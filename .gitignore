@@ -1,1 +1,6 @@
-__pycache__*
+.git
+.env
+airflow_settings.yaml
+*.pyc
+*/__pycache__/*
+.idea%
