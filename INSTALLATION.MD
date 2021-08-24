@@ -9,7 +9,7 @@ to create a Personal Access Token.
 
 ## Add the pip URL to your requirements.txt
 
-First add the `git` package to `packages.txt. This will allow pip to install packages from github.
+First add the `git` package to `packages.txt`. This will allow pip to install packages from github.
 
 In your requirements.txt add the following line (with values filled in):
 
