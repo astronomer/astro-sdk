@@ -19,7 +19,7 @@ setup(
     },
     license='Apache License 2.0',
     packages=['astronomer_sql_decorator', 'astronomer_sql_decorator.operators'],
-    install_requires=['apache-airflow>=2.0', 'pandas', 'apache-airflow-postgres-provider'],
+    install_requires=['apache-airflow>=2.0', 'pandas', 'apache-airflow-providers-postgres'],
     setup_requires=['setuptools', 'wheel'],
     author='Daniel Imberman, Plinio Guzman',
     author_email='daniel@astronomer.io',
