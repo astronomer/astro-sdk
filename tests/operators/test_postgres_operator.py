@@ -21,9 +21,10 @@ from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
+from airflow.models import Connection
 
 # Import Operator
-from provider.operators.sql_decorator import postgres_decorator
+from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -41,8 +42,16 @@ class TestSampleOperator(unittest.TestCase):
         super().setUpClass()
 
         with create_session() as session:
+            postgres_connection = Connection(
+                conn_id="postgres_conn",
+                conn_type="postgres",
+                host="localhost",
+                port=5432,
+                login="postgres",
+            )
             session.query(DagRun).delete()
             session.query(TI).delete()
+            session.add(postgres_connection)
 
     def setUp(self):
         super().setUp()
@@ -62,7 +71,7 @@ class TestSampleOperator(unittest.TestCase):
             session.query(TI).delete()
 
     def test_dataframe_func(self):
-        @postgres_decorator(postgres_conn_id="posgres_conn", to_dataframe=True)
+        @postgres_decorator(postgres_conn_id="postgres_conn", to_dataframe=True)
         def print_table(input_df: DataFrame):
             print(input_df.to_string)
 

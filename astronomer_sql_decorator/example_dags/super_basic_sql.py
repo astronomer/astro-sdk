@@ -1,4 +1,4 @@
-from astronomer_sql_decorator.operators.sql_decorator import postgres_decorator
+from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
 from airflow.models import DAG
 from pandas import DataFrame
 from datetime import datetime, timedelta
@@ -20,7 +20,6 @@ dag = DAG(dag_id="pagila_dag",
 @postgres_decorator(postgres_conn_id="my_favorite_db", database="pagila")
 def sample_pg(input_table):
     return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
-
 
 
 @postgres_decorator(postgres_conn_id="my_favorite_db", database="pagila", to_dataframe=True)
