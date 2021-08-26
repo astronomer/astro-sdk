@@ -22,9 +22,10 @@ from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 from airflow.models import Connection
+import os
 
 # Import Operator
-from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
+from astronomer_sql_decorator.operators.snowflake_decorator import snowflake_decorator
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -42,12 +43,20 @@ class TestSampleOperator(unittest.TestCase):
         super().setUpClass()
 
         with create_session() as session:
+            session.query(Connection).delete()
             postgres_connection = Connection(
-                conn_id="postgres_conn",
-                conn_type="postgres",
-                host="localhost",
-                port=5432,
-                login="postgres",
+                conn_id="snowflake_conn",
+                conn_type="snowflake",
+                host="https://gp21411.us-east-1.snowflakecomputing.com",
+                login=os.environ["SNOW_ACCOUNT_NAME"],
+                port=443,
+                password=os.environ["SNOW_PASSWORD"],
+                extra={
+                    "account": "gp21411",
+                    "region": "us-east-1",
+                    "role": "DANIEL",
+                },
+
             )
             session.query(DagRun).delete()
             session.query(TI).delete()
@@ -71,13 +80,20 @@ class TestSampleOperator(unittest.TestCase):
             session.query(DagRun).delete()
             session.query(TI).delete()
 
-    def test_dataframe_func(self):
-        @postgres_decorator(postgres_conn_id="postgres_conn", to_dataframe=True)
-        def print_table(input_df: DataFrame):
-            print(input_df.to_string)
+    def test_snow_dataframe_func(self):
+        @snowflake_decorator(snowflake_conn_id="snowflake_conn",
+                             warehouse="REPORTING_DEV",
+                             database="DWH_LEGACY",
+                             to_dataframe=True)
+        def get_df(input_df: DataFrame):
+            return input_df
 
         with self.dag:
-            x = print_table(input_table="bar")
+            # Injecting a subquery as we do not want to pull this entire table.
+            # DO NOT DO THIS ON YOUR DAGS!
+            x = get_df(input_table="(WITH my_cte AS (SELECT * "
+                                   "FROM REPORTING.CLOUD_USAGE "
+                                   "LIMIT 10) SELECT * FROM my_cte)")
 
         dr = self.dag.create_dagrun(
             run_id=DagRunType.MANUAL.value,
@@ -86,9 +102,11 @@ class TestSampleOperator(unittest.TestCase):
             state=State.RUNNING,
         )
         x.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        ti = dr.get_task_instances()[0]
+        assert len(ti.xcom_pull()) == 10
 
     def test_postgres(self):
-        @postgres_decorator(postgres_conn_id="postgres_conn", database="pagila")
+        @snowflake_decorator(snowflake_conn_id="snowflake_conn", database="pagila")
         def sample_pg(input_table):
             return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
 

@@ -1,10 +1,9 @@
-from typing import Callable, Dict, Iterable, Optional, Union, Mapping
+from typing import Callable, Iterable, Optional, Union, Mapping
 
 import pandas.io.sql as sqlio
 from airflow.decorators.base import task_decorator_factory
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
-from psycopg2.extensions import AsIs
 
 from astronomer_sql_decorator.operators.sql_decorator import SqlDecoratoratedOperator
 
@@ -30,12 +29,14 @@ class _SnowflakeDecoratedOperator(SqlDecoratoratedOperator, SnowflakeOperator):
         most recent generated table. At this time we do not allow multiple inheritance, but that could be an option
         later.
         """
-        self.hook = SnowflakeHook(snowflake_conn_id=self.snowflake_conn_id, schema=self.database,
+        self.hook = SnowflakeHook(snowflake_conn_id=self.snowflake_conn_id,
+                                  database=self.database,
                                   warehouse=self.warehouse)
-        input_df = sqlio.read_sql_query(
-            sql=f"SELECT * FROM {input_table}",
-            con=self.hook.get_conn()
-        )
+        cursor = self.hook.get_conn().cursor()
+        sql = f"SELECT * FROM {input_table}"
+        print(sql)
+        cursor.execute(f"SELECT * FROM {input_table}")
+        input_df = cursor.fetch_pandas_all()
         self.op_kwargs["input_df"] = input_df
         return self.python_callable(input_df=input_df)
 
@@ -85,4 +86,3 @@ def snowflake_decorator(
         to_dataframe=to_dataframe,
         to_temp_table=to_temp_table,
     )
-    pass

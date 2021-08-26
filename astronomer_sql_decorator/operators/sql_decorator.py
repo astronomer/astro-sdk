@@ -1,13 +1,9 @@
-from typing import Callable, Dict, Iterable, Optional, Union, Mapping
-
-import pandas.io.sql as sqlio
-from airflow.decorators.base import DecoratedOperator, task_decorator_factory
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.providers.postgres.operators.postgres import PostgresOperator
-from psycopg2.extensions import AsIs
-from airflow.models import TaskInstance, DagRun
 from builtins import NotImplementedError
-import base64
+from typing import Dict
+
+from airflow.decorators.base import DecoratedOperator
+from airflow.models import TaskInstance, DagRun
+from psycopg2.extensions import AsIs
 
 
 class SqlDecoratoratedOperator(DecoratedOperator):
