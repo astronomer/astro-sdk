@@ -92,7 +92,7 @@ class TestSampleOperator(unittest.TestCase):
             # Injecting a subquery as we do not want to pull this entire table.
             # DO NOT DO THIS ON YOUR DAGS!
             x = get_df(input_table="(WITH my_cte AS (SELECT * "
-                                   "FROM REPORTING.CLOUD_USAGE "
+                                   "FROM REPORTING.CLOUD_USAGE"
                                    "LIMIT 10) SELECT * FROM my_cte)")
 
         dr = self.dag.create_dagrun(
@@ -105,13 +105,16 @@ class TestSampleOperator(unittest.TestCase):
         ti = dr.get_task_instances()[0]
         assert len(ti.xcom_pull()) == 10
 
-    def test_postgres(self):
-        @snowflake_decorator(snowflake_conn_id="snowflake_conn", database="pagila")
-        def sample_pg(input_table):
-            return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
+    def test_snowflake_query(self):
+        @snowflake_decorator(snowflake_conn_id="snowflake_conn",
+                             warehouse="REPORTING_DEV",
+                             database="DWH_LEGACY",
+                             to_dataframe=True)
+        def sample_snow(input_table):
+            return "SELECT * FROM %(input_table)s LIMIT 10"
 
         with self.dag:
-            f = sample_pg("actor")
+            f = sample_snow("REPORTING.CLOUD_USAGE")
 
         dr = self.dag.create_dagrun(
             run_id=DagRunType.MANUAL.value,
