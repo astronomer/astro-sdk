@@ -1,14 +1,11 @@
 import os
-from typing import Callable, Dict, Iterable, Optional, Union, Mapping
+from typing import Callable, Iterable, Optional, Union, Mapping
 
 import pandas as pd
 import pandas.io.sql as sqlio
-import sqlalchemy
-
 from airflow.decorators.base import task_decorator_factory
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.postgres.operators.postgres import PostgresOperator
-from psycopg2.extensions import AsIs
 
 from astronomer_sql_decorator.operators.sql_decorator import SqlDecoratoratedOperator
 
@@ -48,6 +45,22 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
         self.op_kwargs["input_df"] = input_df
         return self.python_callable(input_df=input_df)
 
+    def _s3fs_creds(self):
+        """Structure s3fs credentials from Airflow connection.
+        s3fs enables pandas to write to s3
+        """
+
+        # To-do: clean-up how S3 creds are passed to s3fs
+        k, v = (
+            os.environ["AIRFLOW_CONN_AWS_DEFAULT"]
+            .replace("%2F", "/")
+            .replace("aws://", "")
+            .replace("@", "")
+            .split(":")
+        )
+
+        return {"key": k, "secret": v}
+
     def _s3_to_db(self, s3_path, table_name):
         """Transfer table from S3 to Postgres database.
 
@@ -57,23 +70,8 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
         :type s3_path:
         """
 
-        def _s3fs_creds():
-            """Structure s3fs credentials from Airflow connection.
-            s3fs enables pandas to write to s3
-            """
-            # To-do: clean-up how S3 creds are passed to s3fs
-            k, v = (
-                os.environ["AIRFLOW_CONN_AWS_DEFAULT"]
-                .replace("%2F", "/")
-                .replace("aws://", "")
-                .replace("@", "")
-                .split(":")
-            )
-
-            return {"key": k, "secret": v}
-
         # Read CSV from S3
-        df = pd.read_csv(s3_path, storage_options=_s3fs_creds())
+        df = pd.read_csv(s3_path, storage_options=self._s3fs_creds())
 
         # Write df to postgres
         self._df_to_postgres(df, table_name)
@@ -86,8 +84,31 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
         # Write df to postgres
         self._df_to_postgres(df, table_name)
 
-    def _df_to_postgres(self, df, table_name):
+    def _db_to_s3(self, s3_path, table_name):
+        """Transfer Postgres database to s3.
 
+        :param s3_path:
+        :type s3_path:
+        """
+
+        # Read CSV from S3
+        hook = PostgresHook(
+            postgres_conn_id=self.postgres_conn_id, schema=self.database
+        )
+        df = sqlio.read_sql_query(f"SELECT * FROM {table_name}", con=hook.get_conn())
+        df.to_csv(s3_path, storage_options=self._s3fs_creds())
+
+        # Write df to postgres
+        self._df_to_postgres(df, table_name)
+
+    def _db_to_csv(self, csv_path: str, table_name: str):
+        df = sqlio.read_sql_query(
+            con=self.hook.get_conn(), sql=f"SELECT * FROM {table_name}"
+        )
+        df.to_csv(csv_path)
+
+    def _df_to_postgres(self, df, table_name):
+        # Generate target db hook
         hook = PostgresHook(
             postgres_conn_id=self.postgres_conn_id, schema=self.database
         )
@@ -137,6 +158,8 @@ def postgres_decorator(
     to_dataframe: bool = False,
     from_s3: bool = False,
     from_csv: bool = False,
+    to_s3: bool = False,
+    to_csv: bool = False,
 ):
     """
     :param python_callable:
@@ -174,5 +197,6 @@ def postgres_decorator(
         to_dataframe=to_dataframe,
         from_s3=from_s3,
         from_csv=from_csv,
+        to_s3=to_s3,
+        to_csv=to_csv,
     )
-    pass
