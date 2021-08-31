@@ -80,13 +80,12 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
 
     def _df_to_postgres(self, df, table_name):
 
-        # Using a sqlalchemy engine because `to_sql` with `hook_target.get_conn()` returns error.
-        engine = sqlalchemy.create_engine(
-            os.environ['AIRFLOW_CONN_POSTGRES_CONN']).connect()
+        hook = PostgresHook(
+            postgres_conn_id=self.postgres_conn_id, schema=self.database)
 
         # CREATE OR REPLACE table in db
         df.to_sql(table_name,
-                  con=engine,
+                  con=hook.get_conn(),
                   schema=None,
                   if_exists='replace',
                   method=None)
