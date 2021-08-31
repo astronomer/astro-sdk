@@ -19,7 +19,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
                  to_temp_table=False,
                  cache=False,
                  from_s3=False,
-                 from_csv='False',
+                 from_csv=False,
                  **kwargs):
         self.to_dataframe = to_dataframe
         self.to_temp_table = to_temp_table
@@ -30,10 +30,12 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.kwargs = kwargs
         self.op_kwargs = self.kwargs.get('op_kwargs')
 
-        if kwargs["op_kwargs"].get("input_table"):
-            self.input_table = kwargs["op_kwargs"].pop("input_table")
-            if to_dataframe:
-                kwargs["op_kwargs"]["input_df"] = None
+        if to_dataframe or from_s3 or from_csv:
+            if kwargs["op_kwargs"].get("input_table"):
+                # Note: does this need to be popped? `from_csv` requires `self.input_table`
+                self.input_table = kwargs["op_kwargs"].pop("input_table")
+                if to_dataframe:
+                    kwargs["op_kwargs"]["input_df"] = None
 
         super().__init__(
             **kwargs,
@@ -46,26 +48,20 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             # Load from s3
             self._s3_to_db(
                 s3_path=self.op_kwargs.get('s3_path'),
-                conn=self.kwargs['postgres_conn_id'],
                 table_name=self.input_table)
 
         elif self.from_csv:
             # Load from csv
             self._csv_to_db(
                 csv_path=self.op_kwargs.get('csv_path'),
-                conn=self.kwargs['postgres_conn_id'],
                 table_name=self.input_table)
 
         if self.to_dataframe:
             return self.handle_dataframe_func(input_table=input_table)
         else:
-            # To-do: pass parameters
-
-            # To-do: ADDRESS ERROR: `task_from_local_csv() got an unexpected keyword argument 's3_path'`
-            # @dimberman
             sql_stuff = self.python_callable(
                 input_table=self.input_table,
-                s3_path=None)
+                **self.op_kwargs)
 
         # To-do: Type check `sql_stuff`
 
@@ -77,7 +73,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.parameters = {}
 
         # Create a table name for the temp table
-        # To-do: if `output_table` defined, name it `output_table`
         ouput_table_name = self.kwargs.get('op_kwargs').get(
             'output_table') or self.create_table_name(context)
 
@@ -118,7 +113,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
     def create_table_name(context):
         ti: TaskInstance = context['ti']
         dag_run: DagRun = ti.get_dagrun()
-        return f"{dag_run.dag_id}_{ti.task_id}_{int(ti.execution_date.timestamp())}"
+        return f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
 
     def handle_input_table(self):
         """
@@ -185,12 +180,12 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         # To-do
         pass
 
-    def _s3_to_db(self, s3_path: str, conn: str, table_name: str):
+    def _s3_to_db(self, s3_path: str, table_name: str):
         """Override this method to enable transfer from S3 to selected database.
         """
         raise NotImplementedError("Add _s3_to_db method to class")
 
-    def _s3_to_db(self, s3_path: str, conn: str, table_name: str):
+    def _s3_to_db(self, s3_path: str, table_name: str):
         """Override this method to enable transfer from csv to selected database.
         """
         raise NotImplementedError("Add _csv_to_db method to class")

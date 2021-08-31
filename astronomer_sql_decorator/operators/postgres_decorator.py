@@ -44,7 +44,7 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
         self.op_kwargs["input_df"] = input_df
         return self.python_callable(input_df=input_df)
 
-    def _s3_to_db(self, s3_path, conn, table_name):
+    def _s3_to_db(self, s3_path, table_name):
         """Transfer table from S3 to Postgres database.
 
         :param conn:
@@ -67,24 +67,20 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
         df = pd.read_csv(s3_path, storage_options=_s3fs_creds())
 
         # Write df to postgres
-        self._df_to_postgres(df, conn, table_name)
+        self._df_to_postgres(df, table_name)
 
-    def _csv_to_db(self, csv_path, conn, table_name):
+    def _csv_to_db(self, csv_path, table_name):
         """Override this method to enable transfer from csv to selected database.
         """
         # Create df from local csv
         df = pd.read_csv(csv_path)
 
         # Write df to postgres
-        self._df_to_postgres(df, conn, table_name)
+        self._df_to_postgres(df, table_name)
 
-    def _df_to_postgres(self, df, conn, table_name):
-        # Generate target db hook
-        self.hook_target = PostgresHook(
-            postgres_conn_id=conn,
-            schema=self.database)
+    def _df_to_postgres(self, df, table_name):
 
-        # Using a sqlalchemy engine because `to_sql` with `hook_target.get_conn()` returns error
+        # Using a sqlalchemy engine because `to_sql` with `hook_target.get_conn()` returns error.
         engine = sqlalchemy.create_engine(
             os.environ['AIRFLOW_CONN_POSTGRES_CONN']).connect()
 
