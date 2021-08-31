@@ -5,7 +5,9 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 
 Run test:
 
-    python3 -m unittest tests.operators.test_sample_operator.TestSampleOperator
+    AIRFLOW_CONN_AWS_DEFAULT=aws://KEY:SECRET@ \
+    AIRFLOW_CONN_POSTGRES_CONN=postgres://USER:PASSWORD@HOST:5432/DB_NAME \
+    python3 -m unittest tests.operators.test_postgres_operator.TestSampleOperator.test_load_s3_to_sql_db
 
 """
 
@@ -14,15 +16,20 @@ import logging
 import unittest.mock
 from unittest import mock
 from pandas import DataFrame
+import pandas as pd
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+import os
+import sqlalchemy
 
-import requests_mock
 from airflow.models import DAG, DagRun, TaskInstance as TI
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 from airflow.models import Connection
+from airflow import settings
 
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 # Import Operator
 from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
 
@@ -56,10 +63,10 @@ class TestSampleOperator(unittest.TestCase):
 
     def setUp(self):
         super().setUp()
-        self.dag = DAG('test_dag', default_args={'owner': 'airflow', 'start_date': DEFAULT_DATE})
-        self.addCleanup(self.dag.clear)
         self.clear_run()
         self.addCleanup(self.clear_run)
+        self.dag = DAG('test_dag', default_args={
+                       'owner': 'airflow', 'start_date': DEFAULT_DATE})
 
     def clear_run(self):
         self.run = False
@@ -71,29 +78,9 @@ class TestSampleOperator(unittest.TestCase):
             session.query(DagRun).delete()
             session.query(TI).delete()
 
-    def test_dataframe_func(self):
-        @postgres_decorator(postgres_conn_id="postgres_conn", to_dataframe=True)
-        def print_table(input_df: DataFrame):
-            print(input_df.to_string)
-
+    def create_and_run_task(self, decorator_func, op_args, op_kwargs):
         with self.dag:
-            x = print_table(input_table="bar")
-
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-        x.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-
-    def test_postgres(self):
-        @postgres_decorator(postgres_conn_id="postgres_conn", database="pagila")
-        def sample_pg(input_table):
-            return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
-
-        with self.dag:
-            f = sample_pg("actor")
+            f = decorator_func(*op_args, **op_kwargs)
 
         dr = self.dag.create_dagrun(
             run_id=DagRunType.MANUAL.value,
@@ -102,6 +89,68 @@ class TestSampleOperator(unittest.TestCase):
             state=State.RUNNING,
         )
         f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        return f
+
+    def test_dataframe_func(self):
+        @postgres_decorator(postgres_conn_id="postgres_conn", to_dataframe=True)
+        def print_table(input_df: DataFrame):
+            print(input_df.to_string)
+
+        self.create_and_run_task(print_table, ("bar",), {})
+
+    def test_postgres(self):
+        @postgres_decorator(postgres_conn_id="postgres_conn", database="astro")
+        def sample_pg(input_table):
+            return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
+
+        self.create_and_run_task(sample_pg, (), {"input_table": "actor"})
+
+    def test_load_s3_to_sql_db(self):
+        OUTPUT_TABLE_NAME = 'table_test_load_s3_to_sql_db'
+
+        @postgres_decorator(postgres_conn_id="postgres_conn", database="astro", from_s3=True)
+        def task_from_s3(s3_path, input_table=None, output_table=None):
+            return """SELECT * FROM %(input_table)s LIMIT 8"""
+
+        self.create_and_run_task(
+            task_from_s3, (), {"s3_path": "s3://tmp9/homes.csv", "input_table": "actor", "output_table": OUTPUT_TABLE_NAME})
+
+        # Generate target db hook
+        self.hook_target = PostgresHook(
+            postgres_conn_id='postgres_conn',
+            schema='astro')
+
+        # Using a sqlalchemy engine because `to_sql` with `hook_target.get_conn()` returns error
+        engine = sqlalchemy.create_engine(
+            os.environ['AIRFLOW_CONN_POSTGRES_CONN']).connect()
+
+        # Read table from db
+        df = pd.read_sql(f'SELECT * FROM {OUTPUT_TABLE_NAME}', con=engine)
+
+        # Assert output table structure
+        assert len(df) == 8
+
+    def test_load_local_csv_to_sql_db(self):
+        OUTPUT_TABLE_NAME = 'expected_table_from_csv'
+
+        @postgres_decorator(postgres_conn_id="postgres_conn", database="astro", from_csv=True)
+        def task_from_local_csv(csv_path, input_table=None, output_table=None):
+            return """SELECT "Sell" FROM %(input_table)s LIMIT 3""", {'csv_path': 'tests/data/homes.csv', 'input_table': 'input_raw_table_from_csv', 'output_table': OUTPUT_TABLE_NAME}
+
+        # Generate target db hook
+        self.hook_target = PostgresHook(
+            postgres_conn_id='postgres_conn',
+            schema='astro')
+
+        # Using a sqlalchemy engine because `to_sql` with `hook_target.get_conn()` returns error
+        engine = sqlalchemy.create_engine(
+            os.environ['AIRFLOW_CONN_POSTGRES_CONN']).connect()
+
+        # Read table from db
+        df = pd.read_sql(f'SELECT * FROM {OUTPUT_TABLE_NAME}', con=engine)
+
+        # Assert output table structure
+        assert df.to_json() == '{"Sell":{"0":142,"1":175,"2":129}}'
 
 
 if __name__ == '__main__':
