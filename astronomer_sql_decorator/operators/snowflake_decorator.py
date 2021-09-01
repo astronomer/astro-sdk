@@ -1,12 +1,14 @@
-from typing import Callable, Iterable, Optional, Union, Mapping
+import os
+from typing import Callable, Iterable, Mapping, Optional, Union
 
+import pandas as pd
+import pandas.io.sql as sqlio
 from airflow.decorators.base import task_decorator_factory
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
-import pandas.io.sql as sqlio
-import pandas as pd
-import os
-from astronomer_sql_decorator.operators.sql_decorator import SqlDecoratoratedOperator
+
+from astronomer_sql_decorator.operators.sql_decorator import \
+    SqlDecoratoratedOperator
 
 
 class _SnowflakeDecoratedOperator(SqlDecoratoratedOperator, SnowflakeOperator):

@@ -1,16 +1,17 @@
 from datetime import datetime
+
 from airflow.decorators import dag
 from airflow.utils import timezone
 
 # Import Operator
-from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
+from astronomer_sql_decorator.operators.postgres_decorator import \
+    postgres_decorator
 
 default_args = {
     "owner": "airflow",
     "retries": 1,
     "retry_delay": 0,
 }
-
 
 
 @postgres_decorator(postgres_conn_id="postgres_conn", database="astro", from_s3=True)
@@ -31,6 +32,7 @@ def task_to_s3(s3_path, input_table=None):
 @postgres_decorator(postgres_conn_id="postgres_conn", database="astro", to_csv=True)
 def task_to_local_csv(csv_path, input_table=None):
     return """SELECT "Sell" FROM %(input_table)s"""
+
 
 @dag(
     default_args=default_args,

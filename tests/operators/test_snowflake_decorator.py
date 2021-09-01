@@ -11,21 +11,22 @@ Run test:
 
 import json
 import logging
+import os
 import unittest.mock
 from unittest import mock
-from pandas import DataFrame
 
 import requests_mock
-from airflow.models import DAG, DagRun, TaskInstance as TI
+from airflow.models import DAG, Connection, DagRun
+from airflow.models import TaskInstance as TI
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
-from airflow.models import Connection
-import os
+from pandas import DataFrame
 
 # Import Operator
-from astronomer_sql_decorator.operators.snowflake_decorator import snowflake_decorator
+from astronomer_sql_decorator.operators.snowflake_decorator import \
+    snowflake_decorator
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)

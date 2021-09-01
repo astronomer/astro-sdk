@@ -1,16 +1,15 @@
-from builtins import NotImplementedError
 import os
+from builtins import NotImplementedError
 from typing import Dict
 
-from psycopg2.extensions import AsIs
 import pandas as pd
 import pandas.io.sql as sqlio
-
 from airflow.decorators.base import DecoratedOperator
-from airflow.models import TaskInstance, DagRun
-from airflow.utils.db import check, provide_session
+from airflow.models import DagRun, TaskInstance
 from airflow.models.xcom import BaseXCom
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.utils.db import check, provide_session
+from psycopg2.extensions import AsIs
 
 
 class SqlDecoratoratedOperator(DecoratedOperator):

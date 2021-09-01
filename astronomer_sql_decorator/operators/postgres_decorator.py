@@ -1,14 +1,16 @@
 import os
-from typing import Callable, Iterable, Optional, Union, Mapping
-import sqlalchemy
+from typing import Callable, Iterable, Mapping, Optional, Union
 
 import pandas as pd
 import pandas.io.sql as sqlio
+import sqlalchemy
+from airflow.configuration import conf
 from airflow.decorators.base import task_decorator_factory
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.postgres.operators.postgres import PostgresOperator
-from airflow.configuration import conf
-from astronomer_sql_decorator.operators.sql_decorator import SqlDecoratoratedOperator
+
+from astronomer_sql_decorator.operators.sql_decorator import \
+    SqlDecoratoratedOperator
 
 
 class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):

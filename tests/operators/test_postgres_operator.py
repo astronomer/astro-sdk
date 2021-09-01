@@ -10,15 +10,13 @@ Run test:
 """
 
 import logging
-import os
 import tempfile
 import unittest.mock
 from unittest import mock
 
 import pandas as pd
-import sqlalchemy
-from airflow.models import Connection
-from airflow.models import DAG, DagRun, TaskInstance as TI
+from airflow.models import DAG, Connection, DagRun
+from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
@@ -27,7 +25,8 @@ from airflow.utils.types import DagRunType
 from pandas import DataFrame
 
 # Import Operator
-from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
+from astronomer_sql_decorator.operators.postgres_decorator import \
+    postgres_decorator
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -190,8 +189,9 @@ class TestSampleOperator(unittest.TestCase):
         )
         def task_to_s3(s3_path, input_table=None):
             return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
-        
+
         self.create_and_run_task(
             task_to_s3,
             (),
-            {"input_table": "actor", "s3_path": "s3://tmp9/test_out.csv"})
+            {"input_table": "actor", "s3_path": "s3://tmp9/test_out.csv"},
+        )

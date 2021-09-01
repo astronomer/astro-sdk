@@ -1,7 +1,10 @@
-from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
+from datetime import datetime, timedelta
+
 from airflow.models import DAG
 from pandas import DataFrame
-from datetime import datetime, timedelta
+
+from astronomer_sql_decorator.operators.postgres_decorator import \
+    postgres_decorator
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
