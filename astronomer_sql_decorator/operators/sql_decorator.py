@@ -19,6 +19,8 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         to_dataframe=False,
         from_s3=False,
         from_csv=False,
+        to_s3=False,
+        to_csv=False,
         output_table_name=None,
         **kwargs,
     ):
@@ -45,6 +47,8 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.input_table = None
         self.from_s3 = from_s3
         self.from_csv = from_csv
+        self.to_s3 = to_s3
+        self.to_csv = to_csv
         self.kwargs = kwargs
         self.op_kwargs = self.kwargs.get("op_kwargs")
 
@@ -110,7 +114,23 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         # Run execute function of subclassed Operator.
         super().execute(context)
 
-        return ouput_table_name
+        if self.to_csv:
+            if self.op_kwargs.get("csv_path"):
+                csv_path = self.op_kwargs.get("csv_path")
+            else:
+                csv_path = self.create_output_csv_path(context)
+
+            self._db_to_csv(csv_path=csv_path, table_name=ouput_table_name)
+            return csv_path
+        elif self.to_s3:
+            if self.op_kwargs.get("s3_path"):
+                s3_path = self.op_kwargs.get("s3_path")
+            else:
+                s3_path = self.create_output_csv_path(context)
+
+            self._db_to_s3(s3_path=s3_path, table_name=ouput_table_name)
+        else:
+            return ouput_table_name
 
     @staticmethod
     def create_temporary_table(query, table_name):
@@ -132,6 +152,12 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         ti: TaskInstance = context["ti"]
         dag_run: DagRun = ti.get_dagrun()
         return f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
+
+    @staticmethod
+    def create_output_csv_path(context):
+        ti: TaskInstance = context["ti"]
+        dag_run: DagRun = ti.get_dagrun()
+        return f"{dag_run.dag_id}_{ti.task_id}_{int(ti.execution_date.timestamp())}.csv"
 
     def handle_input_table(self):
         """
@@ -202,6 +228,14 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         """Override this method to enable transfer from S3 to selected database."""
         raise NotImplementedError("Add _s3_to_db method to class")
 
-    def _s3_to_db(self, s3_path: str, table_name: str):
+    def _csv_to_db(self, csv_path: str, table_name: str):
         """Override this method to enable transfer from csv to selected database."""
         raise NotImplementedError("Add _csv_to_db method to class")
+
+    def _db_to_s3(self, s3_path: str, table_name: str):
+        """Override this method to enable transfer from S3 to selected database."""
+        raise NotImplementedError("Add _s3_to_db method to class")
+
+    def _db_to_csv(self, csv_path: str, table_name: str):
+        """Override this method to enable transfer from S3 to selected database."""
+        raise NotImplementedError("Add _s3_to_db method to class")

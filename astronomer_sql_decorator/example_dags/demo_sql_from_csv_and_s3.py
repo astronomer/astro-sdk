@@ -2,7 +2,6 @@ from datetime import datetime
 from airflow.decorators import dag
 from airflow.utils import timezone
 
-
 # Import Operator
 from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
 
@@ -19,19 +18,27 @@ default_args = {
     start_date=timezone.utcnow(),
     tags=["demo"],
 )
+@postgres_decorator(postgres_conn_id="postgres_conn", database="astro", from_s3=True)
+def task_from_s3(s3_path, input_table=None, output_table=None):
+    return """SELECT "Sell" FROM %(input_table)s LIMIT 8"""
+
+
+@postgres_decorator(postgres_conn_id="postgres_conn", database="astro", from_csv=True)
+def task_from_local_csv(csv_path, input_table=None, output_table=None):
+    return """SELECT "Sell" FROM %(input_table)s LIMIT 3"""
+
+
+@postgres_decorator(postgres_conn_id="postgres_conn", database="astro", to_s3=True)
+def task_to_s3(s3_path, input_table=None):
+    return """SELECT "Sell" FROM %(input_table)s"""
+
+
+@postgres_decorator(postgres_conn_id="postgres_conn", database="astro", to_csv=True)
+def task_to_local_csv(csv_path, input_table=None):
+    return """SELECT "Sell" FROM %(input_table)s"""
+
+
 def demo():
-    @postgres_decorator(
-        postgres_conn_id="postgres_conn", database="astro", from_s3=True
-    )
-    def task_from_s3(s3_path, input_table=None, output_table=None):
-        return """SELECT "Sell" FROM %(input_table)s LIMIT 8"""
-
-    @postgres_decorator(
-        postgres_conn_id="postgres_conn", database="astro", from_csv=True
-    )
-    def task_from_local_csv(csv_path, input_table=None, output_table=None):
-        return """SELECT "Sell" FROM %(input_table)s LIMIT 3"""
-
     t1 = task_from_s3(
         s3_path="s3://tmp9/homes.csv",
         input_table="input_raw_table_from_s3",
@@ -43,6 +50,10 @@ def demo():
         input_table="input_raw_table_from_csv",
         output_table="expected_table_from_csv",
     )
+
+    task_to_s3(s3_path="s3://tmp9/homes.csv", input_table=t1)
+
+    task_to_local_csv(csv_path="tests/data/homes_output.csv", input_table=t2)
 
     t1 >> t2
 

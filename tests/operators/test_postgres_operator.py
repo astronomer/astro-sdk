@@ -4,32 +4,27 @@ Unittest module to test Operators.
 Requires the unittest, pytest, and requests-mock Python libraries.
 
 Run test:
-
     AIRFLOW_CONN_AWS_DEFAULT=aws://KEY:SECRET@ \
-    AIRFLOW_CONN_POSTGRES_CONN=postgres://USER:PASSWORD@HOST:5432/DB_NAME \
     python3 -m unittest tests.operators.test_postgres_operator.TestSampleOperator.test_load_s3_to_sql_db
 
 """
 
-import json
 import logging
+import os
+import tempfile
 import unittest.mock
 from unittest import mock
-from pandas import DataFrame
-import pandas as pd
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-import os
-import sqlalchemy
 
+import pandas as pd
+import sqlalchemy
+from airflow.models import Connection
 from airflow.models import DAG, DagRun, TaskInstance as TI
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
-from airflow.models import Connection
-from airflow import settings
-
-from airflow.providers.postgres.hooks.postgres import PostgresHook
+from pandas import DataFrame
 
 # Import Operator
 from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
@@ -56,8 +51,10 @@ class TestSampleOperator(unittest.TestCase):
                 conn_id="postgres_conn",
                 conn_type="postgres",
                 host="localhost",
+                schema="astro",
                 port=5432,
                 login="postgres",
+                password="postgres",
             )
             session.query(DagRun).delete()
             session.query(TI).delete()
@@ -77,7 +74,6 @@ class TestSampleOperator(unittest.TestCase):
 
     def tearDown(self):
         super().tearDown()
-
         with create_session() as session:
             session.query(DagRun).delete()
             session.query(TI).delete()
@@ -103,7 +99,7 @@ class TestSampleOperator(unittest.TestCase):
         self.create_and_run_task(print_table, ("bar",), {})
 
     def test_postgres(self):
-        @postgres_decorator(postgres_conn_id="postgres_conn", database="astro")
+        @postgres_decorator(postgres_conn_id="postgres_conn", database="pagila")
         def sample_pg(input_table):
             return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
 
@@ -133,46 +129,55 @@ class TestSampleOperator(unittest.TestCase):
             postgres_conn_id="postgres_conn", schema="astro"
         )
 
-        # Using a sqlalchemy engine because `to_sql` with `hook_target.get_conn()` returns error
-        engine = sqlalchemy.create_engine(
-            os.environ["AIRFLOW_CONN_POSTGRES_CONN"]
-        ).connect()
-
         # Read table from db
-        df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=engine)
+        df = pd.read_sql(
+            f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=self.hook_target.get_conn()
+        )
 
         # Assert output table structure
         assert len(df) == 8
 
     def test_load_local_csv_to_sql_db(self):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
+        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="astro")
 
         @postgres_decorator(
             postgres_conn_id="postgres_conn", database="astro", from_csv=True
         )
         def task_from_local_csv(csv_path, input_table=None, output_table=None):
-            return """SELECT "Sell" FROM %(input_table)s LIMIT 3""", {
-                "csv_path": "tests/data/homes.csv",
+            return """SELECT "Sell" FROM %(input_table)s LIMIT 3"""
+
+        self.create_and_run_task(
+            task_from_local_csv,
+            (),
+            {
+                "csv_path": "../data/homes.csv",
                 "input_table": "input_raw_table_from_csv",
                 "output_table": OUTPUT_TABLE_NAME,
-            }
-
-        # Generate target db hook
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="astro"
+            },
         )
 
-        # Using a sqlalchemy engine because `to_sql` with `hook_target.get_conn()` returns error
-        engine = sqlalchemy.create_engine(
-            os.environ["AIRFLOW_CONN_POSTGRES_CONN"]
-        ).connect()
-
         # Read table from db
-        df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=engine)
+        df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=hook.get_conn())
 
         # Assert output table structure
         assert df.to_json() == '{"Sell":{"0":142,"1":175,"2":129}}'
 
+    def test_save_sql_table_to_csv(self):
+        @postgres_decorator(
+            postgres_conn_id="postgres_conn",
+            database="pagila",
+            to_csv=True,
+        )
+        def task_to_local_csv(csv_path, input_table=None):
+            return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
 
-if __name__ == "__main__":
-    unittest.main()
+        with tempfile.TemporaryDirectory() as tmp:
+            self.create_and_run_task(
+                task_to_local_csv,
+                (),
+                {"input_table": "actor", "csv_path": tmp + "/output.csv"},
+            )
+            with open(tmp + "/output.csv") as file:
+                lines = [line for line in file.readlines()]
+                assert len(lines) == 13

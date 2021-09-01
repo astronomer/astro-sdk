@@ -1,10 +1,11 @@
 from typing import Callable, Iterable, Optional, Union, Mapping
 
-import pandas.io.sql as sqlio
 from airflow.decorators.base import task_decorator_factory
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
-
+import pandas.io.sql as sqlio
+import pandas as pd
+import os
 from astronomer_sql_decorator.operators.sql_decorator import SqlDecoratoratedOperator
 
 
@@ -40,6 +41,87 @@ class _SnowflakeDecoratedOperator(SqlDecoratoratedOperator, SnowflakeOperator):
         input_df = cursor.fetch_pandas_all()
         self.op_kwargs["input_df"] = input_df
         return self.python_callable(input_df=input_df)
+
+    def _s3fs_creds(self):
+        """Structure s3fs credentials from Airflow connection.
+        s3fs enables pandas to write to s3
+        """
+
+        # To-do: clean-up how S3 creds are passed to s3fs
+        k, v = (
+            os.environ["AIRFLOW_CONN_AWS_DEFAULT"]
+            .replace("%2F", "/")
+            .replace("aws://", "")
+            .replace("@", "")
+            .split(":")
+        )
+
+        return {"key": k, "secret": v}
+
+    def _s3_to_db(self, s3_path, table_name):
+        """Transfer table from S3 to Postgres database.
+
+        :param conn:
+        :type conn:
+        :param s3_path:
+        :type s3_path:
+        """
+
+        # Read CSV from S3
+        df = pd.read_csv(s3_path, storage_options=self._s3fs_creds())
+
+        # Write df to postgres
+        self._df_to_snowflake(df, table_name)
+
+    def _csv_to_db(self, csv_path, table_name):
+        """Override this method to enable transfer from csv to selected database."""
+        # Create df from local csv
+        df = pd.read_csv(csv_path)
+
+        # Write df to postgres
+        self._df_to_snowflake(df, table_name)
+
+    def _db_to_s3(self, s3_path, table_name):
+        """Transfer Postgres database to s3.
+
+        :param s3_path:
+        :type s3_path:
+        """
+
+        # Read CSV from S3
+        hook = SnowflakeHook(
+            snowflake_conn_id=self.snowflake_conn_id, schema=self.database
+        )
+        df = sqlio.read_sql_query(f"SELECT * FROM {table_name}", con=hook.get_conn())
+        df.to_csv(s3_path, storage_options=self._s3fs_creds())
+
+        # Write df to postgres
+        self._df_to_postgres(df, table_name)
+
+    def _db_to_csv(self, csv_path: str, table_name: str):
+        hook = SnowflakeHook(
+            snowflake_conn_id=self.snowflake_conn_id, schema=self.database
+        )
+
+        df = sqlio.read_sql_query(
+            con=hook.get_conn(), sql=f"SELECT * FROM {table_name}"
+        )
+        df.to_csv(csv_path)
+
+    def _df_to_snowflake(self, df, table_name):
+        # Generate target db hook
+        hook = SnowflakeHook(
+            snowflake_conn_id=self.snowflake_conn_id, schema=self.database
+        )
+
+        # CREATE OR REPLACE table in db
+        df.to_sql(
+            table_name,
+            con=hook.get_conn(),
+            schema=None,
+            if_exists="replace",
+            method=None,
+        )
 
 
 def _snowflake_task(
