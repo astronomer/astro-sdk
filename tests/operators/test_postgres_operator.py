@@ -128,13 +128,10 @@ class TestSampleOperator(unittest.TestCase):
             postgres_conn_id="postgres_conn", schema="astro"
         )
 
-        # Using a sqlalchemy engine because `to_sql` with `hook_target.get_conn()` returns error
-        engine = sqlalchemy.create_engine(
-            os.environ["AIRFLOW_CONN_POSTGRES_CONN"]
-        ).connect()
-
         # Read table from db
-        df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=engine)
+        df = pd.read_sql(
+            f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=self.hook_target.get_conn()
+        )
 
         # Assert output table structure
         assert len(df) == 8
@@ -146,20 +143,19 @@ class TestSampleOperator(unittest.TestCase):
             postgres_conn_id="postgres_conn", database="astro", from_csv=True
         )
         def task_from_local_csv(csv_path, input_table=None, output_table=None):
-            return """SELECT "Sell" FROM %(input_table)s LIMIT 3""", {
-                "csv_path": "tests/data/homes.csv",
+            return """SELECT "Sell" FROM %(input_table)s LIMIT 3"""
+
+        self.create_and_run_task(
+            task_from_local_csv,
+            (),
+            {
+                "csv_path": "../data/homes.csv",
                 "input_table": "input_raw_table_from_csv",
                 "output_table": OUTPUT_TABLE_NAME,
-            }
-
-        # Generate target db hook
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="astro"
+            },
         )
 
-        hook = PostgresHook(
-            postgres_conn_id=self.postgres_conn_id, schema=self.database
-        )
+        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="astro")
 
         # Read table from db
         df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=hook.get_conn())

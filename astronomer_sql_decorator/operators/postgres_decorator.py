@@ -1,5 +1,6 @@
 import os
 from typing import Callable, Iterable, Optional, Union, Mapping
+import sqlalchemy
 
 import pandas as pd
 import pandas.io.sql as sqlio
@@ -78,10 +79,7 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
 
     def _csv_to_db(self, csv_path, table_name):
         """Override this method to enable transfer from csv to selected database."""
-        # Create df from local csv
         df = pd.read_csv(csv_path)
-
-        # Write df to postgres
         self._df_to_postgres(df, table_name)
 
     def _db_to_s3(self, s3_path, table_name):
@@ -112,11 +110,13 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
         hook = PostgresHook(
             postgres_conn_id=self.postgres_conn_id, schema=self.database
         )
+        conn = hook.get_connection(self.postgres_conn_id)
 
-        # CREATE OR REPLACE table in db
         df.to_sql(
             table_name,
-            con=hook.get_conn(),
+            con=sqlalchemy.create_engine(
+                f"postgresql+psycopg2://{conn.login}:{conn.password}@{conn.host}:{conn.port}/{self.database}"
+            ),
             schema=None,
             if_exists="replace",
             method=None,

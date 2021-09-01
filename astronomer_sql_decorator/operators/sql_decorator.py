@@ -228,7 +228,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         """Override this method to enable transfer from S3 to selected database."""
         raise NotImplementedError("Add _s3_to_db method to class")
 
-    def _csv_to_db(self, s3_path: str, table_name: str):
+    def _csv_to_db(self, csv_path: str, table_name: str):
         """Override this method to enable transfer from csv to selected database."""
         raise NotImplementedError("Add _csv_to_db method to class")
 
