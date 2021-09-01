@@ -52,8 +52,10 @@ class TestSampleOperator(unittest.TestCase):
                 conn_id="postgres_conn",
                 conn_type="postgres",
                 host="localhost",
+                schema="astro",
                 port=5432,
                 login="postgres",
+                password="postgres",
             )
             session.query(DagRun).delete()
             session.query(TI).delete()
@@ -138,6 +140,7 @@ class TestSampleOperator(unittest.TestCase):
 
     def test_load_local_csv_to_sql_db(self):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
+        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="astro")
 
         @postgres_decorator(
             postgres_conn_id="postgres_conn", database="astro", from_csv=True
@@ -155,8 +158,6 @@ class TestSampleOperator(unittest.TestCase):
             },
         )
 
-        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="astro")
-
         # Read table from db
         df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=hook.get_conn())
 
@@ -167,7 +168,6 @@ class TestSampleOperator(unittest.TestCase):
         @postgres_decorator(
             postgres_conn_id="postgres_conn",
             database="pagila",
-            to_temp_table=False,
             to_csv=True,
         )
         def task_to_local_csv(csv_path, input_table=None):

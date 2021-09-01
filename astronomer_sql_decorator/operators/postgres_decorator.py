@@ -110,13 +110,11 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
         hook = PostgresHook(
             postgres_conn_id=self.postgres_conn_id, schema=self.database
         )
-        conn = hook.get_connection(self.postgres_conn_id)
+        engine = hook.get_sqlalchemy_engine()
 
         df.to_sql(
             table_name,
-            con=sqlalchemy.create_engine(
-                f"postgresql+psycopg2://{conn.login}:{conn.password}@{conn.host}:{conn.port}/{self.database}"
-            ),
+            con=engine,
             schema=None,
             if_exists="replace",
             method=None,
