@@ -60,4 +60,4 @@ def demo_with_s3_and_csv():
     t1 >> t2
 
 
-demo_dag = demo()
+demo_dag = demo_with_s3_and_csv()
