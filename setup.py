@@ -22,6 +22,8 @@ setup(
     install_requires=[
         "apache-airflow>=2.0",
         "pandas",
+        "s3fs",
+        "apache-airflow-providers-snowflake",
         "apache-airflow-providers-postgres",
     ],
     setup_requires=["setuptools", "wheel"],
