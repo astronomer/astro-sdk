@@ -190,10 +190,8 @@ class TestSampleOperator(unittest.TestCase):
         )
         def task_to_s3(s3_path, input_table=None):
             return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
-
-        with tempfile.TemporaryDirectory() as tmp:
-            self.create_and_run_task(
-                task_to_s3,
-                (),
-                {"input_table": "actor", "s3_path": "s3://tmp9/test_out.csv"},
-            )
+        
+        self.create_and_run_task(
+            task_to_s3,
+            (),
+            {"input_table": "actor", "s3_path": "s3://tmp9/test_out.csv"})
