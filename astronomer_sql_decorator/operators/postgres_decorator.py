@@ -108,6 +108,7 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
         )
         engine = hook.get_sqlalchemy_engine()
 
+        engine.url.database = self.database
         df.to_sql(
             table_name,
             con=engine,

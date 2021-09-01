@@ -49,7 +49,6 @@ class TestSampleOperator(unittest.TestCase):
                 conn_id="postgres_conn",
                 conn_type="postgres",
                 host="localhost",
-                schema="astro",
                 port=5432,
                 login="postgres",
                 password="postgres",
