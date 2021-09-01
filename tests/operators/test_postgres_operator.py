@@ -5,8 +5,7 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 
 Run test:
     AIRFLOW_CONN_AWS_DEFAULT=aws://KEY:SECRET@ \
-    AIRFLOW_CONN_POSTGRES_CONN=postgres://USER:PASSWORD@HOST:5432/DB_NAME \
-    python3 -m unittest tests.operators.test_postgres_operator.TestSampleOperator.test_load_s3_to_db
+    python3 -m unittest tests.operators.test_postgres_operator.TestSampleOperator.test_load_s3_to_sql_db
 
 """
 
