@@ -7,7 +7,7 @@ import pandas.io.sql as sqlio
 from airflow.decorators.base import task_decorator_factory
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.postgres.operators.postgres import PostgresOperator
-
+from airflow.configuration import conf
 from astronomer_sql_decorator.operators.sql_decorator import SqlDecoratoratedOperator
 
 
@@ -51,9 +51,8 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
         s3fs enables pandas to write to s3
         """
 
-        # To-do: clean-up how S3 creds are passed to s3fs
         k, v = (
-            os.environ["AIRFLOW_CONN_AWS_DEFAULT"]
+            conf.get("sql_decorator", "conn_aws_default")
             .replace("%2F", "/")
             .replace("aws://", "")
             .replace("@", "")
@@ -89,15 +88,11 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
         :type s3_path:
         """
 
-        # Read CSV from S3
         hook = PostgresHook(
             postgres_conn_id=self.postgres_conn_id, schema=self.database
         )
         df = sqlio.read_sql_query(f"SELECT * FROM {table_name}", con=hook.get_conn())
         df.to_csv(s3_path, storage_options=self._s3fs_creds())
-
-        # Write df to postgres
-        self._df_to_postgres(df, table_name)
 
     def _db_to_csv(self, csv_path: str, table_name: str):
         df = sqlio.read_sql_query(
