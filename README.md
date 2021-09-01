@@ -31,20 +31,27 @@ dag = DAG(dag_id="pagila_dag",
           schedule_interval=timedelta(minutes=30),  # https://airflow.apache.org/docs/stable/scheduler.html#dag-runs
           default_args=default_args,
           )
+@postgres_decorator(postgres_conn_id="postgres_conn", database="pagila", output_table="my_raw_data", from_s3=True)
+def task_from_s3(s3_path, input_table=None, output_table=None):
+    return """SELECT * FROM %(input_table)s"""
+
+@postgres_decorator(postgres_conn_id="postgres_conn", database="pagila", from_csv=True)
+def task_from_local_csv(csv_path, input_table=None, output_table=None):
+    return """SELECT "Sell" FROM %(input_table)s LIMIT 3"""
 
 @postgres_decorator(postgres_conn_id="my_favorite_db", database="pagila")
-def sample_pg(input_table):
-    return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
-
+def sample_pg(input_table, last_name_prefix):
+    return "SELECT * FROM %(input_table)s WHERE last_name LIKE '$(last_name_prefix)s%%'", {"last_name_prefix": last_name_prefix}
 
 
 @postgres_decorator(postgres_conn_id="my_favorite_db", database="pagila", to_dataframe=True)
 def print_table(input_df: DataFrame):
     print(input_df.to_string)
 
-
 with dag:
-    last_name_g = sample_pg(input_table="actor")
+    import_pagila_table = task_from_s3(s3_path='s3://tmp9/homes.csv',
+                      input_table='input_raw_table_from_s3')
+    last_name_g = sample_pg(input_table=import_pagila_table, last_name_prefix="F")
     print_table(last_name_g)
 
 ```

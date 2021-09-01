@@ -18,14 +18,17 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
             self,
             postgres_conn_id: str = 'postgres_default',
             to_dataframe: bool = False,
-            to_temp_table: bool = True,
             **kwargs) -> None:
+        """
+        :param postgres_conn_id: the connection string that links to a Postgres connection in your Airflow database
+        :param to_dataframe:
+        :param kwargs:
+        """
 
         super().__init__(
             sql="",
             postgres_conn_id=postgres_conn_id,
             to_dataframe=to_dataframe,
-            to_temp_table=to_temp_table,
             **kwargs,
         )
 
@@ -124,10 +127,35 @@ def postgres_decorator(
         parameters: Optional[Union[Mapping, Iterable]] = None,
         database: Optional[str] = None,
         to_dataframe: bool = False,
-        to_temp_table: bool = True,
         from_s3: bool = False,
         from_csv: bool = False,
 ):
+    """
+    :param python_callable: 
+    :param multiple_outputs: 
+    :param postgres_conn_id: The :ref:`postgres conn id <howto/connection:postgres>`
+        reference to a specific postgres database.
+    :type postgres_conn_id: str
+    :param autocommit: if True, each command is automatically committed.
+        (default value: False)
+    :type autocommit: bool
+    :param parameters: (optional) the parameters to render the SQL query with.
+    :type parameters: dict or iterable
+    :param database: name of database which overwrite defined one in connection
+    :type database: str
+    :param to_dataframe: This function allows users to pull the current staging table into a pandas dataframe. To
+        use this function, please make sure that your decorated function has a parameter called ``input_df``. This
+        parameter will be a pandas.Dataframe that you can modify as needed. Please note that until we implement
+        spark and dask dataframes, that you should be mindful as to how large your worker is when pulling large tables.
+    :param from_s3: Whether to pull from s3 into current database. When set to true, please include a parameter named
+        ``s3_path`` in your TaskFlow function. When calling this task, you can specify any s3:// path and Airflow will
+        automatically pull that file into your database using Panda's automatic data typing functionality.
+    :param from_csv: Whether to pull from a local csv file into current database. When set to true,
+        please include a parameter named ``csv_path`` in your TaskFlow function. When calling this task, you can
+        specify any local path and Airflow will automatically pull that file into your database using Panda's
+        automatic data typing functionality.
+    @return: 
+    """
     return _postgres_task(
         python_callable=python_callable,
         multiple_outputs=multiple_outputs,
@@ -136,7 +164,6 @@ def postgres_decorator(
         parameters=parameters,
         database=database,
         to_dataframe=to_dataframe,
-        to_temp_table=to_temp_table,
         from_s3=from_s3,
         from_csv=from_csv
     )

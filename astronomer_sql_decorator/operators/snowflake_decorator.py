@@ -13,13 +13,11 @@ class _SnowflakeDecoratedOperator(SqlDecoratoratedOperator, SnowflakeOperator):
             self,
             snowflake_conn_id: str = 'snowflake_default',
             to_dataframe: bool = False,
-            to_temp_table: bool = True,
             **kwargs) -> None:
         super().__init__(
             sql="",
             snowflake_conn_id=snowflake_conn_id,
             to_dataframe=to_dataframe,
-            to_temp_table=to_temp_table,
             **kwargs,
         )
 
@@ -71,10 +69,49 @@ def snowflake_decorator(
         warehouse: str = "",
         autocommit: bool = False,
         parameters: Optional[Union[Mapping, Iterable]] = None,
+        role: Optional[str] = None,
+        schema: Optional[str] = None,
+        authenticator: Optional[str] = None,
+        session_parameters: Optional[dict] = None,
         database: Optional[str] = None,
         to_dataframe: bool = False,
-        to_temp_table: bool = True,
 ):
+    """
+    
+    :param python_callable: 
+    :param multiple_outputs: 
+    :param autocommit: if True, each command is automatically committed.
+        (default value: True)
+    :type autocommit: bool
+    :param parameters: (optional) the parameters to render the SQL query with.
+    :type parameters: dict or iterable
+    :param warehouse: name of warehouse (will overwrite any warehouse
+        defined in the connection's extra JSON)
+    :type warehouse: str
+    :param database: name of database (will overwrite database defined
+        in connection)
+    :type database: str
+    :param schema: name of schema (will overwrite schema defined in
+        connection)
+    :type schema: str
+    :param role: name of role (will overwrite any role defined in
+        connection's extra JSON)
+    :type role: str
+    :param authenticator: authenticator for Snowflake.
+        'snowflake' (default) to use the internal Snowflake authenticator
+        'externalbrowser' to authenticate using your web browser and
+        Okta, ADFS or any other SAML 2.0-compliant identify provider
+        (IdP) that has been defined for your account
+        'https://<your_okta_account_name>.okta.com' to authenticate
+        through native Okta.
+    :type authenticator: str
+    :param to_dataframe: This function allows users to pull the current staging table into a pandas dataframe. To
+        use this function, please make sure that your decorated function has a parameter called ``input_df``. This
+        parameter will be a pandas.Dataframe that you can modify as needed. Please note that until we implement
+        spark and dask dataframes, that you should be mindful as to how large your worker is when pulling large tables. 
+    :param snowflake_conn_id:
+    :param session_parameters:
+    """
     return _snowflake_task(
         python_callable=python_callable,
         warehouse=warehouse,
@@ -83,6 +120,9 @@ def snowflake_decorator(
         autocommit=autocommit,
         parameters=parameters,
         database=database,
+        role=role,
+        schema=schema,
+        authenticator=authenticator,
+        session_parameters=session_parameters,
         to_dataframe=to_dataframe,
-        to_temp_table=to_temp_table,
     )

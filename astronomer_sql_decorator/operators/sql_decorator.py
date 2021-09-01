@@ -16,15 +16,27 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 class SqlDecoratoratedOperator(DecoratedOperator):
     def __init__(self,
                  to_dataframe=False,
-                 to_temp_table=False,
-                 cache=False,
                  from_s3=False,
                  from_csv=False,
+                 output_table_name=None,
                  **kwargs):
+        """
+        @param to_dataframe: This function allows users to pull the current staging table into a pandas dataframe. To
+        use this function, please make sure that your decorated function has a parameter called ``input_df``. This
+        parameter will be a pandas.Dataframe that you can modify as needed. Please note that until we implement
+        spark and dask dataframes, that you should be mindful as to how large your worker is when pulling large tables.
+        @param from_s3: Whether to pull from s3 into current database. When set to true, please include a parameter named
+        ``s3_path`` in your TaskFlow function. When calling this task, you can specify any s3:// path and Airflow will
+        automatically pull that file into your database using Panda's automatic data typing functionality.
+        @param from_csv: Whether to pull from a local csv file into current database. When set to true,
+        please include a parameter named ``csv_path`` in your TaskFlow function. When calling this task, you can
+        specify any local path and Airflow will automatically pull that file into your database using Panda's
+        automatic data typing functionality.
+        @param kwargs:
+        """
         self.to_dataframe = to_dataframe
-        self.to_temp_table = to_temp_table
+        self.output_table_name = output_table_name
         self.input_table = None
-        self.cache = cache
         self.from_s3 = from_s3
         self.from_csv = from_csv
         self.kwargs = kwargs
@@ -91,8 +103,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         # Run execute function of subclassed Operator.
         super().execute(context)
 
-        if self.to_temp_table:
-            return ouput_table_name
+        return ouput_table_name
 
     @staticmethod
     def create_temporary_table(query, table_name):
