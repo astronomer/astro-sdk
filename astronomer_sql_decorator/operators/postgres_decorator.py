@@ -9,8 +9,7 @@ from airflow.decorators.base import task_decorator_factory
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.postgres.operators.postgres import PostgresOperator
 
-from astronomer_sql_decorator.operators.sql_decorator import \
-    SqlDecoratoratedOperator
+from astronomer_sql_decorator.operators.sql_decorator import SqlDecoratoratedOperator
 
 
 class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):

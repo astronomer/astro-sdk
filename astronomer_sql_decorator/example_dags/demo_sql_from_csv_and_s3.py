@@ -4,8 +4,7 @@ from airflow.decorators import dag
 from airflow.utils import timezone
 
 # Import Operator
-from astronomer_sql_decorator.operators.postgres_decorator import \
-    postgres_decorator
+from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
 
 default_args = {
     "owner": "airflow",

@@ -7,8 +7,7 @@ from airflow.decorators.base import task_decorator_factory
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
 
-from astronomer_sql_decorator.operators.sql_decorator import \
-    SqlDecoratoratedOperator
+from astronomer_sql_decorator.operators.sql_decorator import SqlDecoratoratedOperator
 
 
 class _SnowflakeDecoratedOperator(SqlDecoratoratedOperator, SnowflakeOperator):

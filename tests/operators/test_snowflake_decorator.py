@@ -25,8 +25,7 @@ from airflow.utils.types import DagRunType
 from pandas import DataFrame
 
 # Import Operator
-from astronomer_sql_decorator.operators.snowflake_decorator import \
-    snowflake_decorator
+from astronomer_sql_decorator.operators.snowflake_decorator import snowflake_decorator
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
