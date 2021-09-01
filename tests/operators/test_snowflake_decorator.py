@@ -32,7 +32,9 @@ DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 
 # Mock the `conn_sample` Airflow connection
-@mock.patch.dict('os.environ', AIRFLOW_CONN_CONN_SAMPLE='http://https%3A%2F%2Fwww.httpbin.org%2F')
+@mock.patch.dict(
+    "os.environ", AIRFLOW_CONN_CONN_SAMPLE="http://https%3A%2F%2Fwww.httpbin.org%2F"
+)
 class TestSampleOperator(unittest.TestCase):
     """
     Test Sample Operator.
@@ -56,7 +58,6 @@ class TestSampleOperator(unittest.TestCase):
                     "region": "us-east-1",
                     "role": "DANIEL",
                 },
-
             )
             session.query(DagRun).delete()
             session.query(TI).delete()
@@ -65,7 +66,9 @@ class TestSampleOperator(unittest.TestCase):
 
     def setUp(self):
         super().setUp()
-        self.dag = DAG('test_dag', default_args={'owner': 'airflow', 'start_date': DEFAULT_DATE})
+        self.dag = DAG(
+            "test_dag", default_args={"owner": "airflow", "start_date": DEFAULT_DATE}
+        )
         self.addCleanup(self.dag.clear)
         self.clear_run()
         self.addCleanup(self.clear_run)
@@ -81,19 +84,23 @@ class TestSampleOperator(unittest.TestCase):
             session.query(TI).delete()
 
     def test_snow_dataframe_func(self):
-        @snowflake_decorator(snowflake_conn_id="snowflake_conn",
-                             warehouse="REPORTING_DEV",
-                             database="DWH_LEGACY",
-                             to_dataframe=True)
+        @snowflake_decorator(
+            snowflake_conn_id="snowflake_conn",
+            warehouse="REPORTING_DEV",
+            database="DWH_LEGACY",
+            to_dataframe=True,
+        )
         def get_df(input_df: DataFrame):
             return input_df
 
         with self.dag:
             # Injecting a subquery as we do not want to pull this entire table.
             # DO NOT DO THIS ON YOUR DAGS!
-            x = get_df(input_table="(WITH my_cte AS (SELECT * "
-                                   "FROM REPORTING.CLOUD_USAGE"
-                                   "LIMIT 10) SELECT * FROM my_cte)")
+            x = get_df(
+                input_table="(WITH my_cte AS (SELECT * "
+                "FROM REPORTING.CLOUD_USAGE"
+                "LIMIT 10) SELECT * FROM my_cte)"
+            )
 
         dr = self.dag.create_dagrun(
             run_id=DagRunType.MANUAL.value,
@@ -106,10 +113,12 @@ class TestSampleOperator(unittest.TestCase):
         assert len(ti.xcom_pull()) == 10
 
     def test_snowflake_query(self):
-        @snowflake_decorator(snowflake_conn_id="snowflake_conn",
-                             warehouse="REPORTING_DEV",
-                             database="DWH_LEGACY",
-                             to_dataframe=True)
+        @snowflake_decorator(
+            snowflake_conn_id="snowflake_conn",
+            warehouse="REPORTING_DEV",
+            database="DWH_LEGACY",
+            to_dataframe=True,
+        )
         def sample_snow(input_table):
             return "SELECT * FROM %(input_table)s LIMIT 10"
 
@@ -125,5 +134,5 @@ class TestSampleOperator(unittest.TestCase):
         f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

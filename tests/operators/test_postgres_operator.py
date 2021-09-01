@@ -30,6 +30,7 @@ from airflow.models import Connection
 from airflow import settings
 
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+
 # Import Operator
 from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
 
@@ -38,7 +39,9 @@ DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 
 # Mock the `conn_sample` Airflow connection
-@mock.patch.dict('os.environ', AIRFLOW_CONN_CONN_SAMPLE='http://https%3A%2F%2Fwww.httpbin.org%2F')
+@mock.patch.dict(
+    "os.environ", AIRFLOW_CONN_CONN_SAMPLE="http://https%3A%2F%2Fwww.httpbin.org%2F"
+)
 class TestSampleOperator(unittest.TestCase):
     """
     Test Sample Operator.
@@ -65,8 +68,9 @@ class TestSampleOperator(unittest.TestCase):
         super().setUp()
         self.clear_run()
         self.addCleanup(self.clear_run)
-        self.dag = DAG('test_dag', default_args={
-                       'owner': 'airflow', 'start_date': DEFAULT_DATE})
+        self.dag = DAG(
+            "test_dag", default_args={"owner": "airflow", "start_date": DEFAULT_DATE}
+        )
 
     def clear_run(self):
         self.run = False
@@ -106,52 +110,69 @@ class TestSampleOperator(unittest.TestCase):
         self.create_and_run_task(sample_pg, (), {"input_table": "actor"})
 
     def test_load_s3_to_sql_db(self):
-        OUTPUT_TABLE_NAME = 'table_test_load_s3_to_sql_db'
+        OUTPUT_TABLE_NAME = "table_test_load_s3_to_sql_db"
 
-        @postgres_decorator(postgres_conn_id="postgres_conn", database="astro", from_s3=True)
+        @postgres_decorator(
+            postgres_conn_id="postgres_conn", database="astro", from_s3=True
+        )
         def task_from_s3(s3_path, input_table=None, output_table=None):
             return """SELECT * FROM %(input_table)s LIMIT 8"""
 
         self.create_and_run_task(
-            task_from_s3, (), {"s3_path": "s3://tmp9/homes.csv", "input_table": "actor", "output_table": OUTPUT_TABLE_NAME})
+            task_from_s3,
+            (),
+            {
+                "s3_path": "s3://tmp9/homes.csv",
+                "input_table": "actor",
+                "output_table": OUTPUT_TABLE_NAME,
+            },
+        )
 
         # Generate target db hook
         self.hook_target = PostgresHook(
-            postgres_conn_id='postgres_conn',
-            schema='astro')
+            postgres_conn_id="postgres_conn", schema="astro"
+        )
 
         # Using a sqlalchemy engine because `to_sql` with `hook_target.get_conn()` returns error
         engine = sqlalchemy.create_engine(
-            os.environ['AIRFLOW_CONN_POSTGRES_CONN']).connect()
+            os.environ["AIRFLOW_CONN_POSTGRES_CONN"]
+        ).connect()
 
         # Read table from db
-        df = pd.read_sql(f'SELECT * FROM {OUTPUT_TABLE_NAME}', con=engine)
+        df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=engine)
 
         # Assert output table structure
         assert len(df) == 8
 
     def test_load_local_csv_to_sql_db(self):
-        OUTPUT_TABLE_NAME = 'expected_table_from_csv'
+        OUTPUT_TABLE_NAME = "expected_table_from_csv"
 
-        @postgres_decorator(postgres_conn_id="postgres_conn", database="astro", from_csv=True)
+        @postgres_decorator(
+            postgres_conn_id="postgres_conn", database="astro", from_csv=True
+        )
         def task_from_local_csv(csv_path, input_table=None, output_table=None):
-            return """SELECT "Sell" FROM %(input_table)s LIMIT 3""", {'csv_path': 'tests/data/homes.csv', 'input_table': 'input_raw_table_from_csv', 'output_table': OUTPUT_TABLE_NAME}
+            return """SELECT "Sell" FROM %(input_table)s LIMIT 3""", {
+                "csv_path": "tests/data/homes.csv",
+                "input_table": "input_raw_table_from_csv",
+                "output_table": OUTPUT_TABLE_NAME,
+            }
 
         # Generate target db hook
         self.hook_target = PostgresHook(
-            postgres_conn_id='postgres_conn',
-            schema='astro')
+            postgres_conn_id="postgres_conn", schema="astro"
+        )
 
         # Using a sqlalchemy engine because `to_sql` with `hook_target.get_conn()` returns error
         engine = sqlalchemy.create_engine(
-            os.environ['AIRFLOW_CONN_POSTGRES_CONN']).connect()
+            os.environ["AIRFLOW_CONN_POSTGRES_CONN"]
+        ).connect()
 
         # Read table from db
-        df = pd.read_sql(f'SELECT * FROM {OUTPUT_TABLE_NAME}', con=engine)
+        df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=engine)
 
         # Assert output table structure
         assert df.to_json() == '{"Sell":{"0":142,"1":175,"2":129}}'
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

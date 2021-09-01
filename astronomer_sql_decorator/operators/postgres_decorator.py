@@ -15,10 +15,11 @@ from astronomer_sql_decorator.operators.sql_decorator import SqlDecoratoratedOpe
 
 class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
     def __init__(
-            self,
-            postgres_conn_id: str = 'postgres_default',
-            to_dataframe: bool = False,
-            **kwargs) -> None:
+        self,
+        postgres_conn_id: str = "postgres_default",
+        to_dataframe: bool = False,
+        **kwargs,
+    ) -> None:
         """
         :param postgres_conn_id: the connection string that links to a Postgres connection in your Airflow database
         :param to_dataframe:
@@ -39,10 +40,10 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
         later.
         """
         self.hook = PostgresHook(
-            postgres_conn_id=self.postgres_conn_id, schema=self.database)
+            postgres_conn_id=self.postgres_conn_id, schema=self.database
+        )
         input_df = sqlio.read_sql_query(
-            sql=f"SELECT * FROM {input_table}",
-            con=self.hook.get_conn()
+            sql=f"SELECT * FROM {input_table}", con=self.hook.get_conn()
         )
         self.op_kwargs["input_df"] = input_df
         return self.python_callable(input_df=input_df)
@@ -61,10 +62,15 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
             s3fs enables pandas to write to s3
             """
             # To-do: clean-up how S3 creds are passed to s3fs
-            k, v = os.environ['AIRFLOW_CONN_AWS_DEFAULT'].replace(
-                '%2F', '/').replace('aws://', '').replace('@', '').split(':')
+            k, v = (
+                os.environ["AIRFLOW_CONN_AWS_DEFAULT"]
+                .replace("%2F", "/")
+                .replace("aws://", "")
+                .replace("@", "")
+                .split(":")
+            )
 
-            return {'key': k, 'secret': v}
+            return {"key": k, "secret": v}
 
         # Read CSV from S3
         df = pd.read_csv(s3_path, storage_options=_s3fs_creds())
@@ -73,8 +79,7 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
         self._df_to_postgres(df, table_name)
 
     def _csv_to_db(self, csv_path, table_name):
-        """Override this method to enable transfer from csv to selected database.
-        """
+        """Override this method to enable transfer from csv to selected database."""
         # Create df from local csv
         df = pd.read_csv(csv_path)
 
@@ -84,20 +89,23 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
     def _df_to_postgres(self, df, table_name):
 
         hook = PostgresHook(
-            postgres_conn_id=self.postgres_conn_id, schema=self.database)
+            postgres_conn_id=self.postgres_conn_id, schema=self.database
+        )
 
         # CREATE OR REPLACE table in db
-        df.to_sql(table_name,
-                  con=hook.get_conn(),
-                  schema=None,
-                  if_exists='replace',
-                  method=None)
+        df.to_sql(
+            table_name,
+            con=hook.get_conn(),
+            schema=None,
+            if_exists="replace",
+            method=None,
+        )
 
 
 def _postgres_task(
-        python_callable: Optional[Callable] = None, multiple_outputs: Optional[bool] = None, **kwargs
-
-
+    python_callable: Optional[Callable] = None,
+    multiple_outputs: Optional[bool] = None,
+    **kwargs,
 ):
     """
     Python operator decorator. Wraps a function into an Airflow operator.
@@ -120,19 +128,19 @@ def _postgres_task(
 
 
 def postgres_decorator(
-        python_callable: Optional[Callable] = None,
-        multiple_outputs: Optional[bool] = None,
-        postgres_conn_id: str = 'postgres_default',
-        autocommit: bool = False,
-        parameters: Optional[Union[Mapping, Iterable]] = None,
-        database: Optional[str] = None,
-        to_dataframe: bool = False,
-        from_s3: bool = False,
-        from_csv: bool = False,
+    python_callable: Optional[Callable] = None,
+    multiple_outputs: Optional[bool] = None,
+    postgres_conn_id: str = "postgres_default",
+    autocommit: bool = False,
+    parameters: Optional[Union[Mapping, Iterable]] = None,
+    database: Optional[str] = None,
+    to_dataframe: bool = False,
+    from_s3: bool = False,
+    from_csv: bool = False,
 ):
     """
-    :param python_callable: 
-    :param multiple_outputs: 
+    :param python_callable:
+    :param multiple_outputs:
     :param postgres_conn_id: The :ref:`postgres conn id <howto/connection:postgres>`
         reference to a specific postgres database.
     :type postgres_conn_id: str
@@ -154,7 +162,7 @@ def postgres_decorator(
         please include a parameter named ``csv_path`` in your TaskFlow function. When calling this task, you can
         specify any local path and Airflow will automatically pull that file into your database using Panda's
         automatic data typing functionality.
-    @return: 
+    @return:
     """
     return _postgres_task(
         python_callable=python_callable,
@@ -165,6 +173,6 @@ def postgres_decorator(
         database=database,
         to_dataframe=to_dataframe,
         from_s3=from_s3,
-        from_csv=from_csv
+        from_csv=from_csv,
     )
     pass

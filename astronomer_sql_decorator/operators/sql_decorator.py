@@ -14,12 +14,14 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 
 class SqlDecoratoratedOperator(DecoratedOperator):
-    def __init__(self,
-                 to_dataframe=False,
-                 from_s3=False,
-                 from_csv=False,
-                 output_table_name=None,
-                 **kwargs):
+    def __init__(
+        self,
+        to_dataframe=False,
+        from_s3=False,
+        from_csv=False,
+        output_table_name=None,
+        **kwargs,
+    ):
         """
         @param to_dataframe: This function allows users to pull the current staging table into a pandas dataframe. To
         use this function, please make sure that your decorated function has a parameter called ``input_df``. This
@@ -40,7 +42,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.from_s3 = from_s3
         self.from_csv = from_csv
         self.kwargs = kwargs
-        self.op_kwargs = self.kwargs.get('op_kwargs')
+        self.op_kwargs = self.kwargs.get("op_kwargs")
 
         if to_dataframe or from_s3 or from_csv:
             if kwargs["op_kwargs"].get("input_table"):
@@ -59,21 +61,21 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         if self.from_s3:
             # Load from s3
             self._s3_to_db(
-                s3_path=self.op_kwargs.get('s3_path'),
-                table_name=self.input_table)
+                s3_path=self.op_kwargs.get("s3_path"), table_name=self.input_table
+            )
 
         elif self.from_csv:
             # Load from csv
             self._csv_to_db(
-                csv_path=self.op_kwargs.get('csv_path'),
-                table_name=self.input_table)
+                csv_path=self.op_kwargs.get("csv_path"), table_name=self.input_table
+            )
 
         if self.to_dataframe:
             return self.handle_dataframe_func(input_table=input_table)
         else:
             sql_stuff = self.python_callable(
-                input_table=self.input_table,
-                **self.op_kwargs)
+                input_table=self.input_table, **self.op_kwargs
+            )
 
         # To-do: Type check `sql_stuff`
 
@@ -85,8 +87,9 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.parameters = {}
 
         # Create a table name for the temp table
-        ouput_table_name = self.kwargs.get('op_kwargs').get(
-            'output_table') or self.create_table_name(context)
+        ouput_table_name = self.kwargs.get("op_kwargs").get(
+            "output_table"
+        ) or self.create_table_name(context)
 
         self.sql = self.create_temporary_table(self.sql, ouput_table_name)
 
@@ -97,7 +100,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         # While normally it is a security anti-pattern to use AsIs in SQL, this value is never user controlled
         # The only way a user could modify this value is if they already own the metadata DB, which would be a much
         # deeper security breach.
-        self.parameters['input_table'] = AsIs(input_table)
+        self.parameters["input_table"] = AsIs(input_table)
         self.parameters = {k: AsIs(v) for k, v in self.parameters.items()}
 
         # Run execute function of subclassed Operator.
@@ -122,7 +125,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
     @staticmethod
     def create_table_name(context):
-        ti: TaskInstance = context['ti']
+        ti: TaskInstance = context["ti"]
         dag_run: DagRun = ti.get_dagrun()
         return f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
 
@@ -134,8 +137,8 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         :return:
         """
         if not self.input_table:
-            if self.op_kwargs.get('input_table'):
-                input_table = self.op_kwargs.pop('input_table')
+            if self.op_kwargs.get("input_table"):
+                input_table = self.op_kwargs.pop("input_table")
             else:
                 op_args_list = list(self.op_args)
                 input_table = op_args_list.pop(0)
@@ -149,8 +152,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
     @provide_session
     def pre_execute(self, context, session=None):
-        """This hook is triggered right before self.execute() is called.
-        """
+        """This hook is triggered right before self.execute() is called."""
         pass
 
     def post_execute(self, context, result=None):
@@ -160,18 +162,15 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         pass
 
     def _table_exists_in_db(self, conn: str, table_name: str):
-        """Override this method to enable sensing db.
-        """
+        """Override this method to enable sensing db."""
         raise NotImplementedError("Add _table_exists_in_db method to class")
 
     def _transfer_to_s3(self, conn: str, table_name: str):
-        """Override this method to enable write to S3.
-        """
+        """Override this method to enable write to S3."""
         raise NotImplementedError("Add _transfer_to_s3 method to class")
 
     def _transfer_from_s3(self, conn: str, table_name: str):
-        """Override this method to enable read from to S3.
-        """
+        """Override this method to enable read from to S3."""
         raise NotImplementedError("Add _transfer_from_s3 method to class")
 
     def _s3fs_creds(self):
@@ -180,23 +179,25 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         s3fs enables pandas to write to s3
         """
         # To-do: clean-up how S3 creds are passed to s3fs
-        k, v = os.environ['AIRFLOW_CONN_AWS_DEFAULT'].replace(
-            '%2F', '/').replace('aws://', '').replace('@', '').split(':')
+        k, v = (
+            os.environ["AIRFLOW_CONN_AWS_DEFAULT"]
+            .replace("%2F", "/")
+            .replace("aws://", "")
+            .replace("@", "")
+            .split(":")
+        )
 
-        return {'key': k, 'secret': v}
+        return {"key": k, "secret": v}
 
     def _cleanup(self):
-        """Remove DAG's objects from S3 and db.
-        """
+        """Remove DAG's objects from S3 and db."""
         # To-do
         pass
 
     def _s3_to_db(self, s3_path: str, table_name: str):
-        """Override this method to enable transfer from S3 to selected database.
-        """
+        """Override this method to enable transfer from S3 to selected database."""
         raise NotImplementedError("Add _s3_to_db method to class")
 
     def _s3_to_db(self, s3_path: str, table_name: str):
-        """Override this method to enable transfer from csv to selected database.
-        """
+        """Override this method to enable transfer from csv to selected database."""
         raise NotImplementedError("Add _csv_to_db method to class")

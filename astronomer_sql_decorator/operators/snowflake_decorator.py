@@ -10,10 +10,11 @@ from astronomer_sql_decorator.operators.sql_decorator import SqlDecoratoratedOpe
 
 class _SnowflakeDecoratedOperator(SqlDecoratoratedOperator, SnowflakeOperator):
     def __init__(
-            self,
-            snowflake_conn_id: str = 'snowflake_default',
-            to_dataframe: bool = False,
-            **kwargs) -> None:
+        self,
+        snowflake_conn_id: str = "snowflake_default",
+        to_dataframe: bool = False,
+        **kwargs,
+    ) -> None:
         super().__init__(
             sql="",
             snowflake_conn_id=snowflake_conn_id,
@@ -27,9 +28,11 @@ class _SnowflakeDecoratedOperator(SqlDecoratoratedOperator, SnowflakeOperator):
         most recent generated table. At this time we do not allow multiple inheritance, but that could be an option
         later.
         """
-        self.hook = SnowflakeHook(snowflake_conn_id=self.snowflake_conn_id,
-                                  database=self.database,
-                                  warehouse=self.warehouse)
+        self.hook = SnowflakeHook(
+            snowflake_conn_id=self.snowflake_conn_id,
+            database=self.database,
+            warehouse=self.warehouse,
+        )
         cursor = self.hook.get_conn().cursor()
         sql = f"SELECT * FROM {input_table}"
         print(sql)
@@ -40,7 +43,9 @@ class _SnowflakeDecoratedOperator(SqlDecoratoratedOperator, SnowflakeOperator):
 
 
 def _snowflake_task(
-        python_callable: Optional[Callable] = None, multiple_outputs: Optional[bool] = None, **kwargs
+    python_callable: Optional[Callable] = None,
+    multiple_outputs: Optional[bool] = None,
+    **kwargs,
 ):
     """
     Python operator decorator. Wraps a function into an Airflow operator.
@@ -63,23 +68,23 @@ def _snowflake_task(
 
 
 def snowflake_decorator(
-        python_callable: Optional[Callable] = None,
-        multiple_outputs: Optional[bool] = None,
-        snowflake_conn_id: str = 'snowflake_default',
-        warehouse: str = "",
-        autocommit: bool = False,
-        parameters: Optional[Union[Mapping, Iterable]] = None,
-        role: Optional[str] = None,
-        schema: Optional[str] = None,
-        authenticator: Optional[str] = None,
-        session_parameters: Optional[dict] = None,
-        database: Optional[str] = None,
-        to_dataframe: bool = False,
+    python_callable: Optional[Callable] = None,
+    multiple_outputs: Optional[bool] = None,
+    snowflake_conn_id: str = "snowflake_default",
+    warehouse: str = "",
+    autocommit: bool = False,
+    parameters: Optional[Union[Mapping, Iterable]] = None,
+    role: Optional[str] = None,
+    schema: Optional[str] = None,
+    authenticator: Optional[str] = None,
+    session_parameters: Optional[dict] = None,
+    database: Optional[str] = None,
+    to_dataframe: bool = False,
 ):
     """
-    
-    :param python_callable: 
-    :param multiple_outputs: 
+
+    :param python_callable:
+    :param multiple_outputs:
     :param autocommit: if True, each command is automatically committed.
         (default value: True)
     :type autocommit: bool
@@ -108,7 +113,7 @@ def snowflake_decorator(
     :param to_dataframe: This function allows users to pull the current staging table into a pandas dataframe. To
         use this function, please make sure that your decorated function has a parameter called ``input_df``. This
         parameter will be a pandas.Dataframe that you can modify as needed. Please note that until we implement
-        spark and dask dataframes, that you should be mindful as to how large your worker is when pulling large tables. 
+        spark and dask dataframes, that you should be mindful as to how large your worker is when pulling large tables.
     :param snowflake_conn_id:
     :param session_parameters:
     """
