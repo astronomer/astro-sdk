@@ -23,18 +23,22 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         **kwargs,
     ):
         """
-        @param to_dataframe: This function allows users to pull the current staging table into a pandas dataframe. To
-        use this function, please make sure that your decorated function has a parameter called ``input_df``. This
+        :param to_dataframe: This function allows users to pull the current staging table into a pandas dataframe.
+
+            To use this function, please make sure that your decorated function has a parameter called ``input_df``. This
         parameter will be a pandas.Dataframe that you can modify as needed. Please note that until we implement
         spark and dask dataframes, that you should be mindful as to how large your worker is when pulling large tables.
-        @param from_s3: Whether to pull from s3 into current database. When set to true, please include a parameter named
-        ``s3_path`` in your TaskFlow function. When calling this task, you can specify any s3:// path and Airflow will
+        :param from_s3: Whether to pull from s3 into current database.
+
+            When set to true, please include a parameter named ``s3_path`` in your TaskFlow function. When calling this
+        task, you can specify any s3:// path and Airflow will
         automatically pull that file into your database using Panda's automatic data typing functionality.
-        @param from_csv: Whether to pull from a local csv file into current database. When set to true,
-        please include a parameter named ``csv_path`` in your TaskFlow function. When calling this task, you can
-        specify any local path and Airflow will automatically pull that file into your database using Panda's
-        automatic data typing functionality.
-        @param kwargs:
+        :param from_csv: Whether to pull from a local csv file into current database.
+
+            When set to true, please include a parameter named ``csv_path`` in your TaskFlow function.
+        When calling this task, you can specify any local path and Airflow will automatically pull that file into your
+        database using Panda's automatic data typing functionality.
+        :param kwargs:
         """
         self.to_dataframe = to_dataframe
         self.output_table_name = output_table_name
