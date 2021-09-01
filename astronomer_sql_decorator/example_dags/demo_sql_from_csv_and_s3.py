@@ -12,12 +12,7 @@ default_args = {
 }
 
 
-@dag(
-    default_args=default_args,
-    schedule_interval=None,
-    start_date=timezone.utcnow(),
-    tags=["demo"],
-)
+
 @postgres_decorator(postgres_conn_id="postgres_conn", database="astro", from_s3=True)
 def task_from_s3(s3_path, input_table=None, output_table=None):
     return """SELECT "Sell" FROM %(input_table)s LIMIT 8"""
@@ -37,8 +32,13 @@ def task_to_s3(s3_path, input_table=None):
 def task_to_local_csv(csv_path, input_table=None):
     return """SELECT "Sell" FROM %(input_table)s"""
 
-
-def demo():
+@dag(
+    default_args=default_args,
+    schedule_interval=None,
+    start_date=timezone.utcnow(),
+    tags=["demo"],
+)
+def demo_with_s3_and_csv():
     t1 = task_from_s3(
         s3_path="s3://tmp9/homes.csv",
         input_table="input_raw_table_from_s3",
