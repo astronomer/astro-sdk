@@ -25,7 +25,7 @@
 ## Basic Usage
 
 ```python
-from astronomer_sql_decorator.operators.sql_decorator import postgres_decorator
+from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
 from airflow.models import DAG
 from pandas import DataFrame
 from datetime import datetime, timedelta
