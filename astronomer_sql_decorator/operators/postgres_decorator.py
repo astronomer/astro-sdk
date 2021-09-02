@@ -12,6 +12,13 @@ from airflow.providers.postgres.operators.postgres import PostgresOperator
 from astronomer_sql_decorator.operators.sql_decorator import SqlDecoratoratedOperator
 
 
+def create_sql_engine(postgres_conn_id, database):
+    hook = PostgresHook(postgres_conn_id=postgres_conn_id, schema=database)
+    engine = hook.get_sqlalchemy_engine()
+    engine.url.database = database
+    return engine
+
+
 class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
     def __init__(
         self,
@@ -103,12 +110,7 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
 
     def _df_to_postgres(self, df, table_name):
         # Generate target db hook
-        hook = PostgresHook(
-            postgres_conn_id=self.postgres_conn_id, schema=self.database
-        )
-        engine = hook.get_sqlalchemy_engine()
-
-        engine.url.database = self.database
+        engine = create_sql_engine(self.postgres_conn_id, self.database)
         df.to_sql(
             table_name,
             con=engine,

@@ -25,7 +25,10 @@ from airflow.utils.types import DagRunType
 from pandas import DataFrame
 
 # Import Operator
-from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
+from astronomer_sql_decorator.operators.postgres_decorator import (
+    create_sql_engine,
+    postgres_decorator,
+)
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -101,6 +104,49 @@ class TestSampleOperator(unittest.TestCase):
             return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
 
         self.create_and_run_task(sample_pg, (), {"input_table": "actor"})
+
+    def test_postgres_join(self):
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+
+        conn = self.hook_target.get_conn()
+        cursor = conn.cursor()
+        cursor.execute("DROP TABLE IF EXISTS my_table CASCADE;")
+        cursor.close()
+        conn.close()
+
+        @postgres_decorator(postgres_conn_id="postgres_conn", database="pagila")
+        def sample_pg(input_table, join_table, output_table_name):
+            return (
+                "SELECT %(input_table)s.actor_id, first_name, last_name, COUNT(film_id) "
+                "FROM %(input_table)s JOIN %(join_table)s ON %(input_table)s.actor_id = %(join_table)s.actor_id "
+                "WHERE last_name LIKE 'G%%' GROUP BY %(input_table)s.actor_id"
+            )
+
+        self.create_and_run_task(
+            sample_pg,
+            (),
+            {
+                "input_table": "actor",
+                "join_table": "film_actor",
+                "output_table_name": "my_table",
+            },
+        )
+        # Read table from db
+        df = pd.read_sql(f"SELECT * FROM my_table", con=self.hook_target.get_conn())
+        assert df.iloc[0].to_dict() == {
+            "actor_id": 90,
+            "first_name": "SEAN",
+            "last_name": "GUINESS",
+            "count": 33,
+        }
+
+        conn = self.hook_target.get_conn()
+        cursor = conn.cursor()
+        cursor.execute("DROP TABLE IF EXISTS my_table CASCADE;")
+        cursor.close()
+        conn.close()
 
     def test_load_s3_to_sql_db(self):
         OUTPUT_TABLE_NAME = "table_test_load_s3_to_sql_db"

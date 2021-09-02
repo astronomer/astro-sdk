@@ -20,7 +20,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         from_csv=False,
         to_s3=False,
         to_csv=False,
-        output_table_name=None,
         **kwargs,
     ):
         """
@@ -42,7 +41,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         :param kwargs:
         """
         self.to_dataframe = to_dataframe
-        self.output_table_name = output_table_name
         self.input_table = None
         self.from_s3 = from_s3
         self.from_csv = from_csv
@@ -95,7 +93,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
         # Create a table name for the temp table
         ouput_table_name = self.kwargs.get("op_kwargs").get(
-            "output_table"
+            "output_table_name"
         ) or self.create_table_name(context)
 
         self.sql = self.create_temporary_table(self.sql, ouput_table_name)
@@ -108,6 +106,8 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         # The only way a user could modify this value is if they already own the metadata DB, which would be a much
         # deeper security breach.
         self.parameters["input_table"] = AsIs(input_table)
+        if self.parameters.get("join_table"):
+            self.parameters["join_table"] = AsIs(self.parameters["join_table"])
         self.parameters = {k: AsIs(v) for k, v in self.parameters.items()}
 
         # Run execute function of subclassed Operator.
