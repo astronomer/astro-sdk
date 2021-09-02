@@ -38,6 +38,14 @@ DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 @mock.patch.dict(
     "os.environ", AIRFLOW_CONN_CONN_SAMPLE="http://https%3A%2F%2Fwww.httpbin.org%2F"
 )
+def drop_table(table_name, postgres_conn):
+    cursor = postgres_conn.cursor()
+    cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
+    postgres_conn.commit()
+    cursor.close()
+    postgres_conn.close()
+
+
 class TestSampleOperator(unittest.TestCase):
     """
     Test Sample Operator.
@@ -110,11 +118,7 @@ class TestSampleOperator(unittest.TestCase):
             postgres_conn_id="postgres_conn", schema="pagila"
         )
 
-        conn = self.hook_target.get_conn()
-        cursor = conn.cursor()
-        cursor.execute("DROP TABLE IF EXISTS my_table CASCADE;")
-        cursor.close()
-        conn.close()
+        drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
 
         @postgres_decorator(postgres_conn_id="postgres_conn", database="pagila")
         def sample_pg(input_table, join_table, output_table_name):
@@ -142,11 +146,7 @@ class TestSampleOperator(unittest.TestCase):
             "count": 33,
         }
 
-        conn = self.hook_target.get_conn()
-        cursor = conn.cursor()
-        cursor.execute("DROP TABLE IF EXISTS my_table CASCADE;")
-        cursor.close()
-        conn.close()
+        drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
 
     def test_load_s3_to_sql_db(self):
         OUTPUT_TABLE_NAME = "table_test_load_s3_to_sql_db"
