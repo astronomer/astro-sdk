@@ -10,10 +10,12 @@ Run test:
 """
 
 import logging
+import os
 import tempfile
 import unittest.mock
 from unittest import mock
-
+import pathlib
+import pandas
 import pandas as pd
 from airflow.models import DAG, Connection, DagRun
 from airflow.models import TaskInstance as TI
@@ -100,11 +102,13 @@ class TestSampleOperator(unittest.TestCase):
         return f
 
     def test_dataframe_func(self):
-        @postgres_decorator(postgres_conn_id="postgres_conn", to_dataframe=True)
+        @postgres_decorator(
+            postgres_conn_id="postgres_conn", database="pagila", to_dataframe=True
+        )
         def print_table(input_df: DataFrame):
             print(input_df.to_string)
 
-        self.create_and_run_task(print_table, ("bar",), {})
+        self.create_and_run_task(print_table, ("actor",), {})
 
     def test_postgres(self):
         @postgres_decorator(postgres_conn_id="postgres_conn", database="pagila")
@@ -140,10 +144,10 @@ class TestSampleOperator(unittest.TestCase):
         # Read table from db
         df = pd.read_sql(f"SELECT * FROM my_table", con=self.hook_target.get_conn())
         assert df.iloc[0].to_dict() == {
-            "actor_id": 90,
-            "first_name": "SEAN",
-            "last_name": "GUINESS",
-            "count": 33,
+            "actor_id": 191,
+            "first_name": "GREGORY",
+            "last_name": "GOODING",
+            "count": 30,
         }
 
         drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
@@ -152,9 +156,9 @@ class TestSampleOperator(unittest.TestCase):
         OUTPUT_TABLE_NAME = "table_test_load_s3_to_sql_db"
 
         @postgres_decorator(
-            postgres_conn_id="postgres_conn", database="astro", from_s3=True
+            postgres_conn_id="postgres_conn", database="pagila", from_s3=True
         )
-        def task_from_s3(s3_path, input_table=None, output_table=None):
+        def task_from_s3(s3_path, input_table=None, output_table_name=None):
             return """SELECT * FROM %(input_table)s LIMIT 8"""
 
         self.create_and_run_task(
@@ -163,13 +167,13 @@ class TestSampleOperator(unittest.TestCase):
             {
                 "s3_path": "s3://tmp9/homes.csv",
                 "input_table": "actor",
-                "output_table": OUTPUT_TABLE_NAME,
+                "output_table_name": OUTPUT_TABLE_NAME,
             },
         )
 
         # Generate target db hook
         self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="astro"
+            postgres_conn_id="postgres_conn", schema="pagila"
         )
 
         # Read table from db
@@ -182,21 +186,22 @@ class TestSampleOperator(unittest.TestCase):
 
     def test_load_local_csv_to_sql_db(self):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
-        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="astro")
+        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="postgres")
 
         @postgres_decorator(
-            postgres_conn_id="postgres_conn", database="astro", from_csv=True
+            postgres_conn_id="postgres_conn", database="postgres", from_csv=True
         )
-        def task_from_local_csv(csv_path, input_table=None, output_table=None):
+        def task_from_local_csv(csv_path, input_table=None, output_table_name=None):
             return """SELECT "Sell" FROM %(input_table)s LIMIT 3"""
 
+        cwd = pathlib.Path(__file__).parent
         self.create_and_run_task(
             task_from_local_csv,
             (),
             {
-                "csv_path": "../data/homes.csv",
+                "csv_path": str(cwd) + "/../data/homes.csv",
                 "input_table": "input_raw_table_from_csv",
-                "output_table": OUTPUT_TABLE_NAME,
+                "output_table_name": OUTPUT_TABLE_NAME,
             },
         )
 

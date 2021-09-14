@@ -1,12 +1,12 @@
-
 # [START tutorial]
 # [START import_module]
 
-from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
 from airflow.decorators import dag, task
 from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
 from pandas import DataFrame
+
+from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
 
 # [END import_module]
 
@@ -14,11 +14,11 @@ from pandas import DataFrame
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
 default_args = {
-    'owner': 'airflow',
-    'email': ['vikram@astronomer.com'],
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 0,
+    "owner": "airflow",
+    "email": ["vikram@astronomer.com"],
+    "email_on_failure": False,
+    "email_on_retry": False,
+    "retries": 0,
 }
 # [END default_args]
 
@@ -29,8 +29,8 @@ def tutorial_elt_sql():
     """
     ### Tutorial ELT Dag with the SQL Decorator
     This is a simple ELT data pipeline example which demonstrates the use of
-    the SQL Decorator and the TaskFlow API using three simple tasks for Extract, 
-    Load, and Transform. 
+    the SQL Decorator and the TaskFlow API using three simple tasks for Extract,
+    Load, and Transform.
     """
     # [END instantiate_dag]
 
@@ -41,13 +41,13 @@ def tutorial_elt_sql():
         #### Extract task
         A simple Extract task to get data ready for the rest of the data
         pipeline. In this case, a simulated CSV data file is created with data
-        from this task. 
+        from this task.
         """
 
-        order_data_file = '/tmp/order_data.csv'
+        order_data_file = "/tmp/order_data.csv"
 
-        tmp_data_file = open(order_data_file, 'w')
-        tmp_data_file.write('order_id,order_value\n')
+        tmp_data_file = open(order_data_file, "w")
+        tmp_data_file.write("order_id,order_value\n")
         tmp_data_file.write('"1001", 301.27\n')
         tmp_data_file.write('"1002", 433.21\n')
         tmp_data_file.write('"1003", 502.22\n')
@@ -57,9 +57,10 @@ def tutorial_elt_sql():
 
     # [END extract]
 
-
     # [START load]
-    @postgres_decorator(postgres_conn_id="postgres_conn", database="testdata", from_csv=True)
+    @postgres_decorator(
+        postgres_conn_id="postgres_conn", database="testdata", from_csv=True
+    )
     def load(csv_path=None, input_table=None, output_table=None):
         """
         #### Load task
@@ -69,7 +70,6 @@ def tutorial_elt_sql():
         return """SELECT * FROM %(input_table)s """
 
     # [END load]
-
 
     # [START transform]
     @postgres_decorator(postgres_conn_id="postgres_conn", database="testdata")
@@ -86,7 +86,9 @@ def tutorial_elt_sql():
     # [END transform]
 
     # [START print_table]
-    @postgres_decorator(postgres_conn_id="postgres_conn", database="testdata", to_dataframe=True)
+    @postgres_decorator(
+        postgres_conn_id="postgres_conn", database="testdata", to_dataframe=True
+    )
     def print_table(input_df: DataFrame):
         """
         #### Print table task
@@ -98,14 +100,13 @@ def tutorial_elt_sql():
 
     # [END print_table]
 
-
-   # [START main_flow]
+    # [START main_flow]
 
     # in the example just generate the expected data file, so there are no
     # external dependencies needed to get the data file
 
     order_data_file = extract()
-    order_data =load(csv_path=order_data_file, input_table="my_input_table")
+    order_data = load(csv_path=order_data_file, input_table="my_input_table")
     order_summary = transform(input_table=order_data)
     print_table(order_summary)
     # print_table(input_table=order_summary)
@@ -113,11 +114,8 @@ def tutorial_elt_sql():
     # [END main_flow]
 
 
-
 # [START dag_invocation]
 tutorial_elt_sql_dag = tutorial_elt_sql()
 # [END dag_invocation]
 
 # [END tutorial]
-
-
