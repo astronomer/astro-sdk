@@ -10,12 +10,11 @@ Run test:
 """
 
 import logging
-import os
+import pathlib
 import tempfile
 import unittest.mock
 from unittest import mock
-import pathlib
-import pandas
+
 import pandas as pd
 from airflow.models import DAG, Connection, DagRun
 from airflow.models import TaskInstance as TI
@@ -27,10 +26,7 @@ from airflow.utils.types import DagRunType
 from pandas import DataFrame
 
 # Import Operator
-from astronomer_sql_decorator.operators.postgres_decorator import (
-    create_sql_engine,
-    postgres_decorator,
-)
+from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
