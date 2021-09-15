@@ -31,7 +31,7 @@ jobs:
         with:
           path: ~/.cache/pip
           key: ${{ hashFiles('setup.py') }}-${{ hashFiles('dev-requirements.txt') }}
-#      - uses: pre-commit/action@v2.0.3
+      - uses: pre-commit/action@v2.0.3
       - run: pip install -e .
       - run: pip install pytest
       - run: pip install requests-mock
