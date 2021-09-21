@@ -2,11 +2,10 @@
 # [START import_module]
 
 from airflow.decorators import dag, task
-from airflow.operators.python import PythonOperator
 from airflow.utils.dates import days_ago
 from pandas import DataFrame
 
-from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
+import astronomer_sql_decorator.sql as aql
 
 # [END import_module]
 
@@ -58,9 +57,7 @@ def tutorial_elt_sql():
     # [END extract]
 
     # [START load]
-    @postgres_decorator(
-        postgres_conn_id="postgres_conn", database="testdata", from_csv=True
-    )
+    @aql.transform(postgres_conn_id="postgres_conn", database="testdata", from_csv=True)
     def load(csv_path=None, input_table=None, output_table=None):
         """
         #### Load task
@@ -72,7 +69,7 @@ def tutorial_elt_sql():
     # [END load]
 
     # [START transform]
-    @postgres_decorator(postgres_conn_id="postgres_conn", database="testdata")
+    @aql.transform(postgres_conn_id="postgres_conn", database="testdata")
     def transform(input_table=None, output_table=None):
         """
         #### Transform task
@@ -86,7 +83,7 @@ def tutorial_elt_sql():
     # [END transform]
 
     # [START print_table]
-    @postgres_decorator(
+    @aql.transform(
         postgres_conn_id="postgres_conn", database="testdata", to_dataframe=True
     )
     def print_table(input_df: DataFrame):

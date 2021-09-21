@@ -26,7 +26,7 @@ from airflow.utils.types import DagRunType
 from pandas import DataFrame
 
 # Import Operator
-from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
+import astronomer_sql_decorator.sql as aql
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -98,7 +98,7 @@ class TestSampleOperator(unittest.TestCase):
         return f
 
     def test_dataframe_func(self):
-        @postgres_decorator(
+        @aql.transform(
             postgres_conn_id="postgres_conn", database="pagila", to_dataframe=True
         )
         def print_table(input_df: DataFrame):
@@ -107,7 +107,7 @@ class TestSampleOperator(unittest.TestCase):
         self.create_and_run_task(print_table, ("actor",), {})
 
     def test_postgres(self):
-        @postgres_decorator(postgres_conn_id="postgres_conn", database="pagila")
+        @aql.transform(postgres_conn_id="postgres_conn", database="pagila")
         def sample_pg(input_table):
             return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
 
@@ -120,7 +120,7 @@ class TestSampleOperator(unittest.TestCase):
 
         drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
 
-        @postgres_decorator(postgres_conn_id="postgres_conn", database="pagila")
+        @aql.transform(postgres_conn_id="postgres_conn", database="pagila")
         def sample_pg(input_table, join_table, output_table_name):
             return (
                 "SELECT %(input_table)s.actor_id, first_name, last_name, COUNT(film_id) "
@@ -151,7 +151,7 @@ class TestSampleOperator(unittest.TestCase):
     def test_load_s3_to_sql_db(self):
         OUTPUT_TABLE_NAME = "table_test_load_s3_to_sql_db"
 
-        @postgres_decorator(
+        @aql.transform(
             postgres_conn_id="postgres_conn", database="pagila", from_s3=True
         )
         def task_from_s3(s3_path, input_table=None, output_table_name=None):
@@ -184,7 +184,7 @@ class TestSampleOperator(unittest.TestCase):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
         hook = PostgresHook(postgres_conn_id="postgres_conn", schema="postgres")
 
-        @postgres_decorator(
+        @aql.transform(
             postgres_conn_id="postgres_conn", database="postgres", from_csv=True
         )
         def task_from_local_csv(csv_path, input_table=None, output_table_name=None):
@@ -208,7 +208,7 @@ class TestSampleOperator(unittest.TestCase):
         assert df.to_json() == '{"Sell":{"0":142,"1":175,"2":129}}'
 
     def test_save_sql_table_to_csv(self):
-        @postgres_decorator(
+        @aql.transform(
             postgres_conn_id="postgres_conn",
             database="pagila",
             to_csv=True,
@@ -227,7 +227,7 @@ class TestSampleOperator(unittest.TestCase):
                 assert len(lines) == 13
 
     def test_save_sql_table_to_s3(self):
-        @postgres_decorator(
+        @aql.transform(
             postgres_conn_id="postgres_conn",
             database="pagila",
             to_s3=True,

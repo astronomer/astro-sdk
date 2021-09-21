@@ -47,7 +47,7 @@ dag = DAG(
 )
 
 
-@postgres_decorator(
+@aql.transform(
     postgres_conn_id="postgres_conn",
     database="pagila",
     output_table="my_raw_data",
@@ -57,12 +57,12 @@ def task_from_s3(s3_path, input_table=None, output_table=None):
     return """SELECT * FROM %(input_table)s"""
 
 
-@postgres_decorator(postgres_conn_id="postgres_conn", database="pagila", from_csv=True)
+@aql.transform(postgres_conn_id="postgres_conn", database="pagila", from_csv=True)
 def task_from_local_csv(csv_path, input_table=None, output_table=None):
     return """SELECT "Sell" FROM %(input_table)s LIMIT 3"""
 
 
-@postgres_decorator(postgres_conn_id="my_favorite_db", database="pagila")
+@aql.transform(postgres_conn_id="my_favorite_db", database="pagila")
 def sample_pg(input_table, last_name_prefix):
     return (
         "SELECT * FROM %(input_table)s WHERE last_name LIKE '$(last_name_prefix)s%%'",
@@ -70,9 +70,7 @@ def sample_pg(input_table, last_name_prefix):
     )
 
 
-@postgres_decorator(
-    postgres_conn_id="my_favorite_db", database="pagila", to_dataframe=True
-)
+@aql.transform(postgres_conn_id="my_favorite_db", database="pagila", to_dataframe=True)
 def print_table(input_df: DataFrame):
     print(input_df.to_string)
 

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from pandas import DataFrame
 
-from astronomer_sql_decorator.operators.postgres_decorator import postgres_decorator
+import astronomer_sql_decorator.sql as aql
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -22,14 +22,12 @@ dag = DAG(
 )
 
 
-@postgres_decorator(postgres_conn_id="my_favorite_db", database="pagila")
+@aql.transform(postgres_conn_id="my_favorite_db", database="pagila")
 def sample_pg(input_table):
     return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
 
 
-@postgres_decorator(
-    postgres_conn_id="my_favorite_db", database="pagila", to_dataframe=True
-)
+@aql.transform(postgres_conn_id="my_favorite_db", database="pagila", to_dataframe=True)
 def print_table(input_df: DataFrame):
     print(input_df.to_string)
 
