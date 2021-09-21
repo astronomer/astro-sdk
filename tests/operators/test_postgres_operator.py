@@ -72,7 +72,12 @@ class TestSampleOperator(unittest.TestCase):
         self.clear_run()
         self.addCleanup(self.clear_run)
         self.dag = DAG(
-            "test_dag", default_args={"owner": "airflow", "start_date": DEFAULT_DATE}
+            "test_dag",
+            default_args={
+                "owner": "airflow",
+                "start_date": DEFAULT_DATE,
+                "safe_parameters": ["input_table", "actor", "film_actor_join"],
+            },
         )
 
     def clear_run(self):
@@ -121,11 +126,11 @@ class TestSampleOperator(unittest.TestCase):
         drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
 
         @aql.transform(postgres_conn_id="postgres_conn", database="pagila")
-        def sample_pg(actor, film_actor_join, output_table_name):
+        def sample_pg(actor, film_actor_join, output_table_name, unsafe_parameter):
             return (
                 "SELECT {actor}.actor_id, first_name, last_name, COUNT(film_id) "
                 "FROM {actor} JOIN {film_actor_join} ON {actor}.actor_id = {film_actor_join}.actor_id "
-                "WHERE last_name LIKE 'G%%' GROUP BY {actor}.actor_id"
+                "WHERE last_name LIKE {unsafe_parameter} GROUP BY {actor}.actor_id"
             )
 
         self.create_and_run_task(
@@ -134,6 +139,7 @@ class TestSampleOperator(unittest.TestCase):
             {
                 "actor": "actor",
                 "film_actor_join": "film_actor",
+                "unsafe_parameter": "G%%",
                 "output_table_name": "my_table",
             },
         )

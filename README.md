@@ -34,6 +34,10 @@ from datetime import datetime, timedelta
 # You can override them on a per-task basis during operator initialization
 default_args = {
     "owner": "airflow",
+    "safe_parameters": [
+        "input_table",
+        "output_table",
+    ],  # WARNING: only use this for trusted values. Do not trust user input
 }
 
 dag = DAG(

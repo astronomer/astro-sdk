@@ -19,6 +19,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         from_csv=False,
         to_s3=False,
         to_csv=False,
+        safe_parameters=[],
         **kwargs,
     ):
         """
@@ -44,6 +45,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.to_s3 = to_s3
         self.to_csv = to_csv
         self.kwargs = kwargs
+        self.safe_parameters = safe_parameters
         self.op_kwargs = self.kwargs.get("op_kwargs")
 
         super().__init__(
@@ -93,7 +95,10 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         # The only way a user could modify this value is if they already own the metadata DB, which would be a much
         # deeper security breach.
         self.parameters.update(self.op_kwargs)
-        self.parameters = {k: AsIs(v) for k, v in self.parameters.items()}
+        self.parameters = {
+            k: (AsIs(v) if k in self.safe_parameters else v)
+            for k, v in self.parameters.items()
+        }
 
         # Run execute function of subclassed Operator.
         super().execute(context)
