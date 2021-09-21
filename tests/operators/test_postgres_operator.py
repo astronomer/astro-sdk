@@ -5,7 +5,7 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 
 Run test:
     AIRFLOW__SQL_DECORATOR__CONN_AWS_DEFAULT=aws://KEY:SECRET@ \
-    python3 -m unittest tests.operators.test_postgres_operator.TestSampleOperator.test_load_s3_to_sql_db
+    python3 -m unittest tests.operators.test_postgres_operator.TestPostgresOperator.test_load_s3_to_sql_db
 
 """
 
@@ -44,7 +44,7 @@ def drop_table(table_name, postgres_conn):
     postgres_conn.close()
 
 
-class TestSampleOperator(unittest.TestCase):
+class TestPostgresOperator(unittest.TestCase):
     """
     Test Sample Operator.
     """
@@ -102,17 +102,8 @@ class TestSampleOperator(unittest.TestCase):
         f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         return f
 
-    # def test_dataframe_func(self):
-    #     @aql.transform(
-    #         postgres_conn_id="postgres_conn", database="pagila", to_dataframe=True
-    #     )
-    #     def print_table(input_df: DataFrame):
-    #         print(input_df.to_string)
-    #
-    #     self.create_and_run_task(print_table, ("actor",), {})
-
     def test_postgres(self):
-        @aql.transform(postgres_conn_id="postgres_conn", database="pagila")
+        @aql.transform(conn_id="postgres_conn", database="pagila")
         def sample_pg(input_table):
             return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%'"
 
@@ -125,7 +116,7 @@ class TestSampleOperator(unittest.TestCase):
 
         drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
 
-        @aql.transform(postgres_conn_id="postgres_conn", database="pagila")
+        @aql.transform(conn_id="postgres_conn", database="pagila")
         def sample_pg(actor, film_actor_join, output_table_name, unsafe_parameter):
             return (
                 "SELECT {actor}.actor_id, first_name, last_name, COUNT(film_id) "
@@ -154,12 +145,51 @@ class TestSampleOperator(unittest.TestCase):
 
         drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
 
+    def test_raw_sql(self):
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+        drop_table(
+            table_name="my_raw_sql_table", postgres_conn=self.hook_target.get_conn()
+        )
+
+        @aql.run_raw_sql(conn_id="postgres_conn", database="pagila")
+        def sample_pg(actor, film_actor_join, output_table_name, unsafe_parameter):
+            return (
+                "CREATE TABLE my_raw_sql_table AS (SELECT {actor}.actor_id, first_name, last_name, COUNT(film_id) "
+                "FROM {actor} JOIN {film_actor_join} ON {actor}.actor_id = {film_actor_join}.actor_id "
+                "WHERE last_name LIKE {unsafe_parameter} GROUP BY {actor}.actor_id)"
+            )
+
+        self.create_and_run_task(
+            sample_pg,
+            (),
+            {
+                "actor": "actor",
+                "film_actor_join": "film_actor",
+                "unsafe_parameter": "G%%",
+                "output_table_name": "my_table",
+            },
+        )
+        # Read table from db
+        df = pd.read_sql(
+            f"SELECT * FROM my_raw_sql_table", con=self.hook_target.get_conn()
+        )
+        assert df.iloc[0].to_dict() == {
+            "actor_id": 191,
+            "first_name": "GREGORY",
+            "last_name": "GOODING",
+            "count": 30,
+        }
+
+        drop_table(
+            table_name="my_raw_sql_table", postgres_conn=self.hook_target.get_conn()
+        )
+
     def test_load_s3_to_sql_db(self):
         OUTPUT_TABLE_NAME = "table_test_load_s3_to_sql_db"
 
-        @aql.transform(
-            postgres_conn_id="postgres_conn", database="pagila", from_s3=True
-        )
+        @aql.transform(conn_id="postgres_conn", database="pagila", from_s3=True)
         def task_from_s3(s3_path, input_table=None, output_table_name=None):
             return """SELECT * FROM {input_table} LIMIT 8"""
 
@@ -190,9 +220,7 @@ class TestSampleOperator(unittest.TestCase):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
         hook = PostgresHook(postgres_conn_id="postgres_conn", schema="postgres")
 
-        @aql.transform(
-            postgres_conn_id="postgres_conn", database="postgres", from_csv=True
-        )
+        @aql.transform(conn_id="postgres_conn", database="postgres", from_csv=True)
         def task_from_local_csv(csv_path, input_table=None, output_table_name=None):
             return """SELECT "Sell" FROM {input_table} LIMIT 3"""
 
@@ -215,7 +243,7 @@ class TestSampleOperator(unittest.TestCase):
 
     def test_save_sql_table_to_csv(self):
         @aql.transform(
-            postgres_conn_id="postgres_conn",
+            conn_id="postgres_conn",
             database="pagila",
             to_csv=True,
         )
@@ -234,7 +262,7 @@ class TestSampleOperator(unittest.TestCase):
 
     def test_save_sql_table_to_s3(self):
         @aql.transform(
-            postgres_conn_id="postgres_conn",
+            conn_id="postgres_conn",
             database="pagila",
             to_s3=True,
         )

@@ -157,6 +157,7 @@ def postgres_decorator(
     from_csv: bool = False,
     to_s3: bool = False,
     to_csv: bool = False,
+    raw_sql: bool = False,
 ):
     """
     :param python_callable:
@@ -195,4 +196,5 @@ def postgres_decorator(
         from_csv=from_csv,
         to_s3=to_s3,
         to_csv=to_csv,
+        raw_sql=raw_sql,
     )

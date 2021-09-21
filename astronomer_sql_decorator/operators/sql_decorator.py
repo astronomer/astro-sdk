@@ -20,6 +20,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         to_s3=False,
         to_csv=False,
         safe_parameters=[],
+        raw_sql=False,
         **kwargs,
     ):
         """
@@ -44,6 +45,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.from_csv = from_csv
         self.to_s3 = to_s3
         self.to_csv = to_csv
+        self.raw_sql = raw_sql
         self.kwargs = kwargs
         self.safe_parameters = safe_parameters
         self.op_kwargs = self.kwargs.get("op_kwargs")
@@ -85,7 +87,8 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             "output_table_name"
         ) or self.create_table_name(context)
 
-        self.sql = self.create_temporary_table(self.sql, ouput_table_name)
+        if not self.raw_sql:
+            self.sql = self.create_temporary_table(self.sql, ouput_table_name)
 
         # Automatically add any kwargs going into the function
         if self.op_kwargs:
