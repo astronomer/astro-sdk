@@ -15,7 +15,6 @@ from psycopg2.extensions import AsIs
 class SqlDecoratoratedOperator(DecoratedOperator):
     def __init__(
         self,
-        to_dataframe=False,
         from_s3=False,
         from_csv=False,
         to_s3=False,
@@ -40,8 +39,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         database using Panda's automatic data typing functionality.
         :param kwargs:
         """
-        self.to_dataframe = to_dataframe
-        self.input_table = None
         self.from_s3 = from_s3
         self.from_csv = from_csv
         self.to_s3 = to_s3
@@ -49,38 +46,27 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.kwargs = kwargs
         self.op_kwargs = self.kwargs.get("op_kwargs")
 
-        if to_dataframe or from_s3 or from_csv:
-            if kwargs["op_kwargs"].get("input_table"):
-                # Note: does this need to be popped? `from_csv` requires `self.input_table`
-                self.input_table = kwargs["op_kwargs"].pop("input_table")
-                if to_dataframe:
-                    kwargs["op_kwargs"]["input_df"] = None
-
         super().__init__(
             **kwargs,
         )
 
     def execute(self, context: Dict):
-        input_table = self.handle_input_table()
 
         if self.from_s3:
             # Load from s3
             self._s3_to_db(
-                s3_path=self.op_kwargs.get("s3_path"), table_name=self.input_table
+                s3_path=self.op_kwargs.get("s3_path"),
+                table_name=self.op_kwargs["input_table"],
             )
 
         elif self.from_csv:
             # Load from csv
             self._csv_to_db(
-                csv_path=self.op_kwargs.get("csv_path"), table_name=self.input_table
+                csv_path=self.op_kwargs.get("csv_path"),
+                table_name=self.op_kwargs["input_table"],
             )
 
-        if self.to_dataframe:
-            return self.handle_dataframe_func(input_table=input_table)
-        else:
-            sql_stuff = self.python_callable(
-                input_table=self.input_table, **self.op_kwargs
-            )
+        sql_stuff = self.python_callable(**self.op_kwargs)
 
         # To-do: Type check `sql_stuff`
 
@@ -91,6 +77,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.sql = sql_stuff
             self.parameters = {}
 
+        self._parse_template()
         # Create a table name for the temp table
         ouput_table_name = self.kwargs.get("op_kwargs").get(
             "output_table_name"
@@ -105,9 +92,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         # While normally it is a security anti-pattern to use AsIs in SQL, this value is never user controlled
         # The only way a user could modify this value is if they already own the metadata DB, which would be a much
         # deeper security breach.
-        self.parameters["input_table"] = AsIs(input_table)
-        if self.parameters.get("join_table"):
-            self.parameters["join_table"] = AsIs(self.parameters["join_table"])
+        self.parameters.update(self.op_kwargs)
         self.parameters = {k: AsIs(v) for k, v in self.parameters.items()}
 
         # Run execute function of subclassed Operator.
@@ -193,6 +178,10 @@ class SqlDecoratoratedOperator(DecoratedOperator):
     def _table_exists_in_db(self, conn: str, table_name: str):
         """Override this method to enable sensing db."""
         raise NotImplementedError("Add _table_exists_in_db method to class")
+
+    def _parse_template(self):
+        """Override this method to enable sensing db."""
+        raise NotImplementedError("Add _parse_template method to class")
 
     def _transfer_to_s3(self, conn: str, table_name: str):
         """Override this method to enable write to S3."""

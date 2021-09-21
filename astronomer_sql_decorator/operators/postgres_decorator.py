@@ -23,7 +23,6 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
     def __init__(
         self,
         postgres_conn_id: str = "postgres_default",
-        to_dataframe: bool = False,
         **kwargs,
     ) -> None:
         """
@@ -35,7 +34,6 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
         super().__init__(
             sql="",
             postgres_conn_id=postgres_conn_id,
-            to_dataframe=to_dataframe,
             **kwargs,
         )
 
@@ -53,6 +51,9 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
         )
         self.op_kwargs["input_df"] = input_df
         return self.python_callable(input_df=input_df)
+
+    def _parse_template(self):
+        self.sql = self.sql.replace("{", "%(").replace("}", ")s")
 
     def _s3fs_creds(self):
         """Structure s3fs credentials from Airflow connection.
@@ -152,7 +153,6 @@ def postgres_decorator(
     autocommit: bool = False,
     parameters: Optional[Union[Mapping, Iterable]] = None,
     database: Optional[str] = None,
-    to_dataframe: bool = False,
     from_s3: bool = False,
     from_csv: bool = False,
     to_s3: bool = False,
@@ -191,7 +191,6 @@ def postgres_decorator(
         autocommit=autocommit,
         parameters=parameters,
         database=database,
-        to_dataframe=to_dataframe,
         from_s3=from_s3,
         from_csv=from_csv,
         to_s3=to_s3,

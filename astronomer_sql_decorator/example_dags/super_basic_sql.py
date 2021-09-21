@@ -27,11 +27,5 @@ def sample_pg(input_table):
     return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
 
 
-@aql.transform(postgres_conn_id="my_favorite_db", database="pagila", to_dataframe=True)
-def print_table(input_df: DataFrame):
-    print(input_df.to_string)
-
-
 with dag:
     last_name_g = sample_pg(input_table="actor")
-    print_table(last_name_g)

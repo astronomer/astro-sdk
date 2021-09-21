@@ -97,19 +97,19 @@ class TestSampleOperator(unittest.TestCase):
         f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         return f
 
-    def test_dataframe_func(self):
-        @aql.transform(
-            postgres_conn_id="postgres_conn", database="pagila", to_dataframe=True
-        )
-        def print_table(input_df: DataFrame):
-            print(input_df.to_string)
-
-        self.create_and_run_task(print_table, ("actor",), {})
+    # def test_dataframe_func(self):
+    #     @aql.transform(
+    #         postgres_conn_id="postgres_conn", database="pagila", to_dataframe=True
+    #     )
+    #     def print_table(input_df: DataFrame):
+    #         print(input_df.to_string)
+    #
+    #     self.create_and_run_task(print_table, ("actor",), {})
 
     def test_postgres(self):
         @aql.transform(postgres_conn_id="postgres_conn", database="pagila")
         def sample_pg(input_table):
-            return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
+            return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%'"
 
         self.create_and_run_task(sample_pg, (), {"input_table": "actor"})
 
@@ -121,19 +121,19 @@ class TestSampleOperator(unittest.TestCase):
         drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
 
         @aql.transform(postgres_conn_id="postgres_conn", database="pagila")
-        def sample_pg(input_table, join_table, output_table_name):
+        def sample_pg(actor, film_actor_join, output_table_name):
             return (
-                "SELECT %(input_table)s.actor_id, first_name, last_name, COUNT(film_id) "
-                "FROM %(input_table)s JOIN %(join_table)s ON %(input_table)s.actor_id = %(join_table)s.actor_id "
-                "WHERE last_name LIKE 'G%%' GROUP BY %(input_table)s.actor_id"
+                "SELECT {actor}.actor_id, first_name, last_name, COUNT(film_id) "
+                "FROM {actor} JOIN {film_actor_join} ON {actor}.actor_id = {film_actor_join}.actor_id "
+                "WHERE last_name LIKE 'G%%' GROUP BY {actor}.actor_id"
             )
 
         self.create_and_run_task(
             sample_pg,
             (),
             {
-                "input_table": "actor",
-                "join_table": "film_actor",
+                "actor": "actor",
+                "film_actor_join": "film_actor",
                 "output_table_name": "my_table",
             },
         )
@@ -155,7 +155,7 @@ class TestSampleOperator(unittest.TestCase):
             postgres_conn_id="postgres_conn", database="pagila", from_s3=True
         )
         def task_from_s3(s3_path, input_table=None, output_table_name=None):
-            return """SELECT * FROM %(input_table)s LIMIT 8"""
+            return """SELECT * FROM {input_table} LIMIT 8"""
 
         self.create_and_run_task(
             task_from_s3,
@@ -188,7 +188,7 @@ class TestSampleOperator(unittest.TestCase):
             postgres_conn_id="postgres_conn", database="postgres", from_csv=True
         )
         def task_from_local_csv(csv_path, input_table=None, output_table_name=None):
-            return """SELECT "Sell" FROM %(input_table)s LIMIT 3"""
+            return """SELECT "Sell" FROM {input_table} LIMIT 3"""
 
         cwd = pathlib.Path(__file__).parent
         self.create_and_run_task(
@@ -214,7 +214,7 @@ class TestSampleOperator(unittest.TestCase):
             to_csv=True,
         )
         def task_to_local_csv(csv_path, input_table=None):
-            return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
+            return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%'"
 
         with tempfile.TemporaryDirectory() as tmp:
             self.create_and_run_task(
@@ -233,7 +233,7 @@ class TestSampleOperator(unittest.TestCase):
             to_s3=True,
         )
         def task_to_s3(s3_path, input_table=None):
-            return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
+            return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%'"
 
         self.create_and_run_task(
             task_to_s3,

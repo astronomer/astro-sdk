@@ -82,21 +82,6 @@ def tutorial_elt_sql():
 
     # [END transform]
 
-    # [START print_table]
-    @aql.transform(
-        postgres_conn_id="postgres_conn", database="testdata", to_dataframe=True
-    )
-    def print_table(input_df: DataFrame):
-        """
-        #### Print table task
-        A simple Data output task to get the data from the SQL table into a Python variable to print
-        This demonstrates yet another use case of the SQL Decorator to get the data from a SQL
-        database table into a Python DataFrame
-        """
-        print(input_df.to_string)
-
-    # [END print_table]
-
     # [START main_flow]
 
     # in the example just generate the expected data file, so there are no
@@ -105,7 +90,6 @@ def tutorial_elt_sql():
     order_data_file = extract()
     order_data = load(csv_path=order_data_file, input_table="my_input_table")
     order_summary = transform(input_table=order_data)
-    print_table(order_summary)
     # print_table(input_table=order_summary)
 
     # [END main_flow]
