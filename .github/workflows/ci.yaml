@@ -1,7 +1,20 @@
 name: GitHub Actions Demo
 on: [push]
 jobs:
-  Explore-GitHub-Actions:
+  Pre-Commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+          architecture: 'x64'
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ hashFiles('setup.py') }}-${{ hashFiles('dev-requirements.txt') }}
+      - uses: pre-commit/action@v2.0.3
+  Run-Unit-tests:
     runs-on: ubuntu-latest
     # Service containers to run with `container-job`
     services:
@@ -31,7 +44,6 @@ jobs:
         with:
           path: ~/.cache/pip
           key: ${{ hashFiles('setup.py') }}-${{ hashFiles('dev-requirements.txt') }}
-      - uses: pre-commit/action@v2.0.3
       - run: pip install -e .
       - run: pip install pytest
       - run: pip install requests-mock
