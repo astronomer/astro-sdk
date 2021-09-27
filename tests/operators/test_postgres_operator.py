@@ -12,6 +12,7 @@ Run test:
 import logging
 import pathlib
 import tempfile
+import time
 import unittest.mock
 from unittest import mock
 
@@ -23,7 +24,6 @@ from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
-from pandas import DataFrame
 
 # Import Operator
 import astronomer_sql_decorator.sql as aql
@@ -76,7 +76,13 @@ class TestPostgresOperator(unittest.TestCase):
             default_args={
                 "owner": "airflow",
                 "start_date": DEFAULT_DATE,
-                "safe_parameters": ["input_table", "actor", "film_actor_join"],
+                "safe_parameters": [
+                    "input_table",
+                    "actor",
+                    "film_actor_join",
+                    "main_table",
+                    "append_table",
+                ],
             },
         )
 
@@ -274,3 +280,207 @@ class TestPostgresOperator(unittest.TestCase):
             (),
             {"input_table": "actor", "s3_path": "s3://tmp9/test_out.csv"},
         )
+
+    def test_append(self):
+        MAIN_TABLE_NAME = "test_main"
+        APPEND_TABLE_NAME = "test_append"
+        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="postgres")
+
+        @aql.transform(conn_id="postgres_conn", database="postgres", from_csv=True)
+        def task_from_local_csv(csv_path, input_table=None, output_table_name=None):
+            return """SELECT * FROM {input_table} LIMIT 3"""
+
+        drop_table(table_name="test_main", postgres_conn=hook.get_conn())
+        drop_table(table_name="test_append", postgres_conn=hook.get_conn())
+
+        cwd = pathlib.Path(__file__).parent
+
+        with self.dag:
+            main = task_from_local_csv(
+                csv_path=str(cwd) + "/../data/homes.csv",
+                input_table="input_raw_from_csv",
+                output_table_name=MAIN_TABLE_NAME,
+            )
+            append = task_from_local_csv(
+                csv_path=str(cwd) + "/../data/homes_append.csv",
+                input_table="input_raw_from_csv_append",
+                output_table_name=APPEND_TABLE_NAME,
+            )
+            foo = aql.append(
+                conn_id="postgres_conn",
+                database="postgres",
+                append_table=APPEND_TABLE_NAME,
+                columns=["Sell", "Living"],
+                main_table=MAIN_TABLE_NAME,
+            )
+        dr = self.dag.create_dagrun(
+            run_id=DagRunType.MANUAL.value,
+            start_date=timezone.utcnow(),
+            execution_date=DEFAULT_DATE,
+            state=State.RUNNING,
+        )
+
+        main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        foo.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        self.wait_for_task_finish(dr, "append_func")
+
+        df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
+
+        assert len(df) == 6
+        assert not df["Sell"].hasnans
+        assert df["Rooms"].hasnans
+
+    def test_append_all_fields(self):
+        MAIN_TABLE_NAME = "test_main"
+        APPEND_TABLE_NAME = "test_append"
+        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="postgres")
+
+        @aql.transform(conn_id="postgres_conn", database="postgres", from_csv=True)
+        def task_from_local_csv(csv_path, input_table=None, output_table_name=None):
+            return """SELECT * FROM {input_table} LIMIT 3"""
+
+        drop_table(table_name="test_main", postgres_conn=hook.get_conn())
+        drop_table(table_name="test_append", postgres_conn=hook.get_conn())
+
+        cwd = pathlib.Path(__file__).parent
+
+        with self.dag:
+            main = task_from_local_csv(
+                csv_path=str(cwd) + "/../data/homes.csv",
+                input_table="input_raw_from_csv",
+                output_table_name=MAIN_TABLE_NAME,
+            )
+            append = task_from_local_csv(
+                csv_path=str(cwd) + "/../data/homes_append.csv",
+                input_table="input_raw_from_csv_append",
+                output_table_name=APPEND_TABLE_NAME,
+            )
+            foo = aql.append(
+                conn_id="postgres_conn",
+                database="postgres",
+                append_table=APPEND_TABLE_NAME,
+                main_table=MAIN_TABLE_NAME,
+            )
+        dr = self.dag.create_dagrun(
+            run_id=DagRunType.MANUAL.value,
+            start_date=timezone.utcnow(),
+            execution_date=DEFAULT_DATE,
+            state=State.RUNNING,
+        )
+
+        main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        foo.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        self.wait_for_task_finish(dr, "append_func")
+        df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
+
+        assert len(df) == 6
+        assert not df["Sell"].hasnans
+        assert not df["Rooms"].hasnans
+
+    def test_append_with_cast(self):
+        MAIN_TABLE_NAME = "test_main"
+        APPEND_TABLE_NAME = "test_append"
+        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="postgres")
+
+        @aql.transform(conn_id="postgres_conn", database="postgres", from_csv=True)
+        def task_from_local_csv(csv_path, input_table=None, output_table_name=None):
+            return """SELECT * FROM {input_table} LIMIT 3"""
+
+        drop_table(table_name="test_main", postgres_conn=hook.get_conn())
+        drop_table(table_name="test_append", postgres_conn=hook.get_conn())
+
+        cwd = pathlib.Path(__file__).parent
+
+        with self.dag:
+            main = task_from_local_csv(
+                csv_path=str(cwd) + "/../data/homes.csv",
+                input_table="input_raw_from_csv",
+                output_table_name=MAIN_TABLE_NAME,
+            )
+            append = task_from_local_csv(
+                csv_path=str(cwd) + "/../data/homes_append.csv",
+                input_table="input_raw_from_csv_append",
+                output_table_name=APPEND_TABLE_NAME,
+            )
+            foo = aql.append(
+                conn_id="postgres_conn",
+                database="postgres",
+                append_table=APPEND_TABLE_NAME,
+                columns=["Sell", "Living"],
+                casted_columns={"Age": "INTEGER"},
+                main_table=MAIN_TABLE_NAME,
+            )
+        dr = self.dag.create_dagrun(
+            run_id=DagRunType.MANUAL.value,
+            start_date=timezone.utcnow(),
+            execution_date=DEFAULT_DATE,
+            state=State.RUNNING,
+        )
+
+        main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        foo.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        self.wait_for_task_finish(dr, "append_func")
+
+        df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
+
+        assert len(df) == 6
+        assert not df["Sell"].hasnans
+        assert df["Rooms"].hasnans
+
+    def wait_for_task_finish(self, dr, task_id):
+        append_task = dr.get_task_instance(task_id)
+        while append_task.state == "running":
+            time.sleep(1)
+
+    def test_append_only_cast(self):
+        MAIN_TABLE_NAME = "test_main"
+        APPEND_TABLE_NAME = "test_append"
+        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="postgres")
+
+        @aql.transform(conn_id="postgres_conn", database="postgres", from_csv=True)
+        def task_from_local_csv(csv_path, input_table=None, output_table_name=None):
+            return """SELECT * FROM {input_table} LIMIT 3"""
+
+        drop_table(table_name="test_main", postgres_conn=hook.get_conn())
+        drop_table(table_name="test_append", postgres_conn=hook.get_conn())
+
+        cwd = pathlib.Path(__file__).parent
+
+        with self.dag:
+            main = task_from_local_csv(
+                csv_path=str(cwd) + "/../data/homes.csv",
+                input_table="input_raw_from_csv",
+                output_table_name=MAIN_TABLE_NAME,
+            )
+            append = task_from_local_csv(
+                csv_path=str(cwd) + "/../data/homes_append.csv",
+                input_table="input_raw_from_csv_append",
+                output_table_name=APPEND_TABLE_NAME,
+            )
+            foo = aql.append(
+                conn_id="postgres_conn",
+                database="postgres",
+                append_table=APPEND_TABLE_NAME,
+                casted_columns={"Age": "INTEGER"},
+                main_table=MAIN_TABLE_NAME,
+            )
+        dr = self.dag.create_dagrun(
+            run_id=DagRunType.MANUAL.value,
+            start_date=timezone.utcnow(),
+            execution_date=DEFAULT_DATE,
+            state=State.RUNNING,
+        )
+
+        main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        foo.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        self.wait_for_task_finish(dr, "append_func")
+
+        df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
+
+        assert len(df) == 6
+        assert not df["Age"].hasnans
+        assert df["Sell"].hasnans

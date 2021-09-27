@@ -79,7 +79,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.sql, self.parameters = sql_stuff
         else:
             self.sql = sql_stuff
-            self.parameters = {}
+        self.parameters = {}
 
         self._parse_template()
         # Create a table name for the temp table
