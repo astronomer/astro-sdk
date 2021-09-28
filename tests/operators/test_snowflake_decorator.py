@@ -80,7 +80,7 @@ class TestSampleOperator(unittest.TestCase):
             default_args={
                 "owner": "airflow",
                 "start_date": DEFAULT_DATE,
-                "safe_parameters": ["input_table"],
+                "safe_parameters": ["input_table", "my_input_table"],
             },
         )
         self.addCleanup(self.dag.clear)
@@ -135,6 +135,46 @@ class TestSampleOperator(unittest.TestCase):
             'SELECT * FROM "DWH_LEGACY"."SANDBOX_DANIEL"."SNOWFLAKE_TRANSFORM_TEST_TABLE"'
         )
         assert len(df) == 10
+
+    def test_raw_sql(self):
+        hook = SnowflakeHook(
+            snowflake_conn_id="snowflake_conn",
+            schema="SANDBOX_DANIEL",
+            warehouse="TRANSFORMING_DEV",
+        )
+
+        drop_table(
+            snowflake_conn=hook.get_conn(),
+            table_name='"DWH_LEGACY"."SANDBOX_DANIEL"."SNOWFLAKE_TRANSFORM_RAW_SQL_TEST_TABLE"',
+        )
+
+        @aql.run_raw_sql(
+            conn_id="snowflake_conn",
+            warehouse="TRANSFORMING_DEV",
+            schema="SANDBOX_DANIEL",
+            database="DWH_LEGACY",
+        )
+        def sample_snow(my_input_table):
+            return "CREATE TABLE SNOWFLAKE_TRANSFORM_RAW_SQL_TEST_TABLE AS (SELECT * FROM {my_input_table} LIMIT 5)"
+
+        with self.dag:
+            f = sample_snow(
+                my_input_table="PRICE_TABLE",
+            )
+
+        dr = self.dag.create_dagrun(
+            run_id=DagRunType.MANUAL.value,
+            start_date=timezone.utcnow(),
+            execution_date=DEFAULT_DATE,
+            state=State.RUNNING,
+        )
+        f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+
+        # Read table from db
+        df = hook.get_pandas_df(
+            'SELECT * FROM "DWH_LEGACY"."SANDBOX_DANIEL"."SNOWFLAKE_TRANSFORM_RAW_SQL_TEST_TABLE"'
+        )
+        assert len(df) == 5
 
 
 if __name__ == "__main__":

@@ -171,6 +171,7 @@ def snowflake_decorator(
     authenticator: Optional[str] = None,
     session_parameters: Optional[dict] = None,
     database: Optional[str] = None,
+    raw_sql: bool = False,
 ):
     """
 
@@ -220,4 +221,5 @@ def snowflake_decorator(
         schema=schema,
         authenticator=authenticator,
         session_parameters=session_parameters,
+        raw_sql=raw_sql,
     )

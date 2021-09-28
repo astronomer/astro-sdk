@@ -60,6 +60,8 @@ def run_raw_sql(
     autocommit: bool = False,
     parameters: Optional[Union[Mapping, Iterable]] = None,
     database: Optional[str] = None,
+    schema: Optional[str] = None,
+    warehouse: Optional[str] = None,
 ):
     conn_type = BaseHook.get_connection(conn_id).conn_type
     if conn_type == "postgres":
@@ -70,6 +72,18 @@ def run_raw_sql(
             autocommit=autocommit,
             parameters=parameters,
             database=database,
+            raw_sql=True,
+        )
+    elif conn_type == "snowflake":
+        return snowflake_decorator(
+            python_callable=python_callable,
+            multiple_outputs=multiple_outputs,
+            snowflake_conn_id=conn_id,
+            autocommit=autocommit,
+            parameters=parameters,
+            database=database,
+            schema=schema,
+            warehouse=warehouse,
             raw_sql=True,
         )
     else:
