@@ -7,6 +7,7 @@ from astronomer_sql_decorator.operators.postgres_decorator import (
     postgres_append_func,
     postgres_decorator,
 )
+from astronomer_sql_decorator.operators.snowflake_decorator import snowflake_decorator
 
 
 def transform(
@@ -16,6 +17,8 @@ def transform(
     autocommit: bool = False,
     parameters: Optional[Union[Mapping, Iterable]] = None,
     database: Optional[str] = None,
+    schema: Optional[str] = None,
+    warehouse: Optional[str] = None,
     from_s3: bool = False,
     from_csv: bool = False,
     to_s3: bool = False,
@@ -34,6 +37,17 @@ def transform(
             from_csv=from_csv,
             to_s3=to_s3,
             to_csv=to_csv,
+        )
+    elif conn_type == "snowflake":
+        return snowflake_decorator(
+            python_callable=python_callable,
+            multiple_outputs=multiple_outputs,
+            snowflake_conn_id=conn_id,
+            autocommit=autocommit,
+            parameters=parameters,
+            database=database,
+            schema=schema,
+            warehouse=warehouse,
         )
     else:
         raise AirflowException(f"Connection type {conn_type} is not supported")

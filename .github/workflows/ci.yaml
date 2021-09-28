@@ -63,3 +63,5 @@ jobs:
           # The default PostgreSQL port
           POSTGRES_PORT: 5432
           AIRFLOW__SQL_DECORATOR__CONN_AWS_DEFAULT: ${{ secrets.AWS_ACCESS_CRED }}
+          SNOW_ACCOUNT_NAME: ${{ secrets.SNOW_UNAME }}
+          SNOW_PASSWORD: ${{ secrets.SNOW_PASSWORD }}

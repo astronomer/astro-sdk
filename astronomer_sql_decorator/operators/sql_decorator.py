@@ -9,7 +9,6 @@ from airflow.models import DagRun, TaskInstance
 from airflow.models.xcom import BaseXCom
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils.db import check, provide_session
-from psycopg2.extensions import AsIs
 
 
 class SqlDecoratoratedOperator(DecoratedOperator):
@@ -98,10 +97,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         # The only way a user could modify this value is if they already own the metadata DB, which would be a much
         # deeper security breach.
         self.parameters.update(self.op_kwargs)
-        self.parameters = {
-            k: (AsIs(v) if k in self.safe_parameters else v)
-            for k, v in self.parameters.items()
-        }
+        self._process_params()
 
         # Run execute function of subclassed Operator.
         super().execute(context)
@@ -186,6 +182,9 @@ class SqlDecoratoratedOperator(DecoratedOperator):
     def _table_exists_in_db(self, conn: str, table_name: str):
         """Override this method to enable sensing db."""
         raise NotImplementedError("Add _table_exists_in_db method to class")
+
+    def _process_params(self):
+        pass
 
     def _parse_template(self):
         """Override this method to enable sensing db."""

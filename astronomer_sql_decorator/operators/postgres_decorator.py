@@ -6,6 +6,7 @@ from airflow.configuration import conf
 from airflow.decorators.base import task_decorator_factory
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.postgres.operators.postgres import PostgresOperator
+from psycopg2.extensions import AsIs
 
 from astronomer_sql_decorator.operators.sql_decorator import SqlDecoratoratedOperator
 
@@ -117,6 +118,12 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
             if_exists="replace",
             method=None,
         )
+
+    def _process_params(self):
+        self.parameters = {
+            k: (AsIs(v) if k in self.safe_parameters else v)
+            for k, v in self.parameters.items()
+        }
 
 
 def _postgres_task(

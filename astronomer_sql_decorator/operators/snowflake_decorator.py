@@ -1,4 +1,5 @@
 import os
+import re
 from typing import Callable, Iterable, Mapping, Optional, Union
 
 import pandas as pd
@@ -14,13 +15,11 @@ class _SnowflakeDecoratedOperator(SqlDecoratoratedOperator, SnowflakeOperator):
     def __init__(
         self,
         snowflake_conn_id: str = "snowflake_default",
-        to_dataframe: bool = False,
         **kwargs,
     ) -> None:
         super().__init__(
             sql="",
             snowflake_conn_id=snowflake_conn_id,
-            to_dataframe=to_dataframe,
             **kwargs,
         )
 
@@ -124,6 +123,16 @@ class _SnowflakeDecoratedOperator(SqlDecoratoratedOperator, SnowflakeOperator):
             method=None,
         )
 
+    def _parse_template(self):
+        self.sql = self.sql.replace("{", "%(").replace("}", ")s")
+        all_vals = re.findall("%\(.*?\)s", self.sql)
+        mod_vals = {
+            f: f"IDENTIFIER({f})" if f[2:-2] in self.safe_parameters else f
+            for f in all_vals
+        }
+        for k, v in mod_vals.items():
+            self.sql = self.sql.replace(k, v)
+
 
 def _snowflake_task(
     python_callable: Optional[Callable] = None,
@@ -154,7 +163,7 @@ def snowflake_decorator(
     python_callable: Optional[Callable] = None,
     multiple_outputs: Optional[bool] = None,
     snowflake_conn_id: str = "snowflake_default",
-    warehouse: str = "",
+    warehouse: Optional[str] = "",
     autocommit: bool = False,
     parameters: Optional[Union[Mapping, Iterable]] = None,
     role: Optional[str] = None,
@@ -162,7 +171,6 @@ def snowflake_decorator(
     authenticator: Optional[str] = None,
     session_parameters: Optional[dict] = None,
     database: Optional[str] = None,
-    to_dataframe: bool = False,
 ):
     """
 
@@ -212,5 +220,4 @@ def snowflake_decorator(
         schema=schema,
         authenticator=authenticator,
         session_parameters=session_parameters,
-        to_dataframe=to_dataframe,
     )
