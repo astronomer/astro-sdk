@@ -3,6 +3,7 @@ from typing import Callable, Iterable, List, Mapping, Optional, Union
 from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 
+from astronomer_sql_decorator.operators.agnostic_load_file import load_file
 from astronomer_sql_decorator.operators.postgres_decorator import (
     postgres_append_func,
     postgres_decorator,
@@ -19,8 +20,6 @@ def transform(
     database: Optional[str] = None,
     schema: Optional[str] = None,
     warehouse: Optional[str] = None,
-    from_s3: bool = False,
-    from_csv: bool = False,
     to_s3: bool = False,
     to_csv: bool = False,
 ):
@@ -33,8 +32,6 @@ def transform(
             autocommit=autocommit,
             parameters=parameters,
             database=database,
-            from_s3=from_s3,
-            from_csv=from_csv,
             to_s3=to_s3,
             to_csv=to_csv,
         )

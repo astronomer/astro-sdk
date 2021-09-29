@@ -36,21 +36,6 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
             **kwargs,
         )
 
-    def handle_dataframe_func(self, input_table):
-        """
-        If a user wants to use the "to_dataframe" option, we give them a dataframe with the full value of the
-        most recent generated table. At this time we do not allow multiple inheritance, but that could be an option
-        later.
-        """
-        self.hook = PostgresHook(
-            postgres_conn_id=self.postgres_conn_id, schema=self.database
-        )
-        input_df = sqlio.read_sql_query(
-            sql=f"SELECT * FROM {input_table}", con=self.hook.get_conn()
-        )
-        self.op_kwargs["input_df"] = input_df
-        return self.python_callable(input_df=input_df)
-
     def _parse_template(self):
         self.sql = self.sql.replace("{", "%(").replace("}", ")s")
 
@@ -68,26 +53,6 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
         )
 
         return {"key": k, "secret": v}
-
-    def _s3_to_db(self, s3_path, table_name):
-        """Transfer table from S3 to Postgres database.
-
-        :param conn:
-        :type conn:
-        :param s3_path:
-        :type s3_path:
-        """
-
-        # Read CSV from S3
-        df = pd.read_csv(s3_path, storage_options=self._s3fs_creds())
-
-        # Write df to postgres
-        self._df_to_postgres(df, table_name)
-
-    def _csv_to_db(self, csv_path, table_name):
-        """Override this method to enable transfer from csv to selected database."""
-        df = pd.read_csv(csv_path)
-        self._df_to_postgres(df, table_name)
 
     def _db_to_s3(self, s3_path, table_name):
         """Transfer Postgres database to s3.
@@ -107,17 +72,6 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
             con=self.hook.get_conn(), sql=f"SELECT * FROM {table_name}"
         )
         df.to_csv(csv_path)
-
-    def _df_to_postgres(self, df, table_name):
-        # Generate target db hook
-        engine = create_sql_engine(self.postgres_conn_id, self.database)
-        df.to_sql(
-            table_name,
-            con=engine,
-            schema=None,
-            if_exists="replace",
-            method=None,
-        )
 
     def _process_params(self):
         self.parameters = {
@@ -158,8 +112,6 @@ def postgres_decorator(
     autocommit: bool = False,
     parameters: Optional[Union[Mapping, Iterable]] = None,
     database: Optional[str] = None,
-    from_s3: bool = False,
-    from_csv: bool = False,
     to_s3: bool = False,
     to_csv: bool = False,
     raw_sql: bool = False,
@@ -177,17 +129,6 @@ def postgres_decorator(
     :type parameters: dict or iterable
     :param database: name of database which overwrite defined one in connection
     :type database: str
-    :param to_dataframe: This function allows users to pull the current staging table into a pandas dataframe. To
-        use this function, please make sure that your decorated function has a parameter called ``input_df``. This
-        parameter will be a pandas.Dataframe that you can modify as needed. Please note that until we implement
-        spark and dask dataframes, that you should be mindful as to how large your worker is when pulling large tables.
-    :param from_s3: Whether to pull from s3 into current database. When set to true, please include a parameter named
-        ``s3_path`` in your TaskFlow function. When calling this task, you can specify any s3:// path and Airflow will
-        automatically pull that file into your database using Panda's automatic data typing functionality.
-    :param from_csv: Whether to pull from a local csv file into current database. When set to true,
-        please include a parameter named ``csv_path`` in your TaskFlow function. When calling this task, you can
-        specify any local path and Airflow will automatically pull that file into your database using Panda's
-        automatic data typing functionality.
     @return:
     """
     return _postgres_task(
@@ -197,8 +138,6 @@ def postgres_decorator(
         autocommit=autocommit,
         parameters=parameters,
         database=database,
-        from_s3=from_s3,
-        from_csv=from_csv,
         to_s3=to_s3,
         to_csv=to_csv,
         raw_sql=raw_sql,

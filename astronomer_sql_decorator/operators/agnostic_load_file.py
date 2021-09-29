@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 
 import pandas as pd
 import sqlalchemy
@@ -29,12 +30,14 @@ class AgnosticLoadFile(BaseOperator):
         output_table_name=None,
         file_conn_id="",
         output_conn_id="",
+        database: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.path = path
         self.file_conn_id = file_conn_id
         self.output_conn_id = output_conn_id
+        self.database = database
         self.kwargs = kwargs
         self.output_table_name = output_table_name
 
@@ -55,6 +58,9 @@ class AgnosticLoadFile(BaseOperator):
             "postgres": PostgresHook(postgres_conn_id=self.output_conn_id),
             "snowflake": SnowflakeHook(snowflake_conn_id=self.output_conn_id),
         }.get(conn_type, None)
+
+        if self.database:
+            hook.database = self.database
 
         # Autogenerate table name
         if not self.output_table_name:

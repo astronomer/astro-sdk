@@ -192,61 +192,6 @@ class TestPostgresOperator(unittest.TestCase):
             table_name="my_raw_sql_table", postgres_conn=self.hook_target.get_conn()
         )
 
-    def test_load_s3_to_sql_db(self):
-        OUTPUT_TABLE_NAME = "table_test_load_s3_to_sql_db"
-
-        @aql.transform(conn_id="postgres_conn", database="pagila", from_s3=True)
-        def task_from_s3(s3_path, input_table=None, output_table_name=None):
-            return """SELECT * FROM {input_table} LIMIT 8"""
-
-        self.create_and_run_task(
-            task_from_s3,
-            (),
-            {
-                "s3_path": "s3://tmp9/homes.csv",
-                "input_table": "actor",
-                "output_table_name": OUTPUT_TABLE_NAME,
-            },
-        )
-
-        # Generate target db hook
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-
-        # Read table from db
-        df = pd.read_sql(
-            f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=self.hook_target.get_conn()
-        )
-
-        # Assert output table structure
-        assert len(df) == 8
-
-    def test_load_local_csv_to_sql_db(self):
-        OUTPUT_TABLE_NAME = "expected_table_from_csv"
-        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="postgres")
-
-        @aql.transform(conn_id="postgres_conn", database="postgres", from_csv=True)
-        def task_from_local_csv(csv_path, input_table=None, output_table_name=None):
-            return """SELECT "Sell" FROM {input_table} LIMIT 3"""
-
-        cwd = pathlib.Path(__file__).parent
-        self.create_and_run_task(
-            task_from_local_csv,
-            (),
-            {
-                "csv_path": str(cwd) + "/../data/homes.csv",
-                "input_table": "input_raw_table_from_csv",
-                "output_table_name": OUTPUT_TABLE_NAME,
-            },
-        )
-
-        # Read table from db
-        df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=hook.get_conn())
-
-        # Assert output table structure
-        assert df.to_json() == '{"Sell":{"0":142,"1":175,"2":129}}'
-
     def test_save_sql_table_to_csv(self):
         @aql.transform(
             conn_id="postgres_conn",
@@ -286,25 +231,21 @@ class TestPostgresOperator(unittest.TestCase):
         APPEND_TABLE_NAME = "test_append"
         hook = PostgresHook(postgres_conn_id="postgres_conn", schema="postgres")
 
-        @aql.transform(conn_id="postgres_conn", database="postgres", from_csv=True)
-        def task_from_local_csv(csv_path, input_table=None, output_table_name=None):
-            return """SELECT * FROM {input_table} LIMIT 3"""
-
         drop_table(table_name="test_main", postgres_conn=hook.get_conn())
         drop_table(table_name="test_append", postgres_conn=hook.get_conn())
 
         cwd = pathlib.Path(__file__).parent
 
         with self.dag:
-            main = task_from_local_csv(
-                csv_path=str(cwd) + "/../data/homes.csv",
-                input_table="input_raw_from_csv",
+            load_main = aql.load_file(
+                path=str(cwd) + "/../data/homes_main.csv",
                 output_table_name=MAIN_TABLE_NAME,
+                output_conn_id="postgres_conn",
             )
-            append = task_from_local_csv(
-                csv_path=str(cwd) + "/../data/homes_append.csv",
-                input_table="input_raw_from_csv_append",
+            load_append = aql.load_file(
+                path=str(cwd) + "/../data/homes_append.csv",
                 output_table_name=APPEND_TABLE_NAME,
+                output_conn_id="postgres_conn",
             )
             foo = aql.append(
                 conn_id="postgres_conn",
@@ -320,8 +261,10 @@ class TestPostgresOperator(unittest.TestCase):
             state=State.RUNNING,
         )
 
-        main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        load_main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        self.wait_for_task_finish(dr, MAIN_TABLE_NAME)
+        self.wait_for_task_finish(dr, APPEND_TABLE_NAME)
         foo.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, "append_func")
 
@@ -336,25 +279,21 @@ class TestPostgresOperator(unittest.TestCase):
         APPEND_TABLE_NAME = "test_append"
         hook = PostgresHook(postgres_conn_id="postgres_conn", schema="postgres")
 
-        @aql.transform(conn_id="postgres_conn", database="postgres", from_csv=True)
-        def task_from_local_csv(csv_path, input_table=None, output_table_name=None):
-            return """SELECT * FROM {input_table} LIMIT 3"""
-
         drop_table(table_name="test_main", postgres_conn=hook.get_conn())
         drop_table(table_name="test_append", postgres_conn=hook.get_conn())
 
         cwd = pathlib.Path(__file__).parent
 
         with self.dag:
-            main = task_from_local_csv(
-                csv_path=str(cwd) + "/../data/homes.csv",
-                input_table="input_raw_from_csv",
+            load_main = aql.load_file(
+                path=str(cwd) + "/../data/homes_main.csv",
                 output_table_name=MAIN_TABLE_NAME,
+                output_conn_id="postgres_conn",
             )
-            append = task_from_local_csv(
-                csv_path=str(cwd) + "/../data/homes_append.csv",
-                input_table="input_raw_from_csv_append",
+            load_append = aql.load_file(
+                path=str(cwd) + "/../data/homes_append.csv",
                 output_table_name=APPEND_TABLE_NAME,
+                output_conn_id="postgres_conn",
             )
             foo = aql.append(
                 conn_id="postgres_conn",
@@ -369,8 +308,10 @@ class TestPostgresOperator(unittest.TestCase):
             state=State.RUNNING,
         )
 
-        main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        load_main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        self.wait_for_task_finish(dr, MAIN_TABLE_NAME)
+        self.wait_for_task_finish(dr, APPEND_TABLE_NAME)
         foo.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, "append_func")
         df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
@@ -384,25 +325,21 @@ class TestPostgresOperator(unittest.TestCase):
         APPEND_TABLE_NAME = "test_append"
         hook = PostgresHook(postgres_conn_id="postgres_conn", schema="postgres")
 
-        @aql.transform(conn_id="postgres_conn", database="postgres", from_csv=True)
-        def task_from_local_csv(csv_path, input_table=None, output_table_name=None):
-            return """SELECT * FROM {input_table} LIMIT 3"""
-
         drop_table(table_name="test_main", postgres_conn=hook.get_conn())
         drop_table(table_name="test_append", postgres_conn=hook.get_conn())
 
         cwd = pathlib.Path(__file__).parent
 
         with self.dag:
-            main = task_from_local_csv(
-                csv_path=str(cwd) + "/../data/homes.csv",
-                input_table="input_raw_from_csv",
+            load_main = aql.load_file(
+                path=str(cwd) + "/../data/homes_main.csv",
                 output_table_name=MAIN_TABLE_NAME,
+                output_conn_id="postgres_conn",
             )
-            append = task_from_local_csv(
-                csv_path=str(cwd) + "/../data/homes_append.csv",
-                input_table="input_raw_from_csv_append",
+            load_append = aql.load_file(
+                path=str(cwd) + "/../data/homes_append.csv",
                 output_table_name=APPEND_TABLE_NAME,
+                output_conn_id="postgres_conn",
             )
             foo = aql.append(
                 conn_id="postgres_conn",
@@ -419,11 +356,12 @@ class TestPostgresOperator(unittest.TestCase):
             state=State.RUNNING,
         )
 
-        main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        load_main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        self.wait_for_task_finish(dr, MAIN_TABLE_NAME)
+        self.wait_for_task_finish(dr, APPEND_TABLE_NAME)
         foo.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, "append_func")
-
         df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
 
         assert len(df) == 6
@@ -431,18 +369,15 @@ class TestPostgresOperator(unittest.TestCase):
         assert df["Rooms"].hasnans
 
     def wait_for_task_finish(self, dr, task_id):
-        append_task = dr.get_task_instance(task_id)
-        while append_task.state == "running":
+        task = dr.get_task_instance(task_id)
+        while task.state not in ["success", "failed"]:
             time.sleep(1)
+            task = dr.get_task_instance(task_id)
 
     def test_append_only_cast(self):
         MAIN_TABLE_NAME = "test_main"
         APPEND_TABLE_NAME = "test_append"
         hook = PostgresHook(postgres_conn_id="postgres_conn", schema="postgres")
-
-        @aql.transform(conn_id="postgres_conn", database="postgres", from_csv=True)
-        def task_from_local_csv(csv_path, input_table=None, output_table_name=None):
-            return """SELECT * FROM {input_table} LIMIT 3"""
 
         drop_table(table_name="test_main", postgres_conn=hook.get_conn())
         drop_table(table_name="test_append", postgres_conn=hook.get_conn())
@@ -450,15 +385,15 @@ class TestPostgresOperator(unittest.TestCase):
         cwd = pathlib.Path(__file__).parent
 
         with self.dag:
-            main = task_from_local_csv(
-                csv_path=str(cwd) + "/../data/homes.csv",
-                input_table="input_raw_from_csv",
+            load_main = aql.load_file(
+                path=str(cwd) + "/../data/homes_main.csv",
                 output_table_name=MAIN_TABLE_NAME,
+                output_conn_id="postgres_conn",
             )
-            append = task_from_local_csv(
-                csv_path=str(cwd) + "/../data/homes_append.csv",
-                input_table="input_raw_from_csv_append",
+            load_append = aql.load_file(
+                path=str(cwd) + "/../data/homes_append.csv",
                 output_table_name=APPEND_TABLE_NAME,
+                output_conn_id="postgres_conn",
             )
             foo = aql.append(
                 conn_id="postgres_conn",
@@ -474,8 +409,10 @@ class TestPostgresOperator(unittest.TestCase):
             state=State.RUNNING,
         )
 
-        main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        load_main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        self.wait_for_task_finish(dr, MAIN_TABLE_NAME)
+        self.wait_for_task_finish(dr, APPEND_TABLE_NAME)
         foo.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, "append_func")
 

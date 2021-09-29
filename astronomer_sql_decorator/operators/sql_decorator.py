@@ -147,24 +147,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         dag_run: DagRun = ti.get_dagrun()
         return f"{dag_run.dag_id}_{ti.task_id}_{int(ti.execution_date.timestamp())}.csv"
 
-    def handle_input_table(self):
-        """
-        For security reasons, we don't want the user having actual control over the input_table variable.
-        This is because there is no sql injection safe way that we can allow user input for this variable.
-        This function pulls the input table out of the arguments
-        :return:
-        """
-        if not self.input_table:
-            if self.op_kwargs.get("input_table"):
-                input_table = self.op_kwargs.pop("input_table")
-            else:
-                op_args_list = list(self.op_args)
-                input_table = op_args_list.pop(0)
-                self.op_args = tuple(op_args_list)
-        else:
-            input_table = self.input_table
-        return input_table
-
     def handle_dataframe_func(self, input_table):
         raise NotImplementedError("Need to add dataframe func to class")
 
@@ -218,14 +200,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         """Remove DAG's objects from S3 and db."""
         # To-do
         pass
-
-    def _s3_to_db(self, s3_path: str, table_name: str):
-        """Override this method to enable transfer from S3 to selected database."""
-        raise NotImplementedError("Add _s3_to_db method to class")
-
-    def _csv_to_db(self, csv_path: str, table_name: str):
-        """Override this method to enable transfer from csv to selected database."""
-        raise NotImplementedError("Add _csv_to_db method to class")
 
     def _db_to_s3(self, s3_path: str, table_name: str):
         """Override this method to enable transfer from S3 to selected database."""
