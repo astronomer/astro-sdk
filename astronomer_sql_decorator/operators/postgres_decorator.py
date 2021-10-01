@@ -1,3 +1,4 @@
+import inspect
 from typing import Callable, Iterable, Mapping, Optional, Union
 
 import pandas as pd
@@ -9,6 +10,7 @@ from airflow.providers.postgres.operators.postgres import PostgresOperator
 from psycopg2.extensions import AsIs
 
 from astronomer_sql_decorator.operators.sql_decorator import SqlDecoratoratedOperator
+from astronomer_sql_decorator.sql.types import Table
 
 
 def create_sql_engine(postgres_conn_id, database):
@@ -74,8 +76,9 @@ class _PostgresDecoratedOperator(SqlDecoratoratedOperator, PostgresOperator):
         df.to_csv(csv_path)
 
     def _process_params(self):
+        param_types = inspect.signature(self.python_callable).parameters
         self.parameters = {
-            k: (AsIs(v) if k in self.safe_parameters else v)
+            k: (AsIs(v) if param_types.get(k).annotation == Table else v)
             for k, v in self.parameters.items()
         }
 

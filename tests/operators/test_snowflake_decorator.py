@@ -27,6 +27,7 @@ from pandas import DataFrame
 
 # Import Operator
 from astronomer_sql_decorator import sql as aql
+from astronomer_sql_decorator.sql.types import Table
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -80,7 +81,6 @@ class TestSampleOperator(unittest.TestCase):
             default_args={
                 "owner": "airflow",
                 "start_date": DEFAULT_DATE,
-                "safe_parameters": ["input_table", "my_input_table"],
             },
         )
         self.addCleanup(self.dag.clear)
@@ -104,7 +104,7 @@ class TestSampleOperator(unittest.TestCase):
             schema="SANDBOX_DANIEL",
             database="DWH_LEGACY",
         )
-        def sample_snow(input_table, output_table_name):
+        def sample_snow(input_table: Table, output_table_name):
             return "SELECT * FROM {input_table} LIMIT 10"
 
         hook = SnowflakeHook(
@@ -154,7 +154,7 @@ class TestSampleOperator(unittest.TestCase):
             schema="SANDBOX_DANIEL",
             database="DWH_LEGACY",
         )
-        def sample_snow(my_input_table):
+        def sample_snow(my_input_table: Table):
             return "CREATE TABLE SNOWFLAKE_TRANSFORM_RAW_SQL_TEST_TABLE AS (SELECT * FROM {my_input_table} LIMIT 5)"
 
         with self.dag:

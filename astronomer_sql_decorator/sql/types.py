@@ -1,0 +1,2 @@
+class Table(str):
+    pass

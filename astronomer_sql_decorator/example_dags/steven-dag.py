@@ -13,11 +13,12 @@ from pandas import DataFrame
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
+from astronomer_sql_decorator.sql.types import Table
+
 default_args = {
     "owner": "airflow",
     "retries": 1,
     "retry_delay": 0,
-    "safe_parameters": ["orders_table", "customers_table"],
 }
 
 
@@ -33,7 +34,7 @@ dag = DAG(
 @aql.transform(
     snowflake_conn_id="my_db_conn", cache=True, cache_version=1.0, warehouse="LOADING"
 )
-def aggregate_orders(orders_table):
+def aggregate_orders(orders_table: Table):
     """Snowflake.
     Next I would probably do some sort of merge, but I'll skip that for now. Instead, some basic ETL.
     Note the Snowflake-specific parameter...
@@ -45,14 +46,14 @@ def aggregate_orders(orders_table):
 
 
 @aql.transform(postgres_conn_id="postgres_conn", cache=True, cache_version=1.0)
-def get_customers(customer_table="customer"):
+def get_customers(customer_table: Table = Table("customer")):
     """Basic clean-up of an existing table."""
     return """SELECT customer_id, source, region, member_since
         FROM {customer_table} WHERE NOT is_deleted"""
 
 
 @aql.transform(postgres_conn_id="postgres_conn", cache=True, cache_version=1.0)
-def join_orders_and_customers(orders_table, customer_table):
+def join_orders_and_customers(orders_table: Table, customer_table: Table):
     """Now join those together to create a very simple 'feature' dataset."""
     return """SELECT c.customer_id, c.source, c.region, c.member_since,
         CASE WHEN purchase_count IS NULL THEN 0 ELSE 1 END AS recent_purchase
@@ -60,7 +61,7 @@ def join_orders_and_customers(orders_table, customer_table):
 
 
 @aql.transform(postgres_conn_id="postgres_conn", cache=True, cache_version=1.0)
-def get_existing_customers(customer_table):
+def get_existing_customers(customer_table: Table):
     """Filter for existing customers.
     Split this 'feature' dataset into existing/older customers and 'new' customers, which we'll use
     later for inference/scoring.
@@ -69,7 +70,7 @@ def get_existing_customers(customer_table):
 
 
 @aql.transform(postgres_conn_id="postgres_conn", cache=True, cache_version=1.0)
-def get_new_customers(customer_table):
+def get_new_customers(customer_table: Table):
     """Filter for new customers.
     Split this 'feature' dataset into existing/older customers and 'new' customers, which we'll use
     later for inference/scoring.

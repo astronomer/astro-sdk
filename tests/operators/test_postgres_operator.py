@@ -27,6 +27,7 @@ from airflow.utils.types import DagRunType
 
 # Import Operator
 import astronomer_sql_decorator.sql as aql
+from astronomer_sql_decorator.sql.types import Table
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -76,13 +77,6 @@ class TestPostgresOperator(unittest.TestCase):
             default_args={
                 "owner": "airflow",
                 "start_date": DEFAULT_DATE,
-                "safe_parameters": [
-                    "input_table",
-                    "actor",
-                    "film_actor_join",
-                    "main_table",
-                    "append_table",
-                ],
             },
         )
 
@@ -110,7 +104,7 @@ class TestPostgresOperator(unittest.TestCase):
 
     def test_postgres(self):
         @aql.transform(conn_id="postgres_conn", database="pagila")
-        def sample_pg(input_table):
+        def sample_pg(input_table: Table):
             return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%'"
 
         self.create_and_run_task(sample_pg, (), {"input_table": "actor"})
@@ -123,7 +117,9 @@ class TestPostgresOperator(unittest.TestCase):
         drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
 
         @aql.transform(conn_id="postgres_conn", database="pagila")
-        def sample_pg(actor, film_actor_join, output_table_name, unsafe_parameter):
+        def sample_pg(
+            actor: Table, film_actor_join: Table, output_table_name, unsafe_parameter
+        ):
             return (
                 "SELECT {actor}.actor_id, first_name, last_name, COUNT(film_id) "
                 "FROM {actor} JOIN {film_actor_join} ON {actor}.actor_id = {film_actor_join}.actor_id "
@@ -160,7 +156,9 @@ class TestPostgresOperator(unittest.TestCase):
         )
 
         @aql.run_raw_sql(conn_id="postgres_conn", database="pagila")
-        def sample_pg(actor, film_actor_join, output_table_name, unsafe_parameter):
+        def sample_pg(
+            actor: Table, film_actor_join: Table, output_table_name, unsafe_parameter
+        ):
             return (
                 "CREATE TABLE my_raw_sql_table AS (SELECT {actor}.actor_id, first_name, last_name, COUNT(film_id) "
                 "FROM {actor} JOIN {film_actor_join} ON {actor}.actor_id = {film_actor_join}.actor_id "
@@ -198,7 +196,7 @@ class TestPostgresOperator(unittest.TestCase):
             database="pagila",
             to_csv=True,
         )
-        def task_to_local_csv(csv_path, input_table=None):
+        def task_to_local_csv(csv_path, input_table: Table = None):
             return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%'"
 
         with tempfile.TemporaryDirectory() as tmp:
@@ -217,7 +215,7 @@ class TestPostgresOperator(unittest.TestCase):
             database="pagila",
             to_s3=True,
         )
-        def task_to_s3(s3_path, input_table=None):
+        def task_to_s3(s3_path, input_table: Table = None):
             return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%'"
 
         self.create_and_run_task(

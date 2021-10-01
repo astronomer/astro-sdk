@@ -29,15 +29,12 @@ import astronomer_sql_decorator.sql as aql
 from airflow.models import DAG
 from pandas import DataFrame
 from datetime import datetime, timedelta
+from astronomer_sql_decorator.sql.types import Table
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
 default_args = {
     "owner": "airflow",
-    "safe_parameters": [
-        "input_table",
-        "output_table",
-    ],  # WARNING: only use this for trusted values. Do not trust user input
 }
 
 dag = DAG(
@@ -57,17 +54,17 @@ dag = DAG(
     output_table="my_raw_data",
     from_s3=True,
 )
-def task_from_s3(s3_path, input_table=None, output_table=None):
+def task_from_s3(s3_path, input_table: Table = None, output_table=None):
     return """SELECT * FROM %(input_table)s"""
 
 
 @aql.transform(postgres_conn_id="postgres_conn", database="pagila", from_csv=True)
-def task_from_local_csv(csv_path, input_table=None, output_table=None):
+def task_from_local_csv(csv_path, input_table: Table = None, output_table=None):
     return """SELECT "Sell" FROM %(input_table)s LIMIT 3"""
 
 
 @aql.transform(postgres_conn_id="my_favorite_db", database="pagila")
-def sample_pg(input_table, last_name_prefix):
+def sample_pg(input_table: Table, last_name_prefix):
     return (
         "SELECT * FROM %(input_table)s WHERE last_name LIKE '$(last_name_prefix)s%%'",
         {"last_name_prefix": last_name_prefix},

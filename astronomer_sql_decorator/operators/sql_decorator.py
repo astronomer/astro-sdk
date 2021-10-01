@@ -18,7 +18,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         from_csv=False,
         to_s3=False,
         to_csv=False,
-        safe_parameters=[],
         raw_sql=False,
         **kwargs,
     ):
@@ -46,7 +45,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.to_csv = to_csv
         self.raw_sql = raw_sql
         self.kwargs = kwargs
-        self.safe_parameters = safe_parameters
         self.op_kwargs = self.kwargs.get("op_kwargs")
 
         super().__init__(

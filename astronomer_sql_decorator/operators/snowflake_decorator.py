@@ -1,3 +1,4 @@
+import inspect
 import os
 import re
 from typing import Callable, Iterable, Mapping, Optional, Union
@@ -9,6 +10,7 @@ from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.providers.snowflake.operators.snowflake import SnowflakeOperator
 
 from astronomer_sql_decorator.operators.sql_decorator import SqlDecoratoratedOperator
+from astronomer_sql_decorator.sql.types import Table
 
 
 class _SnowflakeDecoratedOperator(SqlDecoratoratedOperator, SnowflakeOperator):
@@ -124,10 +126,13 @@ class _SnowflakeDecoratedOperator(SqlDecoratoratedOperator, SnowflakeOperator):
         )
 
     def _parse_template(self):
+        param_types = inspect.signature(self.python_callable).parameters
         self.sql = self.sql.replace("{", "%(").replace("}", ")s")
         all_vals = re.findall("%\(.*?\)s", self.sql)
         mod_vals = {
-            f: f"IDENTIFIER({f})" if f[2:-2] in self.safe_parameters else f
+            f: f"IDENTIFIER({f})"
+            if param_types.get(f[2:-2], None).annotation == Table
+            else f
             for f in all_vals
         }
         for k, v in mod_vals.items():
