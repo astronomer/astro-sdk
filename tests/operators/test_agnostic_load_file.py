@@ -10,6 +10,7 @@ Run test:
 """
 
 import logging
+import os
 import pathlib
 import tempfile
 import unittest.mock
@@ -19,6 +20,7 @@ import pandas as pd
 from airflow.models import DAG, Connection, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
@@ -70,6 +72,20 @@ class TestAgnosticLoadFile(unittest.TestCase):
             session.query(TI).delete()
             session.query(Connection).delete()
             session.add(postgres_connection)
+            snowflake_connection = Connection(
+                conn_id="snowflake_conn",
+                conn_type="snowflake",
+                host="https://gp21411.us-east-1.snowflakecomputing.com",
+                login=os.environ["SNOW_ACCOUNT_NAME"],
+                port=443,
+                password=os.environ["SNOW_PASSWORD"],
+                extra={
+                    "account": "gp21411",
+                    "region": "us-east-1",
+                    "role": "TRANSFORMER",
+                },
+            )
+            session.add(snowflake_connection)
 
     def setUp(self):
         super().setUp()
@@ -102,7 +118,6 @@ class TestAgnosticLoadFile(unittest.TestCase):
         return f
 
     def test_aql_local_file_to_postgres(self):
-
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
 
         self.hook_target = PostgresHook(
@@ -129,7 +144,6 @@ class TestAgnosticLoadFile(unittest.TestCase):
         )
 
         assert df.iloc[0].to_dict() == {
-            "index": 0.0,
             "Sell": 142.0,
             "List": 160.0,
             "Living": 28.0,
@@ -142,7 +156,6 @@ class TestAgnosticLoadFile(unittest.TestCase):
         }
 
     def test_aql_local_file_to_postgres_no_output_table_name(self):
-
         OUTPUT_TABLE_NAME = "test_dag_unique_task_name_1"
         self.hook_target = PostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
@@ -169,7 +182,6 @@ class TestAgnosticLoadFile(unittest.TestCase):
         )
 
         assert df.iloc[0].to_dict() == {
-            "index": 0.0,
             "Sell": 142.0,
             "List": 160.0,
             "Living": 28.0,
@@ -182,7 +194,6 @@ class TestAgnosticLoadFile(unittest.TestCase):
         }
 
     def test_aql_s3_file_to_postgres(self):
-
         OUTPUT_TABLE_NAME = "expected_table_from_s3_csv"
 
         self.hook_target = PostgresHook(
@@ -209,3 +220,44 @@ class TestAgnosticLoadFile(unittest.TestCase):
         )
 
         assert df.iloc[0].to_dict()["Sell"] == 142.0
+
+    def test_aql_local_file_to_snowflake(self):
+        OUTPUT_TABLE_NAME = "expected_table_from_csv"
+
+        hook = SnowflakeHook(
+            snowflake_conn_id="snowflake_conn",
+            schema="SANDBOX_DANIEL",
+            database="DWH_LEGACY",
+            warehouse="TRANSFORMING_DEV",
+        )
+
+        # Drop target table
+        hook.run(f"DROP TABLE IF EXISTS {OUTPUT_TABLE_NAME}")
+        self.create_and_run_task(
+            load_file,
+            (),
+            {
+                "path": str(self.cwd) + "/../data/homes.csv",
+                "file_conn_id": "",
+                "output_conn_id": "snowflake_conn",
+                "output_table_name": OUTPUT_TABLE_NAME,
+                "database": "DWH_LEGACY",
+                "schema": "SANDBOX_DANIEL",
+                "warehouse": "TRANSFORMING_DEV",
+            },
+        )
+
+        # Read table from db
+        df = hook.get_pandas_df(f"SELECT * FROM {OUTPUT_TABLE_NAME}")
+
+        assert df.iloc[0].to_dict() == {
+            "Sell": 142.0,
+            "List": 160.0,
+            "Living": 28.0,
+            "Rooms": 10.0,
+            "Beds": 5.0,
+            "Baths": 3.0,
+            "Age": 60.0,
+            "Acres": 0.28,
+            "Taxes": 3167.0,
+        }

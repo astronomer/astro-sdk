@@ -9,6 +9,22 @@ from airflow.models import BaseOperator, DagRun, TaskInstance
 from airflow.models.xcom_arg import XComArg
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+from snowflake.connector.pandas_tools import pd_writer
+
+
+class TempSnowflakeHook(SnowflakeHook):
+    """
+    Temporary class to get around a bug in the snowflakehook when creating URIs
+    """
+
+    def get_uri(self) -> str:
+        """Override DbApiHook get_uri method for get_sqlalchemy_engine()"""
+        conn_config = self._get_conn_params()
+        uri = (
+            "snowflake://{user}:{password}@{account}.{region}/{database}/{schema}"
+            "?warehouse={warehouse}&role={role}&authenticator={authenticator}"
+        )
+        return uri.format(**conn_config)
 
 
 class AgnosticLoadFile(BaseOperator):
@@ -31,6 +47,8 @@ class AgnosticLoadFile(BaseOperator):
         file_conn_id="",
         output_conn_id="",
         database: Optional[str] = None,
+        schema: Optional[str] = None,
+        warehouse: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -38,6 +56,8 @@ class AgnosticLoadFile(BaseOperator):
         self.file_conn_id = file_conn_id
         self.output_conn_id = output_conn_id
         self.database = database
+        self.schema = schema
+        self.warehouse = warehouse
         self.kwargs = kwargs
         self.output_table_name = output_table_name
 
@@ -56,7 +76,12 @@ class AgnosticLoadFile(BaseOperator):
         # Select database Hook based on `conn` type
         hook = {
             "postgres": PostgresHook(postgres_conn_id=self.output_conn_id),
-            "snowflake": SnowflakeHook(snowflake_conn_id=self.output_conn_id),
+            "snowflake": TempSnowflakeHook(
+                snowflake_conn_id=self.output_conn_id,
+                database=self.database,
+                schema=self.schema,
+                warehouse=self.warehouse,
+            ),
         }.get(conn_type, None)
 
         if self.database:
@@ -68,12 +93,16 @@ class AgnosticLoadFile(BaseOperator):
 
         # Write df to target db
         # Note: the `method` argument changes when writing to Snowflake
+        write_method = None
+        if conn_type == "snowflake":
+            meth = pd_writer
         df.to_sql(
             self.output_table_name,
             con=hook.get_sqlalchemy_engine(),
             schema=None,
             if_exists="replace",
-            method=None,
+            method=write_method,
+            index=False,
         )
 
         return self.output_table_name
@@ -114,7 +143,14 @@ class AgnosticLoadFile(BaseOperator):
 
 
 def load_file(
-    path, output_table_name, file_conn_id=None, output_conn_id=None, **kwargs
+    path,
+    output_table_name,
+    file_conn_id=None,
+    output_conn_id=None,
+    database=None,
+    schema=None,
+    warehouse=None,
+    **kwargs,
 ):
     """Convert AgnosticLoadFile into a function.
 
@@ -136,4 +172,8 @@ def load_file(
         output_table_name=output_table_name,
         file_conn_id=file_conn_id,
         output_conn_id=output_conn_id,
+        database=database,
+        schema=schema,
+        warehouse=warehouse,
+        **kwargs,
     ).output

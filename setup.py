@@ -25,6 +25,8 @@ setup(
         "s3fs",
         "apache-airflow-providers-snowflake",
         "apache-airflow-providers-postgres",
+        "snowflake-sqlalchemy==1.2.0",
+        "snowflake-connector-python[pandas]",
     ],
     setup_requires=["setuptools", "wheel"],
     author="Daniel Imberman, Plinio Guzman",
