@@ -2,29 +2,14 @@ import os
 from typing import Optional
 
 import pandas as pd
-import sqlalchemy
 from airflow.hooks.base import BaseHook
-from airflow.hooks.dbapi import DbApiHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
-from airflow.models.xcom_arg import XComArg
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from snowflake.connector.pandas_tools import pd_writer
 
-
-class TempSnowflakeHook(SnowflakeHook):
-    """
-    Temporary class to get around a bug in the snowflakehook when creating URIs
-    """
-
-    def get_uri(self) -> str:
-        """Override DbApiHook get_uri method for get_sqlalchemy_engine()"""
-        conn_config = self._get_conn_params()
-        uri = (
-            "snowflake://{user}:{password}@{account}.{region}/{database}/{schema}"
-            "?warehouse={warehouse}&role={role}&authenticator={authenticator}"
-        )
-        return uri.format(**conn_config)
+from astronomer_sql_decorator.operators.temp_hooks import (
+    TempPostgresHook,
+    TempSnowflakeHook,
+)
 
 
 class AgnosticLoadFile(BaseOperator):
@@ -75,7 +60,7 @@ class AgnosticLoadFile(BaseOperator):
 
         # Select database Hook based on `conn` type
         hook = {
-            "postgres": PostgresHook(postgres_conn_id=self.output_conn_id),
+            "postgres": TempPostgresHook(postgres_conn_id=self.output_conn_id),
             "snowflake": TempSnowflakeHook(
                 snowflake_conn_id=self.output_conn_id,
                 database=self.database,
