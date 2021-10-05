@@ -57,7 +57,7 @@ def tutorial_elt_sql():
     # [END extract]
 
     # [START load]
-    @aql.transform(conn_id="postgres_conn", database="testdata", from_csv=True)
+    @aql.transform(postgres_conn_id="postgres_conn", database="testdata")
     def load(csv_path=None, input_table=None, output_table=None):
         """
         #### Load task
@@ -69,7 +69,7 @@ def tutorial_elt_sql():
     # [END load]
 
     # [START transform]
-    @aql.transform(conn_id="postgres_conn", database="testdata")
+    @aql.transform(postgres_conn_id="postgres_conn", database="testdata")
     def transform(input_table=None, output_table=None):
         """
         #### Transform task

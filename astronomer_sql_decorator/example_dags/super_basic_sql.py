@@ -4,6 +4,7 @@ from airflow.models import DAG
 from pandas import DataFrame
 
 import astronomer_sql_decorator.sql as aql
+from astronomer_sql_decorator.sql.types import Table
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -22,9 +23,9 @@ dag = DAG(
 )
 
 
-@aql.transform(conn_id="my_favorite_db", database="pagila")
-def sample_pg(input_table):
-    return "SELECT * FROM %(input_table)s WHERE last_name LIKE 'G%%'"
+@aql.transform(postgres_conn_id="postgres_conn", database="pagila")
+def sample_pg(input_table: Table):
+    return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%'"
 
 
 with dag:

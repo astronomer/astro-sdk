@@ -1,7 +1,6 @@
 import inspect
 from typing import Callable, Iterable, Mapping, Optional, Union
 
-import pandas as pd
 import pandas.io.sql as sqlio
 from airflow.configuration import conf
 from airflow.decorators.base import task_decorator_factory
@@ -115,8 +114,6 @@ def postgres_decorator(
     autocommit: bool = False,
     parameters: Optional[Union[Mapping, Iterable]] = None,
     database: Optional[str] = None,
-    to_s3: bool = False,
-    to_csv: bool = False,
     raw_sql: bool = False,
 ):
     """
@@ -141,13 +138,13 @@ def postgres_decorator(
         autocommit=autocommit,
         parameters=parameters,
         database=database,
-        to_s3=to_s3,
-        to_csv=to_csv,
         raw_sql=raw_sql,
     )
 
 
-def postgres_append_func(main_table, columns, casted_columns, append_table, conn_id):
+def postgres_append_func(
+    main_table, columns, casted_columns, append_table, postgres_conn_id
+):
     from psycopg2 import sql
 
     if columns or casted_columns:
@@ -173,5 +170,5 @@ def postgres_append_func(main_table, columns, casted_columns, append_table, conn
         append_table=sql.Identifier(append_table),
     )
 
-    hook = PostgresHook(postgres_conn_id=conn_id)
+    hook = PostgresHook(postgres_conn_id=postgres_conn_id)
     return query.as_string(hook.get_conn())

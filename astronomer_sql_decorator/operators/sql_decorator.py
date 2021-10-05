@@ -14,10 +14,6 @@ from airflow.utils.db import check, provide_session
 class SqlDecoratoratedOperator(DecoratedOperator):
     def __init__(
         self,
-        from_s3=False,
-        from_csv=False,
-        to_s3=False,
-        to_csv=False,
         raw_sql=False,
         **kwargs,
     ):
@@ -39,10 +35,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         database using Panda's automatic data typing functionality.
         :param kwargs:
         """
-        self.from_s3 = from_s3
-        self.from_csv = from_csv
-        self.to_s3 = to_s3
-        self.to_csv = to_csv
         self.raw_sql = raw_sql
         self.kwargs = kwargs
         self.op_kwargs = self.kwargs.get("op_kwargs")
@@ -52,20 +44,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         )
 
     def execute(self, context: Dict):
-
-        if self.from_s3:
-            # Load from s3
-            self._s3_to_db(
-                s3_path=self.op_kwargs.get("s3_path"),
-                table_name=self.op_kwargs["input_table"],
-            )
-
-        elif self.from_csv:
-            # Load from csv
-            self._csv_to_db(
-                csv_path=self.op_kwargs.get("csv_path"),
-                table_name=self.op_kwargs["input_table"],
-            )
 
         sql_stuff = self.python_callable(**self.op_kwargs)
 
@@ -99,24 +77,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
         # Run execute function of subclassed Operator.
         super().execute(context)
-
-        if self.to_csv:
-            if self.op_kwargs.get("csv_path"):
-                csv_path = self.op_kwargs.get("csv_path")
-            else:
-                csv_path = self.create_output_csv_path(context)
-
-            self._db_to_csv(csv_path=csv_path, table_name=ouput_table_name)
-            return csv_path
-        elif self.to_s3:
-            if self.op_kwargs.get("s3_path"):
-                s3_path = self.op_kwargs.get("s3_path")
-            else:
-                s3_path = self.create_output_csv_path(context)
-
-            self._db_to_s3(s3_path=s3_path, table_name=ouput_table_name)
-        else:
-            return ouput_table_name
+        return ouput_table_name
 
     @staticmethod
     def create_temporary_table(query, table_name):

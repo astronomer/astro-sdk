@@ -99,7 +99,7 @@ class TestSampleOperator(unittest.TestCase):
 
     def test_snowflake_query(self):
         @aql.transform(
-            conn_id="snowflake_conn",
+            snowflake_conn_id="snowflake_conn",
             warehouse="TRANSFORMING_DEV",
             schema="SANDBOX_DANIEL",
             database="DWH_LEGACY",
@@ -149,7 +149,7 @@ class TestSampleOperator(unittest.TestCase):
         )
 
         @aql.run_raw_sql(
-            conn_id="snowflake_conn",
+            snowflake_conn_id="snowflake_conn",
             warehouse="TRANSFORMING_DEV",
             schema="SANDBOX_DANIEL",
             database="DWH_LEGACY",

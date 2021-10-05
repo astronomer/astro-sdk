@@ -14,32 +14,28 @@ from astronomer_sql_decorator.operators.snowflake_decorator import snowflake_dec
 def transform(
     python_callable: Optional[Callable] = None,
     multiple_outputs: Optional[bool] = None,
-    conn_id: str = "postgres_default",
+    postgres_conn_id: Optional[str] = None,
+    snowflake_conn_id: Optional[str] = None,
     autocommit: bool = False,
     parameters: Optional[Union[Mapping, Iterable]] = None,
     database: Optional[str] = None,
     schema: Optional[str] = None,
     warehouse: Optional[str] = None,
-    to_s3: bool = False,
-    to_csv: bool = False,
 ):
-    conn_type = BaseHook.get_connection(conn_id).conn_type
-    if conn_type == "postgres":
+    if postgres_conn_id:
         return postgres_decorator(
             python_callable=python_callable,
             multiple_outputs=multiple_outputs,
-            postgres_conn_id=conn_id,
+            postgres_conn_id=postgres_conn_id,
             autocommit=autocommit,
             parameters=parameters,
             database=database,
-            to_s3=to_s3,
-            to_csv=to_csv,
         )
-    elif conn_type == "snowflake":
+    elif snowflake_conn_id:
         return snowflake_decorator(
             python_callable=python_callable,
             multiple_outputs=multiple_outputs,
-            snowflake_conn_id=conn_id,
+            snowflake_conn_id=snowflake_conn_id,
             autocommit=autocommit,
             parameters=parameters,
             database=database,
@@ -47,35 +43,37 @@ def transform(
             warehouse=warehouse,
         )
     else:
-        raise AirflowException(f"Connection type {conn_type} is not supported")
+        raise AirflowException(
+            f"Please enter a postgres_conn_id or a snowflake_conn_id"
+        )
 
 
 def run_raw_sql(
     python_callable: Optional[Callable] = None,
     multiple_outputs: Optional[bool] = None,
-    conn_id: str = "postgres_default",
+    postgres_conn_id: Optional[str] = None,
+    snowflake_conn_id: Optional[str] = None,
     autocommit: bool = False,
     parameters: Optional[Union[Mapping, Iterable]] = None,
     database: Optional[str] = None,
     schema: Optional[str] = None,
     warehouse: Optional[str] = None,
 ):
-    conn_type = BaseHook.get_connection(conn_id).conn_type
-    if conn_type == "postgres":
+    if postgres_conn_id:
         return postgres_decorator(
             python_callable=python_callable,
             multiple_outputs=multiple_outputs,
-            postgres_conn_id=conn_id,
+            postgres_conn_id=postgres_conn_id,
             autocommit=autocommit,
             parameters=parameters,
             database=database,
             raw_sql=True,
         )
-    elif conn_type == "snowflake":
+    elif snowflake_conn_id:
         return snowflake_decorator(
             python_callable=python_callable,
             multiple_outputs=multiple_outputs,
-            snowflake_conn_id=conn_id,
+            snowflake_conn_id=snowflake_conn_id,
             autocommit=autocommit,
             parameters=parameters,
             database=database,
@@ -84,32 +82,40 @@ def run_raw_sql(
             raw_sql=True,
         )
     else:
-        raise AirflowException(f"Connection type {conn_type} is not supported")
+        raise AirflowException(
+            f"Please enter a postgres_conn_id or a snowflake_conn_id"
+        )
 
 
 def append(
-    conn_id: str,
     database: str,
     append_table: str,
     main_table: str,
+    postgres_conn_id: Optional[str] = None,
+    snowflake_conn_id: Optional[str] = None,
     columns: List[str] = [],
     casted_columns: dict = {},
     **kwargs,
 ):
-    @run_raw_sql(conn_id=conn_id, database=database, **kwargs)
+    @run_raw_sql(
+        postgres_conn_id=postgres_conn_id,
+        snowflake_conn_id=snowflake_conn_id,
+        database=database,
+        **kwargs,
+    )
     def append_func(main_table, append_table):
-        conn_type = BaseHook.get_connection(conn_id).conn_type
-
-        f = {"postgres": postgres_append_func}.get(conn_type, None)
+        f = None
+        if postgres_conn_id:
+            f = postgres_append_func
 
         if not f:
-            raise AirflowException(f"conn_type {conn_type} not supported")
+            raise AirflowException(f"please give a postgres conn id")
         return f(
             main_table=main_table,
             append_table=append_table,
             columns=columns,
             casted_columns=casted_columns,
-            conn_id=conn_id,
+            postgres_conn_id=postgres_conn_id,
         )
 
     return append_func(main_table=main_table, append_table=append_table)
