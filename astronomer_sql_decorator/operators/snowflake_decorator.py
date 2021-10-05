@@ -13,6 +13,16 @@ from astronomer_sql_decorator.operators.sql_decorator import SqlDecoratoratedOpe
 from astronomer_sql_decorator.sql.types import Table
 
 
+def _wrap_identifiers(sql, identifier_params):
+    all_vals = re.findall("%\(.*?\)s", sql)
+    mod_vals = {
+        f: f"IDENTIFIER({f})" if f[2:-2] in identifier_params else f for f in all_vals
+    }
+    for k, v in mod_vals.items():
+        sql = sql.replace(k, v)
+    return sql
+
+
 class _SnowflakeDecoratedOperator(SqlDecoratoratedOperator, SnowflakeOperator):
     def __init__(
         self,
@@ -60,78 +70,14 @@ class _SnowflakeDecoratedOperator(SqlDecoratoratedOperator, SnowflakeOperator):
 
         return {"key": k, "secret": v}
 
-    def _s3_to_db(self, s3_path, table_name):
-        """Transfer table from S3 to Postgres database.
-
-        :param conn:
-        :type conn:
-        :param s3_path:
-        :type s3_path:
-        """
-
-        # Read CSV from S3
-        df = pd.read_csv(s3_path, storage_options=self._s3fs_creds())
-
-        # Write df to postgres
-        self._df_to_snowflake(df, table_name)
-
-    def _csv_to_db(self, csv_path, table_name):
-        """Override this method to enable transfer from csv to selected database."""
-        # Create df from local csv
-        df = pd.read_csv(csv_path)
-
-        # Write df to postgres
-        self._df_to_snowflake(df, table_name)
-
-    def _db_to_s3(self, s3_path, table_name):
-        """Transfer Postgres database to s3.
-
-        :param s3_path:
-        :type s3_path:
-        """
-
-        # Read CSV from S3
-        hook = SnowflakeHook(
-            snowflake_conn_id=self.snowflake_conn_id, schema=self.database
-        )
-        df = sqlio.read_sql_query(f"SELECT * FROM {table_name}", con=hook.get_conn())
-        df.to_csv(s3_path, storage_options=self._s3fs_creds())
-
-        # Write df to postgres
-        self._df_to_postgres(df, table_name)
-
-    def _db_to_csv(self, csv_path: str, table_name: str):
-        hook = SnowflakeHook(
-            snowflake_conn_id=self.snowflake_conn_id, schema=self.database
-        )
-
-        df = sqlio.read_sql_query(
-            con=hook.get_conn(), sql=f"SELECT * FROM {table_name}"
-        )
-        df.to_csv(csv_path)
-
-    def _df_to_snowflake(self, df, table_name):
-        # Generate target db hook
-        hook = SnowflakeHook(
-            snowflake_conn_id=self.snowflake_conn_id, schema=self.database
-        )
-
-        # CREATE OR REPLACE table in db
-        df.to_sql(
-            table_name,
-            con=hook.get_conn(),
-            schema=None,
-            if_exists="replace",
-            method=None,
-        )
-
     def _parse_template(self):
         param_types = inspect.signature(self.python_callable).parameters
         self.sql = self.sql.replace("{", "%(").replace("}", ")s")
         all_vals = re.findall("%\(.*?\)s", self.sql)
         mod_vals = {
             f: f"IDENTIFIER({f})"
-            if param_types.get(f[2:-2], None).annotation == Table
+            if param_types.get(f[2:-2], None)
+            and param_types.get(f[2:-2], None).annotation == Table
             else f
             for f in all_vals
         }
@@ -228,3 +174,55 @@ def snowflake_decorator(
         session_parameters=session_parameters,
         raw_sql=raw_sql,
     )
+
+
+def snowflake_append_func(
+    main_table, columns, casted_columns, append_table, snowflake_conn_id
+):
+    def wrap_identifier(inp):
+        return "Identifier(%(" + inp + ")s)"
+
+    if columns or casted_columns:
+        statement = (
+            "INSERT INTO Identifier(%(main_table)s) ({main_cols}{sep}{main_casted_cols})"
+            "(SELECT {fields}{sep}{casted_fields} FROM Identifier(%(append_table)s))"
+        )
+    else:
+        statement = "INSERT INTO Identifier(%(main_table)s) (SELECT * FROM Identifier(%(append_table)s))"
+
+    col_dict = {
+        f"col{i}": x for i, x in enumerate(columns)
+    }  # prevent directly putting user input into query
+
+    casted_col_dict = {f"casted_col{i}": x for i, x in enumerate(casted_columns.keys())}
+
+    statement = (
+        statement.replace("{sep}", ",")
+        if columns and casted_columns
+        else statement.replace("{sep}", "")
+    )
+    statement = statement.replace(
+        "{main_cols}", ",".join([c for c in columns])
+    )  # Please note that we are not wrapping these in Identifier due to a snowflake bug. Must fix before public release!
+    statement = statement.replace(
+        "{main_casted_cols}", ",".join([c for c in casted_columns.keys()])
+    )  # Please note that we are not wrapping these in Identifier due to a snowflake bug. Must fix before public release!
+    statement = statement.replace(
+        "{fields}", ",".join([wrap_identifier(c) for c in col_dict.keys()])
+    )
+    statement = statement.replace(
+        "{casted_fields}",
+        ",".join(
+            [
+                "CAST(" + wrap_identifier(c) + " AS " + casted_columns[v] + ")"
+                for c, v in casted_col_dict.items()
+            ]
+        ),
+    )
+    statement = statement.replace("{", "%(").replace("}", ")s")
+    statement = _wrap_identifiers(
+        sql=statement,
+        identifier_params=[main_table, columns, casted_columns.keys(), append_table],
+    )
+    col_dict.update(casted_col_dict)
+    return statement, col_dict

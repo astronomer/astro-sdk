@@ -4,11 +4,15 @@ from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 
 from astronomer_sql_decorator.operators.agnostic_load_file import load_file
+from astronomer_sql_decorator.operators.agnostic_save_file import save_file
 from astronomer_sql_decorator.operators.postgres_decorator import (
     postgres_append_func,
     postgres_decorator,
 )
-from astronomer_sql_decorator.operators.snowflake_decorator import snowflake_decorator
+from astronomer_sql_decorator.operators.snowflake_decorator import (
+    snowflake_append_func,
+    snowflake_decorator,
+)
 
 
 def transform(
@@ -104,18 +108,23 @@ def append(
         **kwargs,
     )
     def append_func(main_table, append_table):
-        f = None
         if postgres_conn_id:
-            f = postgres_append_func
-
-        if not f:
+            return postgres_append_func(
+                main_table=main_table,
+                append_table=append_table,
+                columns=columns,
+                casted_columns=casted_columns,
+                postgres_conn_id=postgres_conn_id,
+            )
+        elif snowflake_conn_id:
+            return snowflake_append_func(
+                main_table=main_table,
+                append_table=append_table,
+                columns=columns,
+                casted_columns=casted_columns,
+                snowflake_conn_id=snowflake_conn_id,
+            )
+        else:
             raise AirflowException(f"please give a postgres conn id")
-        return f(
-            main_table=main_table,
-            append_table=append_table,
-            columns=columns,
-            casted_columns=casted_columns,
-            postgres_conn_id=postgres_conn_id,
-        )
 
     return append_func(main_table=main_table, append_table=append_table)

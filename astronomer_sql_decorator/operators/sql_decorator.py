@@ -54,7 +54,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.sql, self.parameters = sql_stuff
         else:
             self.sql = sql_stuff
-        self.parameters = {}
+            self.parameters = {}
 
         self._parse_template()
         # Create a table name for the temp table
@@ -69,9 +69,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         if self.op_kwargs:
             self.parameters.update(self.op_kwargs)
 
-        # While normally it is a security anti-pattern to use AsIs in SQL, this value is never user controlled
-        # The only way a user could modify this value is if they already own the metadata DB, which would be a much
-        # deeper security breach.
         self.parameters.update(self.op_kwargs)
         self._process_params()
 

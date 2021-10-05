@@ -59,7 +59,7 @@ class TestPostgresOperator(unittest.TestCase):
                 conn_id="postgres_conn",
                 conn_type="postgres",
                 host="localhost",
-                port=5433,
+                port=5432,
                 login="postgres",
                 password="postgres",
             )

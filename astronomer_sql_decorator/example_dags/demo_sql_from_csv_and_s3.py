@@ -13,16 +13,6 @@ default_args = {
 }
 
 
-@aql.transform(conn_id="postgres_conn", database="astro", to_s3=True)
-def task_to_s3(s3_path, input_table=None):
-    return """SELECT "Sell" FROM %(input_table)s"""
-
-
-@aql.transform(conn_id="postgres_conn", database="astro", to_csv=True)
-def task_to_local_csv(csv_path, input_table=None):
-    return """SELECT "Sell" FROM %(input_table)s"""
-
-
 @dag(
     default_args=default_args,
     schedule_interval=None,
@@ -45,11 +35,19 @@ def demo_with_s3_and_csv():
         output_table_name="expected_table_from_csv",
     )
 
-    task_to_s3(s3_path="s3://tmp9/homes.csv", input_table=t1)
+    aql.save_file(
+        output_file_path="s3://tmp9/homes.csv",
+        table=t1,
+        input_conn_id="postgres_conn",
+        overwrite=True,
+    )
 
-    task_to_local_csv(csv_path="tests/data/homes_output.csv", input_table=t2)
-
-    t1 >> t2
+    aql.save_file(
+        output_file_path="tests/data/homes_output.csv",
+        table=t2,
+        input_conn_id="postgres_conn",
+        overwrite=True,
+    )
 
 
 demo_dag = demo_with_s3_and_csv()

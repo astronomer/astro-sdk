@@ -18,7 +18,11 @@ setup(
         ]
     },
     license="Apache License 2.0",
-    packages=["astronomer_sql_decorator", "astronomer_sql_decorator.operators", "astronomer_sql_decorator.sql"],
+    packages=[
+        "astronomer_sql_decorator",
+        "astronomer_sql_decorator.operators",
+        "astronomer_sql_decorator.sql",
+    ],
     install_requires=[
         "apache-airflow>=2.0",
         "pandas",
