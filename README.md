@@ -54,32 +54,19 @@ dag = DAG(
     output_table="my_raw_data",
     from_s3=True,
 )
-def task_from_s3(s3_path, input_table: Table = None, output_table=None):
-    return """SELECT * FROM %(input_table)s"""
-
-
-@aql.transform(postgres_conn_id="postgres_conn", database="pagila", from_csv=True)
-def task_from_local_csv(csv_path, input_table: Table = None, output_table=None):
-    return """SELECT "Sell" FROM %(input_table)s LIMIT 3"""
-
-
 @aql.transform(postgres_conn_id="my_favorite_db", database="pagila")
-def sample_pg(input_table: Table, last_name_prefix):
+def sample_pg(actor: Table, last_name_prefix):
     return (
-        "SELECT * FROM %(input_table)s WHERE last_name LIKE '$(last_name_prefix)s%%'",
+        "SELECT * FROM {actor} WHERE last_name LIKE '{last_name_prefix}s%%'",
         {"last_name_prefix": last_name_prefix},
     )
 
 
-@aql.transform(postgres_conn_id="my_favorite_db", database="pagila", to_dataframe=True)
-def print_table(input_df: DataFrame):
-    print(input_df.to_string)
-
-
 with dag:
-    import_pagila_table = task_from_s3(
-        s3_path="s3://tmp9/homes.csv", input_table="input_raw_table_from_s3"
+    import_pagila_table = aql.load_file(
+        path="s3://tmp9/homes.csv",
+        output_conn_id="my_favorite_db",
+        output_table_name="foo",
     )
     last_name_g = sample_pg(input_table=import_pagila_table, last_name_prefix="F")
-    print_table(last_name_g)
 ```
