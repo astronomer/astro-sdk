@@ -45,7 +45,7 @@ def drop_table(table_name, snowflake_conn):
 @mock.patch.dict(
     "os.environ", AIRFLOW_CONN_CONN_SAMPLE="http://https%3A%2F%2Fwww.httpbin.org%2F"
 )
-class TestSampleOperator(unittest.TestCase):
+class TestSnowflakeOperator(unittest.TestCase):
     """
     Test Sample Operator.
     """
@@ -107,7 +107,7 @@ class TestSampleOperator(unittest.TestCase):
 
     def test_snowflake_query(self):
         @aql.transform(
-            snowflake_conn_id="snowflake_conn",
+            conn_id="snowflake_conn",
             warehouse="TRANSFORMING_DEV",
             schema="SANDBOX_DANIEL",
             database="DWH_LEGACY",
@@ -158,7 +158,7 @@ class TestSampleOperator(unittest.TestCase):
         )
 
         @aql.run_raw_sql(
-            snowflake_conn_id="snowflake_conn",
+            conn_id="snowflake_conn",
             warehouse="TRANSFORMING_DEV",
             schema="SANDBOX_DANIEL",
             database="DWH_LEGACY",
@@ -209,7 +209,7 @@ class TestSampleOperator(unittest.TestCase):
 
         with self.dag:
             foo = aql.append(
-                snowflake_conn_id="snowflake_conn",
+                conn_id="snowflake_conn",
                 warehouse="TRANSFORMING_DEV",
                 schema="SANDBOX_DANIEL",
                 database="DWH_LEGACY",

@@ -103,7 +103,7 @@ class TestPostgresOperator(unittest.TestCase):
         return f
 
     def test_postgres(self):
-        @aql.transform(postgres_conn_id="postgres_conn", database="pagila")
+        @aql.transform(conn_id="postgres_conn", database="pagila")
         def sample_pg(input_table: Table):
             return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%'"
 
@@ -116,7 +116,7 @@ class TestPostgresOperator(unittest.TestCase):
 
         drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
 
-        @aql.transform(postgres_conn_id="postgres_conn", database="pagila")
+        @aql.transform(conn_id="postgres_conn", database="pagila")
         def sample_pg(
             actor: Table, film_actor_join: Table, output_table_name, unsafe_parameter
         ):
@@ -155,7 +155,7 @@ class TestPostgresOperator(unittest.TestCase):
             table_name="my_raw_sql_table", postgres_conn=self.hook_target.get_conn()
         )
 
-        @aql.run_raw_sql(postgres_conn_id="postgres_conn", database="pagila")
+        @aql.run_raw_sql(conn_id="postgres_conn", database="pagila")
         def sample_pg(
             actor: Table, film_actor_join: Table, output_table_name, unsafe_parameter
         ):
@@ -212,7 +212,7 @@ class TestPostgresOperator(unittest.TestCase):
                 output_conn_id="postgres_conn",
             )
             foo = aql.append(
-                postgres_conn_id="postgres_conn",
+                conn_id="postgres_conn",
                 database="postgres",
                 append_table=APPEND_TABLE_NAME,
                 columns=["Sell", "Living"],
@@ -260,7 +260,7 @@ class TestPostgresOperator(unittest.TestCase):
                 output_conn_id="postgres_conn",
             )
             foo = aql.append(
-                postgres_conn_id="postgres_conn",
+                conn_id="postgres_conn",
                 database="postgres",
                 append_table=APPEND_TABLE_NAME,
                 main_table=MAIN_TABLE_NAME,
@@ -306,7 +306,7 @@ class TestPostgresOperator(unittest.TestCase):
                 output_conn_id="postgres_conn",
             )
             foo = aql.append(
-                postgres_conn_id="postgres_conn",
+                conn_id="postgres_conn",
                 database="postgres",
                 append_table=APPEND_TABLE_NAME,
                 columns=["Sell", "Living"],
@@ -360,7 +360,7 @@ class TestPostgresOperator(unittest.TestCase):
                 output_conn_id="postgres_conn",
             )
             foo = aql.append(
-                postgres_conn_id="postgres_conn",
+                conn_id="postgres_conn",
                 database="postgres",
                 append_table=APPEND_TABLE_NAME,
                 casted_columns={"Age": "INTEGER"},

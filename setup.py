@@ -22,6 +22,7 @@ setup(
         "astronomer_sql_decorator",
         "astronomer_sql_decorator.operators",
         "astronomer_sql_decorator.sql",
+        "astronomer_sql_decorator.utils",
     ],
     install_requires=[
         "apache-airflow>=2.0",
