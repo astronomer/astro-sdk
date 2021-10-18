@@ -60,4 +60,6 @@ def snowflake_append_func(
         identifier_params=[main_table, columns, casted_columns.keys(), append_table],
     )
     col_dict.update(casted_col_dict)
+    col_dict["main_table"] = main_table
+    col_dict["append_table"] = append_table
     return statement, col_dict

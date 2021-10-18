@@ -41,7 +41,7 @@ def drop_table(table_name, postgres_conn):
     postgres_conn.close()
 
 
-class TestPostgresOperator(unittest.TestCase):
+class TestPostgresAppend(unittest.TestCase):
     """
     Test Sample Operator.
     """
@@ -84,94 +84,6 @@ class TestPostgresOperator(unittest.TestCase):
         f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         return f
 
-    def test_postgres(self):
-        @aql.transform(conn_id="postgres_conn", database="pagila")
-        def sample_pg(input_table: Table):
-            return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%'"
-
-        self.create_and_run_task(sample_pg, (), {"input_table": "actor"})
-
-    def test_postgres_join(self):
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-
-        drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
-
-        @aql.transform(conn_id="postgres_conn", database="pagila")
-        def sample_pg(
-            actor: Table, film_actor_join: Table, output_table_name, unsafe_parameter
-        ):
-            return (
-                "SELECT {actor}.actor_id, first_name, last_name, COUNT(film_id) "
-                "FROM {actor} JOIN {film_actor_join} ON {actor}.actor_id = {film_actor_join}.actor_id "
-                "WHERE last_name LIKE {unsafe_parameter} GROUP BY {actor}.actor_id"
-            )
-
-        self.create_and_run_task(
-            sample_pg,
-            (),
-            {
-                "actor": "actor",
-                "film_actor_join": "film_actor",
-                "unsafe_parameter": "G%%",
-                "output_table_name": "my_table",
-            },
-        )
-        # Read table from db
-        df = pd.read_sql(f"SELECT * FROM my_table", con=self.hook_target.get_conn())
-        assert df.iloc[0].to_dict() == {
-            "actor_id": 191,
-            "first_name": "GREGORY",
-            "last_name": "GOODING",
-            "count": 30,
-        }
-
-        drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
-
-    def test_raw_sql(self):
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-        drop_table(
-            table_name="my_raw_sql_table", postgres_conn=self.hook_target.get_conn()
-        )
-
-        @aql.run_raw_sql(conn_id="postgres_conn", database="pagila")
-        def sample_pg(
-            actor: Table, film_actor_join: Table, output_table_name, unsafe_parameter
-        ):
-            return (
-                "CREATE TABLE my_raw_sql_table AS (SELECT {actor}.actor_id, first_name, last_name, COUNT(film_id) "
-                "FROM {actor} JOIN {film_actor_join} ON {actor}.actor_id = {film_actor_join}.actor_id "
-                "WHERE last_name LIKE {unsafe_parameter} GROUP BY {actor}.actor_id)"
-            )
-
-        self.create_and_run_task(
-            sample_pg,
-            (),
-            {
-                "actor": "actor",
-                "film_actor_join": "film_actor",
-                "unsafe_parameter": "G%%",
-                "output_table_name": "my_table",
-            },
-        )
-        # Read table from db
-        df = pd.read_sql(
-            f"SELECT * FROM my_raw_sql_table", con=self.hook_target.get_conn()
-        )
-        assert df.iloc[0].to_dict() == {
-            "actor_id": 191,
-            "first_name": "GREGORY",
-            "last_name": "GOODING",
-            "count": 30,
-        }
-
-        drop_table(
-            table_name="my_raw_sql_table", postgres_conn=self.hook_target.get_conn()
-        )
-
     def test_append(self):
         MAIN_TABLE_NAME = "test_main"
         APPEND_TABLE_NAME = "test_append"
@@ -211,8 +123,8 @@ class TestPostgresOperator(unittest.TestCase):
         load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, MAIN_TABLE_NAME)
         self.wait_for_task_finish(dr, APPEND_TABLE_NAME)
-        foo.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, "append_func")
+        foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        self.wait_for_task_finish(dr, foo.task_id)
 
         df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
 
@@ -258,8 +170,8 @@ class TestPostgresOperator(unittest.TestCase):
         load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, MAIN_TABLE_NAME)
         self.wait_for_task_finish(dr, APPEND_TABLE_NAME)
-        foo.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, "append_func")
+        foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        self.wait_for_task_finish(dr, foo.task_id)
         df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
 
         assert len(df) == 6
@@ -306,8 +218,8 @@ class TestPostgresOperator(unittest.TestCase):
         load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, MAIN_TABLE_NAME)
         self.wait_for_task_finish(dr, APPEND_TABLE_NAME)
-        foo.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, "append_func")
+        foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        self.wait_for_task_finish(dr, foo.task_id)
         df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
 
         assert len(df) == 6
@@ -359,8 +271,8 @@ class TestPostgresOperator(unittest.TestCase):
         load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, MAIN_TABLE_NAME)
         self.wait_for_task_finish(dr, APPEND_TABLE_NAME)
-        foo.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, "append_func")
+        foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        self.wait_for_task_finish(dr, foo.task_id)
 
         df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
 

@@ -48,6 +48,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.database = database
         self.schema = schema
         self.warehouse = warehouse
+        self.sql = ""
         self.kwargs = kwargs or {}
         self.op_kwargs = self.kwargs.get("op_kwargs")
 
@@ -56,18 +57,18 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         )
 
     def execute(self, context: Dict):
-
-        sql_stuff = self.python_callable(**self.op_kwargs)
         self.conn_type = BaseHook.get_connection(self.conn_id).conn_type
 
-        # To-do: Type check `sql_stuff`
+        if not self.sql:
+            sql_stuff = self.python_callable(**self.op_kwargs)
+            # If we return two things, assume the second thing is the params
+            if len(sql_stuff) == 2:
+                self.sql, self.parameters = sql_stuff
+            else:
+                self.sql = sql_stuff
+                self.parameters = {}
 
-        # If we return two things, assume the second thing is the params
-        if len(sql_stuff) == 2:
-            self.sql, self.parameters = sql_stuff
-        else:
-            self.sql = sql_stuff
-            self.parameters = {}
+        # To-do: Type check `sql_stuff`
 
         self._parse_template()
         # Create a table name for the temp table
