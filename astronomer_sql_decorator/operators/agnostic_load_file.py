@@ -10,6 +10,7 @@ from astronomer_sql_decorator.operators.temp_hooks import (
     TempPostgresHook,
     TempSnowflakeHook,
 )
+from astronomer_sql_decorator.utils.load_dataframe import move_dataframe_to_sql
 
 
 class AgnosticLoadFile(BaseOperator):
@@ -58,6 +59,7 @@ class AgnosticLoadFile(BaseOperator):
         # Retrieve conn type
         conn_type = BaseHook.get_connection(self.output_conn_id).conn_type
         self.move_dataframe_to_sql(conn_type, df)
+        return self.output_table_name
 
     def move_dataframe_to_sql(self, conn_type, df):
         # Select database Hook based on `conn` type
