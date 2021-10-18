@@ -12,11 +12,9 @@ Run test:
 import logging
 import pathlib
 import unittest.mock
-from unittest import mock
 
 import pandas as pd
-import pytest
-from airflow.models import DAG, Connection, DagRun
+from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook

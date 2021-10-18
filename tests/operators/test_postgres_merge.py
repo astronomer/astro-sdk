@@ -9,9 +9,8 @@ import logging
 import math
 import pathlib
 import unittest.mock
-from unittest import mock
 
-from airflow.models import DAG, Connection, DagRun
+from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone

@@ -56,9 +56,9 @@ def run_raw_sql(
 
 
 def append(
-    database: str,
     append_table: str,
     main_table: str,
+    database: str = "",
     conn_id: str = "",
     columns: List[str] = [],
     casted_columns: dict = {},

@@ -13,11 +13,9 @@ import logging
 import pathlib
 import time
 import unittest.mock
-from unittest import mock
 
 import pandas as pd
-import pytest
-from airflow.models import DAG, Connection, DagRun
+from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
@@ -27,7 +25,6 @@ from airflow.utils.types import DagRunType
 
 # Import Operator
 import astronomer_sql_decorator.sql as aql
-from astronomer_sql_decorator.sql.types import Table
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)

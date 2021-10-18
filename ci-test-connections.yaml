@@ -13,8 +13,11 @@ connections:
     port: 443
     login: $SNOW_ACCOUNT_NAME
     password: $SNOW_PASSWORD
+    schema: SANDBOX_DANIEL
     extra:
       account: "gp21411"
       region: "us-east-1"
       role: "TRANSFORMER"
+      warehouse: TRANSFORMING_DEV
+      database: DWH_LEGACY
 

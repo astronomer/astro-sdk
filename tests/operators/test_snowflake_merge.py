@@ -7,16 +7,11 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 
 import logging
 import math
-import os
 import pathlib
 import unittest.mock
-from unittest import mock
 
-from airflow.models import Connection, DagRun
-from airflow.models import TaskInstance as TI
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
-from airflow.utils.session import create_session
 
 # Import Operator
 import astronomer_sql_decorator.sql as aql

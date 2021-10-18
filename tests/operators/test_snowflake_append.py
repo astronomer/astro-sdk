@@ -9,25 +9,19 @@ Run test:
 
 """
 
-import json
 import logging
-import os
 import unittest.mock
-from unittest import mock
 
-import requests_mock
-from airflow.models import DAG, Connection, DagRun
+from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
-from pandas import DataFrame
 
 # Import Operator
 from astronomer_sql_decorator import sql as aql
-from astronomer_sql_decorator.sql.types import Table
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -104,9 +98,6 @@ class TestSnowflakeAppend(unittest.TestCase):
         with self.dag:
             foo = aql.append(
                 conn_id="snowflake_conn",
-                warehouse="TRANSFORMING_DEV",
-                schema="SANDBOX_DANIEL",
-                database="DWH_LEGACY",
                 append_table=APPEND_TABLE_NAME,
                 columns=columns,
                 casted_columns=casted_columns,
