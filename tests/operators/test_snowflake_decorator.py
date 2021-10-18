@@ -5,17 +5,15 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 
 Run test:
 
-    python3 -m unittest tests.operators.test_sample_operator.TestSampleOperator
+    python3 -m unittest tests.operators.test_snowflake_decorator.TestSnowflakeOperator
 
 """
 
-import json
 import logging
-import os
 import unittest.mock
 from unittest import mock
 
-import requests_mock
+import pytest
 from airflow.models import DAG, Connection, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -23,7 +21,6 @@ from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
-from pandas import DataFrame
 
 # Import Operator
 from astronomer_sql_decorator import sql as aql
@@ -41,10 +38,6 @@ def drop_table(table_name, snowflake_conn):
     snowflake_conn.close()
 
 
-# Mock the `conn_sample` Airflow connection
-@mock.patch.dict(
-    "os.environ", AIRFLOW_CONN_CONN_SAMPLE="http://https%3A%2F%2Fwww.httpbin.org%2F"
-)
 class TestSnowflakeOperator(unittest.TestCase):
     """
     Test Sample Operator.
@@ -53,26 +46,6 @@ class TestSnowflakeOperator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-
-        with create_session() as session:
-            session.query(Connection).delete()
-            snowflake_connection = Connection(
-                conn_id="snowflake_conn",
-                conn_type="snowflake",
-                host="https://gp21411.us-east-1.snowflakecomputing.com",
-                login=os.environ["SNOW_ACCOUNT_NAME"],
-                port=443,
-                password=os.environ["SNOW_PASSWORD"],
-                extra={
-                    "account": "gp21411",
-                    "region": "us-east-1",
-                    "role": "TRANSFORMER",
-                },
-            )
-            session.query(DagRun).delete()
-            session.query(TI).delete()
-            session.query(Connection).delete()
-            session.add(snowflake_connection)
 
     def setUp(self):
         super().setUp()

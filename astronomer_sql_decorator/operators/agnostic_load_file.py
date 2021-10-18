@@ -57,10 +57,14 @@ class AgnosticLoadFile(BaseOperator):
 
         # Retrieve conn type
         conn_type = BaseHook.get_connection(self.output_conn_id).conn_type
+        self.move_dataframe_to_sql(conn_type, df)
 
+    def move_dataframe_to_sql(self, conn_type, df):
         # Select database Hook based on `conn` type
         hook = {
-            "postgres": TempPostgresHook(postgres_conn_id=self.output_conn_id),
+            "postgres": TempPostgresHook(
+                postgres_conn_id=self.output_conn_id, schema=self.database
+            ),
             "snowflake": TempSnowflakeHook(
                 snowflake_conn_id=self.output_conn_id,
                 database=self.database,
@@ -68,14 +72,8 @@ class AgnosticLoadFile(BaseOperator):
                 warehouse=self.warehouse,
             ),
         }.get(conn_type, None)
-
         if self.database:
             hook.database = self.database
-
-        # Autogenerate table name
-        if not self.output_table_name:
-            self.output_table_name = self.create_table_name(context)
-
         # Write df to target db
         # Note: the `method` argument changes when writing to Snowflake
         write_method = None
@@ -89,8 +87,6 @@ class AgnosticLoadFile(BaseOperator):
             method=write_method,
             index=False,
         )
-
-        return self.output_table_name
 
     def _load_dataframe(self, path):
         """Read file with Pandas.

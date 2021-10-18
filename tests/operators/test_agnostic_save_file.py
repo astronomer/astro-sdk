@@ -4,8 +4,7 @@ Unittest module to test Agnostic Load File function.
 Requires the unittest, pytest, and requests-mock Python libraries.
 
 Run test:
-    AIRFLOW_CONN_POSTGRES_CONN=postgres://postgres:postgres@localhost:5432/pagila \
-    AIRFLOW__SQL_DECORATOR__CONN_AWS_DEFAULT=aws://KEY:SECRET@ \
+    AIRFLOW__SQL_DECORATOR__CONN_AWS_DEFAULT=aws://KEY:SECRET@
     python3 -m unittest tests.operators.test_save_file.TestSaveFile.test_save_postgres_table_to_local
 
 """
@@ -18,6 +17,7 @@ from unittest import mock
 
 import boto3
 import pandas as pd
+import pytest
 from airflow.models import DAG, Connection, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -25,10 +25,8 @@ from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
-from pandas import DataFrame
 
 # Import Operator
-import astronomer_sql_decorator.sql as aql
 from astronomer_sql_decorator.operators.agnostic_save_file import save_file
 
 log = logging.getLogger(__name__)
@@ -43,11 +41,6 @@ def drop_table_postgres(table_name, postgres_conn):
     postgres_conn.close()
 
 
-# Mock the `postgres_conn` Airflow connection
-@mock.patch.dict(
-    "os.environ",
-    AIRFLOW_CONN_POSTGRES_CONN="postgresql://postgres:postgres@localhost:5432/pagila",
-)
 class TestSaveFile(unittest.TestCase):
     """
     Test agnostic load file.
@@ -58,34 +51,6 @@ class TestSaveFile(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-
-        with create_session() as session:
-            postgres_connection = Connection(
-                conn_id="postgres_conn",
-                conn_type="postgres",
-                host="localhost",
-                port=5432,
-                login="postgres",
-                password="postgres",
-            )
-            session.query(DagRun).delete()
-            session.query(TI).delete()
-            session.query(Connection).delete()
-            session.add(postgres_connection)
-            snowflake_connection = Connection(
-                conn_id="snowflake_conn",
-                conn_type="snowflake",
-                host="https://gp21411.us-east-1.snowflakecomputing.com",
-                login=os.environ["SNOW_ACCOUNT_NAME"],
-                port=443,
-                password=os.environ["SNOW_PASSWORD"],
-                extra={
-                    "account": "gp21411",
-                    "region": "us-east-1",
-                    "role": "TRANSFORMER",
-                },
-            )
-            session.add(snowflake_connection)
 
     def setUp(self):
         super().setUp()
@@ -139,6 +104,7 @@ class TestSaveFile(unittest.TestCase):
                 "table": INPUT_TABLE_NAME,
                 "output_file_path": OUTPUT_FILE_PATH,
                 "input_conn_id": "postgres_conn",
+                "database": "pagila",
                 "output_conn_id": None,
                 "overwrite": True,
             },
@@ -181,6 +147,7 @@ class TestSaveFile(unittest.TestCase):
                 "output_file_path": OUTPUT_FILE_PATH,
                 "input_conn_id": "postgres_conn",
                 "output_conn_id": None,
+                "database": "pagila",
                 "overwrite": True,
             },
         )
@@ -220,6 +187,7 @@ class TestSaveFile(unittest.TestCase):
                     "output_file_path": OUTPUT_FILE_PATH,
                     "input_conn_id": "postgres_conn",
                     "output_conn_id": None,
+                    "database": "pagila",
                     "overwrite": False,
                 },
             )
@@ -253,6 +221,7 @@ class TestSaveFile(unittest.TestCase):
                 "output_file_path": OUTPUT_FILE_PATH,
                 "input_conn_id": "postgres_conn",
                 "output_conn_id": "aws_default",
+                "database": "pagila",
                 "overwrite": True,
             },
         )
@@ -291,6 +260,7 @@ class TestSaveFile(unittest.TestCase):
                     "output_file_path": OUTPUT_FILE_PATH,
                     "input_conn_id": "postgres_conn",
                     "output_conn_id": "aws_default",
+                    "database": "pagila",
                     "overwrite": False,
                 },
             )

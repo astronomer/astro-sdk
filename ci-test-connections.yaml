@@ -1,0 +1,20 @@
+connections:
+  - conn_id: postgres_conn
+    conn_type: postgres
+    host: localhost
+    schema:
+    login: postgres
+    password: postgres
+    port: 5432
+    extra:
+  - conn_id: snowflake_conn
+    conn_type: snowflake
+    host: https://gp21411.us-east-1.snowflakecomputing.com
+    port: 443
+    login: $SNOW_ACCOUNT_NAME
+    password: $SNOW_PASSWORD
+    extra:
+      account: "gp21411"
+      region: "us-east-1"
+      role: "TRANSFORMER"
+

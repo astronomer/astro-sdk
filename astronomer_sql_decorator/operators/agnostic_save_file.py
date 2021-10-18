@@ -63,7 +63,9 @@ class SaveFile(BaseOperator):
 
         # Select database Hook based on `conn` type
         input_hook = {
-            "postgres": TempPostgresHook(postgres_conn_id=self.input_conn_id),
+            "postgres": TempPostgresHook(
+                postgres_conn_id=self.input_conn_id, schema=self.database
+            ),
             "snowflake": TempSnowflakeHook(
                 snowflake_conn_id=self.output_conn_id,
                 database=self.database,
@@ -72,8 +74,11 @@ class SaveFile(BaseOperator):
             ),
         }.get(conn_type, None)
 
+        eng = input_hook.get_sqlalchemy_engine()
         # Load table from SQL db.
-        df = pd.read_sql(f"SELECT * FROM {self.table}", con=input_hook.get_conn())
+        df = pd.read_sql(
+            f"SELECT * FROM {self.table}", con=input_hook.get_sqlalchemy_engine()
+        )
 
         # Write file if overwrite == True or if file doesn't exist.
         if self.overwrite == True or not self.file_exists(
@@ -152,6 +157,9 @@ def save_file(
     input_conn_id=None,
     output_conn_id=None,
     overwrite=False,
+    database="",
+    schema="",
+    warehouse="",
     **kwargs,
 ):
     """Convert SaveFile into a function. Returns XComArg.
@@ -178,4 +186,7 @@ def save_file(
         input_conn_id=input_conn_id,
         output_conn_id=output_conn_id,
         overwrite=overwrite,
+        database=database,
+        schema=schema,
+        warehouse=warehouse,
     ).output

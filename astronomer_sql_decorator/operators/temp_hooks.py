@@ -38,6 +38,6 @@ class TempPostgresHook(PostgresHook):
         if conn.port is not None:
             host += f":{conn.port}"
         uri = f"postgresql://{login}{host}/"
-        if conn.schema:
-            uri += conn.schema
+        if self.schema:
+            uri += self.schema
         return uri

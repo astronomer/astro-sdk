@@ -1,4 +1,6 @@
 .git
+.env
+test-connections.yaml
 .idea
 .env
 airflow_settings.yaml

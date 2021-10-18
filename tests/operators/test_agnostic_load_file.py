@@ -10,13 +10,12 @@ Run test:
 """
 
 import logging
-import os
 import pathlib
-import tempfile
 import unittest.mock
 from unittest import mock
 
 import pandas as pd
+import pytest
 from airflow.models import DAG, Connection, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -25,11 +24,10 @@ from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
-from pandas import DataFrame
 
 # Import Operator
-import astronomer_sql_decorator.sql as aql
 from astronomer_sql_decorator.operators.agnostic_load_file import load_file
+from astronomer_sql_decorator.operators.temp_hooks import TempPostgresHook
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -43,11 +41,6 @@ def drop_table_postgres(table_name, postgres_conn):
     postgres_conn.close()
 
 
-# Mock the `postgres_conn` Airflow connection
-@mock.patch.dict(
-    "os.environ",
-    AIRFLOW_CONN_POSTGRES_CONN="postgres://postgres:postgres@localhost:5432/pagila",
-)
 class TestAgnosticLoadFile(unittest.TestCase):
     """
     Test agnostic load file.
@@ -58,34 +51,6 @@ class TestAgnosticLoadFile(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-
-        with create_session() as session:
-            postgres_connection = Connection(
-                conn_id="postgres_conn",
-                conn_type="postgres",
-                host="localhost",
-                port=5432,
-                login="postgres",
-                password="postgres",
-            )
-            session.query(DagRun).delete()
-            session.query(TI).delete()
-            session.query(Connection).delete()
-            session.add(postgres_connection)
-            snowflake_connection = Connection(
-                conn_id="snowflake_conn",
-                conn_type="snowflake",
-                host="https://gp21411.us-east-1.snowflakecomputing.com",
-                login=os.environ["SNOW_ACCOUNT_NAME"],
-                port=443,
-                password=os.environ["SNOW_PASSWORD"],
-                extra={
-                    "account": "gp21411",
-                    "region": "us-east-1",
-                    "role": "TRANSFORMER",
-                },
-            )
-            session.add(snowflake_connection)
 
     def setUp(self):
         super().setUp()
@@ -120,7 +85,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
     def test_aql_local_file_to_postgres(self):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
 
-        self.hook_target = PostgresHook(
+        self.hook_target = TempPostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
         )
 
@@ -133,6 +98,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
             {
                 "path": str(self.cwd) + "/../data/homes.csv",
                 "file_conn_id": "",
+                "database": "pagila",
                 "output_conn_id": "postgres_conn",
                 "output_table_name": OUTPUT_TABLE_NAME,
             },
@@ -171,6 +137,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
             {
                 "path": str(self.cwd) + "/../data/homes.csv",
                 "file_conn_id": "",
+                "database": "pagila",
                 "output_conn_id": "postgres_conn",
                 "output_table_name": OUTPUT_TABLE_NAME,
             },
@@ -210,6 +177,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
                 "path": "s3://tmp9/homes.csv",
                 "file_conn_id": "",
                 "output_conn_id": "postgres_conn",
+                "database": "pagila",
                 "output_table_name": OUTPUT_TABLE_NAME,
             },
         )

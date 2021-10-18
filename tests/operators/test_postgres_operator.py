@@ -11,12 +11,12 @@ Run test:
 
 import logging
 import pathlib
-import tempfile
 import time
 import unittest.mock
 from unittest import mock
 
 import pandas as pd
+import pytest
 from airflow.models import DAG, Connection, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -33,10 +33,6 @@ log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 
-# Mock the `conn_sample` Airflow connection
-@mock.patch.dict(
-    "os.environ", AIRFLOW_CONN_CONN_SAMPLE="http://https%3A%2F%2Fwww.httpbin.org%2F"
-)
 def drop_table(table_name, postgres_conn):
     cursor = postgres_conn.cursor()
     cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
@@ -53,20 +49,6 @@ class TestPostgresOperator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-
-        with create_session() as session:
-            postgres_connection = Connection(
-                conn_id="postgres_conn",
-                conn_type="postgres",
-                host="localhost",
-                port=5432,
-                login="postgres",
-                password="postgres",
-            )
-            session.query(DagRun).delete()
-            session.query(TI).delete()
-            session.query(Connection).delete()
-            session.add(postgres_connection)
 
     def setUp(self):
         super().setUp()
