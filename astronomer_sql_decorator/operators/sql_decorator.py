@@ -21,6 +21,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         schema: Optional[str] = None,
         warehouse: Optional[str] = None,
         raw_sql=False,
+        sql="",
         **kwargs,
     ):
         """
@@ -48,8 +49,8 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.database = database
         self.schema = schema
         self.warehouse = warehouse
-        self.sql = ""
         self.kwargs = kwargs or {}
+        self.sql = sql
         self.op_kwargs = self.kwargs.get("op_kwargs")
 
         super().__init__(
@@ -68,16 +69,15 @@ class SqlDecoratoratedOperator(DecoratedOperator):
                 self.sql = sql_stuff
                 self.parameters = {}
 
-        # To-do: Type check `sql_stuff`
-
         self._parse_template()
-        # Create a table name for the temp table
-        ouput_table_name = self.kwargs.get("op_kwargs").get(  # type: ignore
-            "output_table_name"
-        ) or self.create_table_name(context)
+        output_table_name = None
 
         if not self.raw_sql:
-            self.sql = self.create_temporary_table(self.sql, ouput_table_name)
+            # Create a table name for the temp table
+            output_table_name = self.kwargs.get("op_kwargs").get(  # type: ignore
+                "output_table_name"
+            ) or self.create_table_name(context)
+            self.sql = self.create_temporary_table(self.sql, output_table_name)
 
         # Automatically add any kwargs going into the function
         if self.op_kwargs:
@@ -87,7 +87,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self._process_params()
         self._run_sql()
         # Run execute function of subclassed Operator.
-        return ouput_table_name
+        return output_table_name
 
     def get_snow_hook(self) -> SnowflakeHook:
         """

@@ -122,6 +122,7 @@ class TestSnowflakeOperator(unittest.TestCase):
         hook = SnowflakeHook(
             snowflake_conn_id="snowflake_conn",
             schema="SANDBOX_DANIEL",
+            database="DWH_LEGACY",
             warehouse="TRANSFORMING_DEV",
         )
 
