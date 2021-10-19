@@ -20,6 +20,7 @@ setup(
     license="Apache License 2.0",
     packages=[
         "astronomer_sql_decorator",
+        "astronomer_sql_decorator.dataframe",
         "astronomer_sql_decorator.operators",
         "astronomer_sql_decorator.sql",
         "astronomer_sql_decorator.utils",
