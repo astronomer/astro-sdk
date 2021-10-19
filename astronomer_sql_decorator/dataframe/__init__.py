@@ -27,7 +27,7 @@ def from_sql(
     )
 
 
-def from_dataframe(
+def to_sql(
     python_callable: Optional[Callable] = None,
     multiple_outputs: Optional[bool] = None,
     conn_id: str = "",

@@ -101,7 +101,7 @@ def train_model(df: DataFrame, cache=True, cache_version=1.0):
     return model
 
 
-@adf.from_dataframe(ouput_table="final_table", cache=True, cache_version=1.0)
+@adf.to_sql(ouput_table="final_table", cache=True, cache_version=1.0)
 def score_model(model, df: DataFrame):
     """In this task I'm passing in the model as well as the input dataset."""
     preds = model.predict(df)

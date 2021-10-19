@@ -75,9 +75,7 @@ class TestDataframeToSQL(unittest.TestCase):
         return f
 
     def test_dataframe_to_sql_basic_op_arg(self):
-        @adf.from_dataframe(
-            conn_id="postgres_conn", database="pagila", output_table_name="foo"
-        )
+        @adf.to_sql(conn_id="postgres_conn", database="pagila", output_table_name="foo")
         def my_df_func():
             return pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
 
@@ -105,7 +103,7 @@ class TestDataframeToSQL(unittest.TestCase):
 
         hook.run("DROP TABLE IF EXISTS TEST_DF_LOAD")
 
-        @adf.from_dataframe(
+        @adf.to_sql(
             conn_id="snowflake_conn",
             schema="SANDBOX_DANIEL",
             database="DWH_LEGACY",
