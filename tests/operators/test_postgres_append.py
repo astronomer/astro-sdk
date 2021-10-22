@@ -118,8 +118,8 @@ class TestPostgresAppend(unittest.TestCase):
 
         load_main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, MAIN_TABLE_NAME)
-        self.wait_for_task_finish(dr, APPEND_TABLE_NAME)
+        self.wait_for_task_finish(dr, load_main.operator.task_id)
+        self.wait_for_task_finish(dr, load_append.operator.task_id)
         foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, foo.task_id)
 
@@ -165,8 +165,8 @@ class TestPostgresAppend(unittest.TestCase):
 
         load_main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, MAIN_TABLE_NAME)
-        self.wait_for_task_finish(dr, APPEND_TABLE_NAME)
+        self.wait_for_task_finish(dr, load_main.operator.task_id)
+        self.wait_for_task_finish(dr, load_append.operator.task_id)
         foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, foo.task_id)
         df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
@@ -213,8 +213,8 @@ class TestPostgresAppend(unittest.TestCase):
 
         load_main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, MAIN_TABLE_NAME)
-        self.wait_for_task_finish(dr, APPEND_TABLE_NAME)
+        self.wait_for_task_finish(dr, load_main.operator.task_id)
+        self.wait_for_task_finish(dr, load_append.operator.task_id)
         foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, foo.task_id)
         df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
@@ -266,8 +266,8 @@ class TestPostgresAppend(unittest.TestCase):
 
         load_main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, MAIN_TABLE_NAME)
-        self.wait_for_task_finish(dr, APPEND_TABLE_NAME)
+        self.wait_for_task_finish(dr, load_main.operator.task_id)
+        self.wait_for_task_finish(dr, load_append.operator.task_id)
         foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, foo.task_id)
 

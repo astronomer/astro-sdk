@@ -38,17 +38,16 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: '3.8'
           architecture: 'x64'
       - uses: actions/cache@v2
         with:
           path: ~/.cache/pip
           key: ${{ hashFiles('setup.py') }}-${{ hashFiles('dev-requirements.txt') }}
       - run: cat ci-test-connections.yaml > test-connections.yaml
-      - run: pip install numpy==1.19.4
-      - run: pip install -e .
-      - run: pip install pytest
-      - run: pip install requests-mock
+      - run: pip3 install -e .
+      - run: pip3 install pytest
+      - run: pip3 install requests-mock
       - run: airflow db init
       - run: echo "\l" | PGPASSWORD=postgres psql -U postgres -h localhost -p 5432
         env:

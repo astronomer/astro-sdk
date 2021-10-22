@@ -32,7 +32,6 @@ setup(
         "apache-airflow-providers-snowflake",
         "snowflake-sqlalchemy==1.2.0",
         "apache-airflow-providers-postgres",
-        "numpy==1.19.4",
         "snowflake-connector-python[pandas]",
     ],
     setup_requires=["setuptools", "wheel"],
