@@ -177,7 +177,7 @@ def save_file(
     :param overwrite: Overwrite file if exists. Default False.
     :type overwrite: bool
     """
-    task_id = output_file_path.rsplit("/", 1)[1].replace(".", "_")
+    task_id = "save_file_" + output_file_path.rsplit("/", 1)[-1].replace(".", "_")
 
     return SaveFile(
         task_id=task_id,

@@ -7,12 +7,12 @@ from datetime import datetime, timedelta
 
 import xgboost as xgb
 from airflow.models import DAG
-from astronomer.workflow import dataframe as adf
-from astronomer.workflow import sql as aql
 from pandas import DataFrame
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
+from astronomer_sql_decorator import dataframe as adf
+from astronomer_sql_decorator import sql as aql
 from astronomer_sql_decorator.sql.types import Table
 
 default_args = {
@@ -31,9 +31,7 @@ dag = DAG(
 )
 
 
-@aql.transform(
-    snowflake_conn_id="my_db_conn", cache=True, cache_version=1.0, warehouse="LOADING"
-)
+@aql.transform(conn_id="my_snowflake_conn", warehouse="LOADING")
 def aggregate_orders(orders_table: Table):
     """Snowflake.
     Next I would probably do some sort of merge, but I'll skip that for now. Instead, some basic ETL.
@@ -45,14 +43,14 @@ def aggregate_orders(orders_table: Table):
         WHERE purchase_date >= DATEADD(day, -7, '{{ execution_date }}')"""
 
 
-@aql.transform(postgres_conn_id="postgres_conn", cache=True, cache_version=1.0)
+@aql.transform(conn_id="postgres_conn")
 def get_customers(customer_table: Table = Table("customer")):
     """Basic clean-up of an existing table."""
     return """SELECT customer_id, source, region, member_since
         FROM {customer_table} WHERE NOT is_deleted"""
 
 
-@aql.transform(postgres_conn_id="postgres_conn", cache=True, cache_version=1.0)
+@aql.transform(conn_id="postgres_conn")
 def join_orders_and_customers(orders_table: Table, customer_table: Table):
     """Now join those together to create a very simple 'feature' dataset."""
     return """SELECT c.customer_id, c.source, c.region, c.member_since,
@@ -60,7 +58,7 @@ def join_orders_and_customers(orders_table: Table, customer_table: Table):
         FROM {orders_table} c LEFT OUTER JOIN {customer_table} p ON c.customer_id = p.customer_id"""
 
 
-@aql.transform(postgres_conn_id="postgres_conn", cache=True, cache_version=1.0)
+@aql.transform(conn_id="postgres_conn")
 def get_existing_customers(customer_table: Table):
     """Filter for existing customers.
     Split this 'feature' dataset into existing/older customers and 'new' customers, which we'll use
@@ -69,7 +67,7 @@ def get_existing_customers(customer_table: Table):
     return """SELECT * FROM {customer_table} WHERE member_since > DATEADD(day, -7, '{{ execution_date }}')"""
 
 
-@aql.transform(postgres_conn_id="postgres_conn", cache=True, cache_version=1.0)
+@aql.transform(conn_id="postgres_conn")
 def get_new_customers(customer_table: Table):
     """Filter for new customers.
     Split this 'feature' dataset into existing/older customers and 'new' customers, which we'll use
@@ -78,8 +76,8 @@ def get_new_customers(customer_table: Table):
     return """SELECT * FROM {customer_table} WHERE member_since <= DATEADD(day, -7, '{{ execution_date }}')"""
 
 
-@adf.from_sql()
-def train_model(df: DataFrame, cache=True, cache_version=1.0):
+@adf.from_sql(conn_id="postgres_conn")
+def train_model(df: DataFrame):
     """Train model with Python.
     Switch to Python. Note that I'm not specifying the database input in the decorator. Ideally,
     the decorator knows where the input is coming from and knows that it needs to convert the
@@ -101,7 +99,7 @@ def train_model(df: DataFrame, cache=True, cache_version=1.0):
     return model
 
 
-@adf.to_sql(ouput_table="final_table", cache=True, cache_version=1.0)
+@adf.to_sql(output_table_name="final_table")
 def score_model(model, df: DataFrame):
     """In this task I'm passing in the model as well as the input dataset."""
     preds = model.predict(df)

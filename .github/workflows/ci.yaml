@@ -45,6 +45,7 @@ jobs:
           path: ~/.cache/pip
           key: ${{ hashFiles('setup.py') }}-${{ hashFiles('dev-requirements.txt') }}
       - run: cat ci-test-connections.yaml > test-connections.yaml
+      - run: pip install numpy==1.19.4
       - run: pip install -e .
       - run: pip install pytest
       - run: pip install requests-mock

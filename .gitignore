@@ -1,5 +1,6 @@
 .git
 .env
+astronomer_sql_decorator.egg-info
 test-connections.yaml
 .idea
 .env

@@ -127,7 +127,7 @@ class AgnosticLoadFile(BaseOperator):
 
 def load_file(
     path,
-    output_table_name,
+    output_table_name=None,
     file_conn_id=None,
     output_conn_id=None,
     database=None,
@@ -148,9 +148,10 @@ def load_file(
     :param output_conn_id: Database connection id.
     :type output_conn_id: str
     """
+    task_id = "load_file_" + path.rsplit("/", 1)[-1].replace(".", "_")
 
     return AgnosticLoadFile(
-        task_id=output_table_name,
+        task_id=task_id,
         path=path,
         output_table_name=output_table_name,
         file_conn_id=file_conn_id,
