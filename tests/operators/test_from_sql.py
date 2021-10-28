@@ -2,6 +2,7 @@ import logging
 import unittest.mock
 from unittest import mock
 
+import pandas
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.models.xcom import XCom
@@ -73,7 +74,7 @@ class TestDataframeFromSQL(unittest.TestCase):
 
     def test_dataframe_from_sql_basic(self):
         @adf.from_sql(conn_id="postgres_conn", database="pagila")
-        def my_df_func(df=None):
+        def my_df_func(df: pandas.DataFrame):
             return df.actor_id.count()
 
         res = self.create_and_run_task(my_df_func, (), {"df": "actor"})
@@ -86,7 +87,7 @@ class TestDataframeFromSQL(unittest.TestCase):
 
     def test_dataframe_from_sql_basic_op_arg(self):
         @adf.from_sql(conn_id="postgres_conn", database="pagila")
-        def my_df_func(df=None):
+        def my_df_func(df: pandas.DataFrame):
             return df.actor_id.count()
 
         res = self.create_and_run_task(my_df_func, ("actor",), {})
@@ -97,11 +98,24 @@ class TestDataframeFromSQL(unittest.TestCase):
             == 200
         )
 
+    def test_dataframe_from_sql_basic_op_arg_and_kwarg(self):
+        @adf.from_sql(conn_id="postgres_conn", database="pagila")
+        def my_df_func(actor_df: pandas.DataFrame, film_df: pandas.DataFrame):
+            return actor_df.actor_id.count() + film_df.film_id.count()
+
+        res = self.create_and_run_task(my_df_func, ("actor",), {"film_df": "film"})
+        assert (
+            XCom.get_one(
+                execution_date=DEFAULT_DATE, key=res.key, task_id=res.operator.task_id
+            )
+            == 1200
+        )
+
     def test_snow_dataframe_from_sql_basic(self):
         @adf.from_sql(
             conn_id="snowflake_conn",
         )
-        def my_df_func(df=None):
+        def my_df_func(df: pandas.DataFrame):
             return df.STRIPECUSTOMERID.count()
 
         res = self.create_and_run_task(my_df_func, (), {"df": "PRICE_TABLE"})
