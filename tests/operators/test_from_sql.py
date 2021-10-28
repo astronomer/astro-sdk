@@ -1,4 +1,6 @@
 import logging
+import os
+import pathlib
 import unittest.mock
 from unittest import mock
 
@@ -12,6 +14,7 @@ from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 
 import astronomer_sql_decorator.dataframe as adf
+from astronomer_sql_decorator import sql as aql
 
 # Import Operator
 
@@ -49,6 +52,12 @@ class TestDataframeFromSQL(unittest.TestCase):
                 "start_date": DEFAULT_DATE,
             },
         )
+        cwd = pathlib.Path(__file__).parent
+        aql.load_file(
+            path=str(cwd) + "/../data/homes.csv",
+            output_conn_id="snowflake_conn",
+            output_table_name="snowflake_decorator_test",
+        ).operator.execute(None)
 
     def clear_run(self):
         self.run = False
@@ -116,12 +125,14 @@ class TestDataframeFromSQL(unittest.TestCase):
             conn_id="snowflake_conn",
         )
         def my_df_func(df: pandas.DataFrame):
-            return df.STRIPECUSTOMERID.count()
+            return df.LIVING.count()
 
-        res = self.create_and_run_task(my_df_func, (), {"df": "PRICE_TABLE"})
+        res = self.create_and_run_task(
+            my_df_func, (), {"df": "snowflake_decorator_test"}
+        )
         assert (
             XCom.get_one(
                 execution_date=DEFAULT_DATE, key=res.key, task_id=res.operator.task_id
             )
-            == 70
+            == 47
         )

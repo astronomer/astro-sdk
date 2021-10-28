@@ -10,6 +10,8 @@ Run test:
 """
 
 import logging
+import os
+import pathlib
 import unittest.mock
 
 from airflow.models import DAG, DagRun
@@ -36,16 +38,34 @@ def drop_table(table_name, snowflake_conn):
     snowflake_conn.close()
 
 
+def get_snowflake_hook():
+    hook = SnowflakeHook(
+        snowflake_conn_id="snowflake_conn",
+        schema=os.environ["SNOWFLAKE_SCHEMA"],
+        database=os.environ["SNOWFLAKE_DB"],
+        warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
+    )
+    return hook
+
+
 class TestSnowflakeOperator(unittest.TestCase):
     """
     Test Sample Operator.
     """
+
+    cwd = pathlib.Path(__file__).parent
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
 
     def setUp(self):
+        cwd = pathlib.Path(__file__).parent
+        aql.load_file(
+            path=str(cwd) + "/../data/homes.csv",
+            output_conn_id="snowflake_conn",
+            output_table_name="snowflake_decorator_test",
+        ).operator.execute(None)
         super().setUp()
         self.dag = DAG(
             "test_dag",
@@ -79,27 +99,19 @@ class TestSnowflakeOperator(unittest.TestCase):
     def test_snowflake_query(self):
         @aql.transform(
             conn_id="snowflake_conn",
-            warehouse="TRANSFORMING_DEV",
-            schema="SANDBOX_DANIEL",
-            database="DWH_LEGACY",
         )
         def sample_snow(input_table: Table, output_table_name):
             return "SELECT * FROM {input_table} LIMIT 10"
 
-        hook = SnowflakeHook(
-            snowflake_conn_id="snowflake_conn",
-            schema="SANDBOX_DANIEL",
-            database="DWH_LEGACY",
-            warehouse="TRANSFORMING_DEV",
-        )
+        hook = get_snowflake_hook()
 
         drop_table(
             snowflake_conn=hook.get_conn(),
-            table_name='"DWH_LEGACY"."SANDBOX_DANIEL"."SNOWFLAKE_TRANSFORM_TEST_TABLE"',
+            table_name='"DWH_LEGACY"."SANDBOX_AIRFLOW_TEST"."SNOWFLAKE_TRANSFORM_TEST_TABLE"',
         )
         with self.dag:
             f = sample_snow(
-                input_table="PRICE_TABLE",
+                input_table="snowflake_decorator_test",
                 output_table_name="SNOWFLAKE_TRANSFORM_TEST_TABLE",
             )
 
@@ -112,35 +124,27 @@ class TestSnowflakeOperator(unittest.TestCase):
         f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
 
         df = hook.get_pandas_df(
-            'SELECT * FROM "DWH_LEGACY"."SANDBOX_DANIEL"."SNOWFLAKE_TRANSFORM_TEST_TABLE"'
+            'SELECT * FROM "DWH_LEGACY"."SANDBOX_AIRFLOW_TEST"."SNOWFLAKE_TRANSFORM_TEST_TABLE"'
         )
         assert len(df) == 10
 
     def test_raw_sql(self):
-        hook = SnowflakeHook(
-            snowflake_conn_id="snowflake_conn",
-            schema="SANDBOX_DANIEL",
-            database="DWH_LEGACY",
-            warehouse="TRANSFORMING_DEV",
-        )
+        hook = get_snowflake_hook()
 
         drop_table(
             snowflake_conn=hook.get_conn(),
-            table_name='"DWH_LEGACY"."SANDBOX_DANIEL"."SNOWFLAKE_TRANSFORM_RAW_SQL_TEST_TABLE"',
+            table_name='"DWH_LEGACY"."SANDBOX_AIRFLOW_TEST"."SNOWFLAKE_TRANSFORM_RAW_SQL_TEST_TABLE"',
         )
 
         @aql.run_raw_sql(
             conn_id="snowflake_conn",
-            warehouse="TRANSFORMING_DEV",
-            schema="SANDBOX_DANIEL",
-            database="DWH_LEGACY",
         )
         def sample_snow(my_input_table: Table):
             return "CREATE TABLE SNOWFLAKE_TRANSFORM_RAW_SQL_TEST_TABLE AS (SELECT * FROM {my_input_table} LIMIT 5)"
 
         with self.dag:
             f = sample_snow(
-                my_input_table="PRICE_TABLE",
+                my_input_table="snowflake_decorator_test",
             )
 
         dr = self.dag.create_dagrun(
@@ -153,6 +157,6 @@ class TestSnowflakeOperator(unittest.TestCase):
 
         # Read table from db
         df = hook.get_pandas_df(
-            'SELECT * FROM "DWH_LEGACY"."SANDBOX_DANIEL"."SNOWFLAKE_TRANSFORM_RAW_SQL_TEST_TABLE"'
+            'SELECT * FROM "DWH_LEGACY"."SANDBOX_AIRFLOW_TEST"."SNOWFLAKE_TRANSFORM_RAW_SQL_TEST_TABLE"'
         )
         assert len(df) == 5

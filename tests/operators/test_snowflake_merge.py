@@ -7,6 +7,7 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 
 import logging
 import math
+import os
 import pathlib
 import unittest.mock
 
@@ -45,25 +46,18 @@ class TestSnowflakeMerge(unittest.TestCase):
         super().setUpClass()
 
     def setUp(self):
-        super().setUp()
-
-    def load_tables(self):
+        cwd = pathlib.Path(__file__).parent
         aql.load_file(
-            path=str(self.cwd) + "/../data/homes_merge_1.csv",
+            path=str(cwd) + "/../data/homes_merge_1.csv",
             output_conn_id="snowflake_conn",
-            schema="SANDBOX_DANIEL",
-            database="DWH_LEGACY",
-            warehouse="TRANSFORMING_DEV",
             output_table_name="merge_test_1",
         ).operator.execute(None)
         aql.load_file(
-            path=str(self.cwd) + "/../data/homes_merge_2.csv",
+            path=str(cwd) + "/../data/homes_merge_2.csv",
             output_conn_id="snowflake_conn",
             output_table_name="merge_test_2",
-            schema="SANDBOX_DANIEL",
-            database="DWH_LEGACY",
-            warehouse="TRANSFORMING_DEV",
         ).operator.execute(None)
+        super().setUp()
 
     def test_merge_func(self):
         sql, parameters = snowflake_merge_func(
@@ -162,12 +156,10 @@ class TestSnowflakeMerge(unittest.TestCase):
             assert not is_valid_snow_identifier(i)
 
     def test_merge_basic_single_key(self):
-        self.load_tables()
         hook = SnowflakeHook(
             snowflake_conn_id="snowflake_conn",
-            schema="SANDBOX_DANIEL",
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
             database="DWH_LEGACY",
-            warehouse="TRANSFORMING_DEV",
         )
         a = aql.merge(
             target_table="merge_test_1",
@@ -178,8 +170,7 @@ class TestSnowflakeMerge(unittest.TestCase):
             conn_id="snowflake_conn",
             conflict_strategy="ignore",
             database="DWH_LEGACY",
-            schema="SANDBOX_DANIEL",
-            warehouse="TRANSFORMING_DEV",
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
         )
         a.execute(None)
 
@@ -194,12 +185,10 @@ class TestSnowflakeMerge(unittest.TestCase):
         assert math.isnan(df.SELL.to_list()[0])
 
     def test_merge_basic_ignore(self):
-        self.load_tables()
         hook = SnowflakeHook(
             snowflake_conn_id="snowflake_conn",
-            schema="SANDBOX_DANIEL",
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
             database="DWH_LEGACY",
-            warehouse="TRANSFORMING_DEV",
         )
         a = aql.merge(
             target_table="merge_test_1",
@@ -209,8 +198,7 @@ class TestSnowflakeMerge(unittest.TestCase):
             merge_columns=["list", "sell"],
             conn_id="snowflake_conn",
             database="DWH_LEGACY",
-            schema="SANDBOX_DANIEL",
-            warehouse="TRANSFORMING_DEV",
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
             conflict_strategy="ignore",
         )
         a.execute(None)
@@ -225,10 +213,9 @@ class TestSnowflakeMerge(unittest.TestCase):
         assert df.SELL.to_list() == [232, 142, 175, 129, 138]
 
     def test_merge_basic_update(self):
-        self.load_tables()
         hook = SnowflakeHook(
             snowflake_conn_id="snowflake_conn",
-            schema="SANDBOX_DANIEL",
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
             database="DWH_LEGACY",
             warehouse="TRANSFORMING_DEV",
         )
@@ -241,7 +228,7 @@ class TestSnowflakeMerge(unittest.TestCase):
             conn_id="snowflake_conn",
             conflict_strategy="update",
             database="DWH_LEGACY",
-            schema="SANDBOX_DANIEL",
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
             warehouse="TRANSFORMING_DEV",
         )
         a.execute(None)

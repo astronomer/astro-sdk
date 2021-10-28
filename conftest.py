@@ -1,4 +1,5 @@
 import os
+import pathlib
 
 import pytest
 
@@ -8,9 +9,11 @@ from airflow.models import Connection, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.utils.session import create_session
 
+from astronomer_sql_decorator import sql as aql
+
 
 @pytest.fixture(scope="session", autouse=True)
-def foo():
+def create_database_connections():
     with open(os.path.dirname(__file__) + "/test-connections.yaml") as file:
         yaml_with_env = os.path.expandvars(file.read())
         yaml_dicts = yaml.safe_load(yaml_with_env)

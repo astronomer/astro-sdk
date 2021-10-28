@@ -106,7 +106,7 @@ class TestPostgresAppend(unittest.TestCase):
                 conn_id="postgres_conn",
                 database="postgres",
                 append_table=APPEND_TABLE_NAME,
-                columns=["Sell", "Living"],
+                columns=["sell", "living"],
                 main_table=MAIN_TABLE_NAME,
             )
         dr = self.dag.create_dagrun(
@@ -126,8 +126,8 @@ class TestPostgresAppend(unittest.TestCase):
         df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
 
         assert len(df) == 6
-        assert not df["Sell"].hasnans
-        assert df["Rooms"].hasnans
+        assert not df["sell"].hasnans
+        assert df["rooms"].hasnans
 
     def test_append_all_fields(self):
         MAIN_TABLE_NAME = "test_main"
@@ -172,8 +172,8 @@ class TestPostgresAppend(unittest.TestCase):
         df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
 
         assert len(df) == 6
-        assert not df["Sell"].hasnans
-        assert not df["Rooms"].hasnans
+        assert not df["sell"].hasnans
+        assert not df["rooms"].hasnans
 
     def test_append_with_cast(self):
         MAIN_TABLE_NAME = "test_main"
@@ -200,8 +200,8 @@ class TestPostgresAppend(unittest.TestCase):
                 conn_id="postgres_conn",
                 database="postgres",
                 append_table=APPEND_TABLE_NAME,
-                columns=["Sell", "Living"],
-                casted_columns={"Age": "INTEGER"},
+                columns=["sell", "living"],
+                casted_columns={"age": "INTEGER"},
                 main_table=MAIN_TABLE_NAME,
             )
         dr = self.dag.create_dagrun(
@@ -220,8 +220,8 @@ class TestPostgresAppend(unittest.TestCase):
         df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
 
         assert len(df) == 6
-        assert not df["Sell"].hasnans
-        assert df["Rooms"].hasnans
+        assert not df["sell"].hasnans
+        assert df["rooms"].hasnans
 
     def wait_for_task_finish(self, dr, task_id):
         task = dr.get_task_instance(task_id)
@@ -254,7 +254,7 @@ class TestPostgresAppend(unittest.TestCase):
                 conn_id="postgres_conn",
                 database="postgres",
                 append_table=APPEND_TABLE_NAME,
-                casted_columns={"Age": "INTEGER"},
+                casted_columns={"age": "INTEGER"},
                 main_table=MAIN_TABLE_NAME,
             )
         dr = self.dag.create_dagrun(
@@ -274,5 +274,5 @@ class TestPostgresAppend(unittest.TestCase):
         df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
 
         assert len(df) == 6
-        assert not df["Age"].hasnans
-        assert df["Sell"].hasnans
+        assert not df["age"].hasnans
+        assert df["sell"].hasnans

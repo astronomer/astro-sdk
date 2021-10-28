@@ -33,7 +33,7 @@ setup(
         "snowflake-sqlalchemy==1.2.0",
         "apache-airflow-providers-postgres",
         "snowflake-connector-python[pandas]",
-        "boto3",
+        "boto3==1.18.65",
     ],
     setup_requires=["setuptools", "wheel"],
     author="Daniel Imberman, Plinio Guzman",

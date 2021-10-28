@@ -10,6 +10,7 @@ Run test:
 """
 
 import logging
+import os
 import pathlib
 import unittest.mock
 
@@ -108,15 +109,15 @@ class TestAgnosticLoadFile(unittest.TestCase):
         )
 
         assert df.iloc[0].to_dict() == {
-            "Sell": 142.0,
-            "List": 160.0,
-            "Living": 28.0,
-            "Rooms": 10.0,
-            "Beds": 5.0,
-            "Baths": 3.0,
-            "Age": 60.0,
-            "Acres": 0.28,
-            "Taxes": 3167.0,
+            "sell": 142.0,
+            "list": 160.0,
+            "living": 28.0,
+            "rooms": 10.0,
+            "beds": 5.0,
+            "baths": 3.0,
+            "age": 60.0,
+            "acres": 0.28,
+            "taxes": 3167.0,
         }
 
     def test_aql_local_file_to_postgres_no_output_table_name(self):
@@ -147,15 +148,15 @@ class TestAgnosticLoadFile(unittest.TestCase):
         )
 
         assert df.iloc[0].to_dict() == {
-            "Sell": 142.0,
-            "List": 160.0,
-            "Living": 28.0,
-            "Rooms": 10.0,
-            "Beds": 5.0,
-            "Baths": 3.0,
-            "Age": 60.0,
-            "Acres": 0.28,
-            "Taxes": 3167.0,
+            "sell": 142.0,
+            "list": 160.0,
+            "living": 28.0,
+            "rooms": 10.0,
+            "beds": 5.0,
+            "baths": 3.0,
+            "age": 60.0,
+            "acres": 0.28,
+            "taxes": 3167.0,
         }
 
     def test_aql_s3_file_to_postgres(self):
@@ -192,9 +193,8 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         hook = SnowflakeHook(
             snowflake_conn_id="snowflake_conn",
-            schema="SANDBOX_DANIEL",
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
             database="DWH_LEGACY",
-            warehouse="TRANSFORMING_DEV",
         )
 
         # Drop target table
@@ -208,8 +208,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
                 "output_conn_id": "snowflake_conn",
                 "output_table_name": OUTPUT_TABLE_NAME,
                 "database": "DWH_LEGACY",
-                "schema": "SANDBOX_DANIEL",
-                "warehouse": "TRANSFORMING_DEV",
+                "schema": "SANDBOX_AIRFLOW_TEST",
             },
         )
 
@@ -217,13 +216,13 @@ class TestAgnosticLoadFile(unittest.TestCase):
         df = hook.get_pandas_df(f"SELECT * FROM {OUTPUT_TABLE_NAME}")
 
         assert df.iloc[0].to_dict() == {
-            "Sell": 142.0,
-            "List": 160.0,
-            "Living": 28.0,
-            "Rooms": 10.0,
-            "Beds": 5.0,
-            "Baths": 3.0,
-            "Age": 60.0,
-            "Acres": 0.28,
-            "Taxes": 3167.0,
+            "SELL": 142.0,
+            "LIST": 160.0,
+            "LIVING": 28.0,
+            "ROOMS": 10.0,
+            "BEDS": 5.0,
+            "BATHS": 3.0,
+            "AGE": 60.0,
+            "ACRES": 0.28,
+            "TAXES": 3167.0,
         }

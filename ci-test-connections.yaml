@@ -13,7 +13,7 @@ connections:
     port: 443
     login: $SNOW_ACCOUNT_NAME
     password: $SNOW_PASSWORD
-    schema: SANDBOX_DANIEL
+    schema: SANDBOX_AIRFLOW_TEST
     extra:
       account: "gp21411"
       region: "us-east-1"

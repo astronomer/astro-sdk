@@ -96,18 +96,16 @@ class TestDataframeToSQL(unittest.TestCase):
     def test_snow_dataframe_to_sql_basic(self):
         hook = SnowflakeHook(
             snowflake_conn_id="snowflake_conn",
-            schema="SANDBOX_DANIEL",
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
             database="DWH_LEGACY",
-            warehouse="TRANSFORMING_DEV",
         )
 
         hook.run("DROP TABLE IF EXISTS TEST_DF_LOAD")
 
         @adf.to_sql(
             conn_id="snowflake_conn",
-            schema="SANDBOX_DANIEL",
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
             database="DWH_LEGACY",
-            warehouse="TRANSFORMING_DEV",
             output_table_name="TEST_DF_LOAD",
         )
         def my_df_func():

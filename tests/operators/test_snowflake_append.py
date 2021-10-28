@@ -10,6 +10,8 @@ Run test:
 """
 
 import logging
+import os
+import pathlib
 import unittest.mock
 
 from airflow.models import DAG, DagRun
@@ -35,6 +37,16 @@ def drop_table(table_name, snowflake_conn):
     snowflake_conn.close()
 
 
+def get_snowflake_hook():
+    hook = SnowflakeHook(
+        snowflake_conn_id="snowflake_conn",
+        schema=os.environ["SNOWFLAKE_SCHEMA"],
+        database=os.environ["SNOWFLAKE_DB"],
+        warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
+    )
+    return hook
+
+
 class TestSnowflakeAppend(unittest.TestCase):
     """Test Snowflake Append."""
 
@@ -54,6 +66,17 @@ class TestSnowflakeAppend(unittest.TestCase):
         self.addCleanup(self.dag.clear)
         self.clear_run()
         self.addCleanup(self.clear_run)
+        cwd = pathlib.Path(__file__).parent
+        aql.load_file(
+            path=str(cwd) + "/../data/homes_main.csv",
+            output_table_name="test_append_1",
+            output_conn_id="snowflake_conn",
+        ).operator.execute(None)
+        aql.load_file(
+            path=str(cwd) + "/../data/homes_append.csv",
+            output_table_name="test_append_2",
+            output_conn_id="snowflake_conn",
+        ).operator.execute(None)
 
     def clear_run(self):
         self.run = False
@@ -78,22 +101,6 @@ class TestSnowflakeAppend(unittest.TestCase):
     ):
         MAIN_TABLE_NAME = main_table_name
         APPEND_TABLE_NAME = append_table_name
-        hook = SnowflakeHook(
-            snowflake_conn_id="snowflake_conn",
-            schema="SANDBOX_DANIEL",
-            database="DWH_LEGACY",
-            warehouse="TRANSFORMING_DEV",
-        )
-
-        hook.run(
-            'DROP TABLE IF EXISTS TEST_APPEND1; CREATE TABLE TEST_APPEND1 AS (SELECT * FROM "DWH_LEGACY"."SANDBOX_DANIEL"."PRICE_TABLE" WHERE BILL_AMOUNT < 300000)'
-        )
-        hook.run(
-            'DROP TABLE IF EXISTS TEST_APPEND2; CREATE TABLE TEST_APPEND2 AS (SELECT * FROM "DWH_LEGACY"."SANDBOX_DANIEL"."PRICE_TABLE" WHERE BILL_AMOUNT > 300000)'
-        )
-
-        drop_table(table_name="test_main", snowflake_conn=hook.get_conn())
-        drop_table(table_name="test_append", snowflake_conn=hook.get_conn())
 
         with self.dag:
             foo = aql.append(
@@ -114,83 +121,59 @@ class TestSnowflakeAppend(unittest.TestCase):
         self.wait_for_task_finish(dr, foo.task_id)
 
     def test_append(self):
-        MAIN_TABLE_NAME = "TEST_APPEND1"
-        APPEND_TABLE_NAME = "TEST_APPEND2"
-        hook = SnowflakeHook(
-            snowflake_conn_id="snowflake_conn",
-            schema="SANDBOX_DANIEL",
-            database="DWH_LEGACY",
-            warehouse="TRANSFORMING_DEV",
-        )
+        MAIN_TABLE_NAME = "TEST_APPEND_1"
+        APPEND_TABLE_NAME = "TEST_APPEND_2"
+        hook = get_snowflake_hook()
+
         self.run_append_func(MAIN_TABLE_NAME, APPEND_TABLE_NAME, [], {})
         main_table_count = hook.run(f"SELECT COUNT(*) FROM {MAIN_TABLE_NAME}")
-        original_table_count = hook.run(
-            'SELECT COUNT(*) FROM "DWH_LEGACY"."SANDBOX_DANIEL"."PRICE_TABLE"'
-        )
-        assert main_table_count[0]["COUNT(*)"] == original_table_count[0]["COUNT(*)"]
+        assert main_table_count[0]["COUNT(*)"] == 6
 
     def test_append_no_cast(self):
-        MAIN_TABLE_NAME = "TEST_APPEND1"
-        APPEND_TABLE_NAME = "TEST_APPEND2"
-        hook = SnowflakeHook(
-            snowflake_conn_id="snowflake_conn",
-            schema="SANDBOX_DANIEL",
-            database="DWH_LEGACY",
-            warehouse="TRANSFORMING_DEV",
-        )
+        MAIN_TABLE_NAME = "TEST_APPEND_1"
+        APPEND_TABLE_NAME = "TEST_APPEND_2"
+        hook = get_snowflake_hook()
 
-        self.run_append_func(
-            MAIN_TABLE_NAME, APPEND_TABLE_NAME, ["STRIPECUSTOMERID"], {}
-        )
+        self.run_append_func(MAIN_TABLE_NAME, APPEND_TABLE_NAME, ["BEDS"], {})
 
         df = hook.get_pandas_df(f"SELECT * FROM {MAIN_TABLE_NAME}")
 
-        assert len(df) == 70
-        assert not df["STRIPECUSTOMERID"].hasnans
-        assert df["WORKSPACE"].hasnans
+        assert len(df) == 6
+        assert not df["BEDS"].hasnans
+        assert df["ROOMS"].hasnans
 
     def test_append_with_cast(self):
-        MAIN_TABLE_NAME = "TEST_APPEND1"
-        APPEND_TABLE_NAME = "TEST_APPEND2"
+        MAIN_TABLE_NAME = "TEST_APPEND_1"
+        APPEND_TABLE_NAME = "TEST_APPEND_2"
 
-        self.run_append_func(
-            MAIN_TABLE_NAME, APPEND_TABLE_NAME, [], {"BILL_AMOUNT": "FLOAT"}
-        )
+        self.run_append_func(MAIN_TABLE_NAME, APPEND_TABLE_NAME, [], {"ACRES": "FLOAT"})
 
-        hook = SnowflakeHook(
-            snowflake_conn_id="snowflake_conn",
-            schema="SANDBOX_DANIEL",
-            database="DWH_LEGACY",
-            warehouse="TRANSFORMING_DEV",
-        )
+        hook = get_snowflake_hook()
+
         df = hook.get_pandas_df(f"SELECT * FROM {MAIN_TABLE_NAME}")
 
-        assert len(df) == 70
-        assert not df["BILL_AMOUNT"].hasnans
-        assert df["WORKSPACE"].hasnans
+        assert len(df) == 6
+        assert not df["ACRES"].hasnans
+        assert df["BEDS"].hasnans
 
     def test_append_with_cast_and_no_cast(self):
-        MAIN_TABLE_NAME = "TEST_APPEND1"
-        APPEND_TABLE_NAME = "TEST_APPEND2"
-        hook = SnowflakeHook(
-            snowflake_conn_id="snowflake_conn",
-            schema="SANDBOX_DANIEL",
-            database="DWH_LEGACY",
-            warehouse="TRANSFORMING_DEV",
-        )
+        MAIN_TABLE_NAME = "TEST_APPEND_1"
+        APPEND_TABLE_NAME = "TEST_APPEND_2"
+        hook = get_snowflake_hook()
+
         self.run_append_func(
             MAIN_TABLE_NAME,
             APPEND_TABLE_NAME,
-            ["STRIPECUSTOMERID"],
-            {"BILL_AMOUNT": "FLOAT"},
+            ["BEDS"],
+            {"ACRES": "FLOAT"},
         )
 
         df = hook.get_pandas_df(f"SELECT * FROM {MAIN_TABLE_NAME}")
 
-        assert len(df) == 70
-        assert not df["BILL_AMOUNT"].hasnans
-        assert not df["STRIPECUSTOMERID"].hasnans
-        assert df["WORKSPACE"].hasnans
+        assert len(df) == 6
+        assert not df["BEDS"].hasnans
+        assert not df["ACRES"].hasnans
+        assert df["LIVING"].hasnans
 
 
 if __name__ == "__main__":

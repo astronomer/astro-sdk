@@ -274,8 +274,7 @@ a = aql.merge(
     merge_columns=["list", "sell"],
     conn_id="snowflake_conn",
     database="DWH_LEGACY",
-    schema="SANDBOX_DANIEL",
-    warehouse="TRANSFORMING_DEV",
+    os.getenv("SNOWFLAKE_SCHEMA"),
     conflict_strategy="ignore",
 )
 ```
