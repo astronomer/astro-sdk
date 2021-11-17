@@ -7,6 +7,7 @@ from astronomer_sql_decorator.operators.agnostic_load_file import load_file
 from astronomer_sql_decorator.operators.agnostic_save_file import save_file
 from astronomer_sql_decorator.operators.agnostic_sql_append import SqlAppendOperator
 from astronomer_sql_decorator.operators.agnostic_sql_merge import SqlMergeOperator
+from astronomer_sql_decorator.operators.agnostic_sql_truncate import SqlTruncateOperator
 from astronomer_sql_decorator.operators.sql_decorator import transform_decorator
 
 
@@ -111,6 +112,31 @@ def merge(
         target_columns=target_columns,
         merge_columns=merge_columns,
         conflict_strategy=conflict_strategy,
+        conn_id=conn_id,
+        database=database,
+        schema=schema,
+        warehouse=warehouse,
+    )
+
+
+def truncate(
+    table: str,
+    conn_id: str,
+    database: str = "",
+    schema: str = "",
+    warehouse: str = "",
+    **kwargs,
+):
+    """`
+    :param table: The table that we will truncate
+    :param database:
+    :param schema: Snowflake, specific. Specify Snowflake schema
+    :param kwargs:
+    :return:
+    """
+
+    return SqlTruncateOperator(
+        table_name=table,
         conn_id=conn_id,
         database=database,
         schema=schema,

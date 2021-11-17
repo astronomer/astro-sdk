@@ -12,6 +12,7 @@
   - [Raw SQL](#raw-sql)
   - [Appending data](#appending-data)
   - [Merging data](#merging-data)
+  - [Truncate table](#truncate-table)
 - [Dataframe functionality](#dataframe-functionality)
   - [from_sql](#from_sql)
   - [to_sql](#to_sql)
@@ -274,8 +275,17 @@ a = aql.merge(
     merge_columns=["list", "sell"],
     conn_id="snowflake_conn",
     database="DWH_LEGACY",
-    os.getenv("SNOWFLAKE_SCHEMA"),
     conflict_strategy="ignore",
+)
+```
+
+## Truncate table
+
+```python
+a = aql.truncate(
+    table="truncate_table",
+    conn_id="snowflake_conn",
+    database="DWH_LEGACY",
 )
 ```
 

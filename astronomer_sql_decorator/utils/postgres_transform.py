@@ -13,7 +13,11 @@ def parse_template(sql):
 def process_params(parameters, python_callable):
     param_types = inspect.signature(python_callable).parameters
     return {
-        k: (AsIs(v) if param_types.get(k).annotation == Table else v)
+        k: (
+            AsIs(v)
+            if param_types.get(k) and param_types.get(k).annotation == Table
+            else v
+        )
         for k, v in parameters.items()
     }
 

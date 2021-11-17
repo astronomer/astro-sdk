@@ -84,6 +84,15 @@ class TestPostgresDecorator(unittest.TestCase):
 
         self.create_and_run_task(sample_pg, (), {"input_table": "actor"})
 
+    def test_postgres_with_parameter(self):
+        @aql.transform(conn_id="postgres_conn", database="pagila")
+        def sample_pg(input_table: Table):
+            return "SELECT * FROM {input_table} WHERE last_name LIKE {last_name}", {
+                "last_name": "G%%"
+            }
+
+        self.create_and_run_task(sample_pg, (), {"input_table": "actor"})
+
     def test_postgres_join(self):
         self.hook_target = PostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
