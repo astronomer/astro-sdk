@@ -27,7 +27,7 @@ setup(
     ],
     install_requires=[
         "apache-airflow>=2.0",
-        "pandas",
+        "pandas>=1.3.4",
         "s3fs",
         "apache-airflow-providers-snowflake",
         "snowflake-sqlalchemy==1.2.0",

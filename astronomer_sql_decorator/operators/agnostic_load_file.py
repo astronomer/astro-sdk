@@ -4,7 +4,9 @@ from typing import Optional
 import pandas as pd
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
-from snowflake.connector.pandas_tools import pd_writer
+from pandas.core.dtypes.inference import is_dict_like
+from pandas.io.sql import SQLDatabase, SQLTable
+from snowflake.connector.pandas_tools import write_pandas
 
 from astronomer_sql_decorator.operators.temp_hooks import (
     TempPostgresHook,
@@ -32,6 +34,7 @@ class AgnosticLoadFile(BaseOperator):
         output_table_name=None,
         file_conn_id="",
         output_conn_id="",
+        chunksize=None,
         database: Optional[str] = None,
         schema: Optional[str] = None,
         warehouse: Optional[str] = None,
@@ -39,6 +42,7 @@ class AgnosticLoadFile(BaseOperator):
     ) -> None:
         super().__init__(**kwargs)
         self.path = path
+        self.chunksize = chunksize
         self.file_conn_id = file_conn_id
         self.output_conn_id = output_conn_id
         self.database = database
@@ -78,17 +82,32 @@ class AgnosticLoadFile(BaseOperator):
             hook.database = self.database
         # Write df to target db
         # Note: the `method` argument changes when writing to Snowflake
-        write_method = None
         if conn_type == "snowflake":
-            meth = pd_writer
-        df.to_sql(
-            self.output_table_name,
-            con=hook.get_sqlalchemy_engine(),
-            schema=None,
-            if_exists="replace",
-            method=write_method,
-            index=False,
-        )
+
+            db = SQLDatabase(engine=hook.get_sqlalchemy_engine())
+            db.prep_table(
+                df,
+                self.output_table_name.lower(),
+                if_exists="replace",
+                index=False,
+            )
+            write_pandas(
+                hook.get_conn(),
+                df,
+                self.output_table_name,
+                chunk_size=self.chunksize,
+                quote_identifiers=False,
+            )
+        else:
+            df.to_sql(
+                self.output_table_name,
+                con=hook.get_sqlalchemy_engine(),
+                schema=None,
+                if_exists="replace",
+                chunksize=self.chunksize,
+                method="multi",
+                index=False,
+            )
 
     def _load_dataframe(self, path):
         """Read file with Pandas.
