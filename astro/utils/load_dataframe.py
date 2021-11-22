@@ -1,9 +1,6 @@
 from snowflake.connector.pandas_tools import pd_writer
 
-from astronomer_sql_decorator.operators.temp_hooks import (
-    TempPostgresHook,
-    TempSnowflakeHook,
-)
+from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
 
 
 def move_dataframe_to_sql(

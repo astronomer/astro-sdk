@@ -1,6 +1,6 @@
 from typing import Dict
 
-from astronomer_sql_decorator.operators.sql_decorator import SqlDecoratoratedOperator
+from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 
 
 class SqlTruncateOperator(SqlDecoratoratedOperator):
@@ -32,7 +32,7 @@ class SqlTruncateOperator(SqlDecoratoratedOperator):
         )
 
     def execute(self, context: Dict):
-        from astronomer_sql_decorator.sql.types import Table
+        from astro.sql.types import Table
 
         self.sql = "TRUNCATE TABLE {table_name};"
 

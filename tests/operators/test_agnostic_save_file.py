@@ -25,7 +25,7 @@ from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 
 # Import Operator
-from astronomer_sql_decorator.operators.agnostic_save_file import save_file
+from astro.sql.operators.agnostic_save_file import save_file
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)

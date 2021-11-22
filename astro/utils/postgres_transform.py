@@ -3,7 +3,7 @@ import inspect
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from psycopg2.extensions import AsIs
 
-from astronomer_sql_decorator.sql.types import Table
+from astro.sql.types import Table
 
 
 def parse_template(sql):

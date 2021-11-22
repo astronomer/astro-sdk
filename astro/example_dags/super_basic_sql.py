@@ -3,8 +3,8 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from pandas import DataFrame
 
-import astronomer_sql_decorator.sql as aql
-from astronomer_sql_decorator.sql.types import Table
+import astro.sql as aql
+from astro.sql.types import Table
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization

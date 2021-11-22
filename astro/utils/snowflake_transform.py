@@ -1,7 +1,7 @@
 import inspect
 import re
 
-from astronomer_sql_decorator.sql.types import Table
+from astro.sql.types import Table
 
 
 def _parse_template(sql, python_callable):

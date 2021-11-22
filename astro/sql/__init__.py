@@ -3,12 +3,12 @@ from typing import Callable, Iterable, List, Mapping, Optional, Union
 from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 
-from astronomer_sql_decorator.operators.agnostic_load_file import load_file
-from astronomer_sql_decorator.operators.agnostic_save_file import save_file
-from astronomer_sql_decorator.operators.agnostic_sql_append import SqlAppendOperator
-from astronomer_sql_decorator.operators.agnostic_sql_merge import SqlMergeOperator
-from astronomer_sql_decorator.operators.agnostic_sql_truncate import SqlTruncateOperator
-from astronomer_sql_decorator.operators.sql_decorator import transform_decorator
+from astro.sql.operators.agnostic_load_file import load_file
+from astro.sql.operators.agnostic_save_file import save_file
+from astro.sql.operators.agnostic_sql_append import SqlAppendOperator
+from astro.sql.operators.agnostic_sql_merge import SqlMergeOperator
+from astro.sql.operators.agnostic_sql_truncate import SqlTruncateOperator
+from astro.sql.operators.sql_decorator import transform_decorator
 
 
 def transform(

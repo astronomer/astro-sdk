@@ -13,17 +13,15 @@ setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     entry_points={
-        "apache_airflow_provider": [
-            "provider_info=astronomer_sql_decorator.__init__:get_provider_info"
-        ]
+        "apache_airflow_provider": ["provider_info=astro.__init__:get_provider_info"]
     },
     license="Apache License 2.0",
     packages=[
-        "astronomer_sql_decorator",
-        "astronomer_sql_decorator.dataframe",
-        "astronomer_sql_decorator.operators",
-        "astronomer_sql_decorator.sql",
-        "astronomer_sql_decorator.utils",
+        "astro",
+        "astro.dataframe",
+        "astro.sql.operators",
+        "astro.sql",
+        "astro.utils",
     ],
     install_requires=[
         "apache-airflow>=2.0",

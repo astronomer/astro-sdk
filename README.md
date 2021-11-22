@@ -48,9 +48,9 @@ from pandas import DataFrame
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
-from astronomer_sql_decorator import dataframe as adf
-from astronomer_sql_decorator import sql as aql
-from astronomer_sql_decorator.sql.types import Table
+from astro import dataframe as adf
+from astro import sql as aql
+from astro.sql.types import Table
 
 default_args = {
     "owner": "airflow",

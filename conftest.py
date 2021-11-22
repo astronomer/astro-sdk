@@ -9,7 +9,7 @@ from airflow.models import Connection, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.utils.session import create_session
 
-from astronomer_sql_decorator import sql as aql
+from astro import sql as aql
 
 
 @pytest.fixture(scope="session", autouse=True)

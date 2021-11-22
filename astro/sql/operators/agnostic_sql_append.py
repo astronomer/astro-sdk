@@ -3,9 +3,9 @@ from typing import Dict, List
 from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 
-from astronomer_sql_decorator.operators.sql_decorator import SqlDecoratoratedOperator
-from astronomer_sql_decorator.utils.postgres_append import postgres_append_func
-from astronomer_sql_decorator.utils.snowflake_append import snowflake_append_func
+from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
+from astro.utils.postgres_append import postgres_append_func
+from astro.utils.snowflake_append import snowflake_append_func
 
 
 class SqlAppendOperator(SqlDecoratoratedOperator):

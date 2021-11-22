@@ -23,8 +23,8 @@ from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 
 # Import Operator
-from astronomer_sql_decorator import sql as aql
-from astronomer_sql_decorator.sql.types import Table
+from astro import sql as aql
+from astro.sql.types import Table
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)

@@ -4,7 +4,7 @@ from airflow.decorators import dag
 from airflow.utils import timezone
 
 # Import Operator
-import astronomer_sql_decorator.sql as aql
+import astro.sql as aql
 
 default_args = {
     "owner": "airflow",

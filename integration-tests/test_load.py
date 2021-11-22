@@ -1,6 +1,6 @@
 import timeit
 
-from astronomer_sql_decorator import sql as aql
+from astro import sql as aql
 
 start = timeit.default_timer()
 f = aql.load_file(

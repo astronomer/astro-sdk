@@ -15,8 +15,8 @@ from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 
 # Import Operator
-import astronomer_sql_decorator.sql as aql
-from astronomer_sql_decorator.utils.snowflake_merge_func import (
+import astro.sql as aql
+from astro.utils.snowflake_merge_func import (
     is_valid_snow_identifier,
     snowflake_merge_func,
 )

@@ -8,10 +8,7 @@ from airflow.models import BaseOperator, DagRun, TaskInstance
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 
-from astronomer_sql_decorator.operators.temp_hooks import (
-    TempPostgresHook,
-    TempSnowflakeHook,
-)
+from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
 
 
 class SaveFile(BaseOperator):

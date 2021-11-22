@@ -13,7 +13,7 @@ from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 
-import astronomer_sql_decorator.dataframe as adf
+import astro.dataframe as adf
 
 # Import Operator
 

@@ -8,11 +8,8 @@ from pandas.core.dtypes.inference import is_dict_like
 from pandas.io.sql import SQLDatabase, SQLTable
 from snowflake.connector.pandas_tools import write_pandas
 
-from astronomer_sql_decorator.operators.temp_hooks import (
-    TempPostgresHook,
-    TempSnowflakeHook,
-)
-from astronomer_sql_decorator.utils.load_dataframe import move_dataframe_to_sql
+from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
+from astro.utils.load_dataframe import move_dataframe_to_sql
 
 
 class AgnosticLoadFile(BaseOperator):

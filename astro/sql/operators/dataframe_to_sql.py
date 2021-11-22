@@ -7,11 +7,8 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from snowflake.connector.pandas_tools import pd_writer
 
-from astronomer_sql_decorator.operators.temp_hooks import (
-    TempPostgresHook,
-    TempSnowflakeHook,
-)
-from astronomer_sql_decorator.utils.load_dataframe import move_dataframe_to_sql
+from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
+from astro.utils.load_dataframe import move_dataframe_to_sql
 
 
 class DataframeToSqlOperator(DecoratedOperator):

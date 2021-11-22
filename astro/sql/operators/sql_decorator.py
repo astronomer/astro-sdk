@@ -8,7 +8,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils.db import provide_session
 
-from astronomer_sql_decorator.utils import postgres_transform, snowflake_transform
+from astro.utils import postgres_transform, snowflake_transform
 
 
 class SqlDecoratoratedOperator(DecoratedOperator):

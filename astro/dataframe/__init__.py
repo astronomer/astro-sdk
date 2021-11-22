@@ -2,8 +2,8 @@ from typing import Callable, Optional
 
 from airflow.decorators.base import task_decorator_factory
 
-from astronomer_sql_decorator.operators.dataframe_to_sql import DataframeToSqlOperator
-from astronomer_sql_decorator.operators.sql_to_dataframe import SqlToDataframeOperator
+from astro.sql.operators.dataframe_to_sql import DataframeToSqlOperator
+from astro.sql.operators.sql_to_dataframe import SqlToDataframeOperator
 
 
 def from_sql(

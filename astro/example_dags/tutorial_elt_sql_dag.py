@@ -5,7 +5,7 @@ from airflow.decorators import dag, task
 from airflow.utils.dates import days_ago
 from pandas import DataFrame
 
-import astronomer_sql_decorator.sql as aql
+import astro.sql as aql
 
 # [END import_module]
 
