@@ -68,7 +68,11 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             else:
                 self.sql = sql_stuff
                 self.parameters = {}
-
+        if context:
+            self.sql = self.render_template(self.sql, context)
+            self.parameters = {
+                k: self.render_template(v, context) for k, v in self.parameters.items()  # type: ignore
+            }
         self._parse_template()
         output_table_name = None
 
@@ -84,6 +88,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.parameters.update(self.op_kwargs)  # type: ignore
 
         self.parameters.update(self.op_kwargs)  # type: ignore
+
         self._process_params()
         self._run_sql()
         # Run execute function of subclassed Operator.

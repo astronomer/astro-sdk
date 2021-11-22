@@ -93,6 +93,24 @@ class TestPostgresDecorator(unittest.TestCase):
 
         self.create_and_run_task(sample_pg, (), {"input_table": "actor"})
 
+    def test_postgres_with_jinja_template(self):
+        @aql.transform(conn_id="postgres_conn", database="pagila")
+        def sample_pg(input_table: Table):
+            return (
+                "SELECT * FROM {input_table} WHERE rental_date < '{{ execution_date }}'"
+            )
+
+        self.create_and_run_task(sample_pg, (), {"input_table": "rental"})
+
+    def test_postgres_with_jinja_template_params(self):
+        @aql.transform(conn_id="postgres_conn", database="pagila")
+        def sample_pg(input_table: Table):
+            return "SELECT * FROM {input_table} WHERE rental_date < {r_date}", {
+                "r_date": "{{ execution_date }}"
+            }
+
+        self.create_and_run_task(sample_pg, (), {"input_table": "rental"})
+
     def test_postgres_join(self):
         self.hook_target = PostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
