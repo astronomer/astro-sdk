@@ -158,8 +158,8 @@ class TestSnowflakeMerge(unittest.TestCase):
     def test_merge_basic_single_key(self):
         hook = SnowflakeHook(
             snowflake_conn_id="snowflake_conn",
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
-            database="DWH_LEGACY",
+            schema=os.getenv("SNOW_SCHEMA"),
+            database=os.getenv("SNOW_DATABASE"),
         )
         a = aql.merge(
             target_table="merge_test_1",
@@ -169,8 +169,8 @@ class TestSnowflakeMerge(unittest.TestCase):
             merge_columns=["list"],
             conn_id="snowflake_conn",
             conflict_strategy="ignore",
-            database="DWH_LEGACY",
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOW_DATABASE"),
+            schema=os.getenv("SNOW_SCHEMA"),
         )
         a.execute(None)
 
@@ -187,8 +187,8 @@ class TestSnowflakeMerge(unittest.TestCase):
     def test_merge_basic_ignore(self):
         hook = SnowflakeHook(
             snowflake_conn_id="snowflake_conn",
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
-            database="DWH_LEGACY",
+            schema=os.getenv("SNOW_SCHEMA"),
+            database=os.getenv("SNOW_DATABASE"),
         )
         a = aql.merge(
             target_table="merge_test_1",
@@ -197,8 +197,8 @@ class TestSnowflakeMerge(unittest.TestCase):
             target_columns=["list", "sell"],
             merge_columns=["list", "sell"],
             conn_id="snowflake_conn",
-            database="DWH_LEGACY",
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOW_DATABASE"),
+            schema=os.getenv("SNOW_SCHEMA"),
             conflict_strategy="ignore",
         )
         a.execute(None)
@@ -215,8 +215,8 @@ class TestSnowflakeMerge(unittest.TestCase):
     def test_merge_basic_update(self):
         hook = SnowflakeHook(
             snowflake_conn_id="snowflake_conn",
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
-            database="DWH_LEGACY",
+            schema=os.getenv("SNOW_SCHEMA"),
+            database=os.getenv("SNOW_DATABASE"),
             warehouse="TRANSFORMING_DEV",
         )
         a = aql.merge(
@@ -227,8 +227,8 @@ class TestSnowflakeMerge(unittest.TestCase):
             merge_columns=["list", "sell", "age"],
             conn_id="snowflake_conn",
             conflict_strategy="update",
-            database="DWH_LEGACY",
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOW_DATABASE"),
+            schema=os.getenv("SNOW_SCHEMA"),
             warehouse="TRANSFORMING_DEV",
         )
         a.execute(None)

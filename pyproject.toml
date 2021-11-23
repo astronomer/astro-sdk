@@ -1,0 +1,55 @@
+[build-system]
+requires = ["flit_core ~=3.2"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "astro"
+dynamic = ["version", "description"]
+
+authors = [
+    {name = "Daniel Imberman", email = "daniel@astronomer.io"},
+    {name = "Plinio Guzman"},
+]
+readme = "README.md"
+license = {file = "LICENSE"}
+
+requires-python = ">=3.7"
+dependencies = [
+    "apache-airflow >=2.0",
+    "apache-airflow-providers-postgres",
+    "apache-airflow-providers-snowflake",
+    "boto3 ==1.18.65",
+    "pandas >=1.3.4",
+    "s3fs",
+    "snowflake-sqlalchemy ==1.2.0",
+    "snowflake-connector-python[pandas]",
+]
+
+keywords = ["airflow", "provider", "astronomer", "sql", "decorator"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Database",
+]
+
+[project.optional-dependencies]
+tests = [
+    "pytest >=6.0",
+    "pytest-dotenv",
+    "requests-mock",
+]
+
+[project.urls]
+Home = "http://astronomer.io/"
+
+[project.entry-points.apache_airflow_provider]
+provider_info = "astro.__init__:get_provider_info"
+
+[tool.pytest.ini_options]
+env_files = [".env"]
+testpaths = ["tests"]

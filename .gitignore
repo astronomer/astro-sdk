@@ -9,3 +9,5 @@ airflow_settings.yaml
 *.pyc
 */__pycache__/*
 .idea%
+/build/
+/dist/

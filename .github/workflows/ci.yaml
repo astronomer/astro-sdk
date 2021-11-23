@@ -12,7 +12,7 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ~/.cache/pip
-          key: ${{ hashFiles('setup.py') }}-${{ hashFiles('dev-requirements.txt') }}
+          key: ${{ hashFiles('pyproject.toml') }}
       - uses: pre-commit/action@v2.0.3
   Run-Unit-tests:
     runs-on: ubuntu-latest
@@ -43,21 +43,10 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ~/.cache/pip
-          key: ${{ hashFiles('setup.py') }}-${{ hashFiles('dev-requirements.txt') }}
+          key: ${{ hashFiles('pyproject.toml') }}
       - run: cat ci-test-connections.yaml > test-connections.yaml
-      - run: pip3 install -e .
-      - run: pip3 install pytest
-      - run: pip3 install requests-mock
-      - run: airflow db init
-      - run: echo "\l" | PGPASSWORD=postgres psql -U postgres -h localhost -p 5432
-        env:
-          # The hostname used to communicate with the PostgreSQL service container
-          POSTGRES_HOST: localhost
-          # The default PostgreSQL port
-          POSTGRES_PORT: 5432
-          POSTGRES_PASSWORD: postgres
-      - run: pytest tests
-        # Environment variables used by the `client.js` script to create a new PostgreSQL table.
+      - run: pip3 install nox
+      - run: nox -s test
         env:
           # The hostname used to communicate with the PostgreSQL service container
           POSTGRES_HOST: postgres
@@ -66,6 +55,10 @@ jobs:
           AIRFLOW__SQL_DECORATOR__CONN_AWS_DEFAULT: ${{ secrets.AWS_ACCESS_CRED }}
           SNOW_ACCOUNT_NAME: ${{ secrets.SNOW_UNAME }}
           SNOW_PASSWORD: ${{ secrets.SNOW_PASSWORD }}
-          SNOWFLAKE_SCHEMA: SANDBOX_AIRFLOW_TEST
-          SNOWFLAKE_DB: DWH_LEGACY
-          SNOWFLAKE_WAREHOUSE: TRANSFORMING_DEV
+          SNOW_SCHEMA: SANDBOX_AIRFLOW_TEST
+          SNOW_DATABASE: DWH_LEGACY
+          SNOW_WAREHOUSE: TRANSFORMING_DEV
+          SNOW_HOST: https://gp21411.us-east-1.snowflakecomputing.com
+          SNOW_ACCOUNT: gp21411
+          SNOW_REGION: us-east-1
+          SNOW_ROLE: TRANSFORMER
