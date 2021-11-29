@@ -24,6 +24,8 @@ class SaveFile(BaseOperator):
     :type output_conn_id: str
     :param overwrite: Overwrite file if exists. Default False.
     :type overwrite: bool
+    :param output_file_format: file formats, valid values csv/parquet. Default: 'csv'.
+    :type output_file_format: str
     """
 
     def __init__(
@@ -32,6 +34,7 @@ class SaveFile(BaseOperator):
         output_file_path="",
         input_conn_id="",
         output_conn_id=None,
+        output_file_format="csv",
         overwrite=None,
         database: Optional[str] = None,
         schema: Optional[str] = None,
@@ -47,6 +50,7 @@ class SaveFile(BaseOperator):
         self.database = database
         self.schema = schema
         self.warehouse = warehouse
+        self.output_file_format = output_file_format
         self.kwargs = kwargs
 
     def execute(self, context):
@@ -108,11 +112,14 @@ class SaveFile(BaseOperator):
             return os.path.isfile(output_file_path)
 
     def agnostic_write_file(self, df, output_file_path, output_conn_id=None):
+        """Write dataframe to csv/parquet files formats
+
+        Select output file format based on param output_file_format to class.
+        """
         storage_options = self._s3fs_creds() if "s3://" in output_file_path else None
-        if "s3://" in output_file_path:
-            df.to_csv(output_file_path, storage_options=storage_options)
-        else:
-            df.to_csv(output_file_path)
+        {"csv": df.to_csv, "parquet": df.to_parquet}[self.output_file_format](
+            output_file_path, storage_options=storage_options
+        )
 
     def _load_dataframe(self, path):
         """Read file with Pandas.
@@ -157,6 +164,7 @@ def save_file(
     database="",
     schema="",
     warehouse="",
+    output_file_format="csv",
     **kwargs,
 ):
     """Convert SaveFile into a function. Returns XComArg.
@@ -186,4 +194,5 @@ def save_file(
         database=database,
         schema=schema,
         warehouse=warehouse,
+        output_file_format=output_file_format,
     ).output

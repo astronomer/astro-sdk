@@ -80,7 +80,7 @@ class TestSaveFile(unittest.TestCase):
         f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         return f
 
-    def test_save_snowflake_table_to_local(self):
+    def test_save_snowflake_table_to_local_with_csv_format(self):
 
         OUTPUT_FILE_PATH = str(self.cwd) + "/../data/save_snow_file_out.csv"
         INPUT_TABLE_NAME = "rental"
@@ -117,6 +117,48 @@ class TestSaveFile(unittest.TestCase):
         df_file = pd.read_csv(OUTPUT_FILE_PATH)
 
         assert len(df_file) == 16044
+        assert (df["rental_id"] == df_file["rental_id"]).all()
+
+        # Delete output file after run
+        os.remove(OUTPUT_FILE_PATH)
+
+    def test_save_snowflake_table_to_local_with_parquet_format(self):
+
+        OUTPUT_FILE_PATH = str(self.cwd) + "/../data/save_snow_file_out.parquet"
+        INPUT_TABLE_NAME = "rental"
+
+        # Delete output file prior to run
+        try:
+            os.remove(OUTPUT_FILE_PATH)
+        except OSError:
+            pass
+
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+
+        self.create_and_run_task(
+            save_file,
+            (),
+            {
+                "table": INPUT_TABLE_NAME,
+                "output_file_path": OUTPUT_FILE_PATH,
+                "input_conn_id": "postgres_conn",
+                "database": "pagila",
+                "output_conn_id": None,
+                "overwrite": True,
+                "output_file_format": "parquet",
+            },
+        )
+
+        # Read table from db
+        df = pd.read_sql(
+            f"SELECT * FROM {INPUT_TABLE_NAME}", con=self.hook_target.get_conn()
+        )
+
+        # Read output Parquet
+        df_file = pd.read_parquet(OUTPUT_FILE_PATH)
+
         assert (df["rental_id"] == df_file["rental_id"]).all()
 
         # Delete output file after run
