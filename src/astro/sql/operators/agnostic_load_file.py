@@ -1,5 +1,6 @@
 import os
 from typing import Optional
+from urllib.parse import urlparse
 
 import pandas as pd
 from airflow.hooks.base import BaseHook
@@ -106,11 +107,24 @@ class AgnosticLoadFile(BaseOperator):
                 index=False,
             )
 
+    @staticmethod
+    def validate_path(path):
+        """Validate a URL or local file path"""
+        try:
+            result = urlparse(path)
+            return all([result.scheme, result.netloc]) or os.path.isfile(path)
+        except:
+            return False
+
     def _load_dataframe(self, path):
         """Read file with Pandas.
 
         Select method based on `file_type` (S3 or local).
         """
+
+        if not AgnosticLoadFile.validate_path(path):
+            raise ValueError("Invalid path: {}".format(path))
+
         file_type = path.split(".")[-1]
         storage_options = self._s3fs_creds() if "s3://" in path else None
         return {"parquet": pd.read_parquet, "csv": pd.read_csv}[file_type](

@@ -25,7 +25,7 @@ from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 
 # Import Operator
-from astro.sql.operators.agnostic_load_file import load_file
+from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
 from astro.sql.operators.temp_hooks import TempPostgresHook
 
 log = logging.getLogger(__name__)
@@ -80,6 +80,21 @@ class TestAgnosticLoadFile(unittest.TestCase):
         )
         f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         return f
+
+    def test_path_validation(self):
+        test_table = [
+            {"input": "S3://mybucket/puppy.jpg", "output": True},
+            {
+                "input": "https://my-bucket.s3.us-west-2.amazonaws.com/puppy.png",
+                "output": True,
+            },
+            {"input": "/etc/someFile/randomFileName.csv", "output": False},
+            {"input": "\x00", "output": False},
+            {"input": "a" * 256, "output": False},
+        ]
+
+        for test in test_table:
+            assert AgnosticLoadFile.validate_path(test["input"]) == test["output"]
 
     def test_aql_local_file_to_postgres(self):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
