@@ -71,12 +71,12 @@ class TestSnowflakeAppend(unittest.TestCase):
             path=str(cwd) + "/../data/homes_main.csv",
             output_table_name="test_append_1",
             output_conn_id="snowflake_conn",
-        ).operator.execute(None)
+        ).operator.execute({"run_id": "foo"})
         aql.load_file(
             path=str(cwd) + "/../data/homes_append.csv",
             output_table_name="test_append_2",
             output_conn_id="snowflake_conn",
-        ).operator.execute(None)
+        ).operator.execute({"run_id": "foo"})
 
     def clear_run(self):
         self.run = False

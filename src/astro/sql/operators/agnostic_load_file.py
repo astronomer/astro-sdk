@@ -60,52 +60,17 @@ class AgnosticLoadFile(BaseOperator):
 
         # Retrieve conn type
         conn_type = BaseHook.get_connection(self.output_conn_id).conn_type
-        self.move_dataframe_to_sql(conn_type, df)
+        move_dataframe_to_sql(
+            output_table_name=self.output_table_name,
+            df=df,
+            conn_type=conn_type,
+            conn_id=self.output_conn_id,
+            database=self.database,
+            schema=self.schema,
+            warehouse=self.warehouse,
+            chunksize=self.chunksize,
+        )
         return self.output_table_name
-
-    def move_dataframe_to_sql(self, conn_type, df):
-        # Select database Hook based on `conn` type
-        hook = {
-            "postgres": TempPostgresHook(
-                postgres_conn_id=self.output_conn_id, schema=self.database
-            ),
-            "snowflake": TempSnowflakeHook(
-                snowflake_conn_id=self.output_conn_id,
-                database=self.database,
-                schema=self.schema,
-                warehouse=self.warehouse,
-            ),
-        }.get(conn_type, None)
-        if self.database:
-            hook.database = self.database
-        # Write df to target db
-        # Note: the `method` argument changes when writing to Snowflake
-        if conn_type == "snowflake":
-
-            db = SQLDatabase(engine=hook.get_sqlalchemy_engine())
-            db.prep_table(
-                df,
-                self.output_table_name.lower(),
-                if_exists="replace",
-                index=False,
-            )
-            write_pandas(
-                hook.get_conn(),
-                df,
-                self.output_table_name,
-                chunk_size=self.chunksize,
-                quote_identifiers=False,
-            )
-        else:
-            df.to_sql(
-                self.output_table_name,
-                con=hook.get_sqlalchemy_engine(),
-                schema=None,
-                if_exists="replace",
-                chunksize=self.chunksize,
-                method="multi",
-                index=False,
-            )
 
     @staticmethod
     def validate_path(path):

@@ -60,13 +60,13 @@ class TestPostgresMergeOperator(unittest.TestCase):
             output_conn_id="postgres_conn",
             output_table_name="merge_test_1",
             database="pagila",
-        ).operator.execute(None)
+        ).operator.execute({"run_id": "foo"})
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_merge_2.csv",
             output_conn_id="postgres_conn",
             output_table_name="merge_test_2",
             database="pagila",
-        ).operator.execute(None)
+        ).operator.execute({"run_id": "foo"})
 
     def clear_run(self):
         self.run = False
@@ -103,7 +103,7 @@ class TestPostgresMergeOperator(unittest.TestCase):
             conflict_strategy="ignore",
             database="pagila",
         )
-        a.execute(None)
+        a.execute({"run_id": "foo"})
 
         df = hook.get_pandas_df(sql="SELECT * FROM merge_test_1")
         assert df.age.to_list()[:-1] == [60.0, 12.0, 41.0, 22.0]
@@ -130,7 +130,7 @@ class TestPostgresMergeOperator(unittest.TestCase):
             conflict_strategy="ignore",
             database="pagila",
         )
-        a.execute(None)
+        a.execute({"run_id": "foo"})
 
         df = hook.get_pandas_df(sql="SELECT * FROM merge_test_1")
         assert df.age.to_list()[:-1] == [60.0, 12.0, 41.0, 22.0]
@@ -156,7 +156,7 @@ class TestPostgresMergeOperator(unittest.TestCase):
             conflict_strategy="update",
             database="pagila",
         )
-        a.execute(None)
+        a.execute({"run_id": "foo"})
 
         df = hook.get_pandas_df(sql="SELECT * FROM merge_test_1")
         assert df.taxes.to_list() == [1, 1, 1, 1, 1]

@@ -11,6 +11,7 @@ from pandas import DataFrame
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
+import astro
 from astro import dataframe as adf
 from astro import sql as aql
 from astro.sql.types import Table
@@ -76,7 +77,7 @@ def get_new_customers(customer_table: Table):
     return """SELECT * FROM {customer_table} WHERE member_since <= DATEADD(day, -7, '{{ execution_date }}')"""
 
 
-@adf.from_sql(conn_id="postgres_conn")
+@astro.python(conn_id="postgres_conn")
 def train_model(df: DataFrame):
     """Train model with Python.
     Switch to Python. Note that I'm not specifying the database input in the decorator. Ideally,
@@ -99,7 +100,7 @@ def train_model(df: DataFrame):
     return model
 
 
-@adf.to_sql(output_table_name="final_table")
+@astro.python()
 def score_model(model, df: DataFrame):
     """In this task I'm passing in the model as well as the input dataset."""
     preds = model.predict(df)

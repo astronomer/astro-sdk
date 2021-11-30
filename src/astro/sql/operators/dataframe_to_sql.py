@@ -2,12 +2,10 @@ from typing import Dict, Optional
 
 from airflow.decorators.base import DecoratedOperator
 from airflow.hooks.base import BaseHook
-from airflow.models import BaseOperator, DagRun, TaskInstance
+from airflow.models import DagRun, TaskInstance
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
-from snowflake.connector.pandas_tools import pd_writer
 
-from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
 from astro.utils.load_dataframe import move_dataframe_to_sql
 
 

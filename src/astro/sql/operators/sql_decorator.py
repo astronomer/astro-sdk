@@ -1,6 +1,8 @@
+import inspect
 from builtins import NotImplementedError
 from typing import Callable, Dict, Iterable, Mapping, Optional, Union
 
+import pandas as pd
 from airflow.decorators.base import DecoratedOperator, task_decorator_factory
 from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, TaskInstance
@@ -9,6 +11,7 @@ from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils.db import provide_session
 
 from astro.utils import postgres_transform, snowflake_transform
+from astro.utils.load_dataframe import move_dataframe_to_sql
 
 
 class SqlDecoratoratedOperator(DecoratedOperator):
@@ -59,9 +62,11 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
     def execute(self, context: Dict):
         self.conn_type = BaseHook.get_connection(self.conn_id).conn_type
-
+        self.run_id = context.get("run_id")
+        self.convert_op_arg_dataframes()
+        self.convert_op_kwarg_dataframes()
         if not self.sql:
-            sql_stuff = self.python_callable(**self.op_kwargs)
+            sql_stuff = self.python_callable(*self.op_args, **self.op_kwargs)
             # If we return two things, assume the second thing is the params
             if len(sql_stuff) == 2:
                 self.sql, self.parameters = sql_stuff
@@ -86,6 +91,11 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         # Automatically add any kwargs going into the function
         if self.op_kwargs:
             self.parameters.update(self.op_kwargs)  # type: ignore
+
+        if self.op_args:
+            params = list(inspect.signature(self.python_callable).parameters.keys())
+            for i, arg in enumerate(self.op_args):
+                self.parameters[params[i]] = arg  # type: ignore
 
         self.parameters.update(self.op_kwargs)  # type: ignore
 
@@ -194,6 +204,53 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         """Remove DAG's objects from S3 and db."""
         # To-do
         pass
+
+    def convert_op_arg_dataframes(self):
+        final_args = []
+        for i, arg in enumerate(self.op_args):
+            if type(arg) == pd.DataFrame:
+                output_table_name = (
+                    self.dag_id
+                    + "_"
+                    + self.task_id
+                    + "_"
+                    + self.run_id
+                    + f"_input_dataframe_{i}"
+                )
+                move_dataframe_to_sql(
+                    output_table_name=output_table_name,
+                    df=arg,
+                    conn_type=self.conn_type,
+                    conn_id=self.conn_id,
+                    database=self.database,
+                    schema=self.schema,
+                    warehouse=self.warehouse,
+                )
+                final_args.append(output_table_name)
+            else:
+                final_args.extend(i)
+        self.op_args = tuple(final_args)
+
+    def convert_op_kwarg_dataframes(self):
+        final_kwargs = {}
+        for k, v in self.op_kwargs.items():
+            if type(v) == pd.DataFrame:
+                output_table_name = "_".join(
+                    [self.dag_id, self.task_id, self.run_id, "input_dataframe", str(k)]
+                )
+                move_dataframe_to_sql(
+                    output_table_name=output_table_name,
+                    df=v,
+                    conn_type=self.conn_type,
+                    conn_id=self.conn_id,
+                    database=self.database,
+                    schema=self.schema,
+                    warehouse=self.warehouse,
+                )
+                final_kwargs[k] = output_table_name
+            else:
+                final_kwargs[k] = v
+        self.op_kwargs = final_kwargs
 
 
 def _transform_task(

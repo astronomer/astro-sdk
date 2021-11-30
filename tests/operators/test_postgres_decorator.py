@@ -10,8 +10,10 @@ Run test:
 
 import logging
 import unittest.mock
+from unittest import mock
 
 import pandas as pd
+from airflow.decorators import task
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -26,6 +28,14 @@ from astro.sql.types import Table
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
+import time
+
+
+def wait_for_task_finish(dr, task_id):
+    task = dr.get_task_instance(task_id)
+    while task.state not in ["success", "failed"]:
+        time.sleep(1)
+        task = dr.get_task_instance(task_id)
 
 
 def drop_table(table_name, postgres_conn):
@@ -36,6 +46,7 @@ def drop_table(table_name, postgres_conn):
     postgres_conn.close()
 
 
+@mock.patch.dict("os.environ", AIRFLOW__CORE__ENABLE_XCOM_PICKLING="True")
 class TestPostgresDecorator(unittest.TestCase):
     """Test Postgres Decorator."""
 
@@ -76,6 +87,58 @@ class TestPostgresDecorator(unittest.TestCase):
         )
         f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         return f
+
+    def test_dataframe_to_postgres(self):
+        @task
+        def get_dataframe():
+            return pd.DataFrame(
+                {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
+            )
+
+        @aql.transform(conn_id="postgres_conn", database="pagila")
+        def sample_pg(input_table: Table):
+            return "SELECT * FROM {input_table}"
+
+        with self.dag:
+            my_df = get_dataframe()
+            pg_df = sample_pg(my_df)
+
+        dr = self.dag.create_dagrun(
+            run_id=DagRunType.MANUAL.value,
+            start_date=timezone.utcnow(),
+            execution_date=DEFAULT_DATE,
+            state=State.RUNNING,
+        )
+        my_df.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        wait_for_task_finish(dr, my_df.operator.task_id)
+        pg_df.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        wait_for_task_finish(dr, pg_df.operator.task_id)
+
+    def test_dataframe_to_postgres_kwarg(self):
+        @task
+        def get_dataframe():
+            return pd.DataFrame(
+                {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
+            )
+
+        @aql.transform(conn_id="postgres_conn", database="pagila")
+        def sample_pg(input_table: Table):
+            return "SELECT * FROM {input_table}"
+
+        with self.dag:
+            my_df = get_dataframe()
+            pg_df = sample_pg(input_table=my_df)
+
+        dr = self.dag.create_dagrun(
+            run_id=DagRunType.MANUAL.value,
+            start_date=timezone.utcnow(),
+            execution_date=DEFAULT_DATE,
+            state=State.RUNNING,
+        )
+        my_df.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        wait_for_task_finish(dr, my_df.operator.task_id)
+        pg_df.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        wait_for_task_finish(dr, pg_df.operator.task_id)
 
     def test_postgres(self):
         @aql.transform(conn_id="postgres_conn", database="pagila")

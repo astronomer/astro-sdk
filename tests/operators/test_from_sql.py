@@ -13,6 +13,7 @@ from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 
+import astro
 import astro.dataframe as adf
 from astro import sql as aql
 
@@ -57,7 +58,7 @@ class TestDataframeFromSQL(unittest.TestCase):
             path=str(cwd) + "/../data/homes.csv",
             output_conn_id="snowflake_conn",
             output_table_name="snowflake_decorator_test",
-        ).operator.execute(None)
+        ).operator.execute({"run_id": "foo"})
 
     def clear_run(self):
         self.run = False
@@ -82,7 +83,7 @@ class TestDataframeFromSQL(unittest.TestCase):
         return f
 
     def test_dataframe_from_sql_basic(self):
-        @adf.from_sql(conn_id="postgres_conn", database="pagila")
+        @astro.python(conn_id="postgres_conn", database="pagila")
         def my_df_func(df: pandas.DataFrame):
             return df.actor_id.count()
 
@@ -95,7 +96,7 @@ class TestDataframeFromSQL(unittest.TestCase):
         )
 
     def test_dataframe_from_sql_basic_op_arg(self):
-        @adf.from_sql(conn_id="postgres_conn", database="pagila")
+        @astro.python(conn_id="postgres_conn", database="pagila")
         def my_df_func(df: pandas.DataFrame):
             return df.actor_id.count()
 
@@ -108,7 +109,7 @@ class TestDataframeFromSQL(unittest.TestCase):
         )
 
     def test_dataframe_from_sql_basic_op_arg_and_kwarg(self):
-        @adf.from_sql(conn_id="postgres_conn", database="pagila")
+        @astro.python(conn_id="postgres_conn", database="pagila")
         def my_df_func(actor_df: pandas.DataFrame, film_df: pandas.DataFrame):
             return actor_df.actor_id.count() + film_df.film_id.count()
 
@@ -121,7 +122,7 @@ class TestDataframeFromSQL(unittest.TestCase):
         )
 
     def test_snow_dataframe_from_sql_basic(self):
-        @adf.from_sql(
+        @astro.python(
             conn_id="snowflake_conn",
         )
         def my_df_func(df: pandas.DataFrame):

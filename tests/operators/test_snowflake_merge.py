@@ -51,12 +51,12 @@ class TestSnowflakeMerge(unittest.TestCase):
             path=str(cwd) + "/../data/homes_merge_1.csv",
             output_conn_id="snowflake_conn",
             output_table_name="merge_test_1",
-        ).operator.execute(None)
+        ).operator.execute({"run_id": "foo"})
         aql.load_file(
             path=str(cwd) + "/../data/homes_merge_2.csv",
             output_conn_id="snowflake_conn",
             output_table_name="merge_test_2",
-        ).operator.execute(None)
+        ).operator.execute({"run_id": "foo"})
         super().setUp()
 
     def test_merge_func(self):
@@ -172,7 +172,7 @@ class TestSnowflakeMerge(unittest.TestCase):
             database=os.getenv("SNOW_DATABASE"),
             schema=os.getenv("SNOW_SCHEMA"),
         )
-        a.execute(None)
+        a.execute({"run_id": "foo"})
 
         df = hook.get_pandas_df(sql="SELECT * FROM merge_test_1")
         assert df.AGE.to_list()[1:] == [60.0, 12.0, 41.0, 22.0]
@@ -201,7 +201,7 @@ class TestSnowflakeMerge(unittest.TestCase):
             schema=os.getenv("SNOW_SCHEMA"),
             conflict_strategy="ignore",
         )
-        a.execute(None)
+        a.execute({"run_id": "foo"})
 
         df = hook.get_pandas_df(sql="SELECT * FROM merge_test_1")
         assert df.AGE.to_list()[1:] == [60.0, 12.0, 41.0, 22.0]
@@ -231,7 +231,7 @@ class TestSnowflakeMerge(unittest.TestCase):
             schema=os.getenv("SNOW_SCHEMA"),
             warehouse="TRANSFORMING_DEV",
         )
-        a.execute(None)
+        a.execute({"run_id": "foo"})
 
         df = hook.get_pandas_df(sql="SELECT * FROM merge_test_1")
         assert df.TAXES.to_list() == [1, 1, 1, 1, 1]

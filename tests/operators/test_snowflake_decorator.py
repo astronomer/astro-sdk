@@ -65,7 +65,7 @@ class TestSnowflakeOperator(unittest.TestCase):
             path=str(cwd) + "/../data/homes.csv",
             output_conn_id="snowflake_conn",
             output_table_name="snowflake_decorator_test",
-        ).operator.execute(None)
+        ).operator.execute({"run_id": "foo"})
         super().setUp()
         self.dag = DAG(
             "test_dag",

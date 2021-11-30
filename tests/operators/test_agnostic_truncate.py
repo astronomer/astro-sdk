@@ -63,7 +63,7 @@ class TestPostgresTruncateOperator(unittest.TestCase):
             output_conn_id="postgres_conn",
             output_table_name="truncate_test",
             database="pagila",
-        ).operator.execute(None)
+        ).operator.execute({"run_id": "foo"})
 
     def test_truncate(self):
         hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
@@ -74,6 +74,6 @@ class TestPostgresTruncateOperator(unittest.TestCase):
             database="pagila",
             conn_id="postgres_conn",
         )
-        a.execute(None)
+        a.execute({"run_id": "foo"})
         df = hook.get_pandas_df(sql="SELECT * FROM truncate_test")
         assert df.count()[0] == 0
