@@ -20,6 +20,7 @@ from airflow.utils.types import DagRunType
 
 # Import Operator
 import astro.sql as aql
+from astro.sql.table import Table
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -70,9 +71,9 @@ class TestPostgresTruncateOperator(unittest.TestCase):
         df = hook.get_pandas_df(sql="SELECT * FROM truncate_test")
         assert df.count()[0] == 4
         a = aql.truncate(
-            table="truncate_test",
-            database="pagila",
-            conn_id="postgres_conn",
+            table=Table(
+                table_name="truncate_test", database="pagila", conn_id="postgres_conn"
+            ),
         )
         a.execute({"run_id": "foo"})
         df = hook.get_pandas_df(sql="SELECT * FROM truncate_test")

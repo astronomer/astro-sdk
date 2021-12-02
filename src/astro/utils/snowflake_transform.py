@@ -1,7 +1,11 @@
 import inspect
 import re
 
-from astro.sql.types import Table
+from astro.sql.table import Table
+
+
+def process_params(parameters):
+    return {k: (v.table_name if type(v) == Table else v) for k, v in parameters.items()}
 
 
 def _parse_template(sql, python_callable):

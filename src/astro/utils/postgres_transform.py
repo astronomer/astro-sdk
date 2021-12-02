@@ -3,7 +3,7 @@ import inspect
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from psycopg2.extensions import AsIs
 
-from astro.sql.types import Table
+from astro.sql.table import Table
 
 
 def parse_template(sql):
@@ -14,7 +14,7 @@ def process_params(parameters, python_callable):
     param_types = inspect.signature(python_callable).parameters
     return {
         k: (
-            AsIs(v)
+            AsIs(v.table_name)
             if param_types.get(k) and param_types.get(k).annotation == Table
             else v
         )

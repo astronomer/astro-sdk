@@ -10,6 +10,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils.db import provide_session
 
+from astro.sql.table import Table
 from astro.utils import postgres_transform, snowflake_transform
 from astro.utils.load_dataframe import move_dataframe_to_sql
 
@@ -46,6 +47,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         :param kwargs:
         """
         self.raw_sql = raw_sql
+
         self.conn_id = conn_id
         self.autocommit = autocommit
         self.parameters = parameters
@@ -54,13 +56,19 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.warehouse = warehouse
         self.kwargs = kwargs or {}
         self.sql = sql
-        self.op_kwargs = self.kwargs.get("op_kwargs")
+        self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
+        if self.op_kwargs.get("output_table"):
+            self.output_table: Optional[Table] = self.op_kwargs.pop("output_table")
+        else:
+            self.output_table = None
 
         super().__init__(
             **kwargs,
         )
 
     def execute(self, context: Dict):
+        self._set_variables_from_first_table()
+
         self.conn_type = BaseHook.get_connection(self.conn_id).conn_type
         self.run_id = context.get("run_id")
         self.convert_op_arg_dataframes()
@@ -83,10 +91,11 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
         if not self.raw_sql:
             # Create a table name for the temp table
-            output_table_name = self.kwargs.get("op_kwargs").get(  # type: ignore
-                "output_table_name"
-            ) or self.create_table_name(context)
-            self.sql = self.create_temporary_table(self.sql, output_table_name)
+            output_table = self.output_table or Table(self.create_table_name(context))
+            if not output_table.table_name:
+                output_table.table_name = self.create_table_name(context)
+            output_table_name = output_table.table_name
+            self.sql = self.create_temporary_table(self.sql, output_table)
 
         # Automatically add any kwargs going into the function
         if self.op_kwargs:
@@ -102,7 +111,38 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self._process_params()
         self._run_sql()
         # Run execute function of subclassed Operator.
-        return output_table_name
+        return Table(
+            table_name=output_table_name,
+            conn_id=self.conn_id,
+            database=self.database,
+            warehouse=self.warehouse,
+            schema=self.schema,
+        )
+
+    def _set_variables_from_first_table(self):
+        """
+        When we create our SQL operation, we run with the assumption that the first table given is the "main table".
+        This means that a user doesn't need to define default conn_id, database, etc. in the function unless they want
+        to create default values.
+        """
+        first_table: Optional[Table] = None
+        if self.op_args:
+            table_index = [x for x, t in enumerate(self.op_args) if type(t) == Table]
+            if table_index:
+                first_table = self.op_args[table_index[0]]
+        if not first_table:
+            table_kwargs = [
+                x
+                for x in inspect.signature(self.python_callable).parameters.values()
+                if x.annotation == Table and type(self.op_kwargs[x.name]) == Table
+            ]
+            if table_kwargs:
+                first_table = self.op_kwargs[table_kwargs[0].name]
+        if first_table:
+            self.conn_id = first_table.conn_id or self.conn_id
+            self.database = first_table.database or self.database
+            self.schema = first_table.schema or self.schema
+            self.warehouse = first_table.warehouse or self.warehouse
 
     def get_snow_hook(self) -> SnowflakeHook:
         """
@@ -142,7 +182,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
                 return execution_info
 
     @staticmethod
-    def create_temporary_table(query, table_name):
+    def create_temporary_table(query, table):
         """
         Create a temp table for the current task instance. This table will be overwritten if the DAG is run again as this
         table is only ever meant to be temporary.
@@ -150,7 +190,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         :param table_name:
         :return:
         """
-        return f"DROP TABLE IF EXISTS {table_name}; CREATE TABLE {table_name} AS ({query});"
+        return f"DROP TABLE IF EXISTS {table.table_name}; CREATE TABLE {table.table_name} AS ({query});"
 
     @staticmethod
     def create_cte(query, table_name):
@@ -191,6 +231,8 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.parameters = postgres_transform.process_params(
                 self.parameters, self.python_callable
             )
+        elif self.conn_type == "snowflake":
+            self.parameters = snowflake_transform.process_params(self.parameters)
 
     def _parse_template(self):
         if self.conn_type == "postgres":
@@ -226,10 +268,18 @@ class SqlDecoratoratedOperator(DecoratedOperator):
                     schema=self.schema,
                     warehouse=self.warehouse,
                 )
-                final_args.append(output_table_name)
+                final_args.append(
+                    Table(
+                        table_name=output_table_name,
+                        conn_id=self.conn_id,
+                        database=self.database,
+                        schema=self.schema,
+                        warehouse=self.warehouse,
+                    )
+                )
             else:
-                final_args.extend(i)
-        self.op_args = tuple(final_args)
+                final_args.append(arg)
+            self.op_args = tuple(final_args)
 
     def convert_op_kwarg_dataframes(self):
         final_kwargs = {}

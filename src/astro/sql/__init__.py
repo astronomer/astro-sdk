@@ -9,6 +9,7 @@ from astro.sql.operators.agnostic_sql_append import SqlAppendOperator
 from astro.sql.operators.agnostic_sql_merge import SqlMergeOperator
 from astro.sql.operators.agnostic_sql_truncate import SqlTruncateOperator
 from astro.sql.operators.sql_decorator import transform_decorator
+from astro.sql.table import Table
 
 
 def transform(
@@ -120,8 +121,8 @@ def merge(
 
 
 def truncate(
-    table: str,
-    conn_id: str,
+    table: Table,
+    conn_id: str = "",
     database: str = "",
     schema: str = "",
     warehouse: str = "",
@@ -136,7 +137,7 @@ def truncate(
     """
 
     return SqlTruncateOperator(
-        table_name=table,
+        table=table,
         conn_id=conn_id,
         database=database,
         schema=schema,

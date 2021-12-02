@@ -13,9 +13,9 @@ from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 
-import astro
-import astro.dataframe as adf
+from astro import dataframe as df
 from astro import sql as aql
+from astro.sql.table import Table
 
 # Import Operator
 
@@ -83,11 +83,15 @@ class TestDataframeFromSQL(unittest.TestCase):
         return f
 
     def test_dataframe_from_sql_basic(self):
-        @astro.python(conn_id="postgres_conn", database="pagila")
+        @df
         def my_df_func(df: pandas.DataFrame):
             return df.actor_id.count()
 
-        res = self.create_and_run_task(my_df_func, (), {"df": "actor"})
+        res = self.create_and_run_task(
+            my_df_func,
+            (),
+            {"df": Table("actor", conn_id="postgres_conn", database="pagila")},
+        )
         assert (
             XCom.get_one(
                 execution_date=DEFAULT_DATE, key=res.key, task_id=res.operator.task_id
@@ -96,11 +100,15 @@ class TestDataframeFromSQL(unittest.TestCase):
         )
 
     def test_dataframe_from_sql_basic_op_arg(self):
-        @astro.python(conn_id="postgres_conn", database="pagila")
+        @df(conn_id="postgres_conn", database="pagila")
         def my_df_func(df: pandas.DataFrame):
             return df.actor_id.count()
 
-        res = self.create_and_run_task(my_df_func, ("actor",), {})
+        res = self.create_and_run_task(
+            my_df_func,
+            (Table("actor", conn_id="postgres_conn", database="pagila"),),
+            {},
+        )
         assert (
             XCom.get_one(
                 execution_date=DEFAULT_DATE, key=res.key, task_id=res.operator.task_id
@@ -109,11 +117,15 @@ class TestDataframeFromSQL(unittest.TestCase):
         )
 
     def test_dataframe_from_sql_basic_op_arg_and_kwarg(self):
-        @astro.python(conn_id="postgres_conn", database="pagila")
+        @df(conn_id="postgres_conn", database="pagila")
         def my_df_func(actor_df: pandas.DataFrame, film_df: pandas.DataFrame):
             return actor_df.actor_id.count() + film_df.film_id.count()
 
-        res = self.create_and_run_task(my_df_func, ("actor",), {"film_df": "film"})
+        res = self.create_and_run_task(
+            my_df_func,
+            (Table("actor", conn_id="postgres_conn", database="pagila"),),
+            {"film_df": Table("film", conn_id="postgres_conn", database="pagila")},
+        )
         assert (
             XCom.get_one(
                 execution_date=DEFAULT_DATE, key=res.key, task_id=res.operator.task_id
@@ -122,14 +134,14 @@ class TestDataframeFromSQL(unittest.TestCase):
         )
 
     def test_snow_dataframe_from_sql_basic(self):
-        @astro.python(
-            conn_id="snowflake_conn",
-        )
+        @df
         def my_df_func(df: pandas.DataFrame):
             return df.LIVING.count()
 
         res = self.create_and_run_task(
-            my_df_func, (), {"df": "snowflake_decorator_test"}
+            my_df_func,
+            (),
+            {"df": Table("snowflake_decorator_test", conn_id="snowflake_conn")},
         )
         assert (
             XCom.get_one(

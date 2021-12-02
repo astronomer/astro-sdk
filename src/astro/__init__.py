@@ -1,7 +1,7 @@
 """A decorator that allows users to run SQL queries natively in Airflow."""
 
 __version__ = "0.0.1"
-from astro.dataframe import from_sql as python
+from astro.dataframe import dataframe
 
 
 # This is needed to allow Airflow to pick up specific metadata fields it needs

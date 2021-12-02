@@ -62,3 +62,5 @@ jobs:
           SNOW_ACCOUNT: gp21411
           SNOW_REGION: us-east-1
           SNOW_ROLE: TRANSFORMER
+          AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
+

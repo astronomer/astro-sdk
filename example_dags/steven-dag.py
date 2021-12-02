@@ -11,17 +11,15 @@ from pandas import DataFrame
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
-import astro
-from astro import dataframe as adf
 from astro import sql as aql
-from astro.sql.types import Table
+from astro.ml import predict, train
+from astro.sql.table import Table
 
 default_args = {
     "owner": "airflow",
     "retries": 1,
     "retry_delay": 0,
 }
-
 
 dag = DAG(
     dag_id="pagila_dag",
@@ -32,7 +30,7 @@ dag = DAG(
 )
 
 
-@aql.transform(conn_id="my_snowflake_conn", warehouse="LOADING")
+@aql.transform
 def aggregate_orders(orders_table: Table):
     """Snowflake.
     Next I would probably do some sort of merge, but I'll skip that for now. Instead, some basic ETL.
@@ -44,14 +42,14 @@ def aggregate_orders(orders_table: Table):
         WHERE purchase_date >= DATEADD(day, -7, '{{ execution_date }}')"""
 
 
-@aql.transform(conn_id="postgres_conn")
+@aql.transform(conn_id="postgres_conn", database="pagila")
 def get_customers(customer_table: Table = Table("customer")):
     """Basic clean-up of an existing table."""
     return """SELECT customer_id, source, region, member_since
         FROM {customer_table} WHERE NOT is_deleted"""
 
 
-@aql.transform(conn_id="postgres_conn")
+@aql.transform
 def join_orders_and_customers(orders_table: Table, customer_table: Table):
     """Now join those together to create a very simple 'feature' dataset."""
     return """SELECT c.customer_id, c.source, c.region, c.member_since,
@@ -59,7 +57,7 @@ def join_orders_and_customers(orders_table: Table, customer_table: Table):
         FROM {orders_table} c LEFT OUTER JOIN {customer_table} p ON c.customer_id = p.customer_id"""
 
 
-@aql.transform(conn_id="postgres_conn")
+@aql.transform
 def get_existing_customers(customer_table: Table):
     """Filter for existing customers.
     Split this 'feature' dataset into existing/older customers and 'new' customers, which we'll use
@@ -68,7 +66,7 @@ def get_existing_customers(customer_table: Table):
     return """SELECT * FROM {customer_table} WHERE member_since > DATEADD(day, -7, '{{ execution_date }}')"""
 
 
-@aql.transform(conn_id="postgres_conn")
+@aql.transform
 def get_new_customers(customer_table: Table):
     """Filter for new customers.
     Split this 'feature' dataset into existing/older customers and 'new' customers, which we'll use
@@ -77,7 +75,7 @@ def get_new_customers(customer_table: Table):
     return """SELECT * FROM {customer_table} WHERE member_since <= DATEADD(day, -7, '{{ execution_date }}')"""
 
 
-@astro.python(conn_id="postgres_conn")
+@train()
 def train_model(df: DataFrame):
     """Train model with Python.
     Switch to Python. Note that I'm not specifying the database input in the decorator. Ideally,
@@ -100,7 +98,7 @@ def train_model(df: DataFrame):
     return model
 
 
-@astro.python()
+@predict()
 def score_model(model, df: DataFrame):
     """In this task I'm passing in the model as well as the input dataset."""
     preds = model.predict(df)
@@ -120,14 +118,15 @@ s3_path = (
     "{{ ts_nodash }}.csv"
 )
 
-
 with dag:
     """Structure DAG dependencies.
     So easy! It's like magic!
     """
 
     raw_orders = aql.load_file(
-        path="to-do", file_conn_id="my_s3_conn", output_conn_id="postgres_conn"
+        path="to-do",
+        file_conn_id="my_s3_conn",
+        output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
     )
     agg_orders = aggregate_orders(raw_orders)
     customers = get_customers()

@@ -13,7 +13,6 @@ import unittest.mock
 from unittest import mock
 
 import pandas as pd
-from airflow.decorators import task
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -24,7 +23,8 @@ from airflow.utils.types import DagRunType
 
 # Import Operator
 import astro.sql as aql
-from astro.sql.types import Table
+from astro import dataframe as df
+from astro.sql.table import Table
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -89,18 +89,22 @@ class TestPostgresDecorator(unittest.TestCase):
         return f
 
     def test_dataframe_to_postgres(self):
-        @task
+        @df
         def get_dataframe():
             return pd.DataFrame(
                 {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
             )
 
-        @aql.transform(conn_id="postgres_conn", database="pagila")
+        @aql.transform
         def sample_pg(input_table: Table):
             return "SELECT * FROM {input_table}"
 
         with self.dag:
-            my_df = get_dataframe()
+            my_df = get_dataframe(
+                output_table=Table(
+                    table_name="my_df_table", conn_id="postgres_conn", database="pagila"
+                )
+            )
             pg_df = sample_pg(my_df)
 
         dr = self.dag.create_dagrun(
@@ -115,18 +119,22 @@ class TestPostgresDecorator(unittest.TestCase):
         wait_for_task_finish(dr, pg_df.operator.task_id)
 
     def test_dataframe_to_postgres_kwarg(self):
-        @task
+        @df
         def get_dataframe():
             return pd.DataFrame(
                 {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
             )
 
-        @aql.transform(conn_id="postgres_conn", database="pagila")
+        @aql.transform
         def sample_pg(input_table: Table):
             return "SELECT * FROM {input_table}"
 
         with self.dag:
-            my_df = get_dataframe()
+            my_df = get_dataframe(
+                output_table=Table(
+                    table_name="my_df_table", conn_id="postgres_conn", database="pagila"
+                )
+            )
             pg_df = sample_pg(input_table=my_df)
 
         dr = self.dag.create_dagrun(
@@ -141,11 +149,19 @@ class TestPostgresDecorator(unittest.TestCase):
         wait_for_task_finish(dr, pg_df.operator.task_id)
 
     def test_postgres(self):
-        @aql.transform(conn_id="postgres_conn", database="pagila")
+        @aql.transform()
         def sample_pg(input_table: Table):
             return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%'"
 
-        self.create_and_run_task(sample_pg, (), {"input_table": "actor"})
+        self.create_and_run_task(
+            sample_pg,
+            (),
+            {
+                "input_table": Table(
+                    table_name="actor", conn_id="postgres_conn", database="pagila"
+                )
+            },
+        )
 
     def test_postgres_with_parameter(self):
         @aql.transform(conn_id="postgres_conn", database="pagila")
@@ -154,16 +170,26 @@ class TestPostgresDecorator(unittest.TestCase):
                 "last_name": "G%%"
             }
 
-        self.create_and_run_task(sample_pg, (), {"input_table": "actor"})
+        self.create_and_run_task(
+            sample_pg, (), {"input_table": Table(table_name="actor")}
+        )
 
     def test_postgres_with_jinja_template(self):
-        @aql.transform(conn_id="postgres_conn", database="pagila")
+        @aql.transform()
         def sample_pg(input_table: Table):
             return (
                 "SELECT * FROM {input_table} WHERE rental_date < '{{ execution_date }}'"
             )
 
-        self.create_and_run_task(sample_pg, (), {"input_table": "rental"})
+        self.create_and_run_task(
+            sample_pg,
+            (),
+            {
+                "input_table": Table(
+                    table_name="rental", conn_id="postgres_conn", database="pagila"
+                )
+            },
+        )
 
     def test_postgres_with_jinja_template_params(self):
         @aql.transform(conn_id="postgres_conn", database="pagila")
@@ -172,7 +198,15 @@ class TestPostgresDecorator(unittest.TestCase):
                 "r_date": "{{ execution_date }}"
             }
 
-        self.create_and_run_task(sample_pg, (), {"input_table": "rental"})
+        self.create_and_run_task(
+            sample_pg,
+            (),
+            {
+                "input_table": Table(
+                    table_name="rental", conn_id="postgres_conn", database="pagila"
+                )
+            },
+        )
 
     def test_postgres_join(self):
         self.hook_target = PostgresHook(
@@ -182,9 +216,7 @@ class TestPostgresDecorator(unittest.TestCase):
         drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
 
         @aql.transform(conn_id="postgres_conn", database="pagila")
-        def sample_pg(
-            actor: Table, film_actor_join: Table, output_table_name, unsafe_parameter
-        ):
+        def sample_pg(actor: Table, film_actor_join: Table, unsafe_parameter):
             return (
                 "SELECT {actor}.actor_id, first_name, last_name, COUNT(film_id) "
                 "FROM {actor} JOIN {film_actor_join} ON {actor}.actor_id = {film_actor_join}.actor_id "
@@ -195,10 +227,12 @@ class TestPostgresDecorator(unittest.TestCase):
             sample_pg,
             (),
             {
-                "actor": "actor",
-                "film_actor_join": "film_actor",
+                "actor": Table(
+                    table_name="actor", conn_id="postgres_conn", database="pagila"
+                ),
+                "film_actor_join": Table(table_name="film_actor"),
                 "unsafe_parameter": "G%%",
-                "output_table_name": "my_table",
+                "output_table": Table("my_table"),
             },
         )
         # Read table from db
@@ -220,7 +254,7 @@ class TestPostgresDecorator(unittest.TestCase):
             table_name="my_raw_sql_table", postgres_conn=self.hook_target.get_conn()
         )
 
-        @aql.run_raw_sql(conn_id="postgres_conn", database="pagila")
+        @aql.run_raw_sql
         def sample_pg(
             actor: Table, film_actor_join: Table, output_table_name, unsafe_parameter
         ):
@@ -234,8 +268,10 @@ class TestPostgresDecorator(unittest.TestCase):
             sample_pg,
             (),
             {
-                "actor": "actor",
-                "film_actor_join": "film_actor",
+                "actor": Table(
+                    table_name="actor", conn_id="postgres_conn", database="pagila"
+                ),
+                "film_actor_join": Table(table_name="film_actor"),
                 "unsafe_parameter": "G%%",
                 "output_table_name": "my_table",
             },

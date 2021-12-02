@@ -1,18 +1,17 @@
 import inspect
-from builtins import NotImplementedError
-from typing import Callable, Dict, Iterable, Mapping, Optional, Union
+from typing import Dict, Optional
 
 import pandas as pd
-from airflow.decorators.base import DecoratedOperator, task_decorator_factory
-from airflow.exceptions import AirflowException
+from airflow.decorators.base import DecoratedOperator
 from airflow.hooks.base import BaseHook
-from airflow.models import DagRun, TaskInstance
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
-from airflow.utils.db import provide_session
+
+from astro.sql.table import Table
+from astro.utils.load_dataframe import move_dataframe_to_sql
 
 
-class SqlToDataframeOperator(DecoratedOperator):
+class SqlDataframeOperator(DecoratedOperator):
     def __init__(
         self,
         conn_id: Optional[str] = None,
@@ -37,7 +36,11 @@ class SqlToDataframeOperator(DecoratedOperator):
         self.schema = schema
         self.warehouse = warehouse
         self.kwargs = kwargs or {}
-        self.op_kwargs = self.kwargs.get("op_kwargs")
+        self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
+        if self.op_kwargs.get("output_table"):
+            self.output_table: Optional[Table] = self.op_kwargs.pop("output_table")
+        else:
+            self.output_table = None
         self.op_args = self.kwargs.get("op_args")
 
         super().__init__(
@@ -50,7 +53,10 @@ class SqlToDataframeOperator(DecoratedOperator):
         ret_args = []
         for arg in op_args:
             current_arg = full_spec.args.pop(0)
-            if full_spec.annotations[current_arg] == pd.DataFrame and type(arg) == str:
+            if (
+                full_spec.annotations[current_arg] == pd.DataFrame
+                and type(arg) == Table
+            ):
                 ret_args.append(self._get_dataframe(arg))
             else:
                 ret_args.append(arg)
@@ -60,51 +66,65 @@ class SqlToDataframeOperator(DecoratedOperator):
         param_types = inspect.signature(self.python_callable).parameters
         self.op_kwargs = {
             k: self._get_dataframe(v)
-            if param_types.get(k).annotation == pd.DataFrame and type(v) == str
+            if param_types.get(k).annotation == pd.DataFrame and type(v) == Table
             else v
             for k, v in self.op_kwargs.items()
         }
 
     def execute(self, context: Dict):
-        self.conn_type = BaseHook.get_connection(self.conn_id).conn_type
         self.handle_op_args()
         self.handle_op_kwargs()
 
-        return self.python_callable(*self.op_args, **self.op_kwargs)
+        ret = self.python_callable(*self.op_args, **self.op_kwargs)
+        if self.output_table:
+            move_dataframe_to_sql(
+                output_table_name=self.output_table.table_name,
+                conn_id=self.output_table.conn_id,
+                database=self.output_table.database,
+                warehouse=self.output_table.warehouse,
+                schema=self.output_table.schema,
+                df=ret,
+                conn_type=BaseHook.get_connection(self.output_table.conn_id).conn_type,
+            )
+            return self.output_table
+        else:
+            return ret
 
-    def get_snow_hook(self) -> SnowflakeHook:
+    def get_snow_hook(self, table: Table) -> SnowflakeHook:
         """
         Create and return SnowflakeHook.
         :return: a SnowflakeHook instance.
         :rtype: SnowflakeHook
         """
         return SnowflakeHook(
-            snowflake_conn_id=self.conn_id,
-            warehouse=self.warehouse,
-            database=self.database,
+            snowflake_conn_id=table.conn_id,
+            warehouse=table.warehouse,
+            database=table.database,
             role=None,
-            schema=self.schema,
+            schema=table.schema,
             authenticator=None,
             session_parameters=None,
         )
 
-    def _get_dataframe(self, param):
-        if self.conn_type == "postgres":
+    def _get_dataframe(self, table: Table):
+        conn_type = BaseHook.get_connection(table.conn_id).conn_type
+
+        if conn_type == "postgres":
             from psycopg2 import sql
 
             self.hook = PostgresHook(
-                postgres_conn_id=self.conn_id, schema=self.database
+                postgres_conn_id=table.conn_id, schema=table.database
             )
             query = (
                 sql.SQL("SELECT * FROM {input_table}")
-                .format(input_table=sql.Identifier(param))
+                .format(input_table=sql.Identifier(table.table_name))
                 .as_string(self.hook.get_conn())
             )
             return self.hook.get_pandas_df(query)
 
-        elif self.conn_type == "snowflake":
-            hook = self.get_snow_hook()
+        elif conn_type == "snowflake":
+            hook = self.get_snow_hook(table)
             return hook.get_pandas_df(
                 "SELECT * FROM IDENTIFIER(%(input_table)s)",
-                parameters={"input_table": param},
+                parameters={"input_table": table.table_name},
             )

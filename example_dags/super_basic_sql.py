@@ -4,7 +4,7 @@ from airflow.models import DAG
 from pandas import DataFrame
 
 import astro.sql as aql
-from astro.sql.types import Table
+from astro.sql.table import Table
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
@@ -29,4 +29,4 @@ def sample_pg(input_table: Table):
 
 
 with dag:
-    last_name_g = sample_pg(input_table="actor")
+    last_name_g = sample_pg(input_table=Table(table_name="actor"))

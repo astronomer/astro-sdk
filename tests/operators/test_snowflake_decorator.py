@@ -24,7 +24,7 @@ from airflow.utils.types import DagRunType
 
 # Import Operator
 from astro import sql as aql
-from astro.sql.types import Table
+from astro.sql.table import Table
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -100,7 +100,7 @@ class TestSnowflakeOperator(unittest.TestCase):
         @aql.transform(
             conn_id="snowflake_conn",
         )
-        def sample_snow(input_table: Table, output_table_name):
+        def sample_snow(input_table: Table):
             return "SELECT * FROM {input_table} LIMIT 10"
 
         hook = get_snowflake_hook()
@@ -111,8 +111,8 @@ class TestSnowflakeOperator(unittest.TestCase):
         )
         with self.dag:
             f = sample_snow(
-                input_table="snowflake_decorator_test",
-                output_table_name="SNOWFLAKE_TRANSFORM_TEST_TABLE",
+                input_table=Table("snowflake_decorator_test", conn_id="snowflake_conn"),
+                output_table=Table("SNOWFLAKE_TRANSFORM_TEST_TABLE"),
             )
 
         dr = self.dag.create_dagrun(
@@ -144,7 +144,9 @@ class TestSnowflakeOperator(unittest.TestCase):
 
         with self.dag:
             f = sample_snow(
-                my_input_table="snowflake_decorator_test",
+                my_input_table=Table(
+                    "snowflake_decorator_test",
+                ),
             )
 
         dr = self.dag.create_dagrun(

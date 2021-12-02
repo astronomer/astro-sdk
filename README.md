@@ -7,6 +7,7 @@
 ](#airflow-sql-decorator)
   - [Basic Usage](#basic-usage)
   - [Supported databases](#supported-databases)
+  - [The Table class](#the-table-class)
   - [Loading Data](#loading-data)
   - [Transform](#transform)
   - [Raw SQL](#raw-sql)
@@ -14,8 +15,10 @@
   - [Merging data](#merging-data)
   - [Truncate table](#truncate-table)
 - [Dataframe functionality](#dataframe-functionality)
-  - [from_sql](#from_sql)
-  - [to_sql](#to_sql)
+  - [dataframe](#dataframe)
+  - [ML Operations](#ml-operations)
+  - [train](#train)
+  - [predict](#predict)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -48,16 +51,15 @@ from pandas import DataFrame
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 
-from astro import dataframe as adf
 from astro import sql as aql
-from astro.sql.types import Table
+from astro.ml import predict, train
+from astro.sql.table import Table
 
 default_args = {
     "owner": "airflow",
     "retries": 1,
     "retry_delay": 0,
 }
-
 
 dag = DAG(
     dag_id="pagila_dag",
@@ -68,48 +70,58 @@ dag = DAG(
 )
 
 
-@aql.transform(conn_id="my_snowflake_conn", warehouse="LOADING")
+@aql.transform
 def aggregate_orders(orders_table: Table):
-    """Basic SELECT statement on a Snowflake table."""
+    """Snowflake.
+    Next I would probably do some sort of merge, but I'll skip that for now. Instead, some basic ETL.
+    Note the Snowflake-specific parameter...
+    Note that I'm not specifying schema location anywhere. Ideally this can be an admin setting that
+    I'm able to over-ride.
+    """
     return """SELECT customer_id, count(*) AS purchase_count FROM {orders_table}
         WHERE purchase_date >= DATEADD(day, -7, '{{ execution_date }}')"""
 
 
-@aql.transform(conn_id="postgres_conn")
+@aql.transform(conn_id="postgres_conn", database="pagila")
 def get_customers(customer_table: Table = Table("customer")):
-    """Basic SELECT statement on a Postgres table."""
+    """Basic clean-up of an existing table."""
     return """SELECT customer_id, source, region, member_since
         FROM {customer_table} WHERE NOT is_deleted"""
 
 
-@aql.transform(conn_id="postgres_conn")
+@aql.transform
 def join_orders_and_customers(orders_table: Table, customer_table: Table):
-    """Join the two tables to create a simple 'feature' dataset."""
+    """Now join those together to create a very simple 'feature' dataset."""
     return """SELECT c.customer_id, c.source, c.region, c.member_since,
         CASE WHEN purchase_count IS NULL THEN 0 ELSE 1 END AS recent_purchase
         FROM {orders_table} c LEFT OUTER JOIN {customer_table} p ON c.customer_id = p.customer_id"""
 
 
-@aql.transform(conn_id="postgres_conn")
+@aql.transform
 def get_existing_customers(customer_table: Table):
     """Filter for existing customers.
-
-    Split the 'feature' dataset into 'current' and 'new' customers. This will be used for inference/scoring.
+    Split this 'feature' dataset into existing/older customers and 'new' customers, which we'll use
+    later for inference/scoring.
     """
     return """SELECT * FROM {customer_table} WHERE member_since > DATEADD(day, -7, '{{ execution_date }}')"""
 
 
-@aql.transform(conn_id="postgres_conn")
+@aql.transform
 def get_new_customers(customer_table: Table):
-    """Filter for new customers."""
+    """Filter for new customers.
+    Split this 'feature' dataset into existing/older customers and 'new' customers, which we'll use
+    later for inference/scoring.
+    """
     return """SELECT * FROM {customer_table} WHERE member_since <= DATEADD(day, -7, '{{ execution_date }}')"""
 
 
-@adf.from_sql(conn_id="postgres_conn")
+@train()
 def train_model(df: DataFrame):
     """Train model with Python.
-
-    Convert upstream tables to Pandas DataFrames. Note how input database is inferred rather than explicitly stated in the decorator.
+    Switch to Python. Note that I'm not specifying the database input in the decorator. Ideally,
+    the decorator knows where the input is coming from and knows that it needs to convert the
+    table to a pandas dataframe. Then I can use the same task for a different database or another
+    type of input entirely. Less for the user to specify, easier to reuse for different inputs.
     """
     dfy = df.loc[:, "recent_purchase"]
     dfx = df.drop(columns=["customer_id", "recent_purchase"])
@@ -126,12 +138,9 @@ def train_model(df: DataFrame):
     return model
 
 
-@adf.to_sql(output_table_name="final_table")
+@predict()
 def score_model(model, df: DataFrame):
-    """Score model.
-
-    Note the model and input dataset as Task parameters.
-    """
+    """In this task I'm passing in the model as well as the input dataset."""
     preds = model.predict(df)
     output = df.copy()
     output["prediction"] = preds
@@ -149,12 +158,15 @@ s3_path = (
     "{{ ts_nodash }}.csv"
 )
 
-
 with dag:
-    """Structure DAG dependencies."""
+    """Structure DAG dependencies.
+    So easy! It's like magic!
+    """
 
     raw_orders = aql.load_file(
-        path="input.csv", file_conn_id="my_s3_conn", output_conn_id="postgres_conn"
+        path="to-do",
+        file_conn_id="my_s3_conn",
+        output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
     )
     agg_orders = aggregate_orders(raw_orders)
     customers = get_customers()
@@ -164,21 +176,53 @@ with dag:
     model = train_model(existing)
     score_model(model=model, df=new)
 ```
+
 ## Supported databases
 
 The current implementation supports Postgresql and Snowflake. Other databases are on the roadmap. 
 
 To move data from one database to another, you can use the `save_file` and `load_file` functions to store intermediary tables on S3.
 
-## Loading Data
+## The Table class
 
-To create an ELT pipeline, users can first load (CSV or parquet) data (from local, S3, or GCS) into a SQL database with the `load_sql` function. To interact with S3, set an S3 Airflow connection in the `AIRFLOW__SQL_DECORATOR__CONN_AWS_DEFAULT` environment variable.
+To instantiate a table or bring in a table from a database into the `astro` ecosystem, you can pass a `Table` object into the class. This Table object will contain all necessary metadata
+to handle table creation between tasks. once you define it in the beginning of your pipeline, `astro` can automatically pass that metadata along
 
 ```python
+from astro import sql as aql
+from astro.sql.table import Table
+
+
+@aql.transform
+def my_first_sql_transformation(input_table: Table):
+    return "SELECT * FROM {input_table}"
+
+
+@aql.transform
+def my_second_sql_transformation(input_table_2: Table):
+    return "SELECT * FROM {input_table_2}"
+
+
+with dag:
+    my_table = my_first_sql_transformation(
+        input_table=Table(table_name="foo", database="bar", conn_id="postgres_conn")
+    )
+    my_second_sql_transformation(my_table)
+```
+
+## Loading Data
+
+To create an ELT pipeline, users can first load (CSV or parquet) data (from local, S3, or GCS) into a SQL database with the `load_sql` function. 
+To interact with S3, set an S3 Airflow connection in the `AIRFLOW__SQL_DECORATOR__CONN_AWS_DEFAULT` environment variable.
+
+```python
+from astro import sql as aql
+from astro.sql.table import Table
+
 raw_orders = aql.load_file(
     path="s3://my/s3/path.csv",
     file_conn_id="my_s3_conn",
-    output_conn_id="postgres_conn",
+    output_table=Table(table_name="my_table", conn_id="postgres_conn"),
 )
 ```
 
@@ -197,17 +241,17 @@ Please note that this is NOT an f string. F-strings in SQL formatting risk secur
 For security, users MUST explicitly identify tables in the function parameters by typing a value as a `Table`. Only then will the SQL decorator treat the value as a table. 
 
 ```python
-@aql.transform(conn_id="postgres_conn")
+@aql.transform
 def get_orders():
     ...
 
 
-@aql.transform(conn_id="postgres_conn")
+@aql.transform
 def get_customers():
     ...
 
 
-@aql.transform(conn_id="postgres_conn")
+@aql.transform
 def join_orders_and_customers(orders_table: Table, customer_table: Table):
     """Join `orders_table` and `customers_table` to create a simple 'feature' dataset."""
     return """SELECT c.customer_id, c.source, c.region, c.member_since,
@@ -216,14 +260,16 @@ def join_orders_and_customers(orders_table: Table, customer_table: Table):
 
 
 with dag:
-    join_orders_and_customers(get_orders(), get_customers())
+    orders = get_orders()
+    customers = get_customers()
+    join_orders_and_customers(orders, customers)
 ```
 
 ## Raw SQL
 Most ETL use-cases can be addressed by cross-sharing Task outputs, as shown above with `@aql.transform`. For SQL operations that _don't_ return tables but might take tables as arguments, there is `@aql.run_raw_sql`. 
 
 ```python
-@aql.run_raw_sql(conn_id="postgres_conn")
+@aql.run_raw_sql
 def drop_table(table_to_drop):
     return "DROP TABLE IF EXISTS {table_to_drop}"
 ```
@@ -237,10 +283,10 @@ be to aggregate daily data on a "main" table that analysts use for timeseries an
 foo = aql.append(
     conn_id="postgres_conn",
     database="postgres",
-    append_table=APPEND_TABLE_NAME,
+    append_table=APPEND_TABLE,
     columns=["Bedrooms", "Bathrooms"],
     casted_columns={"Age": "INTEGER"},
-    main_table=MAIN_TABLE_NAME,
+    main_table=MAIN_TABLE,
 )
 ```
 
@@ -255,8 +301,8 @@ Note that the `merge_keys` parameter is a list in Postgres, but a map in Snowfla
 Postgres:
 ```python
 a = aql.merge(
-    target_table="merge_test_1",
-    merge_table="merge_test_2",
+    target_table=MAIN_TABLE,
+    merge_table=MERGE_TABLE,
     merge_keys=["list", "sell"],
     target_columns=["list", "sell", "taxes"],
     merge_columns=["list", "sell", "age"],
@@ -268,8 +314,8 @@ a = aql.merge(
 Snowflake:
 ```python
 a = aql.merge(
-    target_table="merge_test_1",
-    merge_table="merge_test_2",
+    target_table=MAIN_TABLE,
+    merge_table=MERGE_TABLE,
     merge_keys={"list": "list", "sell": "sell"},
     target_columns=["list", "sell"],
     merge_columns=["list", "sell"],
@@ -283,7 +329,7 @@ a = aql.merge(
 
 ```python
 a = aql.truncate(
-    table="truncate_table",
+    table=TRUNCATE_TABLE,
     conn_id="snowflake_conn",
     database="DWH_LEGACY",
 )
@@ -291,27 +337,66 @@ a = aql.truncate(
 
 # Dataframe functionality
 
-Finally, your pipeline might call for procedures that would be too complex or impossible in SQL. This could be building a model from a feature set, or using a windowing function which more Pandas is adept for. The `from_sql` and `to_sql` functions can easily move your data into a Pandas dataframe and back to your database as needed.
+Finally, your pipeline might call for procedures that would be too complex or impossible in SQL. This could be building a model from a feature set, or using a windowing function which more Pandas is adept for. The `df` functions can easily move your data into a Pandas dataframe and back to your database as needed.
 
-The `from_sql` function requires a parameter named "df". This parameter will be the table that you wish to process. At runtime, the operator loads and acts on the table as a Pandas DataFrame. If the Task returns a DataFame, downstream Taskflow API Tasks can interact with it to continue using Python.
+At runtime, the operator loads any `Table` object into a Pandas DataFrame. If the Task returns a DataFame, downstream Taskflow API Tasks can interact with it to continue using Python.
 
-After transforming data with Python, the `to_sql` decorator can convert DataFrames SQL. This decorator MUST return a DataFrame which will be transformed into a temporary table on the database specified by the `conn_id` (or a permanent table if you declare a table name). 
+If after running the function, you wish to return the value into your database, simply include a `Table` in the reserved `output_table` parameters (please note that since this parameter is reserved, you can not use it in your function definition).
 
 
-## from_sql
+
+## dataframe
 ```python
-@adf.from_sql(conn_id="postgres_conn", database="pagila")
-def my_df_func(df=None):
-    return df.actor_id.count()
-```
-
-
-## to_sql
-```python
+from astro import dataframe as df
+from astro import sql as aql
+from astro.sql.table import Table
 import pandas as pd
 
 
-@adf.to_sql(conn_id="postgres_conn", database="pagila", output_table_name="foo")
+@df
+def get_dataframe():
+    return pd.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
+
+
+@aql.transform
+def sample_pg(input_table: Table):
+    return "SELECT * FROM {input_table}"
+
+
+with self.dag:
+    my_df = get_dataframe(
+        output_table=Table(
+            table_name="my_df_table", conn_id="postgres_conn", database="pagila"
+        )
+    )
+    pg_df = sample_pg(my_df)
+```
+
+## ML Operations
+
+We currently offer two ML based functions: `train` and `predict`. Currently these functions do the 
+exact same thing as `dataframe`, but eventually we hope to add valuable ML functionality (e.g. hyperparam for train and
+model serving options in predict).
+
+For now please feel free to use these endpoints as convenience functions, knowing that there will long term be added
+functionality.
+
+## train
+```python
+from astro.ml import train
+
+
+@train
+def my_df_func():
+    return pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
+```
+
+## predict
+```python
+from astro.ml import predict
+
+
+@predict
 def my_df_func():
     return pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
 ```
