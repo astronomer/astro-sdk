@@ -9,6 +9,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 
 from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
+from astro.utils.task_id_helper import get_task_id
 
 
 class SaveFile(BaseOperator):
@@ -165,6 +166,7 @@ def save_file(
     schema="",
     warehouse="",
     output_file_format="csv",
+    task_id=None,
     **kwargs,
 ):
     """Convert SaveFile into a function. Returns XComArg.
@@ -181,8 +183,13 @@ def save_file(
     :type output_conn_id: str
     :param overwrite: Overwrite file if exists. Default False.
     :type overwrite: bool
+    :param task_id: task id, optional.
+    :type task_id: str
     """
-    task_id = "save_file_" + output_file_path.rsplit("/", 1)[-1].replace(".", "_")
+
+    task_id = (
+        task_id if task_id is not None else get_task_id("save_file", output_file_path)
+    )
 
     return SaveFile(
         task_id=task_id,

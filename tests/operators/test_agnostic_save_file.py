@@ -80,6 +80,27 @@ class TestSaveFile(unittest.TestCase):
         f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         return f
 
+    def create_and_run_tasks(self, decorator_funcs):
+        # To Do: Merge create_and_run_tasks and create_and_run_task into a single fucntion.
+        tasks = []
+        with self.dag:
+            for decorator_func in decorator_funcs:
+                tasks.append(
+                    decorator_func["func"](
+                        *decorator_func["op_args"], **decorator_func["op_kwargs"]
+                    )
+                )
+
+        dr = self.dag.create_dagrun(
+            run_id=DagRunType.MANUAL.value,
+            start_date=timezone.utcnow(),
+            execution_date=DEFAULT_DATE,
+            state=State.RUNNING,
+        )
+        for task in tasks:
+            task.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        return tasks
+
     def test_save_snowflake_table_to_local_with_csv_format(self):
 
         OUTPUT_FILE_PATH = str(self.cwd) + "/../data/save_snow_file_out.csv"
@@ -310,6 +331,37 @@ class TestSaveFile(unittest.TestCase):
 
         # Delete object from S3
         # s3.Object("tmp9", "test_table_to_s3_file_exists_overwrite_false.csv").delete()
+
+    def test_unique_task_id_for_same_path(self):
+        OUTPUT_FILE_PATH = str(self.cwd) + "/../data/output.csv"
+        INPUT_TABLE_NAME = "rental"
+
+        tasks_params = []
+        for _ in range(4):
+            tasks_params.append(
+                {
+                    "func": save_file,
+                    "op_args": (),
+                    "op_kwargs": {
+                        "table": INPUT_TABLE_NAME,
+                        "output_file_path": OUTPUT_FILE_PATH,
+                        "input_conn_id": "postgres_conn",
+                        "output_conn_id": None,
+                        "database": "pagila",
+                        "overwrite": True,
+                    },
+                }
+            )
+        tasks_params[-1]["op_kwargs"]["task_id"] = "task_id"
+
+        tasks = self.create_and_run_tasks(tasks_params)
+
+        assert tasks[0].operator.task_id != tasks[1].operator.task_id
+        assert tasks[1].operator.task_id == "save_file_output_csv__1"
+        assert tasks[2].operator.task_id == "save_file_output_csv__2"
+        assert tasks[3].operator.task_id == "task_id"
+
+        os.remove(OUTPUT_FILE_PATH)
 
     @staticmethod
     def _s3fs_creds():

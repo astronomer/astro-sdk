@@ -15,6 +15,7 @@ import pathlib
 import unittest.mock
 
 import pandas as pd
+from airflow.exceptions import DuplicateTaskIdFound
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -81,6 +82,26 @@ class TestAgnosticLoadFile(unittest.TestCase):
         f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         return f
 
+    def create_and_run_tasks(self, decorator_funcs):
+        tasks = []
+        with self.dag:
+            for decorator_func in decorator_funcs:
+                tasks.append(
+                    decorator_func["func"](
+                        *decorator_func["op_args"], **decorator_func["op_kwargs"]
+                    )
+                )
+
+        dr = self.dag.create_dagrun(
+            run_id=DagRunType.MANUAL.value,
+            start_date=timezone.utcnow(),
+            execution_date=DEFAULT_DATE,
+            state=State.RUNNING,
+        )
+        for task in tasks:
+            task.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        return tasks
+
     def test_path_validation(self):
         test_table = [
             {"input": "S3://mybucket/puppy.jpg", "output": True},
@@ -95,6 +116,59 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         for test in test_table:
             assert AgnosticLoadFile.validate_path(test["input"]) == test["output"]
+
+    def test_poc_for_need_unique_task_id_for_same_path(self):
+        OUTPUT_TABLE_NAME = "expected_table_from_csv_1"
+
+        tasks_params = []
+        for _ in range(5):
+            tasks_params.append(
+                {
+                    "func": load_file,
+                    "op_args": (),
+                    "op_kwargs": {
+                        "path": str(self.cwd) + "/../data/homes.csv",
+                        "file_conn_id": "",
+                        "database": "pagila",
+                        "task_id": "task_id",
+                        "output_conn_id": "postgres_conn",
+                        "output_table_name": OUTPUT_TABLE_NAME,
+                    },
+                }
+            )
+        tasks_params[-1]["op_kwargs"]["task_id"] = "task_id"
+        try:
+            self.create_and_run_tasks(tasks_params)
+            assert False
+        except DuplicateTaskIdFound:
+            assert True
+
+    def test_unique_task_id_for_same_path(self):
+        OUTPUT_TABLE_NAME = "expected_table_from_csv_1"
+
+        tasks_params = []
+        for _ in range(4):
+            tasks_params.append(
+                {
+                    "func": load_file,
+                    "op_args": (),
+                    "op_kwargs": {
+                        "path": str(self.cwd) + "/../data/homes.csv",
+                        "file_conn_id": "",
+                        "database": "pagila",
+                        "output_conn_id": "postgres_conn",
+                        "output_table_name": OUTPUT_TABLE_NAME,
+                    },
+                }
+            )
+        tasks_params[-1]["op_kwargs"]["task_id"] = "task_id"
+
+        tasks = self.create_and_run_tasks(tasks_params)
+
+        assert tasks[0].operator.task_id != tasks[1].operator.task_id
+        assert tasks[1].operator.task_id == "load_file_homes_csv__1"
+        assert tasks[2].operator.task_id == "load_file_homes_csv__2"
+        assert tasks[3].operator.task_id == "task_id"
 
     def test_aql_local_file_to_postgres(self):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"

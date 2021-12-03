@@ -5,12 +5,9 @@ from urllib.parse import urlparse
 import pandas as pd
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
-from pandas.core.dtypes.inference import is_dict_like
-from pandas.io.sql import SQLDatabase, SQLTable
-from snowflake.connector.pandas_tools import write_pandas
 
-from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
 from astro.utils.load_dataframe import move_dataframe_to_sql
+from astro.utils.task_id_helper import get_task_id
 
 
 class AgnosticLoadFile(BaseOperator):
@@ -128,6 +125,7 @@ def load_file(
     database=None,
     schema=None,
     warehouse=None,
+    task_id=None,
     **kwargs,
 ):
     """Convert AgnosticLoadFile into a function.
@@ -142,8 +140,11 @@ def load_file(
     :type file_conn_id: str
     :param output_conn_id: Database connection id.
     :type output_conn_id: str
+    :param task_id: task id, optional.
+    :type task_id: str
     """
-    task_id = "load_file_" + path.rsplit("/", 1)[-1].replace(".", "_")
+
+    task_id = task_id if task_id is not None else get_task_id("load_file", path)
 
     return AgnosticLoadFile(
         task_id=task_id,
