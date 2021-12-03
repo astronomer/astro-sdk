@@ -11,8 +11,8 @@ connections:
     conn_type: snowflake
     host: https://gp21411.us-east-1.snowflakecomputing.com
     port: 443
-    login: $SNOW_ACCOUNT_NAME
-    password: $SNOW_PASSWORD
+    login: $SNOWFLAKE_ACCOUNT_NAME
+    password: $SNOWFLAKE_PASSWORD
     schema: SANDBOX_AIRFLOW_TEST
     extra:
       account: "gp21411"

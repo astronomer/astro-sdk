@@ -41,9 +41,9 @@ def drop_table(table_name, snowflake_conn):
 def get_snowflake_hook():
     hook = SnowflakeHook(
         snowflake_conn_id="snowflake_conn",
-        schema=os.environ["SNOW_SCHEMA"],
-        database=os.environ["SNOW_DATABASE"],
-        warehouse=os.environ["SNOW_WAREHOUSE"],
+        schema=os.environ["SNOWFLAKE_SCHEMA"],
+        database=os.environ["SNOWFLAKE_DATABASE"],
+        warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
     )
     return hook
 

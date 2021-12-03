@@ -53,14 +53,14 @@ jobs:
           # The default PostgreSQL port
           POSTGRES_PORT: 5432
           AIRFLOW__SQL_DECORATOR__CONN_AWS_DEFAULT: ${{ secrets.AWS_ACCESS_CRED }}
-          SNOW_ACCOUNT_NAME: ${{ secrets.SNOW_UNAME }}
-          SNOW_PASSWORD: ${{ secrets.SNOW_PASSWORD }}
-          SNOW_SCHEMA: SANDBOX_AIRFLOW_TEST
-          SNOW_DATABASE: DWH_LEGACY
-          SNOW_WAREHOUSE: TRANSFORMING_DEV
-          SNOW_HOST: https://gp21411.us-east-1.snowflakecomputing.com
-          SNOW_ACCOUNT: gp21411
-          SNOW_REGION: us-east-1
-          SNOW_ROLE: TRANSFORMER
+          SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+          SNOWFLAKE_SCHEMA: SANDBOX_AIRFLOW_TEST
+          SNOWFLAKE_DATABASE: DWH_LEGACY
+          SNOWFLAKE_WAREHOUSE: TRANSFORMING_DEV
+          SNOWFLAKE_HOST: https://gp21411.us-east-1.snowflakecomputing.com
+          SNOWFLAKE_ACCOUNT: gp21411
+          SNOWFLAKE_REGION: us-east-1
+          SNOWFLAKE_ROLE: TRANSFORMER
           AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
 
