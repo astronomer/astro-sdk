@@ -1,0 +1,231 @@
+"""
+Unittest module to test Operators.
+
+Requires the unittest, pytest, and requests-mock Python libraries.
+
+"""
+
+import logging
+import math
+import pathlib
+import unittest.mock
+
+from airflow.models import DAG, DagRun
+from airflow.models import TaskInstance as TI
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.utils import timezone
+from airflow.utils.db import check
+from airflow.utils.session import create_session
+from airflow.utils.state import State
+from airflow.utils.types import DagRunType
+
+# Import Operator
+import astro.sql as aql
+
+log = logging.getLogger(__name__)
+DEFAULT_DATE = timezone.datetime(2016, 1, 1)
+
+
+class TestAggregateCheckOperator(unittest.TestCase):
+    """
+    Test Postgres Merge Operator.
+    """
+
+    cwd = pathlib.Path(__file__).parent
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+
+    def clear_run(self):
+        self.run = False
+
+    def setUp(self):
+        super().setUp()
+        self.clear_run()
+        self.addCleanup(self.clear_run)
+        self.dag = DAG(
+            "test_dag",
+            default_args={
+                "owner": "airflow",
+                "start_date": DEFAULT_DATE,
+            },
+        )
+        aql.load_file(
+            path=str(self.cwd) + "/../data/homes_merge_1.csv",
+            output_conn_id="postgres_conn",
+            output_table_name="aggregate_check_test",
+            database="pagila",
+        ).operator.execute({"run_id": "foo"})
+
+    def test_exact_value(self):
+        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
+        df = hook.get_pandas_df(sql="SELECT * FROM aggregate_check_test")
+        assert df.count()[0] == 4
+        try:
+            a = aql.aggregate_check(
+                table="aggregate_check_test",
+                database="pagila",
+                conn_id="postgres_conn",
+                check="select count(*) FROM aggregate_check_test",
+                greater_than=4,
+                less_than=4,
+            )
+            a.execute({"run_id": "foo"})
+            assert True
+        except ValueError:
+            assert False
+
+    def test_range_values(self):
+        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
+        df = hook.get_pandas_df(sql="SELECT * FROM aggregate_check_test")
+        assert df.count()[0] == 4
+        try:
+            a = aql.aggregate_check(
+                table="aggregate_check_test",
+                database="pagila",
+                conn_id="postgres_conn",
+                check="select count(*) FROM aggregate_check_test",
+                greater_than=2,
+                less_than=6,
+            )
+            a.execute({"run_id": "foo"})
+            assert True
+        except ValueError:
+            assert False
+
+    def test_out_of_range_value(self):
+        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
+        df = hook.get_pandas_df(sql="SELECT * FROM aggregate_check_test")
+        assert df.count()[0] == 4
+        try:
+            a = aql.aggregate_check(
+                table="aggregate_check_test",
+                database="pagila",
+                conn_id="postgres_conn",
+                check="select count(*) FROM aggregate_check_test",
+                greater_than=10,
+                less_than=20,
+            )
+            a.execute({"run_id": "foo"})
+            assert False
+        except ValueError:
+            assert True
+
+    def test_invalid_values(self):
+        """param:greater_than should be less than or equal to param:less_than"""
+
+        try:
+            a = aql.aggregate_check(
+                table="aggregate_check_test",
+                database="pagila",
+                conn_id="postgres_conn",
+                check="select count(*) FROM aggregate_check_test",
+                greater_than=20,
+                less_than=10,
+            )
+            assert False
+        except ValueError:
+            assert True
+
+    def test_snowflake_exact_number_of_rows(self):
+        aql.load_file(
+            path=str(self.cwd) + "/../data/homes_merge_1.csv",
+            output_conn_id="snowflake_conn",
+            output_table_name="aggregate_check_test",
+            database="DWH_LEGACY",
+            schema="SANDBOX_AIRFLOW_TEST",
+        ).operator.execute({"run_id": "foo"})
+        try:
+            a = aql.aggregate_check(
+                table="aggregate_check_test",
+                database="pagila",
+                conn_id="postgres_conn",
+                check="select count(*) FROM aggregate_check_test",
+                greater_than=4,
+                less_than=4,
+            )
+            a.execute({"run_id": "foo"})
+            assert True
+        except ValueError:
+            assert False
+
+    def test_invalid_params_no_test_values(self):
+        try:
+            a = aql.aggregate_check(
+                table="aggregate_check_test",
+                database="pagila",
+                conn_id="postgres_conn",
+                check="select count(*) FROM aggregate_check_test",
+            )
+            assert False
+        except ValueError:
+            assert True
+
+    def test_equal_to_param(self):
+        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
+        df = hook.get_pandas_df(sql="SELECT * FROM aggregate_check_test")
+        assert df.count()[0] == 4
+        try:
+            a = aql.aggregate_check(
+                table="aggregate_check_test",
+                database="pagila",
+                conn_id="postgres_conn",
+                check="select count(*) FROM aggregate_check_test",
+                equal_to=4,
+            )
+            a.execute({"run_id": "foo"})
+            assert True
+        except ValueError:
+            assert False
+
+    def test_only_less_than_param(self):
+        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
+        df = hook.get_pandas_df(sql="SELECT * FROM aggregate_check_test")
+        assert df.count()[0] == 4
+        try:
+            a = aql.aggregate_check(
+                table="aggregate_check_test",
+                database="pagila",
+                conn_id="postgres_conn",
+                check="select count(*) FROM aggregate_check_test",
+                less_than=3,
+            )
+            result = a.execute({"run_id": "foo"})
+            assert False
+        except ValueError:
+            assert True
+
+    def test_only_greater_than_param(self):
+        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
+        df = hook.get_pandas_df(sql="SELECT * FROM aggregate_check_test")
+        assert df.count()[0] == 4
+        try:
+            a = aql.aggregate_check(
+                table="aggregate_check_test",
+                database="pagila",
+                conn_id="postgres_conn",
+                check="select count(*) FROM aggregate_check_test",
+                greater_than=3,
+            )
+            a.execute({"run_id": "foo"})
+            assert True
+        except ValueError:
+            assert False
+
+    def test_all_three_params_provided_priority_given_to_equal_to_param(self):
+        """param:greater_than should be less than or equal to param:less_than"""
+
+        try:
+            a = aql.aggregate_check(
+                table="aggregate_check_test",
+                database="pagila",
+                conn_id="postgres_conn",
+                check="select count(*) FROM aggregate_check_test",
+                greater_than=20,
+                less_than=10,
+                equal_to=4,
+            )
+            assert False
+        except ValueError:
+            assert True

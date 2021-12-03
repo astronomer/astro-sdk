@@ -9,6 +9,7 @@ from airflow.models import DagRun, TaskInstance
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils.db import provide_session
+from sqlalchemy.sql.functions import Function
 
 from astro.sql.table import Table
 from astro.utils import postgres_transform, snowflake_transform
@@ -21,6 +22,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         conn_id: Optional[str] = None,
         autocommit: bool = False,
         parameters: dict = None,
+        handler: Function = None,
         database: Optional[str] = None,
         schema: Optional[str] = None,
         warehouse: Optional[str] = None,
@@ -53,6 +55,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.parameters = parameters
         self.database = database
         self.schema = schema
+        self.handler = handler
         self.warehouse = warehouse
         self.kwargs = kwargs or {}
         self.sql = sql
@@ -69,7 +72,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
     def execute(self, context: Dict):
         self._set_variables_from_first_table()
 
-        self.conn_type = BaseHook.get_connection(self.conn_id).conn_type
+        self.conn_type = BaseHook.get_connection(self.conn_id).conn_type  # type: ignore
         self.run_id = context.get("run_id")
         self.convert_op_arg_dataframes()
         self.convert_op_kwarg_dataframes()
@@ -109,15 +112,19 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.parameters.update(self.op_kwargs)  # type: ignore
 
         self._process_params()
-        self._run_sql()
+        query_result = self._run_sql()
         # Run execute function of subclassed Operator.
-        return Table(
-            table_name=output_table_name,
-            conn_id=self.conn_id,
-            database=self.database,
-            warehouse=self.warehouse,
-            schema=self.schema,
-        )
+
+        if self.raw_sql:
+            return query_result
+        else:
+            return Table(
+                table_name=output_table_name,
+                conn_id=self.conn_id,
+                database=self.database,
+                warehouse=self.warehouse,
+                schema=self.schema,
+            )
 
     def _set_variables_from_first_table(self):
         """
@@ -167,19 +174,24 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.hook = PostgresHook(
                 postgres_conn_id=self.conn_id, schema=self.database
             )
-            self.hook.run(self.sql, self.autocommit, parameters=self.parameters)
+            results = self.hook.run(
+                self.sql,
+                self.autocommit,
+                parameters=self.parameters,
+                handler=self.handler,
+            )
             for output in self.hook.conn.notices:
                 self.log.info(output)
+
         elif self.conn_type == "snowflake":
             self.log.info("Executing: %s", self.sql)
             hook = self.get_snow_hook()
-            execution_info = hook.run(
+            results = hook.run(
                 self.sql, autocommit=self.autocommit, parameters=self.parameters
             )
             self.query_ids = hook.query_ids
 
-            if self.do_xcom_push:
-                return execution_info
+        return results
 
     @staticmethod
     def create_temporary_table(query, table):
@@ -323,7 +335,7 @@ def _transform_task(
     return task_decorator_factory(
         python_callable=python_callable,
         multiple_outputs=multiple_outputs,
-        decorated_operator_class=SqlDecoratoratedOperator,
+        decorated_operator_class=SqlDecoratoratedOperator,  # type: ignore
         **kwargs,
     )
 
