@@ -15,7 +15,9 @@ def process_params(parameters, python_callable):
     return {
         k: (
             AsIs(v.table_name)
-            if param_types.get(k) and param_types.get(k).annotation == Table
+            if param_types.get(k)
+            and param_types.get(k).annotation == Table
+            or type(v) == Table
             else v
         )
         for k, v in parameters.items()

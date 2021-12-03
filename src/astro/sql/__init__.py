@@ -9,8 +9,12 @@ from astro.sql.operators.agnostic_save_file import save_file
 from astro.sql.operators.agnostic_sql_append import SqlAppendOperator
 from astro.sql.operators.agnostic_sql_merge import SqlMergeOperator
 from astro.sql.operators.agnostic_sql_truncate import SqlTruncateOperator
-from astro.sql.operators.sql_decorator import transform_decorator
+from astro.sql.operators.sql_decorator import (
+    SqlDecoratoratedOperator,
+    transform_decorator,
+)
 from astro.sql.table import Table
+from astro.utils.task_id_helper import get_task_id
 
 
 def transform(
@@ -28,6 +32,32 @@ def transform(
         multiple_outputs=multiple_outputs,
         conn_id=conn_id,
         autocommit=autocommit,
+        parameters=parameters,
+        database=database,
+        schema=schema,
+        warehouse=warehouse,
+    )
+
+
+def transform_file(
+    sql=None,
+    conn_id: str = "",
+    parameters=None,
+    database: Optional[str] = None,
+    schema: Optional[str] = None,
+    warehouse: Optional[str] = None,
+    output_table: Table = None,
+):
+    def transform_file():
+        return sql
+
+    return SqlDecoratoratedOperator(
+        task_id=get_task_id("transform_file", sql),
+        sql=sql,
+        python_callable=transform_file,
+        op_kwargs={"output_table": output_table},
+        op_args=(),
+        conn_id=conn_id,
         parameters=parameters,
         database=database,
         schema=schema,

@@ -10,6 +10,7 @@
   - [The Table class](#the-table-class)
   - [Loading Data](#loading-data)
   - [Transform](#transform)
+  - [Transform File](#transform-file)
   - [Raw SQL](#raw-sql)
   - [Appending data](#appending-data)
   - [Merging data](#merging-data)
@@ -263,6 +264,27 @@ with dag:
     orders = get_orders()
     customers = get_customers()
     join_orders_and_customers(orders, customers)
+```
+
+
+## Transform File
+
+Another option for larger SQL queries is to use the `transform_file` function to pass an external SQL file to the DAG.
+All of the same templating will work for this SQL query.
+
+```python
+with self.dag:
+    f = aql.transform_file(
+        sql=str(cwd) + "/my_sql_function.sql",
+        conn_id="postgres_conn",
+        database="pagila",
+        parameters={
+            "actor": Table("actor"),
+            "film_actor_join": Table("film_actor"),
+            "unsafe_parameter": "G%%",
+        },
+        output_table=Table("my_table_from_file"),
+    )
 ```
 
 ## Raw SQL

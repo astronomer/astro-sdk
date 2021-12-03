@@ -9,6 +9,7 @@ Run test:
 """
 
 import logging
+import pathlib
 import unittest.mock
 from unittest import mock
 
@@ -237,6 +238,50 @@ class TestPostgresDecorator(unittest.TestCase):
         )
         # Read table from db
         df = pd.read_sql(f"SELECT * FROM my_table", con=self.hook_target.get_conn())
+        assert df.iloc[0].to_dict() == {
+            "actor_id": 191,
+            "first_name": "GREGORY",
+            "last_name": "GOODING",
+            "count": 30,
+        }
+
+        drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
+
+    def test_sql_file(self):
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+
+        drop_table(
+            table_name="my_table_from_file", postgres_conn=self.hook_target.get_conn()
+        )
+
+        cwd = pathlib.Path(__file__).parent
+
+        with self.dag:
+            f = aql.transform_file(
+                sql=str(cwd) + "/test.sql",
+                conn_id="postgres_conn",
+                database="pagila",
+                parameters={
+                    "actor": Table("actor"),
+                    "film_actor_join": Table("film_actor"),
+                    "unsafe_parameter": "G%%",
+                },
+                output_table=Table("my_table_from_file"),
+            )
+
+        dr = self.dag.create_dagrun(
+            run_id=DagRunType.MANUAL.value,
+            start_date=timezone.utcnow(),
+            execution_date=DEFAULT_DATE,
+            state=State.RUNNING,
+        )
+        f.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        # Read table from db
+        df = pd.read_sql(
+            f"SELECT * FROM my_table_from_file", con=self.hook_target.get_conn()
+        )
         assert df.iloc[0].to_dict() == {
             "actor_id": 191,
             "first_name": "GREGORY",

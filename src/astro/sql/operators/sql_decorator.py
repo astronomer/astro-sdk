@@ -49,7 +49,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         :param kwargs:
         """
         self.raw_sql = raw_sql
-
         self.conn_id = conn_id
         self.autocommit = autocommit
         self.parameters = parameters
@@ -84,6 +83,9 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             else:
                 self.sql = sql_stuff
                 self.parameters = {}
+        elif self.sql[-4:] == ".sql":
+            with open(self.sql) as file:
+                self.sql = file.read().replace("\n", " ")
         if context:
             self.sql = self.render_template(self.sql, context)
             self.parameters = {
