@@ -35,6 +35,7 @@ from airflow.utils.types import DagRunType
 
 # Import Operator
 import astro.sql as aql
+from astro.sql.table import Table
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -72,15 +73,15 @@ class TestPostgresMergeOperator(unittest.TestCase):
         )
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_merge_1.csv",
-            output_conn_id="postgres_conn",
-            output_table_name="merge_test_1",
-            database="pagila",
+            output_table=Table(
+                table_name="merge_test_1", conn_id="postgres_conn", database="pagila"
+            ),
         ).operator.execute({"run_id": "foo"})
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_merge_2.csv",
-            output_conn_id="postgres_conn",
-            output_table_name="merge_test_2",
-            database="pagila",
+            output_table=Table(
+                table_name="merge_test_2", conn_id="postgres_conn", database="pagila"
+            ),
         ).operator.execute({"run_id": "foo"})
 
     def clear_run(self):

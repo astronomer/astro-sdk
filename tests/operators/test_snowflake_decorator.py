@@ -78,8 +78,7 @@ class TestSnowflakeOperator(unittest.TestCase):
         cwd = pathlib.Path(__file__).parent
         aql.load_file(
             path=str(cwd) + "/../data/homes.csv",
-            output_conn_id="snowflake_conn",
-            output_table_name="snowflake_decorator_test",
+            output_table=Table("snowflake_decorator_test", conn_id="snowflake_conn"),
         ).operator.execute({"run_id": "foo"})
         super().setUp()
         self.dag = DAG(
@@ -112,9 +111,7 @@ class TestSnowflakeOperator(unittest.TestCase):
             task = dr.get_task_instance(task_id)
 
     def test_snowflake_query(self):
-        @aql.transform(
-            conn_id="snowflake_conn",
-        )
+        @aql.transform
         def sample_snow(input_table: Table):
             return "SELECT * FROM {input_table} LIMIT 10"
 

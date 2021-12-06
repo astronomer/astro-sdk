@@ -41,6 +41,7 @@ from airflow.utils.types import DagRunType
 
 # Import Operator
 import astro.sql as aql
+from astro.sql.table import Table
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -110,13 +111,17 @@ class TestPostgresAppend(unittest.TestCase):
         with self.dag:
             load_main = aql.load_file(
                 path=str(cwd) + "/../data/homes_main.csv",
-                output_table_name=MAIN_TABLE_NAME,
-                output_conn_id="postgres_conn",
+                output_table=Table(
+                    table_name=MAIN_TABLE_NAME,
+                    conn_id="postgres_conn",
+                ),
             )
             load_append = aql.load_file(
                 path=str(cwd) + "/../data/homes_append.csv",
-                output_table_name=APPEND_TABLE_NAME,
-                output_conn_id="postgres_conn",
+                output_table=Table(
+                    table_name=APPEND_TABLE_NAME,
+                    conn_id="postgres_conn",
+                ),
             )
             foo = aql.append(
                 conn_id="postgres_conn",
@@ -158,13 +163,17 @@ class TestPostgresAppend(unittest.TestCase):
         with self.dag:
             load_main = aql.load_file(
                 path=str(cwd) + "/../data/homes_main.csv",
-                output_table_name=MAIN_TABLE_NAME,
-                output_conn_id="postgres_conn",
+                output_table=Table(
+                    table_name=MAIN_TABLE_NAME,
+                    conn_id="postgres_conn",
+                ),
             )
             load_append = aql.load_file(
                 path=str(cwd) + "/../data/homes_append.csv",
-                output_table_name=APPEND_TABLE_NAME,
-                output_conn_id="postgres_conn",
+                output_table=Table(
+                    table_name=APPEND_TABLE_NAME,
+                    conn_id="postgres_conn",
+                ),
             )
             foo = aql.append(
                 conn_id="postgres_conn",
@@ -204,13 +213,17 @@ class TestPostgresAppend(unittest.TestCase):
         with self.dag:
             load_main = aql.load_file(
                 path=str(cwd) + "/../data/homes_main.csv",
-                output_table_name=MAIN_TABLE_NAME,
-                output_conn_id="postgres_conn",
+                output_table=Table(
+                    table_name=MAIN_TABLE_NAME,
+                    conn_id="postgres_conn",
+                ),
             )
             load_append = aql.load_file(
                 path=str(cwd) + "/../data/homes_append.csv",
-                output_table_name=APPEND_TABLE_NAME,
-                output_conn_id="postgres_conn",
+                output_table=Table(
+                    table_name=APPEND_TABLE_NAME,
+                    conn_id="postgres_conn",
+                ),
             )
             foo = aql.append(
                 conn_id="postgres_conn",
@@ -258,13 +271,17 @@ class TestPostgresAppend(unittest.TestCase):
         with self.dag:
             load_main = aql.load_file(
                 path=str(cwd) + "/../data/homes_main.csv",
-                output_table_name=MAIN_TABLE_NAME,
-                output_conn_id="postgres_conn",
+                output_table=Table(
+                    table_name=MAIN_TABLE_NAME,
+                    conn_id="postgres_conn",
+                ),
             )
             load_append = aql.load_file(
                 path=str(cwd) + "/../data/homes_append.csv",
-                output_table_name=APPEND_TABLE_NAME,
-                output_conn_id="postgres_conn",
+                output_table=Table(
+                    table_name=APPEND_TABLE_NAME,
+                    conn_id="postgres_conn",
+                ),
             )
             foo = aql.append(
                 conn_id="postgres_conn",

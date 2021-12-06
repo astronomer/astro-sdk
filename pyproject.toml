@@ -3,7 +3,7 @@ requires = ["flit_core ~=3.2"]
 build-backend = "flit_core.buildapi"
 
 [project]
-name = "astro"
+name = "astro-projects"
 dynamic = ["version", "description"]
 
 authors = [
@@ -53,3 +53,6 @@ provider_info = "astro.__init__:get_provider_info"
 [tool.pytest.ini_options]
 env_files = [".env"]
 testpaths = ["tests"]
+
+[tool.flit.module]
+name = "astro"  # Or "astro.sql" if you just want this directory, not the entire 'astro'.

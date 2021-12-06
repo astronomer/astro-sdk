@@ -37,6 +37,7 @@ from airflow.utils.types import DagRunType
 
 # Import Operator
 import astro.sql as aql
+from astro.sql.table import Table
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -69,9 +70,9 @@ class TestAggregateCheckOperator(unittest.TestCase):
         )
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_merge_1.csv",
-            output_conn_id="postgres_conn",
-            output_table_name="aggregate_check_test",
-            database="pagila",
+            output_table=Table(
+                "aggregate_check_test", database="pagila", conn_id="postgres_conn"
+            ),
         ).operator.execute({"run_id": "foo"})
 
     def test_exact_value(self):
@@ -147,10 +148,12 @@ class TestAggregateCheckOperator(unittest.TestCase):
     def test_snowflake_exact_number_of_rows(self):
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_merge_1.csv",
-            output_conn_id="snowflake_conn",
-            output_table_name="aggregate_check_test",
-            database="DWH_LEGACY",
-            schema="SANDBOX_AIRFLOW_TEST",
+            output_table=Table(
+                "aggregate_check_test",
+                conn_id="snowflake_conn",
+                database="DWH_LEGACY",
+                schema="SANDBOX_AIRFLOW_TEST",
+            ),
         ).operator.execute({"run_id": "foo"})
         try:
             a = aql.aggregate_check(

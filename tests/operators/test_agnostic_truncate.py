@@ -76,9 +76,9 @@ class TestPostgresTruncateOperator(unittest.TestCase):
         )
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_merge_1.csv",
-            output_conn_id="postgres_conn",
-            output_table_name="truncate_test",
-            database="pagila",
+            output_table=Table(
+                "truncate_test", database="pagila", conn_id="postgres_conn"
+            ),
         ).operator.execute({"run_id": "foo"})
 
     def test_truncate(self):

@@ -39,6 +39,7 @@ from airflow.utils.types import DagRunType
 
 # Import Operator
 from astro import sql as aql
+from astro.sql.table import Table
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -84,13 +85,11 @@ class TestSnowflakeAppend(unittest.TestCase):
         cwd = pathlib.Path(__file__).parent
         aql.load_file(
             path=str(cwd) + "/../data/homes_main.csv",
-            output_table_name="test_append_1",
-            output_conn_id="snowflake_conn",
+            output_table=Table(table_name="test_append_1", conn_id="snowflake_conn"),
         ).operator.execute({"run_id": "foo"})
         aql.load_file(
             path=str(cwd) + "/../data/homes_append.csv",
-            output_table_name="test_append_2",
-            output_conn_id="snowflake_conn",
+            output_table=Table(table_name="test_append_2", conn_id="snowflake_conn"),
         ).operator.execute({"run_id": "foo"})
 
     def clear_run(self):

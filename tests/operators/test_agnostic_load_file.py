@@ -43,6 +43,7 @@ from airflow.utils.types import DagRunType
 # Import Operator
 from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
 from astro.sql.operators.temp_hooks import TempPostgresHook
+from astro.sql.table import Table
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -144,10 +145,12 @@ class TestAgnosticLoadFile(unittest.TestCase):
                     "op_kwargs": {
                         "path": str(self.cwd) + "/../data/homes.csv",
                         "file_conn_id": "",
-                        "database": "pagila",
                         "task_id": "task_id",
-                        "output_conn_id": "postgres_conn",
-                        "output_table_name": OUTPUT_TABLE_NAME,
+                        "output_table": Table(
+                            OUTPUT_TABLE_NAME,
+                            database="pagila",
+                            conn_id="postgres_conn",
+                        ),
                     },
                 }
             )
@@ -170,9 +173,11 @@ class TestAgnosticLoadFile(unittest.TestCase):
                     "op_kwargs": {
                         "path": str(self.cwd) + "/../data/homes.csv",
                         "file_conn_id": "",
-                        "database": "pagila",
-                        "output_conn_id": "postgres_conn",
-                        "output_table_name": OUTPUT_TABLE_NAME,
+                        "output_table": Table(
+                            OUTPUT_TABLE_NAME,
+                            database="pagila",
+                            conn_id="postgres_conn",
+                        ),
                     },
                 }
             )
@@ -201,9 +206,9 @@ class TestAgnosticLoadFile(unittest.TestCase):
             {
                 "path": str(self.cwd) + "/../data/homes.csv",
                 "file_conn_id": "",
-                "database": "pagila",
-                "output_conn_id": "postgres_conn",
-                "output_table_name": OUTPUT_TABLE_NAME,
+                "output_table": Table(
+                    OUTPUT_TABLE_NAME, database="pagila", conn_id="postgres_conn"
+                ),
             },
         )
 
@@ -224,7 +229,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
             "taxes": 3167.0,
         }
 
-    def test_aql_local_file_to_postgres_no_output_table_name(self):
+    def test_aql_local_file_to_postgres_no_output_table(self):
         OUTPUT_TABLE_NAME = "test_dag_unique_task_name_1"
         self.hook_target = PostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
@@ -233,16 +238,16 @@ class TestAgnosticLoadFile(unittest.TestCase):
         # Drop target table
         drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
 
-        # Run task without specifying `output_table_name`
+        # Run task without specifying `output_table`
         out = self.create_and_run_task(
             load_file,
             (),
             {
                 "path": str(self.cwd) + "/../data/homes.csv",
                 "file_conn_id": "",
-                "database": "pagila",
-                "output_conn_id": "postgres_conn",
-                "output_table_name": OUTPUT_TABLE_NAME,
+                "output_table": Table(
+                    OUTPUT_TABLE_NAME, database="pagila", conn_id="postgres_conn"
+                ),
             },
         )
 
@@ -279,9 +284,9 @@ class TestAgnosticLoadFile(unittest.TestCase):
             {
                 "path": "s3://tmp9/homes.csv",
                 "file_conn_id": "",
-                "output_conn_id": "postgres_conn",
-                "database": "pagila",
-                "output_table_name": OUTPUT_TABLE_NAME,
+                "output_table": Table(
+                    OUTPUT_TABLE_NAME, database="pagila", conn_id="postgres_conn"
+                ),
             },
         )
 
@@ -309,10 +314,12 @@ class TestAgnosticLoadFile(unittest.TestCase):
             {
                 "path": str(self.cwd) + "/../data/homes.csv",
                 "file_conn_id": "",
-                "output_conn_id": "snowflake_conn",
-                "output_table_name": OUTPUT_TABLE_NAME,
-                "database": "DWH_LEGACY",
-                "schema": "SANDBOX_AIRFLOW_TEST",
+                "output_table": Table(
+                    OUTPUT_TABLE_NAME,
+                    database="DWH_LEGACY",
+                    conn_id="snowflake_conn",
+                    schema="SANDBOX_AIRFLOW_TEST",
+                ),
             },
         )
 

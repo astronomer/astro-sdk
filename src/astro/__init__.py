@@ -16,7 +16,7 @@ limitations under the License.
 
 """A decorator that allows users to run SQL queries natively in Airflow."""
 
-__version__ = "0.0.1"
+__version__ = "0.0.5"
 from astro.dataframe import dataframe
 
 
@@ -27,7 +27,7 @@ from astro.dataframe import dataframe
 def get_provider_info():
     return {
         # Required.
-        "package-name": "astro",
+        "package-name": "astro-projects",
         "name": "Astro SQL Provider",
         "description": __doc__,
         "versions": [__version__],

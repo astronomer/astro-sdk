@@ -31,6 +31,7 @@ from airflow.utils import timezone
 
 # Import Operator
 import astro.sql as aql
+from astro.sql.table import Table
 from astro.utils.snowflake_merge_func import (
     is_valid_snow_identifier,
     snowflake_merge_func,
@@ -64,13 +65,17 @@ class TestSnowflakeMerge(unittest.TestCase):
         cwd = pathlib.Path(__file__).parent
         aql.load_file(
             path=str(cwd) + "/../data/homes_merge_1.csv",
-            output_conn_id="snowflake_conn",
-            output_table_name="merge_test_1",
+            output_table=Table(
+                table_name="merge_test_1",
+                conn_id="snowflake_conn",
+            ),
         ).operator.execute({"run_id": "foo"})
         aql.load_file(
             path=str(cwd) + "/../data/homes_merge_2.csv",
-            output_conn_id="snowflake_conn",
-            output_table_name="merge_test_2",
+            output_table=Table(
+                table_name="merge_test_2",
+                conn_id="snowflake_conn",
+            ),
         ).operator.execute({"run_id": "foo"})
         super().setUp()
 

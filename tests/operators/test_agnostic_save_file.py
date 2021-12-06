@@ -41,6 +41,7 @@ from airflow.utils.types import DagRunType
 
 # Import Operator
 from astro.sql.operators.agnostic_save_file import save_file
+from astro.sql.table import Table
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -135,10 +136,10 @@ class TestSaveFile(unittest.TestCase):
             save_file,
             (),
             {
-                "table": INPUT_TABLE_NAME,
                 "output_file_path": OUTPUT_FILE_PATH,
-                "input_conn_id": "postgres_conn",
-                "database": "pagila",
+                "input_table": Table(
+                    INPUT_TABLE_NAME, conn_id="postgres_conn", database="pagila"
+                ),
                 "output_conn_id": None,
                 "overwrite": True,
             },
@@ -177,10 +178,10 @@ class TestSaveFile(unittest.TestCase):
             save_file,
             (),
             {
-                "table": INPUT_TABLE_NAME,
                 "output_file_path": OUTPUT_FILE_PATH,
-                "input_conn_id": "postgres_conn",
-                "database": "pagila",
+                "input_table": Table(
+                    INPUT_TABLE_NAME, conn_id="postgres_conn", database="pagila"
+                ),
                 "output_conn_id": None,
                 "overwrite": True,
                 "output_file_format": "parquet",
@@ -219,11 +220,11 @@ class TestSaveFile(unittest.TestCase):
             save_file,
             (),
             {
-                "table": INPUT_TABLE_NAME,
+                "input_table": Table(
+                    INPUT_TABLE_NAME, conn_id="postgres_conn", database="pagila"
+                ),
                 "output_file_path": OUTPUT_FILE_PATH,
-                "input_conn_id": "postgres_conn",
                 "output_conn_id": None,
-                "database": "pagila",
                 "overwrite": True,
             },
         )
@@ -259,11 +260,11 @@ class TestSaveFile(unittest.TestCase):
                 save_file,
                 (),
                 {
-                    "table": INPUT_TABLE_NAME,
+                    "input_table": Table(
+                        INPUT_TABLE_NAME, conn_id="postgres_conn", database="pagila"
+                    ),
                     "output_file_path": OUTPUT_FILE_PATH,
-                    "input_conn_id": "postgres_conn",
                     "output_conn_id": None,
-                    "database": "pagila",
                     "overwrite": False,
                 },
             )
@@ -293,11 +294,11 @@ class TestSaveFile(unittest.TestCase):
             save_file,
             (),
             {
-                "table": INPUT_TABLE_NAME,
+                "input_table": Table(
+                    INPUT_TABLE_NAME, conn_id="postgres_conn", database="pagila"
+                ),
                 "output_file_path": OUTPUT_FILE_PATH,
-                "input_conn_id": "postgres_conn",
                 "output_conn_id": "aws_default",
-                "database": "pagila",
                 "overwrite": True,
             },
         )
@@ -332,11 +333,11 @@ class TestSaveFile(unittest.TestCase):
                 save_file,
                 (),
                 {
-                    "table": INPUT_TABLE_NAME,
+                    "input_table": Table(
+                        INPUT_TABLE_NAME, conn_id="postgres_conn", database="pagila"
+                    ),
                     "output_file_path": OUTPUT_FILE_PATH,
-                    "input_conn_id": "postgres_conn",
                     "output_conn_id": "aws_default",
-                    "database": "pagila",
                     "overwrite": False,
                 },
             )
@@ -358,11 +359,11 @@ class TestSaveFile(unittest.TestCase):
                     "func": save_file,
                     "op_args": (),
                     "op_kwargs": {
-                        "table": INPUT_TABLE_NAME,
+                        "input_table": Table(
+                            INPUT_TABLE_NAME, conn_id="postgres_conn", database="pagila"
+                        ),
                         "output_file_path": OUTPUT_FILE_PATH,
-                        "input_conn_id": "postgres_conn",
                         "output_conn_id": None,
-                        "database": "pagila",
                         "overwrite": True,
                     },
                 }

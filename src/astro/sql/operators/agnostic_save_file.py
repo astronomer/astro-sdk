@@ -21,10 +21,9 @@ import boto3
 import pandas as pd
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 
 from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
+from astro.sql.table import Table
 from astro.utils.task_id_helper import get_task_id
 
 
@@ -49,24 +48,18 @@ class SaveFile(BaseOperator):
         self,
         table="",
         output_file_path="",
-        input_conn_id="",
+        input_table: Table = None,
         output_conn_id=None,
         output_file_format="csv",
         overwrite=None,
-        database: Optional[str] = None,
-        schema: Optional[str] = None,
-        warehouse: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.table = table
         self.output_file_path = output_file_path
-        self.input_conn_id = input_conn_id
+        self.input_table = input_table
         self.output_conn_id = output_conn_id
         self.overwrite = overwrite
-        self.database = database
-        self.schema = schema
-        self.warehouse = warehouse
         self.output_file_format = output_file_format
         self.kwargs = kwargs
 
@@ -77,25 +70,27 @@ class SaveFile(BaseOperator):
         """
 
         # Infer db type from `input_conn_id`.
-        conn_type = BaseHook.get_connection(self.input_conn_id).conn_type
+        input_table = self.input_table
+        conn_type = BaseHook.get_connection(input_table.conn_id).conn_type
 
         # Select database Hook based on `conn` type
         input_hook = {
             "postgres": TempPostgresHook(
-                postgres_conn_id=self.input_conn_id, schema=self.database
+                postgres_conn_id=input_table.conn_id, schema=input_table.database
             ),
             "snowflake": TempSnowflakeHook(
-                snowflake_conn_id=self.output_conn_id,
-                database=self.database,
-                schema=self.schema,
-                warehouse=self.warehouse,
+                snowflake_conn_id=input_table.conn_id,
+                database=input_table.database,
+                schema=input_table.schema,
+                warehouse=input_table.warehouse,
             ),
         }.get(conn_type, None)
 
         eng = input_hook.get_sqlalchemy_engine()
         # Load table from SQL db.
         df = pd.read_sql(
-            f"SELECT * FROM {self.table}", con=input_hook.get_sqlalchemy_engine()
+            f"SELECT * FROM {input_table.table_name}",
+            con=input_hook.get_sqlalchemy_engine(),
         )
 
         # Write file if overwrite == True or if file doesn't exist.
@@ -175,12 +170,9 @@ class SaveFile(BaseOperator):
 def save_file(
     output_file_path,
     table=None,
-    input_conn_id=None,
+    input_table=None,
     output_conn_id=None,
     overwrite=False,
-    database="",
-    schema="",
-    warehouse="",
     output_file_format="csv",
     task_id=None,
     **kwargs,
@@ -211,11 +203,8 @@ def save_file(
         task_id=task_id,
         output_file_path=output_file_path,
         table=table,
-        input_conn_id=input_conn_id,
+        input_table=input_table,
         output_conn_id=output_conn_id,
         overwrite=overwrite,
-        database=database,
-        schema=schema,
-        warehouse=warehouse,
         output_file_format=output_file_format,
     ).output

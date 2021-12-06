@@ -15,9 +15,6 @@ limitations under the License.
 """
 from typing import Callable, Iterable, List, Mapping, Optional, Union
 
-from airflow.exceptions import AirflowException
-from airflow.hooks.base import BaseHook
-
 from astro.sql.operators.agnostic_aggregate_check import aggregate_check
 from astro.sql.operators.agnostic_load_file import load_file
 from astro.sql.operators.agnostic_save_file import save_file

@@ -38,14 +38,12 @@ def demo_with_s3_and_csv():
     t1 = aql.load_file(
         path="s3://tmp9/homes.csv",
         file_conn_id="my_aws_conn",
-        output_conn_id="postgres_conn",
         database="astro",
         output_table_name="expected_table_from_s3",
     )
 
     t2 = aql.load_file(
         path="tests/data/homes.csv",
-        output_conn_id="postgres_conn",
         database="astro",
         output_table_name="expected_table_from_csv",
     )

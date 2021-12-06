@@ -22,6 +22,7 @@ import pandas as pd
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
 
+from astro.sql.table import Table
 from astro.utils.load_dataframe import move_dataframe_to_sql
 from astro.utils.task_id_helper import get_task_id
 
@@ -42,25 +43,17 @@ class AgnosticLoadFile(BaseOperator):
     def __init__(
         self,
         path="",
-        output_table_name=None,
+        output_table: Table = None,
         file_conn_id="",
-        output_conn_id="",
         chunksize=None,
-        database: Optional[str] = None,
-        schema: Optional[str] = None,
-        warehouse: Optional[str] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.path = path
         self.chunksize = chunksize
         self.file_conn_id = file_conn_id
-        self.output_conn_id = output_conn_id
-        self.database = database
-        self.schema = schema
-        self.warehouse = warehouse
         self.kwargs = kwargs
-        self.output_table_name = output_table_name
+        self.output_table = output_table
 
     def execute(self, context):
         """Loads csv/parquet table from local/S3/GCS with Pandas.
@@ -72,18 +65,16 @@ class AgnosticLoadFile(BaseOperator):
         df = self._load_dataframe(self.path)
 
         # Retrieve conn type
-        conn_type = BaseHook.get_connection(self.output_conn_id).conn_type
         move_dataframe_to_sql(
-            output_table_name=self.output_table_name,
+            output_table_name=self.output_table.table_name,
+            conn_id=self.output_table.conn_id,
+            database=self.output_table.database,
+            warehouse=self.output_table.warehouse,
+            schema=self.output_table.schema,
             df=df,
-            conn_type=conn_type,
-            conn_id=self.output_conn_id,
-            database=self.database,
-            schema=self.schema,
-            warehouse=self.warehouse,
-            chunksize=self.chunksize,
+            conn_type=BaseHook.get_connection(self.output_table.conn_id).conn_type,
         )
-        return self.output_table_name
+        return self.output_table
 
     @staticmethod
     def validate_path(path):
@@ -135,12 +126,8 @@ class AgnosticLoadFile(BaseOperator):
 
 def load_file(
     path,
-    output_table_name=None,
+    output_table=None,
     file_conn_id=None,
-    output_conn_id=None,
-    database=None,
-    schema=None,
-    warehouse=None,
     task_id=None,
     **kwargs,
 ):
@@ -150,12 +137,10 @@ def load_file(
 
     :param path: File path.
     :type path: str
-    :param output_table_name: Name of table to create.
-    :type output_table_name: str
+    :param output_table: Table to create
+    :type output_table: Table
     :param file_conn_id: Airflow connection id of input file (optional)
     :type file_conn_id: str
-    :param output_conn_id: Database connection id.
-    :type output_conn_id: str
     :param task_id: task id, optional.
     :type task_id: str
     """
@@ -165,11 +150,7 @@ def load_file(
     return AgnosticLoadFile(
         task_id=task_id,
         path=path,
-        output_table_name=output_table_name,
+        output_table=output_table,
         file_conn_id=file_conn_id,
-        output_conn_id=output_conn_id,
-        database=database,
-        schema=schema,
-        warehouse=warehouse,
         **kwargs,
     ).output
