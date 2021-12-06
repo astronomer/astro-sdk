@@ -3,8 +3,9 @@
 **Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
 - [
-  Airflow SQL Decorator
-](#airflow-sql-decorator)
+  Astro :rocket:
+](#astro-rocket)
+  - [Philosophy](#philosophy)
   - [Basic Usage](#basic-usage)
   - [Supported databases](#supported-databases)
   - [The Table class](#the-table-class)
@@ -29,12 +30,30 @@
   </a>
 </p>
 <h1 align="center">
-  Airflow SQL Decorator
+  Astro :rocket:
 </h1>
   <h3 align="center">
-  Your new Airflow + SQL experience. Maintained with ❤️ by Astronomer.
+  Your new Airflow DAG writing experience. Maintained with ❤️ by Astronomer.
 </h3>
 <br/>
+
+## Philosophy
+
+With the `astro` library, we want to redefine the DAG writing experience from the bottom up. Our goal is to empower
+data engineers and data scientists to write DAGs based around the momevent of _data_ instead of the dependencies of tasks.
+With this in mind, we built a library where every step is defined by how your data moves, while also simplifying the transformation
+process between different environments. Our first two integrations are SQL and pandas, but we are planning many more in coming months.
+
+With our SQL and dataframe modules, you should have the ability to treat SQL tables as if they're python objects. You can manipulate them,
+join them, templatize them, and ultimately turn them into dataframes if you want to run python functions against them. We hope that this
+library creates a cleaner Airflow ELT experience, as well as an easier onboarding for those who want to think in data transformations
+instead of DAGs. 
+
+Please feel free to raise issues and propose improvements, and community contributions are highly welcome!
+
+Thank you,
+
+:sparkles: The Astro Team :sparkles:
 
 ## Basic Usage
 
