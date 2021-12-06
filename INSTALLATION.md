@@ -1,14 +1,10 @@
-# Installing the SQL Decorators
+# Installing Astro
 
-## Add the pip URL to your requirements.txt
-
-First add the `git` package to `packages.txt`. This will allow pip to install packages from github.
-
-In your requirements.txt add the following line (with values filled in):
+The astro project lives in this [pypi repo](https://pypi.org/project/astro-projects/)
+To add the library to your dev environment, run this command:
 
 ```shell script
-git+https://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@github.com/astronomer/sql-decorator.git@{RELEASE_VERSION}
+pip install astro-projects
 ```
 
-Once you complete these steps, simply run `astro dev start,` and you should have a running Airflow
-with the SQL decorator!
+If you are running Airflow using the [astro cli](https://www.astronomer.io/docs/cloud/stable/develop/cli-quickstart), you can add `astro-projects` to your `requirements.txt`
