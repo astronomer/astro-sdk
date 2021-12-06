@@ -205,8 +205,7 @@ To move data from one database to another, you can use the `save_file` and `load
 
 ## The Table class
 
-To instantiate a table or bring in a table from a database into the `astro` ecosystem, you can pass a `Table` object into the class. This Table object will contain all necessary metadata
-to handle table creation between tasks. once you define it in the beginning of your pipeline, `astro` can automatically pass that metadata along
+To instantiate a table or bring in a table from a database into the `astro` ecosystem, you can pass a `Table` object into the class. This Table object will contain all necessary metadata to handle table creation between tasks. Once you define it in the beginning of your pipeline, `astro` can automatically pass that metadata along.
 
 ```python
 from astro import sql as aql
