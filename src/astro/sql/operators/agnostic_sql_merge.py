@@ -59,7 +59,7 @@ class SqlMergeOperator(SqlDecoratoratedOperator):
         )
 
     def execute(self, context: Dict):
-        conn_type = BaseHook.get_connection(self.conn_id).conn_type
+        conn_type = BaseHook.get_connection(self.conn_id).conn_type  # type: ignore
         if conn_type == "postgres":
             self.sql = postgres_merge_func(
                 target_table=self.target_table,

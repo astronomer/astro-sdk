@@ -56,7 +56,7 @@ class SqlDataframeOperator(DecoratedOperator):
             self.output_table: Optional[Table] = self.op_kwargs.pop("output_table")
         else:
             self.output_table = None
-        self.op_args = self.kwargs.get("op_args")
+        self.op_args = self.kwargs.get("op_args")  # type: ignore
 
         super().__init__(
             **kwargs,

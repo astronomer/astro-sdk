@@ -59,7 +59,7 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
         )
 
     def execute(self, context: Dict):
-        conn_type = BaseHook.get_connection(self.conn_id).conn_type
+        conn_type = BaseHook.get_connection(self.conn_id).conn_type  # type: ignore
         if conn_type == "postgres":
             self.sql = postgres_append_func(
                 main_table=self.main_table,
