@@ -71,17 +71,20 @@ class TestPostgresMergeOperator(unittest.TestCase):
                 "start_date": DEFAULT_DATE,
             },
         )
+        self.main_table = Table(
+            table_name="merge_test_1", conn_id="postgres_conn", database="pagila"
+        )
+
+        self.merge_table = Table(
+            table_name="merge_test_2", conn_id="postgres_conn", database="pagila"
+        )
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_merge_1.csv",
-            output_table=Table(
-                table_name="merge_test_1", conn_id="postgres_conn", database="pagila"
-            ),
+            output_table=self.main_table,
         ).operator.execute({"run_id": "foo"})
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_merge_2.csv",
-            output_table=Table(
-                table_name="merge_test_2", conn_id="postgres_conn", database="pagila"
-            ),
+            output_table=self.merge_table,
         ).operator.execute({"run_id": "foo"})
 
     def clear_run(self):
@@ -108,20 +111,20 @@ class TestPostgresMergeOperator(unittest.TestCase):
 
     def test_merge_basic_single_key(self):
         hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
-        hook.run(sql="ALTER TABLE merge_test_1 ADD CONSTRAINT airflow UNIQUE (list)")
+        hook.run(
+            sql="ALTER TABLE airflow.merge_test_1 ADD CONSTRAINT airflow UNIQUE (list)"
+        )
         a = aql.merge(
-            target_table="merge_test_1",
-            merge_table="merge_test_2",
+            target_table=self.main_table,
+            merge_table=self.merge_table,
             merge_keys=["list"],
             target_columns=["list"],
             merge_columns=["list"],
-            conn_id="postgres_conn",
             conflict_strategy="ignore",
-            database="pagila",
         )
         a.execute({"run_id": "foo"})
 
-        df = hook.get_pandas_df(sql="SELECT * FROM merge_test_1")
+        df = hook.get_pandas_df(sql="SELECT * FROM airflow.merge_test_1")
         assert df.age.to_list()[:-1] == [60.0, 12.0, 41.0, 22.0]
         assert math.isnan(df.age.to_list()[-1])
         assert df.taxes.to_list()[:-1] == [3167.0, 4033.0, 1471.0, 3204.0]
@@ -134,21 +137,20 @@ class TestPostgresMergeOperator(unittest.TestCase):
     def test_merge_basic_ignore(self):
         hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
         hook.run(
-            sql="ALTER TABLE merge_test_1 ADD CONSTRAINT airflow UNIQUE (list,sell)"
+            sql="ALTER TABLE airflow.merge_test_1 ADD CONSTRAINT airflow UNIQUE (list,sell)"
         )
+
         a = aql.merge(
-            target_table="merge_test_1",
-            merge_table="merge_test_2",
+            target_table=self.main_table,
+            merge_table=self.merge_table,
             merge_keys=["list", "sell"],
             target_columns=["list", "sell"],
             merge_columns=["list", "sell"],
-            conn_id="postgres_conn",
             conflict_strategy="ignore",
-            database="pagila",
         )
         a.execute({"run_id": "foo"})
 
-        df = hook.get_pandas_df(sql="SELECT * FROM merge_test_1")
+        df = hook.get_pandas_df(sql="SELECT * FROM airflow.merge_test_1")
         assert df.age.to_list()[:-1] == [60.0, 12.0, 41.0, 22.0]
         assert math.isnan(df.age.to_list()[-1])
         assert df.taxes.to_list()[:-1] == [3167.0, 4033.0, 1471.0, 3204.0]
@@ -160,21 +162,19 @@ class TestPostgresMergeOperator(unittest.TestCase):
     def test_merge_basic_update(self):
         hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
         hook.run(
-            sql="ALTER TABLE merge_test_1 ADD CONSTRAINT airflow UNIQUE (list,sell)"
+            sql="ALTER TABLE airflow.merge_test_1 ADD CONSTRAINT airflow UNIQUE (list,sell)"
         )
         a = aql.merge(
-            target_table="merge_test_1",
-            merge_table="merge_test_2",
+            target_table=self.main_table,
+            merge_table=self.merge_table,
             merge_keys=["list", "sell"],
             target_columns=["list", "sell", "taxes"],
             merge_columns=["list", "sell", "age"],
-            conn_id="postgres_conn",
             conflict_strategy="update",
-            database="pagila",
         )
         a.execute({"run_id": "foo"})
 
-        df = hook.get_pandas_df(sql="SELECT * FROM merge_test_1")
+        df = hook.get_pandas_df(sql="SELECT * FROM airflow.merge_test_1")
         assert df.taxes.to_list() == [1, 1, 1, 1, 1]
         assert df.age.to_list()[:-1] == [60.0, 12.0, 41.0, 22.0]
         assert math.isnan(df.age.to_list()[-1])

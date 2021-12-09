@@ -101,10 +101,8 @@ def run_raw_sql(
 
 
 def append(
-    append_table: str,
-    main_table: str,
-    database: str = "",
-    conn_id: str = "",
+    append_table: Table,
+    main_table: Table,
     columns: List[str] = [],
     casted_columns: dict = {},
     **kwargs,
@@ -112,25 +110,19 @@ def append(
     return SqlAppendOperator(
         main_table=main_table,
         append_table=append_table,
-        conn_id=conn_id,
         columns=columns,
         casted_columns=casted_columns,
-        database=database,
         **kwargs,
     )
 
 
 def merge(
-    target_table: str,
-    merge_table: str,
+    target_table: Table,
+    merge_table: Table,
     merge_keys: Union[List, dict],
     target_columns: List[str],
     merge_columns: List[str],
-    conn_id: str,
     conflict_strategy: str,
-    database: str = "",
-    schema: str = "",
-    warehouse: str = "",
     **kwargs,
 ):
     """`
@@ -156,10 +148,6 @@ def merge(
         target_columns=target_columns,
         merge_columns=merge_columns,
         conflict_strategy=conflict_strategy,
-        conn_id=conn_id,
-        database=database,
-        schema=schema,
-        warehouse=warehouse,
     )
 
 

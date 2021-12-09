@@ -17,6 +17,7 @@ from pandas.io.sql import SQLDatabase
 from snowflake.connector.pandas_tools import write_pandas
 
 from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
+from astro.utils.schema_util import set_schema_query
 
 
 def move_dataframe_to_sql(
@@ -27,6 +28,7 @@ def move_dataframe_to_sql(
     warehouse,
     conn_type,
     df,
+    user,
     chunksize=None,
 ):
     # Select database Hook based on `conn` type
@@ -41,6 +43,11 @@ def move_dataframe_to_sql(
     }.get(conn_type, None)
     if database:
         hook.database = database
+
+    schema_query = set_schema_query(
+        conn_type=conn_type, hook=hook, schema_id=schema, user=user
+    )
+    hook.run(schema_query)
     if conn_type == "snowflake":
 
         db = SQLDatabase(engine=hook.get_sqlalchemy_engine())
@@ -61,7 +68,7 @@ def move_dataframe_to_sql(
         df.to_sql(
             output_table_name,
             con=hook.get_sqlalchemy_engine(),
-            schema=None,
+            schema=schema,
             if_exists="replace",
             chunksize=chunksize,
             method="multi",

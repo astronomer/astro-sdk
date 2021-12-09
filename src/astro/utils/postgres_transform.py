@@ -29,7 +29,7 @@ def process_params(parameters, python_callable):
     param_types = inspect.signature(python_callable).parameters
     return {
         k: (
-            AsIs(v.table_name)
+            AsIs(v.schema + "." + v.table_name if v.schema else v.table_name)
             if param_types.get(k)
             and param_types.get(k).annotation == Table
             or type(v) == Table

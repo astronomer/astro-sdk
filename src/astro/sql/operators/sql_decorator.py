@@ -24,12 +24,12 @@ from airflow.models import DagRun, TaskInstance
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils.db import provide_session
-from psycopg2 import sql
 from sqlalchemy.sql.functions import Function
 
 from astro.sql.table import Table
 from astro.utils import postgres_transform, snowflake_transform
 from astro.utils.load_dataframe import move_dataframe_to_sql
+from astro.utils.schema_util import set_schema_query
 
 
 class SqlDecoratoratedOperator(DecoratedOperator):
@@ -89,6 +89,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
         conn = BaseHook.get_connection(self.conn_id)
         self.conn_type = conn.conn_type  # type: ignore
+        self.schema_id = "airflow_" + self.dag_id
         self.user = conn.login
         self.run_id = context.get("run_id")
         self.convert_op_arg_dataframes()
@@ -116,7 +117,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             # Create a table name for the temp table
             self._set_schema_if_needed()
 
-            output_table_name = self.create_table_name(context)
+            output_table_name = self.create_table_name(self.schema_id, context)
             self.sql = self.create_temporary_table(self.sql, output_table_name)
 
         # Automatically add any kwargs going into the function
@@ -177,21 +178,26 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.warehouse = first_table.warehouse or self.warehouse
 
     def _set_schema_if_needed(self):
+        schema_statement = ""
         if self.conn_type == "postgres":
             self.hook = PostgresHook(
                 postgres_conn_id=self.conn_id, schema=self.database
             )
-            statement = (
-                sql.SQL("CREATE SCHEMA IF NOT EXISTS {schema} AUTHORIZATION {user}")
-                .format(
-                    schema=sql.Identifier("airflow"), user=sql.Identifier(self.user)
-                )
-                .as_string(self.hook.get_conn())
+            schema_statement = set_schema_query(
+                conn_type=self.conn_type,
+                hook=self.hook,
+                schema_id=self.schema_id,
+                user=self.user,
             )
-            self._run_sql(statement, {})
         elif self.conn_type == "snowflake":
-            statement = "CREATE SCHEMA IF NOT EXISTS airflow"
-            self._run_sql(statement, {})
+            hook = self.get_snow_hook()
+            schema_statement = set_schema_query(
+                conn_type=self.conn_type,
+                hook=hook,
+                schema_id=self.schema_id,
+                user=self.user,
+            )
+        self._run_sql(schema_statement, {})
 
     def get_snow_hook(self) -> SnowflakeHook:
         """
@@ -249,10 +255,10 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         return f"WITH {table_name} AS ({query}) SELECT * FROM {table_name};"
 
     @staticmethod
-    def create_table_name(context):
+    def create_table_name(schema_id, context):
         ti: TaskInstance = context["ti"]
         dag_run: DagRun = ti.get_dagrun()
-        return f"airflow.{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
+        return f"{schema_id}.{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
 
     @staticmethod
     def create_output_csv_path(context):

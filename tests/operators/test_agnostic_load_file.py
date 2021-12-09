@@ -43,7 +43,7 @@ from airflow.utils.types import DagRunType
 # Import Operator
 from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
 from astro.sql.operators.temp_hooks import TempPostgresHook
-from astro.sql.table import Table
+from astro.sql.table import Table, TempTable
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -206,15 +206,14 @@ class TestAgnosticLoadFile(unittest.TestCase):
             {
                 "path": str(self.cwd) + "/../data/homes.csv",
                 "file_conn_id": "",
-                "output_table": Table(
-                    OUTPUT_TABLE_NAME, database="pagila", conn_id="postgres_conn"
-                ),
+                "output_table": TempTable(database="pagila", conn_id="postgres_conn"),
             },
         )
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=self.hook_target.get_conn()
+            f"SELECT * FROM airflow_test_dag.{OUTPUT_TABLE_NAME}",
+            con=self.hook_target.get_conn(),
         )
 
         assert df.iloc[0].to_dict() == {
@@ -245,15 +244,14 @@ class TestAgnosticLoadFile(unittest.TestCase):
             {
                 "path": str(self.cwd) + "/../data/homes.csv",
                 "file_conn_id": "",
-                "output_table": Table(
-                    OUTPUT_TABLE_NAME, database="pagila", conn_id="postgres_conn"
-                ),
+                "output_table": TempTable(database="pagila", conn_id="postgres_conn"),
             },
         )
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=self.hook_target.get_conn()
+            f"SELECT * FROM airflow_test_dag.{OUTPUT_TABLE_NAME}",
+            con=self.hook_target.get_conn(),
         )
 
         assert df.iloc[0].to_dict() == {
@@ -284,8 +282,67 @@ class TestAgnosticLoadFile(unittest.TestCase):
             {
                 "path": "s3://tmp9/homes.csv",
                 "file_conn_id": "",
+                "output_table": TempTable(database="pagila", conn_id="postgres_conn"),
+            },
+        )
+
+        # Read table from db
+        df = pd.read_sql(
+            f"SELECT * FROM airflow_test_dag.{OUTPUT_TABLE_NAME}",
+            con=self.hook_target.get_conn(),
+        )
+
+        assert df.iloc[0].to_dict()["Sell"] == 142.0
+
+    def test_aql_s3_file_to_postgres_no_table_name(self):
+        OUTPUT_TABLE_NAME = "test_dag_load_file_homes_csv_1"
+
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+
+        # Drop target table
+        drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
+
+        self.create_and_run_task(
+            load_file,
+            (),
+            {
+                "path": "s3://tmp9/homes.csv",
+                "file_conn_id": "",
+                "output_table": TempTable(database="pagila", conn_id="postgres_conn"),
+            },
+        )
+
+        # Read table from db
+        df = pd.read_sql(
+            f"SELECT * FROM airflow_test_dag.{OUTPUT_TABLE_NAME}",
+            con=self.hook_target.get_conn(),
+        )
+
+        assert df.iloc[0].to_dict()["Sell"] == 142.0
+
+    def test_aql_s3_file_to_postgres_specify_schema(self):
+        OUTPUT_TABLE_NAME = "expected_table_from_s3_csv"
+
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+
+        # Drop target table
+        drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
+
+        self.create_and_run_task(
+            load_file,
+            (),
+            {
+                "path": "s3://tmp9/homes.csv",
+                "file_conn_id": "",
                 "output_table": Table(
-                    OUTPUT_TABLE_NAME, database="pagila", conn_id="postgres_conn"
+                    OUTPUT_TABLE_NAME,
+                    database="pagila",
+                    conn_id="postgres_conn",
+                    schema="public",
                 ),
             },
         )
@@ -314,17 +371,15 @@ class TestAgnosticLoadFile(unittest.TestCase):
             {
                 "path": str(self.cwd) + "/../data/homes.csv",
                 "file_conn_id": "",
-                "output_table": Table(
-                    OUTPUT_TABLE_NAME,
+                "output_table": TempTable(
                     database="DWH_LEGACY",
                     conn_id="snowflake_conn",
-                    schema="SANDBOX_AIRFLOW_TEST",
                 ),
             },
         )
 
         # Read table from db
-        df = hook.get_pandas_df(f"SELECT * FROM {OUTPUT_TABLE_NAME}")
+        df = hook.get_pandas_df(f"SELECT * FROM airflow_test_dag.{OUTPUT_TABLE_NAME}")
 
         assert df.iloc[0].to_dict() == {
             "SELL": 142.0,

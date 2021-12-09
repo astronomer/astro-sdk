@@ -24,3 +24,25 @@ class Table:
         self.database = database
         self.schema = schema
         self.warehouse = warehouse
+
+    def identifier_args(self):
+        return (self.schema, self.table_name) if self.schema else (self.table_name,)
+
+    def qualified_name(self):
+        return self.schema + "." + self.table_name if self.schema else self.table_name
+
+
+class TempTable(Table):
+    def __init__(self, conn_id, database, warehouse=""):
+        super().__init__(
+            table_name="", conn_id=conn_id, database=database, warehouse=warehouse
+        )
+
+    def to_table(self, table_name: str, schema: str) -> Table:
+        return Table(
+            table_name=table_name,
+            conn_id=self.conn_id,
+            database=self.database,
+            warehouse=self.warehouse,
+            schema=schema,
+        )
