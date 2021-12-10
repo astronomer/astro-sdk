@@ -56,6 +56,7 @@ class SqlMergeOperator(SqlDecoratoratedOperator):
             python_callable=null_function,
             database=self.target_table.database,
             conn_id=self.target_table.conn_id,
+            schema=self.target_table.schema,
             **kwargs,
         )
 

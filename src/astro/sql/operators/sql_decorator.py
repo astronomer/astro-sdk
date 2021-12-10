@@ -117,7 +117,10 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             # Create a table name for the temp table
             self._set_schema_if_needed()
 
-            output_table_name = self.create_table_name(self.schema_id, context)
+            if not self.output_table:
+                output_table_name = self.create_table_name(self.schema_id, context)
+            else:
+                output_table_name = self.output_table.qualified_name()
             self.sql = self.create_temporary_table(self.sql, output_table_name)
 
         # Automatically add any kwargs going into the function
@@ -136,12 +139,13 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         # Run execute function of subclassed Operator.
 
         if self.output_table:
-            sql = self.create_temporary_table(
-                f"SELECT * FROM {output_table_name}", self.output_table.table_name
-            )
-            self._run_sql(sql, self.parameters)
+            return self.output_table
+        #     sql = self.create_temporary_table(
+        #         f"-- SELECT * FROM {output_table_name}", self.output_table.table_name
+        #     )
+        #     self._run_sql(sql, self.parameters)
 
-        if self.raw_sql:
+        elif self.raw_sql:
             return query_result
         else:
             return Table(

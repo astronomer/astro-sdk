@@ -36,7 +36,22 @@ from astro.utils.snowflake_merge_func import (
     is_valid_snow_identifier,
     snowflake_merge_func,
 )
+import logging
+import os
+import pathlib
+import unittest.mock
 
+from airflow.models import DAG, DagRun
+from airflow.models import TaskInstance as TI
+from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+from airflow.utils import timezone
+from airflow.utils.session import create_session
+from airflow.utils.state import State
+from airflow.utils.types import DagRunType
+
+# Import Operator
+from astro import sql as aql
+from astro.sql.table import Table
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
@@ -59,121 +74,91 @@ class TestSnowflakeMerge(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cwd = pathlib.Path(__file__).parent
+        main_table = Table(
+                table_name="merge_test_raw_1",
+                conn_id="snowflake_conn",
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            )
+        merge_table = Table(
+                table_name="merge_test_raw_2",
+                conn_id="snowflake_conn",
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            )
+        aql.load_file(
+            path=str(cwd) + "/../data/homes_merge_1.csv",
+            output_table=main_table,
+        ).operator.execute({"run_id": "foo"})
+        aql.load_file(
+            path=str(cwd) + "/../data/homes_merge_2.csv",
+            output_table=merge_table
+        ).operator.execute({"run_id": "foo"})
         super().setUpClass()
 
     def setUp(self):
         cwd = pathlib.Path(__file__).parent
-        aql.load_file(
-            path=str(cwd) + "/../data/homes_merge_1.csv",
-            output_table=Table(
+        main_raw_table = Table(
+                table_name="merge_test_raw_1",
+                conn_id="snowflake_conn",
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            )
+        merge_raw_table = Table(
+                table_name="merge_test_raw_2",
+                conn_id="snowflake_conn",
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            )
+        self.main_table = Table(
                 table_name="merge_test_1",
                 conn_id="snowflake_conn",
-            ),
-        ).operator.execute({"run_id": "foo"})
-        aql.load_file(
-            path=str(cwd) + "/../data/homes_merge_2.csv",
-            output_table=Table(
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            )
+        self.merge_table = Table(
                 table_name="merge_test_2",
                 conn_id="snowflake_conn",
-            ),
-        ).operator.execute({"run_id": "foo"})
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            )
+        dag = DAG(
+            "test_dag",
+            default_args={
+                "owner": "airflow",
+                "start_date": DEFAULT_DATE,
+            },
+        )
+
+        @aql.run_raw_sql
+        def drop(input_table:Table):
+            return "DROP TABLE IF EXISTS {input_table}"
+
+        @aql.transform
+        def fill_table(input_table: Table):
+            return "SELECT * FROM {input_table}"
+        with dag:
+            main = fill_table(input_table=main_raw_table, output_table=self.main_table)
+            merge = fill_table(input_table=merge_raw_table, output_table=self.merge_table)
+
+        dag.create_dagrun(
+            run_id=DagRunType.MANUAL.value,
+            start_date=timezone.utcnow(),
+            execution_date=DEFAULT_DATE,
+            state=State.RUNNING,
+        )
+        main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        merge.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+
         super().setUp()
 
-    def test_merge_func(self):
-        sql, parameters = snowflake_merge_func(
-            target_table="test_merge_1",
-            merge_table="test_merge_2",
-            merge_keys={"sell": "sell"},
-            target_columns=["sell"],
-            merge_columns=["sell"],
-            conflict_strategy="update",
-        )
+    def tearDown(self):
+        super().tearDown()
 
-        assert (
-            sql
-            == "merge into Identifier(%(main_table)s) using Identifier(%(merge_table)s) "
-            "on Identifier(%(merge_clause_target_0)s)=Identifier(%(merge_clause_append_0)s) "
-            "when matched then UPDATE SET test_merge_1.sell=test_merge_2.sell "
-            "when not matched then insert(test_merge_1.sell) values (test_merge_2.sell)"
-        )
-        assert parameters == {
-            "merge_clause_target_0": "test_merge_1.sell",
-            "merge_clause_append_0": "test_merge_2.sell",
-            "main_table": "test_merge_1",
-            "merge_table": "test_merge_2",
-        }
-
-    def test_merge_func_multiple_clause(self):
-        sql, parameters = snowflake_merge_func(
-            target_table="test_merge_1",
-            merge_table="test_merge_2",
-            merge_keys={"sell": "sell", "foo": "bar"},
-            target_columns=["sell"],
-            merge_columns=["sell"],
-            conflict_strategy="update",
-        )
-
-        assert (
-            sql
-            == "merge into Identifier(%(main_table)s) using Identifier(%(merge_table)s) "
-            "on Identifier(%(merge_clause_target_0)s)=Identifier(%(merge_clause_append_0)s) AND "
-            "Identifier(%(merge_clause_target_1)s)=Identifier(%(merge_clause_append_1)s) "
-            "when matched then UPDATE SET test_merge_1.sell=test_merge_2.sell "
-            "when not matched then insert(test_merge_1.sell) values (test_merge_2.sell)"
-        )
-        assert parameters == {
-            "main_table": "test_merge_1",
-            "merge_clause_append_0": "test_merge_2.sell",
-            "merge_clause_append_1": "test_merge_2.bar",
-            "merge_clause_target_0": "test_merge_1.sell",
-            "merge_clause_target_1": "test_merge_1.foo",
-            "merge_table": "test_merge_2",
-        }
-
-    def test_merge_fun_ignore(self):
-        sql, parameters = snowflake_merge_func(
-            target_table="test_merge_1",
-            merge_table="test_merge_2",
-            merge_keys={"sell": "sell"},
-            target_columns=["sell"],
-            merge_columns=["sell"],
-            conflict_strategy="ignore",
-        )
-
-        assert (
-            sql
-            == "merge into Identifier(%(main_table)s) using Identifier(%(merge_table)s) "
-            "on Identifier(%(merge_clause_target_0)s)=Identifier(%(merge_clause_append_0)s) "
-            "when not matched then insert(test_merge_1.sell) values (test_merge_2.sell)"
-        )
-        assert parameters == {
-            "merge_clause_target_0": "test_merge_1.sell",
-            "merge_clause_append_0": "test_merge_2.sell",
-            "main_table": "test_merge_1",
-            "merge_table": "test_merge_2",
-        }
-
-    def test_is_valid_snow_identifier(self):
-        valid_strings = [
-            "ValidName",
-            "Valid_Name",
-            '"$valid"',
-            '"Valid Name"',
-            '"Valid With ""Quotes"""',
-            '"\x00 Valid with ""Quotes"" #$@(TSDGfsd"',
-        ]
-        invalid_strings = [
-            "$invalid",
-            "Infvalid\x00" "Invalid Name",
-            '"Invalid " Name"',
-            '"Also Invalid Name""',
-        ]
-
-        for v in valid_strings:
-            assert is_valid_snow_identifier(v)
-
-        for i in invalid_strings:
-            assert not is_valid_snow_identifier(i)
+        with create_session() as session:
+            session.query(DagRun).delete()
+            session.query(TI).delete()
 
     def test_merge_basic_single_key(self):
         hook = SnowflakeHook(
@@ -182,19 +167,16 @@ class TestSnowflakeMerge(unittest.TestCase):
             database=os.getenv("SNOWFLAKE_DATABASE"),
         )
         a = aql.merge(
-            target_table="merge_test_1",
-            merge_table="merge_test_2",
+            target_table=self.main_table,
+            merge_table=self.merge_table,
             merge_keys={"list": "list"},
             target_columns=["list"],
             merge_columns=["list"],
-            conn_id="snowflake_conn",
             conflict_strategy="ignore",
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
         )
         a.execute({"run_id": "foo"})
 
-        df = hook.get_pandas_df(sql="SELECT * FROM merge_test_1")
+        df = hook.get_pandas_df(sql="SELECT * FROM airflow.merge_test_1")
         assert df.AGE.to_list()[1:] == [60.0, 12.0, 41.0, 22.0]
         assert math.isnan(df.AGE.to_list()[0])
         assert df.TAXES.to_list()[1:] == [3167.0, 4033.0, 1471.0, 3204.0]
@@ -211,14 +193,12 @@ class TestSnowflakeMerge(unittest.TestCase):
             database=os.getenv("SNOWFLAKE_DATABASE"),
         )
         a = aql.merge(
-            target_table="merge_test_1",
-            merge_table="merge_test_2",
+            target_table=self.main_table,
+            merge_table=self.merge_table,
             merge_keys={"list": "list", "sell": "sell"},
             target_columns=["list", "sell"],
             merge_columns=["list", "sell"],
             conn_id="snowflake_conn",
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
             conflict_strategy="ignore",
         )
         a.execute({"run_id": "foo"})
@@ -240,15 +220,13 @@ class TestSnowflakeMerge(unittest.TestCase):
             warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
         )
         a = aql.merge(
-            target_table="merge_test_1",
-            merge_table="merge_test_2",
+            target_table=self.main_table,
+            merge_table=self.merge_table,
             merge_keys={"list": "list", "sell": "sell"},
             target_columns=["list", "sell", "taxes"],
             merge_columns=["list", "sell", "age"],
             conn_id="snowflake_conn",
             conflict_strategy="update",
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
             warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
         )
         a.execute({"run_id": "foo"})
