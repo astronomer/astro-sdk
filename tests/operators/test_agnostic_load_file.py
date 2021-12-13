@@ -33,7 +33,6 @@ import pandas as pd
 from airflow.exceptions import DuplicateTaskIdFound
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
@@ -190,7 +189,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
         assert tasks[2].operator.task_id == "load_file_homes_csv__2"
         assert tasks[3].operator.task_id == "task_id"
 
-    def test_aql_local_file_to_postgres(self):
+    def test_aql_local_file_to_postgres_no_table_name(self):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
 
         self.hook_target = TempPostgresHook(
@@ -198,7 +197,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
         )
 
         # Drop target table
-        # drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
+        drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
 
         task = self.create_and_run_task(
             load_file,
@@ -303,14 +302,14 @@ class TestAgnosticLoadFile(unittest.TestCase):
         assert df.iloc[0].to_dict()["Sell"] == 142.0
 
     def test_aql_s3_file_to_postgres_no_table_name(self):
-        OUTPUT_TABLE_NAME = "test_dag_load_file_homes_csv_1"
+        OUTPUT_TABLE_NAME = "test_dag_load_file_homes_csv_2"
 
         self.hook_target = TempPostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
         )
 
         # Drop target table
-        # drop_table_postgres(f"airflow.{OUTPUT_TABLE_NAME}", self.hook_target.get_conn())
+        drop_table_postgres(f"airflow.{OUTPUT_TABLE_NAME}", self.hook_target.get_conn())
 
         self.create_and_run_task(
             load_file,
@@ -376,14 +375,15 @@ class TestAgnosticLoadFile(unittest.TestCase):
         )
 
         # Drop target table
-        hook.run(f"DROP TABLE IF EXISTS {OUTPUT_TABLE_NAME}")
+        hook.run(f"DROP TABLE IF EXISTS airflow.{OUTPUT_TABLE_NAME}")
         self.create_and_run_task(
             load_file,
             (),
             {
                 "path": str(self.cwd) + "/../data/homes.csv",
                 "file_conn_id": "",
-                "output_table": TempTable(
+                "output_table": Table(
+                    table_name=OUTPUT_TABLE_NAME,
                     database="DWH_LEGACY",
                     conn_id="snowflake_conn",
                 ),

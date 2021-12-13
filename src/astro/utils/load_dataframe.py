@@ -54,6 +54,7 @@ def move_dataframe_to_sql(
         db.prep_table(
             df,
             output_table_name.lower(),
+            schema=schema,
             if_exists="replace",
             index=False,
         )
