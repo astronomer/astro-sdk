@@ -198,6 +198,44 @@ class TestAgnosticLoadFile(unittest.TestCase):
         )
 
         # Drop target table
+        # drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
+
+        task = self.create_and_run_task(
+            load_file,
+            (),
+            {
+                "path": str(self.cwd) + "/../data/homes.csv",
+                "file_conn_id": "",
+                "output_table": TempTable(database="pagila", conn_id="postgres_conn"),
+            },
+        )
+
+        # Read table from db
+        df = pd.read_sql(
+            f"SELECT * FROM airflow.test_dag_load_file_homes_csv_1",
+            con=self.hook_target.get_conn(),
+        )
+
+        assert df.iloc[0].to_dict() == {
+            "sell": 142.0,
+            "list": 160.0,
+            "living": 28.0,
+            "rooms": 10.0,
+            "beds": 5.0,
+            "baths": 3.0,
+            "age": 60.0,
+            "acres": 0.28,
+            "taxes": 3167.0,
+        }
+
+    def test_aql_overwite_existing_table(self):
+        OUTPUT_TABLE_NAME = "expected_table_from_csv"
+
+        self.hook_target = TempPostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+
+        # Drop target table
         drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
 
         self.create_and_run_task(
@@ -206,70 +244,36 @@ class TestAgnosticLoadFile(unittest.TestCase):
             {
                 "path": str(self.cwd) + "/../data/homes.csv",
                 "file_conn_id": "",
-                "output_table": TempTable(database="pagila", conn_id="postgres_conn"),
+                "output_table": Table(
+                    table_name=OUTPUT_TABLE_NAME,
+                    database="pagila",
+                    conn_id="postgres_conn",
+                ),
             },
         )
 
-        # Read table from db
-        df = pd.read_sql(
-            f"SELECT * FROM airflow_test_dag.{OUTPUT_TABLE_NAME}",
-            con=self.hook_target.get_conn(),
-        )
+        with create_session() as session:
+            session.query(DagRun).delete()
+            session.query(TI).delete()
 
-        assert df.iloc[0].to_dict() == {
-            "sell": 142.0,
-            "list": 160.0,
-            "living": 28.0,
-            "rooms": 10.0,
-            "beds": 5.0,
-            "baths": 3.0,
-            "age": 60.0,
-            "acres": 0.28,
-            "taxes": 3167.0,
-        }
-
-    def test_aql_local_file_to_postgres_no_output_table(self):
-        OUTPUT_TABLE_NAME = "test_dag_unique_task_name_1"
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-
-        # Drop target table
-        drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
-
-        # Run task without specifying `output_table`
-        out = self.create_and_run_task(
+        self.create_and_run_task(
             load_file,
             (),
             {
                 "path": str(self.cwd) + "/../data/homes.csv",
                 "file_conn_id": "",
-                "output_table": TempTable(database="pagila", conn_id="postgres_conn"),
+                "output_table": Table(
+                    table_name=OUTPUT_TABLE_NAME,
+                    database="pagila",
+                    conn_id="postgres_conn",
+                ),
             },
         )
-
-        # Read table from db
-        df = pd.read_sql(
-            f"SELECT * FROM airflow_test_dag.{OUTPUT_TABLE_NAME}",
-            con=self.hook_target.get_conn(),
-        )
-
-        assert df.iloc[0].to_dict() == {
-            "sell": 142.0,
-            "list": 160.0,
-            "living": 28.0,
-            "rooms": 10.0,
-            "beds": 5.0,
-            "baths": 3.0,
-            "age": 60.0,
-            "acres": 0.28,
-            "taxes": 3167.0,
-        }
 
     def test_aql_s3_file_to_postgres(self):
         OUTPUT_TABLE_NAME = "expected_table_from_s3_csv"
 
-        self.hook_target = PostgresHook(
+        self.hook_target = TempPostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
         )
 
@@ -282,13 +286,17 @@ class TestAgnosticLoadFile(unittest.TestCase):
             {
                 "path": "s3://tmp9/homes.csv",
                 "file_conn_id": "",
-                "output_table": TempTable(database="pagila", conn_id="postgres_conn"),
+                "output_table": Table(
+                    table_name=OUTPUT_TABLE_NAME,
+                    database="pagila",
+                    conn_id="postgres_conn",
+                ),
             },
         )
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM airflow_test_dag.{OUTPUT_TABLE_NAME}",
+            f"SELECT * FROM airflow.{OUTPUT_TABLE_NAME}",
             con=self.hook_target.get_conn(),
         )
 
@@ -297,12 +305,12 @@ class TestAgnosticLoadFile(unittest.TestCase):
     def test_aql_s3_file_to_postgres_no_table_name(self):
         OUTPUT_TABLE_NAME = "test_dag_load_file_homes_csv_1"
 
-        self.hook_target = PostgresHook(
+        self.hook_target = TempPostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
         )
 
         # Drop target table
-        drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
+        # drop_table_postgres(f"airflow.{OUTPUT_TABLE_NAME}", self.hook_target.get_conn())
 
         self.create_and_run_task(
             load_file,
@@ -310,13 +318,17 @@ class TestAgnosticLoadFile(unittest.TestCase):
             {
                 "path": "s3://tmp9/homes.csv",
                 "file_conn_id": "",
-                "output_table": TempTable(database="pagila", conn_id="postgres_conn"),
+                "output_table": Table(
+                    table_name=OUTPUT_TABLE_NAME,
+                    database="pagila",
+                    conn_id="postgres_conn",
+                ),
             },
         )
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM airflow_test_dag.{OUTPUT_TABLE_NAME}",
+            f"SELECT * FROM airflow.{OUTPUT_TABLE_NAME}",
             con=self.hook_target.get_conn(),
         )
 
@@ -325,7 +337,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
     def test_aql_s3_file_to_postgres_specify_schema(self):
         OUTPUT_TABLE_NAME = "expected_table_from_s3_csv"
 
-        self.hook_target = PostgresHook(
+        self.hook_target = TempPostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
         )
 
@@ -379,7 +391,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
         )
 
         # Read table from db
-        df = hook.get_pandas_df(f"SELECT * FROM airflow_test_dag.{OUTPUT_TABLE_NAME}")
+        df = hook.get_pandas_df(f"SELECT * FROM airflow.{OUTPUT_TABLE_NAME}")
 
         assert df.iloc[0].to_dict() == {
             "SELL": 142.0,
