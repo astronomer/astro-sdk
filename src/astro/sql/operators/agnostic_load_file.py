@@ -70,7 +70,7 @@ class AgnosticLoadFile(BaseOperator):
         conn = BaseHook.get_connection(self.output_table.conn_id)
         if type(self.output_table) == TempTable:
             self.output_table = self.output_table.to_table(
-                create_table_name(context), get_schema()
+                create_table_name(context=context), get_schema()
             )
         else:
             self.output_table.schema = self.output_table.schema or get_schema()

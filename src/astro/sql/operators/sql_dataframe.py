@@ -95,7 +95,7 @@ class SqlDataframeOperator(DecoratedOperator):
         if self.output_table:
             if type(self.output_table) == TempTable:
                 self.output_table = self.output_table.to_table(
-                    table_name=create_table_name(None, context), schema=get_schema()
+                    table_name=create_table_name(context=context), schema=get_schema()
                 )
             self.output_table.schema = self.output_table.schema or get_schema()
             conn = BaseHook.get_connection(self.output_table.conn_id)

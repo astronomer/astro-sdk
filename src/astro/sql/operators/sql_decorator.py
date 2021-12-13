@@ -118,7 +118,9 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self._set_schema_if_needed()
 
             if not self.output_table:
-                output_table_name = create_table_name(self.schema_id, context)
+                output_table_name = create_table_name(
+                    context=context, schema_id=self.schema_id
+                )
             else:
                 output_table_name = self.output_table.qualified_name()
             self.sql = self.create_temporary_table(self.sql, output_table_name)

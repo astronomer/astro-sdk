@@ -49,7 +49,7 @@ class TempTable(Table):
         )
 
 
-def create_table_name(schema_id, context):
+def create_table_name(context, schema_id=None):
     ti: TaskInstance = context["ti"]
     dag_run: DagRun = ti.get_dagrun()
     if schema_id:
