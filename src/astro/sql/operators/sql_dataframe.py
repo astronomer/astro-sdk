@@ -22,7 +22,7 @@ from airflow.hooks.base import BaseHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 
-from astro.sql.table import Table, TempTable
+from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils.load_dataframe import move_dataframe_to_sql
 from astro.utils.schema_util import get_schema
 
@@ -95,7 +95,7 @@ class SqlDataframeOperator(DecoratedOperator):
         if self.output_table:
             if type(self.output_table) == TempTable:
                 self.output_table = self.output_table.to_table(
-                    table_name=self.create_table_name(context), schema=get_schema()
+                    table_name=create_table_name(None, context), schema=get_schema()
                 )
             self.output_table.schema = self.output_table.schema or get_schema()
             conn = BaseHook.get_connection(self.output_table.conn_id)
@@ -151,9 +151,3 @@ class SqlDataframeOperator(DecoratedOperator):
                 "SELECT * FROM IDENTIFIER(%(input_table)s)",
                 parameters={"input_table": table.table_name},
             )
-
-    @staticmethod
-    def create_table_name(context):
-        ti = context["ti"]
-        dag_run = ti.get_dagrun()
-        return f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"

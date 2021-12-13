@@ -15,16 +15,16 @@ limitations under the License.
 """
 
 import os
-from typing import Optional, Union
+from typing import Union
 from urllib.parse import urlparse
 
 import pandas as pd
 from airflow.hooks.base import BaseHook
-from airflow.models import BaseOperator, DagRun, TaskInstance
+from airflow.models import BaseOperator
 
-from astro.sql.table import Table, TempTable
+from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils.load_dataframe import move_dataframe_to_sql
-from astro.utils.schema_util import get_schema, set_schema_query
+from astro.utils.schema_util import get_schema
 from astro.utils.task_id_helper import get_task_id
 
 
@@ -70,7 +70,7 @@ class AgnosticLoadFile(BaseOperator):
         conn = BaseHook.get_connection(self.output_table.conn_id)
         if type(self.output_table) == TempTable:
             self.output_table = self.output_table.to_table(
-                self.create_table_name(context), get_schema()
+                create_table_name(context), get_schema()
             )
         else:
             self.output_table.schema = self.output_table.schema or get_schema()
@@ -125,13 +125,6 @@ class AgnosticLoadFile(BaseOperator):
         )
 
         return {"key": k, "secret": v}
-
-    @staticmethod
-    def create_table_name(context):
-        """Generate output table name."""
-        ti: TaskInstance = context["ti"]
-        dag_run: DagRun = ti.get_dagrun()
-        return f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
 
 
 def load_file(

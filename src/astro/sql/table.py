@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from airflow.models import DagRun, TaskInstance
 
 
 class Table:
@@ -46,3 +47,12 @@ class TempTable(Table):
             warehouse=self.warehouse,
             schema=schema,
         )
+
+
+def create_table_name(schema_id, context):
+    ti: TaskInstance = context["ti"]
+    dag_run: DagRun = ti.get_dagrun()
+    if schema_id:
+        return f"{schema_id}.{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
+    else:
+        return f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
