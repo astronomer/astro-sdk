@@ -63,15 +63,15 @@ class TestSnowflakeMerge(unittest.TestCase):
 
     def setUp(self):
         self.main_table = Table(
-                table_name="merge_test_1",
-                conn_id="snowflake_conn",
-                database=os.getenv("SNOWFLAKE_DATABASE"),
-            )
+            table_name="merge_test_1",
+            conn_id="snowflake_conn",
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+        )
         self.merge_table = Table(
-                table_name="merge_test_2",
-                conn_id="snowflake_conn",
-                database=os.getenv("SNOWFLAKE_DATABASE"),
-            )
+            table_name="merge_test_2",
+            conn_id="snowflake_conn",
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+        )
         super().setUp()
 
     def test_merge_func(self):

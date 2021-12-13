@@ -14,8 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import re
-from astro.sql.table import Table
+
 from airflow.exceptions import AirflowException
+
+from astro.sql.table import Table
 
 
 def _wrap_identifiers(sql, identifier_params):
@@ -68,13 +70,21 @@ def snowflake_merge_func(
     if conflict_strategy == "update":
         statement += " when matched then UPDATE SET {merge_vals}"
         statement = fill_in_update_statement(
-            statement, target_table.table_name, merge_table.table_name, target_columns, merge_columns
+            statement,
+            target_table.table_name,
+            merge_table.table_name,
+            target_columns,
+            merge_columns,
         )
     statement += (
         " when not matched then insert({target_columns}) values ({append_columns})"
     )
     statement = fill_in_append_statements(
-        target_table.table_name, merge_table.table_name, statement, target_columns, merge_columns
+        target_table.table_name,
+        merge_table.table_name,
+        statement,
+        target_columns,
+        merge_columns,
     )
 
     params = {}
