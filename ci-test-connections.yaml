@@ -13,7 +13,6 @@ connections:
     port: 443
     login: $SNOWFLAKE_ACCOUNT_NAME
     password: $SNOWFLAKE_PASSWORD
-    schema: SANDBOX_AIRFLOW_TEST
     extra:
       account: "gp21411"
       region: "us-east-1"
