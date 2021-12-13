@@ -78,7 +78,11 @@ class TestSnowflakeOperator(unittest.TestCase):
         cwd = pathlib.Path(__file__).parent
         aql.load_file(
             path=str(cwd) + "/../data/homes.csv",
-            output_table=Table("snowflake_decorator_test", conn_id="snowflake_conn"),
+            output_table=Table(
+                "snowflake_decorator_test",
+                conn_id="snowflake_conn",
+                database=os.environ["SNOWFLAKE_DATABASE"],
+            ),
         ).operator.execute({"run_id": "foo"})
         super().setUp()
         self.dag = DAG(
@@ -123,7 +127,11 @@ class TestSnowflakeOperator(unittest.TestCase):
         )
         with self.dag:
             f = sample_snow(
-                input_table=Table("snowflake_decorator_test", conn_id="snowflake_conn"),
+                input_table=Table(
+                    "snowflake_decorator_test",
+                    conn_id="snowflake_conn",
+                    database=os.environ["SNOWFLAKE_DATABASE"],
+                ),
                 output_table=Table("SNOWFLAKE_TRANSFORM_TEST_TABLE"),
             )
 
