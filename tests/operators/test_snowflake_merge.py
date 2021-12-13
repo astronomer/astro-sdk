@@ -237,7 +237,7 @@ class TestSnowflakeMerge(unittest.TestCase):
             snowflake_conn_id="snowflake_conn",
             schema=os.getenv("SNOWFLAKE_SCHEMA"),
             database=os.getenv("SNOWFLAKE_DATABASE"),
-            warehouse="TRANSFORMING_DEV",
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
         )
         a = aql.merge(
             target_table="merge_test_1",
@@ -249,7 +249,7 @@ class TestSnowflakeMerge(unittest.TestCase):
             conflict_strategy="update",
             database=os.getenv("SNOWFLAKE_DATABASE"),
             schema=os.getenv("SNOWFLAKE_SCHEMA"),
-            warehouse="TRANSFORMING_DEV",
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
         )
         a.execute({"run_id": "foo"})
 
