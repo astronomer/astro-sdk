@@ -17,4 +17,4 @@ def set_schema_query(conn_type, hook, schema_id, user):
 
 
 def get_schema():
-    return os.getenv("ASTRO__SQL_SCHEMA") or "airflow"
+    return os.getenv("ASTRO__SQL_SCHEMA") or "tmp_astro"

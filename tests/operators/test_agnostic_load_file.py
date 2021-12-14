@@ -211,7 +211,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM airflow.test_dag_load_file_homes_csv_1",
+            f"SELECT * FROM tmp_astro.test_dag_load_file_homes_csv_1",
             con=self.hook_target.get_conn(),
         )
 
@@ -295,7 +295,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM airflow.{OUTPUT_TABLE_NAME}",
+            f"SELECT * FROM tmp_astro.{OUTPUT_TABLE_NAME}",
             con=self.hook_target.get_conn(),
         )
 
@@ -309,7 +309,9 @@ class TestAgnosticLoadFile(unittest.TestCase):
         )
 
         # Drop target table
-        drop_table_postgres(f"airflow.{OUTPUT_TABLE_NAME}", self.hook_target.get_conn())
+        drop_table_postgres(
+            f"tmp_astro.{OUTPUT_TABLE_NAME}", self.hook_target.get_conn()
+        )
 
         self.create_and_run_task(
             load_file,
@@ -327,7 +329,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM airflow.{OUTPUT_TABLE_NAME}",
+            f"SELECT * FROM tmp_astro.{OUTPUT_TABLE_NAME}",
             con=self.hook_target.get_conn(),
         )
 
@@ -375,7 +377,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
         )
 
         # Drop target table
-        hook.run(f"DROP TABLE IF EXISTS airflow.{OUTPUT_TABLE_NAME}")
+        hook.run(f"DROP TABLE IF EXISTS tmp_astro.{OUTPUT_TABLE_NAME}")
         self.create_and_run_task(
             load_file,
             (),
@@ -391,7 +393,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
         )
 
         # Read table from db
-        df = hook.get_pandas_df(f"SELECT * FROM airflow.{OUTPUT_TABLE_NAME}")
+        df = hook.get_pandas_df(f"SELECT * FROM tmp_astro.{OUTPUT_TABLE_NAME}")
 
         assert df.iloc[0].to_dict() == {
             "SELL": 142.0,
