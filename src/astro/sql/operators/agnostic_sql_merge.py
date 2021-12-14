@@ -27,6 +27,8 @@ from astro.utils.task_id_helper import get_unique_task_id
 
 
 class SqlMergeOperator(SqlDecoratoratedOperator):
+    template_fields = ("target_table", "merge_table")
+
     def __init__(
         self,
         target_table: Table,
@@ -51,7 +53,7 @@ class SqlMergeOperator(SqlDecoratoratedOperator):
         super().__init__(
             raw_sql=True,
             parameters={},
-            task_id=task_id,
+            task_id=kwargs.get("task_id") or task_id,
             op_args=(),
             python_callable=null_function,
             database=self.target_table.database,

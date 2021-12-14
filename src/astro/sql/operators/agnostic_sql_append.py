@@ -43,7 +43,6 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
 
         self.columns = columns
         self.casted_columns = casted_columns
-        # task_id = main_table.table_name + "_" + append_table.table_name + "_" + "append"
         task_id = get_unique_task_id("append_table")
 
         def null_function():
@@ -52,7 +51,7 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
         super().__init__(
             raw_sql=True,
             parameters={},
-            task_id=task_id,
+            task_id=kwargs.get("task_id") or task_id,
             op_args=(),
             python_callable=null_function,
             **kwargs,

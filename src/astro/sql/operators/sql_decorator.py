@@ -29,7 +29,7 @@ from sqlalchemy.sql.functions import Function
 from astro.sql.table import Table, create_table_name
 from astro.utils import postgres_transform, snowflake_transform
 from astro.utils.load_dataframe import move_dataframe_to_sql
-from astro.utils.schema_util import set_schema_query
+from astro.utils.schema_util import get_schema, set_schema_query
 
 
 class SqlDecoratoratedOperator(DecoratedOperator):
@@ -89,7 +89,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
         conn = BaseHook.get_connection(self.conn_id)
         self.conn_type = conn.conn_type  # type: ignore
-        self.schema_id = "airflow_" + self.dag_id
+        self.schema_id = self.schema or get_schema()
         self.user = conn.login
         self.run_id = context.get("run_id")
         self.convert_op_arg_dataframes()

@@ -66,9 +66,6 @@ def move_dataframe_to_sql(
             quote_identifiers=False,
         )
     else:
-        # engine = hook.get_sqlalchemy_engine()
-        # engine.drop()
-        # hook.run(sql=f"-- DROP TABLE IF EXISTS {schema}.{output_table_name}")
         df.to_sql(
             output_table_name,
             con=hook.get_sqlalchemy_engine(),
