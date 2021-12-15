@@ -19,8 +19,14 @@ import re
 from astro.sql.table import Table
 
 
+def handle_table(t: Table):
+    return t.schema + "." + t.table_name if t.schema else t.table_name
+
+
 def process_params(parameters):
-    return {k: (v.table_name if type(v) == Table else v) for k, v in parameters.items()}
+    return {
+        k: (handle_table(v) if type(v) == Table else v) for k, v in parameters.items()
+    }
 
 
 def _parse_template(sql, python_callable):
