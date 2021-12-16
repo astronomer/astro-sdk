@@ -89,7 +89,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
         conn = BaseHook.get_connection(self.conn_id)
         self.conn_type = conn.conn_type  # type: ignore
-        self.schema_id = self.schema or get_schema()
+        self.schema = self.schema or get_schema()
         self.user = conn.login
         self.run_id = context.get("run_id")
         self.convert_op_arg_dataframes()
@@ -119,10 +119,10 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
             if not self.output_table:
                 output_table_name = create_table_name(
-                    context=context, schema_id=self.schema_id
+                    context=context, schema_id=self.schema
                 )
             else:
-                output_table_name = self.output_table.qualified_name()
+                output_table_name = self.output_table.table_name
             self.sql = self.create_temporary_table(self.sql, output_table_name)
 
         # Automatically add any kwargs going into the function
@@ -141,18 +141,21 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         # Run execute function of subclassed Operator.
 
         if self.output_table:
+            self.log.info(f"returning table {self.output_table}")
             return self.output_table
 
         elif self.raw_sql:
             return query_result
         else:
-            return Table(
+            self.output_table = Table(
                 table_name=output_table_name,
                 conn_id=self.conn_id,
                 database=self.database,
                 warehouse=self.warehouse,
                 schema=self.schema,
             )
+            self.log.info(f"returning table {self.output_table}")
+            return self.output_table
 
     def _set_variables_from_first_table(self):
         """
@@ -188,7 +191,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             schema_statement = set_schema_query(
                 conn_type=self.conn_type,
                 hook=self.hook,
-                schema_id=self.schema_id,
+                schema_id=self.schema,
                 user=self.user,
             )
         elif self.conn_type == "snowflake":
@@ -196,7 +199,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             schema_statement = set_schema_query(
                 conn_type=self.conn_type,
                 hook=hook,
-                schema_id=self.schema_id,
+                schema_id=self.schema,
                 user=self.user,
             )
         self._run_sql(schema_statement, {})
@@ -242,7 +245,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         return results
 
     @staticmethod
-    def create_temporary_table(query, output_table_name):
+    def create_temporary_table(query, output_table_name, schema=None):
         """
         Create a temp table for the current task instance. This table will be overwritten if the DAG is run again as this
         table is only ever meant to be temporary.
@@ -250,6 +253,8 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         :param table_name:
         :return:
         """
+        if schema:
+            output_table_name = f"{schema}.{output_table_name}"
         return f"DROP TABLE IF EXISTS {output_table_name}; CREATE TABLE {output_table_name} AS ({query});"
 
     @staticmethod

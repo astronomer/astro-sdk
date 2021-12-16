@@ -84,6 +84,7 @@ class AgnosticLoadFile(BaseOperator):
             conn_type=conn.conn_type,
             user=conn.login,
         )
+        self.log.info(f"returning table {self.output_table}")
         return self.output_table
 
     @staticmethod

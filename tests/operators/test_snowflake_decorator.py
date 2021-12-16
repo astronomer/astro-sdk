@@ -144,7 +144,7 @@ class TestSnowflakeOperator(unittest.TestCase):
         f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
 
         df = hook.get_pandas_df(
-            'SELECT * FROM "DWH_LEGACY"."SANDBOX_AIRFLOW_TEST"."SNOWFLAKE_TRANSFORM_TEST_TABLE"'
+            'SELECT * FROM "DWH_LEGACY"."TMP_ASTRO"."SNOWFLAKE_TRANSFORM_TEST_TABLE"'
         )
         assert len(df) == 10
 
@@ -153,7 +153,7 @@ class TestSnowflakeOperator(unittest.TestCase):
 
         drop_table(
             snowflake_conn=hook.get_conn(),
-            table_name='"DWH_LEGACY"."SANDBOX_AIRFLOW_TEST"."SNOWFLAKE_TRANSFORM_RAW_SQL_TEST_TABLE"',
+            table_name='"DWH_LEGACY"."TMP_ASTRO"."SNOWFLAKE_TRANSFORM_RAW_SQL_TEST_TABLE"',
         )
 
         @aql.run_raw_sql(
@@ -179,6 +179,6 @@ class TestSnowflakeOperator(unittest.TestCase):
 
         # Read table from db
         df = hook.get_pandas_df(
-            'SELECT * FROM "DWH_LEGACY"."SANDBOX_AIRFLOW_TEST"."SNOWFLAKE_TRANSFORM_RAW_SQL_TEST_TABLE"'
+            'SELECT * FROM "DWH_LEGACY"."TMP_ASTRO"."SNOWFLAKE_TRANSFORM_RAW_SQL_TEST_TABLE"'
         )
         assert len(df) == 5
