@@ -152,7 +152,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
                 conn_id=self.conn_id,
                 database=self.database,
                 warehouse=self.warehouse,
-                schema=self.schema,
+                schema=get_schema(),
             )
             self.log.info(f"returning table {self.output_table}")
             return self.output_table
