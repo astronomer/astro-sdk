@@ -131,7 +131,7 @@ class SqlDataframeOperator(DecoratedOperator):
 
     def _get_dataframe(self, table: Table):
         conn_type = BaseHook.get_connection(table.conn_id).conn_type
-
+        self.log.info(f"Getting dataframe for {table}")
         if conn_type == "postgres":
             from psycopg2 import sql
 

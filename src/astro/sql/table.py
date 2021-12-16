@@ -32,6 +32,9 @@ class Table:
     def qualified_name(self):
         return self.schema + "." + self.table_name if self.schema else self.table_name
 
+    def __str__(self):
+        return f"Table(table_name={self.table_name}, database={self.database}, schema={self.schema}, conn_id={self.conn_id}, warehouse={self.warehouse})"
+
 
 class TempTable(Table):
     def __init__(self, conn_id, database, warehouse=""):
@@ -52,7 +55,4 @@ class TempTable(Table):
 def create_table_name(context, schema_id=None):
     ti: TaskInstance = context["ti"]
     dag_run: DagRun = ti.get_dagrun()
-    if schema_id:
-        return f"{schema_id}.{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
-    else:
-        return f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
+    return f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
