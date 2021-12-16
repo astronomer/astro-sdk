@@ -13,6 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from typing import Optional, Union
+
+from pandas import DataFrame
 from pandas.io.sql import SQLDatabase
 from snowflake.connector.pandas_tools import write_pandas
 
@@ -27,12 +30,12 @@ def move_dataframe_to_sql(
     schema,
     warehouse,
     conn_type,
-    df,
+    df: DataFrame,
     user,
     chunksize=None,
 ):
     # Select database Hook based on `conn` type
-    hook = {
+    hook: Union[TempPostgresHook, TempSnowflakeHook] = {  # type: ignore
         "postgres": TempPostgresHook(postgres_conn_id=conn_id, schema=database),
         "snowflake": TempSnowflakeHook(
             snowflake_conn_id=conn_id,
@@ -41,6 +44,8 @@ def move_dataframe_to_sql(
             warehouse=warehouse,
         ),
     }.get(conn_type, None)
+    if not hook:
+        raise ValueError("conn id needs to either snowflake or postgres")
     if database:
         hook.database = database
 
@@ -51,6 +56,8 @@ def move_dataframe_to_sql(
     if conn_type == "snowflake":
 
         db = SQLDatabase(engine=hook.get_sqlalchemy_engine())
+        # make columns uppercase to prevent weird errors in snowflake
+        df.columns = df.columns.str.upper()
         db.prep_table(
             df,
             output_table_name.lower(),
