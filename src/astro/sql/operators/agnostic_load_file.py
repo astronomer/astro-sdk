@@ -118,7 +118,7 @@ class AgnosticLoadFile(BaseOperator):
         """
         # To-do: clean-up how S3 creds are passed to s3fs
         k, v = (
-            os.environ["AIRFLOW__SQL_DECORATOR__CONN_AWS_DEFAULT"]
+            os.environ["AIRFLOW__ASTRO__CONN_AWS_DEFAULT"]
             .replace("%2F", "/")
             .replace("aws://", "")
             .replace("@", "")
