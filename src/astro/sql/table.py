@@ -55,4 +55,4 @@ class TempTable(Table):
 def create_table_name(context):
     ti: TaskInstance = context["ti"]
     dag_run: DagRun = ti.get_dagrun()
-    return f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
+    return f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}".replace("-", "_")

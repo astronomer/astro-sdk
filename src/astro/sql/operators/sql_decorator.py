@@ -122,6 +122,10 @@ class SqlDecoratoratedOperator(DecoratedOperator):
                 output_table_name = create_table_name(context=context)
             else:
                 output_table_name = self.output_table.table_name
+            if not output_table_name.isidentifier():
+                raise ValueError(
+                    f"Error: We were unable to create a valid SQL table name: result {output_table_name}"
+                )
             output_table_name = self.handle_schema(output_table_name)
             self.sql = self.create_temporary_table(self.sql, output_table_name)
 
