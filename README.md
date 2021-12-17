@@ -6,9 +6,11 @@
   Astro :rocket:
 ](#astro-rocket)
   - [Philosophy](#philosophy)
+  - [Setup](#setup)
   - [Basic Usage](#basic-usage)
   - [Supported databases](#supported-databases)
-  - [The Table class](#the-table-class)
+  - [The output_table parameter](#the-output_table-parameter)
+  - [Schemas](#schemas)
   - [Loading Data](#loading-data)
   - [Transform](#transform)
   - [Transform File](#transform-file)
@@ -56,6 +58,22 @@ Please feel free to raise issues and propose improvements, and community contrib
 Thank you,
 
 :sparkles: The Astro Team :sparkles:
+
+## Setup
+
+To install the astro library simply run
+```shell script
+pip install astro-projects
+```
+
+or add `astro-projects` to your `requirements.txt`.
+
+Before running please keep in mind that you'll need to set the following env variable for passing table objects
+between tasks:
+
+```shell script
+AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
+```
 
 ## Basic Usage
 
@@ -161,7 +179,9 @@ The current implementation supports Postgresql and Snowflake. Other databases ar
 
 To move data from one database to another, you can use the `save_file` and `load_file` functions to store intermediary tables on S3.
 
-## The Table class
+## The output_table parameter
+
+### The Table class
 
 To instantiate a table or bring in a table from a database into the `astro` ecosystem, you can pass a `Table` object into the class. This Table object will contain all necessary metadata to handle table creation between tasks. Once you define it in the beginning of your pipeline, `astro` can automatically pass that metadata along.
 
@@ -187,10 +207,58 @@ with dag:
     my_second_sql_transformation(my_table)
 ```
 
+### The TempTable Class
+
+Following the traditional dev ops concept of [pets vs. cattle](http://cloudscaling.com/blog/cloud-computing/the-history-of-pets-vs-cattle/), you can decide whether
+the result of a function is a "pet" (e.g. a named table that you would want to reference later), or a "cattle" that can be deleted at any time. 
+
+If you want to ensure that the output of your task is later garbage collected, then declaring it a nameless TempTable will place it into the `astro_tmp` schema, 
+which can be later bulk deleted. All `aql.transform` functions will by default output to TempTables unless a `Table` object is used in the `output_table` argument.
+```python
+from astro import sql as aql
+from astro.sql.table import Table, TempTable
+
+
+@aql.transform
+def my_first_sql_transformation(input_table: Table):
+    return "SELECT * FROM {input_table}"
+
+
+@aql.transform
+def my_second_sql_transformation(input_table_2: Table):
+    return "SELECT * FROM {input_table_2}"
+
+
+with dag:
+    my_table = my_first_sql_transformation(
+        input_table=Table(table_name="foo", database="bar", conn_id="postgres_conn"),
+        output_table=TempTable(database="bar", conn_id="postgres_conn"),
+    )
+    my_second_sql_transformation(my_table)
+```
+
+## Schemas
+
+
+By default, our system will create a schema called `tmp_astro` in any database where astro runs, but we also realize that this system works with
+two core assumptions. The first assumption is that the data engineer running airflow can create schemas on the fly, and the second is that the user
+creating the schema will be the only user adding/removing from said schema.
+
+For production usage we recommend that `astro` users work with their DBAs to create shared schemas where they can put their temporary tables. These schemas
+can be shared across multiple users, but should be created with security in mind (e.g. don't place high security data in a shared schema).
+
+Once this schema is created, the Airflow admin can set the schema by setting the `AIRFLOW__ASTRO__SQL_SCHEMA` env variable, or setting the following in their
+`airflow.cfg`
+
+```bash
+[astro]
+sql_schema=<your schema here>
+```
+
 ## Loading Data
 
 To create an ELT pipeline, users can first load (CSV or parquet) data (from local, S3, or GCS) into a SQL database with the `load_sql` function. 
-To interact with S3, set an S3 Airflow connection in the `AIRFLOW__SQL_DECORATOR__CONN_AWS_DEFAULT` environment variable.
+To interact with S3, set an S3 Airflow connection in the `AIRFLOW__ASTRO__CONN_AWS_DEFAULT` environment variable.
 
 ```python
 from astro import sql as aql
