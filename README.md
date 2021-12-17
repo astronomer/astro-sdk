@@ -6,6 +6,7 @@
   Astro :rocket:
 ](#astro-rocket)
   - [Philosophy](#philosophy)
+  - [Setup](#setup)
   - [Basic Usage](#basic-usage)
   - [Supported databases](#supported-databases)
   - [The output_table parameter](#the-output_table-parameter)
@@ -57,6 +58,22 @@ Please feel free to raise issues and propose improvements, and community contrib
 Thank you,
 
 :sparkles: The Astro Team :sparkles:
+
+## Setup
+
+To install the astro library simply run
+```shell script
+pip install astro-projects
+```
+
+or add `astro-projects` to your `requirements.txt`.
+
+Before running please keep in mind that you'll need to set the following env variable for passing table objects
+between tasks:
+
+```shell script
+AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
+```
 
 ## Basic Usage
 
