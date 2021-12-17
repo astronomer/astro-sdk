@@ -8,7 +8,7 @@
   - [Philosophy](#philosophy)
   - [Basic Usage](#basic-usage)
   - [Supported databases](#supported-databases)
-  - [The Table class](#the-table-class)
+  - [The output_table parameter](#the-output_table-parameter)
   - [Schemas](#schemas)
   - [Loading Data](#loading-data)
   - [Transform](#transform)
@@ -162,7 +162,9 @@ The current implementation supports Postgresql and Snowflake. Other databases ar
 
 To move data from one database to another, you can use the `save_file` and `load_file` functions to store intermediary tables on S3.
 
-## The Table class
+## The output_table parameter
+
+### The Table class
 
 To instantiate a table or bring in a table from a database into the `astro` ecosystem, you can pass a `Table` object into the class. This Table object will contain all necessary metadata to handle table creation between tasks. Once you define it in the beginning of your pipeline, `astro` can automatically pass that metadata along.
 
@@ -187,8 +189,6 @@ with dag:
     )
     my_second_sql_transformation(my_table)
 ```
-
-### The output_table parameter
 
 ### The TempTable Class
 
