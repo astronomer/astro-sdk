@@ -16,11 +16,13 @@ limitations under the License.
 
 import os
 from typing import Optional
+from urllib.parse import urlparse
 
 import boto3
 import pandas as pd
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
+from google.cloud.storage import Client
 from smart_open import open
 
 from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
@@ -129,7 +131,11 @@ class SaveFile(BaseOperator):
 
         Select output file format based on param output_file_format to class.
         """
-        transport_params = self._s3fs_creds() if "s3://" in output_file_path else None
+        transport_params = {
+            "s3": self._s3fs_creds,
+            "gs": self._gcs_creds,
+            "": lambda: None,
+        }[urlparse(output_file_path).scheme]()
         with open(
             output_file_path, mode="wb", transport_params=transport_params
         ) as stream:
@@ -155,6 +161,14 @@ class SaveFile(BaseOperator):
             aws_secret_access_key=v,
         )
         return dict(client=session.client("s3"))
+
+    def _gcs_creds(self):
+        """
+        get GCS credentials for storage
+        """
+        service_account_path = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
+        client = Client.from_service_account_json(service_account_path)
+        return dict(client=client)
 
     @staticmethod
     def create_table_name(context):
