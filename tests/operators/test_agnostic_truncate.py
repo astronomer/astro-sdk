@@ -74,22 +74,23 @@ class TestPostgresTruncateOperator(unittest.TestCase):
                 "start_date": DEFAULT_DATE,
             },
         )
-        aql.load_file(
+        self.file_table = aql.load_file(
             path=str(self.cwd) + "/../data/homes_merge_1.csv",
             output_table=Table(
-                "truncate_test", database="pagila", conn_id="postgres_conn"
+                "truncate_test",
+                database="pagila",
+                conn_id="postgres_conn",
+                schema="airflow_test_dag",
             ),
         ).operator.execute({"run_id": "foo"})
 
     def test_truncate(self):
         hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
-        df = hook.get_pandas_df(sql="SELECT * FROM truncate_test")
+        df = hook.get_pandas_df(sql="SELECT * FROM airflow_test_dag.truncate_test")
         assert df.count()[0] == 4
         a = aql.truncate(
-            table=Table(
-                table_name="truncate_test", database="pagila", conn_id="postgres_conn"
-            ),
+            table=self.file_table,
         )
         a.execute({"run_id": "foo"})
-        df = hook.get_pandas_df(sql="SELECT * FROM truncate_test")
+        df = hook.get_pandas_df(sql="SELECT * FROM airflow_test_dag.truncate_test")
         assert df.count()[0] == 0

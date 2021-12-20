@@ -13,10 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from typing import Optional, Union
+
+from pandas import DataFrame
 from pandas.io.sql import SQLDatabase
 from snowflake.connector.pandas_tools import write_pandas
 
 from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
+from astro.utils.schema_util import set_schema_query
 
 
 def move_dataframe_to_sql(
@@ -26,11 +30,12 @@ def move_dataframe_to_sql(
     schema,
     warehouse,
     conn_type,
-    df,
+    df: DataFrame,
+    user,
     chunksize=None,
 ):
     # Select database Hook based on `conn` type
-    hook = {
+    hook: Union[TempPostgresHook, TempSnowflakeHook] = {  # type: ignore
         "postgres": TempPostgresHook(postgres_conn_id=conn_id, schema=database),
         "snowflake": TempSnowflakeHook(
             snowflake_conn_id=conn_id,
@@ -39,14 +44,24 @@ def move_dataframe_to_sql(
             warehouse=warehouse,
         ),
     }.get(conn_type, None)
+    if not hook:
+        raise ValueError("conn id needs to either snowflake or postgres")
     if database:
         hook.database = database
+
+    schema_query = set_schema_query(
+        conn_type=conn_type, hook=hook, schema_id=schema, user=user
+    )
+    hook.run(schema_query)
     if conn_type == "snowflake":
 
         db = SQLDatabase(engine=hook.get_sqlalchemy_engine())
+        # make columns uppercase to prevent weird errors in snowflake
+        df.columns = df.columns.str.upper()
         db.prep_table(
             df,
             output_table_name.lower(),
+            schema=schema,
             if_exists="replace",
             index=False,
         )
@@ -61,7 +76,7 @@ def move_dataframe_to_sql(
         df.to_sql(
             output_table_name,
             con=hook.get_sqlalchemy_engine(),
-            schema=None,
+            schema=schema,
             if_exists="replace",
             chunksize=chunksize,
             method="multi",

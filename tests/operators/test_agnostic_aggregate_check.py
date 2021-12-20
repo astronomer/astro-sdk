@@ -68,23 +68,27 @@ class TestAggregateCheckOperator(unittest.TestCase):
                 "start_date": DEFAULT_DATE,
             },
         )
+        self.aggregate_table = Table(
+            "aggregate_check_test",
+            database="pagila",
+            conn_id="postgres_conn",
+            schema="airflow_test_dag",
+        )
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_merge_1.csv",
-            output_table=Table(
-                "aggregate_check_test", database="pagila", conn_id="postgres_conn"
-            ),
+            output_table=self.aggregate_table,
         ).operator.execute({"run_id": "foo"})
 
     def test_exact_value(self):
         hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
-        df = hook.get_pandas_df(sql="SELECT * FROM aggregate_check_test")
+        df = hook.get_pandas_df(
+            sql="SELECT * FROM airflow_test_dag.aggregate_check_test"
+        )
         assert df.count()[0] == 4
         try:
             a = aql.aggregate_check(
-                table="aggregate_check_test",
-                database="pagila",
-                conn_id="postgres_conn",
-                check="select count(*) FROM aggregate_check_test",
+                table=self.aggregate_table,
+                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
                 greater_than=4,
                 less_than=4,
             )
@@ -95,14 +99,14 @@ class TestAggregateCheckOperator(unittest.TestCase):
 
     def test_range_values(self):
         hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
-        df = hook.get_pandas_df(sql="SELECT * FROM aggregate_check_test")
+        df = hook.get_pandas_df(
+            sql="SELECT * FROM airflow_test_dag.aggregate_check_test"
+        )
         assert df.count()[0] == 4
         try:
             a = aql.aggregate_check(
-                table="aggregate_check_test",
-                database="pagila",
-                conn_id="postgres_conn",
-                check="select count(*) FROM aggregate_check_test",
+                table=self.aggregate_table,
+                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
                 greater_than=2,
                 less_than=6,
             )
@@ -113,14 +117,14 @@ class TestAggregateCheckOperator(unittest.TestCase):
 
     def test_out_of_range_value(self):
         hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
-        df = hook.get_pandas_df(sql="SELECT * FROM aggregate_check_test")
+        df = hook.get_pandas_df(
+            sql="SELECT * FROM airflow_test_dag.aggregate_check_test"
+        )
         assert df.count()[0] == 4
         try:
             a = aql.aggregate_check(
-                table="aggregate_check_test",
-                database="pagila",
-                conn_id="postgres_conn",
-                check="select count(*) FROM aggregate_check_test",
+                table=self.aggregate_table,
+                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
                 greater_than=10,
                 less_than=20,
             )
@@ -134,10 +138,8 @@ class TestAggregateCheckOperator(unittest.TestCase):
 
         try:
             a = aql.aggregate_check(
-                table="aggregate_check_test",
-                database="pagila",
-                conn_id="postgres_conn",
-                check="select count(*) FROM aggregate_check_test",
+                table=self.aggregate_table,
+                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
                 greater_than=20,
                 less_than=10,
             )
@@ -157,10 +159,8 @@ class TestAggregateCheckOperator(unittest.TestCase):
         ).operator.execute({"run_id": "foo"})
         try:
             a = aql.aggregate_check(
-                table="aggregate_check_test",
-                database="pagila",
-                conn_id="postgres_conn",
-                check="select count(*) FROM aggregate_check_test",
+                table=self.aggregate_table,
+                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
                 greater_than=4,
                 less_than=4,
             )
@@ -172,10 +172,8 @@ class TestAggregateCheckOperator(unittest.TestCase):
     def test_invalid_params_no_test_values(self):
         try:
             a = aql.aggregate_check(
-                table="aggregate_check_test",
-                database="pagila",
-                conn_id="postgres_conn",
-                check="select count(*) FROM aggregate_check_test",
+                table=self.aggregate_table,
+                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
             )
             assert False
         except ValueError:
@@ -183,14 +181,14 @@ class TestAggregateCheckOperator(unittest.TestCase):
 
     def test_equal_to_param(self):
         hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
-        df = hook.get_pandas_df(sql="SELECT * FROM aggregate_check_test")
+        df = hook.get_pandas_df(
+            sql="SELECT * FROM airflow_test_dag.aggregate_check_test"
+        )
         assert df.count()[0] == 4
         try:
             a = aql.aggregate_check(
-                table="aggregate_check_test",
-                database="pagila",
-                conn_id="postgres_conn",
-                check="select count(*) FROM aggregate_check_test",
+                table=self.aggregate_table,
+                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
                 equal_to=4,
             )
             a.execute({"run_id": "foo"})
@@ -200,14 +198,14 @@ class TestAggregateCheckOperator(unittest.TestCase):
 
     def test_only_less_than_param(self):
         hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
-        df = hook.get_pandas_df(sql="SELECT * FROM aggregate_check_test")
+        df = hook.get_pandas_df(
+            sql="SELECT * FROM airflow_test_dag.aggregate_check_test"
+        )
         assert df.count()[0] == 4
         try:
             a = aql.aggregate_check(
-                table="aggregate_check_test",
-                database="pagila",
-                conn_id="postgres_conn",
-                check="select count(*) FROM aggregate_check_test",
+                table=self.aggregate_table,
+                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
                 less_than=3,
             )
             result = a.execute({"run_id": "foo"})
@@ -217,14 +215,14 @@ class TestAggregateCheckOperator(unittest.TestCase):
 
     def test_only_greater_than_param(self):
         hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
-        df = hook.get_pandas_df(sql="SELECT * FROM aggregate_check_test")
+        df = hook.get_pandas_df(
+            sql="SELECT * FROM airflow_test_dag.aggregate_check_test"
+        )
         assert df.count()[0] == 4
         try:
             a = aql.aggregate_check(
-                table="aggregate_check_test",
-                database="pagila",
-                conn_id="postgres_conn",
-                check="select count(*) FROM aggregate_check_test",
+                table=self.aggregate_table,
+                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
                 greater_than=3,
             )
             a.execute({"run_id": "foo"})
@@ -237,10 +235,8 @@ class TestAggregateCheckOperator(unittest.TestCase):
 
         try:
             a = aql.aggregate_check(
-                table="aggregate_check_test",
-                database="pagila",
-                conn_id="postgres_conn",
-                check="select count(*) FROM aggregate_check_test",
+                table=self.aggregate_table,
+                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
                 greater_than=20,
                 less_than=10,
                 equal_to=4,
