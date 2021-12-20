@@ -22,6 +22,7 @@ import boto3
 import pandas as pd
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
+from google.cloud.storage import Client
 from smart_open import open
 
 from astro.sql.table import Table, TempTable, create_table_name
@@ -108,7 +109,11 @@ class AgnosticLoadFile(BaseOperator):
             raise ValueError("Invalid path: {}".format(path))
 
         file_type = path.split(".")[-1]
-        transport_params = self._s3fs_creds() if "s3://" in path else None
+        transport_params = {
+            "s3": self._s3fs_creds,
+            "gs": self._gcs_creds,
+            "": lambda: None,
+        }[urlparse(path).scheme]()
         with open(path, transport_params=transport_params) as stream:
             return {"parquet": pd.read_parquet, "csv": pd.read_csv}[file_type](stream)
 
@@ -130,6 +135,21 @@ class AgnosticLoadFile(BaseOperator):
             aws_secret_access_key=v,
         )
         return dict(client=session.client("s3"))
+
+    def _gcs_creds(self):
+        """
+        get GCS credentials for storage
+        """
+        service_account_path = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
+        client = Client.from_service_account_json(service_account_path)
+        return dict(client=client)
+
+    @staticmethod
+    def create_table_name(context):
+        """Generate output table name."""
+        ti: TaskInstance = context["ti"]
+        dag_run: DagRun = ti.get_dagrun()
+        return f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
 
 
 def load_file(

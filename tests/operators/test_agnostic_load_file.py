@@ -367,6 +367,36 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         assert df.iloc[0].to_dict()["Sell"] == 142.0
 
+    def test_aql_gcs_file_to_postgres(self):
+        # To Do: add service account creds
+        OUTPUT_TABLE_NAME = "expected_table_from_gcs_csv"
+
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+
+        # Drop target table
+        drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
+
+        self.create_and_run_task(
+            load_file,
+            (),
+            {
+                "path": "gs://utkarsharma2/homes.csv",
+                "file_conn_id": "",
+                "output_table": Table(
+                    OUTPUT_TABLE_NAME, database="pagila", conn_id="postgres_conn"
+                ),
+            },
+        )
+
+        # Read table from db
+        df = pd.read_sql(
+            f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=self.hook_target.get_conn()
+        )
+        print("df : ", df)
+        assert df.iloc[0].to_dict()["sell"] == 142.0
+
     def test_aql_local_file_to_snowflake(self):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
 
