@@ -137,17 +137,6 @@ class SaveFile(BaseOperator):
                 stream
             )
 
-    def _load_dataframe(self, path):
-        """Read file with Pandas.
-
-        Select method based on `file_type` (S3 or local).
-        """
-        file_type = path.split(".")[-1]
-        storage_options = self._s3fs_creds() if "s3://" in path else None
-        return {"parquet": pd.read_parquet, "csv": pd.read_csv}[file_type](
-            path, storage_options=storage_options
-        )
-
     def _s3fs_creds(self):
         # To-do: reuse this method from sql decorator
         """Structure s3fs credentials from Airflow connection.
