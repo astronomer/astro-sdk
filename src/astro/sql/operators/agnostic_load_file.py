@@ -15,18 +15,20 @@ limitations under the License.
 """
 
 import os
-from typing import Optional
+from typing import Union
 from urllib.parse import urlparse
 
 import boto3
 import pandas as pd
 from airflow.hooks.base import BaseHook
-from airflow.models import BaseOperator, DagRun, TaskInstance
+
+from airflow.models import BaseOperator
 from google.cloud.storage import Client
 from smart_open import open
 
-from astro.sql.table import Table
+from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils.load_dataframe import move_dataframe_to_sql
+from astro.utils.schema_util import get_schema
 from astro.utils.task_id_helper import get_task_id
 
 
@@ -45,13 +47,14 @@ class AgnosticLoadFile(BaseOperator):
 
     def __init__(
         self,
-        path="",
-        output_table: Table = None,
+        path,
+        output_table: Union[TempTable, Table],
         file_conn_id="",
         chunksize=None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
+        self.output_table: Union[TempTable, Table] = output_table
         self.path = path
         self.chunksize = chunksize
         self.file_conn_id = file_conn_id
@@ -68,6 +71,13 @@ class AgnosticLoadFile(BaseOperator):
         df = self._load_dataframe(self.path)
 
         # Retrieve conn type
+        conn = BaseHook.get_connection(self.output_table.conn_id)
+        if type(self.output_table) == TempTable:
+            self.output_table = self.output_table.to_table(
+                create_table_name(context=context), get_schema()
+            )
+        else:
+            self.output_table.schema = self.output_table.schema or get_schema()
         move_dataframe_to_sql(
             output_table_name=self.output_table.table_name,
             conn_id=self.output_table.conn_id,
@@ -75,8 +85,10 @@ class AgnosticLoadFile(BaseOperator):
             warehouse=self.output_table.warehouse,
             schema=self.output_table.schema,
             df=df,
-            conn_type=BaseHook.get_connection(self.output_table.conn_id).conn_type,
+            conn_type=conn.conn_type,
+            user=conn.login,
         )
+        self.log.info(f"returning table {self.output_table}")
         return self.output_table
 
     @staticmethod
@@ -113,7 +125,7 @@ class AgnosticLoadFile(BaseOperator):
         """
         # To-do: clean-up how S3 creds are passed to s3fs
         k, v = (
-            os.environ["AIRFLOW__SQL_DECORATOR__CONN_AWS_DEFAULT"]
+            os.environ["AIRFLOW__ASTRO__CONN_AWS_DEFAULT"]
             .replace("%2F", "/")
             .replace("aws://", "")
             .replace("@", "")
@@ -132,13 +144,6 @@ class AgnosticLoadFile(BaseOperator):
         service_account_path = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
         client = Client.from_service_account_json(service_account_path)
         return dict(client=client)
-
-    @staticmethod
-    def create_table_name(context):
-        """Generate output table name."""
-        ti: TaskInstance = context["ti"]
-        dag_run: DagRun = ti.get_dagrun()
-        return f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
 
 
 def load_file(

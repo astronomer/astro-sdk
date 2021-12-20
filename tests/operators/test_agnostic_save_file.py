@@ -19,7 +19,7 @@ Unittest module to test Agnostic Load File function.
 Requires the unittest, pytest, and requests-mock Python libraries.
 
 Run test:
-    AIRFLOW__SQL_DECORATOR__CONN_AWS_DEFAULT=aws://KEY:SECRET@
+    AIRFLOW__ASTRO__CONN_AWS_DEFAULT=aws://KEY:SECRET@
     python3 -m unittest tests.operators.test_save_file.TestSaveFile.test_save_postgres_table_to_local
 
 """
@@ -387,7 +387,7 @@ class TestSaveFile(unittest.TestCase):
         """
         # To-do: clean-up how S3 creds are passed to s3fs
         k, v = (
-            os.environ["AIRFLOW__SQL_DECORATOR__CONN_AWS_DEFAULT"]
+            os.environ["AIRFLOW__ASTRO__CONN_AWS_DEFAULT"]
             .replace("%2F", "/")
             .replace("aws://", "")
             .replace("@", "")
