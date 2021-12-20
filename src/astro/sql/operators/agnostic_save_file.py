@@ -21,6 +21,7 @@ import boto3
 import pandas as pd
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
+from smart_open import open
 
 from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
 from astro.sql.table import Table
@@ -128,10 +129,13 @@ class SaveFile(BaseOperator):
 
         Select output file format based on param output_file_format to class.
         """
-        storage_options = self._s3fs_creds() if "s3://" in output_file_path else None
-        {"csv": df.to_csv, "parquet": df.to_parquet}[self.output_file_format](
-            output_file_path, storage_options=storage_options
-        )
+        transport_params = self._s3fs_creds() if "s3://" in output_file_path else None
+        with open(
+            output_file_path, mode="wb", transport_params=transport_params
+        ) as stream:
+            {"csv": df.to_csv, "parquet": df.to_parquet}[self.output_file_format](
+                stream
+            )
 
     def _load_dataframe(self, path):
         """Read file with Pandas.
@@ -157,8 +161,11 @@ class SaveFile(BaseOperator):
             .replace("@", "")
             .split(":")
         )
-
-        return {"key": k, "secret": v}
+        session = boto3.Session(
+            aws_access_key_id=k,
+            aws_secret_access_key=v,
+        )
+        return dict(client=session.client("s3"))
 
     @staticmethod
     def create_table_name(context):
