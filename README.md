@@ -709,4 +709,3 @@ from astro.ml import predict
 def my_df_func():
     return pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
 ```
-
