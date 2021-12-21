@@ -138,7 +138,7 @@ class AgnosticLoadFile(BaseOperator):
 
     def _gcs_creds(self):
         """
-        get GCS credentials for storage
+        get GCS credentials for storage.
         """
         service_account_path = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
         client = Client.from_service_account_json(service_account_path)
