@@ -18,6 +18,6 @@ connections:
       account: "gp21411"
       region: "us-east-1"
       role: "TRANSFORMER"
-      warehouse: TRANSFORMING_DEV
+      warehouse: TRANSFORMING
       database: DWH_LEGACY
 

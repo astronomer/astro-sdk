@@ -40,7 +40,7 @@ from airflow.utils.types import DagRunType
 # Import Operator
 import astro.sql as aql
 from astro import dataframe as df
-from astro.sql.table import Table
+from astro.sql.table import Table, TempTable
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -147,9 +147,7 @@ class TestPostgresDecorator(unittest.TestCase):
 
         with self.dag:
             my_df = get_dataframe(
-                output_table=Table(
-                    table_name="my_df_table", conn_id="postgres_conn", database="pagila"
-                )
+                output_table=TempTable(conn_id="postgres_conn", database="pagila")
             )
             pg_df = sample_pg(input_table=my_df)
 
@@ -175,7 +173,7 @@ class TestPostgresDecorator(unittest.TestCase):
             {
                 "input_table": Table(
                     table_name="actor", conn_id="postgres_conn", database="pagila"
-                )
+                ),
             },
         )
 

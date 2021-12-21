@@ -17,6 +17,8 @@ import re
 
 from airflow.exceptions import AirflowException
 
+from astro.sql.table import Table
+
 
 def _wrap_identifiers(sql, identifier_params):
     all_vals = re.findall("%\(.*?\)s", sql)
@@ -33,8 +35,8 @@ def wrap_identifier(inp):
 
 
 def snowflake_merge_func(
-    target_table,
-    merge_table,
+    target_table: Table,
+    merge_table: Table,
     target_columns,
     merge_keys,
     merge_columns,
@@ -46,17 +48,17 @@ def snowflake_merge_func(
     )
 
     merge_target_dict = {
-        "merge_clause_target_" + str(i): target_table + "." + x
+        "merge_clause_target_" + str(i): target_table.table_name + "." + x
         for i, x in enumerate(merge_keys.keys())
     }
     merge_append_dict = {
-        "merge_clause_append_" + str(i): merge_table + "." + x
+        "merge_clause_append_" + str(i): merge_table.table_name + "." + x
         for i, x in enumerate(merge_keys.values())
     }
 
     statement = fill_in_merge_clauses(merge_append_dict, merge_target_dict, statement)
 
-    values_to_check = [target_table, merge_table]
+    values_to_check = [target_table.table_name, merge_table.table_name]
     values_to_check.extend(target_columns)
     values_to_check.extend(merge_columns)
     for v in values_to_check:
@@ -68,13 +70,21 @@ def snowflake_merge_func(
     if conflict_strategy == "update":
         statement += " when matched then UPDATE SET {merge_vals}"
         statement = fill_in_update_statement(
-            statement, target_table, merge_table, target_columns, merge_columns
+            statement,
+            target_table.table_name,
+            merge_table.table_name,
+            target_columns,
+            merge_columns,
         )
     statement += (
         " when not matched then insert({target_columns}) values ({append_columns})"
     )
     statement = fill_in_append_statements(
-        target_table, merge_table, statement, target_columns, merge_columns
+        target_table.table_name,
+        merge_table.table_name,
+        statement,
+        target_columns,
+        merge_columns,
     )
 
     params = {}

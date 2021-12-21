@@ -14,26 +14,29 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from typing import Dict
+from typing import Dict, Union
 
 from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
+from astro.sql.table import Table, TempTable
 from astro.utils.postgres_merge_func import postgres_merge_func
 from astro.utils.snowflake_merge_func import snowflake_merge_func
+from astro.utils.task_id_helper import get_unique_task_id
 
 
 class SqlMergeOperator(SqlDecoratoratedOperator):
+    template_fields = ("target_table", "merge_table")
+
     def __init__(
         self,
-        target_table,
-        merge_table,
+        target_table: Table,
+        merge_table: Table,
         merge_keys,
         target_columns,
         merge_columns,
         conflict_strategy,
-        conn_id,
         **kwargs,
     ):
         self.target_table = target_table
@@ -42,8 +45,7 @@ class SqlMergeOperator(SqlDecoratoratedOperator):
         self.target_columns = target_columns
         self.merge_columns = merge_columns
         self.conflict_strategy = conflict_strategy
-        self.conn_id = conn_id
-        task_id = target_table + "_" + merge_table + "_" + "merge"
+        task_id = get_unique_task_id("merge_table")
 
         def null_function():
             pass
@@ -51,10 +53,12 @@ class SqlMergeOperator(SqlDecoratoratedOperator):
         super().__init__(
             raw_sql=True,
             parameters={},
-            conn_id=conn_id,
-            task_id=task_id,
+            task_id=kwargs.get("task_id") or task_id,
             op_args=(),
             python_callable=null_function,
+            database=self.target_table.database,
+            conn_id=self.target_table.conn_id,
+            schema=self.target_table.schema,
             **kwargs,
         )
 

@@ -16,10 +16,12 @@ limitations under the License.
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from psycopg2 import sql
 
+from astro.sql.table import Table
+
 
 def postgres_merge_func(
-    target_table,
-    merge_table,
+    target_table: Table,
+    merge_table: Table,
     merge_keys,
     target_columns,
     merge_columns,
@@ -42,9 +44,9 @@ def postgres_merge_func(
 
     query = sql.SQL(statement).format(
         target_columns=sql.SQL(",").join(target_column_names),
-        main_table=sql.Identifier(target_table),
+        main_table=sql.Identifier(*target_table.identifier_args()),
         append_columns=sql.SQL(",").join(append_column_names),
-        append_table=sql.Identifier(merge_table),
+        append_table=sql.Identifier(*merge_table.identifier_args()),
         update_statements=sql.SQL(",").join(update_statements),
         merge_keys=sql.SQL(",").join([sql.Identifier(x) for x in merge_keys]),
     )

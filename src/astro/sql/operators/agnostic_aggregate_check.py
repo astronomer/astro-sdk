@@ -24,6 +24,7 @@ from sqlalchemy.sql.schema import Table
 
 from astro import sql
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
+from astro.utils.task_id_helper import get_unique_task_id
 
 
 class AgnosticAggregateCheck(SqlDecoratoratedOperator):
@@ -31,8 +32,6 @@ class AgnosticAggregateCheck(SqlDecoratoratedOperator):
         self,
         table: Table,
         check: str,
-        database: str,
-        conn_id: str,
         greater_than: float = None,
         less_than: float = None,
         equal_to: float = None,
@@ -62,8 +61,6 @@ class AgnosticAggregateCheck(SqlDecoratoratedOperator):
         self.greater_than = greater_than
         self.less_than = less_than
         self.equal_to = equal_to
-        self.conn_id = conn_id
-        self.database = database
 
         if less_than is None and greater_than is None and equal_to is None:
             raise ValueError(
@@ -79,7 +76,7 @@ class AgnosticAggregateCheck(SqlDecoratoratedOperator):
                 "less_than should be greater than or equal to greater_than."
             )
 
-        task_id = table + "_" + "aggregate_check"
+        task_id = get_unique_task_id("aggregate_check")
 
         def null_function():
             pass
@@ -87,11 +84,11 @@ class AgnosticAggregateCheck(SqlDecoratoratedOperator):
         super().__init__(
             raw_sql=True,
             parameters={},
-            conn_id=conn_id,
+            conn_id=table.conn_id,
             task_id=task_id,
             op_args=(),
             python_callable=null_function,
-            database=database,
+            database=table.database,
             **kwargs,
         )
 
@@ -143,8 +140,6 @@ class AgnosticAggregateCheck(SqlDecoratoratedOperator):
 def aggregate_check(
     table: Table,
     check: str,
-    conn_id: str,
-    database: str,
     greater_than: float = None,
     less_than: float = None,
     equal_to: float = None,
@@ -169,6 +164,4 @@ def aggregate_check(
         greater_than=greater_than,
         less_than=less_than,
         equal_to=equal_to,
-        conn_id=conn_id,
-        database=database,
     )
