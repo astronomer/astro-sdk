@@ -23,6 +23,7 @@ dependencies = [
     "s3fs",
     "snowflake-sqlalchemy ==1.2.0",
     "snowflake-connector-python[pandas]",
+    "smart-open>=5.2.1"
 ]
 
 keywords = ["airflow", "provider", "astronomer", "sql", "decorator"]
