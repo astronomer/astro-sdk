@@ -11,6 +11,7 @@ from sqlalchemy.sql.schema import Table
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
+from astro.sql.util.snowflake_merge_func import is_valid_snow_identifier
 
 
 class Check:
@@ -32,20 +33,24 @@ class Check:
 
     def get_postgres_expression(self):
         return sql.SQL("CASE WHEN {expression} THEN 0 ELSE 1 END AS {name}").format(
-            expression=sql.SQL(self.expression), name=sql.SQL(self.name)
+            expression=sql.Identifier(self.expression), name=sql.Identifier(self.name)
         )
 
     def get_postgres_result(self):
         return sql.SQL("CAST(SUM({name}) as float) / COUNT(*) as {result}").format(
-            name=sql.SQL(self.name), result=sql.SQL(self.name + "_result")
+            name=sql.Identifier(self.name), result=sql.Identifier(self.name + "_result")
         )
 
     def get_snowflake_expression(self):
+        if not is_valid_snow_identifier(name):
+            raise ValueError("Not a valid snowflake identifier {}".format(name))
         return "CASE WHEN {}  THEN 0 ELSE 1 END AS {}".format(
             self.expression, self.name
         )
 
     def get_snowflake_result(self):
+        if not is_valid_snow_identifier(name):
+            raise ValueError("Not a valid snowflake identifier {}".format(name))
         return 'CAST(SUM({}) as float) / COUNT(*) as "{}"'.format(
             self.name, self.name + "_result"
         )
@@ -57,8 +62,6 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
         checks: List[Check],
         table: Table,
         max_rows_returned: int,
-        conn_id: str = "",
-        database: str = "",
         **kwargs,
     ):
         """
@@ -72,9 +75,9 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
 
         self.table = table
         self.max_rows_returned = max_rows_returned
-        self.conn_id = conn_id if conn_id else table.conn_id
+        self.conn_id = table.conn_id
         self.checks = checks
-        self.database = database if database else table.database
+        self.database = table.database
 
         task_id = table.table_name + "_" + "boolean_check"
 

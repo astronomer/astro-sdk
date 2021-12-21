@@ -47,14 +47,17 @@ class TestBooleanCheckOperator(unittest.TestCase):
         )
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_append.csv",
-            output_conn_id="postgres_conn",
-            output_table_name="boolean_check_test",
+            output_table=Table(
+                "boolean_check_test", conn_id="postgres_conn", database="pagila"
+            ),
         ).operator.execute({"run_id": "foo"})
 
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_append.csv",
-            output_conn_id="snowflake_conn",
-            output_table_name="BOOLEAN_CHECK_TEST",
+            output_table=Table(
+                conn_id="snowflake_conn",
+                table_name="BOOLEAN_CHECK_TEST",
+            ),
         ).operator.execute({"run_id": "foo"})
 
     def test_happyflow_postgres_success(self):
