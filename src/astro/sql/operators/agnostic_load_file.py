@@ -21,7 +21,6 @@ from urllib.parse import urlparse
 import boto3
 import pandas as pd
 from airflow.hooks.base import BaseHook
-
 from airflow.models import BaseOperator
 from google.cloud.storage import Client
 from smart_open import open
@@ -139,7 +138,7 @@ class AgnosticLoadFile(BaseOperator):
 
     def _gcs_creds(self):
         """
-        get GCS credentials for storage
+        get GCS credentials for storage.
         """
         service_account_path = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
         client = Client.from_service_account_json(service_account_path)
