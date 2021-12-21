@@ -82,15 +82,6 @@ class TestSnowflakeAppend(unittest.TestCase):
         self.addCleanup(self.dag.clear)
         self.clear_run()
         self.addCleanup(self.clear_run)
-        cwd = pathlib.Path(__file__).parent
-        aql.load_file(
-            path=str(cwd) + "/../data/homes_main.csv",
-            output_table=Table(table_name="test_append_1", conn_id="snowflake_conn"),
-        ).operator.execute({"run_id": "foo"})
-        aql.load_file(
-            path=str(cwd) + "/../data/homes_append.csv",
-            output_table=Table(table_name="test_append_2", conn_id="snowflake_conn"),
-        ).operator.execute({"run_id": "foo"})
 
     def clear_run(self):
         self.run = False
@@ -110,20 +101,30 @@ class TestSnowflakeAppend(unittest.TestCase):
             time.sleep(1)
             task = dr.get_task_instance(task_id)
 
-    def run_append_func(
-        self, main_table_name, append_table_name, columns, casted_columns
-    ):
-        MAIN_TABLE_NAME = main_table_name
-        APPEND_TABLE_NAME = append_table_name
+    def run_append_func(self, columns, casted_columns):
+        cwd = pathlib.Path(__file__).parent
 
         with self.dag:
+            load_main = aql.load_file(
+                path=str(cwd) + "/../data/homes_main.csv",
+                output_table=Table(
+                    table_name="test_append_1", conn_id="snowflake_conn"
+                ),
+            )
+            load_append = aql.load_file(
+                path=str(cwd) + "/../data/homes_append.csv",
+                output_table=Table(
+                    table_name="test_append_2", conn_id="snowflake_conn"
+                ),
+            )
             foo = aql.append(
                 conn_id="snowflake_conn",
-                append_table=APPEND_TABLE_NAME,
+                append_table=load_append,
                 columns=columns,
                 casted_columns=casted_columns,
-                main_table=MAIN_TABLE_NAME,
+                main_table=load_main,
             )
+
         dr = self.dag.create_dagrun(
             run_id=DagRunType.MANUAL.value,
             start_date=timezone.utcnow(),
@@ -131,58 +132,61 @@ class TestSnowflakeAppend(unittest.TestCase):
             state=State.RUNNING,
         )
 
+        load_main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        self.load_main = load_main
+        self.wait_for_task_finish(dr, load_main.operator.task_id)
+        self.wait_for_task_finish(dr, load_append.operator.task_id)
+
         foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, foo.task_id)
 
     def test_append(self):
-        MAIN_TABLE_NAME = "TEST_APPEND_1"
-        APPEND_TABLE_NAME = "TEST_APPEND_2"
         hook = get_snowflake_hook()
 
-        self.run_append_func(MAIN_TABLE_NAME, APPEND_TABLE_NAME, [], {})
-        main_table_count = hook.run(f"SELECT COUNT(*) FROM {MAIN_TABLE_NAME}")
+        self.run_append_func([], {})
+        main_table_count = hook.run(
+            f"SELECT COUNT(*) FROM {self.load_main.operator.output_table.qualified_name()}"
+        )
         assert main_table_count[0]["COUNT(*)"] == 6
 
     def test_append_no_cast(self):
-        MAIN_TABLE_NAME = "TEST_APPEND_1"
-        APPEND_TABLE_NAME = "TEST_APPEND_2"
         hook = get_snowflake_hook()
 
-        self.run_append_func(MAIN_TABLE_NAME, APPEND_TABLE_NAME, ["BEDS"], {})
+        self.run_append_func(["BEDS"], {})
 
-        df = hook.get_pandas_df(f"SELECT * FROM {MAIN_TABLE_NAME}")
+        df = hook.get_pandas_df(
+            f"SELECT * FROM {self.load_main.operator.output_table.qualified_name()}"
+        )
 
         assert len(df) == 6
         assert not df["BEDS"].hasnans
         assert df["ROOMS"].hasnans
 
     def test_append_with_cast(self):
-        MAIN_TABLE_NAME = "TEST_APPEND_1"
-        APPEND_TABLE_NAME = "TEST_APPEND_2"
-
-        self.run_append_func(MAIN_TABLE_NAME, APPEND_TABLE_NAME, [], {"ACRES": "FLOAT"})
+        self.run_append_func([], {"ACRES": "FLOAT"})
 
         hook = get_snowflake_hook()
 
-        df = hook.get_pandas_df(f"SELECT * FROM {MAIN_TABLE_NAME}")
+        df = hook.get_pandas_df(
+            f"SELECT * FROM {self.load_main.operator.output_table.qualified_name()}"
+        )
 
         assert len(df) == 6
         assert not df["ACRES"].hasnans
         assert df["BEDS"].hasnans
 
     def test_append_with_cast_and_no_cast(self):
-        MAIN_TABLE_NAME = "TEST_APPEND_1"
-        APPEND_TABLE_NAME = "TEST_APPEND_2"
         hook = get_snowflake_hook()
 
         self.run_append_func(
-            MAIN_TABLE_NAME,
-            APPEND_TABLE_NAME,
             ["BEDS"],
             {"ACRES": "FLOAT"},
         )
 
-        df = hook.get_pandas_df(f"SELECT * FROM {MAIN_TABLE_NAME}")
+        df = hook.get_pandas_df(
+            f"SELECT * FROM {self.load_main.operator.output_table.qualified_name()}"
+        )
 
         assert len(df) == 6
         assert not df["BEDS"].hasnans
