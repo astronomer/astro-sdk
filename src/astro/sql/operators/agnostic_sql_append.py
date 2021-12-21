@@ -20,29 +20,30 @@ from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
+from astro.sql.table import Table
 from astro.utils.postgres_append import postgres_append_func
 from astro.utils.snowflake_append import snowflake_append_func
+from astro.utils.task_id_helper import get_unique_task_id
 
 
 class SqlAppendOperator(SqlDecoratoratedOperator):
+    template_fields = ("main_table", "append_table")
+
     def __init__(
         self,
-        database: str,
-        append_table: str,
-        main_table: str,
-        conn_id: str = "",
+        append_table: Table,
+        main_table: Table,
         columns: List[str] = [],
         casted_columns: dict = {},
         **kwargs,
     ):
         self.append_table = append_table
         self.main_table = main_table
-        self.conn_id = conn_id
         self.sql = ""
 
         self.columns = columns
         self.casted_columns = casted_columns
-        task_id = main_table + "_" + append_table + "_" + "append"
+        task_id = get_unique_task_id("append_table")
 
         def null_function():
             pass
@@ -50,11 +51,9 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
         super().__init__(
             raw_sql=True,
             parameters={},
-            conn_id=conn_id,
-            task_id=task_id,
+            task_id=kwargs.get("task_id") or task_id,
             op_args=(),
             python_callable=null_function,
-            database=database,
             **kwargs,
         )
 

@@ -26,9 +26,10 @@ from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils.db import provide_session
 from sqlalchemy.sql.functions import Function
 
-from astro.sql.table import Table
+from astro.sql.table import Table, create_table_name
 from astro.utils import postgres_transform, snowflake_transform
 from astro.utils.load_dataframe import move_dataframe_to_sql
+from astro.utils.schema_util import get_schema, set_schema_query
 
 
 class SqlDecoratoratedOperator(DecoratedOperator):
@@ -86,7 +87,10 @@ class SqlDecoratoratedOperator(DecoratedOperator):
     def execute(self, context: Dict):
         self._set_variables_from_first_table()
 
-        self.conn_type = BaseHook.get_connection(self.conn_id).conn_type  # type: ignore
+        conn = BaseHook.get_connection(self.conn_id)
+        self.conn_type = conn.conn_type  # type: ignore
+        self.schema = self.schema or get_schema()
+        self.user = conn.login
         self.run_id = context.get("run_id")
         self.convert_op_arg_dataframes()
         self.convert_op_kwarg_dataframes()
@@ -111,11 +115,15 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
         if not self.raw_sql:
             # Create a table name for the temp table
-            output_table = self.output_table or Table(self.create_table_name(context))
-            if not output_table.table_name:
-                output_table.table_name = self.create_table_name(context)
-            output_table_name = output_table.table_name
-            self.sql = self.create_temporary_table(self.sql, output_table)
+            self._set_schema_if_needed()
+
+            if not self.output_table:
+                output_table_name = create_table_name(
+                    context=context, schema_id=self.schema
+                )
+            else:
+                output_table_name = self.output_table.table_name
+            self.sql = self.create_temporary_table(self.sql, output_table_name)
 
         # Automatically add any kwargs going into the function
         if self.op_kwargs:
@@ -129,19 +137,25 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.parameters.update(self.op_kwargs)  # type: ignore
 
         self._process_params()
-        query_result = self._run_sql()
+        query_result = self._run_sql(self.sql, self.parameters)
         # Run execute function of subclassed Operator.
 
-        if self.raw_sql:
+        if self.output_table:
+            self.log.info(f"returning table {self.output_table}")
+            return self.output_table
+
+        elif self.raw_sql:
             return query_result
         else:
-            return Table(
+            self.output_table = Table(
                 table_name=output_table_name,
                 conn_id=self.conn_id,
                 database=self.database,
                 warehouse=self.warehouse,
-                schema=self.schema,
+                schema=get_schema(),
             )
+            self.log.info(f"returning table {self.output_table}")
+            return self.output_table
 
     def _set_variables_from_first_table(self):
         """
@@ -168,6 +182,28 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.schema = first_table.schema or self.schema
             self.warehouse = first_table.warehouse or self.warehouse
 
+    def _set_schema_if_needed(self):
+        schema_statement = ""
+        if self.conn_type == "postgres":
+            self.hook = PostgresHook(
+                postgres_conn_id=self.conn_id, schema=self.database
+            )
+            schema_statement = set_schema_query(
+                conn_type=self.conn_type,
+                hook=self.hook,
+                schema_id=self.schema,
+                user=self.user,
+            )
+        elif self.conn_type == "snowflake":
+            hook = self.get_snow_hook()
+            schema_statement = set_schema_query(
+                conn_type=self.conn_type,
+                hook=hook,
+                schema_id=self.schema,
+                user=self.user,
+            )
+        self._run_sql(schema_statement, {})
+
     def get_snow_hook(self) -> SnowflakeHook:
         """
         Create and return SnowflakeHook.
@@ -184,34 +220,32 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             session_parameters=None,
         )
 
-    def _run_sql(self):
+    def _run_sql(self, sql, parameters):
 
         if self.conn_type == "postgres":
-            self.log.info("Executing: %s", self.sql)
+            self.log.info("Executing: %s", sql)
             self.hook = PostgresHook(
                 postgres_conn_id=self.conn_id, schema=self.database
             )
             results = self.hook.run(
-                self.sql,
+                sql,
                 self.autocommit,
-                parameters=self.parameters,
+                parameters=parameters,
                 handler=self.handler,
             )
             for output in self.hook.conn.notices:
                 self.log.info(output)
 
         elif self.conn_type == "snowflake":
-            self.log.info("Executing: %s", self.sql)
+            self.log.info("Executing: %s", sql)
             hook = self.get_snow_hook()
-            results = hook.run(
-                self.sql, autocommit=self.autocommit, parameters=self.parameters
-            )
+            results = hook.run(sql, autocommit=self.autocommit, parameters=parameters)
             self.query_ids = hook.query_ids
 
         return results
 
     @staticmethod
-    def create_temporary_table(query, table):
+    def create_temporary_table(query, output_table_name, schema=None):
         """
         Create a temp table for the current task instance. This table will be overwritten if the DAG is run again as this
         table is only ever meant to be temporary.
@@ -219,17 +253,13 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         :param table_name:
         :return:
         """
-        return f"DROP TABLE IF EXISTS {table.table_name}; CREATE TABLE {table.table_name} AS ({query});"
+        if schema:
+            output_table_name = f"{schema}.{output_table_name}"
+        return f"DROP TABLE IF EXISTS {output_table_name}; CREATE TABLE {output_table_name} AS ({query});"
 
     @staticmethod
     def create_cte(query, table_name):
         return f"WITH {table_name} AS ({query}) SELECT * FROM {table_name};"
-
-    @staticmethod
-    def create_table_name(context):
-        ti: TaskInstance = context["ti"]
-        dag_run: DagRun = ti.get_dagrun()
-        return f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
 
     @staticmethod
     def create_output_csv_path(context):

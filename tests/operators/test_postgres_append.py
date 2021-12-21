@@ -20,7 +20,7 @@ Unittest module to test Operators.
 Requires the unittest, pytest, and requests-mock Python libraries.
 
 Run test:
-    AIRFLOW__SQL_DECORATOR__CONN_AWS_DEFAULT=aws://KEY:SECRET@ \
+    AIRFLOW__ASTRO__CONN_AWS_DEFAULT=aws://KEY:SECRET@ \
     python3 -m unittest tests.operators.test_postgres_operator.TestPostgresOperator.test_load_s3_to_sql_db
 
 """
@@ -75,6 +75,16 @@ class TestPostgresAppend(unittest.TestCase):
                 "start_date": DEFAULT_DATE,
             },
         )
+        self.MAIN_TABLE_NAME = "test_main"
+        self.APPEND_TABLE_NAME = "test_append"
+        self.main_table = Table(
+            table_name=self.MAIN_TABLE_NAME,
+            conn_id="postgres_conn",
+        )
+        self.append_table = Table(
+            table_name=self.APPEND_TABLE_NAME,
+            conn_id="postgres_conn",
+        )
 
     def clear_run(self):
         self.run = False
@@ -99,8 +109,6 @@ class TestPostgresAppend(unittest.TestCase):
         return f
 
     def test_append(self):
-        MAIN_TABLE_NAME = "test_main"
-        APPEND_TABLE_NAME = "test_append"
         hook = PostgresHook(postgres_conn_id="postgres_conn", schema="postgres")
 
         drop_table(table_name="test_main", postgres_conn=hook.get_conn())
@@ -111,24 +119,18 @@ class TestPostgresAppend(unittest.TestCase):
         with self.dag:
             load_main = aql.load_file(
                 path=str(cwd) + "/../data/homes_main.csv",
-                output_table=Table(
-                    table_name=MAIN_TABLE_NAME,
-                    conn_id="postgres_conn",
-                ),
+                output_table=self.main_table,
             )
             load_append = aql.load_file(
                 path=str(cwd) + "/../data/homes_append.csv",
-                output_table=Table(
-                    table_name=APPEND_TABLE_NAME,
-                    conn_id="postgres_conn",
-                ),
+                output_table=self.append_table,
             )
             foo = aql.append(
                 conn_id="postgres_conn",
                 database="postgres",
-                append_table=APPEND_TABLE_NAME,
                 columns=["sell", "living"],
-                main_table=MAIN_TABLE_NAME,
+                main_table=load_main,
+                append_table=load_append,
             )
         dr = self.dag.create_dagrun(
             run_id=DagRunType.MANUAL.value,
@@ -144,15 +146,17 @@ class TestPostgresAppend(unittest.TestCase):
         foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, foo.task_id)
 
-        df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
+        df = pd.read_sql(
+            f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
+            con=hook.get_conn(),
+        )
 
         assert len(df) == 6
         assert not df["sell"].hasnans
         assert df["rooms"].hasnans
 
     def test_append_all_fields(self):
-        MAIN_TABLE_NAME = "test_main"
-        APPEND_TABLE_NAME = "test_append"
+
         hook = PostgresHook(postgres_conn_id="postgres_conn", schema="postgres")
 
         drop_table(table_name="test_main", postgres_conn=hook.get_conn())
@@ -163,23 +167,17 @@ class TestPostgresAppend(unittest.TestCase):
         with self.dag:
             load_main = aql.load_file(
                 path=str(cwd) + "/../data/homes_main.csv",
-                output_table=Table(
-                    table_name=MAIN_TABLE_NAME,
-                    conn_id="postgres_conn",
-                ),
+                output_table=self.main_table,
             )
             load_append = aql.load_file(
                 path=str(cwd) + "/../data/homes_append.csv",
-                output_table=Table(
-                    table_name=APPEND_TABLE_NAME,
-                    conn_id="postgres_conn",
-                ),
+                output_table=self.append_table,
             )
             foo = aql.append(
                 conn_id="postgres_conn",
                 database="postgres",
-                append_table=APPEND_TABLE_NAME,
-                main_table=MAIN_TABLE_NAME,
+                main_table=load_main,
+                append_table=load_append,
             )
         dr = self.dag.create_dagrun(
             run_id=DagRunType.MANUAL.value,
@@ -188,21 +186,24 @@ class TestPostgresAppend(unittest.TestCase):
             state=State.RUNNING,
         )
 
-        load_main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        main_table = load_main.operator.run(
+            start_date=DEFAULT_DATE, end_date=DEFAULT_DATE
+        )
         load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, load_main.operator.task_id)
         self.wait_for_task_finish(dr, load_append.operator.task_id)
         foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, foo.task_id)
-        df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
+        df = pd.read_sql(
+            f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
+            con=hook.get_conn(),
+        )
 
         assert len(df) == 6
         assert not df["sell"].hasnans
         assert not df["rooms"].hasnans
 
     def test_append_with_cast(self):
-        MAIN_TABLE_NAME = "test_main"
-        APPEND_TABLE_NAME = "test_append"
         hook = PostgresHook(postgres_conn_id="postgres_conn", schema="postgres")
 
         drop_table(table_name="test_main", postgres_conn=hook.get_conn())
@@ -213,25 +214,19 @@ class TestPostgresAppend(unittest.TestCase):
         with self.dag:
             load_main = aql.load_file(
                 path=str(cwd) + "/../data/homes_main.csv",
-                output_table=Table(
-                    table_name=MAIN_TABLE_NAME,
-                    conn_id="postgres_conn",
-                ),
+                output_table=self.main_table,
             )
             load_append = aql.load_file(
                 path=str(cwd) + "/../data/homes_append.csv",
-                output_table=Table(
-                    table_name=APPEND_TABLE_NAME,
-                    conn_id="postgres_conn",
-                ),
+                output_table=self.append_table,
             )
             foo = aql.append(
                 conn_id="postgres_conn",
                 database="postgres",
-                append_table=APPEND_TABLE_NAME,
                 columns=["sell", "living"],
                 casted_columns={"age": "INTEGER"},
-                main_table=MAIN_TABLE_NAME,
+                main_table=load_main,
+                append_table=load_append,
             )
         dr = self.dag.create_dagrun(
             run_id=DagRunType.MANUAL.value,
@@ -246,7 +241,10 @@ class TestPostgresAppend(unittest.TestCase):
         self.wait_for_task_finish(dr, load_append.operator.task_id)
         foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, foo.task_id)
-        df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
+        df = pd.read_sql(
+            f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
+            con=hook.get_conn(),
+        )
 
         assert len(df) == 6
         assert not df["sell"].hasnans
@@ -271,24 +269,18 @@ class TestPostgresAppend(unittest.TestCase):
         with self.dag:
             load_main = aql.load_file(
                 path=str(cwd) + "/../data/homes_main.csv",
-                output_table=Table(
-                    table_name=MAIN_TABLE_NAME,
-                    conn_id="postgres_conn",
-                ),
+                output_table=self.main_table,
             )
             load_append = aql.load_file(
                 path=str(cwd) + "/../data/homes_append.csv",
-                output_table=Table(
-                    table_name=APPEND_TABLE_NAME,
-                    conn_id="postgres_conn",
-                ),
+                output_table=self.append_table,
             )
             foo = aql.append(
                 conn_id="postgres_conn",
                 database="postgres",
-                append_table=APPEND_TABLE_NAME,
                 casted_columns={"age": "INTEGER"},
-                main_table=MAIN_TABLE_NAME,
+                main_table=load_main,
+                append_table=load_append,
             )
         dr = self.dag.create_dagrun(
             run_id=DagRunType.MANUAL.value,
@@ -304,7 +296,10 @@ class TestPostgresAppend(unittest.TestCase):
         foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, foo.task_id)
 
-        df = pd.read_sql(f"SELECT * FROM {MAIN_TABLE_NAME}", con=hook.get_conn())
+        df = pd.read_sql(
+            f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
+            con=hook.get_conn(),
+        )
 
         assert len(df) == 6
         assert not df["age"].hasnans
