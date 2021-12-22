@@ -253,8 +253,8 @@ class TestPostgresDecorator(unittest.TestCase):
         df = pd.read_sql(f"SELECT * FROM my_table", con=self.hook_target.get_conn())
         assert df.iloc[0].to_dict() == {
             "actor_id": 191,
-            "first_name": "GREGORY",
-            "last_name": "GOODING",
+            "first_name": "FAIL",
+            "last_name": "FAIL",
             "count": 30,
         }
 
