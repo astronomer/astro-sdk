@@ -82,7 +82,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
         cursor.close()
         postgres_conn.close()
 
-    def drop_snowflake_table(table_name):
+    def drop_snowflake_table(self, table_name):
         snowflake_conn = self.get_snowflake_hook()
         cursor = snowflake_conn.cursor()
         cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
