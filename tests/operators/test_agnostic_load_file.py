@@ -38,6 +38,7 @@ from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
+from google.cloud import storage
 
 # Import Operator
 from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
@@ -62,6 +63,9 @@ class TestAgnosticLoadFile(unittest.TestCase):
     """
 
     cwd = pathlib.Path(__file__).parent
+    gcs_creds_filename = "gcp_credentials.json"
+    bucket_name = "dag-authoring"
+    blob_file_name = "homes.csv"
 
     @classmethod
     def setUpClass(cls):
@@ -71,9 +75,52 @@ class TestAgnosticLoadFile(unittest.TestCase):
         super().setUp()
         self.clear_run()
         self.addCleanup(self.clear_run)
+        self.create_gcs_creds()
+        self.upload_blob()
         self.dag = DAG(
             "test_dag", default_args={"owner": "airflow", "start_date": DEFAULT_DATE}
         )
+
+    def upload_blob(self):
+        self.delete_blob()
+
+        with open(str(self.cwd) + "/../data/" + str(self.blob_file_name)) as f:
+            content = f.read()
+
+        storage_client = storage.Client.from_service_account_json(
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
+        )
+        bucket = storage_client.bucket(self.bucket_name)
+        blob = bucket.blob(self.blob_file_name)
+        t = blob.upload_from_filename(
+            str(self.cwd) + "/../data/" + str(self.blob_file_name)
+        )
+        print("File uploaded.")
+
+    def delete_blob(self):
+        storage_client = storage.Client.from_service_account_json(
+            os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
+        )
+
+        bucket = storage_client.bucket(self.bucket_name)
+        blob = bucket.blob(self.blob_file_name)
+        blob.delete()
+
+        print("Blob {} deleted.".format(self.blob_file_name))
+
+    def create_gcs_creds(self):
+
+        path = str(self.cwd) + "/" + self.gcs_creds_filename
+        if os.path.isfile(path):
+            self.delete_gcs_creds()
+
+        content = os.environ["GCP_CREDENTIALS"]
+        with open(path, "w") as f:
+            f.write(content)
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = path
+
+    def delete_gcs_creds(self):
+        os.remove(str(self.cwd) + "/" + self.gcs_creds_filename)
 
     def clear_run(self):
         self.run = False
@@ -371,7 +418,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
         # To Do: add service account creds
         OUTPUT_TABLE_NAME = "expected_table_from_gcs_csv"
 
-        self.hook_target = PostgresHook(
+        self.hook_target = TempPostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
         )
 
@@ -394,7 +441,6 @@ class TestAgnosticLoadFile(unittest.TestCase):
         df = pd.read_sql(
             f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=self.hook_target.get_conn()
         )
-        print("df : ", df)
         assert df.iloc[0].to_dict()["sell"] == 142.0
 
     def test_aql_local_file_to_snowflake(self):
