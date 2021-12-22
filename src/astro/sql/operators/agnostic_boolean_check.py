@@ -11,7 +11,7 @@ from sqlalchemy.sql.schema import Table
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
-from astro.sql.util.snowflake_merge_func import is_valid_snow_identifier
+from astro.utils.snowflake_merge_func import is_valid_snow_identifier
 
 
 class Check:
