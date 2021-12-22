@@ -14,6 +14,11 @@ from airflow.utils import timezone
 
 # Import Operator
 import astro.sql as aql
+from astro.sql.operators.agnostic_boolean_check import (
+    AgnosticBooleanCheck,
+    Check,
+    boolean_check,
+)
 from astro.sql.table import Table
 
 log = logging.getLogger(__name__)
@@ -62,13 +67,13 @@ class TestBooleanCheckOperator(unittest.TestCase):
 
     def test_happyflow_postgres_success(self):
         try:
-            a = aql.boolean_check(
+            a = boolean_check(
                 table=Table(
                     "boolean_check_test",
                     database="pagila",
                     conn_id="postgres_conn",
                 ),
-                checks=[aql.Check("test_1", " boolean_check_test.rooms > 3")],
+                checks=[Check("test_1", " boolean_check_test.rooms > 3")],
                 max_rows_returned=10,
             )
             a.execute({"run_id": "foo"})
@@ -78,15 +83,15 @@ class TestBooleanCheckOperator(unittest.TestCase):
 
     def test_happyflow_postgres_fail(self):
         try:
-            a = aql.boolean_check(
+            a = boolean_check(
                 table=Table(
                     "boolean_check_test",
                     database="pagila",
                     conn_id="postgres_conn",
                 ),
                 checks=[
-                    aql.Check("test_1", " boolean_check_test.rooms > 7"),
-                    aql.Check("test_2", " boolean_check_test.beds >= 3"),
+                    Check("test_1", " boolean_check_test.rooms > 7"),
+                    Check("test_2", " boolean_check_test.beds >= 3"),
                 ],
                 max_rows_returned=10,
             )
@@ -97,9 +102,9 @@ class TestBooleanCheckOperator(unittest.TestCase):
 
     def test_happyflow_snowflake_success(self):
         try:
-            a = aql.boolean_check(
+            a = boolean_check(
                 table=Table("boolean_check_test", conn_id="snowflake_conn"),
-                checks=[aql.Check("test_1", " rooms > 3")],
+                checks=[Check("test_1", " rooms > 3")],
                 max_rows_returned=10,
             )
             a.execute({"run_id": "foo"})
@@ -109,11 +114,11 @@ class TestBooleanCheckOperator(unittest.TestCase):
 
     def test_happyflow_snowflake_fail(self):
         try:
-            a = aql.boolean_check(
+            a = boolean_check(
                 table=Table("boolean_check_test", conn_id="snowflake_conn"),
                 checks=[
-                    aql.Check("test_1", " rooms > 7"),
-                    aql.Check("test_2", " beds >= 3"),
+                    Check("test_1", " rooms > 7"),
+                    Check("test_2", " beds >= 3"),
                 ],
                 max_rows_returned=10,
             )
