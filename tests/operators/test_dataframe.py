@@ -23,6 +23,7 @@ import pandas
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.models.xcom import XCom
+from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
@@ -69,6 +70,7 @@ class TestDataframeFromSQL(unittest.TestCase):
             },
         )
         cwd = pathlib.Path(__file__).parent
+        self.drop_snowflake_table("snowflake_decorator_test")
         aql.load_file(
             path=str(cwd) + "/../data/homes.csv",
             output_table=Table("snowflake_decorator_test", conn_id="snowflake_conn"),
@@ -82,6 +84,23 @@ class TestDataframeFromSQL(unittest.TestCase):
         with create_session() as session:
             session.query(DagRun).delete()
             session.query(TI).delete()
+
+    def drop_snowflake_table(table_name):
+        snowflake_conn = self.get_snowflake_hook()
+        cursor = snowflake_conn.cursor()
+        cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
+        snowflake_conn.commit()
+        cursor.close()
+        snowflake_conn.close()
+
+    def get_snowflake_hook(self):
+        hook = SnowflakeHook(
+            snowflake_conn_id="snowflake_conn",
+            schema=os.environ["SNOWFLAKE_SCHEMA"],
+            database=os.environ["SNOWFLAKE_DATABASE"],
+            warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
+        )
+        return hook
 
     def create_and_run_task(self, decorator_func, op_args, op_kwargs):
         with self.dag:

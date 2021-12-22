@@ -6,10 +6,13 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 """
 
 import logging
+import os
 import pathlib
 import unittest.mock
 
 from airflow.models import DAG
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 
 # Import Operator
@@ -50,6 +53,8 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 "start_date": DEFAULT_DATE,
             },
         )
+
+        self.drop_postgres_table("boolean_check_test")
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_append.csv",
             output_table=Table(
@@ -57,6 +62,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
             ),
         ).operator.execute({"run_id": "foo"})
 
+        self.drop_snowflake_table("BOOLEAN_CHECK_TEST")
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_append.csv",
             output_table=Table(
@@ -64,6 +70,34 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 table_name="BOOLEAN_CHECK_TEST",
             ),
         ).operator.execute({"run_id": "foo"})
+
+    def drop_postgres_table(self, table_name):
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+        postgres_conn = self.hook_target.get_conn()
+        cursor = postgres_conn.cursor()
+        cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
+        postgres_conn.commit()
+        cursor.close()
+        postgres_conn.close()
+
+    def drop_snowflake_table(table_name):
+        snowflake_conn = self.get_snowflake_hook()
+        cursor = snowflake_conn.cursor()
+        cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
+        snowflake_conn.commit()
+        cursor.close()
+        snowflake_conn.close()
+
+    def get_snowflake_hook(self):
+        hook = SnowflakeHook(
+            snowflake_conn_id="snowflake_conn",
+            schema=os.environ["SNOWFLAKE_SCHEMA"],
+            database=os.environ["SNOWFLAKE_DATABASE"],
+            warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
+        )
+        return hook
 
     def test_happyflow_postgres_success(self):
         try:
