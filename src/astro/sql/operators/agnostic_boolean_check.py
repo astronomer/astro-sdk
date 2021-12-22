@@ -33,7 +33,7 @@ class Check:
 
     def get_postgres_expression(self):
         return sql.SQL("CASE WHEN {expression} THEN 0 ELSE 1 END AS {name}").format(
-            expression=sql.Identifier(self.expression), name=sql.Identifier(self.name)
+            expression=sql.SQL(self.expression), name=sql.Identifier(self.name)
         )
 
     def get_postgres_result(self):
@@ -87,8 +87,8 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
         super().__init__(
             raw_sql=True,
             parameters={},
-            conn_id=self.conn_id,
-            database=self.database,
+            conn_id=table.conn_id,
+            database=table.database,
             schema=table.schema,
             warehouse=table.warehouse,
             task_id=task_id,
@@ -122,7 +122,6 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
         self.sql, self.parameters = execute_boolean_checks(
             self.table.table_name, self.checks, self.conn_id  # type: ignore
         )
-
         results = super().execute(context)
         failed_checks_names, failed_checks_index = get_failed_checks(results)
         if len(failed_checks_index) > 0:
@@ -230,8 +229,6 @@ def boolean_check(
     table: Table,
     checks: List[Check] = [],
     max_rows_returned: int = 100,
-    conn_id: str = "",
-    database: str = "",
 ):
     """
     :param table: table name
@@ -245,9 +242,5 @@ def boolean_check(
     """
 
     return AgnosticBooleanCheck(
-        table=table,
-        checks=checks,
-        database=database,
-        max_rows_returned=max_rows_returned,
-        conn_id=conn_id,
+        table=table, checks=checks, max_rows_returned=max_rows_returned
     )
