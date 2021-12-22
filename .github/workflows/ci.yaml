@@ -62,5 +62,6 @@ jobs:
           SNOWFLAKE_ACCOUNT: gp21411
           SNOWFLAKE_REGION: us-east-1
           SNOWFLAKE_ROLE: TRANSFORMER
+          GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
           AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
 
