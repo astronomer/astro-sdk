@@ -340,7 +340,7 @@ class TestPostgresDecorator(unittest.TestCase):
         )
         assert df.iloc[0].to_dict() == {
             "actor_id": 191,
-            "first_name": "GREGORY",
+            "first_name": "FAIL",
             "last_name": "GOODING",
             "count": 30,
         }
