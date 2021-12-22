@@ -36,7 +36,7 @@ def dataframe(
     return task_decorator_factory(
         python_callable=python_callable,
         multiple_outputs=multiple_outputs,
-        decorated_operator_class=SqlDataframeOperator,  # type: ignore
+        decorated_operator_class=SqlDataframeOperator,
         **{
             "conn_id": conn_id,
             "database": database,
