@@ -28,21 +28,6 @@ log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 
-def drop_snowflake_table(table_name):
-    snowflake_conn = SnowflakeHook(
-        snowflake_conn_id="snowflake_conn",
-        schema=os.environ["SNOWFLAKE_SCHEMA"],
-        database=os.environ["SNOWFLAKE_DATABASE"],
-        warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
-    )
-    snowflake_conn = snowflake_conn.get_conn()
-    cursor = snowflake_conn.cursor()
-    cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
-    snowflake_conn.commit()
-    cursor.close()
-    snowflake_conn.close()
-
-
 class TestBooleanCheckOperator(unittest.TestCase):
     """
     Test Boolean Check Operator.
@@ -78,7 +63,6 @@ class TestBooleanCheckOperator(unittest.TestCase):
             ),
         ).operator.execute({"run_id": "foo"})
 
-        # drop_snowflake_table("BOOLEAN_CHECK_TEST")
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_append.csv",
             output_table=Table(
