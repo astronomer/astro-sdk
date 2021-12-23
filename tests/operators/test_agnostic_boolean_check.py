@@ -78,12 +78,12 @@ class TestBooleanCheckOperator(unittest.TestCase):
             ),
         ).operator.execute({"run_id": "foo"})
 
-        drop_snowflake_table("BOOLEAN_CHECK_TEST")
+        # drop_snowflake_table("BOOLEAN_CHECK_TEST")
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_append.csv",
             output_table=Table(
+                "BOOLEAN_CHECK_TEST",
                 conn_id="snowflake_conn",
-                table_name="BOOLEAN_CHECK_TEST",
                 schema="tmp_astro",
             ),
         ).operator.execute({"run_id": "foo"})
