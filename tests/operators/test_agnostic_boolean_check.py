@@ -28,16 +28,6 @@ log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 
-def drop_postgres_table(table_name):
-    postgres_conn = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
-    postgres_conn = postgres_conn.get_conn()
-    cursor = postgres_conn.cursor()
-    cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
-    postgres_conn.commit()
-    cursor.close()
-    postgres_conn.close()
-
-
 def drop_snowflake_table(table_name):
     snowflake_conn = SnowflakeHook(
         snowflake_conn_id="snowflake_conn",
@@ -63,22 +53,6 @@ class TestBooleanCheckOperator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        drop_postgres_table("boolean_check_test")
-        aql.load_file(
-            path=str(cls.cwd) + "/../data/homes_append.csv",
-            output_table=Table(
-                "boolean_check_test", conn_id="postgres_conn", database="pagila"
-            ),
-        ).operator.execute({"run_id": "foo"})
-
-        drop_snowflake_table("BOOLEAN_CHECK_TEST")
-        aql.load_file(
-            path=str(cls.cwd) + "/../data/homes_append.csv",
-            output_table=Table(
-                conn_id="snowflake_conn",
-                table_name="BOOLEAN_CHECK_TEST",
-            ),
-        ).operator.execute({"run_id": "foo"})
 
     def clear_run(self):
         self.run = False
@@ -94,6 +68,24 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 "start_date": DEFAULT_DATE,
             },
         )
+        aql.load_file(
+            path=str(self.cwd) + "/../data/homes_append.csv",
+            output_table=Table(
+                "boolean_check_test",
+                conn_id="postgres_conn",
+                database="pagila",
+                schema="public",
+            ),
+        ).operator.execute({"run_id": "foo"})
+
+        drop_snowflake_table("BOOLEAN_CHECK_TEST")
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes_append.csv",
+            output_table=Table(
+                conn_id="snowflake_conn",
+                table_name="BOOLEAN_CHECK_TEST",
+            ),
+        ).operator.execute({"run_id": "foo"})
 
     def test_happyflow_postgres_success(self):
         try:
