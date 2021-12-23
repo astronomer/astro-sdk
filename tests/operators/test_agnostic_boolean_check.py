@@ -80,7 +80,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
 
         drop_snowflake_table("BOOLEAN_CHECK_TEST")
         aql.load_file(
-            path=str(cls.cwd) + "/../data/homes_append.csv",
+            path=str(self.cwd) + "/../data/homes_append.csv",
             output_table=Table(
                 conn_id="snowflake_conn",
                 table_name="BOOLEAN_CHECK_TEST",
