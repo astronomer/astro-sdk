@@ -72,10 +72,8 @@ class TestBooleanCheckOperator(unittest.TestCase):
         ).operator.execute({"run_id": "foo"})
 
     def drop_postgres_table(self, table_name):
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-        postgres_conn = self.hook_target.get_conn()
+        postgres_conn = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
+        postgres_conn = postgres_conn.get_conn()
         cursor = postgres_conn.cursor()
         cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
         postgres_conn.commit()
@@ -84,6 +82,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
 
     def drop_snowflake_table(self, table_name):
         snowflake_conn = self.get_snowflake_hook()
+        snowflake_conn = snowflake_conn.get_conn()
         cursor = snowflake_conn.cursor()
         cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
         snowflake_conn.commit()

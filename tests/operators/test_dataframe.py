@@ -87,6 +87,7 @@ class TestDataframeFromSQL(unittest.TestCase):
 
     def drop_snowflake_table(self, table_name):
         snowflake_conn = self.get_snowflake_hook()
+        snowflake_conn = snowflake_conn.get_conn()
         cursor = snowflake_conn.cursor()
         cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
         snowflake_conn.commit()
