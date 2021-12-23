@@ -72,8 +72,9 @@ class TestDataframeFromSQL(unittest.TestCase):
         cwd = pathlib.Path(__file__).parent
         aql.load_file(
             path=str(cwd) + "/../data/homes.csv",
-            output_table=Table("snowflake_decorator_test", conn_id="snowflake_conn"),
-            schema="tmp_astro",
+            output_table=Table(
+                "snowflake_decorator_test", conn_id="snowflake_conn", schema="tmp_astro"
+            ),
         ).operator.execute({"run_id": "foo"})
 
     def clear_run(self):
