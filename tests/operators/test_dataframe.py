@@ -23,6 +23,7 @@ import pandas
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.models.xcom import XCom
+from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
@@ -71,7 +72,9 @@ class TestDataframeFromSQL(unittest.TestCase):
         cwd = pathlib.Path(__file__).parent
         aql.load_file(
             path=str(cwd) + "/../data/homes.csv",
-            output_table=Table("snowflake_decorator_test", conn_id="snowflake_conn"),
+            output_table=Table(
+                "snowflake_decorator_test", conn_id="snowflake_conn", schema="tmp_astro"
+            ),
         ).operator.execute({"run_id": "foo"})
 
     def clear_run(self):
@@ -155,7 +158,13 @@ class TestDataframeFromSQL(unittest.TestCase):
         res = self.create_and_run_task(
             my_df_func,
             (),
-            {"df": Table("snowflake_decorator_test", conn_id="snowflake_conn")},
+            {
+                "df": Table(
+                    "snowflake_decorator_test",
+                    conn_id="snowflake_conn",
+                    schema="tmp_astro",
+                )
+            },
         )
         assert (
             XCom.get_one(
