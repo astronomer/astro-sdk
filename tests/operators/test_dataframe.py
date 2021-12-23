@@ -158,7 +158,13 @@ class TestDataframeFromSQL(unittest.TestCase):
         res = self.create_and_run_task(
             my_df_func,
             (),
-            {"df": Table("snowflake_decorator_test", conn_id="snowflake_conn")},
+            {
+                "df": Table(
+                    "snowflake_decorator_test",
+                    conn_id="snowflake_conn",
+                    schema="tmp_astro",
+                )
+            },
         )
         assert (
             XCom.get_one(
