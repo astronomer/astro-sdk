@@ -38,7 +38,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        self.drop_postgres_table("boolean_check_test")
+        cls.drop_postgres_table("boolean_check_test")
         aql.load_file(
             path=str(cls.cwd) + "/../data/homes_append.csv",
             output_table=Table(
