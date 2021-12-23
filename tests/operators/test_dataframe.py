@@ -70,10 +70,11 @@ class TestDataframeFromSQL(unittest.TestCase):
             },
         )
         cwd = pathlib.Path(__file__).parent
-        self.drop_snowflake_table("snowflake_decorator_test")
         aql.load_file(
             path=str(cwd) + "/../data/homes.csv",
-            output_table=Table("snowflake_decorator_test", conn_id="snowflake_conn"),
+            output_table=Table(
+                "snowflake_decorator_test", conn_id="snowflake_conn", schema="tmp_astro"
+            ),
         ).operator.execute({"run_id": "foo"})
 
     def clear_run(self):
@@ -84,24 +85,6 @@ class TestDataframeFromSQL(unittest.TestCase):
         with create_session() as session:
             session.query(DagRun).delete()
             session.query(TI).delete()
-
-    def drop_snowflake_table(self, table_name):
-        snowflake_conn = self.get_snowflake_hook()
-        snowflake_conn = snowflake_conn.get_conn()
-        cursor = snowflake_conn.cursor()
-        cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
-        snowflake_conn.commit()
-        cursor.close()
-        snowflake_conn.close()
-
-    def get_snowflake_hook(self):
-        hook = SnowflakeHook(
-            snowflake_conn_id="snowflake_conn",
-            schema=os.environ["SNOWFLAKE_SCHEMA"],
-            database=os.environ["SNOWFLAKE_DATABASE"],
-            warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
-        )
-        return hook
 
     def create_and_run_task(self, decorator_func, op_args, op_kwargs):
         with self.dag:
@@ -175,7 +158,13 @@ class TestDataframeFromSQL(unittest.TestCase):
         res = self.create_and_run_task(
             my_df_func,
             (),
-            {"df": Table("snowflake_decorator_test", conn_id="snowflake_conn")},
+            {
+                "df": Table(
+                    "snowflake_decorator_test",
+                    conn_id="snowflake_conn",
+                    schema="tmp_astro",
+                )
+            },
         )
         assert (
             XCom.get_one(

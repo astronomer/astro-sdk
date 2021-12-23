@@ -108,13 +108,17 @@ class TestSnowflakeAppend(unittest.TestCase):
             load_main = aql.load_file(
                 path=str(cwd) + "/../data/homes_main.csv",
                 output_table=Table(
-                    table_name="test_append_1", conn_id="snowflake_conn"
+                    table_name="test_append_1",
+                    conn_id="snowflake_conn",
+                    schema="tmp_astro",
                 ),
             )
             load_append = aql.load_file(
                 path=str(cwd) + "/../data/homes_append.csv",
                 output_table=Table(
-                    table_name="test_append_2", conn_id="snowflake_conn"
+                    table_name="test_append_2",
+                    conn_id="snowflake_conn",
+                    schema="tmp_astro",
                 ),
             )
             foo = aql.append(

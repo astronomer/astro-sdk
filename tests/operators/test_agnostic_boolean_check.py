@@ -38,22 +38,6 @@ class TestBooleanCheckOperator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.drop_postgres_table("boolean_check_test")
-        aql.load_file(
-            path=str(cls.cwd) + "/../data/homes_append.csv",
-            output_table=Table(
-                "boolean_check_test", conn_id="postgres_conn", database="pagila"
-            ),
-        ).operator.execute({"run_id": "foo"})
-
-        cls.drop_snowflake_table("BOOLEAN_CHECK_TEST")
-        aql.load_file(
-            path=str(cls.cwd) + "/../data/homes_append.csv",
-            output_table=Table(
-                conn_id="snowflake_conn",
-                table_name="BOOLEAN_CHECK_TEST",
-            ),
-        ).operator.execute({"run_id": "foo"})
 
     def clear_run(self):
         self.run = False
@@ -69,33 +53,24 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 "start_date": DEFAULT_DATE,
             },
         )
+        aql.load_file(
+            path=str(self.cwd) + "/../data/homes_append.csv",
+            output_table=Table(
+                "boolean_check_test",
+                conn_id="postgres_conn",
+                database="pagila",
+                schema="public",
+            ),
+        ).operator.execute({"run_id": "foo"})
 
-    def drop_postgres_table(self, table_name):
-        postgres_conn = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
-        postgres_conn = postgres_conn.get_conn()
-        cursor = postgres_conn.cursor()
-        cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
-        postgres_conn.commit()
-        cursor.close()
-        postgres_conn.close()
-
-    def drop_snowflake_table(self, table_name):
-        snowflake_conn = self.get_snowflake_hook()
-        snowflake_conn = snowflake_conn.get_conn()
-        cursor = snowflake_conn.cursor()
-        cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
-        snowflake_conn.commit()
-        cursor.close()
-        snowflake_conn.close()
-
-    def get_snowflake_hook(self):
-        hook = SnowflakeHook(
-            snowflake_conn_id="snowflake_conn",
-            schema=os.environ["SNOWFLAKE_SCHEMA"],
-            database=os.environ["SNOWFLAKE_DATABASE"],
-            warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
-        )
-        return hook
+        aql.load_file(
+            path=str(self.cwd) + "/../data/homes_append.csv",
+            output_table=Table(
+                "BOOLEAN_CHECK_TEST",
+                conn_id="snowflake_conn",
+                schema="tmp_astro",
+            ),
+        ).operator.execute({"run_id": "foo"})
 
     def test_happyflow_postgres_success(self):
         try:
@@ -135,7 +110,9 @@ class TestBooleanCheckOperator(unittest.TestCase):
     def test_happyflow_snowflake_success(self):
         try:
             a = boolean_check(
-                table=Table("boolean_check_test", conn_id="snowflake_conn"),
+                table=Table(
+                    "boolean_check_test", conn_id="snowflake_conn", schema="tmp_astro"
+                ),
                 checks=[Check("test_1", " rooms > 3")],
                 max_rows_returned=10,
             )
@@ -147,7 +124,9 @@ class TestBooleanCheckOperator(unittest.TestCase):
     def test_happyflow_snowflake_fail(self):
         try:
             a = boolean_check(
-                table=Table("boolean_check_test", conn_id="snowflake_conn"),
+                table=Table(
+                    "boolean_check_test", conn_id="snowflake_conn", schema="tmp_astro"
+                ),
                 checks=[
                     Check("test_1", " rooms > 7"),
                     Check("test_2", " beds >= 3"),
