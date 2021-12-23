@@ -74,7 +74,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 "boolean_check_test",
                 conn_id="postgres_conn",
                 database="pagila",
-                schema="public",
+                schema="tmp_astro",
             ),
         ).operator.execute({"run_id": "foo"})
 
@@ -84,6 +84,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
             output_table=Table(
                 conn_id="snowflake_conn",
                 table_name="BOOLEAN_CHECK_TEST",
+                schema="tmp_astro",
             ),
         ).operator.execute({"run_id": "foo"})
 
@@ -94,6 +95,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
                     "boolean_check_test",
                     database="pagila",
                     conn_id="postgres_conn",
+                    schema="tmp_astro",
                 ),
                 checks=[Check("test_1", "boolean_check_test.rooms > 3")],
                 max_rows_returned=10,
@@ -110,6 +112,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
                     "boolean_check_test",
                     database="pagila",
                     conn_id="postgres_conn",
+                    schema="tmp_astro",
                 ),
                 checks=[
                     Check("test_1", "boolean_check_test.rooms > 7"),
@@ -125,7 +128,9 @@ class TestBooleanCheckOperator(unittest.TestCase):
     def test_happyflow_snowflake_success(self):
         try:
             a = boolean_check(
-                table=Table("boolean_check_test", conn_id="snowflake_conn"),
+                table=Table(
+                    "boolean_check_test", conn_id="snowflake_conn", schema="tmp_astro"
+                ),
                 checks=[Check("test_1", " rooms > 3")],
                 max_rows_returned=10,
             )
@@ -137,7 +142,9 @@ class TestBooleanCheckOperator(unittest.TestCase):
     def test_happyflow_snowflake_fail(self):
         try:
             a = boolean_check(
-                table=Table("boolean_check_test", conn_id="snowflake_conn"),
+                table=Table(
+                    "boolean_check_test", conn_id="snowflake_conn", schema="tmp_astro"
+                ),
                 checks=[
                     Check("test_1", " rooms > 7"),
                     Check("test_2", " beds >= 3"),
