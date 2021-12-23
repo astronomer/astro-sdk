@@ -74,7 +74,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 "boolean_check_test",
                 conn_id="postgres_conn",
                 database="pagila",
-                schema="tmp_astro",
+                schema="public",
             ),
         ).operator.execute({"run_id": "foo"})
 
@@ -95,7 +95,6 @@ class TestBooleanCheckOperator(unittest.TestCase):
                     "boolean_check_test",
                     database="pagila",
                     conn_id="postgres_conn",
-                    schema="tmp_astro",
                 ),
                 checks=[Check("test_1", "boolean_check_test.rooms > 3")],
                 max_rows_returned=10,
@@ -112,7 +111,6 @@ class TestBooleanCheckOperator(unittest.TestCase):
                     "boolean_check_test",
                     database="pagila",
                     conn_id="postgres_conn",
-                    schema="tmp_astro",
                 ),
                 checks=[
                     Check("test_1", "boolean_check_test.rooms > 7"),
