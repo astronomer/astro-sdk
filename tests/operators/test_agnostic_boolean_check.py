@@ -28,6 +28,31 @@ log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 
+def drop_postgres_table(table_name):
+    postgres_conn = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
+    postgres_conn = postgres_conn.get_conn()
+    cursor = postgres_conn.cursor()
+    cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
+    postgres_conn.commit()
+    cursor.close()
+    postgres_conn.close()
+
+
+def drop_snowflake_table(table_name):
+    snowflake_conn = SnowflakeHook(
+        snowflake_conn_id="snowflake_conn",
+        schema=os.environ["SNOWFLAKE_SCHEMA"],
+        database=os.environ["SNOWFLAKE_DATABASE"],
+        warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
+    )
+    snowflake_conn = snowflake_conn.get_conn()
+    cursor = snowflake_conn.cursor()
+    cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
+    snowflake_conn.commit()
+    cursor.close()
+    snowflake_conn.close()
+
+
 class TestBooleanCheckOperator(unittest.TestCase):
     """
     Test Boolean Check Operator.
@@ -38,7 +63,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.drop_postgres_table("boolean_check_test")
+        drop_postgres_table("boolean_check_test")
         aql.load_file(
             path=str(cls.cwd) + "/../data/homes_append.csv",
             output_table=Table(
@@ -46,7 +71,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
             ),
         ).operator.execute({"run_id": "foo"})
 
-        cls.drop_snowflake_table("BOOLEAN_CHECK_TEST")
+        drop_snowflake_table("BOOLEAN_CHECK_TEST")
         aql.load_file(
             path=str(cls.cwd) + "/../data/homes_append.csv",
             output_table=Table(
@@ -69,33 +94,6 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 "start_date": DEFAULT_DATE,
             },
         )
-
-    def drop_postgres_table(self, table_name):
-        postgres_conn = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
-        postgres_conn = postgres_conn.get_conn()
-        cursor = postgres_conn.cursor()
-        cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
-        postgres_conn.commit()
-        cursor.close()
-        postgres_conn.close()
-
-    def drop_snowflake_table(self, table_name):
-        snowflake_conn = self.get_snowflake_hook()
-        snowflake_conn = snowflake_conn.get_conn()
-        cursor = snowflake_conn.cursor()
-        cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
-        snowflake_conn.commit()
-        cursor.close()
-        snowflake_conn.close()
-
-    def get_snowflake_hook(self):
-        hook = SnowflakeHook(
-            snowflake_conn_id="snowflake_conn",
-            schema=os.environ["SNOWFLAKE_SCHEMA"],
-            database=os.environ["SNOWFLAKE_DATABASE"],
-            warehouse=os.environ["SNOWFLAKE_WAREHOUSE"],
-        )
-        return hook
 
     def test_happyflow_postgres_success(self):
         try:
