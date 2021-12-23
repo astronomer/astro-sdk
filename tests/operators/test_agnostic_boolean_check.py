@@ -38,6 +38,22 @@ class TestBooleanCheckOperator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        self.drop_postgres_table("boolean_check_test")
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes_append.csv",
+            output_table=Table(
+                "boolean_check_test", conn_id="postgres_conn", database="pagila"
+            ),
+        ).operator.execute({"run_id": "foo"})
+
+        cls.drop_snowflake_table("BOOLEAN_CHECK_TEST")
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes_append.csv",
+            output_table=Table(
+                conn_id="snowflake_conn",
+                table_name="BOOLEAN_CHECK_TEST",
+            ),
+        ).operator.execute({"run_id": "foo"})
 
     def clear_run(self):
         self.run = False
@@ -53,23 +69,6 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 "start_date": DEFAULT_DATE,
             },
         )
-
-        self.drop_postgres_table("boolean_check_test")
-        aql.load_file(
-            path=str(self.cwd) + "/../data/homes_append.csv",
-            output_table=Table(
-                "boolean_check_test", conn_id="postgres_conn", database="pagila"
-            ),
-        ).operator.execute({"run_id": "foo"})
-
-        self.drop_snowflake_table("BOOLEAN_CHECK_TEST")
-        aql.load_file(
-            path=str(self.cwd) + "/../data/homes_append.csv",
-            output_table=Table(
-                conn_id="snowflake_conn",
-                table_name="BOOLEAN_CHECK_TEST",
-            ),
-        ).operator.execute({"run_id": "foo"})
 
     def drop_postgres_table(self, table_name):
         postgres_conn = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
