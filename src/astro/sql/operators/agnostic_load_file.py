@@ -144,13 +144,6 @@ class AgnosticLoadFile(BaseOperator):
         client = Client.from_service_account_json(service_account_path)
         return dict(client=client)
 
-    @staticmethod
-    def create_table_name(context):
-        """Generate output table name."""
-        ti: TaskInstance = context["ti"]
-        dag_run: DagRun = ti.get_dagrun()
-        return f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
-
 
 def load_file(
     path,
