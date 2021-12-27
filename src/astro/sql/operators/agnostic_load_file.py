@@ -18,9 +18,11 @@ import os
 from typing import Union
 from urllib.parse import urlparse
 
+import boto3
 import pandas as pd
 from airflow.hooks.base import BaseHook
-from airflow.models import BaseOperator
+from airflow.models import BaseOperator, DagRun, TaskInstance
+from smart_open import open
 
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils.load_dataframe import move_dataframe_to_sql
@@ -106,10 +108,9 @@ class AgnosticLoadFile(BaseOperator):
             raise ValueError("Invalid path: {}".format(path))
 
         file_type = path.split(".")[-1]
-        storage_options = self._s3fs_creds() if "s3://" in path else None
-        return {"parquet": pd.read_parquet, "csv": pd.read_csv}[file_type](
-            path, storage_options=storage_options
-        )
+        transport_params = self._s3fs_creds() if "s3://" in path else None
+        with open(path, transport_params=transport_params) as stream:
+            return {"parquet": pd.read_parquet, "csv": pd.read_csv}[file_type](stream)
 
     def _s3fs_creds(self):
         # To-do: reuse this method from sql decorator
@@ -124,8 +125,11 @@ class AgnosticLoadFile(BaseOperator):
             .replace("@", "")
             .split(":")
         )
-
-        return {"key": k, "secret": v}
+        session = boto3.Session(
+            aws_access_key_id=k,
+            aws_secret_access_key=v,
+        )
+        return dict(client=session.client("s3"))
 
 
 def load_file(
