@@ -38,6 +38,7 @@ from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
+from google.api_core.exceptions import NotFound
 from google.cloud import storage
 
 # Import Operator
@@ -104,9 +105,11 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         bucket = storage_client.bucket(self.bucket_name)
         blob = bucket.blob(self.blob_file_name)
-        blob.delete()
-
-        print("Blob {} deleted.".format(self.blob_file_name))
+        try:
+            blob.delete()
+            print("Blob {} deleted.".format(self.blob_file_name))
+        except NotFound as e:
+            print("File {} not found.".format(self.blob_file_name))
 
     def create_gcs_creds(self):
 
