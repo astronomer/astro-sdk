@@ -1,8 +1,6 @@
 """
 Unittest module to test Operators.
-
 Requires the unittest, pytest, and requests-mock Python libraries.
-
 """
 
 import logging
