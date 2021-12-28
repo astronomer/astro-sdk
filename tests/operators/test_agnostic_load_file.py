@@ -432,7 +432,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
             load_file,
             (),
             {
-                "path": "gs://utkarsharma2/homes.csv",
+                "path": "gs://dag-authoring/homes.csv",
                 "file_conn_id": "",
                 "output_table": Table(
                     OUTPUT_TABLE_NAME, database="pagila", conn_id="postgres_conn"
