@@ -29,6 +29,7 @@ import os
 import pathlib
 import unittest.mock
 
+import utils as test_utils
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -69,6 +70,25 @@ class TestSnowflakeAppend(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.TABLE_1_NAME = test_utils.get_table_name("TEST_APPEND_1")
+        cls.TABLE_2_NAME = test_utils.get_table_name("TEST_APPEND_2")
+
+    @classmethod
+    def tearDownClass(cls):
+        test_utils.drop_table_snowflake(
+            table_name=cls.TABLE_1_NAME,
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
+        )
+        test_utils.drop_table_snowflake(
+            table_name=cls.TABLE_2_NAME,
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
+        )
 
     def setUp(self):
         super().setUp()
@@ -103,26 +123,38 @@ class TestSnowflakeAppend(unittest.TestCase):
 
     def run_append_func(self, columns, casted_columns):
         cwd = pathlib.Path(__file__).parent
-
         with self.dag:
+            self.TABLE_1 = Table(
+                table_name=self.TABLE_1_NAME,
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                conn_id="snowflake_conn",
+            )
+
+            self.TABLE_2 = Table(
+                table_name=self.TABLE_2_NAME,
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                conn_id="snowflake_conn",
+            )
+
             load_main = aql.load_file(
                 path=str(cwd) + "/../data/homes_main.csv",
-                output_table=Table(
-                    table_name="test_append_1", conn_id="snowflake_conn"
-                ),
+                file_conn_id="",
+                output_table=self.TABLE_1,
             )
             load_append = aql.load_file(
                 path=str(cwd) + "/../data/homes_append.csv",
-                output_table=Table(
-                    table_name="test_append_2", conn_id="snowflake_conn"
-                ),
+                file_conn_id="",
+                output_table=self.TABLE_2,
             )
             foo = aql.append(
-                conn_id="snowflake_conn",
-                append_table=load_append,
+                append_table=self.TABLE_2,
                 columns=columns,
                 casted_columns=casted_columns,
-                main_table=load_main,
+                main_table=self.TABLE_1,
             )
 
         dr = self.dag.create_dagrun(

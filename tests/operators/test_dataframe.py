@@ -20,9 +20,11 @@ import unittest.mock
 from unittest import mock
 
 import pandas
+import utils as test_utils
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.models.xcom import XCom
+from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
@@ -56,6 +58,28 @@ class TestDataframeFromSQL(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cwd = pathlib.Path(__file__).parent
+        cls.OUTPUT_TABLE_NAME = test_utils.get_table_name("snowflake_decorator_test")
+        aql.load_file(
+            path=str(cwd) + "/../data/homes.csv",
+            output_table=Table(
+                table_name=cls.OUTPUT_TABLE_NAME,
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                conn_id="snowflake_conn",
+            ),
+        ).operator.execute({"run_id": "foo"})
+
+    @classmethod
+    def tearDownClass(cls):
+        test_utils.drop_table_snowflake(
+            table_name=cls.OUTPUT_TABLE_NAME,
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
+        )
 
     def setUp(self):
         super().setUp()
@@ -68,11 +92,6 @@ class TestDataframeFromSQL(unittest.TestCase):
                 "start_date": DEFAULT_DATE,
             },
         )
-        cwd = pathlib.Path(__file__).parent
-        aql.load_file(
-            path=str(cwd) + "/../data/homes.csv",
-            output_table=Table("snowflake_decorator_test", conn_id="snowflake_conn"),
-        ).operator.execute({"run_id": "foo"})
 
     def clear_run(self):
         self.run = False
@@ -155,7 +174,15 @@ class TestDataframeFromSQL(unittest.TestCase):
         res = self.create_and_run_task(
             my_df_func,
             (),
-            {"df": Table("snowflake_decorator_test", conn_id="snowflake_conn")},
+            {
+                "df": Table(
+                    self.OUTPUT_TABLE_NAME,
+                    conn_id="snowflake_conn",
+                    schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                    database=os.getenv("SNOWFLAKE_DATABASE"),
+                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                )
+            },
         )
         assert (
             XCom.get_one(
