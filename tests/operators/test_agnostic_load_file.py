@@ -30,7 +30,7 @@ import pathlib
 import unittest.mock
 
 import pandas as pd
-import utils as test_utils
+from ..operators import utils as test_utils
 from airflow.exceptions import DuplicateTaskIdFound
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
