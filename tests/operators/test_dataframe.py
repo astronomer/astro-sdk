@@ -20,7 +20,7 @@ import unittest.mock
 from unittest import mock
 
 import pandas
-from ..operators import utils as test_utils
+import utils as test_utils
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.models.xcom import XCom
