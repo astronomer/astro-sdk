@@ -26,7 +26,7 @@ import os
 import pathlib
 import unittest.mock
 
-import utils as test_utils
+from ..operators import utils as test_utils
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 
