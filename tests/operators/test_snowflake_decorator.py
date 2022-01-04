@@ -29,7 +29,7 @@ import os
 import pathlib
 import unittest.mock
 
-import utils as test_utils
+from ..operators import utils as test_utils
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
