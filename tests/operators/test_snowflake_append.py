@@ -70,8 +70,38 @@ class TestSnowflakeAppend(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cwd = pathlib.Path(__file__).parent
         cls.TABLE_1_NAME = test_utils.get_table_name("TEST_APPEND_1")
         cls.TABLE_2_NAME = test_utils.get_table_name("TEST_APPEND_2")
+
+        cls.TABLE_1 = Table(
+            table_name=cls.TABLE_1_NAME,
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
+        )
+        cls.TABLE_2 = Table(
+            table_name=cls.TABLE_2_NAME,
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
+        )
+
+        cls.load_main = aql.load_file(
+            path=str(cwd) + "/../data/homes_main.csv",
+            file_conn_id="",
+            output_table=cls.TABLE_1,
+        )
+        cls.load_main.operator.execute({"run_id": "foo"})
+
+        cls.load_append = aql.load_file(
+            path=str(cwd) + "/../data/homes_append.csv",
+            file_conn_id="",
+            output_table=cls.TABLE_2,
+        )
+        cls.load_append.operator.execute({"run_id": "foo"})
 
     @classmethod
     def tearDownClass(cls):
@@ -124,32 +154,6 @@ class TestSnowflakeAppend(unittest.TestCase):
     def run_append_func(self, columns, casted_columns):
         cwd = pathlib.Path(__file__).parent
         with self.dag:
-            self.TABLE_1 = Table(
-                table_name=self.TABLE_1_NAME,
-                database=os.getenv("SNOWFLAKE_DATABASE"),
-                schema=os.getenv("SNOWFLAKE_SCHEMA"),
-                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-                conn_id="snowflake_conn",
-            )
-
-            self.TABLE_2 = Table(
-                table_name=self.TABLE_2_NAME,
-                database=os.getenv("SNOWFLAKE_DATABASE"),
-                schema=os.getenv("SNOWFLAKE_SCHEMA"),
-                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-                conn_id="snowflake_conn",
-            )
-
-            load_main = aql.load_file(
-                path=str(cwd) + "/../data/homes_main.csv",
-                file_conn_id="",
-                output_table=self.TABLE_1,
-            )
-            load_append = aql.load_file(
-                path=str(cwd) + "/../data/homes_append.csv",
-                file_conn_id="",
-                output_table=self.TABLE_2,
-            )
             foo = aql.append(
                 append_table=self.TABLE_2,
                 columns=columns,
@@ -164,52 +168,70 @@ class TestSnowflakeAppend(unittest.TestCase):
             state=State.RUNNING,
         )
 
-        load_main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.load_main = load_main
-        self.wait_for_task_finish(dr, load_main.operator.task_id)
-        self.wait_for_task_finish(dr, load_append.operator.task_id)
-
         foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, foo.task_id)
 
     def test_append(self):
         hook = get_snowflake_hook()
-
+        previous_count = hook.run(
+            f"SELECT COUNT(*) FROM {self.load_main.operator.output_table.qualified_name()}"
+        )
+        append_count = hook.run(
+            f"SELECT COUNT(*) FROM {self.load_append.operator.output_table.qualified_name()}"
+        )
         self.run_append_func([], {})
         main_table_count = hook.run(
             f"SELECT COUNT(*) FROM {self.load_main.operator.output_table.qualified_name()}"
         )
-        assert main_table_count[0]["COUNT(*)"] == 6
+        assert (
+            main_table_count[0]["COUNT(*)"]
+            == previous_count[0]["COUNT(*)"] + append_count[0]["COUNT(*)"]
+        )
 
     def test_append_no_cast(self):
         hook = get_snowflake_hook()
-
-        self.run_append_func(["BEDS"], {})
+        previous_count = hook.run(
+            f"SELECT COUNT(*) FROM {self.load_main.operator.output_table.qualified_name()}"
+        )
+        append_count = hook.run(
+            f"SELECT COUNT(*) FROM {self.load_append.operator.output_table.qualified_name()}"
+        )
+        self.run_append_func(["BEDS", "ACRES"], {})
 
         df = hook.get_pandas_df(
             f"SELECT * FROM {self.load_main.operator.output_table.qualified_name()}"
         )
 
-        assert len(df) == 6
+        assert len(df) == previous_count[0]["COUNT(*)"] + append_count[0]["COUNT(*)"]
         assert not df["BEDS"].hasnans
         assert df["ROOMS"].hasnans
 
     def test_append_with_cast(self):
-        self.run_append_func([], {"ACRES": "FLOAT"})
-
         hook = get_snowflake_hook()
+        previous_count = hook.run(
+            f"SELECT COUNT(*) FROM {self.load_main.operator.output_table.qualified_name()}"
+        )
+        append_count = hook.run(
+            f"SELECT COUNT(*) FROM {self.load_append.operator.output_table.qualified_name()}"
+        )
+        self.run_append_func(["BEDS"], {"ACRES": "FLOAT"})
 
         df = hook.get_pandas_df(
             f"SELECT * FROM {self.load_main.operator.output_table.qualified_name()}"
         )
 
-        assert len(df) == 6
+        assert len(df) == previous_count[0]["COUNT(*)"] + append_count[0]["COUNT(*)"]
         assert not df["ACRES"].hasnans
-        assert df["BEDS"].hasnans
+        assert df["LIVING"].hasnans
 
     def test_append_with_cast_and_no_cast(self):
         hook = get_snowflake_hook()
+        previous_count = hook.run(
+            f"SELECT COUNT(*) FROM {self.load_main.operator.output_table.qualified_name()}"
+        )
+        append_count = hook.run(
+            f"SELECT COUNT(*) FROM {self.load_append.operator.output_table.qualified_name()}"
+        )
 
         self.run_append_func(
             ["BEDS"],
@@ -220,7 +242,7 @@ class TestSnowflakeAppend(unittest.TestCase):
             f"SELECT * FROM {self.load_main.operator.output_table.qualified_name()}"
         )
 
-        assert len(df) == 6
+        assert len(df) == previous_count[0]["COUNT(*)"] + append_count[0]["COUNT(*)"]
         assert not df["BEDS"].hasnans
         assert not df["ACRES"].hasnans
         assert df["LIVING"].hasnans
