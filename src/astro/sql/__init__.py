@@ -21,6 +21,7 @@ from astro.sql.operators.agnostic_save_file import save_file
 from astro.sql.operators.agnostic_sql_append import SqlAppendOperator
 from astro.sql.operators.agnostic_sql_merge import SqlMergeOperator
 from astro.sql.operators.agnostic_sql_truncate import SqlTruncateOperator
+from astro.sql.operators.agnostic_stats_check import OutlierCheck, stats_check
 from astro.sql.operators.sql_decorator import (
     SqlDecoratoratedOperator,
     transform_decorator,
