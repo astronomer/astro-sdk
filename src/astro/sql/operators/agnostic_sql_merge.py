@@ -59,6 +59,7 @@ class SqlMergeOperator(SqlDecoratoratedOperator):
             database=self.target_table.database,
             conn_id=self.target_table.conn_id,
             schema=self.target_table.schema,
+            warehouse=self.target_table.warehouse,
             **kwargs,
         )
 

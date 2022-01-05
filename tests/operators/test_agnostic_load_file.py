@@ -30,6 +30,7 @@ import pathlib
 import unittest.mock
 
 import pandas as pd
+import utils as test_utils
 from airflow.exceptions import DuplicateTaskIdFound
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
@@ -71,6 +72,19 @@ class TestAgnosticLoadFile(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.SNOWFLAKE_OUTPUT_TABLE_NAME = test_utils.get_table_name(
+            "expected_table_from_csv"
+        )
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        test_utils.drop_table_snowflake(
+            table_name=cls.SNOWFLAKE_OUTPUT_TABLE_NAME,  # type: ignore
+            database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore
+            conn_id="snowflake_conn",
+        )
 
     def setUp(self):
         super().setUp()
@@ -447,16 +461,17 @@ class TestAgnosticLoadFile(unittest.TestCase):
         assert df.iloc[0].to_dict()["sell"] == 142.0
 
     def test_aql_local_file_to_snowflake(self):
-        OUTPUT_TABLE_NAME = "expected_table_from_csv"
-
         hook = SnowflakeHook(
             snowflake_conn_id="snowflake_conn",
             schema=os.getenv("SNOWFLAKE_SCHEMA"),
-            database="DWH_LEGACY",
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
         )
 
         # Drop target table
-        hook.run(f"DROP TABLE IF EXISTS tmp_astro.{OUTPUT_TABLE_NAME}")
+        hook.run(
+            f"DROP TABLE IF EXISTS {os.getenv('SNOWFLAKE_SCHEMA')}.{self.SNOWFLAKE_OUTPUT_TABLE_NAME}"
+        )
         self.create_and_run_task(
             load_file,
             (),
@@ -464,15 +479,19 @@ class TestAgnosticLoadFile(unittest.TestCase):
                 "path": str(self.cwd) + "/../data/homes.csv",
                 "file_conn_id": "",
                 "output_table": Table(
-                    table_name=OUTPUT_TABLE_NAME,
-                    database="DWH_LEGACY",
+                    table_name=self.SNOWFLAKE_OUTPUT_TABLE_NAME,
+                    database=os.getenv("SNOWFLAKE_DATABASE"),
+                    schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
                     conn_id="snowflake_conn",
                 ),
             },
         )
 
         # Read table from db
-        df = hook.get_pandas_df(f"SELECT * FROM tmp_astro.{OUTPUT_TABLE_NAME}")
+        df = hook.get_pandas_df(
+            f"SELECT * FROM {os.getenv('SNOWFLAKE_SCHEMA')}.{self.SNOWFLAKE_OUTPUT_TABLE_NAME}"
+        )
 
         assert df.iloc[0].to_dict() == {
             "SELL": 142.0,

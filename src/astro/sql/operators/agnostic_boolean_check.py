@@ -122,6 +122,7 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
         self.sql, self.parameters = execute_boolean_checks(
             self.table.table_name, self.checks, self.conn_id  # type: ignore
         )
+
         results = super().execute(context)
         failed_checks_names, failed_checks_index = get_failed_checks(results)
         if len(failed_checks_index) > 0:
@@ -225,11 +226,7 @@ def wrap_identifier(inp):
     return "Identifier(%(" + inp + ")s)"
 
 
-def boolean_check(
-    table: Table,
-    checks: List[Check] = [],
-    max_rows_returned: int = 100,
-):
+def boolean_check(table: Table, checks: List[Check] = [], max_rows_returned: int = 100):
     """
     :param table: table name
     :type table: str
