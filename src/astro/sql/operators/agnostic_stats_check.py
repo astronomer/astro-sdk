@@ -1,6 +1,6 @@
 from distutils import log as logger
 from os import name, stat
-from typing import Dict, List
+from typing import Dict, List, Set
 
 from airflow.hooks.base import BaseHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -116,33 +116,48 @@ class ChecksHandler:
     def prepare_cases_postgres_sql(self):
         cases = []
         for check in self.checks:
-            for column in check.columns_map:
-                main_table_col = column
-                compare_table_col = check.columns_map[column]
-                statement = sql.SQL(
-                    "CASE WHEN {column_sql} THEN 1 ELSE 0 END as {check_name}"
-                ).format(
-                    column_sql=self.prepare_column_postgres_sql(check),
-                    check_name=sql.SQL(check.name),
-                )
-                cases.append(statement)
+            statement = sql.SQL(
+                "CASE WHEN {column_sql} THEN 1 ELSE 0 END as {check_name}"
+            ).format(
+                column_sql=self.prepare_column_postgres_sql(check),
+                check_name=sql.SQL(check.name),
+            )
+            cases.append(statement)
         return sql.SQL(",").join(cases)
 
     def prepare_cases_snowflake_sql(self):
         cases = []
         for check in self.checks:
-            for column in check.columns_map:
-                main_table_col = column
-                compare_table_col = check.columns_map[column]
-                statement = "CASE WHEN {column_sql} THEN 1 ELSE 0 END as {check_name}"
-                replacements = {
-                    "{column_sql}": self.prepare_column_snowflake_sql(check),
-                    "{check_name}": check.name,
-                }
-                for key, val in replacements.items():
-                    statement = statement.replace(key, val)
-                cases.append(statement)
+            statement = "CASE WHEN {column_sql} THEN 1 ELSE 0 END as {check_name}"
+            replacements = {
+                "{column_sql}": self.prepare_column_snowflake_sql(check),
+                "{check_name}": check.name,
+            }
+            for key, val in replacements.items():
+                statement = statement.replace(key, val)
+            cases.append(statement)
         return ",".join(cases)
+
+    def prepare_checks_postgres_aggregation(self):
+        aggregations = []
+        # sum(room_check) as room_check,
+        for check in self.checks:
+            aggregations.append(
+                sql.SQL("sum({name}) as {name}").format(name=sql.Identifier(check.name))
+            )
+        return sql.SQL(", ").join(aggregations)
+
+    def prepare_checks_snowflake_aggregation(self):
+        aggregations = []
+        # sum(room_check) as room_check,
+        for check in self.checks:
+            statement = "sum({name}) as {name}"
+            replacements = {"{name}": check.name}
+            for key, val in replacements.items():
+                statement = statement.replace(key, val)
+
+            aggregations.append(statement)
+        return ", ".join(aggregations)
 
     def prepare_comparison_sql(self, main_table: Table, compare_table: Table):
         statement = ""
@@ -150,21 +165,23 @@ class ChecksHandler:
             hook = PostgresHook(postgres_conn_id=main_table.conn_id)
             statement = (
                 sql.SQL(
-                    "SELECT {cases}, {compare_table}.*  FROM {main_stats}, {compare_table}"
+                    "SELECT count(*) as total, {checks} FROM (SELECT {cases}, {compare_table}.*  FROM {main_stats}, {compare_table}) as results"
                 )
                 .format(
                     cases=self.prepare_cases_postgres_sql(),
                     main_stats=self.prepare_main_stats_postgres_sql(main_table),
                     compare_table=sql.Identifier(compare_table.table_name),
+                    checks=self.prepare_checks_postgres_aggregation(),
                 )
                 .as_string(hook.get_conn())
             )
         elif self.conn_type == "snowflake":
-            statement = "SELECT {cases}, {compare_table}.*  FROM {main_stats}, Identifier('{compare_table}')"
+            statement = "SELECT count(*) as total, {checks} FROM (SELECT {cases}, {compare_table}.*  FROM {main_stats}, Identifier('{compare_table}')) as results"
             replacements = {
                 "{cases}": self.prepare_cases_snowflake_sql(),
                 "{compare_table}": compare_table.table_name,
                 "{main_stats}": self.prepare_main_stats_snowflake_sql(main_table),
+                "{checks}": self.prepare_checks_snowflake_aggregation(),
             }
             for key, val in replacements.items():
                 statement = statement.replace(key, val)
@@ -176,9 +193,11 @@ class ChecksHandler:
         return row[check.name.upper()]
 
     def check_postgres_results(self, row, check, index):
-        return row[index]
+        return row[index + 1]
 
-    def evaluate_results(self, rows, max_rows_returned, conn_type):
+    def evaluate_results_old(
+        self, rows, column_description, max_rows_returned, conn_type
+    ):
 
         check_results = {
             "postgres": self.check_postgres_results,
@@ -203,6 +222,69 @@ class ChecksHandler:
             else:
                 failed_checks[check.name] = failed_checks[check.name]["rows"]
         return failed_checks
+
+    def evaluate_results(self, rows, max_rows_returned, conn_type):
+        check_results = {
+            "postgres": self.check_postgres_results,
+            "snowflake": self.check_snowflake_results,
+        }[conn_type]
+
+        total_rows = 0
+        if conn_type == "snowflake":
+            total_rows = rows[0]["TOTAL"]
+        elif conn_type == "postgres":
+            total_rows = rows[0][0]
+
+        failed_rows_count = {
+            check.name: check_results(rows[0], check, index)
+            for index, check in enumerate(self.checks)
+        }
+        failed_checks = set()
+        for check in self.checks:
+            if failed_rows_count[check.name] / total_rows > check.threshold:
+                failed_checks.add(check.name)
+        return failed_checks
+
+    def prepare_failed_checks_results(
+        self,
+        conn_type,
+        main_table: Table,
+        compare_table: Table,
+        failed_checks: Set[str],
+        max_rows_returned,
+    ):
+        failed_checks_sql: List[tuple] = []
+        for check in self.checks:
+            if check.name in failed_checks:
+                if conn_type == "postgres":
+                    hook = PostgresHook(postgres_conn_id=main_table.conn_id)
+                    statement = (
+                        sql.SQL(
+                            "SELECT {compare_table}.* FROM {main_stats}, {compare_table} WHERE {column_sql} limit {max_rows_returned}"
+                        )
+                        .format(
+                            compare_table=sql.Identifier(compare_table.table_name),
+                            main_stats=self.prepare_main_stats_postgres_sql(main_table),
+                            column_sql=self.prepare_column_postgres_sql(check),
+                            max_rows_returned=sql.SQL(str(max_rows_returned)),
+                        )
+                        .as_string(hook.get_conn())
+                    )
+                    failed_checks_sql.append((check.name, statement, {}))
+                elif conn_type == "snowflake":
+                    statement = "SELECT {compare_table}.* FROM {main_stats}, Identifier('{compare_table}') WHERE {column_sql} limit {max_rows_returned}"
+                    replacements = {
+                        "{compare_table}": compare_table.table_name,
+                        "{main_stats}": self.prepare_main_stats_snowflake_sql(
+                            main_table
+                        ),
+                        "{column_sql}": self.prepare_column_snowflake_sql(check),
+                        "{max_rows_returned}": str(max_rows_returned),
+                    }
+                    for key, val in replacements.items():
+                        statement = statement.replace(key, val)
+                    failed_checks_sql.append((check.name, statement, {}))
+        return failed_checks_sql
 
 
 class AgnosticStatsCheck(SqlDecoratoratedOperator):
@@ -260,12 +342,24 @@ class AgnosticStatsCheck(SqlDecoratoratedOperator):
             main_table=self.main_table, compare_table=self.compare_table
         )
         results = super().execute(context)
-        print("results : ", results)
-        results = checkHandler.evaluate_results(
+        failed_checks = checkHandler.evaluate_results(
             results, self.max_rows_returned, conn_type
         )
-        if len(results) > 0:
-            raise ValueError("Stats Check Failed. {}".format(results))
+        if len(failed_checks) > 0:
+            failed_check_sql = checkHandler.prepare_failed_checks_results(
+                conn_type=conn_type,
+                main_table=self.main_table,
+                compare_table=self.compare_table,
+                failed_checks=failed_checks,
+                max_rows_returned=self.max_rows_returned,
+            )
+            failed_values = {}
+            for check_query in failed_check_sql:
+                check, self.sql, self.parameters = check_query
+                results = super().execute(context)
+                failed_values[check] = results
+
+            raise ValueError("Stats Check Failed. {}".format(failed_values))
 
 
 def stats_check(
