@@ -126,11 +126,9 @@ class TestPostgresAppend(unittest.TestCase):
                 output_table=self.append_table,
             )
             foo = aql.append(
-                conn_id="postgres_conn",
-                database="postgres",
                 columns=["sell", "living"],
-                main_table=load_main,
-                append_table=load_append,
+                main_table=self.main_table,
+                append_table=self.append_table,
             )
         dr = self.dag.create_dagrun(
             run_id=DagRunType.MANUAL.value,
@@ -173,12 +171,7 @@ class TestPostgresAppend(unittest.TestCase):
                 path=str(cwd) + "/../data/homes_append.csv",
                 output_table=self.append_table,
             )
-            foo = aql.append(
-                conn_id="postgres_conn",
-                database="postgres",
-                main_table=load_main,
-                append_table=load_append,
-            )
+            foo = aql.append(main_table=self.main_table, append_table=self.append_table)
         dr = self.dag.create_dagrun(
             run_id=DagRunType.MANUAL.value,
             start_date=timezone.utcnow(),
@@ -221,12 +214,10 @@ class TestPostgresAppend(unittest.TestCase):
                 output_table=self.append_table,
             )
             foo = aql.append(
-                conn_id="postgres_conn",
-                database="postgres",
                 columns=["sell", "living"],
                 casted_columns={"age": "INTEGER"},
-                main_table=load_main,
-                append_table=load_append,
+                main_table=self.main_table,
+                append_table=self.append_table,
             )
         dr = self.dag.create_dagrun(
             run_id=DagRunType.MANUAL.value,
@@ -276,11 +267,9 @@ class TestPostgresAppend(unittest.TestCase):
                 output_table=self.append_table,
             )
             foo = aql.append(
-                conn_id="postgres_conn",
-                database="postgres",
                 casted_columns={"age": "INTEGER"},
-                main_table=load_main,
-                append_table=load_append,
+                main_table=self.main_table,
+                append_table=self.append_table,
             )
         dr = self.dag.create_dagrun(
             run_id=DagRunType.MANUAL.value,

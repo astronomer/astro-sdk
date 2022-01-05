@@ -8,6 +8,7 @@ import os
 import pathlib
 import unittest.mock
 
+import utils as test_utils
 from airflow.models import DAG
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -36,6 +37,39 @@ class TestBooleanCheckOperator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.postgres_table = "boolean_check_test"
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes_append.csv",
+            output_table=Table(
+                cls.postgres_table,
+                conn_id="postgres_conn",
+                database="pagila",
+                schema="public",
+            ),
+        ).operator.execute({"run_id": "foo"})
+
+        cls.snowflake_table = test_utils.get_table_name("boolean_check_test")
+
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes_append.csv",
+            output_table=Table(
+                conn_id="snowflake_conn",
+                table_name=cls.snowflake_table,
+                schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            ),
+        ).operator.execute({"run_id": "foo"})
+
+    @classmethod
+    def tearDownClass(cls):
+        test_utils.drop_table_snowflake(
+            table_name=cls.snowflake_table,
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
+        )
 
     def clear_run(self):
         self.run = False
@@ -51,34 +85,16 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 "start_date": DEFAULT_DATE,
             },
         )
-        aql.load_file(
-            path=str(self.cwd) + "/../data/homes_append.csv",
-            output_table=Table(
-                "boolean_check_test",
-                conn_id="postgres_conn",
-                database="pagila",
-                schema="public",
-            ),
-        ).operator.execute({"run_id": "foo"})
-
-        aql.load_file(
-            path=str(self.cwd) + "/../data/homes_append.csv",
-            output_table=Table(
-                "BOOLEAN_CHECK_TEST",
-                conn_id="snowflake_conn",
-                schema="tmp_astro",
-            ),
-        ).operator.execute({"run_id": "foo"})
 
     def test_happyflow_postgres_success(self):
         try:
             a = boolean_check(
                 table=Table(
-                    "boolean_check_test",
+                    self.postgres_table,
                     database="pagila",
                     conn_id="postgres_conn",
                 ),
-                checks=[Check("test_1", "boolean_check_test.rooms > 3")],
+                checks=[Check("test_1", f"{self.postgres_table}.rooms > 3")],
                 max_rows_returned=10,
             )
             a.execute({"run_id": "foo"})
@@ -90,13 +106,13 @@ class TestBooleanCheckOperator(unittest.TestCase):
         try:
             a = boolean_check(
                 table=Table(
-                    "boolean_check_test",
+                    self.postgres_table,
                     database="pagila",
                     conn_id="postgres_conn",
                 ),
                 checks=[
-                    Check("test_1", "boolean_check_test.rooms > 7"),
-                    Check("test_2", "boolean_check_test.beds >= 3"),
+                    Check("test_1", f"{self.postgres_table}.rooms > 7"),
+                    Check("test_2", f"{self.postgres_table}.beds >= 3"),
                 ],
                 max_rows_returned=10,
             )
@@ -107,9 +123,14 @@ class TestBooleanCheckOperator(unittest.TestCase):
 
     def test_happyflow_snowflake_success(self):
         try:
+
             a = boolean_check(
                 table=Table(
-                    "boolean_check_test", conn_id="snowflake_conn", schema="tmp_astro"
+                    conn_id="snowflake_conn",
+                    table_name=self.snowflake_table,
+                    schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                    database=os.getenv("SNOWFLAKE_DATABASE"),
+                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
                 ),
                 checks=[Check("test_1", " rooms > 3")],
                 max_rows_returned=10,
@@ -123,7 +144,11 @@ class TestBooleanCheckOperator(unittest.TestCase):
         try:
             a = boolean_check(
                 table=Table(
-                    "boolean_check_test", conn_id="snowflake_conn", schema="tmp_astro"
+                    conn_id="snowflake_conn",
+                    table_name=self.snowflake_table,
+                    schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                    database=os.getenv("SNOWFLAKE_DATABASE"),
+                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
                 ),
                 checks=[
                     Check("test_1", " rooms > 7"),

@@ -26,6 +26,7 @@ import os
 import pathlib
 import unittest.mock
 
+import utils as test_utils
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 
@@ -62,17 +63,39 @@ class TestSnowflakeMerge(unittest.TestCase):
         super().setUpClass()
 
     def setUp(self):
+        self.main_table_name = test_utils.get_table_name("merge_test_1")
         self.main_table = Table(
-            table_name="merge_test_1",
-            conn_id="snowflake_conn",
+            table_name=self.main_table_name,
             database=os.getenv("SNOWFLAKE_DATABASE"),
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
         )
+        self.merge_table_name = test_utils.get_table_name("merge_test_2")
         self.merge_table = Table(
-            table_name="merge_test_2",
-            conn_id="snowflake_conn",
+            table_name=self.merge_table_name,
             database=os.getenv("SNOWFLAKE_DATABASE"),
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
         )
         super().setUp()
+
+    def tearDown(self):
+        test_utils.drop_table_snowflake(
+            table_name=self.main_table_name,
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
+        )
+        test_utils.drop_table_snowflake(
+            table_name=self.merge_table_name,
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
+        )
 
     def test_merge_func(self):
         sql, parameters = snowflake_merge_func(
@@ -88,12 +111,12 @@ class TestSnowflakeMerge(unittest.TestCase):
             sql
             == "merge into Identifier(%(main_table)s) using Identifier(%(merge_table)s) "
             "on Identifier(%(merge_clause_target_0)s)=Identifier(%(merge_clause_append_0)s) "
-            "when matched then UPDATE SET merge_test_1.sell=merge_test_2.sell "
-            "when not matched then insert(merge_test_1.sell) values (merge_test_2.sell)"
+            f"when matched then UPDATE SET {self.main_table_name}.sell={self.merge_table_name}.sell "
+            f"when not matched then insert({self.main_table_name}.sell) values ({self.merge_table_name}.sell)"
         )
         assert parameters == {
-            "merge_clause_target_0": "merge_test_1.sell",
-            "merge_clause_append_0": "merge_test_2.sell",
+            "merge_clause_target_0": f"{self.main_table_name}.sell",
+            "merge_clause_append_0": f"{self.merge_table_name}.sell",
             "main_table": self.main_table,
             "merge_table": self.merge_table,
         }
@@ -113,14 +136,14 @@ class TestSnowflakeMerge(unittest.TestCase):
             == "merge into Identifier(%(main_table)s) using Identifier(%(merge_table)s) "
             "on Identifier(%(merge_clause_target_0)s)=Identifier(%(merge_clause_append_0)s) AND "
             "Identifier(%(merge_clause_target_1)s)=Identifier(%(merge_clause_append_1)s) "
-            "when matched then UPDATE SET merge_test_1.sell=merge_test_2.sell "
-            "when not matched then insert(merge_test_1.sell) values (merge_test_2.sell)"
+            f"when matched then UPDATE SET {self.main_table_name}.sell={self.merge_table_name}.sell "
+            f"when not matched then insert({self.main_table_name}.sell) values ({self.merge_table_name}.sell)"
         )
         assert parameters == {
-            "merge_clause_append_0": "merge_test_2.sell",
-            "merge_clause_append_1": "merge_test_2.bar",
-            "merge_clause_target_0": "merge_test_1.sell",
-            "merge_clause_target_1": "merge_test_1.foo",
+            "merge_clause_append_0": f"{self.merge_table_name}.sell",
+            "merge_clause_append_1": f"{self.merge_table_name}.bar",
+            "merge_clause_target_0": f"{self.main_table_name}.sell",
+            "merge_clause_target_1": f"{self.main_table_name}.foo",
             "main_table": self.main_table,
             "merge_table": self.merge_table,
         }
@@ -139,11 +162,11 @@ class TestSnowflakeMerge(unittest.TestCase):
             sql
             == "merge into Identifier(%(main_table)s) using Identifier(%(merge_table)s) "
             "on Identifier(%(merge_clause_target_0)s)=Identifier(%(merge_clause_append_0)s) "
-            "when not matched then insert(merge_test_1.sell) values (merge_test_2.sell)"
+            f"when not matched then insert({self.main_table_name}.sell) values ({self.merge_table_name}.sell)"
         )
         assert parameters == {
-            "merge_clause_target_0": "merge_test_1.sell",
-            "merge_clause_append_0": "merge_test_2.sell",
+            "merge_clause_target_0": f"{self.main_table_name}.sell",
+            "merge_clause_append_0": f"{self.merge_table_name}.sell",
             "main_table": self.main_table,
             "merge_table": self.merge_table,
         }

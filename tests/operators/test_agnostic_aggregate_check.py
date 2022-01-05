@@ -147,16 +147,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         except ValueError:
             assert True
 
-    def test_snowflake_exact_number_of_rows(self):
-        aql.load_file(
-            path=str(self.cwd) + "/../data/homes_merge_1.csv",
-            output_table=Table(
-                "aggregate_check_test",
-                conn_id="snowflake_conn",
-                database="DWH_LEGACY",
-                schema="SANDBOX_AIRFLOW_TEST",
-            ),
-        ).operator.execute({"run_id": "foo"})
+    def test_postgres_exact_number_of_rows(self):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
