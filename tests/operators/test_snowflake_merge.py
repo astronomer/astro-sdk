@@ -26,6 +26,7 @@ import os
 import pathlib
 import unittest.mock
 
+import utils as test_utils
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -68,17 +69,21 @@ class TestSnowflakeMerge(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cwd = pathlib.Path(__file__).parent
+        cls.merge_test_raw_1 = test_utils.get_table_name("merge_test_raw_1")
         main_table = Table(
-            table_name="merge_test_raw_1",
-            conn_id="snowflake_conn",
+            table_name=cls.merge_test_raw_1,
             database=os.getenv("SNOWFLAKE_DATABASE"),
             schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
         )
+        cls.merge_test_raw_2 = test_utils.get_table_name("merge_test_raw_2")
         merge_table = Table(
-            table_name="merge_test_raw_2",
-            conn_id="snowflake_conn",
+            table_name=cls.merge_test_raw_2,
             database=os.getenv("SNOWFLAKE_DATABASE"),
             schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
         )
         aql.load_file(
             path=str(cwd) + "/../data/homes_merge_1.csv",
@@ -89,31 +94,54 @@ class TestSnowflakeMerge(unittest.TestCase):
         ).operator.execute({"run_id": "foo"})
         super().setUpClass()
 
+    @classmethod
+    def tearDownClass(cls):
+        test_utils.drop_table_snowflake(
+            table_name=cls.merge_test_raw_1,
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
+        )
+        test_utils.drop_table_snowflake(
+            table_name=cls.merge_test_raw_2,
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
+        )
+
     def setUp(self):
         cwd = pathlib.Path(__file__).parent
         main_raw_table = Table(
-            table_name="merge_test_raw_1",
-            conn_id="snowflake_conn",
+            table_name=self.merge_test_raw_1,
             database=os.getenv("SNOWFLAKE_DATABASE"),
             schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
         )
         merge_raw_table = Table(
-            table_name="merge_test_raw_2",
-            conn_id="snowflake_conn",
+            table_name=self.merge_test_raw_2,
             database=os.getenv("SNOWFLAKE_DATABASE"),
             schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
         )
+        self.main_table_name = test_utils.get_table_name("merge_test_1")
         self.main_table = Table(
-            table_name="merge_test_1",
-            conn_id="snowflake_conn",
+            table_name=self.main_table_name,
             database=os.getenv("SNOWFLAKE_DATABASE"),
             schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
         )
+        self.merge_table_name = test_utils.get_table_name("merge_test_2")
         self.merge_table = Table(
-            table_name="merge_test_2",
-            conn_id="snowflake_conn",
+            table_name=self.merge_table_name,
             database=os.getenv("SNOWFLAKE_DATABASE"),
             schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
         )
         dag = DAG(
             "test_dag",
@@ -151,11 +179,27 @@ class TestSnowflakeMerge(unittest.TestCase):
             session.query(DagRun).delete()
             session.query(TI).delete()
 
+        test_utils.drop_table_snowflake(
+            table_name=self.main_table_name,
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
+        )
+        test_utils.drop_table_snowflake(
+            table_name=self.merge_table_name,
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
+        )
+
     def test_merge_basic_single_key(self):
         hook = SnowflakeHook(
             snowflake_conn_id="snowflake_conn",
             schema=os.getenv("SNOWFLAKE_SCHEMA"),
             database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
         )
         a = aql.merge(
             target_table=self.main_table,
@@ -167,7 +211,7 @@ class TestSnowflakeMerge(unittest.TestCase):
         )
         a.execute({"run_id": "foo"})
 
-        df = hook.get_pandas_df(sql=f"SELECT * FROM merge_test_1")
+        df = hook.get_pandas_df(sql=f"SELECT * FROM {self.main_table_name}")
         assert df.AGE.to_list()[1:] == [60.0, 12.0, 41.0, 22.0]
         assert math.isnan(df.AGE.to_list()[0])
         assert df.TAXES.to_list()[1:] == [3167.0, 4033.0, 1471.0, 3204.0]
@@ -182,6 +226,7 @@ class TestSnowflakeMerge(unittest.TestCase):
             snowflake_conn_id="snowflake_conn",
             schema=os.getenv("SNOWFLAKE_SCHEMA"),
             database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
         )
         a = aql.merge(
             target_table=self.main_table,
@@ -194,7 +239,7 @@ class TestSnowflakeMerge(unittest.TestCase):
         )
         a.execute({"run_id": "foo"})
 
-        df = hook.get_pandas_df(sql="SELECT * FROM merge_test_1")
+        df = hook.get_pandas_df(sql=f"SELECT * FROM {self.main_table_name}")
         assert df.AGE.to_list()[1:] == [60.0, 12.0, 41.0, 22.0]
         assert math.isnan(df.AGE.to_list()[0])
         assert df.TAXES.to_list()[1:] == [3167.0, 4033.0, 1471.0, 3204.0]
@@ -222,7 +267,7 @@ class TestSnowflakeMerge(unittest.TestCase):
         )
         a.execute({"run_id": "foo"})
 
-        df = hook.get_pandas_df(sql="SELECT * FROM merge_test_1")
+        df = hook.get_pandas_df(sql=f"SELECT * FROM {self.main_table_name}")
         assert df.TAXES.to_list() == [1, 1, 1, 1, 1]
         assert df.AGE.to_list()[1:] == [60.0, 12.0, 41.0, 22.0]
         assert math.isnan(df.AGE.to_list()[0])

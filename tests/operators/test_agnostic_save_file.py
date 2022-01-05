@@ -117,7 +117,7 @@ class TestSaveFile(unittest.TestCase):
             task.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         return tasks
 
-    def test_save_snowflake_table_to_local_with_csv_format(self):
+    def test_save_postgres_table_to_local_with_csv_format(self):
 
         OUTPUT_FILE_PATH = str(self.cwd) + "/../data/save_snow_file_out.csv"
         INPUT_TABLE_NAME = "rental"
@@ -159,7 +159,7 @@ class TestSaveFile(unittest.TestCase):
         # Delete output file after run
         os.remove(OUTPUT_FILE_PATH)
 
-    def test_save_snowflake_table_to_local_with_parquet_format(self):
+    def test_save_postgres_table_to_local_with_parquet_format(self):
 
         OUTPUT_FILE_PATH = str(self.cwd) + "/../data/save_snow_file_out.parquet"
         INPUT_TABLE_NAME = "rental"
