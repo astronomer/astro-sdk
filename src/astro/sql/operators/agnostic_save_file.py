@@ -105,26 +105,16 @@ class SaveFile(BaseOperator):
             raise FileExistsError
 
     def file_exists(self, output_file_path, output_conn_id=None):
-        if "s3://" in output_file_path:
-
-            bucket_name, object_path = output_file_path.replace("s3://", "").split(
-                "/", 1
-            )
-
-            # Check if object exists in S3.
-            _creds = self._s3fs_creds()
-            s3 = boto3.Session(_creds["key"], _creds["secret"]).resource("s3")
-
-            # Return True if file in S3, else False.
-            try:
-                s3.Object(bucket_name, object_path).load()
+        transport_params = {
+            "s3": self._s3fs_creds,
+            "gs": self._gcs_creds,
+            "": lambda: None,
+        }[urlparse(output_file_path).scheme]()
+        try:
+            with open(output_file_path, mode="r", transport_params=transport_params):
                 return True
-            except:
-                return False
-
-        else:
-            # Return True if file in local fs, else False.
-            return os.path.isfile(output_file_path)
+        except IOError:
+            return False
 
     def agnostic_write_file(self, df, output_file_path, output_conn_id=None):
         """Write dataframe to csv/parquet files formats

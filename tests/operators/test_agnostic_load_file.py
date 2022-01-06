@@ -34,6 +34,7 @@ import utils as test_utils
 from airflow.exceptions import DuplicateTaskIdFound
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
@@ -90,8 +91,6 @@ class TestAgnosticLoadFile(unittest.TestCase):
         super().setUp()
         self.clear_run()
         self.addCleanup(self.clear_run)
-        self.create_gcs_creds()
-        self.upload_blob()
         self.dag = DAG(
             "test_dag", default_args={"owner": "airflow", "start_date": DEFAULT_DATE}
         )
@@ -126,7 +125,6 @@ class TestAgnosticLoadFile(unittest.TestCase):
             print("File {} not found.".format(self.blob_file_name))
 
     def create_gcs_creds(self):
-
         path = str(self.cwd) + "/" + self.gcs_creds_filename
         if os.path.isfile(path):
             self.delete_gcs_creds()
@@ -291,7 +289,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
             "taxes": 3167.0,
         }
 
-    def test_aql_overwite_existing_table(self):
+    def test_aql_overwrite_existing_table(self):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
 
         self.hook_target = TempPostgresHook(
@@ -433,9 +431,11 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
     def test_aql_gcs_file_to_postgres(self):
         # To Do: add service account creds
+        self.create_gcs_creds()
+        self.upload_blob()
         OUTPUT_TABLE_NAME = "expected_table_from_gcs_csv"
 
-        self.hook_target = TempPostgresHook(
+        self.hook_target = PostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
         )
 
@@ -449,7 +449,10 @@ class TestAgnosticLoadFile(unittest.TestCase):
                 "path": "gs://dag-authoring/homes.csv",
                 "file_conn_id": "",
                 "output_table": Table(
-                    OUTPUT_TABLE_NAME, database="pagila", conn_id="postgres_conn"
+                    OUTPUT_TABLE_NAME,
+                    database="pagila",
+                    conn_id="postgres_conn",
+                    schema="public",
                 ),
             },
         )
