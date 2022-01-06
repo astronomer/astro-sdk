@@ -10,6 +10,7 @@ import os
 import pathlib
 import unittest.mock
 
+import utils as test_utils
 from airflow.models import DAG
 from airflow.utils import timezone
 
@@ -59,36 +60,63 @@ class TestStatsCheckOperator(unittest.TestCase):
             ),
         ).operator.execute({"run_id": "foo"})
 
+        cls.Stats_check_table_4 = test_utils.get_table_name("stats_check_test_4")
         aql.load_file(
             path=str(cls.cwd) + "/../data/homes.csv",
             output_table=Table(
-                table_name="stats_check_test_4",
+                table_name=cls.Stats_check_table_4,
                 conn_id="snowflake_conn",
                 schema=os.getenv("SNOWFLAKE_SCHEMA"),
                 database=os.getenv("SNOWFLAKE_DATABASE"),
                 warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
             ),
         ).operator.execute({"run_id": "foo"})
+        cls.Stats_check_table_5 = test_utils.get_table_name("stats_check_test_5")
         aql.load_file(
             path=str(cls.cwd) + "/../data/homes2.csv",
             output_table=Table(
-                table_name="stats_check_test_5",
+                table_name=cls.Stats_check_table_5,
                 conn_id="snowflake_conn",
                 schema=os.getenv("SNOWFLAKE_SCHEMA"),
                 database=os.getenv("SNOWFLAKE_DATABASE"),
                 warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
             ),
         ).operator.execute({"run_id": "foo"})
+        cls.Stats_check_table_6 = test_utils.get_table_name("stats_check_test_6")
         aql.load_file(
             path=str(cls.cwd) + "/../data/homes3.csv",
             output_table=Table(
-                table_name="stats_check_test_6",
+                table_name=cls.Stats_check_table_6,
                 conn_id="snowflake_conn",
                 schema=os.getenv("SNOWFLAKE_SCHEMA"),
                 database=os.getenv("SNOWFLAKE_DATABASE"),
                 warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
             ),
         ).operator.execute({"run_id": "foo"})
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        test_utils.drop_table_snowflake(
+            table_name=cls.Stats_check_table_4,  # type: ignore
+            database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore
+            conn_id="snowflake_conn",
+        )
+        test_utils.drop_table_snowflake(
+            table_name=cls.Stats_check_table_5,  # type: ignore
+            database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore
+            conn_id="snowflake_conn",
+        )
+        test_utils.drop_table_snowflake(
+            table_name=cls.Stats_check_table_6,  # type: ignore
+            database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore
+            conn_id="snowflake_conn",
+        )
 
     def clear_run(self):
         self.run = False
@@ -155,14 +183,14 @@ class TestStatsCheckOperator(unittest.TestCase):
         try:
             a = aql.stats_check(
                 main_table=Table(
-                    table_name="stats_check_test_4",
+                    table_name=self.Stats_check_table_4,
                     conn_id="snowflake_conn",
                     schema=os.getenv("SNOWFLAKE_SCHEMA"),
                     database=os.getenv("SNOWFLAKE_DATABASE"),
                     warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
                 ),
                 compare_table=Table(
-                    table_name="stats_check_test_5",
+                    table_name=self.Stats_check_table_5,
                     conn_id="snowflake_conn",
                     schema=os.getenv("SNOWFLAKE_SCHEMA"),
                     database=os.getenv("SNOWFLAKE_DATABASE"),
@@ -180,14 +208,14 @@ class TestStatsCheckOperator(unittest.TestCase):
         try:
             a = aql.stats_check(
                 main_table=Table(
-                    table_name="stats_check_test_4",
+                    table_name=self.Stats_check_table_4,
                     conn_id="snowflake_conn",
                     schema=os.getenv("SNOWFLAKE_SCHEMA"),
                     database=os.getenv("SNOWFLAKE_DATABASE"),
                     warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
                 ),
                 compare_table=Table(
-                    table_name="stats_check_test_6",
+                    table_name=self.Stats_check_table_6,
                     conn_id="snowflake_conn",
                     schema=os.getenv("SNOWFLAKE_SCHEMA"),
                     database=os.getenv("SNOWFLAKE_DATABASE"),

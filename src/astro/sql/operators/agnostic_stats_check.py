@@ -11,6 +11,10 @@ from sqlalchemy.sql.schema import Table
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
+from astro.utils.snowflake_merge_func import (
+    is_valid_snow_identifier,
+    is_valid_snow_identifiers,
+)
 
 
 class OutlierCheck:
@@ -63,6 +67,11 @@ class ChecksHandler:
                     stats_query = stats_query.replace(key, val)
                 select_expressions.append(stats_query)
 
+        if not is_valid_snow_identifier(main_table.table_name):
+            raise ValueError(
+                f"Not a valid snowflake identifier {main_table.table_name}"
+            )
+
         statement = "(SELECT {select_expressions} FROM Identifier('{main_table}')) as main_stats"
         replacements = {
             "{main_table}": main_table.table_name,
@@ -103,6 +112,14 @@ class ChecksHandler:
                 "{main_table_col}": main_table_col,
                 "{accepted_std_div}": str(check.accepted_std_div),
             }
+            invalid_identifier = is_valid_snow_identifiers(
+                [compare_table_col, check.name, main_table_col]
+            )
+            if len(invalid_identifier) > 0:
+                raise ValueError(
+                    f"Not a valid snowflake identifier {', '.join(invalid_identifier)}"
+                )
+
             statement = """(Identifier('{compare_table_col}') > (Identifier('main_stats.{check_name}_{main_table_col}_avg') + (Identifier('main_stats.{check_name}_{main_table_col}_stddev') * {accepted_std_div})))
                 OR
                 (Identifier('{compare_table_col}') < (Identifier('main_stats.{check_name}_{main_table_col}_avg') - (Identifier('main_stats.{check_name}_{main_table_col}_stddev') * {accepted_std_div})))
@@ -183,6 +200,13 @@ class ChecksHandler:
                 "{main_stats}": self.prepare_main_stats_snowflake_sql(main_table),
                 "{checks}": self.prepare_checks_snowflake_aggregation(),
             }
+
+            invalid_identifier = is_valid_snow_identifiers([compare_table.table_name])
+            if len(invalid_identifier) > 0:
+                raise ValueError(
+                    f"Not a valid snowflake identifier {', '.join(invalid_identifier)}"
+                )
+
             for key, val in replacements.items():
                 statement = statement.replace(key, val)
         else:
@@ -194,34 +218,6 @@ class ChecksHandler:
 
     def check_postgres_results(self, row, check, index):
         return row[index + 1]
-
-    def evaluate_results_old(
-        self, rows, column_description, max_rows_returned, conn_type
-    ):
-
-        check_results = {
-            "postgres": self.check_postgres_results,
-            "snowflake": self.check_snowflake_results,
-        }[conn_type]
-
-        total_rows = len(rows)
-        failed_checks = {check.name: {"count": 0, "rows": []} for check in self.checks}
-        for row in rows:
-            index = 0
-            for check in self.checks:
-                if check_results(row, check, index):
-                    failed_checks[check.name]["count"] += 1
-                    if len(failed_checks[check.name]["rows"]) < max_rows_returned:
-                        failed_checks[check.name]["rows"].append(row)
-                index += 1
-
-        for check in self.checks:
-            count = failed_checks[check.name]["count"]
-            if (count / total_rows) <= check.threshold:
-                failed_checks.pop(check.name)
-            else:
-                failed_checks[check.name] = failed_checks[check.name]["rows"]
-        return failed_checks
 
     def evaluate_results(self, rows, max_rows_returned, conn_type):
         check_results = {
@@ -281,6 +277,15 @@ class ChecksHandler:
                         "{column_sql}": self.prepare_column_snowflake_sql(check),
                         "{max_rows_returned}": str(max_rows_returned),
                     }
+
+                    invalid_identifier = is_valid_snow_identifiers(
+                        [compare_table.table_name]
+                    )
+                    if len(invalid_identifier) > 0:
+                        raise ValueError(
+                            f"Not a valid snowflake identifier {', '.join(invalid_identifier)}"
+                        )
+
                     for key, val in replacements.items():
                         statement = statement.replace(key, val)
                     failed_checks_sql.append((check.name, statement, {}))
@@ -294,7 +299,7 @@ class AgnosticStatsCheck(SqlDecoratoratedOperator):
         main_table: Table,
         compare_table: Table,
         max_rows_returned: int,
-        **kwargs
+        **kwargs,
     ):
         """
         Operator to run Statistical checks on tables.
