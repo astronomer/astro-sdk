@@ -71,7 +71,6 @@ class ChecksHandler:
             raise ValueError(
                 f"Not a valid snowflake identifier {main_table.table_name}"
             )
-
         statement = "(SELECT {select_expressions} FROM Identifier('{main_table}')) as main_stats"
         replacements = {
             "{main_table}": main_table.table_name,
@@ -112,6 +111,7 @@ class ChecksHandler:
                 "{main_table_col}": main_table_col,
                 "{accepted_std_div}": str(check.accepted_std_div),
             }
+
             invalid_identifier = is_valid_snow_identifiers(
                 [compare_table_col, check.name, main_table_col]
             )

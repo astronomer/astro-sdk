@@ -82,6 +82,7 @@ class TestStatsCheckOperator(unittest.TestCase):
                 warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
             ),
         ).operator.execute({"run_id": "foo"})
+
         cls.Stats_check_table_6 = test_utils.get_table_name("stats_check_test_6")
         aql.load_file(
             path=str(cls.cwd) + "/../data/homes3.csv",
