@@ -140,7 +140,7 @@ class AgnosticLoadFile(BaseOperator):
         """
         get GCS credentials for storage.
         """
-        service_account_path = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
+        service_account_path = os.environ["AIRFLOW__ASTRO__GCP_CREDENTIALS"]
         client = Client.from_service_account_json(service_account_path)
         return dict(client=client)
 

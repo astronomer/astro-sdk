@@ -102,7 +102,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
             content = f.read()
 
         storage_client = storage.Client.from_service_account_json(
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
+            os.environ["AIRFLOW__ASTRO__GCP_CREDENTIALS"]
         )
         bucket = storage_client.bucket(self.bucket_name)
         blob = bucket.blob(self.blob_file_name)
@@ -113,7 +113,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
     def delete_blob(self):
         storage_client = storage.Client.from_service_account_json(
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
+            os.environ["AIRFLOW__ASTRO__GCP_CREDENTIALS"]
         )
 
         bucket = storage_client.bucket(self.bucket_name)
@@ -132,7 +132,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
         content = os.environ["GCP_CREDENTIALS"]
         with open(path, "w") as f:
             f.write(content)
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = path
+        os.environ["AIRFLOW__ASTRO__GCP_CREDENTIALS"] = path
 
     def delete_gcs_creds(self):
         os.remove(str(self.cwd) + "/" + self.gcs_creds_filename)
