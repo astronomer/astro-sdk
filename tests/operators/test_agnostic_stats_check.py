@@ -24,7 +24,7 @@ DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 class TestStatsCheckOperator(unittest.TestCase):
     """
-    Test Boolean Check Operator.
+    Test Stats Check Operator.
     """
 
     cwd = pathlib.Path(__file__).parent
