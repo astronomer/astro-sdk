@@ -1,8 +1,6 @@
 """
 Unittest module to test Operators.
-
 Requires the unittest, pytest, and requests-mock Python libraries.
-
 """
 
 import logging
@@ -125,7 +123,6 @@ class TestBooleanCheckOperator(unittest.TestCase):
 
     def test_happyflow_snowflake_success(self):
         try:
-
             a = boolean_check(
                 table=Table(
                     conn_id="snowflake_conn",
