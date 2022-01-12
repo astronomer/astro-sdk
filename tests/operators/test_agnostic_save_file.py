@@ -277,7 +277,7 @@ class TestSaveFile(unittest.TestCase):
 
     def test_save_postgres_table_to_s3(self):
 
-        _creds = self._s3fs_creds()
+        _creds = TestSaveFile._s3fs_creds()
 
         # Delete object from S3
         s3 = boto3.Session(_creds["key"], _creds["secret"]).resource("s3")
@@ -324,7 +324,7 @@ class TestSaveFile(unittest.TestCase):
         INPUT_TABLE_NAME = "rental"
 
         # Create object in S3
-        _creds = self._s3fs_creds()
+        _creds = TestSaveFile._s3fs_creds()
         s3 = boto3.Session(_creds["key"], _creds["secret"]).resource("s3")
         s3.Object("tmp9", OUTPUT_FILE_PATH).put(Body="123")
 

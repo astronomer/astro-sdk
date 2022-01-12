@@ -409,7 +409,7 @@ a = aql.truncate(
 
 # Dataframe functionality
 
-Finally, your pipeline might call for procedures that would be too complex or impossible in SQL. This could be building a model from a feature set, or using a windowing function which more Pandas is adept for. The `df` functions can easily move your data into a Pandas dataframe and back to your database as needed.
+Finally, your pipeline might call for procedures that would be too complex or impossible in SQL. This could be building a model from a feature set, or using a windowing function which Pandas is more adept for. The `df` functions can easily move your data into a Pandas dataframe and back to your database as needed.
 
 At runtime, the operator loads any `Table` object into a Pandas DataFrame. If the Task returns a DataFame, downstream Taskflow API Tasks can interact with it to continue using Python.
 
@@ -472,3 +472,4 @@ from astro.ml import predict
 def my_df_func():
     return pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
 ```
+

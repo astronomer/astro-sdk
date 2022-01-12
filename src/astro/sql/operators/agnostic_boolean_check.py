@@ -230,8 +230,6 @@ def boolean_check(table: Table, checks: List[Check] = [], max_rows_returned: int
     """
     :param table: table name
     :type table: str
-    :param database: database name
-    :type database: str
     :param checks: check class object, which represent boolean expression
     :type checks: Check
     :param max_rows_returned: number of row returned if the check fails.
