@@ -63,6 +63,14 @@ class ChecksHandler:
             for key in check.columns_map:
                 stats_query = "stddev({key}) as {check_name}_{key}_stddev, avg({key}) as {check_name}_{key}_avg"
                 replacements = {"{key}": key, "{check_name}": check.name}
+
+                invalid_identifier = is_valid_snow_identifiers(
+                    [key, check.name, check.name]
+                )
+                if len(invalid_identifier) > 0:
+                    raise ValueError(
+                        f"Not a valid snowflake identifier {', '.join(invalid_identifier)}"
+                    )
                 for key, val in replacements.items():
                     stats_query = stats_query.replace(key, val)
                 select_expressions.append(stats_query)
