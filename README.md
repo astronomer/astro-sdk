@@ -43,7 +43,7 @@
 ## Philosophy
 
 With the `astro` library, we want to redefine the DAG writing experience from the bottom up. Our goal is to empower
-data engineers and data scientists to write DAGs based around the momevent of _data_ instead of the dependencies of tasks.
+data engineers and data scientists to write DAGs based around the movement of _data_ instead of the dependencies of tasks.
 With this in mind, we built a library where every step is defined by how your data moves, while also simplifying the transformation
 process between different environments. Our first two integrations are SQL and pandas, but we are planning many more in coming months.
 
@@ -472,6 +472,4 @@ from astro.ml import predict
 def my_df_func():
     return pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
 ```
-
-
 
