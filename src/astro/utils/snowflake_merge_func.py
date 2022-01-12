@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import re
+from typing import List
 
 from airflow.exceptions import AirflowException
 
@@ -157,6 +158,10 @@ def is_valid_snow_identifier(name):
 
     else:  # not quoted
         return ensure_only_valid_characters(name)
+
+
+def is_valid_snow_identifiers(names: List[str]):
+    return [names for name in names if not is_valid_snow_identifier(name)]
 
 
 # test code to check for validate snowflake identifier
