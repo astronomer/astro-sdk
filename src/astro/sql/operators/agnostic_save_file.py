@@ -16,11 +16,14 @@ limitations under the License.
 
 import os
 from typing import Optional
+from urllib.parse import urlparse
 
 import boto3
 import pandas as pd
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
+from google.cloud.storage import Client
+from smart_open import open
 
 from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
 from astro.sql.table import Table
@@ -102,47 +105,33 @@ class SaveFile(BaseOperator):
             raise FileExistsError
 
     def file_exists(self, output_file_path, output_conn_id=None):
-        if "s3://" in output_file_path:
-
-            bucket_name, object_path = output_file_path.replace("s3://", "").split(
-                "/", 1
-            )
-
-            # Check if object exists in S3.
-            _creds = self._s3fs_creds()
-            s3 = boto3.Session(_creds["key"], _creds["secret"]).resource("s3")
-
-            # Return True if file in S3, else False.
-            try:
-                s3.Object(bucket_name, object_path).load()
+        transport_params = {
+            "s3": self._s3fs_creds,
+            "gs": self._gcs_creds,
+            "": lambda: None,
+        }[urlparse(output_file_path).scheme]()
+        try:
+            with open(output_file_path, mode="r", transport_params=transport_params):
                 return True
-            except:
-                return False
-
-        else:
-            # Return True if file in local fs, else False.
-            return os.path.isfile(output_file_path)
+        except IOError:
+            return False
 
     def agnostic_write_file(self, df, output_file_path, output_conn_id=None):
         """Write dataframe to csv/parquet files formats
 
         Select output file format based on param output_file_format to class.
         """
-        storage_options = self._s3fs_creds() if "s3://" in output_file_path else None
-        {"csv": df.to_csv, "parquet": df.to_parquet}[self.output_file_format](
-            output_file_path, storage_options=storage_options
-        )
-
-    def _load_dataframe(self, path):
-        """Read file with Pandas.
-
-        Select method based on `file_type` (S3 or local).
-        """
-        file_type = path.split(".")[-1]
-        storage_options = self._s3fs_creds() if "s3://" in path else None
-        return {"parquet": pd.read_parquet, "csv": pd.read_csv}[file_type](
-            path, storage_options=storage_options
-        )
+        transport_params = {
+            "s3": self._s3fs_creds,
+            "gs": self._gcs_creds,
+            "": lambda: None,
+        }[urlparse(output_file_path).scheme]()
+        with open(
+            output_file_path, mode="wb", transport_params=transport_params
+        ) as stream:
+            {"csv": df.to_csv, "parquet": df.to_parquet}[self.output_file_format](
+                stream
+            )
 
     def _s3fs_creds(self):
         # To-do: reuse this method from sql decorator
@@ -157,8 +146,21 @@ class SaveFile(BaseOperator):
             .replace("@", "")
             .split(":")
         )
+        session = boto3.Session(
+            aws_access_key_id=k,
+            aws_secret_access_key=v,
+        )
+        return dict(client=session.client("s3"))
 
-        return {"key": k, "secret": v}
+    def _gcs_creds(self):
+        """
+        get GCS credentials for storage
+        """
+        service_account_path = os.environ[
+            "AIRFLOW__ASTRO__GOOGLE_APPLICATION_CREDENTIALS"
+        ]
+        client = Client.from_service_account_json(service_account_path)
+        return dict(client=client)
 
     @staticmethod
     def create_table_name(context):

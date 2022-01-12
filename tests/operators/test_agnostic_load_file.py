@@ -30,14 +30,18 @@ import pathlib
 import unittest.mock
 
 import pandas as pd
+import utils as test_utils
 from airflow.exceptions import DuplicateTaskIdFound
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
+from google.api_core.exceptions import NotFound
+from google.cloud import storage
 
 # Import Operator
 from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
@@ -62,10 +66,26 @@ class TestAgnosticLoadFile(unittest.TestCase):
     """
 
     cwd = pathlib.Path(__file__).parent
+    gcs_creds_filename = "gcp_credentials.json"
+    bucket_name = "dag-authoring"
+    blob_file_name = "homes.csv"
 
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.SNOWFLAKE_OUTPUT_TABLE_NAME = test_utils.get_table_name(
+            "expected_table_from_csv"
+        )
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        test_utils.drop_table_snowflake(
+            table_name=cls.SNOWFLAKE_OUTPUT_TABLE_NAME,  # type: ignore
+            database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore
+            conn_id="snowflake_conn",
+        )
 
     def setUp(self):
         super().setUp()
@@ -74,6 +94,48 @@ class TestAgnosticLoadFile(unittest.TestCase):
         self.dag = DAG(
             "test_dag", default_args={"owner": "airflow", "start_date": DEFAULT_DATE}
         )
+
+    def upload_blob(self):
+        self.delete_blob()
+
+        with open(str(self.cwd) + "/../data/" + str(self.blob_file_name)) as f:
+            content = f.read()
+
+        storage_client = storage.Client.from_service_account_json(
+            os.environ["AIRFLOW__ASTRO__GOOGLE_APPLICATION_CREDENTIALS"]
+        )
+        bucket = storage_client.bucket(self.bucket_name)
+        blob = bucket.blob(self.blob_file_name)
+        t = blob.upload_from_filename(
+            str(self.cwd) + "/../data/" + str(self.blob_file_name)
+        )
+        print("File uploaded.")
+
+    def delete_blob(self):
+        storage_client = storage.Client.from_service_account_json(
+            os.environ["AIRFLOW__ASTRO__GOOGLE_APPLICATION_CREDENTIALS"]
+        )
+
+        bucket = storage_client.bucket(self.bucket_name)
+        blob = bucket.blob(self.blob_file_name)
+        try:
+            blob.delete()
+            print("Blob {} deleted.".format(self.blob_file_name))
+        except NotFound as e:
+            print("File {} not found.".format(self.blob_file_name))
+
+    def create_gcs_creds(self):
+        path = str(self.cwd) + "/" + self.gcs_creds_filename
+        if os.path.isfile(path):
+            self.delete_gcs_creds()
+
+        content = os.environ["GCP_CREDENTIALS"]
+        with open(path, "w") as f:
+            f.write(content)
+        os.environ["AIRFLOW__ASTRO__GOOGLE_APPLICATION_CREDENTIALS"] = path
+
+    def delete_gcs_creds(self):
+        os.remove(str(self.cwd) + "/" + self.gcs_creds_filename)
 
     def clear_run(self):
         self.run = False
@@ -227,7 +289,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
             "taxes": 3167.0,
         }
 
-    def test_aql_overwite_existing_table(self):
+    def test_aql_overwrite_existing_table(self):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
 
         self.hook_target = TempPostgresHook(
@@ -367,17 +429,52 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         assert df.iloc[0].to_dict()["Sell"] == 142.0
 
-    def test_aql_local_file_to_snowflake(self):
-        OUTPUT_TABLE_NAME = "expected_table_from_csv"
+    def test_aql_gcs_file_to_postgres(self):
+        # To Do: add service account creds
+        self.create_gcs_creds()
+        self.upload_blob()
+        OUTPUT_TABLE_NAME = "expected_table_from_gcs_csv"
 
-        hook = SnowflakeHook(
-            snowflake_conn_id="snowflake_conn",
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
-            database="DWH_LEGACY",
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
         )
 
         # Drop target table
-        hook.run(f"DROP TABLE IF EXISTS tmp_astro.{OUTPUT_TABLE_NAME}")
+        drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
+
+        self.create_and_run_task(
+            load_file,
+            (),
+            {
+                "path": "gs://dag-authoring/homes.csv",
+                "file_conn_id": "",
+                "output_table": Table(
+                    OUTPUT_TABLE_NAME,
+                    database="pagila",
+                    conn_id="postgres_conn",
+                    schema="public",
+                ),
+            },
+        )
+
+        # Read table from db
+        df = pd.read_sql(
+            f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=self.hook_target.get_conn()
+        )
+        assert df.iloc[0].to_dict()["sell"] == 142.0
+
+    def test_aql_local_file_to_snowflake(self):
+        hook = SnowflakeHook(
+            snowflake_conn_id="snowflake_conn",
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+        )
+
+        # Drop target table
+        hook.run(
+            f"DROP TABLE IF EXISTS {os.getenv('SNOWFLAKE_SCHEMA')}.{self.SNOWFLAKE_OUTPUT_TABLE_NAME}"
+        )
         self.create_and_run_task(
             load_file,
             (),
@@ -385,15 +482,19 @@ class TestAgnosticLoadFile(unittest.TestCase):
                 "path": str(self.cwd) + "/../data/homes.csv",
                 "file_conn_id": "",
                 "output_table": Table(
-                    table_name=OUTPUT_TABLE_NAME,
-                    database="DWH_LEGACY",
+                    table_name=self.SNOWFLAKE_OUTPUT_TABLE_NAME,
+                    database=os.getenv("SNOWFLAKE_DATABASE"),
+                    schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
                     conn_id="snowflake_conn",
                 ),
             },
         )
 
         # Read table from db
-        df = hook.get_pandas_df(f"SELECT * FROM tmp_astro.{OUTPUT_TABLE_NAME}")
+        df = hook.get_pandas_df(
+            f"SELECT * FROM {os.getenv('SNOWFLAKE_SCHEMA')}.{self.SNOWFLAKE_OUTPUT_TABLE_NAME}"
+        )
 
         assert df.iloc[0].to_dict() == {
             "SELL": 142.0,

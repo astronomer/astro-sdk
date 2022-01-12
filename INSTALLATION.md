@@ -8,3 +8,4 @@ pip install astro-projects
 ```
 
 If you are running Airflow using the [astro cli](https://www.astronomer.io/docs/cloud/stable/develop/cli-quickstart), you can add `astro-projects` to your `requirements.txt`
+ 
