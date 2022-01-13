@@ -156,10 +156,13 @@ class SaveFile(BaseOperator):
         """
         get GCS credentials for storage
         """
-        service_account_path = os.environ[
+        service_account_path = os.getenv(
             "AIRFLOW__ASTRO__GOOGLE_APPLICATION_CREDENTIALS"
-        ]
-        client = Client.from_service_account_json(service_account_path)
+        )
+        if service_account_path:
+            client = Client.from_service_account_json(service_account_path)
+        else:
+            client = Client()
         return dict(client=client)
 
     @staticmethod
