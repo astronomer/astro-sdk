@@ -1,8 +1,10 @@
 import os
 from datetime import datetime, timedelta
 
+import pandas as pd
 from airflow.models import DAG
 
+import astro.dataframe as df
 from astro import sql as aql
 from astro.sql.table import Table
 
@@ -19,6 +21,15 @@ dag = DAG(
     default_args=default_args,
 )
 
+
+@df
+def aggregate_data(df: pd.DataFrame):
+    customers_and_orders_dataframe = df.pivot_table(
+        index="DATE", values="NAME", columns=["TYPE"], aggfunc="count"
+    ).reset_index()
+    return customers_and_orders_dataframe
+
+
 dir_path = os.path.dirname(os.path.realpath(__file__))
 with dag:
     """Structure DAG dependencies.
@@ -30,4 +41,5 @@ with dag:
         file_conn_id="my_s3_conn",
         output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
     )
-    aql.render_directory(dir_path, orders_table=raw_orders)
+    models = aql.render_directory(dir_path, orders_table=raw_orders)
+    aggregate_data(df=models["join_customers_and_orders"])
