@@ -24,8 +24,10 @@ def render_directory(path, **kwargs):
 
     # add kwargs to the dictionary if it's something our tables can inherit.
     for k, v in kwargs.items():
-        if type(v) == XComArg or type(v) == Table:
-            template_dict[k] = v.operator
+        if type(v) == XComArg:
+            template_dict[k] = v
+        elif type(v) == Table:
+            template_dict[k] = v
 
     # Parse all of the SQL files in this directory
     for filename in files:
@@ -37,16 +39,17 @@ def render_directory(path, **kwargs):
             sql = file_string
             parameters = {y: None for y in templated_names}
             p = ParsedSqlOperator(sql=sql, parameters=parameters, file_name=filename)
-            template_dict[filename.removesuffix(".sql")] = p
+            template_dict[filename.replace(".sql", "")] = p.output
 
     # Add the XComArg to the parameters to create dependency
     for filename in files:
-        current_operator = template_dict[filename.removesuffix(".sql")]
+        current_operator = template_dict[filename.replace(".sql", "")].operator
         for param in current_operator.parameters:
-            if not current_operator.parameters.get(param):
+            if not template_dict.get(param):
                 raise AirflowException(f"Table {param} does not exist")
-            current_operator.parameters[param] = template_dict[param].output
-            template_dict[param] >> current_operator
+            current_operator.parameters[param] = template_dict[param]
+            # due to an edge case in XComArg, we need to explicitly set dependencies here
+            template_dict[param].operator >> current_operator
     ret = []
     for f in template_dict.values():
         ret.append(f)
