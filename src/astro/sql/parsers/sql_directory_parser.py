@@ -4,18 +4,27 @@ from collections import defaultdict
 from typing import Dict
 
 from airflow.decorators.base import get_unique_task_id
+from airflow.decorators.task_group import task_group
+from airflow.exceptions import AirflowException
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 
 
-def parse_directory(**kwargs):
+# @task_group()
+def parse_directory(path):
+    # raise AirflowException(f"Failed because cwd is {os.listdir(path)}, {os.}")
+    ret_dict = {}
     files = [
-        f for f in os.listdir(os.getcwd()) if os.path.isfile(f) and f.endswith(".sql")
+        f
+        for f in os.listdir(path)
+        if os.path.isfile(os.path.join(path, f)) and f.endswith(".sql")
     ]
+    ret_dict["files"] = files
+    ret_dict["path"] = path
     file_dict = {}
     lineage_dict = defaultdict(set)
     for filename in files:
-        with open(os.path.join(os.getcwd(), filename), "r") as f:
+        with open(os.path.join(path, filename), "r") as f:
             file_string = f.read()
             x = [
                 y[1:-1] for y in re.findall(r"\{[^}]*\}", file_string) if "{{" not in y
@@ -30,17 +39,21 @@ def parse_directory(**kwargs):
         for param in current_operator.parameters:
             current_operator.parameters[param] = file_dict[param + ".sql"].output
     ret = []
-    for f in file_dict.keys():
-        x = f.removesuffix(".sql")
-        if lineage_dict[x] == set():
-            ret.append(file_dict[f])
-    if len(ret) == 1:
-        return ret[0]
-    else:
-        return ret
+    ret_dict["file_dict"] = file_dict
+    for f in file_dict.values():
+        ret.append(f)
+    # raise AirflowException(f"returning the following values: {ret_dict}")
+    return ret
+    # if len(ret) == 1:
+    #     return ret[0]
+    # else:
+    #     return ret
+    #
 
 
 class ParsedSqlOperator(SqlDecoratoratedOperator):
+    template_fields = ("sql", "parameters")
+
     def _table_exists_in_db(self, conn: str, table_name: str):
         pass
 
@@ -56,7 +69,7 @@ class ParsedSqlOperator(SqlDecoratoratedOperator):
     ):
         self.sql = ""
         self.parameters = parameters
-        task_id = get_unique_task_id(file_name)
+        task_id = get_unique_task_id(file_name.replace(".sql", ""))
 
         def null_function():
             return sql, parameters
