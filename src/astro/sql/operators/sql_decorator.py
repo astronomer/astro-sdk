@@ -220,8 +220,16 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             session_parameters=None,
         )
 
-    def _run_sql(self, sql, parameters):
+    def get_postgres_hook(self):
+        return PostgresHook(postgres_conn_id=self.conn_id, schema=self.database)
 
+    def _run_sql(self, sql, parameters):
+        if isinstance(sql, str):
+            return self._run_sql_string(sql, parameters)
+        else:
+            return self._run_sql_alchemy_obj(sql, parameters)
+
+    def _run_sql_string(self, sql, parameters):
         if self.conn_type == "postgres":
             self.log.info("Executing: %s", sql)
             self.hook = PostgresHook(
@@ -243,6 +251,18 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.query_ids = hook.query_ids
 
         return results
+
+    def get_sql_alchemy_engine(self):
+        hook = {
+            "snowflake": self.get_snow_hook(),
+            "postgres": self.get_postgres_hook(),
+        }[self.conn_type]
+        return hook.get_sqlalchemy_engine()
+
+    def _run_sql_alchemy_obj(self, sql, parameters):
+        engine = self.get_sql_alchemy_engine()
+        conn = engine.connect()
+        return conn.execute(sql, parameters)
 
     @staticmethod
     def create_temporary_table(query, output_table_name, schema=None):
