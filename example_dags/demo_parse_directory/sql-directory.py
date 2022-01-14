@@ -25,7 +25,7 @@ with dag:
     """
 
     raw_orders = aql.load_file(
-        path="to-do",
+        path="s3://my/path/{{ execution_date }}/*.csv",
         file_conn_id="my_s3_conn",
         output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
     )

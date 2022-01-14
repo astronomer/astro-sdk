@@ -87,7 +87,7 @@ def get_new_customers(customer_table: Table):
     Split this 'feature' dataset into existing/older customers and 'new' customers, which we'll use
     later for inference/scoring.
     """
-    return """SELECT * FROM {customer_table} WHERE member_since > DATEADD(day, -7, '{{ execution_date }}')"""
+    return """SELECT * FROM {customer_table} WHERE member_since <= DATEADD(day, -7, '{{ execution_date }}')"""
 
 
 @train()
