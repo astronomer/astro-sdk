@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 
 from airflow.models import DAG
@@ -6,7 +7,6 @@ from astro import sql as aql
 from astro.sql.table import Table
 
 default_args = {
-    "owner": "airflow",
     "retries": 1,
     "retry_delay": 0,
 }
@@ -18,7 +18,6 @@ dag = DAG(
     schedule_interval=timedelta(minutes=30),
     default_args=default_args,
 )
-import os
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 with dag:
@@ -31,4 +30,4 @@ with dag:
         file_conn_id="my_s3_conn",
         output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
     )
-    aql.parse_directory(dir_path, orders_table=raw_orders)
+    aql.render_directory(dir_path, orders_table=raw_orders)

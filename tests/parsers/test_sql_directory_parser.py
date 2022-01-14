@@ -44,7 +44,7 @@ class TestSQLParsing(unittest.TestCase):
 
     def test_parse(self):
         with self.dag:
-            x = aql.parse_directory(dir_path)
+            x = aql.render_directory(dir_path)
 
         dagrun = self.dag.create_dagrun(
             run_id=DagRunType.MANUAL.value,

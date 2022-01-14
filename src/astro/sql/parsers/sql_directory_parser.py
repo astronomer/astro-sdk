@@ -12,8 +12,8 @@ from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
 
 
-# @task_group()
-def parse_directory(path, **kwargs):
+@task_group()
+def render_directory(path, **kwargs):
     # raise AirflowException(f"Failed because cwd is {os.listdir(path)}, {os.}")
     files = [
         f
@@ -22,6 +22,7 @@ def parse_directory(path, **kwargs):
     ]
     template_dict = {}
 
+    # add kwargs to the dictionary if it's something our tables can inherit.
     for k, v in kwargs.items():
         if type(v) == XComArg or type(v) == Table:
             template_dict[k] = v.operator
@@ -42,11 +43,14 @@ def parse_directory(path, **kwargs):
     for filename in files:
         current_operator = template_dict[filename.removesuffix(".sql")]
         for param in current_operator.parameters:
+            if not current_operator.parameters.get(param):
+                raise AirflowException(f"Table {param} does not exist")
             current_operator.parameters[param] = template_dict[param].output
             template_dict[param] >> current_operator
     ret = []
     for f in template_dict.values():
         ret.append(f)
+    return template_dict
 
 
 class ParsedSqlOperator(SqlDecoratoratedOperator):
