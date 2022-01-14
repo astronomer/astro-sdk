@@ -4,6 +4,8 @@ import unittest.mock
 from unittest import mock
 
 import pandas as pd
+import pytest
+from airflow.exceptions import AirflowException
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -44,12 +46,40 @@ class TestSQLParsing(unittest.TestCase):
 
     def test_parse(self):
         with self.dag:
-            x = aql.render_directory(dir_path)
+            rendered_tasks = aql.render_directory(dir_path + "/passing_dag")
 
-        dagrun = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
+        assert (
+            rendered_tasks.get("agg_orders")
+            and rendered_tasks.get("agg_orders").operator.parameters == {}
         )
-        print(x)
+        assert rendered_tasks.get("join_customers_and_orders")
+        join_params = rendered_tasks.get(
+            "join_customers_and_orders"
+        ).operator.parameters
+        assert len(join_params) == 2
+        assert (
+            join_params["customers_table"].operator.task_id
+            == "render_directory.customers_table"
+        )
+
+    def test_parse_missing_table(self):
+        with pytest.raises(AirflowException):
+            with self.dag:
+                rendered_tasks = aql.render_directory(dir_path + "/missing_table_dag")
+
+    def test_parse_missing_table_with_inputs(self):
+        with self.dag:
+            rendered_tasks = aql.render_directory(
+                dir_path + "/missing_table_dag",
+                agg_orders=Table("foo"),
+                customers_table=Table("customers_table"),
+            )
+
+    def test_parse_missing_table_with_input_and_upstream(self):
+        with self.dag:
+            agg_orders = aql.load_file("s3://foo")
+            rendered_tasks = aql.render_directory(
+                dir_path + "/missing_table_dag",
+                agg_orders=agg_orders,
+                customers_table=Table("customers_table"),
+            )

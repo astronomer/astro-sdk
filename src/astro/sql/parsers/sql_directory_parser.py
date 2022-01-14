@@ -49,7 +49,8 @@ def render_directory(path, **kwargs):
                 raise AirflowException(f"Table {param} does not exist")
             current_operator.parameters[param] = template_dict[param]
             # due to an edge case in XComArg, we need to explicitly set dependencies here
-            template_dict[param].operator >> current_operator
+            if type(template_dict[param]) == XComArg:
+                template_dict[param].operator >> current_operator
     ret = []
     for f in template_dict.values():
         ret.append(f)
