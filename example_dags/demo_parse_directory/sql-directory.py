@@ -26,9 +26,9 @@ with dag:
     So easy! It's like magic!
     """
     #
-    # raw_orders = aql.load_file(
-    #     path="s3://my/path/foo.csv",
-    #     file_conn_id="my_s3_conn",
-    #     output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
-    # )
-    aql.parse_directory(dir_path)
+    raw_orders = aql.load_file(
+        path="s3://my/path/foo.csv",
+        file_conn_id="my_s3_conn",
+        output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
+    )
+    aql.parse_directory(dir_path, orders_table=raw_orders)

@@ -6,12 +6,14 @@ from typing import Dict
 from airflow.decorators.base import get_unique_task_id
 from airflow.decorators.task_group import task_group
 from airflow.exceptions import AirflowException
+from airflow.models.xcom_arg import XComArg
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
+from astro.sql.table import Table
 
 
 # @task_group()
-def parse_directory(path):
+def parse_directory(path, **kwargs):
     # raise AirflowException(f"Failed because cwd is {os.listdir(path)}, {os.}")
     files = [
         f
@@ -19,6 +21,10 @@ def parse_directory(path):
         if os.path.isfile(os.path.join(path, f)) and f.endswith(".sql")
     ]
     template_dict = {}
+
+    for k, v in kwargs.items():
+        if type(v) == XComArg or type(v) == Table:
+            template_dict[k] = v.operator
 
     # Parse all of the SQL files in this directory
     for filename in files:
