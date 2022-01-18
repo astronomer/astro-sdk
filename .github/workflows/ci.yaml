@@ -45,23 +45,25 @@ jobs:
           path: ~/.cache/pip
           key: ${{ hashFiles('pyproject.toml') }}
       - run: cat ci-test-connections.yaml > test-connections.yaml
+      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }} 
       - run: pip3 install nox
       - run: nox -s test
-        env:
-          # The hostname used to communicate with the PostgreSQL service container
-          POSTGRES_HOST: postgres
-          # The default PostgreSQL port
-          POSTGRES_PORT: 5432
-          AIRFLOW__ASTRO__CONN_AWS_DEFAULT: ${{ secrets.AWS_ACCESS_CRED }}
-          SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          SNOWFLAKE_SCHEMA: SANDBOX_AIRFLOW_TEST
-          SNOWFLAKE_DATABASE: DWH_LEGACY
-          SNOWFLAKE_WAREHOUSE: TRANSFORMING
-          SNOWFLAKE_HOST: https://gp21411.us-east-1.snowflakecomputing.com
-          SNOWFLAKE_ACCOUNT: gp21411
-          SNOWFLAKE_REGION: us-east-1
-          SNOWFLAKE_ROLE: TRANSFORMER
-          GCP_CREDENTIALS: ${{ secrets.GCP_CREDENTIALS }}
-          AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json 
+      # The hostname used to communicate with the PostgreSQL service container
+      POSTGRES_HOST: postgres
+      # The default PostgreSQL port
+      POSTGRES_PORT: 5432
+      AIRFLOW__ASTRO__CONN_AWS_DEFAULT: ${{ secrets.AWS_ACCESS_CRED }}
+      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_SCHEMA: SANDBOX_AIRFLOW_TEST
+      SNOWFLAKE_DATABASE: DWH_LEGACY
+      SNOWFLAKE_WAREHOUSE: TRANSFORMING
+      SNOWFLAKE_HOST: https://gp21411.us-east-1.snowflakecomputing.com
+      SNOWFLAKE_ACCOUNT: gp21411
+      SNOWFLAKE_REGION: us-east-1
+      SNOWFLAKE_ROLE: TRANSFORMER
+      AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
 
