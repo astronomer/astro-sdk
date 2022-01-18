@@ -10,25 +10,17 @@ from airflow.exceptions import AirflowException
 from airflow.models.xcom_arg import XComArg
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
-from astro.sql.table import Table
 
 
 @task_group()
-def render_directory(path, **kwargs):
+def render(path, **kwargs):
     # raise AirflowException(f"Failed because cwd is {os.listdir(path)}, {os.}")
     files = [
         f
         for f in os.listdir(path)
         if os.path.isfile(os.path.join(path, f)) and f.endswith(".sql")
     ]
-    template_dict = {}
-
-    # add kwargs to the dictionary if it's something our tables can inherit.
-    for k, v in kwargs.items():
-        if type(v) == XComArg:
-            template_dict[k] = v
-        elif type(v) == Table:
-            template_dict[k] = v
+    template_dict = kwargs
 
     # Parse all of the SQL files in this directory
     for filename in files:

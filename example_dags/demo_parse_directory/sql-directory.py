@@ -41,12 +41,6 @@ with dag:
         file_conn_id="my_s3_conn",
         output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
     )
-    ingest_models = aql.render_directory(
-        dir_path + "/ingest_models", orders_table=raw_orders
-    )
-    transform_models = aql.render_directory(
-        dir_path + "/transform_models",
-        orders_and_customer_table=ingest_models["orders_and_customer_table"],
-    )
+    ingest_models = aql.render(dir_path + "/ingest_models", orders_table=raw_orders)
 
-    aggregate_data(df=ingest_models["join_customers_and_orders"])
+    aggregate_data(agg_df=ingest_models["join_customers_and_orders"])

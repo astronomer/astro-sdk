@@ -38,7 +38,7 @@ class TestSQLParsing(unittest.TestCase):
 
     def test_parse(self):
         with self.dag:
-            rendered_tasks = aql.render_directory(dir_path + "/passing_dag")
+            rendered_tasks = aql.render(dir_path + "/passing_dag")
 
         assert (
             rendered_tasks.get("agg_orders")
@@ -57,11 +57,11 @@ class TestSQLParsing(unittest.TestCase):
     def test_parse_missing_table(self):
         with pytest.raises(AirflowException):
             with self.dag:
-                rendered_tasks = aql.render_directory(dir_path + "/missing_table_dag")
+                rendered_tasks = aql.render(dir_path + "/missing_table_dag")
 
     def test_parse_missing_table_with_inputs(self):
         with self.dag:
-            rendered_tasks = aql.render_directory(
+            rendered_tasks = aql.render(
                 dir_path + "/missing_table_dag",
                 agg_orders=Table("foo"),
                 customers_table=Table("customers_table"),
@@ -70,7 +70,7 @@ class TestSQLParsing(unittest.TestCase):
     def test_parse_missing_table_with_input_and_upstream(self):
         with self.dag:
             agg_orders = aql.load_file("s3://foo")
-            rendered_tasks = aql.render_directory(
+            rendered_tasks = aql.render(
                 dir_path + "/missing_table_dag",
                 agg_orders=agg_orders,
                 customers_table=Table("customers_table"),
@@ -78,7 +78,7 @@ class TestSQLParsing(unittest.TestCase):
 
     def test_parse_frontmatter(self):
         with self.dag:
-            rendered_tasks = aql.render_directory(dir_path + "/front_matter_dag")
+            rendered_tasks = aql.render(dir_path + "/front_matter_dag")
         customers_table_task = rendered_tasks.get("customers_table")
         assert customers_table_task
         assert customers_table_task.operator.database == "foo"
