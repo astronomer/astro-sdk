@@ -83,3 +83,15 @@ class TestSQLParsing(unittest.TestCase):
                 agg_orders=agg_orders,
                 customers_table=Table("customers_table"),
             )
+
+    def test_parse_frontmatter(self):
+        with self.dag:
+            rendered_tasks = aql.render_directory(dir_path + "/front_matter_dag")
+        customers_table_task = rendered_tasks.get("customers_table")
+        assert customers_table_task
+        assert customers_table_task.operator.database == "foo"
+        assert customers_table_task.operator.schema == "bar"
+        assert (
+            customers_table_task.operator.sql
+            == "SELECT customer_id, source, region, member_since\n        FROM {get_customers} WHERE NOT is_deleted"
+        )

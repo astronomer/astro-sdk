@@ -76,6 +76,7 @@ AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
 
 ## Basic Usage
 
+###Option 2: SQL for Airflow Engineers
 ```python
 from datetime import datetime, timedelta
 

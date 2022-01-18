@@ -37,9 +37,16 @@ with dag:
     """
     #
     raw_orders = aql.load_file(
-        path="s3://my/path/foo.csv",
+        path="s3://my/path/{{ execution_date }}/",
         file_conn_id="my_s3_conn",
         output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
     )
-    models = aql.render_directory(dir_path, orders_table=raw_orders)
-    aggregate_data(df=models["join_customers_and_orders"])
+    ingest_models = aql.render_directory(
+        dir_path + "/ingest_models", orders_table=raw_orders
+    )
+    transform_models = aql.render_directory(
+        dir_path + "/transform_models",
+        orders_and_customer_table=ingest_models["orders_and_customer_table"],
+    )
+
+    aggregate_data(df=ingest_models["join_customers_and_orders"])
