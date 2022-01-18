@@ -1,28 +1,20 @@
 import logging
-import pathlib
 import unittest.mock
-from unittest import mock
 
-import pandas as pd
 import pytest
 from airflow.exceptions import AirflowException
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
-from airflow.utils.state import State
-from airflow.utils.types import DagRunType
 
 # Import Operator
 import astro.sql as aql
-from astro import dataframe as df
-from astro.sql.table import Table, TempTable
+from astro.sql.table import Table
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 import os
-import time
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -91,7 +83,8 @@ class TestSQLParsing(unittest.TestCase):
         assert customers_table_task
         assert customers_table_task.operator.database == "foo"
         assert customers_table_task.operator.schema == "bar"
+        new_customers_table = rendered_tasks.get("get_new_customers")
         assert (
-            customers_table_task.operator.sql
-            == "SELECT customer_id, source, region, member_since\n        FROM {get_customers} WHERE NOT is_deleted"
+            new_customers_table.operator.sql
+            == "SELECT * FROM {customers_table} WHERE member_since > DATEADD(day, -7, '{{ execution_date }}')"
         )

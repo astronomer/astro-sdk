@@ -4,8 +4,8 @@ from datetime import datetime, timedelta
 import pandas as pd
 from airflow.models import DAG
 
-import astro.dataframe as df
 from astro import sql as aql
+from astro.dataframe import dataframe as df
 from astro.sql.table import Table
 
 default_args = {
@@ -23,8 +23,8 @@ dag = DAG(
 
 
 @df
-def aggregate_data(df: pd.DataFrame):
-    customers_and_orders_dataframe = df.pivot_table(
+def aggregate_data(agg_df: pd.DataFrame):
+    customers_and_orders_dataframe = agg_df.pivot_table(
         index="DATE", values="NAME", columns=["TYPE"], aggfunc="count"
     ).reset_index()
     return customers_and_orders_dataframe
