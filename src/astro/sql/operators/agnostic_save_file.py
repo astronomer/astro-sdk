@@ -126,11 +126,21 @@ class SaveFile(BaseOperator):
             "gs": self._gcs_creds,
             "": lambda: None,
         }[urlparse(output_file_path).scheme]()
+
+        serialiser = {
+            "parquet": df.to_parquet,
+            "csv": df.to_csv,
+            # "json": pd.to_json,
+            # "ndjson": pd.to_json,
+        }
+        serialiser_params = {
+            # "ndjson": {"lines": True}
+        }
         with open(
             output_file_path, mode="wb", transport_params=transport_params
         ) as stream:
-            {"csv": df.to_csv, "parquet": df.to_parquet}[self.output_file_format](
-                stream
+            serialiser[self.output_file_format](
+                stream, **serialiser_params.get(self.output_file_format, {})
             )
 
     def _s3fs_creds(self):

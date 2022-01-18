@@ -114,8 +114,17 @@ class AgnosticLoadFile(BaseOperator):
             "gs": self._gcs_creds,
             "": lambda: None,
         }[urlparse(path).scheme]()
+        deserialiser = {
+            "parquet": pd.read_parquet,
+            "csv": pd.read_csv,
+            "json": pd.read_json,
+            "ndjson": pd.read_json,
+        }
+        deserialiser_params = {"ndjson": {"lines": True}}
         with open(path, transport_params=transport_params) as stream:
-            return {"parquet": pd.read_parquet, "csv": pd.read_csv}[file_type](stream)
+            return deserialiser[file_type](
+                stream, **deserialiser_params.get(file_type, {})
+            )
 
     def _s3fs_creds(self):
         # To-do: reuse this method from sql decorator
