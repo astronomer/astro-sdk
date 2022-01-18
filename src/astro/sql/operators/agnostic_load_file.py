@@ -111,7 +111,7 @@ class AgnosticLoadFile(BaseOperator):
         file_type = path.split(".")[-1]
         transport_params = {
             "s3": self._s3fs_creds,
-            "gs": self._gcs_creds,
+            "gs": self._gcs_client,
             "": lambda: None,
         }[urlparse(path).scheme]()
         deserialiser = {
@@ -145,17 +145,11 @@ class AgnosticLoadFile(BaseOperator):
         )
         return dict(client=session.client("s3"))
 
-    def _gcs_creds(self):
+    def _gcs_client(self):
         """
         get GCS credentials for storage.
         """
-        service_account_path = os.getenv(
-            "AIRFLOW__ASTRO__GOOGLE_APPLICATION_CREDENTIALS"
-        )
-        if service_account_path:
-            client = Client.from_service_account_json(service_account_path)
-        else:
-            client = Client()
+        client = Client()
         return dict(client=client)
 
 

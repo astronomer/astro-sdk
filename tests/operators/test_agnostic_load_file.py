@@ -89,7 +89,6 @@ class TestAgnosticLoadFile(unittest.TestCase):
     Test agnostic load file.
     """
 
-    gcs_creds_filename = "gcp_credentials.json"
     bucket_name = "dag-authoring"
     blob_file_name = "homes.csv"
     storage_client = None
@@ -120,24 +119,8 @@ class TestAgnosticLoadFile(unittest.TestCase):
         )
         self.init_storage_client()
 
-    def setup_gcs_credentials_for_astro(self):
-        path = str(CWD) + "/" + self.gcs_creds_filename
-        if os.path.isfile(path):
-            self.delete_gcs_creds()
-
-        content = os.environ["GCP_CREDENTIALS"]
-        with open(path, "w") as f:
-            f.write(content)
-        os.environ["AIRFLOW__ASTRO__GOOGLE_APPLICATION_CREDENTIALS"] = path
-        return path
-
     def init_storage_client(self):
-        service_account_credentials = os.getenv("GCP_CREDENTIALS")
-        if service_account_credentials:
-            path = self.setup_gcs_credentials_for_astro()
-            self.storage_client = storage.Client.from_service_account_json(path)
-        else:
-            self.storage_client = storage.Client()
+        self.storage_client = storage.Client()
 
     def upload_blob(self):
         self.delete_blob()
@@ -158,9 +141,6 @@ class TestAgnosticLoadFile(unittest.TestCase):
             print("Blob {} deleted.".format(self.blob_file_name))
         except NotFound as e:
             print("File {} not found.".format(self.blob_file_name))
-
-    def delete_gcs_creds(self):
-        os.remove(str(CWD) + "/" + self.gcs_creds_filename)
 
     def clear_run(self):
         self.run = False

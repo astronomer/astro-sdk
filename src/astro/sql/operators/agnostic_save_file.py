@@ -107,7 +107,7 @@ class SaveFile(BaseOperator):
     def file_exists(self, output_file_path, output_conn_id=None):
         transport_params = {
             "s3": self._s3fs_creds,
-            "gs": self._gcs_creds,
+            "gs": self._gcs_client,
             "": lambda: None,
         }[urlparse(output_file_path).scheme]()
         try:
@@ -123,7 +123,7 @@ class SaveFile(BaseOperator):
         """
         transport_params = {
             "s3": self._s3fs_creds,
-            "gs": self._gcs_creds,
+            "gs": self._gcs_client,
             "": lambda: None,
         }[urlparse(output_file_path).scheme]()
 
@@ -162,17 +162,11 @@ class SaveFile(BaseOperator):
         )
         return dict(client=session.client("s3"))
 
-    def _gcs_creds(self):
+    def _gcs_client(self):
         """
         get GCS credentials for storage
         """
-        service_account_path = os.getenv(
-            "AIRFLOW__ASTRO__GOOGLE_APPLICATION_CREDENTIALS"
-        )
-        if service_account_path:
-            client = Client.from_service_account_json(service_account_path)
-        else:
-            client = Client()
+        client = Client()
         return dict(client=client)
 
     @staticmethod
