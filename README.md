@@ -76,6 +76,185 @@ AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
 
 ## Basic Usage
 
+### Setting up SQL files
+
+
+
+```sql
+SELECT c.customer_id, c.source, c.region, c.member_since,
+        CASE WHEN purchase_count IS NULL THEN 0 ELSE 1 END AS recent_purchase
+        FROM orders c LEFT OUTER JOIN customers p ON c.customer_id = p.customer_id
+```
+
+#### Defining metadata
+
+Once you have your SQL working as expected, you might want to explicitly define the database and schema that
+runs this query at runtime. We wanted to expose this functionality while keeping your SQL easy to run in your favorite SQL notebook.
+To accomplish this, we create a [frontmatter](https://middlemanapp.com/basics/frontmatter/). This frontmatter comment
+will allow you to set any metadata you like in a single block that is easy to comment out if you wish to continue local development.
+
+```sql
+---
+database: foo
+schema: bar
+---
+SELECT c.customer_id, c.source, c.region, c.member_since,
+        CASE WHEN purchase_count IS NULL THEN 0 ELSE 1 END AS recent_purchase
+        FROM orders c LEFT OUTER JOIN customers p ON c.customer_id = p.customer_id
+```
+
+```sql
+-- ---
+-- database: foo
+-- schema: bar
+-- ---
+SELECT c.customer_id, c.source, c.region, c.member_since,
+        CASE WHEN purchase_count IS NULL THEN 0 ELSE 1 END AS recent_purchase
+        FROM orders c LEFT OUTER JOIN customers p ON c.customer_id = p.customer_id
+``` 
+
+#### Defining dependencies
+
+As these SQL files are related to Airflow DAGs, there is an expectation that there should be dependencies so you can break up your SQL into
+multiple reproduceable steps. We offer two ways to define dependencies within an `astro` sql file.
+
+The first way to define a dependency is by defining a variable via the `template_vars` option.
+
+```sql
+---
+template_vars:
+    customers: customers_table
+    orders: agg_orders
+---
+SELECT c.customer_id, c.source, c.region, c.member_since,
+        CASE WHEN purchase_count IS NULL THEN 0 ELSE 1 END AS recent_purchase
+        FROM orders c LEFT OUTER JOIN customers p ON c.customer_id = p.customer_id
+```
+
+In this example, we are setting the value `customers` to tie to the `customers_table.sql` file, 
+essentially setting up a task dependency by creating a data dependency.
+
+
+
+| argument      | Description |
+| ----------- | ----------- |
+| conn_id | What 
+| Database      | Which database to query       |
+| Schema   | Which schema to query, defaults to the temporary schema provided by the admin        |
+| Template Vars | A key-value dictionary of what values to override when this SQL file is used in a DAG.  |
+
+### Incorporating SQL directory into DAG
+
+```python
+import os
+from datetime import datetime, timedelta
+
+from airflow.models import DAG
+
+from astro import sql as aql
+from astro.sql.table import Table
+
+default_args = {
+    "retries": 1,
+    "retry_delay": 0,
+}
+
+dag = DAG(
+    dag_id="sql_file_dag",
+    start_date=datetime(2019, 1, 1),
+    max_active_runs=3,
+    schedule_interval=timedelta(minutes=30),
+    default_args=default_args,
+)
+
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+with dag:
+    raw_orders = aql.load_file(
+        path="s3://my/path/{{ execution_date }}/",
+        file_conn_id="my_s3_conn",
+        output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
+    )
+    ingest_models = aql.render(dir_path + "/ingest_models", orders_table=raw_orders)
+```
+
+### Passing on tables to subsequent tasks
+```python
+@df
+def aggregate_data(agg_df: pd.DataFrame):
+    customers_and_orders_dataframe = agg_df.pivot_table(
+        index="DATE", values="NAME", columns=["TYPE"], aggfunc="count"
+    ).reset_index()
+    return customers_and_orders_dataframe
+
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+with dag:
+    raw_orders = aql.load_file(
+        path="s3://my/path/{{ execution_date }}/",
+        file_conn_id="my_s3_conn",
+        output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
+    )
+    ingest_models = aql.render(dir_path + "/ingest_models", orders_table=raw_orders)
+    aggregate_data(agg_df=ingest_models["agg_orders"])
+```
+
+```python
+dir_path = os.path.dirname(os.path.realpath(__file__))
+with dag:
+    raw_orders = aql.load_file(
+        path="s3://my/path/{{ execution_date }}/",
+        file_conn_id="my_s3_conn",
+        output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
+    )
+    ingest_models = aql.render(dir_path + "/ingest_models", orders_table=raw_orders)
+    aql.render(dir_path + "/transform_models", **ingest_models)
+```
+
+```python
+import os
+from datetime import datetime, timedelta
+
+import pandas as pd
+from airflow.models import DAG
+
+from astro import sql as aql
+from astro.dataframe import dataframe as df
+from astro.sql.table import Table
+
+default_args = {
+    "retries": 1,
+    "retry_delay": 0,
+}
+
+dag = DAG(
+    dag_id="sql_file_dag",
+    start_date=datetime(2019, 1, 1),
+    max_active_runs=3,
+    schedule_interval=timedelta(minutes=30),
+    default_args=default_args,
+)
+
+
+@df
+def aggregate_data(agg_df: pd.DataFrame):
+    customers_and_orders_dataframe = agg_df.pivot_table(
+        index="DATE", values="NAME", columns=["TYPE"], aggfunc="count"
+    ).reset_index()
+    return customers_and_orders_dataframe
+
+
+dir_path = os.path.dirname(os.path.realpath(__file__))
+with dag:
+    raw_orders = aql.load_file(
+        path="s3://my/path/{{ execution_date }}/",
+        file_conn_id="my_s3_conn",
+        output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
+    )
+    ingest_models = aql.render(dir_path + "/ingest_models", orders_table=raw_orders)
+
+    aggregate_data(agg_df=ingest_models["join_customers_and_orders"])
+```
 ###Option 2: SQL for Airflow Engineers
 ```python
 from datetime import datetime, timedelta
