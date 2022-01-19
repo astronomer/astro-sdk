@@ -1,20 +1,11 @@
-from distutils import log as logger
-from os import name, stat
 from typing import Dict, List, Set
 
 from airflow.hooks.base import BaseHook
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from psycopg2 import sql
-from sqlalchemy.sql.expression import table
-from sqlalchemy.sql.functions import Function
-from sqlalchemy.sql.schema import Table
+from sqlalchemy import MetaData, case, func, or_, select
+from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
-from astro.utils.snowflake_merge_func import (
-    is_valid_snow_identifier,
-    is_valid_snow_identifiers,
-)
 
 
 class OutlierCheck:
@@ -36,211 +27,95 @@ class ChecksHandler:
         self.checks = checks
         self.conn_type = conn_type
 
-    def prepare_main_stats_postgres_sql(self, main_table: Table):
+    def prepare_main_stats_sql(self, main_table: Table, main_table_sqla):
         select_expressions = []
         for check in self.checks:
             for key in check.columns_map:
-                select_expressions.append(
-                    sql.SQL(
-                        "stddev({key}) as {check_name}_{key_name}_stddev, avg({key}) as {check_name}_{key_name}_avg"
-                    ).format(
-                        key=sql.Identifier(key),
-                        key_name=sql.SQL(key),
-                        check_name=sql.SQL(check.name),
-                    )
+                select_expressions.extend(
+                    [
+                        func.stddev(main_table_sqla.c.get(key)).label(
+                            f"{check.name}_{key}_stddev"
+                        ),
+                        func.avg(main_table_sqla.c.get(key)).label(
+                            f"{check.name}_{key}_avg"
+                        ),
+                    ]
                 )
+        return select(select_expressions)
 
-        return sql.SQL(
-            "(SELECT {select_expressions} FROM {main_table}) as main_stats"
-        ).format(
-            select_expressions=sql.SQL(" ,").join(select_expressions),
-            main_table=sql.Identifier(main_table.table_name),
+    def prepare_column_sql(self, check, main_stats, compare_table):
+        column_sql = []
+        for column in check.columns_map:
+            main_table_col = column
+            compare_table_col = compare_table.c.get(column)
+            main_stats_check_avg = main_stats.c.get(
+                f"{check.name}_{main_table_col}_avg"
+            )
+            main_stats_check_stddev = main_stats.c.get(
+                f"{check.name}_{main_table_col}_stddev"
+            )
+            accepted_std_div = check.accepted_std_div
+
+            statement = compare_table_col > (
+                main_stats_check_avg + (main_stats_check_stddev * accepted_std_div)
+            )
+            column_sql.append(statement)
+            statement = compare_table_col < (
+                main_stats_check_avg - (main_stats_check_stddev * accepted_std_div)
+            )
+            column_sql.append(statement)
+
+        return or_(*column_sql)
+
+    def prepare_cases_sql(self, main_stats, compare_table_sqla):
+        cases = []
+        for check in self.checks:
+
+            cases.append(
+                case(
+                    (self.prepare_column_sql(check, main_stats, compare_table_sqla), 1),
+                    else_=0,
+                ).label(check.name)
+            )
+        return cases
+
+    def prepare_checks_sql(self, temp_table):
+        aggregations = []
+        for check in self.checks:
+            aggregations.append(func.sum(temp_table.c.get(check.name)))
+        return aggregations
+
+    def prepare_comparison_sql(
+        self, main_table: Table, compare_table: Table, engine, metadata_obj
+    ):
+        main_table_sqla = SqlaTable(
+            main_table.table_name, metadata_obj, autoload_with=engine
+        )
+        compare_table_sqla = SqlaTable(
+            compare_table.table_name, metadata_obj, autoload_with=engine
         )
 
-    def prepare_main_stats_snowflake_sql(self, main_table: Table):
-        select_expressions = []
-        for check in self.checks:
-            for key in check.columns_map:
-                stats_query = "stddev({key}) as {check_name}_{key}_stddev, avg({key}) as {check_name}_{key}_avg"
-                replacements = {"{key}": key, "{check_name}": check.name}
+        main_table_stats_sql = self.prepare_main_stats_sql(main_table, main_table_sqla)
+        cases_sql = self.prepare_cases_sql(main_table_stats_sql, compare_table_sqla)
+        temp_table = select(
+            *cases_sql,
+            compare_table_sqla,
+        )
+        checks_sql = self.prepare_checks_sql(temp_table)
 
-                invalid_identifier = is_valid_snow_identifiers(
-                    [key, check.name, check.name]
-                )
-                if len(invalid_identifier) > 0:
-                    raise ValueError(
-                        f"Not a valid snowflake identifier {', '.join(invalid_identifier)}"
-                    )
-                for key, val in replacements.items():
-                    stats_query = stats_query.replace(key, val)
-                select_expressions.append(stats_query)
+        comparison_sql = select(func.count().label("total"), *checks_sql).select_from(
+            temp_table
+        )
 
-        if not is_valid_snow_identifier(main_table.table_name):
-            raise ValueError(
-                f"Not a valid snowflake identifier {main_table.table_name}"
-            )
-        statement = "(SELECT {select_expressions} FROM Identifier('{main_table}')) as main_stats"
-        replacements = {
-            "{main_table}": main_table.table_name,
-            "{select_expressions}": " ,".join(select_expressions),
-        }
-        for key, val in replacements.items():
-            statement = statement.replace(key, val)
-        return statement
+        return comparison_sql
 
-    def prepare_column_postgres_sql(self, check):
-        column_sql = []
-        for column in check.columns_map:
-            main_table_col = column
-            compare_table_col = check.columns_map[column]
-            statement = sql.SQL(
-                """({compare_table_col} > (main_stats.{check_name}_{main_table_col}_avg + (main_stats.{check_name}_{main_table_col}_stddev * {accepted_std_div})))
-                OR
-                ({compare_table_col} < (main_stats.{check_name}_{main_table_col}_avg - (main_stats.{check_name}_{main_table_col}_stddev * {accepted_std_div})))
-                """
-            ).format(
-                compare_table_col=sql.Identifier(compare_table_col),
-                check_name=sql.SQL(check.name),
-                main_table_col=sql.SQL(main_table_col),
-                accepted_std_div=sql.SQL(str(check.accepted_std_div)),
-            )
-            column_sql.append(statement)
-
-        return sql.SQL("OR").join(column_sql)
-
-    def prepare_column_snowflake_sql(self, check):
-        column_sql = []
-        for column in check.columns_map:
-            main_table_col = column
-            compare_table_col = check.columns_map[column]
-            replacements = {
-                "{compare_table_col}": compare_table_col,
-                "{check_name}": check.name,
-                "{main_table_col}": main_table_col,
-                "{accepted_std_div}": str(check.accepted_std_div),
-            }
-
-            invalid_identifier = is_valid_snow_identifiers(
-                [compare_table_col, check.name, main_table_col]
-            )
-            if len(invalid_identifier) > 0:
-                raise ValueError(
-                    f"Not a valid snowflake identifier {', '.join(invalid_identifier)}"
-                )
-
-            statement = """(Identifier('{compare_table_col}') > (Identifier('main_stats.{check_name}_{main_table_col}_avg') + (Identifier('main_stats.{check_name}_{main_table_col}_stddev') * {accepted_std_div})))
-                OR
-                (Identifier('{compare_table_col}') < (Identifier('main_stats.{check_name}_{main_table_col}_avg') - (Identifier('main_stats.{check_name}_{main_table_col}_stddev') * {accepted_std_div})))
-                """
-            for key, val in replacements.items():
-                statement = statement.replace(key, val)
-            column_sql.append(statement)
-
-        return "OR".join(column_sql)
-
-    def prepare_cases_postgres_sql(self):
-        cases = []
-        for check in self.checks:
-            statement = sql.SQL(
-                "CASE WHEN {column_sql} THEN 1 ELSE 0 END as {check_name}"
-            ).format(
-                column_sql=self.prepare_column_postgres_sql(check),
-                check_name=sql.SQL(check.name),
-            )
-            cases.append(statement)
-        return sql.SQL(",").join(cases)
-
-    def prepare_cases_snowflake_sql(self):
-        cases = []
-        for check in self.checks:
-            statement = "CASE WHEN {column_sql} THEN 1 ELSE 0 END as {check_name}"
-            replacements = {
-                "{column_sql}": self.prepare_column_snowflake_sql(check),
-                "{check_name}": check.name,
-            }
-            for key, val in replacements.items():
-                statement = statement.replace(key, val)
-            cases.append(statement)
-        return ",".join(cases)
-
-    def prepare_checks_postgres_aggregation(self):
-        aggregations = []
-        # sum(room_check) as room_check,
-        for check in self.checks:
-            aggregations.append(
-                sql.SQL("sum({name}) as {name}").format(name=sql.Identifier(check.name))
-            )
-        return sql.SQL(", ").join(aggregations)
-
-    def prepare_checks_snowflake_aggregation(self):
-        aggregations = []
-        # sum(room_check) as room_check,
-        for check in self.checks:
-            statement = "sum({name}) as {name}"
-            replacements = {"{name}": check.name}
-            for key, val in replacements.items():
-                statement = statement.replace(key, val)
-
-            aggregations.append(statement)
-        return ", ".join(aggregations)
-
-    def prepare_comparison_sql(self, main_table: Table, compare_table: Table):
-        statement = ""
-        if self.conn_type == "postgres":
-            hook = PostgresHook(postgres_conn_id=main_table.conn_id)
-            statement = (
-                sql.SQL(
-                    "SELECT count(*) as total, {checks} FROM (SELECT {cases}, {compare_table}.*  FROM {main_stats}, {compare_table}) as results"
-                )
-                .format(
-                    cases=self.prepare_cases_postgres_sql(),
-                    main_stats=self.prepare_main_stats_postgres_sql(main_table),
-                    compare_table=sql.Identifier(compare_table.table_name),
-                    checks=self.prepare_checks_postgres_aggregation(),
-                )
-                .as_string(hook.get_conn())
-            )
-        elif self.conn_type == "snowflake":
-            statement = "SELECT count(*) as total, {checks} FROM (SELECT {cases}, {compare_table}.*  FROM {main_stats}, Identifier('{compare_table}')) as results"
-            replacements = {
-                "{cases}": self.prepare_cases_snowflake_sql(),
-                "{compare_table}": compare_table.table_name,
-                "{main_stats}": self.prepare_main_stats_snowflake_sql(main_table),
-                "{checks}": self.prepare_checks_snowflake_aggregation(),
-            }
-
-            invalid_identifier = is_valid_snow_identifiers([compare_table.table_name])
-            if len(invalid_identifier) > 0:
-                raise ValueError(
-                    f"Not a valid snowflake identifier {', '.join(invalid_identifier)}"
-                )
-
-            for key, val in replacements.items():
-                statement = statement.replace(key, val)
-        else:
-            raise ValueError("Unsupported connection type")
-        return statement, {}
-
-    def check_snowflake_results(self, row, check, index):
-        return row[check.name.upper()]
-
-    def check_postgres_results(self, row, check, index):
+    def check_results(self, row, check, index):
         return row[index + 1]
 
     def evaluate_results(self, rows, max_rows_returned, conn_type):
-        check_results = {
-            "postgres": self.check_postgres_results,
-            "snowflake": self.check_snowflake_results,
-        }[conn_type]
-
-        total_rows = 0
-        if conn_type == "snowflake":
-            total_rows = rows[0]["TOTAL"]
-        elif conn_type == "postgres":
-            total_rows = rows[0][0]
-
+        total_rows = rows[0][0]
         failed_rows_count = {
-            check.name: check_results(rows[0], check, index)
+            check.name: self.check_results(rows[0], check, index)
             for index, check in enumerate(self.checks)
         }
         failed_checks = set()
@@ -256,47 +131,31 @@ class ChecksHandler:
         compare_table: Table,
         failed_checks: Set[str],
         max_rows_returned,
+        engine,
+        metadata_obj,
     ):
+        main_table_sqla = SqlaTable(
+            main_table.table_name, metadata_obj, autoload_with=engine
+        )
+        compare_table_sqla = SqlaTable(
+            compare_table.table_name, metadata_obj, autoload_with=engine
+        )
+
+        main_stats = self.prepare_main_stats_sql(main_table, main_table_sqla)
+
         failed_checks_sql: List[tuple] = []
         for check in self.checks:
             if check.name in failed_checks:
-                if conn_type == "postgres":
-                    hook = PostgresHook(postgres_conn_id=main_table.conn_id)
-                    statement = (
-                        sql.SQL(
-                            "SELECT {compare_table}.* FROM {main_stats}, {compare_table} WHERE {column_sql} limit {max_rows_returned}"
-                        )
-                        .format(
-                            compare_table=sql.Identifier(compare_table.table_name),
-                            main_stats=self.prepare_main_stats_postgres_sql(main_table),
-                            column_sql=self.prepare_column_postgres_sql(check),
-                            max_rows_returned=sql.SQL(str(max_rows_returned)),
-                        )
-                        .as_string(hook.get_conn())
+                statement = (
+                    select(compare_table_sqla)
+                    .select_from(main_stats, compare_table_sqla)
+                    .where(
+                        self.prepare_column_sql(check, main_stats, compare_table_sqla)
                     )
-                    failed_checks_sql.append((check.name, statement, {}))
-                elif conn_type == "snowflake":
-                    statement = "SELECT {compare_table}.* FROM {main_stats}, Identifier('{compare_table}') WHERE {column_sql} limit {max_rows_returned}"
-                    replacements = {
-                        "{compare_table}": compare_table.table_name,
-                        "{main_stats}": self.prepare_main_stats_snowflake_sql(
-                            main_table
-                        ),
-                        "{column_sql}": self.prepare_column_snowflake_sql(check),
-                        "{max_rows_returned}": str(max_rows_returned),
-                    }
+                    .limit(max_rows_returned)
+                )
 
-                    invalid_identifier = is_valid_snow_identifiers(
-                        [compare_table.table_name]
-                    )
-                    if len(invalid_identifier) > 0:
-                        raise ValueError(
-                            f"Not a valid snowflake identifier {', '.join(invalid_identifier)}"
-                        )
-
-                    for key, val in replacements.items():
-                        statement = statement.replace(key, val)
-                    failed_checks_sql.append((check.name, statement, {}))
+                failed_checks_sql.append((check.name, statement, {}))
         return failed_checks_sql
 
 
@@ -351,10 +210,16 @@ class AgnosticStatsCheck(SqlDecoratoratedOperator):
         conn_type = BaseHook.get_connection(self.conn_id).conn_type  # type: ignore
         self.handler = lambda curr: curr.fetchall()
         checkHandler = ChecksHandler(self.checks, conn_type)
-        self.sql, self.parameters = checkHandler.prepare_comparison_sql(
-            main_table=self.main_table, compare_table=self.compare_table
+        metadata = MetaData()
+        self.sql = checkHandler.prepare_comparison_sql(
+            main_table=self.main_table,
+            compare_table=self.compare_table,
+            engine=self.get_sql_alchemy_engine(),
+            metadata_obj=metadata,
         )
+
         results = super().execute(context)
+        results = results.fetchall()
         failed_checks = checkHandler.evaluate_results(
             results, self.max_rows_returned, conn_type
         )
@@ -365,12 +230,14 @@ class AgnosticStatsCheck(SqlDecoratoratedOperator):
                 compare_table=self.compare_table,
                 failed_checks=failed_checks,
                 max_rows_returned=self.max_rows_returned,
+                engine=self.get_sql_alchemy_engine(),
+                metadata_obj=metadata,
             )
             failed_values = {}
             for check_query in failed_check_sql:
                 check, self.sql, self.parameters = check_query
                 results = super().execute(context)
-                failed_values[check] = results
+                failed_values[check] = results.fetchall()
 
             raise ValueError("Stats Check Failed. {}".format(failed_values))
 

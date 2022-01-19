@@ -94,7 +94,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.run_id = context.get("run_id")
         self.convert_op_arg_dataframes()
         self.convert_op_kwarg_dataframes()
-        if not self.sql:
+        if self.sql is None or self.sql == "":
             sql_stuff = self.python_callable(*self.op_args, **self.op_kwargs)
             # If we return two things, assume the second thing is the params
             if len(sql_stuff) == 2:
@@ -102,15 +102,16 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             else:
                 self.sql = sql_stuff
                 self.parameters = {}
-        elif self.sql[-4:] == ".sql":
+        elif isinstance(self.sql, str) and self.sql[-4:] == ".sql":
             with open(self.sql) as file:
                 self.sql = file.read().replace("\n", " ")
-        if context:
+        if isinstance(self.sql, str) and context:
             self.sql = self.render_template(self.sql, context)
             self.parameters = {
                 k: self.render_template(v, context) for k, v in self.parameters.items()  # type: ignore
             }
-        self._parse_template()
+        if isinstance(self.sql, str):
+            self._parse_template()
         output_table_name = None
 
         if not self.raw_sql:
@@ -253,8 +254,12 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         return results
 
     def get_sql_alchemy_engine(self):
+        conn = BaseHook.get_connection(self.conn_id)
+        self.conn_type = conn.conn_type  # type: ignore
+
         hook = {
             "snowflake": self.get_snow_hook(),
+            "postgresql": self.get_postgres_hook(),
             "postgres": self.get_postgres_hook(),
         }[self.conn_type]
         return hook.get_sqlalchemy_engine()

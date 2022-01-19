@@ -36,7 +36,7 @@ class TestStatsCheckOperator(unittest.TestCase):
             path=str(cls.cwd) + "/../data/homes.csv",
             output_table=Table(
                 "stats_check_test_1",
-                conn_id="postgres_conn",
+                conn_id="postgres_sqla_conn",
                 database="pagila",
                 schema="public",
             ),
@@ -45,7 +45,7 @@ class TestStatsCheckOperator(unittest.TestCase):
             path=str(cls.cwd) + "/../data/homes2.csv",
             output_table=Table(
                 "stats_check_test_2",
-                conn_id="postgres_conn",
+                conn_id="postgres_sqla_conn",
                 database="pagila",
                 schema="public",
             ),
@@ -54,7 +54,7 @@ class TestStatsCheckOperator(unittest.TestCase):
             path=str(cls.cwd) + "/../data/homes3.csv",
             output_table=Table(
                 "stats_check_test_3",
-                conn_id="postgres_conn",
+                conn_id="postgres_sqla_conn",
                 database="pagila",
                 schema="public",
             ),
@@ -140,13 +140,13 @@ class TestStatsCheckOperator(unittest.TestCase):
                 main_table=Table(
                     "stats_check_test_1",
                     database="pagila",
-                    conn_id="postgres_conn",
+                    conn_id="postgres_sqla_conn",
                     schema="public",
                 ),
                 compare_table=Table(
                     "stats_check_test_2",
                     database="pagila",
-                    conn_id="postgres_conn",
+                    conn_id="postgres_sqla_conn",
                     schema="public",
                 ),
                 checks=[aql.OutlierCheck("room_check", {"rooms": "rooms"}, 2, 0.0)],
@@ -163,13 +163,13 @@ class TestStatsCheckOperator(unittest.TestCase):
                 main_table=Table(
                     "stats_check_test_1",
                     database="pagila",
-                    conn_id="postgres_conn",
+                    conn_id="postgres_sqla_conn",
                     schema="public",
                 ),
                 compare_table=Table(
                     "stats_check_test_3",
                     database="pagila",
-                    conn_id="postgres_conn",
+                    conn_id="postgres_sqla_conn",
                     schema="public",
                 ),
                 checks=[aql.OutlierCheck("room_check", {"rooms": "rooms"}, 2, 0.0)],

@@ -6,7 +6,7 @@ from psycopg2 import sql
 
 def set_schema_query(conn_type, hook, schema_id, user):
 
-    if conn_type == "postgres":
+    if conn_type == "postgresql" or conn_type == "postgres":
         return (
             sql.SQL("CREATE SCHEMA IF NOT EXISTS {schema} AUTHORIZATION {user}")
             .format(schema=sql.Identifier(schema_id), user=sql.Identifier(user))

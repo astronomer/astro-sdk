@@ -36,6 +36,7 @@ def move_dataframe_to_sql(
 ):
     # Select database Hook based on `conn` type
     hook: Union[TempPostgresHook, TempSnowflakeHook] = {  # type: ignore
+        "postgresql": TempPostgresHook(postgres_conn_id=conn_id, schema=database),
         "postgres": TempPostgresHook(postgres_conn_id=conn_id, schema=database),
         "snowflake": TempSnowflakeHook(
             snowflake_conn_id=conn_id,
