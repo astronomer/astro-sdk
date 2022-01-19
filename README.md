@@ -217,7 +217,52 @@ with dag:
 
 ### Passing on tables to subsequent tasks
 
+Once the `render` function completes, it returns a dictionary of all of the models based on the sql file name.
+If you have a sql file named `join_orders_and_customers.sql`, then the result would be stored in `model["join_orders_and_customers]`.
+
+Here is an example of passing a single model to a subsequent rendering (perhaps you want to separate your ingest and transforms).
+
 ```python
+dir_path = os.path.dirname(os.path.realpath(__file__))
+with dag:
+    raw_orders = aql.load_file(
+        path="s3://my/path/{{ execution_date }}/",
+        file_conn_id="my_s3_conn",
+        output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
+    )
+    ingest_models = aql.render(dir_path + "/ingest_models", orders_table=raw_orders)
+    aql.render(
+        dir_path + "/transform_models",
+        orders_and_customers=ingest_models["join_orders_and_customers"],
+    )
+```
+
+You can also pass the entire dictionary of models to the subsequent task by dereferencing the dictionary using `**`.
+
+In this example, we pass _all_ tables to the next round of SQL files.
+
+```python
+dir_path = os.path.dirname(os.path.realpath(__file__))
+with dag:
+    raw_orders = aql.load_file(
+        path="s3://my/path/{{ execution_date }}/",
+        file_conn_id="my_s3_conn",
+        output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
+    )
+    ingest_models = aql.render(dir_path + "/ingest_models", orders_table=raw_orders)
+    aql.render(
+        dir_path + "/transform_models",
+        orders_and_customers=ingest_models["join_orders_and_customers"],
+    )
+```
+
+Finally, you can even pass the resulting tables into a python function that uses the `astro.dataframe` function and we'll
+automatically convert your table into a dataframe (but we'll go into more detail on that further down).
+
+```python
+from astro.dataframe import dataframe as df
+
+
 @df
 def aggregate_data(agg_df: pd.DataFrame):
     customers_and_orders_dataframe = agg_df.pivot_table(
@@ -237,64 +282,13 @@ with dag:
     aggregate_data(agg_df=ingest_models["agg_orders"])
 ```
 
-```python
-dir_path = os.path.dirname(os.path.realpath(__file__))
-with dag:
-    raw_orders = aql.load_file(
-        path="s3://my/path/{{ execution_date }}/",
-        file_conn_id="my_s3_conn",
-        output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
-    )
-    ingest_models = aql.render(dir_path + "/ingest_models", orders_table=raw_orders)
-    aql.render(dir_path + "/transform_models", **ingest_models)
-```
-
-```python
-import os
-from datetime import datetime, timedelta
-
-import pandas as pd
-from airflow.models import DAG
-
-from astro import sql as aql
-from astro.dataframe import dataframe as df
-from astro.sql.table import Table
-
-default_args = {
-    "retries": 1,
-    "retry_delay": 0,
-}
-
-dag = DAG(
-    dag_id="sql_file_dag",
-    start_date=datetime(2019, 1, 1),
-    max_active_runs=3,
-    schedule_interval=timedelta(minutes=30),
-    default_args=default_args,
-)
-
-
-@df
-def aggregate_data(agg_df: pd.DataFrame):
-    customers_and_orders_dataframe = agg_df.pivot_table(
-        index="DATE", values="NAME", columns=["TYPE"], aggfunc="count"
-    ).reset_index()
-    return customers_and_orders_dataframe
-
-
-dir_path = os.path.dirname(os.path.realpath(__file__))
-with dag:
-    raw_orders = aql.load_file(
-        path="s3://my/path/{{ execution_date }}/",
-        file_conn_id="my_s3_conn",
-        output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
-    )
-    ingest_models = aql.render(dir_path + "/ingest_models", orders_table=raw_orders)
-
-    aggregate_data(agg_df=ingest_models["join_customers_and_orders"])
-```
 
 # Using Astro as a Python Engineer
+
+For those who don't want to store their transformations in external SQL files or who want to create tranformation
+functions that are extendable and importable, we offer a rich python API that simplifies the SQL experience for the python engineer!
+
+Here is an example DAG of a SQL + Python workflow using `astro`, we'll break this down in the subsequent sections.
 
 ```python
 from datetime import datetime, timedelta
