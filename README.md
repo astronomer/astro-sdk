@@ -8,12 +8,10 @@
 - [Philosophy](#philosophy)
 - [Setup](#setup)
 - [Using Astro as a SQL Engineer](#using-astro-as-a-sql-engineer)
+  - [Schemas](#schemas)
   - [Setting up SQL files](#setting-up-sql-files)
 - [Using Astro as a Python Engineer](#using-astro-as-a-python-engineer)
-- [The output_table parameter](#the-output_table-parameter)
-  - [The Table class](#the-table-class)
-  - [The TempTable Class](#the-temptable-class)
-  - [Schemas](#schemas)
+  - [The output_table parameter](#the-output_table-parameter)
   - [Loading Data](#loading-data)
   - [Transform](#transform)
   - [Transform File](#transform-file)
@@ -78,6 +76,24 @@ AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
 ```
 
 #  Using Astro as a SQL Engineer
+
+## Schemas
+
+
+By default, our system will create a schema called `tmp_astro` in any database where astro runs, but we also realize that this system works with
+two core assumptions. The first assumption is that the data engineer running airflow can create schemas on the fly, and the second is that the user
+creating the schema will be the only user adding/removing from said schema.
+
+For production usage we recommend that `astro` users work with their DBAs to create shared schemas where they can put their temporary tables. These schemas
+can be shared across multiple users, but should be created with security in mind (e.g. don't place high security data in a shared schema).
+
+Once this schema is created, the Airflow admin can set the schema by setting the `AIRFLOW__ASTRO__SQL_SCHEMA` env variable, or setting the following in their
+`airflow.cfg`
+
+```bash
+[astro]
+sql_schema=<your schema here>
+```
 
 ## Setting up SQL files
 
@@ -377,9 +393,9 @@ with dag:
 ```
 
 
-# The output_table parameter
+## The output_table parameter
 
-## The Table class
+### The Table class
 
 To instantiate a table or bring in a table from a database into the `astro` ecosystem, you can pass a `Table` object into the class. This Table object will contain all necessary metadata to handle table creation between tasks. Once you define it in the beginning of your pipeline, `astro` can automatically pass that metadata along.
 
@@ -405,7 +421,7 @@ with dag:
     my_second_sql_transformation(my_table)
 ```
 
-## The TempTable Class
+### The TempTable Class
 
 Following the traditional dev ops concept of [pets vs. cattle](http://cloudscaling.com/blog/cloud-computing/the-history-of-pets-vs-cattle/), you can decide whether
 the result of a function is a "pet" (e.g. a named table that you would want to reference later), or a "cattle" that can be deleted at any time. 
@@ -433,24 +449,6 @@ with dag:
         output_table=TempTable(database="bar", conn_id="postgres_conn"),
     )
     my_second_sql_transformation(my_table)
-```
-
-## Schemas
-
-
-By default, our system will create a schema called `tmp_astro` in any database where astro runs, but we also realize that this system works with
-two core assumptions. The first assumption is that the data engineer running airflow can create schemas on the fly, and the second is that the user
-creating the schema will be the only user adding/removing from said schema.
-
-For production usage we recommend that `astro` users work with their DBAs to create shared schemas where they can put their temporary tables. These schemas
-can be shared across multiple users, but should be created with security in mind (e.g. don't place high security data in a shared schema).
-
-Once this schema is created, the Airflow admin can set the schema by setting the `AIRFLOW__ASTRO__SQL_SCHEMA` env variable, or setting the following in their
-`airflow.cfg`
-
-```bash
-[astro]
-sql_schema=<your schema here>
 ```
 
 ## Loading Data
