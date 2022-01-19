@@ -47,7 +47,7 @@
 The `astro` library is a collection of SQL and dataframe modules that you can use to write tasks without needing to define Airflow connections and metadata for each task. By design, `astro` modules automatically pass database contexts to your tasks, meaning that you can focus on writing Python and leave metadata definitions for load time.
 
 - **Without `astro`**: Database connections and context are defined in operators. This metadata does not pass automatically from task to task, meaning that you have to redefine it for each new task/ operator. SQL queries must be static. 
-- **With `astro`**: Databse connections and context are defined at load time. Metadata is automatically passed into functions, meaning that you can write generic queries in your task an run these queries in various contexts without knowing the context ahead of time. SQL queries can be templated with JINJA.
+- **With `astro`**: Database connections and context are defined at load time. Metadata is automatically passed into functions, meaning that you can write generic queries in your task and run these queries without knowing the context ahead of time. SQL queries can be templated with JINJA.
 
 # Philosophy
 
