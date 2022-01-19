@@ -35,6 +35,7 @@ import pytest
 from airflow.exceptions import DuplicateTaskIdFound
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
@@ -247,6 +248,42 @@ class TestAgnosticLoadFile(unittest.TestCase):
                 "path": str(CWD) + "/../data/homes.csv",
                 "file_conn_id": "",
                 "output_table": TempTable(database="pagila", conn_id="postgres_conn"),
+            },
+        )
+
+        # Read table from db
+        df = pd.read_sql(
+            f"SELECT * FROM tmp_astro.test_dag_load_file_homes_csv_1",
+            con=self.hook_target.get_conn(),
+        )
+
+        assert df.iloc[0].to_dict() == {
+            "sell": 142.0,
+            "list": 160.0,
+            "living": 28.0,
+            "rooms": 10.0,
+            "beds": 5.0,
+            "baths": 3.0,
+            "age": 60.0,
+            "acres": 0.28,
+            "taxes": 3167.0,
+        }
+
+    def test_aql_local_file_to_bigquery_no_table_name(self):
+        OUTPUT_TABLE_NAME = "expected_table_from_csv"
+
+        self.hook_target = BigQueryHook(gcp_conn_id="bigquery", use_legacy_sql=False)
+
+        # # Drop target table
+        # drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
+
+        task = self.create_and_run_task(
+            load_file,
+            (),
+            {
+                "path": str(self.cwd) + "/../data/homes.csv",
+                "file_conn_id": "",
+                "output_table": TempTable(database="pagila", conn_id="bigquery"),
             },
         )
 

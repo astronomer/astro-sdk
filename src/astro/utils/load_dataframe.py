@@ -15,6 +15,7 @@ limitations under the License.
 """
 from typing import Optional, Union
 
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from pandas import DataFrame
 from pandas.io.sql import SQLDatabase
 from snowflake.connector.pandas_tools import write_pandas
@@ -43,6 +44,12 @@ def move_dataframe_to_sql(
             database=database,
             schema=schema,
             warehouse=warehouse,
+        ),
+        "google_cloud_platform": BigQueryHook(
+            gcp_conn_id=conn_id, use_legacy_sql=False
+        ),
+        "bigquery": BigQueryHook(
+            bigquery_conn_id=conn_id, use_legacy_sql=False, gcp_conn_id=conn_id
         ),
     }.get(conn_type, None)
     if not hook:

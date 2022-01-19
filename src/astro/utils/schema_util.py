@@ -6,13 +6,13 @@ from psycopg2 import sql
 
 def set_schema_query(conn_type, hook, schema_id, user):
 
-    if conn_type == "postgresql" or conn_type == "postgres":
+    if conn_type in ["postgresql", "postgres"]:
         return (
             sql.SQL("CREATE SCHEMA IF NOT EXISTS {schema} AUTHORIZATION {user}")
             .format(schema=sql.Identifier(schema_id), user=sql.Identifier(user))
             .as_string(hook.get_conn())
         )
-    elif conn_type == "snowflake":
+    elif conn_type in ["snowflake", "google_cloud_platform", "bigquery"]:
         return f"CREATE SCHEMA IF NOT EXISTS {schema_id}"
 
 
