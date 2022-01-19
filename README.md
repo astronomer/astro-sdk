@@ -107,7 +107,7 @@ sql_schema=<new-temp-schema>
 ## Setting up SQL files
 
 When writing out a SQL DAG using `astro`, you can think of each SQL file as its own Airflow task. For example, if you wanted
-to aggregate orders, aggregate customers, and then join customers and orders you could havesh
+to aggregate orders, aggregate customers, and then join customers and orders, you could have the following directory of files:
 
 ```
 |
