@@ -13,6 +13,7 @@ from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
 from astro.utils.snowflake_merge_func import is_valid_snow_identifier
 
+
 class Check:
     def __init__(
         self,
