@@ -176,7 +176,7 @@ SELECT c.customer_id, c.source, c.region, c.member_since,
         FROM orders c LEFT OUTER JOIN customers p ON c.customer_id = p.customer_id
 ```
 
-Here is a list of currently supported frontmatter argument:
+Here is a list of supported frontmatter arguments:
 
 | Argument      | Description |
 | ----------- | ----------- |
