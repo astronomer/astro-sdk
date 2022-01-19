@@ -123,7 +123,7 @@ SELECT c.customer_id, c.source, c.region, c.member_since,
 
 ### Defining metadata
 
-Once your SQL is working as expected, you might want to define the database and schema for the query when the query itself runs.
+Once your SQL is working as expected, you might want to define the query's database and schema during its runtime.
 To expose this functionality while keeping your SQL easy to run in your favorite SQL notebook, 
 you can create a [frontmatter](https://middlemanapp.com/basics/frontmatter/): 
 
