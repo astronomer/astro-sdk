@@ -158,9 +158,9 @@ SELECT c.customer_id, c.source, c.region, c.member_since,
 ### Defining dependencies
 
 When running SQL queries in Airflow DAGs, you need to define dependencies that break up your SQL into
-multiple, reproduceable steps. We offer two ways to define dependencies within an `astro` SQL file:
+multiple, reproducible steps. We offer two ways to define dependencies within an `astro` SQL file:
 
-The first way to define a dependency is by defining a variable via the `template_vars` frontmatter argument. We set `template_vars` so that our `join_customers_and_orders` query cannot run until both our `customers_table` and `agg_orders` queries finish. This data dependecy is equivalent task dependency in our DAG. The only difference is that we're defining it directly in our SQL instead of using Airflow's dependency operators. 
+The first way to define a dependency is by defining a variable via the `template_vars` frontmatter argument. We set `template_vars` so that our `join_customers_and_orders` query cannot run until both our `customers_table` and `agg_orders` queries finish. This data dependency is equivalent to a task dependency in our DAG. The only difference is that we're defining it directly in our SQL instead of using Airflow's dependency operators. 
 
 ```sql
 # join_customers_and_orders.sql
@@ -296,7 +296,7 @@ with dag:
 
 # Using Astro as a Python Engineer
 
-For those who don't want to store their transformations in external SQL files or who want to create tranformation
+For those who don't want to store their transformations in external SQL files or who want to create transformation
 functions that are extendable and importable, we offer a rich python API that simplifies the SQL experience for the python engineer!
 
 ## Setting Input and Output Tables
@@ -305,9 +305,9 @@ Before we can complete any transformations, we need to define a way to get our t
 
 ### The Table class
 
-To instantiate a table or bring in a table from a database into the `astro` ecosystem, you can pass a `Table` object into the class. This Table object will contain all of the metadata that's necessary for handling table creation between tasks. Once you define at in the beginning of your pipeline, `astro` can automatically pass that metadata along to downstream tasks.
+To instantiate a table or bring in a table from a database into the `astro` ecosystem, you can pass a `Table` object into the class. This Table object will contain all of the metadata that's necessary for handling table creation between tasks. After you define a Table's metadata in the beginning of your pipeline, `astro` can automatically pass that metadata along to downstream tasks.
 
-In the following example, we define the our table in the DAG instantiation. In each subsequent task, we only pass in an input table argument because `astro` automatically passes in the additional context from our original `input_table` parameter.
+In the following example, we define our table in the DAG instantiation. In each subsequent task, we only pass in an input table argument because `astro` automatically passes in the additional context from our original `input_table` parameter.
 
 ```python
 from astro import sql as aql
@@ -555,7 +555,7 @@ with dag:
 
 # Other SQL functions
 
-While simple SQL statements such as `SELECT` statements are very similar between different flavors of SQL, certain functions can very widely between different SQL systems. This wide variation can lead to issues if a user decides to switch from postgres to snowflake. To simplify this process, we created some high level APIs that handle certain common SQL use-cases to ensure universal interoperability of your DAGs across SQL flavors.
+While simple SQL statements such as `SELECT` statements are very similar between different flavors of SQL, certain functions can vary widely between different SQL systems. This wide variation can lead to issues if a user decides to switch from postgres to snowflake. To simplify this process, we created some high level APIs that handle certain common SQL use-cases to ensure universal interoperability of your DAGs across SQL flavors.
 
 ## Appending data
 
