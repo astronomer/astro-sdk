@@ -41,19 +41,25 @@
 </h3>
 <br/>
 
+# Overview
+
+The `astro` library is a collection of SQL and dataframe modules that you can use to write tasks without needing to define Airflow connections and metadata for each task. By design, `astro` modules automatically pass database contexts to your tasks, meaning that you can focus on writing Python and leave metadata definitions for load time.
+
+- **Without `astro`**: Database connections and context are defined in operators. This metadata does not pass automatically from task to task, meaning that you have to redefine it for each new task/ operator. SQL queries must be static. 
+- **With `astro`**: Databse connections and context are defined at load time. Metadata is automatically passed into functions, meaning that you can write generic queries in your task an run these queries in various contexts without knowing the context ahead of time. SQL queries can be templated with JINJA.
+
 # Philosophy
 
 With the `astro` library, we want to redefine the DAG writing experience from the bottom up. Our goal is to empower
-data engineers and data scientists to write DAGs based around the movement of _data_ instead of the dependencies of tasks.
-With this in mind, we built a library where every step is defined by how your data moves, while also simplifying the transformation
-process between different environments. Our first two integrations are SQL and pandas, but we are planning many more in coming months.
+data engineers and data scientists to write DAGs based around _data_ instead of _task dependencies_.
+With this in mind, we built a library focused on data movement and simplifying data transformations between different environments. Our first two integrations are SQL and pandas, but we are planning many more in the coming months.
 
 With our SQL and dataframe modules, you should have the ability to treat SQL tables as if they're python objects. You can manipulate them,
 join them, templatize them, and ultimately turn them into dataframes if you want to run python functions against them. We hope that this
-library creates a cleaner Airflow ELT experience, as well as an easier onboarding for those who want to think in data transformations
+library creates a cleaner Airflow ELT experience, as well as an easier onboarding for those who want to focus on data transformations
 instead of DAGs. 
 
-Please feel free to raise issues and propose improvements, and community contributions are highly welcome!
+Please feel free to raise issues and propose improvements. Community contributions are highly welcome!
 
 Thank you,
 
@@ -61,44 +67,44 @@ Thank you,
 
 # Setup
 
-To install the astro library simply run
-```shell script
-pip install astro-projects
-```
+To start using `astro`:
 
-or add `astro-projects` to your `requirements.txt`.
+1. Install `astro` by running the following command:
 
-Before running please keep in mind that you'll need to set the following env variable for passing table objects
-between tasks:
+    ```shell script
+    pip install astro-projects
+    ```
 
-```shell script
-AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
-```
+    Alternatively, you can add `astro-projects` to your `requirements.txt` file.
+
+2. Set the following environment variable so that `astro` can pass table objects between tasks:
+
+    ```shell script
+    AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
+    ```
 
 #  Using Astro as a SQL Engineer
 
 ## Schemas
 
 
-By default, our system will create a schema called `tmp_astro` in any database where astro runs, but we also realize that this system works with
-two core assumptions. The first assumption is that the data engineer running airflow can create schemas on the fly, and the second is that the user
-creating the schema will be the only user adding/removing from said schema.
+By default, running `astro` for a given database creates a schema called `tmp_astro` in the database. This default behavior assumes that you have permissions to create schemas on the fly, and that there is only one user adding/removing from this schema.
 
-For production usage we recommend that `astro` users work with their DBAs to create shared schemas where they can put their temporary tables. These schemas
+For production usage, we recommend that you work with your database administrator to create a shared schema for temporary tables. This schema
 can be shared across multiple users, but should be created with security in mind (e.g. don't place high security data in a shared schema).
 
-Once this schema is created, the Airflow admin can set the schema by setting the `AIRFLOW__ASTRO__SQL_SCHEMA` env variable, or setting the following in their
-`airflow.cfg`
+Once you create this schema, an Airflow admin can replace `tmp_astro` by setting `AIRFLOW__ASTRO__SQL_SCHEMA="<new-temp-schema>"`, or by setting the following in `airflow.cfg`:
 
 ```bash
 [astro]
-sql_schema=<your schema here>
+sql_schema=<new-temp-schema>
 ```
 
 ## Setting up SQL files
 
-When writing out a SQL DAG using `astro`, you can think of each SQL file as its own task. So for example if you wanted
-to aggregate orders, aggregate customers, and then join customers and orders you could have
+When writing out a SQL DAG using `astro`, you can think of each SQL file as its own task. For example, if you wanted
+to aggregate orders, aggregate customers, and then join customers and orders you could havesh
+
 ```
 |
 -- customers_table.sql
@@ -106,10 +112,10 @@ to aggregate orders, aggregate customers, and then join customers and orders you
 -- join_customers_and_orders.sql
 ```
 
-In each of these SQL files, you can create a table by having a standard `SELECT` statement (we will handle all of the
-temporary tables for you).
+In each of these SQL files, you can create a table by having a standard `SELECT` statement. `astro` handles creating all of the temporary tables.
 
 ```sql
+# join_customers_and_orders.sql
 SELECT c.customer_id, c.source, c.region, c.member_since,
         CASE WHEN purchase_count IS NULL THEN 0 ELSE 1 END AS recent_purchase
         FROM orders c LEFT OUTER JOIN customers p ON c.customer_id = p.customer_id
@@ -117,11 +123,12 @@ SELECT c.customer_id, c.source, c.region, c.member_since,
 
 ### Defining metadata
 
-Once your SQL is working as expected, you might want to define the database and schema for this query when running. 
+Once your SQL is working as expected, you might want to define the database and schema for the query when the query itself runs.
 To expose this functionality while keeping your SQL easy to run in your favorite SQL notebook, 
-we create a [frontmatter](https://middlemanapp.com/basics/frontmatter/). 
+you can create a [frontmatter](https://middlemanapp.com/basics/frontmatter/): 
 
 ```sql
+# join_customers_and_orders.sql
 ---
 database: foo
 schema: bar
@@ -131,10 +138,10 @@ SELECT c.customer_id, c.source, c.region, c.member_since,
         FROM orders c LEFT OUTER JOIN customers p ON c.customer_id = p.customer_id
 ```
 
-One huge benefit of putting all metadata into a frontmatter block is that all of your SQL is still valid SQL that can run
-outside of the context of Airflow. If you wish to develop your SQL locally, comment out the frontmatter block and made edits.
+One benefit of putting all metadata into a frontmatter block is that all of your SQL is still valid outside of the context of Airflow. If you want to develop your SQL locally, comment out the frontmatter block.
 
 ```sql
+# join_customers_and_orders.sql
 -- ---
 -- database: foo
 -- schema: bar
@@ -146,13 +153,16 @@ SELECT c.customer_id, c.source, c.region, c.member_since,
 
 ### Defining dependencies
 
-As these SQL files are related to Airflow DAGs, there is an expectation that there should be dependencies so you can break up your SQL into
-multiple reproduceable steps. We offer two ways to define dependencies within an `astro` sql file.
+When running SQL queries in Airflow DAGs, you need to define dependencies that break up your SQL into
+multiple, reproduceable steps. We offer two ways to define dependencies within an `astro` SQL file:
 
-The first way to define a dependency is by defining a variable via the `template_vars` option.
+The first way to define a dependency is by defining a variable via the `template_vars` frontmatter argument. We set `template_vars` so that our `join_customers_and_orders` query cannot run until both our `customers_table` and `agg_orders` queries finish. This data dependecy is equivalent task dependency in our DAG. The only difference is that we're defining it directly in our SQL instead of using Airflow's dependency operators. 
 
 ```sql
+# join_customers_and_orders.sql
 ---
+database: foo
+schema: bar
 template_vars:
     customers: customers_table
     orders: agg_orders
@@ -162,24 +172,21 @@ SELECT c.customer_id, c.source, c.region, c.member_since,
         FROM orders c LEFT OUTER JOIN customers p ON c.customer_id = p.customer_id
 ```
 
-In this example, we are setting the value `customers` to tie to the `customers_table.sql` file, 
-essentially setting up a task dependency by creating a data dependency.
+Here is a list of currently supported frontmatter argument:
 
-Here is a list of currently supported variables:
-
-| argument      | Description |
+| Argument      | Description |
 | ----------- | ----------- |
-| conn_id | What connection should this query run against |
-| Database      | Which database to query       |
-| Schema   | Which schema to query, defaults to the temporary schema provided by the admin        |
+| conn_id | The connection that this query should run against |
+| Database      | The database to query    |
+| Schema   | The schema to query. Default value is either `tmp_astro` or your temp schema defined in `AIRFLOW__ASTRO__SQL_SCHEMA`    |
 | Template Vars | A key-value dictionary of what values to override when this SQL file is used in a DAG.  |
 
 ### Incorporating SQL directory into DAG
 
 Now that you have developed your SQL, we can attach your directory to any DAG using the `aql.render` function.
 
-Here is an example DAG that can pull a directory of CSV files from s3 into a postgres table, and then pass
-that table into a directory of sql models that will process the incoming data in an ELT fashion.
+The following example DAG pulls a directory of CSV files from s3 into a postgres table, then passes
+that table into a directory of SQL models that will process the table in an ELT fashion.
 
 ```python
 import os
@@ -215,12 +222,12 @@ with dag:
     ingest_models = aql.render(dir_path + "/ingest_models", orders_table=raw_orders)
 ```
 
-### Passing on tables to subsequent tasks
-
 Once the `render` function completes, it returns a dictionary of all of the models based on the sql file name.
 If you have a sql file named `join_orders_and_customers.sql`, then the result would be stored in `model["join_orders_and_customers]`.
 
-Here is an example of passing a single model to a subsequent rendering (perhaps you want to separate your ingest and transforms).
+### Passing on tables to subsequent tasks
+
+The following DAG is an example of passing a single model to a subsequent rendering (perhaps you want to separate your ingest and transforms):
 
 ```python
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -256,7 +263,7 @@ with dag:
     )
 ```
 
-Finally, you can even pass the resulting tables into a python function that uses the `astro.dataframe` function and we'll
+You can even pass the resulting tables into a python function that uses the `astro.dataframe` to
 automatically convert your table into a dataframe (but we'll go into more detail on that further down).
 
 ```python
@@ -288,7 +295,7 @@ with dag:
 For those who don't want to store their transformations in external SQL files or who want to create tranformation
 functions that are extendable and importable, we offer a rich python API that simplifies the SQL experience for the python engineer!
 
-Here is an example DAG of a SQL + Python workflow using `astro`, we'll break this down in the subsequent sections.
+Here is an example DAG of a SQL + Python workflow using `astro`. We'll break down how this DAG works in the subsequent sections.
 
 ```python
 from datetime import datetime, timedelta
@@ -380,7 +387,7 @@ with dag:
     customers = get_customers()
     features = join_orders_and_customers(customers, agg_orders)
     simple_df = perform_dataframe_transformation(df=features)
-    # By defining the output_table int the invocation, we are telling astro where to put the result dataframe
+    # By defining the output_table in the invocation, we are telling astro where to put the result dataframe
     dataframe_action_to_sql(
         simple_df, output_table=Table(table_name="result", conn_id="my_postgres_conn")
     )
@@ -389,9 +396,13 @@ with dag:
 
 ## The output_table parameter
 
+Before we can complete any transformations, we need to get our tables into Airflow. We can do this by defining a `Table` in the `output_table` parameter.
+
 ### The Table class
 
-To instantiate a table or bring in a table from a database into the `astro` ecosystem, you can pass a `Table` object into the class. This Table object will contain all necessary metadata to handle table creation between tasks. Once you define it in the beginning of your pipeline, `astro` can automatically pass that metadata along.
+To instantiate a table or bring in a table from a database into the `astro` ecosystem, you can pass a `Table` object into the class. This Table object will contain all of the metadata that's necessary for handling table creation between tasks. Once you define at in the beginning of your pipeline, `astro` can automatically pass that metadata along to downstream tasks.
+
+In the following example, we define the our table in the DAG instantiation. In each subsequent task, we only pass in an input table because `astro` automatically passes in the context from `input_table`.
 
 ```python
 from astro import sql as aql
@@ -417,11 +428,11 @@ with dag:
 
 ### The TempTable Class
 
-Following the traditional dev ops concept of [pets vs. cattle](http://cloudscaling.com/blog/cloud-computing/the-history-of-pets-vs-cattle/), you can decide whether
-the result of a function is a "pet" (e.g. a named table that you would want to reference later), or a "cattle" that can be deleted at any time. 
+Following the traditional dev ops concept of [pets vs. cattle](http://cloudscaling.com/blog/cloud-computing/the-history-of-pets-vs-cattle/), you can decide whether the result of a function is a "pet" (e.g. a named table that you would want to reference later), or a "cattle" that can be deleted at any time for garbage collection. 
 
-If you want to ensure that the output of your task is later garbage collected, then declaring it a nameless TempTable will place it into the `astro_tmp` schema, 
-which can be later bulk deleted. All `aql.transform` functions will by default output to TempTables unless a `Table` object is used in the `output_table` argument.
+If you want to ensure that the output of your task is a cattle, you can declare it as a nameless TempTable. This places the output into your temp schema, 
+which can be later bulk deleted. By default, all `aql.transform` functions will output to TempTables unless a `Table` object is used in the `output_table` argument.
+
 ```python
 from astro import sql as aql
 from astro.sql.table import Table, TempTable
