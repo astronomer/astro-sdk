@@ -7,7 +7,8 @@
 ](#astro-rocket)
   - [Philosophy](#philosophy)
   - [Setup](#setup)
-  - [Basic Usage](#basic-usage)
+  - [Using Astro as a SQL Engineer](#using-astro-as-a-sql-engineer)
+  - [Using Astro as a Python Engineer](#using-astro-as-a-python-engineer)
   - [Supported databases](#supported-databases)
   - [The output_table parameter](#the-output_table-parameter)
   - [Schemas](#schemas)
@@ -74,7 +75,7 @@ between tasks:
 AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
 ```
 
-## Basic Usage
+##  Using Astro as a SQL Engineer
 
 ### Setting up SQL files
 
@@ -274,8 +275,8 @@ with dag:
 
     aggregate_data(agg_df=ingest_models["join_customers_and_orders"])
 ```
-###Option 2: SQL for Airflow Engineers
 
+## Using Astro as a Python Engineer
 
 ```python
 from datetime import datetime, timedelta
