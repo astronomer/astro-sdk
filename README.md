@@ -268,7 +268,7 @@ with dag:
 ```
 
 You can even pass the resulting tables into a python function that uses the `astro.dataframe` to
-automatically convert your table into a dataframe (but we'll go into more detail on that further down).
+automatically convert your table into a dataframe. We'll discuss how to do this more in "Using Astro as a Python Engineer".
 
 ```python
 from astro.dataframe import dataframe as df
