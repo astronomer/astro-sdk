@@ -5,12 +5,14 @@
 - [
   Astro :rocket:
 ](#astro-rocket)
-  - [Philosophy](#philosophy)
-  - [Setup](#setup)
-  - [Using Astro as a SQL Engineer](#using-astro-as-a-sql-engineer)
-  - [Using Astro as a Python Engineer](#using-astro-as-a-python-engineer)
-  - [Supported databases](#supported-databases)
-  - [The output_table parameter](#the-output_table-parameter)
+- [Philosophy](#philosophy)
+- [Setup](#setup)
+- [Using Astro as a SQL Engineer](#using-astro-as-a-sql-engineer)
+  - [Setting up SQL files](#setting-up-sql-files)
+- [Using Astro as a Python Engineer](#using-astro-as-a-python-engineer)
+- [The output_table parameter](#the-output_table-parameter)
+  - [The Table class](#the-table-class)
+  - [The TempTable Class](#the-temptable-class)
   - [Schemas](#schemas)
   - [Loading Data](#loading-data)
   - [Transform](#transform)
@@ -41,7 +43,7 @@
 </h3>
 <br/>
 
-## Philosophy
+# Philosophy
 
 With the `astro` library, we want to redefine the DAG writing experience from the bottom up. Our goal is to empower
 data engineers and data scientists to write DAGs based around the movement of _data_ instead of the dependencies of tasks.
@@ -59,7 +61,7 @@ Thank you,
 
 :sparkles: The Astro Team :sparkles:
 
-## Setup
+# Setup
 
 To install the astro library simply run
 ```shell script
@@ -75,9 +77,9 @@ between tasks:
 AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
 ```
 
-##  Using Astro as a SQL Engineer
+#  Using Astro as a SQL Engineer
 
-### Setting up SQL files
+## Setting up SQL files
 
 When writing out a SQL DAG using `astro`, you can think of each SQL file as its own task. So for example if you wanted
 to aggregate orders, aggregate customers, and then join customers and orders you could have
@@ -97,7 +99,7 @@ SELECT c.customer_id, c.source, c.region, c.member_since,
         FROM orders c LEFT OUTER JOIN customers p ON c.customer_id = p.customer_id
 ```
 
-#### Defining metadata
+### Defining metadata
 
 Once your SQL is working as expected, you might want to define the database and schema for this query when running. 
 To expose this functionality while keeping your SQL easy to run in your favorite SQL notebook, 
@@ -126,7 +128,7 @@ SELECT c.customer_id, c.source, c.region, c.member_since,
         FROM orders c LEFT OUTER JOIN customers p ON c.customer_id = p.customer_id
 ``` 
 
-#### Defining dependencies
+### Defining dependencies
 
 As these SQL files are related to Airflow DAGs, there is an expectation that there should be dependencies so you can break up your SQL into
 multiple reproduceable steps. We offer two ways to define dependencies within an `astro` sql file.
@@ -276,7 +278,7 @@ with dag:
     aggregate_data(agg_df=ingest_models["join_customers_and_orders"])
 ```
 
-## Using Astro as a Python Engineer
+# Using Astro as a Python Engineer
 
 ```python
 from datetime import datetime, timedelta
@@ -374,15 +376,10 @@ with dag:
     )
 ```
 
-## Supported databases
 
-The current implementation supports Postgresql and Snowflake. Other databases are on the roadmap. 
+# The output_table parameter
 
-To move data from one database to another, you can use the `save_file` and `load_file` functions to store intermediary tables on S3.
-
-## The output_table parameter
-
-### The Table class
+## The Table class
 
 To instantiate a table or bring in a table from a database into the `astro` ecosystem, you can pass a `Table` object into the class. This Table object will contain all necessary metadata to handle table creation between tasks. Once you define it in the beginning of your pipeline, `astro` can automatically pass that metadata along.
 
@@ -408,7 +405,7 @@ with dag:
     my_second_sql_transformation(my_table)
 ```
 
-### The TempTable Class
+## The TempTable Class
 
 Following the traditional dev ops concept of [pets vs. cattle](http://cloudscaling.com/blog/cloud-computing/the-history-of-pets-vs-cattle/), you can decide whether
 the result of a function is a "pet" (e.g. a named table that you would want to reference later), or a "cattle" that can be deleted at any time. 
