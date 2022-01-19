@@ -89,7 +89,6 @@ class SaveFile(BaseOperator):
             ),
         }.get(conn_type, None)
 
-        eng = input_hook.get_sqlalchemy_engine()
         # Load table from SQL db.
         df = pd.read_sql(
             f"SELECT * FROM {input_table.table_name}",

@@ -27,6 +27,7 @@ from astro.sql.operators.sql_decorator import (
     SqlDecoratoratedOperator,
     transform_decorator,
 )
+from astro.sql.parsers.sql_directory_parser import render
 from astro.sql.table import Table
 from astro.utils.task_id_helper import get_task_id
 
