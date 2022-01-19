@@ -78,7 +78,17 @@ AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
 
 ### Setting up SQL files
 
+When writing out a SQL DAG using `astro`, you can think of each SQL file as its own task. So for example if you wanted
+to aggregate orders, aggregate customers, and then join customers and orders you could have
+```
+|
+-- customers_table.sql
+-- orders_table.sql
+-- join_customers_and_orders.sql
+```
 
+In each of these SQL files, you can create a table by having a standard `SELECT` statement (we will handle all of the
+temporary tables for you).
 
 ```sql
 SELECT c.customer_id, c.source, c.region, c.member_since,
@@ -88,10 +98,9 @@ SELECT c.customer_id, c.source, c.region, c.member_since,
 
 #### Defining metadata
 
-Once you have your SQL working as expected, you might want to explicitly define the database and schema that
-runs this query at runtime. We wanted to expose this functionality while keeping your SQL easy to run in your favorite SQL notebook.
-To accomplish this, we create a [frontmatter](https://middlemanapp.com/basics/frontmatter/). This frontmatter comment
-will allow you to set any metadata you like in a single block that is easy to comment out if you wish to continue local development.
+Once your SQL is working as expected, you might want to define the database and schema for this query when running. 
+To expose this functionality while keeping your SQL easy to run in your favorite SQL notebook, 
+we create a [frontmatter](https://middlemanapp.com/basics/frontmatter/). 
 
 ```sql
 ---
@@ -102,6 +111,9 @@ SELECT c.customer_id, c.source, c.region, c.member_since,
         CASE WHEN purchase_count IS NULL THEN 0 ELSE 1 END AS recent_purchase
         FROM orders c LEFT OUTER JOIN customers p ON c.customer_id = p.customer_id
 ```
+
+One huge benefit of putting all metadata into a frontmatter block is that all of your SQL is still valid SQL that can run
+outside of the context of Airflow. If you wish to develop your SQL locally, comment out the frontmatter block and made edits.
 
 ```sql
 -- ---
@@ -134,16 +146,21 @@ SELECT c.customer_id, c.source, c.region, c.member_since,
 In this example, we are setting the value `customers` to tie to the `customers_table.sql` file, 
 essentially setting up a task dependency by creating a data dependency.
 
-
+Here is a list of currently supported variables:
 
 | argument      | Description |
 | ----------- | ----------- |
-| conn_id | What 
+| conn_id | What connection should this query run against |
 | Database      | Which database to query       |
 | Schema   | Which schema to query, defaults to the temporary schema provided by the admin        |
 | Template Vars | A key-value dictionary of what values to override when this SQL file is used in a DAG.  |
 
 ### Incorporating SQL directory into DAG
+
+Now that you have developed your SQL, we can attach your directory to any DAG using the `aql.render` function.
+
+Here is an example DAG that can pull a directory of CSV files from s3 into a postgres table, and then pass
+that table into a directory of sql models that will process the incoming data in an ELT fashion.
 
 ```python
 import os
@@ -172,6 +189,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 with dag:
     raw_orders = aql.load_file(
         path="s3://my/path/{{ execution_date }}/",
+        task_id="pull_from_s3",
         file_conn_id="my_s3_conn",
         output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
     )
@@ -179,6 +197,7 @@ with dag:
 ```
 
 ### Passing on tables to subsequent tasks
+
 ```python
 @df
 def aggregate_data(agg_df: pd.DataFrame):
@@ -256,6 +275,8 @@ with dag:
     aggregate_data(agg_df=ingest_models["join_customers_and_orders"])
 ```
 ###Option 2: SQL for Airflow Engineers
+
+
 ```python
 from datetime import datetime, timedelta
 
