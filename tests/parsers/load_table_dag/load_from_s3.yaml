@@ -1,0 +1,7 @@
+load_file:
+  path: "s3://foo/bar"
+  file_conn_id: "foo"
+  columns:
+      foo: int
+      bar: string
+      baz: timestamp

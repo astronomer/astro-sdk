@@ -87,3 +87,7 @@ class TestSQLParsing(unittest.TestCase):
             new_customers_table.operator.sql
             == "SELECT * FROM {customers_table} WHERE member_since > DATEADD(day, -7, '{{ execution_date }}')"
         )
+
+    def test_parse_with_load(self):
+        with self.dag:
+            rendered_tasks = aql.render(dir_path + "/load_table_dag")
