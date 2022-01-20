@@ -37,7 +37,7 @@ class Table:
 
 
 class TempTable(Table):
-    def __init__(self, conn_id, database, warehouse=""):
+    def __init__(self, conn_id=None, database=None, warehouse=""):
         super().__init__(
             table_name="", conn_id=conn_id, database=database, warehouse=warehouse
         )
@@ -52,7 +52,7 @@ class TempTable(Table):
         )
 
 
-def create_table_name(context, schema_id=None):
+def create_table_name(context):
     ti: TaskInstance = context["ti"]
     dag_run: DagRun = ti.get_dagrun()
     return f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
