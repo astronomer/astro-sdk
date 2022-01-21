@@ -514,9 +514,9 @@ def sql_server(request):
     },
 )
 def test_aws_decode():
-    from astro.sql.operators.agnostic_load_file import AgnosticLoadFile
+    from astro.utils.cloud_storage_creds import parse_s3_env_var
 
-    k, v = AgnosticLoadFile._parse_s3_env_var()
+    k, v = parse_s3_env_var()
     assert v == "@#$%@$#ASDH@Ksd23%SD546"
 
 
