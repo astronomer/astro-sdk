@@ -23,6 +23,7 @@ def s3fs_creds():
     """
     # To-do: clean-up how S3 creds are passed to s3fs
 
+    k, v = parse_s3_env_var()
     session = boto3.Session(
         aws_access_key_id=k,
         aws_secret_access_key=v,
