@@ -27,6 +27,7 @@ from smart_open import open
 
 from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
 from astro.sql.table import Table
+from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
 from astro.utils.task_id_helper import get_task_id
 
 
@@ -105,8 +106,8 @@ class SaveFile(BaseOperator):
 
     def file_exists(self, output_file_path, output_conn_id=None):
         transport_params = {
-            "s3": self._s3fs_creds,
-            "gs": self._gcs_client,
+            "s3": s3fs_creds,
+            "gs": gcs_client,
             "": lambda: None,
         }[urlparse(output_file_path).scheme]()
         try:
@@ -121,8 +122,8 @@ class SaveFile(BaseOperator):
         Select output file format based on param output_file_format to class.
         """
         transport_params = {
-            "s3": self._s3fs_creds,
-            "gs": self._gcs_client,
+            "s3": s3fs_creds,
+            "gs": gcs_client,
             "": lambda: None,
         }[urlparse(output_file_path).scheme]()
 
@@ -141,32 +142,6 @@ class SaveFile(BaseOperator):
             serialiser[self.output_file_format](
                 stream, **serialiser_params.get(self.output_file_format, {})
             )
-
-    def _s3fs_creds(self):
-        # To-do: reuse this method from sql decorator
-        """Structure s3fs credentials from Airflow connection.
-        s3fs enables pandas to write to s3
-        """
-        # To-do: clean-up how S3 creds are passed to s3fs
-        k, v = (
-            os.environ["AIRFLOW__ASTRO__CONN_AWS_DEFAULT"]
-            .replace("%2F", "/")
-            .replace("aws://", "")
-            .replace("@", "")
-            .split(":")
-        )
-        session = boto3.Session(
-            aws_access_key_id=k,
-            aws_secret_access_key=v,
-        )
-        return dict(client=session.client("s3"))
-
-    def _gcs_client(self):
-        """
-        get GCS credentials for storage
-        """
-        client = Client()
-        return dict(client=client)
 
     @staticmethod
     def create_table_name(context):

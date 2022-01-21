@@ -28,6 +28,7 @@ import logging
 import os
 import pathlib
 import unittest.mock
+from unittest import mock
 
 import pandas as pd
 import pytest
@@ -504,6 +505,19 @@ def sql_server(request):
     hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
     yield (sql_name, hook)
     hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
+
+
+@mock.patch.dict(
+    os.environ,
+    {
+        "AIRFLOW__ASTRO__CONN_AWS_DEFAULT": "abcd:%40%23%24%25%40%24%23ASDH%40Ksd23%25SD546@"
+    },
+)
+def test_aws_decode():
+    from astro.utils.cloud_storage_creds import parse_s3_env_var
+
+    k, v = parse_s3_env_var()
+    assert v == "@#$%@$#ASDH@Ksd23%SD546"
 
 
 @pytest.mark.parametrize("sql_server", ["snowflake", "postgres"], indirect=True)
