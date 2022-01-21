@@ -5,17 +5,18 @@
 - [
   Astro :rocket:
 ](#astro-rocket)
-- [Overview](#overview)
 - [Philosophy](#philosophy)
+- [:mega: Disclaimer :mega:](#mega-disclaimer-mega)
 - [Setup](#setup)
 - [Using Astro as a SQL Engineer](#using-astro-as-a-sql-engineer)
   - [Schemas](#schemas)
   - [Setting up SQL files](#setting-up-sql-files)
 - [Using Astro as a Python Engineer](#using-astro-as-a-python-engineer)
-  - [Setting Input and Output Tables](#setting-input-and-output-tables)
+  - [The output_table parameter](#the-output_table-parameter)
   - [Loading Data](#loading-data)
   - [Transform](#transform)
-  - [Putting it All Together](#putting-it-all-together)
+  - [Transform File](#transform-file)
+  - [Raw SQL](#raw-sql)
 - [Other SQL functions](#other-sql-functions)
   - [Appending data](#appending-data)
   - [Merging data](#merging-data)
@@ -58,6 +59,9 @@ Please feel free to raise issues and propose improvements, and community contrib
 Thank you,
 
 :sparkles: The Astro Team :sparkles:
+
+# :mega: Disclaimer :mega:
+This project is still very early and the API will probably change as it progresses. We are actively seeking alpha users and brave souls to test it and offer feedback, but please know that this is not yet ready for production.
 
 # Setup
 
