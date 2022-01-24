@@ -26,7 +26,6 @@ dependencies = [
     "snowflake-connector-python[pandas]",
     "smart-open[all]>=5.2.1",
     "SQLAlchemy == 1.4.28",
-    "snowflake-sqlalchemy"
 ]
 
 keywords = ["airflow", "provider", "astronomer", "sql", "decorator"]

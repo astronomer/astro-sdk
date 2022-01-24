@@ -43,7 +43,7 @@ from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 from google.api_core.exceptions import NotFound
-from google.cloud import storage
+from google.cloud import bigquery, storage
 
 # Import Operator
 from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
@@ -271,39 +271,30 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
     def test_aql_local_file_to_bigquery_no_table_name(self):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
-
+        data_path = str(self.cwd) + "/../data/homes.csv"
         self.hook_target = BigQueryHook(gcp_conn_id="bigquery", use_legacy_sql=False)
-
-        # # Drop target table
-        # drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
 
         task = self.create_and_run_task(
             load_file,
             (),
             {
-                "path": str(self.cwd) + "/../data/homes.csv",
+                "path": data_path,
                 "file_conn_id": "",
-                "output_table": TempTable(database="pagila", conn_id="bigquery"),
+                "output_table": Table(
+                    OUTPUT_TABLE_NAME, conn_id="bigquery", schema="tmp_astro"
+                ),
             },
         )
 
-        # Read table from db
-        df = pd.read_sql(
-            f"SELECT * FROM tmp_astro.test_dag_load_file_homes_csv_1",
-            con=self.hook_target.get_conn(),
+        client = bigquery.Client()
+        query_job = client.query(
+            f"SELECT * FROM astronomer-dag-authoring.tmp_astro.{OUTPUT_TABLE_NAME}"
         )
+        bigquery_df = query_job.to_dataframe()
 
-        assert df.iloc[0].to_dict() == {
-            "sell": 142.0,
-            "list": 160.0,
-            "living": 28.0,
-            "rooms": 10.0,
-            "beds": 5.0,
-            "baths": 3.0,
-            "age": 60.0,
-            "acres": 0.28,
-            "taxes": 3167.0,
-        }
+        data_df = pd.read_csv(data_path)
+
+        assert bigquery_df.shape == data_df.shape
 
     def test_aql_overwrite_existing_table(self):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
