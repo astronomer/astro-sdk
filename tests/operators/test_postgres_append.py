@@ -42,6 +42,7 @@ from airflow.utils.types import DagRunType
 # Import Operator
 import astro.sql as aql
 from astro.sql.table import Table
+from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -98,14 +99,7 @@ class TestPostgresAppend(unittest.TestCase):
     def create_and_run_task(self, decorator_func, op_args, op_kwargs):
         with self.dag:
             f = decorator_func(*op_args, **op_kwargs)
-
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-        f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        test_utils.run_dag(self.dag)
         return f
 
     def test_append(self):

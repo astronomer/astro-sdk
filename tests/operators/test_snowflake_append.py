@@ -29,18 +29,18 @@ import os
 import pathlib
 import unittest.mock
 
-import utils as test_utils
+from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
-from airflow.utils.types import DagRunType
 
 # Import Operator
 from astro import sql as aql
 from astro.sql.table import Table
+from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -143,16 +143,7 @@ class TestSnowflakeAppend(unittest.TestCase):
             session.query(DagRun).delete()
             session.query(TI).delete()
 
-    def wait_for_task_finish(self, dr, task_id):
-        import time
-
-        task = dr.get_task_instance(task_id)
-        while task.state not in ["success", "failed"]:
-            time.sleep(1)
-            task = dr.get_task_instance(task_id)
-
     def run_append_func(self, columns, casted_columns):
-        cwd = pathlib.Path(__file__).parent
         with self.dag:
             foo = aql.append(
                 append_table=self.TABLE_2,
@@ -160,16 +151,7 @@ class TestSnowflakeAppend(unittest.TestCase):
                 casted_columns=casted_columns,
                 main_table=self.TABLE_1,
             )
-
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-
-        foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, foo.task_id)
+        test_utils.run_dag(self.dag)
 
     def test_append(self):
         hook = get_snowflake_hook()

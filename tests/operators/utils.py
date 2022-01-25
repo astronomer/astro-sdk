@@ -1,6 +1,8 @@
 import os
 import time
 
+from airflow.executors.debug_executor import DebugExecutor
+from airflow.models.taskinstance import State
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
@@ -33,15 +35,7 @@ SQL_SERVER_HOOK_CLASS = {
 def create_and_run_task(dag, decorator_func, op_args, op_kwargs):
     with dag:
         function = decorator_func(*op_args, **op_kwargs)
-
-    _ = dag.create_dagrun(
-        run_id=DagRunType.MANUAL.value,
-        start_date=timezone.utcnow(),
-        data_interval=[DEFAULT_DATE, DEFAULT_DATE],
-        execution_date=DEFAULT_DATE,
-        state=State.RUNNING,
-    )
-    function.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+    run_dag(dag)
     return function
 
 
@@ -81,3 +75,14 @@ def drop_table_postgres(
     postgres_conn.commit()
     cursor.close()
     postgres_conn.close()
+
+
+def run_dag(dag):
+    dag.clear(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE, dag_run_state=State.NONE)
+
+    dag.run(
+        executor=DebugExecutor(),
+        start_date=DEFAULT_DATE,
+        end_date=DEFAULT_DATE,
+        run_at_least_once=True,
+    )

@@ -21,22 +21,19 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 """
 
 import logging
-import math
 import os
 import pathlib
 import unittest.mock
 
-import utils as test_utils
-from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 
 # Import Operator
-import astro.sql as aql
 from astro.sql.table import Table
 from astro.utils.snowflake_merge_func import (
     is_valid_snow_identifier,
     snowflake_merge_func,
 )
+from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)

@@ -10,13 +10,13 @@ import os
 import pathlib
 import unittest.mock
 
-import utils as test_utils
 from airflow.models import DAG
 from airflow.utils import timezone
 
 # Import Operator
 import astro.sql as aql
 from astro.sql.table import Table
+from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
