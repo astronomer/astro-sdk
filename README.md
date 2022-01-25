@@ -5,6 +5,7 @@
 - [
   Astro :rocket:
 ](#astro-rocket)
+- [Overview](#overview)
 - [Philosophy](#philosophy)
 - [:mega: Disclaimer :mega:](#mega-disclaimer-mega)
 - [Setup](#setup)
@@ -12,11 +13,10 @@
   - [Schemas](#schemas)
   - [Setting up SQL files](#setting-up-sql-files)
 - [Using Astro as a Python Engineer](#using-astro-as-a-python-engineer)
-  - [The output_table parameter](#the-output_table-parameter)
+  - [Setting Input and Output Tables](#setting-input-and-output-tables)
   - [Loading Data](#loading-data)
   - [Transform](#transform)
-  - [Transform File](#transform-file)
-  - [Raw SQL](#raw-sql)
+  - [Putting it All Together](#putting-it-all-together)
 - [Other SQL functions](#other-sql-functions)
   - [Appending data](#appending-data)
   - [Merging data](#merging-data)
@@ -111,13 +111,14 @@ to aggregate orders, aggregate customers, and then join customers and orders, yo
 
 ```
 |
--- customers_table.sql
--- orders_table.sql
--- join_customers_and_orders.sql
+ingest_models/
+|
+ -- customers_table.sql
+ -- orders_table.sql
+ -- join_customers_and_orders.sql
 ```
 
-In each of these SQL files, you can create a table by having a standard `SELECT` statement. `astro` handles creating all of the temporary tables.
-
+In each of these SQL files, standard `SELECT` statements automatically creates a table that can be referenced in downstream SQL files via a data dependency. `astro` handles creating all of the temporary tables required for this process.
 ```sql
 # join_customers_and_orders.sql
 SELECT c.customer_id, c.source, c.region, c.member_since,
