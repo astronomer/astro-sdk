@@ -83,7 +83,10 @@ def move_dataframe_to_sql(
         )
     elif conn_type == "bigquery":
         df.to_gbq(
-            f"{schema}.{output_table_name}", if_exists="replace", chunksize=chunksize
+            f"{schema}.{output_table_name}",
+            if_exists="replace",
+            chunksize=chunksize,
+            project_id=hook.project_id,
         )
     else:
         df.to_sql(

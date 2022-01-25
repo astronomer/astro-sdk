@@ -271,7 +271,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
     def test_aql_local_file_to_bigquery_no_table_name(self):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
-        data_path = str(self.cwd) + "/../data/homes.csv"
+        data_path = str(CWD) + "/../data/homes.csv"
         self.hook_target = BigQueryHook(gcp_conn_id="bigquery", use_legacy_sql=False)
 
         task = self.create_and_run_task(
