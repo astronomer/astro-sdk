@@ -456,7 +456,7 @@ def drop_table(table_to_drop):
 
 ## Putting it All Together 
 
-The following is a full example DAG of a SQL + Python workflow using `astro`.
+The following is a full example DAG of a SQL + Python workflow using `astro`. We pull data from S3, run SQL transformations to merge our pulled data with existing data, and move the result of that merge into a dataframe so that we can complete complex work on it using Python / ML.
 
 ```python
 from datetime import datetime, timedelta
