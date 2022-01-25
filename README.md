@@ -446,7 +446,7 @@ with self.dag:
 
 ### Raw SQL
 
-Most ETL use cases can be addressed by cross-sharing task outputs, as shown above with `@aql.transform`. If you need to perform SQL operation that doesn't return a table but might take a table as an argument, you can use `@aql.run_raw_sql`. 
+Most ETL use cases can be addressed by cross-sharing task outputs, as shown above with `@aql.transform`. If you need to perform a SQL operation that doesn't return a table but might take a table as an argument, you can use `@aql.run_raw_sql`. 
 
 ```python
 @aql.run_raw_sql
