@@ -161,7 +161,7 @@ SELECT c.customer_id, c.source, c.region, c.member_since,
 When running SQL queries in Airflow DAGs, you need to define dependencies that break up your SQL into
 multiple, reproducible steps. We offer two ways to define dependencies within an `astro` SQL file:
 
-The first way to define a dependency is by defining a variable via the `template_vars` frontmatter argument. We set `template_vars` so that our `join_customers_and_orders` query cannot run until both our `customers_table` and `agg_orders` queries finish. This data dependency is equivalent to a task dependency in our DAG. The only difference is that we're defining it directly in our SQL instead of using Airflow's dependency operators. 
+You can define your dependency via the `template_vars` frontmatter argument. In the following example, we set `template_vars` so that our `join_customers_and_orders` query cannot run until both our `customers_table` and `agg_orders` queries finish. This data dependency is equivalent to a task dependency in our DAG. The only difference is that we're defining it directly in our SQL instead of using Airflow's dependency operators. 
 
 ```sql
 # join_customers_and_orders.sql
