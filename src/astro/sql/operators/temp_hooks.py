@@ -75,6 +75,8 @@ class TempBigQueryHook(BigQueryHook):
         impersonation_chain: Optional[Union[str, Sequence[str]]] = None,
         labels: Optional[Dict] = None,
     ):
+        """Override __init__() method of BigQueryHook since it was not passing gcp_conn_id param to DbApiHook correctly."""
+
         # To preserve backward compatibility
         # TODO: remove one day
         if bigquery_conn_id:
