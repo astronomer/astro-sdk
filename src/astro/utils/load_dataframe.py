@@ -49,9 +49,6 @@ def move_dataframe_to_sql(
             schema=schema,
             warehouse=warehouse,
         ),
-        "google_cloud_platform": BigQueryHook(
-            gcp_conn_id=conn_id, use_legacy_sql=False
-        ),
         "bigquery": TempBigQueryHook(
             bigquery_conn_id=conn_id, use_legacy_sql=False, gcp_conn_id=conn_id
         ),
