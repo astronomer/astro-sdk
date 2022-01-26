@@ -10,6 +10,7 @@ from airflow.exceptions import AirflowException
 from airflow.models.xcom_arg import XComArg
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
+from astro.sql.table import Table, TempTable
 
 
 @task_group()
@@ -21,7 +22,7 @@ def render(path, **kwargs):
         if os.path.isfile(os.path.join(path, f)) and f.endswith(".sql")
     ]
     template_dict = kwargs
-
+    op_kwargs = {}
     # Parse all of the SQL files in this directory
     for filename in files:
         with open(os.path.join(path, filename), "r") as f:
@@ -33,9 +34,19 @@ def render(path, **kwargs):
                 template_variables = front_matter_opts.pop("template_vars")
                 sql = wrap_template_variables(sql, template_variables)
                 parameters.update({v: None for k, v in template_variables.items()})
+            if front_matter_opts.get("output_table"):
+                out_table_dict = front_matter_opts.pop("output_table")
+                if out_table_dict.get("table_name"):
+                    op_kwargs = {"output_table": Table(**out_table_dict)}
+                else:
+                    op_kwargs = {"output_table": TempTable(**out_table_dict)}
 
             p = ParsedSqlOperator(
-                sql=sql, parameters=parameters, file_name=filename, **front_matter_opts
+                sql=sql,
+                parameters=parameters,
+                file_name=filename,
+                op_kwargs=op_kwargs,
+                **front_matter_opts,
             )
             template_dict[filename.replace(".sql", "")] = p.output
 
@@ -83,6 +94,7 @@ class ParsedSqlOperator(SqlDecoratoratedOperator):
         sql,
         parameters,
         file_name,
+        op_kwargs={},
         **kwargs,
     ):
         self.sql = sql
@@ -97,9 +109,9 @@ class ParsedSqlOperator(SqlDecoratoratedOperator):
             task_id=task_id,
             sql=sql,
             op_args=(),
-            op_kwargs={},
             parameters=parameters,
             python_callable=null_function,
+            op_kwargs=op_kwargs,
             **kwargs,
         )
 

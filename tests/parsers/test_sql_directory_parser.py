@@ -82,7 +82,18 @@ class TestSQLParsing(unittest.TestCase):
         assert customers_table_task
         assert customers_table_task.operator.database == "foo"
         assert customers_table_task.operator.schema == "bar"
+
+        customer_output_table = customers_table_task.operator.output_table
+        assert customer_output_table.table_name == "my_table"
+        assert customer_output_table.schema == "my_schema"
+
         new_customers_table = rendered_tasks.get("get_new_customers")
+        new_customer_output_table = new_customers_table.operator.output_table
+        assert new_customer_output_table.table_name == ""
+        assert new_customer_output_table.schema == None
+        assert new_customer_output_table.database == "my_db"
+        assert new_customer_output_table.conn_id == "my_conn_id"
+
         assert (
             new_customers_table.operator.sql
             == "SELECT * FROM {customers_table} WHERE member_since > DATEADD(day, -7, '{{ execution_date }}')"
