@@ -29,18 +29,16 @@ import os
 import pathlib
 import unittest.mock
 
-import utils as test_utils
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
-from airflow.utils.state import State
-from airflow.utils.types import DagRunType
 
 # Import Operator
 from astro import sql as aql
 from astro.sql.table import Table
+from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -141,14 +139,6 @@ class TestSnowflakeOperator(unittest.TestCase):
             conn_id="snowflake_conn",
         )
 
-    def wait_for_task_finish(self, dr, task_id):
-        import time
-
-        task = dr.get_task_instance(task_id)
-        while task.state not in ["success", "failed"]:
-            time.sleep(1)
-            task = dr.get_task_instance(task_id)
-
     def test_snowflake_query(self):
         @aql.transform
         def sample_snow(input_table: Table):
@@ -176,14 +166,7 @@ class TestSnowflakeOperator(unittest.TestCase):
                     warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
                 ),
             )
-
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-        f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        test_utils.run_dag(self.dag)
 
         df = hook.get_pandas_df(
             f'SELECT * FROM "{os.getenv("SNOWFLAKE_DATABASE")}"."{os.getenv("SNOWFLAKE_SCHEMA")}"."{self.snowflake_table}"'
@@ -214,14 +197,7 @@ class TestSnowflakeOperator(unittest.TestCase):
                 ),
                 snowflake_table_raw_sql=self.snowflake_table_raw_sql,
             )
-
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-        f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        test_utils.run_dag(self.dag)
 
         # Read table from db
         df = hook.get_pandas_df(

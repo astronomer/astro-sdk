@@ -8,7 +8,6 @@ import os
 import pathlib
 import unittest.mock
 
-import utils as test_utils
 from airflow.models import DAG
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -22,6 +21,7 @@ from astro.sql.operators.agnostic_boolean_check import (
     boolean_check,
 )
 from astro.sql.table import Table
+from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)

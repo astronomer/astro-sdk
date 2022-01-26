@@ -21,17 +21,12 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 """
 
 import logging
-import math
 import pathlib
 import unittest.mock
 
-from airflow.models import DAG, DagRun
-from airflow.models import TaskInstance as TI
+from airflow.models import DAG
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
-from airflow.utils.session import create_session
-from airflow.utils.state import State
-from airflow.utils.types import DagRunType
 
 # Import Operator
 import astro.sql as aql
