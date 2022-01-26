@@ -56,26 +56,6 @@ OUTPUT_TABLE_NAME = test_utils.get_table_name("load_file_test_table")
 OUTPUT_SCHEMA = os.getenv("SNOWFLAKE_SCHEMA")
 CWD = pathlib.Path(__file__).parent
 
-DEFAULT_SCHEMA = "tmp_astro"
-SQL_SERVER_HOOK_PARAMETERS = {
-    "snowflake": {
-        "snowflake_conn_id": "snowflake_conn",
-        "schema": os.getenv("SNOWFLAKE_SCHEMA"),
-        "database": os.getenv("SNOWFLAKE_DATABASE"),
-        "warehouse": os.getenv("SNOWFLAKE_WAREHOUSE"),
-    },
-    "postgres": {"postgres_conn_id": "postgres_conn"},
-}
-SQL_SERVER_CONNECTION_KEY = {
-    "snowflake": "snowflake_conn_id",
-    "postgres": "postgres_conn_id",
-}
-
-SQL_SERVER_HOOK_CLASS = {
-    "snowflake": SnowflakeHook,
-    "postgres": TempPostgresHook,
-}
-
 
 def drop_table_postgres(table_name, postgres_conn):
     cursor = postgres_conn.cursor()
@@ -471,37 +451,14 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
 
 @pytest.fixture
-def sample_dag():
-    yield DAG("test_dag", default_args={"owner": "airflow", "start_date": DEFAULT_DATE})
-    with create_session() as session:
-        session.query(DagRun).delete()
-        session.query(TI).delete()
-
-
-def create_and_run_task(dag, decorator_func, op_args, op_kwargs):
-    with dag:
-        function = decorator_func(*op_args, **op_kwargs)
-
-    _ = dag.create_dagrun(
-        run_id=DagRunType.MANUAL.value,
-        start_date=timezone.utcnow(),
-        data_interval=[DEFAULT_DATE, DEFAULT_DATE],
-        execution_date=DEFAULT_DATE,
-        state=State.RUNNING,
-    )
-    function.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-    return function
-
-
-@pytest.fixture
 def sql_server(request):
     sql_name = request.param
-    hook_parameters = SQL_SERVER_HOOK_PARAMETERS.get(sql_name)
-    hook_class = SQL_SERVER_HOOK_CLASS.get(sql_name)
+    hook_parameters = test_utils.SQL_SERVER_HOOK_PARAMETERS.get(sql_name)
+    hook_class = test_utils.SQL_SERVER_HOOK_CLASS.get(sql_name)
     if hook_parameters is None or hook_class is None:
         raise ValueError(f"Unsupported SQL server {sql_name}")
     hook = hook_class(**hook_parameters)
-    schema = hook_parameters.get("schema", DEFAULT_SCHEMA)
+    schema = hook_parameters.get("schema", test_utils.DEFAULT_SCHEMA)
     hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
     yield (sql_name, hook)
     hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
@@ -527,8 +484,10 @@ def test_load_file(sample_dag, sql_server, file_type):
 
     # While hooks expect specific attributes for connection (e.g. `snowflake_conn_id`)
     # the load_file operator expects a generic attribute name (`conn_id`)
-    sql_server_params = copy.deepcopy(SQL_SERVER_HOOK_PARAMETERS[sql_name])
-    conn_id_value = sql_server_params.pop(SQL_SERVER_CONNECTION_KEY[sql_name])
+    sql_server_params = copy.deepcopy(test_utils.SQL_SERVER_HOOK_PARAMETERS[sql_name])
+    conn_id_value = sql_server_params.pop(
+        test_utils.SQL_SERVER_CONNECTION_KEY[sql_name]
+    )
     sql_server_params["conn_id"] = conn_id_value
 
     task_params = {
@@ -536,8 +495,8 @@ def test_load_file(sample_dag, sql_server, file_type):
         "file_conn_id": "",
         "output_table": Table(table_name=OUTPUT_TABLE_NAME, **sql_server_params),
     }
-    schema = sql_server_params.get("schema", DEFAULT_SCHEMA)
-    create_and_run_task(sample_dag, load_file, (), task_params)
+    schema = sql_server_params.get("schema", test_utils.DEFAULT_SCHEMA)
+    test_utils.create_and_run_task(sample_dag, load_file, (), task_params)
 
     df = sql_hook.get_pandas_df(f"SELECT * FROM {schema}.{OUTPUT_TABLE_NAME}")
 

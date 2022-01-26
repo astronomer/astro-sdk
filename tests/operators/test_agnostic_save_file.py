@@ -23,14 +23,18 @@ Run test:
     python3 -m unittest tests.operators.test_save_file.TestSaveFile.test_save_postgres_table_to_local
 
 """
-
+import copy
 import logging
 import os
 import pathlib
+import tempfile
 import unittest.mock
+from pathlib import Path
 
 import boto3
 import pandas as pd
+import pytest
+import utils as test_utils
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -45,6 +49,7 @@ from astro.sql.table import Table
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
+INPUT_TABLE_NAME = test_utils.get_table_name("save_file_test_table")
 
 
 def drop_table_postgres(table_name, postgres_conn):
@@ -116,132 +121,6 @@ class TestSaveFile(unittest.TestCase):
         for task in tasks:
             task.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         return tasks
-
-    def test_save_postgres_table_to_local_with_csv_format(self):
-
-        OUTPUT_FILE_PATH = str(self.cwd) + "/../data/save_snow_file_out.csv"
-        INPUT_TABLE_NAME = "rental"
-
-        # Delete output file prior to run
-        try:
-            os.remove(OUTPUT_FILE_PATH)
-        except OSError:
-            pass
-
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-
-        self.create_and_run_task(
-            save_file,
-            (),
-            {
-                "output_file_path": OUTPUT_FILE_PATH,
-                "input_table": Table(
-                    INPUT_TABLE_NAME, conn_id="postgres_conn", database="pagila"
-                ),
-                "output_conn_id": None,
-                "overwrite": True,
-            },
-        )
-
-        # Read table from db
-        df = pd.read_sql(
-            f"SELECT * FROM {INPUT_TABLE_NAME}", con=self.hook_target.get_conn()
-        )
-
-        # Read output CSV
-        df_file = pd.read_csv(OUTPUT_FILE_PATH)
-
-        assert len(df_file) == 16044
-        assert (df["rental_id"] == df_file["rental_id"]).all()
-
-        # Delete output file after run
-        os.remove(OUTPUT_FILE_PATH)
-
-    def test_save_postgres_table_to_local_with_parquet_format(self):
-
-        OUTPUT_FILE_PATH = str(self.cwd) + "/../data/save_snow_file_out.parquet"
-        INPUT_TABLE_NAME = "rental"
-
-        # Delete output file prior to run
-        try:
-            os.remove(OUTPUT_FILE_PATH)
-        except OSError:
-            pass
-
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-
-        self.create_and_run_task(
-            save_file,
-            (),
-            {
-                "output_file_path": OUTPUT_FILE_PATH,
-                "input_table": Table(
-                    INPUT_TABLE_NAME, conn_id="postgres_conn", database="pagila"
-                ),
-                "output_conn_id": None,
-                "overwrite": True,
-                "output_file_format": "parquet",
-            },
-        )
-
-        # Read table from db
-        df = pd.read_sql(
-            f"SELECT * FROM {INPUT_TABLE_NAME}", con=self.hook_target.get_conn()
-        )
-
-        # Read output Parquet
-        df_file = pd.read_parquet(OUTPUT_FILE_PATH)
-
-        assert (df["rental_id"] == df_file["rental_id"]).all()
-
-        # Delete output file after run
-        os.remove(OUTPUT_FILE_PATH)
-
-    def test_save_postgres_table_to_local(self):
-
-        OUTPUT_FILE_PATH = str(self.cwd) + "/../data/save_file_out.csv"
-        INPUT_TABLE_NAME = "rental"
-
-        # Delete output file prior to run
-        try:
-            os.remove(OUTPUT_FILE_PATH)
-        except OSError:
-            pass
-
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-
-        self.create_and_run_task(
-            save_file,
-            (),
-            {
-                "input_table": Table(
-                    INPUT_TABLE_NAME, conn_id="postgres_conn", database="pagila"
-                ),
-                "output_file_path": OUTPUT_FILE_PATH,
-                "output_conn_id": None,
-                "overwrite": True,
-            },
-        )
-
-        # Read table from db
-        df = pd.read_sql(
-            f"SELECT * FROM {INPUT_TABLE_NAME}", con=self.hook_target.get_conn()
-        )
-
-        # Read output CSV
-        df_file = pd.read_csv(OUTPUT_FILE_PATH)
-
-        assert len(df_file) == 16044
-        assert (df["rental_id"] == df_file["rental_id"]).all()
-
-        # Delete output file after run
-        os.remove(OUTPUT_FILE_PATH)
 
     def test_save_postgres_table_to_local_file_exists_overwrite_false(self):
 
@@ -395,3 +274,70 @@ class TestSaveFile(unittest.TestCase):
         )
 
         return {"key": k, "secret": v}
+
+
+@pytest.fixture
+def sql_server(request):
+    sql_name = request.param
+    hook_parameters = test_utils.SQL_SERVER_HOOK_PARAMETERS.get(sql_name)
+    hook_class = test_utils.SQL_SERVER_HOOK_CLASS.get(sql_name)
+    if hook_parameters is None or hook_class is None:
+        raise ValueError(f"Unsupported SQL server {sql_name}")
+    hook = hook_class(**hook_parameters)
+    schema = hook_parameters.get("schema")
+    if schema:
+        table = ".".join([schema, INPUT_TABLE_NAME])
+    else:
+        table = INPUT_TABLE_NAME
+
+    hook.run(f"DROP TABLE IF EXISTS {table}")
+    hook.run(f"CREATE TABLE {table} (ID int, Name varchar(255));")
+    hook.run(f"INSERT INTO {table} (ID, Name) VALUES (1, 'Someone');")
+    hook.run(f"INSERT INTO {table} (ID, Name) VALUES (2, 'Alguém');")
+    yield (sql_name, hook)
+    hook.run(f"DROP TABLE IF EXISTS {table}")
+
+
+def load_to_dataframe(filepath, file_type):
+    read = {
+        "parquet": pd.read_parquet,
+        "csv": pd.read_csv,
+        "json": pd.read_json,
+        "ndjson": pd.read_json,
+    }
+    read_params = {"ndjson": {"lines": True}}
+    mode = {"parquet": "rb"}
+    with open(filepath, mode.get(file_type, "r")) as fp:
+        return read[file_type](fp, **read_params.get(file_type, {}))
+
+
+@pytest.mark.parametrize("sql_server", ["snowflake", "postgres"], indirect=True)
+@pytest.mark.parametrize("file_type", ["ndjson", "json", "csv", "parquet"])
+def test_save_file(sample_dag, sql_server, file_type):
+    sql_name, sql_hook = sql_server
+
+    # While hooks expect specific attributes for connection (e.g. `snowflake_conn_id`)
+    # the load_file operator expects a generic attribute name (`conn_id`)
+    sql_server_params = copy.deepcopy(test_utils.SQL_SERVER_HOOK_PARAMETERS[sql_name])
+    conn_id_value = sql_server_params.pop(
+        test_utils.SQL_SERVER_CONNECTION_KEY[sql_name]
+    )
+    sql_server_params["conn_id"] = conn_id_value
+
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        filepath = Path(tmp_dir, f"sample.{file_type}")
+
+        task_params = {
+            "input_table": Table(table_name=INPUT_TABLE_NAME, **sql_server_params),
+            "output_file_path": str(filepath),
+            "output_file_format": file_type,
+            "output_conn_id": None,
+            "overwrite": False,
+        }
+        test_utils.create_and_run_task(sample_dag, save_file, (), task_params)
+        df = load_to_dataframe(filepath, file_type)
+        assert len(df) == 2
+        expected = pd.DataFrame(
+            [{"id": 1, "name": "Someone"}, {"id": 2, "name": "Alguém"}]
+        )
+        assert df.rename(columns=str.lower).equals(expected)
