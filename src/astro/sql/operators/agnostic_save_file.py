@@ -130,11 +130,13 @@ class SaveFile(BaseOperator):
         serialiser = {
             "parquet": df.to_parquet,
             "csv": df.to_csv,
-            # "json": pd.to_json,
-            # "ndjson": pd.to_json,
+            "json": df.to_json,
+            "ndjson": df.to_json,
         }
         serialiser_params = {
-            # "ndjson": {"lines": True}
+            "csv": {"index": False},
+            "json": {"orient": "records"},
+            "ndjson": {"orient": "records", "lines": True},
         }
         with open(
             output_file_path, mode="wb", transport_params=transport_params

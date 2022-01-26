@@ -1,15 +1,13 @@
 import os
-import pathlib
 
 import pytest
-
-# Import Operator
 import yaml
-from airflow.models import Connection, DagRun
+from airflow.models import DAG, Connection, DagRun
 from airflow.models import TaskInstance as TI
+from airflow.utils import timezone
 from airflow.utils.session import create_session
 
-from astro import sql as aql
+DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -26,3 +24,11 @@ def create_database_connections():
         session.query(Connection).delete()
         for conn in connections:
             session.add(conn)
+
+
+@pytest.fixture
+def sample_dag():
+    yield DAG("test_dag", default_args={"owner": "airflow", "start_date": DEFAULT_DATE})
+    with create_session() as session:
+        session.query(DagRun).delete()
+        session.query(TI).delete()

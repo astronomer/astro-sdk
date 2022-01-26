@@ -3,6 +3,46 @@ import time
 
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+from airflow.utils import timezone
+from airflow.utils.state import State
+from airflow.utils.types import DagRunType
+
+DEFAULT_SCHEMA = "tmp_astro"
+DEFAULT_DATE = timezone.datetime(2016, 1, 1)
+
+SQL_SERVER_HOOK_PARAMETERS = {
+    "snowflake": {
+        "snowflake_conn_id": "snowflake_conn",
+        "schema": os.getenv("SNOWFLAKE_SCHEMA"),
+        "database": os.getenv("SNOWFLAKE_DATABASE"),
+        "warehouse": os.getenv("SNOWFLAKE_WAREHOUSE"),
+    },
+    "postgres": {"postgres_conn_id": "postgres_conn"},
+}
+SQL_SERVER_CONNECTION_KEY = {
+    "snowflake": "snowflake_conn_id",
+    "postgres": "postgres_conn_id",
+}
+
+SQL_SERVER_HOOK_CLASS = {
+    "snowflake": SnowflakeHook,
+    "postgres": PostgresHook,
+}
+
+
+def create_and_run_task(dag, decorator_func, op_args, op_kwargs):
+    with dag:
+        function = decorator_func(*op_args, **op_kwargs)
+
+    _ = dag.create_dagrun(
+        run_id=DagRunType.MANUAL.value,
+        start_date=timezone.utcnow(),
+        data_interval=[DEFAULT_DATE, DEFAULT_DATE],
+        execution_date=DEFAULT_DATE,
+        state=State.RUNNING,
+    )
+    function.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+    return function
 
 
 def get_table_name(prefix):
