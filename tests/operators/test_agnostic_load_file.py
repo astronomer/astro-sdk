@@ -32,7 +32,6 @@ from unittest import mock
 
 import pandas as pd
 import pytest
-import utils as test_utils
 from airflow.exceptions import DuplicateTaskIdFound
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
@@ -49,6 +48,7 @@ from google.cloud import storage
 from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
 from astro.sql.operators.temp_hooks import TempPostgresHook
 from astro.sql.table import Table, TempTable
+from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -155,15 +155,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
                         *decorator_func["op_args"], **decorator_func["op_kwargs"]
                     )
                 )
-
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-        for task in tasks:
-            task.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        test_utils.run_dag(self.dag)
         return tasks
 
     def test_path_validation(self):

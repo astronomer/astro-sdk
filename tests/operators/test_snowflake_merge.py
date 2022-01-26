@@ -26,7 +26,6 @@ import os
 import pathlib
 import unittest.mock
 
-import utils as test_utils
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -45,6 +44,7 @@ from astro.utils.snowflake_merge_func import (
     is_valid_snow_identifier,
     snowflake_merge_func,
 )
+from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -161,15 +161,7 @@ class TestSnowflakeMerge(unittest.TestCase):
                 input_table=merge_raw_table, output_table=self.merge_table
             )
 
-        dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-        main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        merge.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-
+        test_utils.run_dag(dag)
         super().setUp()
 
     def tearDown(self):

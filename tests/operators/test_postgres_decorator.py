@@ -29,6 +29,7 @@ import unittest.mock
 from unittest import mock
 
 import pandas as pd
+from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -122,17 +123,15 @@ class TestPostgresDecorator(unittest.TestCase):
                 )
             )
             pg_df = sample_pg(my_df)
-
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
+        self.dag.clear(
+            start_date=DEFAULT_DATE, end_date=DEFAULT_DATE, dag_run_state=State.NONE
         )
-        my_df.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        wait_for_task_finish(dr, my_df.operator.task_id)
-        pg_df.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        wait_for_task_finish(dr, pg_df.operator.task_id)
+
+        self.dag.run(
+            executor=DebugExecutor(),
+            start_date=timezone.utcnow(),
+            run_at_least_once=True,
+        )
 
     def test_dataframe_to_postgres_kwarg(self):
         @df
@@ -284,13 +283,17 @@ class TestPostgresDecorator(unittest.TestCase):
                 output_table=Table("my_table_from_file"),
             )
 
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
+        from airflow.executors.debug_executor import DebugExecutor
+
+        self.dag.clear(
+            start_date=DEFAULT_DATE, end_date=DEFAULT_DATE, dag_run_state=State.NONE
         )
-        f.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+
+        self.dag.run(
+            executor=DebugExecutor(),
+            start_date=timezone.utcnow(),
+            run_at_least_once=True,
+        )
         # Read table from db
         df = pd.read_sql(
             f"SELECT * FROM my_table_from_file", con=self.hook_target.get_conn()

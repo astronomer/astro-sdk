@@ -20,11 +20,9 @@ import unittest.mock
 from unittest import mock
 
 import pandas
-import utils as test_utils
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.models.xcom import XCom
-from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
@@ -33,6 +31,7 @@ from airflow.utils.types import DagRunType
 from astro import dataframe as df
 from astro import sql as aql
 from astro.sql.table import Table
+from tests.operators import utils as test_utils
 
 # Import Operator
 
@@ -106,13 +105,8 @@ class TestDataframeFromSQL(unittest.TestCase):
         with self.dag:
             f = decorator_func(*op_args, **op_kwargs)
 
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-        f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        test_utils.run_dag(self.dag)
+
         return f
 
     def test_dataframe_from_sql_basic(self):

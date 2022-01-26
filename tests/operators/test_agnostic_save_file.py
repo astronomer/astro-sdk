@@ -34,7 +34,6 @@ from pathlib import Path
 import boto3
 import pandas as pd
 import pytest
-import utils as test_utils
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -46,6 +45,7 @@ from airflow.utils.types import DagRunType
 # Import Operator
 from astro.sql.operators.agnostic_save_file import save_file
 from astro.sql.table import Table
+from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -111,15 +111,7 @@ class TestSaveFile(unittest.TestCase):
                         *decorator_func["op_args"], **decorator_func["op_kwargs"]
                     )
                 )
-
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-        for task in tasks:
-            task.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        test_utils.run_dag(self.dag)
         return tasks
 
     def test_save_postgres_table_to_local_file_exists_overwrite_false(self):
