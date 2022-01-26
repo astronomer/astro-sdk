@@ -177,6 +177,30 @@ SELECT c.customer_id, c.source, c.region, c.member_since,
         FROM orders c LEFT OUTER JOIN customers p ON c.customer_id = p.customer_id
 ```
 
+### Defining outputs
+
+With certain SQL models, you will want to specify an output based on a table name, schema, and/or database. 
+
+Any table created without an `output_table` will be placed in the temporary schema with a generated table name.
+
+```sql
+---
+database: foo
+schema: bar
+template_vars:
+    customers: customers_table
+    orders: agg_orders
+output_table:
+    table_name: my_pg_table
+    database: foo
+    schema: my_prod_schema
+---
+SELECT c.customer_id, c.source, c.region, c.member_since,
+        CASE WHEN purchase_count IS NULL THEN 0 ELSE 1 END AS recent_purchase
+        FROM orders c LEFT OUTER JOIN customers p ON c.customer_id = p.customer_id
+```
+### Supported arguments
+
 Here is a list of supported frontmatter arguments:
 
 | Argument      | Description |
@@ -184,7 +208,8 @@ Here is a list of supported frontmatter arguments:
 | conn_id | The connection that this query should run against |
 | Database      | The database to query    |
 | Schema   | The schema to query. Default value is either `tmp_astro` or your temp schema defined in `AIRFLOW__ASTRO__SQL_SCHEMA`    |
-| Template Vars | A key-value dictionary of what values to override when this SQL file is used in a DAG.  |
+| template_vars | A key-value dictionary of what values to override when this SQL file is used in a DAG.  |
+| output_table | Specs of location and table name for tables that want to be treated as "pets" insteaad of "cattle" | 
 
 ### Incorporating SQL directory into DAG
 

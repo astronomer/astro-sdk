@@ -85,6 +85,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         )
 
     def execute(self, context: Dict):
+        self.output_schema = self.schema or get_schema()
         self._set_variables_from_first_table()
 
         conn = BaseHook.get_connection(self.conn_id)
@@ -119,9 +120,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self._set_schema_if_needed()
 
             if not self.output_table:
-                output_table_name = create_table_name(
-                    context=context, schema_id=self.schema
-                )
+                output_table_name = create_table_name(context=context)
             else:
                 output_table_name = self.output_table.table_name
             self.sql = self.create_temporary_table(self.sql, output_table_name)
