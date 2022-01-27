@@ -119,8 +119,11 @@ class AgnosticLoadFile(BaseOperator):
             "json": pd.read_json,
             "ndjson": pd.read_json,
         }
+        mode = {"parquet": "rb"}
         deserialiser_params = {"ndjson": {"lines": True}}
-        with open(path, transport_params=transport_params) as stream:
+        with open(
+            path, mode=mode.get(file_type, "r"), transport_params=transport_params
+        ) as stream:
             return deserialiser[file_type](
                 stream, **deserialiser_params.get(file_type, {})
             )

@@ -470,7 +470,7 @@ def test_aws_decode():
 
 
 @pytest.mark.parametrize("sql_server", ["snowflake", "postgres"], indirect=True)
-@pytest.mark.parametrize("file_type", ["ndjson", "json", "csv"])
+@pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
 def test_load_file(sample_dag, sql_server, file_type):
     sql_name, sql_hook = sql_server
 
