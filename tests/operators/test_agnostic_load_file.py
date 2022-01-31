@@ -84,13 +84,14 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        test_utils.drop_table_snowflake(
-            table_name=cls.SNOWFLAKE_OUTPUT_TABLE_NAME,  # type: ignore
-            database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore
-            conn_id="snowflake_conn",
-        )
+        pass
+        # test_utils.drop_table_snowflake(
+        #     table_name=cls.SNOWFLAKE_OUTPUT_TABLE_NAME,  # type: ignore
+        #     database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
+        #     schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
+        #     warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore
+        #     conn_id="snowflake_conn",
+        # )
 
     def setUp(self):
         super().setUp()

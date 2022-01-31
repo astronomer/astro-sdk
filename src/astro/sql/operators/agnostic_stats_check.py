@@ -89,14 +89,10 @@ class ChecksHandler:
         self, main_table: Table, compare_table: Table, engine, metadata_obj
     ):
         main_table_sqla = SqlaTable(
-            f"{main_table.schema}.{main_table.table_name}",
-            metadata_obj,
-            autoload_with=engine,
+            main_table.table_name, metadata_obj, autoload_with=engine
         )
         compare_table_sqla = SqlaTable(
-            f"{compare_table.schema}.{compare_table.table_name}",
-            metadata_obj,
-            autoload_with=engine,
+            compare_table.table_name, metadata_obj, autoload_with=engine
         )
 
         main_table_stats_sql = self.prepare_main_stats_sql(main_table, main_table_sqla)
@@ -139,14 +135,10 @@ class ChecksHandler:
         metadata_obj,
     ):
         main_table_sqla = SqlaTable(
-            f"{main_table.schema}.{main_table.table_name}",
-            metadata_obj,
-            autoload_with=engine,
+            main_table.table_name, metadata_obj, autoload_with=engine
         )
         compare_table_sqla = SqlaTable(
-            f"{compare_table.schema}.{compare_table.table_name}",
-            metadata_obj,
-            autoload_with=engine,
+            compare_table.table_name, metadata_obj, autoload_with=engine
         )
 
         main_stats = self.prepare_main_stats_sql(main_table, main_table_sqla)

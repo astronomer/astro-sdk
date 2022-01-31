@@ -1,17 +1,11 @@
 from distutils import log as logger
-from os import name, stat
 from typing import Dict, List
 
-from airflow.hooks.base import BaseHook
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from psycopg2 import sql
+from sqlalchemy import FLOAT, and_, cast, column, func, select, text
 from sqlalchemy.sql.expression import table
-from sqlalchemy.sql.functions import Function
-from sqlalchemy.sql.schema import Table
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
-from astro.utils.snowflake_merge_func import is_valid_snow_identifier
 
 
 class Check:
@@ -25,34 +19,12 @@ class Check:
         self.expression = expression
         self.threshold = threshold
 
-    def get_expression(self, conn_type: str):
-        return {
-            "postgres": self.get_postgres_expression(),
-            "snowflake": self.get_snowflake_expression(),
-        }[conn_type]
+    def get_expression(self):
+        return text(f"CASE WHEN {self.expression} THEN 0 ELSE 1 END AS {self.name}")
 
-    def get_postgres_expression(self):
-        return sql.SQL("CASE WHEN {expression} THEN 0 ELSE 1 END AS {name}").format(
-            expression=sql.SQL(self.expression), name=sql.Identifier(self.name)
-        )
-
-    def get_postgres_result(self):
-        return sql.SQL("CAST(SUM({name}) as float) / COUNT(*) as {result}").format(
-            name=sql.Identifier(self.name), result=sql.Identifier(self.name + "_result")
-        )
-
-    def get_snowflake_expression(self):
-        if not is_valid_snow_identifier(name):
-            raise ValueError("Not a valid snowflake identifier {}".format(name))
-        return "CASE WHEN {}  THEN 0 ELSE 1 END AS {}".format(
-            self.expression, self.name
-        )
-
-    def get_snowflake_result(self):
-        if not is_valid_snow_identifier(name):
-            raise ValueError("Not a valid snowflake identifier {}".format(name))
-        return 'CAST(SUM({}) as float) / COUNT(*) as "{}"'.format(
-            self.name, self.name + "_result"
+    def get_result(self):
+        return cast(func.sum(column(self.name)), FLOAT) / func.count().label(
+            self.name + "_result"
         )
 
 
@@ -78,6 +50,11 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
         self.conn_id = table.conn_id
         self.checks = checks
         self.database = table.database
+        self.full_table_name = (
+            self.table.table_name
+            if self.table.schema is None
+            else f"{self.table.schema}.{self.table.table_name}"
+        )
 
         task_id = table.table_name + "_" + "boolean_check"
 
@@ -98,36 +75,19 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
         )
 
     def execute(self, context: Dict):
-        conn_type = BaseHook.get_connection(self.conn_id).conn_type  # type: ignore
-        postgres = "postgres"
-        snowflake = "snowflake"
-        try:
-            execute_boolean_checks = {
-                postgres: AgnosticBooleanCheck.execute_postgres_boolean_checks,
-                snowflake: AgnosticBooleanCheck.execute_snowflake_boolean_checks,
-            }[conn_type]
-            get_failed_checks = {
-                postgres: self.get_postgres_failed_checks,
-                snowflake: self.get_snowflake_failed_checks,
-            }[conn_type]
-            prep_results = {
-                postgres: self.postgres_prep_results,
-                snowflake: self.snowflake_prep_results,
-            }[conn_type]
-        except KeyError:
-            raise ValueError(f"Please specify a postgres or snowflake conn id.")
-
-        self.handler = lambda curr: curr.fetchall()
-
-        self.sql, self.parameters = execute_boolean_checks(
-            self.table.table_name, self.checks, self.conn_id  # type: ignore
+        self.parameters = {}
+        self.sql = AgnosticBooleanCheck.prep_boolean_checks_query(
+            self.full_table_name, self.checks
         )
 
         results = super().execute(context)
-        failed_checks_names, failed_checks_index = get_failed_checks(results)
+        results = results.fetchall()
+        failed_checks_names, failed_checks_index = self.get_failed_checks(results)
         if len(failed_checks_index) > 0:
-            self.sql, self.parameters = prep_results(failed_checks_index)
+            self.parameters = {}
+            self.sql = self.prep_results(failed_checks_index)
             failed_rows = super().execute(context)
+            failed_rows = failed_rows.fetchall()
             logger.error("Failed rows {}".format(failed_rows))
             raise ValueError(
                 "Some of the check(s) have failed {}".format(
@@ -137,7 +97,7 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
 
         return table
 
-    def get_postgres_failed_checks(self, results):
+    def get_failed_checks(self, results):
         failed_check_name = []
         failed_check_index = []
 
@@ -147,83 +107,19 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
                 failed_check_index.append(index)
         return failed_check_name, failed_check_index
 
-    def get_snowflake_failed_checks(self, results):
-        failed_check_name = []
-        failed_check_index = []
-
-        for index in range(len(self.checks)):
-            if (
-                self.checks[index].threshold
-                < results[0][self.checks[index].name + "_result"]
-            ):
-                failed_check_name.append(self.checks[index].name)
-                failed_check_index.append(index)
-        return failed_check_name, failed_check_index
-
-    @staticmethod
-    def execute_postgres_boolean_checks(table: str, checks: List[Check], conn_id: str):
-        statement = (
-            "SELECT {results} FROM (SELECT {expressions} From {table}) as temp_table"
+    def prep_boolean_checks_query(table: str, checks: List[Check]):
+        temp_table = select(*[check.get_expression() for check in checks]).select_from(
+            text(table)
         )
-        expressions = sql.SQL(",").join(
-            [check.get_postgres_expression() for check in checks]
+        return select(*[check.get_result() for check in checks]).select_from(temp_table)
+
+    def prep_results(self, results):
+        return (
+            select(["*"])
+            .select_from(text(self.full_table_name))
+            .where(and_(*[text(self.checks[index].expression) for index in results]))
+            .limit(self.max_rows_returned)
         )
-        results = sql.SQL(",").join([check.get_postgres_result() for check in checks])
-
-        hook = PostgresHook(postgres_conn_id=conn_id)
-
-        statement = (
-            sql.SQL(statement)
-            .format(
-                results=results, expressions=expressions, table=sql.Identifier(table)
-            )
-            .as_string(hook.get_conn())
-        )
-        return statement, {}
-
-    @staticmethod
-    def execute_snowflake_boolean_checks(table: str, checks: List[Check], conn_id: str):
-        statement = "SELECT {results} FROM (SELECT {expressions} From Identifier(%(table)s) as temp_table)"
-
-        statement = statement.replace("{table}", table)
-        statement = statement.replace(
-            "{expressions}",
-            ",".join([check.get_snowflake_expression() for check in checks]),
-        )
-        statement = statement.replace(
-            "{results}", ",".join([check.get_snowflake_result() for check in checks])
-        )
-        return statement, {"table": table}
-
-    def postgres_prep_results(self, results):
-        statement = "SELECT * from {table} WHERE {checks} LIMIT {max_rows_returned}"
-        failed_checks = [sql.SQL(self.checks[index].expression) for index in results]
-        hook = PostgresHook(postgres_conn_id=self.conn_id)
-        statement = (
-            sql.SQL(statement)
-            .format(
-                table=sql.Identifier(self.table.table_name),
-                checks=sql.SQL("AND").join(failed_checks),
-                max_rows_returned=sql.SQL(str(self.max_rows_returned)),
-            )
-            .as_string(hook.get_conn())
-        )
-        return statement, {}
-
-    def snowflake_prep_results(self, results):
-        statement = (
-            "SELECT * from Identifier(%(table)s) WHERE {expressions} LIMIT {limit}"
-        )
-        statement = statement.replace(
-            "{expressions}",
-            "AND".join([self.checks[index].expression for index in results]),
-        )
-        statement = statement.replace("{limit}", str(self.max_rows_returned))
-        return statement, {"table": self.table}
-
-
-def wrap_identifier(inp):
-    return "Identifier(%(" + inp + ")s)"
 
 
 def boolean_check(table: Table, checks: List[Check] = [], max_rows_returned: int = 100):
