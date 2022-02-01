@@ -17,15 +17,11 @@ limitations under the License.
 import importlib
 from typing import Dict, List
 
-from airflow.exceptions import AirflowException
-from airflow.hooks.base import BaseHook
 from sqlalchemy import MetaData, cast, column, insert, select
 from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
-from astro.utils.postgres_append import postgres_append_func
-from astro.utils.snowflake_append import snowflake_append_func
 from astro.utils.task_id_helper import get_unique_task_id
 
 
