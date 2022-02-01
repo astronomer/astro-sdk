@@ -31,6 +31,7 @@ import time
 import unittest.mock
 
 import pandas as pd
+import pytest
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -46,6 +47,9 @@ from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
+MAIN_TABLE_NAME = "test_main"
+APPEND_TABLE_NAME = "test_append"
+CWD = pathlib.Path(__file__).parent
 
 
 def drop_table(table_name, postgres_conn):
