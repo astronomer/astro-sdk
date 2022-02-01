@@ -1,5 +1,5 @@
-name: GitHub Actions Demo
-on: [push, pull_request]
+name: Build and test astro
+on: [pull_request]
 jobs:
   Pre-Commit:
     runs-on: ubuntu-latest

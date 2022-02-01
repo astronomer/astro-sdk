@@ -1,0 +1,24 @@
+name: Build and test astro
+on: [release]
+jobs:
+  build-n-publish:
+    name: Build and publish Python 🐍 distributions 📦 to PyPI
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+        architecture: 'x64'
+    - uses: actions/cache@v2
+       with:
+        path: ~/.cache/pip
+        key: ${{ hashFiles('pyproject.toml') }}
+    - run: cat ci-test-connections.yaml > test-connections.yaml
+    - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+    - run: pip3 install nox
+    - run: nox -s build
+    - run: nox -s release -- dist/*
+    env:
+      TWINE_USERNAME: __token__
+      TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
