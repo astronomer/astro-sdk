@@ -1,4 +1,4 @@
-name: Build and test astro
+name: Release to pypi
 on:
   release:
     types: [created]
