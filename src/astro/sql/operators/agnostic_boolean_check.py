@@ -7,6 +7,7 @@ from sqlalchemy.sql.expression import table
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
 
+
 class Check:
     def __init__(
         self,
