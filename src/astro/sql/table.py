@@ -29,9 +29,6 @@ class Table:
     def identifier_args(self):
         return (self.schema, self.table_name) if self.schema else (self.table_name,)
 
-    def identifier_string(self):
-        return ".".join(self.identifier_args())
-
     def qualified_name(self):
         return self.schema + "." + self.table_name if self.schema else self.table_name
 

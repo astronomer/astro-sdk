@@ -22,6 +22,7 @@ from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
+from astro.utils.schema_util import get_table_name
 from astro.utils.task_id_helper import get_unique_task_id
 
 
@@ -78,10 +79,10 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
         metadata = MetaData()
         # TO Do - fix bigquery and postgres reflection table issue.
         main_table_sqla = SqlaTable(
-            main_table.qualified_name(), metadata, autoload_with=engine
+            get_table_name(main_table), metadata, autoload_with=engine
         )
         append_table_sqla = SqlaTable(
-            append_table.qualified_name(), metadata, autoload_with=engine
+            get_table_name(append_table), metadata, autoload_with=engine
         )
 
         column_names = [column(c) for c in columns]
