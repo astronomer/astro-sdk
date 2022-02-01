@@ -31,8 +31,8 @@ import time
 import unittest.mock
 
 import pandas as pd
-from airflow.executors.debug_executor import DebugExecutor
 import pytest
+from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
