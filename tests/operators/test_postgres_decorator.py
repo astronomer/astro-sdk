@@ -101,7 +101,7 @@ class TestPostgresDecorator(unittest.TestCase):
         return f
 
     def test_dataframe_to_postgres(self):
-        @df
+        @adf
         def get_dataframe():
             return pd.DataFrame(
                 {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
