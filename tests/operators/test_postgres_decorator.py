@@ -29,6 +29,7 @@ import unittest.mock
 from unittest import mock
 
 import pandas as pd
+import pytest
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
@@ -40,7 +41,7 @@ from airflow.utils.types import DagRunType
 
 # Import Operator
 import astro.sql as aql
-from astro import dataframe as df
+from astro import dataframe as adf
 from astro.sql.table import Table, TempTable
 from tests.operators import utils as test_utils
 
@@ -100,7 +101,7 @@ class TestPostgresDecorator(unittest.TestCase):
         return f
 
     def test_dataframe_to_postgres(self):
-        @df
+        @adf
         def get_dataframe():
             return pd.DataFrame(
                 {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
@@ -127,8 +128,42 @@ class TestPostgresDecorator(unittest.TestCase):
             run_at_least_once=True,
         )
 
+    def test_with_invalid_dag_name(self):
+        self.dag.dag_id = "my=dag"
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+
+        drop_table(
+            table_name='tmp_astro."my=dag_sample_pg_1"',
+            postgres_conn=self.hook_target.get_conn(),
+        )
+
+        @aql.transform()
+        def sample_pg(input_table: Table):
+            return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%'"
+
+        self.create_and_run_task(
+            sample_pg,
+            (),
+            {
+                "input_table": Table(
+                    table_name="actor", conn_id="postgres_conn", database="pagila"
+                ),
+            },
+        )
+        df = pd.read_sql(
+            f'SELECT * FROM tmp_astro."my=dag_sample_pg_1"',
+            con=self.hook_target.get_conn(),
+        )
+        assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
+
     def test_dataframe_to_postgres_kwarg(self):
-        @df
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+
+        @adf
         def get_dataframe():
             return pd.DataFrame(
                 {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
@@ -154,6 +189,11 @@ class TestPostgresDecorator(unittest.TestCase):
         wait_for_task_finish(dr, my_df.operator.task_id)
         pg_df.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         wait_for_task_finish(dr, pg_df.operator.task_id)
+        df = pd.read_sql(
+            f"SELECT * FROM tmp_astro.test_dag_sample_pg_1",
+            con=self.hook_target.get_conn(),
+        )
+        assert df.iloc[0].to_dict()["colors"] == "red"
 
     def test_postgres(self):
         self.hook_target = PostgresHook(
