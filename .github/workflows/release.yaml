@@ -1,5 +1,7 @@
 name: Build and test astro
-on: [release]
+on:
+  release:
+    types: [created]
 jobs:
   build-n-publish:
     name: Build and publish Python 🐍 distributions 📦 to PyPI
