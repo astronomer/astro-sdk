@@ -16,8 +16,6 @@ jobs:
       with:
         path: ~/.cache/pip
         key: ${{ hashFiles('pyproject.toml') }}
-    - run: cat ci-test-connections.yaml > test-connections.yaml
-    - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
     - run: pip3 install nox
     - run: nox -s build
     - run: nox -s release -- dist/*
