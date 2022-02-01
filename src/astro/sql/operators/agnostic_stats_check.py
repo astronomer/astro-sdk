@@ -6,6 +6,7 @@ from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
+from astro.utils.schema_util import get_table_name
 
 
 class OutlierCheck:
@@ -89,10 +90,10 @@ class ChecksHandler:
         self, main_table: Table, compare_table: Table, engine, metadata_obj
     ):
         main_table_sqla = SqlaTable(
-            main_table.table_name, metadata_obj, autoload_with=engine
+            get_table_name(main_table), metadata_obj, autoload_with=engine
         )
         compare_table_sqla = SqlaTable(
-            compare_table.table_name, metadata_obj, autoload_with=engine
+            get_table_name(compare_table), metadata_obj, autoload_with=engine
         )
 
         main_table_stats_sql = self.prepare_main_stats_sql(main_table, main_table_sqla)
@@ -135,10 +136,10 @@ class ChecksHandler:
         metadata_obj,
     ):
         main_table_sqla = SqlaTable(
-            main_table.table_name, metadata_obj, autoload_with=engine
+            get_table_name(main_table), metadata_obj, autoload_with=engine
         )
         compare_table_sqla = SqlaTable(
-            compare_table.table_name, metadata_obj, autoload_with=engine
+            get_table_name(compare_table), metadata_obj, autoload_with=engine
         )
 
         main_stats = self.prepare_main_stats_sql(main_table, main_table_sqla)
