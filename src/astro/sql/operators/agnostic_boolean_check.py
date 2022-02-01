@@ -50,11 +50,6 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
         self.conn_id = table.conn_id
         self.checks = checks
         self.database = table.database
-        self.full_table_name = (
-            self.table.table_name
-            if self.table.schema is None
-            else f"{self.table.schema}.{self.table.table_name}"
-        )
 
         task_id = table.table_name + "_" + "boolean_check"
 
@@ -77,7 +72,7 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
     def execute(self, context: Dict):
         self.parameters = {}
         self.sql = AgnosticBooleanCheck.prep_boolean_checks_query(
-            self.full_table_name, self.checks
+            self.table, self.checks
         )
 
         results = super().execute(context)
@@ -107,16 +102,16 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
                 failed_check_index.append(index)
         return failed_check_name, failed_check_index
 
-    def prep_boolean_checks_query(table: str, checks: List[Check]):
+    def prep_boolean_checks_query(table: Table, checks: List[Check]):
         temp_table = select(*[check.get_expression() for check in checks]).select_from(
-            text(table)
+            text(table.qualified_name())
         )
         return select(*[check.get_result() for check in checks]).select_from(temp_table)
 
     def prep_results(self, results):
         return (
             select(["*"])
-            .select_from(text(self.full_table_name))
+            .select_from(text(self.table.qualified_name()))
             .where(and_(*[text(self.checks[index].expression) for index in results]))
             .limit(self.max_rows_returned)
         )
