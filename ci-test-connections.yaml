@@ -28,4 +28,12 @@ connections:
       role: "TRANSFORMER"
       warehouse: TRANSFORMING
       database: DWH_LEGACY
-
+  - conn_id: bigquery
+      conn_type: bigquery
+      description: null
+      extra: null
+      host: "astronomer-dag-authoring"
+      login: null
+      password: null
+      port: null
+      schema: null
