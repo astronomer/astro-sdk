@@ -42,6 +42,7 @@ from airflow.utils.types import DagRunType
 import astro.sql as aql
 from astro import dataframe as df
 from astro.sql.table import Table, TempTable
+from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -95,14 +96,7 @@ class TestPostgresDecorator(unittest.TestCase):
     def create_and_run_task(self, decorator_func, op_args, op_kwargs):
         with self.dag:
             f = decorator_func(*op_args, **op_kwargs)
-
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-        f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+        test_utils.run_dag(self.dag)
         return f
 
     def test_dataframe_to_postgres(self):
@@ -162,7 +156,11 @@ class TestPostgresDecorator(unittest.TestCase):
         wait_for_task_finish(dr, pg_df.operator.task_id)
 
     def test_postgres(self):
-        @aql.transform()
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+
+        @aql.transform
         def sample_pg(input_table: Table):
             return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%'"
 
@@ -175,6 +173,11 @@ class TestPostgresDecorator(unittest.TestCase):
                 ),
             },
         )
+        df = pd.read_sql(
+            f"SELECT * FROM tmp_astro.test_dag_sample_pg_1",
+            con=self.hook_target.get_conn(),
+        )
+        assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
 
     def test_postgres_with_parameter(self):
         @aql.transform(conn_id="postgres_conn", database="pagila")
@@ -249,7 +252,9 @@ class TestPostgresDecorator(unittest.TestCase):
             },
         )
         # Read table from db
-        df = pd.read_sql(f"SELECT * FROM my_table", con=self.hook_target.get_conn())
+        df = pd.read_sql(
+            f"SELECT * FROM tmp_astro.my_table", con=self.hook_target.get_conn()
+        )
         assert df.iloc[0].to_dict() == {
             "actor_id": 191,
             "first_name": "GREGORY",
@@ -283,20 +288,12 @@ class TestPostgresDecorator(unittest.TestCase):
                 output_table=Table("my_table_from_file"),
             )
 
-        from airflow.executors.debug_executor import DebugExecutor
+        test_utils.run_dag(self.dag)
 
-        self.dag.clear(
-            start_date=DEFAULT_DATE, end_date=DEFAULT_DATE, dag_run_state=State.NONE
-        )
-
-        self.dag.run(
-            executor=DebugExecutor(),
-            start_date=timezone.utcnow(),
-            run_at_least_once=True,
-        )
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM my_table_from_file", con=self.hook_target.get_conn()
+            f"SELECT * FROM tmp_astro.my_table_from_file",
+            con=self.hook_target.get_conn(),
         )
         assert df.iloc[0].to_dict() == {
             "actor_id": 191,
