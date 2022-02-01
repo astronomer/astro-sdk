@@ -35,6 +35,7 @@ import pytest
 from airflow.exceptions import DuplicateTaskIdFound
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
@@ -42,7 +43,7 @@ from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 from google.api_core.exceptions import NotFound
-from google.cloud import storage
+from google.cloud import bigquery, storage
 
 # Import Operator
 from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
@@ -83,13 +84,14 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        test_utils.drop_table_snowflake(
-            table_name=cls.SNOWFLAKE_OUTPUT_TABLE_NAME,  # type: ignore
-            database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore
-            conn_id="snowflake_conn",
-        )
+        pass
+        # test_utils.drop_table_snowflake(
+        #     table_name=cls.SNOWFLAKE_OUTPUT_TABLE_NAME,  # type: ignore
+        #     database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
+        #     schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
+        #     warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore
+        #     conn_id="snowflake_conn",
+        # )
 
     def setUp(self):
         super().setUp()
@@ -267,6 +269,33 @@ class TestAgnosticLoadFile(unittest.TestCase):
             "acres": 0.28,
             "taxes": 3167.0,
         }
+
+    def test_aql_local_file_to_bigquery_no_table_name(self):
+        OUTPUT_TABLE_NAME = "expected_table_from_csv"
+        data_path = str(CWD) + "/../data/homes.csv"
+        self.hook_target = BigQueryHook(gcp_conn_id="bigquery", use_legacy_sql=False)
+
+        task = self.create_and_run_task(
+            load_file,
+            (),
+            {
+                "path": data_path,
+                "file_conn_id": "",
+                "output_table": Table(
+                    OUTPUT_TABLE_NAME, conn_id="bigquery", schema="tmp_astro"
+                ),
+            },
+        )
+
+        client = bigquery.Client()
+        query_job = client.query(
+            f"SELECT * FROM astronomer-dag-authoring.tmp_astro.{OUTPUT_TABLE_NAME}"
+        )
+        bigquery_df = query_job.to_dataframe()
+
+        data_df = pd.read_csv(data_path)
+
+        assert bigquery_df.shape == data_df.shape
 
     def test_aql_overwrite_existing_table(self):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"

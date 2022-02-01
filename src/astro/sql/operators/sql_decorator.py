@@ -26,6 +26,7 @@ from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils.db import provide_session
 from sqlalchemy.sql.functions import Function
 
+from astro.sql.operators.temp_hooks import TempBigQueryHook
 from astro.sql.table import Table, create_table_name
 from astro.utils import postgres_transform, snowflake_transform
 from astro.utils.load_dataframe import move_dataframe_to_sql
@@ -232,6 +233,13 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             session_parameters=None,
         )
 
+    def get_bigquery_hook(self):
+        return TempBigQueryHook(
+            bigquery_conn_id=self.conn_id,
+            use_legacy_sql=False,
+            gcp_conn_id=self.conn_id,
+        )
+
     def get_postgres_hook(self):
         return PostgresHook(postgres_conn_id=self.conn_id, schema=self.database)
 
@@ -272,6 +280,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             "snowflake": self.get_snow_hook(),
             "postgresql": self.get_postgres_hook(),
             "postgres": self.get_postgres_hook(),
+            "bigquery": self.get_bigquery_hook(),
         }[self.conn_type]
         return hook.get_sqlalchemy_engine()
 

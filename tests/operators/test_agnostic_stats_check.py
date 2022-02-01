@@ -233,3 +233,86 @@ class TestStatsCheckOperator(unittest.TestCase):
             assert True
         except ValueError as e:
             assert False
+
+
+class TestBIGQueryIntegrationWithStatsCheckOperator(unittest.TestCase):
+    """
+    Test Stats Check Operator.
+    """
+
+    cwd = pathlib.Path(__file__).parent
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes.csv",
+            output_table=Table(
+                "stats_check_test_1", conn_id="bigquery", schema="tmp_astro"
+            ),
+        ).operator.execute({"run_id": "foo"})
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes2.csv",
+            output_table=Table(
+                "stats_check_test_2", conn_id="bigquery", schema="tmp_astro"
+            ),
+        ).operator.execute({"run_id": "foo"})
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes3.csv",
+            output_table=Table(
+                "stats_check_test_3", conn_id="bigquery", schema="tmp_astro"
+            ),
+        ).operator.execute({"run_id": "foo"})
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        pass
+
+    def clear_run(self):
+        self.run = False
+
+    def setUp(self):
+        super().setUp()
+        self.clear_run()
+        self.addCleanup(self.clear_run)
+        self.dag = DAG(
+            "test_dag",
+            default_args={
+                "owner": "airflow",
+                "start_date": DEFAULT_DATE,
+            },
+        )
+
+    def test_stats_check_bigQuery_outlier_exists(self):
+        try:
+            a = aql.stats_check(
+                main_table=Table(
+                    "stats_check_test_1", conn_id="bigquery", schema="tmp_astro"
+                ),
+                compare_table=Table(
+                    "stats_check_test_2", conn_id="bigquery", schema="tmp_astro"
+                ),
+                checks=[aql.OutlierCheck("room_check", {"rooms": "rooms"}, 2, 0.0)],
+                max_rows_returned=10,
+            )
+            a.execute({"run_id": "foo"})
+            assert False
+        except ValueError as e:
+            assert True
+
+    def test_stats_check_postgres_bigQuery_not_exists(self):
+        try:
+            a = aql.stats_check(
+                main_table=Table(
+                    "stats_check_test_1", conn_id="bigquery", schema="tmp_astro"
+                ),
+                compare_table=Table(
+                    "stats_check_test_3", conn_id="bigquery", schema="tmp_astro"
+                ),
+                checks=[aql.OutlierCheck("room_check", {"rooms": "rooms"}, 2, 0.0)],
+                max_rows_returned=10,
+            )
+            a.execute({"run_id": "foo"})
+            assert True
+        except ValueError as e:
+            assert False

@@ -19,7 +19,7 @@ from typing import Dict, Optional
 
 from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
-from sqlalchemy.sql.functions import count
+from sqlalchemy import text
 from sqlalchemy.sql.schema import Table
 
 from astro import sql
@@ -57,7 +57,7 @@ class AgnosticAggregateCheck(SqlDecoratoratedOperator):
         :type database: str
         """
         self.table = table
-        self.check = check
+        self.check = text(check)
         self.greater_than = greater_than
         self.less_than = less_than
         self.equal_to = equal_to
@@ -94,8 +94,8 @@ class AgnosticAggregateCheck(SqlDecoratoratedOperator):
 
     def execute(self, context: Dict):
         self.sql = self.check
-        self.handler = lambda curr: curr.fetchone()
         query_result = super().execute(context)
+        query_result = query_result.fetchone()
         if len(query_result) != 1:
             raise ValueError(
                 "The aggregate check query should only return a single numeric value."

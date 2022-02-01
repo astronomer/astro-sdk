@@ -37,6 +37,7 @@ from airflow.utils.types import DagRunType
 
 # Import Operator
 import astro.sql as aql
+from astro.sql.operators.temp_hooks import TempBigQueryHook
 from astro.sql.table import Table
 
 log = logging.getLogger(__name__)
@@ -71,16 +72,25 @@ class TestAggregateCheckOperator(unittest.TestCase):
         self.aggregate_table = Table(
             "aggregate_check_test",
             database="pagila",
-            conn_id="postgres_conn",
+            conn_id="postgres_sqla_conn",
             schema="airflow_test_dag",
+        )
+        self.aggregate_table_bigquery = Table(
+            "aggregate_check_test",
+            conn_id="bigquery",
+            schema="tmp_astro",
         )
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_merge_1.csv",
             output_table=self.aggregate_table,
         ).operator.execute({"run_id": "foo"})
+        aql.load_file(
+            path=str(self.cwd) + "/../data/homes_merge_1.csv",
+            output_table=self.aggregate_table_bigquery,
+        ).operator.execute({"run_id": "foo"})
 
     def test_exact_value(self):
-        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
+        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_sqla_conn")
         df = hook.get_pandas_df(
             sql="SELECT * FROM airflow_test_dag.aggregate_check_test"
         )
@@ -89,6 +99,24 @@ class TestAggregateCheckOperator(unittest.TestCase):
             a = aql.aggregate_check(
                 table=self.aggregate_table,
                 check="select count(*) FROM airflow_test_dag.aggregate_check_test",
+                greater_than=4,
+                less_than=4,
+            )
+            a.execute({"run_id": "foo"})
+            assert True
+        except ValueError:
+            assert False
+
+    def test_exact_value_biquery(self):
+        hook = TempBigQueryHook(
+            bigquery_conn_id="bigquery", use_legacy_sql=False, gcp_conn_id="bigquery"
+        )
+        df = hook.get_pandas_df(sql="SELECT * FROM tmp_astro.aggregate_check_test")
+        assert df.count()[0] == 4
+        try:
+            a = aql.aggregate_check(
+                table=self.aggregate_table_bigquery,
+                check="select count(*) FROM tmp_astro.aggregate_check_test",
                 greater_than=4,
                 less_than=4,
             )

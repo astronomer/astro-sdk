@@ -15,11 +15,16 @@ limitations under the License.
 """
 from typing import Optional, Union
 
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from pandas import DataFrame
 from pandas.io.sql import SQLDatabase
 from snowflake.connector.pandas_tools import write_pandas
 
-from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
+from astro.sql.operators.temp_hooks import (
+    TempBigQueryHook,
+    TempPostgresHook,
+    TempSnowflakeHook,
+)
 from astro.utils.schema_util import set_schema_query
 
 
@@ -43,6 +48,9 @@ def move_dataframe_to_sql(
             database=database,
             schema=schema,
             warehouse=warehouse,
+        ),
+        "bigquery": TempBigQueryHook(
+            bigquery_conn_id=conn_id, use_legacy_sql=False, gcp_conn_id=conn_id
         ),
     }.get(conn_type, None)
     if not hook:
@@ -72,6 +80,13 @@ def move_dataframe_to_sql(
             output_table_name,
             chunk_size=chunksize,
             quote_identifiers=False,
+        )
+    elif conn_type == "bigquery":
+        df.to_gbq(
+            f"{schema}.{output_table_name}",
+            if_exists="replace",
+            chunksize=chunksize,
+            project_id=hook.project_id,
         )
     else:
         df.to_sql(
