@@ -76,18 +76,17 @@ class TestBooleanCheckOperator(unittest.TestCase):
             ),
         ).operator.execute({"run_id": "foo"})
 
-        # cls.snowflake_table = get_table_name("boolean_check_test")
-        #
-        # aql.load_file(
-        #     path=str(cls.cwd) + "/../data/homes_append.csv",
-        #     output_table=Table(
-        #         conn_id="snowflake_conn",
-        #         table_name=cls.snowflake_table,
-        #         schema=os.getenv("SNOWFLAKE_SCHEMA"),
-        #         database=os.getenv("SNOWFLAKE_DATABASE"),
-        #         warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-        #     ),
-        # ).operator.execute({"run_id": "foo"})
+        cls.snowflake_table = get_table_name("boolean_check_test")
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes_append.csv",
+            output_table=Table(
+                conn_id="snowflake_conn",
+                table_name=cls.snowflake_table,
+                schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            ),
+        ).operator.execute({"run_id": "foo"})
 
         cls.table = "boolean_check_test"
         aql.load_file(
@@ -101,14 +100,13 @@ class TestBooleanCheckOperator(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        pass
-        # drop_table_snowflake(
-        #     table_name=cls.snowflake_table,
-        #     schema=os.getenv("SNOWFLAKE_SCHEMA"),
-        #     database=os.getenv("SNOWFLAKE_DATABASE"),
-        #     warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-        #     conn_id="snowflake_conn",
-        # )
+        drop_table_snowflake(
+            table_name=cls.snowflake_table,
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
+        )
 
     def clear_run(self):
         self.run = False
