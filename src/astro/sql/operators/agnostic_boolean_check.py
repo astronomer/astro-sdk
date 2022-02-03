@@ -103,10 +103,10 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
         return failed_check_name, failed_check_index
 
     def prep_boolean_checks_query(table: Table, checks: List[Check]):
-        temp_table = select(*[check.get_expression() for check in checks]).select_from(
+        temp_table = select([check.get_expression() for check in checks]).select_from(
             text(table.qualified_name())
-        )
-        return select(*[check.get_result() for check in checks]).select_from(temp_table)
+        ).alias("check_table")
+        return select([check.get_result() for check in checks]).select_from(temp_table)
 
     def prep_results(self, results):
         return (

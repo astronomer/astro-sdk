@@ -99,12 +99,11 @@ class ChecksHandler:
         main_table_stats_sql = self.prepare_main_stats_sql(main_table, main_table_sqla)
         cases_sql = self.prepare_cases_sql(main_table_stats_sql, compare_table_sqla)
         temp_table = select(
-            *cases_sql,
-            compare_table_sqla,
+            cases_sql.extend(compare_table_sqla)
         )
         checks_sql = self.prepare_checks_sql(temp_table)
 
-        comparison_sql = select(func.count().label("total"), *checks_sql).select_from(
+        comparison_sql = select([func.count().label("total")].extend(checks_sql)).select_from(
             temp_table
         )
 

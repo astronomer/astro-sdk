@@ -97,5 +97,5 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
             column_names = [column(c) for c in append_table_sqla.c.keys()]
             main_columns = column_names
 
-        sel = select(*column_names, *casted_fields).select_from(append_table_sqla)
+        sel = select(column_names.extend(casted_fields)).select_from(append_table_sqla)
         return insert(main_table_sqla).from_select(main_columns, sel)
