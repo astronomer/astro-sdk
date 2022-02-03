@@ -22,7 +22,6 @@ dependencies = [
     "python-frontmatter",
     "pandas >=1.3.4",
     "s3fs",
-    "snowflake-sqlalchemy ==1.2.0",
     "snowflake-connector-python[pandas]",
     "smart-open[all]>=5.2.1",
     "SQLAlchemy==1.3.24",
