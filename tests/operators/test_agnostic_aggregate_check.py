@@ -54,6 +54,25 @@ class TestAggregateCheckOperator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.aggregate_table = Table(
+            "aggregate_check_test",
+            database="pagila",
+            conn_id="postgres_sqla_conn",
+            schema="airflow_test_dag",
+        )
+        cls.aggregate_table_bigquery = Table(
+            "aggregate_check_test",
+            conn_id="bigquery",
+            schema="tmp_astro",
+        )
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes_merge_1.csv",
+            output_table=cls.aggregate_table,
+        ).operator.execute({"run_id": "foo"})
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes_merge_1.csv",
+            output_table=cls.aggregate_table_bigquery,
+        ).operator.execute({"run_id": "foo"})
 
     def clear_run(self):
         self.run = False
@@ -69,25 +88,6 @@ class TestAggregateCheckOperator(unittest.TestCase):
                 "start_date": DEFAULT_DATE,
             },
         )
-        self.aggregate_table = Table(
-            "aggregate_check_test",
-            database="pagila",
-            conn_id="postgres_sqla_conn",
-            schema="airflow_test_dag",
-        )
-        self.aggregate_table_bigquery = Table(
-            "aggregate_check_test",
-            conn_id="bigquery",
-            schema="tmp_astro",
-        )
-        aql.load_file(
-            path=str(self.cwd) + "/../data/homes_merge_1.csv",
-            output_table=self.aggregate_table,
-        ).operator.execute({"run_id": "foo"})
-        aql.load_file(
-            path=str(self.cwd) + "/../data/homes_merge_1.csv",
-            output_table=self.aggregate_table_bigquery,
-        ).operator.execute({"run_id": "foo"})
 
     def test_exact_value(self):
         hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_sqla_conn")
