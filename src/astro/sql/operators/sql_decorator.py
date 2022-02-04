@@ -161,7 +161,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.log.info(f"returning table {self.output_table}")
             return self.output_table
 
-    def handle_schema(self, output_table_name, schema=get_schema()):
+    def handle_schema(self, output_table_name, schema=None):
         """
         In postgres, we set the schema in the query itself instead of as a query parameter.
         This function adds the necessary {schema}.{table} notation.
@@ -169,6 +169,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         :param output_table_name:
         :return:
         """
+        schema = schema or get_schema()
         if self.conn_type == "postgres" and self.schema:
             output_table_name = schema + "." + output_table_name
         elif self.conn_type == "snowflake" and self.schema and "." not in self.sql:
