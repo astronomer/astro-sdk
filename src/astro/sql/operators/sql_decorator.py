@@ -120,10 +120,12 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
             if not self.output_table:
                 output_table_name = create_table_name(context=context)
-                full_output_table_name = self.handle_schema(output_table_name)
+                full_output_table_name = self.handle_output_table_schema(
+                    output_table_name
+                )
             else:
                 output_table_name = self.output_table.table_name
-                full_output_table_name = self.handle_schema(
+                full_output_table_name = self.handle_output_table_schema(
                     output_table_name, self.output_table.schema
                 )
 
@@ -161,12 +163,12 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.log.info(f"returning table {self.output_table}")
             return self.output_table
 
-    def handle_schema(self, output_table_name, schema=None):
+    def handle_output_table_schema(self, output_table_name, schema=None):
         """
         In postgres, we set the schema in the query itself instead of as a query parameter.
         This function adds the necessary {schema}.{table} notation.
-        :param schema:
         :param output_table_name:
+        :param schema: an optional schema if the output_table has a schema set. Defaults to the temp schema
         :return:
         """
         schema = schema or get_schema()
