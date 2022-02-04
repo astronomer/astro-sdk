@@ -197,6 +197,13 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             ]
             if table_kwargs:
                 first_table = self.op_kwargs[table_kwargs[0].name]
+
+        # If there is no first table via op_ags or kwargs, we check the parameters
+        if not first_table:
+            param_tables = [t for t in self.parameters.values() if type(t) == Table]
+            if param_tables:
+                first_table = param_tables[0]
+
         if first_table:
             self.conn_id = first_table.conn_id or self.conn_id
             self.database = first_table.database or self.database
