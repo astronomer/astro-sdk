@@ -203,8 +203,10 @@ class TestSnowflakeOperator(unittest.TestCase):
         @aql.run_raw_sql(
             conn_id="snowflake_conn",
         )
-        def sample_snow(my_input_table: Table, snowflake_table_raw_sql: str):
-            return "CREATE TABLE {snowflake_table_raw_sql} AS (SELECT * FROM {my_input_table} LIMIT 5)"
+        def sample_snow(
+            my_input_table: Table, snowflake_table_raw_sql: Table, num_rows: int
+        ):
+            return "CREATE TABLE {snowflake_table_raw_sql} AS (SELECT * FROM {my_input_table} LIMIT {num_rows})"
 
         with self.dag:
             f = sample_snow(
@@ -215,7 +217,14 @@ class TestSnowflakeOperator(unittest.TestCase):
                     database=os.getenv("SNOWFLAKE_DATABASE"),
                     warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
                 ),
-                snowflake_table_raw_sql=self.snowflake_table_raw_sql,
+                snowflake_table_raw_sql=Table(
+                    self.snowflake_table_raw_sql,
+                    conn_id="snowflake_conn",
+                    schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                    database=os.getenv("SNOWFLAKE_DATABASE"),
+                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                ),
+                num_rows=5,
             )
         test_utils.run_dag(self.dag)
 

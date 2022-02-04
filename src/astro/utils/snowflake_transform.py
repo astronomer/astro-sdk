@@ -21,7 +21,7 @@ from astro.sql.table import Table
 
 def handle_table(t: Table):
     return (
-        t.schema + "." + t.table_name
+        t.database + "." + t.schema + "." + t.table_name
         if t.schema and "." not in t.table_name
         else t.table_name
     )
@@ -35,7 +35,7 @@ def process_params(parameters):
 
 def _parse_template(sql, python_callable, added_parameters):
     param_types = inspect.signature(python_callable).parameters.copy()
-    param_types = {k: v.annotation for k, v in param_types}
+    param_types = {k: v.annotation for k, v in param_types.items()}
     added_parameters = {k: type(v) for k, v in added_parameters.items()}
     param_types.update(added_parameters)
     sql = sql.replace("{", "%(").replace("}", ")s")
