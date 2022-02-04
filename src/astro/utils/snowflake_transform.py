@@ -19,17 +19,23 @@ import re
 from astro.sql.table import Table
 
 
-def handle_table(t: Table):
+def _handle_table(t: Table):
+    """
+    If the table is a fully qualified name ("DATABASE"."SCHEMA"."TABLE") thenw e do nothing, otherwise
+    we generate a fully qualified name. This will allow snowflake users to do cross schema and cross database queries
+    :param t:
+    :return:
+    """
     return (
         t.database + "." + t.schema + "." + t.table_name
-        if t.schema and "." not in t.table_name
+        if t.schema and t.table_name.count(".") > 1
         else t.table_name
     )
 
 
 def process_params(parameters):
     return {
-        k: (handle_table(v) if type(v) == Table else v) for k, v in parameters.items()
+        k: (_handle_table(v) if type(v) == Table else v) for k, v in parameters.items()
     }
 
 

@@ -11,6 +11,7 @@ from airflow.utils.session import create_session
 # Import Operator
 import astro.sql as aql
 from astro.sql.table import Table
+from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -100,8 +101,11 @@ class TestSQLParsing(unittest.TestCase):
         )
 
     def test_parse_creates_xcom(self):
+        """
+        Runs two tasks with a direct dependency, the DAG will fail if task two can not inherit the table produced by task 1
+        :return:
+        """
         with self.dag:
             rendered_tasks = aql.render(dir_path + "/single_task_dag")
-        from tests.operators import utils as test_utils
 
         test_utils.run_dag(self.dag)
