@@ -120,7 +120,7 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
         self.handler = lambda curr: curr.fetchall()
 
         self.sql, self.parameters = execute_boolean_checks(
-            self.table.table_name, self.checks, self.conn_id  # type: ignore
+            self.table, self.checks, self.conn_id  # type: ignore
         )
 
         results = super().execute(context)
@@ -161,7 +161,9 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
         return failed_check_name, failed_check_index
 
     @staticmethod
-    def execute_postgres_boolean_checks(table: str, checks: List[Check], conn_id: str):
+    def execute_postgres_boolean_checks(
+        table: Table, checks: List[Check], conn_id: str
+    ):
         statement = (
             "SELECT {results} FROM (SELECT {expressions} From {table}) as temp_table"
         )
@@ -175,7 +177,9 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
         statement = (
             sql.SQL(statement)
             .format(
-                results=results, expressions=expressions, table=sql.Identifier(table)
+                results=results,
+                expressions=expressions,
+                table=sql.Identifier(table.table_name),
             )
             .as_string(hook.get_conn())
         )
@@ -183,9 +187,10 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
 
     @staticmethod
     def execute_snowflake_boolean_checks(table: str, checks: List[Check], conn_id: str):
-        statement = "SELECT {results} FROM (SELECT {expressions} From Identifier(%(table)s) as temp_table)"
+        statement = (
+            "SELECT {results} FROM (SELECT {expressions} From %(table)s as temp_table)"
+        )
 
-        statement = statement.replace("{table}", table)
         statement = statement.replace(
             "{expressions}",
             ",".join([check.get_snowflake_expression() for check in checks]),
@@ -211,9 +216,7 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
         return statement, {}
 
     def snowflake_prep_results(self, results):
-        statement = (
-            "SELECT * from Identifier(%(table)s) WHERE {expressions} LIMIT {limit}"
-        )
+        statement = "SELECT * from %(table)s WHERE {expressions} LIMIT {limit}"
         statement = statement.replace(
             "{expressions}",
             "AND".join([self.checks[index].expression for index in results]),
