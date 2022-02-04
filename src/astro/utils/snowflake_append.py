@@ -34,11 +34,11 @@ def snowflake_append_func(
 
     if columns or casted_columns:
         statement = (
-            "INSERT INTO Identifier(%(main_table)s) ({main_cols}{sep}{main_casted_cols})"
-            "(SELECT {fields}{sep}{casted_fields} FROM Identifier(%(append_table)s))"
+            "INSERT INTO %(main_table)s ({main_cols}{sep}{main_casted_cols})"
+            "(SELECT {fields}{sep}{casted_fields} FROM %(append_table)s)"
         )
     else:
-        statement = "INSERT INTO Identifier(%(main_table)s) (SELECT * FROM Identifier(%(append_table)s))"
+        statement = "INSERT INTO %(main_table)s (SELECT * FROM %(append_table)s)"
 
     col_dict = {
         f"col{i}": x for i, x in enumerate(columns)

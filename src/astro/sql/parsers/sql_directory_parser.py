@@ -116,4 +116,4 @@ class ParsedSqlOperator(SqlDecoratoratedOperator):
         )
 
     def execute(self, context: Dict):
-        super().execute(context)
+        return super().execute(context)

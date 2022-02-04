@@ -43,10 +43,7 @@ def snowflake_merge_func(
     merge_columns,
     conflict_strategy,
 ):
-    statement = (
-        "merge into Identifier(%(main_table)s) using Identifier(%(merge_table)s) on "
-        "{merge_clauses}"
-    )
+    statement = "merge into %(main_table)s using %(merge_table)s on " "{merge_clauses}"
 
     merge_target_dict = {
         "merge_clause_target_" + str(i): target_table.table_name + "." + x

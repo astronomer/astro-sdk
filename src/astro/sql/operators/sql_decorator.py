@@ -120,10 +120,16 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
             if not self.output_table:
                 output_table_name = create_table_name(context=context)
+                full_output_table_name = self.handle_output_table_schema(
+                    output_table_name
+                )
             else:
                 output_table_name = self.output_table.table_name
-            output_table_name = self.handle_schema(output_table_name)
-            self.sql = self.create_temporary_table(self.sql, output_table_name)
+                full_output_table_name = self.handle_output_table_schema(
+                    output_table_name, self.output_table.schema
+                )
+
+            self.sql = self.create_temporary_table(self.sql, full_output_table_name)
 
         # Automatically add any kwargs going into the function
         if self.op_kwargs:
@@ -157,15 +163,19 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.log.info(f"returning table {self.output_table}")
             return self.output_table
 
-    def handle_schema(self, output_table_name):
+    def handle_output_table_schema(self, output_table_name, schema=None):
         """
         In postgres, we set the schema in the query itself instead of as a query parameter.
         This function adds the necessary {schema}.{table} notation.
         :param output_table_name:
+        :param schema: an optional schema if the output_table has a schema set. Defaults to the temp schema
         :return:
         """
+        schema = schema or get_schema()
         if self.conn_type == "postgres" and self.schema:
-            output_table_name = self.schema + "." + output_table_name
+            output_table_name = schema + "." + output_table_name
+        elif self.conn_type == "snowflake" and self.schema and "." not in self.sql:
+            output_table_name = self.database + "." + schema + "." + output_table_name
         return output_table_name
 
     def _set_variables_from_first_table(self):
@@ -309,7 +319,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.sql = postgres_transform.parse_template(self.sql)
         else:
             self.sql = snowflake_transform._parse_template(
-                self.sql, self.python_callable
+                self.sql, self.python_callable, self.parameters
             )
 
     def _cleanup(self):
