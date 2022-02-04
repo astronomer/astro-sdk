@@ -281,9 +281,16 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         :param table_name:
         :return:
         """
+
+        def clean_trailing_semicolon(query):
+            query = query.strip()
+            if query and query[-1] == ";":
+                query = query[:-1]
+            return query
+
         if schema:
             output_table_name = f"{schema}.{output_table_name}"
-        return f"DROP TABLE IF EXISTS {output_table_name}; CREATE TABLE {output_table_name} AS ({query});"
+        return f"DROP TABLE IF EXISTS {output_table_name}; CREATE TABLE {output_table_name} AS ({clean_trailing_semicolon(query)});"
 
     @staticmethod
     def create_cte(query, table_name):

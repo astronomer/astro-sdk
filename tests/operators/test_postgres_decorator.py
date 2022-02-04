@@ -219,6 +219,31 @@ class TestPostgresDecorator(unittest.TestCase):
         )
         assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
 
+    def test_postgres_with_semicolon(self):
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+
+        @aql.transform
+        def sample_pg(input_table: Table):
+            # Add trailing whitespaces to ensure it can still catch the semicolon
+            return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%';   " "    "
+
+        self.create_and_run_task(
+            sample_pg,
+            (),
+            {
+                "input_table": Table(
+                    table_name="actor", conn_id="postgres_conn", database="pagila"
+                ),
+            },
+        )
+        df = pd.read_sql(
+            f"SELECT * FROM tmp_astro.test_dag_sample_pg_1",
+            con=self.hook_target.get_conn(),
+        )
+        assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
+
     def test_postgres_with_parameter(self):
         @aql.transform(conn_id="postgres_conn", database="pagila")
         def sample_pg(input_table: Table):
