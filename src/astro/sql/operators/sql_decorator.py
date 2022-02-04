@@ -166,6 +166,10 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         """
         if self.conn_type == "postgres" and self.schema:
             output_table_name = self.schema + "." + output_table_name
+        elif self.conn_type == "snowflake" and self.schema and "." not in self.sql:
+            output_table_name = (
+                self.database + "." + self.schema + "." + output_table_name
+            )
         return output_table_name
 
     def _set_variables_from_first_table(self):
@@ -309,7 +313,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.sql = postgres_transform.parse_template(self.sql)
         else:
             self.sql = snowflake_transform._parse_template(
-                self.sql, self.python_callable
+                self.sql, self.python_callable, self.parameters
             )
 
     def _cleanup(self):

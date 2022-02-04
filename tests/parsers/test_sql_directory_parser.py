@@ -98,3 +98,10 @@ class TestSQLParsing(unittest.TestCase):
             new_customers_table.operator.sql
             == "SELECT * FROM {customers_table} WHERE member_since > DATEADD(day, -7, '{{ execution_date }}')"
         )
+
+    def test_parse_creates_xcom(self):
+        with self.dag:
+            rendered_tasks = aql.render(dir_path + "/single_task_dag")
+        from tests.operators import utils as test_utils
+
+        test_utils.run_dag(self.dag)
