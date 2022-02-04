@@ -21,16 +21,13 @@ from astro.sql.table import Table
 
 def _handle_table(t: Table):
     """
-    If the table is a fully qualified name ("DATABASE"."SCHEMA"."TABLE") thenw e do nothing, otherwise
-    we generate a fully qualified name. This will allow snowflake users to do cross schema and cross database queries
+    returns the fully qualified name ("DATABASE"."SCHEMA"."TABLE").
+    This will allow snowflake users to do cross schema and cross database queries
     :param t:
     :return:
     """
-    return (
-        t.database + "." + t.schema + "." + t.table_name
-        if t.schema and t.table_name.count(".") > 1
-        else t.table_name
-    )
+
+    return t.database + "." + t.schema + "." + t.table_name
 
 
 def process_params(parameters):
