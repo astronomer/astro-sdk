@@ -42,7 +42,7 @@ class ChecksHandler:
                         ),
                     ]
                 )
-        return select(select_expressions)
+        return select(select_expressions).alias("main_stats_sql")
 
     def prepare_column_sql(self, check, main_stats, compare_table):
         column_sql = []
@@ -74,7 +74,14 @@ class ChecksHandler:
 
             cases.append(
                 case(
-                    (self.prepare_column_sql(check, main_stats, compare_table_sqla), 1),
+                    [
+                        (
+                            self.prepare_column_sql(
+                                check, main_stats, compare_table_sqla
+                            ),
+                            1,
+                        ),
+                    ],
                     else_=0,
                 ).label(check.name)
             )
@@ -98,14 +105,12 @@ class ChecksHandler:
 
         main_table_stats_sql = self.prepare_main_stats_sql(main_table, main_table_sqla)
         cases_sql = self.prepare_cases_sql(main_table_stats_sql, compare_table_sqla)
-        temp_table = select(
-            cases_sql.extend(compare_table_sqla)
-        )
+        cases_sql.append(compare_table_sqla)
+        temp_table = select(cases_sql).alias("temp_table")
         checks_sql = self.prepare_checks_sql(temp_table)
 
-        comparison_sql = select([func.count().label("total")].extend(checks_sql)).select_from(
-            temp_table
-        )
+        checks_sql.insert(0, func.count().label("total"))
+        comparison_sql = select(checks_sql).select_from(temp_table)
 
         return comparison_sql
 
@@ -147,8 +152,9 @@ class ChecksHandler:
         for check in self.checks:
             if check.name in failed_checks:
                 statement = (
-                    select(compare_table_sqla)
-                    .select_from(main_stats, compare_table_sqla)
+                    select([compare_table_sqla])
+                    .select_from(main_stats)
+                    .select_from(compare_table_sqla)
                     .where(
                         self.prepare_column_sql(check, main_stats, compare_table_sqla)
                     )
