@@ -38,9 +38,10 @@ class Table:
 
     def fully_qualified_name(self, conn_type, schema=None):
         """
-        In postgres, we set the schema in the query itself instead of as a query parameter.
-        This function adds the necessary {schema}.{table} notation.
-        :param output_table_name:
+        To make our SQL queries more clear in scope and to allow queries containing multiple
+        schemas or databases, we should start generating SQL that uses fully qualified names (eg.
+        schema.table in postgres and DATABASE.SCHEMA.TABLE in snowflake).
+        :param conn_type: What type of connection are we creating.
         :param schema: an optional schema if the output_table has a schema set. Defaults to the temp schema
         :return:
         """
