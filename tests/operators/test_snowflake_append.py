@@ -156,14 +156,14 @@ class TestSnowflakeAppend(unittest.TestCase):
     def test_append(self):
         hook = get_snowflake_hook()
         previous_count = hook.run(
-            f"SELECT COUNT(*) FROM {self.load_main.operator.output_table.qualified_name()}"
+            f"SELECT COUNT(*) FROM {self.load_main.operator.output_table.fully_qualified_name(conn_type='snowflake')}"
         )
         append_count = hook.run(
-            f"SELECT COUNT(*) FROM {self.load_append.operator.output_table.qualified_name()}"
+            f"SELECT COUNT(*) FROM {self.load_append.operator.output_table.fully_qualified_name(conn_type='snowflake')}"
         )
         self.run_append_func([], {})
         main_table_count = hook.run(
-            f"SELECT COUNT(*) FROM {self.load_main.operator.output_table.qualified_name()}"
+            f"SELECT COUNT(*) FROM {self.load_main.operator.output_table.fully_qualified_name(conn_type='snowflake')}"
         )
         assert (
             main_table_count[0]["COUNT(*)"]
@@ -173,15 +173,15 @@ class TestSnowflakeAppend(unittest.TestCase):
     def test_append_no_cast(self):
         hook = get_snowflake_hook()
         previous_count = hook.run(
-            f"SELECT COUNT(*) FROM {self.load_main.operator.output_table.qualified_name()}"
+            f"SELECT COUNT(*) FROM {self.load_main.operator.output_table.fully_qualified_name(conn_type='snowflake')}"
         )
         append_count = hook.run(
-            f"SELECT COUNT(*) FROM {self.load_append.operator.output_table.qualified_name()}"
+            f"SELECT COUNT(*) FROM {self.load_append.operator.output_table.fully_qualified_name(conn_type='snowflake')}"
         )
         self.run_append_func(["beds", "acres"], {})
 
         df = hook.get_pandas_df(
-            f"SELECT * FROM {self.load_main.operator.output_table.qualified_name()}"
+            f"SELECT * FROM {self.load_main.operator.output_table.fully_qualified_name(conn_type='snowflake')}"
         )
 
         assert len(df) == previous_count[0]["COUNT(*)"] + append_count[0]["COUNT(*)"]
@@ -191,15 +191,15 @@ class TestSnowflakeAppend(unittest.TestCase):
     def test_append_with_cast(self):
         hook = get_snowflake_hook()
         previous_count = hook.run(
-            f"SELECT COUNT(*) FROM {self.load_main.operator.output_table.qualified_name()}"
+            f"SELECT COUNT(*) FROM {self.load_main.operator.output_table.fully_qualified_name(conn_type='snowflake')}"
         )
         append_count = hook.run(
-            f"SELECT COUNT(*) FROM {self.load_append.operator.output_table.qualified_name()}"
+            f"SELECT COUNT(*) FROM {self.load_append.operator.output_table.fully_qualified_name(conn_type='snowflake')}"
         )
         self.run_append_func(["beds"], {"acres": "FLOAT"})
 
         df = hook.get_pandas_df(
-            f"SELECT * FROM {self.load_main.operator.output_table.qualified_name()}"
+            f"SELECT * FROM {self.load_main.operator.output_table.fully_qualified_name(conn_type='snowflake')}"
         )
 
         assert len(df) == previous_count[0]["COUNT(*)"] + append_count[0]["COUNT(*)"]
@@ -209,10 +209,10 @@ class TestSnowflakeAppend(unittest.TestCase):
     def test_append_with_cast_and_no_cast(self):
         hook = get_snowflake_hook()
         previous_count = hook.run(
-            f"SELECT COUNT(*) FROM {self.load_main.operator.output_table.qualified_name()}"
+            f"SELECT COUNT(*) FROM {self.load_main.operator.output_table.fully_qualified_name(conn_type='snowflake')}"
         )
         append_count = hook.run(
-            f"SELECT COUNT(*) FROM {self.load_append.operator.output_table.qualified_name()}"
+            f"SELECT COUNT(*) FROM {self.load_append.operator.output_table.fully_qualified_name(conn_type='snowflake')}"
         )
 
         self.run_append_func(
@@ -221,7 +221,7 @@ class TestSnowflakeAppend(unittest.TestCase):
         )
 
         df = hook.get_pandas_df(
-            f"SELECT * FROM {self.load_main.operator.output_table.qualified_name()}"
+            f"SELECT * FROM {self.load_main.operator.output_table.fully_qualified_name(conn_type='snowflake')}"
         )
 
         assert len(df) == previous_count[0]["COUNT(*)"] + append_count[0]["COUNT(*)"]

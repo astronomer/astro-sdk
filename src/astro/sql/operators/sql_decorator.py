@@ -125,15 +125,16 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self._set_schema_if_needed()
 
             if not self.output_table:
-                output_table_name = create_table_name(context=context)
-                full_output_table_name = self.handle_output_table_schema(
-                    output_table_name
+                self.output_table = Table(
+                    table_name=create_table_name(context=context),
+                    conn_id=self.conn_id,
+                    database=self.database,
+                    warehouse=self.warehouse,
+                    schema=get_schema(),
                 )
-            else:
-                output_table_name = self.output_table.table_name
-                full_output_table_name = self.handle_output_table_schema(
-                    output_table_name, self.output_table.schema
-                )
+            full_output_table_name = self.output_table.fully_qualified_name(
+                conn_type=self.conn_type, schema=self.schema
+            )
 
             self.sql = self.create_temporary_table(self.sql, full_output_table_name)
 
@@ -159,30 +160,8 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         elif self.raw_sql:
             return query_result
         else:
-            self.output_table = Table(
-                table_name=output_table_name,
-                conn_id=self.conn_id,
-                database=self.database,
-                warehouse=self.warehouse,
-                schema=get_schema(),
-            )
             self.log.info(f"returning table {self.output_table}")
             return self.output_table
-
-    def handle_output_table_schema(self, output_table_name, schema=None):
-        """
-        In postgres, we set the schema in the query itself instead of as a query parameter.
-        This function adds the necessary {schema}.{table} notation.
-        :param output_table_name:
-        :param schema: an optional schema if the output_table has a schema set. Defaults to the temp schema
-        :return:
-        """
-        schema = schema or get_schema()
-        if self.conn_type == "postgres" and self.schema:
-            output_table_name = schema + "." + output_table_name
-        elif self.conn_type == "snowflake" and self.schema and "." not in self.sql:
-            output_table_name = self.database + "." + schema + "." + output_table_name
-        return output_table_name
 
     def _set_variables_from_first_table(self):
         """

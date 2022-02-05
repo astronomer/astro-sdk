@@ -36,8 +36,21 @@ class Table:
     def identifier_args(self):
         return (self.schema, self.table_name) if self.schema else (self.table_name,)
 
-    def qualified_name(self):
-        return self.schema + "." + self.table_name if self.schema else self.table_name
+    def fully_qualified_name(self, conn_type, schema=None):
+        """
+        In postgres, we set the schema in the query itself instead of as a query parameter.
+        This function adds the necessary {schema}.{table} notation.
+        :param output_table_name:
+        :param schema: an optional schema if the output_table has a schema set. Defaults to the temp schema
+        :return:
+        """
+        table_name = self.table_name
+        schema = self.schema or schema
+        if (conn_type == "postgres" or conn_type == "postgresql") and schema:
+            table_name = schema + "." + self.table_name
+        elif conn_type == "snowflake" and schema and "." not in self.table_name:
+            table_name = self.database + "." + schema + "." + self.table_name
+        return table_name
 
     def __str__(self):
         return f"Table(table_name={self.table_name}, database={self.database}, schema={self.schema}, conn_id={self.conn_id}, warehouse={self.warehouse})"

@@ -109,3 +109,22 @@ class TestSQLParsing(unittest.TestCase):
             rendered_tasks = aql.render(dir_path + "/single_task_dag")
 
         test_utils.run_dag(self.dag)
+
+    def test_parse_to_dataframe(self):
+        """
+        Runs two tasks with a direct dependency, the DAG will fail if task two can not inherit the table produced by task 1
+        :return:
+        """
+        import pandas as pd
+
+        from astro.dataframe import dataframe as adf
+
+        @adf
+        def dataframe_func(df: pd.DataFrame):
+            print(df.to_string)
+
+        with self.dag:
+            rendered_tasks = aql.render(dir_path + "/postgres_simple_tasks")
+            dataframe_func(rendered_tasks["test_inheritance"])
+
+        test_utils.run_dag(self.dag)

@@ -141,8 +141,11 @@ class SqlDataframeOperator(DecoratedOperator):
                 postgres_conn_id=table.conn_id, schema=table.database
             )
             query = (
-                sql.SQL("SELECT * FROM {input_table}")
-                .format(input_table=sql.Identifier(table.table_name))
+                sql.SQL("SELECT * FROM {schema}.{input_table}")
+                .format(
+                    schema=sql.Identifier(table.schema),
+                    input_table=sql.Identifier(table.table_name.strip('"')),
+                )
                 .as_string(self.hook.get_conn())
             )
             return self.hook.get_pandas_df(query)
@@ -151,5 +154,7 @@ class SqlDataframeOperator(DecoratedOperator):
             hook = self.get_snow_hook(table)
             return hook.get_pandas_df(
                 "SELECT * FROM IDENTIFIER(%(input_table)s)",
-                parameters={"input_table": table.table_name},
+                parameters={
+                    "input_table": table.fully_qualified_name(conn_type="snowflake")
+                },
             )
