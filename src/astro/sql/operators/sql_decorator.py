@@ -21,12 +21,12 @@ import pandas as pd
 from airflow.decorators.base import DecoratedOperator, task_decorator_factory
 from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, TaskInstance
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils.db import provide_session
 from sqlalchemy.sql.functions import Function
 
-from astro.sql.operators.temp_hooks import TempBigQueryHook
 from astro.sql.table import Table, create_table_name
 from astro.utils import postgres_transform, snowflake_transform
 from astro.utils.load_dataframe import move_dataframe_to_sql
@@ -86,6 +86,9 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         )
 
     def execute(self, context: Dict):
+        if not isinstance(self.sql, str):
+            return self._run_sql_alchemy_obj(self.sql, self.parameters)
+
         self.output_schema = self.schema or get_schema()
         self._set_variables_from_first_table()
 
@@ -96,7 +99,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.run_id = context.get("run_id")
         self.convert_op_arg_dataframes()
         self.convert_op_kwarg_dataframes()
-        if self.sql is None or self.sql == "":
+        if self.sql == "":
             sql_stuff = self.python_callable(*self.op_args, **self.op_kwargs)
             # If we return two things, assume the second thing is the params
             if len(sql_stuff) == 2:
@@ -104,16 +107,15 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             else:
                 self.sql = sql_stuff
                 self.parameters = {}
-        elif isinstance(self.sql, str) and self.sql[-4:] == ".sql":
+        elif self.sql[-4:] == ".sql":
             with open(self.sql) as file:
                 self.sql = file.read().replace("\n", " ")
-        if isinstance(self.sql, str) and context:
+        if context:
             self.sql = self.render_template(self.sql, context)
             self.parameters = {
                 k: self.render_template(v, context) for k, v in self.parameters.items()  # type: ignore
             }
-        if isinstance(self.sql, str):
-            self._parse_template()
+        self._parse_template()
         output_table_name = None
 
         if not self.raw_sql:
@@ -139,7 +141,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.parameters.update(self.op_kwargs)  # type: ignore
 
         self._process_params()
-        query_result = self._run_sql(self.sql, self.parameters)
+        query_result = self._run_sql_string(self.sql, self.parameters)
         # Run execute function of subclassed Operator.
 
         if self.output_table:
@@ -215,7 +217,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
                 schema_id=self.schema,
                 user=self.user,
             )
-        self._run_sql(schema_statement, {})
+        self._run_sql_string(schema_statement, {})
 
     def get_snow_hook(self) -> SnowflakeHook:
         """
@@ -234,20 +236,13 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         )
 
     def get_bigquery_hook(self):
-        return TempBigQueryHook(
-            bigquery_conn_id=self.conn_id,
+        return BigQueryHook(
             use_legacy_sql=False,
             gcp_conn_id=self.conn_id,
         )
 
     def get_postgres_hook(self):
         return PostgresHook(postgres_conn_id=self.conn_id, schema=self.database)
-
-    def _run_sql(self, sql, parameters):
-        if isinstance(sql, str):
-            return self._run_sql_string(sql, parameters)
-        else:
-            return self._run_sql_alchemy_obj(sql, parameters)
 
     def _run_sql_string(self, sql, parameters):
         if self.conn_type == "postgres":

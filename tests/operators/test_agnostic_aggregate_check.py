@@ -28,6 +28,7 @@ import unittest.mock
 
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
 from airflow.utils.db import check
@@ -37,7 +38,6 @@ from airflow.utils.types import DagRunType
 
 # Import Operator
 import astro.sql as aql
-from astro.sql.operators.temp_hooks import TempBigQueryHook
 from astro.sql.table import Table
 
 log = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         cls.aggregate_table = Table(
             "aggregate_check_test",
             database="pagila",
-            conn_id="postgres_sqla_conn",
+            conn_id="postgres_conn",
             schema="airflow_test_dag",
         )
         cls.aggregate_table_bigquery = Table(
@@ -90,7 +90,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         )
 
     def test_exact_value(self):
-        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_sqla_conn")
+        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
         df = hook.get_pandas_df(
             sql="SELECT * FROM airflow_test_dag.aggregate_check_test"
         )
@@ -108,7 +108,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
             assert False
 
     def test_exact_value_biquery(self):
-        hook = TempBigQueryHook(
+        hook = BigQueryHook(
             bigquery_conn_id="bigquery", use_legacy_sql=False, gcp_conn_id="bigquery"
         )
         df = hook.get_pandas_df(sql="SELECT * FROM tmp_astro.aggregate_check_test")

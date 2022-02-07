@@ -20,11 +20,7 @@ from pandas import DataFrame
 from pandas.io.sql import SQLDatabase
 from snowflake.connector.pandas_tools import write_pandas
 
-from astro.sql.operators.temp_hooks import (
-    TempBigQueryHook,
-    TempPostgresHook,
-    TempSnowflakeHook,
-)
+from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
 from astro.utils.schema_util import set_schema_query
 
 
@@ -49,7 +45,7 @@ def move_dataframe_to_sql(
             schema=schema,
             warehouse=warehouse,
         ),
-        "bigquery": TempBigQueryHook(use_legacy_sql=False, gcp_conn_id=conn_id),
+        "bigquery": BigQueryHook(use_legacy_sql=False, gcp_conn_id=conn_id),
     }.get(conn_type, None)
     if not hook:
         raise ValueError("conn id needs to either snowflake or postgres")

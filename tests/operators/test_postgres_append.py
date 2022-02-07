@@ -99,13 +99,13 @@ class TestPostgresAppend(unittest.TestCase):
         self.APPEND_TABLE_NAME = "test_append"
         self.main_table = Table(
             table_name=self.MAIN_TABLE_NAME,
-            conn_id="postgres_sqla_conn",
+            conn_id="postgres_conn",
             database="pagila",
             schema="public",
         )
         self.append_table = Table(
             table_name=self.APPEND_TABLE_NAME,
-            conn_id="postgres_sqla_conn",
+            conn_id="postgres_conn",
             database="pagila",
             schema="public",
         )
@@ -139,7 +139,7 @@ class TestPostgresAppend(unittest.TestCase):
             task = dr.get_task_instance(task_id)
 
     def test_append(self):
-        hook = PostgresHook(postgres_conn_id="postgres_sqla_conn", schema="pagila")
+        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
 
         drop_table(table_name="test_main", postgres_conn=hook.get_conn())
         drop_table(table_name="test_append", postgres_conn=hook.get_conn())
@@ -185,7 +185,7 @@ class TestPostgresAppend(unittest.TestCase):
 
     def test_append_all_fields(self):
 
-        hook = TempPostgresHook(postgres_conn_id="postgres_sqla_conn", schema="pagila")
+        hook = TempPostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
 
         drop_table(table_name="test_main", postgres_conn=hook.get_conn())
         drop_table(table_name="test_append", postgres_conn=hook.get_conn())
@@ -227,7 +227,7 @@ class TestPostgresAppend(unittest.TestCase):
         assert not df["rooms"].hasnans
 
     def test_append_with_cast(self):
-        hook = PostgresHook(postgres_conn_id="postgres_sqla_conn", schema="pagila")
+        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
 
         # drop_table(table_name="test_main", postgres_conn=hook.get_conn())
         # drop_table(table_name="test_append", postgres_conn=hook.get_conn())
@@ -274,7 +274,7 @@ class TestPostgresAppend(unittest.TestCase):
     def test_append_only_cast(self):
         MAIN_TABLE_NAME = "test_main"
         APPEND_TABLE_NAME = "test_append"
-        hook = PostgresHook(postgres_conn_id="postgres_sqla_conn", schema="pagila")
+        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
 
         drop_table(table_name="test_main", postgres_conn=hook.get_conn())
         drop_table(table_name="test_append", postgres_conn=hook.get_conn())

@@ -70,7 +70,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
             path=str(cls.cwd) + "/../data/homes_append.csv",
             output_table=Table(
                 cls.table,
-                conn_id="postgres_sqla_conn",
+                conn_id="postgres_conn",
                 database="pagila",
                 schema="public",
             ),
@@ -129,7 +129,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 table=Table(
                     self.table,
                     database="pagila",
-                    conn_id="postgres_sqla_conn",
+                    conn_id="postgres_conn",
                 ),
                 checks=[Check("test_1", f"{self.table}.rooms > 3")],
                 max_rows_returned=10,
@@ -145,7 +145,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 table=Table(
                     self.table,
                     database="pagila",
-                    conn_id="postgres_sqla_conn",
+                    conn_id="postgres_conn",
                 ),
                 checks=[
                     Check("test_1", f"{self.table}.rooms > 7"),

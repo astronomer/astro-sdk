@@ -74,13 +74,13 @@ class TestPostgresTruncateOperator(unittest.TestCase):
             output_table=Table(
                 "truncate_test",
                 database="pagila",
-                conn_id="postgres_sqla_conn",
+                conn_id="postgres_conn",
                 schema="public",
             ),
         ).operator.execute({"run_id": "foo"})
 
     def test_truncate(self):
-        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_sqla_conn")
+        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
         df = hook.get_pandas_df(sql="SELECT * FROM public.truncate_test")
         assert df.count()[0] == 4
         a = aql.truncate(

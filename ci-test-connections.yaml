@@ -1,13 +1,5 @@
 connections:
   - conn_id: postgres_conn
-    conn_type: postgres
-    host: localhost
-    schema:
-    login: postgres
-    password: postgres
-    port: 5432
-    extra:
-  - conn_id: postgres_sqla_conn
     conn_type: postgresql
     host: localhost
     schema:
