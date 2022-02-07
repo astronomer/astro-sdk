@@ -23,12 +23,22 @@ dag = DAG(
 
 
 @aql.transform
-def sample_create_table(input_table: Table):
-    return "SELECT * FROM {input_table} LIMIT 10"
+def films_in_drama_category():
+    return "SELECT film_id FROM film INNER JOIN film_category ON (film.film_id=film_category.film_id) WHERE film_category.category_id=6;"
+
+
+@aql.transform
+def actors_c_lastname():
+    return "SELECT * FROM actor WHERE last_name LIKE 'C%';"
+
+
+@aql.transform
+def actor_with_c_name_in_drama_films(actor: Table, drama_films: Table):
+    return "SELECT DISTINCT first_name, last_name FROM {actor} INNER JOIN {drama_films} ON (actor.actor_id=tmp_astro.drama_actors.actor_id);"
 
 
 @df
-def my_df_func(input_df: DataFrame):
+def print_result(input_df: DataFrame):
     print(input_df)
 
 
@@ -40,5 +50,11 @@ with dag:
             conn_id="postgres_conn",
         ),
     )
-    sample_table = sample_create_table(my_homes_table)
-    my_df_func(sample_table)
+    all_actors_c_lastname = actors_c_lastname(
+        conn_id="postgres_conn", database="pagila"
+    )
+    drama_films = films_in_drama_category(conn_id="postgres_conn", database="pagila")
+    actors_of_interest = actor_with_c_name_in_drama_films(
+        actor=all_actors_c_lastname, drama_films=drama_films
+    )
+    print_result(actors_of_interest)

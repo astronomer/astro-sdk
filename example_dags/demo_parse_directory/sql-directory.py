@@ -21,4 +21,4 @@ dag = DAG(
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 with dag:
-    aql.render(dir_path + "/ingest_models")
+    aql.render(dir_path + "/models")
