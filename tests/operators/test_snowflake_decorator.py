@@ -75,6 +75,9 @@ class TestSnowflakeOperator(unittest.TestCase):
         cls.snowflake_table = test_utils.get_table_name(
             "SNOWFLAKE_TRANSFORM_TEST_TABLE"
         )
+        cls.snow_inherit_table = test_utils.get_table_name(
+            "SNOWFLAKE_INHERIT_TEST_TABLE"
+        )
         cls.snowflake_table_raw_sql = test_utils.get_table_name(
             "SNOWFLAKE_TRANSFORM_RAW_SQL_TEST_TABLE"
         )
@@ -83,6 +86,13 @@ class TestSnowflakeOperator(unittest.TestCase):
     def tearDownClass(cls):
         test_utils.drop_table_snowflake(
             table_name=cls.snowflake_table,
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            conn_id="snowflake_conn",
+        )
+        test_utils.drop_table_snowflake(
+            table_name=cls.snow_inherit_table,
             schema=os.getenv("SNOWFLAKE_SCHEMA"),
             database=os.getenv("SNOWFLAKE_DATABASE"),
             warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
@@ -142,7 +152,7 @@ class TestSnowflakeOperator(unittest.TestCase):
     def test_snowflake_query(self):
         @aql.transform
         def sample_snow(input_table: Table):
-            return f"SELECT * FROM {input_table.table_name} LIMIT 10"
+            return "SELECT * FROM {input_table} LIMIT 10"
 
         hook = get_snowflake_hook()
         drop_table(
@@ -166,10 +176,20 @@ class TestSnowflakeOperator(unittest.TestCase):
                     warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
                 ),
             )
+            x = sample_snow(
+                input_table=f,
+                output_table=Table(
+                    self.snow_inherit_table,
+                    conn_id="snowflake_conn",
+                    schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                    database=os.getenv("SNOWFLAKE_DATABASE"),
+                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                ),
+            )
         test_utils.run_dag(self.dag)
 
         df = hook.get_pandas_df(
-            f'SELECT * FROM "{os.getenv("SNOWFLAKE_DATABASE")}"."{os.getenv("SNOWFLAKE_SCHEMA")}"."{self.snowflake_table}"'
+            f'SELECT * FROM "{os.getenv("SNOWFLAKE_DATABASE")}"."{os.getenv("SNOWFLAKE_SCHEMA")}"."{self.snow_inherit_table}"'
         )
         assert len(df) == 10
 
@@ -183,8 +203,10 @@ class TestSnowflakeOperator(unittest.TestCase):
         @aql.run_raw_sql(
             conn_id="snowflake_conn",
         )
-        def sample_snow(my_input_table: Table, snowflake_table_raw_sql: str):
-            return f"CREATE TABLE {snowflake_table_raw_sql} AS (SELECT * FROM {my_input_table.table_name} LIMIT 5)"
+        def sample_snow(
+            my_input_table: Table, snowflake_table_raw_sql: Table, num_rows: int
+        ):
+            return "CREATE TABLE {snowflake_table_raw_sql} AS (SELECT * FROM {my_input_table} LIMIT {num_rows})"
 
         with self.dag:
             f = sample_snow(
@@ -195,7 +217,14 @@ class TestSnowflakeOperator(unittest.TestCase):
                     database=os.getenv("SNOWFLAKE_DATABASE"),
                     warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
                 ),
-                snowflake_table_raw_sql=self.snowflake_table_raw_sql,
+                snowflake_table_raw_sql=Table(
+                    self.snowflake_table_raw_sql,
+                    conn_id="snowflake_conn",
+                    schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                    database=os.getenv("SNOWFLAKE_DATABASE"),
+                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                ),
+                num_rows=5,
             )
         test_utils.run_dag(self.dag)
 

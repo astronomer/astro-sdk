@@ -105,8 +105,7 @@ class TestSnowflakeMerge(unittest.TestCase):
         )
 
         assert (
-            sql
-            == "merge into Identifier(%(main_table)s) using Identifier(%(merge_table)s) "
+            sql == "merge into %(main_table)s using %(merge_table)s "
             "on Identifier(%(merge_clause_target_0)s)=Identifier(%(merge_clause_append_0)s) "
             f"when matched then UPDATE SET {self.main_table_name}.sell={self.merge_table_name}.sell "
             f"when not matched then insert({self.main_table_name}.sell) values ({self.merge_table_name}.sell)"
@@ -129,8 +128,7 @@ class TestSnowflakeMerge(unittest.TestCase):
         )
 
         assert (
-            sql
-            == "merge into Identifier(%(main_table)s) using Identifier(%(merge_table)s) "
+            sql == "merge into %(main_table)s using %(merge_table)s "
             "on Identifier(%(merge_clause_target_0)s)=Identifier(%(merge_clause_append_0)s) AND "
             "Identifier(%(merge_clause_target_1)s)=Identifier(%(merge_clause_append_1)s) "
             f"when matched then UPDATE SET {self.main_table_name}.sell={self.merge_table_name}.sell "
@@ -156,8 +154,7 @@ class TestSnowflakeMerge(unittest.TestCase):
         )
 
         assert (
-            sql
-            == "merge into Identifier(%(main_table)s) using Identifier(%(merge_table)s) "
+            sql == "merge into %(main_table)s using %(merge_table)s "
             "on Identifier(%(merge_clause_target_0)s)=Identifier(%(merge_clause_append_0)s) "
             f"when not matched then insert({self.main_table_name}.sell) values ({self.merge_table_name}.sell)"
         )
