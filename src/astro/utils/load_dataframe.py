@@ -15,6 +15,7 @@ limitations under the License.
 """
 from typing import Optional, Union
 
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from pandas import DataFrame
 from pandas.io.sql import SQLDatabase
 from snowflake.connector.pandas_tools import write_pandas
@@ -36,6 +37,7 @@ def move_dataframe_to_sql(
 ):
     # Select database Hook based on `conn` type
     hook: Union[TempPostgresHook, TempSnowflakeHook] = {  # type: ignore
+        "postgresql": TempPostgresHook(postgres_conn_id=conn_id, schema=database),
         "postgres": TempPostgresHook(postgres_conn_id=conn_id, schema=database),
         "snowflake": TempSnowflakeHook(
             snowflake_conn_id=conn_id,
@@ -43,6 +45,7 @@ def move_dataframe_to_sql(
             schema=schema,
             warehouse=warehouse,
         ),
+        "bigquery": BigQueryHook(use_legacy_sql=False, gcp_conn_id=conn_id),
     }.get(conn_type, None)
     if not hook:
         raise ValueError("conn id needs to either snowflake or postgres")
@@ -71,6 +74,13 @@ def move_dataframe_to_sql(
             output_table_name,
             chunk_size=chunksize,
             quote_identifiers=False,
+        )
+    elif conn_type == "bigquery":
+        df.to_gbq(
+            f"{schema}.{output_table_name}",
+            if_exists="replace",
+            chunksize=chunksize,
+            project_id=hook.project_id,
         )
     else:
         df.to_sql(

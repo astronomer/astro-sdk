@@ -22,12 +22,14 @@ import boto3
 import pandas as pd
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from google.cloud.storage import Client
 from smart_open import open
 
 from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
 from astro.sql.table import Table
 from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
+from astro.utils.schema_util import get_table_name
 from astro.utils.task_id_helper import get_task_id
 
 
@@ -88,11 +90,14 @@ class SaveFile(BaseOperator):
                 schema=input_table.schema,
                 warehouse=input_table.warehouse,
             ),
+            "bigquery": BigQueryHook(
+                use_legacy_sql=False, gcp_conn_id=input_table.conn_id
+            ),
         }.get(conn_type, None)
 
         # Load table from SQL db.
         df = pd.read_sql(
-            f"SELECT * FROM {input_table.table_name}",
+            f"SELECT * FROM {get_table_name(input_table)}",
             con=input_hook.get_sqlalchemy_engine(),
         )
 

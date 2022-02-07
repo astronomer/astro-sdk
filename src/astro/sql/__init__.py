@@ -156,10 +156,6 @@ def merge(
 
 def truncate(
     table: Table,
-    conn_id: str = "",
-    database: str = "",
-    schema: str = "",
-    warehouse: str = "",
     **kwargs,
 ):
     """`
@@ -170,10 +166,4 @@ def truncate(
     :return:
     """
 
-    return SqlTruncateOperator(
-        table=table,
-        conn_id=conn_id,
-        database=database,
-        schema=schema,
-        warehouse=warehouse,
-    )
+    return SqlTruncateOperator(table=table)

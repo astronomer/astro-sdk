@@ -13,8 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import warnings
+from typing import Dict, Optional, Sequence, Union
 from urllib.parse import quote_plus
 
+from airflow.hooks.dbapi import DbApiHook
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 

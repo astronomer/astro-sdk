@@ -21,6 +21,7 @@ import pandas as pd
 from airflow.decorators.base import DecoratedOperator, task_decorator_factory
 from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, TaskInstance
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils.db import provide_session
@@ -85,6 +86,9 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         )
 
     def execute(self, context: Dict):
+        if not isinstance(self.sql, str):
+            return self._run_sql_alchemy_obj(self.sql, self.parameters)
+
         self.output_schema = self.schema or get_schema()
         self._set_variables_from_first_table()
 
@@ -95,7 +99,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.run_id = context.get("run_id")
         self.convert_op_arg_dataframes()
         self.convert_op_kwarg_dataframes()
-        if not self.sql:
+        if self.sql == "":
             sql_stuff = self.python_callable(*self.op_args, **self.op_kwargs)
             # If we return two things, assume the second thing is the params
             if len(sql_stuff) == 2:
@@ -143,7 +147,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.parameters.update(self.op_kwargs)  # type: ignore
 
         self._process_params()
-        query_result = self._run_sql(self.sql, self.parameters)
+        query_result = self._run_sql_string(self.sql, self.parameters)
         # Run execute function of subclassed Operator.
 
         if self.output_table:
@@ -230,7 +234,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
                 schema_id=self.schema,
                 user=self.user,
             )
-        self._run_sql(schema_statement, {})
+        self._run_sql_string(schema_statement, {})
 
     def get_snow_hook(self) -> SnowflakeHook:
         """
@@ -248,8 +252,16 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             session_parameters=None,
         )
 
-    def _run_sql(self, sql, parameters):
+    def get_bigquery_hook(self):
+        return BigQueryHook(
+            use_legacy_sql=False,
+            gcp_conn_id=self.conn_id,
+        )
 
+    def get_postgres_hook(self):
+        return PostgresHook(postgres_conn_id=self.conn_id, schema=self.database)
+
+    def _run_sql_string(self, sql, parameters):
         if self.conn_type == "postgres":
             self.log.info("Executing: %s", sql)
             self.hook = PostgresHook(
@@ -270,7 +282,27 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             results = hook.run(sql, autocommit=self.autocommit, parameters=parameters)
             self.query_ids = hook.query_ids
 
+        elif self.conn_type == "bigquery":
+            hook = self.get_bigquery_hook()
+            results = hook.run(sql, autocommit=self.autocommit, parameters=parameters)
         return results
+
+    def get_sql_alchemy_engine(self):
+        conn = BaseHook.get_connection(self.conn_id)
+        self.conn_type = conn.conn_type  # type: ignore
+
+        hook = {
+            "snowflake": self.get_snow_hook(),
+            "postgresql": self.get_postgres_hook(),
+            "postgres": self.get_postgres_hook(),
+            "bigquery": self.get_bigquery_hook(),
+        }[self.conn_type]
+        return hook.get_sqlalchemy_engine()
+
+    def _run_sql_alchemy_obj(self, sql, parameters):
+        engine = self.get_sql_alchemy_engine()
+        conn = engine.connect()
+        return conn.execute(sql, parameters)
 
     @staticmethod
     def create_temporary_table(query, output_table_name, schema=None):

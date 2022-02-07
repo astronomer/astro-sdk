@@ -14,15 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import importlib
 from typing import Dict, List
 
-from airflow.exceptions import AirflowException
-from airflow.hooks.base import BaseHook
+from sqlalchemy import MetaData, cast, column, insert, select
+from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
-from astro.utils.postgres_append import postgres_append_func
-from astro.utils.snowflake_append import snowflake_append_func
+from astro.utils.schema_util import get_table_name
 from astro.utils.task_id_helper import get_unique_task_id
 
 
@@ -62,24 +62,41 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
         )
 
     def execute(self, context: Dict):
-        conn_type = BaseHook.get_connection(self.conn_id).conn_type  # type: ignore
-        if conn_type == "postgres":
-            self.sql = postgres_append_func(
-                main_table=self.main_table,
-                append_table=self.append_table,
-                columns=self.columns,
-                casted_columns=self.casted_columns,
-                conn_id=self.conn_id,
-            )
-        elif conn_type == "snowflake":
-            self.sql, self.parameters = snowflake_append_func(
-                main_table=self.main_table,
-                append_table=self.append_table,
-                columns=self.columns,
-                casted_columns=self.casted_columns,
-                snowflake_conn_id=self.conn_id,
-            )
-        else:
-            raise AirflowException(f"Please specify a postgres or snowflake conn id.")
 
+        self.sql = self.append(
+            main_table=self.main_table,
+            append_table=self.append_table,
+            columns=self.columns,
+            casted_columns=self.casted_columns,
+            conn_id=self.conn_id,
+        )
         super().execute(context)
+
+    def append(
+        self, main_table: Table, columns, casted_columns, append_table: Table, conn_id
+    ):
+        engine = self.get_sql_alchemy_engine()
+        metadata = MetaData()
+        # TO Do - fix bigquery and postgres reflection table issue.
+        main_table_sqla = SqlaTable(
+            get_table_name(main_table), metadata, autoload_with=engine
+        )
+        append_table_sqla = SqlaTable(
+            get_table_name(append_table), metadata, autoload_with=engine
+        )
+
+        column_names = [column(c) for c in columns]
+        sqlalchemy = importlib.import_module("sqlalchemy")
+        casted_fields = [
+            cast(column(k), getattr(sqlalchemy, v)) for k, v in casted_columns.items()
+        ]
+        main_columns = [k for k, v in casted_columns.items()]
+        main_columns.extend([c for c in columns])
+
+        if len(column_names) + len(casted_fields) == 0:
+            column_names = [column(c) for c in append_table_sqla.c.keys()]
+            main_columns = column_names
+
+        column_names.extend(casted_fields)
+        sel = select(column_names).select_from(append_table_sqla)
+        return insert(main_table_sqla).from_select(main_columns, sel)

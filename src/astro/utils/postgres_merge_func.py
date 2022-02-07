@@ -25,7 +25,6 @@ def postgres_merge_func(
     merge_keys,
     target_columns,
     merge_columns,
-    conn_id,
     conflict_strategy,
 ):
     statement = "INSERT INTO {main_table} ({target_columns}) SELECT {append_columns} FROM {append_table}"
@@ -51,5 +50,5 @@ def postgres_merge_func(
         merge_keys=sql.SQL(",").join([sql.Identifier(x) for x in merge_keys]),
     )
 
-    hook = PostgresHook(postgres_conn_id=conn_id)
+    hook = PostgresHook(postgres_conn_id=target_table.conn_id)
     return query.as_string(hook.get_conn())

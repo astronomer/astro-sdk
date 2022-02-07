@@ -16,6 +16,8 @@ limitations under the License.
 from typing import Dict
 
 from airflow.decorators.base import get_unique_task_id
+from sqlalchemy import MetaData
+from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
@@ -42,14 +44,17 @@ class SqlTruncateOperator(SqlDecoratoratedOperator):
             op_args=(),
             op_kwargs={"table": table},
             python_callable=null_function,
+            conn_id=self.table.conn_id,
+            database=self.table.database,
+            schema=self.table.schema,
+            warehouse=self.table.warehouse,
             **kwargs,
         )
 
     def execute(self, context: Dict):
-        def table_func(table: Table):
-            return "TRUNCATE TABLE {table}"
-
-        self.python_callable = table_func
-        self.parameters = {"table_name": self.table.table_name}
+        engine = self.get_sql_alchemy_engine()
+        metadata = MetaData()
+        table_sqla = SqlaTable(self.table.table_name, metadata, autoload_with=engine)
+        self.sql = table_sqla.delete()
 
         super().execute(context)

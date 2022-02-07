@@ -28,6 +28,7 @@ import unittest.mock
 
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
 from airflow.utils.db import check
@@ -53,6 +54,25 @@ class TestAggregateCheckOperator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
+        cls.aggregate_table = Table(
+            "aggregate_check_test",
+            database="pagila",
+            conn_id="postgres_conn",
+            schema="airflow_test_dag",
+        )
+        cls.aggregate_table_bigquery = Table(
+            "aggregate_check_test",
+            conn_id="bigquery",
+            schema="tmp_astro",
+        )
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes_merge_1.csv",
+            output_table=cls.aggregate_table,
+        ).operator.execute({"run_id": "foo"})
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes_merge_1.csv",
+            output_table=cls.aggregate_table_bigquery,
+        ).operator.execute({"run_id": "foo"})
 
     def clear_run(self):
         self.run = False
@@ -68,16 +88,6 @@ class TestAggregateCheckOperator(unittest.TestCase):
                 "start_date": DEFAULT_DATE,
             },
         )
-        self.aggregate_table = Table(
-            "aggregate_check_test",
-            database="pagila",
-            conn_id="postgres_conn",
-            schema="airflow_test_dag",
-        )
-        aql.load_file(
-            path=str(self.cwd) + "/../data/homes_merge_1.csv",
-            output_table=self.aggregate_table,
-        ).operator.execute({"run_id": "foo"})
 
     def test_exact_value(self):
         hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
@@ -89,6 +99,24 @@ class TestAggregateCheckOperator(unittest.TestCase):
             a = aql.aggregate_check(
                 table=self.aggregate_table,
                 check="select count(*) FROM airflow_test_dag.aggregate_check_test",
+                greater_than=4,
+                less_than=4,
+            )
+            a.execute({"run_id": "foo"})
+            assert True
+        except ValueError:
+            assert False
+
+    def test_exact_value_biquery(self):
+        hook = BigQueryHook(
+            bigquery_conn_id="bigquery", use_legacy_sql=False, gcp_conn_id="bigquery"
+        )
+        df = hook.get_pandas_df(sql="SELECT * FROM tmp_astro.aggregate_check_test")
+        assert df.count()[0] == 4
+        try:
+            a = aql.aggregate_check(
+                table=self.aggregate_table_bigquery,
+                check="select count(*) FROM tmp_astro.aggregate_check_test",
                 greater_than=4,
                 less_than=4,
             )
