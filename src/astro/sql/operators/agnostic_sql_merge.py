@@ -21,6 +21,7 @@ from airflow.hooks.base import BaseHook
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table, TempTable
+from astro.utils.bigquery_merge_func import bigquery_merge_func
 from astro.utils.postgres_merge_func import postgres_merge_func
 from astro.utils.snowflake_merge_func import snowflake_merge_func
 from astro.utils.task_id_helper import get_unique_task_id
@@ -73,10 +74,18 @@ class SqlMergeOperator(SqlDecoratoratedOperator):
                 target_columns=self.target_columns,
                 merge_columns=self.merge_columns,
                 conflict_strategy=self.conflict_strategy,
-                conn_id=self.conn_id,
             )
         elif conn_type == "snowflake":
             self.sql, self.parameters = snowflake_merge_func(
+                target_table=self.target_table,
+                merge_table=self.merge_table,
+                merge_keys=self.merge_keys,
+                target_columns=self.target_columns,
+                merge_columns=self.merge_columns,
+                conflict_strategy=self.conflict_strategy,
+            )
+        elif conn_type == "bigquery":
+            self.sql, self.parameters = bigquery_merge_func(
                 target_table=self.target_table,
                 merge_table=self.merge_table,
                 merge_keys=self.merge_keys,

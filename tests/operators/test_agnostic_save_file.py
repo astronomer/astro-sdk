@@ -36,11 +36,14 @@ import pandas as pd
 import pytest
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
+
+import astro.sql as aql
 
 # Import Operator
 from astro.sql.operators.agnostic_save_file import save_file
@@ -248,6 +251,43 @@ class TestSaveFile(unittest.TestCase):
         assert tasks[2].operator.task_id == "save_file_output_csv__2"
         assert tasks[3].operator.task_id == "task_id"
 
+        os.remove(OUTPUT_FILE_PATH)
+
+    def test_save_bigquery_table_to_local_file_exists_overwrite_false(self):
+
+        INPUT_TABLE_NAME = "save_file_bigquery_test"
+        INPUT_FILE_PATH = str(self.cwd) + "/../data/homes.csv"
+
+        OUTPUT_FILE_PATH = str(self.cwd) + "/../data/save_file_bigquery_test.csv"
+
+        aql.load_file(
+            path=INPUT_FILE_PATH,
+            output_table=Table(
+                INPUT_TABLE_NAME,
+                conn_id="bigquery",
+                schema="tmp_astro",
+            ),
+        ).operator.execute({"run_id": "foo"})
+
+        self.create_and_run_task(
+            save_file,
+            (),
+            {
+                "input_table": Table(
+                    INPUT_TABLE_NAME, conn_id="bigquery", schema="tmp_astro"
+                ),
+                "output_file_path": OUTPUT_FILE_PATH,
+                "output_conn_id": None,
+                "overwrite": True,
+            },
+        )
+
+        input_df = pd.read_csv(INPUT_FILE_PATH)
+        output_df = pd.read_csv(OUTPUT_FILE_PATH)
+
+        assert input_df.shape == output_df.shape
+
+        # Delete output file after run
         os.remove(OUTPUT_FILE_PATH)
 
     @staticmethod

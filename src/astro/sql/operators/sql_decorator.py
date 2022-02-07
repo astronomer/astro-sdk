@@ -270,6 +270,9 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             results = hook.run(sql, autocommit=self.autocommit, parameters=parameters)
             self.query_ids = hook.query_ids
 
+        elif self.conn_type == "bigquery":
+            hook = self.get_bigquery_hook()
+            results = hook.run(sql, autocommit=self.autocommit, parameters=parameters)
         return results
 
     def get_sql_alchemy_engine(self):
