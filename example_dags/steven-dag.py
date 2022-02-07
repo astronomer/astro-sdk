@@ -149,4 +149,4 @@ with dag:
     existing = get_existing_customers(features)
     new = get_new_customers(features)
     model = train_model(existing)
-    score_model(model=model, df=new)
+    score_model(model=model, df=new, output_table=Table("", ""))
