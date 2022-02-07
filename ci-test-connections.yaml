@@ -1,6 +1,6 @@
 connections:
   - conn_id: postgres_conn
-    conn_type: postgresql
+    conn_type: postgres
     host: localhost
     schema:
     login: postgres
