@@ -49,6 +49,7 @@ class Table:
         :param schema: an optional schema if the output_table has a schema set. Defaults to the temp schema
         :return:
         """
+        self.conn_type = BaseHook.get_connection(self.conn_id).conn_type
         table_name = self.table_name
         schema = self.schema or schema
         if (self.conn_type == "postgres" or self.conn_type == "postgresql") and schema:

@@ -132,6 +132,8 @@ class SqlDecoratoratedOperator(DecoratedOperator):
                     warehouse=self.warehouse,
                     schema=get_schema(),
                 )
+            self.output_table.conn_id = self.output_table.conn_id or self.conn_id
+            self.output_table.database = self.output_table.database or self.database
             full_output_table_name = self.output_table.fully_qualified_name(
                 schema=self.schema
             )

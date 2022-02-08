@@ -72,7 +72,6 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 cls.table,
                 conn_id="postgres_conn",
                 database="pagila",
-                schema="public",
             ),
         ).operator.execute({"run_id": "foo"})
 

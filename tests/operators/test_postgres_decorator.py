@@ -148,7 +148,10 @@ class TestPostgresDecorator(unittest.TestCase):
             (),
             {
                 "input_table": Table(
-                    table_name="actor", conn_id="postgres_conn", database="pagila"
+                    table_name="actor",
+                    conn_id="postgres_conn",
+                    database="pagila",
+                    schema="public",
                 ),
             },
         )
@@ -209,7 +212,10 @@ class TestPostgresDecorator(unittest.TestCase):
             (),
             {
                 "input_table": Table(
-                    table_name="actor", conn_id="postgres_conn", database="pagila"
+                    table_name="actor",
+                    conn_id="postgres_conn",
+                    database="pagila",
+                    schema="public",
                 ),
             },
         )
@@ -234,7 +240,10 @@ class TestPostgresDecorator(unittest.TestCase):
             (),
             {
                 "input_table": Table(
-                    table_name="actor", conn_id="postgres_conn", database="pagila"
+                    table_name="actor",
+                    conn_id="postgres_conn",
+                    database="pagila",
+                    schema="public",
                 ),
             },
         )
@@ -252,7 +261,7 @@ class TestPostgresDecorator(unittest.TestCase):
             }
 
         self.create_and_run_task(
-            sample_pg, (), {"input_table": Table(table_name="actor")}
+            sample_pg, (), {"input_table": Table(table_name="actor", schema="public")}
         )
 
     def test_postgres_with_jinja_template(self):
@@ -267,7 +276,10 @@ class TestPostgresDecorator(unittest.TestCase):
             (),
             {
                 "input_table": Table(
-                    table_name="rental", conn_id="postgres_conn", database="pagila"
+                    table_name="rental",
+                    conn_id="postgres_conn",
+                    database="pagila",
+                    schema="public",
                 )
             },
         )
@@ -284,7 +296,10 @@ class TestPostgresDecorator(unittest.TestCase):
             (),
             {
                 "input_table": Table(
-                    table_name="rental", conn_id="postgres_conn", database="pagila"
+                    table_name="rental",
+                    conn_id="postgres_conn",
+                    database="pagila",
+                    schema="public",
                 )
             },
         )
@@ -296,7 +311,7 @@ class TestPostgresDecorator(unittest.TestCase):
 
         drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
 
-        @aql.transform(conn_id="postgres_conn", database="pagila")
+        @aql.transform
         def sample_pg(actor: Table, film_actor_join: Table, unsafe_parameter):
             return (
                 "SELECT {actor}.actor_id, first_name, last_name, COUNT(film_id) "
@@ -309,9 +324,12 @@ class TestPostgresDecorator(unittest.TestCase):
             (),
             {
                 "actor": Table(
-                    table_name="actor", conn_id="postgres_conn", database="pagila"
+                    table_name="actor",
+                    conn_id="postgres_conn",
+                    database="pagila",
+                    schema="public",
                 ),
-                "film_actor_join": Table(table_name="film_actor"),
+                "film_actor_join": Table(table_name="film_actor", schema="public"),
                 "unsafe_parameter": "G%%",
                 "output_table": Table("my_table"),
             },
@@ -344,10 +362,11 @@ class TestPostgresDecorator(unittest.TestCase):
             f = aql.transform_file(
                 sql=str(cwd) + "/test.sql",
                 conn_id="postgres_conn",
+                schema="public",
                 database="pagila",
                 parameters={
-                    "actor": Table("actor"),
-                    "film_actor_join": Table("film_actor"),
+                    "actor": Table("actor", schema="public"),
+                    "film_actor_join": Table("film_actor", schema="public"),
                     "unsafe_parameter": "G%%",
                 },
                 output_table=Table("my_table_from_file"),
@@ -392,9 +411,12 @@ class TestPostgresDecorator(unittest.TestCase):
             (),
             {
                 "actor": Table(
-                    table_name="actor", conn_id="postgres_conn", database="pagila"
+                    table_name="actor",
+                    conn_id="postgres_conn",
+                    database="pagila",
+                    schema="public",
                 ),
-                "film_actor_join": Table(table_name="film_actor"),
+                "film_actor_join": Table(table_name="film_actor", schema="public"),
                 "unsafe_parameter": "G%%",
                 "output_table_name": "my_table",
             },
