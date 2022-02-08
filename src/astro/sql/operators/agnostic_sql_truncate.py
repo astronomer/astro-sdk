@@ -57,5 +57,4 @@ class SqlTruncateOperator(SqlDecoratoratedOperator):
         table_sqla = SqlaTable(self.table.table_name, metadata, autoload_with=engine)
         self.sql = table_sqla.delete()
 
-        # self.sql = text(f"TRUNCATE TABLE {self.table.table_name}")
         super().execute(context)
