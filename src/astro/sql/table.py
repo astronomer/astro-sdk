@@ -27,10 +27,12 @@ class Table:
         warehouse=None,
         role=None,
     ):
+        from astro.utils.schema_util import get_schema
+
         self.table_name = table_name
         self.conn_id = conn_id
         self.database = database
-        self.schema = schema
+        self.schema = schema or get_schema()
         self.warehouse = warehouse
         self.conn_type = BaseHook.get_connection(self.conn_id).conn_type
         self.role = role

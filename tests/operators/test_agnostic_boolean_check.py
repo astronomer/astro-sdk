@@ -130,6 +130,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
                     self.table,
                     database="pagila",
                     conn_id="postgres_conn",
+                    schema="public",
                 ),
                 checks=[Check("test_1", f"{self.table}.rooms > 3")],
                 max_rows_returned=10,
@@ -146,6 +147,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
                     self.table,
                     database="pagila",
                     conn_id="postgres_conn",
+                    schema="public",
                 ),
                 checks=[
                     Check("test_1", f"{self.table}.rooms > 7"),
