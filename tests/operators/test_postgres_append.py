@@ -173,7 +173,7 @@ class TestPostgresAppend(unittest.TestCase):
         self.wait_for_task_finish(dr, foo.task_id)
 
         df = pd.read_sql(
-            f"SELECT * FROM {load_main.operator.output_table.fully_qualified_name(conn_type='postgres')}",
+            f"SELECT * FROM {load_main.operator.output_table.fully_qualified_name()}",
             con=hook.get_conn(),
         )
 
@@ -216,7 +216,7 @@ class TestPostgresAppend(unittest.TestCase):
         foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, foo.task_id)
         df = pd.read_sql(
-            f"SELECT * FROM {load_main.operator.output_table.fully_qualified_name(conn_type='postgres')}",
+            f"SELECT * FROM {load_main.operator.output_table.fully_qualified_name()}",
             con=hook.get_conn(),
         )
 
@@ -261,7 +261,7 @@ class TestPostgresAppend(unittest.TestCase):
         foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         self.wait_for_task_finish(dr, foo.task_id)
         df = pd.read_sql(
-            f"SELECT * FROM {load_main.operator.output_table.fully_qualified_name(conn_type='postgres')}",
+            f"SELECT * FROM {load_main.operator.output_table.fully_qualified_name()}",
             con=hook.get_conn(),
         )
 
@@ -308,7 +308,7 @@ class TestPostgresAppend(unittest.TestCase):
         self.wait_for_task_finish(dr, foo.task_id)
 
         df = pd.read_sql(
-            f"SELECT * FROM {load_main.operator.output_table.fully_qualified_name(conn_type='postgres')}",
+            f"SELECT * FROM {load_main.operator.output_table.fully_qualified_name()}",
             con=hook.get_conn(),
         )
 

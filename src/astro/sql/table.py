@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, TaskInstance
 
 
@@ -31,12 +32,13 @@ class Table:
         self.database = database
         self.schema = schema
         self.warehouse = warehouse
+        self.conn_type = BaseHook.get_connection(self.conn_id).conn_type
         self.role = role
 
     def identifier_args(self):
         return (self.schema, self.table_name) if self.schema else (self.table_name,)
 
-    def fully_qualified_name(self, conn_type, schema=None):
+    def fully_qualified_name(self, schema=None):
         """
         To make our SQL queries more clear in scope and to allow queries containing multiple
         schemas or databases, we should start generating SQL that uses fully qualified names (eg.
@@ -47,9 +49,9 @@ class Table:
         """
         table_name = self.table_name
         schema = self.schema or schema
-        if (conn_type == "postgres" or conn_type == "postgresql") and schema:
+        if (self.conn_type == "postgres" or self.conn_type == "postgresql") and schema:
             table_name = schema + "." + self.table_name
-        elif conn_type == "snowflake" and schema and "." not in self.table_name:
+        elif self.conn_type == "snowflake" and schema and "." not in self.table_name:
             table_name = self.database + "." + schema + "." + self.table_name
         return table_name
 

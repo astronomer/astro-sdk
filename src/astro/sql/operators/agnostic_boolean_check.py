@@ -105,7 +105,7 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
     def prep_boolean_checks_query(table: Table, checks: List[Check]):
         temp_table = (
             select([check.get_expression() for check in checks])
-            .select_from(text(table.qualified_name()))
+            .select_from(text(table.fully_qualified_name()))
             .alias("check_table")
         )
         return select([check.get_result() for check in checks]).select_from(temp_table)
@@ -113,7 +113,7 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
     def prep_results(self, results):
         return (
             select(["*"])
-            .select_from(text(self.table.qualified_name()))
+            .select_from(text(self.table.fully_qualified_name()))
             .where(and_(*[text(self.checks[index].expression) for index in results]))
             .limit(self.max_rows_returned)
         )

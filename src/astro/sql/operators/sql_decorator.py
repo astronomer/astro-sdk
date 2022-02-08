@@ -133,7 +133,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
                     schema=get_schema(),
                 )
             full_output_table_name = self.output_table.fully_qualified_name(
-                conn_type=self.conn_type, schema=self.schema
+                schema=self.schema
             )
 
             self.sql = self.create_temporary_table(self.sql, full_output_table_name)

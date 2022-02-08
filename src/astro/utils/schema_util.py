@@ -26,5 +26,5 @@ def get_schema():
 def get_table_name(table: Table):
     conn_type = BaseHook.get_connection(table.conn_id).conn_type
     if conn_type in ["bigquery"]:
-        return table.qualified_name()
+        return table.fully_qualified_name()
     return table.table_name

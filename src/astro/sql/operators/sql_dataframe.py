@@ -154,7 +154,5 @@ class SqlDataframeOperator(DecoratedOperator):
             hook = self.get_snow_hook(table)
             return hook.get_pandas_df(
                 "SELECT * FROM IDENTIFIER(%(input_table)s)",
-                parameters={
-                    "input_table": table.fully_qualified_name(conn_type="snowflake")
-                },
+                parameters={"input_table": table.fully_qualified_name()},
             )
