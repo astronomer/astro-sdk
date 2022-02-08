@@ -464,6 +464,7 @@ def transform_decorator(
     schema: Optional[str] = None,
     warehouse: Optional[str] = None,
     raw_sql: bool = False,
+    handler: Callable = None,
 ):
     """
     :param python_callable:
@@ -490,4 +491,5 @@ def transform_decorator(
         schema=schema,
         warehouse=warehouse,
         raw_sql=raw_sql,
+        handler=handler,
     )

@@ -98,7 +98,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
+                check="select count(*) FROM {table}",
                 greater_than=4,
                 less_than=4,
             )
@@ -116,7 +116,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table_bigquery,
-                check="select count(*) FROM tmp_astro.aggregate_check_test",
+                check="select count(*) FROM {table}",
                 greater_than=4,
                 less_than=4,
             )
@@ -134,7 +134,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
+                check="select count(*) FROM {table}",
                 greater_than=2,
                 less_than=6,
             )
@@ -152,7 +152,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
+                check="select count(*) FROM {table}",
                 greater_than=10,
                 less_than=20,
             )
@@ -167,7 +167,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
+                check="select count(*) FROM {table}",
                 greater_than=20,
                 less_than=10,
             )
@@ -179,7 +179,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
+                check="select count(*) FROM {table}",
                 greater_than=4,
                 less_than=4,
             )
@@ -192,7 +192,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
+                check="select count(*) FROM {table}",
             )
             assert False
         except ValueError:
@@ -207,7 +207,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
+                check="select count(*) FROM {table}",
                 equal_to=4,
             )
             a.execute({"run_id": "foo"})
@@ -224,7 +224,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
+                check="select count(*) FROM {table}",
                 less_than=3,
             )
             result = a.execute({"run_id": "foo"})
@@ -241,7 +241,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
+                check="select count(*) FROM {table}",
                 greater_than=3,
             )
             a.execute({"run_id": "foo"})
@@ -255,7 +255,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM airflow_test_dag.aggregate_check_test",
+                check="select count(*) FROM {table}",
                 greater_than=20,
                 less_than=10,
                 equal_to=4,

@@ -29,6 +29,8 @@ class Check:
 
 
 class AgnosticBooleanCheck(SqlDecoratoratedOperator):
+    template_fields = ("table",)
+
     def __init__(
         self,
         checks: List[Check],

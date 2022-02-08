@@ -28,6 +28,8 @@ from astro.utils.task_id_helper import get_unique_task_id
 
 
 class AgnosticAggregateCheck(SqlDecoratoratedOperator):
+    template_fields = ("table",)
+
     def __init__(
         self,
         table: Table,
@@ -57,7 +59,7 @@ class AgnosticAggregateCheck(SqlDecoratoratedOperator):
         :type database: str
         """
         self.table = table
-        self.check = text(check)
+        self.check = check
         self.greater_than = greater_than
         self.less_than = less_than
         self.equal_to = equal_to
@@ -81,12 +83,16 @@ class AgnosticAggregateCheck(SqlDecoratoratedOperator):
         def null_function():
             pass
 
+        def handler_func(result):
+            return result.fetchone()[0]
+
         super().__init__(
             raw_sql=True,
             parameters={},
             conn_id=table.conn_id,
             task_id=task_id,
             op_args=(),
+            handler=handler_func,
             python_callable=null_function,
             database=table.database,
             **kwargs,
@@ -94,17 +100,12 @@ class AgnosticAggregateCheck(SqlDecoratoratedOperator):
 
     def execute(self, context: Dict):
         self.sql = self.check
+        self.parameters = {"table": self.table}
         query_result = super().execute(context)
-        query_result = query_result.fetchone()
-        if len(query_result) != 1:
-            raise ValueError(
-                "The aggregate check query should only return a single numeric value."
-            )
 
-        query_result = query_result[0]
         if not isinstance(query_result, int) and not isinstance(query_result, float):
             raise ValueError(
-                "The aggregate check query should only return a single numeric value."
+                "The aggregate check query should only return a numeric value."
             )
 
         if self.equal_to is not None and self.equal_to != query_result:

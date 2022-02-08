@@ -166,6 +166,8 @@ class ChecksHandler:
 
 
 class AgnosticStatsCheck(SqlDecoratoratedOperator):
+    template_fields = ("table",)
+
     def __init__(
         self,
         checks: List[OutlierCheck],
