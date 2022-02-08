@@ -23,6 +23,7 @@ from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator
 from smart_open import open
 
+from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
 from astro.utils.load_dataframe import move_dataframe_to_sql
@@ -48,7 +49,7 @@ class AgnosticLoadFile(BaseOperator):
         path,
         output_table: Union[TempTable, Table],
         file_conn_id="",
-        chunksize=None,
+        chunksize=DEFAULT_CHUNK_SIZE,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -85,6 +86,7 @@ class AgnosticLoadFile(BaseOperator):
             df=df,
             conn_type=conn.conn_type,
             user=conn.login,
+            chunksize=self.chunksize,
         )
         self.log.info(f"returning table {self.output_table}")
         return self.output_table
