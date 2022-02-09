@@ -13,13 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import warnings
-from typing import Dict, Optional, Sequence, Union
 from urllib.parse import quote_plus
 
-from airflow.hooks.dbapi import DbApiHook
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.providers.google.common.hooks.base_google import GoogleBaseHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 
@@ -37,27 +32,3 @@ class TempSnowflakeHook(SnowflakeHook):
             "?warehouse={warehouse}&role={role}&authenticator={authenticator}"
         )
         return uri.format(**conn_config)
-
-
-class TempPostgresHook(PostgresHook):
-    """
-    Temporary class to get around a bug in the snowflakehook when creating URIs
-    """
-
-    def get_uri(self) -> str:
-        """
-        Extract the URI from the connection.
-
-        :return: the extracted uri.
-        """
-        conn = self.get_connection(getattr(self, self.conn_name_attr))
-        login = ""
-        if conn.login:
-            login = f"{quote_plus(conn.login)}:{quote_plus(conn.password)}@"
-        host = conn.host
-        if conn.port is not None:
-            host += f":{conn.port}"
-        uri = f"postgresql://{login}{host}/"
-        if self.schema:
-            uri += self.schema
-        return uri
