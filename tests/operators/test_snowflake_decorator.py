@@ -152,7 +152,7 @@ class TestSnowflakeOperator(unittest.TestCase):
     def test_snowflake_query(self):
         @aql.transform
         def sample_snow(input_table: Table):
-            return "SELECT * FROM {input_table} LIMIT 10"
+            return "SELECT * FROM {{input_table}} LIMIT 10"
 
         hook = get_snowflake_hook()
         drop_table(

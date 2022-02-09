@@ -99,24 +99,12 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.run_id = context.get("run_id")
         self.convert_op_arg_dataframes()
         self.convert_op_kwarg_dataframes()
-        if self.sql == "":
-            sql_stuff = self.python_callable(*self.op_args, **self.op_kwargs)
-            # If we return two things, assume the second thing is the params
-            if len(sql_stuff) == 2:
-                self.sql, self.parameters = sql_stuff
-            else:
-                self.sql = sql_stuff
-                self.parameters = {}
-        elif self.sql[-4:] == ".sql":
-            with open(self.sql) as file:
-                self.sql = file.read().replace("\n", " ")
-
+        self.read_sql()
+        self.handle_params(context)
+        self._parse_template()
         if context:
             self.sql = self.render_template(self.sql, context)
-            self.parameters = {
-                k: self.render_template(v, context) for k, v in self.parameters.items()  # type: ignore
-            }
-        self._parse_template()
+
         output_table_name = None
 
         if not self.raw_sql:
@@ -136,18 +124,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
             self.sql = self.create_temporary_table(self.sql, full_output_table_name)
 
-        # Automatically add any kwargs going into the function
-        if self.op_kwargs:
-            self.parameters.update(self.op_kwargs)  # type: ignore
-
-        if self.op_args:
-            params = list(inspect.signature(self.python_callable).parameters.keys())
-            for i, arg in enumerate(self.op_args):
-                self.parameters[params[i]] = arg  # type: ignore
-
-        self.parameters.update(self.op_kwargs)  # type: ignore
-
-        self._process_params()
         query_result = self._run_sql_alchemy_obj(self.sql, self.parameters)
         # Run execute function of subclassed Operator.
 
@@ -167,6 +143,34 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             )
             self.log.info(f"returning table {self.output_table}")
             return self.output_table
+
+    def read_sql(self):
+        if self.sql == "":
+            sql_stuff = self.python_callable(*self.op_args, **self.op_kwargs)
+            # If we return two things, assume the second thing is the params
+            if len(sql_stuff) == 2:
+                self.sql, self.parameters = sql_stuff
+            else:
+                self.sql = sql_stuff
+                self.parameters = {}
+        elif self.sql[-4:] == ".sql":
+            with open(self.sql) as file:
+                self.sql = file.read().replace("\n", " ")
+
+    def handle_params(self, context):
+        # Automatically add any kwargs going into the function
+        if self.op_kwargs:
+            self.parameters.update(self.op_kwargs)  # type: ignore
+        if self.op_args:
+            params = list(inspect.signature(self.python_callable).parameters.keys())
+            for i, arg in enumerate(self.op_args):
+                self.parameters[params[i]] = arg  # type: ignore
+        if context:
+            self.parameters = {
+                k: self.render_template(v, context) for k, v in self.parameters.items()  # type: ignore
+            }
+        self.parameters.update(self.op_kwargs)  # type: ignore
+        # self._process_params()
 
     def handle_output_table_schema(self, output_table_name, schema=None):
         """
@@ -303,23 +307,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
     def _run_sql_alchemy_obj(self, sql, parameters):
         engine = self.get_sql_alchemy_engine()
         conn = engine.connect()
-        sql, parameters = self._parse_identifiers(sql, parameters)
         return conn.execute(text(sql), parameters)
-
-    def _parse_identifiers(self, sql, parameters):
-        matches = re.findall(r":[^\s]*", sql)
-        for match in matches:
-            param = match.split(":")
-            if len(param) == 0:
-                raise ValueError(f"invalid identifier {match}")
-            param = param[1]
-            if param not in parameters:
-                raise ValueError(f"{param} not found in context {parameters}")
-
-            sql = sql.replace(match, parameters[param])
-            parameters.pop(param)
-
-        return sql, parameters
 
     @staticmethod
     def create_temporary_table(query, output_table_name, schema=None):
@@ -369,17 +357,9 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         """Override this method to enable sensing db."""
         raise NotImplementedError("Add _table_exists_in_db method to class")
 
-    def _process_params(self):
-        if self.conn_type == "postgres":
-            self.parameters = postgres_transform.process_params(
-                self.parameters, self.python_callable
-            )
-        elif self.conn_type == "snowflake":
-            self.parameters = snowflake_transform.process_params(self.parameters)
-
     def _parse_template(self):
         if self.conn_type == "postgres":
-            self.sql = postgres_transform.parse_template(self.sql)
+            self.sql = postgres_transform.parse_template(self.sql, self.parameters)
         else:
             self.sql = snowflake_transform._parse_template(
                 self.sql, self.python_callable, self.parameters

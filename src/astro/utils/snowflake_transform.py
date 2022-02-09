@@ -27,7 +27,7 @@ def _handle_table(t: Table):
     :return:
     """
 
-    return t.database + "." + t.schema + "." + t.table_name
+    return "IDENTIFIER(" + t.database + "." + t.schema + "." + t.table_name + ")"
 
 
 def process_params(parameters):
@@ -36,19 +36,11 @@ def process_params(parameters):
     }
 
 
-def _parse_template(sql, python_callable, added_parameters):
-    param_types = inspect.signature(python_callable).parameters.copy()
-    param_types = {k: v.annotation for k, v in param_types.items()}
-    added_parameters = {k: type(v) for k, v in added_parameters.items()}
-    param_types.update(added_parameters)
-    sql = sql.replace("{", "%(").replace("}", ")s")
-    all_vals = re.findall("%\(.*?\)s", sql)
-    mod_vals = {
-        f: f"IDENTIFIER({f})"
-        if param_types.get(f[2:-2], None) and param_types.get(f[2:-2], None) == Table
-        else f
-        for f in all_vals
-    }
-    for k, v in mod_vals.items():
-        sql = sql.replace(k, v)
+def _parse_template(sql, python_callable, parameters):
+    for k, v in parameters.items():
+        param_string = "{{" + k + "}}"
+        if type(v) == Table:
+            sql = sql.replace(param_string, _handle_table(v))
+        else:
+            sql = sql.replace(param_string, ":" + v)
     return sql
