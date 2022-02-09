@@ -18,13 +18,20 @@ from airflow.models import DagRun, TaskInstance
 
 class Table:
     def __init__(
-        self, table_name="", conn_id=None, database=None, schema=None, warehouse=None
+        self,
+        table_name="",
+        conn_id=None,
+        database=None,
+        schema=None,
+        warehouse=None,
+        role=None,
     ):
         self.table_name = table_name
         self.conn_id = conn_id
         self.database = database
         self.schema = schema
         self.warehouse = warehouse
+        self.role = role
 
     def identifier_args(self):
         return (self.schema, self.table_name) if self.schema else (self.table_name,)
