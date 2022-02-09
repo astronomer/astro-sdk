@@ -29,6 +29,7 @@ import os
 import pathlib
 import unittest.mock
 
+import pytest
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -149,7 +150,7 @@ class TestSnowflakeOperator(unittest.TestCase):
             conn_id="snowflake_conn",
         )
 
-    def test_snowflake_query(self):
+    def run_snow_query(self, role=None):
         @aql.transform
         def sample_snow(input_table: Table):
             return "SELECT * FROM {{input_table}} LIMIT 10"
@@ -159,6 +160,7 @@ class TestSnowflakeOperator(unittest.TestCase):
             snowflake_conn=hook.get_conn(),
             table_name=self.snowflake_table,
         )
+
         with self.dag:
             f = sample_snow(
                 input_table=Table(
@@ -167,6 +169,7 @@ class TestSnowflakeOperator(unittest.TestCase):
                     schema=os.getenv("SNOWFLAKE_SCHEMA"),
                     database=os.getenv("SNOWFLAKE_DATABASE"),
                     warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                    role=role,
                 ),
                 output_table=Table(
                     self.snowflake_table,
@@ -192,6 +195,16 @@ class TestSnowflakeOperator(unittest.TestCase):
             f'SELECT * FROM "{os.getenv("SNOWFLAKE_DATABASE")}"."{os.getenv("SNOWFLAKE_SCHEMA")}"."{self.snow_inherit_table}"'
         )
         assert len(df) == 10
+
+    def test_snowflake_query(self):
+        self.run_snow_query()
+
+    def test_roles_work_failing(self):
+        with pytest.raises(Exception):
+            self.run_snow_query(role="foo")
+
+    def test_roles_work_passing(self):
+        self.run_snow_query(role=os.getenv("SNOWFLAKE_ROLE"))
 
     def test_raw_sql(self):
         hook = get_snowflake_hook()

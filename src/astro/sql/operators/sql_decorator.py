@@ -45,6 +45,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         database: Optional[str] = None,
         schema: Optional[str] = None,
         warehouse: Optional[str] = None,
+        role: Optional[str] = None,
         raw_sql=False,
         sql="",
         **kwargs,
@@ -75,6 +76,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.schema = schema
         self.handler = handler
         self.warehouse = warehouse
+        self.role = role
         self.kwargs = kwargs or {}
         self.sql = sql
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
@@ -226,6 +228,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.database = first_table.database or self.database
             self.schema = first_table.schema or self.schema
             self.warehouse = first_table.warehouse or self.warehouse
+            self.role = first_table.role or self.role
 
     def _set_schema_if_needed(self):
         schema_statement = ""
@@ -259,7 +262,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             snowflake_conn_id=self.conn_id,
             warehouse=self.warehouse,
             database=self.database,
-            role=None,
+            role=self.role,
             schema=self.schema,
             authenticator=None,
             session_parameters=None,
