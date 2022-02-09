@@ -36,6 +36,8 @@ from airflow.exceptions import DuplicateTaskIdFound
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+
+# from astro.sql.operators.temp_hooks import PostgresHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
@@ -47,7 +49,6 @@ from google.cloud import bigquery, storage
 
 # Import Operator
 from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
-from astro.sql.operators.temp_hooks import TempPostgresHook
 from astro.sql.table import Table, TempTable
 from tests.operators import utils as test_utils
 
@@ -234,7 +235,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
     def test_aql_local_file_to_postgres_no_table_name(self):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
 
-        self.hook_target = TempPostgresHook(
+        self.hook_target = PostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
         )
 
@@ -299,7 +300,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
     def test_aql_overwrite_existing_table(self):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
 
-        self.hook_target = TempPostgresHook(
+        self.hook_target = PostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
         )
 
@@ -341,7 +342,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
     def test_aql_s3_file_to_postgres(self):
         OUTPUT_TABLE_NAME = "expected_table_from_s3_csv"
 
-        self.hook_target = TempPostgresHook(
+        self.hook_target = PostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
         )
 
@@ -373,7 +374,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
     def test_aql_s3_file_to_postgres_no_table_name(self):
         OUTPUT_TABLE_NAME = "test_dag_load_file_homes_csv_2"
 
-        self.hook_target = TempPostgresHook(
+        self.hook_target = PostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
         )
 
@@ -407,7 +408,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
     def test_aql_s3_file_to_postgres_specify_schema(self):
         OUTPUT_TABLE_NAME = "expected_table_from_s3_csv"
 
-        self.hook_target = TempPostgresHook(
+        self.hook_target = PostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
         )
 
