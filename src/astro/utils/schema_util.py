@@ -37,11 +37,10 @@ def tables_from_same_db(tables: List[Table]):
     :param tables: List of table
     :return: Boolean
     """
-    conn_types = set()
+    conn_ids = set()
     for table in tables:
-        conn = BaseHook.get_connection(table.conn_id)
-        conn_types.add(conn.conn_type)
-    return len(conn_types) == 1
+        conn_ids.add(table.conn_id)
+    return len(conn_ids) == 1
 
 
 def get_error_string_for_multiple_dbs(tables: List[Table]):
