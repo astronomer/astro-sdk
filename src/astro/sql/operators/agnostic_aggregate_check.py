@@ -100,7 +100,7 @@ class AgnosticAggregateCheck(SqlDecoratoratedOperator):
 
     def execute(self, context: Dict):
         self.sql = self.check
-        self.parameters = {"table": self.table}
+        self.parameters = {"table": self.table.table_name}
         query_result = super().execute(context)
 
         if not isinstance(query_result, int) and not isinstance(query_result, float):

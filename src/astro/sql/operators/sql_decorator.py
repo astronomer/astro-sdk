@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import inspect
+import re
 from builtins import NotImplementedError
 from typing import Callable, Dict, Iterable, Mapping, Optional, Union
 
@@ -25,6 +26,7 @@ from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils.db import provide_session
+from sqlalchemy import text
 from sqlalchemy.sql.functions import Function
 
 from astro.sql.table import Table, create_table_name
@@ -86,8 +88,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         )
 
     def execute(self, context: Dict):
-        if not isinstance(self.sql, str):
-            return self._run_sql_alchemy_obj(self.sql, self.parameters)
 
         self.output_schema = self.schema or get_schema()
         self._set_variables_from_first_table()
@@ -110,6 +110,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         elif self.sql[-4:] == ".sql":
             with open(self.sql) as file:
                 self.sql = file.read().replace("\n", " ")
+
         if context:
             self.sql = self.render_template(self.sql, context)
             self.parameters = {
@@ -147,7 +148,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.parameters.update(self.op_kwargs)  # type: ignore
 
         self._process_params()
-        query_result = self._run_sql_string(self.sql, self.parameters)
+        query_result = self._run_sql_alchemy_obj(self.sql, self.parameters)
         # Run execute function of subclassed Operator.
 
         if self.output_table:
@@ -302,7 +303,23 @@ class SqlDecoratoratedOperator(DecoratedOperator):
     def _run_sql_alchemy_obj(self, sql, parameters):
         engine = self.get_sql_alchemy_engine()
         conn = engine.connect()
-        return conn.execute(sql, parameters)
+        sql, parameters = self._parse_identifiers(sql, parameters)
+        return conn.execute(text(sql), parameters)
+
+    def _parse_identifiers(self, sql, parameters):
+        matches = re.findall(r":[^\s]*", sql)
+        for match in matches:
+            param = match.split(":")
+            if len(param) == 0:
+                raise ValueError(f"invalid identifier {match}")
+            param = param[1]
+            if param not in parameters:
+                raise ValueError(f"{param} not found in context {parameters}")
+
+            sql = sql.replace(match, parameters[param])
+            parameters.pop(param)
+
+        return sql, parameters
 
     @staticmethod
     def create_temporary_table(query, output_table_name, schema=None):
@@ -310,7 +327,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         Create a temp table for the current task instance. This table will be overwritten if the DAG is run again as this
         table is only ever meant to be temporary.
         :param query:
-        :param table_name:
+        :param table_name
         :return:
         """
 

@@ -98,7 +98,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM {table}",
+                check="select count(*) FROM :table",
                 greater_than=4,
                 less_than=4,
             )
@@ -255,7 +255,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM {table}",
+                check="select count(*) FROM :table",
                 greater_than=20,
                 less_than=10,
                 equal_to=4,
