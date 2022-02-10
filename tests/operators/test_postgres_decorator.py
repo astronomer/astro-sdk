@@ -370,27 +370,11 @@ class TestPostgresDecorator(unittest.TestCase):
         drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
 
     def test_raw_sql_result(self):
-        @aql.run_raw_sql
-        def sample_pg(
-            actor: Table,
-        ):
-            return "SELECT COUNT(*) FROM {{actor}}"
-
         self.hook_target = PostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
         )
         drop_table(
             table_name="my_raw_sql_table", postgres_conn=self.hook_target.get_conn()
-        )
-
-        self.create_and_run_task(
-            sample_pg,
-            (),
-            {
-                "actor": Table(
-                    table_name="actor", conn_id="postgres_conn", database="pagila"
-                ),
-            },
         )
 
         @aql.run_raw_sql

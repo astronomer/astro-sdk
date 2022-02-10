@@ -55,6 +55,9 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
 
         task_id = table.table_name + "_" + "boolean_check"
 
+        def handler_func(results):
+            return results.fetchall()
+
         def null_function():
             pass
 
@@ -68,6 +71,7 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
             task_id=task_id,
             op_args=(),
             python_callable=null_function,
+            handler=handler_func,
             **kwargs,
         )
 
@@ -78,18 +82,14 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
         )
 
         results = super().execute(context)
-        results = results.fetchall()
         failed_checks_names, failed_checks_index = self.get_failed_checks(results)
         if len(failed_checks_index) > 0:
             self.parameters = {}
             self.sql = self.prep_results(failed_checks_index)
             failed_rows = super().execute(context)
-            failed_rows = failed_rows.fetchall()
-            logger.error("Failed rows {}".format(failed_rows))
+            logger.error("Failed rows %s", failed_rows)
             raise ValueError(
-                "Some of the check(s) have failed {}".format(
-                    ",".join(failed_checks_names)
-                )
+                "Some of the check(s) have failed %s", ",".join(failed_checks_names)
             )
 
         return table

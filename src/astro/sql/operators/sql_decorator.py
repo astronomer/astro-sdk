@@ -138,7 +138,9 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             return self.output_table
 
         elif self.raw_sql:
-            return query_result
+            if self.handler is not None:
+                return self.handler(query_result)
+            return None
         else:
             self.output_table = Table(
                 table_name=output_table_name,
