@@ -2,7 +2,7 @@ from distutils import log as logger
 from typing import Dict, List
 
 from sqlalchemy import FLOAT, and_, cast, column, func, select, text
-from sqlalchemy.sql.expression import table
+from sqlalchemy.sql.expression import table as sqlatable
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
@@ -76,7 +76,7 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
         )
 
     def execute(self, context: Dict):
-        self.parameters = {}
+        self.parameters = {"table": self.table}
         self.sql = AgnosticBooleanCheck.prep_boolean_checks_query(
             self.table, self.checks
         )
@@ -84,7 +84,7 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
         results = super().execute(context)
         failed_checks_names, failed_checks_index = self.get_failed_checks(results)
         if len(failed_checks_index) > 0:
-            self.parameters = {}
+            self.parameters = {"table": self.table, "limit": self.max_rows_returned}
             self.sql = self.prep_results(failed_checks_index)
             failed_rows = super().execute(context)
             logger.error("Failed rows %s", failed_rows)
@@ -92,7 +92,7 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
                 "Some of the check(s) have failed %s", ",".join(failed_checks_names)
             )
 
-        return table
+        return self.table
 
     def get_failed_checks(self, results):
         failed_check_name = []
@@ -104,20 +104,23 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
                 failed_check_index.append(index)
         return failed_check_name, failed_check_index
 
+    @staticmethod
     def prep_boolean_checks_query(table: Table, checks: List[Check]):
         temp_table = (
             select([check.get_expression() for check in checks])
-            .select_from(text(table.qualified_name()))
+            .select_from(text("{{table}}"))
             .alias("check_table")
         )
-        return select([check.get_result() for check in checks]).select_from(temp_table)
+        return str(
+            select([check.get_result() for check in checks]).select_from(temp_table)
+        )
 
     def prep_results(self, results):
-        return (
+        return str(
             select(["*"])
-            .select_from(text(self.table.qualified_name()))
+            .select_from(text("{{table}}"))
             .where(and_(*[text(self.checks[index].expression) for index in results]))
-            .limit(self.max_rows_returned)
+            .limit("{{limit}}")
         )
 
 

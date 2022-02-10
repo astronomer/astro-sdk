@@ -131,7 +131,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
                     database="pagila",
                     conn_id="postgres_conn",
                 ),
-                checks=[Check("test_1", f"{self.table}.rooms > 3")],
+                checks=[Check("test_1", "{{table}}.rooms > 3")],
                 max_rows_returned=10,
             )
             a.execute({"run_id": "foo"})
@@ -148,8 +148,8 @@ class TestBooleanCheckOperator(unittest.TestCase):
                     conn_id="postgres_conn",
                 ),
                 checks=[
-                    Check("test_1", f"{self.table}.rooms > 7"),
-                    Check("test_2", f"{self.table}.beds >= 3"),
+                    Check("test_1", "{{table}}.rooms > 7"),
+                    Check("test_2", "{{table}}.beds >= 3"),
                 ],
                 max_rows_returned=10,
             )
@@ -205,7 +205,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
                     conn_id="bigquery",
                     schema="tmp_astro",
                 ),
-                checks=[Check("test_1", f"{self.table}.rooms > 3")],
+                checks=[Check("test_1", "{{table}}.rooms > 3")],
                 max_rows_returned=10,
             )
             a.execute({"run_id": "foo"})
@@ -222,8 +222,8 @@ class TestBooleanCheckOperator(unittest.TestCase):
                     schema="tmp_astro",
                 ),
                 checks=[
-                    Check("test_1", f"{self.table}.rooms > 7"),
-                    Check("test_2", f"{self.table}.beds >= 3"),
+                    Check("test_1", "{{table}}.rooms > 7"),
+                    Check("test_2", "{{table}}.beds >= 3"),
                 ],
                 max_rows_returned=10,
             )
