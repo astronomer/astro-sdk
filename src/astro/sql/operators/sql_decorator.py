@@ -170,7 +170,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
                 k: self.render_template(v, context) for k, v in self.parameters.items()  # type: ignore
             }
         self.parameters.update(self.op_kwargs)  # type: ignore
-        # self._process_params()
+        self._process_params()
 
     def handle_output_table_schema(self, output_table_name, schema=None):
         """
@@ -356,6 +356,12 @@ class SqlDecoratoratedOperator(DecoratedOperator):
     def _table_exists_in_db(self, conn: str, table_name: str):
         """Override this method to enable sensing db."""
         raise NotImplementedError("Add _table_exists_in_db method to class")
+
+    def _process_params(self):
+        if self.conn_type == "snowflake":
+            self.parameters = snowflake_transform.process_params(
+                parameters=self.parameters
+            )
 
     def _parse_template(self):
         if self.conn_type == "postgres":

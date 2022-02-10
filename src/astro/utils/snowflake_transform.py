@@ -27,7 +27,7 @@ def _handle_table(t: Table):
     :return:
     """
 
-    return "IDENTIFIER(" + t.database + "." + t.schema + "." + t.table_name + ")"
+    return t.database + "." + t.schema + "." + t.table_name
 
 
 def process_params(parameters):
@@ -40,7 +40,7 @@ def _parse_template(sql, python_callable, parameters):
     for k, v in parameters.items():
         param_string = "{{" + k + "}}"
         if type(v) == Table:
-            sql = sql.replace(param_string, _handle_table(v))
+            sql = sql.replace(param_string, "IDENTIFIER(:" + k + ")")
         else:
-            sql = sql.replace(param_string, ":" + v)
+            sql = sql.replace(param_string, ":" + k)
     return sql
