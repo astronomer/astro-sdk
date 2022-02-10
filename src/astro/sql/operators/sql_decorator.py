@@ -107,6 +107,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         context = self._add_templates_to_context(context)
         if context:
             self.sql = self.render_template(self.sql, context)
+        self._process_params()
 
         output_table_name = None
 
@@ -178,7 +179,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
                 k: self.render_template(v, context) for k, v in self.parameters.items()  # type: ignore
             }
         self.parameters.update(self.op_kwargs)  # type: ignore
-        self._process_params()
 
     def handle_output_table_schema(self, output_table_name, schema=None):
         """
