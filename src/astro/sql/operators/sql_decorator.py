@@ -104,7 +104,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.convert_op_kwarg_dataframes()
         self.read_sql()
         self.handle_params(context)
-        self._parse_template()
+        context = self._add_templates_to_context(context)
         if context:
             self.sql = self.render_template(self.sql, context)
 
@@ -375,15 +375,13 @@ class SqlDecoratoratedOperator(DecoratedOperator):
                 parameters=self.parameters
             )
 
-    def _parse_template(self):
+    def _add_templates_to_context(self, context):
         if self.conn_type in ["postgres", "bigquery"]:
-            self.sql = postgres_transform.parse_template(self.sql, self.parameters)
+            return postgres_transform.add_templates_to_context(self.parameters, context)
         else:
-            self.sql = snowflake_transform._parse_template(
-                self.sql, self.python_callable, self.parameters
+            return snowflake_transform.add_templates_to_context(
+                self.parameters, context
             )
-
-        # self.sql = postgres_transform.parse_template(self.sql, self.parameters)
 
     def _cleanup(self):
         """Remove DAG's objects from S3 and db."""

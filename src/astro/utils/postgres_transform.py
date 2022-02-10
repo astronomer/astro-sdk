@@ -19,15 +19,14 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from astro.sql.table import Table
 
 
-def parse_template(sql, parameters):
+def add_templates_to_context(parameters, context):
     for k, v in parameters.items():
-        param_string = "{{" + k + "}}"
         if type(v) == Table:
             final_name = v.schema + "." + v.table_name if v.schema else v.table_name
-            sql = sql.replace(param_string, final_name)
+            context[k] = final_name
         else:
-            sql = sql.replace(param_string, ":" + k)
-    return sql
+            context[k] = ":" + k
+    return context
 
 
 def create_sql_engine(postgres_conn_id, database):
