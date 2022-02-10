@@ -100,9 +100,9 @@ class AgnosticAggregateCheck(SqlDecoratoratedOperator):
 
     def execute(self, context: Dict):
         self.sql = self.check
-        self.parameters = {"table": self.table.table_name}
+        self.parameters = {"table": self.table}
         query_result = super().execute(context)
-
+        query_result = query_result.fetchone()[0]
         if not isinstance(query_result, int) and not isinstance(query_result, float):
             raise ValueError(
                 "The aggregate check query should only return a numeric value."

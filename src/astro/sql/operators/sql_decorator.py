@@ -89,6 +89,9 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
     def execute(self, context: Dict):
 
+        if not isinstance(self.sql, str):
+            return self._run_sql_alchemy_obj(self.sql, self.parameters)
+
         self.output_schema = self.schema or get_schema()
         self._set_variables_from_first_table()
 
@@ -122,6 +125,9 @@ class SqlDecoratoratedOperator(DecoratedOperator):
                     output_table_name, self.output_table.schema
                 )
 
+            self._run_sql_alchemy_obj(
+                f"DROP TABLE IF EXISTS {full_output_table_name};", self.parameters
+            )
             self.sql = self.create_temporary_table(self.sql, full_output_table_name)
 
         query_result = self._run_sql_alchemy_obj(self.sql, self.parameters)
@@ -307,7 +313,10 @@ class SqlDecoratoratedOperator(DecoratedOperator):
     def _run_sql_alchemy_obj(self, sql, parameters):
         engine = self.get_sql_alchemy_engine()
         conn = engine.connect()
-        return conn.execute(text(sql), parameters)
+        if isinstance(sql, str):
+            return conn.execute(text(sql), parameters)
+        else:
+            return conn.execute(sql, parameters)
 
     @staticmethod
     def create_temporary_table(query, output_table_name, schema=None):
@@ -327,7 +336,10 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
         if schema:
             output_table_name = f"{schema}.{output_table_name}"
-        return f"DROP TABLE IF EXISTS {output_table_name}; CREATE TABLE {output_table_name} AS ({clean_trailing_semicolon(query)});"
+        # return f"DROP TABLE IF EXISTS {output_table_name}; CREATE TABLE {output_table_name} AS ({clean_trailing_semicolon(query)});"
+        return (
+            f"CREATE TABLE {output_table_name} AS ({clean_trailing_semicolon(query)});"
+        )
 
     @staticmethod
     def create_cte(query, table_name):
@@ -364,12 +376,14 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             )
 
     def _parse_template(self):
-        if self.conn_type == "postgres":
+        if self.conn_type in ["postgres", "bigquery"]:
             self.sql = postgres_transform.parse_template(self.sql, self.parameters)
         else:
             self.sql = snowflake_transform._parse_template(
                 self.sql, self.python_callable, self.parameters
             )
+
+        # self.sql = postgres_transform.parse_template(self.sql, self.parameters)
 
     def _cleanup(self):
         """Remove DAG's objects from S3 and db."""

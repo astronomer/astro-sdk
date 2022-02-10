@@ -23,6 +23,7 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 
 import logging
 import math
+import os
 import pathlib
 import unittest.mock
 
@@ -98,7 +99,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM :table",
+                check="select count(*) FROM {{table}}",
                 greater_than=4,
                 less_than=4,
             )
@@ -116,7 +117,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table_bigquery,
-                check="select count(*) FROM {table}",
+                check="select count(*) FROM {{table}}",
                 greater_than=4,
                 less_than=4,
             )
@@ -134,7 +135,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM {table}",
+                check="select count(*) FROM {{table}}",
                 greater_than=2,
                 less_than=6,
             )
@@ -152,7 +153,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM {table}",
+                check="select count(*) FROM {{table}}",
                 greater_than=10,
                 less_than=20,
             )
@@ -167,7 +168,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM {table}",
+                check="select count(*) FROM {{table}}",
                 greater_than=20,
                 less_than=10,
             )
@@ -179,7 +180,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM {table}",
+                check="select count(*) FROM {{table}}",
                 greater_than=4,
                 less_than=4,
             )
@@ -192,7 +193,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM {table}",
+                check="select count(*) FROM {{table}}",
             )
             assert False
         except ValueError:
@@ -207,7 +208,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM {table}",
+                check="select count(*) FROM {{table}}",
                 equal_to=4,
             )
             a.execute({"run_id": "foo"})
@@ -224,7 +225,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM {table}",
+                check="select count(*) FROM {{table}}",
                 less_than=3,
             )
             result = a.execute({"run_id": "foo"})
@@ -241,7 +242,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM {table}",
+                check="select count(*) FROM {{table}}",
                 greater_than=3,
             )
             a.execute({"run_id": "foo"})
@@ -255,7 +256,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table,
-                check="select count(*) FROM :table",
+                check="select count(*) FROM {{table}}",
                 greater_than=20,
                 less_than=10,
                 equal_to=4,

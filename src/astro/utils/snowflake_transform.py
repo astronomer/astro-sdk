@@ -31,16 +31,17 @@ def _handle_table(t: Table):
 
 
 def process_params(parameters):
-    return {
-        k: (_handle_table(v) if type(v) == Table else v) for k, v in parameters.items()
-    }
+    return parameters
+    # return {
+    #     k: (_handle_table(v) if type(v) == Table else v) for k, v in parameters.items()
+    # }
 
 
 def _parse_template(sql, python_callable, parameters):
     for k, v in parameters.items():
         param_string = "{{" + k + "}}"
         if type(v) == Table:
-            sql = sql.replace(param_string, "IDENTIFIER(:" + k + ")")
+            sql = sql.replace(param_string, "IDENTIFIER('" + v.table_name + "')")
         else:
             sql = sql.replace(param_string, ":" + k)
     return sql
