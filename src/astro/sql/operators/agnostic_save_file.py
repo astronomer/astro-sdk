@@ -23,10 +23,11 @@ import pandas as pd
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 from google.cloud.storage import Client
 from smart_open import open
 
-from astro.sql.operators.temp_hooks import TempPostgresHook, TempSnowflakeHook
+from astro.sql.operators.temp_hooks import TempSnowflakeHook
 from astro.sql.table import Table
 from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
 from astro.utils.schema_util import get_table_name
@@ -81,7 +82,7 @@ class SaveFile(BaseOperator):
 
         # Select database Hook based on `conn` type
         input_hook = {
-            "postgres": TempPostgresHook(
+            "postgres": PostgresHook(
                 postgres_conn_id=input_table.conn_id, schema=input_table.database
             ),
             "snowflake": TempSnowflakeHook(

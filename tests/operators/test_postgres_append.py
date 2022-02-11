@@ -31,7 +31,6 @@ import time
 import unittest.mock
 
 import pandas as pd
-import pytest
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
@@ -44,7 +43,6 @@ from google.cloud import bigquery
 
 # Import Operator
 import astro.sql as aql
-from astro.sql.operators.temp_hooks import TempPostgresHook
 from astro.sql.table import Table
 
 # from tests.operators import utils as test_utils
@@ -185,7 +183,7 @@ class TestPostgresAppend(unittest.TestCase):
 
     def test_append_all_fields(self):
 
-        hook = TempPostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
+        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
 
         drop_table(table_name="test_main", postgres_conn=hook.get_conn())
         drop_table(table_name="test_append", postgres_conn=hook.get_conn())
