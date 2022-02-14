@@ -195,6 +195,29 @@ class TestPostgresDecorator(unittest.TestCase):
         )
         assert df.iloc[0].to_dict()["colors"] == "red"
 
+    def test_postgres_set_op_kwargs(self):
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+
+        @aql.transform
+        def sample_pg():
+            return "SELECT * FROM actor WHERE last_name LIKE 'G%%'"
+
+        self.create_and_run_task(
+            sample_pg,
+            (),
+            {
+                "conn_id": "postgres_conn",
+                "database": "pagila",
+            },
+        )
+        df = pd.read_sql(
+            f"SELECT * FROM tmp_astro.test_dag_sample_pg_1",
+            con=self.hook_target.get_conn(),
+        )
+        assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
+
     def test_postgres(self):
         self.hook_target = PostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"

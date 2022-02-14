@@ -84,6 +84,12 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         else:
             self.output_table = None
 
+        self.database = self.op_kwargs.pop("database", self.database)
+        self.conn_id = self.op_kwargs.pop("conn_id", self.conn_id)
+        self.schema = self.op_kwargs.pop("schema", self.schema)
+        self.warehouse = self.op_kwargs.pop("warehouse", self.warehouse)
+        self.role = self.op_kwargs.pop("role", self.role)
+
         super().__init__(
             **kwargs,
         )
@@ -221,9 +227,10 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
         # If there is no first table via op_ags or kwargs, we check the parameters
         if not first_table:
-            param_tables = [t for t in self.parameters.values() if type(t) == Table]
-            if param_tables:
-                first_table = param_tables[0]
+            if self.parameters:
+                param_tables = [t for t in self.parameters.values() if type(t) == Table]
+                if param_tables:
+                    first_table = param_tables[0]
 
         if first_table:
             self.conn_id = first_table.conn_id or self.conn_id
