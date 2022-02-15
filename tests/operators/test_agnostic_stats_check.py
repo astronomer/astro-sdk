@@ -10,6 +10,7 @@ import os
 import pathlib
 import unittest.mock
 
+import pytest
 from airflow.models import DAG
 from airflow.utils import timezone
 
@@ -284,7 +285,7 @@ class TestBIGQueryIntegrationWithStatsCheckOperator(unittest.TestCase):
         )
 
     def test_stats_check_bigQuery_outlier_exists(self):
-        try:
+        with pytest.raises(ValueError):
             a = aql.stats_check(
                 main_table=Table(
                     "stats_check_test_1", conn_id="bigquery", schema="tmp_astro"
@@ -296,29 +297,22 @@ class TestBIGQueryIntegrationWithStatsCheckOperator(unittest.TestCase):
                 max_rows_returned=10,
             )
             a.execute({"run_id": "foo"})
-            assert False
-        except ValueError as e:
-            assert True
 
     def test_stats_check_postgres_bigQuery_outlier_not_exists(self):
-        try:
-            a = aql.stats_check(
-                main_table=Table(
-                    "stats_check_test_1", conn_id="bigquery", schema="tmp_astro"
-                ),
-                compare_table=Table(
-                    "stats_check_test_3", conn_id="bigquery", schema="tmp_astro"
-                ),
-                checks=[aql.OutlierCheck("room_check", {"rooms": "rooms"}, 2, 0.0)],
-                max_rows_returned=10,
-            )
-            a.execute({"run_id": "foo"})
-            assert True
-        except ValueError as e:
-            assert False
+        a = aql.stats_check(
+            main_table=Table(
+                "stats_check_test_1", conn_id="bigquery", schema="tmp_astro"
+            ),
+            compare_table=Table(
+                "stats_check_test_3", conn_id="bigquery", schema="tmp_astro"
+            ),
+            checks=[aql.OutlierCheck("room_check", {"rooms": "rooms"}, 2, 0.0)],
+            max_rows_returned=10,
+        )
+        a.execute({"run_id": "foo"})
 
     def test_stats_check_on_tables_on_different_db(self):
-        try:
+        with pytest.raises(ValueError):
             a = aql.stats_check(
                 main_table=Table(
                     "stats_check_test_1", conn_id="bigquery", schema="tmp_astro"
@@ -330,6 +324,3 @@ class TestBIGQueryIntegrationWithStatsCheckOperator(unittest.TestCase):
                 max_rows_returned=10,
             )
             a.execute({"run_id": "foo"})
-            assert False
-        except ValueError as e:
-            assert True
