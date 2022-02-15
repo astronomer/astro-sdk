@@ -68,14 +68,9 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         :param kwargs:
         """
         self.raw_sql = raw_sql
-        self.conn_id = conn_id
         self.autocommit = autocommit
         self.parameters = parameters
-        self.database = database
-        self.schema = schema
         self.handler = handler
-        self.warehouse = warehouse
-        self.role = role
         self.kwargs = kwargs or {}
         self.sql = sql
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
@@ -84,11 +79,11 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         else:
             self.output_table = None
 
-        self.database = self.op_kwargs.pop("database", self.database)
-        self.conn_id = self.op_kwargs.pop("conn_id", self.conn_id)
-        self.schema = self.op_kwargs.pop("schema", self.schema)
-        self.warehouse = self.op_kwargs.pop("warehouse", self.warehouse)
-        self.role = self.op_kwargs.pop("role", self.role)
+        self.database = self.op_kwargs.pop("database", database)
+        self.conn_id = self.op_kwargs.pop("conn_id", conn_id)
+        self.schema = self.op_kwargs.pop("schema", schema)
+        self.warehouse = self.op_kwargs.pop("warehouse", warehouse)
+        self.role = self.op_kwargs.pop("role", role)
 
         super().__init__(
             **kwargs,
