@@ -361,7 +361,7 @@ class TestPostgresAppend(unittest.TestCase):
     def test_append_on_tables_on_different_db(self):
         cwd = pathlib.Path(__file__).parent
 
-        try:
+        with pytest.raises(ValueError):
             with self.dag:
                 load_main = aql.load_file(
                     path=str(cwd) + "/../data/homes_main.csv",
@@ -386,7 +386,3 @@ class TestPostgresAppend(unittest.TestCase):
             self.wait_for_task_finish(dr, load_main.operator.task_id)
             self.wait_for_task_finish(dr, load_append.operator.task_id)
             foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-
-            assert False
-        except ValueError as e:
-            assert True

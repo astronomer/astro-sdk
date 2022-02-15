@@ -25,6 +25,7 @@ import math
 import pathlib
 import unittest.mock
 
+import pytest
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -179,7 +180,7 @@ class TestPostgresMergeOperator(unittest.TestCase):
         assert math.isnan(df.age.to_list()[-1])
 
     def test_merge_on_tables_on_different_db(self):
-        try:
+        with pytest.raises(ValueError):
             a = aql.merge(
                 target_table=self.main_table,
                 merge_table=self.merge_table_bigquery,
@@ -189,6 +190,3 @@ class TestPostgresMergeOperator(unittest.TestCase):
                 conflict_strategy="update",
             )
             a.execute({"run_id": "foo"})
-            assert False
-        except ValueError as e:
-            assert True
