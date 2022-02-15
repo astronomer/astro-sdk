@@ -34,7 +34,7 @@ def move_dataframe_to_sql(
     conn_type,
     df: DataFrame,
     user,
-    chunksize=None,
+    chunksize,
 ):
     # Select database Hook based on `conn` type
     hook: Union[PostgresHook, TempSnowflakeHook] = {  # type: ignore
