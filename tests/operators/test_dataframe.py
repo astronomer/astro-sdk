@@ -117,7 +117,11 @@ class TestDataframeFromSQL(unittest.TestCase):
         res = self.create_and_run_task(
             my_df_func,
             (),
-            {"df": Table("actor", conn_id="postgres_conn", database="pagila")},
+            {
+                "df": Table(
+                    "actor", conn_id="postgres_conn", database="pagila", schema="public"
+                )
+            },
         )
         assert (
             XCom.get_one(
@@ -133,7 +137,11 @@ class TestDataframeFromSQL(unittest.TestCase):
 
         res = self.create_and_run_task(
             my_df_func,
-            (Table("actor", conn_id="postgres_conn", database="pagila"),),
+            (
+                Table(
+                    "actor", conn_id="postgres_conn", database="pagila", schema="public"
+                ),
+            ),
             {},
         )
         assert (
@@ -150,8 +158,16 @@ class TestDataframeFromSQL(unittest.TestCase):
 
         res = self.create_and_run_task(
             my_df_func,
-            (Table("actor", conn_id="postgres_conn", database="pagila"),),
-            {"film_df": Table("film", conn_id="postgres_conn", database="pagila")},
+            (
+                Table(
+                    "actor", conn_id="postgres_conn", database="pagila", schema="public"
+                ),
+            ),
+            {
+                "film_df": Table(
+                    "film", conn_id="postgres_conn", database="pagila", schema="public"
+                )
+            },
         )
         assert (
             XCom.get_one(
