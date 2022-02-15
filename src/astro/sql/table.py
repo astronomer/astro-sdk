@@ -17,6 +17,15 @@ from airflow.models import DagRun, TaskInstance
 
 
 class Table:
+    template_fields = (
+        "table_name",
+        "conn_id",
+        "database",
+        "schema",
+        "warehouse",
+        "role",
+    )
+
     def __init__(
         self,
         table_name="",

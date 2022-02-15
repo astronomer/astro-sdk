@@ -37,12 +37,10 @@ from astro.utils.task_id_helper import get_task_id
 class SaveFile(BaseOperator):
     """Write SQL table to csv/parquet on local/S3/GCS.
 
+    :param input_table: Table to convert to file
+    :type input_table: Table
     :param output_file_path: Path and name of table to create.
     :type output_file_path: str
-    :param table: Input table name.
-    :type table: str
-    :param input_conn_id: Database connection id.
-    :type input_conn_id: str
     :param output_conn_id: File system connection id (if S3 or GCS).
     :type output_conn_id: str
     :param overwrite: Overwrite file if exists. Default False.
@@ -51,18 +49,23 @@ class SaveFile(BaseOperator):
     :type output_file_format: str
     """
 
+    template_fields = (
+        "input_table",
+        "output_file_path",
+        "output_conn_id",
+        "output_file_format",
+    )
+
     def __init__(
         self,
-        table="",
-        output_file_path="",
         input_table: Table = None,
+        output_file_path="",
         output_conn_id=None,
         output_file_format="csv",
         overwrite=None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.table = table
         self.output_file_path = output_file_path
         self.input_table = input_table
         self.output_conn_id = output_conn_id
