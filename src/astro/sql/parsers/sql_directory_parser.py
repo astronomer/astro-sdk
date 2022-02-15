@@ -1,6 +1,5 @@
 import os
 import re
-from collections import defaultdict
 from typing import Dict
 
 import frontmatter
@@ -23,16 +22,19 @@ def render(path, **kwargs):
     ]
     template_dict = kwargs
     op_kwargs = {}
+    default_params = {filename.split(".")[0]: None for filename in files}
+
     # Parse all of the SQL files in this directory
     for filename in files:
         with open(os.path.join(path, filename), "r") as f:
             front_matter_opts = frontmatter.loads(f.read()).to_dict()
             sql = front_matter_opts.pop("content")
-            templated_names = find_templated_fields(sql)
-            parameters = {y: None for y in templated_names}
+            temp_items = find_templated_fields(sql)
+            parameters = {
+                k: v for k, v in default_params.copy().items() if k in temp_items
+            }
             if front_matter_opts.get("template_vars"):
                 template_variables = front_matter_opts.pop("template_vars")
-                sql = wrap_template_variables(sql, template_variables)
                 parameters.update({v: None for k, v in template_variables.items()})
             if front_matter_opts.get("output_table"):
                 out_table_dict = front_matter_opts.pop("output_table")
@@ -69,7 +71,7 @@ def render(path, **kwargs):
 
 
 def find_templated_fields(file_string):
-    return [y[1:-1] for y in re.findall(r"\{[^}]*\}", file_string) if "{{" not in y]
+    return [y[2:-2] for y in re.findall(r"\{\{[^}]*\}\}", file_string)]
 
 
 def wrap_template_variables(sql, template_vars):
@@ -81,7 +83,7 @@ def wrap_template_variables(sql, template_vars):
 
 
 class ParsedSqlOperator(SqlDecoratoratedOperator):
-    template_fields = ("sql", "parameters")
+    template_fields = ("parameters",)
 
     def _table_exists_in_db(self, conn: str, table_name: str):
         pass
