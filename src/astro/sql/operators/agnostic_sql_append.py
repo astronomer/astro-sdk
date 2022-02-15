@@ -58,6 +58,7 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
             conn_id=main_table.conn_id,
             op_args=(),
             python_callable=null_function,
+            handler=lambda x: None,
             **kwargs,
         )
 
