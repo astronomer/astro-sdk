@@ -70,4 +70,5 @@ jobs:
       SNOWFLAKE_REGION: us-east-1
       SNOWFLAKE_ROLE: TRANSFORMER
       AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
+      AIRFLOW_VAR_FOO: templated_file_name
 
