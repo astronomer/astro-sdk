@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 from airflow.hooks.base import BaseHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -28,3 +29,24 @@ def get_table_name(table: Table):
     if conn_type in ["bigquery"]:
         return table.qualified_name()
     return table.table_name
+
+
+def tables_from_same_db(tables: List[Table]):
+    """
+    Validate that the tables belong to same db by checking connection type.
+    :param tables: List of table
+    :return: Boolean
+    """
+    conn_ids = set()
+    for table in tables:
+        conn_ids.add(table.conn_id)
+    return len(conn_ids) == 1
+
+
+def get_error_string_for_multiple_dbs(tables: List[Table]):
+    """
+    Get error string for tables belonging to multiple databases.
+    :param tables: list of table
+    :return: String: error string
+    """
+    return f'Tables should belong to same db {", ".join([table.table_name for table in tables])}'

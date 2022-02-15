@@ -6,7 +6,11 @@ from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
-from astro.utils.schema_util import get_table_name
+from astro.utils.schema_util import (
+    get_error_string_for_multiple_dbs,
+    get_table_name,
+    tables_from_same_db,
+)
 
 
 class OutlierCheck:
@@ -195,6 +199,11 @@ class AgnosticStatsCheck(SqlDecoratoratedOperator):
         self.database = main_table.database
 
         task_id = main_table.table_name + "_" + "stats_check"
+
+        if not tables_from_same_db([main_table, compare_table]):
+            raise ValueError(
+                get_error_string_for_multiple_dbs([main_table, compare_table])
+            )
 
         def null_function():
             pass

@@ -23,6 +23,10 @@ from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table, TempTable
 from astro.utils.bigquery_merge_func import bigquery_merge_func
 from astro.utils.postgres_merge_func import postgres_merge_func
+from astro.utils.schema_util import (
+    get_error_string_for_multiple_dbs,
+    tables_from_same_db,
+)
 from astro.utils.snowflake_merge_func import snowflake_merge_func
 from astro.utils.task_id_helper import get_unique_task_id
 
@@ -47,6 +51,11 @@ class SqlMergeOperator(SqlDecoratoratedOperator):
         self.merge_columns = merge_columns
         self.conflict_strategy = conflict_strategy
         task_id = get_unique_task_id("merge_table")
+
+        if not tables_from_same_db([target_table, merge_table]):
+            raise ValueError(
+                get_error_string_for_multiple_dbs([target_table, merge_table])
+            )
 
         def null_function():
             pass

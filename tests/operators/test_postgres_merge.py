@@ -25,6 +25,7 @@ import math
 import pathlib
 import unittest.mock
 
+import pytest
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -79,6 +80,11 @@ class TestPostgresMergeOperator(unittest.TestCase):
         self.merge_table = Table(
             table_name="merge_test_2", conn_id="postgres_conn", database="pagila"
         )
+
+        self.merge_table_bigquery = Table(
+            table_name="merge_test_2", conn_id="bigquery", schema="tmp_astro"
+        )
+
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_merge_1.csv",
             output_table=self.main_table,
@@ -172,3 +178,15 @@ class TestPostgresMergeOperator(unittest.TestCase):
         assert df.taxes.to_list() == [1, 1, 1, 1, 1]
         assert df.age.to_list()[:-1] == [60.0, 12.0, 41.0, 22.0]
         assert math.isnan(df.age.to_list()[-1])
+
+    def test_merge_on_tables_on_different_db(self):
+        with pytest.raises(ValueError):
+            a = aql.merge(
+                target_table=self.main_table,
+                merge_table=self.merge_table_bigquery,
+                merge_keys=["list", "sell"],
+                target_columns=["list", "sell", "taxes"],
+                merge_columns=["list", "sell", "age"],
+                conflict_strategy="update",
+            )
+            a.execute({"run_id": "foo"})

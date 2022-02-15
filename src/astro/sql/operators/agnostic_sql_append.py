@@ -22,7 +22,11 @@ from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
-from astro.utils.schema_util import get_table_name
+from astro.utils.schema_util import (
+    get_error_string_for_multiple_dbs,
+    get_table_name,
+    tables_from_same_db,
+)
 from astro.utils.task_id_helper import get_unique_task_id
 
 
@@ -44,6 +48,11 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
         self.columns = columns
         self.casted_columns = casted_columns
         task_id = get_unique_task_id("append_table")
+
+        if not tables_from_same_db([append_table, main_table]):
+            raise ValueError(
+                get_error_string_for_multiple_dbs([append_table, main_table])
+            )
 
         def null_function():
             pass

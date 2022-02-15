@@ -31,6 +31,7 @@ import time
 import unittest.mock
 
 import pandas as pd
+import pytest
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
@@ -357,3 +358,32 @@ class TestPostgresAppend(unittest.TestCase):
         assert len(bigquery_df) == 6
         assert not bigquery_df["sell"].hasnans
         assert not bigquery_df["rooms"].hasnans
+
+    def test_append_on_tables_on_different_db(self):
+        cwd = pathlib.Path(__file__).parent
+
+        with pytest.raises(ValueError):
+            with self.dag:
+                load_main = aql.load_file(
+                    path=str(cwd) + "/../data/homes_main.csv",
+                    output_table=self.main_table_bigquery,
+                )
+                load_append = aql.load_file(
+                    path=str(cwd) + "/../data/homes_append.csv",
+                    output_table=self.append_table,
+                )
+                foo = aql.append(
+                    main_table=self.main_table_bigquery,
+                    append_table=self.append_table,
+                )
+            dr = self.dag.create_dagrun(
+                run_id=DagRunType.MANUAL.value,
+                start_date=timezone.utcnow(),
+                execution_date=DEFAULT_DATE,
+                state=State.RUNNING,
+            )
+
+            load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+            self.wait_for_task_finish(dr, load_main.operator.task_id)
+            self.wait_for_task_finish(dr, load_append.operator.task_id)
+            foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
