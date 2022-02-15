@@ -45,6 +45,7 @@ class AgnosticLoadFile(BaseOperator):
 
     template_fields = (
         "output_table",
+        "file_conn_id",
         "path",
     )
 
