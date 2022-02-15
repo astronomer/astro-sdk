@@ -22,6 +22,7 @@ from airflow.hooks.base import BaseHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 
+from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils.load_dataframe import move_dataframe_to_sql
 from astro.utils.schema_util import get_schema
@@ -108,6 +109,7 @@ class SqlDataframeOperator(DecoratedOperator):
                 df=ret,
                 conn_type=conn.conn_type,
                 user=conn.login,
+                chunksize=DEFAULT_CHUNK_SIZE,
             )
             return self.output_table
         else:
