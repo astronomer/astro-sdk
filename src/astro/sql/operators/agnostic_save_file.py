@@ -163,7 +163,6 @@ class SaveFile(BaseOperator):
 
 def save_file(
     output_file_path,
-    table=None,
     input_table=None,
     output_conn_id=None,
     overwrite=False,
@@ -196,7 +195,6 @@ def save_file(
     return SaveFile(
         task_id=task_id,
         output_file_path=output_file_path,
-        table=table,
         input_table=input_table,
         output_conn_id=output_conn_id,
         overwrite=overwrite,
