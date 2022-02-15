@@ -53,7 +53,7 @@ def aggregate_orders(orders_table: Table):
     Note that I'm not specifying schema location anywhere. Ideally this can be an admin setting that
     I'm able to over-ride.
     """
-    return """SELECT customer_id, count(*) AS purchase_count FROM {orders_table}
+    return """SELECT customer_id, count(*) AS purchase_count FROM {{orders_table}}
         WHERE purchase_date >= DATEADD(day, -7, '{{ execution_date }}')"""
 
 
@@ -61,7 +61,7 @@ def aggregate_orders(orders_table: Table):
 def get_customers(customer_table: Table = Table("customer")):
     """Basic clean-up of an existing table."""
     return """SELECT customer_id, source, region, member_since
-        FROM {customer_table} WHERE NOT is_deleted"""
+        FROM {{customer_table}} WHERE NOT is_deleted"""
 
 
 @aql.transform
@@ -69,7 +69,7 @@ def join_orders_and_customers(orders_table: Table, customer_table: Table):
     """Now join those together to create a very simple 'feature' dataset."""
     return """SELECT c.customer_id, c.source, c.region, c.member_since,
         CASE WHEN purchase_count IS NULL THEN 0 ELSE 1 END AS recent_purchase
-        FROM {orders_table} c LEFT OUTER JOIN {customer_table} p ON c.customer_id = p.customer_id"""
+        FROM {{orders_table}} c LEFT OUTER JOIN {{customer_table}} p ON c.customer_id = p.customer_id"""
 
 
 @aql.transform
@@ -78,7 +78,7 @@ def get_existing_customers(customer_table: Table):
     Split this 'feature' dataset into existing/older customers and 'new' customers, which we'll use
     later for inference/scoring.
     """
-    return """SELECT * FROM {customer_table} WHERE member_since > DATEADD(day, -7, '{{ execution_date }}')"""
+    return """SELECT * FROM {{customer_table}} WHERE member_since > DATEADD(day, -7, '{{ execution_date }}')"""
 
 
 @aql.transform
@@ -87,7 +87,7 @@ def get_new_customers(customer_table: Table):
     Split this 'feature' dataset into existing/older customers and 'new' customers, which we'll use
     later for inference/scoring.
     """
-    return """SELECT * FROM {customer_table} WHERE member_since <= DATEADD(day, -7, '{{ execution_date }}')"""
+    return """SELECT * FROM {{customer_table}} WHERE member_since <= DATEADD(day, -7, '{{ execution_date }}')"""
 
 
 @train()
