@@ -480,9 +480,11 @@ def sql_server(request):
         raise ValueError(f"Unsupported SQL server {sql_name}")
     hook = hook_class(**hook_parameters)
     schema = hook_parameters.get("schema", test_utils.DEFAULT_SCHEMA)
-    hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
+    if not isinstance(hook, BigQueryHook):
+        hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
     yield (sql_name, hook)
-    hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
+    if not isinstance(hook, BigQueryHook):
+        hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
 
 
 @mock.patch.dict(
@@ -498,7 +500,9 @@ def test_aws_decode():
     assert v == "@#$%@$#ASDH@Ksd23%SD546"
 
 
-@pytest.mark.parametrize("sql_server", ["snowflake", "postgres"], indirect=True)
+@pytest.mark.parametrize(
+    "sql_server", ["snowflake", "postgres", "bigquery"], indirect=True
+)
 @pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
 def test_load_file(sample_dag, sql_server, file_type):
     sql_name, sql_hook = sql_server

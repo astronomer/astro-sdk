@@ -3,6 +3,7 @@ import time
 
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.models.taskinstance import State
+from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
@@ -20,15 +21,20 @@ SQL_SERVER_HOOK_PARAMETERS = {
         "warehouse": os.getenv("SNOWFLAKE_WAREHOUSE"),
     },
     "postgres": {"postgres_conn_id": "postgres_conn"},
+    "bigquery": {
+        "bigquery_conn_id": "bigquery",
+    },
 }
 SQL_SERVER_CONNECTION_KEY = {
     "snowflake": "snowflake_conn_id",
     "postgres": "postgres_conn_id",
+    "bigquery": "bigquery_conn_id",
 }
 
 SQL_SERVER_HOOK_CLASS = {
     "snowflake": SnowflakeHook,
     "postgres": PostgresHook,
+    "bigquery": BigQueryHook,
 }
 
 
