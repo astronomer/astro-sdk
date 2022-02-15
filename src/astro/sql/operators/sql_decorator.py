@@ -92,7 +92,10 @@ class SqlDecoratoratedOperator(DecoratedOperator):
     def execute(self, context: Dict):
 
         if not isinstance(self.sql, str):
-            return self._run_sql_alchemy_obj(self.sql, self.parameters)
+            cursor = self._run_sql_alchemy_obj(self.sql, self.parameters)
+            if self.handler is not None:
+                return self.handler(cursor)
+            return cursor
 
         self.output_schema = self.schema or get_schema()
         self._set_variables_from_first_table()
@@ -341,7 +344,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
         if schema:
             output_table_name = f"{schema}.{output_table_name}"
-        # return f"DROP TABLE IF EXISTS {output_table_name}; CREATE TABLE {output_table_name} AS ({clean_trailing_semicolon(query)});"
         return (
             f"CREATE TABLE {output_table_name} AS ({clean_trailing_semicolon(query)});"
         )

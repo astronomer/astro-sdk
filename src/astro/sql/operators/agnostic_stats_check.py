@@ -112,7 +112,7 @@ class ChecksHandler:
         checks_sql.insert(0, func.count().label("total"))
         comparison_sql = select(checks_sql).select_from(temp_table)
 
-        return str(comparison_sql), comparison_sql.compile().params
+        return comparison_sql
 
     def check_results(self, row, check, index):
         return row[index + 1]
@@ -161,10 +161,8 @@ class ChecksHandler:
                     .limit(max_rows_returned)
                 )
 
-                failed_checks_sql.append(
-                    (check.name, statement, statement.compile().params)
-                )
-        return str(failed_checks_sql)
+                failed_checks_sql.append((check.name, statement, {}))
+        return failed_checks_sql
 
 
 class AgnosticStatsCheck(SqlDecoratoratedOperator):
@@ -224,7 +222,7 @@ class AgnosticStatsCheck(SqlDecoratoratedOperator):
         conn_type = BaseHook.get_connection(self.conn_id).conn_type  # type: ignore
         checkHandler = ChecksHandler(self.checks, conn_type)
         metadata = MetaData()
-        self.sql, self.parameters = checkHandler.prepare_comparison_sql(
+        self.sql = checkHandler.prepare_comparison_sql(
             main_table=self.main_table,
             compare_table=self.compare_table,
             engine=self.get_sql_alchemy_engine(),

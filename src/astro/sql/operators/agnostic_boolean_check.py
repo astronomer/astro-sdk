@@ -1,6 +1,7 @@
 from distutils import log as logger
 from typing import Dict, List
 
+from airflow.hooks.base import BaseHook
 from sqlalchemy import FLOAT, and_, cast, column, func, select, text
 from sqlalchemy.sql.expression import table as sqlatable
 
@@ -76,10 +77,10 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
         )
 
     def execute(self, context: Dict):
+        conn = BaseHook.get_connection(self.conn_id)
+        self.conn_type = conn.conn_type  # type: ignore
         self.parameters = {"table": self.table}
-        self.sql = AgnosticBooleanCheck.prep_boolean_checks_query(
-            self.table, self.checks
-        )
+        self.sql = self.prep_boolean_checks_query(self.table, self.checks, context)
 
         results = super().execute(context)
         failed_checks_names, failed_checks_index = self.get_failed_checks(results)
@@ -105,18 +106,30 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
         return failed_check_name, failed_check_index
 
     @staticmethod
-    def prep_boolean_checks_query(table: Table, checks: List[Check]):
+    def get_expression(expression, name):
+        return text(f"CASE WHEN {expression} THEN 0 ELSE 1 END AS {name}")
+
+    def prep_boolean_checks_query(
+        self, table: Table, checks: List[Check], context: Dict
+    ):
+
+        sqla_checks_object = []
+        context = self._add_templates_to_context(context)
+        for check in checks:
+            prepared_exp = self.render_template(check.expression, context)
+            sqla_checks_object.append(
+                AgnosticBooleanCheck.get_expression(prepared_exp, check.name)
+            )
+
         temp_table = (
-            select([check.get_expression() for check in checks])
-            .select_from(text("{{table}}"))
+            select(sqla_checks_object)
+            .select_from(text(table.qualified_name()))
             .alias("check_table")
         )
-        return str(
-            select([check.get_result() for check in checks]).select_from(temp_table)
-        )
+        return select([check.get_result() for check in checks]).select_from(temp_table)
 
     def prep_results(self, results):
-        return str(
+        return (
             select(["*"])
             .select_from(text("{{table}}"))
             .where(and_(*[text(self.checks[index].expression) for index in results]))
