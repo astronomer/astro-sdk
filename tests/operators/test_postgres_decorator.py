@@ -208,8 +208,10 @@ class TestPostgresDecorator(unittest.TestCase):
             sample_pg,
             (),
             {
-                "conn_id": "postgres_conn",
-                "database": "pagila",
+                "op_kwargs": {
+                    "conn_id": "postgres_conn",
+                    "database": "pagila",
+                }
             },
         )
         df = pd.read_sql(
