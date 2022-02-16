@@ -40,7 +40,7 @@ dag = DAG(
 
 @aql.transform(conn_id="postgres_conn", database="pagila")
 def sample_pg(input_table: Table):
-    return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%'"
+    return "SELECT * FROM {{input_table}} WHERE last_name LIKE 'G%%'"
 
 
 with dag:

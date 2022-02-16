@@ -1,8 +1,9 @@
 from distutils import log as logger
 from typing import Dict, List
 
+from airflow.hooks.base import BaseHook
 from sqlalchemy import FLOAT, and_, cast, column, func, select, text
-from sqlalchemy.sql.expression import table
+from sqlalchemy.sql.expression import table as sqlatable
 
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
@@ -29,6 +30,8 @@ class Check:
 
 
 class AgnosticBooleanCheck(SqlDecoratoratedOperator):
+    template_fields = ("table",)
+
     def __init__(
         self,
         checks: List[Check],
@@ -53,6 +56,9 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
 
         task_id = table.table_name + "_" + "boolean_check"
 
+        def handler_func(results):
+            return results.fetchall()
+
         def null_function():
             pass
 
@@ -66,31 +72,28 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
             task_id=task_id,
             op_args=(),
             python_callable=null_function,
+            handler=handler_func,
             **kwargs,
         )
 
     def execute(self, context: Dict):
-        self.parameters = {}
-        self.sql = AgnosticBooleanCheck.prep_boolean_checks_query(
-            self.table, self.checks
-        )
+        conn = BaseHook.get_connection(self.conn_id)
+        self.conn_type = conn.conn_type  # type: ignore
+        self.parameters = {"table": self.table}
+        self.sql = self.prep_boolean_checks_query(self.table, self.checks, context)
 
         results = super().execute(context)
-        results = results.fetchall()
         failed_checks_names, failed_checks_index = self.get_failed_checks(results)
         if len(failed_checks_index) > 0:
-            self.parameters = {}
+            self.parameters = {"table": self.table, "limit": self.max_rows_returned}
             self.sql = self.prep_results(failed_checks_index)
             failed_rows = super().execute(context)
-            failed_rows = failed_rows.fetchall()
-            logger.error("Failed rows {}".format(failed_rows))
+            logger.error("Failed rows %s", failed_rows)
             raise ValueError(
-                "Some of the check(s) have failed {}".format(
-                    ",".join(failed_checks_names)
-                )
+                "Some of the check(s) have failed %s", ",".join(failed_checks_names)
             )
 
-        return table
+        return self.table
 
     def get_failed_checks(self, results):
         failed_check_name = []
@@ -102,9 +105,24 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
                 failed_check_index.append(index)
         return failed_check_name, failed_check_index
 
-    def prep_boolean_checks_query(table: Table, checks: List[Check]):
+    @staticmethod
+    def get_expression(expression, name):
+        return text(f"CASE WHEN {expression} THEN 0 ELSE 1 END AS {name}")
+
+    def prep_boolean_checks_query(
+        self, table: Table, checks: List[Check], context: Dict
+    ):
+
+        sqla_checks_object = []
+        context = self._add_templates_to_context(context)
+        for check in checks:
+            prepared_exp = self.render_template(check.expression, context)
+            sqla_checks_object.append(
+                AgnosticBooleanCheck.get_expression(prepared_exp, check.name)
+            )
+
         temp_table = (
-            select([check.get_expression() for check in checks])
+            select(sqla_checks_object)
             .select_from(text(table.qualified_name()))
             .alias("check_table")
         )
@@ -113,9 +131,9 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
     def prep_results(self, results):
         return (
             select(["*"])
-            .select_from(text(self.table.qualified_name()))
+            .select_from(text("{{table}}"))
             .where(and_(*[text(self.checks[index].expression) for index in results]))
-            .limit(self.max_rows_returned)
+            .limit("{{limit}}")
         )
 
 

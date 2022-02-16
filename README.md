@@ -5,9 +5,9 @@
 - [
   Astro :rocket:
 ](#astro-rocket)
+- [:mega: Disclaimer :mega:](#mega-disclaimer-mega)
 - [Overview](#overview)
 - [Philosophy](#philosophy)
-- [:mega: Disclaimer :mega:](#mega-disclaimer-mega)
 - [Setup](#setup)
 - [Using Astro as a SQL Engineer](#using-astro-as-a-sql-engineer)
   - [Schemas](#schemas)
@@ -42,6 +42,12 @@
 </h3>
 <br/>
 
+# :mega: Disclaimer :mega:
+```
+This project is still very early and the API will probably change as it progresses.
+We are actively seeking alpha users and brave souls to test it and offer feedback,
+but please know that this is not yet ready for production.
+```
 # Overview
 
 The astro library is a suite of tools for writing ETL and ELT workflows in Airflow. It lets SQL engineers focus on writing SQL, Python engineers focus on writing Python, and all engineers focus on data engineering instead of configuration. By design, `astro` modules automatically pass database contexts to your tasks, meaning that you can focus on writing code and leave metadata definitions for load time.
@@ -65,9 +71,6 @@ Please feel free to raise issues and propose improvements. Community contributio
 Thank you,
 
 :sparkles: The Astro Team :sparkles:
-
-# :mega: Disclaimer :mega:
-This project is still very early and the API will probably change as it progresses. We are actively seeking alpha users and brave souls to test it and offer feedback, but please know that this is not yet ready for production.
 
 # Setup
 
@@ -161,20 +164,18 @@ SELECT c.customer_id, c.source, c.region, c.member_since,
 When running SQL queries in Airflow DAGs, you need to define dependencies that break up your SQL into
 multiple, reproducible steps. We offer two ways to define dependencies within an `astro` SQL file:
 
-You can define your dependency via the `template_vars` frontmatter argument. In the following example, we set `template_vars` so that our `join_customers_and_orders` query cannot run until both our `customers_table` and `agg_orders` queries finish. This data dependency is equivalent to a task dependency in our DAG. The only difference is that we're defining it directly in our SQL instead of using Airflow's dependency operators. 
+You can define your dependency by using jinja templating to refer to other SQL files. In this example we use `{{agg_orders}}` to refer to `agg_orders.sql` and `{{customers_table}}` to refer to `customers_table.sql`.
+This data dependency is equivalent to a task dependency in our DAG. The only difference is that we're defining it directly in our SQL instead of using Airflow's dependency operators. 
 
 ```sql
 # join_customers_and_orders.sql
 ---
 database: foo
 schema: bar
-template_vars:
-    customers: customers_table
-    orders: agg_orders
 ---
 SELECT c.customer_id, c.source, c.region, c.member_since,
         CASE WHEN purchase_count IS NULL THEN 0 ELSE 1 END AS recent_purchase
-        FROM orders c LEFT OUTER JOIN customers p ON c.customer_id = p.customer_id
+        FROM {{agg_orders}} c LEFT OUTER JOIN {{customers_table}} p ON c.customer_id = p.customer_id
 ```
 
 ### Defining outputs
@@ -197,7 +198,7 @@ output_table:
 ---
 SELECT c.customer_id, c.source, c.region, c.member_since,
         CASE WHEN purchase_count IS NULL THEN 0 ELSE 1 END AS recent_purchase
-        FROM orders c LEFT OUTER JOIN customers p ON c.customer_id = p.customer_id
+        FROM {{agg_orders}} c LEFT OUTER JOIN {{customers_table}} p ON c.customer_id = p.customer_id
 ```
 ### Supported arguments
 
@@ -208,7 +209,6 @@ Here is a list of supported frontmatter arguments:
 | conn_id | The connection that this query should run against |
 | Database      | The database to query    |
 | Schema   | The schema to query. Default value is either `tmp_astro` or your temp schema defined in `AIRFLOW__ASTRO__SQL_SCHEMA`    |
-| template_vars | A key-value dictionary of what values to override when this SQL file is used in a DAG.  |
 | output_table | Specs of location and table name for tables that want to be treated as "pets" insteaad of "cattle" | 
 
 ### Incorporating SQL directory into DAG
@@ -342,12 +342,12 @@ from astro.sql.table import Table
 
 @aql.transform
 def my_first_sql_transformation(input_table: Table):
-    return "SELECT * FROM {input_table}"
+    return "SELECT * FROM {{input_table}}"
 
 
 @aql.transform
 def my_second_sql_transformation(input_table_2: Table):
-    return "SELECT * FROM {input_table_2}"
+    return "SELECT * FROM {{input_table_2}}"
 
 
 with dag:
@@ -375,12 +375,12 @@ from astro.sql.table import Table, TempTable
 
 @aql.transform
 def my_first_sql_transformation(input_table: Table):
-    return "SELECT * FROM {input_table}"
+    return "SELECT * FROM {{input_table}}"
 
 
 @aql.transform
 def my_second_sql_transformation(input_table_2: Table):
-    return "SELECT * FROM {input_table_2}"
+    return "SELECT * FROM {{input_table_2}}"
 
 
 with dag:
@@ -476,7 +476,7 @@ Most ETL use cases can be addressed by cross-sharing task outputs, as shown abov
 ```python
 @aql.run_raw_sql
 def drop_table(table_to_drop):
-    return "DROP TABLE IF EXISTS {table_to_drop}"
+    return "DROP TABLE IF EXISTS {{table_to_drop}}"
 ```
 
 ## Putting it All Together 
@@ -518,7 +518,7 @@ def aggregate_orders(orders_table: Table):
 def get_customers(customer_table: Table = Table("customer")):
     """Basic clean-up of an existing table."""
     return """SELECT customer_id, source, region, member_since
-        FROM {customer_table} WHERE NOT is_deleted"""
+        FROM {[customer_table}} WHERE NOT is_deleted"""
 
 
 @aql.transform
@@ -526,7 +526,7 @@ def join_orders_and_customers(orders_table: Table, customer_table: Table):
     """Now join those together to create a very simple 'feature' dataset."""
     return """SELECT c.customer_id, c.source, c.region, c.member_since,
         CASE WHEN purchase_count IS NULL THEN 0 ELSE 1 END AS recent_purchase
-        FROM {orders_table} c LEFT OUTER JOIN {customer_table} p ON c.customer_id = p.customer_id"""
+        FROM {{orders_table}} c LEFT OUTER JOIN {{customer_table}} p ON c.customer_id = p.customer_id"""
 
 
 @df
@@ -592,8 +592,6 @@ The `aql.append` function merges tables assuming that there are no conflicts. Yo
 
 ```python
 foo = aql.append(
-    conn_id="postgres_conn",
-    database="postgres",
     append_table=APPEND_TABLE,
     columns=["Bedrooms", "Bathrooms"],
     casted_columns={"Age": "INTEGER"},
@@ -617,9 +615,7 @@ a = aql.merge(
     merge_keys=["list", "sell"],
     target_columns=["list", "sell", "taxes"],
     merge_columns=["list", "sell", "age"],
-    conn_id="postgres_conn",
     conflict_strategy="update",
-    database="pagila",
 )
 ```
 Snowflake:
@@ -630,8 +626,6 @@ a = aql.merge(
     merge_keys={"list": "list", "sell": "sell"},
     target_columns=["list", "sell"],
     merge_columns=["list", "sell"],
-    conn_id="snowflake_conn",
-    database="DWH_LEGACY",
     conflict_strategy="ignore",
 )
 ```
@@ -641,8 +635,6 @@ a = aql.merge(
 ```python
 a = aql.truncate(
     table=TRUNCATE_TABLE,
-    conn_id="snowflake_conn",
-    database="DWH_LEGACY",
 )
 ```
 
@@ -669,7 +661,7 @@ def get_dataframe():
 
 @aql.transform
 def sample_pg(input_table: Table):
-    return "SELECT * FROM {input_table}"
+    return "SELECT * FROM {{input_table}}"
 
 
 with self.dag:
