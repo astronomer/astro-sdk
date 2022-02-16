@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import inspect
-import re
 from builtins import NotImplementedError
 from typing import Callable, Dict, Iterable, Mapping, Optional, Union
 
