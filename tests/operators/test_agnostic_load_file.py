@@ -500,18 +500,14 @@ def test_aws_decode():
     assert v == "@#$%@$#ASDH@Ksd23%SD546"
 
 
-@pytest.mark.parametrize(
-    "sql_server", ["snowflake", "postgres", "bigquery"], indirect=True
-)
-@pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
-def test_load_file(sample_dag, sql_server, file_type):
-    sql_name, sql_hook = sql_server
-
+def create_task_parameters(database_name, file_type):
     # While hooks expect specific attributes for connection (e.g. `snowflake_conn_id`)
     # the load_file operator expects a generic attribute name (`conn_id`)
-    sql_server_params = copy.deepcopy(test_utils.SQL_SERVER_HOOK_PARAMETERS[sql_name])
+    sql_server_params = copy.deepcopy(
+        test_utils.SQL_SERVER_HOOK_PARAMETERS[database_name]
+    )
     conn_id_value = sql_server_params.pop(
-        test_utils.SQL_SERVER_CONNECTION_KEY[sql_name]
+        test_utils.SQL_SERVER_CONNECTION_KEY[database_name]
     )
     sql_server_params["conn_id"] = conn_id_value
 
@@ -520,7 +516,19 @@ def test_load_file(sample_dag, sql_server, file_type):
         "file_conn_id": "",
         "output_table": Table(table_name=OUTPUT_TABLE_NAME, **sql_server_params),
     }
-    schema = sql_server_params.get("schema", test_utils.DEFAULT_SCHEMA)
+    return task_params
+
+
+@pytest.mark.parametrize(
+    "sql_server", ["snowflake", "postgres", "bigquery"], indirect=True
+)
+@pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
+def test_load_file(sample_dag, sql_server, file_type):
+    database_name, sql_hook = sql_server
+
+    task_params = create_task_parameters(database_name, file_type)
+    schema = task_params["output_table"].schema or test_utils.DEFAULT_SCHEMA
+
     test_utils.create_and_run_task(sample_dag, load_file, (), task_params)
 
     df = sql_hook.get_pandas_df(f"SELECT * FROM {schema}.{OUTPUT_TABLE_NAME}")
@@ -534,3 +542,29 @@ def test_load_file(sample_dag, sql_server, file_type):
         ]
     )
     assert df.rename(columns=str.lower).equals(expected)
+
+
+@pytest.mark.parametrize(
+    "sql_server", ["bigquery", "postgres", "snowflake"], indirect=True
+)
+def test_load_file_chunks(sample_dag, sql_server):
+    file_type = "csv"
+    database_name, sql_hook = sql_server
+
+    chunk_function = {
+        "bigquery": "pandas.DataFrame.to_gbq",
+        "postgres": "pandas.DataFrame.to_sql",
+        "snowflake": "snowflake.connector.pandas_tools.write_pandas",
+    }[database_name]
+
+    chunk_size_argument = {
+        "bigquery": "chunksize",
+        "postgres": "chunksize",
+        "snowflake": "chunk_size",
+    }[database_name]
+
+    with mock.patch(chunk_function) as mock_chunk_function:
+        task_params = create_task_parameters(database_name, file_type)
+        test_utils.create_and_run_task(sample_dag, load_file, (), task_params)
+
+    assert mock_chunk_function.call_args_list[0].kwargs[chunk_size_argument] == 1000000
