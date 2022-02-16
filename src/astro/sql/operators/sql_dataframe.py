@@ -140,9 +140,13 @@ class SqlDataframeOperator(DecoratedOperator):
             self.hook = PostgresHook(
                 postgres_conn_id=table.conn_id, schema=table.database
             )
+            schema = table.schema or get_schema()
             query = (
-                sql.SQL("SELECT * FROM {input_table}")
-                .format(input_table=sql.Identifier(table.table_name))
+                sql.SQL("SELECT * FROM {schema}.{input_table}")
+                .format(
+                    schema=sql.Identifier(schema),
+                    input_table=sql.Identifier(table.table_name),
+                )
                 .as_string(self.hook.get_conn())
             )
             return self.hook.get_pandas_df(query)
