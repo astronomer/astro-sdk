@@ -44,6 +44,12 @@ class AgnosticLoadFile(BaseOperator):
     :type output_conn_id: str
     """
 
+    template_fields = (
+        "output_table",
+        "file_conn_id",
+        "path",
+    )
+
     def __init__(
         self,
         path,
