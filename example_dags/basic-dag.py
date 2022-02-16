@@ -24,7 +24,7 @@ dag = DAG(
 
 @aql.transform
 def sample_create_table(input_table: Table):
-    return "SELECT * FROM {input_table} LIMIT 10"
+    return "SELECT * FROM {{input_table}} LIMIT 10"
 
 
 @df

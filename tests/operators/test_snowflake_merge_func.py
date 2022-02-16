@@ -105,8 +105,8 @@ class TestSnowflakeMerge(unittest.TestCase):
         )
 
         assert (
-            sql == "merge into %(main_table)s using %(merge_table)s "
-            "on Identifier(%(merge_clause_target_0)s)=Identifier(%(merge_clause_append_0)s) "
+            sql == "merge into {{main_table}} using {{merge_table}} "
+            "on Identifier({{merge_clause_target_0}})=Identifier({{merge_clause_append_0}}) "
             f"when matched then UPDATE SET {self.main_table_name}.sell={self.merge_table_name}.sell "
             f"when not matched then insert({self.main_table_name}.sell) values ({self.merge_table_name}.sell)"
         )
@@ -128,9 +128,9 @@ class TestSnowflakeMerge(unittest.TestCase):
         )
 
         assert (
-            sql == "merge into %(main_table)s using %(merge_table)s "
-            "on Identifier(%(merge_clause_target_0)s)=Identifier(%(merge_clause_append_0)s) AND "
-            "Identifier(%(merge_clause_target_1)s)=Identifier(%(merge_clause_append_1)s) "
+            sql == "merge into {{main_table}} using {{merge_table}} "
+            "on Identifier({{merge_clause_target_0}})=Identifier({{merge_clause_append_0}}) AND "
+            "Identifier({{merge_clause_target_1}})=Identifier({{merge_clause_append_1}}) "
             f"when matched then UPDATE SET {self.main_table_name}.sell={self.merge_table_name}.sell "
             f"when not matched then insert({self.main_table_name}.sell) values ({self.merge_table_name}.sell)"
         )
@@ -154,8 +154,8 @@ class TestSnowflakeMerge(unittest.TestCase):
         )
 
         assert (
-            sql == "merge into %(main_table)s using %(merge_table)s "
-            "on Identifier(%(merge_clause_target_0)s)=Identifier(%(merge_clause_append_0)s) "
+            sql == "merge into {{main_table}} using {{merge_table}} "
+            "on Identifier({{merge_clause_target_0}})=Identifier({{merge_clause_append_0}}) "
             f"when not matched then insert({self.main_table_name}.sell) values ({self.merge_table_name}.sell)"
         )
         assert parameters == {

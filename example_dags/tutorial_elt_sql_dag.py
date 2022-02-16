@@ -19,9 +19,9 @@ limitations under the License.
 
 from airflow.decorators import dag, task
 from airflow.utils.dates import days_ago
-from pandas import DataFrame
 
 import astro.sql as aql
+from astro.sql.table import Table
 
 # [END import_module]
 
@@ -80,7 +80,7 @@ def tutorial_elt_sql():
         A simple Load task to load the CSV file data into a SQL table
         using the SQL decorator
         """
-        return """SELECT * FROM %(input_table)s """
+        return """SELECT * FROM {{input_table}}"""
 
     # [END load]
 
@@ -94,7 +94,7 @@ def tutorial_elt_sql():
         in the database.
         This demonstrates the transformation use of the SQL Decorator
         """
-        return """SELECT sum(order_value) FROM %(input_table)s LIMIT 1"""
+        return """SELECT sum(order_value) FROM {{input_table}} LIMIT 1"""
 
     # [END transform]
 
@@ -104,7 +104,12 @@ def tutorial_elt_sql():
     # external dependencies needed to get the data file
 
     order_data_file = extract()
-    order_data = load(csv_path=order_data_file, input_table="my_input_table")
+    order_data = load(
+        csv_path=order_data_file,
+        input_table=Table(
+            table_name="my_input_table", database="pagila", conn_id="postgres_conn"
+        ),
+    )
     order_summary = transform(input_table=order_data)
     # print_table(input_table=order_summary)
 

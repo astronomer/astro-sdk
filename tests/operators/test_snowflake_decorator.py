@@ -153,7 +153,7 @@ class TestSnowflakeOperator(unittest.TestCase):
     def run_snow_query(self, role=None):
         @aql.transform
         def sample_snow(input_table: Table):
-            return "SELECT * FROM {input_table} LIMIT 10"
+            return "SELECT * FROM {{input_table}} LIMIT 10"
 
         hook = get_snowflake_hook()
         drop_table(
@@ -219,7 +219,7 @@ class TestSnowflakeOperator(unittest.TestCase):
         def sample_snow(
             my_input_table: Table, snowflake_table_raw_sql: Table, num_rows: int
         ):
-            return "CREATE TABLE {snowflake_table_raw_sql} AS (SELECT * FROM {my_input_table} LIMIT {num_rows})"
+            return "CREATE TABLE {{snowflake_table_raw_sql}} AS (SELECT * FROM {{my_input_table}} LIMIT {{num_rows}})"
 
         with self.dag:
             f = sample_snow(

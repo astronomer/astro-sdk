@@ -170,6 +170,8 @@ class ChecksHandler:
 
 
 class AgnosticStatsCheck(SqlDecoratoratedOperator):
+    template_fields = ("table",)
+
     def __init__(
         self,
         checks: List[OutlierCheck],
@@ -208,6 +210,9 @@ class AgnosticStatsCheck(SqlDecoratoratedOperator):
         def null_function():
             pass
 
+        def handler_func(results):
+            return results.fetchall()
+
         super().__init__(
             raw_sql=True,
             parameters={},
@@ -217,13 +222,13 @@ class AgnosticStatsCheck(SqlDecoratoratedOperator):
             warehouse=main_table.warehouse,
             task_id=task_id,
             op_args=(),
+            handler=handler_func,
             python_callable=null_function,
             **kwargs,
         )
 
     def execute(self, context: Dict):
         conn_type = BaseHook.get_connection(self.conn_id).conn_type  # type: ignore
-        self.handler = lambda curr: curr.fetchall()
         checkHandler = ChecksHandler(self.checks, conn_type)
         metadata = MetaData()
         self.sql = checkHandler.prepare_comparison_sql(
@@ -234,7 +239,6 @@ class AgnosticStatsCheck(SqlDecoratoratedOperator):
         )
 
         results = super().execute(context)
-        results = results.fetchall()
         failed_checks = checkHandler.evaluate_results(
             results, self.max_rows_returned, conn_type
         )
@@ -251,10 +255,9 @@ class AgnosticStatsCheck(SqlDecoratoratedOperator):
             failed_values = {}
             for check_query in failed_check_sql:
                 check, self.sql, self.parameters = check_query
-                results = super().execute(context)
-                failed_values[check] = results.fetchall()
+                failed_values[check] = super().execute(context)
 
-            raise ValueError("Stats Check Failed. {}".format(failed_values))
+            raise ValueError("Stats Check Failed. %s", failed_values)
 
 
 def stats_check(

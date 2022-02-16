@@ -153,7 +153,7 @@ class TestSnowflakeMerge(unittest.TestCase):
 
         @aql.transform
         def fill_table(input_table: Table):
-            return "SELECT * FROM {input_table}"
+            return "SELECT * FROM {{input_table}}"
 
         with dag:
             main = fill_table(input_table=main_raw_table, output_table=self.main_table)

@@ -67,6 +67,7 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
             conn_id=main_table.conn_id,
             op_args=(),
             python_callable=null_function,
+            handler=lambda x: None,
             **kwargs,
         )
 
@@ -79,7 +80,7 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
             casted_columns=self.casted_columns,
             conn_id=self.conn_id,
         )
-        super().execute(context)
+        return super().execute(context)
 
     def append(
         self, main_table: Table, columns, casted_columns, append_table: Table, conn_id

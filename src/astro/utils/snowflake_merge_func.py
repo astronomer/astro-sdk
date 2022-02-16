@@ -21,18 +21,8 @@ from airflow.exceptions import AirflowException
 from astro.sql.table import Table
 
 
-def _wrap_identifiers(sql, identifier_params):
-    all_vals = re.findall("%\(.*?\)s", sql)
-    mod_vals = {
-        f: f"IDENTIFIER({f})" if f[2:-2] in identifier_params else f for f in all_vals
-    }
-    for k, v in mod_vals.items():
-        sql = sql.replace(k, v)
-    return sql
-
-
 def wrap_identifier(inp):
-    return "Identifier(%(" + inp + ")s)"
+    return "Identifier({{" + inp + "}})"
 
 
 def snowflake_merge_func(
@@ -43,7 +33,7 @@ def snowflake_merge_func(
     merge_columns,
     conflict_strategy,
 ):
-    statement = "merge into %(main_table)s using %(merge_table)s on " "{merge_clauses}"
+    statement = "merge into {{main_table}} using {{merge_table}} on " "{merge_clauses}"
 
     merge_target_dict = {
         "merge_clause_target_" + str(i): target_table.table_name + "." + x

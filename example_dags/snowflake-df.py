@@ -28,14 +28,14 @@ from astro.sql.table import Table
 
 @aql.transform()
 def combine_data(center_1: Table, center_2: Table):
-    return """SELECT * FROM {center_1}
-    UNION SELECT * FROM {center_2}"""
+    return """SELECT * FROM {{center_1}}
+    UNION SELECT * FROM {{center_2}}"""
 
 
 @aql.transform()
 def clean_data(input_table: Table):
     return """SELECT *
-    FROM {input_table} WHERE TYPE NOT LIKE 'Guinea Pig'
+    FROM {{input_table}} WHERE TYPE NOT LIKE 'Guinea Pig'
     """
 
 

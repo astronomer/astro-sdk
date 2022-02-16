@@ -58,6 +58,7 @@ class TestSQLParsing(unittest.TestCase):
         with pytest.raises(AirflowException):
             with self.dag:
                 rendered_tasks = aql.render(dir_path + "/missing_table_dag")
+            test_utils.run_dag(self.dag)
 
     def test_parse_missing_table_with_inputs(self):
         with self.dag:
@@ -97,7 +98,7 @@ class TestSQLParsing(unittest.TestCase):
 
         assert (
             new_customers_table.operator.sql
-            == "SELECT * FROM {customers_table} WHERE member_since > DATEADD(day, -7, '{{ execution_date }}')"
+            == "SELECT * FROM {{customers_table}} WHERE member_since > DATEADD(day, -7, '{{ execution_date }}')"
         )
 
     def test_parse_creates_xcom(self):
