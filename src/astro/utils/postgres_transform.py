@@ -15,7 +15,10 @@ limitations under the License.
 """
 import inspect
 
-from airflow.providers.postgres.hooks.postgres import PostgresHook
+try:
+    from airflow.providers.postgres.hooks.postgres import PostgresHook
+except ModuleNotFoundError:
+    from astro.utils.schema_util import RaiseException as PostgresHook
 from psycopg2.extensions import AsIs
 
 from astro.sql.table import Table

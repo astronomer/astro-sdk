@@ -22,9 +22,17 @@ import boto3
 import pandas as pd
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from google.cloud.storage import Client
+
+try:
+    from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+except ModuleNotFoundError:
+    from astro.utils.schema_util import RaiseException as BigQueryHook
+
+try:
+    from airflow.providers.postgres.hooks.postgres import PostgresHook
+except ModuleNotFoundError:
+    from astro.utils.schema_util import RaiseException as PostgresHook
+
 from smart_open import open
 
 from astro.sql.operators.temp_hooks import TempSnowflakeHook

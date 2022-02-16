@@ -15,8 +15,10 @@ limitations under the License.
 """
 from urllib.parse import quote_plus
 
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+try:
+    from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+except ModuleNotFoundError:
+    from astro.utils.schema_util import RaiseException as SnowflakeHook
 
 
 class TempSnowflakeHook(SnowflakeHook):

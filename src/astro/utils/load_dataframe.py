@@ -15,8 +15,15 @@ limitations under the License.
 """
 from typing import Optional, Union
 
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.providers.postgres.hooks.postgres import PostgresHook
+try:
+    from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+except ModuleNotFoundError:
+    from astro.utils.schema_util import RaiseException as BigQueryHook
+
+try:
+    from airflow.providers.postgres.hooks.postgres import PostgresHook
+except ModuleNotFoundError:
+    from astro.utils.schema_util import RaiseException as BigQueryHook
 from pandas import DataFrame
 from pandas.io.sql import SQLDatabase
 from snowflake.connector.pandas_tools import write_pandas

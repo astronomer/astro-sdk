@@ -19,8 +19,15 @@ from typing import Dict, Optional
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.hooks.base import BaseHook
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+
+try:
+    from airflow.providers.postgres.hooks.postgres import PostgresHook
+except ModuleNotFoundError:
+    from astro.utils.schema_util import RaiseException as PostgresHook
+try:
+    from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+except ModuleNotFoundError:
+    from astro.utils.schema_util import RaiseException as SnowflakeHook
 
 from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.sql.table import Table, TempTable, create_table_name

@@ -50,3 +50,11 @@ def get_error_string_for_multiple_dbs(tables: List[Table]):
     :return: String: error string
     """
     return f'Tables should belong to same db {", ".join([table.table_name for table in tables])}'
+
+
+class RaiseException(object):
+    def __init__(self, module_name):
+        self.module_name = module_name
+
+    def __getattr__(self, item):
+        raise RuntimeError(f"Error loading the module {self.module_name}")
