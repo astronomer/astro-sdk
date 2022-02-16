@@ -16,17 +16,10 @@ license = {file = "LICENSE"}
 requires-python = ">=3.7"
 dependencies = [
     "apache-airflow >=2.0",
-    "apache-airflow-providers-postgres",
-    "apache-airflow-providers-snowflake",
-    "apache-airflow-providers-google",
     "python-frontmatter",
     "pandas >=1.3.4",
-    "s3fs",
-    "snowflake-sqlalchemy ==1.2.0",
-    "snowflake-connector-python[pandas]",
-    "smart-open[all]>=5.2.1",
     "SQLAlchemy==1.3.24",
-    "sqlalchemy-bigquery==1.3.0"
+    "apache-airflow-providers-postgres",
 ]
 
 keywords = ["airflow", "provider", "astronomer", "sql", "decorator"]
@@ -46,6 +39,32 @@ tests = [
     "pytest >=6.0",
     "pytest-dotenv",
     "requests-mock",
+    "apache-airflow-providers-google",
+    "sqlalchemy-bigquery==1.3.0",
+    "smart-open[all]>=5.2.1",
+    "apache-airflow-providers-snowflake",
+    "snowflake-sqlalchemy ==1.2.0",
+    "snowflake-connector-python[pandas]",
+    "apache-airflow-providers-postgres",
+    "s3fs",
+    "smart-open[s3]>=5.2.1",
+]
+gcs = [
+    "apache-airflow-providers-google",
+    "sqlalchemy-bigquery==1.3.0",
+    "smart-open[gcs]>=5.2.1",
+]
+snowflake = [
+    "apache-airflow-providers-snowflake",
+    "snowflake-sqlalchemy ==1.2.0",
+    "snowflake-connector-python[pandas]",
+]
+postgres = [
+    "apache-airflow-providers-postgres",
+]
+aws = [
+    "s3fs",
+    "smart-open[s3]>=5.2.1",
 ]
 
 [project.urls]
