@@ -37,7 +37,7 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id="pagila_dag",
+    dag_id="steven_dag",
     start_date=datetime(2019, 1, 1),
     max_active_runs=3,
     schedule_interval=timedelta(minutes=30),
