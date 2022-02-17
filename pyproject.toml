@@ -66,6 +66,20 @@ aws = [
     "s3fs",
     "smart-open[s3]>=5.2.1",
 ]
+all = [
+    "pytest >=6.0",
+    "pytest-dotenv",
+    "requests-mock",
+    "apache-airflow-providers-google",
+    "sqlalchemy-bigquery==1.3.0",
+    "smart-open[all]>=5.2.1",
+    "apache-airflow-providers-snowflake",
+    "snowflake-sqlalchemy ==1.2.0",
+    "snowflake-connector-python[pandas]",
+    "apache-airflow-providers-postgres",
+    "s3fs",
+    "smart-open[s3]>=5.2.1",
+]
 
 [project.urls]
 Home = "http://astronomer.io/"
