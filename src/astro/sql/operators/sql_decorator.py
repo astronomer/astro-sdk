@@ -21,24 +21,12 @@ import pandas as pd
 from airflow.decorators.base import DecoratedOperator, task_decorator_factory
 from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, TaskInstance
-
-try:
-    from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-except ModuleNotFoundError:
-    from astro.utils.schema_util import RaiseException as BigQueryHook
-try:
-    from airflow.providers.postgres.hooks.postgres import PostgresHook
-except ModuleNotFoundError:
-    from astro.utils.schema_util import RaiseException as PostgresHook
-try:
-    from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
-except ModuleNotFoundError:
-    from astro.utils.schema_util import RaiseException as SnowflakeHook
 from airflow.utils.db import provide_session
 from sqlalchemy.sql.functions import Function
 
 from astro.sql.table import Table, create_table_name
 from astro.utils import postgres_transform, snowflake_transform
+from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from astro.utils.load_dataframe import move_dataframe_to_sql
 from astro.utils.schema_util import get_schema, set_schema_query
 

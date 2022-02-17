@@ -13,13 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-try:
-    from airflow.providers.postgres.hooks.postgres import PostgresHook
-except ModuleNotFoundError:
-    from astro.utils.schema_util import RaiseException as PostgresHook
 from psycopg2 import sql
 
 from astro.sql.table import Table
+from astro.utils.dependencies import PostgresHook
 
 
 def postgres_merge_func(
