@@ -23,7 +23,7 @@ def test(session: nox.Session) -> None:
     """Run unit tests."""
     session.install("-e", ".[tests]")
     session.run("airflow", "db", "init")
-    session.run("pytest", *session.posargs)
+    session.run("pytest", "-n", "auto", *session.posargs)
 
 
 @nox.session()

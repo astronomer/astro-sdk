@@ -43,7 +43,7 @@ classifiers = [
 
 [project.optional-dependencies]
 tests = [
-    "pytest >=6.0",
+    "pytest-xdist[psutil] >= 2.5.0",
     "pytest-dotenv",
     "requests-mock",
 ]
