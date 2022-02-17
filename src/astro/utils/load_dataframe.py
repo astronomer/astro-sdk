@@ -17,7 +17,7 @@ from typing import Optional, Union
 
 from pandas import DataFrame
 from pandas.io.sql import SQLDatabase
-from snowflake.connector.pandas_tools import write_pandas
+from snowflake.connector import pandas_tools
 
 from astro.sql.operators.temp_hooks import TempSnowflakeHook
 from astro.utils.dependencies import BigQueryHook, PostgresHook
@@ -68,7 +68,7 @@ def move_dataframe_to_sql(
             if_exists="replace",
             index=False,
         )
-        write_pandas(
+        pandas_tools.write_pandas(
             hook.get_conn(),
             df,
             output_table_name,

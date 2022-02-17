@@ -109,7 +109,7 @@ class TestPostgresDecorator(unittest.TestCase):
 
         @aql.transform
         def sample_pg(input_table: Table):
-            return "SELECT * FROM {input_table}"
+            return "SELECT * FROM {{input_table}}"
 
         with self.dag:
             my_df = get_dataframe(
@@ -141,7 +141,7 @@ class TestPostgresDecorator(unittest.TestCase):
 
         @aql.transform()
         def sample_pg(input_table: Table):
-            return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%'"
+            return "SELECT * FROM {{input_table}} WHERE last_name LIKE 'G%%'"
 
         self.create_and_run_task(
             sample_pg,
@@ -171,7 +171,7 @@ class TestPostgresDecorator(unittest.TestCase):
 
         @aql.transform
         def sample_pg(input_table: Table):
-            return "SELECT * FROM {input_table}"
+            return "SELECT * FROM {{input_table}}"
 
         with self.dag:
             my_df = get_dataframe(
@@ -195,6 +195,29 @@ class TestPostgresDecorator(unittest.TestCase):
         )
         assert df.iloc[0].to_dict()["colors"] == "red"
 
+    def test_postgres_set_op_kwargs(self):
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+
+        @aql.transform
+        def sample_pg():
+            return "SELECT * FROM actor WHERE last_name LIKE 'G%%'"
+
+        self.create_and_run_task(
+            sample_pg,
+            (),
+            {
+                "conn_id": "postgres_conn",
+                "database": "pagila",
+            },
+        )
+        df = pd.read_sql(
+            f"SELECT * FROM tmp_astro.test_dag_sample_pg_1",
+            con=self.hook_target.get_conn(),
+        )
+        assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
+
     def test_postgres(self):
         self.hook_target = PostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
@@ -202,7 +225,7 @@ class TestPostgresDecorator(unittest.TestCase):
 
         @aql.transform
         def sample_pg(input_table: Table):
-            return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%'"
+            return "SELECT * FROM {{input_table}} WHERE last_name LIKE 'G%%'"
 
         self.create_and_run_task(
             sample_pg,
@@ -227,7 +250,7 @@ class TestPostgresDecorator(unittest.TestCase):
         @aql.transform
         def sample_pg(input_table: Table):
             # Add trailing whitespaces to ensure it can still catch the semicolon
-            return "SELECT * FROM {input_table} WHERE last_name LIKE 'G%%';   " "    "
+            return "SELECT * FROM {{input_table}} WHERE last_name LIKE 'G%%';   " "    "
 
         self.create_and_run_task(
             sample_pg,
@@ -247,7 +270,7 @@ class TestPostgresDecorator(unittest.TestCase):
     def test_postgres_with_parameter(self):
         @aql.transform(conn_id="postgres_conn", database="pagila")
         def sample_pg(input_table: Table):
-            return "SELECT * FROM {input_table} WHERE last_name LIKE {last_name}", {
+            return "SELECT * FROM {{input_table}} WHERE last_name LIKE {{last_name}}", {
                 "last_name": "G%%"
             }
 
@@ -259,7 +282,7 @@ class TestPostgresDecorator(unittest.TestCase):
         @aql.transform()
         def sample_pg(input_table: Table):
             return (
-                "SELECT * FROM {input_table} WHERE rental_date < '{{ execution_date }}'"
+                "SELECT * FROM {{input_table}} WHERE rental_date < '{{execution_date}}'"
             )
 
         self.create_and_run_task(
@@ -275,7 +298,7 @@ class TestPostgresDecorator(unittest.TestCase):
     def test_postgres_with_jinja_template_params(self):
         @aql.transform(conn_id="postgres_conn", database="pagila")
         def sample_pg(input_table: Table):
-            return "SELECT * FROM {input_table} WHERE rental_date < {r_date}", {
+            return "SELECT * FROM {{input_table}} WHERE rental_date < {{r_date}}", {
                 "r_date": "{{ execution_date }}"
             }
 
@@ -299,9 +322,9 @@ class TestPostgresDecorator(unittest.TestCase):
         @aql.transform(conn_id="postgres_conn", database="pagila")
         def sample_pg(actor: Table, film_actor_join: Table, unsafe_parameter):
             return (
-                "SELECT {actor}.actor_id, first_name, last_name, COUNT(film_id) "
-                "FROM {actor} JOIN {film_actor_join} ON {actor}.actor_id = {film_actor_join}.actor_id "
-                "WHERE last_name LIKE {unsafe_parameter} GROUP BY {actor}.actor_id"
+                "SELECT {{actor}}.actor_id, first_name, last_name, COUNT(film_id) "
+                "FROM {{actor}} JOIN {{film_actor_join}} ON {{actor}}.actor_id = {{film_actor_join}}.actor_id "
+                "WHERE last_name LIKE {{unsafe_parameter}} GROUP BY {{actor}}.actor_id"
             )
 
         self.create_and_run_task(
@@ -369,7 +392,7 @@ class TestPostgresDecorator(unittest.TestCase):
 
         drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
 
-    def test_raw_sql(self):
+    def test_raw_sql_result(self):
         self.hook_target = PostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"
         )
@@ -382,9 +405,10 @@ class TestPostgresDecorator(unittest.TestCase):
             actor: Table, film_actor_join: Table, output_table_name, unsafe_parameter
         ):
             return (
-                "CREATE TABLE my_raw_sql_table AS (SELECT {actor}.actor_id, first_name, last_name, COUNT(film_id) "
-                "FROM {actor} JOIN {film_actor_join} ON {actor}.actor_id = {film_actor_join}.actor_id "
-                "WHERE last_name LIKE {unsafe_parameter} GROUP BY {actor}.actor_id)"
+                "CREATE TABLE my_raw_sql_table AS "
+                "(SELECT {{actor}}.actor_id, first_name, last_name, COUNT(film_id) "
+                "FROM {{actor}} JOIN {{film_actor_join}} ON {{actor}}.actor_id = {{film_actor_join}}.actor_id "
+                "WHERE last_name LIKE {{unsafe_parameter}} GROUP BY {{actor}}.actor_id)"
             )
 
         self.create_and_run_task(

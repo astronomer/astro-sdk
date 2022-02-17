@@ -1,5 +1,1 @@
----
-template_vars:
-    foo: agg_orders
----
-SELECT * FROM foo
+SELECT * FROM {{agg_orders}}

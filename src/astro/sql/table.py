@@ -17,6 +17,15 @@ from airflow.models import DagRun, TaskInstance
 
 
 class Table:
+    template_fields = (
+        "table_name",
+        "conn_id",
+        "database",
+        "schema",
+        "warehouse",
+        "role",
+    )
+
     def __init__(
         self,
         table_name="",
@@ -62,7 +71,9 @@ class TempTable(Table):
 def create_table_name(context):
     ti: TaskInstance = context["ti"]
     dag_run: DagRun = ti.get_dagrun()
-    table_name = f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}".replace("-", "_")
+    table_name = f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}".replace(
+        "-", "_"
+    ).replace(".", "__")
     if not table_name.isidentifier():
         table_name = f'"{table_name}"'
     return table_name

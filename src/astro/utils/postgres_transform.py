@@ -13,30 +13,22 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import inspect
 
 from psycopg2.extensions import AsIs
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 from astro.sql.table import Table
 from astro.utils.dependencies import PostgresHook
 
 
-def parse_template(sql):
-    return sql.replace("{", "%(").replace("}", ")s")
-
-
-def process_params(parameters, python_callable):
-    param_types = inspect.signature(python_callable).parameters
-    return {
-        k: (
-            AsIs(v.schema + "." + v.table_name if v.schema else v.table_name)
-            if param_types.get(k)
-            and param_types.get(k).annotation == Table
-            or type(v) == Table
-            else v
-        )
-        for k, v in parameters.items()
-    }
+def add_templates_to_context(parameters, context):
+    for k, v in parameters.items():
+        if type(v) == Table:
+            final_name = v.schema + "." + v.table_name if v.schema else v.table_name
+            context[k] = final_name
+        else:
+            context[k] = ":" + k
+    return context
 
 
 def create_sql_engine(postgres_conn_id, database):

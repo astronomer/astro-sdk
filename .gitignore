@@ -11,3 +11,10 @@ airflow_settings.yaml
 .idea%
 /build/
 /dist/
+airflow.db
+airflow.cfg
+unittests.db
+unittests.cfg
+tests/benchmark/logs/*
+tests/benchmark/webserver_config.py
+

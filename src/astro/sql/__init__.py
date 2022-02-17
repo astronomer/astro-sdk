@@ -89,6 +89,7 @@ def run_raw_sql(
     database: Optional[str] = None,
     schema: Optional[str] = None,
     warehouse: Optional[str] = None,
+    handler: Callable = None,
 ):
     return transform_decorator(
         python_callable=python_callable,
@@ -99,6 +100,7 @@ def run_raw_sql(
         database=database,
         schema=schema,
         warehouse=warehouse,
+        handler=handler,
         raw_sql=True,
     )
 

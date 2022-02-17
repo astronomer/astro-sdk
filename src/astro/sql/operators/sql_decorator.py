@@ -22,6 +22,7 @@ from airflow.decorators.base import DecoratedOperator, task_decorator_factory
 from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, TaskInstance
 from airflow.utils.db import provide_session
+from sqlalchemy import text
 from sqlalchemy.sql.functions import Function
 
 from astro.sql.table import Table, create_table_name
@@ -65,14 +66,9 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         :param kwargs:
         """
         self.raw_sql = raw_sql
-        self.conn_id = conn_id
         self.autocommit = autocommit
         self.parameters = parameters
-        self.database = database
-        self.schema = schema
         self.handler = handler
-        self.warehouse = warehouse
-        self.role = role
         self.kwargs = kwargs or {}
         self.sql = sql
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
@@ -81,13 +77,23 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         else:
             self.output_table = None
 
+        self.database = self.op_kwargs.pop("database", database)
+        self.conn_id = self.op_kwargs.pop("conn_id", conn_id)
+        self.schema = self.op_kwargs.pop("schema", schema)
+        self.warehouse = self.op_kwargs.pop("warehouse", warehouse)
+        self.role = self.op_kwargs.pop("role", role)
+
         super().__init__(
             **kwargs,
         )
 
     def execute(self, context: Dict):
+
         if not isinstance(self.sql, str):
-            return self._run_sql_alchemy_obj(self.sql, self.parameters)
+            cursor = self._run_sql_alchemy_obj(self.sql, self.parameters)
+            if self.handler is not None:
+                return self.handler(cursor)
+            return cursor
 
         self.output_schema = self.schema or get_schema()
         self._set_variables_from_first_table()
@@ -99,23 +105,13 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.run_id = context.get("run_id")
         self.convert_op_arg_dataframes()
         self.convert_op_kwarg_dataframes()
-        if self.sql == "":
-            sql_stuff = self.python_callable(*self.op_args, **self.op_kwargs)
-            # If we return two things, assume the second thing is the params
-            if len(sql_stuff) == 2:
-                self.sql, self.parameters = sql_stuff
-            else:
-                self.sql = sql_stuff
-                self.parameters = {}
-        elif self.sql[-4:] == ".sql":
-            with open(self.sql) as file:
-                self.sql = file.read().replace("\n", " ")
+        self.read_sql()
+        self.handle_params(context)
+        context = self._add_templates_to_context(context)
         if context:
             self.sql = self.render_template(self.sql, context)
-            self.parameters = {
-                k: self.render_template(v, context) for k, v in self.parameters.items()  # type: ignore
-            }
-        self._parse_template()
+        self._process_params()
+
         output_table_name = None
 
         if not self.raw_sql:
@@ -133,21 +129,12 @@ class SqlDecoratoratedOperator(DecoratedOperator):
                     output_table_name, self.output_table.schema
                 )
 
+            self._run_sql_alchemy_obj(
+                f"DROP TABLE IF EXISTS {full_output_table_name};", self.parameters
+            )
             self.sql = self.create_temporary_table(self.sql, full_output_table_name)
 
-        # Automatically add any kwargs going into the function
-        if self.op_kwargs:
-            self.parameters.update(self.op_kwargs)  # type: ignore
-
-        if self.op_args:
-            params = list(inspect.signature(self.python_callable).parameters.keys())
-            for i, arg in enumerate(self.op_args):
-                self.parameters[params[i]] = arg  # type: ignore
-
-        self.parameters.update(self.op_kwargs)  # type: ignore
-
-        self._process_params()
-        query_result = self._run_sql_string(self.sql, self.parameters)
+        query_result = self._run_sql_alchemy_obj(self.sql, self.parameters)
         # Run execute function of subclassed Operator.
 
         if self.output_table:
@@ -155,7 +142,9 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             return self.output_table
 
         elif self.raw_sql:
-            return query_result
+            if self.handler is not None:
+                return self.handler(query_result)
+            return None
         else:
             self.output_table = Table(
                 table_name=output_table_name,
@@ -166,6 +155,33 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             )
             self.log.info(f"returning table {self.output_table}")
             return self.output_table
+
+    def read_sql(self):
+        if self.sql == "":
+            sql_stuff = self.python_callable(*self.op_args, **self.op_kwargs)
+            # If we return two things, assume the second thing is the params
+            if len(sql_stuff) == 2:
+                self.sql, self.parameters = sql_stuff
+            else:
+                self.sql = sql_stuff
+                self.parameters = {}
+        elif self.sql[-4:] == ".sql":
+            with open(self.sql) as file:
+                self.sql = file.read().replace("\n", " ")
+
+    def handle_params(self, context):
+        # Automatically add any kwargs going into the function
+        if self.op_kwargs:
+            self.parameters.update(self.op_kwargs)  # type: ignore
+        if self.op_args:
+            params = list(inspect.signature(self.python_callable).parameters.keys())
+            for i, arg in enumerate(self.op_args):
+                self.parameters[params[i]] = arg  # type: ignore
+        if context:
+            self.parameters = {
+                k: self.render_template(v, context) for k, v in self.parameters.items()  # type: ignore
+            }
+        self.parameters.update(self.op_kwargs)  # type: ignore
 
     def handle_output_table_schema(self, output_table_name, schema=None):
         """
@@ -204,9 +220,10 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
         # If there is no first table via op_ags or kwargs, we check the parameters
         if not first_table:
-            param_tables = [t for t in self.parameters.values() if type(t) == Table]
-            if param_tables:
-                first_table = param_tables[0]
+            if self.parameters:
+                param_tables = [t for t in self.parameters.values() if type(t) == Table]
+                if param_tables:
+                    first_table = param_tables[0]
 
         if first_table:
             self.conn_id = first_table.conn_id or self.conn_id
@@ -303,7 +320,10 @@ class SqlDecoratoratedOperator(DecoratedOperator):
     def _run_sql_alchemy_obj(self, sql, parameters):
         engine = self.get_sql_alchemy_engine()
         conn = engine.connect()
-        return conn.execute(sql, parameters)
+        if isinstance(sql, str):
+            return conn.execute(text(sql), parameters)
+        else:
+            return conn.execute(sql, parameters)
 
     @staticmethod
     def create_temporary_table(query, output_table_name, schema=None):
@@ -311,7 +331,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         Create a temp table for the current task instance. This table will be overwritten if the DAG is run again as this
         table is only ever meant to be temporary.
         :param query:
-        :param table_name:
+        :param table_name
         :return:
         """
 
@@ -323,7 +343,9 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
         if schema:
             output_table_name = f"{schema}.{output_table_name}"
-        return f"DROP TABLE IF EXISTS {output_table_name}; CREATE TABLE {output_table_name} AS ({clean_trailing_semicolon(query)});"
+        return (
+            f"CREATE TABLE {output_table_name} AS ({clean_trailing_semicolon(query)});"
+        )
 
     @staticmethod
     def create_cte(query, table_name):
@@ -354,19 +376,17 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         raise NotImplementedError("Add _table_exists_in_db method to class")
 
     def _process_params(self):
-        if self.conn_type == "postgres":
-            self.parameters = postgres_transform.process_params(
-                self.parameters, self.python_callable
+        if self.conn_type == "snowflake":
+            self.parameters = snowflake_transform.process_params(
+                parameters=self.parameters
             )
-        elif self.conn_type == "snowflake":
-            self.parameters = snowflake_transform.process_params(self.parameters)
 
-    def _parse_template(self):
-        if self.conn_type == "postgres":
-            self.sql = postgres_transform.parse_template(self.sql)
+    def _add_templates_to_context(self, context):
+        if self.conn_type in ["postgres", "bigquery"]:
+            return postgres_transform.add_templates_to_context(self.parameters, context)
         else:
-            self.sql = snowflake_transform._parse_template(
-                self.sql, self.python_callable, self.parameters
+            return snowflake_transform.add_templates_to_context(
+                self.parameters, context
             )
 
     def _cleanup(self):
@@ -465,6 +485,7 @@ def transform_decorator(
     schema: Optional[str] = None,
     warehouse: Optional[str] = None,
     raw_sql: bool = False,
+    handler: Callable = None,
 ):
     """
     :param python_callable:
@@ -491,4 +512,5 @@ def transform_decorator(
         schema=schema,
         warehouse=warehouse,
         raw_sql=raw_sql,
+        handler=handler,
     )

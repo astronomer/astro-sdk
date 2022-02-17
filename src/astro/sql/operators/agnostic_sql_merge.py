@@ -105,4 +105,4 @@ class SqlMergeOperator(SqlDecoratoratedOperator):
         else:
             raise AirflowException(f"please give a postgres conn id")
 
-        super().execute(context)
+        return super().execute(context)
