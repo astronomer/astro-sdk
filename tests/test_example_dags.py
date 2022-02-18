@@ -29,10 +29,10 @@ def session():
 @pytest.mark.parametrize(
     "dag_id",
     [
-        "astro_test_dag",
-        "sql_file_dag",
-        "demo_with_s3_and_csv",
-        "snowflake_animal_adoption_example",
+        # "astro_test_dag",
+        "find_top_rentals_with_sql_files",
+        # "demo_with_s3_and_csv",
+        # "snowflake_animal_adoption_example",
     ],
 )
 def test_example_dag(session, dag_id):

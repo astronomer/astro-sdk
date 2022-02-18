@@ -1,1 +1,0 @@
-SELECT * FROM {{adoption_center_1}}
