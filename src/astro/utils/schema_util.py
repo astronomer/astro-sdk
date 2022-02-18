@@ -16,7 +16,7 @@ def set_schema_query(conn_type, hook, schema_id, user):
             .format(schema=sql.Identifier(schema_id), user=sql.Identifier(user))
             .as_string(hook.get_conn())
         )
-    elif conn_type in ["snowflake", "google_cloud_platform", "bigquery"]:
+    elif conn_type in ["snowflake", "google_cloud_platform", "bigquery", "sqlite"]:
         return f"CREATE SCHEMA IF NOT EXISTS {schema_id}"
 
 

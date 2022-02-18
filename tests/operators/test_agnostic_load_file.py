@@ -33,6 +33,7 @@ from unittest import mock
 import pandas as pd
 import pytest
 from airflow.exceptions import DuplicateTaskIdFound
+from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
@@ -255,6 +256,39 @@ class TestAgnosticLoadFile(unittest.TestCase):
         # Read table from db
         df = pd.read_sql(
             f"SELECT * FROM tmp_astro.test_dag_load_file_homes_csv_1",
+            con=self.hook_target.get_conn(),
+        )
+
+        assert df.iloc[0].to_dict() == {
+            "sell": 142.0,
+            "list": 160.0,
+            "living": 28.0,
+            "rooms": 10.0,
+            "beds": 5.0,
+            "baths": 3.0,
+            "age": 60.0,
+            "acres": 0.28,
+            "taxes": 3167.0,
+        }
+
+    def test_aql_local_file_to_sqlite_no_table_name(self):
+        OUTPUT_TABLE_NAME = "expected_table_from_csv"
+
+        self.hook_target = SqliteHook(sqlite_conn_id="sqlite_conn")
+
+        task = self.create_and_run_task(
+            load_file,
+            (),
+            {
+                "path": str(CWD) + "/../data/homes.csv",
+                "file_conn_id": "",
+                "output_table": TempTable(conn_id="sqlite_conn"),
+            },
+        )
+
+        # Read table from db
+        df = pd.read_sql(
+            f"SELECT * FROM test_dag_load_file_homes_csv_1",
             con=self.hook_target.get_conn(),
         )
 

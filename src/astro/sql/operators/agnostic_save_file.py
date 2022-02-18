@@ -21,6 +21,7 @@ from urllib.parse import urlparse
 import boto3
 import pandas as pd
 from airflow.hooks.base import BaseHook
+from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -97,6 +98,7 @@ class SaveFile(BaseOperator):
             "bigquery": BigQueryHook(
                 use_legacy_sql=False, gcp_conn_id=input_table.conn_id
             ),
+            "sqlite": SqliteHook(sqlite_conn_id=input_table.conn_id),
         }.get(conn_type, None)
 
         # Load table from SQL db.
