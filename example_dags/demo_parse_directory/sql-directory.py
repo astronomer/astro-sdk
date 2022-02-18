@@ -1,9 +1,11 @@
 import os
 from datetime import datetime, timedelta
 
+import pandas as pd
 from airflow.models import DAG
 
 from astro import sql as aql
+from astro.dataframe import dataframe as adf
 
 default_args = {
     "retries": 1,
@@ -19,6 +21,12 @@ dag = DAG(
 )
 
 
+@adf
+def print_results(df: pd.DataFrame):
+    print(df.to_string)
+
+
 dir_path = os.path.dirname(os.path.realpath(__file__))
 with dag:
-    aql.render(dir_path + "/ingest_models")
+    models = aql.render(dir_path + "/ingest_models")
+    print_results(models["inherit_task"])

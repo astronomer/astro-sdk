@@ -26,7 +26,15 @@ def session():
     return get_session()
 
 
-@pytest.mark.parametrize("dag_id", ["astro_test_dag", "sql_file_dag"])
+@pytest.mark.parametrize(
+    "dag_id",
+    [
+        "astro_test_dag",
+        "sql_file_dag",
+        "demo_with_s3_and_csv",
+        "snowflake_animal_adoption_example",
+    ],
+)
 def test_example_dag(session, dag_id):
     dir_path = os.path.dirname(os.path.realpath(__file__))
     db = DagBag(dir_path + "/../example_dags")

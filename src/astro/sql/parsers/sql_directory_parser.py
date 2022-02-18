@@ -117,5 +117,15 @@ class ParsedSqlOperator(SqlDecoratoratedOperator):
             **kwargs,
         )
 
+    def set_values(self, table: Table):
+        self.conn_id = self.conn_id or table.conn_id
+        self.database = self.database or table.database
+        self.warehouse = self.warehouse or table.warehouse
+        self.role = self.role or table.role
+
     def execute(self, context: Dict):
+        if self.parameters:
+            for v in self.parameters.values():
+                if type(v) == Table:
+                    self.set_values(v)
         return super().execute(context)

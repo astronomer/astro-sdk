@@ -30,7 +30,7 @@ from smart_open import open
 from astro.sql.operators.temp_hooks import TempSnowflakeHook
 from astro.sql.table import Table
 from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
-from astro.utils.schema_util import get_table_name
+from astro.utils.schema_util import get_schema, get_table_name
 from astro.utils.task_id_helper import get_task_id
 
 
@@ -101,7 +101,7 @@ class SaveFile(BaseOperator):
 
         # Load table from SQL db.
         df = pd.read_sql(
-            f"SELECT * FROM {get_table_name(input_table)}",
+            f"SELECT * FROM {input_table.schema or get_schema()}.{get_table_name(input_table)}",
             con=input_hook.get_sqlalchemy_engine(),
         )
 
