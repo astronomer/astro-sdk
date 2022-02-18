@@ -99,9 +99,15 @@ class SaveFile(BaseOperator):
             ),
         }.get(conn_type, None)
 
+        if conn_type == "postgres" or conn_type == "postgresql":
+            table_name = (
+                f"{input_table.schema or get_schema()}.{get_table_name(input_table)}"
+            )
+        else:
+            table_name = f"{get_table_name(input_table)}"
         # Load table from SQL db.
         df = pd.read_sql(
-            f"SELECT * FROM {input_table.schema or get_schema()}.{get_table_name(input_table)}",
+            f"SELECT * FROM {table_name}",
             con=input_hook.get_sqlalchemy_engine(),
         )
 
