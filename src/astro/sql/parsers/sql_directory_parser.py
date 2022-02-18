@@ -126,12 +126,9 @@ class ParsedSqlOperator(SqlDecoratoratedOperator):
         database: Optional[str] = None,
         schema: Optional[str] = None,
         warehouse: Optional[str] = None,
+        role: Optional[str] = None,
         **kwargs,
     ):
-        self.conn_id = conn_id
-        self.database = database
-        self.warehouse = warehouse
-        self.role = warehouse
         self.sql = sql
         self.parameters = parameters
         task_id = get_unique_task_id(file_name.replace(".sql", ""))
@@ -140,6 +137,11 @@ class ParsedSqlOperator(SqlDecoratoratedOperator):
             return sql, parameters
 
         super().__init__(
+            conn_id=conn_id,
+            database=database,
+            warehouse=warehouse,
+            schema=schema,
+            role=role,
             raw_sql=False,
             task_id=task_id,
             sql=sql,
@@ -151,10 +153,10 @@ class ParsedSqlOperator(SqlDecoratoratedOperator):
         )
 
     def set_values(self, table: Table):
-        self.conn_id = self.conn_id or table.conn_id
-        self.database = self.database or table.database
-        self.warehouse = self.warehouse or table.warehouse
-        self.role = self.role or table.role
+        self.conn_id = self.conn_id or table.conn_id  # type: ignore
+        self.database = self.database or table.database  # type: ignore
+        self.warehouse = self.warehouse or table.warehouse  # type: ignore
+        self.role = self.role or table.role  # type: ignore
 
     def execute(self, context: Dict):
         if self.parameters:
