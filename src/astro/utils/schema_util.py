@@ -8,7 +8,23 @@ from astro.sql.table import Table
 from astro.utils.dependencies import PostgresHook
 
 
-def set_schema_query(conn_type, hook, schema_id, user):
+def schema_exists(hook, schema, conn_type):
+    if conn_type in ["postgresql", "postgres"]:
+        created_schemas = hook.run(
+            "SELECT schema_name FROM information_schema.schemata;",
+            handler=lambda x: [y[0] for y in x.fetchall()],
+        )
+        return schema in created_schemas
+    elif conn_type == "snowflake":
+        created_schemas = hook.run(
+            "SELECT SCHEMA_NAME from information_schema.schemata;",
+            handler=lambda x: [y[0] for y in x.fetchall()],
+        )
+        return schema in created_schemas
+    return False
+
+
+def create_schema_query(conn_type, hook, schema_id, user):
 
     if conn_type in ["postgresql", "postgres"]:
         return (

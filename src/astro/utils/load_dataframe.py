@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import os
 from typing import Optional, Union
 
 from pandas import DataFrame
@@ -20,7 +21,7 @@ from pandas.io.sql import SQLDatabase
 from snowflake.connector import pandas_tools
 
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
-from astro.utils.schema_util import set_schema_query
+from astro.utils.schema_util import create_schema_query, schema_exists
 
 
 def move_dataframe_to_sql(
@@ -51,10 +52,11 @@ def move_dataframe_to_sql(
     if database:
         hook.database = database
 
-    schema_query = set_schema_query(
-        conn_type=conn_type, hook=hook, schema_id=schema, user=user
-    )
-    hook.run(schema_query)
+    if not schema_exists(hook=hook, schema=schema, conn_type=conn_type):
+        schema_query = create_schema_query(
+            conn_type=conn_type, hook=hook, schema_id=schema, user=user
+        )
+        hook.run(schema_query)
     if conn_type == "snowflake":
 
         db = SQLDatabase(engine=hook.get_sqlalchemy_engine())
