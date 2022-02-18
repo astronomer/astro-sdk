@@ -22,7 +22,7 @@ SQL_SERVER_HOOK_PARAMETERS = {
     },
     "postgres": {"postgres_conn_id": "postgres_conn"},
     "bigquery": {
-        "bigquery_conn_id": "bigquery",
+        "gcp_conn_id": "bigquery",
     },
 }
 SQL_SERVER_CONNECTION_KEY = {
