@@ -324,3 +324,85 @@ class TestBIGQueryIntegrationWithStatsCheckOperator(unittest.TestCase):
                 max_rows_returned=10,
             )
             a.execute({"run_id": "foo"})
+
+
+# To Do - this test is failing due to absence of stddev function in
+# SQLite(https://www.sqlite.org/lang_aggfunc.html)
+@pytest.mark.skipif(True, reason="No support for stddev SQLfunction in sqlite")
+class TestSQLITEStatsCheckOperator(unittest.TestCase):
+    """
+    Test Stats Check Operator.
+    """
+
+    cwd = pathlib.Path(__file__).parent
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.stats_check_test_1 = Table(
+            "stats_check_test_1",
+            conn_id="sqlite_conn",
+        )
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes.csv",
+            output_table=cls.stats_check_test_1,
+        ).operator.execute({"run_id": "foo"})
+
+        cls.stats_check_test_2 = Table(
+            "stats_check_test_2",
+            conn_id="sqlite_conn",
+        )
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes2.csv",
+            output_table=cls.stats_check_test_2,
+        ).operator.execute({"run_id": "foo"})
+
+        cls.stats_check_test_3 = Table(
+            "stats_check_test_3",
+            conn_id="sqlite_conn",
+        )
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes3.csv",
+            output_table=cls.stats_check_test_3,
+        ).operator.execute({"run_id": "foo"})
+
+    def clear_run(self):
+        self.run = False
+
+    def setUp(self):
+        super().setUp()
+        self.clear_run()
+        self.addCleanup(self.clear_run)
+        self.dag = DAG(
+            "test_dag",
+            default_args={
+                "owner": "airflow",
+                "start_date": DEFAULT_DATE,
+            },
+        )
+
+    def test_stats_check_outlier_exists(self):
+        try:
+            a = aql.stats_check(
+                main_table=self.stats_check_test_1,
+                compare_table=self.stats_check_test_2,
+                checks=[aql.OutlierCheck("room_check", {"rooms": "rooms"}, 2, 0.0)],
+                max_rows_returned=10,
+            )
+            a.execute({"run_id": "foo"})
+            assert False
+        except ValueError as e:
+            assert True
+
+    def test_stats_check_outlier_not_exists(self):
+        try:
+            a = aql.stats_check(
+                main_table=self.stats_check_test_1,
+                compare_table=self.stats_check_test_3,
+                checks=[aql.OutlierCheck("room_check", {"rooms": "rooms"}, 2, 0.0)],
+                max_rows_returned=10,
+            )
+            a.execute({"run_id": "foo"})
+            assert True
+        except ValueError as e:
+            assert False

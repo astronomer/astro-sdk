@@ -97,6 +97,13 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 schema="tmp_astro",
             ),
         ).operator.execute({"run_id": "foo"})
+        cls.table_sqlite = Table(
+            "boolean_check_test", conn_id="sqlite_conn", schema="sqlite_schema"
+        )
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes_append.csv",
+            output_table=cls.table_sqlite,
+        ).operator.execute({"run_id": "foo"})
 
     @classmethod
     def tearDownClass(cls):
@@ -205,6 +212,18 @@ class TestBooleanCheckOperator(unittest.TestCase):
                     conn_id="bigquery",
                     schema="tmp_astro",
                 ),
+                checks=[Check("test_1", "rooms > 3")],
+                max_rows_returned=10,
+            )
+            a.execute({"run_id": "foo"})
+            assert True
+        except ValueError:
+            assert False
+
+    def test_happyflow_sqlite_success(self):
+        try:
+            a = boolean_check(
+                table=self.table_sqlite,
                 checks=[Check("test_1", "rooms > 3")],
                 max_rows_returned=10,
             )

@@ -24,6 +24,7 @@ import logging
 import pathlib
 import unittest.mock
 
+from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import DAG
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
@@ -78,6 +79,13 @@ class TestPostgresTruncateOperator(unittest.TestCase):
                 schema="public",
             ),
         ).operator.execute({"run_id": "foo"})
+        self.file_sqlite_table = aql.load_file(
+            path=str(self.cwd) + "/../data/homes_merge_1.csv",
+            output_table=Table(
+                "truncate_test",
+                conn_id="sqlite_conn",
+            ),
+        ).operator.execute({"run_id": "foo"})
 
     def test_truncate(self):
         hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
@@ -88,4 +96,17 @@ class TestPostgresTruncateOperator(unittest.TestCase):
         )
         a.execute({"run_id": "foo"})
         df = hook.get_pandas_df(sql="SELECT * FROM public.truncate_test")
+        assert df.count()[0] == 0
+
+    def test_sqlite_truncate(self):
+        hook = SqliteHook(
+            sqlite_conn_id="sqlite_conn",
+        )
+        df = hook.get_pandas_df(sql="SELECT * FROM truncate_test")
+        assert df.count()[0] == 4
+        a = aql.truncate(
+            table=self.file_sqlite_table,
+        )
+        a.execute({"run_id": "foo"})
+        df = hook.get_pandas_df(sql="SELECT * FROM truncate_test")
         assert df.count()[0] == 0

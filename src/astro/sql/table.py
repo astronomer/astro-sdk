@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, TaskInstance
 
 
@@ -46,7 +47,14 @@ class Table:
         return (self.schema, self.table_name) if self.schema else (self.table_name,)
 
     def qualified_name(self):
-        return self.schema + "." + self.table_name if self.schema else self.table_name
+        conn = BaseHook.get_connection(self.conn_id)
+        self.conn_type = conn.conn_type  # type: ignore
+        if self.conn_type == "sqlite":
+            return self.table_name
+        else:
+            return (
+                self.schema + "." + self.table_name if self.schema else self.table_name
+            )
 
     def __str__(self):
         return f"Table(table_name={self.table_name}, database={self.database}, schema={self.schema}, conn_id={self.conn_id}, warehouse={self.warehouse})"

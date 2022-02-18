@@ -21,6 +21,7 @@ from typing import Callable, Dict, Iterable, Mapping, Optional, Union
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator, task_decorator_factory
 from airflow.hooks.base import BaseHook
+from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import DagRun, TaskInstance
 from airflow.utils.db import provide_session
 from sqlalchemy import text
@@ -287,6 +288,11 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             gcp_conn_id=self.conn_id,
         )
 
+    def get_sqlite_hook(self):
+        return SqliteHook(
+            sqlite_conn_id=self.conn_id,
+        )
+
     def get_postgres_hook(self):
         return PostgresHook(postgres_conn_id=self.conn_id, schema=self.database)
 
@@ -325,6 +331,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             "postgresql": self.get_postgres_hook(),
             "postgres": self.get_postgres_hook(),
             "bigquery": self.get_bigquery_hook(),
+            "sqlite": self.get_sqlite_hook(),
         }[self.conn_type]
         return hook.get_sqlalchemy_engine()
 
@@ -395,10 +402,20 @@ class SqlDecoratoratedOperator(DecoratedOperator):
     def _add_templates_to_context(self, context):
         if self.conn_type in ["postgres", "bigquery"]:
             return postgres_transform.add_templates_to_context(self.parameters, context)
-        else:
+        elif self.conn_type in ["snowflake"]:
             return snowflake_transform.add_templates_to_context(
                 self.parameters, context
             )
+        else:
+            return self.default_transform(self.parameters, context)
+
+    def default_transform(self, parameters, context):
+        for k, v in parameters.items():
+            if type(v) == Table:
+                context[k] = v.table_name
+            else:
+                context[k] = ":" + k
+        return context
 
     def _cleanup(self):
         """Remove DAG's objects from S3 and db."""

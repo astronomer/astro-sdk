@@ -29,3 +29,9 @@ connections:
     password: null
     port: null
     schema: null
+  - conn_id: sqlite_conn
+    conn_type: sqlite
+    host: ./sqlite.db
+    schema:
+    login:
+    password:
