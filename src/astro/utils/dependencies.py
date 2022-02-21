@@ -33,7 +33,7 @@ try:
     from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 except ModuleNotFoundError:
     BigQueryHook = MissingPackage(
-        "airflow.providers.google.cloud.hooks.bigquery", "gcp"
+        "airflow.providers.google.cloud.hooks.bigquery", "google"
     )
 
 try:

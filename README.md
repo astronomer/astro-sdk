@@ -88,7 +88,7 @@ To start using `astro`:
 2. Installing `astro` with extras(i.e., gcp, snowflake, postgres)
 
     ```shell script
-    pip install astro-projects[gcp,snowflake,postgres]
+    pip install astro-projects[google,snowflake,postgres]
     ```
 
 3. Set the following environment variable so that `astro` can pass table objects between tasks:
