@@ -20,6 +20,7 @@ dependencies = [
     "pandas >=1.3.4",
     "SQLAlchemy==1.3.24",
     "apache-airflow-providers-postgres",
+    "markupsafe>=1.1.1,<2.1.0"
 ]
 
 keywords = ["airflow", "provider", "astronomer", "sql", "decorator"]
