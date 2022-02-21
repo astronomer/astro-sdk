@@ -13,7 +13,7 @@
       "params": {
         "database": "DWH_LEGACY",
         "conn_id": "snowflake_conn",
-        "schema": "SANDBOX_TATIANAALCHUEYR"
+        "schema": "SANDBOX_AIRFLOW_TEST"
       }
     },
     {

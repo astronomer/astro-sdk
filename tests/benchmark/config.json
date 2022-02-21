@@ -13,13 +13,13 @@
     {
         "name": "few_kb",
         "size": "45K",
-        "path":"/home/tati/Data/covid_overview.csv",
+        "path":"/tmp/covid_overview.csv",
         "rows": 732
     },
     {
         "name": "many_kb",
         "size": "472K",
-        "path": "/home/tati/Data/artist_data.csv",
+        "path": "/tmp/artist_data.csv",
         "rows": 3532
     }
   ]
