@@ -13,30 +13,39 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from astro import constants
 
 
 class MissingPackage(object):
-    def __init__(self, module_name):
+    def __init__(self, module_name, related_extras):
         self.module_name = module_name
+        self.related_extras = related_extras
 
     def __getattr__(self, item):
         raise RuntimeError(
             f"Error loading the module {self.module_name},"
-            f" please make sure all the dependencies are installed"
+            f" please make sure all the dependencies are installed."
+            f" try - pip install {constants.PYPI_PROJECT_NAME}[{self.related_extras}]"
         )
 
 
 try:
     from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 except ModuleNotFoundError:
-    BigQueryHook = MissingPackage("airflow.providers.google.cloud.hooks.bigquery")
+    BigQueryHook = MissingPackage(
+        "airflow.providers.google.cloud.hooks.bigquery", "gcp"
+    )
 
 try:
     from airflow.providers.postgres.hooks.postgres import PostgresHook
 except ModuleNotFoundError:
-    PostgresHook = MissingPackage("airflow.providers.postgres.hooks.postgres")
+    PostgresHook = MissingPackage(
+        "airflow.providers.postgres.hooks.postgres", "postgres"
+    )
 
 try:
     from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 except ModuleNotFoundError:
-    SnowflakeHook = MissingPackage("airflow.providers.snowflake.hooks.snowflake")
+    SnowflakeHook = MissingPackage(
+        "airflow.providers.snowflake.hooks.snowflake", "snowflake"
+    )
