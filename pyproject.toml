@@ -49,7 +49,7 @@ tests = [
     "s3fs",
     "smart-open[s3]>=5.2.1",
 ]
-gcs = [
+gcp = [
     "apache-airflow-providers-google",
     "sqlalchemy-bigquery==1.3.0",
     "smart-open[gcs]>=5.2.1",
