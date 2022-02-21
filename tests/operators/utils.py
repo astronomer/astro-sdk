@@ -28,7 +28,7 @@ SQL_SERVER_HOOK_PARAMETERS = {
 SQL_SERVER_CONNECTION_KEY = {
     "snowflake": "snowflake_conn_id",
     "postgres": "postgres_conn_id",
-    "bigquery": "bigquery_conn_id",
+    "bigquery": "gcp_conn_id",
 }
 
 SQL_SERVER_HOOK_CLASS = {
