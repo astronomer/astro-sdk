@@ -38,6 +38,7 @@ classifiers = [
 [project.optional-dependencies]
 tests = [
     "pytest >=6.0",
+    "pytest-split",
     "pytest-dotenv",
     "requests-mock",
     "apache-airflow-providers-google",

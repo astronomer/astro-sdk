@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Dict
+from typing import Dict, Optional
 
 import frontmatter
 from airflow.decorators.base import get_unique_task_id
@@ -13,7 +13,15 @@ from astro.sql.table import Table, TempTable
 
 
 @task_group()
-def render(path, **kwargs):
+def render(
+    path,
+    conn_id: Optional[str] = None,
+    database: Optional[str] = None,
+    schema: Optional[str] = None,
+    warehouse: Optional[str] = None,
+    role: Optional[str] = None,
+    **kwargs,
+):
     # raise AirflowException(f"Failed because cwd is {os.listdir(path)}, {os.}")
     files = [
         f
@@ -33,6 +41,7 @@ def render(path, **kwargs):
             parameters = {
                 k: v for k, v in default_params.copy().items() if k in temp_items
             }
+
             if front_matter_opts.get("template_vars"):
                 template_variables = front_matter_opts.pop("template_vars")
                 parameters.update({v: None for k, v in template_variables.items()})
@@ -42,13 +51,16 @@ def render(path, **kwargs):
                     op_kwargs = {"output_table": Table(**out_table_dict)}
                 else:
                     op_kwargs = {"output_table": TempTable(**out_table_dict)}
+            operator_kwargs = set_kwargs_with_defaults(
+                front_matter_opts, conn_id, database, role, schema, warehouse
+            )
 
             p = ParsedSqlOperator(
                 sql=sql,
                 parameters=parameters,
                 file_name=filename,
                 op_kwargs=op_kwargs,
-                **front_matter_opts,
+                **operator_kwargs,
             )
             template_dict[filename.replace(".sql", "")] = p.output
 
@@ -68,6 +80,19 @@ def render(path, **kwargs):
     for f in template_dict.values():
         ret.append(f)
     return template_dict
+
+
+def set_kwargs_with_defaults(
+    opts_without_defaults, conn_id, database, role, schema, warehouse
+):
+    opts_without_defaults["conn_id"] = opts_without_defaults.get("conn_id", conn_id)
+    opts_without_defaults["database"] = opts_without_defaults.get("database", database)
+    opts_without_defaults["schema"] = opts_without_defaults.get("schema", schema)
+    opts_without_defaults["role"] = opts_without_defaults.get("role", role)
+    opts_without_defaults["warehouse"] = opts_without_defaults.get(
+        "warehouse", warehouse
+    )
+    return opts_without_defaults
 
 
 def find_templated_fields(file_string):
@@ -97,6 +122,11 @@ class ParsedSqlOperator(SqlDecoratoratedOperator):
         parameters,
         file_name,
         op_kwargs={},
+        conn_id: Optional[str] = None,
+        database: Optional[str] = None,
+        schema: Optional[str] = None,
+        warehouse: Optional[str] = None,
+        role: Optional[str] = None,
         **kwargs,
     ):
         self.sql = sql
@@ -107,6 +137,11 @@ class ParsedSqlOperator(SqlDecoratoratedOperator):
             return sql, parameters
 
         super().__init__(
+            conn_id=conn_id,
+            database=database,
+            warehouse=warehouse,
+            schema=schema,
+            role=role,
             raw_sql=False,
             task_id=task_id,
             sql=sql,
@@ -117,5 +152,15 @@ class ParsedSqlOperator(SqlDecoratoratedOperator):
             **kwargs,
         )
 
+    def set_values(self, table: Table):
+        self.conn_id = self.conn_id or table.conn_id  # type: ignore
+        self.database = self.database or table.database  # type: ignore
+        self.warehouse = self.warehouse or table.warehouse  # type: ignore
+        self.role = self.role or table.role  # type: ignore
+
     def execute(self, context: Dict):
+        if self.parameters:
+            for v in self.parameters.values():
+                if type(v) == Table:
+                    self.set_values(v)
         return super().execute(context)
