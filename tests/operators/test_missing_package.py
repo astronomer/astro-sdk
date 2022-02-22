@@ -67,32 +67,8 @@ class TestMissingPackages(unittest.TestCase):
     def setUpClass(cls):
         super().setUpClass()
 
-    def clear_run(self):
-        self.run = False
-
     def setUp(self):
         super().setUp()
-        self.dag = DAG(
-            "test_dag",
-            default_args={
-                "owner": "airflow",
-                "start_date": DEFAULT_DATE,
-            },
-        )
-
-    def create_and_run_task(self, decorator_func, op_args, op_kwargs):
-        with self.dag:
-            f = decorator_func(*op_args, **op_kwargs)
-
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            data_interval=[DEFAULT_DATE, DEFAULT_DATE],
-            state=State.RUNNING,
-        )
-        f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        return f
 
     def test_missing_bigquery_package(self):
         with unittest.mock.patch("builtins.__import__", import_mock):
