@@ -20,6 +20,7 @@ from airflow.utils import timezone
 
 # Import Operator
 import astro.sql as aql
+from astro.sql.table import Table
 
 default_args = {
     "owner": "airflow",
@@ -38,27 +39,14 @@ def demo_with_s3_and_csv():
     t1 = aql.load_file(
         path="s3://tmp9/homes.csv",
         file_conn_id="my_aws_conn",
-        database="astro",
-        output_table_name="expected_table_from_s3",
-    )
-
-    t2 = aql.load_file(
-        path="tests/data/homes.csv",
-        database="astro",
-        output_table_name="expected_table_from_csv",
+        output_table=Table(
+            "expected_table_from_s3", conn_id="postgres_conn", database="postgres"
+        ),
     )
 
     aql.save_file(
         output_file_path="s3://tmp9/homes.csv",
-        table=t1,
-        input_conn_id="postgres_conn",
-        overwrite=True,
-    )
-
-    aql.save_file(
-        output_file_path="tests/data/homes_output.csv",
-        table=t2,
-        input_conn_id="postgres_conn",
+        input_table=t1,
         overwrite=True,
     )
 

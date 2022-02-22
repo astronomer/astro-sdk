@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import os
 from datetime import datetime, timedelta
 
 import pandas as pd
@@ -59,13 +60,19 @@ def aggregate_data(df: pd.DataFrame):
     },
     catchup=False,
 )
-def animal_adoptions_etl():
+def snowflake_animal_adoption_example():
     combined_data = combine_data(
         center_1=Table(
-            "ADOPTION_CENTER_1", schema="SANDBOX_AIRFLOW_TEST", conn_id="snowflake_conn"
+            "ADOPTION_CENTER_1",
+            database=os.environ["SNOWFLAKE_DATABASE"],
+            schema=os.environ["SNOWFLAKE_SCHEMA"],
+            conn_id="snowflake_conn",
         ),
         center_2=Table(
-            "ADOPTION_CENTER_2", schema="SANDBOX_AIRFLOW_TEST", conn_id="snowflake"
+            "ADOPTION_CENTER_2",
+            database=os.environ["SNOWFLAKE_DATABASE"],
+            schema=os.environ["SNOWFLAKE_SCHEMA"],
+            conn_id="snowflake_conn",
         ),
     )
 
@@ -80,4 +87,4 @@ def animal_adoptions_etl():
     )
 
 
-animal_adoptions_etl_dag = animal_adoptions_etl()
+animal_adoptions_etl_dag = snowflake_animal_adoption_example()
