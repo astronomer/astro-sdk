@@ -18,6 +18,8 @@ limitations under the License.
 
 __version__ = "0.5.1"
 
+from astro.dataframe import dataframe
+
 
 # This is needed to allow Airflow to pick up specific metadata fields it needs
 # for certain features. We recognize it's a bit unclean to define these in

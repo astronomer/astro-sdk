@@ -24,10 +24,9 @@ from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
 from smart_open import open
 
-from astro.sql.operators.temp_hooks import TempSnowflakeHook
 from astro.sql.table import Table
 from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
-from astro.utils.dependencies import BigQueryHook, PostgresHook
+from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from astro.utils.schema_util import get_table_name
 from astro.utils.task_id_helper import get_task_id
 
@@ -86,7 +85,7 @@ class SaveFile(BaseOperator):
             "postgres": PostgresHook(
                 postgres_conn_id=input_table.conn_id, schema=input_table.database
             ),
-            "snowflake": TempSnowflakeHook(
+            "snowflake": SnowflakeHook(
                 snowflake_conn_id=input_table.conn_id,
                 database=input_table.database,
                 schema=input_table.schema,

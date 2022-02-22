@@ -26,6 +26,7 @@ import logging
 import math
 import os
 import pathlib
+import sys
 import unittest.mock
 
 from airflow.models import DAG
@@ -65,6 +66,9 @@ class TestMissingPackages(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        # Removed cached module from sys.module to make any
+        # code post mocking 'astro.utils.dependencies' work.
+        sys.modules.pop("astro.utils.dependencies", None)
         super().setUpClass()
 
     def setUp(self):
