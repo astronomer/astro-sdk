@@ -14,9 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-
 from astro.sql.table import Table
+from astro.utils.dependencies import PostgresHook
 
 
 def add_templates_to_context(parameters, context):

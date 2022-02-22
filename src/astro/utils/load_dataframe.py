@@ -15,13 +15,11 @@ limitations under the License.
 """
 from typing import Optional, Union
 
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from pandas import DataFrame
 from pandas.io.sql import SQLDatabase
 from snowflake.connector import pandas_tools
 
-from astro.sql.operators.temp_hooks import TempSnowflakeHook
+from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from astro.utils.schema_util import set_schema_query
 
 
@@ -37,10 +35,10 @@ def move_dataframe_to_sql(
     chunksize,
 ):
     # Select database Hook based on `conn` type
-    hook: Union[PostgresHook, TempSnowflakeHook] = {  # type: ignore
+    hook: Union[PostgresHook, SnowflakeHook] = {  # type: ignore
         "postgresql": PostgresHook(postgres_conn_id=conn_id, schema=database),
         "postgres": PostgresHook(postgres_conn_id=conn_id, schema=database),
-        "snowflake": TempSnowflakeHook(
+        "snowflake": SnowflakeHook(
             snowflake_conn_id=conn_id,
             database=database,
             schema=schema,
