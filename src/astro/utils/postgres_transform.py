@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from psycopg2.extensions import AsIs
 
 from astro.sql.table import Table
