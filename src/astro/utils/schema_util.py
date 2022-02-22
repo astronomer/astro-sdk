@@ -2,10 +2,10 @@ import os
 from typing import List
 
 from airflow.hooks.base import BaseHook
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from psycopg2 import sql
 
 from astro.sql.table import Table
+from astro.utils.dependencies import PostgresHook
 
 
 def set_schema_query(conn_type, hook, schema_id, user):

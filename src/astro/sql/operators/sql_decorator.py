@@ -21,15 +21,13 @@ import pandas as pd
 from airflow.decorators.base import DecoratedOperator, task_decorator_factory
 from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, TaskInstance
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils.db import provide_session
 from sqlalchemy import text
 from sqlalchemy.sql.functions import Function
 
 from astro.sql.table import Table, create_table_name
 from astro.utils import postgres_transform, snowflake_transform
+from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from astro.utils.load_dataframe import move_dataframe_to_sql
 from astro.utils.schema_util import get_schema, set_schema_query
 
