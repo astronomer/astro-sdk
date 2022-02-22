@@ -16,6 +16,7 @@ license = {file = "LICENSE"}
 requires-python = ">=3.7"
 dependencies = [
     "apache-airflow >=2.0",
+    "markupsafe>=1.1.1,<2.1.0",
     "apache-airflow-providers-postgres",
     "apache-airflow-providers-snowflake",
     "apache-airflow-providers-google",
@@ -45,6 +46,7 @@ classifiers = [
 [project.optional-dependencies]
 tests = [
     "pytest >=6.0",
+    "pytest-split",
     "pytest-dotenv",
     "requests-mock",
 ]
