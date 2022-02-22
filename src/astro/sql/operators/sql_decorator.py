@@ -96,7 +96,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
                 return self.handler(cursor)
             return cursor
 
-        self._set_hook()
         self.output_schema = self.schema or get_schema()
         self._set_variables_from_first_table()
 
@@ -105,6 +104,8 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.schema = self.schema or get_schema()
         self.user = conn.login
         self.run_id = context.get("run_id")
+        self._set_hook()
+
         self.convert_op_arg_dataframes()
         self.convert_op_kwarg_dataframes()
         self.read_sql()

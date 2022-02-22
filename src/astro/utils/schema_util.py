@@ -5,7 +5,6 @@ from airflow.hooks.base import BaseHook
 from psycopg2 import sql
 
 from astro.sql.table import Table
-from astro.utils.dependencies import PostgresHook
 
 
 def schema_exists(hook, schema, conn_type):
@@ -16,10 +15,10 @@ def schema_exists(hook, schema, conn_type):
         )
         return schema in created_schemas
     elif conn_type == "snowflake":
-        created_schemas = hook.run(
-            "SELECT SCHEMA_NAME from information_schema.schemata;",
-            handler=lambda x: [y[0] for y in x.fetchall()],
-        )
+        created_schemas = [
+            x["SCHEMA_NAME"]
+            for x in hook.run("SELECT SCHEMA_NAME from information_schema.schemata;")
+        ]
         return schema in created_schemas
     return False
 
