@@ -49,9 +49,16 @@ def import_mock(name, *args):
     return original_import(name, *args)
 
 
-class TestAggregateCheckOperator(unittest.TestCase):
+class TestMissingPackages(unittest.TestCase):
     """
-    Test Postgres Merge Operator.
+    Test Missing packages.
+
+    NOTE - These testcases will fail in case if we import any dependencies in 'astro/__init__.py'
+            which directly import or import a package which import below-mentioned packages.
+
+            airflow.providers.google.cloud.hooks.bigquery
+            airflow.providers.postgres.hooks.postgres
+            airflow.providers.snowflake.hooks.snowflake
     """
 
     cwd = pathlib.Path(__file__).parent
