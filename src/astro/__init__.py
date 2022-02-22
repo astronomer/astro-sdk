@@ -16,7 +16,7 @@ limitations under the License.
 
 """A decorator that allows users to run SQL queries natively in Airflow."""
 
-__version__ = "0.5.1"
+__version__ = "0.5.2"
 
 from astro.dataframe import dataframe
 
