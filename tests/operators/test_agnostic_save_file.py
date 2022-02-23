@@ -135,7 +135,10 @@ class TestSaveFile(unittest.TestCase):
                 (),
                 {
                     "input_table": Table(
-                        INPUT_TABLE_NAME, conn_id="postgres_conn", database="pagila"
+                        INPUT_TABLE_NAME,
+                        conn_id="postgres_conn",
+                        database="pagila",
+                        schema="public",
                     ),
                     "output_file_path": OUTPUT_FILE_PATH,
                     "output_conn_id": None,
@@ -169,7 +172,10 @@ class TestSaveFile(unittest.TestCase):
             (),
             {
                 "input_table": Table(
-                    INPUT_TABLE_NAME, conn_id="postgres_conn", database="pagila"
+                    INPUT_TABLE_NAME,
+                    conn_id="postgres_conn",
+                    database="pagila",
+                    schema="public",
                 ),
                 "output_file_path": OUTPUT_FILE_PATH,
                 "output_conn_id": "aws_default",
@@ -208,7 +214,10 @@ class TestSaveFile(unittest.TestCase):
                 (),
                 {
                     "input_table": Table(
-                        INPUT_TABLE_NAME, conn_id="postgres_conn", database="pagila"
+                        INPUT_TABLE_NAME,
+                        conn_id="postgres_conn",
+                        database="pagila",
+                        schema="public",
                     ),
                     "output_file_path": OUTPUT_FILE_PATH,
                     "output_conn_id": "aws_default",
@@ -234,7 +243,10 @@ class TestSaveFile(unittest.TestCase):
                     "op_args": (),
                     "op_kwargs": {
                         "input_table": Table(
-                            INPUT_TABLE_NAME, conn_id="postgres_conn", database="pagila"
+                            INPUT_TABLE_NAME,
+                            conn_id="postgres_conn",
+                            database="pagila",
+                            schema="public",
                         ),
                         "output_file_path": OUTPUT_FILE_PATH,
                         "output_conn_id": None,
@@ -389,6 +401,8 @@ def test_save_file(sample_dag, sql_server, file_type):
         test_utils.SQL_SERVER_CONNECTION_KEY[sql_name]
     )
     sql_server_params["conn_id"] = conn_id_value
+    if type(sql_hook) == PostgresHook:
+        sql_server_params["schema"] = "public"
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         filepath = Path(tmp_dir, f"sample.{file_type}")

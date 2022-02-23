@@ -23,15 +23,12 @@ import pandas as pd
 from airflow.hooks.base import BaseHook
 from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from google.cloud.storage import Client
 from smart_open import open
 
-from astro.sql.operators.temp_hooks import TempSnowflakeHook
 from astro.sql.table import Table
 from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
-from astro.utils.schema_util import get_table_name
+from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
+from astro.utils.schema_util import get_schema, get_table_name
 from astro.utils.task_id_helper import get_task_id
 
 
@@ -89,7 +86,7 @@ class SaveFile(BaseOperator):
             "postgres": PostgresHook(
                 postgres_conn_id=input_table.conn_id, schema=input_table.database
             ),
-            "snowflake": TempSnowflakeHook(
+            "snowflake": SnowflakeHook(
                 snowflake_conn_id=input_table.conn_id,
                 database=input_table.database,
                 schema=input_table.schema,
@@ -101,9 +98,15 @@ class SaveFile(BaseOperator):
             "sqlite": SqliteHook(sqlite_conn_id=input_table.conn_id),
         }.get(conn_type, None)
 
+        if conn_type == "postgres" or conn_type == "postgresql":
+            table_name = (
+                f"{input_table.schema or get_schema()}.{get_table_name(input_table)}"
+            )
+        else:
+            table_name = f"{get_table_name(input_table)}"
         # Load table from SQL db.
         df = pd.read_sql(
-            f"SELECT * FROM {get_table_name(input_table)}",
+            f"SELECT * FROM {table_name}",
             con=input_hook.get_sqlalchemy_engine(),
         )
 

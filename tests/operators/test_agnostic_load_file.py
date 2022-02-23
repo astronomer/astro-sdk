@@ -40,7 +40,6 @@ from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 
 # from astro.sql.operators.temp_hooks import PostgresHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State

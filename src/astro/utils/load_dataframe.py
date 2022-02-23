@@ -13,17 +13,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import os
 from typing import Optional, Union
 
 from airflow.hooks.sqlite_hook import SqliteHook
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from pandas import DataFrame
 from pandas.io.sql import SQLDatabase
 from snowflake.connector import pandas_tools
 
-from astro.sql.operators.temp_hooks import TempSnowflakeHook
-from astro.utils.schema_util import set_schema_query
+from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
+from astro.utils.schema_util import create_schema_query, schema_exists
 
 
 def move_dataframe_to_sql(
@@ -38,10 +37,10 @@ def move_dataframe_to_sql(
     chunksize,
 ):
     # Select database Hook based on `conn` type
-    hook: Union[PostgresHook, TempSnowflakeHook] = {  # type: ignore
+    hook: Union[PostgresHook, SnowflakeHook] = {  # type: ignore
         "postgresql": PostgresHook(postgres_conn_id=conn_id, schema=database),
         "postgres": PostgresHook(postgres_conn_id=conn_id, schema=database),
-        "snowflake": TempSnowflakeHook(
+        "snowflake": SnowflakeHook(
             snowflake_conn_id=conn_id,
             database=database,
             schema=schema,
@@ -55,8 +54,10 @@ def move_dataframe_to_sql(
     if database:
         hook.database = database
 
-    if conn_type != "sqlite":
-        schema_query = set_schema_query(
+    if conn_type != "sqlite" and not schema_exists(
+        hook=hook, schema=schema, conn_type=conn_type
+    ):
+        schema_query = create_schema_query(
             conn_type=conn_type, hook=hook, schema_id=schema, user=user
         )
         hook.run(schema_query)

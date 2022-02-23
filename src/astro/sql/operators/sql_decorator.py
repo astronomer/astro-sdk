@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import inspect
+import os
 from builtins import NotImplementedError
 from typing import Callable, Dict, Iterable, Mapping, Optional, Union
 
@@ -22,17 +23,15 @@ from airflow.decorators.base import DecoratedOperator, task_decorator_factory
 from airflow.hooks.base import BaseHook
 from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import DagRun, TaskInstance
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils.db import provide_session
 from sqlalchemy import text
 from sqlalchemy.sql.functions import Function
 
 from astro.sql.table import Table, create_table_name
 from astro.utils import postgres_transform, snowflake_transform
+from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from astro.utils.load_dataframe import move_dataframe_to_sql
-from astro.utils.schema_util import get_schema, set_schema_query
+from astro.utils.schema_util import create_schema_query, get_schema, schema_exists
 
 
 class SqlDecoratoratedOperator(DecoratedOperator):
@@ -106,6 +105,8 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.schema = self.schema or get_schema()
         self.user = conn.login
         self.run_id = context.get("run_id")
+        self._set_hook()
+
         self.convert_op_arg_dataframes()
         self.convert_op_kwarg_dataframes()
         self.read_sql()
@@ -119,7 +120,10 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
         if not self.raw_sql:
             # Create a table name for the temp table
-            self._set_schema_if_needed()
+            if not schema_exists(
+                hook=self.hook, schema=self.schema, conn_type=self.conn_type
+            ):
+                self._set_schema_if_needed()
 
             if not self.output_table:
                 output_table_name = create_table_name(context=context)
@@ -235,23 +239,28 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.warehouse = first_table.warehouse or self.warehouse
             self.role = first_table.role or self.role
 
-    def _set_schema_if_needed(self):
-        schema_statement = ""
+    def _set_hook(self):
         if self.conn_type == "postgres":
             self.hook = PostgresHook(
                 postgres_conn_id=self.conn_id, schema=self.database
             )
-            schema_statement = set_schema_query(
+
+        elif self.conn_type == "snowflake":
+            self.hook = self.get_snow_hook()
+
+    def _set_schema_if_needed(self):
+        schema_statement = ""
+        if self.conn_type == "postgres":
+            schema_statement = create_schema_query(
                 conn_type=self.conn_type,
                 hook=self.hook,
                 schema_id=self.schema,
                 user=self.user,
             )
         elif self.conn_type == "snowflake":
-            hook = self.get_snow_hook()
-            schema_statement = set_schema_query(
+            schema_statement = create_schema_query(
                 conn_type=self.conn_type,
-                hook=hook,
+                hook=self.hook,
                 schema_id=self.schema,
                 user=self.user,
             )

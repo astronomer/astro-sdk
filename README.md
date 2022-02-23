@@ -84,7 +84,14 @@ To start using `astro`:
 
     Alternatively, you can add `astro-projects` to your `requirements.txt` file.
 
-2. Set the following environment variable so that `astro` can pass table objects between tasks:
+
+2. Installing `astro` with extras(i.e., gcp, snowflake, postgres)
+
+    ```shell script
+    pip install astro-projects[google,snowflake,postgres]
+    ```
+
+3. Set the following environment variable so that `astro` can pass table objects between tasks:
 
     ```shell script
     AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
