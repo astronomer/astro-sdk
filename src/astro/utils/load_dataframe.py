@@ -19,9 +19,13 @@ from typing import Optional, Union
 from airflow.hooks.sqlite_hook import SqliteHook
 from pandas import DataFrame
 from pandas.io.sql import SQLDatabase
-from snowflake.connector import pandas_tools
 
-from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
+from astro.utils.dependencies import (
+    BigQueryHook,
+    PostgresHook,
+    SnowflakeHook,
+    pandas_tools,
+)
 from astro.utils.schema_util import create_schema_query, schema_exists
 
 

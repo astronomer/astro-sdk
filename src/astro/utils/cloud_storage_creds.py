@@ -1,8 +1,7 @@
 import os
 from urllib import parse
 
-import boto3
-from google.cloud.storage import Client
+from astro.utils.dependencies import boto3, storage
 
 
 def parse_s3_env_var():
@@ -35,5 +34,5 @@ def gcs_client():
     """
     get GCS credentials for storage.
     """
-    client = Client()
+    client = storage.Client()
     return dict(client=client)

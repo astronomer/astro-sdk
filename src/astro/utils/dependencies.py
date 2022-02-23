@@ -49,3 +49,23 @@ except ModuleNotFoundError:
     SnowflakeHook = MissingPackage(
         "airflow.providers.snowflake.hooks.snowflake", "snowflake"
     )
+
+try:
+    from snowflake.connector import pandas_tools
+except ModuleNotFoundError:
+    pandas_tools = MissingPackage("snowflake.connector", "snowflake")
+
+try:
+    import boto3
+except ModuleNotFoundError:
+    boto3 = MissingPackage("boto3", "amazon")
+
+try:
+    from psycopg2 import sql
+except ModuleNotFoundError:
+    sql = MissingPackage("psycopg2", "postgres")
+
+try:
+    from google.cloud import storage
+except ModuleNotFoundError:
+    storage = MissingPackage("google.cloud", "google")

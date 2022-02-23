@@ -2,9 +2,9 @@ import os
 from typing import List
 
 from airflow.hooks.base import BaseHook
-from psycopg2 import sql
 
 from astro.sql.table import Table
+from astro.utils.dependencies import sql
 
 
 def schema_exists(hook, schema, conn_type):
