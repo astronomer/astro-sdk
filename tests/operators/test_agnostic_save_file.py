@@ -302,6 +302,40 @@ class TestSaveFile(unittest.TestCase):
         # Delete output file after run
         os.remove(OUTPUT_FILE_PATH)
 
+    def test_save_sqlite_table_to_local_file_exists_overwrite_false(self):
+
+        INPUT_TABLE_NAME = "save_file_sqlite_test"
+        INPUT_FILE_PATH = str(self.cwd) + "/../data/homes.csv"
+
+        OUTPUT_FILE_PATH = str(self.cwd) + f"/../data/{INPUT_TABLE_NAME}.csv"
+
+        aql.load_file(
+            path=INPUT_FILE_PATH,
+            output_table=Table(
+                INPUT_TABLE_NAME,
+                conn_id="sqlite_conn",
+            ),
+        ).operator.execute({"run_id": "foo"})
+
+        self.create_and_run_task(
+            save_file,
+            (),
+            {
+                "input_table": Table(INPUT_TABLE_NAME, conn_id="sqlite_conn"),
+                "output_file_path": OUTPUT_FILE_PATH,
+                "output_conn_id": None,
+                "overwrite": True,
+            },
+        )
+
+        input_df = pd.read_csv(INPUT_FILE_PATH)
+        output_df = pd.read_csv(OUTPUT_FILE_PATH)
+
+        assert input_df.shape == output_df.shape
+
+        # Delete output file after run
+        os.remove(OUTPUT_FILE_PATH)
+
     @staticmethod
     def _s3fs_creds():
         # To-do: reuse this method from sql decorator

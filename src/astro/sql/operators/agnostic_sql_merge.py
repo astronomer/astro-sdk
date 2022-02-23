@@ -28,6 +28,7 @@ from astro.utils.schema_util import (
     tables_from_same_db,
 )
 from astro.utils.snowflake_merge_func import snowflake_merge_func
+from astro.utils.sqlite_merge_func import sqlite_merge_func
 from astro.utils.task_id_helper import get_unique_task_id
 
 
@@ -77,6 +78,15 @@ class SqlMergeOperator(SqlDecoratoratedOperator):
         conn_type = BaseHook.get_connection(self.conn_id).conn_type  # type: ignore
         if conn_type == "postgres":
             self.sql = postgres_merge_func(
+                target_table=self.target_table,
+                merge_table=self.merge_table,
+                merge_keys=self.merge_keys,
+                target_columns=self.target_columns,
+                merge_columns=self.merge_columns,
+                conflict_strategy=self.conflict_strategy,
+            )
+        elif conn_type == "sqlite":
+            self.sql = sqlite_merge_func(
                 target_table=self.target_table,
                 merge_table=self.merge_table,
                 merge_keys=self.merge_keys,
