@@ -15,8 +15,8 @@ limitations under the License.
 """
 import os
 from typing import Optional, Union
-from airflow.hooks.sqlite_hook import SqliteHook
 
+from airflow.hooks.sqlite_hook import SqliteHook
 from pandas import DataFrame
 from pandas.io.sql import SQLDatabase
 from snowflake.connector import pandas_tools
@@ -54,7 +54,9 @@ def move_dataframe_to_sql(
     if database:
         hook.database = database
 
-    if conn_type != "sqlite" and not schema_exists(hook=hook, schema=schema, conn_type=conn_type):
+    if conn_type != "sqlite" and not schema_exists(
+        hook=hook, schema=schema, conn_type=conn_type
+    ):
         schema_query = create_schema_query(
             conn_type=conn_type, hook=hook, schema_id=schema, user=user
         )
