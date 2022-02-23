@@ -270,39 +270,6 @@ class TestAgnosticLoadFile(unittest.TestCase):
             "taxes": 3167.0,
         }
 
-    def test_aql_local_file_to_sqlite_no_table_name(self):
-        OUTPUT_TABLE_NAME = "expected_table_from_csv"
-
-        self.hook_target = SqliteHook(sqlite_conn_id="sqlite_conn")
-
-        task = self.create_and_run_task(
-            load_file,
-            (),
-            {
-                "path": str(CWD) + "/../data/homes.csv",
-                "file_conn_id": "",
-                "output_table": TempTable(conn_id="sqlite_conn"),
-            },
-        )
-
-        # Read table from db
-        df = pd.read_sql(
-            f"SELECT * FROM test_dag_load_file_homes_csv_1",
-            con=self.hook_target.get_conn(),
-        )
-
-        assert df.iloc[0].to_dict() == {
-            "sell": 142.0,
-            "list": 160.0,
-            "living": 28.0,
-            "rooms": 10.0,
-            "beds": 5.0,
-            "baths": 3.0,
-            "age": 60.0,
-            "acres": 0.28,
-            "taxes": 3167.0,
-        }
-
     def test_aql_local_file_to_bigquery_no_table_name(self):
         OUTPUT_TABLE_NAME = "expected_table_from_csv"
         data_path = str(CWD) + "/../data/homes.csv"
@@ -555,7 +522,7 @@ def create_task_parameters(database_name, file_type):
 
 
 @pytest.mark.parametrize(
-    "sql_server", ["snowflake", "postgres", "bigquery"], indirect=True
+    "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
 )
 @pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
 def test_load_file(sample_dag, sql_server, file_type):
@@ -566,9 +533,14 @@ def test_load_file(sample_dag, sql_server, file_type):
 
     test_utils.create_and_run_task(sample_dag, load_file, (), task_params)
 
-    df = sql_hook.get_pandas_df(
-        f"SELECT * FROM {schema}.{OUTPUT_TABLE_NAME}_templated_file_name"
-    )
+    if database_name == "sqlite":
+        df = sql_hook.get_pandas_df(
+            f"SELECT * FROM {OUTPUT_TABLE_NAME}_templated_file_name"
+        )
+    else:
+        df = sql_hook.get_pandas_df(
+            f"SELECT * FROM {schema}.{OUTPUT_TABLE_NAME}_templated_file_name"
+        )
 
     assert len(df) == 3
     expected = pd.DataFrame(
