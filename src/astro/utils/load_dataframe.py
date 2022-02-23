@@ -61,6 +61,7 @@ def move_dataframe_to_sql(
             conn_type=conn_type, hook=hook, schema_id=schema, user=user
         )
         hook.run(schema_query)
+
     if conn_type == "snowflake":
 
         db = SQLDatabase(engine=hook.get_sqlalchemy_engine())

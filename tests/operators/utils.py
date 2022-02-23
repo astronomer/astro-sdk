@@ -2,6 +2,7 @@ import os
 import time
 
 from airflow.executors.debug_executor import DebugExecutor
+from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models.taskinstance import State
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -24,17 +25,20 @@ SQL_SERVER_HOOK_PARAMETERS = {
     "bigquery": {
         "gcp_conn_id": "bigquery",
     },
+    "sqlite": {"sqlite_conn_id": "sqlite_conn"},
 }
 SQL_SERVER_CONNECTION_KEY = {
     "snowflake": "snowflake_conn_id",
     "postgres": "postgres_conn_id",
     "bigquery": "gcp_conn_id",
+    "sqlite": "sqlite_conn_id",
 }
 
 SQL_SERVER_HOOK_CLASS = {
     "snowflake": SnowflakeHook,
     "postgres": PostgresHook,
     "bigquery": BigQueryHook,
+    "sqlite": SqliteHook,
 }
 
 
