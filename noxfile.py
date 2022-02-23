@@ -29,6 +29,29 @@ def test(session: nox.Session) -> None:
 
 
 @nox.session()
+@nox.parametrize(
+    "extras",
+    [
+        ("postgres-only", {"include": ["postgres"], "exclude": ["amazon"]}),
+        ("postgres-amazon", {"include": ["postgres", "amazon"]}),
+        ("snowflake-amazon", {"include": ["snowflake", "amazon"]}),
+    ],
+)
+def test_examples_by_dependency(session: nox.Session, extras):
+    _, extras = extras
+    pypi_deps = ",".join(extras["include"])
+    pytest_options = " and ".join(extras["include"])
+    pytest_options = " and not ".join([pytest_options, *extras.get("exclude", [])])
+    pytest_args = ["-k", pytest_options]
+
+    session.install("-e", f".[{pypi_deps}]")
+    session.install("-e", f".[tests]")
+    session.run("airflow", "db", "init")
+
+    session.run("pytest", "tests/test_example_dags.py", *pytest_args, *session.posargs)
+
+
+@nox.session()
 def lint(session: nox.Session) -> None:
     """Run linters."""
     session.install("pre-commit")

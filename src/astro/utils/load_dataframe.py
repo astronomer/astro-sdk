@@ -19,9 +19,13 @@ from typing import Optional, Union
 from airflow.hooks.sqlite_hook import SqliteHook
 from pandas import DataFrame
 from pandas.io.sql import SQLDatabase
-from snowflake.connector import pandas_tools
 
-from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
+from astro.utils.dependencies import (
+    BigQueryHook,
+    PostgresHook,
+    SnowflakeHook,
+    pandas_tools,
+)
 from astro.utils.schema_util import create_schema_query, schema_exists
 
 
@@ -36,21 +40,33 @@ def move_dataframe_to_sql(
     user,
     chunksize,
 ):
-    # Select database Hook based on `conn` type
-    hook: Union[PostgresHook, SnowflakeHook] = {  # type: ignore
-        "postgresql": PostgresHook(postgres_conn_id=conn_id, schema=database),
-        "postgres": PostgresHook(postgres_conn_id=conn_id, schema=database),
-        "snowflake": SnowflakeHook(
-            snowflake_conn_id=conn_id,
-            database=database,
-            schema=schema,
-            warehouse=warehouse,
-        ),
-        "bigquery": BigQueryHook(use_legacy_sql=False, gcp_conn_id=conn_id),
-        "sqlite": SqliteHook(sqlite_conn_id=conn_id),
-    }.get(conn_type, None)
-    if not hook:
-        raise ValueError("conn id needs to either snowflake or postgres")
+    hook_kwargs = {
+        "postgresql": {"postgres_conn_id": conn_id, "schema": database},
+        "postgres": {"postgres_conn_id": conn_id, "schema": database},
+        "snowflake": {
+            "snowflake_conn_id": conn_id,
+            "database": database,
+            "schema": schema,
+            "warehouse": warehouse,
+        },
+        "bigquery": {"use_legacy_sql": False, "gcp_conn_id": conn_id},
+        "sqlite": {"sqlite_conn_id": conn_id},
+    }
+    try:
+        hook_class = {
+            "postgresql": PostgresHook,
+            "postgres": PostgresHook,
+            "snowflake": SnowflakeHook,
+            "bigquery": BigQueryHook,
+            "sqlite": SqliteHook,
+        }[conn_type]
+    except KeyError:
+        raise ValueError(
+            f"The conn_id {conn_id} is of unsupported type {conn_type}. Current supported types: {list(hook_class.keys())}"
+        )
+    else:
+        hook = hook_class(**hook_kwargs[conn_type])
+
     if database:
         hook.database = database
 

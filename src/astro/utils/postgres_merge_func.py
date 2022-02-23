@@ -13,10 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from psycopg2 import sql
-
 from astro.sql.table import Table
-from astro.utils.dependencies import PostgresHook
+from astro.utils.dependencies import PostgresHook, postgres_sql
 
 
 def postgres_merge_func(
@@ -34,20 +32,22 @@ def postgres_merge_func(
     elif conflict_strategy == "update":
         statement += " ON CONFLICT ({merge_keys}) DO UPDATE SET {update_statements}"
 
-    append_column_names = [sql.Identifier(c) for c in merge_columns]
-    target_column_names = [sql.Identifier(c) for c in target_columns]
+    append_column_names = [postgres_sql.Identifier(c) for c in merge_columns]
+    target_column_names = [postgres_sql.Identifier(c) for c in target_columns]
     column_pairs = list(zip(target_column_names, target_column_names))
     update_statements = [
-        sql.SQL("{x}=EXCLUDED.{y}").format(x=x, y=y) for x, y in column_pairs
+        postgres_sql.SQL("{x}=EXCLUDED.{y}").format(x=x, y=y) for x, y in column_pairs
     ]
 
-    query = sql.SQL(statement).format(
-        target_columns=sql.SQL(",").join(target_column_names),
-        main_table=sql.Identifier(*target_table.identifier_args()),
-        append_columns=sql.SQL(",").join(append_column_names),
-        append_table=sql.Identifier(*merge_table.identifier_args()),
-        update_statements=sql.SQL(",").join(update_statements),
-        merge_keys=sql.SQL(",").join([sql.Identifier(x) for x in merge_keys]),
+    query = postgres_sql.SQL(statement).format(
+        target_columns=postgres_sql.SQL(",").join(target_column_names),
+        main_table=postgres_sql.Identifier(*target_table.identifier_args()),
+        append_columns=postgres_sql.SQL(",").join(append_column_names),
+        append_table=postgres_sql.Identifier(*merge_table.identifier_args()),
+        update_statements=postgres_sql.SQL(",").join(update_statements),
+        merge_keys=postgres_sql.SQL(",").join(
+            [postgres_sql.Identifier(x) for x in merge_keys]
+        ),
     )
 
     hook = PostgresHook(postgres_conn_id=target_table.conn_id)

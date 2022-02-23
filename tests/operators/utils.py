@@ -4,12 +4,11 @@ import time
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models.taskinstance import State
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
+
+from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 
 DEFAULT_SCHEMA = os.getenv("AIRFLOW__ASTRO__SQL_SCHEMA", "astroflow_ci")
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)

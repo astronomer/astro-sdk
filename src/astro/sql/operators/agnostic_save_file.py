@@ -18,12 +18,11 @@ import os
 from typing import Optional
 from urllib.parse import urlparse
 
-import boto3
 import pandas as pd
+import smart_open
 from airflow.hooks.base import BaseHook
 from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
-from smart_open import open
 
 from astro.sql.table import Table
 from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
@@ -82,21 +81,34 @@ class SaveFile(BaseOperator):
         conn_type = BaseHook.get_connection(input_table.conn_id).conn_type
 
         # Select database Hook based on `conn` type
-        input_hook = {
-            "postgres": PostgresHook(
-                postgres_conn_id=input_table.conn_id, schema=input_table.database
-            ),
-            "snowflake": SnowflakeHook(
-                snowflake_conn_id=input_table.conn_id,
-                database=input_table.database,
-                schema=input_table.schema,
-                warehouse=input_table.warehouse,
-            ),
-            "bigquery": BigQueryHook(
-                use_legacy_sql=False, gcp_conn_id=input_table.conn_id
-            ),
-            "sqlite": SqliteHook(sqlite_conn_id=input_table.conn_id),
-        }.get(conn_type, None)
+        hook_kwargs = {
+            "postgres": {
+                "postgres_conn_id": input_table.conn_id,
+                "schema": input_table.database,
+            },
+            "snowflake": {
+                "snowflake_conn_id": input_table.conn_id,
+                "database": input_table.database,
+                "schema": input_table.schema,
+                "warehouse": input_table.warehouse,
+            },
+            "bigquery": {"use_legacy_sql": False, "gcp_conn_id": input_table.conn_id},
+            "sqlite": {"sqlite_conn_id": input_table.conn_id},
+        }
+
+        hook_class = {
+            "postgres": PostgresHook,
+            "snowflake": SnowflakeHook,
+            "bigquery": BigQueryHook,
+            "sqlite": SqliteHook,
+        }
+
+        try:
+            input_hook = hook_class[conn_type](**hook_kwargs[conn_type])
+        except KeyError:
+            raise ValueError(
+                f"The conn_id {input_table.conn_id} is of unsupported type {conn_type}. Current support types: {list(hook_class.key())}"
+            )
 
         if conn_type == "postgres" or conn_type == "postgresql":
             table_name = (
@@ -125,7 +137,9 @@ class SaveFile(BaseOperator):
             "": lambda: None,
         }[urlparse(output_file_path).scheme]()
         try:
-            with open(output_file_path, mode="r", transport_params=transport_params):
+            with smart_open.open(
+                output_file_path, mode="r", transport_params=transport_params
+            ):
                 return True
         except IOError:
             return False
@@ -152,7 +166,7 @@ class SaveFile(BaseOperator):
             "json": {"orient": "records"},
             "ndjson": {"orient": "records", "lines": True},
         }
-        with open(
+        with smart_open.open(
             output_file_path, mode="wb", transport_params=transport_params
         ) as stream:
             serialiser[self.output_file_format](
