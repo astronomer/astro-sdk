@@ -42,6 +42,7 @@ tests = [
     "pytest>=6.0",
     "pytest-split",
     "pytest-dotenv",
+    "requests-mock",
 ]
 google = [
     "apache-airflow-providers-google",
