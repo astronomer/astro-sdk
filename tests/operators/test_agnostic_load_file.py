@@ -555,7 +555,7 @@ def create_task_parameters(database_name, file_type):
 
 
 @pytest.mark.parametrize(
-    "sql_server", ["snowflake", "postgres", "bigquery"], indirect=True
+    "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
 )
 @pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
 def test_load_file(sample_dag, sql_server, file_type):
@@ -566,9 +566,14 @@ def test_load_file(sample_dag, sql_server, file_type):
 
     test_utils.create_and_run_task(sample_dag, load_file, (), task_params)
 
-    df = sql_hook.get_pandas_df(
-        f"SELECT * FROM {schema}.{OUTPUT_TABLE_NAME}_templated_file_name"
-    )
+    if database_name != "sqlite":
+        df = sql_hook.get_pandas_df(
+            f"SELECT * FROM {OUTPUT_TABLE_NAME}_templated_file_name"
+        )
+    else:
+        df = sql_hook.get_pandas_df(
+            f"SELECT * FROM {schema}.{OUTPUT_TABLE_NAME}_templated_file_name"
+        )
 
     assert len(df) == 3
     expected = pd.DataFrame(
