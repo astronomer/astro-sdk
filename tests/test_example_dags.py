@@ -6,7 +6,6 @@ from airflow.models.dagbag import DagBag
 from airflow.utils import timezone
 from airflow.utils.session import provide_session
 from airflow.utils.state import State
-from google.api_core.exceptions import NotFound
 
 from tests.operators.utils import DEFAULT_SCHEMA
 
@@ -26,10 +25,10 @@ def session():
 @pytest.mark.parametrize(
     "dag_id",
     [
-        "astro_test_dag",
-        "find_top_rentals_with_sql_files",
-        "demo_with_s3_and_csv",
-        "snowflake_animal_adoption_example",
+        "example_amazon_s3_postgres",
+        "example_amazon_s3_postgres_load_and_save",
+        "example_amazon_s3_snowflake_transform",
+        "example_postgres_render",
     ],
 )
 def test_example_dag(session, dag_id):
@@ -38,9 +37,7 @@ def test_example_dag(session, dag_id):
     dag = db.get_dag(dag_id)
 
     if dag is None:
-        raise NotFound(
-            "DAG not found", detail=f"The DAG with dag_id: {dag_id} was not found"
-        )
+        raise NameError(f"The DAG with dag_id: {dag_id} was not found")
 
     dag.clear(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE, dag_run_state=State.NONE)
 

@@ -35,7 +35,7 @@ default_args = {
     start_date=timezone.utcnow(),
     tags=["demo"],
 )
-def demo_with_s3_and_csv():
+def example_amazon_s3_postgres_load_and_save():
     t1 = aql.load_file(
         path="s3://tmp9/homes.csv",
         file_conn_id="my_aws_conn",
@@ -51,4 +51,4 @@ def demo_with_s3_and_csv():
     )
 
 
-demo_dag = demo_with_s3_and_csv()
+dag = example_amazon_s3_postgres_load_and_save()
