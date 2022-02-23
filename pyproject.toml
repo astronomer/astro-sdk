@@ -9,22 +9,23 @@ dynamic = ["version", "description"]
 authors = [
     {name = "Daniel Imberman", email = "daniel@astronomer.io"},
     {name = "Plinio Guzman"},
+    {name = "Utkarsh Sharma", email = "utkarsh.sharma@astronomer.io"},
+    {name = "Tatiana Al-Chueyr", email = "tatiana.alchueyr@astronomer.io"}
 ]
 readme = "README.md"
 license = {file = "LICENSE"}
 
 requires-python = ">=3.7"
 dependencies = [
-    "apache-airflow >=2.0",
+    "apache-airflow>=2.0",
     "python-frontmatter",
-    "pandas >=1.3.4",
-    "SQLAlchemy==1.3.24",
-    "apache-airflow-providers-postgres",
+    "pandas>=1.3.4",
+    "SQLAlchemy>=1.3.18,<=1.3.24",
     "markupsafe>=1.1.1,<2.1.0",
     "smart-open"
 ]
 
-keywords = ["airflow", "provider", "astronomer", "sql", "decorator"]
+keywords = ["airflow", "provider", "astronomer", "sql", "decorator", "task flow", "elt", "etl", "dag"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: Apache Software License",
@@ -38,18 +39,9 @@ classifiers = [
 
 [project.optional-dependencies]
 tests = [
-    "pytest >=6.0",
+    "pytest>=6.0",
     "pytest-split",
     "pytest-dotenv",
-    "requests-mock",
-    "apache-airflow-providers-google",
-    "sqlalchemy-bigquery==1.3.0",
-    "smart-open[all]>=5.2.1",
-    "apache-airflow-providers-snowflake",
-    "snowflake-sqlalchemy ==1.2.0",
-    "snowflake-connector-python[pandas]",
-    "apache-airflow-providers-postgres",
-    "s3fs",
 ]
 google = [
     "apache-airflow-providers-google",
@@ -58,7 +50,7 @@ google = [
 ]
 snowflake = [
     "apache-airflow-providers-snowflake",
-    "snowflake-sqlalchemy ==1.2.0",
+    "snowflake-sqlalchemy>=1.2.0,<=1.2.4",
     "snowflake-connector-python[pandas]",
 ]
 postgres = [
@@ -69,17 +61,14 @@ amazon = [
     "smart-open[s3]>=5.2.1",
 ]
 all = [
-    "pytest >=6.0",
-    "pytest-dotenv",
-    "requests-mock",
     "apache-airflow-providers-google",
     "sqlalchemy-bigquery==1.3.0",
     "smart-open[all]>=5.2.1",
-    "apache-airflow-providers-snowflake",
-    "snowflake-sqlalchemy ==1.2.0",
-    "snowflake-connector-python[pandas]",
-    "apache-airflow-providers-postgres",
     "s3fs",
+    "apache-airflow-providers-snowflake",
+    "snowflake-sqlalchemy>=1.2.0,<=1.2.4",
+    "snowflake-connector-python[pandas]",
+    "apache-airflow-providers-postgres"
 ]
 
 [project.urls]
