@@ -15,12 +15,14 @@ def dev(session: nox.Session) -> None:
     development environment to ``.nox/dev``.
     """
     session.install("nox")
+    session.install("-e", ".[all]")
     session.install("-e", ".[tests]")
 
 
 @nox.session(python=["3.7", "3.8", "3.9"])
 def test(session: nox.Session) -> None:
     """Run unit tests."""
+    session.install("-e", ".[all]")
     session.install("-e", ".[tests]")
     session.run("airflow", "db", "init")
     session.run("pytest", *session.posargs)
