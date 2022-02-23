@@ -16,6 +16,7 @@ limitations under the License.
 import os
 from typing import Optional, Union
 
+from airflow.hooks.sqlite_hook import SqliteHook
 from pandas import DataFrame
 from pandas.io.sql import SQLDatabase
 from snowflake.connector import pandas_tools
@@ -46,13 +47,16 @@ def move_dataframe_to_sql(
             warehouse=warehouse,
         ),
         "bigquery": BigQueryHook(use_legacy_sql=False, gcp_conn_id=conn_id),
+        "sqlite": SqliteHook(sqlite_conn_id=conn_id),
     }.get(conn_type, None)
     if not hook:
         raise ValueError("conn id needs to either snowflake or postgres")
     if database:
         hook.database = database
 
-    if not schema_exists(hook=hook, schema=schema, conn_type=conn_type):
+    if conn_type != "sqlite" and not schema_exists(
+        hook=hook, schema=schema, conn_type=conn_type
+    ):
         schema_query = create_schema_query(
             conn_type=conn_type, hook=hook, schema_id=schema, user=user
         )
@@ -82,6 +86,15 @@ def move_dataframe_to_sql(
             if_exists="replace",
             chunksize=chunksize,
             project_id=hook.project_id,
+        )
+    elif conn_type == "sqlite":
+        df.to_sql(
+            output_table_name,
+            con=hook.get_sqlalchemy_engine(),
+            if_exists="replace",
+            chunksize=chunksize,
+            method="multi",
+            index=False,
         )
     else:
         df.to_sql(

@@ -75,7 +75,7 @@ def run_dag(dag):
     )
 
 
-class TestPostgresAppend(unittest.TestCase):
+class TestSQLiteAppend(unittest.TestCase):
     """
     Test Sample Operator.
     """
@@ -99,22 +99,11 @@ class TestPostgresAppend(unittest.TestCase):
         self.APPEND_TABLE_NAME = "test_append"
         self.main_table = Table(
             table_name=self.MAIN_TABLE_NAME,
-            conn_id="postgres_conn",
-            database="pagila",
-            schema="public",
+            conn_id="sqlite_conn",
         )
         self.append_table = Table(
             table_name=self.APPEND_TABLE_NAME,
-            conn_id="postgres_conn",
-            database="pagila",
-            schema="public",
-        )
-
-        self.main_table_bigquery = Table(
-            table_name=self.MAIN_TABLE_NAME, conn_id="bigquery", schema="tmp_astro"
-        )
-        self.append_table_bigquery = Table(
-            table_name=self.APPEND_TABLE_NAME, conn_id="bigquery", schema="tmp_astro"
+            conn_id="sqlite_conn",
         )
 
     def clear_run(self):
@@ -139,7 +128,7 @@ class TestPostgresAppend(unittest.TestCase):
             task = dr.get_task_instance(task_id)
 
     def test_append(self):
-        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
+        hook = SqliteHook(sqlite_conn_id="sqlite_conn")
 
         drop_table(table_name="test_main", postgres_conn=hook.get_conn())
         drop_table(table_name="test_append", postgres_conn=hook.get_conn())
@@ -185,7 +174,7 @@ class TestPostgresAppend(unittest.TestCase):
 
     def test_append_all_fields(self):
 
-        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
+        hook = SqliteHook(sqlite_conn_id="sqlite_conn")
 
         drop_table(table_name="test_main", postgres_conn=hook.get_conn())
         drop_table(table_name="test_append", postgres_conn=hook.get_conn())
@@ -227,7 +216,7 @@ class TestPostgresAppend(unittest.TestCase):
         assert not df["rooms"].hasnans
 
     def test_append_with_cast(self):
-        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
+        hook = SqliteHook(sqlite_conn_id="sqlite_conn")
 
         # drop_table(table_name="test_main", postgres_conn=hook.get_conn())
         # drop_table(table_name="test_append", postgres_conn=hook.get_conn())
@@ -274,7 +263,7 @@ class TestPostgresAppend(unittest.TestCase):
     def test_append_only_cast(self):
         MAIN_TABLE_NAME = "test_main"
         APPEND_TABLE_NAME = "test_append"
-        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
+        hook = SqliteHook(sqlite_conn_id="sqlite_conn")
 
         drop_table(table_name="test_main", postgres_conn=hook.get_conn())
         drop_table(table_name="test_append", postgres_conn=hook.get_conn())
@@ -317,74 +306,3 @@ class TestPostgresAppend(unittest.TestCase):
         assert len(df) == 6
         assert not df["age"].hasnans
         assert df["sell"].hasnans
-
-    def test_append_all_fields_bigquery(self):
-        cwd = pathlib.Path(__file__).parent
-
-        with self.dag:
-            load_main = aql.load_file(
-                path=str(cwd) + "/../data/homes_main.csv",
-                output_table=self.main_table_bigquery,
-            )
-            load_append = aql.load_file(
-                path=str(cwd) + "/../data/homes_append.csv",
-                output_table=self.append_table_bigquery,
-            )
-            foo = aql.append(
-                main_table=self.main_table_bigquery,
-                append_table=self.append_table_bigquery,
-            )
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-
-        main_table = load_main.operator.run(
-            start_date=DEFAULT_DATE, end_date=DEFAULT_DATE
-        )
-        load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, load_main.operator.task_id)
-        self.wait_for_task_finish(dr, load_append.operator.task_id)
-        foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, foo.task_id)
-
-        client = bigquery.Client()
-        query_job = client.query(
-            f"SELECT * FROM {load_main.operator.output_table.qualified_name()}"
-        )
-        bigquery_df = query_job.to_dataframe()
-
-        assert len(bigquery_df) == 6
-        assert not bigquery_df["sell"].hasnans
-        assert not bigquery_df["rooms"].hasnans
-
-    def test_append_on_tables_on_different_db(self):
-        cwd = pathlib.Path(__file__).parent
-
-        with pytest.raises(ValueError):
-            with self.dag:
-                load_main = aql.load_file(
-                    path=str(cwd) + "/../data/homes_main.csv",
-                    output_table=self.main_table_bigquery,
-                )
-                load_append = aql.load_file(
-                    path=str(cwd) + "/../data/homes_append.csv",
-                    output_table=self.append_table,
-                )
-                foo = aql.append(
-                    main_table=self.main_table_bigquery,
-                    append_table=self.append_table,
-                )
-            dr = self.dag.create_dagrun(
-                run_id=DagRunType.MANUAL.value,
-                start_date=timezone.utcnow(),
-                execution_date=DEFAULT_DATE,
-                state=State.RUNNING,
-            )
-
-            load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-            self.wait_for_task_finish(dr, load_main.operator.task_id)
-            self.wait_for_task_finish(dr, load_append.operator.task_id)
-            foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)

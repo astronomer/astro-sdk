@@ -27,6 +27,7 @@ import os
 import pathlib
 import unittest.mock
 
+from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
@@ -66,6 +67,9 @@ class TestAggregateCheckOperator(unittest.TestCase):
             conn_id="bigquery",
             schema="tmp_astro",
         )
+        cls.aggregate_table_sqlite = Table(
+            "aggregate_check_test", conn_id="sqlite_conn"
+        )
         aql.load_file(
             path=str(cls.cwd) + "/../data/homes_merge_1.csv",
             output_table=cls.aggregate_table,
@@ -73,6 +77,10 @@ class TestAggregateCheckOperator(unittest.TestCase):
         aql.load_file(
             path=str(cls.cwd) + "/../data/homes_merge_1.csv",
             output_table=cls.aggregate_table_bigquery,
+        ).operator.execute({"run_id": "foo"})
+        aql.load_file(
+            path=str(cls.cwd) + "/../data/homes_merge_1.csv",
+            output_table=cls.aggregate_table_sqlite,
         ).operator.execute({"run_id": "foo"})
 
     def clear_run(self):
@@ -117,6 +125,22 @@ class TestAggregateCheckOperator(unittest.TestCase):
         try:
             a = aql.aggregate_check(
                 table=self.aggregate_table_bigquery,
+                check="select count(*) FROM {{table}}",
+                greater_than=4,
+                less_than=4,
+            )
+            a.execute({"run_id": "foo"})
+            assert True
+        except ValueError:
+            assert False
+
+    def test_exact_value_sqlite(self):
+        hook = SqliteHook(sqlite_conn_id="sqlite_conn")
+        df = hook.get_pandas_df(sql="SELECT * FROM aggregate_check_test")
+        assert df.count()[0] == 4
+        try:
+            a = aql.aggregate_check(
+                table=self.aggregate_table_sqlite,
                 check="select count(*) FROM {{table}}",
                 greater_than=4,
                 less_than=4,
