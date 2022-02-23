@@ -2,9 +2,9 @@ import os
 from typing import List
 
 from airflow.hooks.base import BaseHook
-from psycopg2 import sql
 
 from astro.sql.table import Table
+from astro.utils.dependencies import postgres_sql
 
 
 def schema_exists(hook, schema, conn_type):
@@ -27,8 +27,13 @@ def create_schema_query(conn_type, hook, schema_id, user):
 
     if conn_type in ["postgresql", "postgres"]:
         return (
-            sql.SQL("CREATE SCHEMA IF NOT EXISTS {schema} AUTHORIZATION {user}")
-            .format(schema=sql.Identifier(schema_id), user=sql.Identifier(user))
+            postgres_sql.SQL(
+                "CREATE SCHEMA IF NOT EXISTS {schema} AUTHORIZATION {user}"
+            )
+            .format(
+                schema=postgres_sql.Identifier(schema_id),
+                user=postgres_sql.Identifier(user),
+            )
             .as_string(hook.get_conn())
         )
     elif conn_type in ["snowflake", "google_cloud_platform", "bigquery", "sqlite"]:

@@ -329,12 +329,12 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         self.conn_type = conn.conn_type  # type: ignore
 
         hook = {
-            "snowflake": self.get_snow_hook(),
-            "postgresql": self.get_postgres_hook(),
-            "postgres": self.get_postgres_hook(),
-            "bigquery": self.get_bigquery_hook(),
-            "sqlite": self.get_sqlite_hook(),
-        }[self.conn_type]
+            "snowflake": self.get_snow_hook,
+            "postgresql": self.get_postgres_hook,
+            "postgres": self.get_postgres_hook,
+            "bigquery": self.get_bigquery_hook,
+            "sqlite": self.get_sqlite_hook,
+        }[self.conn_type]()
         return hook.get_sqlalchemy_engine()
 
     def _run_sql_alchemy_obj(self, sql, parameters):

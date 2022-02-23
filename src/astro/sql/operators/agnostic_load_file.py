@@ -19,9 +19,9 @@ from typing import Union
 from urllib.parse import urlparse
 
 import pandas as pd
+import smart_open
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator
-from smart_open import open
 
 from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.sql.table import Table, TempTable, create_table_name
@@ -129,7 +129,7 @@ class AgnosticLoadFile(BaseOperator):
         }
         mode = {"parquet": "rb"}
         deserialiser_params = {"ndjson": {"lines": True}}
-        with open(
+        with smart_open.open(
             path, mode=mode.get(file_type, "r"), transport_params=transport_params
         ) as stream:
             return deserialiser[file_type](

@@ -1,8 +1,7 @@
 import os
 from urllib import parse
 
-import boto3
-from google.cloud.storage import Client
+from astro.utils.dependencies import BotoSession, GCSClient
 
 
 def parse_s3_env_var():
@@ -24,7 +23,7 @@ def s3fs_creds():
     # To-do: clean-up how S3 creds are passed to s3fs
 
     k, v = parse_s3_env_var()
-    session = boto3.Session(
+    session = BotoSession(
         aws_access_key_id=k,
         aws_secret_access_key=v,
     )
@@ -35,5 +34,5 @@ def gcs_client():
     """
     get GCS credentials for storage.
     """
-    client = Client()
+    client = GCSClient()
     return dict(client=client)
