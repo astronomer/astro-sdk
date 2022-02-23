@@ -566,7 +566,7 @@ def test_load_file(sample_dag, sql_server, file_type):
 
     test_utils.create_and_run_task(sample_dag, load_file, (), task_params)
 
-    if database_name != "sqlite":
+    if database_name == "sqlite":
         df = sql_hook.get_pandas_df(
             f"SELECT * FROM {OUTPUT_TABLE_NAME}_templated_file_name"
         )
