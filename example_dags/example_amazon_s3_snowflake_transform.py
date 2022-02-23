@@ -60,7 +60,7 @@ def aggregate_data(df: pd.DataFrame):
     },
     catchup=False,
 )
-def snowflake_animal_adoption_example():
+def example_amazon_s3_snowflake_transform():
     combined_data = combine_data(
         center_1=Table(
             "ADOPTION_CENTER_1",
@@ -87,4 +87,4 @@ def snowflake_animal_adoption_example():
     )
 
 
-animal_adoptions_etl_dag = snowflake_animal_adoption_example()
+dag = example_amazon_s3_snowflake_transform()
