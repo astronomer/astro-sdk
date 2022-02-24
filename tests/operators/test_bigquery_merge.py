@@ -143,7 +143,7 @@ class TestPostgresMergeOperator(unittest.TestCase):
         a.execute({"run_id": "foo"})
 
         df = hook.get_pandas_df(
-            sql="SELECT * FROM {test_utils.DEFAULT_SCHEMA}.merge_test_1 order by list"
+            sql=f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.merge_test_1 order by list"
         )
         assert df.age.to_list()[:-1] == [41.0, 22.0, 60.0, 12.0]
         assert math.isnan(df.age.to_list()[-1])
@@ -166,6 +166,6 @@ class TestPostgresMergeOperator(unittest.TestCase):
         a.execute({"run_id": "foo"})
 
         df = hook.get_pandas_df(
-            sql="SELECT * FROM {test_utils.DEFAULT_SCHEMA}.merge_test_1 order by list"
+            sql=f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.merge_test_1 order by list"
         )
         assert df.taxes.to_list() == [1, 2, 3167, 4033, 3]
