@@ -78,6 +78,7 @@ class SaveFile(BaseOperator):
 
         # Infer db type from `input_conn_id`.
         input_table = self.input_table
+        self._set_default_values_from_dag_default(context)
         conn_type = BaseHook.get_connection(input_table.conn_id).conn_type
 
         # Select database Hook based on `conn` type
@@ -111,9 +112,7 @@ class SaveFile(BaseOperator):
             )
 
         if conn_type == "postgres" or conn_type == "postgresql":
-            table_name = (
-                f"{input_table.schema or get_schema()}.{get_table_name(input_table)}"
-            )
+            table_name = f"{input_table.schema or get_schema(context)}.{get_table_name(input_table)}"
         else:
             table_name = f"{get_table_name(input_table)}"
         # Load table from SQL db.
@@ -143,6 +142,19 @@ class SaveFile(BaseOperator):
                 return True
         except IOError:
             return False
+
+    def _set_default_values_from_dag_default(self, context):
+        self.input_table.schema = self.input_table.schema or get_schema(context)
+        if context.get("dag"):
+            self.input_table.conn_id = self.input_table.conn_id or context[
+                "dag"
+            ].default_args.get("conn_id")
+            self.input_table.database = self.input_table.database or context[
+                "dag"
+            ].default_args.get("database")
+            self.input_table.warehouse = self.input_table.warehouse or context[
+                "dag"
+            ].default_args.get("warehouse")
 
     def agnostic_write_file(self, df, output_file_path, output_conn_id=None):
         """Write dataframe to csv/parquet files formats

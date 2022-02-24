@@ -25,6 +25,7 @@ from astro.utils.bigquery_merge_func import bigquery_merge_func
 from astro.utils.postgres_merge_func import postgres_merge_func
 from astro.utils.schema_util import (
     get_error_string_for_multiple_dbs,
+    get_schema,
     tables_from_same_db,
 )
 from astro.utils.snowflake_merge_func import snowflake_merge_func
@@ -75,6 +76,7 @@ class SqlMergeOperator(SqlDecoratoratedOperator):
         )
 
     def execute(self, context: Dict):
+        self._set_default_values_from_dag_default(context)
         conn_type = BaseHook.get_connection(self.conn_id).conn_type  # type: ignore
         if conn_type == "postgres":
             self.sql = postgres_merge_func(
@@ -116,3 +118,13 @@ class SqlMergeOperator(SqlDecoratoratedOperator):
             raise AirflowException(f"please give a postgres conn id")
 
         return super().execute(context)
+
+    def _set_default_values_from_dag_default(self, context):
+        self.schema = self.schema or get_schema(context)
+        if context.get("dag"):
+            self.conn_id = self.conn_id or context["dag"].default_args.get("conn_id")
+            self.database = self.database or context["dag"].default_args.get("database")
+            self.warehouse = self.warehouse or context["dag"].default_args.get(
+                "warehouse"
+            )
+            self.role = self.role or context["dag"].default_args.get("role")

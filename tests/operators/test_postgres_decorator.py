@@ -363,10 +363,11 @@ class TestPostgresDecorator(unittest.TestCase):
 
         cwd = pathlib.Path(__file__).parent
 
+        self.dag.default_args["conn_id"] = "postgres_conn"
+
         with self.dag:
             f = aql.transform_file(
                 sql=str(cwd) + "/test.sql",
-                conn_id="postgres_conn",
                 database="pagila",
                 parameters={
                     "actor": Table("actor"),

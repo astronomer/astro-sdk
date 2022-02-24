@@ -61,18 +61,22 @@ class Table:
 
 
 class TempTable(Table):
-    def __init__(self, conn_id=None, database=None, warehouse=""):
+    def __init__(self, conn_id=None, database=None, warehouse="", schema=None):
         super().__init__(
-            table_name="", conn_id=conn_id, database=database, warehouse=warehouse
+            table_name="",
+            conn_id=conn_id,
+            database=database,
+            warehouse=warehouse,
+            schema=schema,
         )
 
-    def to_table(self, table_name: str, schema: str) -> Table:
+    def to_table(self, table_name: str, schema: str = None) -> Table:
         return Table(
             table_name=table_name,
             conn_id=self.conn_id,
             database=self.database,
             warehouse=self.warehouse,
-            schema=schema,
+            schema=self.schema or schema,
         )
 
 

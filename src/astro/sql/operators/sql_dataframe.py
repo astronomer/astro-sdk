@@ -57,6 +57,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         self.parameters = None
         self.kwargs = kwargs or {}
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
+        self.context = None
         if self.op_kwargs.get("output_table"):
             self.output_table: Optional[Table] = self.op_kwargs.pop("output_table")
         else:
@@ -92,6 +93,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         }
 
     def execute(self, context: Dict):
+        self.context = context  # type: ignore
         self._set_variables_from_first_table()
         self.handle_op_args()
         self.handle_op_kwargs()
@@ -101,9 +103,10 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             self.populate_output_table()
             if type(self.output_table) == TempTable:
                 self.output_table = self.output_table.to_table(
-                    table_name=create_table_name(context=context), schema=get_schema()
+                    table_name=create_table_name(context=context),
+                    schema=get_schema(context),
                 )
-            self.output_table.schema = self.output_table.schema or get_schema()
+            self.output_table.schema = self.output_table.schema or get_schema(context)
             conn = BaseHook.get_connection(self.output_table.conn_id)
             move_dataframe_to_sql(
                 output_table_name=self.output_table.table_name,
@@ -145,7 +148,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             self.hook = PostgresHook(
                 postgres_conn_id=table.conn_id, schema=table.database
             )
-            schema = table.schema or get_schema()
+            schema = table.schema or get_schema(context=self.context)
             query = (
                 sql.SQL("SELECT * FROM {schema}.{input_table}")
                 .format(

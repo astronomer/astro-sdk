@@ -66,4 +66,4 @@ class TableHandler:
         self.output_table.conn_id = self.output_table.conn_id or self.conn_id
         self.output_table.database = self.output_table.database or self.database
         self.output_table.warehouse = self.output_table.warehouse or self.warehouse
-        self.output_table.schema = self.output_table.schema or get_schema()
+        self.output_table.schema = self.output_table.schema or get_schema(self.context)

@@ -98,12 +98,12 @@ class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
                 return self.handler(cursor)
             return cursor
 
-        self.output_schema = self.schema or get_schema()
+        self.output_schema = self.schema or get_schema(context)
         self._set_variables_from_first_table()
+        self._set_default_values_from_dag_default(context)
 
         conn = BaseHook.get_connection(self.conn_id)
         self.conn_type = conn.conn_type  # type: ignore
-        self.schema = self.schema or get_schema()
         self.user = conn.login
         self.run_id = context.get("run_id")
         self._set_hook()
@@ -131,12 +131,13 @@ class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
                 full_output_table_name = self.handle_output_table_schema(
                     # Since there is no output table defined we have to assume default schema
                     output_table_name,
-                    schema=get_schema(),
+                    schema=get_schema(context),
                 )
             else:
                 output_table_name = self.output_table.table_name
                 full_output_table_name = self.handle_output_table_schema(
-                    output_table_name, schema=self.output_table.schema
+                    output_table_name,
+                    schema=self.output_table.schema or get_schema(context),
                 )
 
             self._run_sql_alchemy_obj(
@@ -167,6 +168,16 @@ class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
             self.populate_output_table()
             self.log.info(f"returning table {self.output_table}")
             return self.output_table
+
+    def _set_default_values_from_dag_default(self, context):
+        self.schema = self.schema or get_schema(context)
+        if context.get("dag"):
+            self.conn_id = self.conn_id or context["dag"].default_args.get("conn_id")
+            self.database = self.database or context["dag"].default_args.get("database")
+            self.warehouse = self.warehouse or context["dag"].default_args.get(
+                "warehouse"
+            )
+            self.role = self.role or context["dag"].default_args.get("role")
 
     def read_sql(self):
         if self.sql == "":

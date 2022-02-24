@@ -73,6 +73,7 @@ class AgnosticLoadFile(BaseOperator):
         """
 
         # Read file with Pandas load method based on `file_type` (S3 or local).
+        self._set_default_values_from_dag_default(context)
         df = self._load_dataframe(self.path)
 
         # Retrieve conn type
@@ -99,6 +100,23 @@ class AgnosticLoadFile(BaseOperator):
         )
         self.log.info(f"returning table {self.output_table}")
         return self.output_table
+
+    def _set_default_values_from_dag_default(self, context):
+        if type(self.output_table) == TempTable:
+            self.output_table = self.output_table.to_table(
+                create_table_name(context=context), get_schema(context)
+            )
+        self.output_table.schema = self.output_table.schema or get_schema(context)
+        if context.get("dag"):
+            self.output_table.conn_id = self.output_table.conn_id or context[
+                "dag"
+            ].default_args.get("conn_id")
+            self.output_table.database = self.output_table.database or context[
+                "dag"
+            ].default_args.get("database")
+            self.output_table.warehouse = self.output_table.warehouse or context[
+                "dag"
+            ].default_args.get("warehouse")
 
     @staticmethod
     def validate_path(path):
