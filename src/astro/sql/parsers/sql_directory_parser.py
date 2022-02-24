@@ -31,6 +31,7 @@ def render(
     template_dict = kwargs
     op_kwargs = {}
     default_params = {filename.split(".")[0]: None for filename in files}
+    default_params.update(template_dict)
 
     # Parse all of the SQL files in this directory
     for filename in files:
