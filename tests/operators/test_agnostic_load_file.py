@@ -33,12 +33,9 @@ from unittest import mock
 import pandas as pd
 import pytest
 from airflow.exceptions import DuplicateTaskIdFound
-from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-
-# from astro.sql.operators.temp_hooks import PostgresHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
@@ -47,7 +44,6 @@ from airflow.utils.types import DagRunType
 from google.api_core.exceptions import NotFound
 from google.cloud import bigquery, storage
 
-# Import Operator
 from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
 from astro.sql.table import Table, TempTable
 from tests.operators import utils as test_utils
@@ -254,7 +250,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM tmp_astro.test_dag_load_file_homes_csv_1",
+            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.test_dag_load_file_homes_csv_1",
             con=self.hook_target.get_conn(),
         )
 
@@ -282,14 +278,16 @@ class TestAgnosticLoadFile(unittest.TestCase):
                 "path": data_path,
                 "file_conn_id": "",
                 "output_table": Table(
-                    OUTPUT_TABLE_NAME, conn_id="bigquery", schema="tmp_astro"
+                    OUTPUT_TABLE_NAME,
+                    conn_id="bigquery",
+                    schema=test_utils.DEFAULT_SCHEMA,
                 ),
             },
         )
 
         client = bigquery.Client()
         query_job = client.query(
-            f"SELECT * FROM astronomer-dag-authoring.tmp_astro.{OUTPUT_TABLE_NAME}"
+            f"SELECT * FROM astronomer-dag-authoring.{test_utils.DEFAULT_SCHEMA}.{OUTPUT_TABLE_NAME}"
         )
         bigquery_df = query_job.to_dataframe()
 
@@ -365,7 +363,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM tmp_astro.{OUTPUT_TABLE_NAME}",
+            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.{OUTPUT_TABLE_NAME}",
             con=self.hook_target.get_conn(),
         )
 
@@ -380,7 +378,8 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Drop target table
         drop_table_postgres(
-            f"tmp_astro.{OUTPUT_TABLE_NAME}", self.hook_target.get_conn()
+            f"{test_utils.DEFAULT_SCHEMA}.{OUTPUT_TABLE_NAME}",
+            self.hook_target.get_conn(),
         )
 
         self.create_and_run_task(
@@ -399,7 +398,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM tmp_astro.{OUTPUT_TABLE_NAME}",
+            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.{OUTPUT_TABLE_NAME}",
             con=self.hook_target.get_conn(),
         )
 

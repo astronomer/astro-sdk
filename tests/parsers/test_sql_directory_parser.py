@@ -1,4 +1,5 @@
 import logging
+import pathlib
 import unittest.mock
 
 import pytest
@@ -107,8 +108,21 @@ class TestSQLParsing(unittest.TestCase):
         :return:
         """
         with self.dag:
-            rendered_tasks = aql.render(dir_path + "/single_task_dag")
+            cwd = pathlib.Path(__file__).parent
 
+            input_table = aql.load_file(
+                path=str(cwd) + "/../data/homes.csv",
+                output_table=Table(
+                    test_utils.get_table_name("snowflake_render_test"),
+                    conn_id="snowflake_conn",
+                    schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                    database=os.getenv("SNOWFLAKE_DATABASE"),
+                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                ),
+            )
+            rendered_tasks = aql.render(
+                dir_path + "/single_task_dag", input_table=input_table
+            )
         test_utils.run_dag(self.dag)
 
     def test_parse_to_dataframe(self):
