@@ -97,15 +97,6 @@ def move_dataframe_to_sql(
             method="multi",
             index=False,
         )
-    elif conn_type in ["postgres", "postgresql"]:
-        df.to_sql(
-            f"{schema}.{output_table_name}",
-            con=hook.get_sqlalchemy_engine(),
-            if_exists="replace",
-            chunksize=chunksize,
-            method="multi",
-            index=False,
-        )
     else:
         df.to_sql(
             output_table_name,
