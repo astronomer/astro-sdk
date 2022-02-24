@@ -73,19 +73,28 @@ class SqlDataframeOperator(DecoratedOperator):
                 full_spec.annotations[current_arg] == pd.DataFrame
                 and type(arg) == Table
             ):
+                self.pull_values_from_table(arg)
                 ret_args.append(self._get_dataframe(arg))
             else:
                 ret_args.append(arg)
         self.op_args = tuple(ret_args)
 
+    def pull_values_from_table(self, table):
+        self.conn_id = self.conn_id or table.conn_id
+        self.database = self.database or table.database
+        self.schema = self.schema or table.schema
+        self.warehouse = self.warehouse or table.warehouse
+
     def handle_op_kwargs(self):
         param_types = inspect.signature(self.python_callable).parameters
-        self.op_kwargs = {
-            k: self._get_dataframe(v)
-            if param_types.get(k).annotation == pd.DataFrame and type(v) == Table
-            else v
-            for k, v in self.op_kwargs.items()
-        }
+        kwargs = {}
+        for k, v in self.op_kwargs.items():
+            if param_types.get(k).annotation == pd.DataFrame and type(v) == Table:
+                kwargs[k] = self._get_dataframe(v)
+                self.pull_values_from_table(v)
+            else:
+                kwargs[k] = v
+        self.op_kwargs = kwargs
 
     def execute(self, context: Dict):
         self.handle_op_args()
@@ -97,7 +106,13 @@ class SqlDataframeOperator(DecoratedOperator):
                 self.output_table = self.output_table.to_table(
                     table_name=create_table_name(context=context), schema=get_schema()
                 )
-            self.output_table.schema = self.output_table.schema or get_schema()
+            self.output_table.conn_id = self.output_table.conn_id or self.conn_id
+            self.output_table.schema = (
+                self.output_table.schema or self.schema or get_schema()
+            )
+            self.output_table.database = self.output_table.database or self.database
+            self.output_table.warehouse = self.output_table.warehouse or self.warehouse
+            # self.output_table.role = self.output_table.role or self.role
             conn = BaseHook.get_connection(self.output_table.conn_id)
             move_dataframe_to_sql(
                 output_table_name=self.output_table.table_name,

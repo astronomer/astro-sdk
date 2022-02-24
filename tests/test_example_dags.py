@@ -29,6 +29,7 @@ def session():
 @pytest.mark.parametrize(
     "dag_id",
     [
+        "astro_homes_etl_dag",
         "astro_test_dag",
         "find_top_rentals_with_sql_files",
         "demo_with_s3_and_csv",

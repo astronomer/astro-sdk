@@ -128,12 +128,12 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             if not self.output_table:
                 output_table_name = create_table_name(context=context)
                 full_output_table_name = self.handle_output_table_schema(
-                    output_table_name
+                    output_table_name=output_table_name, schema=self.schema
                 )
             else:
                 output_table_name = self.output_table.table_name
                 full_output_table_name = self.handle_output_table_schema(
-                    output_table_name, self.output_table.schema
+                    output_table_name=output_table_name, schema=self.output_table.schema
                 )
 
             self._run_sql_alchemy_obj(
@@ -146,6 +146,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
 
         if self.output_table:
             self.log.info(f"returning table {self.output_table}")
+            self.populate_output_table()
             return self.output_table
 
         elif self.raw_sql:
@@ -162,6 +163,12 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             )
             self.log.info(f"returning table {self.output_table}")
             return self.output_table
+
+    def populate_output_table(self):
+        self.output_table.conn_id = self.output_table.conn_id or self.conn_id
+        self.output_table.schema = self.output_table.schema or self.schema
+        self.output_table.warehouse = self.output_table.warehouse or self.warehouse
+        self.output_table.database = self.output_table.database or self.database
 
     def read_sql(self):
         if self.sql == "":
@@ -199,9 +206,9 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         :return:
         """
         schema = schema or get_schema()
-        if self.conn_type == "postgres" and self.schema:
+        if self.conn_type == "postgres" and schema:
             output_table_name = schema + "." + output_table_name
-        elif self.conn_type == "snowflake" and self.schema and "." not in self.sql:
+        elif self.conn_type == "snowflake" and schema and "." not in self.sql:
             output_table_name = self.database + "." + schema + "." + output_table_name
         return output_table_name
 
