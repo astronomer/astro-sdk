@@ -111,10 +111,10 @@ class TestPostgresAppend(unittest.TestCase):
         )
 
         self.main_table_bigquery = Table(
-            table_name=self.MAIN_TABLE_NAME, conn_id="bigquery", schema="tmp_astro"
+            table_name=self.MAIN_TABLE_NAME, conn_id="bigquery", schema="ASTROFLOW_CI"
         )
         self.append_table_bigquery = Table(
-            table_name=self.APPEND_TABLE_NAME, conn_id="bigquery", schema="tmp_astro"
+            table_name=self.APPEND_TABLE_NAME, conn_id="bigquery", schema="ASTROFLOW_CI"
         )
 
     def clear_run(self):

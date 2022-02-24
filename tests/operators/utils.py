@@ -11,7 +11,7 @@ from airflow.utils import timezone
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 
-DEFAULT_SCHEMA = "tmp_astro"
+DEFAULT_SCHEMA = "ASTROFLOW_CI"
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 SQL_SERVER_HOOK_PARAMETERS = {

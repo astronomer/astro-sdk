@@ -12,7 +12,7 @@ from google.api_core.exceptions import NotFound
 
 # Import Operator
 
-DEFAULT_SCHEMA = "tmp_astro"
+DEFAULT_SCHEMA = "ASTROFLOW_CI"
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 
