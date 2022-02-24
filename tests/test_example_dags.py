@@ -3,16 +3,13 @@ import os
 import pytest
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.models.dagbag import DagBag
-
-# from astro.sql.operators.temp_hooks import PostgresHook
 from airflow.utils import timezone
 from airflow.utils.session import provide_session
 from airflow.utils.state import State
 from google.api_core.exceptions import NotFound
 
-# Import Operator
+from tests.operators.utils import DEFAULT_SCHEMA
 
-DEFAULT_SCHEMA = "ASTROFLOW_CI"
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 

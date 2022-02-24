@@ -29,7 +29,6 @@ import unittest.mock
 from unittest import mock
 
 import pandas as pd
-import pytest
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
@@ -39,7 +38,6 @@ from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 
-# Import Operator
 import astro.sql as aql
 from astro import dataframe as adf
 from astro.sql.table import Table, TempTable
@@ -135,7 +133,7 @@ class TestPostgresDecorator(unittest.TestCase):
         )
 
         drop_table(
-            table_name='ASTROFLOW_CI."my=dag_sample_pg_1"',
+            table_name=f'{test_utils.DEFAULT_SCHEMA}."my=dag_sample_pg_1"',
             postgres_conn=self.hook_target.get_conn(),
         )
 
@@ -153,7 +151,7 @@ class TestPostgresDecorator(unittest.TestCase):
             },
         )
         df = pd.read_sql(
-            f'SELECT * FROM ASTROFLOW_CI."my=dag_sample_pg_1"',
+            f'SELECT * FROM {test_utils.DEFAULT_SCHEMA}."my=dag_sample_pg_1"',
             con=self.hook_target.get_conn(),
         )
         assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
@@ -190,7 +188,7 @@ class TestPostgresDecorator(unittest.TestCase):
         pg_df.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
         wait_for_task_finish(dr, pg_df.operator.task_id)
         df = pd.read_sql(
-            f"SELECT * FROM ASTROFLOW_CI.test_dag_sample_pg_1",
+            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.test_dag_sample_pg_1",
             con=self.hook_target.get_conn(),
         )
         assert df.iloc[0].to_dict()["colors"] == "red"
@@ -213,7 +211,7 @@ class TestPostgresDecorator(unittest.TestCase):
             },
         )
         df = pd.read_sql(
-            f"SELECT * FROM ASTROFLOW_CI.test_dag_sample_pg_1",
+            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.test_dag_sample_pg_1",
             con=self.hook_target.get_conn(),
         )
         assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
@@ -237,7 +235,7 @@ class TestPostgresDecorator(unittest.TestCase):
             },
         )
         df = pd.read_sql(
-            f"SELECT * FROM ASTROFLOW_CI.test_dag_sample_pg_1",
+            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.test_dag_sample_pg_1",
             con=self.hook_target.get_conn(),
         )
         assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
@@ -262,7 +260,7 @@ class TestPostgresDecorator(unittest.TestCase):
             },
         )
         df = pd.read_sql(
-            f"SELECT * FROM ASTROFLOW_CI.test_dag_sample_pg_1",
+            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.test_dag_sample_pg_1",
             con=self.hook_target.get_conn(),
         )
         assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
@@ -341,7 +339,8 @@ class TestPostgresDecorator(unittest.TestCase):
         )
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM ASTROFLOW_CI.my_table", con=self.hook_target.get_conn()
+            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.my_table",
+            con=self.hook_target.get_conn(),
         )
         assert df.iloc[0].to_dict() == {
             "actor_id": 191,
@@ -380,7 +379,7 @@ class TestPostgresDecorator(unittest.TestCase):
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM ASTROFLOW_CI.my_table_from_file",
+            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.my_table_from_file",
             con=self.hook_target.get_conn(),
         )
         assert df.iloc[0].to_dict() == {

@@ -108,19 +108,19 @@ tables = [
             "name": "stats_check_test_7",
             "conn_id": "bigquery",
             "database": "pagila",
-            "schema": "ASTROFLOW_CI",
+            "schema": test_utils.DEFAULT_SCHEMA,
         },
         "table_2": {
             "path": "/../data/homes2.csv",
             "name": "stats_check_test_8",
             "conn_id": "bigquery",
-            "schema": "ASTROFLOW_CI",
+            "schema": test_utils.DEFAULT_SCHEMA,
         },
         "table_3": {
             "path": "/../data/homes3.csv",
             "name": "stats_check_test_9",
             "conn_id": "bigquery",
-            "schema": "ASTROFLOW_CI",
+            "schema": test_utils.DEFAULT_SCHEMA,
         },
     }
     # {

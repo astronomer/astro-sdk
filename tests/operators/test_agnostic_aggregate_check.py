@@ -22,25 +22,18 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 """
 
 import logging
-import math
-import os
 import pathlib
 import unittest.mock
 
 from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import DAG, DagRun
-from airflow.models import TaskInstance as TI
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
-from airflow.utils.db import check
-from airflow.utils.session import create_session
-from airflow.utils.state import State
-from airflow.utils.types import DagRunType
 
-# Import Operator
 import astro.sql as aql
 from astro.sql.table import Table
+from tests.operators.utils import DEFAULT_SCHEMA
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -65,7 +58,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         cls.aggregate_table_bigquery = Table(
             "aggregate_check_test",
             conn_id="bigquery",
-            schema="ASTROFLOW_CI",
+            schema=DEFAULT_SCHEMA,
         )
         cls.aggregate_table_sqlite = Table(
             "aggregate_check_test", conn_id="sqlite_conn"
@@ -120,7 +113,9 @@ class TestAggregateCheckOperator(unittest.TestCase):
         hook = BigQueryHook(
             bigquery_conn_id="bigquery", use_legacy_sql=False, gcp_conn_id="bigquery"
         )
-        df = hook.get_pandas_df(sql="SELECT * FROM ASTROFLOW_CI.aggregate_check_test")
+        df = hook.get_pandas_df(
+            sql=f"SELECT * FROM {DEFAULT_SCHEMA}.aggregate_check_test"
+        )
         assert df.count()[0] == 4
         try:
             a = aql.aggregate_check(

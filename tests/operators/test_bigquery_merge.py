@@ -28,13 +28,9 @@ import unittest.mock
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
-from airflow.utils.state import State
-from airflow.utils.types import DagRunType
 
-# Import Operator
 import astro.sql as aql
 from astro.sql.table import Table
 from tests.operators import utils as test_utils
@@ -74,11 +70,15 @@ class TestPostgresMergeOperator(unittest.TestCase):
             },
         )
         self.main_table = Table(
-            table_name="merge_test_1", conn_id="bigquery", schema="ASTROFLOW_CI"
+            table_name="merge_test_1",
+            conn_id="bigquery",
+            schema=test_utils.DEFAULT_SCHEMA,
         )
 
         self.merge_table = Table(
-            table_name="merge_test_2", conn_id="bigquery", schema="ASTROFLOW_CI"
+            table_name="merge_test_2",
+            conn_id="bigquery",
+            schema=test_utils.DEFAULT_SCHEMA,
         )
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_merge_1.csv",
@@ -118,7 +118,7 @@ class TestPostgresMergeOperator(unittest.TestCase):
         a.execute({"run_id": "foo"})
 
         df = hook.get_pandas_df(
-            sql="SELECT * FROM ASTROFLOW_CI.merge_test_1 order by list"
+            sql=f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.merge_test_1 order by list"
         )
         assert df.age.to_list()[:-1] == [41.0, 22.0, 60.0, 12.0]
         assert math.isnan(df.age.to_list()[-1])
@@ -143,7 +143,7 @@ class TestPostgresMergeOperator(unittest.TestCase):
         a.execute({"run_id": "foo"})
 
         df = hook.get_pandas_df(
-            sql="SELECT * FROM ASTROFLOW_CI.merge_test_1 order by list"
+            sql="SELECT * FROM {test_utils.DEFAULT_SCHEMA}.merge_test_1 order by list"
         )
         assert df.age.to_list()[:-1] == [41.0, 22.0, 60.0, 12.0]
         assert math.isnan(df.age.to_list()[-1])
@@ -166,6 +166,6 @@ class TestPostgresMergeOperator(unittest.TestCase):
         a.execute({"run_id": "foo"})
 
         df = hook.get_pandas_df(
-            sql="SELECT * FROM ASTROFLOW_CI.merge_test_1 order by list"
+            sql="SELECT * FROM {test_utils.DEFAULT_SCHEMA}.merge_test_1 order by list"
         )
         assert df.taxes.to_list() == [1, 2, 3167, 4033, 3]
