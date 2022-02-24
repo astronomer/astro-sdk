@@ -81,7 +81,7 @@ def snowflake_animal_adoption_example():
         cleaned_data,
         output_table=Table(
             "aggregated_adoptions",
-            schema="SANDBOX_AIRFLOW_TEST",
+            schema=os.environ["SNOWFLAKE_SCHEMA"],
             conn_id="snowflake_conn",
         ),
     )

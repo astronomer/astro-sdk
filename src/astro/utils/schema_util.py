@@ -13,13 +13,13 @@ def schema_exists(hook, schema, conn_type):
             "SELECT schema_name FROM information_schema.schemata;",
             handler=lambda x: [y[0] for y in x.fetchall()],
         )
-        return schema in created_schemas
+        return schema.upper() in [c.upper() for c in created_schemas]
     elif conn_type == "snowflake":
         created_schemas = [
             x["SCHEMA_NAME"]
             for x in hook.run("SELECT SCHEMA_NAME from information_schema.schemata;")
         ]
-        return schema in created_schemas
+        return schema.upper() in [c.upper() for c in created_schemas]
     return False
 
 
