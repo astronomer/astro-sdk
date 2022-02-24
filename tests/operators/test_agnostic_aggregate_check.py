@@ -65,7 +65,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         cls.aggregate_table_bigquery = Table(
             "aggregate_check_test",
             conn_id="bigquery",
-            schema="tmp_astro",
+            schema="ASTROFLOW_CI",
         )
         cls.aggregate_table_sqlite = Table(
             "aggregate_check_test", conn_id="sqlite_conn"
@@ -120,7 +120,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         hook = BigQueryHook(
             bigquery_conn_id="bigquery", use_legacy_sql=False, gcp_conn_id="bigquery"
         )
-        df = hook.get_pandas_df(sql="SELECT * FROM tmp_astro.aggregate_check_test")
+        df = hook.get_pandas_df(sql="SELECT * FROM ASTROFLOW_CI.aggregate_check_test")
         assert df.count()[0] == 4
         try:
             a = aql.aggregate_check(

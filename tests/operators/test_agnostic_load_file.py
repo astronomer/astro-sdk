@@ -254,7 +254,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM tmp_astro.test_dag_load_file_homes_csv_1",
+            f"SELECT * FROM ASTROFLOW_CI.test_dag_load_file_homes_csv_1",
             con=self.hook_target.get_conn(),
         )
 
@@ -282,14 +282,14 @@ class TestAgnosticLoadFile(unittest.TestCase):
                 "path": data_path,
                 "file_conn_id": "",
                 "output_table": Table(
-                    OUTPUT_TABLE_NAME, conn_id="bigquery", schema="tmp_astro"
+                    OUTPUT_TABLE_NAME, conn_id="bigquery", schema="ASTROFLOW_CI"
                 ),
             },
         )
 
         client = bigquery.Client()
         query_job = client.query(
-            f"SELECT * FROM astronomer-dag-authoring.tmp_astro.{OUTPUT_TABLE_NAME}"
+            f"SELECT * FROM astronomer-dag-authoring.ASTROFLOW_CI.{OUTPUT_TABLE_NAME}"
         )
         bigquery_df = query_job.to_dataframe()
 
@@ -365,7 +365,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM tmp_astro.{OUTPUT_TABLE_NAME}",
+            f"SELECT * FROM ASTROFLOW_CI.{OUTPUT_TABLE_NAME}",
             con=self.hook_target.get_conn(),
         )
 
@@ -380,7 +380,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Drop target table
         drop_table_postgres(
-            f"tmp_astro.{OUTPUT_TABLE_NAME}", self.hook_target.get_conn()
+            f"ASTROFLOW_CI.{OUTPUT_TABLE_NAME}", self.hook_target.get_conn()
         )
 
         self.create_and_run_task(
@@ -399,7 +399,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM tmp_astro.{OUTPUT_TABLE_NAME}",
+            f"SELECT * FROM ASTROFLOW_CI.{OUTPUT_TABLE_NAME}",
             con=self.hook_target.get_conn(),
         )
 

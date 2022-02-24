@@ -277,7 +277,7 @@ class TestSaveFile(unittest.TestCase):
             output_table=Table(
                 INPUT_TABLE_NAME,
                 conn_id="bigquery",
-                schema="tmp_astro",
+                schema="ASTROFLOW_CI",
             ),
         ).operator.execute({"run_id": "foo"})
 
@@ -286,7 +286,7 @@ class TestSaveFile(unittest.TestCase):
             (),
             {
                 "input_table": Table(
-                    INPUT_TABLE_NAME, conn_id="bigquery", schema="tmp_astro"
+                    INPUT_TABLE_NAME, conn_id="bigquery", schema="ASTROFLOW_CI"
                 ),
                 "output_file_path": OUTPUT_FILE_PATH,
                 "output_conn_id": None,

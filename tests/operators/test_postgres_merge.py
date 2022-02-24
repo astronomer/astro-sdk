@@ -83,7 +83,7 @@ class TestPostgresMergeOperator(unittest.TestCase):
         )
 
         self.merge_table_bigquery = Table(
-            table_name="merge_test_2", conn_id="bigquery", schema="tmp_astro"
+            table_name="merge_test_2", conn_id="bigquery", schema="ASTROFLOW_CI"
         )
 
         aql.load_file(
@@ -113,7 +113,7 @@ class TestPostgresMergeOperator(unittest.TestCase):
     def test_merge_basic_single_key(self):
         hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
         hook.run(
-            sql="ALTER TABLE tmp_astro.merge_test_1 ADD CONSTRAINT airflow UNIQUE (list)"
+            sql="ALTER TABLE ASTROFLOW_CI.merge_test_1 ADD CONSTRAINT airflow UNIQUE (list)"
         )
         a = aql.merge(
             target_table=self.main_table,
@@ -125,7 +125,7 @@ class TestPostgresMergeOperator(unittest.TestCase):
         )
         a.execute({"run_id": "foo"})
 
-        df = hook.get_pandas_df(sql="SELECT * FROM tmp_astro.merge_test_1")
+        df = hook.get_pandas_df(sql="SELECT * FROM ASTROFLOW_CI.merge_test_1")
         assert df.age.to_list()[:-1] == [60.0, 12.0, 41.0, 22.0]
         assert math.isnan(df.age.to_list()[-1])
         assert df.taxes.to_list()[:-1] == [3167.0, 4033.0, 1471.0, 3204.0]
@@ -138,7 +138,7 @@ class TestPostgresMergeOperator(unittest.TestCase):
     def test_merge_basic_ignore(self):
         hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
         hook.run(
-            sql="ALTER TABLE tmp_astro.merge_test_1 ADD CONSTRAINT airflow UNIQUE (list,sell)"
+            sql="ALTER TABLE ASTROFLOW_CI.merge_test_1 ADD CONSTRAINT airflow UNIQUE (list,sell)"
         )
 
         a = aql.merge(
@@ -151,7 +151,7 @@ class TestPostgresMergeOperator(unittest.TestCase):
         )
         a.execute({"run_id": "foo"})
 
-        df = hook.get_pandas_df(sql="SELECT * FROM tmp_astro.merge_test_1")
+        df = hook.get_pandas_df(sql="SELECT * FROM ASTROFLOW_CI.merge_test_1")
         assert df.age.to_list()[:-1] == [60.0, 12.0, 41.0, 22.0]
         assert math.isnan(df.age.to_list()[-1])
         assert df.taxes.to_list()[:-1] == [3167.0, 4033.0, 1471.0, 3204.0]
@@ -163,7 +163,7 @@ class TestPostgresMergeOperator(unittest.TestCase):
     def test_merge_basic_update(self):
         hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
         hook.run(
-            sql="ALTER TABLE tmp_astro.merge_test_1 ADD CONSTRAINT airflow UNIQUE (list,sell)"
+            sql="ALTER TABLE ASTROFLOW_CI.merge_test_1 ADD CONSTRAINT airflow UNIQUE (list,sell)"
         )
         a = aql.merge(
             target_table=self.main_table,
@@ -175,7 +175,7 @@ class TestPostgresMergeOperator(unittest.TestCase):
         )
         a.execute({"run_id": "foo"})
 
-        df = hook.get_pandas_df(sql="SELECT * FROM tmp_astro.merge_test_1")
+        df = hook.get_pandas_df(sql="SELECT * FROM ASTROFLOW_CI.merge_test_1")
         assert df.taxes.to_list() == [1, 1, 1, 1, 1]
         assert df.age.to_list()[:-1] == [60.0, 12.0, 41.0, 22.0]
         assert math.isnan(df.age.to_list()[-1])

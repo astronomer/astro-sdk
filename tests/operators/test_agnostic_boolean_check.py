@@ -94,7 +94,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
             output_table=Table(
                 cls.table,
                 conn_id="bigquery",
-                schema="tmp_astro",
+                schema="ASTROFLOW_CI",
             ),
         ).operator.execute({"run_id": "foo"})
         cls.table_sqlite = Table(
@@ -210,7 +210,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 table=Table(
                     self.table,
                     conn_id="bigquery",
-                    schema="tmp_astro",
+                    schema="ASTROFLOW_CI",
                 ),
                 checks=[Check("test_1", "rooms > 3")],
                 max_rows_returned=10,
@@ -238,7 +238,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 table=Table(
                     self.table,
                     conn_id="bigquery",
-                    schema="tmp_astro",
+                    schema="ASTROFLOW_CI",
                 ),
                 checks=[
                     Check("test_1", "rooms > 7"),

@@ -74,11 +74,11 @@ class TestPostgresMergeOperator(unittest.TestCase):
             },
         )
         self.main_table = Table(
-            table_name="merge_test_1", conn_id="bigquery", schema="tmp_astro"
+            table_name="merge_test_1", conn_id="bigquery", schema="ASTROFLOW_CI"
         )
 
         self.merge_table = Table(
-            table_name="merge_test_2", conn_id="bigquery", schema="tmp_astro"
+            table_name="merge_test_2", conn_id="bigquery", schema="ASTROFLOW_CI"
         )
         aql.load_file(
             path=str(self.cwd) + "/../data/homes_merge_1.csv",
@@ -118,7 +118,7 @@ class TestPostgresMergeOperator(unittest.TestCase):
         a.execute({"run_id": "foo"})
 
         df = hook.get_pandas_df(
-            sql="SELECT * FROM tmp_astro.merge_test_1 order by list"
+            sql="SELECT * FROM ASTROFLOW_CI.merge_test_1 order by list"
         )
         assert df.age.to_list()[:-1] == [41.0, 22.0, 60.0, 12.0]
         assert math.isnan(df.age.to_list()[-1])
@@ -143,7 +143,7 @@ class TestPostgresMergeOperator(unittest.TestCase):
         a.execute({"run_id": "foo"})
 
         df = hook.get_pandas_df(
-            sql="SELECT * FROM tmp_astro.merge_test_1 order by list"
+            sql="SELECT * FROM ASTROFLOW_CI.merge_test_1 order by list"
         )
         assert df.age.to_list()[:-1] == [41.0, 22.0, 60.0, 12.0]
         assert math.isnan(df.age.to_list()[-1])
@@ -166,6 +166,6 @@ class TestPostgresMergeOperator(unittest.TestCase):
         a.execute({"run_id": "foo"})
 
         df = hook.get_pandas_df(
-            sql="SELECT * FROM tmp_astro.merge_test_1 order by list"
+            sql="SELECT * FROM ASTROFLOW_CI.merge_test_1 order by list"
         )
         assert df.taxes.to_list() == [1, 2, 3167, 4033, 3]
