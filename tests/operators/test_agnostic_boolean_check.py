@@ -10,7 +10,6 @@ import time
 import unittest.mock
 
 from airflow.models import DAG
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 
@@ -22,8 +21,7 @@ from astro.sql.operators.agnostic_boolean_check import (
     boolean_check,
 )
 from astro.sql.table import Table
-
-# from tests.operators import utils as test_utils
+from tests.operators.utils import DEFAULT_SCHEMA
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -94,7 +92,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
             output_table=Table(
                 cls.table,
                 conn_id="bigquery",
-                schema="tmp_astro",
+                schema=DEFAULT_SCHEMA,
             ),
         ).operator.execute({"run_id": "foo"})
         cls.table_sqlite = Table(
@@ -210,7 +208,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 table=Table(
                     self.table,
                     conn_id="bigquery",
-                    schema="tmp_astro",
+                    schema=DEFAULT_SCHEMA,
                 ),
                 checks=[Check("test_1", "rooms > 3")],
                 max_rows_returned=10,
@@ -238,7 +236,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 table=Table(
                     self.table,
                     conn_id="bigquery",
-                    schema="tmp_astro",
+                    schema=DEFAULT_SCHEMA,
                 ),
                 checks=[
                     Check("test_1", "rooms > 7"),

@@ -128,12 +128,14 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             if not self.output_table:
                 output_table_name = create_table_name(context=context)
                 full_output_table_name = self.handle_output_table_schema(
-                    output_table_name
+                    # Since there is no output table defined we have to assume default schema
+                    output_table_name,
+                    schema=get_schema(),
                 )
             else:
                 output_table_name = self.output_table.table_name
                 full_output_table_name = self.handle_output_table_schema(
-                    output_table_name, self.output_table.schema
+                    output_table_name, schema=self.output_table.schema
                 )
 
             self._run_sql_alchemy_obj(

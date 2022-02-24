@@ -13,13 +13,13 @@ connections:
     port: 443
     login: $SNOWFLAKE_ACCOUNT_NAME
     password: $SNOWFLAKE_PASSWORD
-    schema: SANDBOX_AIRFLOW_TEST
+    schema: ASTROFLOW_CI
     extra:
       account: "gp21411"
       region: "us-east-1"
-      role: "TRANSFORMER"
-      warehouse: TRANSFORMING
-      database: DWH_LEGACY
+      role: "AIRFLOW_TEST_USER"
+      warehouse: DEMO
+      database: SANDBOX
   - conn_id: bigquery
     conn_type: bigquery
     description: null

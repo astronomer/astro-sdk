@@ -11,7 +11,7 @@ from airflow.utils import timezone
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 
-DEFAULT_SCHEMA = "tmp_astro"
+DEFAULT_SCHEMA = os.getenv("AIRFLOW__ASTRO__SQL_SCHEMA", "astroflow_ci")
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 SQL_SERVER_HOOK_PARAMETERS = {
@@ -69,7 +69,7 @@ def drop_table_snowflake(
     )
     snowflake_conn = hook.get_conn()
     cursor = snowflake_conn.cursor()
-    cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
+    cursor.execute(f"DROP TABLE IF EXISTS {schema}.{table_name} CASCADE;")
     snowflake_conn.commit()
     cursor.close()
     snowflake_conn.close()
