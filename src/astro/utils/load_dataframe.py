@@ -81,6 +81,15 @@ def move_dataframe_to_sql(
             chunk_size=chunksize,
             quote_identifiers=False,
         )
+    elif conn_type in ["postgres", "postgresql"]:
+        df.to_sql(
+            f"{schema}.{output_table_name}",
+            con=hook.get_sqlalchemy_engine(),
+            if_exists="replace",
+            chunksize=chunksize,
+            method="multi",
+            index=False,
+        )
     elif conn_type == "bigquery":
         df.to_gbq(
             f"{schema}.{output_table_name}",
