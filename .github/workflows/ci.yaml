@@ -18,19 +18,62 @@ jobs:
           path: ~/.cache/pip
           key: ${{ hashFiles('pyproject.toml') }}
       - uses: pre-commit/action@v2.0.3
+  Run-Optional-Packages-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: dimberman/pagila-test
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ hashFiles('pyproject.toml') }}
+      - run: cat ci-test-connections.yaml > test-connections.yaml
+      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }} 
+      - run: pip3 install nox
+      - run: nox -s test_examples_by_dependency
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json 
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      AIRFLOW__ASTRO__CONN_AWS_DEFAULT: ${{ secrets.AWS_ACCESS_CRED }}
+      AIRFLOW__ASTRO__SQL_SCHEMA: astroflow_ci
+      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_SCHEMA: ASTROFLOW_CI
+      SNOWFLAKE_DATABASE: SANDBOX
+      SNOWFLAKE_WAREHOUSE: DEMO
+      SNOWFLAKE_HOST: https://gp21411.us-east-1.snowflakecomputing.com
+      SNOWFLAKE_ACCOUNT: gp21411
+      SNOWFLAKE_REGION: us-east-1
+      SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
+      AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
+      AIRFLOW_VAR_FOO: templated_file_name
   Run-Unit-tests:
     strategy:
       fail-fast: false
       matrix:
         group: [ 1, 2, 3, 4, 5, 6, 7, 8 ]
     runs-on: ubuntu-latest
-    # Service containers to run with `container-job`
     services:
-      # Label used to access the service container
       postgres:
         # Docker Hub image
         image: dimberman/pagila-test
-        # Provide the password for postgres
         env:
           POSTGRES_PASSWORD: postgres
         # Set health checks to wait until postgres has started
@@ -40,7 +83,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         ports:
-          # Maps tcp port 5432 on service container to the host
           - 5432:5432
     steps:
       - uses: actions/checkout@v2
@@ -56,14 +98,10 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }} 
       - run: pip3 install nox
       - run: nox -s test -- --splits 8 --group ${{ matrix.group }}
-      - run: nox -s test_examples_by_dependency
-
     env:
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json 
-      # The hostname used to communicate with the PostgreSQL service container
       POSTGRES_HOST: postgres
-      # The default PostgreSQL port
       POSTGRES_PORT: 5432
       AIRFLOW__ASTRO__CONN_AWS_DEFAULT: ${{ secrets.AWS_ACCESS_CRED }}
       AIRFLOW__ASTRO__SQL_SCHEMA: astroflow_ci
