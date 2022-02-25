@@ -17,4 +17,4 @@ unittests.db
 unittests.cfg
 tests/benchmark/logs/*
 tests/benchmark/webserver_config.py
-
+*.sw[a-z]
