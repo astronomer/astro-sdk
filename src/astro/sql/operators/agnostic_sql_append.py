@@ -49,11 +49,6 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
         self.casted_columns = casted_columns
         task_id = get_unique_task_id("append_table")
 
-        if not tables_from_same_db([append_table, main_table]):
-            raise ValueError(
-                get_error_string_for_multiple_dbs([append_table, main_table])
-            )
-
         def null_function():
             pass
 
@@ -72,6 +67,10 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
         )
 
     def execute(self, context: Dict):
+        if not tables_from_same_db([self.append_table, self.main_table]):
+            raise ValueError(
+                get_error_string_for_multiple_dbs([self.append_table, self.main_table])
+            )
 
         self.sql = self.append(
             main_table=self.main_table,

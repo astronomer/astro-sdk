@@ -1,26 +1,23 @@
-import os
-from datetime import datetime
-
-import pandas as pd
 from airflow.decorators import dag
-
-from astro import dataframe
-from astro.sql import append, load_file, transform
+from astro.sql import transform, append, load_file
 from astro.sql.table import Table
+from astro import dataframe
+
+from datetime import datetime
+import pandas as pd
 
 """
 Example ETL DAG highlighting Astro functionality
 DAG requires 2 "Homes" csv's (found in this repo), and a supported database
+
 General flow of the DAG is to extract the data from csv's and combine using SQL,
 then switch to Python for a melt transformation, then back to SQL for final
 filtering. The data is then loaded by appending to an existing reporting table.
 """
-
+# Airflow connection to the database (Snowflake in this case)
 SNOWFLAKE_CONN_ID = "snowflake_conn"
-dir_path = os.path.dirname(os.path.realpath(__file__))
-
-FILE_PATH = dir_path + "/data/"
-
+# Path to Homes csv's
+FILE_PATH = '../tests/data/'
 
 # The first transformation combines data from the two source csv's
 @transform
@@ -33,15 +30,13 @@ def extract_data(homes1: Table, homes2: Table):
     FROM {{homes2}}
     """
 
-
 # Switch to Python (Pandas) for melting transformation to get data into long format
 @dataframe
 def transform_data(df: pd.DataFrame):
-    melted_df = df.melt(id_vars=['SELL', 'LIST'],
-                        value_vars=['LIVING', 'ROOMS', 'BEDS', 'BATHS', 'AGE'])
+    melted_df = df.melt(id_vars=['sell', 'list'], 
+                        value_vars=['living', 'rooms', 'beds', 'baths', 'age'])
 
     return melted_df
-
 
 # Back to SQL to filter data
 @transform
@@ -53,27 +48,19 @@ def filter_data(homes_long: Table):
     """
 
 
-@dag(start_date=datetime(2021, 12, 1), schedule_interval="@daily", catchup=False)
-def example_snowflake_partial_table():
+@dag(start_date=datetime(2022, 2, 1), schedule_interval='@daily', catchup=False)
+
+def aastroflow_homes_etl_dag():
     # Initial load of homes data csv's into Snowflake
     homes_data1 = load_file(
         path=FILE_PATH + 'homes.csv',
-        output_table=Table(table_name="homes",
-                           conn_id=SNOWFLAKE_CONN_ID,
-                           database=os.getenv("SNOWFLAKE_DATABASE"),
-                           warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-                           schema=os.getenv("SNOWFLAKE_SCHEMA")),
+        output_table=Table(table_name="homes", conn_id=SNOWFLAKE_CONN_ID, database="SANDBOX"),
     )
 
     homes_data2 = load_file(
         path=FILE_PATH + 'homes2.csv',
-        output_table=Table(table_name="homes2",
-                           conn_id=SNOWFLAKE_CONN_ID,
-                           database=os.getenv("SNOWFLAKE_DATABASE"),
-                           warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-                           schema=os.getenv("SNOWFLAKE_SCHEMA")),
+        output_table=Table(table_name="homes2", conn_id=SNOWFLAKE_CONN_ID, database="SANDBOX", schema="KENTENDANAS"),
     )
-
     # Define task dependencies
     extracted_data = extract_data(
         homes1=homes_data1,
@@ -90,7 +77,7 @@ def example_snowflake_partial_table():
         homes_long=transformed_data,
         output_table=Table(table_name="expensive_homes_long")
     )
-
+    
     # Append transformed & filtered data to reporting table
     # Dependency is inferred by passing the previous `filtered_data` task to `append_table` param
     append(
@@ -99,5 +86,4 @@ def example_snowflake_partial_table():
         main_table=Table(table_name="homes_reporting"),
     )
 
-
-example_snowflake_partial_table_dag = example_snowflake_partial_table()
+astroflow_hoames_etl_dag = aastroflow_homes_etl_dag()
