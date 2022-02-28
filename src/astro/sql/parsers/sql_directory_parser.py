@@ -12,7 +12,6 @@ from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table, TempTable
 
 
-@task_group()
 def render(
     path,
     conn_id: Optional[str] = None,
