@@ -1,3 +1,4 @@
+import json
 import glob
 from typing import Union
 from urllib.parse import urlparse, urlunparse
@@ -41,6 +42,7 @@ class AgnosticLoadFile(BaseOperator):
         file_conn_id="",
         chunksize=DEFAULT_CHUNK_SIZE,
         if_exists="replace",
+        flatten_ndjson={},
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -51,6 +53,7 @@ class AgnosticLoadFile(BaseOperator):
         self.kwargs = kwargs
         self.output_table = output_table
         self.if_exists = if_exists
+        self.flatten_ndjson = flatten_ndjson
 
     def execute(self, context):
         """
@@ -147,6 +150,7 @@ def load_file(
     file_conn_id=None,
     task_id=None,
     if_exists="replace",
+    flatten_ndjson={},
     **kwargs,
 ):
     """Convert AgnosticLoadFile into a function.
@@ -173,5 +177,6 @@ def load_file(
         output_table=output_table,
         file_conn_id=file_conn_id,
         if_exists=if_exists,
+        flatten_ndjson=flatten_ndjson,
         **kwargs,
     ).output
