@@ -25,15 +25,17 @@ from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils.dependencies import PostgresHook, SnowflakeHook
 from astro.utils.load_dataframe import move_dataframe_to_sql
 from astro.utils.schema_util import get_schema
+from astro.utils.table_handler import TableHandler
 
 
-class SqlDataframeOperator(DecoratedOperator):
+class SqlDataframeOperator(DecoratedOperator, TableHandler):
     def __init__(
         self,
         conn_id: Optional[str] = None,
         database: Optional[str] = None,
         schema: Optional[str] = None,
         warehouse: Optional[str] = None,
+        role: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -51,6 +53,8 @@ class SqlDataframeOperator(DecoratedOperator):
         self.database = database
         self.schema = schema
         self.warehouse = warehouse
+        self.role = role
+        self.parameters = None
         self.kwargs = kwargs or {}
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
         if self.op_kwargs.get("output_table"):
@@ -88,11 +92,13 @@ class SqlDataframeOperator(DecoratedOperator):
         }
 
     def execute(self, context: Dict):
+        self._set_variables_from_first_table()
         self.handle_op_args()
         self.handle_op_kwargs()
 
         ret = self.python_callable(*self.op_args, **self.op_kwargs)
         if self.output_table:
+            self.populate_output_table()
             if type(self.output_table) == TempTable:
                 self.output_table = self.output_table.to_table(
                     table_name=create_table_name(context=context), schema=get_schema()
@@ -124,7 +130,7 @@ class SqlDataframeOperator(DecoratedOperator):
             snowflake_conn_id=table.conn_id,
             warehouse=table.warehouse,
             database=table.database,
-            role=None,
+            role=self.role,
             schema=table.schema,
             authenticator=None,
             session_parameters=None,
