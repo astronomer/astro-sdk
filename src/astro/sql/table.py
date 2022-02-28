@@ -76,7 +76,7 @@ class TempTable(Table):
         )
 
 
-def create_table_name(context):
+def create_table_name(context) -> str:
     ti: TaskInstance = context["ti"]
     dag_run: DagRun = ti.get_dagrun()
     table_name = f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}".replace(
