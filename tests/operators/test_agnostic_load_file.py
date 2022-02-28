@@ -569,6 +569,18 @@ def test_aql_load_file_pattern(file_info):
     df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=hook_target.get_conn())
     assert test_df_rows * 2 == df.shape[0]
 
+@mock.patch.dict(
+    os.environ,
+    {
+        "AIRFLOW__ASTRO__CONN_AWS_DEFAULT": "abcd:%40%23%24%25%40%24%23ASDH%40Ksd23%25SD546@"
+    },
+)
+def test_aws_decode():
+    from astro.utils.cloud_storage_creds import parse_s3_env_var
+
+    k, v = parse_s3_env_var()
+    assert v == "@#$%@$#ASDH@Ksd23%SD546"
+
 
 @pytest.fixture
 def sql_server(request):
@@ -586,17 +598,31 @@ def sql_server(request):
         hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
 
 
-@mock.patch.dict(
-    os.environ,
-    {
-        "AIRFLOW__ASTRO__CONN_AWS_DEFAULT": "abcd:%40%23%24%25%40%24%23ASDH%40Ksd23%25SD546@"
-    },
-)
-def test_aws_decode():
-    from astro.utils.cloud_storage_creds import parse_s3_env_var
+@pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
+def test_load_file_templated_filename(sample_dag, sql_server):
+    database_name, sql_hook = sql_server
 
-    k, v = parse_s3_env_var()
-    assert v == "@#$%@$#ASDH@Ksd23%SD546"
+    sql_server_params = copy.deepcopy(
+        test_utils.SQL_SERVER_HOOK_PARAMETERS[database_name]
+    )
+    conn_id_value = sql_server_params.pop(
+        test_utils.SQL_SERVER_CONNECTION_KEY[database_name]
+    )
+    sql_server_params["conn_id"] = conn_id_value
+
+    task_params = {
+        "path": str(CWD) + "/../data/{{ var.value.foo }}/example.csv",
+        "file_conn_id": "",
+        "output_table": Table(
+            table_name=OUTPUT_TABLE_NAME + "_{{ var.value.foo }}", **sql_server_params
+        ),
+    }
+
+    test_utils.create_and_run_task(sample_dag, load_file, (), task_params)
+    df = sql_hook.get_pandas_df(
+        f"SELECT * FROM {OUTPUT_TABLE_NAME}_templated_file_name"
+    )
+    assert len(df) == 3
 
 
 def create_task_parameters(database_name, file_type):
@@ -611,11 +637,9 @@ def create_task_parameters(database_name, file_type):
     sql_server_params["conn_id"] = conn_id_value
 
     task_params = {
-        "path": str(CWD) + "/../data/{{ var.value.foo }}/sample." + file_type,
+        "path": str(pathlib.Path(CWD.parent, f"data/sample.{file_type}")),
         "file_conn_id": "",
-        "output_table": Table(
-            table_name=OUTPUT_TABLE_NAME + "_{{ var.value.foo }}", **sql_server_params
-        ),
+        "output_table": Table(table_name=OUTPUT_TABLE_NAME, **sql_server_params),
     }
     return task_params
 
@@ -628,18 +652,10 @@ def test_load_file(sample_dag, sql_server, file_type):
     database_name, sql_hook = sql_server
 
     task_params = create_task_parameters(database_name, file_type)
-    schema = task_params["output_table"].schema or test_utils.DEFAULT_SCHEMA
-
     test_utils.create_and_run_task(sample_dag, load_file, (), task_params)
 
-    if database_name == "sqlite":
-        df = sql_hook.get_pandas_df(
-            f"SELECT * FROM {OUTPUT_TABLE_NAME}_templated_file_name"
-        )
-    else:
-        df = sql_hook.get_pandas_df(
-            f"SELECT * FROM {schema}.{OUTPUT_TABLE_NAME}_templated_file_name"
-        )
+    qualified_name = task_params["output_table"].qualified_name()
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {qualified_name}")
 
     assert len(df) == 3
     expected = pd.DataFrame(
