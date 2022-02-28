@@ -136,9 +136,8 @@ class AgnosticLoadFile(BaseOperator):
         with smart_open.open(
             path, mode=mode.get(file_type, "r"), transport_params=transport_params
         ) as stream:
-            if file_type == "ndjson":
+            if len(self.flatten_ndjson) > 0 and file_type == "ndjson":
                 df = None
-                count = 0
                 while True:
                     rows = stream.readlines(DEFAULT_CHUNK_SIZE)
                     if len(rows) == 0:
@@ -147,7 +146,6 @@ class AgnosticLoadFile(BaseOperator):
                         df = pd.DataFrame(self.process_ndjson(rows))
                     else:
                         df = df.append(pd.DataFrame(self.process_ndjson(rows)))
-                    count += 1
                 return df
             else:
                 return deserialiser[file_type](
