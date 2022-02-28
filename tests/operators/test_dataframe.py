@@ -114,18 +114,18 @@ class TestDataframeFromSQL(unittest.TestCase):
         def my_df_func(df: pandas.DataFrame):
             return df.actor_id.count()
 
-        res = self.create_and_run_task(
-            my_df_func,
-            (),
-            {
-                "df": Table(
+        with self.dag:
+            f = my_df_func(
+                df=Table(
                     "actor", conn_id="postgres_conn", database="pagila", schema="public"
                 )
-            },
-        )
+            )
+
+        test_utils.run_dag(self.dag)
+
         assert (
             XCom.get_one(
-                execution_date=DEFAULT_DATE, key=res.key, task_id=res.operator.task_id
+                execution_date=DEFAULT_DATE, key=f.key, task_id=f.operator.task_id
             )
             == 200
         )

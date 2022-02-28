@@ -27,14 +27,15 @@ from airflow.utils.db import provide_session
 from sqlalchemy import text
 from sqlalchemy.sql.functions import Function
 
-from astro.sql.table import Table, create_table_name
+from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils import postgres_transform, snowflake_transform
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from astro.utils.load_dataframe import move_dataframe_to_sql
 from astro.utils.schema_util import create_schema_query, get_schema, schema_exists
+from astro.utils.table_handler import TableHandler
 
 
-class SqlDecoratoratedOperator(DecoratedOperator):
+class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
     def __init__(
         self,
         conn_id: Optional[str] = None,
@@ -116,7 +117,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             self.sql = self.render_template(self.sql, context)
         self._process_params()
 
-        output_table_name = None
+        output_table_name: str = ""
 
         if not self.raw_sql:
             # Create a table name for the temp table
@@ -125,7 +126,7 @@ class SqlDecoratoratedOperator(DecoratedOperator):
             ):
                 self._set_schema_if_needed()
 
-            if not self.output_table:
+            if not self.output_table or type(self.output_table) == TempTable:
                 output_table_name = create_table_name(context=context)
                 full_output_table_name = self.handle_output_table_schema(
                     # Since there is no output table defined we have to assume default schema
@@ -147,7 +148,12 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         # Run execute function of subclassed Operator.
 
         if self.output_table:
+            if type(self.output_table) == TempTable:
+                self.output_table = self.output_table.to_table(
+                    table_name=output_table_name, schema=self.output_table.schema
+                )
             self.log.info(f"returning table {self.output_table}")
+            self.populate_output_table()
             return self.output_table
 
         elif self.raw_sql:
@@ -157,11 +163,8 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         else:
             self.output_table = Table(
                 table_name=output_table_name,
-                conn_id=self.conn_id,
-                database=self.database,
-                warehouse=self.warehouse,
-                schema=get_schema(),
             )
+            self.populate_output_table()
             self.log.info(f"returning table {self.output_table}")
             return self.output_table
 
@@ -206,40 +209,6 @@ class SqlDecoratoratedOperator(DecoratedOperator):
         elif self.conn_type == "snowflake" and self.schema and "." not in self.sql:
             output_table_name = self.database + "." + schema + "." + output_table_name
         return output_table_name
-
-    def _set_variables_from_first_table(self):
-        """
-        When we create our SQL operation, we run with the assumption that the first table given is the "main table".
-        This means that a user doesn't need to define default conn_id, database, etc. in the function unless they want
-        to create default values.
-        """
-        first_table: Optional[Table] = None
-        if self.op_args:
-            table_index = [x for x, t in enumerate(self.op_args) if type(t) == Table]
-            if table_index:
-                first_table = self.op_args[table_index[0]]
-        if not first_table:
-            table_kwargs = [
-                x
-                for x in inspect.signature(self.python_callable).parameters.values()
-                if x.annotation == Table and type(self.op_kwargs[x.name]) == Table
-            ]
-            if table_kwargs:
-                first_table = self.op_kwargs[table_kwargs[0].name]
-
-        # If there is no first table via op_ags or kwargs, we check the parameters
-        if not first_table:
-            if self.parameters:
-                param_tables = [t for t in self.parameters.values() if type(t) == Table]
-                if param_tables:
-                    first_table = param_tables[0]
-
-        if first_table:
-            self.conn_id = first_table.conn_id or self.conn_id
-            self.database = first_table.database or self.database
-            self.schema = first_table.schema or self.schema
-            self.warehouse = first_table.warehouse or self.warehouse
-            self.role = first_table.role or self.role
 
     def _set_hook(self):
         if self.conn_type == "postgres":
