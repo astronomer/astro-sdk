@@ -1,3 +1,4 @@
+import json
 import glob
 import os
 from typing import Union
@@ -43,6 +44,7 @@ class AgnosticLoadFile(BaseOperator):
         file_conn_id="",
         chunksize=DEFAULT_CHUNK_SIZE,
         if_exists="replace",
+        flatten_ndjson={},
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -53,6 +55,7 @@ class AgnosticLoadFile(BaseOperator):
         self.kwargs = kwargs
         self.output_table = output_table
         self.if_exists = if_exists
+        self.flatten_ndjson = flatten_ndjson
 
     def execute(self, context):
         """Loads csv/parquet table from local/S3/GCS with Pandas.
@@ -133,9 +136,57 @@ class AgnosticLoadFile(BaseOperator):
         with smart_open.open(
             path, mode=mode.get(file_type, "r"), transport_params=transport_params
         ) as stream:
-            return deserialiser[file_type](
-                stream, **deserialiser_params.get(file_type, {})
-            )
+            if file_type == "ndjson":
+                df = None
+                count = 0
+                while True:
+                    rows = stream.readlines(DEFAULT_CHUNK_SIZE)
+                    if len(rows) == 0:
+                        break
+                    if df is None:
+                        df = pd.DataFrame(self.process_ndjson(rows))
+                    else:
+                        df = df.append(pd.DataFrame(self.process_ndjson(rows)))
+                    count += 1
+                return df
+            else:
+                return deserialiser[file_type](
+                    stream, **deserialiser_params.get(file_type, {})
+                )
+
+    def process_ndjson(self, rows):
+        results = {}
+        for row in rows:
+
+            row = json.loads(row)
+            if len(row) == 0 or len(row.keys()) != 8:
+                continue
+
+            for k in row:
+                if not results.get(k):
+                    results[k] = []
+
+                if k in self.flatten_ndjson:
+                    v = self.flatten_ndjson[k]
+
+                    if isinstance(v, str):
+                        results[k].append(self.ndjson_get_values(v, row))
+                    elif self.isLambda(v):
+                        results[k].append(v(row))
+                else:
+                    results[k].append(row[k])
+        return results
+
+    def ndjson_get_values(self, path, data):
+        steps = path.split(".")
+        for step in steps:
+            data = data.get(step, None)
+            if data is None:
+                break
+        return data
+
+    def isLambda(self, val):
+        return callable(val) and val.__name__ == "<lambda>"
 
     def get_paths(self, path, file_conn_id):
         url = urlparse(path)
@@ -176,6 +227,7 @@ def load_file(
     file_conn_id=None,
     task_id=None,
     if_exists="replace",
+    flatten_ndjson={},
     **kwargs,
 ):
     """Convert AgnosticLoadFile into a function.
@@ -202,5 +254,6 @@ def load_file(
         output_table=output_table,
         file_conn_id=file_conn_id,
         if_exists=if_exists,
+        flatten_ndjson=flatten_ndjson,
         **kwargs,
     ).output
