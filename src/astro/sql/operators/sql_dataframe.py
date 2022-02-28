@@ -35,6 +35,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         database: Optional[str] = None,
         schema: Optional[str] = None,
         warehouse: Optional[str] = None,
+        role: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -52,7 +53,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         self.database = database
         self.schema = schema
         self.warehouse = warehouse
-        self.role = None
+        self.role = role
         self.parameters = None
         self.kwargs = kwargs or {}
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
@@ -119,12 +120,6 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         else:
             return ret
 
-    def populate_output_table(self):
-        self.output_table.conn_id = self.output_table.conn_id or self.conn_id
-        self.output_table.database = self.output_table.database or self.database
-        self.output_table.warehouse = self.output_table.warehouse or self.warehouse
-        self.output_table.schema = self.output_table.schema or get_schema()
-
     def get_snow_hook(self, table: Table) -> SnowflakeHook:
         """
         Create and return SnowflakeHook.
@@ -135,7 +130,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             snowflake_conn_id=table.conn_id,
             warehouse=table.warehouse,
             database=table.database,
-            role=None,
+            role=self.role,
             schema=table.schema,
             authenticator=None,
             session_parameters=None,
