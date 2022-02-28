@@ -51,9 +51,7 @@ class TestSQLParsing(unittest.TestCase):
             "join_customers_and_orders"
         ).operator.parameters
         assert len(join_params) == 2
-        assert (
-            join_params["customers_table"].operator.task_id == "render.customers_table"
-        )
+        assert join_params["customers_table"].operator.task_id == "customers_table"
 
     def test_parse_missing_table(self):
         with pytest.raises(AirflowException):
