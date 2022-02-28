@@ -17,6 +17,7 @@ import inspect
 from typing import Optional
 
 from astro.sql.table import Table
+from astro.utils.schema_util import get_schema
 
 
 class TableHandler:
