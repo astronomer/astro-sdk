@@ -32,6 +32,7 @@ import unittest.mock
 
 import pandas as pd
 import pytest
+from airflow.exceptions import BackfillUnfinished
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
@@ -296,7 +297,7 @@ class TestPostgresAppend(unittest.TestCase):
     def test_append_on_tables_on_different_db(self):
         cwd = pathlib.Path(__file__).parent
 
-        with pytest.raises(ValueError):
+        with pytest.raises(BackfillUnfinished):
             with self.dag:
                 load_main = aql.load_file(
                     path=str(cwd) + "/../data/homes_main.csv",
