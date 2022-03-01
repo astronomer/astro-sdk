@@ -17,6 +17,7 @@ limitations under the License.
 import importlib
 from typing import Dict, List
 
+from airflow.hooks.base import BaseHook
 from sqlalchemy import MetaData, cast, column, insert, select
 from sqlalchemy.sql.schema import Table as SqlaTable
 
@@ -28,6 +29,12 @@ from astro.utils.schema_util import (
     tables_from_same_db,
 )
 from astro.utils.task_id_helper import get_unique_task_id
+
+
+def get_column_name(name, conn_type):
+    if conn_type == "snowflake":
+        return name.lower()
+    return name
 
 
 class SqlAppendOperator(SqlDecoratoratedOperator):
@@ -73,6 +80,9 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
 
     def execute(self, context: Dict):
 
+        conn = BaseHook.get_connection(self.main_table.conn_id)
+        self.conn_type = conn.conn_type
+
         self.sql = self.append(
             main_table=self.main_table,
             append_table=self.append_table,
@@ -98,13 +108,22 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
         column_names = [column(c) for c in columns]
         sqlalchemy = importlib.import_module("sqlalchemy")
         casted_fields = [
-            cast(column(k), getattr(sqlalchemy, v)) for k, v in casted_columns.items()
+            cast(column(get_column_name(k, self.conn_type)), getattr(sqlalchemy, v))
+            for k, v in casted_columns.items()
         ]
-        main_columns = [column(k) for k, v in casted_columns.items()]
-        main_columns.extend([column(c) for c in columns])
+        main_columns = [
+            column(get_column_name(k, self.conn_type))
+            for k, v in casted_columns.items()
+        ]
+        main_columns.extend(
+            [column(get_column_name(c, self.conn_type)) for c in columns]
+        )
 
         if len(column_names) + len(casted_fields) == 0:
-            column_names = [column(c) for c in append_table_sqla.c.keys()]
+            column_names = [
+                column(get_column_name(c, self.conn_type))
+                for c in append_table_sqla.c.keys()
+            ]
             main_columns = column_names
 
         column_names.extend(casted_fields)

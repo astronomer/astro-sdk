@@ -178,7 +178,7 @@ class TestSnowflakeAppend(unittest.TestCase):
         append_count = hook.run(
             f"SELECT COUNT(*) FROM {self.load_append.operator.output_table.qualified_name()}"
         )
-        self.run_append_func(["beds", "acres"], {})
+        self.run_append_func(["BEDS", "ACRES"], {})
 
         df = hook.get_pandas_df(
             f"SELECT * FROM {self.load_main.operator.output_table.qualified_name()}"
