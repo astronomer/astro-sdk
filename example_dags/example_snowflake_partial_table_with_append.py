@@ -66,7 +66,7 @@ def filter_data(homes_long: Table):
 
 
 @dag(start_date=datetime(2021, 12, 1), schedule_interval="@daily", catchup=False)
-def example_snowflake_partial_table():
+def example_snowflake_partial_table_with_append():
     # Initial load of homes data csv's into Snowflake
     homes_data1 = load_file(
         path=FILE_PATH + "homes.csv",
@@ -115,4 +115,4 @@ def example_snowflake_partial_table():
     )
 
 
-example_snowflake_partial_table_dag = example_snowflake_partial_table()
+example_snowflake_partial_table_dag = example_snowflake_partial_table_with_append()
