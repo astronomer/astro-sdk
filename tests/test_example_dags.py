@@ -29,7 +29,8 @@ def session():
         "example_amazon_s3_postgres_load_and_save",
         "example_amazon_s3_snowflake_transform",
         "example_postgres_render",
-        "example_snowflake_partial_table",
+        "example_snowflake_partial_table_with_append",
+        "example_snowflake_render",
     ],
 )
 def test_example_dag(session, dag_id):
