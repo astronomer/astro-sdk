@@ -154,7 +154,7 @@ class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
                     table_name=output_table_name, schema=self.output_table.schema
                 )
             self.log.info(f"returning table {self.output_table}")
-            self.populate_output_table()
+            self.populate_output_table(context)
             return self.output_table
 
         elif self.raw_sql:
@@ -165,7 +165,7 @@ class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
             self.output_table = Table(
                 table_name=output_table_name,
             )
-            self.populate_output_table()
+            self.populate_output_table(context)
             self.log.info(f"returning table {self.output_table}")
             return self.output_table
 

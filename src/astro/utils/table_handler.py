@@ -62,8 +62,8 @@ class TableHandler:
             self.warehouse = first_table.warehouse or self.warehouse
             self.role = first_table.role or self.role
 
-    def populate_output_table(self):
+    def populate_output_table(self, context):
         self.output_table.conn_id = self.output_table.conn_id or self.conn_id
         self.output_table.database = self.output_table.database or self.database
         self.output_table.warehouse = self.output_table.warehouse or self.warehouse
-        self.output_table.schema = self.output_table.schema or get_schema(self.context)
+        self.output_table.schema = self.output_table.schema or get_schema(context)
