@@ -67,7 +67,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             **kwargs,
         )
 
-    def handle_op_args(self):
+    def handle_op_args(self, context):
         full_spec = inspect.getfullargspec(self.python_callable)
         op_args = list(self.op_args)
         ret_args = []
@@ -77,15 +77,15 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
                 full_spec.annotations[current_arg] == pd.DataFrame
                 and type(arg) == Table
             ):
-                ret_args.append(self._get_dataframe(arg))
+                ret_args.append(self._get_dataframe(arg, context))
             else:
                 ret_args.append(arg)
         self.op_args = tuple(ret_args)
 
-    def handle_op_kwargs(self):
+    def handle_op_kwargs(self, context):
         param_types = inspect.signature(self.python_callable).parameters
         self.op_kwargs = {
-            k: self._get_dataframe(v)
+            k: self._get_dataframe(v, context)
             if param_types.get(k).annotation == pd.DataFrame and type(v) == Table
             else v
             for k, v in self.op_kwargs.items()
@@ -93,8 +93,8 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
 
     def execute(self, context: Dict):
         self._set_variables_from_first_table()
-        self.handle_op_args()
-        self.handle_op_kwargs()
+        self.handle_op_args(context)
+        self.handle_op_kwargs(context)
 
         ret = self.python_callable(*self.op_args, **self.op_kwargs)
         if self.output_table:
