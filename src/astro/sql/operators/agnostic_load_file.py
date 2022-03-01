@@ -83,6 +83,9 @@ class AgnosticLoadFile(BaseOperator):
             )
         else:
             self.output_table.schema = self.output_table.schema or get_schema()
+        if not self.output_table.table_name:
+            self.output_table.table_name = create_table_name(context=context)
+
         move_dataframe_to_sql(
             output_table_name=self.output_table.table_name,
             conn_id=self.output_table.conn_id,
