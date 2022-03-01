@@ -27,10 +27,11 @@ from astro.utils.schema_util import (
     get_table_name,
     tables_from_same_db,
 )
+from astro.utils.table_handler import TableHandler
 from astro.utils.task_id_helper import get_unique_task_id
 
 
-class SqlAppendOperator(SqlDecoratoratedOperator):
+class SqlAppendOperator(SqlDecoratoratedOperator, TableHandler):
     template_fields = ("main_table", "append_table")
 
     def __init__(
@@ -49,11 +50,6 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
         self.casted_columns = casted_columns
         task_id = get_unique_task_id("append_table")
 
-        if not tables_from_same_db([append_table, main_table]):
-            raise ValueError(
-                get_error_string_for_multiple_dbs([append_table, main_table])
-            )
-
         def null_function():
             pass
 
@@ -61,10 +57,6 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
             raw_sql=True,
             parameters={},
             task_id=kwargs.get("task_id") or task_id,
-            database=main_table.database,
-            schema=main_table.schema,
-            warehouse=main_table.warehouse,
-            conn_id=main_table.conn_id,
             op_args=(),
             python_callable=null_function,
             handler=lambda x: None,
@@ -72,13 +64,22 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
         )
 
     def execute(self, context: Dict):
+        if not tables_from_same_db([self.append_table, self.main_table]):
+            raise ValueError(
+                get_error_string_for_multiple_dbs([self.append_table, self.main_table])
+            )
 
+        self.main_table.conn_id = self.main_table.conn_id or self.append_table.conn_id
+        self.conn_id = self.main_table.conn_id or self.append_table.conn_id
+        self.database = self.main_table.database or self.append_table.database
+        self.warehouse = self.main_table.warehouse or self.append_table.warehouse
+        self.schema = self.main_table.schema or self.append_table.schema
         self.sql = self.append(
             main_table=self.main_table,
             append_table=self.append_table,
             columns=self.columns,
             casted_columns=self.casted_columns,
-            conn_id=self.conn_id,
+            conn_id=self.main_table.conn_id,
         )
         return super().execute(context)
 

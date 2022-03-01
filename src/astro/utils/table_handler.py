@@ -16,6 +16,8 @@ limitations under the License.
 import inspect
 from typing import Optional
 
+import pandas
+
 from astro.sql.table import Table
 from astro.utils.schema_util import get_schema
 
@@ -32,17 +34,22 @@ class TableHandler:
             table_index = [x for x, t in enumerate(self.op_args) if type(t) == Table]
             if table_index:
                 first_table = self.op_args[table_index[0]]
-        if not first_table:
+        elif not first_table:
             table_kwargs = [
                 x
                 for x in inspect.signature(self.python_callable).parameters.values()
-                if x.annotation == Table and type(self.op_kwargs[x.name]) == Table
+                if (
+                    x.annotation == Table
+                    and type(self.op_kwargs[x.name]) == Table
+                    or x.annotation == pandas.DataFrame
+                    and type(self.op_kwargs[x.name]) == Table
+                )
             ]
             if table_kwargs:
                 first_table = self.op_kwargs[table_kwargs[0].name]
 
         # If there is no first table via op_ags or kwargs, we check the parameters
-        if not first_table:
+        elif not first_table:
             if self.parameters:
                 param_tables = [t for t in self.parameters.values() if type(t) == Table]
                 if param_tables:

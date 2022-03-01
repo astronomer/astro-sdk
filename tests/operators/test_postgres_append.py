@@ -32,6 +32,7 @@ import unittest.mock
 
 import pandas as pd
 import pytest
+from airflow.exceptions import BackfillUnfinished
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
@@ -44,6 +45,7 @@ from google.cloud import bigquery
 
 import astro.sql as aql
 from astro.sql.table import Table
+from tests.operators import utils as test_utils
 from tests.operators.utils import DEFAULT_SCHEMA
 
 log = logging.getLogger(__name__)
@@ -154,23 +156,10 @@ class TestPostgresAppend(unittest.TestCase):
             )
             foo = aql.append(
                 columns=["sell", "living"],
-                main_table=self.main_table,
-                append_table=self.append_table,
+                main_table=load_main,
+                append_table=load_append,
             )
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-
-        load_main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, load_main.operator.task_id)
-        self.wait_for_task_finish(dr, load_append.operator.task_id)
-        foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, foo.task_id)
-
+        test_utils.run_dag(self.dag)
         df = pd.read_sql(
             f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
             con=hook.get_conn(),
@@ -181,7 +170,6 @@ class TestPostgresAppend(unittest.TestCase):
         assert df["rooms"].hasnans
 
     def test_append_all_fields(self):
-
         hook = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
 
         drop_table(table_name="test_main", postgres_conn=hook.get_conn())
@@ -199,21 +187,7 @@ class TestPostgresAppend(unittest.TestCase):
                 output_table=self.append_table,
             )
             foo = aql.append(main_table=self.main_table, append_table=self.append_table)
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-
-        main_table = load_main.operator.run(
-            start_date=DEFAULT_DATE, end_date=DEFAULT_DATE
-        )
-        load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, load_main.operator.task_id)
-        self.wait_for_task_finish(dr, load_append.operator.task_id)
-        foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, foo.task_id)
+        test_utils.run_dag(self.dag)
         df = pd.read_sql(
             f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
             con=hook.get_conn(),
@@ -246,19 +220,7 @@ class TestPostgresAppend(unittest.TestCase):
                 main_table=self.main_table,
                 append_table=self.append_table,
             )
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-
-        load_main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, load_main.operator.task_id)
-        self.wait_for_task_finish(dr, load_append.operator.task_id)
-        foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, foo.task_id)
+        test_utils.run_dag(self.dag)
         df = pd.read_sql(
             f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
             con=hook.get_conn(),
@@ -292,19 +254,8 @@ class TestPostgresAppend(unittest.TestCase):
                 main_table=self.main_table,
                 append_table=self.append_table,
             )
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
 
-        load_main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, load_main.operator.task_id)
-        self.wait_for_task_finish(dr, load_append.operator.task_id)
-        foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, foo.task_id)
+        test_utils.run_dag(self.dag)
 
         df = pd.read_sql(
             f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
@@ -331,21 +282,7 @@ class TestPostgresAppend(unittest.TestCase):
                 main_table=self.main_table_bigquery,
                 append_table=self.append_table_bigquery,
             )
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-
-        main_table = load_main.operator.run(
-            start_date=DEFAULT_DATE, end_date=DEFAULT_DATE
-        )
-        load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, load_main.operator.task_id)
-        self.wait_for_task_finish(dr, load_append.operator.task_id)
-        foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, foo.task_id)
+        test_utils.run_dag(self.dag)
 
         client = bigquery.Client()
         query_job = client.query(
@@ -360,7 +297,7 @@ class TestPostgresAppend(unittest.TestCase):
     def test_append_on_tables_on_different_db(self):
         cwd = pathlib.Path(__file__).parent
 
-        with pytest.raises(ValueError):
+        with pytest.raises(BackfillUnfinished):
             with self.dag:
                 load_main = aql.load_file(
                     path=str(cwd) + "/../data/homes_main.csv",
@@ -371,17 +308,7 @@ class TestPostgresAppend(unittest.TestCase):
                     output_table=self.append_table,
                 )
                 foo = aql.append(
-                    main_table=self.main_table_bigquery,
-                    append_table=self.append_table,
+                    main_table=load_main,
+                    append_table=load_append,
                 )
-            dr = self.dag.create_dagrun(
-                run_id=DagRunType.MANUAL.value,
-                start_date=timezone.utcnow(),
-                execution_date=DEFAULT_DATE,
-                state=State.RUNNING,
-            )
-
-            load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-            self.wait_for_task_finish(dr, load_main.operator.task_id)
-            self.wait_for_task_finish(dr, load_append.operator.task_id)
-            foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
+                test_utils.run_dag(self.dag)
