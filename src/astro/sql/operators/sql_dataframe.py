@@ -97,6 +97,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         self.handle_op_kwargs()
 
         ret = self.python_callable(*self.op_args, **self.op_kwargs)
+        ret.columns = map(str.lower, ret.columns)
         if self.output_table:
             self.populate_output_table()
             if type(self.output_table) == TempTable:
