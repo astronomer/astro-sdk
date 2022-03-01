@@ -59,7 +59,8 @@ def tables_from_same_db(tables: List[Table]):
     """
     conn_ids = set()
     for table in tables:
-        conn_ids.add(table.conn_id)
+        if table.conn_id:
+            conn_ids.add(table.conn_id)
     return len(conn_ids) == 1
 
 
@@ -69,4 +70,4 @@ def get_error_string_for_multiple_dbs(tables: List[Table]):
     :param tables: list of table
     :return: String: error string
     """
-    return f'Tables should belong to same db {", ".join([table.table_name for table in tables])}'
+    return f'Tables should belong to same db {", ".join([f"{table.table_name}: {table.conn_id}" for table in tables])}'
