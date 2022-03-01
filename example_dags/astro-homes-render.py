@@ -1,8 +1,9 @@
 import os
-from airflow.decorators import dag
-from astro.sql import render
-
 from datetime import datetime
+
+from airflow.decorators import dag
+
+from astro.sql import render
 
 """
 This DAG highlights using the render function to execute SQL queries.
@@ -18,8 +19,10 @@ connection info.
 """
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-@dag(start_date=datetime(2022, 2, 1), schedule_interval='@daily', catchup=False)
+
+@dag(start_date=datetime(2022, 2, 1), schedule_interval="@daily", catchup=False)
 def astroflow_homes_sql_dag():
     homes_models = render(dir_path + "/demo_parse_directory/homes_example/")
+
 
 astroflow_homes_sql_dag = astroflow_homes_sql_dag()
