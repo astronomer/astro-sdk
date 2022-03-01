@@ -19,7 +19,6 @@ aggregate data in Snowflake.
 
 To use the DAG, you must have two tables called "Homes" and "Homes2" in 
 your database. The `load_file` tasks in this DAG load the data from homes csv's in the `data/` directory.
-/include directory. 
 You must also update the frontmatter in the queries to your own database
 connection info.
 """
