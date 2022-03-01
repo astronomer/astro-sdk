@@ -25,12 +25,12 @@ def session():
 @pytest.mark.parametrize(
     "dag_id",
     [
-        # "example_amazon_s3_postgres",
-        # "example_amazon_s3_postgres_load_and_save",
-        # "example_amazon_s3_snowflake_transform",
-        # "example_postgres_render",
-        # "example_snowflake_partial_table",
-        "astroflow_homes_sql_dag"
+        "example_amazon_s3_postgres",
+        "example_amazon_s3_postgres_load_and_save",
+        "example_amazon_s3_snowflake_transform",
+        "example_postgres_render",
+        "example_snowflake_partial_table",
+        "astroflow_homes_sql_dag",
     ],
 )
 def test_example_dag(session, dag_id):
