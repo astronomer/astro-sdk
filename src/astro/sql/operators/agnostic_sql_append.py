@@ -57,10 +57,6 @@ class SqlAppendOperator(SqlDecoratoratedOperator, TableHandler):
             raw_sql=True,
             parameters={},
             task_id=kwargs.get("task_id") or task_id,
-            database=main_table.database,
-            schema=main_table.schema,
-            warehouse=main_table.warehouse,
-            conn_id=main_table.conn_id,
             op_args=(),
             python_callable=null_function,
             handler=lambda x: None,
@@ -74,7 +70,10 @@ class SqlAppendOperator(SqlDecoratoratedOperator, TableHandler):
             )
 
         self.main_table.conn_id = self.main_table.conn_id or self.append_table.conn_id
-        self.conn_id = self.main_table.conn_id
+        self.conn_id = self.main_table.conn_id or self.append_table.conn_id
+        self.database = self.main_table.database or self.append_table.database
+        self.warehouse = self.main_table.warehouse or self.append_table.warehouse
+        self.schema = self.main_table.schema or self.append_table.schema
         self.sql = self.append(
             main_table=self.main_table,
             append_table=self.append_table,
