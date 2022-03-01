@@ -1,3 +1,4 @@
+import io
 import json
 import glob
 from typing import Union
@@ -42,7 +43,7 @@ class AgnosticLoadFile(BaseOperator):
         file_conn_id="",
         chunksize=DEFAULT_CHUNK_SIZE,
         if_exists="replace",
-        flatten_ndjson={},
+        normalize_config=None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -53,7 +54,7 @@ class AgnosticLoadFile(BaseOperator):
         self.kwargs = kwargs
         self.output_table = output_table
         self.if_exists = if_exists
-        self.flatten_ndjson = flatten_ndjson
+        self.normalize_config = normalize_config or {}
 
     def execute(self, context):
         """
@@ -150,7 +151,7 @@ def load_file(
     file_conn_id=None,
     task_id=None,
     if_exists="replace",
-    flatten_ndjson={},
+    normalize_config=None,
     **kwargs,
 ):
     """Convert AgnosticLoadFile into a function.
@@ -165,6 +166,8 @@ def load_file(
     :type file_conn_id: str
     :param task_id: task id, optional.
     :type task_id: str
+    :param normalize_config: config dict for pandas json_normalize method https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html
+    :type normalize_config: dict
     """
 
     # Note - using path for task id is causing issues as it's a pattern and
@@ -177,6 +180,6 @@ def load_file(
         output_table=output_table,
         file_conn_id=file_conn_id,
         if_exists=if_exists,
-        flatten_ndjson=flatten_ndjson,
+        normalize_config=normalize_config,
         **kwargs,
     ).output
