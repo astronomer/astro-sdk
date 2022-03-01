@@ -18,7 +18,7 @@ queries in the /include/sql directory. The queries, combine, clean, and
 aggregate data in Snowflake.
 
 To use the DAG, you must have two tables called "Homes" and "Homes2" in 
-your database. Data to populate these tables are located in csv's in the 
+your database. The `load_file` tasks in this DAG load the data from homes csv's in the `data/` directory.
 /include directory. 
 You must also update the frontmatter in the queries to your own database
 connection info.
