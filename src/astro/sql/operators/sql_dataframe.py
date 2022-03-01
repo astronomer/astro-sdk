@@ -97,7 +97,6 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         self.handle_op_kwargs()
 
         ret = self.python_callable(*self.op_args, **self.op_kwargs)
-        ret.columns = map(str.lower, ret.columns)
         if self.output_table:
             self.populate_output_table()
             if type(self.output_table) == TempTable:
@@ -106,6 +105,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
                 )
             self.output_table.schema = self.output_table.schema or get_schema()
             conn = BaseHook.get_connection(self.output_table.conn_id)
+            ret.columns = map(str.lower, ret.columns)
             move_dataframe_to_sql(
                 output_table_name=self.output_table.table_name,
                 conn_id=self.output_table.conn_id,
