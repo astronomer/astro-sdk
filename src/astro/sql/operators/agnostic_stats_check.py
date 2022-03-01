@@ -7,6 +7,7 @@ from sqlalchemy.sql.schema import Table as SqlaTable
 from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
 from astro.utils.schema_util import (
+    get_column_name,
     get_error_string_for_multiple_dbs,
     get_table_name,
     tables_from_same_db,
@@ -38,12 +39,12 @@ class ChecksHandler:
             for key in check.columns_map:
                 select_expressions.extend(
                     [
-                        func.stddev(main_table_sqla.c.get(key)).label(
-                            f"{check.name}_{key}_stddev"
-                        ),
-                        func.avg(main_table_sqla.c.get(key)).label(
-                            f"{check.name}_{key}_avg"
-                        ),
+                        func.stddev(
+                            main_table_sqla.c.get(get_column_name(key, self.conn_type))
+                        ).label(f"{check.name}_{key}_stddev"),
+                        func.avg(
+                            main_table_sqla.c.get(get_column_name(key, self.conn_type))
+                        ).label(f"{check.name}_{key}_avg"),
                     ]
                 )
         return select(select_expressions).alias("main_stats_sql")
@@ -52,7 +53,9 @@ class ChecksHandler:
         column_sql = []
         for column in check.columns_map:
             main_table_col = column
-            compare_table_col = compare_table.c.get(column)
+            compare_table_col = compare_table.c.get(
+                get_column_name(check.columns_map[column], self.conn_type)
+            )
             main_stats_check_avg = main_stats.c.get(
                 f"{check.name}_{main_table_col}_avg"
             )

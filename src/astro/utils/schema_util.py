@@ -70,3 +70,9 @@ def get_error_string_for_multiple_dbs(tables: List[Table]):
     :return: String: error string
     """
     return f'Tables should belong to same db {", ".join([table.table_name for table in tables])}'
+
+
+def get_column_name(name, conn_type):
+    if conn_type == "snowflake":
+        return name.lower()
+    return name
