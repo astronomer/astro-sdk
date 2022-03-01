@@ -30,7 +30,7 @@ def session():
         "example_amazon_s3_snowflake_transform",
         "example_postgres_render",
         "example_snowflake_partial_table",
-        "astroflow_homes_sql_dag",
+        "example_snowflake_render",
     ],
 )
 def test_example_dag(session, dag_id):

@@ -27,7 +27,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
 @dag(start_date=datetime(2022, 2, 1), schedule_interval="@daily", catchup=False)
-def astroflow_homes_sql_dag():
+def example_snowflake_render():
     homes_data1 = load_file(
         path=FILE_PATH + "homes.csv",
         output_table=Table(
@@ -55,4 +55,4 @@ def astroflow_homes_sql_dag():
     )
 
 
-astroflow_homes_sql_dag = astroflow_homes_sql_dag()
+example_snowflake_render_dag = example_snowflake_render()
