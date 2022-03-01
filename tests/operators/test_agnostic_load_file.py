@@ -99,8 +99,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
         self.init_storage_client()
 
     def init_storage_client(self):
-        pass
-        # self.storage_client = storage.Client()
+        self.storage_client = storage.Client()
 
     def upload_blob(self):
         self.delete_blob()
