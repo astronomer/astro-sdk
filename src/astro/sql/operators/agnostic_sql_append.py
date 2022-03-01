@@ -27,13 +27,13 @@ from astro.utils.schema_util import (
     get_column_name,
     get_error_string_for_multiple_dbs,
     get_table_name,
-    tables_from_same_db
+    tables_from_same_db,
 )
 from astro.utils.table_handler import TableHandler
 from astro.utils.task_id_helper import get_unique_task_id
 
 
-class SqlAppendOperator(SqlDecoratoratedOperator):
+class SqlAppendOperator(SqlDecoratoratedOperator, TableHandler):
     template_fields = ("main_table", "append_table")
 
     def __init__(
@@ -78,7 +78,6 @@ class SqlAppendOperator(SqlDecoratoratedOperator):
         self.database = self.main_table.database or self.append_table.database
         self.warehouse = self.main_table.warehouse or self.append_table.warehouse
         self.schema = self.main_table.schema or self.append_table.schema
-
         self.sql = self.append(
             main_table=self.main_table,
             append_table=self.append_table,
