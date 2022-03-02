@@ -58,6 +58,12 @@ class AgnosticLoadFile(BaseOperator):
         self.if_exists = if_exists
         self.normalize_config = normalize_config or {}
 
+        conn = BaseHook.get_connection(self.output_table.conn_id)
+        self.conn_type = conn.conn_type
+        self.normalize_config = self.check_ndjson_config_delimiter(
+            self.conn_type, self.normalize_config
+        )
+
     def execute(self, context):
         """Loads csv/parquet table from local/S3/GCS with Pandas.
 
@@ -137,7 +143,7 @@ class AgnosticLoadFile(BaseOperator):
         with smart_open.open(
             path, mode=mode.get(file_type, "r"), transport_params=transport_params
         ) as stream:
-            if file_type in "ndjson":
+            if file_type is "ndjson":
                 return self.flatten_ndjson(stream)
             else:
                 return deserialiser[file_type](
@@ -165,6 +171,18 @@ class AgnosticLoadFile(BaseOperator):
                 )
             rows = stream.readlines(DEFAULT_CHUNK_SIZE)
         return df
+
+    def check_ndjson_config_delimiter(self, conn_type, normalize_config):
+        if conn_type in ["bigquery", "snowflake"]:
+            meta_prefix = normalize_config.get("meta_prefix")
+            if meta_prefix and meta_prefix == ".":
+                normalize_config["meta_prefix"] == "__"
+
+            meta_prefix = normalize_config.get("record_prefix")
+            if meta_prefix and meta_prefix == ".":
+                normalize_config["record_prefix"] == "__"
+
+        return normalize_config
 
     def get_paths(self, path, file_conn_id):
         url = urlparse(path)
