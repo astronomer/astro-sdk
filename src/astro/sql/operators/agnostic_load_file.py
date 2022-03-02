@@ -58,12 +58,6 @@ class AgnosticLoadFile(BaseOperator):
         self.if_exists = if_exists
         self.normalize_config = normalize_config or {}
 
-        conn = BaseHook.get_connection(self.output_table.conn_id)
-        self.conn_type = conn.conn_type
-        self.normalize_config = self.check_ndjson_config_delimiter(
-            self.conn_type, self.normalize_config
-        )
-
     def execute(self, context):
         """Loads csv/parquet table from local/S3/GCS with Pandas.
 
@@ -75,12 +69,14 @@ class AgnosticLoadFile(BaseOperator):
 
         # Retrieve conn type
         conn = BaseHook.get_connection(self.output_table.conn_id)
+
         if type(self.output_table) == TempTable:
             self.output_table = self.output_table.to_table(
                 create_table_name(context=context), SCHEMA
             )
         else:
             self.output_table.schema = self.output_table.schema or SCHEMA
+
         if not self.output_table.table_name:
             self.output_table.table_name = create_table_name(context=context)
 
@@ -103,6 +99,7 @@ class AgnosticLoadFile(BaseOperator):
                 if_exists=if_exists,
             )
             if_exists = "append"
+
         self.log.info(f"returning table {self.output_table}")
         return self.output_table
 
