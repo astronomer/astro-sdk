@@ -70,6 +70,12 @@ class AgnosticLoadFile(BaseOperator):
         # Retrieve conn type
         conn = BaseHook.get_connection(self.output_table.conn_id)
 
+        self.normalize_config = self.check_ndjson_config_delimiter(
+            conn.conn_type, self.normalize_config
+        )
+        # Read file with Pandas load method based on `file_type` (S3 or local).
+        df = self._load_dataframe(self.path)
+
         if type(self.output_table) == TempTable:
             self.output_table = self.output_table.to_table(
                 create_table_name(context=context), SCHEMA
