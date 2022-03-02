@@ -70,9 +70,6 @@ class SqlAppendOperator(SqlDecoratoratedOperator, TableHandler):
             raise ValueError(
                 get_error_string_for_multiple_dbs([self.append_table, self.main_table])
             )
-        conn = BaseHook.get_connection(self.main_table.conn_id)
-
-        self.conn_type = conn.conn_type
         self.main_table.conn_id = self.main_table.conn_id or self.append_table.conn_id
         self.conn_id = self.main_table.conn_id or self.append_table.conn_id
         self.database = self.main_table.database or self.append_table.database
@@ -85,6 +82,9 @@ class SqlAppendOperator(SqlDecoratoratedOperator, TableHandler):
             casted_columns=self.casted_columns,
             conn_id=self.main_table.conn_id,
         )
+        conn = BaseHook.get_connection(self.main_table.conn_id)
+        self.conn_type = conn.conn_type
+
         return super().execute(context)
 
     def append(

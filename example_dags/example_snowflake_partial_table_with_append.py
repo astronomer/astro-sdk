@@ -111,13 +111,7 @@ def example_snowflake_partial_table_with_append():
     append(
         append_table=filtered_data,
         columns=["sell", "list", "variable", "value"],
-        main_table=Table(
-            table_name="homes_reporting",
-            conn_id=SNOWFLAKE_CONN_ID,
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
-        ),
+        main_table=Table(table_name="homes_reporting"),
     )
 
 
