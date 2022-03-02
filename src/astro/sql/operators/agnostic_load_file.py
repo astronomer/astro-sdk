@@ -56,6 +56,12 @@ class AgnosticLoadFile(BaseOperator):
         self.if_exists = if_exists
         self.normalize_config = normalize_config or {}
 
+        conn = BaseHook.get_connection(self.output_table.conn_id)
+        self.conn_type = conn.conn_type
+        self.normalize_config = self.check_ndjson_config_delimiter(
+            self.conn_type, self.normalize_config
+        )
+
     def execute(self, context):
         """
         Load an existing dataset from a supported file into a SQL table.
@@ -108,9 +114,22 @@ class AgnosticLoadFile(BaseOperator):
 
         Select method based on `file_type` (S3 or local).
         """
+
         validate_path(filepath)
         filetype = get_filetype(filepath)
         return load_file_into_dataframe(filepath, filetype, transport_params)
+
+    def check_ndjson_config_delimiter(self, conn_type, normalize_config):
+        if conn_type in ["bigquery", "snowflake"]:
+            meta_prefix = normalize_config.get("meta_prefix")
+            if meta_prefix and meta_prefix == ".":
+                normalize_config["meta_prefix"] == "__"
+
+            meta_prefix = normalize_config.get("record_prefix")
+            if meta_prefix and meta_prefix == ".":
+                normalize_config["record_prefix"] == "__"
+
+        return normalize_config
 
     def get_paths(self, path, file_conn_id):
         url = urlparse(path)
