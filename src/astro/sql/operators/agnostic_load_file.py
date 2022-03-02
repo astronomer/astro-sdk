@@ -56,12 +56,6 @@ class AgnosticLoadFile(BaseOperator):
         self.if_exists = if_exists
         self.normalize_config = normalize_config or {}
 
-        conn = BaseHook.get_connection(self.output_table.conn_id)
-        self.conn_type = conn.conn_type
-        self.normalize_config = self.check_ndjson_config_delimiter(
-            self.conn_type, self.normalize_config
-        )
-
     def execute(self, context):
         """
         Load an existing dataset from a supported file into a SQL table.
@@ -97,7 +91,9 @@ class AgnosticLoadFile(BaseOperator):
                 if_exists=if_exists,
             )
             if_exists = "append"
+
         self.log.info(f"Completed loading the data into {self.output_table}.")
+
         return self.output_table
 
     def _configure_output_table(self, context):
