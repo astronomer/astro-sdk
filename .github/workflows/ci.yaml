@@ -68,6 +68,10 @@ jobs:
       AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
       AIRFLOW_VAR_FOO: templated_file_name
   Run-Unit-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [ 1, 2, 3, 4, 5, 6, 7, 8 ]
     runs-on: ubuntu-latest
     services:
       postgres:
