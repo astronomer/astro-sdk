@@ -85,6 +85,7 @@ with DAG(
 Execute the DAG locally:
 
 ```commandline
+export AIRFLOW_HOME=`pwd`
 export AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
 airflow db init
 airflow dags test calculate_popular_movies `date --iso-8601`
