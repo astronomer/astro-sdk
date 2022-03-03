@@ -21,6 +21,7 @@ from pandas import DataFrame
 from pandas.io.sql import SQLDatabase
 from sqlalchemy import create_engine
 
+from astro.utils import get_hook
 from astro.utils.dependencies import (
     BigQueryHook,
     PostgresHook,
@@ -41,39 +42,9 @@ def move_dataframe_to_sql(
     user,
     chunksize,
 ):
-    hook_kwargs = {
-        "postgresql": {"postgres_conn_id": conn_id, "schema": database},
-        "postgres": {"postgres_conn_id": conn_id, "schema": database},
-        "snowflake": {
-            "snowflake_conn_id": conn_id,
-            "database": database,
-            "schema": schema,
-            "warehouse": warehouse,
-        },
-        "bigquery": {"use_legacy_sql": False, "gcp_conn_id": conn_id},
-        "sqlite": {"sqlite_conn_id": conn_id},
-    }
-    try:
-        hook_class = {
-            "postgresql": PostgresHook,
-            "postgres": PostgresHook,
-            "snowflake": SnowflakeHook,
-            "bigquery": BigQueryHook,
-            "sqlite": SqliteHook,
-        }[conn_type]
-    except KeyError:
-        raise ValueError(
-            f"The conn_id {conn_id} is of unsupported type {conn_type}. Current supported types: {list(hook_class.keys())}"
-        )
-    else:
-        hook = hook_class(**hook_kwargs[conn_type])
-
-    import pdb
-
-    pdb.set_trace()
-
-    if database:
-        hook.database = database
+    hook = get_hook(
+        conn_id=conn_id, database=database, schema=schema, warehouse=warehouse
+    )
 
     if conn_type != "sqlite" and not schema_exists(
         hook=hook, schema=schema, conn_type=conn_type

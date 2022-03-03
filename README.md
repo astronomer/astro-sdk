@@ -14,16 +14,13 @@
 [![CI](https://github.com/astro-projects/astro/actions/workflows/ci.yaml/badge.svg)](https://github.com/astro-projects/astro)
 
 **astro** allows rapid and clean development of {Extract, Load, Transform} workflows using Python.
-It empowers DAG authors to achieve more with less code. 
+It helps DAG authors to achieve more with less code. 
 It is powered by [Apache Airflow](https://www.airflow.apache.org) and maintained by [Astronomer](https://astronomer.io).
 
 > :warning: **Disclaimer** This project development status is alpha. This means it is not production-ready yet.
 The interfaces may change. We welcome alpha users and brave souls to test it - any feedback is very much appreciated.
 
-
-## Quickstart
-
-### Install
+## Install
 
 **astro** is available at [PyPI](https://pypi.org/project/astro-projects/) and it can be installed using standard Python
 [installation tools](https://packaging.python.org/en/latest/tutorials/installing-packages/).
@@ -34,16 +31,15 @@ To install a cloud-agnostic version of **astro**, run
 pip install astro-projects
 ```
 
-If using cloud-providers, install using the optional dependencies of interest. Example:
+If using cloud-providers, install using the optional dependencies of interest:
 
 ```commandline
-pip install astro-projects[google,snowflake,postgres]
+pip install astro-projects[amazon,google,snowflake,postgres]
 ```
 
+## Quick-start
 
-### Try it out
-
-This is an example is an example Airflow DAG, to a local folder named `dags`:
+After installing Astro, copy the following example dag `calculate_top_animations.py` to a local directory named `dags`:
 
 ```python
 from datetime import datetime
@@ -54,18 +50,23 @@ from astro.sql.table import Table
 START_DATE = datetime(2000, 1, 1)
 
 
-@aql.transform
-def top_five_scify_movies(input_table: Table):
+@aql.transform()
+def top_five_animations(input_table: Table):
     return """
-        SELECT COUNT(*)
+        SELECT Title, Rating
         FROM {{input_table}}
+        WHERE Genre1=='Animation'
+        ORDER BY Rating desc
+        LIMIT 5;
     """
 
 
 with DAG(
-    "calculate_popular_movies", schedule_interval=None, start_date=START_DATE
+    "calculate_popular_movies",
+    schedule_interval=None,
+    start_date=START_DATE,
+    catchup=False,
 ) as dag:
-
     imdb_movies = aql.load_file(
         path="https://raw.githubusercontent.com/astro-projects/astro/readme/tests/data/imdb.csv",
         task_id="load_csv",
@@ -74,33 +75,40 @@ with DAG(
         ),
     )
 
-    top_five_scify_movies(
+    top_five_animations(
         input_table=imdb_movies,
         output_table=Table(
-            table_name="top_scify", database="sqlite", conn_id="sqlite_default"
+            table_name="top_animation", database="sqlite", conn_id="sqlite_default"
         ),
     )
 ```
 
-Execute the DAG locally:
+Set-up a local instance of Airflow by running:
 
 ```commandline
 export AIRFLOW_HOME=`pwd`
 export AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
 
-sqlite3 /tmp/sqlite_default.db "VACUUM;"
-
 airflow db init
-airflow dags test calculate_popular_movies `date --iso-8601`
+```
+
+Create a SQLite database for the example to run with and run the DAG:
+```commandline
+sqlite3 /tmp/sqlite_default.db "VACUUM;"
+airflow dags test calculate_top_animations `date --iso-8601=seconds`
+```
+
+Check the top five animations calculated by your first Astro DAG by running:
+```commandline
+sqlite3 /tmp/sqlite_default.db "select * from top_animation;" ".exit"
 ```
 
 ## Requirements
 
-Because **astro** is built using the [Task Flow API](https://airflow.apache.org/docs/apache-airflow/stable/concepts/taskflow.html), 
-it depends on Apache Airflow >= 2.0.0.
+Because **astro** relies on the [Task Flow API](https://airflow.apache.org/docs/apache-airflow/stable/concepts/taskflow.html) and
+it depends on Apache Airflow >= 2.1.0.
 
 ## Supported technologies
-
 
 | Databases       | File types | File locations |
 |-----------------|------------|----------------|
@@ -110,12 +118,27 @@ it depends on Apache Airflow >= 2.0.0.
 | SQLite          | Parquet    |                |
 
 
+## Available operations
+
+A summary of the currently available operations in **astro**. More details are available in the [reference guide](docs/OLD_README.md).
+* `load_file`: load a given file into a SQL table
+* `transform`: applies a SQL select statement to a source table and saves the result to a destination table
+* `truncate`: remove all content from a SQL table
+* `run_raw_sql`: run any SQL statement without handling its output
+* `append`: insert rows from the source SQL table into the destination SQL table, if there are no conflicts
+* `merge`: insert rows from the source SQL table into the destination SQL table, depending on conflicts:
+  * ignore: do not add rows which already exist
+  * update: replace existing rows by new ones
+* `save_file`: export SQL table rows into destination file
+* `dataframe`: export given SQL table into in-memory Pandas dataframe
+* `render`: given a directory containing SQL statements, dynamically create transform tasks within a DAG 
+
 ## Documentation
 
 The documentation is a work in progress, and we aim to follow the [Diátaxis](https://diataxis.fr/) system:
 * **Tutorial**: a hands-on introduction to **astro**
 * **How-to guides**: simple step-by-step user guides to accomplish specific tasks
-* **[Technical reference](docs/OLD_README.md)**: commands, modules, classes and methods
+* **[Reference guide](docs/OLD_README.md)**: commands, modules, classes and methods
 * **Explanation**: Clarification and discussion of key decisions when designing the project.
 
 ## Changelog
@@ -126,7 +149,7 @@ We follow Semantic Versioning for releases. Check the [changelog](docs/CHANGELOG
 
 All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
 
-A detailed overview on how to contribute can be found in the [Contributing Guide](docs/CONTRIBUTING.md).
+A detailed overview on how to contribute can be found in the [Contribution Guideline](docs/CONTRIBUTING.md).
 
 As contributors and maintainers to this project, you are expected to abide by the [Contributor Code of Conduct](docs/CODE_OF_CONDUCT.md).
 

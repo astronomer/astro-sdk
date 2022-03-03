@@ -8,16 +8,22 @@ from astro.sql.table import Table
 START_DATE = datetime(2000, 1, 1)
 
 
-@aql.transform
-def top_five_scify_movies(input_table: Table):
+@aql.transform()
+def top_five_animations(input_table: Table):
     return """
-        SELECT COUNT(*)
+        SELECT Title, Rating
         FROM {{input_table}}
+        WHERE Genre1=='Animation'
+        ORDER BY Rating desc
+        LIMIT 5;
     """
 
 
 with DAG(
-    "example_sqlite_load_transform", schedule_interval=None, start_date=START_DATE
+    "example_sqlite_load_transform",
+    schedule_interval=None,
+    start_date=START_DATE,
+    catchup=False,
 ) as dag:
 
     imdb_movies = aql.load_file(
@@ -28,9 +34,9 @@ with DAG(
         ),
     )
 
-    top_five_scify_movies(
+    top_five_animations(
         input_table=imdb_movies,
         output_table=Table(
-            table_name="top_scify", database="sqlite", conn_id="sqlite_default"
+            table_name="top_animation", database="sqlite", conn_id="sqlite_default"
         ),
     )
