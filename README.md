@@ -74,17 +74,11 @@ with DAG(
         ),
     )
 
-    top_movies = top_five_scify_movies(
+    top_five_scify_movies(
         input_table=imdb_movies,
         output_table=Table(
             table_name="top_scify", database="sqlite", conn_id="sqlite_default"
         ),
-    )
-
-    aql.save_file(
-        input_table=top_movies,
-        output_file_path="/tmp/to_five_scify_movies.csv",
-        task_id="save_csv",
     )
 ```
 
@@ -117,12 +111,12 @@ it depends on Apache Airflow >= 2.0.0.
 The documentation is a work in progress, and we aim to follow the [Diátaxis](https://diataxis.fr/) system:
 * **Tutorial**: a hands-on introduction to **astro**
 * **How-to guides**: simple step-by-step user guides to accomplish specific tasks
-* **Technical reference**: 
+* **[Technical reference](docs/OLD_README.md)**: commands, modules, classes and methods
 * **Explanation**: Clarification and discussion of key decisions when designing the project.
 
 ## Changelog
 
-We follow Semantic Versioning for releases. Check the [changelog](CHANGELOG.md) for the latest changes.
+We follow Semantic Versioning for releases. Check the [changelog](docs/CHANGELOG.md) for the latest changes.
 
 ## Contribution Guidelines
 
