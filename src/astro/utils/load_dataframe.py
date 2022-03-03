@@ -16,9 +16,10 @@ limitations under the License.
 import os
 from typing import Optional, Union
 
-from airflow.hooks.sqlite_hook import SqliteHook
+from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from pandas import DataFrame
 from pandas.io.sql import SQLDatabase
+from sqlalchemy import create_engine
 
 from astro.utils.dependencies import (
     BigQueryHook,
@@ -67,6 +68,10 @@ def move_dataframe_to_sql(
     else:
         hook = hook_class(**hook_kwargs[conn_type])
 
+    import pdb
+
+    pdb.set_trace()
+
     if database:
         hook.database = database
 
@@ -105,9 +110,11 @@ def move_dataframe_to_sql(
             project_id=hook.project_id,
         )
     elif conn_type == "sqlite":
+        uri = hook.get_uri().replace("///", "////")
+        engine = create_engine(uri)
         df.to_sql(
             output_table_name,
-            con=hook.get_sqlalchemy_engine(),
+            con=engine,
             if_exists="replace",
             chunksize=chunksize,
             method="multi",
