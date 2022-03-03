@@ -110,10 +110,10 @@ class AgnosticLoadFile(BaseOperator):
 
         Select method based on `file_type` (S3 or local).
         """
-
         validate_path(filepath)
         filetype = get_filetype(filepath)
         return load_file_into_dataframe(filepath, filetype, transport_params)
+
 
     def check_ndjson_config_delimiter(self, conn_type, normalize_config):
         if conn_type in ["bigquery", "snowflake"]:
