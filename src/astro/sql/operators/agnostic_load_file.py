@@ -146,7 +146,7 @@ class AgnosticLoadFile(BaseOperator):
         with smart_open.open(
             path, mode=mode.get(file_type, "r"), transport_params=transport_params
         ) as stream:
-            if file_type is "ndjson":
+            if file_type == "ndjson":
                 return self.flatten_ndjson(stream)
             else:
                 return deserialiser[file_type](
