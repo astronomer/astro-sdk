@@ -87,6 +87,9 @@ Execute the DAG locally:
 ```commandline
 export AIRFLOW_HOME=`pwd`
 export AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
+
+sqlite3 /tmp/sqlite_default.db "VACUUM;"
+
 airflow db init
 airflow dags test calculate_popular_movies `date --iso-8601`
 ```
