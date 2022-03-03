@@ -78,7 +78,6 @@ class AgnosticBooleanCheck(SqlDecoratoratedOperator):
 
     def execute(self, context: Dict):
         conn = BaseHook.get_connection(self.conn_id)
-        self.conn_type = conn.conn_type  # type: ignore
         self.parameters = {"table": self.table}
         self.sql = self.prep_boolean_checks_query(self.table, self.checks, context)
 
