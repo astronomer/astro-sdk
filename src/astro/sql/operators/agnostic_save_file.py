@@ -14,8 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import os
-from typing import Optional
+from typing import Optional, Union
 from urllib.parse import urlparse
 
 import pandas as pd
@@ -55,7 +54,7 @@ class SaveFile(BaseOperator):
 
     def __init__(
         self,
-        input_table: Table = None,
+        input_table: Optional[Union[Table, pd.DataFrame]] = None,
         output_file_path="",
         output_conn_id=None,
         output_file_format="csv",
@@ -77,6 +76,39 @@ class SaveFile(BaseOperator):
         """
 
         # Infer db type from `input_conn_id`.
+        if type(self.input_table) == Table:
+            df = self.convert_sql_table_to_dataframe()
+        elif type(self.input_table) == pd.DataFrame:
+            df = self.input_table
+        else:
+            raise ValueError(
+                "Expected input_table to be Table or dataframe. Got %s",
+                type(self.input_table),
+            )
+
+        # Write file if overwrite == True or if file doesn't exist.
+        if self.overwrite == True or not self.file_exists(
+            self.output_file_path, self.output_conn_id
+        ):
+            self.agnostic_write_file(df, self.output_file_path, self.output_conn_id)
+        else:
+            raise FileExistsError
+
+    def file_exists(self, output_file_path, output_conn_id=None):
+        transport_params = {
+            "s3": s3fs_creds,
+            "gs": gcs_client,
+            "": lambda: None,
+        }[urlparse(output_file_path).scheme]()
+        try:
+            with smart_open.open(
+                output_file_path, mode="r", transport_params=transport_params
+            ):
+                return True
+        except IOError:
+            return False
+
+    def convert_sql_table_to_dataframe(self):
         input_table = self.input_table
         conn_type = BaseHook.get_connection(input_table.conn_id).conn_type
 
@@ -117,32 +149,10 @@ class SaveFile(BaseOperator):
         else:
             table_name = f"{get_table_name(input_table)}"
         # Load table from SQL db.
-        df = pd.read_sql(
+        return pd.read_sql(
             f"SELECT * FROM {table_name}",
             con=input_hook.get_sqlalchemy_engine(),
         )
-
-        # Write file if overwrite == True or if file doesn't exist.
-        if self.overwrite == True or not self.file_exists(
-            self.output_file_path, self.output_conn_id
-        ):
-            self.agnostic_write_file(df, self.output_file_path, self.output_conn_id)
-        else:
-            raise FileExistsError
-
-    def file_exists(self, output_file_path, output_conn_id=None):
-        transport_params = {
-            "s3": s3fs_creds,
-            "gs": gcs_client,
-            "": lambda: None,
-        }[urlparse(output_file_path).scheme]()
-        try:
-            with smart_open.open(
-                output_file_path, mode="r", transport_params=transport_params
-            ):
-                return True
-        except IOError:
-            return False
 
     def agnostic_write_file(self, df, output_file_path, output_conn_id=None):
         """Write dataframe to csv/parquet files formats
