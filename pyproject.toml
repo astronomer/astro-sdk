@@ -60,6 +60,7 @@ postgres = [
 amazon = [
     "s3fs",
     "smart-open[s3]>=5.2.1",
+    "apache-airflow-providers-amazon"
 ]
 all = [
     "apache-airflow-providers-google",
