@@ -14,9 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import glob
 import os
 from typing import Union
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 import pandas as pd
 import smart_open
@@ -26,6 +27,7 @@ from airflow.models import BaseOperator
 from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
+from astro.utils.dependencies import gcs, s3
 from astro.utils.load_dataframe import move_dataframe_to_sql
 from astro.utils.schema_util import get_schema
 from astro.utils.task_id_helper import get_task_id
@@ -72,9 +74,6 @@ class AgnosticLoadFile(BaseOperator):
         Infers SQL database type based on connection then loads table to db.
         """
 
-        # Read file with Pandas load method based on `file_type` (S3 or local).
-        df = self._load_dataframe(self.path)
-
         # Retrieve conn type
         conn = BaseHook.get_connection(self.output_table.conn_id)
         if type(self.output_table) == TempTable:
@@ -86,17 +85,25 @@ class AgnosticLoadFile(BaseOperator):
         if not self.output_table.table_name:
             self.output_table.table_name = create_table_name(context=context)
 
-        move_dataframe_to_sql(
-            output_table_name=self.output_table.table_name,
-            conn_id=self.output_table.conn_id,
-            database=self.output_table.database,
-            warehouse=self.output_table.warehouse,
-            schema=self.output_table.schema,
-            df=df,
-            conn_type=conn.conn_type,
-            user=conn.login,
-            chunksize=self.chunksize,
-        )
+        if_exists = "replace"
+        paths = self.get_paths(self.path, self.file_conn_id)
+        for path in paths:
+            # Read file with Pandas load method based on `file_type` (S3 or local).
+            df = self._load_dataframe(path)
+
+            move_dataframe_to_sql(
+                output_table_name=self.output_table.table_name,
+                conn_id=self.output_table.conn_id,
+                database=self.output_table.database,
+                warehouse=self.output_table.warehouse,
+                schema=self.output_table.schema,
+                df=df,
+                conn_type=conn.conn_type,
+                user=conn.login,
+                chunksize=self.chunksize,
+                if_exists=if_exists,
+            )
+            if_exists = "append"
         self.log.info(f"returning table {self.output_table}")
         return self.output_table
 
@@ -141,6 +148,36 @@ class AgnosticLoadFile(BaseOperator):
                 stream, **deserialiser_params.get(file_type, {})
             )
 
+    def get_paths(self, path, file_conn_id):
+        url = urlparse(path)
+        file_location = url.scheme
+        return {
+            "s3": self.get_paths_from_s3,
+            "gs": self.get_paths_from_gcs,
+            "": self.get_paths_from_filesystem,
+        }[file_location](url, file_conn_id)
+
+    def get_paths_from_s3(self, url, file_conn_id=None):
+        bucket = url.netloc
+        prefix = url.path
+        hook = s3.S3Hook(aws_conn_id=file_conn_id) if file_conn_id else s3.S3Hook()
+        return [
+            urlunparse((url.scheme, url.netloc, keys, "", "", ""))
+            for keys in hook.list_keys(bucket_name=bucket, prefix=prefix[1:])
+        ]
+
+    def get_paths_from_gcs(self, url, file_conn_id=None):
+        bucket = url.netloc
+        prefix = url.path
+        hook = gcs.GCSHook(gcp_conn_id=file_conn_id) if file_conn_id else gcs.GCSHook()
+        return [
+            urlunparse((url.scheme, url.netloc, keys, "", "", ""))
+            for keys in hook.list(bucket_name=bucket, prefix=prefix[1:])
+        ]
+
+    def get_paths_from_filesystem(self, url, file_conn_id):
+        return glob.glob(url.path)
+
 
 def load_file(
     path,
@@ -163,7 +200,10 @@ def load_file(
     :type task_id: str
     """
 
-    task_id = task_id if task_id is not None else get_task_id("load_file", path)
+    # Note - using path for task id is causing issues as it's a pattern and
+    # contain chars like - ?, * etc. Which are not acceptable as task id.
+    task_id = task_id if task_id is not None else get_task_id("load_file", "")
+
     return AgnosticLoadFile(
         task_id=task_id,
         path=path,

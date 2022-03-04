@@ -44,6 +44,7 @@ jobs:
           key: ${{ hashFiles('pyproject.toml') }}
       - run: cat .github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      - run: python -c 'import os; from urllib import parse; login, password = os.getenv("AIRFLOW__ASTRO__CONN_AWS_DEFAULT").replace("%2F", "/").replace("aws://", "").replace("@", "").split(":"); os.environ["AIRFLOW_CONN_AWS_DEFAULT_LOGIN"] = parse.unquote(login); os.environ["AIRFLOW_CONN_AWS_DEFAULT_PASSWORD"] = parse.unquote(password);'
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
       - run: nox -s test_examples_by_dependency
@@ -64,6 +65,7 @@ jobs:
       SNOWFLAKE_ACCOUNT: gp21411
       SNOWFLAKE_REGION: us-east-1
       SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
+      AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
       AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
       AIRFLOW_VAR_FOO: templated_file_name
   Run-Unit-tests:
@@ -98,6 +100,7 @@ jobs:
           key: ${{ hashFiles('pyproject.toml') }}
       - run: cat .github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      - run: python -c 'import os; from urllib import parse; login, password = os.getenv("AIRFLOW__ASTRO__CONN_AWS_DEFAULT").replace("%2F", "/").replace("aws://", "").replace("@", "").split(":"); os.environ["AIRFLOW_CONN_AWS_DEFAULT_LOGIN"] = parse.unquote(login); os.environ["AIRFLOW_CONN_AWS_DEFAULT_PASSWORD"] = parse.unquote(password);'
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
       - run: nox -s test -- --splits 8 --group ${{ matrix.group }} --cov=./ --cov-report=xml --cov-branch
@@ -125,6 +128,7 @@ jobs:
       SNOWFLAKE_ACCOUNT: gp21411
       SNOWFLAKE_REGION: us-east-1
       SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
+      AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
       AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
       AIRFLOW_VAR_FOO: templated_file_name
 

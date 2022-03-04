@@ -90,3 +90,14 @@ try:
     from airflow.providers.google.cloud.hooks.gcs import GCSHook
 except ModuleNotFoundError:
     GCSHook = MissingPackage("apache-airflow-providers-google", "google")
+
+try:
+    from airflow.providers.amazon.aws.hooks import s3
+except ModuleNotFoundError:
+    s3 = MissingPackage("apache-airflow-providers-amazon", "amazon")
+
+
+try:
+    from airflow.providers.google.cloud.hooks import gcs
+except ModuleNotFoundError:
+    gcs = MissingPackage("apache-airflow-providers-google", "google")

@@ -41,6 +41,7 @@ def move_dataframe_to_sql(
     df: DataFrame,
     user,
     chunksize,
+    if_exists="replace",
 ):
     hook = get_hook(
         conn_id=conn_id, database=database, schema=schema, warehouse=warehouse
@@ -63,7 +64,7 @@ def move_dataframe_to_sql(
             df,
             output_table_name.lower(),
             schema=schema,
-            if_exists="replace",
+            if_exists=if_exists,
             index=False,
         )
         pandas_tools.write_pandas(
@@ -76,7 +77,7 @@ def move_dataframe_to_sql(
     elif conn_type == "bigquery":
         df.to_gbq(
             f"{schema}.{output_table_name}",
-            if_exists="replace",
+            if_exists=if_exists,
             chunksize=chunksize,
             project_id=hook.project_id,
         )
@@ -86,7 +87,7 @@ def move_dataframe_to_sql(
         df.to_sql(
             output_table_name,
             con=engine,
-            if_exists="replace",
+            if_exists=if_exists,
             chunksize=chunksize,
             method="multi",
             index=False,
@@ -96,7 +97,7 @@ def move_dataframe_to_sql(
             output_table_name,
             con=hook.get_sqlalchemy_engine(),
             schema=schema,
-            if_exists="replace",
+            if_exists=if_exists,
             chunksize=chunksize,
             method="multi",
             index=False,
