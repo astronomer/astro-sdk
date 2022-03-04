@@ -126,11 +126,13 @@ class AgnosticLoadFile(BaseOperator):
             raise ValueError("Invalid path: {}".format(path))
 
         file_type = path.split(".")[-1]
-        transport_params = {
-            "s3": s3fs_creds,
-            "gs": gcs_client,
-            "": lambda: None,
-        }[urlparse(path).scheme]()
+        file_scheme = urlparse(path).scheme
+
+        default_params_getter = lambda: None
+        transport_params = {"s3": s3fs_creds, "gs": gcs_client}.get(
+            file_scheme, default_params_getter
+        )()
+
         deserialiser = {
             "parquet": pd.read_parquet,
             "csv": pd.read_csv,

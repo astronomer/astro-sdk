@@ -14,22 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import inspect
-import os
 from builtins import NotImplementedError
 from typing import Callable, Dict, Iterable, Mapping, Optional, Union
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator, task_decorator_factory
 from airflow.hooks.base import BaseHook
-from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import DagRun, TaskInstance
 from airflow.utils.db import provide_session
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
 from sqlalchemy.sql.functions import Function
 
 from astro.sql.table import Table, TempTable, create_table_name
-from astro.utils import postgres_transform, snowflake_transform
-from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
+from astro.utils import get_hook, postgres_transform, snowflake_transform
 from astro.utils.load_dataframe import move_dataframe_to_sql
 from astro.utils.schema_util import create_schema_query, get_schema, schema_exists
 from astro.utils.table_handler import TableHandler
@@ -90,10 +87,24 @@ class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
             **kwargs,
         )
 
+    @property
+    def conn_type(self):
+        return BaseHook.get_connection(self.conn_id).conn_type
+
+    @property
+    def hook(self):
+        return get_hook(
+            conn_id=self.conn_id,
+            database=self.database,
+            role=self.role,
+            schema=self.schema,
+            warehouse=self.warehouse,
+        )
+
     def execute(self, context: Dict):
 
         if not isinstance(self.sql, str):
-            cursor = self._run_sql_alchemy_obj(self.sql, self.parameters)
+            cursor = self._run_sql(self.sql, self.parameters)
             if self.handler is not None:
                 return self.handler(cursor)
             return cursor
@@ -102,11 +113,10 @@ class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
         self._set_variables_from_first_table()
 
         conn = BaseHook.get_connection(self.conn_id)
-        self.conn_type = conn.conn_type  # type: ignore
+
         self.schema = self.schema or get_schema()
         self.user = conn.login
         self.run_id = context.get("run_id")
-        self._set_hook()
 
         self.convert_op_arg_dataframes()
         self.convert_op_kwarg_dataframes()
@@ -139,12 +149,12 @@ class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
                     output_table_name, schema=self.output_table.schema
                 )
 
-            self._run_sql_alchemy_obj(
+            self._run_sql(
                 f"DROP TABLE IF EXISTS {full_output_table_name};", self.parameters
             )
             self.sql = self.create_temporary_table(self.sql, full_output_table_name)
 
-        query_result = self._run_sql_alchemy_obj(self.sql, self.parameters)
+        query_result = self._run_sql(self.sql, self.parameters)
         # Run execute function of subclassed Operator.
 
         if self.output_table:
@@ -210,15 +220,6 @@ class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
             output_table_name = self.database + "." + schema + "." + output_table_name
         return output_table_name
 
-    def _set_hook(self):
-        if self.conn_type == "postgres":
-            self.hook = PostgresHook(
-                postgres_conn_id=self.conn_id, schema=self.database
-            )
-
-        elif self.conn_type == "snowflake":
-            self.hook = self.get_snow_hook()
-
     def _set_schema_if_needed(self):
         schema_statement = ""
         if self.conn_type == "postgres":
@@ -235,78 +236,17 @@ class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
                 schema_id=self.schema,
                 user=self.user,
             )
-        self._run_sql_string(schema_statement, {})
-
-    def get_snow_hook(self) -> SnowflakeHook:
-        """
-        Create and return SnowflakeHook.
-        :return: a SnowflakeHook instance.
-        :rtype: SnowflakeHook
-        """
-        return SnowflakeHook(
-            snowflake_conn_id=self.conn_id,
-            warehouse=self.warehouse,
-            database=self.database,
-            role=self.role,
-            schema=self.schema,
-            authenticator=None,
-            session_parameters=None,
-        )
-
-    def get_bigquery_hook(self):
-        return BigQueryHook(
-            use_legacy_sql=False,
-            gcp_conn_id=self.conn_id,
-        )
-
-    def get_sqlite_hook(self):
-        return SqliteHook(
-            sqlite_conn_id=self.conn_id,
-        )
-
-    def get_postgres_hook(self):
-        return PostgresHook(postgres_conn_id=self.conn_id, schema=self.database)
-
-    def _run_sql_string(self, sql, parameters):
-        if self.conn_type == "postgres":
-            self.log.info("Executing: %s", sql)
-            self.hook = PostgresHook(
-                postgres_conn_id=self.conn_id, schema=self.database
-            )
-            results = self.hook.run(
-                sql,
-                self.autocommit,
-                parameters=parameters,
-                handler=self.handler,
-            )
-            for output in self.hook.conn.notices:
-                self.log.info(output)
-
-        elif self.conn_type == "snowflake":
-            self.log.info("Executing: %s", sql)
-            hook = self.get_snow_hook()
-            results = hook.run(sql, autocommit=self.autocommit, parameters=parameters)
-            self.query_ids = hook.query_ids
-
-        elif self.conn_type == "bigquery":
-            hook = self.get_bigquery_hook()
-            results = hook.run(sql, autocommit=self.autocommit, parameters=parameters)
-        return results
+        self._run_sql(schema_statement, {})
 
     def get_sql_alchemy_engine(self):
-        conn = BaseHook.get_connection(self.conn_id)
-        self.conn_type = conn.conn_type  # type: ignore
+        if self.conn_type == "sqlite":
+            uri = self.hook.get_uri().replace("///", "////")
+            engine = create_engine(uri)
+        else:
+            engine = self.hook.get_sqlalchemy_engine()
+        return engine
 
-        hook = {
-            "snowflake": self.get_snow_hook,
-            "postgresql": self.get_postgres_hook,
-            "postgres": self.get_postgres_hook,
-            "bigquery": self.get_bigquery_hook,
-            "sqlite": self.get_sqlite_hook,
-        }[self.conn_type]()
-        return hook.get_sqlalchemy_engine()
-
-    def _run_sql_alchemy_obj(self, sql, parameters):
+    def _run_sql(self, sql, parameters):
         engine = self.get_sql_alchemy_engine()
         conn = engine.connect()
         if isinstance(sql, str):
@@ -314,8 +254,7 @@ class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
         else:
             return conn.execute(sql, parameters)
 
-    @staticmethod
-    def create_temporary_table(query, output_table_name, schema=None):
+    def create_temporary_table(self, query, output_table_name, schema=None):
         """
         Create a temp table for the current task instance. This table will be overwritten if the DAG is run again as this
         table is only ever meant to be temporary.
@@ -332,9 +271,12 @@ class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
 
         if schema:
             output_table_name = f"{schema}.{output_table_name}"
-        return (
-            f"CREATE TABLE {output_table_name} AS ({clean_trailing_semicolon(query)});"
-        )
+
+        if self.conn_type == "sqlite":
+            statement = f"CREATE TABLE {output_table_name} AS {clean_trailing_semicolon(query)};"
+        else:
+            statement = f"CREATE TABLE {output_table_name} AS ({clean_trailing_semicolon(query)});"
+        return statement
 
     @staticmethod
     def create_cte(query, table_name):

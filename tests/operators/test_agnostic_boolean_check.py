@@ -129,20 +129,16 @@ class TestBooleanCheckOperator(unittest.TestCase):
         )
 
     def test_happyflow_postgres_success(self):
-        try:
-            a = boolean_check(
-                table=Table(
-                    self.table,
-                    database="pagila",
-                    conn_id="postgres_conn",
-                ),
-                checks=[Check("test_1", "{{table}}.rooms > 3")],
-                max_rows_returned=10,
-            )
-            a.execute({"run_id": "foo"})
-            assert True
-        except ValueError:
-            assert False
+        a = boolean_check(
+            table=Table(
+                self.table,
+                database="pagila",
+                conn_id="postgres_conn",
+            ),
+            checks=[Check("test_1", "{{table}}.rooms > 3")],
+            max_rows_returned=10,
+        )
+        a.execute({"run_id": "foo"})
 
     def test_happyflow_postgres_fail(self):
         try:
