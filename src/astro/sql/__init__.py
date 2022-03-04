@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import warnings
 from typing import Callable, Iterable, List, Mapping, Optional, Union
 
 from astro.sql.operators.agnostic_aggregate_check import aggregate_check
@@ -63,6 +64,10 @@ def transform_file(
     warehouse: Optional[str] = None,
     output_table: Table = None,
 ):
+    warnings.warn(
+        "astro.sql.transform_file is now deprecated and will be taken out in version 1.0. Please use astro.sql.render instead"
+    )
+
     def transform_file():
         return sql
 
