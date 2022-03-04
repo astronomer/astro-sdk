@@ -145,6 +145,10 @@ The documentation is a work in progress, and we aim to follow the [Diátaxis](ht
 
 We follow Semantic Versioning for releases. Check the [changelog](docs/CHANGELOG.md) for the latest changes.
 
+## Release Managements
+
+To learn more about our release philosophy and steps, check [here](docs/RELEASE.md)
+
 ## Contribution Guidelines
 
 All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
