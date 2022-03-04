@@ -56,7 +56,7 @@ The instructions for creating a major release are identical for those of [creati
 
 Once your release branch is ready to go there are a few simple steps to actually release the project to pypi.
 
-The first step is to go to [a relative link](src/astro/__init__.py) and change the `__version__` variable to the new version. You can then
+The first step is to go to [the base level \_\_init\_\_.py](src/astro/__init__.py#L19) and change the `__version__` variable to the new version. You can then
 push this change to main or create a PR depending on your level of permission within the project.
 
 The second step is to [create a release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository)
