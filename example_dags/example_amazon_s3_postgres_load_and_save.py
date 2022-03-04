@@ -45,8 +45,8 @@ def example_amazon_s3_postgres_load_and_save():
     )
 
     aql.save_file(
+        input=t1,
         output_file_path="s3://tmp9/homes.csv",
-        input_table=t1,
         overwrite=True,
     )
 
