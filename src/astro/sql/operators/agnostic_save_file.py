@@ -46,7 +46,7 @@ class SaveFile(BaseOperator):
     """
 
     template_fields = (
-        "input_table",
+        "input",
         "output_file_path",
         "output_conn_id",
         "output_file_format",

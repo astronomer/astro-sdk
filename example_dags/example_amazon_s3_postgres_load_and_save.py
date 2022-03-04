@@ -51,4 +51,6 @@ def example_amazon_s3_postgres_load_and_save():
     )
 
 
-dag = example_amazon_s3_postgres_load_and_save()
+example_amazon_s3_postgres_load_and_save_dag = (
+    example_amazon_s3_postgres_load_and_save()
+)
