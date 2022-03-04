@@ -4,16 +4,16 @@ import pytest
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.models.dagbag import DagBag
 from airflow.utils import timezone
+from airflow.utils.db import create_default_connections
 from airflow.utils.session import provide_session
 from airflow.utils.state import State
-
-from tests.operators.utils import DEFAULT_SCHEMA
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 
 @provide_session
 def get_session(session=None):
+    create_default_connections(session)
     return session
 
 
@@ -31,6 +31,7 @@ def session():
         "example_postgres_render",
         "example_snowflake_partial_table_with_append",
         "example_snowflake_render",
+        "example_sqlite_load_transform",
     ],
 )
 def test_example_dag(session, dag_id):

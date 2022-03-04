@@ -17,21 +17,21 @@
 It helps DAG authors to achieve more with less code. 
 It is powered by [Apache Airflow](https://www.airflow.apache.org) and maintained by [Astronomer](https://astronomer.io).
 
-> :warning: **Disclaimer** This project development status is alpha. This means it is not production-ready yet.
-The interfaces may change. We welcome alpha users and brave souls to test it - any feedback is very much appreciated.
+> :warning: **Disclaimer** This project development status is alpha. In other words, it is not production-ready yet.
+The interfaces may change. We welcome alpha users and brave souls to test it - any feedback is welcome.
 
 ## Install
 
-**astro** is available at [PyPI](https://pypi.org/project/astro-projects/) and it can be installed using standard Python
+**Astro** is available at [PyPI](https://pypi.org/project/astro-projects/). Use the standard Python
 [installation tools](https://packaging.python.org/en/latest/tutorials/installing-packages/).
 
-To install a cloud-agnostic version of **astro**, run
+To install a cloud-agnostic version of **Astro**, run:
 
-```commandline
+```
 pip install astro-projects
 ```
 
-If using cloud-providers, install using the optional dependencies of interest:
+If using cloud providers, install using the optional dependencies of interest:
 
 ```commandline
 pip install astro-projects[amazon,google,snowflake,postgres]
@@ -41,7 +41,7 @@ pip install astro-projects[amazon,google,snowflake,postgres]
 
 After installing Astro, copy the following example dag `calculate_top_animations.py` to a local directory named `dags`:
 
-```python
+```Python
 from datetime import datetime
 from airflow import DAG
 from astro import sql as aql
@@ -83,17 +83,17 @@ with DAG(
     )
 ```
 
-Set-up a local instance of Airflow by running:
+Set up a local instance of Airflow by running:
 
-```commandline
-export AIRFLOW_HOME=`pwd`
+```
+export AIRFLOW_HOMappreciatedE=`pwd`
 export AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
 
 airflow db init
 ```
 
-Create a SQLite database for the example to run with and run the DAG:
-```commandline
+Create an SQLite database for the example to run with and run the DAG:
+```
 sqlite3 /tmp/sqlite_default.db "VACUUM;"
 airflow dags test calculate_top_animations `date --iso-8601=seconds`
 ```
@@ -127,10 +127,10 @@ A summary of the currently available operations in **astro**. More details are a
 * `run_raw_sql`: run any SQL statement without handling its output
 * `append`: insert rows from the source SQL table into the destination SQL table, if there are no conflicts
 * `merge`: insert rows from the source SQL table into the destination SQL table, depending on conflicts:
-  * ignore: do not add rows which already exist
-  * update: replace existing rows by new ones
-* `save_file`: export SQL table rows into destination file
-* `dataframe`: export given SQL table into in-memory Pandas dataframe
+  * ignore: do not add rows that already exist
+  * update: replace existing rows with new ones
+* `save_file`: export SQL table rows into a destination file
+* `dataframe`: export given SQL table into in-memory Pandas data-frame
 * `render`: given a directory containing SQL statements, dynamically create transform tasks within a DAG 
 
 ## Documentation
@@ -149,9 +149,9 @@ We follow Semantic Versioning for releases. Check the [changelog](docs/CHANGELOG
 
 All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
 
-A detailed overview on how to contribute can be found in the [Contribution Guideline](docs/CONTRIBUTING.md).
+Read the [Contribution Guideline](docs/CONTRIBUTING.md) for a detailed overview on how to contribute.
 
-As contributors and maintainers to this project, you are expected to abide by the [Contributor Code of Conduct](docs/CODE_OF_CONDUCT.md).
+As contributors and maintainers to this project, you should abide by the [Contributor Code of Conduct](docs/CODE_OF_CONDUCT.md).
 
 ## License
 
