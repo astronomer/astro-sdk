@@ -23,7 +23,6 @@ Once you merge all expected fixes, the next step is to ensure that all fixes hav
 git commit hashes and messages). Depending on the fix there might be some git conflicts to resolve. If you run into conflicts, please 
 resolve said conflicts, run `git add .`, and then `git cherry-pick --continue` to continue the merge.
 
-#### Creating a release from the release branch
 
 # Handling minor releases
 ### When should I create a minor release?
@@ -32,8 +31,11 @@ resolve said conflicts, run `git add .`, and then `git cherry-pick --continue` t
 
 To create a minor release, first create a new release branch based on main under the new minor release number. 
 If we are currently releasing from `release-0.6` then you should create the branch `release-0.7`. 
-You can then follow the steps laid out [here](####creating-a-release-from-the-release-branch)
+You can then follow the steps laid out [here](#creating-a-release-from-the-release-branch)
 
 # Handling Major releases
 
 ### When should I create a major release?
+
+
+# Creating a release from the release branch
