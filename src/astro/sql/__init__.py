@@ -102,6 +102,8 @@ def merge(
     **kwargs,
 ):
     """`
+    Merge two sql tables
+
     :param target_table: The primary table that we are merging into
     :param merge_table: The table that will be inserted
     :param merge_keys: A key dictionary of what fields we want to compare when determining conflicts.
@@ -114,7 +116,8 @@ def merge(
     :param database:
     :param schema: Snowflake, specific. Specify Snowflake schema
     :param kwargs:
-    :return:
+    :return: None
+    :rtype: None
     """
 
     return SqlMergeOperator(

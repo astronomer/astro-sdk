@@ -72,7 +72,8 @@ all = [
     "apache-airflow-providers-snowflake",
     "snowflake-sqlalchemy>=1.2.0,<=1.2.4",
     "snowflake-connector-python[pandas]",
-    "apache-airflow-providers-postgres"
+    "apache-airflow-providers-postgres",
+    "sphinx==4.4.0"
 ]
 
 [project.urls]
