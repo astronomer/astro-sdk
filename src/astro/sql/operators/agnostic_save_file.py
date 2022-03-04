@@ -54,7 +54,7 @@ class SaveFile(BaseOperator):
 
     def __init__(
         self,
-        input_table: Optional[Union[Table, pd.DataFrame]] = None,
+        input: Optional[Union[Table, pd.DataFrame]] = None,
         output_file_path="",
         output_conn_id=None,
         output_file_format="csv",
@@ -63,7 +63,7 @@ class SaveFile(BaseOperator):
     ) -> None:
         super().__init__(**kwargs)
         self.output_file_path = output_file_path
-        self.input_table = input_table
+        self.input = input
         self.output_conn_id = output_conn_id
         self.overwrite = overwrite
         self.output_file_format = output_file_format
@@ -76,14 +76,14 @@ class SaveFile(BaseOperator):
         """
 
         # Infer db type from `input_conn_id`.
-        if type(self.input_table) == Table:
+        if type(self.input) == Table:
             df = self.convert_sql_table_to_dataframe()
-        elif type(self.input_table) == pd.DataFrame:
-            df = self.input_table
+        elif type(self.input) == pd.DataFrame:
+            df = self.input
         else:
             raise ValueError(
                 "Expected input_table to be Table or dataframe. Got %s",
-                type(self.input_table),
+                type(self.input),
             )
 
         # Write file if overwrite == True or if file doesn't exist.
@@ -109,7 +109,7 @@ class SaveFile(BaseOperator):
             return False
 
     def convert_sql_table_to_dataframe(self):
-        input_table = self.input_table
+        input_table = self.input
         conn_type = BaseHook.get_connection(input_table.conn_id).conn_type
 
         # Select database Hook based on `conn` type
