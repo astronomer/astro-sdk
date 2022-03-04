@@ -36,8 +36,8 @@ from astro.utils.task_id_helper import get_task_id
 class AgnosticLoadFile(BaseOperator):
     """Load S3/local table to postgres/snowflake database.
 
-    :param path: File path.
-    :type path: str
+    :param pattern: File path.
+    :type pattern: str
     :param output_table_name: Name of table to create.
     :type output_table_name: str
     :param file_conn_id: Airflow connection id of input file (optional)
@@ -49,12 +49,12 @@ class AgnosticLoadFile(BaseOperator):
     template_fields = (
         "output_table",
         "file_conn_id",
-        "path",
+        "pattern",
     )
 
     def __init__(
         self,
-        path,
+        pattern,
         output_table: Union[TempTable, Table],
         file_conn_id="",
         chunksize=DEFAULT_CHUNK_SIZE,
@@ -62,7 +62,7 @@ class AgnosticLoadFile(BaseOperator):
     ) -> None:
         super().__init__(**kwargs)
         self.output_table: Union[TempTable, Table] = output_table
-        self.path = path
+        self.pattern = pattern
         self.chunksize = chunksize
         self.file_conn_id = file_conn_id
         self.kwargs = kwargs
@@ -190,8 +190,8 @@ def load_file(
 
     Returns an XComArg object.
 
-    :param path: File path.
-    :type path: str
+    :param pattern: File path.
+    :type pattern: str
     :param output_table: Table to create
     :type output_table: Table
     :param file_conn_id: Airflow connection id of input file (optional)
@@ -204,7 +204,7 @@ def load_file(
 
     return AgnosticLoadFile(
         task_id=task_id,
-        path=path,
+        pattern=path,
         output_table=output_table,
         file_conn_id=file_conn_id,
         **kwargs,
