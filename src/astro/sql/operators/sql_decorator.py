@@ -6,7 +6,7 @@ you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
     http://www.apache.org/licenses/LICENSE-2.0
-from sqlalchemy import create_engine
+
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -104,7 +104,7 @@ class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
     def execute(self, context: Dict):
 
         if not isinstance(self.sql, str):
-            cursor = self._run_sql_alchemy_obj(self.sql, self.parameters)
+            cursor = self._run_sql(self.sql, self.parameters)
             if self.handler is not None:
                 return self.handler(cursor)
             return cursor
@@ -149,12 +149,12 @@ class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
                     output_table_name, schema=self.output_table.schema
                 )
 
-            self._run_sql_alchemy_obj(
+            self._run_sql(
                 f"DROP TABLE IF EXISTS {full_output_table_name};", self.parameters
             )
             self.sql = self.create_temporary_table(self.sql, full_output_table_name)
 
-        query_result = self._run_sql_alchemy_obj(self.sql, self.parameters)
+        query_result = self._run_sql(self.sql, self.parameters)
         # Run execute function of subclassed Operator.
 
         if self.output_table:
@@ -236,30 +236,7 @@ class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
                 schema_id=self.schema,
                 user=self.user,
             )
-        self._run_sql_string(schema_statement, {})
-
-    def _run_sql_string(self, sql, parameters):
-        self.log.info("Executing: %s", sql)
-        if self.conn_type == "postgres":
-            results = self.hook.run(
-                sql,
-                self.autocommit,
-                parameters=parameters,
-                handler=self.handler,
-            )
-            if self.hook.conn is not None:
-                for output in self.hook.conn.notices:
-                    self.log.info(output)
-        elif self.conn_type == "snowflake":
-            results = self.hook.run(
-                sql, autocommit=self.autocommit, parameters=parameters
-            )
-            self.query_ids = hook.query_ids
-        else:
-            results = self.hook.run(
-                sql, autocommit=self.autocommit, parameters=parameters
-            )
-        return results
+        self._run_sql(schema_statement, {})
 
     def get_sql_alchemy_engine(self):
         if self.conn_type == "sqlite":
@@ -269,7 +246,7 @@ class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
             engine = self.hook.get_sqlalchemy_engine()
         return engine
 
-    def _run_sql_alchemy_obj(self, sql, parameters):
+    def _run_sql(self, sql, parameters):
         engine = self.get_sql_alchemy_engine()
         conn = engine.connect()
         if isinstance(sql, str):
