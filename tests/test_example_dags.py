@@ -31,7 +31,7 @@ def session():
         "example_postgres_render",
         "example_snowflake_partial_table_with_append",
         "example_snowflake_render",
-        # "example_sqlite_load_transform",
+        "example_sqlite_load_transform",
     ],
 )
 def test_example_dag(session, dag_id):

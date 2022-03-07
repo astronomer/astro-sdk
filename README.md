@@ -68,7 +68,7 @@ with DAG(
     catchup=False,
 ) as dag:
     imdb_movies = aql.load_file(
-        path="https://raw.githubusercontent.com/astro-projects/astro/master/tests/data/imdb.csv",
+        path="https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/imdb.csv",
         task_id="load_csv",
         output_table=Table(
             table_name="imdb_movies", database="sqlite", conn_id="sqlite_default"

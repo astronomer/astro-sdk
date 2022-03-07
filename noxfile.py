@@ -34,8 +34,8 @@ def test(session: nox.Session) -> None:
     [
         ("postgres-only", {"include": ["postgres"], "exclude": ["amazon"]}),
         ("postgres-amazon", {"include": ["postgres", "amazon"]}),
-        ("snowflake-amazon", {"include": ["snowflake", "amazon"]})
-        # ("sqlite", {"include": ["sqlite"]}),
+        ("snowflake-amazon", {"include": ["snowflake", "amazon"]}),
+        ("sqlite", {"include": ["sqlite"]}),
     ],
 )
 def test_examples_by_dependency(session: nox.Session, extras):
