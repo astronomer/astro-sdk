@@ -116,7 +116,7 @@ class AgnosticLoadFile(BaseOperator):
         """
 
         if not AgnosticLoadFile.validate_path(path):
-            raise ValueError("Invalid path: {}".format(path))
+            raise ValueError(f"Invalid path: {path}")
 
         file_type = path.split(".")[-1]
         file_scheme = urlparse(path).scheme

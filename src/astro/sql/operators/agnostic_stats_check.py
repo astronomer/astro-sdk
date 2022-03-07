@@ -4,7 +4,7 @@ from airflow.hooks.base import BaseHook
 from sqlalchemy import MetaData, case, func, or_, select
 from sqlalchemy.sql.schema import Table as SqlaTable
 
-from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
+from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.table import Table
 from astro.utils.schema_util import (
     get_error_string_for_multiple_dbs,
@@ -169,7 +169,7 @@ class ChecksHandler:
         return failed_checks_sql
 
 
-class AgnosticStatsCheck(SqlDecoratoratedOperator):
+class AgnosticStatsCheck(SqlDecoratedOperator):
     template_fields = ("table",)
 
     def __init__(
