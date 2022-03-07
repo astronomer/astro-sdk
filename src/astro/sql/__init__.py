@@ -54,32 +54,6 @@ def transform(
     )
 
 
-def transform_file(
-    sql=None,
-    conn_id: str = "",
-    parameters=None,
-    database: Optional[str] = None,
-    schema: Optional[str] = None,
-    warehouse: Optional[str] = None,
-    output_table: Table = None,
-):
-    def transform_file():
-        return sql
-
-    return SqlDecoratoratedOperator(
-        task_id=get_task_id("transform_file", sql),
-        sql=sql,
-        python_callable=transform_file,
-        op_kwargs={"output_table": output_table},
-        op_args=(),
-        conn_id=conn_id,
-        parameters=parameters,
-        database=database,
-        schema=schema,
-        warehouse=warehouse,
-    )
-
-
 def run_raw_sql(
     python_callable: Optional[Callable] = None,
     multiple_outputs: Optional[bool] = None,

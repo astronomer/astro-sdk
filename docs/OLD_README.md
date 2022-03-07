@@ -456,26 +456,6 @@ Please note that this is NOT an f string. F-strings in SQL formatting risk secur
 For security, users MUST explicitly identify tables in the function parameters by typing a value as a `Table`. Only then will the SQL decorator treat the value as a table. 
 
 
-### Transform File
-
-Another option for larger SQL queries is to use the `transform_file` function to pass an external SQL file to the DAG.
-All of the same templating will work for this SQL query.
-
-```python
-with self.dag:
-    f = aql.transform_file(
-        sql=str(cwd) + "/my_sql_function.sql",
-        conn_id="postgres_conn",
-        database="pagila",
-        parameters={
-            "actor": Table("actor"),
-            "film_actor_join": Table("film_actor"),
-            "unsafe_parameter": "G%%",
-        },
-        output_table=Table("my_table_from_file"),
-    )
-```
-
 ### Raw SQL
 
 Most ETL use cases can be addressed by cross-sharing task outputs, as shown above with `@aql.transform`. If you need to perform a SQL operation that doesn't return a table but might take a table as an argument, you can use `@aql.run_raw_sql`. 
