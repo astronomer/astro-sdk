@@ -17,7 +17,7 @@ limitations under the License.
 import glob
 import os
 from typing import Union
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 import pandas as pd
 import smart_open
@@ -36,8 +36,8 @@ from astro.utils.task_id_helper import get_task_id
 class AgnosticLoadFile(BaseOperator):
     """Load S3/local table to postgres/snowflake database.
 
-    :param pattern: File path.
-    :type pattern: str
+    :param path: File path.
+    :type path: str
     :param output_table_name: Name of table to create.
     :type output_table_name: str
     :param file_conn_id: Airflow connection id of input file (optional)
@@ -49,12 +49,12 @@ class AgnosticLoadFile(BaseOperator):
     template_fields = (
         "output_table",
         "file_conn_id",
-        "pattern",
+        "path",
     )
 
     def __init__(
         self,
-        pattern,
+        path,
         output_table: Union[TempTable, Table],
         file_conn_id="",
         chunksize=DEFAULT_CHUNK_SIZE,
@@ -62,7 +62,7 @@ class AgnosticLoadFile(BaseOperator):
     ) -> None:
         super().__init__(**kwargs)
         self.output_table: Union[TempTable, Table] = output_table
-        self.pattern = pattern
+        self.path = path
         self.chunksize = chunksize
         self.file_conn_id = file_conn_id
         self.kwargs = kwargs
@@ -84,7 +84,7 @@ class AgnosticLoadFile(BaseOperator):
         if not self.output_table.table_name:
             self.output_table.table_name = create_table_name(context=context)
 
-        paths = self.get_paths(self.pattern)
+        paths = self.get_paths(self.path, self.file_conn_id)
         if_table_exist = "replace"
         for path in paths:
             # Read file with Pandas load method based on `file_type` (S3 or local).
@@ -100,7 +100,7 @@ class AgnosticLoadFile(BaseOperator):
                 conn_type=conn.conn_type,
                 user=conn.login,
                 chunksize=self.chunksize,
-                if_exist=if_table_exist,
+                if_exists=if_table_exist,
             )
             if_table_exist = "append"
 
@@ -148,27 +148,34 @@ class AgnosticLoadFile(BaseOperator):
                 stream, **deserialiser_params.get(file_type, {})
             )
 
-    def get_paths(self, pattern):
-        url = urlparse(pattern)
+    def get_paths(self, path, file_conn_id):
+        url = urlparse(path)
         file_location = url.scheme
         return {
             "s3": self.get_paths_from_s3,
             "gs": self.get_paths_from_gcs,
             "": self.get_paths_from_filesystem,
-        }[file_location](url)
+        }[file_location](url, file_conn_id)
 
-    def get_paths_from_s3(self, url):
+    def get_paths_from_s3(self, url, file_conn_id):
         bucket = url.netloc
         prefix = url.path
-        hook = s3.S3Hook()
-        return s3.S3Hook.list_prefixes(bucket_name=bucket, prefix=prefix)
+        hook = s3.S3Hook(aws_conn_id=file_conn_id)
+        return [
+            urlunparse((url.scheme, url.netloc, keys, "", "", ""))
+            for keys in hook.list_keys(bucket_name=bucket, prefix=prefix[1:])
+        ]
 
-    def get_paths_from_gcs(self, url):
+    def get_paths_from_gcs(self, url, file_conn_id):
         bucket = url.netloc
         prefix = url.path
-        return gcs.list(bucket=bucket, prefix=prefix)
+        hook = gcs.GCSHook(gcp_conn_id=file_conn_id)
+        return [
+            urlunparse((url.scheme, url.netloc, keys, "", "", ""))
+            for keys in hook.list(bucket_name=bucket, prefix=prefix[1:])
+        ]
 
-    def get_paths_from_filesystem(self, url):
+    def get_paths_from_filesystem(self, url, file_conn_id):
         return glob.glob(url.path)
 
 
@@ -183,8 +190,8 @@ def load_file(
 
     Returns an XComArg object.
 
-    :param pattern: File path.
-    :type pattern: str
+    :param path: File path.
+    :type path: str
     :param output_table: Table to create
     :type output_table: Table
     :param file_conn_id: Airflow connection id of input file (optional)
@@ -193,11 +200,11 @@ def load_file(
     :type task_id: str
     """
 
-    task_id = task_id if task_id is not None else get_task_id("load_file", path)
+    task_id = task_id if task_id is not None else get_task_id("load_file", "")
 
     return AgnosticLoadFile(
         task_id=task_id,
-        pattern=path,
+        path=path,
         output_table=output_table,
         file_conn_id=file_conn_id,
         **kwargs,

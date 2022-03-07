@@ -46,6 +46,7 @@ from google.cloud import bigquery, storage
 
 from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
 from astro.sql.table import Table, TempTable
+from astro.utils.dependencies import gcs, s3
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
@@ -352,7 +353,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
             (),
             {
                 "path": "s3://tmp9/homes.csv",
-                "file_conn_id": "",
+                "file_conn_id": "aws_conn",
                 "output_table": Table(
                     table_name=OUTPUT_TABLE_NAME,
                     database="pagila",
@@ -387,7 +388,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
             (),
             {
                 "path": "s3://tmp9/homes.csv",
-                "file_conn_id": "",
+                "file_conn_id": "aws_conn",
                 "output_table": Table(
                     table_name=OUTPUT_TABLE_NAME,
                     database="pagila",
@@ -419,7 +420,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
             (),
             {
                 "path": "s3://tmp9/homes.csv",
-                "file_conn_id": "",
+                "file_conn_id": "aws_conn",
                 "output_table": Table(
                     OUTPUT_TABLE_NAME,
                     database="pagila",
@@ -453,7 +454,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
             (),
             {
                 "path": "gs://dag-authoring/homes.csv",
-                "file_conn_id": "",
+                "file_conn_id": "gcp_conn",
                 "output_table": Table(
                     OUTPUT_TABLE_NAME,
                     database="pagila",
@@ -468,6 +469,105 @@ class TestAgnosticLoadFile(unittest.TestCase):
             f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=self.hook_target.get_conn()
         )
         assert df.iloc[0].to_dict()["sell"] == 142.0
+
+
+def upload_test_file_gcp(files, file_conn_id):
+    hook = gcs.GCSHook(gcp_conn_id=file_conn_id)
+    for file in files:
+        hook.upload(
+            bucket_name=file["bucket_id"],
+            object_name=file["object_name"],
+            filename=file["filename"],
+        )
+
+
+def upload_test_file_s3(files, file_conn_id):
+    hook = s3.S3Hook(aws_conn_id=file_conn_id)
+    bucket = hook.get_bucket(files[0]["bucket_id"])
+    for file in files:
+        bucket.upload_file(Key=file["object_name"], Filename=file["filename"])
+
+
+@pytest.mark.parametrize(
+    "file_info",
+    [
+        {
+            "path": "gs://dag-authoring/a",
+            "file_conn_id": "gcp_conn",
+            "load_data": upload_test_file_gcp,
+            "files": [
+                {
+                    "bucket_id": "dag-authoring",
+                    "object_name": "a.csv",
+                    "filename": str(CWD) + "/../data/homes.csv",
+                },
+                {
+                    "bucket_id": "dag-authoring",
+                    "object_name": "aa.csv",
+                    "filename": str(CWD) + "/../data/homes.csv",
+                },
+            ],
+        },
+        {
+            "path": "s3://tmp9/a",
+            "file_conn_id": "aws_conn",
+            "load_data": upload_test_file_s3,
+            "files": [
+                {
+                    "bucket_id": "tmp9",
+                    "object_name": "a.csv",
+                    "filename": str(CWD) + "/../data/homes.csv",
+                },
+                {
+                    "bucket_id": "tmp9",
+                    "object_name": "aa.csv",
+                    "filename": str(CWD) + "/../data/homes2.csv",
+                },
+            ],
+        },
+        {
+            "path": str(CWD) + "/../data/homes_merge_*",
+            "file_conn_id": "",
+            "load_data": lambda *args: None,
+            "files": [
+                {"filename": str(CWD) + "/../data/homes_pattern_1.csv"},
+                {"filename": str(CWD) + "/../data/homes_pattern_2.csv"},
+            ],
+        },
+    ],
+)
+def test_aql_load_file_pattern(file_info):
+
+    OUTPUT_TABLE_NAME = "expected_table_from_gcs_csv"
+    load_data = file_info["load_data"]
+    files = file_info["files"]
+    file_conn_id = file_info["file_conn_id"]
+    load_data(files, file_conn_id)
+
+    test_df_rows = pd.read_csv(files[0]["filename"]).shape[0]
+
+    hook_target = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
+
+    dag = DAG("test_dag", default_args={"owner": "airflow", "start_date": DEFAULT_DATE})
+    test_utils.create_and_run_task(
+        dag,
+        load_file,
+        (),
+        {
+            "path": file_info["path"],
+            "file_conn_id": file_info["file_conn_id"],
+            "output_table": Table(
+                OUTPUT_TABLE_NAME,
+                database="pagila",
+                conn_id="postgres_conn",
+                schema="public",
+            ),
+        },
+    )
+
+    # Read table from db
+    df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=hook_target.get_conn())
+    assert test_df_rows * 2 == df.shape[0]
 
 
 @pytest.fixture
