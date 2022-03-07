@@ -130,6 +130,35 @@ class TestDataframeFromSQL(unittest.TestCase):
             == 200
         )
 
+    def test_dataframe_from_sql_custom_task_id(self):
+        @df(task_id="foo")
+        def my_df_func(df: pandas.DataFrame):
+            return df.actor_id.count()
+
+        with self.dag:
+            for i in range(5):
+                # ensure we can create multiple tasks
+                f = my_df_func(
+                    df=Table(
+                        "actor",
+                        conn_id="postgres_conn",
+                        database="pagila",
+                        schema="public",
+                    )
+                )
+
+        task_ids = [x.task_id for x in self.dag.tasks]
+        assert task_ids == ["foo", "foo__1", "foo__2", "foo__3", "foo__4"]
+
+        test_utils.run_dag(self.dag)
+
+        assert (
+            XCom.get_one(
+                execution_date=DEFAULT_DATE, key=f.key, task_id=f.operator.task_id
+            )
+            == 200
+        )
+
     def test_dataframe_from_sql_basic_op_arg(self):
         @df(conn_id="postgres_conn", database="pagila")
         def my_df_func(df: pandas.DataFrame):
