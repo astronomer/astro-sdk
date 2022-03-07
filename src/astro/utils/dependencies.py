@@ -16,7 +16,7 @@ limitations under the License.
 from astro import constants
 
 
-class MissingPackage(object):
+class MissingPackage:
     def __init__(self, module_name, related_extras):
         self.module_name = module_name
         self.related_extras = related_extras

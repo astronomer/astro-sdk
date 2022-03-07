@@ -105,7 +105,7 @@ class SaveFile(BaseOperator):
                 output_file_path, mode="r", transport_params=transport_params
             ):
                 return True
-        except IOError:
+        except OSError:
             return False
 
     def convert_sql_table_to_dataframe(self):

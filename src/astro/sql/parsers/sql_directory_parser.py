@@ -34,7 +34,7 @@ def render(
 
     # Parse all of the SQL files in this directory
     for filename in files:
-        with open(os.path.join(path, filename), "r") as f:
+        with open(os.path.join(path, filename)) as f:
             front_matter_opts = frontmatter.loads(f.read()).to_dict()
             sql = front_matter_opts.pop("content")
             temp_items = find_templated_fields(sql)
