@@ -8,7 +8,7 @@ from airflow.decorators.task_group import task_group
 from airflow.exceptions import AirflowException
 from airflow.models.xcom_arg import XComArg
 
-from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
+from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.table import Table, TempTable
 
 
@@ -34,7 +34,7 @@ def render(
 
     # Parse all of the SQL files in this directory
     for filename in files:
-        with open(os.path.join(path, filename), "r") as f:
+        with open(os.path.join(path, filename)) as f:
             front_matter_opts = frontmatter.loads(f.read()).to_dict()
             sql = front_matter_opts.pop("content")
             temp_items = find_templated_fields(sql)
@@ -107,7 +107,7 @@ def wrap_template_variables(sql, template_vars):
     return " ".join(fixed_words)
 
 
-class ParsedSqlOperator(SqlDecoratoratedOperator):
+class ParsedSqlOperator(SqlDecoratedOperator):
     template_fields = ("parameters",)
 
     def _table_exists_in_db(self, conn: str, table_name: str):

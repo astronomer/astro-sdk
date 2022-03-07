@@ -118,9 +118,9 @@ class TestAgnosticLoadFile(unittest.TestCase):
         blob = bucket.blob(self.blob_file_name)
         try:
             blob.delete()
-            print("Blob {} deleted.".format(self.blob_file_name))
+            print(f"Blob {self.blob_file_name} deleted.")
         except NotFound as e:
-            print("File {} not found.".format(self.blob_file_name))
+            print(f"File {self.blob_file_name} not found.")
 
     def clear_run(self):
         self.run = False

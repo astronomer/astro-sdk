@@ -19,11 +19,11 @@ from airflow.decorators.base import get_unique_task_id
 from sqlalchemy import MetaData
 from sqlalchemy.sql.schema import Table as SqlaTable
 
-from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
+from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.table import Table
 
 
-class SqlTruncateOperator(SqlDecoratoratedOperator):
+class SqlTruncateOperator(SqlDecoratedOperator):
     def __init__(
         self,
         table: Table,

@@ -35,7 +35,7 @@ def sqlite_merge_func(
     append_column_names = [c for c in merge_columns]
     target_column_names = [c for c in target_columns]
     column_pairs = list(zip(target_column_names, target_column_names))
-    update_statements = ["{x}=EXCLUDED.{y}".format(x=x, y=y) for x, y in column_pairs]
+    update_statements = [f"{x}=EXCLUDED.{y}" for x, y in column_pairs]
 
     query = statement.format(
         target_columns=",".join(target_column_names),

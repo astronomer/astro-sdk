@@ -23,10 +23,7 @@ from astro.sql.operators.agnostic_sql_append import SqlAppendOperator
 from astro.sql.operators.agnostic_sql_merge import SqlMergeOperator
 from astro.sql.operators.agnostic_sql_truncate import SqlTruncateOperator
 from astro.sql.operators.agnostic_stats_check import OutlierCheck, stats_check
-from astro.sql.operators.sql_decorator import (
-    SqlDecoratoratedOperator,
-    transform_decorator,
-)
+from astro.sql.operators.sql_decorator import SqlDecoratedOperator, transform_decorator
 from astro.sql.parsers.sql_directory_parser import render
 from astro.sql.table import Table
 from astro.utils.task_id_helper import get_task_id

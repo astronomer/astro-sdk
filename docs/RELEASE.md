@@ -4,11 +4,12 @@
 ## Handling patch releases
 
 ### When should I create a patch release?
-Patch releases are exclusively for bugs and and security fixes. Patch releases can have minor _enhancements_ to 
+Patch releases are exclusively for bugs and security fixes. Patch releases can have minor _enhancements_ to 
 existing features but really should not affect the API in any noticeable way (unless it is adding an argument). For any
 functionality changes or new endpoints, please create a minor or major release.
 
-A patch release should increment the third digit e.g. `0.6.9 -> 0.6.10`. This indicates to users that the release 
+A patch release should increment the third digit e.g. `0.6.9 -> 0.6.10`. This indicates to users that the release is
+strictly for bug fixes, and they can easily upgrade to it.
 
 
 ### Creating a patch release
@@ -16,9 +17,10 @@ A patch release should increment the third digit e.g. `0.6.9 -> 0.6.10`. This in
 When looking through the branches on the main repo, you will notice a series of `release` branches labeled
 `release-<major version>.<minor version>`. So if we are currently working on the 0.6 release, the branch should be labeled 
 `release-0.6`. Before creating a minor release please check the [milestones](https://github.com/astro-projects/astro/milestones)
-page to ensure that all relevent bug fixes have been PRed and merged. 
+page to ensure that all relevant bug fixes have been PRed and merged. 
 
-Once you merge all expected fixes, the next step is to ensure that all fixes have been cherry-picked to the release branch from main (please use `git cherry-pick -x <commit id>` to retain
+Once you merge all expected fixes, the next step is to ensure that all fixes have been cherry-picked to the release 
+branch from main (please use `git cherry-pick -x <commit id>` to retain
 git commit hashes and messages). Depending on the fix there might be some git conflicts to resolve. If you run into conflicts, please 
 resolve said conflicts, run `git add .`, and then `git cherry-pick --continue` to continue the merge.
 
@@ -48,13 +50,13 @@ A major release should be carefully considered, and we should make all attempts 
 However, there is a reality that we sometimes need to remove features to keep the project forward facing. Please take care to give users
 ample time with deprecation warnings and migration steps before removing a feature.
 
-### Creating a minor release
+### Creating a major release
 
-The instructions for creating a major release are identical for those of [creating a minor release](###creating-a-minor-release).
+The instructions for creating a major release are identical for those of [creating a minor release](#creating-a-minor-release).
 
 # Creating a release from the release branch
 
-Once your release branch is ready to go there are a few simple steps to actually release the project to pypi.
+Once your release branch is ready to go there are a few simple steps to actually release the project to PyPI.
 
 The first step is to go to [the base level \_\_init\_\_.py](src/astro/__init__.py#L19) and change the `__version__` variable to the new version. You can then
 push this change to main or create a PR depending on your level of permission within the project.
