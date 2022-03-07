@@ -43,6 +43,7 @@ from airflow.utils.session import create_session
 from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 
+import astro.dataframe as adf
 import astro.sql as aql
 
 # Import Operator
@@ -117,6 +118,22 @@ class TestSaveFile(unittest.TestCase):
         test_utils.run_dag(self.dag)
         return tasks
 
+    def test_save_dataframe_to_local(self):
+        @adf
+        def make_df():
+            d = {"col1": [1, 2], "col2": [3, 4]}
+            return pd.DataFrame(data=d)
+
+        with self.dag:
+            df = make_df()
+            aql.save_file(
+                input=df, output_file_path="/tmp/saved_df.csv", overwrite=True
+            )
+
+        test_utils.run_dag(self.dag)
+        df = pd.read_csv("/tmp/saved_df.csv")
+        assert df.equals(pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]}))
+
     def test_save_postgres_table_to_local_file_exists_overwrite_false(self):
 
         OUTPUT_FILE_PATH = str(self.cwd) + "/../data/save_file_out.csv"
@@ -134,7 +151,7 @@ class TestSaveFile(unittest.TestCase):
                 save_file,
                 (),
                 {
-                    "input_table": Table(
+                    "input": Table(
                         INPUT_TABLE_NAME,
                         conn_id="postgres_conn",
                         database="pagila",
@@ -171,7 +188,7 @@ class TestSaveFile(unittest.TestCase):
             save_file,
             (),
             {
-                "input_table": Table(
+                "input": Table(
                     INPUT_TABLE_NAME,
                     conn_id="postgres_conn",
                     database="pagila",
@@ -213,7 +230,7 @@ class TestSaveFile(unittest.TestCase):
                 save_file,
                 (),
                 {
-                    "input_table": Table(
+                    "input": Table(
                         INPUT_TABLE_NAME,
                         conn_id="postgres_conn",
                         database="pagila",
@@ -242,7 +259,7 @@ class TestSaveFile(unittest.TestCase):
                     "func": save_file,
                     "op_args": (),
                     "op_kwargs": {
-                        "input_table": Table(
+                        "input": Table(
                             INPUT_TABLE_NAME,
                             conn_id="postgres_conn",
                             database="pagila",
@@ -285,7 +302,7 @@ class TestSaveFile(unittest.TestCase):
             save_file,
             (),
             {
-                "input_table": Table(
+                "input": Table(
                     INPUT_TABLE_NAME,
                     conn_id="bigquery",
                     schema=test_utils.DEFAULT_SCHEMA,
@@ -323,7 +340,7 @@ class TestSaveFile(unittest.TestCase):
             save_file,
             (),
             {
-                "input_table": Table(INPUT_TABLE_NAME, conn_id="sqlite_conn"),
+                "input": Table(INPUT_TABLE_NAME, conn_id="sqlite_conn"),
                 "output_file_path": OUTPUT_FILE_PATH,
                 "output_conn_id": None,
                 "overwrite": True,
@@ -410,7 +427,7 @@ def test_save_file(sample_dag, sql_server, file_type):
         filepath = Path(tmp_dir, f"sample.{file_type}")
 
         task_params = {
-            "input_table": Table(table_name=INPUT_TABLE_NAME, **sql_server_params),
+            "input": Table(table_name=INPUT_TABLE_NAME, **sql_server_params),
             "output_file_path": str(filepath),
             "output_file_format": file_type,
             "output_conn_id": None,
