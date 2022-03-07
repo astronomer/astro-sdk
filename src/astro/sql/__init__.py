@@ -24,7 +24,7 @@ from astro.sql.operators.agnostic_sql_merge import SqlMergeOperator
 from astro.sql.operators.agnostic_sql_truncate import SqlTruncateOperator
 from astro.sql.operators.agnostic_stats_check import OutlierCheck, stats_check
 from astro.sql.operators.sql_decorator import (
-    SqlDecoratoratedOperator,
+    SqlDecoratedOperator,
     transform_decorator,
 )
 from astro.sql.parsers.sql_directory_parser import render

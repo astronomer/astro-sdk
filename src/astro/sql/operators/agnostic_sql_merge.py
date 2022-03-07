@@ -19,7 +19,7 @@ from typing import Dict, Union
 from airflow.exceptions import AirflowException
 from airflow.hooks.base import BaseHook
 
-from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
+from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.table import Table, TempTable
 from astro.utils.bigquery_merge_func import bigquery_merge_func
 from astro.utils.postgres_merge_func import postgres_merge_func
@@ -32,7 +32,7 @@ from astro.utils.sqlite_merge_func import sqlite_merge_func
 from astro.utils.task_id_helper import get_unique_task_id
 
 
-class SqlMergeOperator(SqlDecoratoratedOperator):
+class SqlMergeOperator(SqlDecoratedOperator):
     template_fields = ("target_table", "merge_table")
 
     def __init__(
