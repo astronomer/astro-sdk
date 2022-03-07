@@ -17,7 +17,7 @@ import re
 
 
 def _wrap_identifiers(sql, identifier_params):
-    all_vals = re.findall("%\(.*?\)s", sql)
+    all_vals = re.findall(r"%\(.*?\)s", sql)
     mod_vals = {
         f: f"IDENTIFIER({f})" if f[2:-2] in identifier_params else f for f in all_vals
     }
