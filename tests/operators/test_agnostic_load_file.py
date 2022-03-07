@@ -52,6 +52,7 @@ from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
 from astro.sql.table import Table, TempTable
 from astro.utils.dependencies import gcs, s3
 from astro.utils.cloud_storage_creds import parse_s3_env_var
+from astro.utils.dependencies import gcs, s3
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
@@ -573,6 +574,21 @@ def test_aql_load_file_pattern(file_info):
     # Read table from db
     df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=hook_target.get_conn())
     assert test_df_rows * 2 == df.shape[0]
+
+@pytest.fixture
+def sql_server(request):
+    sql_name = request.param
+    hook_parameters = test_utils.SQL_SERVER_HOOK_PARAMETERS.get(sql_name)
+    hook_class = test_utils.SQL_SERVER_HOOK_CLASS.get(sql_name)
+    if hook_parameters is None or hook_class is None:
+        raise ValueError(f"Unsupported SQL server {sql_name}")
+    hook = hook_class(**hook_parameters)
+    schema = hook_parameters.get("schema", test_utils.DEFAULT_SCHEMA)
+    if not isinstance(hook, BigQueryHook):
+        hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
+    yield (sql_name, hook)
+    if not isinstance(hook, BigQueryHook):
+        hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
 
 @mock.patch.dict(
     os.environ,
