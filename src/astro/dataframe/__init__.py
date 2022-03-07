@@ -28,19 +28,23 @@ def dataframe(
     database: Optional[str] = None,
     schema: Optional[str] = None,
     warehouse: Optional[str] = None,
+    task_id: Optional[str] = None,
 ):
     """
     This function allows a user to run python functions in Airflow but with the huge benefit that SQL files
     will automatically be turned into dataframes and resulting dataframes can automatically used in astro.sql functions
     """
+    param_map = {
+        "conn_id": conn_id,
+        "database": database,
+        "schema": schema,
+        "warehouse": warehouse,
+    }
+    if task_id:
+        param_map["task_id"] = task_id
     return task_decorator_factory(
         python_callable=python_callable,
         multiple_outputs=multiple_outputs,
         decorated_operator_class=SqlDataframeOperator,  # type: ignore
-        **{
-            "conn_id": conn_id,
-            "database": database,
-            "schema": schema,
-            "warehouse": warehouse,
-        }
+        **param_map
     )
