@@ -1,9 +1,9 @@
 name: Build and test astro
 on:
   push:
-    branches: ['main']
+    branches: [ 'main' ]
   pull_request:
-    branches: ['main']
+    branches: [ 'main' ]
 jobs:
   Pre-Commit:
     runs-on: ubuntu-latest
@@ -43,12 +43,13 @@ jobs:
           path: ~/.cache/pip
           key: ${{ hashFiles('pyproject.toml') }}
       - run: cat ci-test-connections.yaml > test-connections.yaml
-      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }} 
+      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
       - run: nox -s test_examples_by_dependency
     env:
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
-      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json 
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       AIRFLOW__ASTRO__CONN_AWS_DEFAULT: ${{ secrets.AWS_ACCESS_CRED }}
@@ -95,12 +96,13 @@ jobs:
           path: ~/.cache/pip
           key: ${{ hashFiles('pyproject.toml') }}
       - run: cat ci-test-connections.yaml > test-connections.yaml
-      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }} 
+      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
       - run: nox -s test -- --splits 8 --group ${{ matrix.group }}
     env:
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
-      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json 
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       AIRFLOW__ASTRO__CONN_AWS_DEFAULT: ${{ secrets.AWS_ACCESS_CRED }}
