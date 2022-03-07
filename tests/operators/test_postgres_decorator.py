@@ -117,15 +117,58 @@ class TestPostgresDecorator(unittest.TestCase):
                 )
             )
             pg_df = sample_pg(my_df)
-        self.dag.clear(
-            start_date=DEFAULT_DATE, end_date=DEFAULT_DATE, dag_run_state=State.NONE
+        test_utils.run_dag(self.dag)
+
+    def test_dataframe_to_postgres_kwarg(self):
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
         )
 
-        self.dag.run(
-            executor=DebugExecutor(),
-            start_date=timezone.utcnow(),
-            run_at_least_once=True,
+        @adf
+        def get_dataframe():
+            return pd.DataFrame(
+                {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
+            )
+
+        @adf
+        def validate_result(df: pd.DataFrame):
+            assert df.iloc[0].to_dict()["colors"] == "red"
+
+        @aql.transform
+        def sample_pg(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
+
+        with self.dag:
+            my_df = get_dataframe(
+                output_table=TempTable(conn_id="postgres_conn", database="pagila")
+            )
+            pg_df = sample_pg(input_table=my_df)
+            validate_result(pg_df)
+
+        test_utils.run_dag(self.dag)
+
+    def test_postgres_set_op_kwargs(self):
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
         )
+
+        @aql.transform
+        def sample_pg():
+            return "SELECT * FROM actor WHERE last_name LIKE 'G%%'"
+
+        self.create_and_run_task(
+            sample_pg,
+            (),
+            {
+                "conn_id": "postgres_conn",
+                "database": "pagila",
+            },
+        )
+        df = pd.read_sql(
+            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.test_dag_sample_pg_1",
+            con=self.hook_target.get_conn(),
+        )
+        assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
 
     def test_with_invalid_dag_name(self):
         self.dag.dag_id = "my=dag"
@@ -153,66 +196,6 @@ class TestPostgresDecorator(unittest.TestCase):
         )
         df = pd.read_sql(
             f'SELECT * FROM {test_utils.DEFAULT_SCHEMA}."my=dag_sample_pg_1"',
-            con=self.hook_target.get_conn(),
-        )
-        assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
-
-    def test_dataframe_to_postgres_kwarg(self):
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-
-        @adf
-        def get_dataframe():
-            return pd.DataFrame(
-                {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
-            )
-
-        @aql.transform
-        def sample_pg(input_table: Table):
-            return "SELECT * FROM {{input_table}}"
-
-        with self.dag:
-            my_df = get_dataframe(
-                output_table=TempTable(conn_id="postgres_conn", database="pagila")
-            )
-            pg_df = sample_pg(input_table=my_df)
-
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-        my_df.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        wait_for_task_finish(dr, my_df.operator.task_id)
-        pg_df.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        wait_for_task_finish(dr, pg_df.operator.task_id)
-        df = pd.read_sql(
-            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.test_dag_sample_pg_1",
-            con=self.hook_target.get_conn(),
-        )
-        assert df.iloc[0].to_dict()["colors"] == "red"
-
-    def test_postgres_set_op_kwargs(self):
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-
-        @aql.transform
-        def sample_pg():
-            return "SELECT * FROM actor WHERE last_name LIKE 'G%%'"
-
-        self.create_and_run_task(
-            sample_pg,
-            (),
-            {
-                "conn_id": "postgres_conn",
-                "database": "pagila",
-            },
-        )
-        df = pd.read_sql(
-            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.test_dag_sample_pg_1",
             con=self.hook_target.get_conn(),
         )
         assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
