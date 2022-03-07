@@ -335,46 +335,6 @@ class TestPostgresDecorator(unittest.TestCase):
 
         drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
 
-    def test_sql_file(self):
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-
-        drop_table(
-            table_name="my_table_from_file", postgres_conn=self.hook_target.get_conn()
-        )
-
-        cwd = pathlib.Path(__file__).parent
-
-        with self.dag:
-            f = aql.transform_file(
-                sql=str(cwd) + "/test.sql",
-                conn_id="postgres_conn",
-                database="pagila",
-                parameters={
-                    "actor": Table("actor"),
-                    "film_actor_join": Table("film_actor"),
-                    "unsafe_parameter": "G%%",
-                },
-                output_table=Table("my_table_from_file"),
-            )
-
-        test_utils.run_dag(self.dag)
-
-        # Read table from db
-        df = pd.read_sql(
-            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.my_table_from_file",
-            con=self.hook_target.get_conn(),
-        )
-        assert df.iloc[0].to_dict() == {
-            "actor_id": 191,
-            "first_name": "GREGORY",
-            "last_name": "GOODING",
-            "count": 30,
-        }
-
-        drop_table(table_name="my_table", postgres_conn=self.hook_target.get_conn())
-
     def test_raw_sql_result(self):
         self.hook_target = PostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"

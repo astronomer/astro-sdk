@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import warnings
 from typing import Callable, Iterable, List, Mapping, Optional, Union
 
 from astro.sql.operators.agnostic_aggregate_check import aggregate_check
@@ -48,36 +47,6 @@ def transform(
         multiple_outputs=multiple_outputs,
         conn_id=conn_id,
         autocommit=autocommit,
-        parameters=parameters,
-        database=database,
-        schema=schema,
-        warehouse=warehouse,
-    )
-
-
-def transform_file(
-    sql=None,
-    conn_id: str = "",
-    parameters=None,
-    database: Optional[str] = None,
-    schema: Optional[str] = None,
-    warehouse: Optional[str] = None,
-    output_table: Table = None,
-):
-    warnings.warn(
-        "astro.sql.transform_file is now deprecated and will be taken out in version 1.0. Please use astro.sql.render instead"
-    )
-
-    def transform_file():
-        return sql
-
-    return SqlDecoratoratedOperator(
-        task_id=get_task_id("transform_file", sql),
-        sql=sql,
-        python_callable=transform_file,
-        op_kwargs={"output_table": output_table},
-        op_args=(),
-        conn_id=conn_id,
         parameters=parameters,
         database=database,
         schema=schema,
