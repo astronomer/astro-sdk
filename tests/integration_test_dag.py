@@ -173,9 +173,9 @@ def run_merge(output_specs: TempTable):
 @pytest.mark.parametrize(
     "sql_server",
     [
-        # "snowflake",
+        "snowflake",
         "postgres",
-        # pytest.param("bigquery", marks=pytest.mark.xfail(reason="some bug")),
+        pytest.param("bigquery", marks=pytest.mark.xfail(reason="some bug")),
         "sqlite",
     ],
     indirect=True,
