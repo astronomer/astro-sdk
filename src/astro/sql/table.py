@@ -42,6 +42,14 @@ class Table:
         self.schema = schema
         self.warehouse = warehouse
         self.role = role
+        self._conn_type = None
+
+    @property
+    def conn_type(self):
+        if self._conn_type:
+            return self._conn_type
+        self._conn_type = BaseHook.get_connection(self.conn_id).conn_type
+        return self._conn_type
 
     def identifier_args(self):
         return (self.schema, self.table_name) if self.schema else (self.table_name,)

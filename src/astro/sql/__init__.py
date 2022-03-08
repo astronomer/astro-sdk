@@ -124,7 +124,7 @@ def merge(
         target_columns=target_columns,
         merge_columns=merge_columns,
         conflict_strategy=conflict_strategy,
-    )
+    ).output
 
 
 def truncate(
