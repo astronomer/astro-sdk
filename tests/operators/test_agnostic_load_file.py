@@ -28,14 +28,18 @@ import logging
 import os
 import pathlib
 import unittest.mock
+import uuid
 from unittest import mock
 
 import pandas as pd
 import pytest
-from airflow.exceptions import DuplicateTaskIdFound
-from airflow.models import DAG, DagRun
+from airflow import settings
+from airflow.exceptions import BackfillUnfinished, DuplicateTaskIdFound
+from airflow.models import DAG, Connection, DagRun
 from airflow.models import TaskInstance as TI
+from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+from airflow.providers.google.cloud.hooks.gcs import GCSHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
@@ -47,6 +51,7 @@ from google.cloud import bigquery, storage
 from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
 from astro.sql.table import Table, TempTable
 from astro.utils.dependencies import gcs, s3
+from astro.utils.cloud_storage_creds import parse_s3_env_var
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
@@ -625,16 +630,101 @@ def test_load_file_templated_filename(sample_dag, sql_server):
     assert len(df) == 3
 
 
+@pytest.fixture
+def remote_file(request):
+    provider = request.param
+    if provider == "google":
+        conn_id = "test_google"
+        conn_type = "google_cloud_platform"
+        extra = {
+            "extra__google_cloud_platform__key_path": os.getenv(
+                "GOOGLE_APPLICATION_CREDENTIALS"
+            )
+        }
+    elif provider == "amazon":
+        key, secret = parse_s3_env_var()
+        conn_id = "test_amazon"
+        conn_type = "S3"
+        extra = {"aws_access_key_id": key, "aws_secret_access_key": secret}
+    else:
+        raise ValueError(f"File location {request.param} not supported")
+
+    new_connection = Connection(conn_id=conn_id, conn_type=conn_type, extra=extra)
+    session = settings.Session()
+    if not (
+        session.query(Connection)
+        .filter(Connection.conn_id == new_connection.conn_id)
+        .first()
+    ):
+        session.add(new_connection)
+        session.commit()
+
+    object_prefix = f"test/{uuid.uuid4()}.csv"
+    filename = pathlib.Path(CWD.parent, "data/sample.csv")
+    if provider == "google":
+        bucket_name = os.getenv("GOOGLE_BUCKET", "dag-authoring")
+        hook = GCSHook(gcp_conn_id=conn_id)
+        hook.upload(bucket_name, object_prefix, filename)
+        object_path = f"gs://{bucket_name}/{object_prefix}"
+    else:
+        bucket_name = os.getenv("AWS_BUCKET", "tmp9")
+        hook = S3Hook(aws_conn_id=conn_id)
+        hook.load_file(filename, object_prefix, bucket_name)
+        object_path = f"s3://{bucket_name}/{object_prefix}"
+
+    yield conn_id, object_path
+
+    if provider == "google":
+        if hook.exists(bucket_name, object_prefix):
+            hook.delete(bucket_name, object_prefix)
+    else:
+        if hook.check_for_prefix(object_prefix, delimiter="/", bucket_name=bucket_name):
+            hook.delete_objects(bucket_name, object_prefix)
+
+    session.delete(new_connection)
+    session.flush()
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
+@pytest.mark.parametrize("remote_file", ["google", "amazon"], indirect=True)
+def test_load_file_using_file_connection(sample_dag, remote_file, sql_server):
+    database_name, sql_hook = sql_server
+    file_conn_id, file_uri = remote_file
+
+    sql_server_params = test_utils.get_default_parameters(database_name)
+
+    task_params = {
+        "path": file_uri,
+        "file_conn_id": file_conn_id,
+        "output_table": Table(table_name=OUTPUT_TABLE_NAME, **sql_server_params),
+    }
+
+    test_utils.create_and_run_task(sample_dag, load_file, (), task_params)
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {OUTPUT_TABLE_NAME}")
+    assert len(df) == 3
+
+
+def test_load_file_using_file_connection_fails_inexistent_conn(caplog, sample_dag):
+    database_name = "postgres"
+    file_conn_id = "fake_conn"
+    file_uri = "s3://fake-bucket/fake-object"
+
+    sql_server_params = test_utils.get_default_parameters(database_name)
+
+    task_params = {
+        "path": file_uri,
+        "file_conn_id": file_conn_id,
+        "output_table": Table(table_name=OUTPUT_TABLE_NAME, **sql_server_params),
+    }
+    with pytest.raises(BackfillUnfinished) as exec_info:
+        test_utils.create_and_run_task(sample_dag, load_file, (), task_params)
+    expected_error = "Failed to execute task: The conn_id `fake_conn` isn't defined."
+    assert expected_error in caplog.text
+
+
 def create_task_parameters(database_name, file_type):
-    # While hooks expect specific attributes for connection (e.g. `snowflake_conn_id`)
-    # the load_file operator expects a generic attribute name (`conn_id`)
-    sql_server_params = copy.deepcopy(
-        test_utils.SQL_SERVER_HOOK_PARAMETERS[database_name]
-    )
-    conn_id_value = sql_server_params.pop(
-        test_utils.SQL_SERVER_CONNECTION_KEY[database_name]
-    )
-    sql_server_params["conn_id"] = conn_id_value
+    sql_server_params = test_utils.get_default_parameters(database_name)
 
     task_params = {
         "path": str(pathlib.Path(CWD.parent, f"data/sample.{file_type}")),

@@ -38,7 +38,7 @@ default_args = {
 def example_amazon_s3_postgres_load_and_save():
     t1 = aql.load_file(
         path="s3://tmp9/homes.csv",
-        file_conn_id="my_aws_conn",
+        file_conn_id="",
         output_table=Table(
             "expected_table_from_s3", conn_id="postgres_conn", database="postgres"
         ),
