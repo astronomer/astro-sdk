@@ -44,7 +44,7 @@ from airflow.utils.types import DagRunType
 from google.cloud import bigquery
 
 import astro.sql as aql
-from astro.sql.table import Table
+from astro.sql.table import Table, TempTable
 from tests.operators import utils as test_utils
 from tests.operators.utils import DEFAULT_SCHEMA
 
@@ -108,6 +108,10 @@ class TestPostgresAppend(unittest.TestCase):
             database="pagila",
             schema="public",
         )
+        self.temp_table = TempTable(
+            conn_id="postgres_conn",
+            database="pagila",
+        )
 
         self.main_table_bigquery = Table(
             table_name=self.MAIN_TABLE_NAME, conn_id="bigquery", schema=DEFAULT_SCHEMA
@@ -169,6 +173,39 @@ class TestPostgresAppend(unittest.TestCase):
         assert not df["sell"].hasnans
         assert df["rooms"].hasnans
 
+    def test_append_temptable(self):
+        hook = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
+
+        drop_table(table_name="test_main", postgres_conn=hook.get_conn())
+        drop_table(table_name="test_append", postgres_conn=hook.get_conn())
+
+        cwd = pathlib.Path(__file__).parent
+
+        from astro.dataframe import dataframe as adf
+
+        @adf
+        def validate_result(df: pd.DataFrame):
+            assert len(df) == 6
+            assert not df["sell"].hasnans
+            assert df["rooms"].hasnans
+
+        with self.dag:
+            load_main = aql.load_file(
+                path=str(cwd) + "/../data/homes_main.csv",
+                output_table=self.temp_table,
+            )
+            load_append = aql.load_file(
+                path=str(cwd) + "/../data/homes_append.csv",
+                output_table=self.temp_table,
+            )
+            res = aql.append(
+                columns=["sell", "living"],
+                main_table=load_main,
+                append_table=load_append,
+            )
+            validate_result(res)
+        test_utils.run_dag(self.dag)
+
     def test_append_all_fields(self):
         hook = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
 
@@ -222,7 +259,7 @@ class TestPostgresAppend(unittest.TestCase):
             )
         test_utils.run_dag(self.dag)
         df = pd.read_sql(
-            f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
+            f"SELECT * FROM {load_main.operator.output_table.schema}.{load_main.operator.output_table.qualified_name()}",
             con=hook.get_conn(),
         )
 

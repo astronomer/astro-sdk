@@ -1,6 +1,7 @@
 import pathlib
 
 import pandas as pd
+from airflow.decorators import task, task_group
 from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.utils import timezone
@@ -9,6 +10,7 @@ from airflow.utils.session import provide_session
 
 from astro import sql as aql
 from astro.dataframe import dataframe as adf
+from astro.sql.operators.agnostic_boolean_check import Check
 from astro.sql.table import Table, TempTable
 from astro.utils.dependencies import PostgresHook, SnowflakeHook
 from tests.operators import utils as test_utils
@@ -83,8 +85,69 @@ def do_a_dataframe_thing(df: pd.DataFrame):
     return df
 
 
+@adf
+def count_dataframes(df1: pd.DataFrame, df2: pd.DataFrame):
+    return len(df1) + len(df2)
+
+
+@task
+def compare(a, b):
+    assert a == b
+
+
+@task_group
+def run_validation(input_table: Table):
+    agg_validated_table = aql.aggregate_check(
+        input_table,
+        check="select count(*) FROM {{table}}",
+        equal_to=47,
+    )
+    aql.save_file(
+        input=agg_validated_table.output,
+        output_file_path="/tmp/out_agg.csv",
+        overwrite=True,
+    )
+
+    # TODO add boolean and stats checks here
+
+
+@task_group
+def run_dataframe_funcs(input_table: Table):
+    table_counts = count_dataframes(df1=input_table, df2=input_table)
+
+    df1 = do_a_dataframe_thing(input_table)
+    df2 = do_a_dataframe_thing(input_table)
+    df_counts = count_dataframes(df1, df2)
+    compare(table_counts, df_counts)
+
+
+@task_group
+def run_append(output_specs: TempTable):
+    load_main = aql.load_file(
+        path=str(CWD) + "/data/homes_main.csv",
+        output_table=output_specs,
+    )
+    load_append = aql.load_file(
+        path=str(CWD) + "/data/homes_append.csv",
+        output_table=output_specs,
+    )
+
+    aql.append(
+        columns=["sell", "living"],
+        main_table=load_main,
+        append_table=load_append,
+    )
+
+
 @pytest.mark.parametrize(
-    "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
+    "sql_server",
+    [
+        "snowflake",
+        "postgres",
+        pytest.param("bigquery", marks=pytest.mark.xfail(reason="some bug")),
+        "sqlite",
+    ],
+    indirect=True,
 )
 def test_full_dag(sql_server, sample_dag, tmp_table):
     with sample_dag:
@@ -93,17 +156,7 @@ def test_full_dag(sql_server, sample_dag, tmp_table):
             str(CWD) + "/data/homes.csv", output_table=output_table
         )
         tranformed_table = do_a_thing(loaded_table)
-        dataframe_from_table = do_a_dataframe_thing(
-            tranformed_table, output_table=output_table
-        )
-        validated_table = aql.aggregate_check(
-            dataframe_from_table,
-            check="select count(*) FROM {{table}}",
-            equal_to=47,
-        )
-        aql.save_file(
-            input=validated_table.output,
-            output_file_path="/tmp/out.csv",
-            overwrite=True,
-        )
+        run_dataframe_funcs(tranformed_table)
+        run_append(output_table)
+        run_validation(tranformed_table)
     test_utils.run_dag(sample_dag)
