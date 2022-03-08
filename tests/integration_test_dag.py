@@ -75,6 +75,16 @@ def tmp_table(sql_server):
     #     return TempTable(conn_id=hook.gcp_conn_id, database=)
 
 
+@pytest.fixture
+def merge_keys(sql_server):
+    sql_name, _ = sql_server
+
+    if sql_name == "snowflake":
+        return {"list": "list", "sell": "sell"}
+    else:
+        return ["list", "sell"]
+
+
 @aql.transform
 def do_a_thing(input_table: Table):
     return "SELECT * FROM {{input_table}}"
@@ -147,7 +157,7 @@ def run_append(output_specs: TempTable):
 
 
 @task_group
-def run_merge(output_specs: TempTable):
+def run_merge(output_specs: TempTable, merge_keys):
     main_table = aql.load_file(
         path=str(CWD) + "/data/homes_merge_1.csv",
         output_table=output_specs,
@@ -162,7 +172,7 @@ def run_merge(output_specs: TempTable):
     merged_table = aql.merge(
         target_table=main_table,
         merge_table=merge_table,
-        merge_keys=["list", "sell"],
+        merge_keys=merge_keys,
         target_columns=["list", "sell"],
         merge_columns=["list", "sell"],
         conflict_strategy="ignore",
@@ -180,7 +190,7 @@ def run_merge(output_specs: TempTable):
     ],
     indirect=True,
 )
-def test_full_dag(sql_server, sample_dag, tmp_table):
+def test_full_dag(sql_server, sample_dag, tmp_table, merge_keys):
     with sample_dag:
         output_table = tmp_table
         loaded_table = aql.load_file(
@@ -189,6 +199,6 @@ def test_full_dag(sql_server, sample_dag, tmp_table):
         tranformed_table = do_a_thing(loaded_table)
         run_dataframe_funcs(tranformed_table)
         run_append(output_table)
-        run_merge(output_table)
+        run_merge(output_table, merge_keys)
         run_validation(tranformed_table)
     test_utils.run_dag(sample_dag)
