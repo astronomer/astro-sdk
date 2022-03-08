@@ -77,6 +77,12 @@ def tmp_table(sql_server):
 
 @pytest.fixture
 def merge_keys(sql_server):
+    """
+    To match with their respective API's, we have a slightly different "merge_keys" value
+    when a user is using snowflake.
+    :param sql_server:
+    :return:
+    """
     sql_name, _ = sql_server
 
     if sql_name == "snowflake":
