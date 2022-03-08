@@ -1,7 +1,10 @@
+import json
 import os
 from urllib import parse
 
-from astro.utils.dependencies import BotoSession, GCSClient
+from airflow.hooks.base import BaseHook
+
+from astro.utils.dependencies import BotoSession, GCSClient, google_service_account
 
 
 def parse_s3_env_var():
@@ -15,24 +18,36 @@ def parse_s3_env_var():
     return [parse.unquote(r) for r in raw_data]
 
 
-def s3fs_creds():
-    # To-do: reuse this method from sql decorator
+def s3fs_creds(conn_id=None):
     """Structure s3fs credentials from Airflow connection.
     s3fs enables pandas to write to s3
     """
-    # To-do: clean-up how S3 creds are passed to s3fs
+    if conn_id:
+        extra = BaseHook.get_connection(conn_id).extra_dejson
+        key = extra["aws_access_key_id"]
+        secret = extra["aws_secret_access_key"]
+    else:
+        key, secret = parse_s3_env_var()
 
-    k, v = parse_s3_env_var()
     session = BotoSession(
-        aws_access_key_id=k,
-        aws_secret_access_key=v,
+        aws_access_key_id=key,
+        aws_secret_access_key=secret,
     )
     return dict(client=session.client("s3"))
 
 
-def gcs_client():
+def gcs_client(conn_id=None):
     """
     get GCS credentials for storage.
     """
-    client = GCSClient()
+    credentials = None
+    if conn_id:
+        extra = BaseHook.get_connection(conn_id).extra_dejson
+        json_file_path = extra["extra__google_cloud_platform__key_path"]
+        with open(json_file_path) as fp:
+            json_account_info = json.load(fp)
+            credentials = google_service_account.Credentials.from_service_account_info(
+                json_account_info
+            )
+    client = GCSClient(credentials=credentials)
     return dict(client=client)

@@ -70,6 +70,12 @@ except ModuleNotFoundError:
 
 
 try:
+    from google.oauth2 import service_account as google_service_account
+except ModuleNotFoundError:
+    google_service_account = MissingPackage("apache-airflow-providers-google", "google")
+
+
+try:
     from psycopg2 import sql as postgres_sql
 except ModuleNotFoundError:
     postgres_sql = MissingPackage("psycopg2", "postgres")
