@@ -73,7 +73,7 @@ all = [
 ]
 
 [project.urls]
-Home = "https://astronomer.io/"
+Home = "http://astronomer.io/"
 
 [project.entry-points.apache_airflow_provider]
 provider_info = "astro.__init__:get_provider_info"

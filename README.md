@@ -17,7 +17,7 @@
 It helps DAG authors to achieve more with less code. 
 It is powered by [Apache Airflow](https://www.airflow.apache.org) and maintained by [Astronomer](https://astronomer.io).
 
-> :warning: **Disclaimer** This project's development status is alpha. In other words, it is not production-ready yet.
+> :warning: **Disclaimer** This project development status is alpha. In other words, it is not production-ready yet.
 The interfaces may change. We welcome alpha users and brave souls to test it - any feedback is welcome.
 
 ## Install
@@ -47,6 +47,8 @@ from airflow import DAG
 from astro import sql as aql
 from astro.sql.table import Table
 
+START_DATE = datetime(2000, 1, 1)
+
 
 @aql.transform()
 def top_five_animations(input_table: Table):
@@ -62,7 +64,7 @@ def top_five_animations(input_table: Table):
 with DAG(
     "calculate_popular_movies",
     schedule_interval=None,
-    start_date=datetime(2000, 1, 1),
+    start_date=START_DATE,
     catchup=False,
 ) as dag:
     imdb_movies = aql.load_file(
@@ -121,7 +123,7 @@ it depends on Apache Airflow >= 2.1.0.
 A summary of the currently available operations in **astro**. More details are available in the [reference guide](docs/OLD_README.md).
 * `load_file`: load a given file into a SQL table
 * `transform`: applies a SQL select statement to a source table and saves the result to a destination table
-* `truncate`: remove all records from a SQL table
+* `truncate`: remove all content from a SQL table
 * `run_raw_sql`: run any SQL statement without handling its output
 * `append`: insert rows from the source SQL table into the destination SQL table, if there are no conflicts
 * `merge`: insert rows from the source SQL table into the destination SQL table, depending on conflicts:

@@ -23,11 +23,11 @@ from sqlalchemy import text
 from sqlalchemy.sql.schema import Table
 
 from astro import sql
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.utils.task_id_helper import get_unique_task_id
 
 
-class AgnosticAggregateCheck(SqlDecoratedOperator):
+class AgnosticAggregateCheck(SqlDecoratoratedOperator):
     template_fields = ("table",)
 
     def __init__(

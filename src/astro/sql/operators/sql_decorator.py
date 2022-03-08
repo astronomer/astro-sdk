@@ -32,7 +32,7 @@ from astro.utils.schema_util import create_schema_query, get_schema, schema_exis
 from astro.utils.table_handler import TableHandler
 
 
-class SqlDecoratedOperator(DecoratedOperator, TableHandler):
+class SqlDecoratoratedOperator(DecoratedOperator, TableHandler):
     def __init__(
         self,
         conn_id: Optional[str] = None,
@@ -411,7 +411,7 @@ def _transform_task(
     return task_decorator_factory(
         python_callable=python_callable,
         multiple_outputs=multiple_outputs,
-        decorated_operator_class=SqlDecoratedOperator,  # type: ignore
+        decorated_operator_class=SqlDecoratoratedOperator,  # type: ignore
         **kwargs,
     )
 

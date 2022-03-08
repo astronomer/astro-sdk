@@ -20,7 +20,7 @@ from typing import Dict, List
 from sqlalchemy import MetaData, cast, column, insert, select
 from sqlalchemy.sql.schema import Table as SqlaTable
 
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
 from astro.utils.schema_util import (
     get_error_string_for_multiple_dbs,
@@ -31,7 +31,7 @@ from astro.utils.table_handler import TableHandler
 from astro.utils.task_id_helper import get_unique_task_id
 
 
-class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
+class SqlAppendOperator(SqlDecoratoratedOperator, TableHandler):
     template_fields = ("main_table", "append_table")
 
     def __init__(

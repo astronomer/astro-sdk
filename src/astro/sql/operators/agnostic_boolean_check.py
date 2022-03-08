@@ -5,7 +5,7 @@ from airflow.hooks.base import BaseHook
 from sqlalchemy import FLOAT, and_, cast, column, func, select, text
 from sqlalchemy.sql.expression import table as sqlatable
 
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.operators.sql_decorator import SqlDecoratoratedOperator
 from astro.sql.table import Table
 
 
@@ -29,7 +29,7 @@ class Check:
         )
 
 
-class AgnosticBooleanCheck(SqlDecoratedOperator):
+class AgnosticBooleanCheck(SqlDecoratoratedOperator):
     template_fields = ("table",)
 
     def __init__(
