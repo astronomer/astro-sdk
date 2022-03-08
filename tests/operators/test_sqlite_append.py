@@ -20,7 +20,8 @@ Unittest module to test Operators.
 Requires the unittest, pytest, and requests-mock Python libraries.
 
 Run test:
-    AIRFLOW__ASTRO__CONN_AWS_DEFAULT=aws://KEY:SECRET@ \
+    AWS_ACCESS_KEY_ID=KEY \
+    AWS_SECRET_ACCESS_KEY=SECRET \
     python3 -m unittest tests.operators.test_postgres_operator.TestPostgresOperator.test_load_s3_to_sql_db
 
 """
