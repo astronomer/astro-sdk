@@ -121,6 +121,13 @@ def run_dataframe_funcs(input_table: Table):
     compare(table_counts, df_counts)
 
 
+@aql.run_raw_sql
+def add_constraint(table: Table):
+    if table.conn_type == "sqlite":
+        return "CREATE UNIQUE INDEX unique_index ON {{table}}(list,sell)"
+    return "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (list,sell)"
+
+
 @task_group
 def run_append(output_specs: TempTable):
     load_main = aql.load_file(
@@ -132,19 +139,43 @@ def run_append(output_specs: TempTable):
         output_table=output_specs,
     )
 
-    aql.append(
+    app = aql.append(
         columns=["sell", "living"],
         main_table=load_main,
         append_table=load_append,
     )
 
 
+@task_group
+def run_merge(output_specs: TempTable):
+    main_table = aql.load_file(
+        path=str(CWD) + "/data/homes_merge_1.csv",
+        output_table=output_specs,
+    )
+    merge_table = aql.load_file(
+        path=str(CWD) + "/data/homes_merge_2.csv",
+        output_table=output_specs,
+    )
+
+    con1 = add_constraint(main_table)
+
+    merged_table = aql.merge(
+        target_table=main_table,
+        merge_table=merge_table,
+        merge_keys=["list", "sell"],
+        target_columns=["list", "sell"],
+        merge_columns=["list", "sell"],
+        conflict_strategy="ignore",
+    )
+    con1 >> merged_table
+
+
 @pytest.mark.parametrize(
     "sql_server",
     [
-        "snowflake",
+        # "snowflake",
         "postgres",
-        pytest.param("bigquery", marks=pytest.mark.xfail(reason="some bug")),
+        # pytest.param("bigquery", marks=pytest.mark.xfail(reason="some bug")),
         "sqlite",
     ],
     indirect=True,
@@ -158,5 +189,6 @@ def test_full_dag(sql_server, sample_dag, tmp_table):
         tranformed_table = do_a_thing(loaded_table)
         run_dataframe_funcs(tranformed_table)
         run_append(output_table)
+        run_merge(output_table)
         run_validation(tranformed_table)
     test_utils.run_dag(sample_dag)
