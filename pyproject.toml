@@ -58,10 +58,12 @@ postgres = [
     "apache-airflow-providers-postgres",
 ]
 amazon = [
+    "apache-airflow-providers-amazon",
     "s3fs",
     "smart-open[s3]>=5.2.1",
 ]
 all = [
+    "apache-airflow-providers-amazon",
     "apache-airflow-providers-google",
     "sqlalchemy-bigquery==1.3.0",
     "smart-open[all]>=5.2.1",

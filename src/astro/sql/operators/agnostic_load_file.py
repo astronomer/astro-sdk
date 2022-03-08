@@ -121,10 +121,10 @@ class AgnosticLoadFile(BaseOperator):
         file_type = path.split(".")[-1]
         file_scheme = urlparse(path).scheme
 
-        default_params_getter = lambda: None
+        default_params_getter = lambda conn_id: None
         transport_params = {"s3": s3fs_creds, "gs": gcs_client}.get(
             file_scheme, default_params_getter
-        )()
+        )(conn_id=self.file_conn_id)
 
         deserialiser = {
             "parquet": pd.read_parquet,
@@ -164,7 +164,6 @@ def load_file(
     """
 
     task_id = task_id if task_id is not None else get_task_id("load_file", path)
-
     return AgnosticLoadFile(
         task_id=task_id,
         path=path,

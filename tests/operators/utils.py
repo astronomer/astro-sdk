@@ -1,3 +1,4 @@
+import copy
 import os
 import time
 
@@ -39,6 +40,15 @@ SQL_SERVER_HOOK_CLASS = {
     "bigquery": BigQueryHook,
     "sqlite": SqliteHook,
 }
+
+
+def get_default_parameters(database_name):
+    # While hooks expect specific attributes for connection (e.g. `snowflake_conn_id`)
+    # the load_file operator expects a generic attribute name (`conn_id`)
+    sql_server_params = copy.deepcopy(SQL_SERVER_HOOK_PARAMETERS[database_name])
+    conn_id_value = sql_server_params.pop(SQL_SERVER_CONNECTION_KEY[database_name])
+    sql_server_params["conn_id"] = conn_id_value
+    return sql_server_params
 
 
 def create_and_run_task(dag, decorator_func, op_args, op_kwargs):

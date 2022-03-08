@@ -101,8 +101,10 @@ jobs:
       - run: pip3 install nox
       - run: nox -s test -- --splits 8 --group ${{ matrix.group }}
     env:
+      AWS_BUCKET: tmp9
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
+      GOOGLE_BUCKET: dag-authoring
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       AIRFLOW__ASTRO__CONN_AWS_DEFAULT: ${{ secrets.AWS_ACCESS_CRED }}
