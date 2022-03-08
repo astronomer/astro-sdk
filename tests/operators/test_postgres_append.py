@@ -259,7 +259,7 @@ class TestPostgresAppend(unittest.TestCase):
             )
         test_utils.run_dag(self.dag)
         df = pd.read_sql(
-            f"SELECT * FROM {load_main.operator.output_table.schema}.{load_main.operator.output_table.qualified_name()}",
+            f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
             con=hook.get_conn(),
         )
 
