@@ -52,7 +52,8 @@ jobs:
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
-      AIRFLOW__ASTRO__CONN_AWS_DEFAULT: ${{ secrets.AWS_ACCESS_CRED }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AIRFLOW__ASTRO__SQL_SCHEMA: astroflow_ci
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
@@ -105,7 +106,8 @@ jobs:
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
-      AIRFLOW__ASTRO__CONN_AWS_DEFAULT: ${{ secrets.AWS_ACCESS_CRED }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AIRFLOW__ASTRO__SQL_SCHEMA: astroflow_ci
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}

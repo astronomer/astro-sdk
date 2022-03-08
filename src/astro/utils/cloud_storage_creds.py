@@ -5,14 +5,7 @@ from astro.utils.dependencies import BotoSession, GCSClient
 
 
 def parse_s3_env_var():
-    raw_data = (
-        os.environ["AIRFLOW__ASTRO__CONN_AWS_DEFAULT"]
-        .replace("%2F", "/")
-        .replace("aws://", "")
-        .replace("@", "")
-        .split(":")
-    )
-    return [parse.unquote(r) for r in raw_data]
+    return os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"]
 
 
 def s3fs_creds():

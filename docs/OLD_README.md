@@ -401,7 +401,7 @@ with dag:
 ## Loading Data
 
 To create an ELT pipeline, users can first load CSV or parquet data from either local, S3, or GCS into a SQL database with the `load_sql` function. 
-To interact with S3, you must set an S3 Airflow connection in the `AIRFLOW__ASTRO__CONN_AWS_DEFAULT` environment variable.
+To interact with S3, you must set an S3 Airflow connection in the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`  environment variables.
 
 In the following example, we load data from S3 by specifying the path and connection ID for our S3 database in `aql.load_file`: 
 
