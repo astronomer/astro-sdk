@@ -19,6 +19,7 @@ from typing import Dict, Optional
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.hooks.base import BaseHook
+from airflow.hooks.sqlite_hook import SqliteHook
 
 from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.sql.table import Table, TempTable, create_table_name
@@ -162,3 +163,8 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
                 "SELECT * FROM IDENTIFIER(%(input_table)s)",
                 parameters={"input_table": table.table_name},
             )
+        elif conn_type == "sqlite":
+            hook = SqliteHook(sqlite_conn_id=table.conn_id, database=table.database)
+
+            engine = hook.get_sqlalchemy_engine()
+            return pd.read_sql_table(table.table_name, engine)

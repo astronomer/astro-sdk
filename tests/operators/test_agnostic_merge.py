@@ -1,18 +1,19 @@
+import math
 import pathlib
 
+import pandas as pd
 from airflow.decorators import task_group
 from airflow.utils import timezone
+
 from astro import sql as aql
-from astro.sql.table import Table, TempTable
 from astro.dataframe import dataframe as adf
+from astro.sql.table import Table, TempTable
 from tests.operators import utils as test_utils
-import pandas as pd
-import math
+
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 CWD = pathlib.Path(__file__).parent
 import pytest
-
 
 default_args = {
     "owner": "airflow",
@@ -42,31 +43,40 @@ def merge_keys(sql_server, mode):
     else:
         return keys
 
+
 @pytest.fixture
 def merge_parameters(request, sql_server):
     mode = request.param
     if mode == "single":
-        return ({
-            "merge_keys": merge_keys(sql_server, mode),
-            "merge_columns": ["list"],
-            "target_columns": ["list"],
-            "conflict_strategy": "ignore"
-        }, mode)
+        return (
+            {
+                "merge_keys": merge_keys(sql_server, mode),
+                "merge_columns": ["list"],
+                "target_columns": ["list"],
+                "conflict_strategy": "ignore",
+            },
+            mode,
+        )
     elif mode == "multi":
-        return ({
-            "merge_keys": merge_keys(sql_server, mode),
-            "merge_columns": ["list", "sell"],
-            "target_columns": ["list", "sell"],
-            "conflict_strategy": "ignore"
-        }, mode)
+        return (
+            {
+                "merge_keys": merge_keys(sql_server, mode),
+                "merge_columns": ["list", "sell"],
+                "target_columns": ["list", "sell"],
+                "conflict_strategy": "ignore",
+            },
+            mode,
+        )
     elif mode == "mixed":
-        return ({
-            "merge_keys": merge_keys(sql_server, mode),
-            "merge_columns": ["list", "sell", "taxes"],
-            "target_columns": ["list", "sell", "age"],
-            "conflict_strategy": "update"
-        }, mode)
-
+        return (
+            {
+                "merge_keys": merge_keys(sql_server, mode),
+                "merge_columns": ["list", "sell", "taxes"],
+                "target_columns": ["list", "sell", "age"],
+                "conflict_strategy": "update",
+            },
+            mode,
+        )
 
 
 @aql.transform
@@ -77,11 +87,19 @@ def do_a_thing(input_table: Table):
 @aql.run_raw_sql
 def add_constraint(table: Table, columns):
     if table.conn_type == "sqlite":
-        return "CREATE UNIQUE INDEX unique_index ON {{table}}" + f"({','.join(columns)})"
-    return "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE" + f" ({','.join(columns)})"
+        return (
+            "CREATE UNIQUE INDEX unique_index ON {{table}}" + f"({','.join(columns)})"
+        )
+    return (
+        "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE"
+        + f" ({','.join(columns)})"
+    )
+
 
 @adf
 def validate_results(df: pd.DataFrame, mode):
+    # make columns lower due to snowflake defaulting to uppercase
+    df.columns = df.columns.str.lower()
     if mode == "single":
         assert df.age.to_list()[:-1] == [60.0, 12.0, 41.0, 22.0]
         assert math.isnan(df.age.to_list()[-1])
@@ -104,6 +122,7 @@ def validate_results(df: pd.DataFrame, mode):
         assert df.age.to_list()[:-1] == [60.0, 12.0, 41.0, 22.0]
         assert math.isnan(df.age.to_list()[-1])
 
+
 @task_group
 def run_merge(output_specs: TempTable, merge_parameters, mode):
     main_table = aql.load_file(
@@ -125,24 +144,26 @@ def run_merge(output_specs: TempTable, merge_parameters, mode):
     con1 >> merged_table
     validate_results(df=merged_table, mode=mode)
 
+
 @pytest.mark.parametrize(
     "sql_server",
     [
-        # "snowflake",
+        "snowflake",
         "postgres",
-        # pytest.param("bigquery", marks=pytest.mark.xfail(reason="some bug")),
+        pytest.param("bigquery", marks=pytest.mark.xfail(reason="some bug")),
         "sqlite",
     ],
     indirect=True,
 )
 @pytest.mark.parametrize(
-    "merge_parameters", [
+    "merge_parameters",
+    [
         # "None",
         "single",
         "multi",
-        "mixed"
+        "mixed",
     ],
-    indirect=True
+    indirect=True,
 )
 def test_merge(sql_server, sample_dag, tmp_table, merge_parameters):
     merge_params, mode = merge_parameters
