@@ -155,15 +155,22 @@ class TestAggregateCheckOperator(unittest.TestCase):
         run_dag(dag)
 
     def test_range_values(self):
+        aggregate_table = Table(
+            "aggregate_check_test",
+            database="pagila",
+            conn_id="postgres_conn",
+            schema="airflow_test_dag",
+        )
+
         @aql.transform
         def get_table(input_table: Table):
             return "SELECT * FROM {{input_table}}"
 
         dag = get_dag()
         with dag:
-            aggregate_table = get_table(self.aggregate_table)
+            table = get_table(aggregate_table)
             aql.aggregate_check(
-                table=aggregate_table,
+                table=table,
                 check="select count(*) FROM {{table}}",
                 greater_than=2,
                 less_than=6,
