@@ -8,6 +8,7 @@ from astro.utils.dependencies import (
     AwsBaseHook,
     BotoSession,
     GCSClient,
+    GCSHook,
     google_service_account,
 )
 
@@ -28,9 +29,8 @@ def s3fs_creds(conn_id=None):
     s3fs enables pandas to write to s3
     """
     if conn_id:
-        BaseHook.get_connection(
-            conn_id
-        )  # This line helps to raise a friendly exception
+        # The following line raises a friendly exception
+        BaseHook.get_connection(conn_id)
         aws_hook = AwsBaseHook(conn_id, client_type="S3")
         session = aws_hook.get_session()
     else:
@@ -46,14 +46,10 @@ def gcs_client(conn_id=None):
     """
     get GCS credentials for storage.
     """
-    credentials = None
     if conn_id:
-        extra = BaseHook.get_connection(conn_id).extra_dejson
-        json_file_path = extra["extra__google_cloud_platform__key_path"]
-        with open(json_file_path) as fp:
-            json_account_info = json.load(fp)
-            credentials = google_service_account.Credentials.from_service_account_info(
-                json_account_info
-            )
-    client = GCSClient(credentials=credentials)
+        gcs_hook = GCSHook(conn_id)
+        client = gcs_hook.get_conn()
+    else:
+        client = GCSClient()
+
     return dict(client=client)
