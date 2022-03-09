@@ -55,8 +55,8 @@ def tmp_table(sql_server):
         return TempTable(conn_id=hook.postgres_conn_id, database=hook.schema)
     elif isinstance(hook, SqliteHook):
         return TempTable(conn_id=hook.sqlite_conn_id, database="sqlite")
-    # elif isinstance(hook, BigQueryHook):
-    #     return TempTable(conn_id=hook.gcp_conn_id, database=)
+    elif isinstance(hook, BigQueryHook):
+        return TempTable(conn_id=hook.gcp_conn_id)
 
 
 @pytest.fixture
