@@ -150,7 +150,7 @@ def run_merge(output_specs: TempTable, merge_parameters, mode, sql_type):
     [
         "snowflake",
         "postgres",
-        pytest.param("bigquery", marks=pytest.mark.xfail(reason="some bug")),
+        "bigquery",
         "sqlite",
     ],
     indirect=True,
