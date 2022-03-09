@@ -28,6 +28,7 @@ import unittest.mock
 from unittest import mock
 
 import pandas as pd
+import pytest
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
@@ -95,6 +96,8 @@ class TestPostgresDecorator(unittest.TestCase):
         return f
 
     def test_dataframe_to_postgres(self):
+        print("test_dataframe_to_postgres")
+
         @adf
         def get_dataframe():
             return pd.DataFrame(
