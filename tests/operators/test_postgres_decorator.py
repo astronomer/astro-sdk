@@ -164,29 +164,6 @@ class TestPostgresDecorator(unittest.TestCase):
 
         test_utils.run_dag(self.dag)
 
-    def test_postgres_set_op_kwargs(self):
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-
-        @aql.transform
-        def sample_pg():
-            return "SELECT * FROM actor WHERE last_name LIKE 'G%%'"
-
-        self.create_and_run_task(
-            sample_pg,
-            (),
-            {
-                "conn_id": "postgres_conn",
-                "database": "pagila",
-            },
-        )
-        df = pd.read_sql(
-            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.test_dag_sample_pg_1",
-            con=self.hook_target.get_conn(),
-        )
-        assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
-
     def test_with_invalid_dag_name(self):
         self.dag.dag_id = "my=dag"
         self.hook_target = PostgresHook(
@@ -276,6 +253,23 @@ class TestPostgresDecorator(unittest.TestCase):
         self.create_and_run_task(
             sample_pg, (), {"input_table": Table(table_name="actor")}
         )
+
+    def test_postgres_set_op_kwargs(self):
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+
+        @adf
+        def validate_result(df: pd.DataFrame):
+            assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
+
+        @aql.transform
+        def sample_pg():
+            return "SELECT * FROM actor WHERE last_name LIKE 'G%%'"
+
+        with self.dag:
+            pg_df = sample_pg(conn_id="postgres_conn", database="pagila")
+            validate_result(pg_df)
 
     def test_postgres_with_jinja_template(self):
         @aql.transform()
