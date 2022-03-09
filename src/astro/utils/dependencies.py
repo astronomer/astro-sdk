@@ -79,3 +79,9 @@ try:
     from psycopg2 import sql as postgres_sql
 except ModuleNotFoundError:
     postgres_sql = MissingPackage("psycopg2", "postgres")
+
+
+try:
+    from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
+except ModuleNotFoundError:
+    AwsBaseHook = MissingPackage("apache-airflow-providers-amazon", "amazon")
