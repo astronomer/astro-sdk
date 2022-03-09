@@ -71,8 +71,8 @@ def merge_parameters(request, sql_server):
         return (
             {
                 "merge_keys": merge_keys(sql_server, mode),
-                "merge_columns": ["list", "sell", "taxes"],
-                "target_columns": ["list", "sell", "age"],
+                "target_columns": ["list", "sell", "taxes"],
+                "merge_columns": ["list", "sell", "age"],
                 "conflict_strategy": "update",
             },
             mode,
