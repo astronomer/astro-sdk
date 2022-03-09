@@ -97,34 +97,34 @@ def add_constraint(table: Table, columns):
 
 
 @adf
-def validate_results(df: pd.DataFrame, mode):
-    # make columns lower due to snowflake defaulting to uppercase
-    df.columns = df.columns.str.lower()
+def validate_results(df: pd.DataFrame, mode, sql_type):
+    # make columns lower and reverse due to snowflake defaulting to uppercase
+    if sql_type == "snowflake":
+        df.columns = df.columns.str.lower()
+        df = df.iloc[::-1]
+
+    def set_compare(l1, l2):
+        return set(l1) == set(l2)
+
     if mode == "single":
-        assert df.age.to_list()[:-1] == [60.0, 12.0, 41.0, 22.0]
-        assert math.isnan(df.age.to_list()[-1])
-        assert df.taxes.to_list()[:-1] == [3167.0, 4033.0, 1471.0, 3204.0]
-        assert math.isnan(df.taxes.to_list()[-1])
-        assert df.taxes.to_list()[:-1] == [3167.0, 4033.0, 1471.0, 3204.0]
-        assert df.list.to_list() == [160, 180, 132, 140, 240]
-        assert df.sell.to_list()[:-1] == [142, 175, 129, 138]
-        assert math.isnan(df.taxes.to_list()[-1])
+        assert set_compare(df.age.to_list()[:-1], [60.0, 12.0, 41.0, 22.0])
+        assert set_compare(df.taxes.to_list()[:-1], [3167.0, 4033.0, 1471.0, 3204.0])
+        assert set_compare(df.taxes.to_list()[:-1], [3167.0, 4033.0, 1471.0, 3204.0])
+        assert set_compare(df.list.to_list(), [160, 180, 132, 140, 240])
+        assert set_compare(df.sell.to_list()[:-1], [142, 175, 129, 138])
     elif mode == "multi":
-        assert df.age.to_list()[:-1] == [60.0, 12.0, 41.0, 22.0]
-        assert math.isnan(df.age.to_list()[-1])
-        assert df.taxes.to_list()[:-1] == [3167.0, 4033.0, 1471.0, 3204.0]
-        assert math.isnan(df.taxes.to_list()[-1])
-        assert df.taxes.to_list()[:-1] == [3167.0, 4033.0, 1471.0, 3204.0]
-        assert df.list.to_list() == [160, 180, 132, 140, 240]
-        assert df.sell.to_list() == [142, 175, 129, 138, 232]
+        assert set_compare(df.age.to_list()[:-1], [60.0, 12.0, 41.0, 22.0])
+        assert set_compare(df.taxes.to_list()[:-1], [3167.0, 4033.0, 1471.0, 3204.0])
+        assert set_compare(df.taxes.to_list()[:-1], [3167.0, 4033.0, 1471.0, 3204.0])
+        assert set_compare(df.list.to_list(), [160, 180, 132, 140, 240])
+        assert set_compare(df.sell.to_list()[:-1], [142, 175, 129, 138])
     elif mode == "mixed":
         assert df.taxes.to_list() == [1, 1, 1, 1, 1]
-        assert df.age.to_list()[:-1] == [60.0, 12.0, 41.0, 22.0]
-        assert math.isnan(df.age.to_list()[-1])
+        assert set_compare(df.age.to_list()[:-1], [60.0, 12.0, 41.0, 22.0])
 
 
 @task_group
-def run_merge(output_specs: TempTable, merge_parameters, mode):
+def run_merge(output_specs: TempTable, merge_parameters, mode, sql_type):
     main_table = aql.load_file(
         path=str(CWD) + "/../data/homes_merge_1.csv",
         output_table=output_specs,
@@ -142,7 +142,7 @@ def run_merge(output_specs: TempTable, merge_parameters, mode):
         **merge_parameters,
     )
     con1 >> merged_table
-    validate_results(df=merged_table, mode=mode)
+    validate_results(df=merged_table, mode=mode, sql_type=sql_type)
 
 
 @pytest.mark.parametrize(
@@ -166,8 +166,9 @@ def run_merge(output_specs: TempTable, merge_parameters, mode):
     indirect=True,
 )
 def test_merge(sql_server, sample_dag, tmp_table, merge_parameters):
+    sql_type, _ = sql_server
     merge_params, mode = merge_parameters
     with sample_dag:
         output_table = tmp_table
-        run_merge(output_table, merge_params, mode)
+        run_merge(output_table, merge_params, mode, sql_type)
     test_utils.run_dag(sample_dag)
