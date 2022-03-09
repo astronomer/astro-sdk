@@ -23,7 +23,7 @@ from airflow.hooks.sqlite_hook import SqliteHook
 
 from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.sql.table import Table, TempTable, create_table_name
-from astro.utils.dependencies import PostgresHook, SnowflakeHook
+from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from astro.utils.load_dataframe import move_dataframe_to_sql
 from astro.utils.schema_util import get_schema
 from astro.utils.table_handler import TableHandler
@@ -166,5 +166,9 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         elif conn_type == "sqlite":
             hook = SqliteHook(sqlite_conn_id=table.conn_id, database=table.database)
 
+            engine = hook.get_sqlalchemy_engine()
+            return pd.read_sql_table(table.table_name, engine)
+        elif conn_type == "bigquery":
+            hook = BigQueryHook(gcp_conn_id=table.conn_id)
             engine = hook.get_sqlalchemy_engine()
             return pd.read_sql_table(table.table_name, engine)
