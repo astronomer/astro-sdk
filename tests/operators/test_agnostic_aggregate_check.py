@@ -111,7 +111,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         def get_table(input_table: Table):
             return "SELECT * FROM {{input_table}}"
 
-        dag = self.get_dag()
+        dag = get_dag()
         with dag:
             aggregate_table = get_table(self.aggregate_table)
             aql.aggregate_check(
@@ -127,7 +127,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         def get_table(input_table: Table):
             return "SELECT * FROM {{input_table}}"
 
-        dag = self.get_dag()
+        dag = get_dag()
         with dag:
             aggregate_table_bigquery = get_table(self.aggregate_table_bigquery)
             aql.aggregate_check(
@@ -143,7 +143,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         def get_table(input_table: Table):
             return "SELECT * FROM {{input_table}}"
 
-        dag = self.get_dag()
+        dag = get_dag()
         with dag:
             aggregate_table_sqlite = get_table(self.aggregate_table_sqlite)
             aql.aggregate_check(
@@ -159,7 +159,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         def get_table(input_table: Table):
             return "SELECT * FROM {{input_table}}"
 
-        dag = self.get_dag()
+        dag = get_dag()
         with dag:
             aggregate_table = get_table(self.aggregate_table)
             aql.aggregate_check(
@@ -176,7 +176,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
             return "SELECT * FROM {{input_table}}"
 
         with pytest.raises(BackfillUnfinished):
-            dag = self.get_dag()
+            dag = get_dag()
             with dag:
                 aggregate_table = get_table(self.aggregate_table)
                 aql.aggregate_check(
@@ -195,7 +195,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
             return "SELECT * FROM {{input_table}}"
 
         with pytest.raises(ValueError):
-            dag = self.get_dag()
+            dag = get_dag()
             with dag:
                 aggregate_table = get_table(self.aggregate_table)
                 aql.aggregate_check(
@@ -212,7 +212,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
             return "SELECT * FROM {{input_table}}"
 
         with pytest.raises(ValueError):
-            dag = self.get_dag()
+            dag = get_dag()
             with dag:
                 aggregate_table = get_table(self.aggregate_table)
                 aql.aggregate_check(
@@ -225,7 +225,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         def get_table(input_table: Table):
             return "SELECT * FROM {{input_table}}"
 
-        dag = self.get_dag()
+        dag = get_dag()
         with dag:
             aggregate_table = get_table(self.aggregate_table)
             aql.aggregate_check(
@@ -241,7 +241,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
             return "SELECT * FROM {{input_table}}"
 
         with pytest.raises(BackfillUnfinished):
-            dag = self.get_dag()
+            dag = get_dag()
             with dag:
                 aggregate_table = get_table(self.aggregate_table)
                 aql.aggregate_check(
@@ -256,7 +256,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
         def get_table(input_table: Table):
             return "SELECT * FROM {{input_table}}"
 
-        dag = self.get_dag()
+        dag = get_dag()
         with dag:
             aggregate_table = get_table(self.aggregate_table)
             aql.aggregate_check(
@@ -274,7 +274,7 @@ class TestAggregateCheckOperator(unittest.TestCase):
             return "SELECT * FROM {{input_table}}"
 
         with pytest.raises(ValueError):
-            dag = self.get_dag()
+            dag = get_dag()
             with dag:
                 aggregate_table = get_table(self.aggregate_table)
                 aql.aggregate_check(

@@ -9,6 +9,8 @@ import pathlib
 import time
 import unittest.mock
 
+import pytest
+from airflow.exceptions import BackfillUnfinished
 from airflow.models import DAG
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
@@ -22,6 +24,8 @@ from astro.sql.operators.agnostic_boolean_check import (
     boolean_check,
 )
 from astro.sql.table import Table
+from tests.operators.utils import get_dag, run_dag
+
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -63,38 +67,39 @@ class TestBooleanCheckOperator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.table = "boolean_check_test"
+        cls.table = Table(
+            "boolean_check_test",
+            conn_id="postgres_conn",
+            database="pagila",
+            schema="public",
+        )
         aql.load_file(
             path=str(cls.cwd) + "/../data/homes_append.csv",
-            output_table=Table(
-                cls.table,
-                conn_id="postgres_conn",
-                database="pagila",
-                schema="public",
-            ),
+            output_table=cls.table,
         ).operator.execute({"run_id": "foo"})
 
-        cls.snowflake_table = get_table_name("boolean_check_test")
+        cls.snowflake_table = Table(
+            conn_id="snowflake_conn",
+            table_name=get_table_name("boolean_check_test"),
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+        )
         aql.load_file(
             path=str(cls.cwd) + "/../data/homes_append.csv",
-            output_table=Table(
-                conn_id="snowflake_conn",
-                table_name=cls.snowflake_table,
-                schema=os.getenv("SNOWFLAKE_SCHEMA"),
-                database=os.getenv("SNOWFLAKE_DATABASE"),
-                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-            ),
+            output_table=cls.snowflake_table,
         ).operator.execute({"run_id": "foo"})
 
-        cls.table = "boolean_check_test"
+        cls.table_bigquery = Table(
+            "boolean_check_test",
+            conn_id="bigquery",
+            schema=DEFAULT_SCHEMA,
+        )
         aql.load_file(
             path=str(cls.cwd) + "/../data/homes_append.csv",
-            output_table=Table(
-                cls.table,
-                conn_id="bigquery",
-                schema=SCHEMA,
-            ),
+            output_table=cls.table_bigquery,
         ).operator.execute({"run_id": "foo"})
+
         cls.table_sqlite = Table(
             "boolean_check_test", conn_id="sqlite_conn", schema="sqlite_schema"
         )
@@ -106,7 +111,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         drop_table_snowflake(
-            table_name=cls.snowflake_table,
+            table_name=cls.snowflake_table.table_name,
             schema=os.getenv("SNOWFLAKE_SCHEMA"),
             database=os.getenv("SNOWFLAKE_DATABASE"),
             warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
@@ -129,118 +134,118 @@ class TestBooleanCheckOperator(unittest.TestCase):
         )
 
     def test_happyflow_postgres_success(self):
-        a = boolean_check(
-            table=Table(
-                self.table,
-                database="pagila",
-                conn_id="postgres_conn",
-            ),
-            checks=[Check("test_1", "{{table}}.rooms > 3")],
-            max_rows_returned=10,
-        )
-        a.execute({"run_id": "foo"})
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
 
-    def test_happyflow_postgres_fail(self):
-        try:
-            a = boolean_check(
-                table=Table(
-                    self.table,
-                    database="pagila",
-                    conn_id="postgres_conn",
-                ),
-                checks=[
-                    Check("test_1", "{{table}}.rooms > 7"),
-                    Check("test_2", "{{table}}.beds >= 3"),
-                ],
+        dag = get_dag()
+        with dag:
+            table = get_table(self.table)
+            aql.boolean_check(
+                table=table,
+                checks=[Check("test_1", "{{table}}.rooms > 3")],
                 max_rows_returned=10,
             )
-            a.execute({"run_id": "foo"})
-            assert False
-        except ValueError:
-            assert True
+        run_dag(dag)
+
+    def test_happyflow_postgres_fail(self):
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
+
+        with pytest.raises(BackfillUnfinished):
+            dag = get_dag()
+            with dag:
+                table = get_table(self.table)
+                aql.boolean_check(
+                    table=table,
+                    checks=[
+                        Check("test_1", "{{table}}.rooms > 7"),
+                        Check("test_2", "{{table}}.beds >= 3"),
+                    ],
+                    max_rows_returned=10,
+                )
+            run_dag(dag)
 
     def test_happyflow_snowflake_success(self):
-        try:
-            a = boolean_check(
-                table=Table(
-                    conn_id="snowflake_conn",
-                    table_name=self.snowflake_table,
-                    schema=os.getenv("SNOWFLAKE_SCHEMA"),
-                    database=os.getenv("SNOWFLAKE_DATABASE"),
-                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-                ),
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
+
+        dag = get_dag()
+        with dag:
+            table = get_table(self.snowflake_table)
+            aql.boolean_check(
+                table=table,
                 checks=[Check("test_1", " rooms > 3")],
                 max_rows_returned=10,
             )
-            a.execute({"run_id": "foo"})
-            assert True
-        except ValueError:
-            assert False
+        run_dag(dag)
 
     def test_happyflow_snowflake_fail(self):
-        try:
-            a = boolean_check(
-                table=Table(
-                    conn_id="snowflake_conn",
-                    table_name=self.snowflake_table,
-                    schema=os.getenv("SNOWFLAKE_SCHEMA"),
-                    database=os.getenv("SNOWFLAKE_DATABASE"),
-                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-                ),
-                checks=[
-                    Check("test_1", " rooms > 7"),
-                    Check("test_2", " beds >= 3"),
-                ],
-                max_rows_returned=10,
-            )
-            a.execute({"run_id": "foo"})
-            assert False
-        except ValueError:
-            assert True
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
+
+        with pytest.raises(BackfillUnfinished):
+            dag = get_dag()
+            with dag:
+                table = get_table(self.snowflake_table)
+                aql.boolean_check(
+                    table=table,
+                    checks=[
+                        Check("test_1", " rooms > 7"),
+                        Check("test_2", " beds >= 3"),
+                    ],
+                    max_rows_returned=10,
+                )
+            run_dag(dag)
 
     def test_happyflow_bigquery_success(self):
-        try:
-            a = boolean_check(
-                table=Table(
-                    self.table,
-                    conn_id="bigquery",
-                    schema=SCHEMA,
-                ),
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
+
+        dag = get_dag()
+        with dag:
+            table = get_table(self.table_bigquery)
+            aql.boolean_check(
+                table=table,
                 checks=[Check("test_1", "rooms > 3")],
                 max_rows_returned=10,
             )
-            a.execute({"run_id": "foo"})
-            assert True
-        except ValueError:
-            assert False
+        run_dag(dag)
 
     def test_happyflow_sqlite_success(self):
-        try:
-            a = boolean_check(
-                table=self.table_sqlite,
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
+
+        dag = get_dag()
+        with dag:
+            table = get_table(self.table_sqlite)
+            aql.boolean_check(
+                table=table,
                 checks=[Check("test_1", "rooms > 3")],
                 max_rows_returned=10,
             )
-            a.execute({"run_id": "foo"})
-            assert True
-        except ValueError:
-            assert False
+        run_dag(dag)
 
     def test_happyflow_bigquery_fail(self):
-        try:
-            a = boolean_check(
-                table=Table(
-                    self.table,
-                    conn_id="bigquery",
-                    schema=SCHEMA,
-                ),
-                checks=[
-                    Check("test_1", "rooms > 7"),
-                    Check("test_2", "beds >= 3"),
-                ],
-                max_rows_returned=10,
-            )
-            a.execute({"run_id": "foo"})
-            assert False
-        except ValueError:
-            assert True
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
+
+        with pytest.raises(BackfillUnfinished):
+            dag = get_dag()
+            with dag:
+                table = get_table(self.table_bigquery)
+                aql.boolean_check(
+                    table=table,
+                    checks=[
+                        Check("test_1", "rooms > 7"),
+                        Check("test_2", "beds >= 3"),
+                    ],
+                    max_rows_returned=10,
+                )
+            run_dag(dag)
