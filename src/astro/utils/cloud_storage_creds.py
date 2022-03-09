@@ -4,7 +4,12 @@ from urllib import parse
 
 from airflow.hooks.base import BaseHook
 
-from astro.utils.dependencies import BotoSession, GCSClient, google_service_account
+from astro.utils.dependencies import (
+    AwsBaseHook,
+    BotoSession,
+    GCSClient,
+    google_service_account,
+)
 
 
 def parse_s3_env_var():
@@ -23,16 +28,17 @@ def s3fs_creds(conn_id=None):
     s3fs enables pandas to write to s3
     """
     if conn_id:
-        extra = BaseHook.get_connection(conn_id).extra_dejson
-        key = extra["aws_access_key_id"]
-        secret = extra["aws_secret_access_key"]
+        BaseHook.get_connection(
+            conn_id
+        )  # This line helps to raise a friendly exception
+        aws_hook = AwsBaseHook(conn_id, client_type="S3")
+        session = aws_hook.get_session()
     else:
         key, secret = parse_s3_env_var()
-
-    session = BotoSession(
-        aws_access_key_id=key,
-        aws_secret_access_key=secret,
-    )
+        session = BotoSession(
+            aws_access_key_id=key,
+            aws_secret_access_key=secret,
+        )
     return dict(client=session.client("s3"))
 
 
