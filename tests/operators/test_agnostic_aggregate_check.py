@@ -23,8 +23,11 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 
 import logging
 import pathlib
+import random
 import unittest.mock
 
+import pytest
+from airflow.exceptions import BackfillUnfinished
 from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import DAG, DagRun
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
@@ -34,6 +37,8 @@ from airflow.utils import timezone
 import astro.sql as aql
 from astro.settings import SCHEMA
 from astro.sql.table import Table
+
+from tests.operators.utils import run_dag
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -79,6 +84,16 @@ class TestAggregateCheckOperator(unittest.TestCase):
     def clear_run(self):
         self.run = False
 
+    def get_dag(self):
+        very_high_number = 99999999
+        return DAG(
+            "test_dag_" + str(random.randint(0, very_high_number)),
+            default_args={
+                "owner": "airflow",
+                "start_date": DEFAULT_DATE,
+            },
+        )
+
     def setUp(self):
         super().setUp()
         self.clear_run()
@@ -92,192 +107,181 @@ class TestAggregateCheckOperator(unittest.TestCase):
         )
 
     def test_exact_value(self):
-        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
-        df = hook.get_pandas_df(
-            sql="SELECT * FROM airflow_test_dag.aggregate_check_test"
-        )
-        assert df.count()[0] == 4
-        try:
-            a = aql.aggregate_check(
-                table=self.aggregate_table,
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
+
+        dag = self.get_dag()
+        with dag:
+            aggregate_table = get_table(self.aggregate_table)
+            aql.aggregate_check(
+                table=aggregate_table,
                 check="select count(*) FROM {{table}}",
                 greater_than=4,
                 less_than=4,
             )
-            a.execute({"run_id": "foo"})
-            assert True
-        except ValueError:
-            assert False
+        run_dag(dag)
 
     def test_exact_value_biquery(self):
-        hook = BigQueryHook(
-            bigquery_conn_id="bigquery", use_legacy_sql=False, gcp_conn_id="bigquery"
-        )
-        df = hook.get_pandas_df(sql=f"SELECT * FROM {SCHEMA}.aggregate_check_test")
-        assert df.count()[0] == 4
-        try:
-            a = aql.aggregate_check(
-                table=self.aggregate_table_bigquery,
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
+
+        dag = self.get_dag()
+        with dag:
+            aggregate_table_bigquery = get_table(self.aggregate_table_bigquery)
+            aql.aggregate_check(
+                table=aggregate_table_bigquery,
                 check="select count(*) FROM {{table}}",
                 greater_than=4,
                 less_than=4,
             )
-            a.execute({"run_id": "foo"})
-            assert True
-        except ValueError:
-            assert False
+        run_dag(dag)
 
     def test_exact_value_sqlite(self):
-        hook = SqliteHook(sqlite_conn_id="sqlite_conn")
-        df = hook.get_pandas_df(sql="SELECT * FROM aggregate_check_test")
-        assert df.count()[0] == 4
-        try:
-            a = aql.aggregate_check(
-                table=self.aggregate_table_sqlite,
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
+
+        dag = self.get_dag()
+        with dag:
+            aggregate_table_sqlite = get_table(self.aggregate_table_sqlite)
+            aql.aggregate_check(
+                table=aggregate_table_sqlite,
                 check="select count(*) FROM {{table}}",
                 greater_than=4,
                 less_than=4,
             )
-            a.execute({"run_id": "foo"})
-            assert True
-        except ValueError:
-            assert False
+        run_dag(dag)
 
     def test_range_values(self):
-        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
-        df = hook.get_pandas_df(
-            sql="SELECT * FROM airflow_test_dag.aggregate_check_test"
-        )
-        assert df.count()[0] == 4
-        try:
-            a = aql.aggregate_check(
-                table=self.aggregate_table,
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
+
+        dag = self.get_dag()
+        with dag:
+            aggregate_table = get_table(self.aggregate_table)
+            aql.aggregate_check(
+                table=aggregate_table,
                 check="select count(*) FROM {{table}}",
                 greater_than=2,
                 less_than=6,
             )
-            a.execute({"run_id": "foo"})
-            assert True
-        except ValueError:
-            assert False
+        run_dag(dag)
 
     def test_out_of_range_value(self):
-        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
-        df = hook.get_pandas_df(
-            sql="SELECT * FROM airflow_test_dag.aggregate_check_test"
-        )
-        assert df.count()[0] == 4
-        try:
-            a = aql.aggregate_check(
-                table=self.aggregate_table,
-                check="select count(*) FROM {{table}}",
-                greater_than=10,
-                less_than=20,
-            )
-            a.execute({"run_id": "foo"})
-            assert False
-        except ValueError:
-            assert True
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
+
+        with pytest.raises(BackfillUnfinished):
+            dag = self.get_dag()
+            with dag:
+                aggregate_table = get_table(self.aggregate_table)
+                aql.aggregate_check(
+                    table=aggregate_table,
+                    check="select count(*) FROM {{table}}",
+                    greater_than=10,
+                    less_than=20,
+                )
+            run_dag(dag)
 
     def test_invalid_values(self):
         """param:greater_than should be less than or equal to param:less_than"""
 
-        try:
-            a = aql.aggregate_check(
-                table=self.aggregate_table,
-                check="select count(*) FROM {{table}}",
-                greater_than=20,
-                less_than=10,
-            )
-            assert False
-        except ValueError:
-            assert True
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
 
-    def test_postgres_exact_number_of_rows(self):
-        try:
-            a = aql.aggregate_check(
-                table=self.aggregate_table,
-                check="select count(*) FROM {{table}}",
-                greater_than=4,
-                less_than=4,
-            )
-            a.execute({"run_id": "foo"})
-            assert True
-        except ValueError:
-            assert False
+        with pytest.raises(ValueError):
+            dag = self.get_dag()
+            with dag:
+                aggregate_table = get_table(self.aggregate_table)
+                aql.aggregate_check(
+                    table=aggregate_table,
+                    check="select count(*) FROM {{table}}",
+                    greater_than=20,
+                    less_than=10,
+                )
+            run_dag(dag)
 
     def test_invalid_params_no_test_values(self):
-        try:
-            a = aql.aggregate_check(
-                table=self.aggregate_table,
-                check="select count(*) FROM {{table}}",
-            )
-            assert False
-        except ValueError:
-            assert True
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
+
+        with pytest.raises(ValueError):
+            dag = self.get_dag()
+            with dag:
+                aggregate_table = get_table(self.aggregate_table)
+                aql.aggregate_check(
+                    table=aggregate_table, check="select count(*) FROM {{table}}"
+                )
+            run_dag(dag)
 
     def test_equal_to_param(self):
-        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
-        df = hook.get_pandas_df(
-            sql="SELECT * FROM airflow_test_dag.aggregate_check_test"
-        )
-        assert df.count()[0] == 4
-        try:
-            a = aql.aggregate_check(
-                table=self.aggregate_table,
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
+
+        dag = self.get_dag()
+        with dag:
+            aggregate_table = get_table(self.aggregate_table)
+            aql.aggregate_check(
+                table=aggregate_table,
                 check="select count(*) FROM {{table}}",
                 equal_to=4,
             )
-            a.execute({"run_id": "foo"})
-            assert True
-        except ValueError:
-            assert False
+        run_dag(dag)
 
     def test_only_less_than_param(self):
-        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
-        df = hook.get_pandas_df(
-            sql="SELECT * FROM airflow_test_dag.aggregate_check_test"
-        )
-        assert df.count()[0] == 4
-        try:
-            a = aql.aggregate_check(
-                table=self.aggregate_table,
-                check="select count(*) FROM {{table}}",
-                less_than=3,
-            )
-            result = a.execute({"run_id": "foo"})
-            assert False
-        except ValueError:
-            assert True
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
+
+        with pytest.raises(BackfillUnfinished):
+            dag = self.get_dag()
+            with dag:
+                aggregate_table = get_table(self.aggregate_table)
+                aql.aggregate_check(
+                    table=aggregate_table,
+                    check="select count(*) FROM {{table}}",
+                    less_than=3,
+                )
+            run_dag(dag)
 
     def test_only_greater_than_param(self):
-        hook = PostgresHook(schema="pagila", postgres_conn_id="postgres_conn")
-        df = hook.get_pandas_df(
-            sql="SELECT * FROM airflow_test_dag.aggregate_check_test"
-        )
-        assert df.count()[0] == 4
-        try:
-            a = aql.aggregate_check(
-                table=self.aggregate_table,
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
+
+        dag = self.get_dag()
+        with dag:
+            aggregate_table = get_table(self.aggregate_table)
+            aql.aggregate_check(
+                table=aggregate_table,
                 check="select count(*) FROM {{table}}",
                 greater_than=3,
             )
-            a.execute({"run_id": "foo"})
-            assert True
-        except ValueError:
-            assert False
+        run_dag(dag)
 
     def test_all_three_params_provided_priority_given_to_equal_to_param(self):
         """param:greater_than should be less than or equal to param:less_than"""
 
-        try:
-            a = aql.aggregate_check(
-                table=self.aggregate_table,
-                check="select count(*) FROM {{table}}",
-                greater_than=20,
-                less_than=10,
-                equal_to=4,
-            )
-            assert False
-        except ValueError:
-            assert True
+        @aql.transform
+        def get_table(input_table: Table):
+            return "SELECT * FROM {{input_table}}"
+
+        with pytest.raises(ValueError):
+            dag = self.get_dag()
+            with dag:
+                aggregate_table = get_table(self.aggregate_table)
+                aql.aggregate_check(
+                    table=aggregate_table,
+                    check="select count(*) FROM {{table}}",
+                    greater_than=20,
+                    less_than=10,
+                    equal_to=4,
+                )
+            run_dag(dag)
