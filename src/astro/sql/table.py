@@ -55,8 +55,6 @@ class Table:
         return (self.schema, self.table_name) if self.schema else (self.table_name,)
 
     def qualified_name(self):
-        conn = BaseHook.get_connection(self.conn_id)
-        self.conn_type = conn.conn_type  # type: ignore
         if self.conn_type == "sqlite":
             return self.table_name
         else:
