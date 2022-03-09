@@ -8,14 +8,15 @@ from airflow.models import TaskInstance as TI
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
+
 from astro.sql.table import TempTable
 from astro.utils.dependencies import PostgresHook, SnowflakeHook
-
 from tests.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("integration_test_table")
+
 
 @pytest.fixture(scope="session", autouse=True)
 def create_database_connections():
@@ -57,6 +58,7 @@ def tmp_table(sql_server):
         return TempTable(conn_id=hook.sqlite_conn_id, database="sqlite")
     # elif isinstance(hook, BigQueryHook):
     #     return TempTable(conn_id=hook.gcp_conn_id, database=)
+
 
 @pytest.fixture
 def sql_server(request):
