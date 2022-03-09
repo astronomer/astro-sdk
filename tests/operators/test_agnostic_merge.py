@@ -101,7 +101,8 @@ def add_constraint(table: Table, columns):
 @adf
 def validate_results(df: pd.DataFrame, mode, sql_type):
     # make columns lower and reverse due to snowflake defaulting to uppercase
-    if sql_type == "snowflake":
+    # Also reverse because BQ and snowflake seem to reverse row order
+    if sql_type in ["snowflake", "bigquery"]:
         df.columns = df.columns.str.lower()
         df = df.iloc[::-1]
 
