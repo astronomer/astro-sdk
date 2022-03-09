@@ -5,12 +5,11 @@ import yaml
 from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import DAG, Connection, DagRun
 from airflow.models import TaskInstance as TI
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 
 from astro.sql.table import TempTable
-from astro.utils.dependencies import PostgresHook, SnowflakeHook
+from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from tests.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
