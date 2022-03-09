@@ -171,4 +171,4 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         elif conn_type == "bigquery":
             hook = BigQueryHook(gcp_conn_id=table.conn_id)
             engine = hook.get_sqlalchemy_engine()
-            return pd.read_sql_table(table.table_name, engine)
+            return pd.read_sql_table(table.qualified_name(), engine)
