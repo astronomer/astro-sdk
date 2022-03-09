@@ -107,7 +107,10 @@ def validate_results(df: pd.DataFrame, mode, sql_type):
         df = df.iloc[::-1]
 
     def set_compare(l1, l2):
+        l1 = list(filter(lambda val: not math.isnan(val), l1))
         return set(l1) == set(l2)
+
+    df = df.sort_values(by=["list"], ascending=True)
 
     if mode == "single":
         assert set_compare(df.age.to_list()[:-1], [60.0, 12.0, 41.0, 22.0])
@@ -151,14 +154,9 @@ def run_merge(output_specs: TempTable, merge_parameters, mode, sql_type):
 @pytest.mark.parametrize(
     "sql_server",
     [
+        "bigquery",
         "snowflake",
         "postgres",
-        pytest.param(
-            "bigquery",
-            marks=pytest.mark.xfail(
-                reason="There is a known issue preventing update in bigquery"
-            ),
-        ),
         "sqlite",
     ],
     indirect=True,
