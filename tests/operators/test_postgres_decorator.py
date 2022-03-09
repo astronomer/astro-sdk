@@ -24,20 +24,16 @@ Run test:
 """
 
 import logging
-import pathlib
 import unittest.mock
 from unittest import mock
 
 import pandas as pd
 import pytest
-from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
-from airflow.utils.state import State
-from airflow.utils.types import DagRunType
 
 import astro.sql as aql
 from astro import dataframe as adf
@@ -100,6 +96,8 @@ class TestPostgresDecorator(unittest.TestCase):
         return f
 
     def test_dataframe_to_postgres(self):
+        print("test_dataframe_to_postgres")
+
         @adf
         def get_dataframe():
             return pd.DataFrame(
@@ -117,6 +115,25 @@ class TestPostgresDecorator(unittest.TestCase):
                 )
             )
             pg_df = sample_pg(my_df)
+        test_utils.run_dag(self.dag)
+
+    def test_empty_func(self):
+        @adf
+        def get_dataframe():
+            return pd.DataFrame(
+                {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
+            )
+
+        @aql.run_raw_sql
+        def sample_pg(input_table: Table):
+            return ""
+
+        with self.dag:
+            my_df = get_dataframe(
+                output_table=TempTable(conn_id="postgres_conn", database="pagila")
+            )
+            pg_df = sample_pg(input_table=my_df)
+
         test_utils.run_dag(self.dag)
 
     def test_dataframe_to_postgres_kwarg(self):
@@ -146,29 +163,6 @@ class TestPostgresDecorator(unittest.TestCase):
             validate_result(pg_df)
 
         test_utils.run_dag(self.dag)
-
-    def test_postgres_set_op_kwargs(self):
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-
-        @aql.transform
-        def sample_pg():
-            return "SELECT * FROM actor WHERE last_name LIKE 'G%%'"
-
-        self.create_and_run_task(
-            sample_pg,
-            (),
-            {
-                "conn_id": "postgres_conn",
-                "database": "pagila",
-            },
-        )
-        df = pd.read_sql(
-            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.test_dag_sample_pg_1",
-            con=self.hook_target.get_conn(),
-        )
-        assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
 
     def test_with_invalid_dag_name(self):
         self.dag.dag_id = "my=dag"
@@ -259,6 +253,23 @@ class TestPostgresDecorator(unittest.TestCase):
         self.create_and_run_task(
             sample_pg, (), {"input_table": Table(table_name="actor")}
         )
+
+    def test_postgres_set_op_kwargs(self):
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+
+        @adf
+        def validate_result(df: pd.DataFrame):
+            assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
+
+        @aql.transform
+        def sample_pg():
+            return "SELECT * FROM actor WHERE last_name LIKE 'G%%'"
+
+        with self.dag:
+            pg_df = sample_pg(conn_id="postgres_conn", database="pagila")
+            validate_result(pg_df)
 
     def test_postgres_with_jinja_template(self):
         @aql.transform()
@@ -380,63 +391,3 @@ class TestPostgresDecorator(unittest.TestCase):
         drop_table(
             table_name="my_raw_sql_table", postgres_conn=self.hook_target.get_conn()
         )
-
-
-@pytest.fixture
-def dag():
-    return DAG(
-        "test_dag",
-        default_args={
-            "owner": "airflow",
-            "start_date": DEFAULT_DATE,
-        },
-    )
-
-
-@pytest.fixture(autouse=True)
-def cleanup():
-    yield
-    with create_session() as session:
-        session.query(DagRun).delete()
-        session.query(TI).delete()
-
-
-@pytest.fixture
-def output_table(request):
-    table_type = request.param
-    if table_type == "None":
-        return TempTable()
-    elif table_type == "partial":
-        return Table("my_table")
-    elif table_type == "full":
-        return Table("my_table", database="pagila", conn_id="postgres_conn")
-
-
-@pytest.mark.parametrize("output_table", ["None", "partial", "full"], indirect=True)
-def test_postgres_to_dataframe_partial_output(output_table, dag):
-    hook_target = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
-
-    @aql.transform
-    def sample_pg(input_table: Table):
-        return "SELECT * FROM {{input_table}} WHERE last_name LIKE 'G%%'"
-
-    @adf
-    def count(df: pd.DataFrame):
-        assert len(df) == 12
-
-    with dag:
-        pg_output = sample_pg(
-            input_table=Table(
-                table_name="actor", conn_id="postgres_conn", database="pagila"
-            ),
-            output_table=output_table,
-        )
-        df_count = count(df=pg_output)
-    test_utils.run_dag(dag)
-
-    df = pd.read_sql(
-        f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.test_dag_sample_pg_1",
-        con=hook_target.get_conn(),
-    )
-    assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
-    print(df_count)
