@@ -35,7 +35,7 @@ def merge_keys(sql_server, mode):
         keys = ["list"]
     if mode == "multi":
         keys = ["list", "sell"]
-    if mode == "mixed":
+    if mode == "update":
         keys = ["list", "sell"]
 
     if sql_name == "snowflake":
@@ -67,7 +67,7 @@ def merge_parameters(request, sql_server):
             },
             mode,
         )
-    elif mode == "mixed":
+    elif mode == "update":
         return (
             {
                 "merge_keys": merge_keys(sql_server, mode),
@@ -121,7 +121,7 @@ def validate_results(df: pd.DataFrame, mode, sql_type):
         assert set_compare(df.taxes.to_list()[:-1], [3167.0, 4033.0, 1471.0, 3204.0])
         assert set_compare(df.list.to_list(), [160, 180, 132, 140, 240])
         assert set_compare(df.sell.to_list()[:-1], [142, 175, 129, 138])
-    elif mode == "mixed":
+    elif mode == "update":
         assert df.taxes.to_list() == [1, 1, 1, 1, 1]
         assert set_compare(df.age.to_list()[:-1], [60.0, 12.0, 41.0, 22.0])
 
@@ -153,7 +153,12 @@ def run_merge(output_specs: TempTable, merge_parameters, mode, sql_type):
     [
         "snowflake",
         "postgres",
-        "bigquery",
+        pytest.param(
+            "bigquery",
+            marks=pytest.mark.xfail(
+                reason="There is a known issue preventing update in bigquery"
+            ),
+        ),
         "sqlite",
     ],
     indirect=True,
@@ -164,7 +169,7 @@ def run_merge(output_specs: TempTable, merge_parameters, mode, sql_type):
         # "None",
         "single",
         "multi",
-        "mixed",
+        "update",
     ],
     indirect=True,
 )
