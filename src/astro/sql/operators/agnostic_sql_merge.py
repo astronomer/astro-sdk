@@ -53,11 +53,6 @@ class SqlMergeOperator(SqlDecoratedOperator):
         self.conflict_strategy = conflict_strategy
         task_id = get_unique_task_id("merge_table")
 
-        if not tables_from_same_db([target_table, merge_table]):
-            raise ValueError(
-                get_error_string_for_multiple_dbs([target_table, merge_table])
-            )
-
         def null_function():
             pass
 
@@ -67,14 +62,18 @@ class SqlMergeOperator(SqlDecoratedOperator):
             task_id=kwargs.get("task_id") or task_id,
             op_args=(),
             python_callable=null_function,
-            database=self.target_table.database,
-            conn_id=self.target_table.conn_id,
-            schema=self.target_table.schema,
-            warehouse=self.target_table.warehouse,
             **kwargs,
         )
 
     def execute(self, context: Dict):
+        self.database = self.target_table.database
+        self.conn_id = self.target_table.conn_id
+        self.schema = self.target_table.schema
+        self.warehouse = self.target_table.warehouse
+        if not tables_from_same_db([self.target_table, self.merge_table]):
+            raise ValueError(
+                get_error_string_for_multiple_dbs([self.target_table, self.merge_table])
+            )
         conn_type = BaseHook.get_connection(self.conn_id).conn_type  # type: ignore
         if conn_type == "postgres":
             self.sql = postgres_merge_func(
@@ -115,4 +114,5 @@ class SqlMergeOperator(SqlDecoratedOperator):
         else:
             raise AirflowException(f"please give a postgres conn id")
 
-        return super().execute(context)
+        super().execute(context)
+        return self.target_table

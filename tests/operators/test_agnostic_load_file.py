@@ -587,22 +587,6 @@ def test_aws_decode():
     assert v == "@#$%@$#ASDH@Ksd23%SD546"
 
 
-@pytest.fixture
-def sql_server(request):
-    sql_name = request.param
-    hook_parameters = test_utils.SQL_SERVER_HOOK_PARAMETERS.get(sql_name)
-    hook_class = test_utils.SQL_SERVER_HOOK_CLASS.get(sql_name)
-    if hook_parameters is None or hook_class is None:
-        raise ValueError(f"Unsupported SQL server {sql_name}")
-    hook = hook_class(**hook_parameters)
-    schema = hook_parameters.get("schema", test_utils.DEFAULT_SCHEMA)
-    if not isinstance(hook, BigQueryHook):
-        hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
-    yield (sql_name, hook)
-    if not isinstance(hook, BigQueryHook):
-        hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
-
-
 @pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
 def test_load_file_templated_filename(sample_dag, sql_server):
     database_name, sql_hook = sql_server
