@@ -119,6 +119,25 @@ class TestPostgresDecorator(unittest.TestCase):
             pg_df = sample_pg(my_df)
         test_utils.run_dag(self.dag)
 
+    def test_empty_func(self):
+        @adf
+        def get_dataframe():
+            return pd.DataFrame(
+                {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
+            )
+
+        @aql.run_raw_sql
+        def sample_pg(input_table: Table):
+            return ""
+
+        with self.dag:
+            my_df = get_dataframe(
+                output_table=TempTable(conn_id="postgres_conn", database="pagila")
+            )
+            pg_df = sample_pg(input_table=my_df)
+
+        test_utils.run_dag(self.dag)
+
     def test_dataframe_to_postgres_kwarg(self):
         self.hook_target = PostgresHook(
             postgres_conn_id="postgres_conn", schema="pagila"

@@ -153,6 +153,10 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 f"DROP TABLE IF EXISTS {full_output_table_name};", self.parameters
             )
             self.sql = self.create_temporary_table(self.sql, full_output_table_name)
+        else:
+            # If there's no SQL to run we simply return
+            if self.sql == "" or not self.sql:
+                return
 
         query_result = self._run_sql(self.sql, self.parameters)
         # Run execute function of subclassed Operator.

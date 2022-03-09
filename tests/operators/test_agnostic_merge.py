@@ -90,6 +90,8 @@ def add_constraint(table: Table, columns):
         return (
             "CREATE UNIQUE INDEX unique_index ON {{table}}" + f"({','.join(columns)})"
         )
+    elif table.conn_type == "bigquery":
+        return ""
     return (
         "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE"
         + f" ({','.join(columns)})"
