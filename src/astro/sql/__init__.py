@@ -89,7 +89,7 @@ def append(
         columns=columns,
         casted_columns=casted_columns,
         **kwargs,
-    )
+    ).output
 
 
 def merge(
