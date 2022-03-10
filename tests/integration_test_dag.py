@@ -71,11 +71,10 @@ def tmp_table(sql_server):
         return TempTable(conn_id=hook.postgres_conn_id, database=hook.schema)
     elif isinstance(hook, SqliteHook):
         return TempTable(conn_id=hook.sqlite_conn_id, database="sqlite")
-    # elif isinstance(hook, BigQueryHook):
-    #     return TempTable(conn_id=hook.gcp_conn_id, database=)
+    elif isinstance(hook, BigQueryHook):
+        return TempTable(conn_id=hook.gcp_conn_id)
 
 
-@pytest.fixture
 def merge_keys(sql_server):
     """
     To match with their respective API's, we have a slightly different "merge_keys" value
@@ -92,7 +91,7 @@ def merge_keys(sql_server):
 
 
 @aql.transform
-def do_a_thing(input_table: Table):
+def apply_transform(input_table: Table):
     return "SELECT * FROM {{input_table}}"
 
 
@@ -191,20 +190,21 @@ def run_merge(output_specs: TempTable, merge_keys):
     [
         "snowflake",
         "postgres",
-        pytest.param("bigquery", marks=pytest.mark.xfail(reason="some bug")),
+        "bigquery",
+        # pytest.param("bigquery", marks=pytest.mark.xfail(reason="some bug")),
         "sqlite",
     ],
     indirect=True,
 )
-def test_full_dag(sql_server, sample_dag, tmp_table, merge_keys):
+def test_full_dag(sql_server, sample_dag, tmp_table):
     with sample_dag:
         output_table = tmp_table
         loaded_table = aql.load_file(
             str(CWD) + "/data/homes.csv", output_table=output_table
         )
-        tranformed_table = do_a_thing(loaded_table)
+        tranformed_table = apply_transform(loaded_table)
         run_dataframe_funcs(tranformed_table)
         run_append(output_table)
-        run_merge(output_table, merge_keys)
+        run_merge(output_table, merge_keys(sql_server))
         run_validation(tranformed_table)
     test_utils.run_dag(sample_dag)
