@@ -477,8 +477,8 @@ class TestAgnosticLoadFile(unittest.TestCase):
         assert df.iloc[0].to_dict()["sell"] == 142.0
 
 
-def upload_test_file_gcp(files, file_conn_id):
-    hook = gcs.GCSHook(gcp_conn_id=file_conn_id)
+def upload_test_file_gcp(files, file_conn_id=None):
+    hook = gcs.GCSHook(file_conn_id) if file_conn_id else gcs.GCSHook()
     for file in files:
         hook.upload(
             bucket_name=file["bucket_id"],
@@ -487,8 +487,8 @@ def upload_test_file_gcp(files, file_conn_id):
         )
 
 
-def upload_test_file_s3(files, file_conn_id):
-    hook = s3.S3Hook(aws_conn_id=file_conn_id)
+def upload_test_file_s3(files, file_conn_id=None):
+    hook = s3.S3Hook(aws_conn_id=file_conn_id) if file_conn_id else s3.S3Hook()
     bucket = hook.get_bucket(files[0]["bucket_id"])
     for file in files:
         bucket.upload_file(Key=file["object_name"], Filename=file["filename"])
@@ -515,8 +515,42 @@ def upload_test_file_s3(files, file_conn_id):
             ],
         },
         {
+            "path": "gs://dag-authoring/a",
+            "file_conn_id": None,
+            "load_data": upload_test_file_gcp,
+            "files": [
+                {
+                    "bucket_id": "dag-authoring",
+                    "object_name": "a.csv",
+                    "filename": str(CWD) + "/../data/homes.csv",
+                },
+                {
+                    "bucket_id": "dag-authoring",
+                    "object_name": "aa.csv",
+                    "filename": str(CWD) + "/../data/homes.csv",
+                },
+            ],
+        },
+        {
             "path": "s3://tmp9/a",
             "file_conn_id": "aws_conn",
+            "load_data": upload_test_file_s3,
+            "files": [
+                {
+                    "bucket_id": "tmp9",
+                    "object_name": "a.csv",
+                    "filename": str(CWD) + "/../data/homes.csv",
+                },
+                {
+                    "bucket_id": "tmp9",
+                    "object_name": "aa.csv",
+                    "filename": str(CWD) + "/../data/homes2.csv",
+                },
+            ],
+        },
+        {
+            "path": "s3://tmp9/a",
+            "file_conn_id": None,
             "load_data": upload_test_file_s3,
             "files": [
                 {
@@ -589,6 +623,7 @@ def sql_server(request):
     yield (sql_name, hook)
     if not isinstance(hook, BigQueryHook):
         hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
+
 
 @mock.patch.dict(
     os.environ,

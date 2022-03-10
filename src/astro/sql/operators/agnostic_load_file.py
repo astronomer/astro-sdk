@@ -157,19 +157,19 @@ class AgnosticLoadFile(BaseOperator):
             "": self.get_paths_from_filesystem,
         }[file_location](url, file_conn_id)
 
-    def get_paths_from_s3(self, url, file_conn_id):
+    def get_paths_from_s3(self, url, file_conn_id=None):
         bucket = url.netloc
         prefix = url.path
-        hook = s3.S3Hook(aws_conn_id=file_conn_id)
+        hook = s3.S3Hook(aws_conn_id=file_conn_id) if file_conn_id else s3.S3Hook()
         return [
             urlunparse((url.scheme, url.netloc, keys, "", "", ""))
             for keys in hook.list_keys(bucket_name=bucket, prefix=prefix[1:])
         ]
 
-    def get_paths_from_gcs(self, url, file_conn_id):
+    def get_paths_from_gcs(self, url, file_conn_id=None):
         bucket = url.netloc
         prefix = url.path
-        hook = gcs.GCSHook(gcp_conn_id=file_conn_id)
+        hook = gcs.GCSHook(gcp_conn_id=file_conn_id) if file_conn_id else gcs.GCSHook()
         return [
             urlunparse((url.scheme, url.netloc, keys, "", "", ""))
             for keys in hook.list(bucket_name=bucket, prefix=prefix[1:])
