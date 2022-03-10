@@ -29,6 +29,7 @@ def dataframe(
     schema: Optional[str] = None,
     warehouse: Optional[str] = None,
     task_id: Optional[str] = None,
+    identifiers_as_lower: Optional[bool] = True,
 ):
     """
     This function allows a user to run python functions in Airflow but with the huge benefit that SQL files
@@ -39,6 +40,7 @@ def dataframe(
         "database": database,
         "schema": schema,
         "warehouse": warehouse,
+        "identifiers_as_lower": identifiers_as_lower,
     }
     if task_id:
         param_map["task_id"] = task_id
