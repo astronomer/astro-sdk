@@ -229,3 +229,53 @@ class TestDataframeFromSQL(unittest.TestCase):
             )
             == 47
         )
+
+    def test_snow_dataframe_with_case(self):
+        identifiers_as_lower = True
+
+        @df(identifiers_as_lower=identifiers_as_lower)
+        def my_df_func(df: pandas.DataFrame):
+            return df.columns
+
+        res = self.create_and_run_task(
+            my_df_func,
+            (),
+            {
+                "df": Table(
+                    self.OUTPUT_TABLE_NAME,
+                    conn_id="snowflake_conn",
+                    schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                    database=os.getenv("SNOWFLAKE_DATABASE"),
+                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                )
+            },
+        )
+        columns = XCom.get_one(
+            execution_date=DEFAULT_DATE, key=res.key, task_id=res.operator.task_id
+        )
+        assert all(x.islower() for x in columns) == identifiers_as_lower
+
+    def test_snow_dataframe_without_case(self):
+        identifiers_as_lower = False
+
+        @df(identifiers_as_lower=identifiers_as_lower)
+        def my_df_func(df: pandas.DataFrame):
+            return df.columns
+
+        res = self.create_and_run_task(
+            my_df_func,
+            (),
+            {
+                "df": Table(
+                    self.OUTPUT_TABLE_NAME,
+                    conn_id="snowflake_conn",
+                    schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                    database=os.getenv("SNOWFLAKE_DATABASE"),
+                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                )
+            },
+        )
+        columns = XCom.get_one(
+            execution_date=DEFAULT_DATE, key=res.key, task_id=res.operator.task_id
+        )
+        assert all(x.islower() for x in columns) == identifiers_as_lower
