@@ -89,16 +89,16 @@ class AgnosticAggregateCheck(SqlDecoratedOperator):
         super().__init__(
             raw_sql=True,
             parameters={},
-            conn_id=table.conn_id,
             task_id=task_id,
             op_args=(),
             handler=handler_func,
             python_callable=null_function,
-            database=table.database,
             **kwargs,
         )
 
     def execute(self, context: Dict):
+        self.conn_id = self.table.conn_id
+        self.database = self.table.database
         self.sql = self.check
         self.parameters = {"table": self.table}
         query_result = super().execute(context)
@@ -135,6 +135,7 @@ class AgnosticAggregateCheck(SqlDecoratedOperator):
                     query_result, self.greater_than
                 )
             )
+        return self.table
 
 
 def aggregate_check(

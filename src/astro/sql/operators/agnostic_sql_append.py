@@ -81,13 +81,17 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
             casted_columns=self.casted_columns,
             conn_id=self.main_table.conn_id,
         )
-        return super().execute(context)
+        super().execute(context)
+        return self.main_table
 
     def append(
         self, main_table: Table, columns, casted_columns, append_table: Table, conn_id
     ):
         engine = self.get_sql_alchemy_engine()
-        metadata = MetaData()
+        if self.conn_type in ["postgres", "postgresql"]:
+            metadata = MetaData(schema=self.schema)
+        else:
+            metadata = MetaData()
         # TO Do - fix bigquery and postgres reflection table issue.
         main_table_sqla = SqlaTable(
             get_table_name(main_table), metadata, autoload_with=engine

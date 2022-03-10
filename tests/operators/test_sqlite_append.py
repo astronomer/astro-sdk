@@ -46,6 +46,7 @@ from google.cloud import bigquery
 # Import Operator
 import astro.sql as aql
 from astro.sql.table import Table
+from tests.operators import utils as test_utils
 
 # from tests.operators import utils as test_utils
 
@@ -146,22 +147,10 @@ class TestSQLiteAppend(unittest.TestCase):
             )
             foo = aql.append(
                 columns=["sell", "living"],
-                main_table=self.main_table,
-                append_table=self.append_table,
+                main_table=load_main,
+                append_table=load_append,
             )
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-
-        load_main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, load_main.operator.task_id)
-        self.wait_for_task_finish(dr, load_append.operator.task_id)
-        foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, foo.task_id)
+        test_utils.run_dag(self.dag)
 
         df = pd.read_sql(
             f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
@@ -190,22 +179,11 @@ class TestSQLiteAppend(unittest.TestCase):
                 path=str(cwd) + "/../data/homes_append.csv",
                 output_table=self.append_table,
             )
-            foo = aql.append(main_table=self.main_table, append_table=self.append_table)
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-
-        main_table = load_main.operator.run(
-            start_date=DEFAULT_DATE, end_date=DEFAULT_DATE
-        )
-        load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, load_main.operator.task_id)
-        self.wait_for_task_finish(dr, load_append.operator.task_id)
-        foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, foo.task_id)
+            foo = aql.append(
+                main_table=load_main,
+                append_table=load_append,
+            )
+        test_utils.run_dag(self.dag)
         df = pd.read_sql(
             f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
             con=hook.get_conn(),
@@ -235,22 +213,10 @@ class TestSQLiteAppend(unittest.TestCase):
             foo = aql.append(
                 columns=["sell", "living"],
                 casted_columns={"age": "INTEGER"},
-                main_table=self.main_table,
-                append_table=self.append_table,
+                main_table=load_main,
+                append_table=load_append,
             )
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-
-        load_main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, load_main.operator.task_id)
-        self.wait_for_task_finish(dr, load_append.operator.task_id)
-        foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, foo.task_id)
+        test_utils.run_dag(self.dag)
         df = pd.read_sql(
             f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
             con=hook.get_conn(),
@@ -281,22 +247,10 @@ class TestSQLiteAppend(unittest.TestCase):
             )
             foo = aql.append(
                 casted_columns={"age": "INTEGER"},
-                main_table=self.main_table,
-                append_table=self.append_table,
+                main_table=load_main,
+                append_table=load_append,
             )
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            state=State.RUNNING,
-        )
-
-        load_main.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        load_append.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, load_main.operator.task_id)
-        self.wait_for_task_finish(dr, load_append.operator.task_id)
-        foo.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        self.wait_for_task_finish(dr, foo.task_id)
+        test_utils.run_dag(self.dag)
 
         df = pd.read_sql(
             f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
