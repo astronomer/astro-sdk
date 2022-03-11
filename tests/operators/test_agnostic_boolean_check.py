@@ -139,11 +139,16 @@ def test_happyflow_fail(sample_dag, database, tables):
         pytest.param(
             "bigquery",
             marks=pytest.mark.xfail(
-                reason="bigquery don't expect table name before cols"
+                reason="bigquery don't expect table name before cols."
+            ),
+        ),
+        pytest.param(
+            "snowflake",
+            marks=pytest.mark.xfail(
+                reason="Binding data in type (table) is not supported."
             ),
         ),
         "sqlite",
-        "snowflake",
     ],
 )
 def test_happyflow_success_with_templated_query(sample_dag, database, tables):
