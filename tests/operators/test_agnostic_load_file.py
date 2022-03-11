@@ -19,7 +19,8 @@ Unittest module to test Agnostic Load File function.
 Requires the unittest, pytest, and requests-mock Python libraries.
 
 Run test:
-    AIRFLOW__ASTRO__CONN_AWS_DEFAULT=aws://AKIAZG42HVH6Z3B6ELRB:SgwfrcO2NdKpeKhUG77K%2F6B2HuRJJopbHPV84NbY@ \
+    AWS_ACCESS_KEY_ID=AKIAZG42HVH6Z3B6ELRB \
+    AWS_SECRET_ACCESS_KEY=SgwfrcO2NdKpeKhUG77K%2F6B2HuRJJopbHPV84NbY \
     python3 -m unittest tests.operators.test_agnostic_load_file.TestAgnosticLoadFile.test_aql_local_file_to_postgres
 
 """
@@ -478,9 +479,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
 @mock.patch.dict(
     os.environ,
-    {
-        "AIRFLOW__ASTRO__CONN_AWS_DEFAULT": "abcd:%40%23%24%25%40%24%23ASDH%40Ksd23%25SD546@"
-    },
+    {"AWS_ACCESS_KEY_ID": "abcd", "AWS_SECRET_ACCESS_KEY": "@#$%@$#ASDH@Ksd23%SD546"},
 )
 def test_aws_decode():
     from astro.utils.cloud_storage_creds import parse_s3_env_var
