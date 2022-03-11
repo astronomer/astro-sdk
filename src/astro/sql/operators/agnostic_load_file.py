@@ -156,6 +156,8 @@ class AgnosticLoadFile(BaseOperator):
         return {
             "s3": self.get_paths_from_s3,
             "gs": self.get_paths_from_gcs,
+            "http": lambda url, file_conn_id: [urlunparse(list(url))],
+            "https": lambda url, file_conn_id: [urlunparse(list(url))],
             "": self.get_paths_from_filesystem,
         }[file_location](url, file_conn_id)
 

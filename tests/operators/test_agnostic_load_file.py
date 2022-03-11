@@ -260,7 +260,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM {DEFAULT_SCHEMA}.test_dag_load_file_homes_csv_1",
+            f"SELECT * FROM {DEFAULT_SCHEMA}.test_dag_load_file__1",
             con=self.hook_target.get_conn(),
         )
 
@@ -378,6 +378,38 @@ class TestAgnosticLoadFile(unittest.TestCase):
         )
 
         assert df.iloc[0].to_dict()["Sell"] == 142.0
+
+    def test_aql_http_path_file_to_postgres(self):
+        OUTPUT_TABLE_NAME = "expected_table_from_s3_csv"
+
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+
+        # Drop target table
+        drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
+
+        self.create_and_run_task(
+            load_file,
+            (),
+            {
+                "path": "https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/homes_main.csv",
+                "file_conn_id": "",
+                "output_table": Table(
+                    table_name=OUTPUT_TABLE_NAME,
+                    database="pagila",
+                    conn_id="postgres_conn",
+                ),
+            },
+        )
+
+        # Read table from db
+        df = pd.read_sql(
+            f"SELECT * FROM {DEFAULT_SCHEMA}.{OUTPUT_TABLE_NAME}",
+            con=self.hook_target.get_conn(),
+        )
+
+        assert df.shape == (3, 9)
 
     def test_aql_s3_file_to_postgres_no_table_name(self):
         OUTPUT_TABLE_NAME = "test_dag_load_file_homes_csv_2"
