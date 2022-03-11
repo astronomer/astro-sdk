@@ -213,3 +213,38 @@ def test_all_three_params_provided_priority_given_to_equal_to_param(
                 equal_to=4,
             )
         run_dag(sample_dag)
+
+
+@pytest.mark.parametrize("database", ["sqlite"])
+def test_invalid_params_no_test_values(sample_dag, database, tables):
+    @aql.transform
+    def get_table(input_table: Table):
+        return "SELECT * FROM {{input_table}}"
+
+    with pytest.raises(ValueError):
+        with sample_dag:
+            aggregate_table = get_table(tables[database])
+            aql.aggregate_check(
+                table=aggregate_table, check="select count(*) FROM {{table}}"
+            )
+        run_dag(sample_dag)
+
+
+@pytest.mark.parametrize("database", ["sqlite"])
+def test_invalid_values(sample_dag, database, tables):
+    """param:greater_than should be less than or equal to param:less_than"""
+
+    @aql.transform
+    def get_table(input_table: Table):
+        return "SELECT * FROM {{input_table}}"
+
+    with pytest.raises(ValueError):
+        with sample_dag:
+            aggregate_table = get_table(tables[database])
+            aql.aggregate_check(
+                table=aggregate_table,
+                check="select count(*) FROM {{table}}",
+                greater_than=20,
+                less_than=10,
+            )
+        run_dag(sample_dag)
