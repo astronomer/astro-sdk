@@ -47,6 +47,7 @@ from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 from google.api_core.exceptions import NotFound
 from google.cloud import bigquery, storage
+from pandas.util.testing import assert_frame_equal
 
 from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
 from astro.sql.table import Table, TempTable
@@ -640,7 +641,10 @@ def test_load_file(sample_dag, sql_server, file_type):
             {"id": 3, "name": "Third with unicode पांचाल"},
         ]
     )
-    assert df.rename(columns=str.lower).equals(expected)
+    df = df.rename(columns=str.lower)
+    df = df.astype({"id": "int64"})
+    expected = expected.astype({"id": "int64"})
+    assert_frame_equal(df, expected)
 
 
 @pytest.mark.parametrize(
