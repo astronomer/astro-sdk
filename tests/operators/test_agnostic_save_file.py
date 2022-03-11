@@ -364,7 +364,10 @@ class TestSaveFile(unittest.TestCase):
         """
         # To-do: clean-up how S3 creds are passed to s3fs
 
-        return {"key": os.environ["AWS_ACCESS_KEY_ID"], "secret":  os.environ["AWS_SECRET_ACCESS_KEY"]}
+        return {
+            "key": os.environ["AWS_ACCESS_KEY_ID"],
+            "secret": os.environ["AWS_SECRET_ACCESS_KEY"],
+        }
 
 
 @pytest.fixture

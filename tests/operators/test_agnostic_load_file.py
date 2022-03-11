@@ -479,10 +479,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
 @mock.patch.dict(
     os.environ,
-    {
-        "AWS_ACCESS_KEY_ID": "abcd", 
-        "AWS_SECRET_ACCESS_KEY": "@#$%@$#ASDH@Ksd23%SD546"
-    },
+    {"AWS_ACCESS_KEY_ID": "abcd", "AWS_SECRET_ACCESS_KEY": "@#$%@$#ASDH@Ksd23%SD546"},
 )
 def test_aws_decode():
     from astro.utils.cloud_storage_creds import parse_s3_env_var
