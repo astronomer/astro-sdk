@@ -49,7 +49,5 @@ connections:
     extra: null
   - conn_id: aws_default
     conn_type: aws
-    login: $AIRFLOW_CONN_AWS_DEFAULT_LOGIN
-    password: $AIRFLOW_CONN_AWS_DEFAULT_PASSWORD
     description: null
     extra: null
