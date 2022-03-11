@@ -22,7 +22,8 @@ dependencies = [
     "pandas>=1.3.4,<=1.3.5",
     "SQLAlchemy>=1.3.18,<=1.3.24",
     "markupsafe>=1.1.1,<2.1.0",
-    "smart-open"
+    "smart-open",
+    "coverage"
 ]
 
 keywords = ["airflow", "provider", "astronomer", "sql", "decorator", "task flow", "elt", "etl", "dag"]
@@ -43,6 +44,7 @@ tests = [
     "pytest-split",
     "pytest-dotenv",
     "requests-mock",
+    "pytest-cov",
 ]
 google = [
     "apache-airflow-providers-google",

@@ -12,6 +12,7 @@
 [![Contributors](https://img.shields.io/github/contributors/astro-projects/astro)](https://github.com/astro-projects/astro)
 [![Commit activity](https://img.shields.io/github/commit-activity/m/astro-projects/astro)](https://github.com/astro-projects/astro)
 [![CI](https://github.com/astro-projects/astro/actions/workflows/ci.yaml/badge.svg)](https://github.com/astro-projects/astro)
+[![codecov](https://codecov.io/gh/astro-projects/astro/branch/main/graph/badge.svg?token=MI4SSE50Q6)](https://codecov.io/gh/astro-projects/astro)
 
 **astro** allows rapid and clean development of {Extract, Load, Transform} workflows using Python.
 It helps DAG authors to achieve more with less code. 

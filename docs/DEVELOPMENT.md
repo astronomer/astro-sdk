@@ -78,6 +78,44 @@ On only 3.9 (for example):
 Please also note that you can reuse an existing environtment if you run nox with the `-r` argument (or even `-R` if you
 don't want to attempt to reinstall packages). This can significantly speed up repeat test runs.
 
+## Check code coverage
+
+To run code coverage locally, you can either use `pytest` in one of the test environments or
+run `nox -s test` with coverage arguments. We use [pytest-cov](https://pypi.org/project/pytest-cov/) for our coverage reporting.
+
+Below is an example of running a coverage report on a single test. In this case the relevent file is `src/astro/sql/operators/sql_decorator.py`
+since we are testing the postgres `transform` decorator.
+
+```shell script
+nox -R -s test -- --cov-report term --cov=src/astro/sql/operators  tests/operators/test_postgres_decorator.py
+===================================================== test session starts =====================================================
+platform darwin -- Python 3.9.10, pytest-6.2.5, py-1.11.0, pluggy-1.0.0
+rootdir: /Users/dimberman/code/astronomer/astro-project/plugins/astro, configfile: pyproject.toml
+plugins: anyio-3.5.0, requests-mock-1.9.3, split-0.6.0, dotenv-0.5.2, cov-3.0.0
+collected 12 items
+
+tests/operators/test_postgres_decorator.py ............                                                                 [100%]
+
+====================================================== warnings summary =======================================================
+
+---------- coverage: platform darwin, python 3.9.10-final-0 ----------
+Name                                                  Stmts   Miss Branch BrPart  Cover   Missing
+-------------------------------------------------------------------------------------------------
+src/astro/sql/operators/__init__.py                       0      0      0      0   100%
+src/astro/sql/operators/agnostic_aggregate_check.py      46     32     16      0    26%   61-89, 100-138, 162
+src/astro/sql/operators/agnostic_boolean_check.py        66     45     16      0    30%   19-21, 24, 27, 51-65, 80-95, 98-105, 109, 115-128, 131, 149
+src/astro/sql/operators/agnostic_load_file.py            56     35     10      0    35%   61-67, 76-101, 106-110, 118-140, 166-167
+src/astro/sql/operators/agnostic_save_file.py            65     43     14      0    30%   64-70, 79-95, 98-109, 112-152, 162-182, 188-190, 220-224
+src/astro/sql/operators/agnostic_sql_append.py           50     36     20      0    23%   45-56, 67-85, 90-117
+src/astro/sql/operators/agnostic_sql_merge.py            43     28     12      0    31%   48-59, 69-118
+src/astro/sql/operators/agnostic_sql_truncate.py         20     11      2      0    50%   32-40, 55-60
+src/astro/sql/operators/agnostic_stats_check.py         110     86     32      0    21%   24-27, 32-33, 36-49, 52-73, 76-92, 95-98, 103-119, 122, 125-134, 146-169, 196-216, 231-260, 280
+src/astro/sql/operators/sql_dataframe.py                 76     13     22      2    79%   83, 130, 160-174
+src/astro/sql/operators/sql_decorator.py                201     45     78     16    72%   107-110, 126->128, 137, 166, 175, 194-196, 206->210, 223-224, 228-243, 247-248, 259, 277, 280, 287, 291-293, 296, 311, 315, 322-327, 330-335, 340, 346-363, 380-392
+-------------------------------------------------------------------------------------------------
+TOTAL                                                   733    374    222     18    46%
+```
+
 ## Release a new version
 
 <!-- Not yet verified. -->
