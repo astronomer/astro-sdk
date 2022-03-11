@@ -20,8 +20,8 @@ Unittest module to test Operators.
 Requires the unittest, pytest, and requests-mock Python libraries.
 
 """
-
 import logging
+import os
 import pathlib
 import random
 import unittest.mock
@@ -42,253 +42,174 @@ from tests.operators.utils import run_dag
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
+CWD = pathlib.Path(__file__).parent
+
+DATABASES_LIST = ["postgres", "bigquery", "sqlite", "snowflake"]
 
 
-class TestAggregateCheckOperator(unittest.TestCase):
-    """
-    Test Postgres Merge Operator.
-    """
-
-    cwd = pathlib.Path(__file__).parent
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.aggregate_table = Table(
-            "aggregate_check_test",
-            database="pagila",
-            conn_id="postgres_conn",
-            schema="airflow_test_dag",
-        )
-        cls.aggregate_table_bigquery = Table(
-            "aggregate_check_test",
-            conn_id="bigquery",
-            schema=SCHEMA,
-        )
-        cls.aggregate_table_sqlite = Table(
-            "aggregate_check_test", conn_id="sqlite_conn"
-        )
+@pytest.fixture(scope="session")
+def tables(request):
+    aggregate_table = Table(
+        "aggregate_check_test",
+        database="pagila",
+        conn_id="postgres_conn",
+        schema="airflow_test_dag",
+    )
+    aggregate_table_bigquery = Table(
+        "aggregate_check_test",
+        conn_id="bigquery",
+        schema=DEFAULT_SCHEMA,
+    )
+    aggregate_table_sqlite = Table("aggregate_check_test", conn_id="sqlite_conn")
+    aggregate_table_snowflake = Table(
+        table_name=get_table_name("aggregate_check_test"),
+        database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
+        schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
+        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore
+        conn_id="snowflake_conn",
+    )
+    path = str(CWD) + "/../data/homes_merge_1.csv"
+    tables = {
+        "postgres": aggregate_table,
+        "bigquery": aggregate_table_bigquery,
+        "sqlite": aggregate_table_sqlite,
+        "snowflake": aggregate_table_snowflake,
+    }
+    for _, table in tables.items():
         aql.load_file(
-            path=str(cls.cwd) + "/../data/homes_merge_1.csv",
-            output_table=cls.aggregate_table,
-        ).operator.execute({"run_id": "foo"})
-        aql.load_file(
-            path=str(cls.cwd) + "/../data/homes_merge_1.csv",
-            output_table=cls.aggregate_table_bigquery,
-        ).operator.execute({"run_id": "foo"})
-        aql.load_file(
-            path=str(cls.cwd) + "/../data/homes_merge_1.csv",
-            output_table=cls.aggregate_table_sqlite,
+            path=path,
+            output_table=table,
         ).operator.execute({"run_id": "foo"})
 
-    def clear_run(self):
-        self.run = False
+    yield tables
 
-    def get_dag(self):
-        very_high_number = 99999999
-        return DAG(
-            "test_dag_" + str(random.randint(0, very_high_number)),
-            default_args={
-                "owner": "airflow",
-                "start_date": DEFAULT_DATE,
-            },
+
+@pytest.mark.parametrize("database", DATABASES_LIST)
+def test_exact_value(sample_dag, database, tables):
+    @aql.transform
+    def get_table(input_table: Table):
+        return "SELECT * FROM {{input_table}}"
+
+    with sample_dag:
+        aggregate_table = get_table(tables[database])
+        aql.aggregate_check(
+            table=aggregate_table,
+            check="select count(*) FROM {{table}}",
+            greater_than=4,
+            less_than=4,
         )
+    run_dag(sample_dag)
 
-    def setUp(self):
-        super().setUp()
-        self.clear_run()
-        self.addCleanup(self.clear_run)
-        self.dag = DAG(
-            "test_dag",
-            default_args={
-                "owner": "airflow",
-                "start_date": DEFAULT_DATE,
-            },
+
+@pytest.mark.parametrize("database", DATABASES_LIST)
+def test_range_values(sample_dag, database, tables):
+    aggregate_table = Table(
+        "aggregate_check_test",
+        database="pagila",
+        conn_id="postgres_conn",
+        schema="airflow_test_dag",
+    )
+
+    @aql.transform
+    def get_table(input_table: Table):
+        return "SELECT * FROM {{input_table}}"
+
+    with sample_dag:
+        table = get_table(tables[database])
+        aql.aggregate_check(
+            table=table,
+            check="select count(*) FROM {{table}}",
+            greater_than=2,
+            less_than=6,
         )
+    run_dag(sample_dag)
 
-    def test_exact_value(self):
-        @aql.transform
-        def get_table(input_table: Table):
-            return "SELECT * FROM {{input_table}}"
 
-        dag = get_dag()
-        with dag:
-            aggregate_table = get_table(self.aggregate_table)
+@pytest.mark.parametrize("database", DATABASES_LIST)
+def test_out_of_range_value(sample_dag, database, tables):
+    @aql.transform
+    def get_table(input_table: Table):
+        return "SELECT * FROM {{input_table}}"
+
+    with pytest.raises(BackfillUnfinished):
+        with sample_dag:
+            aggregate_table = get_table(tables[database])
             aql.aggregate_check(
                 table=aggregate_table,
                 check="select count(*) FROM {{table}}",
-                greater_than=4,
-                less_than=4,
+                greater_than=10,
+                less_than=20,
             )
-        run_dag(dag)
+        run_dag(sample_dag)
 
-    def test_exact_value_biquery(self):
-        @aql.transform
-        def get_table(input_table: Table):
-            return "SELECT * FROM {{input_table}}"
 
-        dag = get_dag()
-        with dag:
-            aggregate_table_bigquery = get_table(self.aggregate_table_bigquery)
-            aql.aggregate_check(
-                table=aggregate_table_bigquery,
-                check="select count(*) FROM {{table}}",
-                greater_than=4,
-                less_than=4,
-            )
-        run_dag(dag)
+@pytest.mark.parametrize("database", DATABASES_LIST)
+def test_equal_to_param(sample_dag, database, tables):
+    @aql.transform
+    def get_table(input_table: Table):
+        return "SELECT * FROM {{input_table}}"
 
-    def test_exact_value_sqlite(self):
-        @aql.transform
-        def get_table(input_table: Table):
-            return "SELECT * FROM {{input_table}}"
-
-        dag = get_dag()
-        with dag:
-            aggregate_table_sqlite = get_table(self.aggregate_table_sqlite)
-            aql.aggregate_check(
-                table=aggregate_table_sqlite,
-                check="select count(*) FROM {{table}}",
-                greater_than=4,
-                less_than=4,
-            )
-        run_dag(dag)
-
-    def test_range_values(self):
-        aggregate_table = Table(
-            "aggregate_check_test",
-            database="pagila",
-            conn_id="postgres_conn",
-            schema="airflow_test_dag",
+    with sample_dag:
+        aggregate_table = get_table(tables[database])
+        aql.aggregate_check(
+            table=aggregate_table,
+            check="select count(*) FROM {{table}}",
+            equal_to=4,
         )
+    run_dag(sample_dag)
 
-        @aql.transform
-        def get_table(input_table: Table):
-            return "SELECT * FROM {{input_table}}"
 
-        dag = get_dag()
-        with dag:
-            table = get_table(aggregate_table)
-            aql.aggregate_check(
-                table=table,
-                check="select count(*) FROM {{table}}",
-                greater_than=2,
-                less_than=6,
-            )
-        run_dag(dag)
+@pytest.mark.parametrize("database", DATABASES_LIST)
+def test_only_less_than_param(sample_dag, database, tables):
+    @aql.transform
+    def get_table(input_table: Table):
+        return "SELECT * FROM {{input_table}}"
 
-    def test_out_of_range_value(self):
-        @aql.transform
-        def get_table(input_table: Table):
-            return "SELECT * FROM {{input_table}}"
-
-        with pytest.raises(BackfillUnfinished):
-            dag = get_dag()
-            with dag:
-                aggregate_table = get_table(self.aggregate_table)
-                aql.aggregate_check(
-                    table=aggregate_table,
-                    check="select count(*) FROM {{table}}",
-                    greater_than=10,
-                    less_than=20,
-                )
-            run_dag(dag)
-
-    def test_invalid_values(self):
-        """param:greater_than should be less than or equal to param:less_than"""
-
-        @aql.transform
-        def get_table(input_table: Table):
-            return "SELECT * FROM {{input_table}}"
-
-        with pytest.raises(ValueError):
-            dag = get_dag()
-            with dag:
-                aggregate_table = get_table(self.aggregate_table)
-                aql.aggregate_check(
-                    table=aggregate_table,
-                    check="select count(*) FROM {{table}}",
-                    greater_than=20,
-                    less_than=10,
-                )
-            run_dag(dag)
-
-    def test_invalid_params_no_test_values(self):
-        @aql.transform
-        def get_table(input_table: Table):
-            return "SELECT * FROM {{input_table}}"
-
-        with pytest.raises(ValueError):
-            dag = get_dag()
-            with dag:
-                aggregate_table = get_table(self.aggregate_table)
-                aql.aggregate_check(
-                    table=aggregate_table, check="select count(*) FROM {{table}}"
-                )
-            run_dag(dag)
-
-    def test_equal_to_param(self):
-        @aql.transform
-        def get_table(input_table: Table):
-            return "SELECT * FROM {{input_table}}"
-
-        dag = get_dag()
-        with dag:
-            aggregate_table = get_table(self.aggregate_table)
+    with pytest.raises(BackfillUnfinished):
+        with sample_dag:
+            aggregate_table = get_table(tables[database])
             aql.aggregate_check(
                 table=aggregate_table,
                 check="select count(*) FROM {{table}}",
+                less_than=3,
+            )
+        run_dag(sample_dag)
+
+
+@pytest.mark.parametrize("database", DATABASES_LIST)
+def test_only_greater_than_param(sample_dag, database, tables):
+    @aql.transform
+    def get_table(input_table: Table):
+        return "SELECT * FROM {{input_table}}"
+
+    with sample_dag:
+        aggregate_table = get_table(tables[database])
+        aql.aggregate_check(
+            table=aggregate_table,
+            check="select count(*) FROM {{table}}",
+            greater_than=3,
+        )
+    run_dag(sample_dag)
+
+
+@pytest.mark.parametrize("database", DATABASES_LIST)
+def test_all_three_params_provided_priority_given_to_equal_to_param(
+    sample_dag, database, tables
+):
+    """param:greater_than should be less than or equal to param:less_than"""
+
+    @aql.transform
+    def get_table(input_table: Table):
+        return "SELECT * FROM {{input_table}}"
+
+    with pytest.raises(ValueError):
+        with sample_dag:
+            aggregate_table = get_table(tables[database])
+            aql.aggregate_check(
+                table=aggregate_table,
+                check="select count(*) FROM {{table}}",
+                greater_than=20,
+                less_than=10,
                 equal_to=4,
             )
-        run_dag(dag)
-
-    def test_only_less_than_param(self):
-        @aql.transform
-        def get_table(input_table: Table):
-            return "SELECT * FROM {{input_table}}"
-
-        with pytest.raises(BackfillUnfinished):
-            dag = get_dag()
-            with dag:
-                aggregate_table = get_table(self.aggregate_table)
-                aql.aggregate_check(
-                    table=aggregate_table,
-                    check="select count(*) FROM {{table}}",
-                    less_than=3,
-                )
-            run_dag(dag)
-
-    def test_only_greater_than_param(self):
-        @aql.transform
-        def get_table(input_table: Table):
-            return "SELECT * FROM {{input_table}}"
-
-        dag = get_dag()
-        with dag:
-            aggregate_table = get_table(self.aggregate_table)
-            aql.aggregate_check(
-                table=aggregate_table,
-                check="select count(*) FROM {{table}}",
-                greater_than=3,
-            )
-        run_dag(dag)
-
-    def test_all_three_params_provided_priority_given_to_equal_to_param(self):
-        """param:greater_than should be less than or equal to param:less_than"""
-
-        @aql.transform
-        def get_table(input_table: Table):
-            return "SELECT * FROM {{input_table}}"
-
-        with pytest.raises(ValueError):
-            dag = get_dag()
-            with dag:
-                aggregate_table = get_table(self.aggregate_table)
-                aql.aggregate_check(
-                    table=aggregate_table,
-                    check="select count(*) FROM {{table}}",
-                    greater_than=20,
-                    less_than=10,
-                    equal_to=4,
-                )
-            run_dag(dag)
+        run_dag(sample_dag)
