@@ -25,10 +25,11 @@ from airflow.utils.db import provide_session
 from sqlalchemy import create_engine, text
 from sqlalchemy.sql.functions import Function
 
+from astro.constants import DEFAULT_SCHEMA
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils import get_hook, postgres_transform, snowflake_transform
 from astro.utils.load_dataframe import move_dataframe_to_sql
-from astro.utils.schema_util import create_schema_query, get_schema, schema_exists
+from astro.utils.schema_util import create_schema_query, schema_exists
 from astro.utils.table_handler import TableHandler
 
 
@@ -109,12 +110,12 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 return self.handler(cursor)
             return cursor
 
-        self.output_schema = self.schema or get_schema()
+        self.output_schema = self.schema or DEFAULT_SCHEMA
         self._set_variables_from_first_table()
 
         conn = BaseHook.get_connection(self.conn_id)
 
-        self.schema = self.schema or get_schema()
+        self.schema = self.schema or DEFAULT_SCHEMA
         self.user = conn.login
         self.run_id = context.get("run_id")
 
@@ -141,7 +142,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 full_output_table_name = self.handle_output_table_schema(
                     # Since there is no output table defined we have to assume default schema
                     output_table_name,
-                    schema=get_schema(),
+                    schema=DEFAULT_SCHEMA,
                 )
             else:
                 output_table_name = self.output_table.table_name
@@ -217,7 +218,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         :param schema: an optional schema if the output_table has a schema set. Defaults to the temp schema
         :return:
         """
-        schema = schema or get_schema()
+        schema = schema or DEFAULT_SCHEMA
         if self.conn_type == "postgres" and self.schema:
             output_table_name = schema + "." + output_table_name
         elif self.conn_type == "snowflake" and self.schema and "." not in self.sql:

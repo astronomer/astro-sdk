@@ -51,6 +51,7 @@ from google.api_core.exceptions import NotFound
 from google.cloud import bigquery, storage
 from pandas.util.testing import assert_frame_equal
 
+from astro.constants import DEFAULT_SCHEMA
 from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
 from astro.sql.table import Table, TempTable
 from astro.utils.cloud_storage_creds import parse_s3_env_var
@@ -259,7 +260,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.test_dag_load_file_homes_csv_1",
+            f"SELECT * FROM {DEFAULT_SCHEMA}.test_dag_load_file_homes_csv_1",
             con=self.hook_target.get_conn(),
         )
 
@@ -289,14 +290,14 @@ class TestAgnosticLoadFile(unittest.TestCase):
                 "output_table": Table(
                     OUTPUT_TABLE_NAME,
                     conn_id="bigquery",
-                    schema=test_utils.DEFAULT_SCHEMA,
+                    schema=DEFAULT_SCHEMA,
                 ),
             },
         )
 
         client = bigquery.Client()
         query_job = client.query(
-            f"SELECT * FROM astronomer-dag-authoring.{test_utils.DEFAULT_SCHEMA}.{OUTPUT_TABLE_NAME}"
+            f"SELECT * FROM astronomer-dag-authoring.{DEFAULT_SCHEMA}.{OUTPUT_TABLE_NAME}"
         )
         bigquery_df = query_job.to_dataframe()
 
@@ -372,7 +373,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.{OUTPUT_TABLE_NAME}",
+            f"SELECT * FROM {DEFAULT_SCHEMA}.{OUTPUT_TABLE_NAME}",
             con=self.hook_target.get_conn(),
         )
 
@@ -387,7 +388,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Drop target table
         drop_table_postgres(
-            f"{test_utils.DEFAULT_SCHEMA}.{OUTPUT_TABLE_NAME}",
+            f"{DEFAULT_SCHEMA}.{OUTPUT_TABLE_NAME}",
             self.hook_target.get_conn(),
         )
 
@@ -407,7 +408,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.{OUTPUT_TABLE_NAME}",
+            f"SELECT * FROM {DEFAULT_SCHEMA}.{OUTPUT_TABLE_NAME}",
             con=self.hook_target.get_conn(),
         )
 

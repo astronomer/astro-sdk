@@ -37,6 +37,7 @@ from airflow.utils.session import create_session
 
 import astro.sql as aql
 from astro import dataframe as adf
+from astro.constants import DEFAULT_SCHEMA
 from astro.sql.table import Table, TempTable
 from tests.operators import utils as test_utils
 
@@ -171,7 +172,7 @@ class TestPostgresDecorator(unittest.TestCase):
         )
 
         drop_table(
-            table_name=f'{test_utils.DEFAULT_SCHEMA}."my=dag_sample_pg_1"',
+            table_name=f'{DEFAULT_SCHEMA}."my=dag_sample_pg_1"',
             postgres_conn=self.hook_target.get_conn(),
         )
 
@@ -189,7 +190,7 @@ class TestPostgresDecorator(unittest.TestCase):
             },
         )
         df = pd.read_sql(
-            f'SELECT * FROM {test_utils.DEFAULT_SCHEMA}."my=dag_sample_pg_1"',
+            f'SELECT * FROM {DEFAULT_SCHEMA}."my=dag_sample_pg_1"',
             con=self.hook_target.get_conn(),
         )
         assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
@@ -213,7 +214,7 @@ class TestPostgresDecorator(unittest.TestCase):
             },
         )
         df = pd.read_sql(
-            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.test_dag_sample_pg_1",
+            f"SELECT * FROM {DEFAULT_SCHEMA}.test_dag_sample_pg_1",
             con=self.hook_target.get_conn(),
         )
         assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
@@ -238,7 +239,7 @@ class TestPostgresDecorator(unittest.TestCase):
             },
         )
         df = pd.read_sql(
-            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.test_dag_sample_pg_1",
+            f"SELECT * FROM {DEFAULT_SCHEMA}.test_dag_sample_pg_1",
             con=self.hook_target.get_conn(),
         )
         assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
@@ -334,7 +335,7 @@ class TestPostgresDecorator(unittest.TestCase):
         )
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.my_table",
+            f"SELECT * FROM {DEFAULT_SCHEMA}.my_table",
             con=self.hook_target.get_conn(),
         )
         assert df.iloc[0].to_dict() == {

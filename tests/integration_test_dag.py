@@ -9,6 +9,7 @@ from airflow.utils.db import create_default_connections
 from airflow.utils.session import provide_session
 
 from astro import sql as aql
+from astro.constants import DEFAULT_SCHEMA
 from astro.dataframe import dataframe as adf
 from astro.sql.operators.agnostic_boolean_check import Check
 from astro.sql.table import Table, TempTable
@@ -31,7 +32,7 @@ def sql_server(request):
     if hook_parameters is None or hook_class is None:
         raise ValueError(f"Unsupported SQL server {sql_name}")
     hook = hook_class(**hook_parameters)
-    schema = hook_parameters.get("schema", test_utils.DEFAULT_SCHEMA)
+    schema = hook_parameters.get("schema", DEFAULT_SCHEMA)
     if not isinstance(hook, BigQueryHook):
         hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
     yield (sql_name, hook)

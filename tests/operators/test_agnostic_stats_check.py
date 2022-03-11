@@ -18,6 +18,7 @@ from airflow.utils import timezone
 
 # Import Operator
 import astro.sql as aql
+from astro.constants import DEFAULT_SCHEMA
 from astro.sql.table import Table
 from tests.operators import utils as test_utils
 
@@ -108,19 +109,19 @@ tables = [
             "name": "stats_check_test_7",
             "conn_id": "bigquery",
             "database": "pagila",
-            "schema": test_utils.DEFAULT_SCHEMA,
+            "schema": DEFAULT_SCHEMA,
         },
         "table_2": {
             "path": "/../data/homes2.csv",
             "name": "stats_check_test_8",
             "conn_id": "bigquery",
-            "schema": test_utils.DEFAULT_SCHEMA,
+            "schema": DEFAULT_SCHEMA,
         },
         "table_3": {
             "path": "/../data/homes3.csv",
             "name": "stats_check_test_9",
             "conn_id": "bigquery",
-            "schema": test_utils.DEFAULT_SCHEMA,
+            "schema": DEFAULT_SCHEMA,
         },
     }
     # {

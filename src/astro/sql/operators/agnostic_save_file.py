@@ -23,10 +23,11 @@ from airflow.hooks.base import BaseHook
 from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
 
+from astro.constants import DEFAULT_SCHEMA
 from astro.sql.table import Table
 from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
-from astro.utils.schema_util import get_schema, get_table_name
+from astro.utils.schema_util import get_table_name
 from astro.utils.task_id_helper import get_task_id
 
 
@@ -144,7 +145,7 @@ class SaveFile(BaseOperator):
 
         if conn_type == "postgres" or conn_type == "postgresql":
             table_name = (
-                f"{input_table.schema or get_schema()}.{get_table_name(input_table)}"
+                f"{input_table.schema or DEFAULT_SCHEMA}.{get_table_name(input_table)}"
             )
         else:
             table_name = f"{get_table_name(input_table)}"
