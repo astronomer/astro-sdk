@@ -73,6 +73,9 @@ class AgnosticLoadFile(BaseOperator):
         Infers SQL database type based on connection then loads table to db.
         """
 
+        if self.file_conn_id:
+            BaseHook.get_connection(self.file_conn_id)
+
         # Retrieve conn type
         conn = BaseHook.get_connection(self.output_table.conn_id)
         if type(self.output_table) == TempTable:
