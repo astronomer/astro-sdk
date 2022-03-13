@@ -1,5 +1,7 @@
 .git
+coverage.xml
 .env
+.coverage
 integration-tests/test_data*
 astronomer_sql_decorator.egg-info
 test-connections.yaml

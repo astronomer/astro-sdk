@@ -100,7 +100,12 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s test -- --splits 8 --group ${{ matrix.group }}
+      - run: nox -s test -- --splits 8 --group ${{ matrix.group }} --cov=./ --cov-report=xml --cov-branch
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
     env:
       AWS_BUCKET: tmp9
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
