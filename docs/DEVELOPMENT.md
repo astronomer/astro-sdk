@@ -87,7 +87,7 @@ Below is an example of running a coverage report on a single test. In this case 
 since we are testing the postgres `transform` decorator.
 
 ```shell script
-nox -R -s test -- --cov-report term --cov=src/astro/sql/operators  tests/operators/test_postgres_decorator.py
+nox -R -s test -- --cov-report term --cov-branch --cov=src/astro/sql/operators  tests/operators/test_postgres_decorator.py
 ===================================================== test session starts =====================================================
 platform darwin -- Python 3.9.10, pytest-6.2.5, py-1.11.0, pluggy-1.0.0
 rootdir: /Users/dimberman/code/astronomer/astro-project/plugins/astro, configfile: pyproject.toml

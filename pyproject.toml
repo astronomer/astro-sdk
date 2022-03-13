@@ -22,8 +22,7 @@ dependencies = [
     "pandas>=1.3.4,<=1.3.5",
     "SQLAlchemy>=1.3.18,<=1.3.24",
     "markupsafe>=1.1.1,<2.1.0",
-    "smart-open",
-    "coverage"
+    "smart-open"
 ]
 
 keywords = ["airflow", "provider", "astronomer", "sql", "decorator", "task flow", "elt", "etl", "dag"]
