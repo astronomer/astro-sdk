@@ -1,0 +1,5 @@
+---
+contact_links:
+  - name: Ask a question or get support (Forum)
+    url: https://github.com/astronomer/astronomer-providers/discussions/
+    about: Ask a question or request support for using this package
