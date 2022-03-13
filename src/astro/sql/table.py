@@ -63,7 +63,7 @@ class TempTable(Table):
             warehouse=warehouse,
         )
 
-    def to_table(self, table_name: str, schema: str) -> Table:
+    def to_table(self, table_name: str, schema: str = None) -> Table:
         self.table_name = table_name
         self.schema = schema
         return Table(

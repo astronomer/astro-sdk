@@ -29,6 +29,7 @@ import os
 import pathlib
 import unittest.mock
 
+import pandas as pd
 import pytest
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
@@ -38,11 +39,13 @@ from airflow.utils.session import create_session
 
 # Import Operator
 from astro import sql as aql
-from astro.sql.table import Table
+from astro.dataframe import dataframe as adf
+from astro.sql.table import Table, TempTable
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
+CWD = pathlib.Path(__file__).parent
 
 
 def drop_table(table_name, snowflake_conn):
@@ -199,13 +202,6 @@ class TestSnowflakeOperator(unittest.TestCase):
     def test_snowflake_query(self):
         self.run_snow_query()
 
-    def test_roles_work_failing(self):
-        with pytest.raises(Exception):
-            self.run_snow_query(role="foo")
-
-    def test_roles_work_passing(self):
-        self.run_snow_query(role=os.getenv("SNOWFLAKE_ROLE"))
-
     def test_raw_sql(self):
         hook = get_snowflake_hook()
         drop_table(
@@ -246,3 +242,65 @@ class TestSnowflakeOperator(unittest.TestCase):
             f'SELECT * FROM "{os.getenv("SNOWFLAKE_DATABASE")}"."{os.getenv("SNOWFLAKE_SCHEMA")}"."{self.snowflake_table_raw_sql}"'
         )
         assert len(df) == 5
+
+
+def snowflake_table(table_name, role):
+    hook = get_snowflake_hook()
+
+    drop_table(
+        snowflake_conn=hook.get_conn(),
+        table_name=table_name,
+    )
+    return Table(
+        table_name,
+        conn_id="snowflake_conn",
+        schema=os.getenv("SNOWFLAKE_SCHEMA"),
+        database=os.getenv("SNOWFLAKE_DATABASE"),
+        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+        role=role,
+    )
+
+
+def run_role_query(dag, table, role):
+    @aql.transform
+    def sample_snow(input_table: Table):
+        return "SELECT * FROM {{input_table}} LIMIT 10"
+
+    @adf
+    def validate_table(df: pd.DataFrame):
+        assert len(df) == 10
+
+    with dag:
+        loaded_table = aql.load_file(
+            path=str(CWD) + "/../data/homes.csv",
+            output_table=table,
+        )
+        f = sample_snow(
+            input_table=loaded_table,
+            output_table=TempTable(
+                conn_id="snowflake_conn",
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                role=role,
+            ),
+        )
+        x = sample_snow(
+            input_table=f,
+        )
+        validate_table(x)
+    test_utils.run_dag(dag)
+
+
+@pytest.mark.parametrize("sql_server", ["snowflake"])
+def test_roles_failing(sql_server, sample_dag):
+    table = snowflake_table(sample_dag.dag_id + "_role_failing", role="foo")
+    with pytest.raises(Exception):
+        run_role_query(sample_dag, table, role="foo")
+
+
+@pytest.mark.parametrize("sql_server", ["snowflake"])
+def test_roles_passing(sql_server, sample_dag):
+    table = snowflake_table(
+        sample_dag.dag_id + "_role_passing", role=os.getenv("SNOWFLAKE_ROLE")
+    )
+    run_role_query(sample_dag, table, role=os.getenv("SNOWFLAKE_ROLE"))

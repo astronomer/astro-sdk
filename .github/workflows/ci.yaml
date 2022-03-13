@@ -102,6 +102,8 @@ jobs:
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
       - run: nox -s test -- --splits 8 --group ${{ matrix.group }} --cov=./ --cov-report=xml --cov-branch
+        env:
+          TEST_WORKER_NUMBER: ${{ matrix.group }}
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:

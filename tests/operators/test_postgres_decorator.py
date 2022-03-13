@@ -96,28 +96,6 @@ class TestPostgresDecorator(unittest.TestCase):
         test_utils.run_dag(self.dag)
         return f
 
-    def test_dataframe_to_postgres(self):
-        print("test_dataframe_to_postgres")
-
-        @adf
-        def get_dataframe():
-            return pd.DataFrame(
-                {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
-            )
-
-        @aql.transform
-        def sample_pg(input_table: Table):
-            return "SELECT * FROM {{input_table}}"
-
-        with self.dag:
-            my_df = get_dataframe(
-                output_table=Table(
-                    table_name="my_df_table", conn_id="postgres_conn", database="pagila"
-                )
-            )
-            pg_df = sample_pg(my_df)
-        test_utils.run_dag(self.dag)
-
     def test_empty_func(self):
         @adf
         def get_dataframe():
