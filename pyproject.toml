@@ -44,7 +44,6 @@ tests = [
     "pytest-dotenv",
     "requests-mock",
     "pytest-cov",
-    "gitpython",
 ]
 google = [
     "apache-airflow-providers-google",
