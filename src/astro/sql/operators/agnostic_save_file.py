@@ -1,6 +1,5 @@
-from typing import Optional, Union
 import os
-from typing import Optional
+from typing import Optional, Union
 from urllib.parse import urlparse
 
 import pandas as pd
