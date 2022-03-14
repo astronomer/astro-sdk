@@ -45,9 +45,9 @@ from airflow.utils.types import DagRunType
 from google.cloud import bigquery
 
 import astro.sql as aql
+from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable
 from tests.operators import utils as test_utils
-from tests.operators.utils import DEFAULT_SCHEMA
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -115,10 +115,10 @@ class TestPostgresAppend(unittest.TestCase):
         )
 
         self.main_table_bigquery = Table(
-            table_name=self.MAIN_TABLE_NAME, conn_id="bigquery", schema=DEFAULT_SCHEMA
+            table_name=self.MAIN_TABLE_NAME, conn_id="bigquery", schema=SCHEMA
         )
         self.append_table_bigquery = Table(
-            table_name=self.APPEND_TABLE_NAME, conn_id="bigquery", schema=DEFAULT_SCHEMA
+            table_name=self.APPEND_TABLE_NAME, conn_id="bigquery", schema=SCHEMA
         )
 
     def clear_run(self):

@@ -46,6 +46,7 @@ from airflow.utils.types import DagRunType
 
 import astro.dataframe as adf
 import astro.sql as aql
+from astro.settings import SCHEMA
 
 # Import Operator
 from astro.sql.operators.agnostic_save_file import save_file
@@ -295,7 +296,7 @@ class TestSaveFile(unittest.TestCase):
             output_table=Table(
                 INPUT_TABLE_NAME,
                 conn_id="bigquery",
-                schema=test_utils.DEFAULT_SCHEMA,
+                schema=SCHEMA,
             ),
         ).operator.execute({"run_id": "foo"})
 
@@ -306,7 +307,7 @@ class TestSaveFile(unittest.TestCase):
                 "input": Table(
                     INPUT_TABLE_NAME,
                     conn_id="bigquery",
-                    schema=test_utils.DEFAULT_SCHEMA,
+                    schema=SCHEMA,
                 ),
                 "output_file_path": OUTPUT_FILE_PATH,
                 "output_conn_id": None,

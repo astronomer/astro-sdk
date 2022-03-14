@@ -35,3 +35,11 @@ connections:
     schema:
     login:
     password:
+  - conn_id: gcp_conn
+    conn_type: google_cloud_platform
+    description: null
+    extra: null
+  - conn_id: aws_conn
+    conn_type: aws
+    description: null
+    extra: null

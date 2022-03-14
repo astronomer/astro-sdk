@@ -28,6 +28,7 @@ import copy
 import logging
 import os
 import pathlib
+import time
 import unittest.mock
 import uuid
 from unittest import mock
@@ -50,9 +51,11 @@ from google.api_core.exceptions import NotFound
 from google.cloud import bigquery, storage
 from pandas.util.testing import assert_frame_equal
 
+from astro.settings import SCHEMA
 from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
 from astro.sql.table import Table, TempTable
 from astro.utils.cloud_storage_creds import parse_s3_env_var
+from astro.utils.dependencies import gcs, s3
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
@@ -231,8 +234,8 @@ class TestAgnosticLoadFile(unittest.TestCase):
         tasks = self.create_and_run_tasks(tasks_params)
 
         assert tasks[0].operator.task_id != tasks[1].operator.task_id
-        assert tasks[1].operator.task_id == "load_file_homes_csv__1"
-        assert tasks[2].operator.task_id == "load_file_homes_csv__2"
+        assert tasks[1].operator.task_id == "load_file___1"
+        assert tasks[2].operator.task_id == "load_file___2"
         assert tasks[3].operator.task_id == "task_id"
 
     def test_aql_local_file_to_postgres_no_table_name(self):
@@ -257,7 +260,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.test_dag_load_file_homes_csv_1",
+            f"SELECT * FROM {SCHEMA}.test_dag_load_file__1",
             con=self.hook_target.get_conn(),
         )
 
@@ -287,14 +290,14 @@ class TestAgnosticLoadFile(unittest.TestCase):
                 "output_table": Table(
                     OUTPUT_TABLE_NAME,
                     conn_id="bigquery",
-                    schema=test_utils.DEFAULT_SCHEMA,
+                    schema=SCHEMA,
                 ),
             },
         )
 
         client = bigquery.Client()
         query_job = client.query(
-            f"SELECT * FROM astronomer-dag-authoring.{test_utils.DEFAULT_SCHEMA}.{OUTPUT_TABLE_NAME}"
+            f"SELECT * FROM astronomer-dag-authoring.{SCHEMA}.{OUTPUT_TABLE_NAME}"
         )
         bigquery_df = query_job.to_dataframe()
 
@@ -370,11 +373,43 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.{OUTPUT_TABLE_NAME}",
+            f"SELECT * FROM {SCHEMA}.{OUTPUT_TABLE_NAME}",
             con=self.hook_target.get_conn(),
         )
 
         assert df.iloc[0].to_dict()["Sell"] == 142.0
+
+    def test_aql_http_path_file_to_postgres(self):
+        OUTPUT_TABLE_NAME = "expected_table_from_s3_csv"
+
+        self.hook_target = PostgresHook(
+            postgres_conn_id="postgres_conn", schema="pagila"
+        )
+
+        # Drop target table
+        drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
+
+        self.create_and_run_task(
+            load_file,
+            (),
+            {
+                "path": "https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/homes_main.csv",
+                "file_conn_id": "",
+                "output_table": Table(
+                    table_name=OUTPUT_TABLE_NAME,
+                    database="pagila",
+                    conn_id="postgres_conn",
+                ),
+            },
+        )
+
+        # Read table from db
+        df = pd.read_sql(
+            f"SELECT * FROM {SCHEMA}.{OUTPUT_TABLE_NAME}",
+            con=self.hook_target.get_conn(),
+        )
+
+        assert df.shape == (3, 9)
 
     def test_aql_s3_file_to_postgres_no_table_name(self):
         OUTPUT_TABLE_NAME = "test_dag_load_file_homes_csv_2"
@@ -385,7 +420,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Drop target table
         drop_table_postgres(
-            f"{test_utils.DEFAULT_SCHEMA}.{OUTPUT_TABLE_NAME}",
+            f"{SCHEMA}.{OUTPUT_TABLE_NAME}",
             self.hook_target.get_conn(),
         )
 
@@ -405,7 +440,7 @@ class TestAgnosticLoadFile(unittest.TestCase):
 
         # Read table from db
         df = pd.read_sql(
-            f"SELECT * FROM {test_utils.DEFAULT_SCHEMA}.{OUTPUT_TABLE_NAME}",
+            f"SELECT * FROM {SCHEMA}.{OUTPUT_TABLE_NAME}",
             con=self.hook_target.get_conn(),
         )
 
@@ -477,6 +512,23 @@ class TestAgnosticLoadFile(unittest.TestCase):
         assert df.iloc[0].to_dict()["sell"] == 142.0
 
 
+def upload_test_file_gcp(files, file_conn_id=None):
+    hook = gcs.GCSHook(file_conn_id) if file_conn_id else gcs.GCSHook()
+    for file in files:
+        hook.upload(
+            bucket_name=file["bucket_id"],
+            object_name=file["object_name"],
+            filename=file["filename"],
+        )
+
+
+def upload_test_file_s3(files, file_conn_id=None):
+    hook = s3.S3Hook(aws_conn_id=file_conn_id) if file_conn_id else s3.S3Hook()
+    bucket = hook.get_bucket(files[0]["bucket_id"])
+    for file in files:
+        bucket.upload_file(Key=file["object_name"], Filename=file["filename"])
+
+
 @mock.patch.dict(
     os.environ,
     {"AWS_ACCESS_KEY_ID": "abcd", "AWS_SECRET_ACCESS_KEY": "@#$%@$#ASDH@Ksd23%SD546"},
@@ -517,7 +569,10 @@ def test_load_file_templated_filename(sample_dag, sql_server):
 
 @pytest.fixture
 def remote_file(request):
-    provider = request.param
+    param = request.param
+    provider = param["name"]
+    no_of_files = param["count"] if "count" in param else 1
+
     if provider == "google":
         conn_id = "test_google"
         conn_type = "google_cloud_platform"
@@ -544,35 +599,85 @@ def remote_file(request):
         session.add(new_connection)
         session.commit()
 
-    object_prefix = f"test/{uuid.uuid4()}.csv"
     filename = pathlib.Path(CWD.parent, "data/sample.csv")
-    if provider == "google":
-        bucket_name = os.getenv("GOOGLE_BUCKET", "dag-authoring")
-        hook = GCSHook(gcp_conn_id=conn_id)
-        hook.upload(bucket_name, object_prefix, filename)
-        object_path = f"gs://{bucket_name}/{object_prefix}"
-    else:
-        bucket_name = os.getenv("AWS_BUCKET", "tmp9")
-        hook = S3Hook(aws_conn_id=conn_id)
-        hook.load_file(filename, object_prefix, bucket_name)
-        object_path = f"s3://{bucket_name}/{object_prefix}"
+    object_paths = []
+    unique_value = uuid.uuid4()
+    for count in range(no_of_files):
+        object_prefix = f"test/{unique_value}__{count}.csv"
+        if provider == "google":
+            bucket_name = os.getenv("GOOGLE_BUCKET", "dag-authoring")
+            hook = GCSHook(gcp_conn_id=conn_id)
+            hook.upload(bucket_name, object_prefix, filename)
+            object_path = f"gs://{bucket_name}/{object_prefix}"
+        else:
+            bucket_name = os.getenv("AWS_BUCKET", "tmp9")
+            hook = S3Hook(aws_conn_id=conn_id)
+            hook.load_file(filename, object_prefix, bucket_name)
+            object_path = f"s3://{bucket_name}/{object_prefix}"
 
-    yield conn_id, object_path
+        object_paths.append(object_path)
 
-    if provider == "google":
-        if hook.exists(bucket_name, object_prefix):
-            hook.delete(bucket_name, object_prefix)
-    else:
-        if hook.check_for_prefix(object_prefix, delimiter="/", bucket_name=bucket_name):
-            hook.delete_objects(bucket_name, object_prefix)
+    yield conn_id, object_paths
+
+    for count in range(no_of_files):
+        object_prefix = f"test/{unique_value}__{count}.csv"
+        if provider == "google":
+            if hook.exists(bucket_name, object_prefix):
+                hook.delete(bucket_name, object_prefix)
+        else:
+            if hook.check_for_prefix(
+                object_prefix, delimiter="/", bucket_name=bucket_name
+            ):
+                hook.delete_objects(bucket_name, object_prefix)
 
     session.delete(new_connection)
     session.flush()
 
 
+@pytest.mark.parametrize(
+    "remote_file",
+    [{"name": "google", "count": 2}, {"name": "amazon", "count": 2}],
+    indirect=True,
+)
+def test_aql_load_file_pattern(remote_file):
+    file_conn_id, file_prefix = remote_file
+    filename = pathlib.Path(CWD.parent, "data/sample.csv")
+    OUTPUT_TABLE_NAME = f"expected_table_from_gcs_csv__{file_conn_id}"
+
+    test_df_rows = pd.read_csv(filename).shape[0]
+    hook_target = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
+
+    epoc = str(int(time.time()))
+    dag = DAG(
+        "test_dag_" + epoc,
+        default_args={"owner": "airflow", "start_date": DEFAULT_DATE},
+    )
+    test_utils.create_and_run_task(
+        dag,
+        load_file,
+        (),
+        {
+            "path": file_prefix[0][0:-5],
+            "file_conn_id": file_conn_id,
+            "output_table": Table(
+                OUTPUT_TABLE_NAME,
+                database="pagila",
+                conn_id="postgres_conn",
+                schema="public",
+            ),
+        },
+    )
+
+    # Read table from db
+    df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=hook_target.get_conn())
+    assert test_df_rows * 2 == df.shape[0]
+
+
 @pytest.mark.integration
 @pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
-@pytest.mark.parametrize("remote_file", ["google", "amazon"], indirect=True)
+@pytest.mark.parametrize(
+    "remote_file", [{"name": "google"}, {"name": "amazon"}], indirect=True
+)
 def test_load_file_using_file_connection(sample_dag, remote_file, sql_server):
     database_name, sql_hook = sql_server
     file_conn_id, file_uri = remote_file
@@ -580,7 +685,7 @@ def test_load_file_using_file_connection(sample_dag, remote_file, sql_server):
     sql_server_params = test_utils.get_default_parameters(database_name)
 
     task_params = {
-        "path": file_uri,
+        "path": file_uri[0],
         "file_conn_id": file_conn_id,
         "output_table": Table(table_name=OUTPUT_TABLE_NAME, **sql_server_params),
     }

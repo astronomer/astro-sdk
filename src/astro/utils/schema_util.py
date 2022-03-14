@@ -40,10 +40,6 @@ def create_schema_query(conn_type, hook, schema_id, user):
         return f"CREATE SCHEMA IF NOT EXISTS {schema_id}"
 
 
-def get_schema():
-    return os.getenv("AIRFLOW__ASTRO__SQL_SCHEMA") or "tmp_astro"
-
-
 def get_table_name(table: Table):
     conn_type = BaseHook.get_connection(table.conn_id).conn_type
     if conn_type in ["bigquery"]:
