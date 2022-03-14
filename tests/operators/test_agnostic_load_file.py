@@ -529,126 +529,6 @@ def upload_test_file_s3(files, file_conn_id=None):
         bucket.upload_file(Key=file["object_name"], Filename=file["filename"])
 
 
-@pytest.mark.parametrize(
-    "file_info",
-    [
-        {
-            "path": "gs://dag-authoring/a",
-            "file_conn_id": "gcp_conn",
-            "load_data": upload_test_file_gcp,
-            "files": [
-                {
-                    "bucket_id": "dag-authoring",
-                    "object_name": "a.csv",
-                    "filename": str(CWD) + "/../data/homes.csv",
-                },
-                {
-                    "bucket_id": "dag-authoring",
-                    "object_name": "aa.csv",
-                    "filename": str(CWD) + "/../data/homes.csv",
-                },
-            ],
-        },
-        {
-            "path": "gs://dag-authoring/a",
-            "file_conn_id": None,
-            "load_data": upload_test_file_gcp,
-            "files": [
-                {
-                    "bucket_id": "dag-authoring",
-                    "object_name": "a.csv",
-                    "filename": str(CWD) + "/../data/homes.csv",
-                },
-                {
-                    "bucket_id": "dag-authoring",
-                    "object_name": "aa.csv",
-                    "filename": str(CWD) + "/../data/homes.csv",
-                },
-            ],
-        },
-        {
-            "path": "s3://tmp9/a",
-            "file_conn_id": "aws_conn",
-            "load_data": upload_test_file_s3,
-            "files": [
-                {
-                    "bucket_id": "tmp9",
-                    "object_name": "a.csv",
-                    "filename": str(CWD) + "/../data/homes.csv",
-                },
-                {
-                    "bucket_id": "tmp9",
-                    "object_name": "aa.csv",
-                    "filename": str(CWD) + "/../data/homes2.csv",
-                },
-            ],
-        },
-        {
-            "path": "s3://tmp9/a",
-            "file_conn_id": None,
-            "load_data": upload_test_file_s3,
-            "files": [
-                {
-                    "bucket_id": "tmp9",
-                    "object_name": "a.csv",
-                    "filename": str(CWD) + "/../data/homes.csv",
-                },
-                {
-                    "bucket_id": "tmp9",
-                    "object_name": "aa.csv",
-                    "filename": str(CWD) + "/../data/homes2.csv",
-                },
-            ],
-        },
-        {
-            "path": str(CWD) + "/../data/homes_merge_*",
-            "file_conn_id": "",
-            "load_data": lambda *args: None,
-            "files": [
-                {"filename": str(CWD) + "/../data/homes_pattern_1.csv"},
-                {"filename": str(CWD) + "/../data/homes_pattern_2.csv"},
-            ],
-        },
-    ],
-)
-def test_aql_load_file_pattern(file_info):
-
-    OUTPUT_TABLE_NAME = "expected_table_from_gcs_csv"
-    load_data = file_info["load_data"]
-    files = file_info["files"]
-    file_conn_id = file_info["file_conn_id"]
-    load_data(files, file_conn_id)
-
-    test_df_rows = pd.read_csv(files[0]["filename"]).shape[0]
-
-    hook_target = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
-
-    epoc = str(int(time.time()))
-    dag = DAG(
-        "test_dag_" + epoc,
-        default_args={"owner": "airflow", "start_date": DEFAULT_DATE},
-    )
-    test_utils.create_and_run_task(
-        dag,
-        load_file,
-        (),
-        {
-            "path": file_info["path"],
-            "file_conn_id": file_info["file_conn_id"],
-            "output_table": Table(
-                OUTPUT_TABLE_NAME,
-                database="pagila",
-                conn_id="postgres_conn",
-                schema="public",
-            ),
-        },
-    )
-
-    # Read table from db
-    df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=hook_target.get_conn())
-    assert test_df_rows * 2 == df.shape[0]
-
-
 @mock.patch.dict(
     os.environ,
     {"AWS_ACCESS_KEY_ID": "abcd", "AWS_SECRET_ACCESS_KEY": "@#$%@$#ASDH@Ksd23%SD546"},
@@ -689,7 +569,10 @@ def test_load_file_templated_filename(sample_dag, sql_server):
 
 @pytest.fixture
 def remote_file(request):
-    provider = request.param
+    param = request.param
+    provider = param["name"]
+    no_of_files = param["count"] if "count" in param else 1
+
     if provider == "google":
         conn_id = "test_google"
         conn_type = "google_cloud_platform"
@@ -716,35 +599,85 @@ def remote_file(request):
         session.add(new_connection)
         session.commit()
 
-    object_prefix = f"test/{uuid.uuid4()}.csv"
     filename = pathlib.Path(CWD.parent, "data/sample.csv")
-    if provider == "google":
-        bucket_name = os.getenv("GOOGLE_BUCKET", "dag-authoring")
-        hook = GCSHook(gcp_conn_id=conn_id)
-        hook.upload(bucket_name, object_prefix, filename)
-        object_path = f"gs://{bucket_name}/{object_prefix}"
-    else:
-        bucket_name = os.getenv("AWS_BUCKET", "tmp9")
-        hook = S3Hook(aws_conn_id=conn_id)
-        hook.load_file(filename, object_prefix, bucket_name)
-        object_path = f"s3://{bucket_name}/{object_prefix}"
+    object_paths = []
+    unique_value = uuid.uuid4()
+    for count in range(no_of_files):
+        object_prefix = f"test/{unique_value}__{count}.csv"
+        if provider == "google":
+            bucket_name = os.getenv("GOOGLE_BUCKET", "dag-authoring")
+            hook = GCSHook(gcp_conn_id=conn_id)
+            hook.upload(bucket_name, object_prefix, filename)
+            object_path = f"gs://{bucket_name}/{object_prefix}"
+        else:
+            bucket_name = os.getenv("AWS_BUCKET", "tmp9")
+            hook = S3Hook(aws_conn_id=conn_id)
+            hook.load_file(filename, object_prefix, bucket_name)
+            object_path = f"s3://{bucket_name}/{object_prefix}"
 
-    yield conn_id, object_path
+        object_paths.append(object_path)
 
-    if provider == "google":
-        if hook.exists(bucket_name, object_prefix):
-            hook.delete(bucket_name, object_prefix)
-    else:
-        if hook.check_for_prefix(object_prefix, delimiter="/", bucket_name=bucket_name):
-            hook.delete_objects(bucket_name, object_prefix)
+    yield conn_id, object_paths
+
+    for count in range(no_of_files):
+        object_prefix = f"test/{unique_value}__{count}.csv"
+        if provider == "google":
+            if hook.exists(bucket_name, object_prefix):
+                hook.delete(bucket_name, object_prefix)
+        else:
+            if hook.check_for_prefix(
+                object_prefix, delimiter="/", bucket_name=bucket_name
+            ):
+                hook.delete_objects(bucket_name, object_prefix)
 
     session.delete(new_connection)
     session.flush()
 
 
+@pytest.mark.parametrize(
+    "remote_file",
+    [{"name": "google", "count": 2}, {"name": "amazon", "count": 2}],
+    indirect=True,
+)
+def test_aql_load_file_pattern(remote_file):
+    file_conn_id, file_prefix = remote_file
+    filename = pathlib.Path(CWD.parent, "data/sample.csv")
+    OUTPUT_TABLE_NAME = f"expected_table_from_gcs_csv__{file_conn_id}"
+
+    test_df_rows = pd.read_csv(filename).shape[0]
+    hook_target = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
+
+    epoc = str(int(time.time()))
+    dag = DAG(
+        "test_dag_" + epoc,
+        default_args={"owner": "airflow", "start_date": DEFAULT_DATE},
+    )
+    test_utils.create_and_run_task(
+        dag,
+        load_file,
+        (),
+        {
+            "path": file_prefix[0][0:-5],
+            "file_conn_id": file_conn_id,
+            "output_table": Table(
+                OUTPUT_TABLE_NAME,
+                database="pagila",
+                conn_id="postgres_conn",
+                schema="public",
+            ),
+        },
+    )
+
+    # Read table from db
+    df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=hook_target.get_conn())
+    assert test_df_rows * 2 == df.shape[0]
+
+
 @pytest.mark.integration
 @pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
-@pytest.mark.parametrize("remote_file", ["google", "amazon"], indirect=True)
+@pytest.mark.parametrize(
+    "remote_file", [{"name": "google"}, {"name": "amazon"}], indirect=True
+)
 def test_load_file_using_file_connection(sample_dag, remote_file, sql_server):
     database_name, sql_hook = sql_server
     file_conn_id, file_uri = remote_file

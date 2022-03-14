@@ -162,19 +162,22 @@ class AgnosticLoadFile(BaseOperator):
             "": self.get_paths_from_filesystem,
         }[file_location](url, file_conn_id)
 
-    def get_s3_or_gcs_hook(self, scheme, conn_id):
+    def get_prefix_list(self, scheme, conn_id, bucket_name, prefix):
         if scheme == "s3":
-            return s3.S3Hook(aws_conn_id=conn_id) if conn_id else s3.S3Hook()
+            hook = s3.S3Hook(aws_conn_id=conn_id) if conn_id else s3.S3Hook()
+            return hook.list_keys(bucket_name=bucket_name, prefix=prefix)
         elif scheme == "gs":
             hook = gcs.GCSHook(gcp_conn_id=conn_id) if conn_id else gcs.GCSHook()
+            return hook.list(bucket_name=bucket_name, prefix=prefix)
 
     def get_paths_from_s3_or_gcs(self, url, file_conn_id=None):
         bucket = url.netloc
         prefix = url.path
-        hook = self.get_s3_or_gcs_hook(url.scheme, file_conn_id)
+        list_keys = self.get_prefix_list(
+            url.scheme, file_conn_id, bucket_name=bucket, prefix=prefix[1:]
+        )
         return [
-            urlunparse((url.scheme, url.netloc, keys, "", "", ""))
-            for keys in hook.list_keys(bucket_name=bucket, prefix=prefix[1:])
+            urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in list_keys
         ]
 
     def get_paths_from_filesystem(self, url, file_conn_id):
