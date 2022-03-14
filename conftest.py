@@ -1,5 +1,6 @@
 import os
-import uuid
+import random
+import string
 
 import pytest
 import yaml
@@ -16,6 +17,7 @@ from tests.operators import utils as test_utils
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("integration_test_table")
+UNIQUE_HASH_SIZE = 16
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -35,7 +37,12 @@ def create_database_connections():
 
 
 def _create_unique_dag_id():
-    unique_id = str(uuid.uuid4()).replace("-", "")
+    # To use 32 chars was too long for the DAG & SQL name table, for this reason we are not using:
+    # unique_id = str(uuid.uuid4()).replace("-", "")
+    unique_id = "".join(
+        random.choice(string.ascii_lowercase + string.digits)
+        for _ in range(UNIQUE_HASH_SIZE)
+    )
     return f"test_dag_{unique_id}"
 
 
@@ -53,17 +60,32 @@ def tmp_table(sql_server):
     sql_name, hook = sql_server
 
     if isinstance(hook, SnowflakeHook):
-        return TempTable(
+        temporary_table = TempTable(
             conn_id=hook.snowflake_conn_id,
             database=hook.database,
             warehouse=hook.warehouse,
         )
     elif isinstance(hook, PostgresHook):
-        return TempTable(conn_id=hook.postgres_conn_id, database=hook.schema)
+        temporary_table = TempTable(conn_id=hook.postgres_conn_id, database=hook.schema)
     elif isinstance(hook, SqliteHook):
-        return TempTable(conn_id=hook.sqlite_conn_id, database="sqlite")
+        temporary_table = TempTable(conn_id=hook.sqlite_conn_id, database="sqlite")
     elif isinstance(hook, BigQueryHook):
-        return TempTable(conn_id=hook.gcp_conn_id)
+        temporary_table = TempTable(conn_id=hook.gcp_conn_id)
+    yield temporary_table
+
+    if isinstance(hook, SqliteHook):
+        hook.run(f"DROP TABLE IF EXISTS {temporary_table.table_name}")
+        hook.run(f"DROP INDEX IF EXISTS unique_index")
+    elif isinstance(hook, SnowflakeHook):
+        hook.run(f"DROP TABLE IF EXISTS {temporary_table.table_name}")
+    elif not isinstance(hook, BigQueryHook):
+        hook.run(
+            f"ALTER TABLE {temporary_table.schema}.{temporary_table.table_name} DROP CONSTRAINT IF EXISTS airflow;"
+        )
+        hook.run(
+            f"DROP TABLE IF EXISTS {temporary_table.schema}.{temporary_table.table_name}"
+        )
+        hook.run(f"DROP INDEX IF EXISTS unique_index")
 
 
 @pytest.fixture

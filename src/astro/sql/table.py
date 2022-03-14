@@ -70,11 +70,17 @@ class Table:
 
 class TempTable(Table):
     def __init__(self, conn_id=None, database=None, warehouse=""):
+        self.table_name = ""
         super().__init__(
-            table_name="", conn_id=conn_id, database=database, warehouse=warehouse
+            table_name=self.table_name,
+            conn_id=conn_id,
+            database=database,
+            warehouse=warehouse,
         )
 
     def to_table(self, table_name: str, schema: str) -> Table:
+        self.table_name = table_name
+        self.schema = schema
         return Table(
             table_name=table_name,
             conn_id=self.conn_id,
