@@ -16,7 +16,7 @@ from airflow.utils.types import DagRunType
 
 import astro.sql as aql
 from astro import dataframe as adf
-from astro.constants import DEFAULT_SCHEMA
+from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable
 from tests.operators import utils as test_utils
 
@@ -78,7 +78,7 @@ def test_postgres_to_dataframe_partial_output(output_table, dag):
     test_utils.run_dag(dag)
 
     df = pd.read_sql(
-        f"SELECT * FROM {DEFAULT_SCHEMA}.test_dag_sample_pg_1",
+        f"SELECT * FROM {SCHEMA}.test_dag_sample_pg_1",
         con=hook_target.get_conn(),
     )
     assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"

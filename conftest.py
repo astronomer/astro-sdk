@@ -10,7 +10,7 @@ from airflow.models import TaskInstance as TI
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 
-from astro.constants import DEFAULT_SCHEMA
+from astro.settings import SCHEMA
 from astro.sql.table import TempTable
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from tests.operators import utils as test_utils
@@ -93,7 +93,7 @@ def sql_server(request):
     if hook_parameters is None or hook_class is None:
         raise ValueError(f"Unsupported SQL server {sql_name}")
     hook = hook_class(**hook_parameters)
-    schema = hook_parameters.get("schema", DEFAULT_SCHEMA)
+    schema = hook_parameters.get("schema", SCHEMA)
     if not isinstance(hook, BigQueryHook):
         hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
     yield (sql_name, hook)

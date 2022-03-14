@@ -11,7 +11,6 @@ from airflow.utils.types import DagRunType
 
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 
-DEFAULT_SCHEMA = os.getenv("AIRFLOW__ASTRO__SQL_SCHEMA", "astroflow_ci")
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 SQL_SERVER_HOOK_PARAMETERS = {

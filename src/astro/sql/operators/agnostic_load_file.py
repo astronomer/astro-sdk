@@ -24,7 +24,8 @@ import smart_open
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator
 
-from astro.constants import DEFAULT_CHUNK_SIZE, DEFAULT_SCHEMA
+from astro.constants import DEFAULT_CHUNK_SIZE
+from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
 from astro.utils.dependencies import gcs, s3
@@ -80,10 +81,10 @@ class AgnosticLoadFile(BaseOperator):
         conn = BaseHook.get_connection(self.output_table.conn_id)
         if type(self.output_table) == TempTable:
             self.output_table = self.output_table.to_table(
-                create_table_name(context=context), DEFAULT_SCHEMA
+                create_table_name(context=context), SCHEMA
             )
         else:
-            self.output_table.schema = self.output_table.schema or DEFAULT_SCHEMA
+            self.output_table.schema = self.output_table.schema or SCHEMA
         if not self.output_table.table_name:
             self.output_table.table_name = create_table_name(context=context)
 
