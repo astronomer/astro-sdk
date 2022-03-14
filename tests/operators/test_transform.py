@@ -42,6 +42,8 @@ def test_dataframe_transform(sql_server, sample_dag, tmp_table):
 
     @adf
     def validate_dataframe(df: pd.DataFrame):
+        df.columns = df.columns.str.lower()
+        df = df.sort_values(by=df.columns.tolist()).reset_index(drop=True)
         assert df.equals(
             pd.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
         )
@@ -84,4 +86,40 @@ def test_transform(sql_server, sample_dag, tmp_table):
             input_table=first_model,
         )
         validate_table(inherit_model)
+    test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.parametrize(
+    "sql_server",
+    [
+        "snowflake",
+        "postgres",
+        "bigquery",
+        "sqlite",
+    ],
+    indirect=True,
+)
+def test_raw_sql(sql_server, sample_dag, tmp_table):
+    @aql.run_raw_sql
+    def raw_sql_query(my_input_table: Table, created_table: Table, num_rows: int):
+        return "SELECT * FROM {{my_input_table}} LIMIT {{num_rows}}"
+
+    @task
+    def validate_raw_sql(cur):
+        print(cur)
+
+    with sample_dag:
+        homes_file = aql.load_file(
+            path=str(cwd) + "/../data/homes.csv",
+            output_table=tmp_table,
+        )
+        raw_sql_result = (
+            raw_sql_query(
+                my_input_table=homes_file,
+                created_table=tmp_table.to_table(sample_dag.dag_id + "_RAW_SQL_CREATE"),
+                num_rows=5,
+                handler=lambda cur: cur.fetchall(),
+            ),
+        )
+        validate_raw_sql(raw_sql_result)
     test_utils.run_dag(sample_dag)

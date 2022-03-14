@@ -54,13 +54,14 @@ class Table:
 
 
 class TempTable(Table):
-    def __init__(self, conn_id=None, database=None, warehouse=""):
+    def __init__(self, conn_id=None, database=None, warehouse="", role=""):
         self.table_name = ""
         super().__init__(
             table_name=self.table_name,
             conn_id=conn_id,
             database=database,
             warehouse=warehouse,
+            role=role,
         )
 
     def to_table(self, table_name: str, schema: str = None) -> Table:
