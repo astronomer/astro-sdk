@@ -16,6 +16,8 @@ limitations under the License.
 from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, TaskInstance
 
+MAX_TABLE_NAME_SIZE = 63
+
 
 class Table:
     template_fields = (
@@ -68,11 +70,17 @@ class Table:
 
 class TempTable(Table):
     def __init__(self, conn_id=None, database=None, warehouse=""):
+        self.table_name = ""
         super().__init__(
-            table_name="", conn_id=conn_id, database=database, warehouse=warehouse
+            table_name=self.table_name,
+            conn_id=conn_id,
+            database=database,
+            warehouse=warehouse,
         )
 
     def to_table(self, table_name: str, schema: str) -> Table:
+        self.table_name = table_name
+        self.schema = schema
         return Table(
             table_name=table_name,
             conn_id=self.conn_id,
@@ -87,7 +95,7 @@ def create_table_name(context) -> str:
     dag_run: DagRun = ti.get_dagrun()
     table_name = f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}".replace(
         "-", "_"
-    ).replace(".", "__")
+    ).replace(".", "__")[:MAX_TABLE_NAME_SIZE]
     if not table_name.isidentifier():
         table_name = f'"{table_name}"'
     return table_name
