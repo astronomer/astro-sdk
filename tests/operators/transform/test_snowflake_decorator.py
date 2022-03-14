@@ -90,7 +90,7 @@ def run_role_query(dag, table, role):
 
     with dag:
         loaded_table = aql.load_file(
-            path=str(CWD) + "/../data/homes.csv",
+            path=str(CWD) + "/../../data/homes.csv",
             output_table=table,
         )
         f = sample_snow(

@@ -1,28 +1,20 @@
 import logging
-import pathlib
-import unittest.mock
-from unittest import mock
 
 import pandas as pd
 import pytest
-from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
-from airflow.utils.state import State
-from airflow.utils.types import DagRunType
 
 import astro.sql as aql
 from astro import dataframe as adf
-from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
-import time
 
 
 @pytest.fixture

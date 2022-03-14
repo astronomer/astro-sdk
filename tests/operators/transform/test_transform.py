@@ -2,18 +2,11 @@ import pathlib
 
 import pandas as pd
 import pytest
-from airflow.decorators import task, task_group
-from airflow.hooks.sqlite_hook import SqliteHook
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.utils import timezone
-from airflow.utils.db import create_default_connections
-from airflow.utils.session import provide_session
+from airflow.decorators import task
 
 from astro import sql as aql
 from astro.dataframe import dataframe as adf
-from astro.sql.operators.agnostic_boolean_check import Check
-from astro.sql.table import Table, TempTable
-from astro.utils.dependencies import PostgresHook, SnowflakeHook
+from astro.sql.table import Table
 from tests.operators import utils as test_utils
 
 cwd = pathlib.Path(__file__).parent
@@ -76,7 +69,7 @@ def test_transform(sql_server, sample_dag, tmp_table):
 
     with sample_dag:
         homes_file = aql.load_file(
-            path=str(cwd) + "/../data/homes.csv",
+            path=str(cwd) + "/../../data/homes.csv",
             output_table=tmp_table,
         )
         first_model = sample_function(
@@ -110,7 +103,7 @@ def test_raw_sql(sql_server, sample_dag, tmp_table):
 
     with sample_dag:
         homes_file = aql.load_file(
-            path=str(cwd) + "/../data/homes.csv",
+            path=str(cwd) + "/../../data/homes.csv",
             output_table=tmp_table,
         )
         raw_sql_result = (
