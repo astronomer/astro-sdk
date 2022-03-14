@@ -84,6 +84,7 @@ def test_postgres_to_dataframe_partial_output(output_table, dag):
 def test_with_invalid_dag_name(sample_dag):
     """
     TODO: There appears to be a bug when passing an "invalid" DAG name to pandas when creating a dataframe
+    This issue can be tracked here: https://app.zenhub.com/workspaces/astro-61e7a085a496df00172965bd/issues/astro-projects/astro/212
     :param sample_dag:
     :return:
     """
