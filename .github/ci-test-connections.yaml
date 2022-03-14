@@ -39,15 +39,7 @@ connections:
     conn_type: google_cloud_platform
     description: null
     extra: null
-  - conn_id: google_cloud_default
-    conn_type: google_cloud_platform
-    description: null
-    extra: null
   - conn_id: aws_conn
-    conn_type: aws
-    description: null
-    extra: null
-  - conn_id: aws_default
     conn_type: aws
     description: null
     extra: null

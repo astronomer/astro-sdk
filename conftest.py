@@ -8,6 +8,7 @@ from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import DAG, Connection, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.utils import timezone
+from airflow.utils.db import create_default_connections
 from airflow.utils.session import create_session
 
 from astro.settings import SCHEMA
@@ -33,6 +34,7 @@ def create_database_connections():
         session.query(DagRun).delete()
         session.query(TI).delete()
         session.query(Connection).delete()
+        create_default_connections(session)
         for conn in connections:
             session.add(conn)
 
