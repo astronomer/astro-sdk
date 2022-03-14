@@ -64,8 +64,9 @@ def test_postgres_to_dataframe_partial_output(output_table, dag):
         return "SELECT * FROM {{input_table}} WHERE last_name LIKE 'G%%'"
 
     @adf
-    def count(df: pd.DataFrame):
+    def validate(df: pd.DataFrame):
         assert len(df) == 12
+        assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
 
     with dag:
         pg_output = sample_pg(
@@ -74,12 +75,5 @@ def test_postgres_to_dataframe_partial_output(output_table, dag):
             ),
             output_table=output_table,
         )
-        df_count = count(df=pg_output)
+        df_count = validate(df=pg_output)
     test_utils.run_dag(dag)
-
-    df = pd.read_sql(
-        f"SELECT * FROM {SCHEMA}.test_dag_sample_pg_1",
-        con=hook_target.get_conn(),
-    )
-    assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
-    print(df_count)
