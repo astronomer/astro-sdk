@@ -1,18 +1,3 @@
-"""
-Copyright Astronomer, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 from typing import Callable, Iterable, List, Mapping, Optional, Union
 
 from astro.sql.operators.agnostic_aggregate_check import aggregate_check
@@ -102,6 +87,8 @@ def merge(
     **kwargs,
 ):
     """`
+    Merge two sql tables
+
     :param target_table: The primary table that we are merging into
     :param merge_table: The table that will be inserted
     :param merge_keys: A key dictionary of what fields we want to compare when determining conflicts.
@@ -114,7 +101,8 @@ def merge(
     :param database:
     :param schema: Snowflake, specific. Specify Snowflake schema
     :param kwargs:
-    :return:
+    :return: None
+    :rtype: None
     """
 
     return SqlMergeOperator(

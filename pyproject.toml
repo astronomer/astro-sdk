@@ -74,6 +74,9 @@ all = [
     "snowflake-connector-python[pandas]",
     "apache-airflow-providers-postgres"
 ]
+doc = [
+    "sphinx==4.4.0"
+]
 
 [project.urls]
 Home = "https://astronomer.io/"
