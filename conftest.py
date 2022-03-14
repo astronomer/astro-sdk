@@ -1,4 +1,6 @@
 import os
+import random
+import string
 
 import pytest
 import yaml
@@ -15,6 +17,7 @@ from tests.operators import utils as test_utils
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("integration_test_table")
+UNIQUE_HASH_SIZE = 16
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -33,9 +36,20 @@ def create_database_connections():
             session.add(conn)
 
 
+def _create_unique_dag_id():
+    # To use 32 chars was too long for the DAG & SQL name table, for this reason we are not using:
+    # unique_id = str(uuid.uuid4()).replace("-", "")
+    unique_id = "".join(
+        random.choice(string.ascii_lowercase + string.digits)
+        for _ in range(UNIQUE_HASH_SIZE)
+    )
+    return f"test_dag_{unique_id}"
+
+
 @pytest.fixture
 def sample_dag():
-    yield DAG("test_dag", default_args={"owner": "airflow", "start_date": DEFAULT_DATE})
+    dag_id = _create_unique_dag_id()
+    yield DAG(dag_id, default_args={"owner": "airflow", "start_date": DEFAULT_DATE})
     with create_session() as session:
         session.query(DagRun).delete()
         session.query(TI).delete()
@@ -46,17 +60,28 @@ def tmp_table(sql_server):
     sql_name, hook = sql_server
 
     if isinstance(hook, SnowflakeHook):
-        return TempTable(
+        temporary_table = TempTable(
             conn_id=hook.snowflake_conn_id,
             database=hook.database,
             warehouse=hook.warehouse,
         )
     elif isinstance(hook, PostgresHook):
-        return TempTable(conn_id=hook.postgres_conn_id, database=hook.schema)
+        temporary_table = TempTable(conn_id=hook.postgres_conn_id, database=hook.schema)
     elif isinstance(hook, SqliteHook):
-        return TempTable(conn_id=hook.sqlite_conn_id, database="sqlite")
+        temporary_table = TempTable(conn_id=hook.sqlite_conn_id, database="sqlite")
     elif isinstance(hook, BigQueryHook):
-        return TempTable(conn_id=hook.gcp_conn_id)
+        temporary_table = TempTable(conn_id=hook.gcp_conn_id)
+    yield temporary_table
+
+    if isinstance(hook, SqliteHook):
+        hook.run(f"DROP TABLE IF EXISTS {temporary_table.table_name}")
+        hook.run(f"DROP INDEX IF EXISTS unique_index")
+    elif isinstance(hook, SnowflakeHook):
+        hook.run(f"DROP TABLE IF EXISTS {temporary_table.table_name}")
+    elif not isinstance(hook, BigQueryHook):
+        # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
+        # Example: tables which are not fixtures and constraints. This is an agressive approach towards tearing down:
+        hook.run(f"DROP SCHEMA IF EXISTS {temporary_table.schema} CASCADE;")
 
 
 @pytest.fixture
