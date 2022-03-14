@@ -1,4 +1,5 @@
 import os
+import uuid
 
 import pytest
 import yaml
@@ -33,9 +34,15 @@ def create_database_connections():
             session.add(conn)
 
 
+def _create_unique_dag_id():
+    unique_id = str(uuid.uuid4()).replace("-", "")
+    return f"test_dag_{unique_id}"
+
+
 @pytest.fixture
 def sample_dag():
-    yield DAG("test_dag", default_args={"owner": "airflow", "start_date": DEFAULT_DATE})
+    dag_id = _create_unique_dag_id()
+    yield DAG(dag_id, default_args={"owner": "airflow", "start_date": DEFAULT_DATE})
     with create_session() as session:
         session.query(DagRun).delete()
         session.query(TI).delete()
