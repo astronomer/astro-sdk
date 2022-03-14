@@ -8,8 +8,10 @@ from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import DAG, Connection, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.utils import timezone
+from airflow.utils.db import create_default_connections
 from airflow.utils.session import create_session
 
+from astro.settings import SCHEMA
 from astro.sql.table import TempTable
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from tests.operators import utils as test_utils
@@ -32,6 +34,7 @@ def create_database_connections():
         session.query(DagRun).delete()
         session.query(TI).delete()
         session.query(Connection).delete()
+        create_default_connections(session)
         for conn in connections:
             session.add(conn)
 
@@ -92,7 +95,7 @@ def sql_server(request):
     if hook_parameters is None or hook_class is None:
         raise ValueError(f"Unsupported SQL server {sql_name}")
     hook = hook_class(**hook_parameters)
-    schema = hook_parameters.get("schema", test_utils.DEFAULT_SCHEMA)
+    schema = hook_parameters.get("schema", SCHEMA)
     if not isinstance(hook, BigQueryHook):
         hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
     yield (sql_name, hook)

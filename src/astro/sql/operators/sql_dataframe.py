@@ -22,10 +22,10 @@ from airflow.hooks.base import BaseHook
 from airflow.hooks.sqlite_hook import SqliteHook
 
 from astro.constants import DEFAULT_CHUNK_SIZE
+from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from astro.utils.load_dataframe import move_dataframe_to_sql
-from astro.utils.schema_util import get_schema
 from astro.utils.table_handler import TableHandler
 
 
@@ -102,9 +102,9 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             self.populate_output_table()
             if type(self.output_table) == TempTable:
                 self.output_table = self.output_table.to_table(
-                    table_name=create_table_name(context=context), schema=get_schema()
+                    table_name=create_table_name(context=context), schema=SCHEMA
                 )
-            self.output_table.schema = self.output_table.schema or get_schema()
+            self.output_table.schema = self.output_table.schema or SCHEMA
             conn = BaseHook.get_connection(self.output_table.conn_id)
             move_dataframe_to_sql(
                 output_table_name=self.output_table.table_name,
@@ -146,7 +146,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             self.hook = PostgresHook(
                 postgres_conn_id=table.conn_id, schema=table.database
             )
-            schema = table.schema or get_schema()
+            schema = table.schema or SCHEMA
             query = (
                 sql.SQL("SELECT * FROM {schema}.{input_table}")
                 .format(

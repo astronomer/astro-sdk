@@ -15,13 +15,13 @@ from airflow.utils import timezone
 
 # Import Operator
 import astro.sql as aql
+from astro.settings import SCHEMA
 from astro.sql.operators.agnostic_boolean_check import (
     AgnosticBooleanCheck,
     Check,
     boolean_check,
 )
 from astro.sql.table import Table
-from tests.operators.utils import DEFAULT_SCHEMA
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -92,7 +92,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
             output_table=Table(
                 cls.table,
                 conn_id="bigquery",
-                schema=DEFAULT_SCHEMA,
+                schema=SCHEMA,
             ),
         ).operator.execute({"run_id": "foo"})
         cls.table_sqlite = Table(
@@ -204,7 +204,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 table=Table(
                     self.table,
                     conn_id="bigquery",
-                    schema=DEFAULT_SCHEMA,
+                    schema=SCHEMA,
                 ),
                 checks=[Check("test_1", "rooms > 3")],
                 max_rows_returned=10,
@@ -232,7 +232,7 @@ class TestBooleanCheckOperator(unittest.TestCase):
                 table=Table(
                     self.table,
                     conn_id="bigquery",
-                    schema=DEFAULT_SCHEMA,
+                    schema=SCHEMA,
                 ),
                 checks=[
                     Check("test_1", "rooms > 7"),

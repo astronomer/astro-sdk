@@ -1,6 +1,7 @@
 import copy
 import os
 import time
+from typing import Optional
 
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.hooks.sqlite_hook import SqliteHook
@@ -11,7 +12,6 @@ from airflow.utils.types import DagRunType
 
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 
-DEFAULT_SCHEMA = os.getenv("AIRFLOW__ASTRO__SQL_SCHEMA", "astroflow_ci")
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 SQL_SERVER_HOOK_PARAMETERS = {
@@ -66,9 +66,9 @@ def get_table_name(prefix):
 def drop_table_snowflake(
     table_name: str,
     conn_id: str = "snowflake_conn",
-    schema: str = os.environ["SNOWFLAKE_SCHEMA"],
-    database: str = os.environ["SNOWFLAKE_DATABASE"],
-    warehouse: str = os.environ["SNOWFLAKE_WAREHOUSE"],
+    schema: Optional[str] = os.getenv("SNOWFLAKE_SCHEMA"),
+    database: Optional[str] = os.getenv("SNOWFLAKE_DATABASE"),
+    warehouse: Optional[str] = os.getenv("SNOWFLAKE_WAREHOUSE"),
 ):
     hook = SnowflakeHook(
         snowflake_conn_id=conn_id,
