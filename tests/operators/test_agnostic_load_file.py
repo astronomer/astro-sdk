@@ -685,7 +685,7 @@ def test_load_file_using_file_connection(sample_dag, remote_file, sql_server):
     sql_server_params = test_utils.get_default_parameters(database_name)
 
     task_params = {
-        "path": file_uri,
+        "path": file_uri[0],
         "file_conn_id": file_conn_id,
         "output_table": Table(table_name=OUTPUT_TABLE_NAME, **sql_server_params),
     }
