@@ -566,49 +566,49 @@ def upload_test_file_s3(files, file_conn_id=None):
                 },
             ],
         },
-        # {
-        #     "path": "s3://tmp9/a",
-        #     "file_conn_id": "aws_conn",
-        #     "load_data": upload_test_file_s3,
-        #     "files": [
-        #         {
-        #             "bucket_id": "tmp9",
-        #             "object_name": "a.csv",
-        #             "filename": str(CWD) + "/../data/homes.csv",
-        #         },
-        #         {
-        #             "bucket_id": "tmp9",
-        #             "object_name": "aa.csv",
-        #             "filename": str(CWD) + "/../data/homes2.csv",
-        #         },
-        #     ],
-        # },
-        # {
-        #     "path": "s3://tmp9/a",
-        #     "file_conn_id": None,
-        #     "load_data": upload_test_file_s3,
-        #     "files": [
-        #         {
-        #             "bucket_id": "tmp9",
-        #             "object_name": "a.csv",
-        #             "filename": str(CWD) + "/../data/homes.csv",
-        #         },
-        #         {
-        #             "bucket_id": "tmp9",
-        #             "object_name": "aa.csv",
-        #             "filename": str(CWD) + "/../data/homes2.csv",
-        #         },
-        #     ],
-        # },
-        # {
-        #     "path": str(CWD) + "/../data/homes_merge_*",
-        #     "file_conn_id": "",
-        #     "load_data": lambda *args: None,
-        #     "files": [
-        #         {"filename": str(CWD) + "/../data/homes_pattern_1.csv"},
-        #         {"filename": str(CWD) + "/../data/homes_pattern_2.csv"},
-        #     ],
-        # },
+        {
+            "path": "s3://tmp9/a",
+            "file_conn_id": "aws_conn",
+            "load_data": upload_test_file_s3,
+            "files": [
+                {
+                    "bucket_id": "tmp9",
+                    "object_name": "a.csv",
+                    "filename": str(CWD) + "/../data/homes.csv",
+                },
+                {
+                    "bucket_id": "tmp9",
+                    "object_name": "aa.csv",
+                    "filename": str(CWD) + "/../data/homes2.csv",
+                },
+            ],
+        },
+        {
+            "path": "s3://tmp9/a",
+            "file_conn_id": None,
+            "load_data": upload_test_file_s3,
+            "files": [
+                {
+                    "bucket_id": "tmp9",
+                    "object_name": "a.csv",
+                    "filename": str(CWD) + "/../data/homes.csv",
+                },
+                {
+                    "bucket_id": "tmp9",
+                    "object_name": "aa.csv",
+                    "filename": str(CWD) + "/../data/homes2.csv",
+                },
+            ],
+        },
+        {
+            "path": str(CWD) + "/../data/homes_merge_*",
+            "file_conn_id": "",
+            "load_data": lambda *args: None,
+            "files": [
+                {"filename": str(CWD) + "/../data/homes_pattern_1.csv"},
+                {"filename": str(CWD) + "/../data/homes_pattern_2.csv"},
+            ],
+        },
     ],
 )
 def test_aql_load_file_pattern(file_info):
