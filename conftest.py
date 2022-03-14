@@ -79,13 +79,9 @@ def tmp_table(sql_server):
     elif isinstance(hook, SnowflakeHook):
         hook.run(f"DROP TABLE IF EXISTS {temporary_table.table_name}")
     elif not isinstance(hook, BigQueryHook):
-        hook.run(
-            f"ALTER TABLE {temporary_table.schema}.{temporary_table.table_name} DROP CONSTRAINT IF EXISTS airflow;"
-        )
-        hook.run(
-            f"DROP TABLE IF EXISTS {temporary_table.schema}.{temporary_table.table_name}"
-        )
-        hook.run(f"DROP INDEX IF EXISTS unique_index")
+        # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
+        # Example: tables which are not fixtures and constraints. This is an agressive approach towards tearing down:
+        hook.run(f"DROP SCHEMA IF EXISTS {temporary_table.schema} CASCADE;")
 
 
 @pytest.fixture
