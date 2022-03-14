@@ -639,34 +639,57 @@ def remote_file(request):
     [{"name": "google", "count": 2}, {"name": "amazon", "count": 2}],
     indirect=True,
 )
-def test_aql_load_file_pattern(remote_file):
+def test_aql_load_file_pattern(remote_file, sample_dag):
     file_conn_id, file_prefix = remote_file
     filename = pathlib.Path(CWD.parent, "data/sample.csv")
     OUTPUT_TABLE_NAME = f"expected_table_from_gcs_csv__{file_conn_id}"
 
     test_df_rows = pd.read_csv(filename).shape[0]
-    hook_target = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
 
-    epoc = str(int(time.time()))
-    dag = DAG(
-        "test_dag_" + epoc,
-        default_args={"owner": "airflow", "start_date": DEFAULT_DATE},
-    )
-    test_utils.create_and_run_task(
-        dag,
-        load_file,
-        (),
-        {
-            "path": file_prefix[0][0:-5],
-            "file_conn_id": file_conn_id,
-            "output_table": Table(
+    hook_target = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
+    cur = hook_target.get_cursor()
+    cur.execute(f"DROP TABLE IF EXISTS public.{OUTPUT_TABLE_NAME} CASCADE;")
+
+    with sample_dag:
+        load_file(
+            path=file_prefix[0][0:-5],
+            file_conn_id=file_conn_id,
+            output_table=Table(
                 OUTPUT_TABLE_NAME,
                 database="pagila",
                 conn_id="postgres_conn",
                 schema="public",
             ),
-        },
-    )
+        )
+    test_utils.run_dag(sample_dag)
+
+    # Read table from db
+    df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=hook_target.get_conn())
+    assert test_df_rows * 2 == df.shape[0]
+
+
+def test_aql_load_file_local_file_pattern(sample_dag):
+    filename = str(CWD.parent) + "/data/homes_pattern_1.csv"
+    OUTPUT_TABLE_NAME = f"test_aql_load_file_pattern_table"
+
+    test_df_rows = pd.read_csv(filename).shape[0]
+
+    hook_target = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
+    cur = hook_target.get_cursor()
+    cur.execute(f"DROP TABLE IF EXISTS public.{OUTPUT_TABLE_NAME} CASCADE;")
+
+    with sample_dag:
+        load_file(
+            path=str(CWD.parent) + "/data/homes_pattern_*",
+            file_conn_id="",
+            output_table=Table(
+                OUTPUT_TABLE_NAME,
+                database="pagila",
+                conn_id="postgres_conn",
+                schema="public",
+            ),
+        )
+    test_utils.run_dag(sample_dag)
 
     # Read table from db
     df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=hook_target.get_conn())

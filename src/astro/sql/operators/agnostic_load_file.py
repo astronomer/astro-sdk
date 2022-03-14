@@ -191,6 +191,7 @@ def load_file(
     output_table=None,
     file_conn_id=None,
     task_id=None,
+    if_exists="replace",
     **kwargs,
 ):
     """Convert AgnosticLoadFile into a function.
@@ -216,5 +217,6 @@ def load_file(
         path=path,
         output_table=output_table,
         file_conn_id=file_conn_id,
+        if_exists=if_exists,
         **kwargs,
     ).output
