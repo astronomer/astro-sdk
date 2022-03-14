@@ -58,6 +58,7 @@ class AgnosticLoadFile(BaseOperator):
         output_table: Union[TempTable, Table],
         file_conn_id="",
         chunksize=DEFAULT_CHUNK_SIZE,
+        if_exists="replace",
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -67,6 +68,7 @@ class AgnosticLoadFile(BaseOperator):
         self.file_conn_id = file_conn_id
         self.kwargs = kwargs
         self.output_table = output_table
+        self.if_exists = if_exists
 
     def execute(self, context):
         """Loads csv/parquet table from local/S3/GCS with Pandas.
@@ -88,7 +90,7 @@ class AgnosticLoadFile(BaseOperator):
         if not self.output_table.table_name:
             self.output_table.table_name = create_table_name(context=context)
 
-        if_exists = "replace"
+        if_exists = self.if_exists
         paths = self.get_paths(self.path, self.file_conn_id)
         for path in paths:
             # Read file with Pandas load method based on `file_type` (S3 or local).
