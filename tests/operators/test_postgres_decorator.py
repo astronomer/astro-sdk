@@ -76,12 +76,18 @@ def test_postgres_to_dataframe_partial_output(output_table, dag):
             ),
             output_table=output_table,
         )
-        df_count = validate(df=pg_output)
+        validate(df=pg_output)
     test_utils.run_dag(dag)
 
 
+@pytest.mark.xfail
 def test_with_invalid_dag_name(sample_dag):
-    sample_dag.dag_id = sample_dag.dag_id + "my=dag"
+    """
+    TODO: There appears to be a bug when passing an "invalid" DAG name to pandas when creating a dataframe
+    :param sample_dag:
+    :return:
+    """
+    sample_dag.dag_id = "my=dag"
 
     @aql.transform()
     def pg_query(input_table: Table):
@@ -109,11 +115,12 @@ def pg_query_result(request):
             "last_name": "G%%"
         }
     if query_name == "with_jinja":
-        return "SELECT * FROM {{input_table}} WHERE rental_date < '{{execution_date}}'"
+        return "SELECT * FROM {{input_table}} WHERE last_update > '{{execution_date}}' AND last_name LIKE 'G%%'"
     if query_name == "with_jinja_template_params":
-        return "SELECT * FROM {{input_table}} WHERE rental_date < {{r_date}}", {
-            "r_date": "{{ execution_date }}"
-        }
+        return (
+            "SELECT * FROM {{input_table}} WHERE last_update > {{r_date}} AND last_name LIKE 'G%%'",
+            {"r_date": "{{ execution_date }}"},
+        )
 
 
 @pytest.mark.parametrize(
@@ -121,7 +128,7 @@ def pg_query_result(request):
     ["basic", "semicolon", "with_param", "with_jinja", "with_jinja_template_params"],
     indirect=True,
 )
-def test_postgres_with_semicolon(sample_dag, pg_query_result):
+def test_postgres(sample_dag, pg_query_result):
     @aql.transform
     def pg_query(input_table: Table):
         return pg_query_result
