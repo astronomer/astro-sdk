@@ -1,19 +1,13 @@
-import glob
-import os
 from typing import Union
-from urllib.parse import urlparse, urlunparse
 
-import pandas as pd
-import smart_open
-from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator
 
 from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_table_name
-from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
-from astro.utils.dependencies import gcs, s3
-from astro.utils.load_dataframe import move_dataframe_to_sql
+from astro.utils import get_hook
+from astro.utils.load import load_dataframe_into_sql_table, load_file_into_dataframe
+from astro.utils.path import get_paths, get_transport_params, validate_path
 from astro.utils.task_id_helper import get_task_id
 
 
@@ -54,17 +48,18 @@ class AgnosticLoadFile(BaseOperator):
         self.output_table = output_table
         self.if_exists = if_exists
 
-    def execute(self, context):
-        """Loads csv/parquet table from local/S3/GCS with Pandas.
+    def execute_postgres(self, context):
+        # 1. download file(s), if not local
+        # 2. check size
+        # 3. load a subset of rows - specific per format
+        # 3. convert the remaining to csv
+        # 4. get first N lines of the csv file
+        # 5. create the table using the dataframe operation & N lines to automatically indentify columns/types
+        # 6. copy the remaining data using the CP
+        # copy usa from '/Users/EDB1/Downloads/usa.csv' delimiter ',' csv header;
+        pass
 
-        Infers SQL database type based on connection then loads table to db.
-        """
-
-        if self.file_conn_id:
-            BaseHook.get_connection(self.file_conn_id)
-
-        # Retrieve conn type
-        conn = BaseHook.get_connection(self.output_table.conn_id)
+    def _configure_output_table(self, context):
         if type(self.output_table) == TempTable:
             self.output_table = self.output_table.to_table(
                 create_table_name(context=context), SCHEMA
@@ -74,100 +69,44 @@ class AgnosticLoadFile(BaseOperator):
         if not self.output_table.table_name:
             self.output_table.table_name = create_table_name(context=context)
 
-        if_exists = self.if_exists
-        paths = self.get_paths(self.path, self.file_conn_id)
-        for path in paths:
-            # Read file with Pandas load method based on `file_type` (S3 or local).
-            df = self._load_dataframe(path)
+    def execute(self, context):
+        """Loads csv/parquet table from local/S3/GCS with Pandas.
 
-            move_dataframe_to_sql(
-                output_table_name=self.output_table.table_name,
-                conn_id=self.output_table.conn_id,
-                database=self.output_table.database,
-                warehouse=self.output_table.warehouse,
-                schema=self.output_table.schema,
-                df=df,
-                conn_type=conn.conn_type,
-                user=conn.login,
-                chunksize=self.chunksize,
-                if_exists=if_exists,
+        Infers SQL database type based on connection then loads table to db.
+        """
+        self._configure_output_table(context)
+        self.log.info(f"Loading {self.path} into {self.output_table}...")
+
+        hook = get_hook(
+            conn_id=self.output_table.conn_id,
+            database=self.output_table.database,
+            schema=self.output_table.schema,
+            warehouse=self.output_table.warehouse,
+        )
+
+        paths = get_paths(self.path, self.file_conn_id)
+        for path in paths:
+            pandas_dataframe = self._load_file_into_dataframe(path)
+            load_dataframe_into_sql_table(
+                pandas_dataframe,
+                self.output_table,
+                hook,
+                self.chunksize,
+                self.if_exists,
             )
-            if_exists = "append"
-        self.log.info(f"returning table {self.output_table}")
+
+        self.log.info(f"Completed loading the data into {self.output_table}.")
         return self.output_table
 
-    @staticmethod
-    def validate_path(path):
-        """Validate a URL or local file path"""
-        try:
-            result = urlparse(path)
-            return all([result.scheme, result.netloc]) or os.path.isfile(path)
-        except:
-            return False
-
-    def _load_dataframe(self, path):
+    def _load_file_into_dataframe(self, filepath):
         """Read file with Pandas.
 
         Select method based on `file_type` (S3 or local).
         """
-
-        if not AgnosticLoadFile.validate_path(path):
-            raise ValueError(f"Invalid path: {path}")
-
-        file_type = path.split(".")[-1]
-        file_scheme = urlparse(path).scheme
-
-        default_params_getter = lambda conn_id: None
-        transport_params = {"s3": s3fs_creds, "gs": gcs_client}.get(
-            file_scheme, default_params_getter
-        )(conn_id=self.file_conn_id)
-
-        deserialiser = {
-            "parquet": pd.read_parquet,
-            "csv": pd.read_csv,
-            "json": pd.read_json,
-            "ndjson": pd.read_json,
-        }
-        mode = {"parquet": "rb"}
-        deserialiser_params = {"ndjson": {"lines": True}}
-        with smart_open.open(
-            path, mode=mode.get(file_type, "r"), transport_params=transport_params
-        ) as stream:
-            return deserialiser[file_type](
-                stream, **deserialiser_params.get(file_type, {})
-            )
-
-    def get_paths(self, path, file_conn_id):
-        url = urlparse(path)
-        file_location = url.scheme
-        return {
-            "s3": self.get_paths_from_s3_or_gcs,
-            "gs": self.get_paths_from_s3_or_gcs,
-            "http": lambda url, file_conn_id: [urlunparse(list(url))],
-            "https": lambda url, file_conn_id: [urlunparse(list(url))],
-            "": self.get_paths_from_filesystem,
-        }[file_location](url, file_conn_id)
-
-    def get_prefix_list(self, scheme, conn_id, bucket_name, prefix):
-        if scheme == "s3":
-            hook = s3.S3Hook(aws_conn_id=conn_id) if conn_id else s3.S3Hook()
-            return hook.list_keys(bucket_name=bucket_name, prefix=prefix)
-        elif scheme == "gs":
-            hook = gcs.GCSHook(gcp_conn_id=conn_id) if conn_id else gcs.GCSHook()
-            return hook.list(bucket_name=bucket_name, prefix=prefix)
-
-    def get_paths_from_s3_or_gcs(self, url, file_conn_id=None):
-        bucket = url.netloc
-        prefix = url.path
-        list_keys = self.get_prefix_list(
-            url.scheme, file_conn_id, bucket_name=bucket, prefix=prefix[1:]
-        )
-        return [
-            urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in list_keys
-        ]
-
-    def get_paths_from_filesystem(self, url, file_conn_id):
-        return glob.glob(url.path)
+        validate_path(filepath)
+        filetype = filepath.split(".")[-1]
+        transport_params = get_transport_params(filepath, self.file_conn_id)
+        return load_file_into_dataframe(filepath, filetype, transport_params)
 
 
 def load_file(

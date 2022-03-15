@@ -4,13 +4,13 @@ from typing import Dict, Optional
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.hooks.base import BaseHook
-from airflow.hooks.sqlite_hook import SqliteHook
+from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 
-from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_table_name
+from astro.utils import get_hook
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
-from astro.utils.load_dataframe import move_dataframe_to_sql
+from astro.utils.load import load_dataframe_into_sql_table
 from astro.utils.table_handler import TableHandler
 
 
@@ -84,7 +84,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         self.handle_op_args()
         self.handle_op_kwargs()
 
-        ret = self.python_callable(*self.op_args, **self.op_kwargs)
+        pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
         if self.output_table:
             self.populate_output_table()
             if type(self.output_table) == TempTable:
@@ -92,21 +92,16 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
                     table_name=create_table_name(context=context), schema=SCHEMA
                 )
             self.output_table.schema = self.output_table.schema or SCHEMA
-            conn = BaseHook.get_connection(self.output_table.conn_id)
-            move_dataframe_to_sql(
-                output_table_name=self.output_table.table_name,
+            hook = get_hook(
                 conn_id=self.output_table.conn_id,
                 database=self.output_table.database,
-                warehouse=self.output_table.warehouse,
                 schema=self.output_table.schema,
-                df=ret,
-                conn_type=conn.conn_type,
-                user=conn.login,
-                chunksize=DEFAULT_CHUNK_SIZE,
+                warehouse=self.output_table.warehouse,
             )
+            load_dataframe_into_sql_table(pandas_dataframe, self.output_table, hook)
             return self.output_table
         else:
-            return ret
+            return pandas_dataframe
 
     def get_snow_hook(self, table: Table) -> SnowflakeHook:
         """

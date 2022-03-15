@@ -13,7 +13,7 @@ from sqlalchemy.sql.functions import Function
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils import get_hook, postgres_transform, snowflake_transform
-from astro.utils.load_dataframe import move_dataframe_to_sql
+from astro.utils.load import load_dataframe_into_sql_table
 from astro.utils.schema_util import create_schema_query, schema_exists
 from astro.utils.table_handler import TableHandler
 
@@ -231,7 +231,9 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             engine = self.hook.get_sqlalchemy_engine()
         return engine
 
-    def _run_sql(self, sql, parameters):
+    def _run_sql(self, sql, parameters=None):
+        if parameters is None:
+            parameters = {}
         engine = self.get_sql_alchemy_engine()
         conn = engine.connect()
         if isinstance(sql, str):
@@ -324,6 +326,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         final_args = []
         for i, arg in enumerate(self.op_args):
             if type(arg) == pd.DataFrame:
+                pandas_dataframe = arg
                 output_table_name = (
                     self.dag_id
                     + "_"
@@ -332,47 +335,50 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                     + self.run_id
                     + f"_input_dataframe_{i}"
                 )
-                move_dataframe_to_sql(
-                    output_table_name=output_table_name,
-                    df=arg,
-                    conn_type=self.conn_type,
+                output_table = Table(
+                    table_name=output_table_name,
                     conn_id=self.conn_id,
                     database=self.database,
                     schema=self.schema,
                     warehouse=self.warehouse,
                 )
-                final_args.append(
-                    Table(
-                        table_name=output_table_name,
-                        conn_id=self.conn_id,
-                        database=self.database,
-                        schema=self.schema,
-                        warehouse=self.warehouse,
-                    )
+                hook = get_hook(
+                    conn_id=self.conn_id,
+                    database=self.database,
+                    schema=self.schema,
+                    warehouse=self.warehouse,
                 )
+                load_dataframe_into_sql_table(pandas_dataframe, output_table, hook)
+                final_args.append(output_table)
             else:
                 final_args.append(arg)
             self.op_args = tuple(final_args)
 
     def convert_op_kwarg_dataframes(self):
         final_kwargs = {}
-        for k, v in self.op_kwargs.items():
-            if type(v) == pd.DataFrame:
+        for key, value in self.op_kwargs.items():
+            if type(value) == pd.DataFrame:
+                pandas_dataframe = value
                 output_table_name = "_".join(
                     [self.dag_id, self.task_id, self.run_id, "input_dataframe", str(k)]
                 )
-                move_dataframe_to_sql(
-                    output_table_name=output_table_name,
-                    df=v,
-                    conn_type=self.conn_type,
+                output_table = Table(
+                    table_name=output_table_name,
                     conn_id=self.conn_id,
                     database=self.database,
                     schema=self.schema,
                     warehouse=self.warehouse,
                 )
-                final_kwargs[k] = output_table_name
+                hook = get_hook(
+                    conn_id=self.conn_id,
+                    database=self.database,
+                    schema=self.schema,
+                    warehouse=self.warehouse,
+                )
+                load_dataframe_into_sql_table(pandas_dataframe, output_table, hook)
+                final_kwargs[key] = output_table_name
             else:
-                final_kwargs[k] = v
+                final_kwargs[key] = value
         self.op_kwargs = final_kwargs
 
 
