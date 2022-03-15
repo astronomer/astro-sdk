@@ -86,6 +86,9 @@ def test_append(sql_server, sample_dag, tmp_table, append_params):
     test_utils.run_dag(sample_dag)
 
 
+from astro.sql.table import TempTable
+
+
 @pytest.mark.parametrize(
     "sql_server",
     [
@@ -93,14 +96,14 @@ def test_append(sql_server, sample_dag, tmp_table, append_params):
     ],
     indirect=True,
 )
-def test_append_on_tables_on_different_db(sample_dag, sql_server, tmp_table):
-    tmp_table_2 = tmp_table
-    tmp_table_2.conn_id = "foobar"
+def test_append_on_tables_on_different_db(sample_dag, sql_server):
+    tmp_table_1 = TempTable(conn_id="postgres_conn")
+    tmp_table_2 = TempTable(conn_id="sqlite_conn")
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
             load_main = aql.load_file(
                 path=str(CWD) + "/../data/homes_main.csv",
-                output_table=tmp_table,
+                output_table=tmp_table_1,
             )
             load_append = aql.load_file(
                 path=str(CWD) + "/../data/homes_append.csv",
