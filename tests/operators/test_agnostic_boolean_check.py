@@ -25,7 +25,7 @@ from astro.sql.operators.agnostic_boolean_check import (
     boolean_check,
 )
 from astro.sql.table import Table
-from tests.operators.utils import get_dag, get_table_name, run_dag
+from tests.operators.utils import get_table_name, run_dag
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)

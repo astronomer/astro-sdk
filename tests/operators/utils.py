@@ -108,14 +108,3 @@ def run_dag(dag):
         end_date=DEFAULT_DATE,
         run_at_least_once=True,
     )
-
-
-def get_dag():
-    very_high_number = 99999999
-    return DAG(
-        "test_dag_" + str(random.randint(0, very_high_number)),
-        default_args={
-            "owner": "airflow",
-            "start_date": DEFAULT_DATE,
-        },
-    )
