@@ -97,6 +97,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             return cursor
 
         self.output_schema = self.schema or SCHEMA
+        self._set_variables_from_first_table()
 
         conn = BaseHook.get_connection(self.conn_id)
 
