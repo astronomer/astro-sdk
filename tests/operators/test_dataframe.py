@@ -206,7 +206,7 @@ class TestDataframeFromSQL(unittest.TestCase):
         )
 
     def test_snow_dataframe_from_sql_basic(self):
-        @df
+        @df(identifiers_as_lower=False)
         def my_df_func(df: pandas.DataFrame):
             return df.LIVING.count()
 
