@@ -17,6 +17,7 @@ from airflow.utils import timezone
 
 # Import Operator
 import astro.sql as aql
+from astro.constants import SUPPORTED_DATABASES
 from astro.settings import SCHEMA
 from astro.sql.operators.agnostic_boolean_check import (
     AgnosticBooleanCheck,
@@ -26,11 +27,9 @@ from astro.sql.operators.agnostic_boolean_check import (
 from astro.sql.table import Table
 from tests.operators.utils import get_dag, get_table_name, run_dag
 
-
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 CWD = pathlib.Path(__file__).parent
-DATABASES_LIST = ["postgres", "bigquery", "sqlite", "snowflake"]
 
 
 def drop_table_snowflake(
@@ -57,8 +56,8 @@ def drop_table_snowflake(
 # DROP TABLE IF EXISTS {table_name} CASCADE;
 
 
-@pytest.fixture(scope="session")
-def tables(request):
+@pytest.fixture(scope="module")
+def table(request):
     boolean_check_table = Table(
         "boolean_check_test",
         database="pagila",
@@ -68,7 +67,7 @@ def tables(request):
     boolean_check_table_bigquery = Table(
         "boolean_check_test",
         conn_id="bigquery",
-        schema=DEFAULT_SCHEMA,
+        schema=SCHEMA,
     )
     boolean_check_table_sqlite = Table("boolean_check_test", conn_id="sqlite_conn")
     boolean_check_table_snowflake = Table(
@@ -85,44 +84,44 @@ def tables(request):
         "sqlite": boolean_check_table_sqlite,
         "snowflake": boolean_check_table_snowflake,
     }
-    for _, table in tables.items():
-        aql.load_file(
-            path=path,
-            output_table=table,
-        ).operator.execute({"run_id": "foo"})
 
-    yield tables
+    aql.load_file(
+        path=path,
+        output_table=tables[request.param],
+    ).operator.execute({"run_id": "foo"})
 
-    drop_table_snowflake(boolean_check_table_snowflake.table_name)
+    yield tables[request.param]
+
+    tables[request.param].drop()
 
 
-@pytest.mark.parametrize("database", DATABASES_LIST)
-def test_happyflow_success(sample_dag, database, tables):
+@pytest.mark.parametrize("table", SUPPORTED_DATABASES, indirect=True)
+def test_happyflow_success(sample_dag, table):
     @aql.transform
     def get_table(input_table: Table):
         return "SELECT * FROM {{input_table}}"
 
     with sample_dag:
-        table = get_table(tables[database])
+        temp_table = get_table(table)
         aql.boolean_check(
-            table=table,
+            table=temp_table,
             checks=[Check("test_1", "rooms > 3")],
             max_rows_returned=10,
         )
     run_dag(sample_dag)
 
 
-@pytest.mark.parametrize("database", DATABASES_LIST)
-def test_happyflow_fail(sample_dag, database, tables):
+@pytest.mark.parametrize("table", SUPPORTED_DATABASES, indirect=True)
+def test_happyflow_fail(sample_dag, table):
     @aql.transform
     def get_table(input_table: Table):
         return "SELECT * FROM {{input_table}}"
 
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
-            table = get_table(tables[database])
+            temp_table = get_table(table)
             aql.boolean_check(
-                table=table,
+                table=temp_table,
                 checks=[
                     Check("test_1", "rooms > 7"),
                     Check("test_2", "beds >= 3"),
@@ -133,7 +132,7 @@ def test_happyflow_fail(sample_dag, database, tables):
 
 
 @pytest.mark.parametrize(
-    "database",
+    "table",
     [
         "postgres",
         pytest.param(
@@ -151,15 +150,15 @@ def test_happyflow_fail(sample_dag, database, tables):
         "sqlite",
     ],
 )
-def test_happyflow_success_with_templated_query(sample_dag, database, tables):
+def test_happyflow_success_with_templated_query(sample_dag, table):
     @aql.transform
     def get_table(input_table: Table):
         return "SELECT * FROM {{input_table}}"
 
     with sample_dag:
-        table = get_table(tables[database])
+        temp_table = get_table(table)
         aql.boolean_check(
-            table=table,
+            table=temp_table,
             checks=[Check("test_1", "{{table}}.rooms > 3")],
             max_rows_returned=10,
         )
