@@ -86,8 +86,16 @@ def test_append(sql_server, sample_dag, tmp_table, append_params):
     test_utils.run_dag(sample_dag)
 
 
+@pytest.mark.parametrize(
+    "sql_server",
+    [
+        "postgres",
+    ],
+    indirect=True,
+)
 def test_append_on_tables_on_different_db(sample_dag, sql_server, tmp_table):
-
+    tmp_table_2 = tmp_table
+    tmp_table_2.conn_id = "foobar"
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
             load_main = aql.load_file(
@@ -96,7 +104,7 @@ def test_append_on_tables_on_different_db(sample_dag, sql_server, tmp_table):
             )
             load_append = aql.load_file(
                 path=str(CWD) + "/../data/homes_append.csv",
-                output_table=tmp_table,
+                output_table=tmp_table_2,
             )
             appended_table = aql.append(
                 main_table=load_main,
