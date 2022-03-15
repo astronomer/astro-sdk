@@ -149,6 +149,7 @@ def test_happyflow_fail(sample_dag, table):
         ),
         "sqlite",
     ],
+    indirect=True,
 )
 def test_happyflow_success_with_templated_query(sample_dag, table):
     @aql.transform
