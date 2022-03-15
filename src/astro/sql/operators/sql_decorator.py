@@ -8,6 +8,7 @@ from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, TaskInstance
 from airflow.utils.db import provide_session
 from sqlalchemy import create_engine, text
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.sql.functions import Function
 
 from astro.settings import SCHEMA
@@ -96,7 +97,11 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             return cursor
 
         self.output_schema = self.schema or SCHEMA
-        self._set_variables_from_first_table()
+
+        try:
+            self._set_variables_from_first_table()
+        except ProgrammingError:
+            pass
 
         conn = BaseHook.get_connection(self.conn_id)
 
