@@ -42,7 +42,7 @@ def sample_create_table(input_table: Table):
     return "SELECT * FROM {{input_table}} LIMIT 10"
 
 
-@df
+@df(identifiers_as_lower=False)
 def my_df_func(input_df: DataFrame):
     print(input_df)
 
