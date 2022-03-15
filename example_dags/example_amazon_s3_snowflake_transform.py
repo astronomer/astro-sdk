@@ -40,7 +40,7 @@ def clean_data(input_table: Table):
     """
 
 
-@df
+@df(identifiers_as_lower=False)
 def aggregate_data(df: pd.DataFrame):
     adoption_reporting_dataframe = df.pivot_table(
         index="DATE", values="NAME", columns=["TYPE"], aggfunc="count"

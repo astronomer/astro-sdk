@@ -22,6 +22,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         schema: Optional[str] = None,
         warehouse: Optional[str] = None,
         role: Optional[str] = None,
+        identifiers_as_lower: Optional[bool] = True,
         **kwargs,
     ):
         """
@@ -48,6 +49,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         else:
             self.output_table = None
         self.op_args = self.kwargs.get("op_args")  # type: ignore
+        self.identifiers_as_lower = identifiers_as_lower
 
         super().__init__(
             **kwargs,
@@ -140,20 +142,22 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
                 )
                 .as_string(self.hook.get_conn())
             )
-            return self.hook.get_pandas_df(query)
-
+            df = self.hook.get_pandas_df(query)
         elif conn_type == "snowflake":
             hook = self.get_snow_hook(table)
-            return hook.get_pandas_df(
+            df = hook.get_pandas_df(
                 "SELECT * FROM IDENTIFIER(%(input_table)s)",
                 parameters={"input_table": table.table_name},
             )
         elif conn_type == "sqlite":
             hook = SqliteHook(sqlite_conn_id=table.conn_id, database=table.database)
-
             engine = hook.get_sqlalchemy_engine()
-            return pd.read_sql_table(table.table_name, engine)
+            df = pd.read_sql_table(table.table_name, engine)
         elif conn_type == "bigquery":
             hook = BigQueryHook(gcp_conn_id=table.conn_id)
             engine = hook.get_sqlalchemy_engine()
-            return pd.read_sql_table(table.qualified_name(), engine)
+            df = pd.read_sql_table(table.qualified_name(), engine)
+
+        if self.identifiers_as_lower:
+            df.columns = [col_label.lower() for col_label in df.columns]
+        return df
