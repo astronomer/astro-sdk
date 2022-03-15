@@ -53,23 +53,23 @@ def drop_table_snowflake(
     snowflake_conn.close()
 
 
-# DROP TABLE IF EXISTS {table_name} CASCADE;
-
-
 @pytest.fixture(scope="module")
 def table(request):
+
     boolean_check_table = Table(
-        "boolean_check_test",
+        get_table_name("boolean_check_test"),
         database="pagila",
         conn_id="postgres_conn",
         schema="airflow_test_dag",
     )
     boolean_check_table_bigquery = Table(
-        "boolean_check_test",
+        get_table_name("boolean_check_test"),
         conn_id="bigquery",
         schema=SCHEMA,
     )
-    boolean_check_table_sqlite = Table("boolean_check_test", conn_id="sqlite_conn")
+    boolean_check_table_sqlite = Table(
+        get_table_name("boolean_check_test"), conn_id="sqlite_conn"
+    )
     boolean_check_table_snowflake = Table(
         table_name=get_table_name("boolean_check_test"),
         database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore

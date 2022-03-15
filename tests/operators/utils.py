@@ -2,6 +2,7 @@ import copy
 import os
 import random
 import time
+import uuid
 from typing import Optional
 
 from airflow.executors.debug_executor import DebugExecutor
@@ -62,7 +63,7 @@ def create_and_run_task(dag, decorator_func, op_args, op_kwargs):
 
 def get_table_name(prefix):
     """get unique table name"""
-    return prefix + "_" + str(int(time.time()))
+    return prefix + "_" + str(uuid.uuid1()).replace("-", "_")[:20]
 
 
 def drop_table_snowflake(
