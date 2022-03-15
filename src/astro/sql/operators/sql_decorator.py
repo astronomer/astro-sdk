@@ -98,11 +98,6 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
 
         self.output_schema = self.schema or SCHEMA
 
-        try:
-            self._set_variables_from_first_table()
-        except ProgrammingError:
-            pass
-
         conn = BaseHook.get_connection(self.conn_id)
 
         self.schema = self.schema or SCHEMA
@@ -227,7 +222,10 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 schema_id=schema if schema else self.schema,
                 user=self.user,
             )
-            self._run_sql(schema_statement, {})
+            try:
+                self._run_sql(schema_statement, {})
+            except ProgrammingError as e:
+                print(e)
 
     def get_sql_alchemy_engine(self):
         if self.conn_type == "sqlite":
