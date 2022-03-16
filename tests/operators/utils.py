@@ -107,10 +107,3 @@ def run_dag(dag):
         end_date=DEFAULT_DATE,
         run_at_least_once=True,
     )
-
-
-def wait_for_task_finish(dr, task_id):
-    task = dr.get_task_instance(task_id)
-    while task.state not in ["success", "failed"]:
-        time.sleep(1)
-        task = dr.get_task_instance(task_id)
