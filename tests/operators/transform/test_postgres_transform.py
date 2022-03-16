@@ -36,17 +36,6 @@ def cleanup():
         session.query(TI).delete()
 
 
-@pytest.fixture
-def output_table(request):
-    table_type = request.param
-    if table_type == "None":
-        return TempTable()
-    elif table_type == "partial":
-        return Table("my_table")
-    elif table_type == "full":
-        return Table("my_table", database="pagila", conn_id="postgres_conn")
-
-
 @adf
 def validate(df: pd.DataFrame):
     assert len(df) == 12
@@ -55,8 +44,6 @@ def validate(df: pd.DataFrame):
 
 @pytest.mark.parametrize("output_table", ["None", "partial", "full"], indirect=True)
 def test_postgres_to_dataframe_partial_output(output_table, dag):
-    hook_target = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
-
     @aql.transform
     def sample_pg(input_table: Table):
         return "SELECT * FROM {{input_table}} WHERE last_name LIKE 'G%%'"
@@ -156,12 +143,13 @@ def test_postgres_join(sample_dag, tmp_table, sql_server):
         }
 
     with sample_dag:
-        sample_pg(
+        ret = sample_pg(
             actor=Table(table_name="actor", conn_id="postgres_conn", database="pagila"),
             film_actor_join=Table(table_name="film_actor"),
             unsafe_parameter="G%%",
             output_table=tmp_table,
         )
+        validate(ret)
 
 
 def test_postgres_set_op_kwargs(sample_dag):

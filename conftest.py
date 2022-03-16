@@ -12,7 +12,7 @@ from airflow.utils.db import create_default_connections
 from airflow.utils.session import create_session
 
 from astro.settings import SCHEMA
-from astro.sql.table import TempTable
+from astro.sql.table import Table, TempTable
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from tests.operators import utils as test_utils
 
@@ -85,6 +85,17 @@ def tmp_table(sql_server):
         # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
         # Example: tables which are not fixtures and constraints. This is an agressive approach towards tearing down:
         hook.run(f"DROP SCHEMA IF EXISTS {temporary_table.schema} CASCADE;")
+
+
+@pytest.fixture
+def output_table(request):
+    table_type = request.param
+    if table_type == "None":
+        return TempTable()
+    elif table_type == "partial":
+        return Table("my_table")
+    elif table_type == "full":
+        return Table("my_table", database="pagila", conn_id="postgres_conn")
 
 
 @pytest.fixture
