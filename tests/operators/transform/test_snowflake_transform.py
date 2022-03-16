@@ -111,14 +111,12 @@ def run_role_query(dag, table, role):
 
 @pytest.mark.parametrize("sql_server", ["snowflake"], indirect=True)
 def test_roles_failing(sql_server, sample_dag, tmp_table):
-    table = tmp_table
-    table.role = "foo"
+    tmp_table.role = "foo"
     with pytest.raises(Exception):
-        run_role_query(sample_dag, table, role="foo")
+        run_role_query(sample_dag, tmp_table, role="foo")
 
 
 @pytest.mark.parametrize("sql_server", ["snowflake"], indirect=True)
 def test_roles_passing(sql_server, sample_dag, tmp_table):
-    table = tmp_table
-    table.role = os.getenv("SNOWFLAKE_ROLE")
-    run_role_query(sample_dag, table, role=os.getenv("SNOWFLAKE_ROLE"))
+    tmp_table.role = os.getenv("SNOWFLAKE_ROLE")
+    run_role_query(sample_dag, tmp_table, role=os.getenv("SNOWFLAKE_ROLE"))

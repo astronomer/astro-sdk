@@ -50,7 +50,7 @@ class Table:
             )
 
     def __str__(self):
-        return f"Table(table_name={self.table_name}, database={self.database}, schema={self.schema}, conn_id={self.conn_id}, warehouse={self.warehouse})"
+        return f"Table(table_name={self.table_name}, database={self.database}, schema={self.schema}, conn_id={self.conn_id}, warehouse={self.warehouse}, role={self.role})"
 
 
 class TempTable(Table):
@@ -72,6 +72,7 @@ class TempTable(Table):
             conn_id=self.conn_id,
             database=self.database,
             warehouse=self.warehouse,
+            role=self.role,
             schema=schema,
         )
 
