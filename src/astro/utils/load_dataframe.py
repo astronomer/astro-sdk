@@ -23,7 +23,6 @@ def move_dataframe_to_sql(
     schema,
     warehouse,
     conn_type,
-    role,
     df: DataFrame,
     user,
     chunksize,
