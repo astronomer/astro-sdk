@@ -63,6 +63,9 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         else:
             self.output_table = None
 
+        if self.op_kwargs.get("handler"):
+            self.handler = self.op_kwargs.pop("handler")
+
         self.database = self.op_kwargs.pop("database", database)
         self.conn_id = self.op_kwargs.pop("conn_id", conn_id)
         self.schema = self.op_kwargs.pop("schema", schema)
@@ -204,29 +207,21 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         :return:
         """
         schema = schema or SCHEMA
-        if self.conn_type == "postgres" and self.schema:
+        if self.conn_type in ["postgres", "bigquery"] and self.schema:
             output_table_name = schema + "." + output_table_name
         elif self.conn_type == "snowflake" and self.schema and "." not in self.sql:
             output_table_name = self.database + "." + schema + "." + output_table_name
         return output_table_name
 
     def _set_schema_if_needed(self):
-        schema_statement = ""
-        if self.conn_type == "postgres":
+        if self.conn_type in ["postgres", "snowflake", "bigquery"]:
             schema_statement = create_schema_query(
                 conn_type=self.conn_type,
                 hook=self.hook,
                 schema_id=self.schema,
                 user=self.user,
             )
-        elif self.conn_type == "snowflake":
-            schema_statement = create_schema_query(
-                conn_type=self.conn_type,
-                hook=self.hook,
-                schema_id=self.schema,
-                user=self.user,
-            )
-        self._run_sql(schema_statement, {})
+            self._run_sql(schema_statement, {})
 
     def get_sql_alchemy_engine(self):
         if self.conn_type == "sqlite":

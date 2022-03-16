@@ -1,6 +1,7 @@
 import inspect
 import re
 
+from astro.settings import SCHEMA
 from astro.sql.table import Table
 
 
@@ -12,7 +13,8 @@ def _handle_table(t: Table):
     :return:
     """
 
-    return t.database + "." + t.schema + "." + t.table_name
+    snow_schema = t.schema or SCHEMA
+    return t.database + "." + snow_schema + "." + t.table_name
 
 
 def process_params(parameters):

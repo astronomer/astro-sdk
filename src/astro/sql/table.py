@@ -50,20 +50,21 @@ class Table:
             )
 
     def __str__(self):
-        return f"Table(table_name={self.table_name}, database={self.database}, schema={self.schema}, conn_id={self.conn_id}, warehouse={self.warehouse})"
+        return f"Table(table_name={self.table_name}, database={self.database}, schema={self.schema}, conn_id={self.conn_id}, warehouse={self.warehouse}, role={self.role})"
 
 
 class TempTable(Table):
-    def __init__(self, conn_id=None, database=None, warehouse=""):
+    def __init__(self, conn_id=None, database=None, warehouse="", role=""):
         self.table_name = ""
         super().__init__(
             table_name=self.table_name,
             conn_id=conn_id,
             database=database,
             warehouse=warehouse,
+            role=role,
         )
 
-    def to_table(self, table_name: str, schema: str) -> Table:
+    def to_table(self, table_name: str, schema: str = None) -> Table:
         self.table_name = table_name
         self.schema = schema
         return Table(
@@ -71,6 +72,7 @@ class TempTable(Table):
             conn_id=self.conn_id,
             database=self.database,
             warehouse=self.warehouse,
+            role=self.role,
             schema=schema,
         )
 

@@ -15,6 +15,7 @@ limitations under the License.
 """
 
 import os
+import time
 from datetime import datetime, timedelta
 
 import pandas as pd
@@ -77,10 +78,10 @@ def example_amazon_s3_snowflake_transform():
     )
 
     cleaned_data = clean_data(combined_data)
-    aggregated_data = aggregate_data(
+    aggregate_data(
         cleaned_data,
         output_table=Table(
-            "aggregated_adoptions",
+            "aggregated_adoptions_" + str(int(time.time())),
             schema=os.environ["SNOWFLAKE_SCHEMA"],
             conn_id="snowflake_conn",
         ),
