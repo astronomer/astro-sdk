@@ -1,6 +1,5 @@
-import io
-import json
 import glob
+
 from typing import Union
 from urllib.parse import urlparse, urlunparse
 
@@ -69,9 +68,11 @@ class AgnosticLoadFile(BaseOperator):
             schema=self.output_table.schema,
             warehouse=self.output_table.warehouse,
         )
+
         paths = get_paths(self.path, self.file_conn_id)
         transport_params = get_transport_params(paths[0], self.file_conn_id)
         return self.load_using_pandas(context, paths, hook, transport_params)
+
 
     def load_using_pandas(self, context, paths, hook, transport_params):
         """Loads csv/parquet table from local/S3/GCS with Pandas.

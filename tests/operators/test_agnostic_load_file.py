@@ -60,7 +60,6 @@ def get_dataframe_from_table(sql_name: str, test_table: Union[Table, TempTable],
 )
 def test_load_file_with_http_path_file(sample_dag, test_table, sql_server):
     sql_name, hook = sql_server
-
     with sample_dag:
         load_file(
             path="https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/homes_main.csv",
@@ -180,6 +179,7 @@ def test_unique_task_id_for_same_path(sample_dag):
             task = load_file(**params)
             tasks.append(task)
 
+
     test_utils.run_dag(sample_dag)
 
     assert tasks[0].operator.task_id != tasks[1].operator.task_id
@@ -237,6 +237,7 @@ def test_aql_load_file_pattern(remote_file, sample_dag, test_table, sql_server):
 
     df = get_dataframe_from_table(sql_name, test_table, hook)
     test_df_rows = pd.read_csv(filename).shape[0]
+
     assert test_df_rows * 2 == df.shape[0]
 
 
