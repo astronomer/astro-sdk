@@ -130,9 +130,9 @@ class AgnosticBooleanCheck(SqlDecoratedOperator):
     def prep_results(self, results):
         return (
             select(["*"])
-            .select_from(text("{{table}}"))
+            .select_from(text(self.table.qualified_name()))
             .where(and_(*[text(self.checks[index].expression) for index in results]))
-            .limit("{{limit}}")
+            .limit(self.max_rows_returned)
         )
 
 

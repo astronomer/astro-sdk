@@ -112,12 +112,12 @@ def test_happyflow_success(sample_dag, table):
 
 
 @pytest.mark.parametrize("table", SUPPORTED_DATABASES, indirect=True)
-def test_happyflow_fail(sample_dag, table):
+def test_happyflow_fail(sample_dag, table, caplog):
     @aql.transform
     def get_table(input_table: Table):
         return "SELECT * FROM {{input_table}}"
 
-    with pytest.raises(BackfillUnfinished):
+    with pytest.raises(BackfillUnfinished) as e:
         with sample_dag:
             temp_table = get_table(table)
             aql.boolean_check(
@@ -129,6 +129,8 @@ def test_happyflow_fail(sample_dag, table):
                 max_rows_returned=10,
             )
         run_dag(sample_dag)
+    expected_error = "Some of the check(s) have failed"
+    assert expected_error in caplog.text
 
 
 @pytest.mark.parametrize(
