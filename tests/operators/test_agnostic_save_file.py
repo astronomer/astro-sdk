@@ -373,6 +373,7 @@ class TestSaveFile(unittest.TestCase):
 
 @pytest.fixture
 def sql_server(request):
+    # TODO: We shouldn't have different versions of this function.
     sql_name = request.param
     hook_parameters = test_utils.SQL_SERVER_HOOK_PARAMETERS.get(sql_name)
     hook_class = test_utils.SQL_SERVER_HOOK_CLASS.get(sql_name)
