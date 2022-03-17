@@ -120,11 +120,15 @@ class AgnosticLoadFile(BaseOperator):
         if conn_type in ["bigquery", "snowflake"]:
             meta_prefix = normalize_config.get("meta_prefix")
             if meta_prefix and meta_prefix == ".":
-                normalize_config["meta_prefix"] == "__"
+                normalize_config["meta_prefix"] = "__"
 
             meta_prefix = normalize_config.get("record_prefix")
             if meta_prefix and meta_prefix == ".":
-                normalize_config["record_prefix"] == "__"
+                normalize_config["record_prefix"] = "__"
+
+            sep = normalize_config.get("sep")
+            if sep is None or sep == ".":
+                normalize_config["sep"] = "_"
 
         return normalize_config
 
