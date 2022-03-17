@@ -9,12 +9,15 @@ import pathlib
 import time
 import unittest.mock
 
+import pytest
+from airflow.exceptions import BackfillUnfinished
 from airflow.models import DAG
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 
 # Import Operator
 import astro.sql as aql
+from astro.constants import SUPPORTED_DATABASES
 from astro.settings import SCHEMA
 from astro.sql.operators.agnostic_boolean_check import (
     AgnosticBooleanCheck,
@@ -22,14 +25,11 @@ from astro.sql.operators.agnostic_boolean_check import (
     boolean_check,
 )
 from astro.sql.table import Table
+from tests.operators.utils import get_table_name, run_dag
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
-
-
-def get_table_name(prefix):
-    """get unique table name"""
-    return prefix + "_" + str(int(time.time()))
+CWD = pathlib.Path(__file__).parent
 
 
 def drop_table_snowflake(
@@ -53,194 +53,116 @@ def drop_table_snowflake(
     snowflake_conn.close()
 
 
-class TestBooleanCheckOperator(unittest.TestCase):
-    """
-    Test Boolean Check Operator.
-    """
+@pytest.fixture(scope="module")
+def table(request):
 
-    cwd = pathlib.Path(__file__).parent
+    boolean_check_table = Table(
+        get_table_name("boolean_check_test"),
+        database="pagila",
+        conn_id="postgres_conn",
+        schema="airflow_test_dag",
+    )
+    boolean_check_table_bigquery = Table(
+        get_table_name("boolean_check_test"),
+        conn_id="bigquery",
+        schema=SCHEMA,
+    )
+    boolean_check_table_sqlite = Table(
+        get_table_name("boolean_check_test"), conn_id="sqlite_conn"
+    )
+    boolean_check_table_snowflake = Table(
+        table_name=get_table_name("boolean_check_test"),
+        database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
+        schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
+        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore
+        conn_id="snowflake_conn",
+    )
+    path = str(CWD) + "/../data/homes_append.csv"
+    tables = {
+        "postgres": boolean_check_table,
+        "bigquery": boolean_check_table_bigquery,
+        "sqlite": boolean_check_table_sqlite,
+        "snowflake": boolean_check_table_snowflake,
+    }
 
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.table = "boolean_check_test"
-        aql.load_file(
-            path=str(cls.cwd) + "/../data/homes_append.csv",
-            output_table=Table(
-                cls.table,
-                conn_id="postgres_conn",
-                database="pagila",
-                schema="public",
-            ),
-        ).operator.execute({"run_id": "foo"})
+    aql.load_file(
+        path=path,
+        output_table=tables[request.param],
+    ).operator.execute({"run_id": "foo"})
 
-        cls.snowflake_table = get_table_name("boolean_check_test")
-        aql.load_file(
-            path=str(cls.cwd) + "/../data/homes_append.csv",
-            output_table=Table(
-                conn_id="snowflake_conn",
-                table_name=cls.snowflake_table,
-                schema=os.getenv("SNOWFLAKE_SCHEMA"),
-                database=os.getenv("SNOWFLAKE_DATABASE"),
-                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-            ),
-        ).operator.execute({"run_id": "foo"})
+    yield tables[request.param]
 
-        cls.table = "boolean_check_test"
-        aql.load_file(
-            path=str(cls.cwd) + "/../data/homes_append.csv",
-            output_table=Table(
-                cls.table,
-                conn_id="bigquery",
-                schema=SCHEMA,
-            ),
-        ).operator.execute({"run_id": "foo"})
-        cls.table_sqlite = Table(
-            "boolean_check_test", conn_id="sqlite_conn", schema="sqlite_schema"
-        )
-        aql.load_file(
-            path=str(cls.cwd) + "/../data/homes_append.csv",
-            output_table=cls.table_sqlite,
-        ).operator.execute({"run_id": "foo"})
+    tables[request.param].drop()
 
-    @classmethod
-    def tearDownClass(cls):
-        drop_table_snowflake(
-            table_name=cls.snowflake_table,
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-            conn_id="snowflake_conn",
-        )
 
-    def clear_run(self):
-        self.run = False
+@pytest.mark.parametrize("table", SUPPORTED_DATABASES, indirect=True)
+def test_happyflow_success(sample_dag, table):
+    @aql.transform
+    def get_table(input_table: Table):
+        return "SELECT * FROM {{input_table}}"
 
-    def setUp(self):
-        super().setUp()
-        self.clear_run()
-        self.addCleanup(self.clear_run)
-        self.dag = DAG(
-            "test_dag",
-            default_args={
-                "owner": "airflow",
-                "start_date": DEFAULT_DATE,
-            },
-        )
-
-    def test_happyflow_postgres_success(self):
-        a = boolean_check(
-            table=Table(
-                self.table,
-                database="pagila",
-                conn_id="postgres_conn",
-            ),
-            checks=[Check("test_1", "{{table}}.rooms > 3")],
+    with sample_dag:
+        temp_table = get_table(table)
+        aql.boolean_check(
+            table=temp_table,
+            checks=[Check("test_1", "rooms > 3")],
             max_rows_returned=10,
         )
-        a.execute({"run_id": "foo"})
+    run_dag(sample_dag)
 
-    def test_happyflow_postgres_fail(self):
-        try:
-            a = boolean_check(
-                table=Table(
-                    self.table,
-                    database="pagila",
-                    conn_id="postgres_conn",
-                ),
-                checks=[
-                    Check("test_1", "{{table}}.rooms > 7"),
-                    Check("test_2", "{{table}}.beds >= 3"),
-                ],
-                max_rows_returned=10,
-            )
-            a.execute({"run_id": "foo"})
-            assert False
-        except ValueError:
-            assert True
 
-    def test_happyflow_snowflake_success(self):
-        try:
-            a = boolean_check(
-                table=Table(
-                    conn_id="snowflake_conn",
-                    table_name=self.snowflake_table,
-                    schema=os.getenv("SNOWFLAKE_SCHEMA"),
-                    database=os.getenv("SNOWFLAKE_DATABASE"),
-                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-                ),
-                checks=[Check("test_1", " rooms > 3")],
-                max_rows_returned=10,
-            )
-            a.execute({"run_id": "foo"})
-            assert True
-        except ValueError:
-            assert False
+@pytest.mark.parametrize("table", SUPPORTED_DATABASES, indirect=True)
+def test_happyflow_fail(sample_dag, table, caplog):
+    @aql.transform
+    def get_table(input_table: Table):
+        return "SELECT * FROM {{input_table}}"
 
-    def test_happyflow_snowflake_fail(self):
-        try:
-            a = boolean_check(
-                table=Table(
-                    conn_id="snowflake_conn",
-                    table_name=self.snowflake_table,
-                    schema=os.getenv("SNOWFLAKE_SCHEMA"),
-                    database=os.getenv("SNOWFLAKE_DATABASE"),
-                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-                ),
-                checks=[
-                    Check("test_1", " rooms > 7"),
-                    Check("test_2", " beds >= 3"),
-                ],
-                max_rows_returned=10,
-            )
-            a.execute({"run_id": "foo"})
-            assert False
-        except ValueError:
-            assert True
-
-    def test_happyflow_bigquery_success(self):
-        try:
-            a = boolean_check(
-                table=Table(
-                    self.table,
-                    conn_id="bigquery",
-                    schema=SCHEMA,
-                ),
-                checks=[Check("test_1", "rooms > 3")],
-                max_rows_returned=10,
-            )
-            a.execute({"run_id": "foo"})
-            assert True
-        except ValueError:
-            assert False
-
-    def test_happyflow_sqlite_success(self):
-        try:
-            a = boolean_check(
-                table=self.table_sqlite,
-                checks=[Check("test_1", "rooms > 3")],
-                max_rows_returned=10,
-            )
-            a.execute({"run_id": "foo"})
-            assert True
-        except ValueError:
-            assert False
-
-    def test_happyflow_bigquery_fail(self):
-        try:
-            a = boolean_check(
-                table=Table(
-                    self.table,
-                    conn_id="bigquery",
-                    schema=SCHEMA,
-                ),
+    with pytest.raises(BackfillUnfinished) as e:
+        with sample_dag:
+            temp_table = get_table(table)
+            aql.boolean_check(
+                table=temp_table,
                 checks=[
                     Check("test_1", "rooms > 7"),
                     Check("test_2", "beds >= 3"),
                 ],
                 max_rows_returned=10,
             )
-            a.execute({"run_id": "foo"})
-            assert False
-        except ValueError:
-            assert True
+        run_dag(sample_dag)
+    expected_error = "Some of the check(s) have failed"
+    assert expected_error in caplog.text
+
+
+@pytest.mark.parametrize(
+    "table",
+    [
+        "postgres",
+        pytest.param(
+            "bigquery",
+            marks=pytest.mark.xfail(
+                reason="bigquery don't expect table name before cols."
+            ),
+        ),
+        pytest.param(
+            "snowflake",
+            marks=pytest.mark.xfail(
+                reason="Binding data in type (table) is not supported."
+            ),
+        ),
+        "sqlite",
+    ],
+    indirect=True,
+)
+def test_happyflow_success_with_templated_query(sample_dag, table):
+    @aql.transform
+    def get_table(input_table: Table):
+        return "SELECT * FROM {{input_table}}"
+
+    with sample_dag:
+        temp_table = get_table(table)
+        aql.boolean_check(
+            table=temp_table,
+            checks=[Check("test_1", "{{table}}.rooms > 3")],
+            max_rows_returned=10,
+        )
+    run_dag(sample_dag)

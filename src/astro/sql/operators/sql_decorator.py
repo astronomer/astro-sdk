@@ -8,6 +8,7 @@ from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, TaskInstance
 from airflow.utils.db import provide_session
 from sqlalchemy import create_engine, text
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.sql.functions import Function
 
 from astro.settings import SCHEMA
@@ -118,6 +119,9 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
 
         output_table_name: str = ""
 
+        # Create DEFAULT SCHEMA if not created.
+        self._set_schema_if_needed(SCHEMA)
+
         if not self.raw_sql:
             # Create a table name for the temp table
             if not schema_exists(
@@ -213,15 +217,18 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             output_table_name = self.database + "." + schema + "." + output_table_name
         return output_table_name
 
-    def _set_schema_if_needed(self):
+    def _set_schema_if_needed(self, schema=None):
         if self.conn_type in ["postgres", "snowflake", "bigquery"]:
             schema_statement = create_schema_query(
                 conn_type=self.conn_type,
                 hook=self.hook,
-                schema_id=self.schema,
+                schema_id=schema if schema else self.schema,
                 user=self.user,
             )
-            self._run_sql(schema_statement, {})
+            try:
+                self._run_sql(schema_statement, {})
+            except ProgrammingError as e:
+                print(e)
 
     def get_sql_alchemy_engine(self):
         if self.conn_type == "sqlite":

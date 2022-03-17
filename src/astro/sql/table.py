@@ -1,6 +1,9 @@
 from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, TaskInstance
 
+from astro.constants import BIGQUERY
+from astro.utils import get_hook
+
 MAX_TABLE_NAME_SIZE = 63
 
 
@@ -51,6 +54,19 @@ class Table:
 
     def __str__(self):
         return f"Table(table_name={self.table_name}, database={self.database}, schema={self.schema}, conn_id={self.conn_id}, warehouse={self.warehouse}, role={self.role})"
+
+    def drop(self):
+        hook = get_hook(
+            conn_id=self.conn_id,
+            database=self.database,
+            schema=self.schema,
+            warehouse=self.warehouse,
+        )
+
+        query = f"DROP TABLE IF EXISTS {self.table_name};"
+        if self.conn_type in [BIGQUERY]:
+            query = f"DROP TABLE IF EXISTS {self.schema}.{self.table_name};"
+        hook.run(query)
 
 
 class TempTable(Table):

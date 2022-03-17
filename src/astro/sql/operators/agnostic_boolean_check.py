@@ -7,6 +7,7 @@ from sqlalchemy.sql.expression import table as sqlatable
 
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.table import Table
+from astro.utils.task_id_helper import get_unique_task_id
 
 
 class Check:
@@ -50,11 +51,9 @@ class AgnosticBooleanCheck(SqlDecoratedOperator):
 
         self.table = table
         self.max_rows_returned = max_rows_returned
-        self.conn_id = table.conn_id
         self.checks = checks
-        self.database = table.database
 
-        task_id = table.table_name + "_" + "boolean_check"
+        task_id = get_unique_task_id("boolean_check")
 
         def handler_func(results):
             return results.fetchall()
@@ -65,10 +64,6 @@ class AgnosticBooleanCheck(SqlDecoratedOperator):
         super().__init__(
             raw_sql=True,
             parameters={},
-            conn_id=table.conn_id,
-            database=table.database,
-            schema=table.schema,
-            warehouse=table.warehouse,
             task_id=task_id,
             op_args=(),
             python_callable=null_function,
@@ -77,7 +72,12 @@ class AgnosticBooleanCheck(SqlDecoratedOperator):
         )
 
     def execute(self, context: Dict):
-        conn = BaseHook.get_connection(self.conn_id)
+        self.conn_id = self.table.conn_id
+        self.database = self.table.database
+        self.schema = self.table.schema
+        self.warehouse = self.table.warehouse
+
+        self.conn = BaseHook.get_connection(self.conn_id)
         self.parameters = {"table": self.table}
         self.sql = self.prep_boolean_checks_query(self.table, self.checks, context)
 
@@ -130,9 +130,9 @@ class AgnosticBooleanCheck(SqlDecoratedOperator):
     def prep_results(self, results):
         return (
             select(["*"])
-            .select_from(text("{{table}}"))
+            .select_from(text(self.table.qualified_name()))
             .where(and_(*[text(self.checks[index].expression) for index in results]))
-            .limit("{{limit}}")
+            .limit(self.max_rows_returned)
         )
 
 
