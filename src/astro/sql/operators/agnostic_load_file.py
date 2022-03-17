@@ -117,18 +117,24 @@ class AgnosticLoadFile(BaseOperator):
 
 
     def check_ndjson_config_delimiter(self, conn_type, normalize_config):
+        replacement = "_"
+        illegal_char = "."
+        error_msg = f"{conn_type} illegal char '{illegal_char}' in column name found in normalized data generated, replaced it with '{replacement}'"
         if conn_type in ["bigquery", "snowflake"]:
             meta_prefix = normalize_config.get("meta_prefix")
-            if meta_prefix and meta_prefix == ".":
-                normalize_config["meta_prefix"] = "__"
+            if meta_prefix and meta_prefix == illegal_char:
+                self.log.info(error_msg)
+                normalize_config["meta_prefix"] = replacement
 
-            meta_prefix = normalize_config.get("record_prefix")
-            if meta_prefix and meta_prefix == ".":
-                normalize_config["record_prefix"] = "__"
+            record_prefix = normalize_config.get("record_prefix")
+            if record_prefix and record_prefix == illegal_char:
+                self.log.info(error_msg)
+                normalize_config["record_prefix"] = replacement
 
             sep = normalize_config.get("sep")
-            if sep is None or sep == ".":
-                normalize_config["sep"] = "_"
+            if sep is None or sep == illegal_char:
+                self.log.info(error_msg)
+                normalize_config["sep"] = replacement
 
         return normalize_config
 
