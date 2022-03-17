@@ -10,7 +10,6 @@ from airflow.utils.session import provide_session
 
 from astro import sql as aql
 from astro.dataframe import dataframe as adf
-from astro.settings import SCHEMA
 from astro.sql.operators.agnostic_boolean_check import Check
 from astro.sql.table import Table, TempTable
 from astro.utils.dependencies import PostgresHook, SnowflakeHook
@@ -22,22 +21,6 @@ DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 CWD = pathlib.Path(__file__).parent
 import pytest
-
-
-@pytest.fixture
-def sql_server(request):
-    sql_name = request.param
-    hook_parameters = test_utils.SQL_SERVER_HOOK_PARAMETERS.get(sql_name)
-    hook_class = test_utils.SQL_SERVER_HOOK_CLASS.get(sql_name)
-    if hook_parameters is None or hook_class is None:
-        raise ValueError(f"Unsupported SQL server {sql_name}")
-    hook = hook_class(**hook_parameters)
-    schema = hook_parameters.get("schema", SCHEMA)
-    if not isinstance(hook, BigQueryHook):
-        hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
-    yield (sql_name, hook)
-    if not isinstance(hook, BigQueryHook):
-        hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
 
 
 @provide_session
@@ -56,24 +39,6 @@ default_args = {
     "retries": 1,
     "retry_delay": 0,
 }
-
-
-@pytest.fixture
-def tmp_table(sql_server):
-    sql_name, hook = sql_server
-
-    if isinstance(hook, SnowflakeHook):
-        return TempTable(
-            conn_id=hook.snowflake_conn_id,
-            database=hook.database,
-            warehouse=hook.warehouse,
-        )
-    elif isinstance(hook, PostgresHook):
-        return TempTable(conn_id=hook.postgres_conn_id, database=hook.schema)
-    elif isinstance(hook, SqliteHook):
-        return TempTable(conn_id=hook.sqlite_conn_id, database="sqlite")
-    elif isinstance(hook, BigQueryHook):
-        return TempTable(conn_id=hook.gcp_conn_id)
 
 
 def merge_keys(sql_server):

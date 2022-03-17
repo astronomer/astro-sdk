@@ -64,6 +64,9 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         else:
             self.output_table = None
 
+        if self.op_kwargs.get("handler"):
+            self.handler = self.op_kwargs.pop("handler")
+
         self.database = self.op_kwargs.pop("database", database)
         self.conn_id = self.op_kwargs.pop("conn_id", conn_id)
         self.schema = self.op_kwargs.pop("schema", schema)
@@ -213,7 +216,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         elif self.conn_type == "snowflake" and self.schema and "." not in self.sql:
             output_table_name = self.database + "." + schema + "." + output_table_name
         return output_table_name
-
+   
     def _set_schema_if_needed(self, schema=None):
         schema_statement = ""
         if self.conn_type in ["postgres", "snowflake", "bigquery"]:
