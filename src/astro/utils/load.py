@@ -1,3 +1,6 @@
+"""
+Functions for loading data from a source location to a destination location.
+"""
 import tempfile
 
 import pandas as pd
@@ -7,13 +10,14 @@ from pandas.io.sql import SQLDatabase
 from pyarrow.parquet import ParquetFile
 from sqlalchemy import create_engine
 
-from astro.constants import DEFAULT_CHUNK_SIZE, LOAD_COLUMN_AUTO_DETECT_ROWS
+from astro.constants import DEFAULT_CHUNK_SIZE, LOAD_COLUMN_AUTO_DETECT_ROWS, FileType
 from astro.utils.dependencies import (
     BigQueryHook,
     PostgresHook,
     SnowflakeHook,
     pandas_tools,
 )
+from astro.utils.file import get_filetype
 from astro.utils.schema_util import create_schema_query, schema_exists
 
 
@@ -32,17 +36,18 @@ def load_file_into_dataframe(filepath, filetype, transport_params=None, **kwargs
     :return: return dataframe containing the loaded data
     :rtype: `pandas.DataFrame`
     """
-    mode = {"parquet": "rb"}.get(filetype, "r")
+    mode = {FileType.PARQUET: "rb"}.get(filetype, "r")
     with smart_open.open(
         filepath, mode=mode, transport_params=transport_params
     ) as stream:
-        if filetype == "csv":
+        filetype = get_filetype(filepath)
+        if filetype == FileType.CSV:
             dataframe = pd.read_csv(stream, **kwargs)
-        elif filetype == "json":
+        elif filetype == FileType.JSON:
             dataframe = pd.read_json(stream, **kwargs)
-        elif filetype == "ndjson":
+        elif filetype == FileType.NDJSON:
             dataframe = pd.read_json(stream, lines=True, **kwargs)
-        elif filetype == "parquet":
+        elif filetype == FileType.PARQUET:
             dataframe = pd.read_parquet(stream, **kwargs)
         else:
             raise ValueError(f"Unable to load file {stream} of type {filetype}")
@@ -182,3 +187,39 @@ def load_dataframe_into_sql_table(
             index=False,
         )
     return output_table.table_name
+
+
+def copy_remote_file_to_local(
+    source_filepath, target_filepath=None, is_binary=False, transport_params=None
+):
+    """
+    Copy the contents of a file (which may be available locally or remotely) to a local file.
+    If no target_filepath is specified, creates one, an returns it.
+
+    :param source_filepath: Local filepath or remote URI of the source file
+    :param target_filepath: (optional) Destination filepath in the local filesystem
+    :param is_binary: If the given file is binary or not
+    :param transport_params: Necessary parameters to connect to object store, in case the file is in (S3, GCS)
+    :type source_filepath: str
+    :type target_filepath: str
+    :type is_binary: bool
+    :type transport_params: dict
+    :return: Target file path
+    :rtype: str
+    """
+    # TODO: if the file is too big (e.g. larger than the available disk) we should change this to be a generator and
+    # chunk the original file into smaller pieces
+
+    read_mode = "rb" if is_binary else "r"
+    write_mode = "wb" if is_binary else "w"
+    if target_filepath is None:
+        fp_out = tempfile.NamedTemporaryFile(mode=write_mode, delete=False)
+        target_filepath = fp_out.name
+    else:
+        fp_out = open(target_filepath, write_mode)
+    with smart_open.open(
+        source_filepath, mode=read_mode, transport_params=transport_params
+    ) as fp_in:
+        content = fp_in.read()
+        fp_out.write(content)
+    return target_filepath

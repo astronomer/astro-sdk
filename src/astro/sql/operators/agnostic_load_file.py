@@ -1,13 +1,29 @@
+import os
 from typing import Union
 
+import sqlalchemy
 from airflow.models import BaseOperator
 
-from astro.constants import DEFAULT_CHUNK_SIZE
+from astro.constants import DEFAULT_CHUNK_SIZE, FileType
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils import get_hook
-from astro.utils.load import load_dataframe_into_sql_table, load_file_into_dataframe
-from astro.utils.path import get_paths, get_transport_params, validate_path
+from astro.utils.delete import delete_dataframe_rows_from_table
+from astro.utils.file import get_filetype, get_size, is_binary, is_small
+from astro.utils.load import (
+    copy_remote_file_to_local,
+    load_dataframe_into_sql_table,
+    load_file_into_dataframe,
+    load_file_into_sql_table,
+    load_file_rows_into_dataframe,
+)
+from astro.utils.path import (
+    get_location,
+    get_paths,
+    get_transport_params,
+    is_local,
+    validate_path,
+)
 from astro.utils.task_id_helper import get_task_id
 
 
@@ -48,17 +64,6 @@ class AgnosticLoadFile(BaseOperator):
         self.output_table = output_table
         self.if_exists = if_exists
 
-    def execute_postgres(self, context):
-        # 1. download file(s), if not local
-        # 2. check size
-        # 3. load a subset of rows - specific per format
-        # 3. convert the remaining to csv
-        # 4. get first N lines of the csv file
-        # 5. create the table using the dataframe operation & N lines to automatically indentify columns/types
-        # 6. copy the remaining data using the CP
-        # copy usa from '/Users/EDB1/Downloads/usa.csv' delimiter ',' csv header;
-        pass
-
     def _configure_output_table(self, context):
         if type(self.output_table) == TempTable:
             self.output_table = self.output_table.to_table(
@@ -70,23 +75,97 @@ class AgnosticLoadFile(BaseOperator):
             self.output_table.table_name = create_table_name(context=context)
 
     def execute(self, context):
-        """Loads csv/parquet table from local/S3/GCS with Pandas.
-
-        Infers SQL database type based on connection then loads table to db.
         """
-        self._configure_output_table(context)
-        self.log.info(f"Loading {self.path} into {self.output_table}...")
-
+        Load an existing dataset from a supported file into a SQL table.
+        """
         hook = get_hook(
             conn_id=self.output_table.conn_id,
             database=self.output_table.database,
             schema=self.output_table.schema,
             warehouse=self.output_table.warehouse,
         )
-
         paths = get_paths(self.path, self.file_conn_id)
+        transport_params = get_transport_params(paths[0], self.file_conn_id)
+
+        if self.output_table.database == "postgres":
+            return self.load_to_postgres(context, paths, hook, transport_params)
+        else:
+            return self.load_using_pandas(context, paths, hook, transport_params)
+
+    def _create_an_empty_table_using_pandas(self, filepath, filetype, hook):
+        """
+        Create an empty SQL table. Uses Pandas to identify the types of the columns.
+        In order to identify the column type, load the first rows of content, based on the value of
+        `astro.constants.LOAD_COLUMN_AUTO_DETECT_ROWS`, and delete them after.
+        """
+        pandas_dataframe = load_file_rows_into_dataframe(filepath, filetype)
+        load_dataframe_into_sql_table(
+            pandas_dataframe,
+            self.output_table,
+            hook,
+            self.chunksize,
+            self.if_exists,
+        )
+        engine = self.get_sql_alchemy_engine()
+        delete_dataframe_rows_from_table(
+            pandas_dataframe, self.output_table, hook, engine
+        )
+
+    def load_to_postgres(self, context, paths, hook, transport_params):
+        """
+        Use Postgres COPY to load files into a table. Makes a local copy of the dataset files if they were originally
+        available remotely (GCS, S3, HTTP).
+
+        This implementation assumes that, if we have multiple files, that all the files have a similer size as the first
+        one. We may have to review this in the future.
+        """
+        first_filepath = paths[0]
+        file_type = get_filetype(first_filepath)
+
+        credentials = transport_params
+
+        # Identify if the files are remote. If they are, make a local copy of the first one.
+        remote_source = False
+        if not is_local(first_filepath):
+            remote_source = True
+            is_bin = is_binary(file_type)
+            local_filepath = copy_remote_file_to_local(
+                first_filepath, is_binary=is_bin, transport_params=credentials
+            )
+
+        # Performance tests (inside tests/benchmark) have shown that we can load small files efficiently using pandas
+        # across all the supported databases. Therefore, if the files are small, we default to this strategy.
+        if is_small(local_filepath):
+            return self.load_using_pandas(context, paths, hook, credentials)
+        else:
+            engine = self.get_sql_alchemy_engine()
+            if not sqlalchemy.inspect(engine).has_table(
+                self.output_table.table_name, schema=self.output_table.schema
+            ):
+                self._create_an_empty_table_using_pandas(
+                    local_filepath, file_type, hook
+                )
+            for path in paths:
+                if remote_source and path != local_filepath:
+                    local_filepath = copy_remote_file_to_local(
+                        path, is_binary=is_bin, transport_params=credentials
+                    )
+                load_file_into_sql_table(
+                    local_filepath, file_type, self.output_table.table_name, engine
+                )
+                if remote_source:
+                    os.remove(local_filepath)
+            return self.output_table
+
+    def load_using_pandas(self, context, paths, hook, transport_params):
+        """Loads csv/parquet table from local/S3/GCS with Pandas.
+
+        Infers SQL database type based on connection then loads table to db.
+        """
+        self._configure_output_table(context)
+        self.log.info(f"Loading {self.path} into {self.output_table}...")
         for path in paths:
-            pandas_dataframe = self._load_file_into_dataframe(path)
+            pandas_dataframe = self._load_file_into_dataframe(path, transport_params)
             load_dataframe_into_sql_table(
                 pandas_dataframe,
                 self.output_table,
@@ -94,18 +173,16 @@ class AgnosticLoadFile(BaseOperator):
                 self.chunksize,
                 self.if_exists,
             )
-
         self.log.info(f"Completed loading the data into {self.output_table}.")
         return self.output_table
 
-    def _load_file_into_dataframe(self, filepath):
+    def _load_file_into_dataframe(self, filepath, transport_params):
         """Read file with Pandas.
 
         Select method based on `file_type` (S3 or local).
         """
         validate_path(filepath)
-        filetype = filepath.split(".")[-1]
-        transport_params = get_transport_params(filepath, self.file_conn_id)
+        filetype = get_filetype(filepath)
         return load_file_into_dataframe(filepath, filetype, transport_params)
 
 

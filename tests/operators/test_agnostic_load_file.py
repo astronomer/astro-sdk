@@ -1,19 +1,4 @@
 """
-Copyright Astronomer, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-"""
 Unittest module to test Agnostic Load File function.
 
 Requires the unittest, pytest, and requests-mock Python libraries.
@@ -28,20 +13,15 @@ import copy
 import logging
 import os
 import pathlib
-import time
 import unittest.mock
-import uuid
 from unittest import mock
 
 import pandas as pd
 import pytest
-from airflow import settings
 from airflow.exceptions import BackfillUnfinished, DuplicateTaskIdFound
-from airflow.models import DAG, Connection, DagRun
+from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
-from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.providers.google.cloud.hooks.gcs import GCSHook
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
@@ -54,7 +34,6 @@ from pandas.util.testing import assert_frame_equal
 from astro.settings import SCHEMA
 from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
 from astro.sql.table import Table, TempTable
-from astro.utils.cloud_storage_creds import parse_s3_env_var
 from astro.utils.dependencies import gcs, s3
 from tests.operators import utils as test_utils
 
@@ -567,76 +546,10 @@ def test_load_file_templated_filename(sample_dag, sql_server):
     assert len(df) == 3
 
 
-@pytest.fixture
-def remote_file(request):
-    param = request.param
-    provider = param["name"]
-    no_of_files = param["count"] if "count" in param else 1
-
-    if provider == "google":
-        conn_id = "test_google"
-        conn_type = "google_cloud_platform"
-        extra = {
-            "extra__google_cloud_platform__key_path": os.getenv(
-                "GOOGLE_APPLICATION_CREDENTIALS"
-            )
-        }
-    elif provider == "amazon":
-        key, secret = parse_s3_env_var()
-        conn_id = "test_amazon"
-        conn_type = "S3"
-        extra = {"aws_access_key_id": key, "aws_secret_access_key": secret}
-    else:
-        raise ValueError(f"File location {request.param} not supported")
-
-    new_connection = Connection(conn_id=conn_id, conn_type=conn_type, extra=extra)
-    session = settings.Session()
-    if not (
-        session.query(Connection)
-        .filter(Connection.conn_id == new_connection.conn_id)
-        .first()
-    ):
-        session.add(new_connection)
-        session.commit()
-
-    filename = pathlib.Path(CWD.parent, "data/sample.csv")
-    object_paths = []
-    unique_value = uuid.uuid4()
-    for count in range(no_of_files):
-        object_prefix = f"test/{unique_value}__{count}.csv"
-        if provider == "google":
-            bucket_name = os.getenv("GOOGLE_BUCKET", "dag-authoring")
-            hook = GCSHook(gcp_conn_id=conn_id)
-            hook.upload(bucket_name, object_prefix, filename)
-            object_path = f"gs://{bucket_name}/{object_prefix}"
-        else:
-            bucket_name = os.getenv("AWS_BUCKET", "tmp9")
-            hook = S3Hook(aws_conn_id=conn_id)
-            hook.load_file(filename, object_prefix, bucket_name)
-            object_path = f"s3://{bucket_name}/{object_prefix}"
-
-        object_paths.append(object_path)
-
-    yield conn_id, object_paths
-
-    for count in range(no_of_files):
-        object_prefix = f"test/{unique_value}__{count}.csv"
-        if provider == "google":
-            if hook.exists(bucket_name, object_prefix):
-                hook.delete(bucket_name, object_prefix)
-        else:
-            if hook.check_for_prefix(
-                object_prefix, delimiter="/", bucket_name=bucket_name
-            ):
-                hook.delete_objects(bucket_name, object_prefix)
-
-    session.delete(new_connection)
-    session.flush()
-
-
 @pytest.mark.parametrize(
     "remote_file",
     [{"name": "google", "count": 2}, {"name": "amazon", "count": 2}],
+    ids=["google", "amazon"],
     indirect=True,
 )
 def test_aql_load_file_pattern(remote_file, sample_dag):
