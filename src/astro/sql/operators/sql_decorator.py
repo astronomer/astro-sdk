@@ -216,9 +216,8 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         elif self.conn_type == "snowflake" and self.schema and "." not in self.sql:
             output_table_name = self.database + "." + schema + "." + output_table_name
         return output_table_name
-   
+
     def _set_schema_if_needed(self, schema=None):
-        schema_statement = ""
         if self.conn_type in ["postgres", "snowflake", "bigquery"]:
             schema_statement = create_schema_query(
                 conn_type=self.conn_type,
