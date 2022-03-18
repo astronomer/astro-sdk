@@ -3,11 +3,6 @@ from enum import Enum
 DEFAULT_CHUNK_SIZE = 1000000
 PYPI_PROJECT_NAME = "astro-projects"
 DEFAULT_SCHEMA = "tmp_astro"
-POSTGRES = "postgres"
-BIGQUERY = "bigquery"
-SQLITE = "sqlite"
-SNOWFLAKE = "snowflake"
-SUPPORTED_DATABASES = [POSTGRES, BIGQUERY, SQLITE, SNOWFLAKE]
 
 LOAD_DATAFRAME_BYTES_LIMIT = 512000  # takes < 3 seconds
 LOAD_COLUMN_AUTO_DETECT_ROWS = 1000
@@ -28,5 +23,16 @@ class FileType(Enum):
     PARQUET = "parquet"
 
 
+class Database(Enum):
+    POSTGRES = "postgres"
+    POSTGRESQL = "postgres"
+    SQLITE = "sqlite"
+    BIGQUERY = "bigquery"
+    SNOWFLAKE = "snowflake"
+
+
 SUPPORTED_FILE_LOCATIONS = [const.value for const in FileLocation]
 SUPPORTED_FILE_TYPES = [const.value for const in FileType]
+SUPPORTED_DATABASES = list({const.value for const in Database})
+
+UNIQUE_TABLE_NAME_SIZE = 63
