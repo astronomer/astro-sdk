@@ -1,8 +1,9 @@
 from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, TaskInstance
 
-from astro.constants import BIGQUERY
+from astro.constants import Database
 from astro.utils import get_hook
+from astro.utils.database import get_database_name
 
 MAX_TABLE_NAME_SIZE = 63
 
@@ -64,7 +65,8 @@ class Table:
         )
 
         query = f"DROP TABLE IF EXISTS {self.table_name};"
-        if self.conn_type in [BIGQUERY]:
+        database_name = get_database_name(hook)
+        if database_name == Database.BIGQUERY:
             query = f"DROP TABLE IF EXISTS {self.schema}.{self.table_name};"
         hook.run(query)
 

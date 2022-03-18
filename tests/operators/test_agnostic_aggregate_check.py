@@ -35,7 +35,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
 
 import astro.sql as aql
-from astro.constants import SQLITE, SUPPORTED_DATABASES
+from astro.constants import SUPPORTED_DATABASES, Database
 from astro.settings import SCHEMA
 from astro.sql.table import Table
 from tests.operators.utils import get_table_name, run_dag
@@ -188,7 +188,7 @@ def test_all_three_params_provided_priority_given_to_equal_to_param(sample_dag, 
         run_dag(sample_dag)
 
 
-@pytest.mark.parametrize("table", [SQLITE])
+@pytest.mark.parametrize("table", [Database.SQLITE])
 def test_invalid_params_no_test_values(sample_dag, table):
     @aql.transform
     def get_table(input_table: Table):
@@ -203,7 +203,7 @@ def test_invalid_params_no_test_values(sample_dag, table):
         run_dag(sample_dag)
 
 
-@pytest.mark.parametrize("table", [SQLITE])
+@pytest.mark.parametrize("table", [Database.SQLITE])
 def test_invalid_values(sample_dag, table):
     """greater_than should be less than or equal to less_than"""
 

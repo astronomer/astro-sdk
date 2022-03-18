@@ -1,0 +1,82 @@
+from typing import Union
+
+from airflow.hooks.base import BaseHook
+from airflow.providers.sqlite.hooks.sqlite import SqliteHook
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import Engine
+from sqlalchemy.engine.result import ResultProxy
+
+from astro.constants import Database
+from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
+
+
+def get_database_name(interface: Union[Engine, BaseHook, SqliteHook]) -> Database:
+    """
+    Given a hook or a SQL engine, identify the database name.
+
+    :param interface: interface to the database
+    :type interface: SQLAlchemy engine or Airflow Hook (BigQueryHook, PostgresHook, SnowflakeHook, SqliteHook)
+    :return: the database this interface relates to (e.g. Database.SQLITE)
+    :rtype: astro.constants.Database enum item
+    """
+    if isinstance(interface, BaseHook):
+        hook_to_database = {
+            BigQueryHook: Database.BIGQUERY,
+            PostgresHook: Database.POSTGRES,
+            SnowflakeHook: Database.SNOWFLAKE,
+            SqliteHook: Database.SQLITE,
+        }
+        try:
+            database_name = hook_to_database[type(interface)]
+        except KeyError:
+            raise ValueError(f"Unsupported database {type(interface)}")
+    else:  # SqlAlchemy engine
+        database_name = getattr(Database, interface.name.upper())
+    return database_name
+
+
+def get_sqlalchemy_engine(hook: Union[BaseHook, SqliteHook]) -> Engine:
+    """
+    Given a hook, return a SQLAlchemy engine for the target database.
+
+    :param hook: Airflow Hook used to access a SQL-like database
+    :type hook: (BigQueryHook, PostgresHook, SnowflakeHook, SqliteHook)
+    :return: SQLAlchemy engine
+    :rtype: sqlalchemy.Engine
+    """
+    database = get_database_name(hook)
+    engine = None
+    if database == Database.SQLITE:
+        uri = hook.get_uri()
+        if "////" not in uri:
+            uri = hook.get_uri().replace("///", "////")
+        engine = create_engine(uri)
+    if engine is None:
+        engine = hook.get_sqlalchemy_engine()
+    return engine
+
+
+def run_sql(
+    engine: Engine,
+    sql_statement: Union[str, text],
+    parameters: Union[None, dict] = None,
+) -> ResultProxy:
+    """
+    Run a SQL statement using the given engine.
+
+    :param engine: SQLAlchemy engine
+    :type engine: sqlalchemy.Engine
+    :param sql_statement: SQL statement to be run on the engine
+    :type sql_statement: (sqlalchemy.text or str)
+    :param parameters: (optional) Parameters to be passed to the SQL statement
+    :type parameters: dict
+    :return: Result of running the statement
+    :rtype: sqlalchemy.engine.result.ResultProxy
+    """
+    if parameters is None:
+        parameters = {}
+    connection = engine.connect()
+    if isinstance(sql_statement, str):
+        return connection.execute(text(sql_statement), parameters)
+    else:
+        return connection.execute(sql_statement, parameters)
