@@ -19,20 +19,24 @@ def get_hook(conn_id, database, role=None, schema=None, warehouse=None):
             "schema": schema,
             "warehouse": warehouse,
         },
+        "google_cloud_platform": {"use_legacy_sql": False, "gcp_conn_id": conn_id},
         "bigquery": {"use_legacy_sql": False, "gcp_conn_id": conn_id},
         "sqlite": {"sqlite_conn_id": conn_id},
     }
+    type_to_hook = {
+        "postgresql": PostgresHook,
+        "postgres": PostgresHook,
+        "snowflake": SnowflakeHook,
+        "google_cloud_platform": BigQueryHook,
+        "bigquery": BigQueryHook,
+        "sqlite": SqliteHook,
+    }
     try:
-        hook_class = {
-            "postgresql": PostgresHook,
-            "postgres": PostgresHook,
-            "snowflake": SnowflakeHook,
-            "bigquery": BigQueryHook,
-            "sqlite": SqliteHook,
-        }[conn_type]
+        hook_class = type_to_hook[conn_type]
     except KeyError:
+        supported_types = list(type_to_hook.keys())
         raise ValueError(
-            f"The conn_id {conn_id} is of unsupported type {conn_type}. Current supported types: {list(hook_class.keys())}"
+            f"The conn_id {conn_id} is of unsupported type {conn_type}. Current supported types: {supported_types}"
         )
     else:
         hook = hook_class(**hook_kwargs[conn_type])

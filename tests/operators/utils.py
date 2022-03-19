@@ -1,17 +1,14 @@
 import copy
 import os
-import random
 import time
 from typing import Optional
 
 from airflow.executors.debug_executor import DebugExecutor
-from airflow.hooks.sqlite_hook import SqliteHook
-from airflow.models import DAG
-from airflow.models.taskinstance import State
+from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from airflow.utils import timezone
 from airflow.utils.state import State
-from airflow.utils.types import DagRunType
 
+from astro.settings import SCHEMA
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -24,9 +21,7 @@ SQL_SERVER_HOOK_PARAMETERS = {
         "warehouse": os.getenv("SNOWFLAKE_WAREHOUSE"),
     },
     "postgres": {"postgres_conn_id": "postgres_conn"},
-    "bigquery": {
-        "gcp_conn_id": "bigquery",
-    },
+    "bigquery": {"gcp_conn_id": "google_cloud_default", "use_legacy_sql": False},
     "sqlite": {"sqlite_conn_id": "sqlite_conn"},
 }
 SQL_SERVER_CONNECTION_KEY = {

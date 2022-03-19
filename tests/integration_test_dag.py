@@ -1,18 +1,13 @@
 import pathlib
 
 import pandas as pd
+import pytest
 from airflow.decorators import task, task_group
-from airflow.hooks.sqlite_hook import SqliteHook
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.utils import timezone
-from airflow.utils.db import create_default_connections
-from airflow.utils.session import provide_session
 
 from astro import sql as aql
 from astro.dataframe import dataframe as adf
-from astro.sql.operators.agnostic_boolean_check import Check
 from astro.sql.table import Table, TempTable
-from astro.utils.dependencies import PostgresHook, SnowflakeHook
 from tests.operators import utils as test_utils
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("integration_test_table")
@@ -20,18 +15,6 @@ OUTPUT_TABLE_NAME = test_utils.get_table_name("integration_test_table")
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 CWD = pathlib.Path(__file__).parent
-import pytest
-
-
-@provide_session
-def get_session(session=None):
-    create_default_connections(session)
-    return session
-
-
-@pytest.fixture()
-def session():
-    return get_session()
 
 
 default_args = {

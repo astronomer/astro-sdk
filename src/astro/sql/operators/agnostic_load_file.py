@@ -1,19 +1,29 @@
 import glob
-import os
 from typing import Union
 from urllib.parse import urlparse, urlunparse
 
-import pandas as pd
-import smart_open
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator
 
 from astro.constants import DEFAULT_CHUNK_SIZE
-from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_table_name
-from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
+from astro.utils import get_hook
 from astro.utils.dependencies import gcs, s3
-from astro.utils.load_dataframe import move_dataframe_to_sql
+from astro.utils.file import get_filetype, get_size, is_binary, is_small
+from astro.utils.load import (
+    copy_remote_file_to_local,
+    load_dataframe_into_sql_table,
+    load_file_into_dataframe,
+    load_file_into_sql_table,
+    load_file_rows_into_dataframe,
+)
+from astro.utils.path import (
+    get_location,
+    get_paths,
+    get_transport_params,
+    is_local,
+    validate_path,
+)
 from astro.utils.task_id_helper import get_task_id
 
 
@@ -55,87 +65,60 @@ class AgnosticLoadFile(BaseOperator):
         self.if_exists = if_exists
 
     def execute(self, context):
+        """
+        Load an existing dataset from a supported file into a SQL table.
+        """
+        if self.file_conn_id:
+            BaseHook.get_connection(self.file_conn_id)
+
+        hook = get_hook(
+            conn_id=self.output_table.conn_id,
+            database=self.output_table.database,
+            schema=self.output_table.schema,
+            warehouse=self.output_table.warehouse,
+        )
+        paths = get_paths(self.path, self.file_conn_id)
+        transport_params = get_transport_params(paths[0], self.file_conn_id)
+        return self.load_using_pandas(context, paths, hook, transport_params)
+
+    def load_using_pandas(self, context, paths, hook, transport_params):
         """Loads csv/parquet table from local/S3/GCS with Pandas.
 
         Infers SQL database type based on connection then loads table to db.
         """
-
-        if self.file_conn_id:
-            BaseHook.get_connection(self.file_conn_id)
-
-        # Retrieve conn type
-        conn = BaseHook.get_connection(self.output_table.conn_id)
-        if type(self.output_table) == TempTable:
-            self.output_table = self.output_table.to_table(
-                create_table_name(context=context), SCHEMA
-            )
-        else:
-            self.output_table.schema = self.output_table.schema or SCHEMA
-        if not self.output_table.table_name:
-            self.output_table.table_name = create_table_name(context=context)
-
+        self._configure_output_table(context)
+        self.log.info(f"Loading {self.path} into {self.output_table}...")
         if_exists = self.if_exists
-        paths = self.get_paths(self.path, self.file_conn_id)
         for path in paths:
-            # Read file with Pandas load method based on `file_type` (S3 or local).
-            df = self._load_dataframe(path)
-
-            move_dataframe_to_sql(
-                output_table_name=self.output_table.table_name,
-                conn_id=self.output_table.conn_id,
-                database=self.output_table.database,
-                warehouse=self.output_table.warehouse,
-                schema=self.output_table.schema,
-                df=df,
-                conn_type=conn.conn_type,
-                user=conn.login,
-                chunksize=self.chunksize,
+            pandas_dataframe = self._load_file_into_dataframe(path, transport_params)
+            load_dataframe_into_sql_table(
+                pandas_dataframe,
+                self.output_table,
+                hook,
+                self.chunksize,
                 if_exists=if_exists,
             )
             if_exists = "append"
-        self.log.info(f"returning table {self.output_table}")
+        self.log.info(f"Completed loading the data into {self.output_table}.")
         return self.output_table
 
-    @staticmethod
-    def validate_path(path):
-        """Validate a URL or local file path"""
-        try:
-            result = urlparse(path)
-            return all([result.scheme, result.netloc]) or os.path.isfile(path)
-        except:
-            return False
+    def _configure_output_table(self, context):
+        # TODO: Move this function to the SQLDecorator, so it can be reused across operators
+        if isinstance(self.output_table, TempTable):
+            self.output_table = self.output_table.to_table(
+                create_table_name(context=context)
+            )
+        if not self.output_table.table_name:
+            self.output_table.table_name = create_table_name(context=context)
 
-    def _load_dataframe(self, path):
+    def _load_file_into_dataframe(self, filepath, transport_params):
         """Read file with Pandas.
 
         Select method based on `file_type` (S3 or local).
         """
-
-        if not AgnosticLoadFile.validate_path(path):
-            raise ValueError(f"Invalid path: {path}")
-
-        file_type = path.split(".")[-1]
-        file_scheme = urlparse(path).scheme
-
-        default_params_getter = lambda conn_id: None
-        transport_params = {"s3": s3fs_creds, "gs": gcs_client}.get(
-            file_scheme, default_params_getter
-        )(conn_id=self.file_conn_id)
-
-        deserialiser = {
-            "parquet": pd.read_parquet,
-            "csv": pd.read_csv,
-            "json": pd.read_json,
-            "ndjson": pd.read_json,
-        }
-        mode = {"parquet": "rb"}
-        deserialiser_params = {"ndjson": {"lines": True}}
-        with smart_open.open(
-            path, mode=mode.get(file_type, "r"), transport_params=transport_params
-        ) as stream:
-            return deserialiser[file_type](
-                stream, **deserialiser_params.get(file_type, {})
-            )
+        validate_path(filepath)
+        filetype = get_filetype(filepath)
+        return load_file_into_dataframe(filepath, filetype, transport_params)
 
     def get_paths(self, path, file_conn_id):
         url = urlparse(path)

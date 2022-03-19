@@ -3,14 +3,20 @@ from typing import Dict, Optional
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
-from airflow.hooks.base import BaseHook
-from airflow.hooks.sqlite_hook import SqliteHook
+from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 
-from astro.constants import DEFAULT_CHUNK_SIZE
+from astro.constants import DEFAULT_CHUNK_SIZE, Database
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_table_name
-from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
-from astro.utils.load_dataframe import move_dataframe_to_sql
+from astro.utils import get_hook
+from astro.utils.database import get_database_from_conn_id
+from astro.utils.dependencies import (
+    BigQueryHook,
+    PostgresHook,
+    SnowflakeHook,
+    postgres_sql,
+)
+from astro.utils.load import load_dataframe_into_sql_table
 from astro.utils.table_handler import TableHandler
 
 
@@ -84,7 +90,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         self.handle_op_args()
         self.handle_op_kwargs()
 
-        ret = self.python_callable(*self.op_args, **self.op_kwargs)
+        pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
         if self.output_table:
             self.populate_output_table()
             if type(self.output_table) == TempTable:
@@ -92,21 +98,16 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
                     table_name=create_table_name(context=context), schema=SCHEMA
                 )
             self.output_table.schema = self.output_table.schema or SCHEMA
-            conn = BaseHook.get_connection(self.output_table.conn_id)
-            move_dataframe_to_sql(
-                output_table_name=self.output_table.table_name,
+            hook = get_hook(
                 conn_id=self.output_table.conn_id,
                 database=self.output_table.database,
-                warehouse=self.output_table.warehouse,
                 schema=self.output_table.schema,
-                df=ret,
-                conn_type=conn.conn_type,
-                user=conn.login,
-                chunksize=DEFAULT_CHUNK_SIZE,
+                warehouse=self.output_table.warehouse,
             )
+            load_dataframe_into_sql_table(pandas_dataframe, self.output_table, hook)
             return self.output_table
         else:
-            return ret
+            return pandas_dataframe
 
     def get_snow_hook(self, table: Table) -> SnowflakeHook:
         """
@@ -125,35 +126,33 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         )
 
     def _get_dataframe(self, table: Table):
-        conn_type = BaseHook.get_connection(table.conn_id).conn_type
+        database = get_database_from_conn_id(table.conn_id)
         self.log.info(f"Getting dataframe for {table}")
-        if conn_type == "postgres":
-            from psycopg2 import sql
-
+        if database in (Database.POSTGRES, Database.POSTGRESQL):
             self.hook = PostgresHook(
                 postgres_conn_id=table.conn_id, schema=table.database
             )
             schema = table.schema or SCHEMA
             query = (
-                sql.SQL("SELECT * FROM {schema}.{input_table}")
+                postgres_sql.SQL("SELECT * FROM {schema}.{input_table}")
                 .format(
-                    schema=sql.Identifier(schema),
-                    input_table=sql.Identifier(table.table_name),
+                    schema=postgres_sql.Identifier(schema),
+                    input_table=postgres_sql.Identifier(table.table_name),
                 )
                 .as_string(self.hook.get_conn())
             )
             df = self.hook.get_pandas_df(query)
-        elif conn_type == "snowflake":
+        elif database == Database.SNOWFLAKE:
             hook = self.get_snow_hook(table)
             df = hook.get_pandas_df(
                 "SELECT * FROM IDENTIFIER(%(input_table)s)",
                 parameters={"input_table": table.table_name},
             )
-        elif conn_type == "sqlite":
+        elif database == Database.SQLITE:
             hook = SqliteHook(sqlite_conn_id=table.conn_id, database=table.database)
             engine = hook.get_sqlalchemy_engine()
             df = pd.read_sql_table(table.table_name, engine)
-        elif conn_type == "bigquery":
+        elif database == Database.BIGQUERY:
             hook = BigQueryHook(gcp_conn_id=table.conn_id)
             engine = hook.get_sqlalchemy_engine()
             df = pd.read_sql_table(table.qualified_name(), engine)

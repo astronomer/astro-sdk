@@ -1,11 +1,12 @@
 from typing import Dict, Union
 
 from airflow.exceptions import AirflowException
-from airflow.hooks.base import BaseHook
 
+from astro.constants import Database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.table import Table, TempTable
 from astro.utils.bigquery_merge_func import bigquery_merge_func
+from astro.utils.database import get_database_from_conn_id
 from astro.utils.postgres_merge_func import postgres_merge_func
 from astro.utils.schema_util import (
     get_error_string_for_multiple_dbs,
@@ -58,8 +59,9 @@ class SqlMergeOperator(SqlDecoratedOperator):
             raise ValueError(
                 get_error_string_for_multiple_dbs([self.target_table, self.merge_table])
             )
-        conn_type = BaseHook.get_connection(self.conn_id).conn_type  # type: ignore
-        if conn_type == "postgres":
+
+        database = get_database_from_conn_id(self.conn_id)
+        if database in (Database.POSTGRES, Database.POSTGRESQL):
             self.sql = postgres_merge_func(
                 target_table=self.target_table,
                 merge_table=self.merge_table,
@@ -68,7 +70,7 @@ class SqlMergeOperator(SqlDecoratedOperator):
                 merge_columns=self.merge_columns,
                 conflict_strategy=self.conflict_strategy,
             )
-        elif conn_type == "sqlite":
+        elif database == Database.SQLITE:
             self.sql = sqlite_merge_func(
                 target_table=self.target_table,
                 merge_table=self.merge_table,
@@ -77,7 +79,7 @@ class SqlMergeOperator(SqlDecoratedOperator):
                 merge_columns=self.merge_columns,
                 conflict_strategy=self.conflict_strategy,
             )
-        elif conn_type == "snowflake":
+        elif database == Database.SNOWFLAKE:
             self.sql, self.parameters = snowflake_merge_func(
                 target_table=self.target_table,
                 merge_table=self.merge_table,
@@ -86,7 +88,7 @@ class SqlMergeOperator(SqlDecoratedOperator):
                 merge_columns=self.merge_columns,
                 conflict_strategy=self.conflict_strategy,
             )
-        elif conn_type == "bigquery":
+        elif database == Database.BIGQUERY:
             self.sql, self.parameters = bigquery_merge_func(
                 target_table=self.target_table,
                 merge_table=self.merge_table,
@@ -97,6 +99,5 @@ class SqlMergeOperator(SqlDecoratedOperator):
             )
         else:
             raise AirflowException(f"please give a postgres conn id")
-
         super().execute(context)
         return self.target_table
