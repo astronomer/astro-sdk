@@ -63,6 +63,12 @@ def get_dataframe_from_table(sql_name: str, tmp_table: Table, hook):
 @pytest.mark.parametrize(
     "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
 )
+@pytest.mark.parametrize(
+    "tmp_table",
+    [{"is_temp": True}, {"is_temp": False}],
+    indirect=True,
+    ids=["temp_table", "named_table"],
+)
 def test_aql_http_path_file_to_postgres(sample_dag, tmp_table, sql_server):
     sql_name, hook = sql_server
 
@@ -88,6 +94,12 @@ def test_aql_http_path_file_to_postgres(sample_dag, tmp_table, sql_server):
 @pytest.mark.parametrize(
     "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
 )
+@pytest.mark.parametrize(
+    "tmp_table",
+    [{"is_temp": True}, {"is_temp": False}],
+    indirect=True,
+    ids=["temp_table", "named_table"],
+)
 def test_aql_s3_file_to_postgres(sample_dag, tmp_table, sql_server, remote_file):
     sql_name, hook = sql_server
     file_conn_id, file_uri = remote_file
@@ -105,6 +117,12 @@ def test_aql_s3_file_to_postgres(sample_dag, tmp_table, sql_server, remote_file)
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
+)
+@pytest.mark.parametrize(
+    "tmp_table",
+    [{"is_temp": True}, {"is_temp": False}],
+    indirect=True,
+    ids=["temp_table", "named_table"],
 )
 def test_aql_replace_existing_table(sample_dag, tmp_table, sql_server):
     sql_name, hook = sql_server
@@ -125,6 +143,12 @@ def test_aql_replace_existing_table(sample_dag, tmp_table, sql_server):
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
+)
+@pytest.mark.parametrize(
+    "tmp_table",
+    [{"is_temp": True}, {"is_temp": False}],
+    indirect=True,
+    ids=["temp_table", "named_table"],
 )
 def test_aql_local_file_with_no_table_name(sample_dag, tmp_table, sql_server):
     sql_name, hook = sql_server

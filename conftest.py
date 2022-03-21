@@ -64,32 +64,46 @@ def sample_dag():
 
 
 @pytest.fixture
-def tmp_table(sql_server):
+def tmp_table(request, sql_server):
+    table_type = True
+    table_options = {}
+
+    if getattr(request, "param", None):
+        table_type = request.param.get("is_temp", True)
+        table_options = request.param.get("param", {})
     sql_name, hook = sql_server
 
     if isinstance(hook, SnowflakeHook):
-        temporary_table = TempTable(
-            conn_id=hook.snowflake_conn_id,
-            database=hook.database,
-            warehouse=hook.warehouse,
-        )
+        params = {
+            "conn_id": hook.snowflake_conn_id,
+            "database": hook.database,
+            "warehouse": hook.warehouse,
+        }
     elif isinstance(hook, PostgresHook):
-        temporary_table = TempTable(conn_id=hook.postgres_conn_id, database=hook.schema)
+        params = {"conn_id": hook.postgres_conn_id, "database": hook.schema}
     elif isinstance(hook, SqliteHook):
-        temporary_table = TempTable(conn_id=hook.sqlite_conn_id, database="sqlite")
+        params = {"conn_id": hook.sqlite_conn_id, "database": "sqlite"}
     elif isinstance(hook, BigQueryHook):
-        temporary_table = TempTable(conn_id=hook.gcp_conn_id)
-    yield temporary_table
+        params = {
+            "conn_id": hook.gcp_conn_id,
+        }
+    else:
+        raise ValueError("Unsupported Database")
+
+    params.update(table_options)
+    table = TempTable(**params) if table_type else Table(**params)
+
+    yield table
 
     if isinstance(hook, SqliteHook):
-        hook.run(f"DROP TABLE IF EXISTS {temporary_table.table_name}")
+        hook.run(f"DROP TABLE IF EXISTS {table.table_name}")
         hook.run(f"DROP INDEX IF EXISTS unique_index")
     elif isinstance(hook, SnowflakeHook):
-        hook.run(f"DROP TABLE IF EXISTS {temporary_table.table_name}")
+        hook.run(f"DROP TABLE IF EXISTS {table.table_name}")
     elif not isinstance(hook, BigQueryHook):
         # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
         # Example: tables which are not fixtures and constraints. This is an agressive approach towards tearing down:
-        hook.run(f"DROP SCHEMA IF EXISTS {temporary_table.schema} CASCADE;")
+        hook.run(f"DROP SCHEMA IF EXISTS {table.schema} CASCADE;")
 
 
 @pytest.fixture
