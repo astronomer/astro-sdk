@@ -31,8 +31,8 @@ dag = DAG(
     schedule_interval="@daily",
     catchup=False,
     params={
-        "min_rooms": 0,
-        "max_rooms": 50,
+        "min_rooms": Param(0, type="integer"),
+        "max_rooms": Param(50, type="integer"),
     },
 )
 
