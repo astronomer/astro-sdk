@@ -1,4 +1,4 @@
 SELECT *
 FROM {{combine_homes}}
-WHERE ROOMS > 0
-AND ROOMS < 50
+WHERE ROOMS > {{ params['min_rooms']}}
+AND ROOMS <  {{ params['max_rooms']}}

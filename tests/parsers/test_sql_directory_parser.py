@@ -18,6 +18,8 @@ log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 import os
 
+from airflow.models.param import Param
+
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -30,6 +32,7 @@ class TestSQLParsing(unittest.TestCase):
                 "owner": "airflow",
                 "start_date": DEFAULT_DATE,
             },
+            params={"foo": Param("*")},
         )
 
     def tearDown(self):
