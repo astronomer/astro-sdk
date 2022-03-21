@@ -394,7 +394,7 @@ def test_load_file(sample_dag, sql_server, file_type):
 
 
 @pytest.mark.parametrize(
-    "sql_server", ["bigquery", "postgres", "snowflake"], indirect=True
+    "sql_server", ["bigquery", "postgres", "snowflake", "sqlite"], indirect=True
 )
 def test_load_file_chunks(sample_dag, sql_server):
     file_type = "csv"
