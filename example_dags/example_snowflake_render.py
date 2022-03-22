@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 
 from airflow.decorators import dag
+from airflow.models import DAG, Param
 
 from astro.sql import load_file, render
 from astro.sql.table import Table
@@ -24,9 +25,19 @@ connection info.
 """
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
+dag = DAG(
+    dag_id="example_snowflake_render",
+    start_date=datetime(2022, 2, 1),
+    schedule_interval="@daily",
+    catchup=False,
+    params={
+        "min_rooms": Param(0, type="integer"),
+        "max_rooms": Param(50, type="integer"),
+    },
+)
 
-@dag(start_date=datetime(2022, 2, 1), schedule_interval="@daily", catchup=False)
-def example_snowflake_render():
+
+with dag:
     homes_data1 = load_file(
         path=FILE_PATH + "homes.csv",
         output_table=Table(
@@ -52,6 +63,3 @@ def example_snowflake_render():
         homes=homes_data1,
         homes2=homes_data2,
     )
-
-
-example_snowflake_render_dag = example_snowflake_render()
