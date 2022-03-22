@@ -6,4 +6,4 @@ coverage:
         threshold: 2%
 ignore:
   - "test_*.py"
-  - "*/**/test/*"
+  - "*/**/tests/*"
