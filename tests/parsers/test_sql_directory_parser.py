@@ -32,7 +32,7 @@ class TestSQLParsing(unittest.TestCase):
                 "owner": "airflow",
                 "start_date": DEFAULT_DATE,
             },
-            params={"foo": Param("*")},
+            params={"foo": Param("first_name")},
         )
 
     def tearDown(self):
