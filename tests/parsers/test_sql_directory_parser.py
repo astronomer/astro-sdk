@@ -163,3 +163,57 @@ class TestSQLParsing(unittest.TestCase):
             dataframe_func(rendered_tasks["test_inheritance"])
 
         test_utils.run_dag(self.dag)
+
+
+def run_render_dag_with_dataframe(params):
+    """
+    Runs two tasks with a direct dependency, the DAG will fail if task two can not inherit the table produced by task 1
+    :return:
+    """
+    import pandas as pd
+
+    from astro.dataframe import dataframe as adf
+
+    template_searchpath, filename, modelname = params
+    dag = DAG(
+        "test_dag",
+        default_args={
+            "owner": "airflow",
+            "start_date": DEFAULT_DATE,
+        },
+        params={"foo": Param("first_name")},
+    )
+
+    @adf
+    def dataframe_func(df: pd.DataFrame):
+        print(df.to_string)
+
+    dag.template_searchpath = template_searchpath
+    with dag:
+        rendered_tasks = aql.render(filename)
+        dataframe_func(rendered_tasks[modelname])
+
+    test_utils.run_dag(dag)
+
+
+from pytest_describe import behaves_like
+
+
+def describe_render():
+    @behaves_like(run_render_dag_with_dataframe)
+    def with_no_template_path():
+        @pytest.fixture
+        def params():
+            return [], "postgres_simple_tasks", "test_inheritance"
+
+    @behaves_like(run_render_dag_with_dataframe)
+    def with_one_template_path():
+        @pytest.fixture
+        def params():
+            return [dir_path], "test_searchpath", "test_inheritance"
+
+    @behaves_like(run_render_dag_with_dataframe)
+    def with_multi_template_path():
+        @pytest.fixture
+        def params():
+            return ["foobar", dir_path], "test_searchpath", "test_inheritance"

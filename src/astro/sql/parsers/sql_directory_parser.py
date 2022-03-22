@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 from typing import Dict, Optional
@@ -21,12 +22,17 @@ def get_path_for_render(path):
     :param path:
     :return:
     """
-    try:
-        template_path = DagContext.get_current_dag().template_searchpath
-        os.listdir(template_path + "/" + path)
-        return template_path + "/" + path
-    except Exception:
-        return path
+    template_path = DagContext.get_current_dag().template_searchpath
+    if template_path:
+        for t in template_path:
+            try:
+                os.listdir(t + "/" + path)
+                logging.info("Template_path found. rendering %s", t + "/" + path)
+                return t + "/" + path
+            except FileNotFoundError:
+                logging.info("Could not find template_path %s", t + "/" + path)
+    logging.info("No template path found, rendering base path %s", path)
+    return path
 
 
 def render(
