@@ -144,26 +144,6 @@ class TestSQLParsing(unittest.TestCase):
 
         test_utils.run_dag(self.dag)
 
-    def test_parse_to_dataframe_with_template_path(self):
-        """
-        Runs two tasks with a direct dependency, the DAG will fail if task two can not inherit the table produced by task 1
-        :return:
-        """
-        import pandas as pd
-
-        from astro.dataframe import dataframe as adf
-
-        @adf
-        def dataframe_func(df: pd.DataFrame):
-            print(df.to_string)
-
-        self.dag.template_searchpath = dir_path + "/template_search/"
-        with self.dag:
-            rendered_tasks = aql.render("test_searchpath")
-            dataframe_func(rendered_tasks["test_inheritance"])
-
-        test_utils.run_dag(self.dag)
-
 
 def run_render_dag_with_dataframe(params):
     """
