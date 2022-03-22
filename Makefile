@@ -4,7 +4,9 @@ VENV = venv
 
 OK := $(shell if [ -d $(VENV) ]; then echo "ok"; fi)
 
-
+ifdef venv
+	VENV = $(venv)
+endif
 
 ifeq ($(OK),)
 	path := $(shell which python3)
@@ -14,11 +16,6 @@ else
 	PYTHON = $(VENV)/bin/python3
 	PIP = $(VENV)/bin/pip
 endif
-
-b:
-	@echo $(OK)
-	@echo $(PYTHON)
-	@echo $(PIP)
 
 install: 
 	$(PIP) install --upgrade pip
@@ -56,7 +53,17 @@ clean:
 	rm -rf $(VENV)
 
 help:
-	@echo "Use commands install, setup, init_venv, clean"
+	@echo -e "Usage: make [command] [option]=[value]"
+	@echo -e "Commands:"
+	@echo -e "\t install \t install dependencies"
+	@echo -e "\t activate \t activate virtual environment"
+	@echo -e "\t init_venv \t initialize virtual environment \n\t\t\t Options: venv=[path] - path to virtual environment"
+	@echo -e "\t setup \t initialize virtual environment and install dependencies. \n\t\t\t Options: collection=[collection] - run tests for specific collection"
+	@echo -e "\t test \t run tests \n\t\t\t Options: db=[db] - run tests for specific database"
+	@echo -e "\t unit_test \t run unit tests"
+	@echo -e "\t integration_test \t run integration tests"
+	@echo -e "\t clean \t remove virtual environment"
+	@echo -e "\t help \t show this help"
 
 quality:
 	pre-commit run --all-files
