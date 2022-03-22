@@ -65,11 +65,11 @@ def sample_dag():
 
 @pytest.fixture
 def test_table(request, sql_server):
-    table_type = True
+    is_tmp_table = True
     table_options = {}
 
     if getattr(request, "param", None):
-        table_type = request.param.get("is_temp", True)
+        is_tmp_table = request.param.get("is_temp", True)
         table_options = request.param.get("param", {})
     sql_name, hook = sql_server
 
@@ -91,7 +91,7 @@ def test_table(request, sql_server):
         raise ValueError("Unsupported Database")
 
     params.update(table_options)
-    table = TempTable(**params) if table_type else Table(**params)
+    table = TempTable(**params) if is_tmp_table else Table(**params)
 
     yield table
 

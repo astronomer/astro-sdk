@@ -14,6 +14,7 @@ import logging
 import os
 import pathlib
 import unittest.mock
+from typing import Union
 from unittest import mock
 
 import pandas as pd
@@ -44,7 +45,7 @@ OUTPUT_SCHEMA = os.getenv("SNOWFLAKE_SCHEMA")
 CWD = pathlib.Path(__file__).parent
 
 
-def get_dataframe_from_table(sql_name: str, test_table: Table, hook):
+def get_dataframe_from_table(sql_name: str, test_table: Union[Table, TempTable], hook):
     if sql_name == "bigquery":
         client = bigquery.Client()
         query_job = client.query(
