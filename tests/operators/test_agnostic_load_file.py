@@ -373,6 +373,47 @@ def test_load_file(sample_dag, sql_server, file_type, tmp_table):
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
+    "sql_server",
+    [
+        "postgres",
+        "bigquery",
+    ],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    "tmp_table",
+    [{"is_temp": False, "param": {"schema": "custom_schema"}}],
+    indirect=True,
+)
+@pytest.mark.parametrize("file_type", ["csv"])
+def test_load_file_with_named_schema(sample_dag, sql_server, file_type, tmp_table):
+    database_name, sql_hook = sql_server
+
+    with sample_dag:
+        load_file(
+            path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}")),
+            file_conn_id="",
+            output_table=tmp_table,
+        )
+    test_utils.run_dag(sample_dag)
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {tmp_table.qualified_name()}")
+
+    assert len(df) == 3
+    expected = pd.DataFrame(
+        [
+            {"id": 1, "name": "First"},
+            {"id": 2, "name": "Second"},
+            {"id": 3, "name": "Third with unicode पांचाल"},
+        ]
+    )
+    df = df.rename(columns=str.lower)
+    df = df.astype({"id": "int64"})
+    expected = expected.astype({"id": "int64"})
+    assert_frame_equal(df, expected)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
     "sql_server", ["bigquery", "postgres", "snowflake"], indirect=True
 )
 def test_load_file_chunks(sample_dag, sql_server, tmp_table):
