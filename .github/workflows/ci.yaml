@@ -71,7 +71,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        group: [ 1, 2, 3, 4, 5, 6, 7, 8 ]
+        database: ["postgres", "snowflake", "bigquery", "sqlite", "not postgres and not snowflake and not sqlite and not bigquery"]
+        group: [ 1, 2]
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -101,7 +102,7 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s test -- --splits 8 --group ${{ matrix.group }} --cov=./ --cov-report=xml --cov-branch
+      - run: nox -s test -- -k ${{ matrix.databse }} --splits 2 --group ${{ matrix.group }} --cov=./ --cov-report=xml --cov-branch
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
