@@ -113,7 +113,7 @@ def test_aql_s3_file_to_postgres(sample_dag, tmp_table, sql_server, remote_file)
     # Workaround for snowflake capitalized col names
     sort_cols = "name"
     if sort_cols not in df.columns:
-        sort_cols.upper()
+        sort_cols = sort_cols.upper()
 
     df = df.sort_values(by=[sort_cols])
 
