@@ -44,16 +44,16 @@ OUTPUT_SCHEMA = os.getenv("SNOWFLAKE_SCHEMA")
 CWD = pathlib.Path(__file__).parent
 
 
-def get_dataframe_from_table(sql_name: str, tmp_table: Table, hook):
+def get_dataframe_from_table(sql_name: str, test_table: Table, hook):
     if sql_name == "bigquery":
         client = bigquery.Client()
         query_job = client.query(
-            f"SELECT * FROM astronomer-dag-authoring.{tmp_table.qualified_name()}"
+            f"SELECT * FROM astronomer-dag-authoring.{test_table.qualified_name()}"
         )
         df = query_job.to_dataframe()
     else:
         df = pd.read_sql(
-            f"SELECT * FROM {tmp_table.qualified_name()}",
+            f"SELECT * FROM {test_table.qualified_name()}",
             con=hook.get_conn(),
         )
     return df
@@ -64,23 +64,23 @@ def get_dataframe_from_table(sql_name: str, tmp_table: Table, hook):
     "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
 )
 @pytest.mark.parametrize(
-    "tmp_table",
+    "test_table",
     [{"is_temp": True}, {"is_temp": False}],
     indirect=True,
     ids=["temp_table", "named_table"],
 )
-def test_load_file_with_http_path_file(sample_dag, tmp_table, sql_server):
+def test_load_file_with_http_path_file(sample_dag, test_table, sql_server):
     sql_name, hook = sql_server
 
     with sample_dag:
         load_file(
             path="https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/homes_main.csv",
             file_conn_id="",
-            output_table=tmp_table,
+            output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
 
-    df = get_dataframe_from_table(sql_name, tmp_table, hook)
+    df = get_dataframe_from_table(sql_name, test_table, hook)
     assert df.shape == (3, 9)
 
 
@@ -95,20 +95,20 @@ def test_load_file_with_http_path_file(sample_dag, tmp_table, sql_server):
     "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
 )
 @pytest.mark.parametrize(
-    "tmp_table",
+    "test_table",
     [{"is_temp": True}, {"is_temp": False}],
     indirect=True,
     ids=["temp_table", "named_table"],
 )
-def test_aql_load_remote_file_to_dbs(sample_dag, tmp_table, sql_server, remote_file):
+def test_aql_load_remote_file_to_dbs(sample_dag, test_table, sql_server, remote_file):
     sql_name, hook = sql_server
     file_conn_id, file_uri = remote_file
 
     with sample_dag:
-        load_file(path=file_uri[0], file_conn_id=file_conn_id, output_table=tmp_table)
+        load_file(path=file_uri[0], file_conn_id=file_conn_id, output_table=test_table)
     test_utils.run_dag(sample_dag)
 
-    df = get_dataframe_from_table(sql_name, tmp_table, hook)
+    df = get_dataframe_from_table(sql_name, test_table, hook)
 
     # Workaround for snowflake capitalized col names
     sort_cols = "name"
@@ -125,22 +125,22 @@ def test_aql_load_remote_file_to_dbs(sample_dag, tmp_table, sql_server, remote_f
     "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
 )
 @pytest.mark.parametrize(
-    "tmp_table",
+    "test_table",
     [{"is_temp": True}, {"is_temp": False}],
     indirect=True,
     ids=["temp_table", "named_table"],
 )
-def test_aql_replace_existing_table(sample_dag, tmp_table, sql_server):
+def test_aql_replace_existing_table(sample_dag, test_table, sql_server):
     sql_name, hook = sql_server
     data_path_1 = str(CWD) + "/../data/homes.csv"
     data_path_2 = str(CWD) + "/../data/homes2.csv"
     with sample_dag:
-        task_1 = load_file(path=data_path_1, file_conn_id="", output_table=tmp_table)
-        task_2 = load_file(path=data_path_2, file_conn_id="", output_table=tmp_table)
+        task_1 = load_file(path=data_path_1, file_conn_id="", output_table=test_table)
+        task_2 = load_file(path=data_path_2, file_conn_id="", output_table=test_table)
         task_1 >> task_2
     test_utils.run_dag(sample_dag)
 
-    df = get_dataframe_from_table(sql_name, tmp_table, hook)
+    df = get_dataframe_from_table(sql_name, test_table, hook)
     data_df = pd.read_csv(data_path_2)
 
     assert df.shape == data_df.shape
@@ -151,19 +151,19 @@ def test_aql_replace_existing_table(sample_dag, tmp_table, sql_server):
     "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
 )
 @pytest.mark.parametrize(
-    "tmp_table",
+    "test_table",
     [{"is_temp": True}, {"is_temp": False}],
     indirect=True,
     ids=["temp_table", "named_table"],
 )
-def test_aql_local_file_with_no_table_name(sample_dag, tmp_table, sql_server):
+def test_aql_local_file_with_no_table_name(sample_dag, test_table, sql_server):
     sql_name, hook = sql_server
     data_path = str(CWD) + "/../data/homes.csv"
     with sample_dag:
-        load_file(path=data_path, file_conn_id="", output_table=tmp_table)
+        load_file(path=data_path, file_conn_id="", output_table=test_table)
     test_utils.run_dag(sample_dag)
 
-    df = get_dataframe_from_table(sql_name, tmp_table, hook)
+    df = get_dataframe_from_table(sql_name, test_table, hook)
     data_df = pd.read_csv(data_path)
 
     assert df.shape == data_df.shape
@@ -228,17 +228,17 @@ def test_aws_decode():
 
 
 @pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
-def test_load_file_templated_filename(sample_dag, sql_server, tmp_table):
+def test_load_file_templated_filename(sample_dag, sql_server, test_table):
     database_name, sql_hook = sql_server
     with sample_dag:
         load_file(
             path=str(CWD) + "/../data/{{ var.value.foo }}/example.csv",
             file_conn_id="",
-            output_table=tmp_table,
+            output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
 
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {tmp_table.qualified_name()}")
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
     assert len(df) == 3
 
 
@@ -250,7 +250,7 @@ def test_load_file_templated_filename(sample_dag, sql_server, tmp_table):
     indirect=True,
 )
 @pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
-def test_aql_load_file_pattern(remote_file, sample_dag, tmp_table, sql_server):
+def test_aql_load_file_pattern(remote_file, sample_dag, test_table, sql_server):
     file_conn_id, file_prefix = remote_file
     filename = pathlib.Path(CWD.parent, "data/sample.csv")
     sql_name, hook = sql_server
@@ -259,18 +259,18 @@ def test_aql_load_file_pattern(remote_file, sample_dag, tmp_table, sql_server):
         load_file(
             path=file_prefix[0][0:-5],
             file_conn_id=file_conn_id,
-            output_table=tmp_table,
+            output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
 
-    df = get_dataframe_from_table(sql_name, tmp_table, hook)
+    df = get_dataframe_from_table(sql_name, test_table, hook)
     test_df_rows = pd.read_csv(filename).shape[0]
     assert test_df_rows * 2 == df.shape[0]
 
 
 @pytest.mark.integration
 @pytest.mark.parametrize("sql_server", ["postgres"], indirect=True)
-def test_aql_load_file_local_file_pattern(sample_dag, tmp_table, sql_server):
+def test_aql_load_file_local_file_pattern(sample_dag, test_table, sql_server):
     filename = str(CWD.parent) + "/data/homes_pattern_1.csv"
     database_name, sql_hook = sql_server
 
@@ -280,13 +280,13 @@ def test_aql_load_file_local_file_pattern(sample_dag, tmp_table, sql_server):
         load_file(
             path=str(CWD.parent) + "/data/homes_pattern_*",
             file_conn_id="",
-            output_table=tmp_table,
+            output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
 
     # Read table from db
     df = pd.read_sql(
-        f"SELECT * FROM {tmp_table.qualified_name()}", con=sql_hook.get_conn()
+        f"SELECT * FROM {test_table.qualified_name()}", con=sql_hook.get_conn()
     )
     assert test_df_rows * 2 == df.shape[0]
 
@@ -300,7 +300,7 @@ def test_aql_load_file_local_file_pattern(sample_dag, tmp_table, sql_server):
     ids=["google", "amazon"],
 )
 def test_load_file_using_file_connection(
-    sample_dag, remote_file, sql_server, tmp_table
+    sample_dag, remote_file, sql_server, test_table
 ):
     database_name, sql_hook = sql_server
     file_conn_id, file_uri = remote_file
@@ -308,11 +308,11 @@ def test_load_file_using_file_connection(
         load_file(
             path=file_uri[0],
             file_conn_id=file_conn_id,
-            output_table=tmp_table,
+            output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
 
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {tmp_table.qualified_name()}")
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
     assert len(df) == 3
 
 
@@ -345,17 +345,17 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(
     "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
 )
 @pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
-def test_load_file(sample_dag, sql_server, file_type, tmp_table):
+def test_load_file(sample_dag, sql_server, file_type, test_table):
     database_name, sql_hook = sql_server
 
     with sample_dag:
         load_file(
             path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}")),
             file_conn_id="",
-            output_table=tmp_table,
+            output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {tmp_table.qualified_name()}")
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
 
     assert len(df) == 3
     expected = pd.DataFrame(
@@ -381,22 +381,22 @@ def test_load_file(sample_dag, sql_server, file_type, tmp_table):
     indirect=True,
 )
 @pytest.mark.parametrize(
-    "tmp_table",
+    "test_table",
     [{"is_temp": False, "param": {"schema": "custom_schema"}}],
     indirect=True,
 )
 @pytest.mark.parametrize("file_type", ["csv"])
-def test_load_file_with_named_schema(sample_dag, sql_server, file_type, tmp_table):
+def test_load_file_with_named_schema(sample_dag, sql_server, file_type, test_table):
     database_name, sql_hook = sql_server
 
     with sample_dag:
         load_file(
             path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}")),
             file_conn_id="",
-            output_table=tmp_table,
+            output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {tmp_table.qualified_name()}")
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
 
     assert len(df) == 3
     expected = pd.DataFrame(
@@ -416,7 +416,7 @@ def test_load_file_with_named_schema(sample_dag, sql_server, file_type, tmp_tabl
 @pytest.mark.parametrize(
     "sql_server", ["bigquery", "postgres", "snowflake"], indirect=True
 )
-def test_load_file_chunks(sample_dag, sql_server, tmp_table):
+def test_load_file_chunks(sample_dag, sql_server, test_table):
     file_type = "csv"
     database_name, sql_hook = sql_server
 
@@ -437,7 +437,7 @@ def test_load_file_chunks(sample_dag, sql_server, tmp_table):
             load_file(
                 path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}")),
                 file_conn_id="",
-                output_table=tmp_table,
+                output_table=test_table,
             )
         test_utils.run_dag(sample_dag)
 

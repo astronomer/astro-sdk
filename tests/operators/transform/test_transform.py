@@ -22,7 +22,7 @@ cwd = pathlib.Path(__file__).parent
     ],
     indirect=True,
 )
-def test_dataframe_transform(sql_server, sample_dag, tmp_table):
+def test_dataframe_transform(sql_server, sample_dag, test_table):
     print("test_dataframe_to_database")
 
     @adf
@@ -42,7 +42,7 @@ def test_dataframe_transform(sql_server, sample_dag, tmp_table):
         )
 
     with sample_dag:
-        my_df = get_dataframe(output_table=tmp_table)
+        my_df = get_dataframe(output_table=test_table)
         pg_df = sample_pg(my_df)
         validate_dataframe(pg_df)
     test_utils.run_dag(sample_dag)
@@ -58,7 +58,7 @@ def test_dataframe_transform(sql_server, sample_dag, tmp_table):
     ],
     indirect=True,
 )
-def test_transform(sql_server, sample_dag, tmp_table):
+def test_transform(sql_server, sample_dag, test_table):
     @aql.transform
     def sample_function(input_table: Table):
         return "SELECT * FROM {{input_table}} LIMIT 10"
@@ -70,7 +70,7 @@ def test_transform(sql_server, sample_dag, tmp_table):
     with sample_dag:
         homes_file = aql.load_file(
             path=str(cwd) + "/../../data/homes.csv",
-            output_table=tmp_table,
+            output_table=test_table,
         )
         first_model = sample_function(
             input_table=homes_file,
@@ -92,7 +92,7 @@ def test_transform(sql_server, sample_dag, tmp_table):
     ],
     indirect=True,
 )
-def test_raw_sql(sql_server, sample_dag, tmp_table):
+def test_raw_sql(sql_server, sample_dag, test_table):
     @aql.run_raw_sql
     def raw_sql_query(my_input_table: Table, created_table: Table, num_rows: int):
         return "SELECT * FROM {{my_input_table}} LIMIT {{num_rows}}"
@@ -104,12 +104,14 @@ def test_raw_sql(sql_server, sample_dag, tmp_table):
     with sample_dag:
         homes_file = aql.load_file(
             path=str(cwd) + "/../../data/homes.csv",
-            output_table=tmp_table,
+            output_table=test_table,
         )
         raw_sql_result = (
             raw_sql_query(
                 my_input_table=homes_file,
-                created_table=tmp_table.to_table(sample_dag.dag_id + "_RAW_SQL_CREATE"),
+                created_table=test_table.to_table(
+                    sample_dag.dag_id + "_RAW_SQL_CREATE"
+                ),
                 num_rows=5,
                 handler=lambda cur: cur.fetchall(),
             ),

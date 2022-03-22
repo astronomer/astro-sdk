@@ -64,7 +64,7 @@ def sample_dag():
 
 
 @pytest.fixture
-def tmp_table(request, sql_server):
+def test_table(request, sql_server):
     table_type = True
     table_options = {}
 
