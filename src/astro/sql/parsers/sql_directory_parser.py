@@ -36,7 +36,7 @@ def get_path_for_render(path):
 
 
 def render(
-    path,
+    path: str = "",
     conn_id: Optional[str] = None,
     database: Optional[str] = None,
     schema: Optional[str] = None,
@@ -44,6 +44,53 @@ def render(
     role: Optional[str] = None,
     **kwargs,
 ):
+    """
+    aql.render renders a single sql file or a directory of sql files and turns them into a group of tasks with
+    dependencies. The result of this function is a dictionary of tasks that you can reference in downstream tasks.
+
+    e.g.:
+
+    dag = DAG(
+        dag_id="example_postgres_render",
+        start_date=datetime(2019, 1, 1),
+        max_active_runs=3,
+        schedule_interval=timedelta(minutes=30),
+        default_args=default_args,
+        template_searchpath=dir_path,
+    )
+
+
+    @adf
+    def print_results(df: pd.DataFrame):
+        print(df.to_string())
+
+
+    with dag:
+        models = aql.render(path="models")
+        print_results(models["top_rentals"])
+
+    :param path: an optional string that determines the directory or file we process. By default we will run your
+    path against and `template_searchpath` strings you apply at the DAG level (however you are welcome to supply an
+    absolute path as well). If you do not supply a path we will assume that the first template_searchpath houses your
+    SQL files (though we do recommend you keep them in subdirectories).
+    assume
+    :param conn_id: connection ID, can also be supplied in SQL frontmatter.
+    :param database:  database name, can also be supplied in SQL frontmatter.
+    :param schema: schema name, can also be supplied in SQL frontmatter.
+    :param warehouse: warehouse name (snowflake only), can also be supplied in SQL frontmatter.
+    :param role: role name (snowflake only), can also be supplied in SQL frontmatter.
+    :param kwargs: any kwargs you supply besides the ones mentioned will be passed on to the model rendering context.
+    This means that if you have SQL file that inherits a table named `homes`, you can do something like this:
+
+    ```
+       with dag:
+        loaded_homes = aql.load_file(...)
+        models = aql.render(path="models", homes=loaded_homes)
+    ```
+
+    :return: returns a dictionary of type <string, xcomarg>, where the key is the name of the SQL file (minus .sql),
+    and the value is the resulting model
+    """
     path = get_path_for_render(path)
     files = [
         f
