@@ -6,10 +6,27 @@ import frontmatter
 from airflow.decorators.base import get_unique_task_id
 from airflow.decorators.task_group import task_group
 from airflow.exceptions import AirflowException
+from airflow.models.dag import DagContext
 from airflow.models.xcom_arg import XComArg
 
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.table import Table, TempTable
+
+
+def get_path_for_render(path):
+    """
+    Generate a path using either the DAG's template_searchpath with a relative path, or with the relative path
+    to the DAG file
+
+    :param path:
+    :return:
+    """
+    try:
+        template_path = DagContext.get_current_dag().template_searchpath
+        os.listdir(template_path + "/" + path)
+        return template_path + "/" + path
+    except Exception:
+        return path
 
 
 def render(
@@ -21,7 +38,7 @@ def render(
     role: Optional[str] = None,
     **kwargs,
 ):
-    # raise AirflowException(f"Failed because cwd is {os.listdir(path)}, {os.}")
+    path = get_path_for_render(path)
     files = [
         f
         for f in os.listdir(path)

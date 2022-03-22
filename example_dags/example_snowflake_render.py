@@ -59,7 +59,7 @@ with dag:
     )
 
     homes_models = render(
-        dir_path + "/demo_parse_directory/homes_example/",
+        "demo_parse_directory/homes_example/",
         homes=homes_data1,
         homes2=homes_data2,
     )
