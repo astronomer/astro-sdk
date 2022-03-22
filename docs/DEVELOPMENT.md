@@ -13,7 +13,7 @@ Prerequisites
 If you use pipx, use the following command to install Nox:
 
     pipx install nox
-    
+
 Once you have installed, please run the following command to create a `.env` file:
 
 ```bash
@@ -27,7 +27,7 @@ Finally, let's set up a toy postgres to run queries against.
 
 We've created a docker image that uses the sample [pagila](https://github.com/devrimgunduz/pagila) database for testing and experimentation.
 To use this database please run the following docker image in the background. You'll notice that we are using port `5433` to ensure that
-this postgres instance does not interfere with other running postgres instances. 
+this postgres instance does not interfere with other running postgres instances.
 
 ```
 docker run --rm -it -p 5433:5432 dimberman/pagila-test &
