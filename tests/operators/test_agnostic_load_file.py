@@ -117,7 +117,7 @@ def test_aql_load_remote_file_to_dbs(sample_dag, tmp_table, sql_server, remote_f
 
     df = df.sort_values(by=[sort_cols])
 
-    assert df.iloc[0].to_dict()["name"] == "First"
+    assert df.iloc[0].to_dict()[sort_cols] == "First"
 
 
 @pytest.mark.integration
