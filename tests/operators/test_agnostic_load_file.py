@@ -100,7 +100,7 @@ def test_load_file_with_http_path_file(sample_dag, tmp_table, sql_server):
     indirect=True,
     ids=["temp_table", "named_table"],
 )
-def test_aql_s3_file_to_postgres(sample_dag, tmp_table, sql_server, remote_file):
+def test_aql_load_remote_file_to_dbs(sample_dag, tmp_table, sql_server, remote_file):
     sql_name, hook = sql_server
     file_conn_id, file_uri = remote_file
 
