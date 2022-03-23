@@ -12,6 +12,8 @@ import pathlib
 from typing import Dict
 
 import pytest
+from airflow.exceptions import BackfillUnfinished
+from airflow.models import DAG
 from airflow.utils import timezone
 
 # Import Operator
@@ -142,38 +144,33 @@ tables = [
 ]
 
 
-@pytest.mark.parametrize("tables", tables)
-class TestStatsCheckOperator:
-    """
-    Test Stats Check Operator.
-    """
+@pytest.mark.parametrize(
+    "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
+)
+def test_stats_check_postgres_outlier_exists(sample_dag, sql_server, tmp_table):
+    tables_objects = create_tables_objects(tables)
+    with sample_dag:
+        aql.stats_check(
+            main_table=tables_objects[0],
+            compare_table=tables_objects[1],
+            checks=[aql.OutlierCheck("room_check", {"rooms": "rooms"}, 2, 0.0)],
+            max_rows_returned=10,
+        )
+    test_utils.run_dag(sample_dag)
 
-    cwd = pathlib.Path(__file__).parent
 
-    def test_stats_check_postgres_outlier_exists(self, tables):
-        tables_objects = create_tables_objects(tables)
-        try:
-            a = aql.stats_check(
+@pytest.mark.parametrize(
+    "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
+)
+def test_stats_check_outlier_exists(sample_dag, sql_server, tmp_table):
+    tables_objects = create_tables_objects(tables)
+    with pytest.raises(BackfillUnfinished):
+        with sample_dag:
+            aql.stats_check(
                 main_table=tables_objects[0],
                 compare_table=tables_objects[1],
                 checks=[aql.OutlierCheck("room_check", {"rooms": "rooms"}, 2, 0.0)],
                 max_rows_returned=10,
             )
-            a.execute({"run_id": "foo"})
-            assert False
-        except ValueError:
-            assert True
+    test_utils.run_dag(sample_dag)
 
-    def test_stats_check_postgres_outlier_not_exists(self, tables):
-        tables_objects = create_tables_objects(tables)
-        try:
-            a = aql.stats_check(
-                main_table=tables_objects[0],
-                compare_table=tables_objects[2],
-                checks=[aql.OutlierCheck("room_check", {"rooms": "rooms"}, 2, 0.0)],
-                max_rows_returned=10,
-            )
-            a.execute({"run_id": "foo"})
-            assert True
-        except ValueError:
-            assert False
