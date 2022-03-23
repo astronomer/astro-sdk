@@ -1,5 +1,6 @@
 import logging
 import os
+import pathlib
 import re
 from typing import Dict, Optional
 
@@ -17,7 +18,8 @@ from astro.sql.table import Table, TempTable
 def get_path_for_render(path):
     """
     Generate a path using either the DAG's template_searchpath with a relative path, or with the relative path
-    to the DAG file
+    to the DAG file. We first check to see if the path exists insde of any of the template_searchpaths (Which mean that
+    template_searchpaths take precedence), and if we can not find a match, we return the path raw.
 
     :param path:
     :return:
@@ -26,11 +28,12 @@ def get_path_for_render(path):
     if template_path:
         for t in template_path:
             try:
-                os.listdir(t + "/" + path)
-                logging.info("Template_path found. rendering %s", t + "/" + path)
-                return t + "/" + path
+                full_path = str(pathlib.Path(t).joinpath(pathlib.Path(path)))
+                os.listdir(full_path)
+                logging.info("Template_path found. rendering %s", full_path)
+                return full_path
             except FileNotFoundError:
-                logging.info("Could not find template_path %s", t + "/" + path)
+                logging.info("Could not find template_path %s", full_path)
     logging.info("No template path found, rendering base path %s", path)
     return path
 
@@ -51,11 +54,8 @@ def render(
     e.g.:
 
     dag = DAG(
-        dag_id="example_postgres_render",
-        start_date=datetime(2019, 1, 1),
-        max_active_runs=3,
-        schedule_interval=timedelta(minutes=30),
-        default_args=default_args,
+        dag_id="example_postgres_render"
+        ...
         template_searchpath=dir_path,
     )
 
@@ -63,7 +63,6 @@ def render(
     @adf
     def print_results(df: pd.DataFrame):
         print(df.to_string())
-
 
     with dag:
         models = aql.render(path="models")
