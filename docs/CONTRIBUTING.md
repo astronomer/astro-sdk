@@ -33,7 +33,7 @@ though! Look at the links below if you're not sure how to open a PR.
 If you have other questions, use [Github Discussions](https://github.com/astro-projects/astro/discussions).
 
 
-# Creating a local development 
+# Creating a local development
 
 Follow the steps described in [development](DEVELOPMENT.md).
 

@@ -15,12 +15,12 @@ General flow of the DAG is to extract the data from csv's and combine using SQL,
 then switch to Python for a melt transformation, then back to SQL for final
 filtering. The data is then loaded by appending to an existing reporting table.
 
-Before running this DAG, run the following query in your snowflake terminal to set 
+Before running this DAG, run the following query in your snowflake terminal to set
 up the "reporting table"
 
 CREATE TABLE homes_reporting (
   sell number,
-  list number, 
+  list number,
   variable varchar,
   value number
 );
@@ -36,10 +36,10 @@ FILE_PATH = dir_path + "/data/"
 @transform
 def extract_data(homes1: Table, homes2: Table):
     return """
-    SELECT * 
+    SELECT *
     FROM {{homes1}}
     UNION
-    SELECT * 
+    SELECT *
     FROM {{homes2}}
     """
 

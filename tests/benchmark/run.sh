@@ -65,12 +65,12 @@ echo - Output: $(get_abs_filename $results_file)
     jq -r '.databases[] | [.name] | @tsv' $config_path | while IFS=$'\t' read -r database; do
       jq -r '.datasets[] | [.name] | @tsv' $config_path | while IFS=$'\t' read -r dataset; do
         for chunk_size in "${chunk_sizes_array[@]}"; do
-	  echo "$i $dataset $database $chunk_size"
-	   ASTRO_CHUNKSIZE=$chunk_size python -W ignore $runner_path --dataset="$dataset" --database="$database" --revision $git_revision --chunk-size=$chunk_size 1>> $results_file &
-	   if command -v peekprof &> /dev/null; then
+      echo "$i $dataset $database $chunk_size"
+       ASTRO_CHUNKSIZE=$chunk_size python -W ignore $runner_path --dataset="$dataset" --database="$database" --revision $git_revision --chunk-size=$chunk_size 1>> $results_file &
+       if command -v peekprof &> /dev/null; then
              # https://github.com/exapsy/peekprof
-	     peekprof -html "/tmp/$dataset-$database-$chunk_size.html" -refresh 1000ms -pid $! > /tmp/$dataset-$database-$chunk_size.csv
-	   fi
+         peekprof -html "/tmp/$dataset-$database-$chunk_size.html" -refresh 1000ms -pid $! > /tmp/$dataset-$database-$chunk_size.csv
+       fi
         done
       done
     done

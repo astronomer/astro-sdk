@@ -9,30 +9,61 @@ repos:
     hooks:
       - id: identity
       - id: check-hooks-apply
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.1.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.9.0
+    hooks:
+      - id: rst-backticks
+      - id: python-no-log-warn
+      - id: python-check-mock-methods
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.1.13
+    hooks:
+      - id: forbid-crlf
+      - id: remove-crlf
+      - id: forbid-tabs
+      - id: remove-tabs
+
   - repo: https://github.com/psf/black
-    rev: 21.7b0
+    rev: 22.1.0
     hooks:
       - id: black
+
   - repo: https://github.com/asottile/blacken-docs
-    rev: v1.10.0
+    rev: v1.12.1
     hooks:
       - id: blacken-docs
         alias: black
-        additional_dependencies: [black==21.7b0]
+        additional_dependencies: [black==22.1.0]
+
   - repo: https://github.com/timothycrosley/isort
-    rev: 5.9.3
+    rev: 5.10.1
     hooks:
       - id: isort
         name: Run isort to sort imports in Python files
         args: [ "--profile", "black" ]
         files: \.py$
+
   -   repo: https://github.com/pre-commit/mirrors-mypy
-      rev: ''  # Use the sha / tag you want to point at
+      rev: 'v0.941'
       hooks:
       -   id: mypy
           additional_dependencies: [types-PyYAML]
+
   -   repo: https://github.com/asottile/pyupgrade
-      rev: v2.31.0
+      rev: v2.31.1
       hooks:
       -   id: pyupgrade
           args: [--py37-plus]

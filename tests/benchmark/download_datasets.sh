@@ -28,7 +28,7 @@ curl 'https://coronavirus.data.gov.uk/api/v2/data?areaType=overview&metric=covid
 # 2. the GCP SDK
 
 echo $'\nDownloading the Github timeline dataset to' $github_timeline_path...
-if [ ! -n "$(gsutil ls $gcs_github_timeline_dir)" ]; then 
+if [ ! -n "$(gsutil ls $gcs_github_timeline_dir)" ]; then
   bq extract \
     --destination_format CSV \
     bigquery-public-data:samples.github_timeline \

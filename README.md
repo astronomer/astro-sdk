@@ -15,7 +15,7 @@
 [![codecov](https://codecov.io/gh/astro-projects/astro/branch/main/graph/badge.svg?token=MI4SSE50Q6)](https://codecov.io/gh/astro-projects/astro)
 
 **astro** allows rapid and clean development of {Extract, Load, Transform} workflows using Python.
-It helps DAG authors to achieve more with less code. 
+It helps DAG authors to achieve more with less code.
 It is powered by [Apache Airflow](https://www.airflow.apache.org) and maintained by [Astronomer](https://astronomer.io).
 
 > :warning: **Disclaimer** This project's development status is alpha. In other words, it is not production-ready yet.
@@ -130,7 +130,7 @@ A summary of the currently available operations in **astro**. More details are a
   * update: replace existing rows with new ones
 * `save_file`: export SQL table rows into a destination file
 * `dataframe`: export given SQL table into in-memory Pandas data-frame
-* `render`: given a directory containing SQL statements, dynamically create transform tasks within a DAG 
+* `render`: given a directory containing SQL statements, dynamically create transform tasks within a DAG
 
 ## Documentation
 

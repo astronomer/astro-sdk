@@ -25,7 +25,7 @@ Give context and describe the motivation of your proposal here.
 * What change do you propose to make?
 * Propose the interface here.
 * Other considerations?
-* What is the scope of this AEP? 
+* What is the scope of this AEP?
 * What defines this AEP as "done"?
 
 
@@ -35,44 +35,5 @@ Give context and describe the motivation of your proposal here.
 * Which users are affected by the change?
 * How are users affected by the change? (e.g. is it a breaking change?)
 * Is there anything special to consider about this AEP?
-* Difficulty in implementation or rollout etc.? 
+* Difficulty in implementation or rollout etc.?
 * Downsides?
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
