@@ -171,10 +171,10 @@ def run_merge(output_specs: TempTable, merge_parameters, mode, sql_type):
     ],
     indirect=True,
 )
-def test_merge(sql_server, sample_dag, tmp_table, merge_parameters):
+def test_merge(sql_server, sample_dag, test_table, merge_parameters):
     sql_type, _ = sql_server
     merge_params, mode = merge_parameters
     with sample_dag:
-        output_table = tmp_table
+        output_table = test_table
         run_merge(output_table, merge_params, mode, sql_type)
     test_utils.run_dag(sample_dag)

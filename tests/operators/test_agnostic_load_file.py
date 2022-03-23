@@ -14,6 +14,7 @@ import logging
 import os
 import pathlib
 import unittest.mock
+from typing import Union
 from unittest import mock
 
 import pandas as pd
@@ -44,468 +45,176 @@ OUTPUT_SCHEMA = os.getenv("SNOWFLAKE_SCHEMA")
 CWD = pathlib.Path(__file__).parent
 
 
-def drop_table_postgres(table_name, postgres_conn):
-    cursor = postgres_conn.cursor()
-    cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
-    postgres_conn.commit()
-    cursor.close()
-    postgres_conn.close()
-
-
-class TestAgnosticLoadFile(unittest.TestCase):
-    """
-    Test agnostic load file.
-    """
-
-    bucket_name = "dag-authoring"
-    blob_file_name = "homes.csv"
-    storage_client = None
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        cls.SNOWFLAKE_OUTPUT_TABLE_NAME = test_utils.get_table_name(
-            "expected_table_from_csv"
-        )
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        test_utils.drop_table_snowflake(
-            table_name=cls.SNOWFLAKE_OUTPUT_TABLE_NAME,  # type: ignore
-            database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore
-            conn_id="snowflake_conn",
-        )
-
-    def setUp(self):
-        super().setUp()
-        self.clear_run()
-        self.addCleanup(self.clear_run)
-        self.dag = DAG(
-            "test_dag", default_args={"owner": "airflow", "start_date": DEFAULT_DATE}
-        )
-        self.init_storage_client()
-
-    def init_storage_client(self):
-        self.storage_client = storage.Client()
-
-    def upload_blob(self):
-        self.delete_blob()
-
-        with open(str(CWD) + "/../data/" + str(self.blob_file_name)) as f:
-            content = f.read()
-
-        bucket = self.storage_client.bucket(self.bucket_name)
-        blob = bucket.blob(self.blob_file_name)
-        t = blob.upload_from_filename(str(CWD) + "/../data/" + str(self.blob_file_name))
-        print("File uploaded.")
-
-    def delete_blob(self):
-        bucket = self.storage_client.bucket(self.bucket_name)
-        blob = bucket.blob(self.blob_file_name)
-        try:
-            blob.delete()
-            print(f"Blob {self.blob_file_name} deleted.")
-        except NotFound as e:
-            print(f"File {self.blob_file_name} not found.")
-
-    def clear_run(self):
-        self.run = False
-
-    def tearDown(self):
-        super().tearDown()
-        with create_session() as session:
-            session.query(DagRun).delete()
-            session.query(TI).delete()
-
-    def create_and_run_task(self, decorator_func, op_args, op_kwargs):
-        with self.dag:
-            f = decorator_func(*op_args, **op_kwargs)
-
-        dr = self.dag.create_dagrun(
-            run_id=DagRunType.MANUAL.value,
-            start_date=timezone.utcnow(),
-            execution_date=DEFAULT_DATE,
-            data_interval=[DEFAULT_DATE, DEFAULT_DATE],
-            state=State.RUNNING,
-        )
-        f.operator.run(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE)
-        return f
-
-    def create_and_run_tasks(self, decorator_funcs):
-        tasks = []
-        with self.dag:
-            for decorator_func in decorator_funcs:
-                tasks.append(
-                    decorator_func["func"](
-                        *decorator_func["op_args"], **decorator_func["op_kwargs"]
-                    )
-                )
-        test_utils.run_dag(self.dag)
-        return tasks
-
-    def test_path_validation(self):
-        test_table = [
-            {"input": "S3://mybucket/puppy.jpg", "output": True},
-            {
-                "input": "https://my-bucket.s3.us-west-2.amazonaws.com/puppy.png",
-                "output": True,
-            },
-            {"input": "/etc/someFile/randomFileName.csv", "output": False},
-            {"input": "\x00", "output": False},
-            {"input": "a" * 256, "output": False},
-        ]
-
-        for test in test_table:
-            assert AgnosticLoadFile.validate_path(test["input"]) == test["output"]
-
-    def test_poc_for_need_unique_task_id_for_same_path(self):
-        OUTPUT_TABLE_NAME = "expected_table_from_csv_1"
-
-        tasks_params = []
-        for _ in range(5):
-            tasks_params.append(
-                {
-                    "func": load_file,
-                    "op_args": (),
-                    "op_kwargs": {
-                        "path": str(CWD) + "/../data/homes.csv",
-                        "file_conn_id": "",
-                        "task_id": "task_id",
-                        "output_table": Table(
-                            OUTPUT_TABLE_NAME,
-                            database="pagila",
-                            conn_id="postgres_conn",
-                        ),
-                    },
-                }
-            )
-        tasks_params[-1]["op_kwargs"]["task_id"] = "task_id"
-        try:
-            self.create_and_run_tasks(tasks_params)
-            assert False
-        except DuplicateTaskIdFound:
-            assert True
-
-    def test_unique_task_id_for_same_path(self):
-        OUTPUT_TABLE_NAME = "expected_table_from_csv_1"
-
-        tasks_params = []
-        for _ in range(4):
-            tasks_params.append(
-                {
-                    "func": load_file,
-                    "op_args": (),
-                    "op_kwargs": {
-                        "path": str(CWD) + "/../data/homes.csv",
-                        "file_conn_id": "",
-                        "output_table": Table(
-                            OUTPUT_TABLE_NAME,
-                            database="pagila",
-                            conn_id="postgres_conn",
-                        ),
-                    },
-                }
-            )
-        tasks_params[-1]["op_kwargs"]["task_id"] = "task_id"
-
-        tasks = self.create_and_run_tasks(tasks_params)
-
-        assert tasks[0].operator.task_id != tasks[1].operator.task_id
-        assert tasks[1].operator.task_id == "load_file___1"
-        assert tasks[2].operator.task_id == "load_file___2"
-        assert tasks[3].operator.task_id == "task_id"
-
-    def test_aql_local_file_to_postgres_no_table_name(self):
-        OUTPUT_TABLE_NAME = "expected_table_from_csv"
-
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-
-        # Drop target table
-        drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
-
-        task = self.create_and_run_task(
-            load_file,
-            (),
-            {
-                "path": str(CWD) + "/../data/homes.csv",
-                "file_conn_id": "",
-                "output_table": TempTable(database="pagila", conn_id="postgres_conn"),
-            },
-        )
-
-        # Read table from db
-        df = pd.read_sql(
-            f"SELECT * FROM {SCHEMA}.test_dag_load_file__1",
-            con=self.hook_target.get_conn(),
-        )
-
-        assert df.iloc[0].to_dict() == {
-            "sell": 142.0,
-            "list": 160.0,
-            "living": 28.0,
-            "rooms": 10.0,
-            "beds": 5.0,
-            "baths": 3.0,
-            "age": 60.0,
-            "acres": 0.28,
-            "taxes": 3167.0,
-        }
-
-    def test_aql_local_file_to_bigquery_no_table_name(self):
-        OUTPUT_TABLE_NAME = "expected_table_from_csv"
-        data_path = str(CWD) + "/../data/homes.csv"
-        self.hook_target = BigQueryHook(gcp_conn_id="bigquery", use_legacy_sql=False)
-
-        task = self.create_and_run_task(
-            load_file,
-            (),
-            {
-                "path": data_path,
-                "file_conn_id": "",
-                "output_table": Table(
-                    OUTPUT_TABLE_NAME,
-                    conn_id="bigquery",
-                    schema=SCHEMA,
-                ),
-            },
-        )
-
+def get_dataframe_from_table(sql_name: str, test_table: Union[Table, TempTable], hook):
+    if sql_name == "bigquery":
         client = bigquery.Client()
         query_job = client.query(
-            f"SELECT * FROM astronomer-dag-authoring.{SCHEMA}.{OUTPUT_TABLE_NAME}"
+            f"SELECT * FROM astronomer-dag-authoring.{test_table.qualified_name()}"
         )
-        bigquery_df = query_job.to_dataframe()
-
-        data_df = pd.read_csv(data_path)
-
-        assert bigquery_df.shape == data_df.shape
-
-    def test_aql_overwrite_existing_table(self):
-        OUTPUT_TABLE_NAME = "expected_table_from_csv"
-
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
+        df = query_job.to_dataframe()
+    else:
+        df = pd.read_sql(
+            f"SELECT * FROM {test_table.qualified_name()}",
+            con=hook.get_conn(),
         )
+    return df
 
-        # Drop target table
-        drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
 
-        self.create_and_run_task(
-            load_file,
-            (),
-            {
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
+)
+@pytest.mark.parametrize(
+    "test_table",
+    [{"is_temp": True}, {"is_temp": False}],
+    indirect=True,
+    ids=["temp_table", "named_table"],
+)
+def test_load_file_with_http_path_file(sample_dag, test_table, sql_server):
+    sql_name, hook = sql_server
+
+    with sample_dag:
+        load_file(
+            path="https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/homes_main.csv",
+            file_conn_id="",
+            output_table=test_table,
+        )
+    test_utils.run_dag(sample_dag)
+
+    df = get_dataframe_from_table(sql_name, test_table, hook)
+    assert df.shape == (3, 9)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "remote_file",
+    [{"name": "google"}, {"name": "amazon"}],
+    indirect=True,
+    ids=["google_gcs", "amazon_s3"],
+)
+@pytest.mark.parametrize(
+    "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
+)
+@pytest.mark.parametrize(
+    "test_table",
+    [{"is_temp": True}, {"is_temp": False}],
+    indirect=True,
+    ids=["temp_table", "named_table"],
+)
+def test_aql_load_remote_file_to_dbs(sample_dag, test_table, sql_server, remote_file):
+    sql_name, hook = sql_server
+    file_conn_id, file_uri = remote_file
+
+    with sample_dag:
+        load_file(path=file_uri[0], file_conn_id=file_conn_id, output_table=test_table)
+    test_utils.run_dag(sample_dag)
+
+    df = get_dataframe_from_table(sql_name, test_table, hook)
+
+    # Workaround for snowflake capitalized col names
+    sort_cols = "name"
+    if sort_cols not in df.columns:
+        sort_cols = sort_cols.upper()
+
+    df = df.sort_values(by=[sort_cols])
+
+    assert df.iloc[0].to_dict()[sort_cols] == "First"
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
+)
+@pytest.mark.parametrize(
+    "test_table",
+    [{"is_temp": True}, {"is_temp": False}],
+    indirect=True,
+    ids=["temp_table", "named_table"],
+)
+def test_aql_replace_existing_table(sample_dag, test_table, sql_server):
+    sql_name, hook = sql_server
+    data_path_1 = str(CWD) + "/../data/homes.csv"
+    data_path_2 = str(CWD) + "/../data/homes2.csv"
+    with sample_dag:
+        task_1 = load_file(path=data_path_1, file_conn_id="", output_table=test_table)
+        task_2 = load_file(path=data_path_2, file_conn_id="", output_table=test_table)
+        task_1 >> task_2
+    test_utils.run_dag(sample_dag)
+
+    df = get_dataframe_from_table(sql_name, test_table, hook)
+    data_df = pd.read_csv(data_path_2)
+
+    assert df.shape == data_df.shape
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
+)
+@pytest.mark.parametrize(
+    "test_table",
+    [{"is_temp": True}, {"is_temp": False}],
+    indirect=True,
+    ids=["temp_table", "named_table"],
+)
+def test_aql_local_file_with_no_table_name(sample_dag, test_table, sql_server):
+    sql_name, hook = sql_server
+    data_path = str(CWD) + "/../data/homes.csv"
+    with sample_dag:
+        load_file(path=data_path, file_conn_id="", output_table=test_table)
+    test_utils.run_dag(sample_dag)
+
+    df = get_dataframe_from_table(sql_name, test_table, hook)
+    data_df = pd.read_csv(data_path)
+
+    assert df.shape == data_df.shape
+
+
+def test_unique_task_id_for_same_path(sample_dag):
+    OUTPUT_TABLE_NAME = "expected_table_from_csv_1"
+
+    tasks = []
+
+    with sample_dag:
+        for index in range(4):
+            params = {
                 "path": str(CWD) + "/../data/homes.csv",
-                "file_conn_id": "",
-                "output_table": Table(
-                    table_name=OUTPUT_TABLE_NAME,
-                    database="pagila",
-                    conn_id="postgres_conn",
-                ),
-            },
-        )
-
-        with create_session() as session:
-            session.query(DagRun).delete()
-            session.query(TI).delete()
-
-        self.create_and_run_task(
-            load_file,
-            (),
-            {
-                "path": str(CWD) + "/../data/homes.csv",
-                "file_conn_id": "",
-                "output_table": Table(
-                    table_name=OUTPUT_TABLE_NAME,
-                    database="pagila",
-                    conn_id="postgres_conn",
-                ),
-            },
-        )
-
-    def test_aql_s3_file_to_postgres(self):
-        OUTPUT_TABLE_NAME = "expected_table_from_s3_csv"
-
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-
-        # Drop target table
-        drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
-
-        self.create_and_run_task(
-            load_file,
-            (),
-            {
-                "path": "s3://tmp9/homes.csv",
-                "file_conn_id": "",
-                "output_table": Table(
-                    table_name=OUTPUT_TABLE_NAME,
-                    database="pagila",
-                    conn_id="postgres_conn",
-                ),
-            },
-        )
-
-        # Read table from db
-        df = pd.read_sql(
-            f"SELECT * FROM {SCHEMA}.{OUTPUT_TABLE_NAME}",
-            con=self.hook_target.get_conn(),
-        )
-
-        assert df.iloc[0].to_dict()["Sell"] == 142.0
-
-    def test_aql_http_path_file_to_postgres(self):
-        OUTPUT_TABLE_NAME = "expected_table_from_s3_csv"
-
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-
-        # Drop target table
-        drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
-
-        self.create_and_run_task(
-            load_file,
-            (),
-            {
-                "path": "https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/homes_main.csv",
-                "file_conn_id": "",
-                "output_table": Table(
-                    table_name=OUTPUT_TABLE_NAME,
-                    database="pagila",
-                    conn_id="postgres_conn",
-                ),
-            },
-        )
-
-        # Read table from db
-        df = pd.read_sql(
-            f"SELECT * FROM {SCHEMA}.{OUTPUT_TABLE_NAME}",
-            con=self.hook_target.get_conn(),
-        )
-
-        assert df.shape == (3, 9)
-
-    def test_aql_s3_file_to_postgres_no_table_name(self):
-        OUTPUT_TABLE_NAME = "test_dag_load_file_homes_csv_2"
-
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-
-        # Drop target table
-        drop_table_postgres(
-            f"{SCHEMA}.{OUTPUT_TABLE_NAME}",
-            self.hook_target.get_conn(),
-        )
-
-        self.create_and_run_task(
-            load_file,
-            (),
-            {
-                "path": "s3://tmp9/homes.csv",
-                "file_conn_id": "",
-                "output_table": Table(
-                    table_name=OUTPUT_TABLE_NAME,
-                    database="pagila",
-                    conn_id="postgres_conn",
-                ),
-            },
-        )
-
-        # Read table from db
-        df = pd.read_sql(
-            f"SELECT * FROM {SCHEMA}.{OUTPUT_TABLE_NAME}",
-            con=self.hook_target.get_conn(),
-        )
-
-        assert df.iloc[0].to_dict()["Sell"] == 142.0
-
-    def test_aql_s3_file_to_postgres_specify_schema(self):
-        OUTPUT_TABLE_NAME = "expected_table_from_s3_csv"
-
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-
-        # Drop target table
-        drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
-
-        self.create_and_run_task(
-            load_file,
-            (),
-            {
-                "path": "s3://tmp9/homes.csv",
                 "file_conn_id": "",
                 "output_table": Table(
                     OUTPUT_TABLE_NAME,
                     database="pagila",
                     conn_id="postgres_conn",
-                    schema="public",
                 ),
-            },
-        )
+            }
+            if index == 3:
+                params["task_id"] = "task_id"
 
-        # Read table from db
-        df = pd.read_sql(
-            f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=self.hook_target.get_conn()
-        )
+            task = load_file(**params)
+            tasks.append(task)
 
-        assert df.iloc[0].to_dict()["Sell"] == 142.0
+    test_utils.run_dag(sample_dag)
 
-    def test_aql_gcs_file_to_postgres(self):
-        # To Do: add service account creds
-        self.upload_blob()
-        OUTPUT_TABLE_NAME = "expected_table_from_gcs_csv"
-
-        self.hook_target = PostgresHook(
-            postgres_conn_id="postgres_conn", schema="pagila"
-        )
-
-        # Drop target table
-        drop_table_postgres(OUTPUT_TABLE_NAME, self.hook_target.get_conn())
-
-        self.create_and_run_task(
-            load_file,
-            (),
-            {
-                "path": "gs://dag-authoring/homes.csv",
-                "file_conn_id": "",
-                "output_table": Table(
-                    OUTPUT_TABLE_NAME,
-                    database="pagila",
-                    conn_id="postgres_conn",
-                    schema="public",
-                ),
-            },
-        )
-
-        # Read table from db
-        df = pd.read_sql(
-            f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=self.hook_target.get_conn()
-        )
-        assert df.iloc[0].to_dict()["sell"] == 142.0
+    assert tasks[0].operator.task_id != tasks[1].operator.task_id
+    assert tasks[1].operator.task_id == "load_file___1"
+    assert tasks[2].operator.task_id == "load_file___2"
+    assert tasks[3].operator.task_id == "task_id"
 
 
-def upload_test_file_gcp(files, file_conn_id=None):
-    hook = gcs.GCSHook(file_conn_id) if file_conn_id else gcs.GCSHook()
-    for file in files:
-        hook.upload(
-            bucket_name=file["bucket_id"],
-            object_name=file["object_name"],
-            filename=file["filename"],
-        )
+def test_path_validation():
+    test_table = [
+        {"input": "gs://mybucket/puppy.jpg", "output": True},
+        {"input": "S3://mybucket/puppy.jpg", "output": True},
+        {
+            "input": "https://my-bucket.s3.us-west-2.amazonaws.com/puppy.png",
+            "output": True,
+        },
+        {"input": "/etc/someFile/randomFileName.csv", "output": False},
+        {"input": "\x00", "output": False},
+        {"input": "a" * 256, "output": False},
+    ]
 
-
-def upload_test_file_s3(files, file_conn_id=None):
-    hook = s3.S3Hook(aws_conn_id=file_conn_id) if file_conn_id else s3.S3Hook()
-    bucket = hook.get_bucket(files[0]["bucket_id"])
-    for file in files:
-        bucket.upload_file(Key=file["object_name"], Filename=file["filename"])
+    for test in test_table:
+        assert AgnosticLoadFile.validate_path(test["input"]) == test["output"]
 
 
 @mock.patch.dict(
@@ -520,118 +229,98 @@ def test_aws_decode():
 
 
 @pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
-def test_load_file_templated_filename(sample_dag, sql_server):
+def test_load_file_templated_filename(sample_dag, sql_server, test_table):
     database_name, sql_hook = sql_server
+    with sample_dag:
+        load_file(
+            path=str(CWD) + "/../data/{{ var.value.foo }}/example.csv",
+            file_conn_id="",
+            output_table=test_table,
+        )
+    test_utils.run_dag(sample_dag)
 
-    sql_server_params = copy.deepcopy(
-        test_utils.SQL_SERVER_HOOK_PARAMETERS[database_name]
-    )
-    conn_id_value = sql_server_params.pop(
-        test_utils.SQL_SERVER_CONNECTION_KEY[database_name]
-    )
-    sql_server_params["conn_id"] = conn_id_value
-
-    task_params = {
-        "path": str(CWD) + "/../data/{{ var.value.foo }}/example.csv",
-        "file_conn_id": "",
-        "output_table": Table(
-            table_name=OUTPUT_TABLE_NAME + "_{{ var.value.foo }}", **sql_server_params
-        ),
-    }
-
-    test_utils.create_and_run_task(sample_dag, load_file, (), task_params)
-    df = sql_hook.get_pandas_df(
-        f"SELECT * FROM {OUTPUT_TABLE_NAME}_templated_file_name"
-    )
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
     assert len(df) == 3
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "remote_file",
     [{"name": "google", "count": 2}, {"name": "amazon", "count": 2}],
     ids=["google", "amazon"],
     indirect=True,
 )
-def test_aql_load_file_pattern(remote_file, sample_dag):
+@pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
+def test_aql_load_file_pattern(remote_file, sample_dag, test_table, sql_server):
     file_conn_id, file_prefix = remote_file
     filename = pathlib.Path(CWD.parent, "data/sample.csv")
-    OUTPUT_TABLE_NAME = f"expected_table_from_gcs_csv__{file_conn_id}"
-
-    test_df_rows = pd.read_csv(filename).shape[0]
-
-    hook_target = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
-    cur = hook_target.get_cursor()
-    cur.execute(f"DROP TABLE IF EXISTS public.{OUTPUT_TABLE_NAME} CASCADE;")
+    sql_name, hook = sql_server
 
     with sample_dag:
         load_file(
             path=file_prefix[0][0:-5],
             file_conn_id=file_conn_id,
-            output_table=Table(
-                OUTPUT_TABLE_NAME,
-                database="pagila",
-                conn_id="postgres_conn",
-                schema="public",
-            ),
+            output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
 
-    # Read table from db
-    df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=hook_target.get_conn())
+    df = get_dataframe_from_table(sql_name, test_table, hook)
+    test_df_rows = pd.read_csv(filename).shape[0]
     assert test_df_rows * 2 == df.shape[0]
 
 
-def test_aql_load_file_local_file_pattern(sample_dag):
+@pytest.mark.integration
+@pytest.mark.parametrize("sql_server", ["postgres"], indirect=True)
+def test_aql_load_file_local_file_pattern(sample_dag, test_table, sql_server):
     filename = str(CWD.parent) + "/data/homes_pattern_1.csv"
-    OUTPUT_TABLE_NAME = f"test_aql_load_file_pattern_table"
+    database_name, sql_hook = sql_server
 
     test_df_rows = pd.read_csv(filename).shape[0]
-
-    hook_target = PostgresHook(postgres_conn_id="postgres_conn", schema="pagila")
-    cur = hook_target.get_cursor()
-    cur.execute(f"DROP TABLE IF EXISTS public.{OUTPUT_TABLE_NAME} CASCADE;")
 
     with sample_dag:
         load_file(
             path=str(CWD.parent) + "/data/homes_pattern_*",
             file_conn_id="",
-            output_table=Table(
-                OUTPUT_TABLE_NAME,
-                database="pagila",
-                conn_id="postgres_conn",
-                schema="public",
-            ),
+            output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
 
     # Read table from db
-    df = pd.read_sql(f"SELECT * FROM {OUTPUT_TABLE_NAME}", con=hook_target.get_conn())
+    df = pd.read_sql(
+        f"SELECT * FROM {test_table.qualified_name()}", con=sql_hook.get_conn()
+    )
     assert test_df_rows * 2 == df.shape[0]
 
 
 @pytest.mark.integration
 @pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
 @pytest.mark.parametrize(
-    "remote_file", [{"name": "google"}, {"name": "amazon"}], indirect=True
+    "remote_file",
+    [{"name": "google"}, {"name": "amazon"}],
+    indirect=True,
+    ids=["google", "amazon"],
 )
-def test_load_file_using_file_connection(sample_dag, remote_file, sql_server):
+def test_load_file_using_file_connection(
+    sample_dag, remote_file, sql_server, test_table
+):
     database_name, sql_hook = sql_server
     file_conn_id, file_uri = remote_file
+    with sample_dag:
+        load_file(
+            path=file_uri[0],
+            file_conn_id=file_conn_id,
+            output_table=test_table,
+        )
+    test_utils.run_dag(sample_dag)
 
-    sql_server_params = test_utils.get_default_parameters(database_name)
-
-    task_params = {
-        "path": file_uri[0],
-        "file_conn_id": file_conn_id,
-        "output_table": Table(table_name=OUTPUT_TABLE_NAME, **sql_server_params),
-    }
-
-    test_utils.create_and_run_task(sample_dag, load_file, (), task_params)
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {OUTPUT_TABLE_NAME}")
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
     assert len(df) == 3
 
 
-def test_load_file_using_file_connection_fails_inexistent_conn(caplog, sample_dag):
+@pytest.mark.parametrize("sql_server", ["postgres"], indirect=True)
+def test_load_file_using_file_connection_fails_nonexistent_conn(
+    caplog, sample_dag, sql_server
+):
     database_name = "postgres"
     file_conn_id = "fake_conn"
     file_uri = "s3://fake-bucket/fake-object"
@@ -644,34 +333,30 @@ def test_load_file_using_file_connection_fails_inexistent_conn(caplog, sample_da
         "output_table": Table(table_name=OUTPUT_TABLE_NAME, **sql_server_params),
     }
     with pytest.raises(BackfillUnfinished) as exec_info:
-        test_utils.create_and_run_task(sample_dag, load_file, (), task_params)
+        with sample_dag:
+            load_file(**task_params)
+        test_utils.run_dag(sample_dag)
+
     expected_error = "Failed to execute task: The conn_id `fake_conn` isn't defined."
     assert expected_error in caplog.text
 
 
-def create_task_parameters(database_name, file_type):
-    sql_server_params = test_utils.get_default_parameters(database_name)
-
-    task_params = {
-        "path": str(pathlib.Path(CWD.parent, f"data/sample.{file_type}")),
-        "file_conn_id": "",
-        "output_table": Table(table_name=OUTPUT_TABLE_NAME, **sql_server_params),
-    }
-    return task_params
-
-
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
 )
 @pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
-def test_load_file(sample_dag, sql_server, file_type):
+def test_load_file(sample_dag, sql_server, file_type, test_table):
     database_name, sql_hook = sql_server
 
-    task_params = create_task_parameters(database_name, file_type)
-    test_utils.create_and_run_task(sample_dag, load_file, (), task_params)
-
-    qualified_name = task_params["output_table"].qualified_name()
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {qualified_name}")
+    with sample_dag:
+        load_file(
+            path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}")),
+            file_conn_id="",
+            output_table=test_table,
+        )
+    test_utils.run_dag(sample_dag)
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
 
     assert len(df) == 3
     expected = pd.DataFrame(
@@ -687,10 +372,52 @@ def test_load_file(sample_dag, sql_server, file_type):
     assert_frame_equal(df, expected)
 
 
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "sql_server",
+    [
+        "postgres",
+        "bigquery",
+    ],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    "test_table",
+    [{"is_temp": False, "param": {"schema": "custom_schema"}}],
+    indirect=True,
+)
+@pytest.mark.parametrize("file_type", ["csv"])
+def test_load_file_with_named_schema(sample_dag, sql_server, file_type, test_table):
+    database_name, sql_hook = sql_server
+
+    with sample_dag:
+        load_file(
+            path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}")),
+            file_conn_id="",
+            output_table=test_table,
+        )
+    test_utils.run_dag(sample_dag)
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+
+    assert len(df) == 3
+    expected = pd.DataFrame(
+        [
+            {"id": 1, "name": "First"},
+            {"id": 2, "name": "Second"},
+            {"id": 3, "name": "Third with unicode पांचाल"},
+        ]
+    )
+    df = df.rename(columns=str.lower)
+    df = df.astype({"id": "int64"})
+    expected = expected.astype({"id": "int64"})
+    assert_frame_equal(df, expected)
+
+
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "sql_server", ["bigquery", "postgres", "snowflake"], indirect=True
 )
-def test_load_file_chunks(sample_dag, sql_server):
+def test_load_file_chunks(sample_dag, sql_server, test_table):
     file_type = "csv"
     database_name, sql_hook = sql_server
 
@@ -707,8 +434,13 @@ def test_load_file_chunks(sample_dag, sql_server):
     }[database_name]
 
     with mock.patch(chunk_function) as mock_chunk_function:
-        task_params = create_task_parameters(database_name, file_type)
-        test_utils.create_and_run_task(sample_dag, load_file, (), task_params)
+        with sample_dag:
+            load_file(
+                path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}")),
+                file_conn_id="",
+                output_table=test_table,
+            )
+        test_utils.run_dag(sample_dag)
 
     _, kwargs = mock_chunk_function.call_args
     assert kwargs[chunk_size_argument] == 1000000
