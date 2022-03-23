@@ -25,7 +25,7 @@ Add any other context about the feature request here.
 - [ ] All checks and tests in the CI should pass
 - [ ] Unit tests (90% code coverage or more, [once available](https://github.com/astro-projects/astro/issues/191))
 - [ ] Integration tests (if the feature relates to a new database or external service)
-- [ ] Example DAG 
+- [ ] Example DAG
 - [ ] Docstrings in [reStructuredText](https://peps.python.org/pep-0287/) for each of  methods, classes, functions and module-level attributes (including Example DAG on how it should be used)
 - [ ] Exception handling in case of errors
 - [ ] Logging (are we exposing useful information to the user? e.g. source and destination)

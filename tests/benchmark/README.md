@@ -70,7 +70,7 @@ The `datasets` section should match the datasets of choice. It has two mandatory
 * `path`: the local, GCS, or S3 path to the dataset
 
 The `databases` section must match existing connections or connections declared in the file `test-connections.yml`, available at the `astro` root directory. It must contain:
-* `name`: the label used to refer to this database 
+* `name`: the label used to refer to this database
 * `params`: a dictionary containing the configuration to the database. The properties `database` and `conn_id` are required.
 
 
@@ -142,11 +142,10 @@ This is an example running the benchmark for the astro `78805a` revision and chu
 
 
 ### Database: snowflake
- 
+
 | database   | dataset   | total_time   | memory_rss   | memory_shared   | memory_pss   | cpu_time_user   | cpu_time_system   |
 |:-----------|:----------|:-------------|:-------------|:----------------|:-------------|:----------------|:------------------|
 | snowflake  | few_kb    | 14.28s       | 136.06MB     | 50.39MB         | 132.96MB     | 3.12s           | 1.48s             |
 | snowflake  | many_kb   | 12.42s       | 138.83MB     | 50.22MB         | 135.85MB     | 3.17s           | 1.48s             |
-| 
+|
 | snowflake  | few_mb    | 7.21min      | 264.67MB     | 50.2MB          | 261.61MB     | 25.95s          | 3.27s             |
-

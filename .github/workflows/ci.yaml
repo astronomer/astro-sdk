@@ -129,4 +129,3 @@ jobs:
       AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
       AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
       AIRFLOW_VAR_FOO: templated_file_name
-

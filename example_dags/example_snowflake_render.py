@@ -14,11 +14,11 @@ FILE_PATH = dir_path + "/data/"
 
 """
 This DAG highlights using the render function to execute SQL queries.
-Here the render function results in three sequential tasks that run 
-queries in the /include/sql directory. The queries, combine, clean, and 
+Here the render function results in three sequential tasks that run
+queries in the /include/sql directory. The queries, combine, clean, and
 aggregate data in Snowflake.
 
-To use the DAG, you must have two tables called "Homes" and "Homes2" in 
+To use the DAG, you must have two tables called "Homes" and "Homes2" in
 your database. The `load_file` tasks in this DAG load the data from homes csv's in the `data/` directory.
 You must also update the frontmatter in the queries to your own database
 connection info.

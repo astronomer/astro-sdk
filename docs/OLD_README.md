@@ -52,7 +52,7 @@ but please know that this is not yet ready for production.
 
 The astro library is a suite of tools for writing ETL and ELT workflows in Airflow. It lets SQL engineers focus on writing SQL, Python engineers focus on writing Python, and all engineers focus on data engineering instead of configuration. By design, `astro` modules automatically pass database contexts to your tasks, meaning that you can focus on writing code and leave metadata definitions for load time.
 
-- **Without `astro`**: Database connections and context are defined in operators. This metadata does not pass automatically from task to task, meaning that you have to redefine it for each new task/ operator. SQL queries must be static. 
+- **Without `astro`**: Database connections and context are defined in operators. This metadata does not pass automatically from task to task, meaning that you have to redefine it for each new task/ operator. SQL queries must be static.
 - **With `astro`**: Database connections and context are defined at load time. Metadata is automatically passed into functions, meaning that you can write generic queries in your task and run these queries without knowing the context ahead of time. SQL queries can be templated with JINJA.
 
 # Philosophy
@@ -64,7 +64,7 @@ With this in mind, we built a library focused on data movement and simplifying d
 With our SQL and dataframe modules, you should have the ability to treat SQL tables as if they're python objects. You can manipulate them,
 join them, templatize them, and ultimately turn them into dataframes if you want to run python functions against them. We hope that this
 library creates a cleaner Airflow ELT experience, as well as an easier onboarding for those who want to focus on data transformations
-instead of DAGs. 
+instead of DAGs.
 
 Please feel free to raise issues and propose improvements. Community contributions are highly welcome!
 
@@ -139,8 +139,8 @@ SELECT c.customer_id, c.source, c.region, c.member_since,
 ### Defining metadata
 
 Once your SQL is working as expected, you might want to define the query's database and schema during its runtime.
-To configure this for Airflow while keeping your SQL easy to run in your favorite SQL notebook, 
-you can create a [frontmatter](https://middlemanapp.com/basics/frontmatter/): 
+To configure this for Airflow while keeping your SQL easy to run in your favorite SQL notebook,
+you can create a [frontmatter](https://middlemanapp.com/basics/frontmatter/):
 
 ```sql
 # join_customers_and_orders.sql
@@ -164,7 +164,7 @@ One benefit of putting all metadata into a frontmatter block is that all of your
 SELECT c.customer_id, c.source, c.region, c.member_since,
         CASE WHEN purchase_count IS NULL THEN 0 ELSE 1 END AS recent_purchase
         FROM orders c LEFT OUTER JOIN customers p ON c.customer_id = p.customer_id
-``` 
+```
 
 ### Defining dependencies
 
@@ -172,7 +172,7 @@ When running SQL queries in Airflow DAGs, you need to define dependencies that b
 multiple, reproducible steps. We offer two ways to define dependencies within an `astro` SQL file:
 
 You can define your dependency by using jinja templating to refer to other SQL files. In this example we use `{{agg_orders}}` to refer to `agg_orders.sql` and `{{customers_table}}` to refer to `customers_table.sql`.
-This data dependency is equivalent to a task dependency in our DAG. The only difference is that we're defining it directly in our SQL instead of using Airflow's dependency operators. 
+This data dependency is equivalent to a task dependency in our DAG. The only difference is that we're defining it directly in our SQL instead of using Airflow's dependency operators.
 
 ```sql
 # join_customers_and_orders.sql
@@ -187,7 +187,7 @@ SELECT c.customer_id, c.source, c.region, c.member_since,
 
 ### Defining outputs
 
-With certain SQL models, you will want to specify an output based on a table name, schema, and/or database. 
+With certain SQL models, you will want to specify an output based on a table name, schema, and/or database.
 
 Any table created without an `output_table` will be placed in the temporary schema with a generated table name.
 
@@ -216,7 +216,7 @@ Here is a list of supported frontmatter arguments:
 | conn_id | The connection that this query should run against |
 | Database      | The database to query    |
 | Schema   | The schema to query. Default value is either `tmp_astro` or your temp schema defined in `AIRFLOW__ASTRO__SQL_SCHEMA`    |
-| output_table | Specs of location and table name for tables that want to be treated as "pets" insteaad of "cattle" | 
+| output_table | Specs of location and table name for tables that want to be treated as "pets" insteaad of "cattle" |
 
 ### Incorporating SQL directory into DAG
 
@@ -366,10 +366,10 @@ with dag:
 
 ### The TempTable Class
 
-Following the traditional dev ops concept of [pets vs. cattle](http://cloudscaling.com/blog/cloud-computing/the-history-of-pets-vs-cattle/), you can decide whether the result of a function is a "pet" (e.g. a named table that you would want to reference later), or a "cattle" that can be deleted at any time for garbage collection. 
+Following the traditional dev ops concept of [pets vs. cattle](http://cloudscaling.com/blog/cloud-computing/the-history-of-pets-vs-cattle/), you can decide whether the result of a function is a "pet" (e.g. a named table that you would want to reference later), or a "cattle" that can be deleted at any time for garbage collection.
 
-If you want to ensure that the output of your task is a cattle, you can declare it as a nameless `TempTable`. This places the output into your temp schema, 
-which can be later bulk deleted. By default, all `aql.transform` functions will output to TempTables unless a `Table` object is used in the `output_table` 
+If you want to ensure that the output of your task is a cattle, you can declare it as a nameless `TempTable`. This places the output into your temp schema,
+which can be later bulk deleted. By default, all `aql.transform` functions will output to TempTables unless a `Table` object is used in the `output_table`
 argument.
 
 In the following example DAG, we set an `output_table` to a nameless `TempTable` meaning that any output from this DAG will be deleted once the DAG completes. If we wanted to keep our output, we would simply update the parameter to instantiate a `Table` instead.
@@ -400,10 +400,10 @@ with dag:
 
 ## Loading Data
 
-To create an ELT pipeline, users can first load CSV or parquet data from either local, S3, or GCS into a SQL database with the `load_sql` function. 
+To create an ELT pipeline, users can first load CSV or parquet data from either local, S3, or GCS into a SQL database with the `load_sql` function.
 To interact with S3, you must set an S3 Airflow connection in the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`  environment variables.
 
-In the following example, we load data from S3 by specifying the path and connection ID for our S3 database in `aql.load_file`: 
+In the following example, we load data from S3 by specifying the path and connection ID for our S3 database in `aql.load_file`:
 
 ```python
 from astro import sql as aql
@@ -447,18 +447,18 @@ with dag:
     join_orders_and_customers(orders, customers)
 ```
 
-Note that the functions in this example use a custom templating system. Wrapping a value in single brackets 
+Note that the functions in this example use a custom templating system. Wrapping a value in single brackets
 (like `{customer_table}`) indicates the value needs to be rendered as a SQL table. The SQL decorator
-also treats values in double brackets as Airflow jinja templates. 
+also treats values in double brackets as Airflow jinja templates.
 
-Please note that this is NOT an f string. F-strings in SQL formatting risk security breaches via SQL injections. 
+Please note that this is NOT an f string. F-strings in SQL formatting risk security breaches via SQL injections.
 
-For security, users MUST explicitly identify tables in the function parameters by typing a value as a `Table`. Only then will the SQL decorator treat the value as a table. 
+For security, users MUST explicitly identify tables in the function parameters by typing a value as a `Table`. Only then will the SQL decorator treat the value as a table.
 
 
 ### Raw SQL
 
-Most ETL use cases can be addressed by cross-sharing task outputs, as shown above with `@aql.transform`. If you need to perform a SQL operation that doesn't return a table but might take a table as an argument, you can use `@aql.run_raw_sql`. 
+Most ETL use cases can be addressed by cross-sharing task outputs, as shown above with `@aql.transform`. If you need to perform a SQL operation that doesn't return a table but might take a table as an argument, you can use `@aql.run_raw_sql`.
 
 ```python
 @aql.run_raw_sql
@@ -466,7 +466,7 @@ def drop_table(table_to_drop):
     return "DROP TABLE IF EXISTS {{table_to_drop}}"
 ```
 
-## Putting it All Together 
+## Putting it All Together
 
 The following is a full example DAG of a SQL + Python workflow using `astro`. We pull data from S3, run SQL transformations to merge our pulled data with existing data, and move the result of that merge into a dataframe so that we can complete complex work on it using Python / ML.
 
@@ -573,7 +573,7 @@ While simple SQL statements such as `SELECT` statements are very similar between
 ## Appending data
 
 After transforming a table, you might want to append the results of your transformation to a reporting table. For example, you might
-want to aggregate daily data on a "main" table that analysts use for timeseries analysis. 
+want to aggregate daily data on a "main" table that analysts use for timeseries analysis.
 
 The `aql.append` function merges tables assuming that there are no conflicts. You can choose to merge the data 'as-is' or cast it to a new value if needed. Note that this query will fail if there is a merge conflict.
 
@@ -590,7 +590,7 @@ foo = aql.append(
 
 To merge data into an existing table in situations where there might be conflicts, the `aql.merge` function
 adds data to a table with either an "update" or "ignore" strategy. The "ignore" strategy does not add values
-that conflict, while the "update" strategy overwrites the older values. This function only handles basic merge statements. Use the `run_raw_sql` function for complex statements. 
+that conflict, while the "update" strategy overwrites the older values. This function only handles basic merge statements. Use the `run_raw_sql` function for complex statements.
 
 Note that the `merge_keys` parameter is a list in Postgres, but a map in Snowflake. This syntax decision was unavoidable due to the differences in how Postgres and Snowflake handle conflict resolution. Also note that `*` inserts are disabled for the merge function.
 
@@ -662,7 +662,7 @@ with self.dag:
 
 ## ML Operations
 
-We currently offer two ML based functions: `train` and `predict`. Currently these functions do the 
+We currently offer two ML based functions: `train` and `predict`. Currently these functions do the
 exact same thing as `dataframe`, but eventually we hope to add valuable ML functionality (e.g. hyperparam for train and
 model serving options in predict).
 
