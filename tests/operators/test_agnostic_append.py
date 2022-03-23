@@ -65,17 +65,17 @@ def append_params(request):
     ],
     indirect=True,
 )
-def test_append(sql_server, sample_dag, tmp_table, append_params):
+def test_append(sql_server, sample_dag, test_table, append_params):
     app_param, validate_append = append_params
 
     with sample_dag:
         load_main = aql.load_file(
             path=str(CWD) + "/../data/homes_main.csv",
-            output_table=tmp_table,
+            output_table=test_table,
         )
         load_append = aql.load_file(
             path=str(CWD) + "/../data/homes_append.csv",
-            output_table=tmp_table,
+            output_table=test_table,
         )
         appended_table = aql.append(
             **app_param,
@@ -97,17 +97,17 @@ from astro.sql.table import TempTable
     indirect=True,
 )
 def test_append_on_tables_on_different_db(sample_dag, sql_server):
-    tmp_table_1 = TempTable(conn_id="postgres_conn")
-    tmp_table_2 = TempTable(conn_id="sqlite_conn")
+    test_table_1 = TempTable(conn_id="postgres_conn")
+    test_table_2 = TempTable(conn_id="sqlite_conn")
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
             load_main = aql.load_file(
                 path=str(CWD) + "/../data/homes_main.csv",
-                output_table=tmp_table_1,
+                output_table=test_table_1,
             )
             load_append = aql.load_file(
                 path=str(CWD) + "/../data/homes_append.csv",
-                output_table=tmp_table_2,
+                output_table=test_table_2,
             )
             appended_table = aql.append(
                 main_table=load_main,

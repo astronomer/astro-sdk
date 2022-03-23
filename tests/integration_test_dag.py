@@ -162,9 +162,9 @@ def run_merge(output_specs: TempTable, merge_keys):
     ],
     indirect=True,
 )
-def test_full_dag(sql_server, sample_dag, tmp_table):
+def test_full_dag(sql_server, sample_dag, test_table):
     with sample_dag:
-        output_table = tmp_table
+        output_table = test_table
         loaded_table = aql.load_file(
             str(CWD) + "/data/homes.csv", output_table=output_table
         )

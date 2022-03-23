@@ -124,7 +124,7 @@ def test_postgres(sample_dag, pg_query_result):
 
 
 @pytest.mark.parametrize("sql_server", ["postgres"], indirect=True)
-def test_postgres_join(sample_dag, tmp_table, sql_server):
+def test_postgres_join(sample_dag, test_table, sql_server):
     @aql.transform(conn_id="postgres_conn", database="pagila")
     def sample_pg(actor: Table, film_actor_join: Table, unsafe_parameter):
         return (
@@ -147,7 +147,7 @@ def test_postgres_join(sample_dag, tmp_table, sql_server):
             actor=Table(table_name="actor", conn_id="postgres_conn", database="pagila"),
             film_actor_join=Table(table_name="film_actor"),
             unsafe_parameter="G%%",
-            output_table=tmp_table,
+            output_table=test_table,
         )
         validate(ret)
 
