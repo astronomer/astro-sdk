@@ -40,7 +40,7 @@ def get_paths_for_render(path):
     return [path]
 
 
-def get_all_file_names(paths: list[str]):
+def get_all_file_names(paths: List[str]):
     all_file_names = []
     for path in paths:
         current_files = [
