@@ -2,11 +2,10 @@ import logging
 import os
 import pathlib
 import re
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import frontmatter
 from airflow.decorators.base import get_unique_task_id
-from airflow.decorators.task_group import task_group
 from airflow.exceptions import AirflowException
 from airflow.models.dag import DagContext
 from airflow.models.xcom_arg import XComArg
@@ -15,27 +14,83 @@ from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.table import Table, TempTable
 
 
-def get_path_for_render(path):
+def get_paths_for_render(path):
     """
     Generate a path using either the DAG's template_searchpath with a relative path, or with the relative path
-    to the DAG file. We first check to see if the path exists insde of any of the template_searchpaths (Which mean that
+    to the DAG file. We first check to see if the path exists inside of any of the template_searchpaths (Which mean that
     template_searchpaths take precedence), and if we can not find a match, we return the path raw.
 
     :param path:
     :return:
     """
     template_path = DagContext.get_current_dag().template_searchpath
+    ret_paths = []
     if template_path:
         for t in template_path:
             try:
                 full_path = str(pathlib.Path(t).joinpath(pathlib.Path(path)))
                 os.listdir(full_path)
                 logging.info("Template_path found. rendering %s", full_path)
-                return full_path
+                ret_paths.append(full_path)
             except FileNotFoundError:
                 logging.info("Could not find template_path %s", full_path)
     logging.info("No template path found, rendering base path %s", path)
-    return path
+    if ret_paths:
+        return ret_paths
+    return [path]
+
+
+def render_single_path(
+    path: str,
+    files: list,
+    template_dict: dict,
+    default_params: dict,
+    conn_id: Optional[str] = None,
+    database: Optional[str] = None,
+    schema: Optional[str] = None,
+    warehouse: Optional[str] = None,
+    role: Optional[str] = None,
+):
+    # Parse all of the SQL files in this directory
+    current_files = [
+        f
+        for f in os.listdir(path)
+        if os.path.isfile(os.path.join(path, f)) and f.endswith(".sql")
+    ]
+    op_kwargs = {}
+    default_params.update({filename.split(".")[0]: None for filename in current_files})
+    for filename in current_files:
+        with open(os.path.join(path, filename)) as f:
+            front_matter_opts = frontmatter.loads(f.read()).to_dict()
+            sql = front_matter_opts.pop("content")
+            temp_items = find_templated_fields(sql)
+            parameters = {
+                k: v for k, v in default_params.copy().items() if k in temp_items
+            }
+
+            if front_matter_opts.get("template_vars"):
+                template_variables = front_matter_opts.pop("template_vars")
+                parameters.update({v: None for k, v in template_variables.items()})
+            if front_matter_opts.get("output_table"):
+                out_table_dict = front_matter_opts.pop("output_table")
+                if out_table_dict.get("table_name"):
+                    op_kwargs = {"output_table": Table(**out_table_dict)}
+                else:
+                    op_kwargs = {"output_table": TempTable(**out_table_dict)}
+            operator_kwargs = set_kwargs_with_defaults(
+                front_matter_opts, conn_id, database, role, schema, warehouse
+            )
+
+            p = ParsedSqlOperator(
+                sql=sql,
+                parameters=parameters,
+                file_name=filename,
+                op_kwargs=op_kwargs,
+                **operator_kwargs,
+            )
+            template_dict[filename.replace(".sql", "")] = p.output
+    files.extend(current_files)
+    return files, template_dict, default_params
 
 
 def render(
@@ -90,48 +145,25 @@ def render(
     :return: returns a dictionary of type <string, xcomarg>, where the key is the name of the SQL file (minus .sql),
     and the value is the resulting model
     """
-    path = get_path_for_render(path)
-    files = [
-        f
-        for f in os.listdir(path)
-        if os.path.isfile(os.path.join(path, f)) and f.endswith(".sql")
-    ]
+    paths = get_paths_for_render(path)
+
     template_dict = kwargs
-    op_kwargs = {}
-    default_params = {filename.split(".")[0]: None for filename in files}
+    default_params = {}
+    files: List[str] = []
     default_params.update(template_dict)
 
-    # Parse all of the SQL files in this directory
-    for filename in files:
-        with open(os.path.join(path, filename)) as f:
-            front_matter_opts = frontmatter.loads(f.read()).to_dict()
-            sql = front_matter_opts.pop("content")
-            temp_items = find_templated_fields(sql)
-            parameters = {
-                k: v for k, v in default_params.copy().items() if k in temp_items
-            }
-
-            if front_matter_opts.get("template_vars"):
-                template_variables = front_matter_opts.pop("template_vars")
-                parameters.update({v: None for k, v in template_variables.items()})
-            if front_matter_opts.get("output_table"):
-                out_table_dict = front_matter_opts.pop("output_table")
-                if out_table_dict.get("table_name"):
-                    op_kwargs = {"output_table": Table(**out_table_dict)}
-                else:
-                    op_kwargs = {"output_table": TempTable(**out_table_dict)}
-            operator_kwargs = set_kwargs_with_defaults(
-                front_matter_opts, conn_id, database, role, schema, warehouse
-            )
-
-            p = ParsedSqlOperator(
-                sql=sql,
-                parameters=parameters,
-                file_name=filename,
-                op_kwargs=op_kwargs,
-                **operator_kwargs,
-            )
-            template_dict[filename.replace(".sql", "")] = p.output
+    for path in paths:
+        files, template_dict, default_params = render_single_path(
+            path=path,
+            files=files,
+            template_dict=template_dict,
+            default_params=default_params,
+            conn_id=conn_id,
+            database=database,
+            schema=schema,
+            warehouse=warehouse,
+            role=role,
+        )
 
     # Add the XComArg to the parameters to create dependency
     for filename in files:
