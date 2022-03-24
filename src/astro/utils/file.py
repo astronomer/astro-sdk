@@ -50,7 +50,7 @@ def is_binary(filetype):
 
 def is_small(filepath):
     """
-    Checks if a file is small enough to be loaded into a Pandas dataframe in memory efficently.
+    Checks if a file is small enough to be loaded into a Pandas dataframe in memory efficiently.
     This value was obtained through performance tests.
 
     :param filepath: Path to a file in the filesystem

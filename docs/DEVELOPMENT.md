@@ -67,7 +67,7 @@ After locating the pre-commit command, run:
 
 <!-- Tests don't run yet, we're missing `test-connections.yaml`. -->
 
-On all supported Pyhon versions:
+On all supported Python versions:
 
     nox -s test
 
@@ -75,7 +75,7 @@ On only 3.9 (for example):
 
     nox -s test-3.9
 
-Please also note that you can reuse an existing environtment if you run nox with the `-r` argument (or even `-R` if you
+Please also note that you can reuse an existing environment if you run nox with the `-r` argument (or even `-R` if you
 don't want to attempt to reinstall packages). This can significantly speed up repeat test runs.
 
 ## Check code coverage
@@ -83,7 +83,7 @@ don't want to attempt to reinstall packages). This can significantly speed up re
 To run code coverage locally, you can either use `pytest` in one of the test environments or
 run `nox -s test` with coverage arguments. We use [pytest-cov](https://pypi.org/project/pytest-cov/) for our coverage reporting.
 
-Below is an example of running a coverage report on a single test. In this case the relevent file is `src/astro/sql/operators/sql_decorator.py`
+Below is an example of running a coverage report on a single test. In this case the relevant file is `src/astro/sql/operators/sql_decorator.py`
 since we are testing the postgres `transform` decorator.
 
 ```shell script

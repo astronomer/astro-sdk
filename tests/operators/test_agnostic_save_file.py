@@ -108,7 +108,7 @@ class TestSaveFile(unittest.TestCase):
         return f
 
     def create_and_run_tasks(self, decorator_funcs):
-        # To Do: Merge create_and_run_tasks and create_and_run_task into a single fucntion.
+        # To Do: Merge create_and_run_tasks and create_and_run_task into a single function.
         tasks = []
         with self.dag:
             for decorator_func in decorator_funcs:

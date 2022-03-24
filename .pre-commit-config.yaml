@@ -56,6 +56,14 @@ repos:
         args: [ "--profile", "black" ]
         files: \.py$
 
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.1.0
+    hooks:
+      - id: codespell
+        name: Run codespell to check for common misspellings in files
+        language: python
+        types: [text]
+
   -   repo: https://github.com/pre-commit/mirrors-mypy
       rev: 'v0.941'
       hooks:
