@@ -45,7 +45,7 @@ Congratulations! Your proposal has been accepted.
 
 Next up is breaking down tasks using the [Github Issues page](https://github.com/astro-projects/astro/issues/new).
 
-Ask a commiter to create a label for your AEP, and link all your issues with it for easier maintainability.
+Ask a committer to create a label for your AEP, and link all your issues with it for easier maintainability.
 
 We encourage you to involve the Astro community in reviewing the proposed tasks before they are implemented. **HOW?**
 

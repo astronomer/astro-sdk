@@ -20,7 +20,7 @@ To download the sample datasets locally, run:
 GCS_BUCKET=<YOUR_GCS_BUCKEt> ./download_datasets.sh
 ```
 
-The GCS bucket `<YOUR_GCS_BUCKEt>` is only required to download the `github_timeline`, and you should have write permisions in this bucket.
+The GCS bucket `<YOUR_GCS_BUCKEt>` is only required to download the `github_timeline`, and you should have write permissions in this bucket.
 
 Summary of the sample datasets:
 

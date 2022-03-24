@@ -102,7 +102,7 @@ def test_table(request, sql_server):
         hook.run(f"DROP TABLE IF EXISTS {table.table_name}")
     elif not isinstance(hook, BigQueryHook):
         # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
-        # Example: tables which are not fixtures and constraints. This is an agressive approach towards tearing down:
+        # Example: tables which are not fixtures and constraints. This is an aggressive approach towards tearing down:
         hook.run(f"DROP SCHEMA IF EXISTS {table.schema} CASCADE;")
 
 
