@@ -16,7 +16,7 @@
 
 **astro** allows rapid and clean development of {Extract, Load, Transform} workflows using Python.
 It helps DAG authors to achieve more with less code.
-It is powered by [Apache Airflow](https://www.airflow.apache.org) and maintained by [Astronomer](https://astronomer.io).
+It is powered by [Apache Airflow](https://airflow.apache.org) and maintained by [Astronomer](https://astronomer.io).
 
 > :warning: **Disclaimer** This project's development status is alpha. In other words, it is not production-ready yet.
 The interfaces may change. We welcome alpha users and brave souls to test it - any feedback is welcome.
@@ -40,7 +40,7 @@ pip install astro-projects[amazon,google,snowflake,postgres]
 
 ## Quick-start
 
-After installing Astro, copy the following example dag `calculate_top_animations.py` to a local directory named `dags`:
+After installing Astro, copy the following example dag `calculate_popular_movies.py` to a local directory named `dags`:
 
 ```Python
 from datetime import datetime
@@ -84,7 +84,7 @@ with DAG(
 
 Set up a local instance of Airflow by running:
 
-```
+```shell
 export AIRFLOW_HOME=`pwd`
 export AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
 
@@ -92,14 +92,30 @@ airflow db init
 ```
 
 Create an SQLite database for the example to run with and run the DAG:
-```
-sqlite3 /tmp/sqlite_default.db "VACUUM;"
-airflow dags test calculate_top_animations `date --iso-8601=seconds`
+
+```shell
+# The sqlite_default connection has different host for MAC vs. Linux
+export SQL_TABLE_NAME=`airflow connections get sqlite_default -o yaml | grep host | awk '{print $2}'`
+
+sqlite3 "$SQL_TABLE_NAME" "VACUUM;"
+airflow dags test calculate_popular_movies `date -Iseconds`
 ```
 
 Check the top five animations calculated by your first Astro DAG by running:
-```commandline
-sqlite3 /tmp/sqlite_default.db "select * from top_animation;" ".exit"
+
+```shell
+sqlite3 "$SQL_TABLE_NAME" "select * from top_animation;" ".exit"
+```
+
+You should see the following output:
+
+```console
+$ sqlite3 "$SQL_TABLE_NAME" "select * from top_animation;" ".exit"
+Toy Story 3 (2010)|8.3
+Inside Out (2015)|8.2
+How to Train Your Dragon (2010)|8.1
+Zootopia (2016)|8.1
+How to Train Your Dragon 2 (2014)|7.9
 ```
 
 ## Requirements
