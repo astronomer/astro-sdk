@@ -194,7 +194,7 @@ def test_render_with_second_template_path(sample_dag):
 
 def test_render_with_multi_template_path(sample_dag):
     run_render_dag_with_dataframe(
-        [dir_path + "/template_search_1", dir_path + "/template_search_2"],
+        [dir_path + "/template_search_multi_1", dir_path + "/template_search_multi_2"],
         "test_searchpath",
         "test_inheritance",
         sample_dag,

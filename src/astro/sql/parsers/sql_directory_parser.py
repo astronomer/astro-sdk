@@ -40,9 +40,20 @@ def get_paths_for_render(path):
     return [path]
 
 
+def get_all_file_names(paths: list[str]):
+    all_file_names = []
+    for path in paths:
+        current_files = [
+            f
+            for f in os.listdir(path)
+            if os.path.isfile(os.path.join(path, f)) and f.endswith(".sql")
+        ]
+        all_file_names.extend(current_files)
+    return all_file_names
+
+
 def render_single_path(
     path: str,
-    files: list,
     template_dict: dict,
     default_params: dict,
     conn_id: Optional[str] = None,
@@ -58,7 +69,6 @@ def render_single_path(
         if os.path.isfile(os.path.join(path, f)) and f.endswith(".sql")
     ]
     op_kwargs = {}
-    default_params.update({filename.split(".")[0]: None for filename in current_files})
     for filename in current_files:
         with open(os.path.join(path, filename)) as f:
             front_matter_opts = frontmatter.loads(f.read()).to_dict()
@@ -67,10 +77,6 @@ def render_single_path(
             parameters = {
                 k: v for k, v in default_params.copy().items() if k in temp_items
             }
-
-            if front_matter_opts.get("template_vars"):
-                template_variables = front_matter_opts.pop("template_vars")
-                parameters.update({v: None for k, v in template_variables.items()})
             if front_matter_opts.get("output_table"):
                 out_table_dict = front_matter_opts.pop("output_table")
                 if out_table_dict.get("table_name"):
@@ -89,8 +95,7 @@ def render_single_path(
                 **operator_kwargs,
             )
             template_dict[filename.replace(".sql", "")] = p.output
-    files.extend(current_files)
-    return files, template_dict, default_params
+    return template_dict
 
 
 def render(
@@ -149,13 +154,14 @@ def render(
 
     template_dict = kwargs
     default_params = {}
-    files: List[str] = []
     default_params.update(template_dict)
 
+    all_file_names = get_all_file_names(paths)
+    default_params.update({filename.split(".")[0]: None for filename in all_file_names})
+
     for path in paths:
-        files, template_dict, default_params = render_single_path(
+        template_dict = render_single_path(
             path=path,
-            files=files,
             template_dict=template_dict,
             default_params=default_params,
             conn_id=conn_id,
@@ -164,9 +170,10 @@ def render(
             warehouse=warehouse,
             role=role,
         )
+    print("Sdafasd")
 
     # Add the XComArg to the parameters to create dependency
-    for filename in files:
+    for filename in all_file_names:
         current_operator = template_dict[filename.replace(".sql", "")].operator
         for param in current_operator.parameters:
             if not template_dict.get(param):
