@@ -145,7 +145,7 @@ class TestSQLParsing(unittest.TestCase):
         test_utils.run_dag(self.dag)
 
 
-def run_render_dag_with_dataframe(template_searchpath, filename, modelname):
+def run_render_dag_with_dataframe(template_searchpath, filename, modelname, dag):
     """
     Runs two tasks with a direct dependency, the DAG will fail if task two can not inherit the table produced by task 1
     :return:
@@ -154,20 +154,13 @@ def run_render_dag_with_dataframe(template_searchpath, filename, modelname):
 
     from astro.dataframe import dataframe as adf
 
-    dag = DAG(
-        "test_dag",
-        default_args={
-            "owner": "airflow",
-            "start_date": DEFAULT_DATE,
-        },
-        params={"foo": Param("first_name")},
-    )
+    dag.params = {"foo": Param("first_name")}
+    dag.template_searchpath = template_searchpath
 
     @adf
     def dataframe_func(df: pd.DataFrame):
         print(df.to_string)
 
-    dag.template_searchpath = template_searchpath
     with dag:
         rendered_tasks = aql.render(filename)
         dataframe_func(rendered_tasks[modelname])
@@ -175,25 +168,34 @@ def run_render_dag_with_dataframe(template_searchpath, filename, modelname):
     test_utils.run_dag(dag)
 
 
-def test_render_with_no_template_path():
-    run_render_dag_with_dataframe([], "postgres_simple_tasks", "test_inheritance")
-
-
-def test_render_with_one_template_path():
+def test_render_with_no_template_path(sample_dag):
     run_render_dag_with_dataframe(
-        [dir_path + "/template_search"], "test_searchpath", "test_inheritance"
+        [], dir_path + "/postgres_simple_tasks", "test_inheritance", sample_dag
     )
 
 
-def test_render_with_second_template_path():
+def test_render_with_one_template_path(sample_dag):
     run_render_dag_with_dataframe(
-        ["foobar", dir_path + "/template_search"], "test_searchpath", "test_inheritance"
+        [dir_path + "/template_search"],
+        "test_searchpath",
+        "test_inheritance",
+        sample_dag,
     )
 
 
-def test_render_with_multi_template_path():
+def test_render_with_second_template_path(sample_dag):
+    run_render_dag_with_dataframe(
+        ["foobar", dir_path + "/template_search"],
+        "test_searchpath",
+        "test_inheritance",
+        sample_dag,
+    )
+
+
+def test_render_with_multi_template_path(sample_dag):
     run_render_dag_with_dataframe(
         [dir_path + "/template_search_1", dir_path + "/template_search_2"],
         "test_searchpath",
         "test_inheritance",
+        sample_dag,
     )
