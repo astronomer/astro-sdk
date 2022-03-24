@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 import os
 
-from airflow.models.param import Param
+from airflow.models.param import Param, ParamsDict
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -154,7 +154,7 @@ def run_render_dag_with_dataframe(template_searchpath, filename, modelname, dag)
 
     from astro.dataframe import dataframe as adf
 
-    dag.params = {"foo": Param("first_name")}
+    dag.params = ParamsDict({"foo": Param("first_name")})
     dag.template_searchpath = template_searchpath
 
     @adf
