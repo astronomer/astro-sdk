@@ -448,7 +448,7 @@ def test_load_file_chunks(sample_dag, sql_server, test_table):
 
 @pytest.mark.parametrize("sql_server", ["postgres", "bigquery"], indirect=True)
 def test_aql_gcs_file_to_postgres_ndjson_with_string_path(
-    sample_dag, sql_server, tmp_table
+    sample_dag, sql_server, test_table
 ):
     _, hook = sql_server
 
