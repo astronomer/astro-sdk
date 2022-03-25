@@ -23,16 +23,11 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 """
 
 import logging
-import math
-import os
 import pathlib
 import sys
 import unittest.mock
 
-from airflow.models import DAG
 from airflow.utils import timezone
-from airflow.utils.state import State
-from airflow.utils.types import DagRunType
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)

@@ -1,12 +1,7 @@
-from numbers import Number
-from typing import Dict, Optional
+from typing import Dict
 
-from airflow.exceptions import AirflowException
-from airflow.hooks.base import BaseHook
-from sqlalchemy import text
 from sqlalchemy.sql.schema import Table
 
-from astro import sql
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.utils.task_id_helper import get_unique_task_id
 
@@ -32,11 +27,11 @@ class AgnosticAggregateCheck(SqlDecoratedOperator):
         :param check: SQL statement
         :type check: str
         :param greater_than: min expected value
-        :type greater_than: Number
+        :type greater_than: float
         :param less_than: max expected value
-        :type less_than: Number
+        :type less_than: float
         :param equal_to: expected value
-        :type equal_to: Number
+        :type equal_to: float
         :param conn_id: connection id
         :type conn_id: str
         :param database: database name

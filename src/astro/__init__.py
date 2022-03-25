@@ -2,7 +2,7 @@
 
 __version__ = "0.7.0"
 
-from astro.dataframe import dataframe
+from astro.dataframe import dataframe  # noqa: F401
 
 
 # This is needed to allow Airflow to pick up specific metadata fields it needs

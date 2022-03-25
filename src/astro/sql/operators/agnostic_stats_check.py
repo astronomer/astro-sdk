@@ -75,7 +75,6 @@ class ChecksHandler:
     def prepare_cases_sql(self, main_stats, compare_table_sqla):
         cases = []
         for check in self.checks:
-
             cases.append(
                 case(
                     [

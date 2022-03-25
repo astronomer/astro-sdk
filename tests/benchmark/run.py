@@ -8,7 +8,6 @@ import time
 import airflow
 import psutil
 from airflow.executors.debug_executor import DebugExecutor
-from airflow.models import DagBag
 from airflow.utils import timezone
 
 

@@ -10,7 +10,6 @@ from astro.sql.table import Table
 from astro.utils.database import get_database_name
 from astro.utils.schema_util import (
     get_error_string_for_multiple_dbs,
-    get_table_name,
     tables_from_same_db,
 )
 from astro.utils.table_handler import TableHandler

@@ -1,4 +1,3 @@
-import os
 from typing import List
 
 from airflow.hooks.base import BaseHook
@@ -24,7 +23,6 @@ def schema_exists(hook, schema, conn_type):
 
 
 def create_schema_query(conn_type, hook, schema_id, user):
-
     if conn_type in ["postgresql", "postgres"]:
         return (
             postgres_sql.SQL(

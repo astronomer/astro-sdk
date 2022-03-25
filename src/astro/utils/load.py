@@ -20,13 +20,8 @@ from astro.constants import (
     FileType,
 )
 from astro.sql.table import Table
-from astro.utils.database import get_database_name, get_sqlalchemy_engine, run_sql
-from astro.utils.dependencies import (
-    BigQueryHook,
-    PostgresHook,
-    SnowflakeHook,
-    pandas_tools,
-)
+from astro.utils.database import get_database_name, get_sqlalchemy_engine
+from astro.utils.dependencies import pandas_tools
 from astro.utils.file import get_filetype, get_size
 from astro.utils.schema_util import create_schema_query, schema_exists
 

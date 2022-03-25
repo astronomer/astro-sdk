@@ -1,4 +1,3 @@
-import os
 from typing import Optional, Union
 from urllib.parse import urlparse
 
