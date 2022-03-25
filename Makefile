@@ -17,15 +17,15 @@ else
 	PIP = $(VENV)/bin/pip
 endif
 
-install: 
+install:
 	$(PIP) install --upgrade pip
 	$(PIP) install pipx nox
 	$(PIP) install '.[$(if $(collection),$(collection),all)]'
 	$(PIP) install .[tests]
 
-activate: 
+activate:
 	. $(VENV)/bin/activate
-	
+
 init_venv:
 	test -d venv || $(PYTHON) -m venv $(VENV)
 	. $(VENV)/bin/activate
@@ -46,7 +46,7 @@ unit_test:
 
 integration_test:
 	pytest -s --cov-report term-missing --cov-branch -m integration
-		
+
 
 clean:
 	rm -rf __pycache__
