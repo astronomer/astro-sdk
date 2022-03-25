@@ -19,9 +19,10 @@ from astro.sql.table import Table, TempTable, create_unique_table_name
 from src.astro.constants import FileType
 from astro.sql.table import Table, TempTable
 from astro.utils.cloud_storage_creds import parse_s3_env_var
-from astro.utils.database import get_database_name
+from astro.utils.database import get_database_name, get_sqlalchemy_engine
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook, gcs, s3
-from astro.utils.load_dataframe import move_dataframe_to_sql
+from astro.utils.file import get_filetype
+from astro.utils.load import load_dataframe_into_sql_table
 from tests.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -68,7 +69,7 @@ def sample_dag():
         session.query(TI).delete()
 
 
-def populate_table(path: str, table: Table) -> None:
+def populate_table(path: str, table: Table, hook: BaseHook) -> None:
     """
     Populate a csv file into a sql table
     :param path: path to csv file
@@ -77,17 +78,7 @@ def populate_table(path: str, table: Table) -> None:
     """
     df = pd.read_csv(path)
     conn = BaseHook.get_connection(table.conn_id)
-    move_dataframe_to_sql(
-        output_table_name=table.table_name,
-        conn_id=table.conn_id,
-        database=table.database,
-        warehouse=table.warehouse,
-        schema=table.schema,
-        df=df,
-        conn_type=conn.conn_type,
-        user=conn.login,
-        chunksize=DEFAULT_CHUNK_SIZE,
-    )
+    load_dataframe_into_sql_table(pandas_dataframe=df, output_table=table, hook=hook)
 
 
 @pytest.fixture
@@ -138,7 +129,7 @@ def test_table(request, sql_server):
             else Table(**default_table_options)
         )
         if load_table:
-            populate_table(path=table_param.get("path"), table=tables[-1])
+            populate_table(path=table_param.get("path"), table=tables[-1], hook=hook)
 
     yield tables if len(tables) > 1 else tables[0]
 

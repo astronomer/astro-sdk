@@ -228,12 +228,15 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
         conn_type = BaseHook.get_connection(self.conn_id).conn_type  # type: ignore
         checkHandler = ChecksHandler(self.checks, conn_type)
 
+        valid_db = {
+            "postgres": Database.POSTGRES,
+            "postgresql": Database.POSTGRES,
+            "bigquery": Database.BIGQUERY,
+            "google_cloud_platform": Database.BIGQUERY,
+        }
+
         metadata_params = {}
-        if Database(conn_type) in [
-            Database.POSTGRES,
-            Database.POSTGRESQL,
-            Database.BIGQUERY,
-        ]:
+        if conn_type in valid_db:
             metadata_params = {"schema": self.main_table.schema}
         metadata = MetaData(**metadata_params)
 
