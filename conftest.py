@@ -94,13 +94,13 @@ def populate_table(path: str, table: Table) -> None:
 @pytest.fixture
 def test_table(request, sql_server):
     tables = []
-    tables_params = []
+    tables_params = [{"is_temp": True}]
 
     if getattr(request, "param", None):
         if isinstance(request.param, list):
             tables_params = request.param
         else:
-            tables_params.append(request.param)
+            tables_params = [request.param]
 
     sql_name, hook = sql_server
     database = get_database_name(hook)
@@ -145,7 +145,12 @@ def test_table(request, sql_server):
             hook.run(f"DROP INDEX IF EXISTS unique_index")
         elif database in (Database.POSTGRES, Database.POSTGRESQL):
             # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
+<<<<<<< HEAD
             # Example: tables which are not fixtures and constraints. This is an aggressive approach towards tearing down:
+=======
+            # Example: tables which are not fixtures and constraints.
+            # This is an aggressive approach towards tearing down:
+>>>>>>> 5cf4171 (Fixed default table issue in test_table fixture.)
             hook.run(f"DROP SCHEMA IF EXISTS {table.schema} CASCADE;")
 
 
