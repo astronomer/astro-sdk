@@ -36,16 +36,16 @@ setup: init_venv activate install
 
 test:
 ifdef db
-	pytest -s --cov-report term --cov-branch -m "$(db)"
+	pytest -s --cov-report term-missing --cov-branch -m "$(db)"
 else
-	pytest -s --cov-report term --cov-branch
+	pytest -s --cov-report term-missing --cov-branch
 endif
 
 unit_test:
-	pytest -s --cov-report term --cov-branch -m "not integration"
+	pytest -s --cov-report term-missing --cov-branch -m "not integration"
 
 integration_test:
-	pytest -s --cov-report term --cov-branch -m integration
+	pytest -s --cov-report term-missing --cov-branch -m integration
 		
 
 clean:
