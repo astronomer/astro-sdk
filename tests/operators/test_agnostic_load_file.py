@@ -451,7 +451,6 @@ def test_aql_gcs_file_to_postgres_ndjson_with_string_path(
     sample_dag, sql_server, test_table
 ):
     _, hook = sql_server
-
     with sample_dag:
         load_main = load_file(
             path=str(CWD) + "/../data/github_nested.ndjson",
