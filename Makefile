@@ -27,7 +27,7 @@ activate:
 	. $(VENV)/bin/activate
 
 init_venv:
-	test -d venv || $(PYTHON) -m venv $(VENV)
+	test -d $(VENV) || $(PYTHON) -m venv $(VENV)
 	. $(VENV)/bin/activate
 
 setup: init_venv activate install
