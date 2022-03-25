@@ -84,6 +84,8 @@ Home = "https://astronomer.io/"
 provider_info = "astro.__init__:get_provider_info"
 
 [tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--cov=src --cov-report=xml --cov-branch"
 env_files = [".env"]
 testpaths = ["tests"]
 markers = [

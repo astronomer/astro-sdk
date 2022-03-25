@@ -3,7 +3,8 @@ coverage:
     project:
       default:
         target: auto
-        threshold: 2%
-ignore:
-  - "test_*.py"
-  - "*/**/tests/*"
+        threshold: 5%
+        only_pulls: true
+  notify:
+    wait_for_ci: yes
+    after_n_builds: 8
