@@ -17,12 +17,12 @@ from unittest import mock
 
 import pandas as pd
 import pytest
-from airflow.exceptions import BackfillUnfinished, DuplicateTaskIdFound
+from airflow.exceptions import BackfillUnfinished
 from airflow.utils import timezone
-from google.cloud import bigquery, storage
+from google.cloud import bigquery
 from pandas.testing import assert_frame_equal
 
-from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
+from astro.sql.operators.agnostic_load_file import load_file
 from astro.sql.table import Table, TempTable
 from tests.operators import utils as test_utils
 

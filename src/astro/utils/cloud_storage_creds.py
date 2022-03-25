@@ -1,16 +1,8 @@
-import json
 import os
-from urllib import parse
 
 from airflow.hooks.base import BaseHook
 
-from astro.utils.dependencies import (
-    AwsBaseHook,
-    BotoSession,
-    GCSClient,
-    GCSHook,
-    google_service_account,
-)
+from astro.utils.dependencies import AwsBaseHook, BotoSession, GCSClient, GCSHook
 
 
 def parse_s3_env_var():

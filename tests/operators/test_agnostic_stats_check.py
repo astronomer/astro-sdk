@@ -9,11 +9,9 @@ import copy
 import logging
 import os
 import pathlib
-import unittest.mock
 from typing import Dict
 
 import pytest
-from airflow.models import DAG
 from airflow.utils import timezone
 
 # Import Operator

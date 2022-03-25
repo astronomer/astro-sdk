@@ -18,7 +18,7 @@ from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable
 from astro.utils.cloud_storage_creds import parse_s3_env_var
 from astro.utils.database import get_database_name
-from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook, gcs, s3
+from astro.utils.dependencies import BigQueryHook, gcs, s3
 from src.astro.constants import FileType
 from tests.operators import utils as test_utils
 

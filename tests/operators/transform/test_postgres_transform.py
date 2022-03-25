@@ -4,13 +4,12 @@ import pandas as pd
 import pytest
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 
 import astro.sql as aql
 from astro import dataframe as adf
-from astro.sql.table import Table, TempTable
+from astro.sql.table import Table
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)

@@ -32,17 +32,13 @@ import time
 import unittest.mock
 
 import pandas as pd
-import pytest
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import DAG, DagRun
 from airflow.models import TaskInstance as TI
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
-from airflow.utils.types import DagRunType
-from google.cloud import bigquery
 
 # Import Operator
 import astro.sql as aql
@@ -163,7 +159,6 @@ class TestSQLiteAppend(unittest.TestCase):
         assert df["rooms"].hasnans
 
     def test_append_all_fields(self):
-
         hook = SqliteHook(sqlite_conn_id="sqlite_conn")
 
         drop_table(table_name="test_main", postgres_conn=hook.get_conn())

@@ -1,4 +1,3 @@
-import re
 from typing import List
 
 from airflow.exceptions import AirflowException

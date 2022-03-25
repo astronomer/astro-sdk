@@ -9,21 +9,9 @@ from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils import get_hook
 from astro.utils.dependencies import gcs, s3
-from astro.utils.file import get_filetype, get_size, is_binary, is_small
-from astro.utils.load import (
-    copy_remote_file_to_local,
-    load_dataframe_into_sql_table,
-    load_file_into_dataframe,
-    load_file_into_sql_table,
-    load_file_rows_into_dataframe,
-)
-from astro.utils.path import (
-    get_location,
-    get_paths,
-    get_transport_params,
-    is_local,
-    validate_path,
-)
+from astro.utils.file import get_filetype
+from astro.utils.load import load_dataframe_into_sql_table, load_file_into_dataframe
+from astro.utils.path import get_paths, get_transport_params, validate_path
 from astro.utils.task_id_helper import get_task_id
 
 
