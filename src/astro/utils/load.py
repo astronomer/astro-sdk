@@ -1,6 +1,8 @@
 """
 Functions for loading data from a source location to a destination location.
 """
+import io
+import json
 import tempfile
 from typing import Union
 
@@ -28,19 +30,25 @@ from astro.utils.schema_util import create_schema_query, schema_exists
 
 def load_file_into_dataframe(
     filepath: str,
+    hook: BaseHook,
     filetype: FileType = None,
     transport_params: Union[None, dict] = None,
+    normalize_config: Union[None, dict] = None,
     **kwargs,
 ) -> pd.DataFrame:
     """
     Load the contents of a file into a Pandas dataframe.
 
     :param filepath: File system path to a single file
+    :param hook: Details of the hook to be used to do the transfer
     :param filetype: One of the supported filetypes ("csv", "json", "ndjson", "parquet")
     :param transport_params: Necessary parameters to connect to object store, in case the file is in (S3, GCS)
+    :param normalize_config: parameters to pandas json_normalize function
     :param kwargs: Additional parameters to be used to load the data into a dataframe
     :type filepath: str
+    :type hook: BaseHook
     :type filetype: str
+    :type normalize_config: dict
     :type transport_params: dict
     :type kwargs: dict
     :return: return dataframe containing the loaded data
@@ -58,12 +66,57 @@ def load_file_into_dataframe(
         elif filetype == FileType.JSON:
             dataframe = pd.read_json(stream, **kwargs)
         elif filetype == FileType.NDJSON:
-            dataframe = pd.read_json(stream, lines=True, **kwargs)
+            # dataframe = pd.read_json(stream, lines=True, **kwargs)
+            dataframe = flatten_ndjson(normalize_config, stream=stream, hook=hook)
         elif filetype == FileType.PARQUET:
             dataframe = pd.read_parquet(stream, **kwargs)
         else:
             raise ValueError(f"Unable to load file '{filepath}' of type '{filetype}'")
         return dataframe
+
+
+def flatten_ndjson(
+    normalize_config: Union[None, dict], stream: io.TextIOWrapper, hook: BaseHook
+) -> pd.DataFrame:
+
+    normalize_config = normalize_config or {}
+
+    check_ndjson_config_delimiter(
+        database=get_database_name(hook), normalize_config=normalize_config
+    )
+
+    df = None
+    rows = stream.readlines(DEFAULT_CHUNK_SIZE)
+    while len(rows) > 0:
+        if df is None:
+            df = pd.DataFrame(
+                pd.json_normalize([json.loads(row) for row in rows], **normalize_config)
+            )
+        else:
+            df = df.append(
+                pd.json_normalize([json.loads(row) for row in rows], **normalize_config)
+            )
+        rows = stream.readlines(DEFAULT_CHUNK_SIZE)
+    return df
+
+
+def check_ndjson_config_delimiter(database: Database, normalize_config: dict) -> dict:
+    replacement = "_"
+    illegal_char = "."
+    if database in [Database.BIGQUERY, Database.SNOWFLAKE]:
+        meta_prefix = normalize_config.get("meta_prefix")
+        if meta_prefix and meta_prefix == illegal_char:
+            normalize_config["meta_prefix"] = replacement
+
+        record_prefix = normalize_config.get("record_prefix")
+        if record_prefix and record_prefix == illegal_char:
+            normalize_config["record_prefix"] = replacement
+
+        sep = normalize_config.get("sep")
+        if sep is None or sep == illegal_char:
+            normalize_config["sep"] = replacement
+
+    return normalize_config
 
 
 def load_file_rows_into_dataframe(

@@ -26,6 +26,8 @@ class AgnosticLoadFile(BaseOperator):
     :type file_conn_id: str
     :param output_conn_id: Database connection id.
     :type output_conn_id: str
+    :param normalize_config: parameters to pandas json_normalize function
+    :type normalize_config: dict
     """
 
     template_fields = (
@@ -41,6 +43,7 @@ class AgnosticLoadFile(BaseOperator):
         file_conn_id="",
         chunksize=DEFAULT_CHUNK_SIZE,
         if_exists="replace",
+        normalize_config: Union[None, dict] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -51,6 +54,7 @@ class AgnosticLoadFile(BaseOperator):
         self.kwargs = kwargs
         self.output_table = output_table
         self.if_exists = if_exists
+        self.normalize_config = normalize_config or {}
 
     def execute(self, context):
         """
@@ -78,7 +82,9 @@ class AgnosticLoadFile(BaseOperator):
         self.log.info(f"Loading {self.path} into {self.output_table}...")
         if_exists = self.if_exists
         for path in paths:
-            pandas_dataframe = self._load_file_into_dataframe(path, transport_params)
+            pandas_dataframe = self._load_file_into_dataframe(
+                path, transport_params, hook
+            )
             load_dataframe_into_sql_table(
                 pandas_dataframe,
                 self.output_table,
@@ -99,14 +105,20 @@ class AgnosticLoadFile(BaseOperator):
         if not self.output_table.table_name:
             self.output_table.table_name = create_table_name(context=context)
 
-    def _load_file_into_dataframe(self, filepath, transport_params):
+    def _load_file_into_dataframe(self, filepath, transport_params, hook):
         """Read file with Pandas.
 
         Select method based on `file_type` (S3 or local).
         """
         validate_path(filepath)
         filetype = get_filetype(filepath)
-        return load_file_into_dataframe(filepath, filetype, transport_params)
+        return load_file_into_dataframe(
+            filepath=filepath,
+            filetype=filetype,
+            transport_params=transport_params,
+            hook=hook,
+            normalize_config=self.normalize_config,
+        )
 
     def get_paths(self, path, file_conn_id):
         url = urlparse(path)
@@ -147,6 +159,7 @@ def load_file(
     file_conn_id=None,
     task_id=None,
     if_exists="replace",
+    normalize_config: Union[None, dict] = None,
     **kwargs,
 ):
     """Convert AgnosticLoadFile into a function.
@@ -159,6 +172,8 @@ def load_file(
     :type output_table: Table
     :param file_conn_id: Airflow connection id of input file (optional)
     :type file_conn_id: str
+    :param normalize_config: parameters to pandas json_normalize function
+    :type normalize_config: dict
     :param task_id: task id, optional.
     :type task_id: str
     """
@@ -173,5 +188,6 @@ def load_file(
         output_table=output_table,
         file_conn_id=file_conn_id,
         if_exists=if_exists,
+        normalize_config=normalize_config,
         **kwargs,
     ).output
