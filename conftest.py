@@ -13,7 +13,7 @@ from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import create_session, provide_session
 
-from astro.constants import DEFAULT_CHUNK_SIZE
+from astro.constants import DEFAULT_CHUNK_SIZE, Database, FileType
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_unique_table_name
 from src.astro.constants import FileType
@@ -21,7 +21,6 @@ from astro.sql.table import Table, TempTable
 from astro.utils.cloud_storage_creds import parse_s3_env_var
 from astro.utils.database import get_database_name
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook, gcs, s3
-from astro.constants import FileType, Database
 from astro.utils.load_dataframe import move_dataframe_to_sql
 from tests.operators import utils as test_utils
 
@@ -118,9 +117,15 @@ def test_table(request, sql_server):
                 "schema": hook.schema,
             }
         elif database == Database.POSTGRES:
-            default_table_options = {"conn_id": hook.postgres_conn_id, "database": hook.schema}
+            default_table_options = {
+                "conn_id": hook.postgres_conn_id,
+                "database": hook.schema,
+            }
         elif database == Database.SQLITE:
-            default_table_options = {"conn_id": hook.sqlite_conn_id, "database": "sqlite"}
+            default_table_options = {
+                "conn_id": hook.sqlite_conn_id,
+                "database": "sqlite",
+            }
         elif database == Database.BIGQUERY:
             default_table_options = {"conn_id": hook.gcp_conn_id, "schema": SCHEMA}
         else:
@@ -145,12 +150,8 @@ def test_table(request, sql_server):
             hook.run(f"DROP INDEX IF EXISTS unique_index")
         elif database in (Database.POSTGRES, Database.POSTGRESQL):
             # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
-<<<<<<< HEAD
-            # Example: tables which are not fixtures and constraints. This is an aggressive approach towards tearing down:
-=======
             # Example: tables which are not fixtures and constraints.
             # This is an aggressive approach towards tearing down:
->>>>>>> 5cf4171 (Fixed default table issue in test_table fixture.)
             hook.run(f"DROP SCHEMA IF EXISTS {table.schema} CASCADE;")
 
 
