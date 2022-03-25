@@ -1,7 +1,6 @@
 import os
 from datetime import datetime
 
-from airflow.decorators import dag
 from airflow.models import DAG, Param
 
 from astro.sql import load_file, render
@@ -23,7 +22,6 @@ your database. The `load_file` tasks in this DAG load the data from homes csv's 
 You must also update the frontmatter in the queries to your own database
 connection info.
 """
-dir_path = os.path.dirname(os.path.realpath(__file__))
 
 dag = DAG(
     dag_id="example_snowflake_render",
@@ -34,8 +32,8 @@ dag = DAG(
         "min_rooms": Param(0, type="integer"),
         "max_rooms": Param(50, type="integer"),
     },
+    template_searchpath=os.path.dirname(os.path.realpath(__file__)),
 )
-
 
 with dag:
     homes_data1 = load_file(
@@ -59,7 +57,7 @@ with dag:
     )
 
     homes_models = render(
-        dir_path + "/demo_parse_directory/homes_example/",
+        "demo_parse_directory/homes_example/",
         homes=homes_data1,
         homes2=homes_data2,
     )
