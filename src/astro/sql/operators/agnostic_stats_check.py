@@ -4,6 +4,7 @@ from airflow.hooks.base import BaseHook
 from sqlalchemy import MetaData, case, func, or_, select
 from sqlalchemy.sql.schema import Table as SqlaTable
 
+from astro.constants import Database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.table import Table
 from astro.utils.schema_util import (
@@ -50,9 +51,8 @@ class ChecksHandler:
 
     def prepare_column_sql(self, check, main_stats, compare_table):
         column_sql = []
-        for column in check.columns_map:
-            main_table_col = column
-            compare_table_col = compare_table.c.get(column)
+        for main_table_col, compare_table_col in check.columns_map.items():
+            compare_table_col_obj = compare_table.c.get(compare_table_col)
             main_stats_check_avg = main_stats.c.get(
                 f"{check.name}_{main_table_col}_avg"
             )
@@ -61,11 +61,11 @@ class ChecksHandler:
             )
             accepted_std_div = check.accepted_std_div
 
-            statement = compare_table_col > (
+            statement = compare_table_col_obj > (
                 main_stats_check_avg + (main_stats_check_stddev * accepted_std_div)
             )
             column_sql.append(statement)
-            statement = compare_table_col < (
+            statement = compare_table_col_obj < (
                 main_stats_check_avg - (main_stats_check_stddev * accepted_std_div)
             )
             column_sql.append(statement)
@@ -100,10 +100,10 @@ class ChecksHandler:
         self, main_table: Table, compare_table: Table, engine, metadata_obj
     ):
         main_table_sqla = SqlaTable(
-            get_table_name(main_table), metadata_obj, autoload_with=engine
+            main_table.table_name, metadata_obj, autoload_with=engine
         )
         compare_table_sqla = SqlaTable(
-            get_table_name(compare_table), metadata_obj, autoload_with=engine
+            compare_table.table_name, metadata_obj, autoload_with=engine
         )
 
         main_table_stats_sql = self.prepare_main_stats_sql(main_table, main_table_sqla)
@@ -143,10 +143,10 @@ class ChecksHandler:
         metadata_obj,
     ):
         main_table_sqla = SqlaTable(
-            get_table_name(main_table), metadata_obj, autoload_with=engine
+            main_table.table_name, metadata_obj, autoload_with=engine
         )
         compare_table_sqla = SqlaTable(
-            get_table_name(compare_table), metadata_obj, autoload_with=engine
+            compare_table.table_name, metadata_obj, autoload_with=engine
         )
 
         main_stats = self.prepare_main_stats_sql(main_table, main_table_sqla)
@@ -169,8 +169,6 @@ class ChecksHandler:
 
 
 class AgnosticStatsCheck(SqlDecoratedOperator):
-    template_fields = ("table",)
-
     def __init__(
         self,
         checks: List[OutlierCheck],
@@ -229,7 +227,16 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
     def execute(self, context: Dict):
         conn_type = BaseHook.get_connection(self.conn_id).conn_type  # type: ignore
         checkHandler = ChecksHandler(self.checks, conn_type)
-        metadata = MetaData()
+
+        metadata_params = {}
+        if Database(conn_type) in [
+            Database.POSTGRES,
+            Database.POSTGRESQL,
+            Database.BIGQUERY,
+        ]:
+            metadata_params = {"schema": self.main_table.schema}
+        metadata = MetaData(**metadata_params)
+
         self.sql = checkHandler.prepare_comparison_sql(
             main_table=self.main_table,
             compare_table=self.compare_table,

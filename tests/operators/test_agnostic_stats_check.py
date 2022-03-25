@@ -28,149 +28,94 @@ CWD = pathlib.Path(__file__).parent
 TABLES_CACHE: Dict[str, Dict] = {}
 
 
-def create_tables_objects(tables):
-    results = []
-
-    copy_table = copy.deepcopy(tables)
-    for _, table in copy_table.items():
-        path = table.pop("path")
-        name = table.pop("name")
-
-        if name in TABLES_CACHE:
-            results.append(TABLES_CACHE[name])
-            continue
-
-        astro_table_object = Table(name, **table)
-        table["name"] = name
-        aql.load_file(
-            path=str(CWD) + path,
-            output_table=astro_table_object,
-        ).operator.execute({"run_id": "foo"})
-
-        TABLES_CACHE[name] = astro_table_object
-        results.append(astro_table_object)
-
-    return results
-
-
-tables = [
-    {
-        "table_1": {
-            "path": "/../data/homes.csv",
-            "name": "stats_check_test_1",
-            "conn_id": "postgres_conn",
-            "database": "pagila",
-            "schema": "public",
-        },
-        "table_2": {
-            "path": "/../data/homes2.csv",
-            "name": "stats_check_test_2",
-            "conn_id": "postgres_conn",
-            "database": "pagila",
-            "schema": "public",
-        },
-        "table_3": {
-            "path": "/../data/homes3.csv",
-            "name": "stats_check_test_3",
-            "conn_id": "postgres_conn",
-            "database": "pagila",
-            "schema": "public",
-        },
-    },
-    {
-        "table_1": {
-            "path": "/../data/homes.csv",
-            "name": test_utils.get_table_name("stats_check_test_4"),
-            "conn_id": "snowflake_conn",
-            "database": os.getenv("SNOWFLAKE_DATABASE"),
-            "schema": os.getenv("SNOWFLAKE_SCHEMA"),
-            "warehouse": os.getenv("SNOWFLAKE_WAREHOUSE"),
-        },
-        "table_2": {
-            "path": "/../data/homes2.csv",
-            "name": test_utils.get_table_name("stats_check_test_5"),
-            "conn_id": "snowflake_conn",
-            "database": os.getenv("SNOWFLAKE_DATABASE"),
-            "schema": os.getenv("SNOWFLAKE_SCHEMA"),
-            "warehouse": os.getenv("SNOWFLAKE_WAREHOUSE"),
-        },
-        "table_3": {
-            "path": "/../data/homes3.csv",
-            "name": test_utils.get_table_name("stats_check_test_6"),
-            "conn_id": "snowflake_conn",
-            "database": os.getenv("SNOWFLAKE_DATABASE"),
-            "schema": os.getenv("SNOWFLAKE_SCHEMA"),
-            "warehouse": os.getenv("SNOWFLAKE_WAREHOUSE"),
-        },
-    },
-    {
-        "table_1": {
-            "path": "/../data/homes.csv",
-            "name": "stats_check_test_7",
-            "conn_id": "bigquery",
-            "database": "pagila",
-            "schema": SCHEMA,
-        },
-        "table_2": {
-            "path": "/../data/homes2.csv",
-            "name": "stats_check_test_8",
-            "conn_id": "bigquery",
-            "schema": SCHEMA,
-        },
-        "table_3": {
-            "path": "/../data/homes3.csv",
-            "name": "stats_check_test_9",
-            "conn_id": "bigquery",
-            "schema": SCHEMA,
-        },
-    }
-    # {
-    #     "table_1" : {
-    #         "path" : "/../data/homes.csv",
-    #         "name" : 'stats_check_test_1',
-    #         "conn_id" : "sqlite_conn",
-    #     },
-    #     "table_2" : {
-    #         "path" : "/../data/homes2.csv",
-    #         "name" : 'stats_check_test_1',
-    #         "conn_id" : "sqlite_conn",
-    #     },
-    #     "table_3" : {
-    #         "path" : "/../data/homes2.csv",
-    #         "name" : 'stats_check_test_1',
-    #         "conn_id" : "sqlite_conn",
-    #     }
-    # },
-]
-
-
 @pytest.mark.parametrize(
-    "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
+    "sql_server",
+    [
+        "snowflake",
+        "postgres",
+        "bigquery",
+    ],
+    indirect=True,
 )
-def test_stats_check_postgres_outlier_exists(sample_dag, sql_server, tmp_table):
-    tables_objects = create_tables_objects(tables)
+@pytest.mark.parametrize(
+    "test_table",
+    [
+        [
+            {
+                "path": str(CWD) + "/../data/homes.csv",
+                "load_table": True,
+                "is_temp": False,
+                "param": {
+                    "schema": SCHEMA,
+                    "table_name": test_utils.get_table_name("test_stats_check_1"),
+                },
+            },
+            {
+                "path": str(CWD) + "/../data/homes3.csv",
+                "load_table": True,
+                "is_temp": False,
+                "param": {
+                    "schema": SCHEMA,
+                    "table_name": test_utils.get_table_name("test_stats_check_2"),
+                },
+            },
+        ],
+    ],
+    indirect=True,
+)
+def test_stats_check_postgres_outlier_exists(sample_dag, sql_server, test_table):
     with sample_dag:
         aql.stats_check(
-            main_table=tables_objects[0],
-            compare_table=tables_objects[1],
+            main_table=test_table[0],
+            compare_table=test_table[1],
             checks=[aql.OutlierCheck("room_check", {"rooms": "rooms"}, 2, 0.0)],
             max_rows_returned=10,
         )
-    test_utils.run_dag(sample_dag)
+        test_utils.run_dag(sample_dag)
 
 
 @pytest.mark.parametrize(
-    "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
+    "sql_server",
+    [
+        "snowflake",
+        "postgres",
+        "bigquery",
+    ],
+    indirect=True,
 )
-def test_stats_check_outlier_exists(sample_dag, sql_server, tmp_table):
-    tables_objects = create_tables_objects(tables)
+@pytest.mark.parametrize(
+    "test_table",
+    [
+        [
+            {
+                "path": str(CWD) + "/../data/homes.csv",
+                "load_table": True,
+                "is_temp": False,
+                "param": {
+                    "schema": SCHEMA,
+                    "table_name": test_utils.get_table_name("test_stats_check_1"),
+                },
+            },
+            {
+                "path": str(CWD) + "/../data/homes2.csv",
+                "load_table": True,
+                "is_temp": False,
+                "param": {
+                    "schema": SCHEMA,
+                    "table_name": test_utils.get_table_name("test_stats_check_2"),
+                },
+            },
+        ],
+    ],
+    indirect=True,
+)
+def test_stats_check_outlier_exists(sample_dag, sql_server, test_table):
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
             aql.stats_check(
-                main_table=tables_objects[0],
-                compare_table=tables_objects[1],
+                main_table=test_table[0],
+                compare_table=test_table[1],
                 checks=[aql.OutlierCheck("room_check", {"rooms": "rooms"}, 2, 0.0)],
                 max_rows_returned=10,
             )
-    test_utils.run_dag(sample_dag)
-
+        test_utils.run_dag(sample_dag)

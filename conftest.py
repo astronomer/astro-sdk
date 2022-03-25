@@ -2,22 +2,27 @@ import os
 import pathlib
 import uuid
 
+import pandas as pd
 import pytest
 import yaml
 from airflow import settings
+from airflow.hooks.base import BaseHook
 from airflow.models import DAG, Connection, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import create_session, provide_session
 
-from astro.constants import Database
+from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_unique_table_name
+from src.astro.constants import FileType
+from astro.sql.table import Table, TempTable
 from astro.utils.cloud_storage_creds import parse_s3_env_var
 from astro.utils.database import get_database_name
-from astro.utils.dependencies import BigQueryHook, gcs, s3
-from src.astro.constants import FileType
+from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook, gcs, s3
+from astro.constants import FileType, Database
+from astro.utils.load_dataframe import move_dataframe_to_sql
 from tests.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -64,46 +69,84 @@ def sample_dag():
         session.query(TI).delete()
 
 
+def populate_table(path: str, table: Table) -> None:
+    """
+    Populate a csv file into a sql table
+    :param path: path to csv file
+    :param table: Astro table object
+    :return: None
+    """
+    df = pd.read_csv(path)
+    conn = BaseHook.get_connection(table.conn_id)
+    move_dataframe_to_sql(
+        output_table_name=table.table_name,
+        conn_id=table.conn_id,
+        database=table.database,
+        warehouse=table.warehouse,
+        schema=table.schema,
+        df=df,
+        conn_type=conn.conn_type,
+        user=conn.login,
+        chunksize=DEFAULT_CHUNK_SIZE,
+    )
+
+
 @pytest.fixture
 def test_table(request, sql_server):
-    is_tmp_table = True
-    table_options = {}
+    tables = []
+    tables_params = []
 
     if getattr(request, "param", None):
-        is_tmp_table = request.param.get("is_temp", True)
-        table_options = request.param.get("param", {})
+        if isinstance(request.param, list):
+            tables_params = request.param
+        else:
+            tables_params.append(request.param)
+
     sql_name, hook = sql_server
     database = get_database_name(hook)
 
-    if database == Database.SNOWFLAKE:
-        params = {
-            "conn_id": hook.snowflake_conn_id,
-            "database": hook.database,
-            "warehouse": hook.warehouse,
-            "schema": hook.schema,
-        }
-    elif database == Database.POSTGRES:
-        params = {"conn_id": hook.postgres_conn_id, "database": hook.schema}
-    elif database == Database.SQLITE:
-        params = {"conn_id": hook.sqlite_conn_id, "database": "sqlite"}
-    elif database == Database.BIGQUERY:
-        params = {"conn_id": hook.gcp_conn_id, "schema": SCHEMA}
-    else:
-        raise ValueError("Unsupported Database")
-    params.update(table_options)
-    table = TempTable(**params) if is_tmp_table else Table(**params)
+    for table_param in tables_params:
+        is_tmp_table = table_param.get("is_temp", True)
+        load_table = table_param.get("load_table", False)
+        override_table_options = table_param.get("param", {})
 
-    yield table
+        if database == Database.SNOWFLAKE:
+            default_table_options = {
+                "conn_id": hook.snowflake_conn_id,
+                "database": hook.database,
+                "warehouse": hook.warehouse,
+                "schema": hook.schema,
+            }
+        elif database == Database.POSTGRES:
+            default_table_options = {"conn_id": hook.postgres_conn_id, "database": hook.schema}
+        elif database == Database.SQLITE:
+            default_table_options = {"conn_id": hook.sqlite_conn_id, "database": "sqlite"}
+        elif database == Database.BIGQUERY:
+            default_table_options = {"conn_id": hook.gcp_conn_id, "schema": SCHEMA}
+        else:
+            raise ValueError("Unsupported Database")
 
-    if table.qualified_name():
-        hook.run(f"DROP TABLE IF EXISTS {table.qualified_name()}")
+        default_table_options.update(override_table_options)
+        tables.append(
+            TempTable(**default_table_options)
+            if is_tmp_table
+            else Table(**default_table_options)
+        )
+        if load_table:
+            populate_table(path=table_param.get("path"), table=tables[-1])
 
-    if database == Database.SQLITE:
-        hook.run("DROP INDEX IF EXISTS unique_index")
-    elif database in (Database.POSTGRES, Database.POSTGRESQL):
-        # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
-        # Example: tables which are not fixtures and constraints. This is an aggressive approach towards tearing down:
-        hook.run(f"DROP SCHEMA IF EXISTS {table.schema} CASCADE;")
+    yield tables if len(tables) > 1 else tables[0]
+
+    for table in tables:
+        if table.qualified_name():
+            hook.run(f"DROP TABLE IF EXISTS {table.qualified_name()}")
+
+        if database == Database.SQLITE:
+            hook.run(f"DROP INDEX IF EXISTS unique_index")
+        elif database in (Database.POSTGRES, Database.POSTGRESQL):
+            # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
+            # Example: tables which are not fixtures and constraints. This is an aggressive approach towards tearing down:
+            hook.run(f"DROP SCHEMA IF EXISTS {table.schema} CASCADE;")
 
 
 @pytest.fixture
