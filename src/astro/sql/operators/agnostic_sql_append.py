@@ -83,7 +83,7 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
             main_table.table_name, metadata, autoload_with=engine
         )
         append_table_sqla = SqlaTable(
-            main_table.table_name, metadata, autoload_with=engine
+            append_table.table_name, metadata, autoload_with=engine
         )
 
         column_names = [column(c) for c in columns]
