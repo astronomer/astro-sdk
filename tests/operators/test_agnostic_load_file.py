@@ -303,7 +303,7 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(
         "file_conn_id": file_conn_id,
         "output_table": Table(table_name=OUTPUT_TABLE_NAME, **sql_server_params),
     }
-    with pytest.raises(BackfillUnfinished) as exec_info:
+    with pytest.raises(BackfillUnfinished):
         with sample_dag:
             load_file(**task_params)
         test_utils.run_dag(sample_dag)

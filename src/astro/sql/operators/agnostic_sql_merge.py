@@ -98,6 +98,6 @@ class SqlMergeOperator(SqlDecoratedOperator):
                 conflict_strategy=self.conflict_strategy,
             )
         else:
-            raise AirflowException(f"please give a postgres conn id")
+            raise AirflowException("Please pass a postgres conn id")
         super().execute(context)
         return self.target_table

@@ -1,14 +1,15 @@
 import pathlib
 
 import pandas as pd
+import pytest
 from airflow.exceptions import BackfillUnfinished
 
 from astro import sql as aql
 from astro.dataframe import dataframe as adf
+from astro.sql.table import TempTable
 from tests.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
-import pytest
 
 
 @adf
@@ -86,9 +87,6 @@ def test_append(sql_server, sample_dag, test_table, append_params):
     test_utils.run_dag(sample_dag)
 
 
-from astro.sql.table import TempTable
-
-
 @pytest.mark.parametrize(
     "sql_server",
     [
@@ -109,7 +107,7 @@ def test_append_on_tables_on_different_db(sample_dag, sql_server):
                 path=str(CWD) + "/../data/homes_append.csv",
                 output_table=test_table_2,
             )
-            appended_table = aql.append(
+            aql.append(
                 main_table=load_main,
                 append_table=load_append,
             )

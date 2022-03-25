@@ -14,6 +14,13 @@ def bigquery_merge_func(
                 WHEN NOT MATCHED BY TARGET THEN INSERT ({','.join(target_columns)}) VALUES ({','.join(merge_columns)})"
 
     if conflict_strategy == "update":
-        update_statement = f"UPDATE SET {', '.join(['T.' + target_columns[index] + '=S.' + merge_columns[index] for index in range(len(target_columns))])}"
+        update_statement = "UPDATE SET {}".format(
+            ", ".join(
+                [
+                    f"T.{target_columns[idx]}=S.{merge_columns[idx]}"
+                    for idx in range(len(target_columns))
+                ]
+            )
+        )
         statement += f" WHEN MATCHED THEN {update_statement}"
     return statement, {}

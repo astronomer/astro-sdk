@@ -37,7 +37,7 @@ def count_columns(input_table: Table):
 def create_dag(database_name, table_args, dataset):
     dataset_name = dataset["name"]
     dataset_path = dataset["path"]
-    dataset_rows = dataset["rows"]
+    # dataset_rows = dataset["rows"]
 
     dag_name = f"load_file_{dataset_name}_into_{database_name}"
     table_name = Path(dataset_path).stem
@@ -45,13 +45,14 @@ def create_dag(database_name, table_args, dataset):
     with DAG(dag_name, schedule_interval=None, start_date=START_DATE) as dag:
         chunk_size = int(os.environ["ASTRO_CHUNKSIZE"])
         table_metadata = Table(table_name=table_name, **table_args)
-        table_xcom = aql.load_file(
+        table_xcom = aql.load_file(  # noqa: F841
             path=dataset_path,
             task_id="load_csv",
             output_table=table_metadata,
             chunksize=chunk_size,
         )
 
+        # Todo: Check is broken so the following code is commented out, uncomment when fixed
         # aggregate_check(
         #    table_xcom,
         #    check="SELECT COUNT(*) FROM {table}",

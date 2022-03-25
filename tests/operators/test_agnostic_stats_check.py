@@ -161,7 +161,7 @@ class TestStatsCheckOperator:
             )
             a.execute({"run_id": "foo"})
             assert False
-        except ValueError as e:
+        except ValueError:
             assert True
 
     def test_stats_check_postgres_outlier_not_exists(self, tables):
@@ -175,5 +175,5 @@ class TestStatsCheckOperator:
             )
             a.execute({"run_id": "foo"})
             assert True
-        except ValueError as e:
+        except ValueError:
             assert False

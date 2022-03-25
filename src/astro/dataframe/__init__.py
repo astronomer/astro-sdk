@@ -32,5 +32,5 @@ def dataframe(
         python_callable=python_callable,
         multiple_outputs=multiple_outputs,
         decorated_operator_class=SqlDataframeOperator,  # type: ignore
-        **param_map
+        **param_map,
     )
