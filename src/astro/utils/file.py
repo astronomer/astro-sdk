@@ -1,10 +1,11 @@
 import os
 import pathlib
+from typing import Union
 
 from astro.constants import LOAD_DATAFRAME_BYTES_LIMIT, FileType
 
 
-def get_size(filepath):
+def get_size(filepath: str) -> int:
     """
     Return the size (bytes) of the given file.
 
@@ -13,20 +14,24 @@ def get_size(filepath):
     :return: File size in bytes
     :rtype: int
     """
-    filepath = pathlib.Path(filepath)
-    return os.path.getsize(filepath)
+    path = pathlib.Path(filepath)
+    return os.path.getsize(path)
 
 
-def get_filetype(filepath):
+def get_filetype(filepath: Union[str, pathlib.PosixPath]) -> FileType:
     """
     Return a FileType given the filepath. Uses a naive strategy, using the file extension.
 
     :param filepath: URI or Path to a file
-    :type filepath: str
+    :type filepath: str or pathlib.PosixPath
     :return: The filetype (e.g. csv, ndjson, json, parquet)
     :rtype: astro.constants.FileType
     """
-    extension = filepath.split(".")[-1]
+    if isinstance(filepath, pathlib.PosixPath):
+        extension = filepath.suffix[1:]
+    else:
+        extension = filepath.split(".")[-1]
+
     try:
         filetype = getattr(FileType, extension.upper())
     except AttributeError:
@@ -34,7 +39,7 @@ def get_filetype(filepath):
     return filetype
 
 
-def is_binary(filetype):
+def is_binary(filetype: FileType) -> bool:
     """
     Return a FileType given the filepath. Uses a naive strategy, using the file extension.
 
@@ -48,7 +53,7 @@ def is_binary(filetype):
     return False
 
 
-def is_small(filepath):
+def is_small(filepath: str) -> bool:
     """
     Checks if a file is small enough to be loaded into a Pandas dataframe in memory efficiently.
     This value was obtained through performance tests.

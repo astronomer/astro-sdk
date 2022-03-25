@@ -10,6 +10,31 @@ from astro.constants import Database
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 
 
+def get_database_from_conn_id(conn_id: str) -> Database:
+    """
+    Given a conn_id, identify the database name.
+
+    :param conn_id: Airflow connection ID
+    :type conn_id: str
+    :return: the database this interface relates to (e.g. Database.SQLITE)
+    :rtype: astro.constants.Database enum item
+    """
+    conn_type = BaseHook.get_connection(conn_id).conn_type
+    type_to_db = {
+        "postgres": Database.POSTGRES,
+        "postgresql": Database.POSTGRES,
+        "sqlite": Database.SQLITE,
+        "bigquery": Database.BIGQUERY,
+        "snowflake": Database.SNOWFLAKE,
+        "google_cloud_platform": Database.BIGQUERY,
+    }
+    try:
+        database_name = type_to_db[conn_type]
+    except KeyError:
+        raise ValueError(f"Unsupported database <{conn_type}>")
+    return database_name
+
+
 def get_database_name(interface: Union[Engine, BaseHook, SqliteHook]) -> Database:
     """
     Given a hook or a SQL engine, identify the database name.

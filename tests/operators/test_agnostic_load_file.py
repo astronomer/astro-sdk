@@ -9,33 +9,21 @@ Run test:
     python3 -m unittest tests.operators.test_agnostic_load_file.TestAgnosticLoadFile.test_aql_local_file_to_postgres
 
 """
-import copy
 import logging
 import os
 import pathlib
-import unittest.mock
 from typing import Union
 from unittest import mock
 
 import pandas as pd
 import pytest
 from airflow.exceptions import BackfillUnfinished, DuplicateTaskIdFound
-from airflow.models import DAG, DagRun
-from airflow.models import TaskInstance as TI
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
-from airflow.utils.session import create_session
-from airflow.utils.state import State
-from airflow.utils.types import DagRunType
-from google.api_core.exceptions import NotFound
 from google.cloud import bigquery, storage
-from pandas.util.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 
-from astro.settings import SCHEMA
 from astro.sql.operators.agnostic_load_file import AgnosticLoadFile, load_file
 from astro.sql.table import Table, TempTable
-from astro.utils.dependencies import gcs, s3
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
@@ -200,23 +188,6 @@ def test_unique_task_id_for_same_path(sample_dag):
     assert tasks[3].operator.task_id == "task_id"
 
 
-def test_path_validation():
-    test_table = [
-        {"input": "gs://mybucket/puppy.jpg", "output": True},
-        {"input": "S3://mybucket/puppy.jpg", "output": True},
-        {
-            "input": "https://my-bucket.s3.us-west-2.amazonaws.com/puppy.png",
-            "output": True,
-        },
-        {"input": "/etc/someFile/randomFileName.csv", "output": False},
-        {"input": "\x00", "output": False},
-        {"input": "a" * 256, "output": False},
-    ]
-
-    for test in test_table:
-        assert AgnosticLoadFile.validate_path(test["input"]) == test["output"]
-
-
 @mock.patch.dict(
     os.environ,
     {"AWS_ACCESS_KEY_ID": "abcd", "AWS_SECRET_ACCESS_KEY": "@#$%@$#ASDH@Ksd23%SD546"},
@@ -341,14 +312,12 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(
     assert expected_error in caplog.text
 
 
-@pytest.mark.integration
 @pytest.mark.parametrize(
     "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
 )
 @pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
 def test_load_file(sample_dag, sql_server, file_type, test_table):
     database_name, sql_hook = sql_server
-
     with sample_dag:
         load_file(
             path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}")),
@@ -398,7 +367,6 @@ def test_load_file_with_named_schema(sample_dag, sql_server, file_type, test_tab
         )
     test_utils.run_dag(sample_dag)
     df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
-
     assert len(df) == 3
     expected = pd.DataFrame(
         [
