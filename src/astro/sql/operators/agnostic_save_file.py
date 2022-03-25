@@ -4,15 +4,14 @@ from urllib.parse import urlparse
 
 import pandas as pd
 import smart_open
-from airflow.hooks.base import BaseHook
-from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import BaseOperator, DagRun, TaskInstance
+from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 
-from astro.settings import SCHEMA
+from astro.constants import Database
 from astro.sql.table import Table
 from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
+from astro.utils.database import get_database_from_conn_id
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
-from astro.utils.schema_util import get_table_name
 from astro.utils.task_id_helper import get_task_id
 
 
@@ -60,7 +59,6 @@ class SaveFile(BaseOperator):
 
         Infers SQL database type based on connection.
         """
-
         # Infer db type from `input_conn_id`.
         if type(self.input) == Table:
             df = self.convert_sql_table_to_dataframe()
@@ -96,45 +94,43 @@ class SaveFile(BaseOperator):
 
     def convert_sql_table_to_dataframe(self):
         input_table = self.input
-        conn_type = BaseHook.get_connection(input_table.conn_id).conn_type
+        database = get_database_from_conn_id(input_table.conn_id)
 
         # Select database Hook based on `conn` type
         hook_kwargs = {
-            "postgres": {
+            Database.POSTGRES: {
                 "postgres_conn_id": input_table.conn_id,
                 "schema": input_table.database,
             },
-            "snowflake": {
+            Database.SNOWFLAKE: {
                 "snowflake_conn_id": input_table.conn_id,
                 "database": input_table.database,
                 "schema": input_table.schema,
                 "warehouse": input_table.warehouse,
             },
-            "bigquery": {"use_legacy_sql": False, "gcp_conn_id": input_table.conn_id},
-            "sqlite": {"sqlite_conn_id": input_table.conn_id},
+            Database.BIGQUERY: {
+                "use_legacy_sql": False,
+                "gcp_conn_id": input_table.conn_id,
+            },
+            Database.SQLITE: {"sqlite_conn_id": input_table.conn_id},
         }
 
         hook_class = {
-            "postgres": PostgresHook,
-            "snowflake": SnowflakeHook,
-            "bigquery": BigQueryHook,
-            "sqlite": SqliteHook,
+            Database.POSTGRES: PostgresHook,
+            Database.SNOWFLAKE: SnowflakeHook,
+            Database.BIGQUERY: BigQueryHook,
+            Database.SQLITE: SqliteHook,
         }
 
         try:
-            input_hook = hook_class[conn_type](**hook_kwargs[conn_type])
+            input_hook = hook_class[database](**hook_kwargs[database])
         except KeyError:
             raise ValueError(
-                f"The conn_id {input_table.conn_id} is of unsupported type {conn_type}. Current support types: {list(hook_class.key())}"
+                f"The conn_id {input_table.conn_id} is of unsupported type {database}. Support types: {list(hook_class.key())}"
             )
 
-        if conn_type == "postgres" or conn_type == "postgresql":
-            table_name = f"{input_table.schema or SCHEMA}.{get_table_name(input_table)}"
-        else:
-            table_name = f"{get_table_name(input_table)}"
-        # Load table from SQL db.
         return pd.read_sql(
-            f"SELECT * FROM {table_name}",
+            f"SELECT * FROM {input_table.qualified_name()}",
             con=input_hook.get_sqlalchemy_engine(),
         )
 

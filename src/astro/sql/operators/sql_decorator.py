@@ -7,14 +7,19 @@ from airflow.decorators.base import DecoratedOperator, task_decorator_factory
 from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, TaskInstance
 from airflow.utils.db import provide_session
-from sqlalchemy import create_engine, text
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.sql.functions import Function
 
+from astro.constants import Database
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils import get_hook, postgres_transform, snowflake_transform
-from astro.utils.load_dataframe import move_dataframe_to_sql
+from astro.utils.database import (
+    get_database_from_conn_id,
+    get_sqlalchemy_engine,
+    run_sql,
+)
+from astro.utils.load import load_dataframe_into_sql_table
 from astro.utils.schema_util import create_schema_query, schema_exists
 from astro.utils.table_handler import TableHandler
 
@@ -92,7 +97,6 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         )
 
     def execute(self, context: Dict):
-
         if not isinstance(self.sql, str):
             cursor = self._run_sql(self.sql, self.parameters)
             if self.handler is not None:
@@ -211,9 +215,10 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         :return:
         """
         schema = schema or SCHEMA
-        if self.conn_type in ["postgres", "bigquery"] and self.schema:
+        database = get_database_from_conn_id(self.conn_id)
+        if database in (Database.POSTGRES, Database.BIGQUERY) and self.schema:
             output_table_name = schema + "." + output_table_name
-        elif self.conn_type == "snowflake" and self.schema and "." not in self.sql:
+        elif database == Database.SNOWFLAKE and self.schema and "." not in self.sql:
             output_table_name = self.database + "." + schema + "." + output_table_name
         return output_table_name
 
@@ -231,20 +236,14 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 print(e)
 
     def get_sql_alchemy_engine(self):
-        if self.conn_type == "sqlite":
-            uri = self.hook.get_uri().replace("///", "////")
-            engine = create_engine(uri)
-        else:
-            engine = self.hook.get_sqlalchemy_engine()
-        return engine
+        return get_sqlalchemy_engine(self.hook)
 
-    def _run_sql(self, sql, parameters):
-        engine = self.get_sql_alchemy_engine()
-        conn = engine.connect()
-        if isinstance(sql, str):
-            return conn.execute(text(sql), parameters)
-        else:
-            return conn.execute(sql, parameters)
+    def _run_sql(self, sql, parameters=None):
+        return run_sql(
+            engine=self.get_sql_alchemy_engine(),
+            sql_statement=sql,
+            parameters=parameters,
+        )
 
     def create_temporary_table(self, query, output_table_name, schema=None):
         """
@@ -269,10 +268,6 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         else:
             statement = f"CREATE TABLE {output_table_name} AS ({clean_trailing_semicolon(query)});"
         return statement
-
-    @staticmethod
-    def create_cte(query, table_name):
-        return f"WITH {table_name} AS ({query}) SELECT * FROM {table_name};"
 
     @staticmethod
     def create_output_csv_path(context):
@@ -305,9 +300,10 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             )
 
     def _add_templates_to_context(self, context):
-        if self.conn_type in ["postgres", "bigquery"]:
+        database = get_database_from_conn_id(self.conn_id)
+        if database in (Database.POSTGRES, Database.BIGQUERY):
             return postgres_transform.add_templates_to_context(self.parameters, context)
-        elif self.conn_type in ["snowflake"]:
+        elif database == Database.SNOWFLAKE:
             return snowflake_transform.add_templates_to_context(
                 self.parameters, context
             )
@@ -331,6 +327,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         final_args = []
         for i, arg in enumerate(self.op_args):
             if type(arg) == pd.DataFrame:
+                pandas_dataframe = arg
                 output_table_name = (
                     self.dag_id
                     + "_"
@@ -339,47 +336,50 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                     + self.run_id
                     + f"_input_dataframe_{i}"
                 )
-                move_dataframe_to_sql(
-                    output_table_name=output_table_name,
-                    df=arg,
-                    conn_type=self.conn_type,
+                output_table = Table(
+                    table_name=output_table_name,
                     conn_id=self.conn_id,
                     database=self.database,
                     schema=self.schema,
                     warehouse=self.warehouse,
                 )
-                final_args.append(
-                    Table(
-                        table_name=output_table_name,
-                        conn_id=self.conn_id,
-                        database=self.database,
-                        schema=self.schema,
-                        warehouse=self.warehouse,
-                    )
+                hook = get_hook(
+                    conn_id=self.conn_id,
+                    database=self.database,
+                    schema=self.schema,
+                    warehouse=self.warehouse,
                 )
+                load_dataframe_into_sql_table(pandas_dataframe, output_table, hook)
+                final_args.append(output_table)
             else:
                 final_args.append(arg)
             self.op_args = tuple(final_args)
 
     def convert_op_kwarg_dataframes(self):
         final_kwargs = {}
-        for k, v in self.op_kwargs.items():
-            if type(v) == pd.DataFrame:
+        for key, value in self.op_kwargs.items():
+            if type(value) == pd.DataFrame:
+                pandas_dataframe = value
                 output_table_name = "_".join(
                     [self.dag_id, self.task_id, self.run_id, "input_dataframe", str(k)]
                 )
-                move_dataframe_to_sql(
-                    output_table_name=output_table_name,
-                    df=v,
-                    conn_type=self.conn_type,
+                output_table = Table(
+                    table_name=output_table_name,
                     conn_id=self.conn_id,
                     database=self.database,
                     schema=self.schema,
                     warehouse=self.warehouse,
                 )
-                final_kwargs[k] = output_table_name
+                hook = get_hook(
+                    conn_id=self.conn_id,
+                    database=self.database,
+                    schema=self.schema,
+                    warehouse=self.warehouse,
+                )
+                load_dataframe_into_sql_table(pandas_dataframe, output_table, hook)
+                final_kwargs[key] = output_table_name
             else:
-                final_kwargs[k] = v
+                final_kwargs[key] = value
         self.op_kwargs = final_kwargs
 
 

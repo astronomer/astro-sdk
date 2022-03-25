@@ -2,6 +2,7 @@ from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, TaskInstance
 
 from astro.constants import Database
+from astro.settings import SCHEMA
 from astro.utils import get_hook
 from astro.utils.database import get_database_name
 
@@ -72,7 +73,7 @@ class Table:
 
 
 class TempTable(Table):
-    def __init__(self, conn_id=None, database=None, warehouse="", role=""):
+    def __init__(self, conn_id=None, database=None, schema=None, warehouse="", role=""):
         self.table_name = ""
         super().__init__(
             table_name=self.table_name,
@@ -80,18 +81,20 @@ class TempTable(Table):
             database=database,
             warehouse=warehouse,
             role=role,
+            schema=schema,
         )
 
     def to_table(self, table_name: str, schema: str = None) -> Table:
         self.table_name = table_name
-        self.schema = schema
+        self.schema = schema or self.schema or SCHEMA
+
         return Table(
             table_name=table_name,
             conn_id=self.conn_id,
             database=self.database,
             warehouse=self.warehouse,
             role=self.role,
-            schema=schema,
+            schema=self.schema,
         )
 
 
