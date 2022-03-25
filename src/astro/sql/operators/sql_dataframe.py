@@ -5,7 +5,7 @@ import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 
-from astro.constants import DEFAULT_CHUNK_SIZE, Database
+from astro.constants import Database
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils import get_hook

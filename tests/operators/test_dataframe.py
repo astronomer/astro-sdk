@@ -25,8 +25,6 @@ from airflow.models import TaskInstance as TI
 from airflow.models.xcom import XCom
 from airflow.utils import timezone
 from airflow.utils.session import create_session
-from airflow.utils.state import State
-from airflow.utils.types import DagRunType
 
 from astro import dataframe as df
 from astro import sql as aql

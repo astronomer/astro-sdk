@@ -6,12 +6,9 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 import logging
 import os
 import pathlib
-import time
-import unittest.mock
 
 import pytest
 from airflow.exceptions import BackfillUnfinished
-from airflow.models import DAG
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from airflow.utils import timezone
 
@@ -19,11 +16,7 @@ from airflow.utils import timezone
 import astro.sql as aql
 from astro.constants import SUPPORTED_DATABASES
 from astro.settings import SCHEMA
-from astro.sql.operators.agnostic_boolean_check import (
-    AgnosticBooleanCheck,
-    Check,
-    boolean_check,
-)
+from astro.sql.operators.agnostic_boolean_check import Check
 from astro.sql.table import Table
 from tests.operators.utils import get_table_name, run_dag
 
@@ -55,7 +48,6 @@ def drop_table_snowflake(
 
 @pytest.fixture(scope="module")
 def table(request):
-
     boolean_check_table = Table(
         get_table_name("boolean_check_test"),
         database="pagila",

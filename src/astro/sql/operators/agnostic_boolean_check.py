@@ -3,7 +3,6 @@ from typing import Dict, List
 
 from airflow.hooks.base import BaseHook
 from sqlalchemy import FLOAT, and_, cast, column, func, select, text
-from sqlalchemy.sql.expression import table as sqlatable
 
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.table import Table

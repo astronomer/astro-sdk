@@ -8,7 +8,6 @@ from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from airflow.utils import timezone
 from airflow.utils.state import State
 
-from astro.settings import SCHEMA
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)

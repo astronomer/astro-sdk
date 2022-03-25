@@ -23,15 +23,9 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 import logging
 import os
 import pathlib
-import random
-import unittest.mock
 
 import pytest
 from airflow.exceptions import BackfillUnfinished
-from airflow.hooks.sqlite_hook import SqliteHook
-from airflow.models import DAG, DagRun
-from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils import timezone
 
 import astro.sql as aql

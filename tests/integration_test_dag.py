@@ -16,7 +16,6 @@ DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 CWD = pathlib.Path(__file__).parent
 
-
 default_args = {
     "owner": "airflow",
     "retries": 1,

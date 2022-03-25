@@ -3,7 +3,7 @@ import os
 import pathlib
 from urllib.parse import urlparse, urlunparse
 
-from astro.constants import FileLocation, FileType
+from astro.constants import FileLocation
 from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
 from astro.utils.dependencies import gcs, s3
 

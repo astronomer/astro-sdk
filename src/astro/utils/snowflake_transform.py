@@ -1,6 +1,3 @@
-import inspect
-import re
-
 from astro.settings import SCHEMA
 from astro.sql.table import Table
 

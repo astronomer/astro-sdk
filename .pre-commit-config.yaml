@@ -48,6 +48,11 @@ repos:
         alias: black
         additional_dependencies: [black==22.1.0]
 
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.9.2
+    hooks:
+      - id: flake8
+
   - repo: https://github.com/timothycrosley/isort
     rev: 5.10.1
     hooks:

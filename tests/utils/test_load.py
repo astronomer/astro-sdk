@@ -15,7 +15,6 @@ from astro.constants import (
 )
 from astro.settings import SCHEMA
 from astro.utils.database import get_sqlalchemy_engine
-from astro.utils.dependencies import PostgresHook
 from astro.utils.load import (
     copy_remote_file_to_local,
     load_dataframe_into_sql_table,
