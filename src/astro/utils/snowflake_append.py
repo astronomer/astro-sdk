@@ -36,12 +36,14 @@ def snowflake_append_func(
         if columns and casted_columns
         else statement.replace("{sep}", "")
     )
+    statement = statement.replace("{main_cols}", ",".join(list(columns)))
+    # TODO: Please note that we are not wrapping these in Identifier due to a snowflake bug.
+    #  Must fix before public release!
     statement = statement.replace(
-        "{main_cols}", ",".join([c for c in columns])
-    )  # Please note that we are not wrapping these in Identifier due to a snowflake bug. Must fix before public release!
-    statement = statement.replace(
-        "{main_casted_cols}", ",".join([c for c in casted_columns.keys()])
-    )  # Please note that we are not wrapping these in Identifier due to a snowflake bug. Must fix before public release!
+        "{main_casted_cols}", ",".join(list(casted_columns.keys()))
+    )
+    # TODO: Please note that we are not wrapping these in Identifier due to a snowflake bug.
+    #  Must fix before public release!
     statement = statement.replace(
         "{fields}", ",".join([wrap_identifier(c) for c in col_dict.keys()])
     )

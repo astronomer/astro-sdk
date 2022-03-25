@@ -24,7 +24,7 @@ def s3fs_creds(conn_id=None):
             aws_access_key_id=key,
             aws_secret_access_key=secret,
         )
-    return dict(client=session.client("s3"))
+    return {"client": session.client("s3")}
 
 
 def gcs_client(conn_id=None):
@@ -37,4 +37,4 @@ def gcs_client(conn_id=None):
     else:
         client = GCSClient()
 
-    return dict(client=client)
+    return {"client": client}

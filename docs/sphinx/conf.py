@@ -19,8 +19,7 @@ sys.path.insert(0, os.path.abspath("../../../src/"))
 # -- Project information -----------------------------------------------------
 
 project = "Astro Projects"
-copyright = "2022, Daniel Imberman, Tatiana Al-Chueyr, Utkarsh Sharma"
-author = "Daniel Imberman, Tatiana Al-Chueyr, Utkarsh Sharma"
+author = "Astronomer Inc."
 
 # The full version, including alpha/beta/rc tags
 release = "0.6.0"

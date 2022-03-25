@@ -1,20 +1,4 @@
 """
-Copyright Astronomer, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-"""
 Unittest module to test Operators.
 
 Requires the unittest, pytest, and requests-mock Python libraries.
@@ -142,7 +126,7 @@ class TestSQLiteAppend(unittest.TestCase):
                 path=str(cwd) + "/../data/homes_append.csv",
                 output_table=self.append_table,
             )
-            foo = aql.append(
+            aql.append(
                 columns=["sell", "living"],
                 main_table=load_main,
                 append_table=load_append,
@@ -175,7 +159,7 @@ class TestSQLiteAppend(unittest.TestCase):
                 path=str(cwd) + "/../data/homes_append.csv",
                 output_table=self.append_table,
             )
-            foo = aql.append(
+            aql.append(
                 main_table=load_main,
                 append_table=load_append,
             )
@@ -206,7 +190,7 @@ class TestSQLiteAppend(unittest.TestCase):
                 path=str(cwd) + "/../data/homes_append.csv",
                 output_table=self.append_table,
             )
-            foo = aql.append(
+            aql.append(
                 columns=["sell", "living"],
                 casted_columns={"age": "INTEGER"},
                 main_table=load_main,
@@ -223,8 +207,6 @@ class TestSQLiteAppend(unittest.TestCase):
         assert df["rooms"].hasnans
 
     def test_append_only_cast(self):
-        MAIN_TABLE_NAME = "test_main"
-        APPEND_TABLE_NAME = "test_append"
         hook = SqliteHook(sqlite_conn_id="sqlite_conn")
 
         drop_table(table_name="test_main", postgres_conn=hook.get_conn())
@@ -241,7 +223,7 @@ class TestSQLiteAppend(unittest.TestCase):
                 path=str(cwd) + "/../data/homes_append.csv",
                 output_table=self.append_table,
             )
-            foo = aql.append(
+            aql.append(
                 casted_columns={"age": "INTEGER"},
                 main_table=load_main,
                 append_table=load_append,

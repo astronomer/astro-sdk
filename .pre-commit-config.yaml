@@ -48,10 +48,16 @@ repos:
         alias: black
         additional_dependencies: [black==22.1.0]
 
-  - repo: https://gitlab.com/pycqa/flake8
+  - repo: https://github.com/PyCQA/flake8
     rev: 3.9.2
     hooks:
       - id: flake8
+        additional_dependencies:
+          - flake8-builtins
+          - flake8-comprehensions
+          - flake8-colors
+          - flake8-assertive
+          - flake8-typing-imports
 
   - repo: https://github.com/timothycrosley/isort
     rev: 5.10.1
@@ -70,7 +76,7 @@ repos:
         types: [text]
 
   -   repo: https://github.com/pre-commit/mirrors-mypy
-      rev: 'v0.941'
+      rev: 'v0.942'
       hooks:
       -   id: mypy
           additional_dependencies: [types-PyYAML]

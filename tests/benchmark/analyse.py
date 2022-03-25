@@ -20,15 +20,15 @@ if sys.platform == "linux":
     SUMMARY_FIELDS.append("memory_shared")
 
 
-def format_bytes(bytes):
-    if abs(bytes) < 1000:
-        return str(bytes) + "B"
-    elif abs(bytes) < 1e6:
-        return str(round(bytes / 1e3, 2)) + "kB"
-    elif abs(bytes) < 1e9:
-        return str(round(bytes / 1e6, 2)) + "MB"
+def format_bytes(bytes_):
+    if abs(bytes_) < 1000:
+        return str(bytes_) + "B"
+    elif abs(bytes_) < 1e6:
+        return str(round(bytes_ / 1e3, 2)) + "kB"
+    elif abs(bytes_) < 1e9:
+        return str(round(bytes_ / 1e6, 2)) + "MB"
     else:
-        return str(round(bytes / 1e9, 2)) + "GB"
+        return str(round(bytes_ / 1e9, 2)) + "GB"
 
 
 def format_time(time):
@@ -52,7 +52,6 @@ def analyse_results(results_filepath):
 
     # calculate total CPU from process & children
     mean_by_dag = df.groupby("dag_id", as_index=False).mean()
-    std_by_dag = df.groupby("dag_id", as_index=False).std()
 
     # format data
     mean_by_dag["database"] = mean_by_dag.dag_id.apply(

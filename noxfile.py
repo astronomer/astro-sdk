@@ -46,7 +46,7 @@ def test_examples_by_dependency(session: nox.Session, extras):
     pytest_args = ["-k", pytest_options]
 
     session.install("-e", f".[{pypi_deps}]")
-    session.install("-e", f".[tests]")
+    session.install("-e", ".[tests]")
     session.run("airflow", "db", "init")
 
     session.run("pytest", "tests/test_example_dags.py", *pytest_args, *session.posargs)

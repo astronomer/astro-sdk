@@ -109,7 +109,7 @@ def test_happyflow_fail(sample_dag, table, caplog):
     def get_table(input_table: Table):
         return "SELECT * FROM {{input_table}}"
 
-    with pytest.raises(BackfillUnfinished) as e:
+    with pytest.raises(BackfillUnfinished):
         with sample_dag:
             temp_table = get_table(table)
             aql.boolean_check(
