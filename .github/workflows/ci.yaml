@@ -13,7 +13,7 @@ jobs:
         with:
           python-version: '3.9'
           architecture: 'x64'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: ${{ hashFiles('pyproject.toml') }}
@@ -38,11 +38,9 @@ jobs:
         with:
           python-version: '3.8'
           architecture: 'x64'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
-          path: |
-            ~/.cache/pip
-            ~/.nox
+          path: .nox
           key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
       - run: cat .github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
@@ -78,7 +76,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        group: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
+        python-version: ["3.7", "3.8", "3.9"]
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -98,19 +96,17 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: ${{ matrix.python-version }}
           architecture: 'x64'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
-          path: |
-            ~/.cache/pip
-            ~/.nox
-          key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+          path: .nox
+          key: ${{ runner.os }}-nox-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml') }}
       - run: cat .github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s test -- --splits 12 --group ${{ matrix.group }}
+      - run: nox --force-color --python=${{ matrix.python-version }} -s test
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
@@ -149,18 +145,15 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
-      - name: Install deps
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
       - name: Download all artifacts
         uses: actions/download-artifact@v2
-      - name: Run coverage
-        run: |
-          coverage combine coverage*/.coverage*
-          coverage report
-          coverage xml
+#      - name: Run coverage
+#        run: |
+#          coverage combine coverage*/.coverage*
+#          coverage report
+#          coverage xml
       - uses: codecov/codecov-action@v2
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./coverage
