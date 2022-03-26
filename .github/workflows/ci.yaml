@@ -46,7 +46,7 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s test_examples_by_dependency -- --cov=./ --cov-report=xml --cov-branch
+      - run: nox -s test_examples_by_dependency
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
@@ -106,7 +106,7 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s test -- --splits 12 --group ${{ matrix.group }} --cov=./ --cov-report=xml --cov-branch
+      - run: nox -s test -- --splits 12 --group ${{ matrix.group }}
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v1
         with:
