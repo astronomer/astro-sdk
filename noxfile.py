@@ -5,6 +5,7 @@ import pathlib
 import nox
 
 nox.options.sessions = ["dev"]
+nox.options.reuse_existing_virtualenvs = True
 
 
 @nox.session(python="3.9")
