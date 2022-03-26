@@ -42,7 +42,7 @@ jobs:
         with:
           path: |
             ~/.cache/pip
-            ~/.nox
+            .nox
           key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
       - run: cat .github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
@@ -104,7 +104,7 @@ jobs:
         with:
           path: |
             ~/.cache/pip
-            ~/.nox
+            .nox
           key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
       - run: cat .github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
