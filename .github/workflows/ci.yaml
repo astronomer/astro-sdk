@@ -40,8 +40,10 @@ jobs:
           architecture: 'x64'
       - uses: actions/cache@v2
         with:
-          path: ~/.cache/pip
-          key: ${{ hashFiles('pyproject.toml') }}
+          path: |
+            ~/.cache/pip
+            ~/.nox
+          key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
       - run: cat .github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
@@ -100,8 +102,10 @@ jobs:
           architecture: 'x64'
       - uses: actions/cache@v2
         with:
-          path: ~/.cache/pip
-          key: ${{ hashFiles('pyproject.toml') }}
+          path: |
+            ~/.cache/pip
+            ~/.nox
+          key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
       - run: cat .github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
