@@ -32,7 +32,7 @@ def load_file_into_dataframe(
     filepath: str,
     filetype: FileType = None,
     transport_params: Union[None, dict] = None,
-    hook: Union[None, BaseHook] = None,
+    database: Union[None, Database] = None,
     normalize_config: Union[None, dict] = None,
     **kwargs,
 ) -> pd.DataFrame:
@@ -40,13 +40,13 @@ def load_file_into_dataframe(
     Load the contents of a file into a Pandas dataframe.
 
     :param filepath: File system path to a single file
-    :param hook: Details of the hook to be used to do the transfer
+    :param database: Database name
     :param filetype: One of the supported filetypes ("csv", "json", "ndjson", "parquet")
     :param transport_params: Necessary parameters to connect to object store, in case the file is in (S3, GCS)
     :param normalize_config: parameters to pandas json_normalize function
     :param kwargs: Additional parameters to be used to load the data into a dataframe
     :type filepath: str
-    :type hook: BaseHook
+    :type database: Enum
     :type filetype: str
     :type normalize_config: dict
     :type transport_params: dict
@@ -66,11 +66,13 @@ def load_file_into_dataframe(
         elif filetype == FileType.JSON:
             dataframe = pd.read_json(stream, **kwargs)
         elif filetype == FileType.NDJSON:
-            if hook is None:
+            if database is None:
                 raise ValueError(
-                    "Hook param cannot be None when the file type is Ndjson."
+                    "database param cannot be None when the file type is Ndjson."
                 )
-            dataframe = flatten_ndjson(normalize_config, stream=stream, hook=hook)
+            dataframe = flatten_ndjson(
+                normalize_config, stream=stream, database=database
+            )
         elif filetype == FileType.PARQUET:
             dataframe = pd.read_parquet(stream, **kwargs)
         else:
@@ -79,14 +81,12 @@ def load_file_into_dataframe(
 
 
 def flatten_ndjson(
-    normalize_config: Union[None, dict], stream: io.TextIOWrapper, hook: BaseHook
+    normalize_config: Union[None, dict], stream: io.TextIOWrapper, database: Database
 ) -> pd.DataFrame:
 
     normalize_config = normalize_config or {}
 
-    check_ndjson_config_delimiter(
-        database=get_database_name(hook), normalize_config=normalize_config
-    )
+    check_ndjson_config_delimiter(database=database, normalize_config=normalize_config)
 
     df = None
     rows = stream.readlines(DEFAULT_CHUNK_SIZE)
@@ -126,6 +126,8 @@ def load_file_rows_into_dataframe(
     filepath: str,
     filetype: FileType = None,
     rows_count: int = LOAD_COLUMN_AUTO_DETECT_ROWS,
+    database: Union[None, Database] = None,
+    normalize_config: Union[None, dict] = None,
 ) -> pd.DataFrame:
     """
     Load the first rows of a file available in the filesystem into a Pandas dataframe.
@@ -133,9 +135,13 @@ def load_file_rows_into_dataframe(
     :param filepath: File system path to a single file
     :param filetype: One of the supported filetypes ("csv", "json", "ndjson", "parquet")
     :param rows_count: Total rows of the file to be loaded into the dataframe
+    :param database: Database name
+    :param normalize_config: parameters to pandas json_normalize function
     :type filepath: str
     :type filetype: str
     :type rows_count: int
+    :type database: Database
+    :type normalize_config: dict
     :return: return dataframe containing the loaded data
     :rtype: `pandas.DataFrame`
     """
@@ -148,6 +154,14 @@ def load_file_rows_into_dataframe(
         parquet_file = ParquetFile(filepath)
         first_rows = next(parquet_file.iter_batches(batch_size=rows_count))
         dataframe = pa.Table.from_batches([first_rows]).to_pandas()
+    elif filetype == FileType.NDJSON:
+        dataframe = load_file_into_dataframe(
+            filepath,
+            filetype,
+            nrows=rows_count,
+            database=database,
+            normalize_config=normalize_config,
+        )
     else:
         dataframe = load_file_into_dataframe(filepath, filetype, nrows=rows_count)
     return dataframe
@@ -180,7 +194,7 @@ def load_file_into_sql_table(
         # At the moment we are using dataframes to convert among filetypes
         # since, among the file formats we support, Postgres only accepts CSV
         # TODO: chunk the files so we don't need to load huge files in memory
-        df = load_file_into_dataframe(filepath, filetype)
+        df = load_file_into_dataframe(filepath, filetype, database=database_name)
         df.to_csv(csv_filepath, index=None, header=False)
         tmp_file.flush()
 
