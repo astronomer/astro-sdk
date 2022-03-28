@@ -30,9 +30,9 @@ from astro.utils.schema_util import create_schema_query, schema_exists
 
 def load_file_into_dataframe(
     filepath: str,
-    hook: Union[None, BaseHook] = None,
     filetype: FileType = None,
     transport_params: Union[None, dict] = None,
+    hook: Union[None, BaseHook] = None,
     normalize_config: Union[None, dict] = None,
     **kwargs,
 ) -> pd.DataFrame:

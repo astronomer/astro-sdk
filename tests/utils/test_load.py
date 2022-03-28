@@ -85,7 +85,8 @@ def describe_load_file_rows_into_dataframe():
     @pytest.mark.parametrize("file_type", SUPPORTED_FILE_TYPES)
     def with_rows_count_smaller_than_data_rows(file_type):
         filepath = pathlib.Path(CWD.parent, f"data/sample.{file_type}")
-        computed = load_file_rows_into_dataframe(filepath, rows_count=1)
+        hook = SqliteHook()
+        computed = load_file_rows_into_dataframe(filepath, rows_count=1, hook=hook)
 
         assert len(computed) == 1
         expected = pd.DataFrame([{"id": 1, "name": "First"}])
@@ -94,7 +95,8 @@ def describe_load_file_rows_into_dataframe():
 
     def with_explicit_filetype():
         filepath = pathlib.Path(CWD.parent, "data/sample.ndjson")
-        computed = load_file_rows_into_dataframe(filepath, FileType.NDJSON)
+        hook = SqliteHook()
+        computed = load_file_rows_into_dataframe(filepath, FileType.NDJSON, hook=hook)
         assert len(computed) == 3
         computed = computed.rename(columns=str.lower)
         assert_frame_equal(computed, EXPECTED_DATA)
@@ -130,6 +132,7 @@ def describe_load_file_into_sql_table():
             filetype=FileType.NDJSON,
             table_name=test_table.table_name,
             engine=engine,
+            hook=hook,
         )
         computed = hook.get_pandas_df(f"SELECT * FROM {test_table.table_name}")
         computed = computed.rename(columns=str.lower)
