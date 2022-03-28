@@ -47,7 +47,7 @@ def describe_load_file_into_dataframe():
     def with_unsupported_inferred_filetype():
         filepath = __file__
         with pytest.raises(ValueError) as exc_info:
-            load_file_into_dataframe(filepath)
+            load_file_into_dataframe(filepath=filepath)
         expected_msg_prefix = "Unsupported filetype 'py' from file '"
         expected_msg_suffix = "test_load.py'."
         error_msg = exc_info.value.args[0]
@@ -67,7 +67,8 @@ def describe_load_file_into_dataframe():
     @pytest.mark.parametrize("file_type", SUPPORTED_FILE_TYPES)
     def with_supported_filetype(file_type):
         filepath = pathlib.Path(CWD.parent, f"data/sample.{file_type}")
-        computed = load_file_into_dataframe(filepath)
+        hook = SqliteHook()
+        computed = load_file_into_dataframe(filepath, hook=hook)
         assert len(computed) == 3
         computed = computed.rename(columns=str.lower)
         assert_frame_equal(computed, EXPECTED_DATA)

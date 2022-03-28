@@ -30,7 +30,7 @@ from astro.utils.schema_util import create_schema_query, schema_exists
 
 def load_file_into_dataframe(
     filepath: str,
-    hook: BaseHook,
+    hook: Union[None, BaseHook] = None,
     filetype: FileType = None,
     transport_params: Union[None, dict] = None,
     normalize_config: Union[None, dict] = None,
@@ -66,7 +66,10 @@ def load_file_into_dataframe(
         elif filetype == FileType.JSON:
             dataframe = pd.read_json(stream, **kwargs)
         elif filetype == FileType.NDJSON:
-            # dataframe = pd.read_json(stream, lines=True, **kwargs)
+            if hook is None:
+                raise ValueError(
+                    "Hook param cannot be None when the file type is Ndjson."
+                )
             dataframe = flatten_ndjson(normalize_config, stream=stream, hook=hook)
         elif filetype == FileType.PARQUET:
             dataframe = pd.read_parquet(stream, **kwargs)
