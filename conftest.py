@@ -13,13 +13,13 @@ from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import create_session, provide_session
 
+from astro.constants import Database, FileType
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_unique_table_name
 from astro.utils.cloud_storage_creds import parse_s3_env_var
 from astro.utils.database import get_database_name
 from astro.utils.dependencies import BigQueryHook, gcs, s3
 from astro.utils.load import load_dataframe_into_sql_table
-from src.astro.constants import Database, FileType
 from tests.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
