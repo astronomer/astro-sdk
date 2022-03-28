@@ -1,7 +1,5 @@
 import os
 import pathlib
-import random
-import string
 import uuid
 
 import pytest
@@ -15,7 +13,7 @@ from airflow.utils.session import create_session, provide_session
 
 from astro.constants import Database
 from astro.settings import SCHEMA
-from astro.sql.table import Table, TempTable
+from astro.sql.table import Table, TempTable, create_unique_table_name
 from astro.utils.cloud_storage_creds import parse_s3_env_var
 from astro.utils.database import get_database_name
 from astro.utils.dependencies import BigQueryHook, gcs, s3
@@ -57,19 +55,9 @@ def create_database_connections():
             session.add(conn)
 
 
-def _create_unique_dag_id():
-    # To use 32 chars was too long for the DAG & SQL name table, for this reason we are not using:
-    # unique_id = str(uuid.uuid4()).replace("-", "")
-    unique_id = "".join(
-        random.choice(string.ascii_lowercase + string.digits)
-        for _ in range(UNIQUE_HASH_SIZE)
-    )
-    return f"test_dag_{unique_id}"
-
-
 @pytest.fixture
 def sample_dag():
-    dag_id = _create_unique_dag_id()
+    dag_id = create_unique_table_name(UNIQUE_HASH_SIZE)
     yield DAG(dag_id, default_args={"owner": "airflow", "start_date": DEFAULT_DATE})
     with create_session() as session:
         session.query(DagRun).delete()

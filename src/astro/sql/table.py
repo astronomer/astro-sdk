@@ -1,7 +1,10 @@
+import random
+import string
+
 from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, TaskInstance
 
-from astro.constants import Database
+from astro.constants import UNIQUE_TABLE_NAME_LENGTH, Database
 from astro.settings import SCHEMA
 from astro.utils import get_hook
 from astro.utils.database import get_database_name
@@ -110,3 +113,16 @@ def create_table_name(context) -> str:
     if not table_name.isidentifier():
         table_name = f'"{table_name}"'
     return table_name
+
+
+def create_unique_table_name(length: int = UNIQUE_TABLE_NAME_LENGTH) -> str:
+    """
+    Create a unique table name of the requested size, which is compatible with all supported databases.
+
+    :return: Unique table name
+    :rtype: str
+    """
+    unique_id = random.choice(string.ascii_lowercase) + "".join(
+        random.choice(string.ascii_lowercase + string.digits) for _ in range(length - 1)
+    )
+    return unique_id

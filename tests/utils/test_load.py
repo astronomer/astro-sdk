@@ -14,6 +14,7 @@ from astro.constants import (
     FileType,
 )
 from astro.settings import SCHEMA
+from astro.sql.table import create_unique_table_name
 from astro.utils.database import get_sqlalchemy_engine
 from astro.utils.load import (
     copy_remote_file_to_local,
@@ -22,9 +23,8 @@ from astro.utils.load import (
     load_file_into_sql_table,
     load_file_rows_into_dataframe,
 )
-from conftest import _create_unique_dag_id
 
-table_name = _create_unique_dag_id()
+table_name = create_unique_table_name()
 CWD = pathlib.Path(__file__).parent
 EXPECTED_DATA = pd.DataFrame(
     [
@@ -36,10 +36,10 @@ EXPECTED_DATA = pd.DataFrame(
 
 
 def create_table(database, hook, table):
+    hook.run(f"DROP TABLE IF EXISTS {table.qualified_name()}")
     if database == Database.BIGQUERY.value:
         hook.run(f"CREATE TABLE {table.qualified_name()} (ID int, Name string);")
     else:
-        hook.run(f"DROP TABLE IF EXISTS {table.qualified_name()}")
         hook.run(f"CREATE TABLE {table.qualified_name()} (ID int, Name varchar(255));")
 
 

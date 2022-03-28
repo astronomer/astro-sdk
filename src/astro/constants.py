@@ -35,4 +35,4 @@ SUPPORTED_FILE_LOCATIONS = [const.value for const in FileLocation]
 SUPPORTED_FILE_TYPES = [const.value for const in FileType]
 SUPPORTED_DATABASES = list({const.value for const in Database})
 
-UNIQUE_TABLE_NAME_SIZE = 63
+UNIQUE_TABLE_NAME_LENGTH = 63
