@@ -83,6 +83,19 @@ def load_file_into_dataframe(
 def flatten_ndjson(
     normalize_config: Union[None, dict], stream: io.TextIOWrapper, database: Database
 ) -> pd.DataFrame:
+    """
+    Flatten the nested ndjson/json.
+
+     :param normalize_config: parameters in dict format of pandas json_normalize() function.
+        https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html
+     :param stream: io.TextIOWrapper object for the file
+     :param database: name of database
+     :type normalize_config: dict
+     :type stream: io.TextIOWrapper
+     :type database: Database
+     :return: return dataframe containing the loaded data
+     :rtype: `pandas.DataFrame`
+    """
 
     normalize_config = normalize_config or {}
 
@@ -104,6 +117,19 @@ def flatten_ndjson(
 
 
 def check_ndjson_config_delimiter(database: Database, normalize_config: dict) -> dict:
+    """
+    Validate pandas json_normalize() parameter for Bigquery and Snowflake databases, since default params result in
+     invalid column name. Default parameter result in the columns name containing '.' char.
+
+     :param database: name of database
+     :param normalize_config: :param normalize_config: config in dict format of pandas json_normalize() function.
+        https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html
+     :type database: Database
+     :type normalize_config: dict
+     :return: return updated config
+     :rtype: `dict`
+    """
+
     replacement = "_"
     illegal_char = "."
     if database in [Database.BIGQUERY, Database.SNOWFLAKE]:
