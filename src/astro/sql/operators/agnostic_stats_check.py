@@ -7,6 +7,7 @@ from sqlalchemy.sql.schema import Table as SqlaTable
 from astro.constants import Database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.table import Table
+from astro.utils.database import get_database_from_conn_id
 from astro.utils.schema_util import (
     get_error_string_for_multiple_dbs,
     get_table_name,
@@ -29,9 +30,8 @@ class OutlierCheck:
 
 
 class ChecksHandler:
-    def __init__(self, checks: List[OutlierCheck], conn_type: str):
+    def __init__(self, checks: List[OutlierCheck]):
         self.checks = checks
-        self.conn_type = conn_type
 
     def prepare_main_stats_sql(self, main_table: Table, main_table_sqla):
         select_expressions = []
@@ -120,7 +120,7 @@ class ChecksHandler:
     def check_results(self, row, check, index):
         return row[index + 1]
 
-    def evaluate_results(self, rows, max_rows_returned, conn_type):
+    def evaluate_results(self, rows):
         total_rows = rows[0][0]
         failed_rows_count = {
             check.name: self.check_results(rows[0], check, index)
@@ -134,7 +134,6 @@ class ChecksHandler:
 
     def prepare_failed_checks_results(
         self,
-        conn_type,
         main_table: Table,
         compare_table: Table,
         failed_checks: Set[str],
@@ -225,8 +224,8 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
         )
 
     def execute(self, context: Dict):
-        conn_type = BaseHook.get_connection(self.conn_id).conn_type  # type: ignore
-        checkHandler = ChecksHandler(self.checks, conn_type)
+        database = get_database_from_conn_id(self.conn_id)
+        check_handler = ChecksHandler(self.checks)
 
         valid_db = {
             "postgres": Database.POSTGRES,
@@ -236,11 +235,11 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
         }
 
         metadata_params = {}
-        if conn_type in valid_db:
+        if database.value in valid_db:
             metadata_params = {"schema": self.main_table.schema}
         metadata = MetaData(**metadata_params)
 
-        self.sql = checkHandler.prepare_comparison_sql(
+        self.sql = check_handler.prepare_comparison_sql(
             main_table=self.main_table,
             compare_table=self.compare_table,
             engine=self.get_sql_alchemy_engine(),
@@ -248,12 +247,9 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
         )
 
         results = super().execute(context)
-        failed_checks = checkHandler.evaluate_results(
-            results, self.max_rows_returned, conn_type
-        )
+        failed_checks = check_handler.evaluate_results(results)
         if len(failed_checks) > 0:
-            failed_check_sql = checkHandler.prepare_failed_checks_results(
-                conn_type=conn_type,
+            failed_check_sql = check_handler.prepare_failed_checks_results(
                 main_table=self.main_table,
                 compare_table=self.compare_table,
                 failed_checks=failed_checks,
