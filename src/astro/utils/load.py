@@ -162,6 +162,7 @@ def load_file_rows_into_dataframe(
             database=database,
             normalize_config=normalize_config,
         )
+        dataframe = dataframe.iloc[0:rows_count]
     else:
         dataframe = load_file_into_dataframe(filepath, filetype, nrows=rows_count)
     return dataframe
