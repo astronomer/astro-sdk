@@ -105,7 +105,7 @@ class AgnosticLoadFile(BaseOperator):
         if not self.output_table.table_name:
             self.output_table.table_name = create_table_name(context=context)
 
-    def _load_file_into_dataframe(self, filepath, transport_params, hook):
+    def _load_file_into_dataframe(self, filepath, transport_params, hook=None):
         """Read file with Pandas.
 
         Select method based on `file_type` (S3 or local).
