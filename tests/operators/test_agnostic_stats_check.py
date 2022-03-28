@@ -63,7 +63,7 @@ TABLES_CACHE: Dict[str, Dict] = {}
     ],
     indirect=True,
 )
-def test_stats_check_postgres_outlier_exists(sample_dag, sql_server, test_table):
+def test_stats_check_outlier_dont_exists(sample_dag, sql_server, test_table):
     with sample_dag:
         aql.stats_check(
             main_table=test_table[0],
@@ -109,8 +109,8 @@ def test_stats_check_postgres_outlier_exists(sample_dag, sql_server, test_table)
     ],
     indirect=True,
 )
-def test_stats_check_outlier_exists(sample_dag, sql_server, test_table):
-    with pytest.raises(BackfillUnfinished):
+def test_stats_check_outlier_exists(sample_dag, sql_server, test_table, caplog):
+    with pytest.raises(BackfillUnfinished) as e:
         with sample_dag:
             aql.stats_check(
                 main_table=test_table[0],
@@ -119,3 +119,5 @@ def test_stats_check_outlier_exists(sample_dag, sql_server, test_table):
                 max_rows_returned=10,
             )
         test_utils.run_dag(sample_dag)
+    expected_error = "Stats Check Failed"
+    assert expected_error in caplog.text
