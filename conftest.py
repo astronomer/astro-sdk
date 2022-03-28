@@ -72,6 +72,7 @@ def sample_dag():
 def populate_table(path: str, table: Table, hook: BaseHook) -> None:
     """
     Populate a csv file into a sql table
+
     :param path: path to csv file
     :param table: Astro table object
     :return: None
