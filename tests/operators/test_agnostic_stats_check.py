@@ -5,21 +5,17 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 
 """
 
-import copy
 import logging
-import os
 import pathlib
 from typing import Dict
 
 import pytest
 from airflow.exceptions import BackfillUnfinished
-from airflow.models import DAG
 from airflow.utils import timezone
 
 # Import Operator
 import astro.sql as aql
 from astro.settings import SCHEMA
-from astro.sql.table import Table
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
@@ -110,7 +106,7 @@ def test_stats_check_outlier_dont_exists(sample_dag, sql_server, test_table):
     indirect=True,
 )
 def test_stats_check_outlier_exists(sample_dag, sql_server, test_table, caplog):
-    with pytest.raises(BackfillUnfinished) as e:
+    with pytest.raises(BackfillUnfinished):
         with sample_dag:
             aql.stats_check(
                 main_table=test_table[0],

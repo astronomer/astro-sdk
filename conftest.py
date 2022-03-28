@@ -13,16 +13,13 @@ from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import create_session, provide_session
 
-from astro.constants import DEFAULT_CHUNK_SIZE, Database, FileType
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_unique_table_name
-from src.astro.constants import FileType
-from astro.sql.table import Table, TempTable
 from astro.utils.cloud_storage_creds import parse_s3_env_var
-from astro.utils.database import get_database_name, get_sqlalchemy_engine
-from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook, gcs, s3
-from astro.utils.file import get_filetype
+from astro.utils.database import get_database_name
+from astro.utils.dependencies import BigQueryHook, gcs, s3
 from astro.utils.load import load_dataframe_into_sql_table
+from src.astro.constants import Database, FileType
 from tests.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -72,18 +69,13 @@ def sample_dag():
 def populate_table(path: str, table: Table, hook: BaseHook) -> None:
     """
     Populate a csv file into a sql table
-
-    :param path: path to csv file
-    :param table: Astro table object
-    :return: None
     """
     df = pd.read_csv(path)
-    conn = BaseHook.get_connection(table.conn_id)
     load_dataframe_into_sql_table(pandas_dataframe=df, output_table=table, hook=hook)
 
 
 @pytest.fixture
-def test_table(request, sql_server):
+def test_table(request, sql_server):  # noqa: C901
     tables = []
     tables_params = [{"is_temp": True}]
 
@@ -139,7 +131,7 @@ def test_table(request, sql_server):
             hook.run(f"DROP TABLE IF EXISTS {table.qualified_name()}")
 
         if database == Database.SQLITE:
-            hook.run(f"DROP INDEX IF EXISTS unique_index")
+            hook.run("DROP INDEX IF EXISTS unique_index")
         elif database in (Database.POSTGRES, Database.POSTGRESQL):
             # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
             # Example: tables which are not fixtures and constraints.
