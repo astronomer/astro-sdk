@@ -61,6 +61,7 @@ def render_single_path(
     schema: Optional[str] = None,
     warehouse: Optional[str] = None,
     role: Optional[str] = None,
+    params: Optional[dict] = None,
     **kwargs,
 ):
     # Parse all of the SQL files in this directory
@@ -87,8 +88,8 @@ def render_single_path(
             operator_kwargs = set_kwargs_with_defaults(
                 front_matter_opts, conn_id, database, role, schema, warehouse
             )
-            if kwargs.get("params"):
-                operator_kwargs["params"] = kwargs.get("params")
+            if params:
+                operator_kwargs["params"] = params
 
             p = ParsedSqlOperator(
                 sql=sql,
@@ -108,6 +109,7 @@ def render(
     schema: Optional[str] = None,
     warehouse: Optional[str] = None,
     role: Optional[str] = None,
+    params: Optional[dict] = None,
     **kwargs,
 ):
     """
@@ -141,6 +143,8 @@ def render(
     :param schema: schema name, can also be supplied in SQL frontmatter.
     :param warehouse: warehouse name (snowflake only), can also be supplied in SQL frontmatter.
     :param role: role name (snowflake only), can also be supplied in SQL frontmatter.
+    :param params: Parameters you want to pass to the sql file using the tradition {{ params.<your param> }} jinja
+    context. Made for backwards compatibility with existing Airflow scripts.
     :param kwargs: any kwargs you supply besides the ones mentioned will be passed on to the model rendering context.
     This means that if you have SQL file that inherits a table named `homes`, you can do something like this:
 
@@ -172,6 +176,7 @@ def render(
             schema=schema,
             warehouse=warehouse,
             role=role,
+            params=params,
             **kwargs,
         )
 
