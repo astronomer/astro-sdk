@@ -9,7 +9,6 @@ Run test:
     python3 -m unittest tests.operators.test_save_file.TestSaveFile.test_save_postgres_table_to_local
 
 """
-import copy
 import logging
 import os
 import pathlib
@@ -30,6 +29,7 @@ from airflow.utils.types import DagRunType
 
 import astro.dataframe as adf
 import astro.sql as aql
+from astro.constants import SUPPORTED_DATABASES, SUPPORTED_FILE_TYPES
 from astro.settings import SCHEMA
 
 # Import Operator
@@ -40,6 +40,7 @@ from tests.operators import utils as test_utils
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 INPUT_TABLE_NAME = test_utils.get_table_name("save_file_test_table")
+CWD = pathlib.Path(__file__).parent
 
 
 def drop_table_postgres(table_name, postgres_conn):
@@ -355,29 +356,6 @@ class TestSaveFile(unittest.TestCase):
         }
 
 
-@pytest.fixture
-def sql_server(request):
-    # TODO: We shouldn't have different versions of this function.
-    sql_name = request.param
-    hook_parameters = test_utils.SQL_SERVER_HOOK_PARAMETERS.get(sql_name)
-    hook_class = test_utils.SQL_SERVER_HOOK_CLASS.get(sql_name)
-    if hook_parameters is None or hook_class is None:
-        raise ValueError(f"Unsupported SQL server {sql_name}")
-    hook = hook_class(**hook_parameters)
-    schema = hook_parameters.get("schema")
-    if schema:
-        table = ".".join([schema, INPUT_TABLE_NAME])
-    else:
-        table = INPUT_TABLE_NAME
-
-    hook.run(f"DROP TABLE IF EXISTS {table}")
-    hook.run(f"CREATE TABLE {table} (ID int, Name varchar(255));")
-    hook.run(f"INSERT INTO {table} (ID, Name) VALUES (1, 'Someone');")
-    hook.run(f"INSERT INTO {table} (ID, Name) VALUES (2, 'Alguém');")
-    yield (sql_name, hook)
-    hook.run(f"DROP TABLE IF EXISTS {table}")
-
-
 def load_to_dataframe(filepath, file_type):
     read = {
         "parquet": pd.read_parquet,
@@ -391,35 +369,46 @@ def load_to_dataframe(filepath, file_type):
         return read[file_type](fp, **read_params.get(file_type, {}))
 
 
-@pytest.mark.parametrize("sql_server", ["snowflake", "postgres"], indirect=True)
-@pytest.mark.parametrize("file_type", ["ndjson", "json", "csv", "parquet"])
-def test_save_file(sample_dag, sql_server, file_type):
+@pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
+@pytest.mark.parametrize("file_type", SUPPORTED_FILE_TYPES)
+@pytest.mark.parametrize(
+    "test_table",
+    [
+        {
+            "path": str(CWD) + "/../data/sample.csv",
+            "load_table": True,
+            "is_temp": False,
+            "param": {
+                "schema": SCHEMA,
+                "table_name": test_utils.get_table_name("test_stats_check_1"),
+            },
+        }
+    ],
+    indirect=True,
+    ids=["test-table"],
+)
+def test_save_file(sample_dag, sql_server, file_type, test_table):
     sql_name, sql_hook = sql_server
-
-    # While hooks expect specific attributes for connection (e.g. `snowflake_conn_id`)
-    # the load_file operator expects a generic attribute name (`conn_id`)
-    sql_server_params = copy.deepcopy(test_utils.SQL_SERVER_HOOK_PARAMETERS[sql_name])
-    conn_id_value = sql_server_params.pop(
-        test_utils.SQL_SERVER_CONNECTION_KEY[sql_name]
-    )
-    sql_server_params["conn_id"] = conn_id_value
-    if type(sql_hook) == PostgresHook:
-        sql_server_params["schema"] = "public"
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         filepath = Path(tmp_dir, f"sample.{file_type}")
+        with sample_dag:
+            save_file(
+                input=test_table,
+                output_file_path=str(filepath),
+                output_file_format=file_type,
+                output_conn_id=None,
+                overwrite=False,
+            )
+        test_utils.run_dag(sample_dag)
 
-        task_params = {
-            "input": Table(table_name=INPUT_TABLE_NAME, **sql_server_params),
-            "output_file_path": str(filepath),
-            "output_file_format": file_type,
-            "output_conn_id": None,
-            "overwrite": False,
-        }
-        test_utils.create_and_run_task(sample_dag, save_file, (), task_params)
         df = load_to_dataframe(filepath, file_type)
-        assert len(df) == 2
+        assert len(df) == 3
         expected = pd.DataFrame(
-            [{"id": 1, "name": "Someone"}, {"id": 2, "name": "Alguém"}]
+            [
+                {"id": 1, "name": "First"},
+                {"id": 2, "name": "Second"},
+                {"id": 3, "name": "Third with unicode पांचाल"},
+            ]
         )
         assert df.rename(columns=str.lower).equals(expected)
