@@ -150,6 +150,18 @@ with dag:
 
 
 
+Please note that you can set the DAG_ID variable to change the DAG ID in Airflow, but this is optional. Once you have pasted this code into your file, you’ll notice that Airflow can now find your DAG, but there are no tasks, so let’s make some!
+
+### aql.transform
+```python
+@aql.transform
+def test_inheritance(my_astro_table: Table):
+    return "SELECT * FROM {{my_astro_table}} LIMIT 10"
+```
+
+
+## Creating your first SQL file-based DAG
+
 ```python
 import os
 from datetime import datetime, timedelta
@@ -178,13 +190,6 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 with dag:
     models = aql.render(dir_path + "/models")
 ```
-
-
-Please note that you can set the DAG_ID variable to change the DAG ID in Airflow, but this is optional. Once you have pasted this code into your file, you’ll notice that Airflow can now find your DAG, but there are no tasks, so let’s make some!
-
-
-## Creating your first SQL file
-
 
 ### Understanding astro.render
 
