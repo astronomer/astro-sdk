@@ -28,6 +28,7 @@ def session():
         "example_amazon_s3_postgres",
         "example_amazon_s3_postgres_load_and_save",
         "example_amazon_s3_snowflake_transform",
+        "example_google_bigquery_gcs_load_and_save",
         "example_postgres_render",
         "example_snowflake_partial_table_with_append",
         "example_snowflake_render",
