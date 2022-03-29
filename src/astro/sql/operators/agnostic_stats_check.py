@@ -1,14 +1,14 @@
 from typing import Dict, List, Set
 
-from airflow.hooks.base import BaseHook
 from sqlalchemy import MetaData, case, func, or_, select
 from sqlalchemy.sql.schema import Table as SqlaTable
 
+from astro.constants import Database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.table import Table
+from astro.utils.database import get_database_from_conn_id
 from astro.utils.schema_util import (
     get_error_string_for_multiple_dbs,
-    get_table_name,
     tables_from_same_db,
 )
 
@@ -28,9 +28,8 @@ class OutlierCheck:
 
 
 class ChecksHandler:
-    def __init__(self, checks: List[OutlierCheck], conn_type: str):
+    def __init__(self, checks: List[OutlierCheck]):
         self.checks = checks
-        self.conn_type = conn_type
 
     def prepare_main_stats_sql(self, main_table: Table, main_table_sqla):
         select_expressions = []
@@ -50,9 +49,8 @@ class ChecksHandler:
 
     def prepare_column_sql(self, check, main_stats, compare_table):
         column_sql = []
-        for column in check.columns_map:
-            main_table_col = column
-            compare_table_col = compare_table.c.get(column)
+        for main_table_col, compare_table_col in check.columns_map.items():
+            compare_table_col_obj = compare_table.c.get(compare_table_col)
             main_stats_check_avg = main_stats.c.get(
                 f"{check.name}_{main_table_col}_avg"
             )
@@ -61,11 +59,11 @@ class ChecksHandler:
             )
             accepted_std_div = check.accepted_std_div
 
-            statement = compare_table_col > (
+            statement = compare_table_col_obj > (
                 main_stats_check_avg + (main_stats_check_stddev * accepted_std_div)
             )
             column_sql.append(statement)
-            statement = compare_table_col < (
+            statement = compare_table_col_obj < (
                 main_stats_check_avg - (main_stats_check_stddev * accepted_std_div)
             )
             column_sql.append(statement)
@@ -100,10 +98,10 @@ class ChecksHandler:
         self, main_table: Table, compare_table: Table, engine, metadata_obj
     ):
         main_table_sqla = SqlaTable(
-            get_table_name(main_table), metadata_obj, autoload_with=engine
+            main_table.table_name, metadata_obj, autoload_with=engine
         )
         compare_table_sqla = SqlaTable(
-            get_table_name(compare_table), metadata_obj, autoload_with=engine
+            compare_table.table_name, metadata_obj, autoload_with=engine
         )
 
         main_table_stats_sql = self.prepare_main_stats_sql(main_table, main_table_sqla)
@@ -120,7 +118,7 @@ class ChecksHandler:
     def check_results(self, row, check, index):
         return row[index + 1]
 
-    def evaluate_results(self, rows, max_rows_returned, conn_type):
+    def evaluate_results(self, rows):
         total_rows = rows[0][0]
         failed_rows_count = {
             check.name: self.check_results(rows[0], check, index)
@@ -134,7 +132,6 @@ class ChecksHandler:
 
     def prepare_failed_checks_results(
         self,
-        conn_type,
         main_table: Table,
         compare_table: Table,
         failed_checks: Set[str],
@@ -143,10 +140,10 @@ class ChecksHandler:
         metadata_obj,
     ):
         main_table_sqla = SqlaTable(
-            get_table_name(main_table), metadata_obj, autoload_with=engine
+            main_table.table_name, metadata_obj, autoload_with=engine
         )
         compare_table_sqla = SqlaTable(
-            get_table_name(compare_table), metadata_obj, autoload_with=engine
+            compare_table.table_name, metadata_obj, autoload_with=engine
         )
 
         main_stats = self.prepare_main_stats_sql(main_table, main_table_sqla)
@@ -169,8 +166,6 @@ class ChecksHandler:
 
 
 class AgnosticStatsCheck(SqlDecoratedOperator):
-    template_fields = ("table",)
-
     def __init__(
         self,
         checks: List[OutlierCheck],
@@ -227,10 +222,22 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
         )
 
     def execute(self, context: Dict):
-        conn_type = BaseHook.get_connection(self.conn_id).conn_type  # type: ignore
-        checkHandler = ChecksHandler(self.checks, conn_type)
-        metadata = MetaData()
-        self.sql = checkHandler.prepare_comparison_sql(
+        database = get_database_from_conn_id(self.conn_id)
+        check_handler = ChecksHandler(self.checks)
+
+        valid_db = {
+            "postgres": Database.POSTGRES,
+            "postgresql": Database.POSTGRES,
+            "bigquery": Database.BIGQUERY,
+            "google_cloud_platform": Database.BIGQUERY,
+        }
+
+        metadata_params = {}
+        if database.value in valid_db:
+            metadata_params = {"schema": self.main_table.schema}
+        metadata = MetaData(**metadata_params)
+
+        self.sql = check_handler.prepare_comparison_sql(
             main_table=self.main_table,
             compare_table=self.compare_table,
             engine=self.get_sql_alchemy_engine(),
@@ -238,12 +245,9 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
         )
 
         results = super().execute(context)
-        failed_checks = checkHandler.evaluate_results(
-            results, self.max_rows_returned, conn_type
-        )
+        failed_checks = check_handler.evaluate_results(results)
         if len(failed_checks) > 0:
-            failed_check_sql = checkHandler.prepare_failed_checks_results(
-                conn_type=conn_type,
+            failed_check_sql = check_handler.prepare_failed_checks_results(
                 main_table=self.main_table,
                 compare_table=self.compare_table,
                 failed_checks=failed_checks,
