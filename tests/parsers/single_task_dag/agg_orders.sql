@@ -1,1 +1,1 @@
-SELECT * FROM {{input_table}}
+SELECT {{params.col}} FROM {{input_table}}

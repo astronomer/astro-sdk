@@ -61,6 +61,7 @@ def render_single_path(
     schema: Optional[str] = None,
     warehouse: Optional[str] = None,
     role: Optional[str] = None,
+    **kwargs,
 ):
     # Parse all of the SQL files in this directory
     current_files = [
@@ -86,6 +87,8 @@ def render_single_path(
             operator_kwargs = set_kwargs_with_defaults(
                 front_matter_opts, conn_id, database, role, schema, warehouse
             )
+            if kwargs.get("params"):
+                operator_kwargs["params"] = kwargs.get("params")
 
             p = ParsedSqlOperator(
                 sql=sql,
@@ -169,8 +172,8 @@ def render(
             schema=schema,
             warehouse=warehouse,
             role=role,
+            **kwargs,
         )
-    print("Sdafasd")
 
     # Add the XComArg to the parameters to create dependency
     for filename in all_file_names:

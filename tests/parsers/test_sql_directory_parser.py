@@ -20,7 +20,6 @@ from tests.operators import utils as test_utils
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
-
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
@@ -121,7 +120,9 @@ class TestSQLParsing(unittest.TestCase):
                     warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
                 ),
             )
-            aql.render("single_task_dag", input_table=input_table)
+            aql.render(
+                "single_task_dag", input_table=input_table, params={"col": "rooms"}
+            )
         test_utils.run_dag(self.dag)
 
     def test_parse_to_dataframe(self):
