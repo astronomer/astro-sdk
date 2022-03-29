@@ -107,6 +107,12 @@ class TestSQLParsing(unittest.TestCase):
         Runs two tasks with a direct dependency, the DAG will fail if task two can not
         inherit the table produced by task 1
         """
+
+        @adf
+        def validate_params(df: pd.DataFrame):
+            cols = df.columns.to_list()
+            assert cols == ["rooms"]
+
         with self.dag:
             cwd = pathlib.Path(__file__).parent
 
@@ -120,9 +126,10 @@ class TestSQLParsing(unittest.TestCase):
                     warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
                 ),
             )
-            aql.render(
+            models = aql.render(
                 "single_task_dag", input_table=input_table, params={"col": "rooms"}
             )
+            validate_params(models["inherit_task"])
         test_utils.run_dag(self.dag)
 
     def test_parse_to_dataframe(self):
