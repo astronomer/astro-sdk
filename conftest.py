@@ -111,7 +111,7 @@ def test_table(request, sql_server):
         hook.run(f"DROP TABLE IF EXISTS {table.qualified_name()}")
 
     if database == Database.SQLITE:
-        hook.run(f"DROP INDEX IF EXISTS unique_index")
+        hook.run("DROP INDEX IF EXISTS unique_index")
     elif database in (Database.POSTGRES, Database.POSTGRESQL):
         # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
         # Example: tables which are not fixtures and constraints. This is an aggressive approach towards tearing down:

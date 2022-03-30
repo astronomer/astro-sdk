@@ -91,7 +91,7 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
             cast(column(k), getattr(sqlalchemy, v)) for k, v in casted_columns.items()
         ]
         main_columns = [k for k, v in casted_columns.items()]
-        main_columns.extend([c for c in columns])
+        main_columns.extend(list(columns))
 
         if len(column_names) + len(casted_fields) == 0:
             column_names = [column(c) for c in append_table_sqla.c.keys()]

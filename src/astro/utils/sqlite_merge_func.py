@@ -16,8 +16,8 @@ def sqlite_merge_func(
     elif conflict_strategy == "update":
         statement += " ON CONFLICT ({merge_keys}) DO UPDATE SET {update_statements}"
 
-    append_column_names = [c for c in merge_columns]
-    target_column_names = [c for c in target_columns]
+    append_column_names = list(merge_columns)
+    target_column_names = list(target_columns)
     column_pairs = list(zip(target_column_names, target_column_names))
     update_statements = [f"{x}=EXCLUDED.{y}" for x, y in column_pairs]
 
@@ -27,6 +27,6 @@ def sqlite_merge_func(
         append_columns=",".join(append_column_names),
         append_table=merge_table.table_name,
         update_statements=",".join(update_statements),
-        merge_keys=",".join([x for x in merge_keys]),
+        merge_keys=",".join(list(merge_keys)),
     )
     return query

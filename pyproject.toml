@@ -7,10 +7,7 @@ name = "astro-projects"
 dynamic = ["version", "description"]
 
 authors = [
-    {name = "Daniel Imberman", email = "daniel@astronomer.io"},
-    {name = "Plinio Guzman"},
-    {name = "Utkarsh Sharma", email = "utkarsh.sharma@astronomer.io"},
-    {name = "Tatiana Al-Chueyr", email = "tatiana.alchueyr@astronomer.io"}
+    {name = "Astronomer", email = "humans@astronomer.io"},
 ]
 readme = "README.md"
 license = {file = "LICENSE"}

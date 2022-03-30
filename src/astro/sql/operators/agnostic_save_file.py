@@ -70,7 +70,7 @@ class SaveFile(BaseOperator):
             )
 
         # Write file if overwrite == True or if file doesn't exist.
-        if self.overwrite == True or not self.file_exists(
+        if self.overwrite or not self.file_exists(
             self.output_file_path, self.output_conn_id
         ):
             self.agnostic_write_file(df, self.output_file_path, self.output_conn_id)
@@ -125,7 +125,8 @@ class SaveFile(BaseOperator):
             input_hook = hook_class[database](**hook_kwargs[database])
         except KeyError:
             raise ValueError(
-                f"The conn_id {input_table.conn_id} is of unsupported type {database}. Support types: {list(hook_class.key())}"
+                f"The conn_id {input_table.conn_id} is of unsupported type {database}. "
+                f"Support types: {list(hook_class.keys())}"
             )
 
         return pd.read_sql(

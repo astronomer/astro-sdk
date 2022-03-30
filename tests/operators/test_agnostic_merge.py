@@ -2,6 +2,7 @@ import math
 import pathlib
 
 import pandas as pd
+import pytest
 from airflow.decorators import task_group
 from airflow.utils import timezone
 
@@ -13,9 +14,7 @@ from astro.utils.database import get_database_from_conn_id
 from tests.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
-
 CWD = pathlib.Path(__file__).parent
-import pytest
 
 default_args = {
     "owner": "airflow",

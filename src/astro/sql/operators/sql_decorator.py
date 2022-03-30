@@ -39,24 +39,6 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         sql="",
         **kwargs,
     ):
-        """
-        :param to_dataframe: This function allows users to pull the current staging table into a pandas dataframe.
-
-            To use this function, please make sure that your decorated function has a parameter called ``input_df``. This
-        parameter will be a pandas.Dataframe that you can modify as needed. Please note that until we implement
-        spark and dask dataframes, that you should be mindful as to how large your worker is when pulling large tables.
-        :param from_s3: Whether to pull from s3 into current database.
-
-            When set to true, please include a parameter named ``s3_path`` in your TaskFlow function. When calling this
-        task, you can specify any s3:// path and Airflow will
-        automatically pull that file into your database using Panda's automatic data typing functionality.
-        :param from_csv: Whether to pull from a local csv file into current database.
-
-            When set to true, please include a parameter named ``csv_path`` in your TaskFlow function.
-        When calling this task, you can specify any local path and Airflow will automatically pull that file into your
-        database using Panda's automatic data typing functionality.
-        :param kwargs:
-        """
         self.raw_sql = raw_sql
         self.autocommit = autocommit
         self.parameters = parameters
@@ -163,7 +145,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 self.output_table = self.output_table.to_table(
                     table_name=output_table_name, schema=self.output_table.schema
                 )
-            self.log.info(f"returning table {self.output_table}")
+            self.log.info("Returning table %s", self.output_table)
             self.populate_output_table()
             return self.output_table
 
@@ -176,7 +158,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 table_name=output_table_name,
             )
             self.populate_output_table()
-            self.log.info(f"returning table {self.output_table}")
+            self.log.info("Returning table %s", self.output_table)
             return self.output_table
 
     def read_sql(self):
@@ -247,11 +229,12 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
 
     def create_temporary_table(self, query, output_table_name, schema=None):
         """
-        Create a temp table for the current task instance. This table will be overwritten if the DAG is run again as this
-        table is only ever meant to be temporary.
-        :param query:
-        :param table_name
-        :return:
+        Create a temp table for the current task instance. This table will be overwritten if
+        the DAG is run again as this table is only ever meant to be temporary.
+
+        :param query: The Query to run
+        :param output_table_name: The name of the table to create
+        :param schema: The schema to create the table in
         """
 
         def clean_trailing_semicolon(query):
@@ -329,12 +312,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             if type(arg) == pd.DataFrame:
                 pandas_dataframe = arg
                 output_table_name = (
-                    self.dag_id
-                    + "_"
-                    + self.task_id
-                    + "_"
-                    + self.run_id
-                    + f"_input_dataframe_{i}"
+                    f"{self.dag_id}_{self.task_id}_{self.run_id}_input_dataframe_{i}"
                 )
                 output_table = Table(
                     table_name=output_table_name,
@@ -361,7 +339,13 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             if type(value) == pd.DataFrame:
                 pandas_dataframe = value
                 output_table_name = "_".join(
-                    [self.dag_id, self.task_id, self.run_id, "input_dataframe", str(k)]
+                    [
+                        self.dag_id,
+                        self.task_id,
+                        self.run_id,
+                        "input_dataframe",
+                        str(key),
+                    ]
                 )
                 output_table = Table(
                     table_name=output_table_name,

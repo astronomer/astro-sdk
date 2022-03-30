@@ -102,7 +102,7 @@ def run_append(output_specs: TempTable):
         output_table=output_specs,
     )
 
-    app = aql.append(
+    aql.append(
         columns=["sell", "living"],
         main_table=load_main,
         append_table=load_append,

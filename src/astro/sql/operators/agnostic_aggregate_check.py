@@ -16,7 +16,7 @@ class AgnosticAggregateCheck(SqlDecoratedOperator):
         greater_than: float = None,
         less_than: float = None,
         equal_to: float = None,
-        **kwargs
+        **kwargs,
     ):
         """Validate that a table has expected aggregation value.
         Range specified by greater_than and/or less_than is inclusive - [greater_than, less_than] or
@@ -91,9 +91,7 @@ class AgnosticAggregateCheck(SqlDecoratedOperator):
 
         if self.equal_to is not None and self.equal_to != query_result:
             raise ValueError(
-                "Check Failed: query result value {} not equal to {}.".format(
-                    query_result, self.equal_to
-                )
+                f"Check Failed: query result value {query_result} not equal to {self.equal_to}."
             )
         elif (
             self.less_than is not None
@@ -107,9 +105,7 @@ class AgnosticAggregateCheck(SqlDecoratedOperator):
             )
         elif self.less_than is not None and self.less_than < query_result:
             raise ValueError(
-                "Check Failed: query result value {} not less than {}.".format(
-                    query_result, self.less_than
-                )
+                f"Check Failed: query result value {query_result} not less than {self.less_than}."
             )
         elif self.greater_than is not None and self.greater_than > query_result:
             raise ValueError(
