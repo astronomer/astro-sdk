@@ -151,7 +151,10 @@ A summary of the currently available operations in **astro**. More details are a
 ## Documentation
 
 The documentation is a work in progress, and we aim to follow the [Diátaxis](https://diataxis.fr/) system:
-* **[Tutorial](docs/QUICK_START.md)**: a hands-on introduction to **astro**
+* **[Python-only Tutorial](docs/QUICK_START_PYTHON.md)**: a hands-on introduction to **astro**'s python SDK.
+We'll go over basic concepts and functions for writing entire sql+python flows in your DAG file.
+* **[Python-with-sql Tutorial](docs/QUICK_START_SQL.md)**: a hands-on introduction to **astro**'s SQL rendering engine.
+We'll show you how to tie SQL files together to develop ELT workflows that are still accessible to your python context.
 * **How-to guides**: simple step-by-step user guides to accomplish specific tasks
 * **[Reference guide](docs/OLD_README.md)**: commands, modules, classes and methods
 * **Explanation**: Clarification and discussion of key decisions when designing the project.
