@@ -152,7 +152,7 @@ def load_file_rows_into_dataframe(
     """
     if filetype is None:
         filetype = get_filetype(filepath)
-    if filetype == FileType.JSON:
+    if filetype in [FileType.JSON, FileType.NDJSON]:
         dataframe = load_file_into_dataframe(filepath, filetype)
         dataframe = dataframe.iloc[0:rows_count]
     elif filetype == FileType.PARQUET:
