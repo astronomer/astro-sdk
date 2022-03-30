@@ -416,14 +416,14 @@ def test_load_file_chunks(sample_dag, sql_server, test_table):
 
 @pytest.mark.parametrize("sql_server", ["postgres", "bigquery"], indirect=True)
 def test_aql_gcs_file_to_postgres_ndjson_with_string_path(
-    sample_dag, sql_server, tmp_table
+    sample_dag, sql_server, test_table
 ):
     _, hook = sql_server
 
     with sample_dag:
         load_file(
             path=str(CWD) + "/../data/github_nested.ndjson",
-            output_table=tmp_table,
+            output_table=test_table,
             normalize_config={
                 "record_path": [["payload", "shas"]],
                 "meta": [["repository", "url"], ["actor_attributes", "blog"]],
@@ -433,7 +433,7 @@ def test_aql_gcs_file_to_postgres_ndjson_with_string_path(
         )
     test_utils.run_dag(sample_dag)
 
-    df = hook.get_pandas_df(f"SELECT * FROM {tmp_table.qualified_name()}")
+    df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
     assert df.shape == (11, 6)
 
 
