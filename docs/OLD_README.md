@@ -338,7 +338,7 @@ Before we can complete any transformations, we need to define a way to get our t
 
 ### The Table class
 
-
+To instantiate a table or bring in a table from a database into the `astro` ecosystem, you can pass a `Table` object into the class. This Table object will contain all of the metadata that's necessary for handling table creation between tasks. After you define a Table's metadata in the beginning of your pipeline, `astro` can automatically pass that metadata along to downstream tasks.
 
 In the following example, we define our table in the DAG instantiation. In each subsequent task, we only pass in an input table argument because `astro` automatically passes in the additional context from our original `input_table` parameter.
 
