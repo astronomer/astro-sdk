@@ -32,7 +32,6 @@ def load_file_into_dataframe(
     filepath: str,
     filetype: FileType = None,
     transport_params: Union[None, dict] = None,
-    database: Union[None, Database] = None,
     normalize_config: Union[None, dict] = None,
     **kwargs,
 ) -> pd.DataFrame:
@@ -40,13 +39,11 @@ def load_file_into_dataframe(
     Load the contents of a file into a Pandas dataframe.
 
     :param filepath: File system path to a single file
-    :param database: Database name
     :param filetype: One of the supported filetypes ("csv", "json", "ndjson", "parquet")
     :param transport_params: Necessary parameters to connect to object store, in case the file is in (S3, GCS)
     :param normalize_config: parameters to pandas json_normalize function
     :param kwargs: Additional parameters to be used to load the data into a dataframe
     :type filepath: str
-    :type database: Enum
     :type filetype: str
     :type normalize_config: dict
     :type transport_params: dict
@@ -66,13 +63,7 @@ def load_file_into_dataframe(
         elif filetype == FileType.JSON:
             dataframe = pd.read_json(stream, **kwargs)
         elif filetype == FileType.NDJSON:
-            if database is None:
-                raise ValueError(
-                    "database param cannot be None when the file type is Ndjson."
-                )
-            dataframe = flatten_ndjson(
-                normalize_config, stream=stream, database=database
-            )
+            dataframe = flatten_ndjson(normalize_config, stream=stream)
         elif filetype == FileType.PARQUET:
             dataframe = pd.read_parquet(stream, **kwargs)
         else:
@@ -81,7 +72,7 @@ def load_file_into_dataframe(
 
 
 def flatten_ndjson(
-    normalize_config: Union[None, dict], stream: io.TextIOWrapper, database: Database
+    normalize_config: Union[None, dict], stream: io.TextIOWrapper
 ) -> pd.DataFrame:
     """
     Flatten the nested ndjson/json.
@@ -89,17 +80,15 @@ def flatten_ndjson(
      :param normalize_config: parameters in dict format of pandas json_normalize() function.
         https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html
      :param stream: io.TextIOWrapper object for the file
-     :param database: name of database
      :type normalize_config: dict
      :type stream: io.TextIOWrapper
-     :type database: Database
      :return: return dataframe containing the loaded data
      :rtype: `pandas.DataFrame`
     """
 
     normalize_config = normalize_config or {}
 
-    check_ndjson_config_delimiter(database=database, normalize_config=normalize_config)
+    check_ndjson_config_delimiter(normalize_config=normalize_config)
 
     df = None
     rows = stream.readlines(DEFAULT_CHUNK_SIZE)
@@ -116,9 +105,9 @@ def flatten_ndjson(
     return df
 
 
-def check_ndjson_config_delimiter(database: Database, normalize_config: dict) -> dict:
+def check_ndjson_config_delimiter(normalize_config: dict) -> dict:
     """
-    Validate pandas json_normalize() parameter for Bigquery and Snowflake databases, since default params result in
+    Validate pandas json_normalize() parameter for databases, since default params result in
      invalid column name. Default parameter result in the columns name containing '.' char.
 
      :param database: name of database
@@ -132,18 +121,18 @@ def check_ndjson_config_delimiter(database: Database, normalize_config: dict) ->
 
     replacement = "_"
     illegal_char = "."
-    if database in [Database.BIGQUERY, Database.SNOWFLAKE]:
-        meta_prefix = normalize_config.get("meta_prefix")
-        if meta_prefix and meta_prefix == illegal_char:
-            normalize_config["meta_prefix"] = replacement
 
-        record_prefix = normalize_config.get("record_prefix")
-        if record_prefix and record_prefix == illegal_char:
-            normalize_config["record_prefix"] = replacement
+    meta_prefix = normalize_config.get("meta_prefix")
+    if meta_prefix and meta_prefix == illegal_char:
+        normalize_config["meta_prefix"] = replacement
 
-        sep = normalize_config.get("sep")
-        if sep is None or sep == illegal_char:
-            normalize_config["sep"] = replacement
+    record_prefix = normalize_config.get("record_prefix")
+    if record_prefix and record_prefix == illegal_char:
+        normalize_config["record_prefix"] = replacement
+
+    sep = normalize_config.get("sep")
+    if sep is None or sep == illegal_char:
+        normalize_config["sep"] = replacement
 
     return normalize_config
 
@@ -152,7 +141,6 @@ def load_file_rows_into_dataframe(
     filepath: str,
     filetype: FileType = None,
     rows_count: int = LOAD_COLUMN_AUTO_DETECT_ROWS,
-    database: Union[None, Database] = None,
     normalize_config: Union[None, dict] = None,
 ) -> pd.DataFrame:
     """
@@ -185,7 +173,6 @@ def load_file_rows_into_dataframe(
             filepath,
             filetype,
             nrows=rows_count,
-            database=database,
             normalize_config=normalize_config,
         )
         dataframe = dataframe.iloc[0:rows_count]
@@ -221,7 +208,7 @@ def load_file_into_sql_table(
         # At the moment we are using dataframes to convert among filetypes
         # since, among the file formats we support, Postgres only accepts CSV
         # TODO: chunk the files so we don't need to load huge files in memory
-        df = load_file_into_dataframe(filepath, filetype, database=database_name)
+        df = load_file_into_dataframe(filepath, filetype)
         df.to_csv(csv_filepath, index=None, header=False)
         tmp_file.flush()
 

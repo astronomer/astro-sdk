@@ -8,7 +8,6 @@ from airflow.models import BaseOperator
 from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils import get_hook
-from astro.utils.database import get_database_name
 from astro.utils.dependencies import gcs, s3
 from astro.utils.file import get_filetype
 from astro.utils.load import load_dataframe_into_sql_table, load_file_into_dataframe
@@ -83,9 +82,7 @@ class AgnosticLoadFile(BaseOperator):
         self.log.info(f"Loading {self.path} into {self.output_table}...")
         if_exists = self.if_exists
         for path in paths:
-            pandas_dataframe = self._load_file_into_dataframe(
-                path, transport_params, database=get_database_name(hook)
-            )
+            pandas_dataframe = self._load_file_into_dataframe(path, transport_params)
             load_dataframe_into_sql_table(
                 pandas_dataframe,
                 self.output_table,
@@ -106,7 +103,7 @@ class AgnosticLoadFile(BaseOperator):
         if not self.output_table.table_name:
             self.output_table.table_name = create_table_name(context=context)
 
-    def _load_file_into_dataframe(self, filepath, transport_params, database=None):
+    def _load_file_into_dataframe(self, filepath, transport_params):
         """Read file with Pandas.
 
         Select method based on `file_type` (S3 or local).
@@ -117,7 +114,6 @@ class AgnosticLoadFile(BaseOperator):
             filepath=filepath,
             filetype=filetype,
             transport_params=transport_params,
-            database=database,
             normalize_config=self.normalize_config,
         )
 
