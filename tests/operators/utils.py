@@ -1,13 +1,16 @@
 import copy
 import os
 import time
-from typing import Optional
+from typing import Optional, Union
 
+import pandas as pd
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from airflow.utils import timezone
 from airflow.utils.state import State
+from google.cloud import bigquery
 
+from astro.sql.table import Table, TempTable
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -101,3 +104,18 @@ def run_dag(dag):
         end_date=DEFAULT_DATE,
         run_at_least_once=True,
     )
+
+
+def get_dataframe_from_table(sql_name: str, test_table: Union[Table, TempTable], hook):
+    if sql_name == "bigquery":
+        client = bigquery.Client()
+        query_job = client.query(
+            f"SELECT * FROM astronomer-dag-authoring.{test_table.qualified_name()}"
+        )
+        df = query_job.to_dataframe()
+    else:
+        df = pd.read_sql(
+            f"SELECT * FROM {test_table.qualified_name()}",
+            con=hook.get_conn(),
+        )
+    return df

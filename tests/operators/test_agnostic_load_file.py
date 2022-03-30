@@ -12,18 +12,16 @@ Run test:
 import logging
 import os
 import pathlib
-from typing import Union
 from unittest import mock
 
 import pandas as pd
 import pytest
 from airflow.exceptions import BackfillUnfinished
 from airflow.utils import timezone
-from google.cloud import bigquery
 from pandas.testing import assert_frame_equal
 
 from astro.sql.operators.agnostic_load_file import load_file
-from astro.sql.table import Table, TempTable
+from astro.sql.table import Table
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
@@ -31,21 +29,6 @@ DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 OUTPUT_TABLE_NAME = test_utils.get_table_name("load_file_test_table")
 OUTPUT_SCHEMA = os.getenv("SNOWFLAKE_SCHEMA")
 CWD = pathlib.Path(__file__).parent
-
-
-def get_dataframe_from_table(sql_name: str, test_table: Union[Table, TempTable], hook):
-    if sql_name == "bigquery":
-        client = bigquery.Client()
-        query_job = client.query(
-            f"SELECT * FROM astronomer-dag-authoring.{test_table.qualified_name()}"
-        )
-        df = query_job.to_dataframe()
-    else:
-        df = pd.read_sql(
-            f"SELECT * FROM {test_table.qualified_name()}",
-            con=hook.get_conn(),
-        )
-    return df
 
 
 @pytest.mark.integration
@@ -69,7 +52,7 @@ def test_load_file_with_http_path_file(sample_dag, test_table, sql_server):
         )
     test_utils.run_dag(sample_dag)
 
-    df = get_dataframe_from_table(sql_name, test_table, hook)
+    df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
     assert df.shape == (3, 9)
 
 
@@ -97,7 +80,7 @@ def test_aql_load_remote_file_to_dbs(sample_dag, test_table, sql_server, remote_
         load_file(path=file_uri[0], file_conn_id=file_conn_id, output_table=test_table)
     test_utils.run_dag(sample_dag)
 
-    df = get_dataframe_from_table(sql_name, test_table, hook)
+    df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
 
     # Workaround for snowflake capitalized col names
     sort_cols = "name"
@@ -129,7 +112,7 @@ def test_aql_replace_existing_table(sample_dag, test_table, sql_server):
         task_1 >> task_2
     test_utils.run_dag(sample_dag)
 
-    df = get_dataframe_from_table(sql_name, test_table, hook)
+    df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
     data_df = pd.read_csv(data_path_2)
 
     assert df.shape == data_df.shape
@@ -152,7 +135,7 @@ def test_aql_local_file_with_no_table_name(sample_dag, test_table, sql_server):
         load_file(path=data_path, file_conn_id="", output_table=test_table)
     test_utils.run_dag(sample_dag)
 
-    df = get_dataframe_from_table(sql_name, test_table, hook)
+    df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
     data_df = pd.read_csv(data_path)
 
     assert df.shape == data_df.shape
@@ -235,7 +218,7 @@ def test_aql_load_file_pattern(remote_file, sample_dag, test_table, sql_server):
         )
     test_utils.run_dag(sample_dag)
 
-    df = get_dataframe_from_table(sql_name, test_table, hook)
+    df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
     test_df_rows = pd.read_csv(filename).shape[0]
     assert test_df_rows * 2 == df.shape[0]
 
