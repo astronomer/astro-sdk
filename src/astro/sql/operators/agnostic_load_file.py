@@ -1,5 +1,4 @@
 import glob
-
 from typing import Union
 from urllib.parse import urlparse, urlunparse
 
@@ -73,7 +72,6 @@ class AgnosticLoadFile(BaseOperator):
         transport_params = get_transport_params(paths[0], self.file_conn_id)
         return self.load_using_pandas(context, paths, hook, transport_params)
 
-
     def load_using_pandas(self, context, paths, hook, transport_params):
         """Loads csv/parquet table from local/S3/GCS with Pandas.
 
@@ -113,30 +111,9 @@ class AgnosticLoadFile(BaseOperator):
         """
         validate_path(filepath)
         filetype = get_filetype(filepath)
-        return load_file_into_dataframe(filepath, filetype, transport_params)
-
-
-    def check_ndjson_config_delimiter(self, conn_type, normalize_config):
-        replacement = "_"
-        illegal_char = "."
-        error_msg = f"{conn_type} illegal char '{illegal_char}' in column name found in normalized data generated, replaced it with '{replacement}'"
-        if conn_type in ["bigquery", "snowflake"]:
-            meta_prefix = normalize_config.get("meta_prefix")
-            if meta_prefix and meta_prefix == illegal_char:
-                self.log.info(error_msg)
-                normalize_config["meta_prefix"] = replacement
-
-            record_prefix = normalize_config.get("record_prefix")
-            if record_prefix and record_prefix == illegal_char:
-                self.log.info(error_msg)
-                normalize_config["record_prefix"] = replacement
-
-            sep = normalize_config.get("sep")
-            if sep is None or sep == illegal_char:
-                self.log.info(error_msg)
-                normalize_config["sep"] = replacement
-
-        return normalize_config
+        return load_file_into_dataframe(
+            filepath, filetype, transport_params, normalize_config=self.normalize_config
+        )
 
     def get_paths(self, path, file_conn_id):
         url = urlparse(path)
@@ -192,7 +169,8 @@ def load_file(
     :type file_conn_id: str
     :param task_id: task id, optional.
     :type task_id: str
-    :param normalize_config: config dict for pandas json_normalize method https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html
+    :param normalize_config: config dict for pandas json_normalize method
+        https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html
     :type normalize_config: dict
     """
 
