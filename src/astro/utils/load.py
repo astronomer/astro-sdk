@@ -62,7 +62,6 @@ def load_file_into_dataframe(
         elif filetype == FileType.JSON:
             dataframe = pd.read_json(stream, **kwargs)
         elif filetype == FileType.NDJSON:
-            # dataframe = pd.read_json(stream, lines=True, **kwargs)
             dataframe = flatten_ndjson(normalize_config, stream)
         elif filetype == FileType.PARQUET:
             dataframe = pd.read_parquet(stream, **kwargs)
@@ -92,10 +91,6 @@ def flatten_ndjson(
     while len(rows) > 0:
         if df is None:
             df = pd.DataFrame(
-                pd.json_normalize([json.loads(row) for row in rows], **normalize_config)
-            )
-        else:
-            df = df.append(
                 pd.json_normalize([json.loads(row) for row in rows], **normalize_config)
             )
         rows = stream.readlines(DEFAULT_CHUNK_SIZE)
