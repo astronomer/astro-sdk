@@ -122,7 +122,10 @@ def test_save_all_db_tables_to_S3(sample_dag, test_table, sql_server):
     df_file = pd.read_csv(OUTPUT_FILE_PATH, storage_options=s3fs_creds())
 
     assert len(df_file) == 47
-    assert (df["sell"] == df_file["sell"]).all()
+    if sql_name != "snowflake":
+        assert (df["sell"] == df_file["sell"]).all()
+    else:
+        assert (df["SELL"] == df_file["sell"]).all()
 
     # Delete object from S3
     s3 = boto3.Session(_creds["key"], _creds["secret"]).resource("s3")
