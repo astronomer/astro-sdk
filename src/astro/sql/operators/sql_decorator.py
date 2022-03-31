@@ -12,7 +12,7 @@ from sqlalchemy.sql.functions import Function
 
 from astro.constants import Database
 from astro.settings import SCHEMA
-from astro.sql.table import Table, TempTable, create_table_name
+from astro.sql.table import Table, TempTable, create_unique_table_name
 from astro.utils import get_hook, postgres_transform, snowflake_transform
 from astro.utils.database import (
     get_database_from_conn_id,
@@ -104,7 +104,6 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         self._process_params()
 
         output_table_name: str = ""
-
         # Create DEFAULT SCHEMA if not created.
         self._set_schema_if_needed(SCHEMA)
 
@@ -116,7 +115,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 self._set_schema_if_needed()
 
             if not self.output_table or type(self.output_table) == TempTable:
-                output_table_name = create_table_name(context=context)
+                output_table_name = create_unique_table_name()
                 full_output_table_name = self.handle_output_table_schema(
                     # Since there is no output table defined we have to assume default schema
                     output_table_name,
@@ -175,7 +174,6 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 self.sql = file.read().replace("\n", " ")
 
     def handle_params(self, context):
-        # Automatically add any kwargs going into the function
         if self.op_kwargs:
             self.parameters.update(self.op_kwargs)  # type: ignore
         if self.op_args:
@@ -295,7 +293,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
 
     def default_transform(self, parameters, context):
         for k, v in parameters.items():
-            if type(v) == Table:
+            if isinstance(v, Table):
                 context[k] = v.table_name
             else:
                 context[k] = ":" + k
@@ -311,9 +309,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         for i, arg in enumerate(self.op_args):
             if type(arg) == pd.DataFrame:
                 pandas_dataframe = arg
-                output_table_name = (
-                    f"{self.dag_id}_{self.task_id}_{self.run_id}_input_dataframe_{i}"
-                )
+                output_table_name = create_unique_table_name()
                 output_table = Table(
                     table_name=output_table_name,
                     conn_id=self.conn_id,
@@ -338,15 +334,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         for key, value in self.op_kwargs.items():
             if type(value) == pd.DataFrame:
                 pandas_dataframe = value
-                output_table_name = "_".join(
-                    [
-                        self.dag_id,
-                        self.task_id,
-                        self.run_id,
-                        "input_dataframe",
-                        str(key),
-                    ]
-                )
+                output_table_name = create_unique_table_name()
                 output_table = Table(
                     table_name=output_table_name,
                     conn_id=self.conn_id,
@@ -361,7 +349,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                     warehouse=self.warehouse,
                 )
                 load_dataframe_into_sql_table(pandas_dataframe, output_table, hook)
-                final_kwargs[key] = output_table_name
+                final_kwargs[key] = output_table
             else:
                 final_kwargs[key] = value
         self.op_kwargs = final_kwargs

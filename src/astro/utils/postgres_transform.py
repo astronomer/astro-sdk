@@ -4,9 +4,8 @@ from astro.utils.dependencies import PostgresHook
 
 def add_templates_to_context(parameters, context):
     for k, v in parameters.items():
-        if type(v) == Table:
-            final_name = v.schema + "." + v.table_name if v.schema else v.table_name
-            context[k] = final_name
+        if isinstance(v, Table):
+            context[k] = v.qualified_name()
         else:
             context[k] = ":" + k
     return context
