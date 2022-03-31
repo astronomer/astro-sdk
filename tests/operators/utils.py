@@ -8,10 +8,9 @@ from airflow.executors.debug_executor import DebugExecutor
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from airflow.utils import timezone
 from airflow.utils.state import State
-from google.cloud import bigquery
 
 from astro.sql.table import Table, TempTable
-from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
+from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook, bigquery
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 

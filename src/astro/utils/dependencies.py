@@ -79,3 +79,8 @@ try:
     from airflow.providers.google.cloud.hooks import gcs
 except ModuleNotFoundError:
     gcs = MissingPackage("apache-airflow-providers-google", "google")
+
+try:
+    from google.cloud import bigquery
+except ModuleNotFoundError:
+    bigquery = MissingPackage("apache-airflow-providers-google", "google")
