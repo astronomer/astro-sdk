@@ -87,8 +87,6 @@ def flatten_ndjson(
 
     normalize_config = normalize_config or {}
 
-    check_ndjson_config_delimiter(normalize_config=normalize_config)
-
     df = None
     rows = stream.readlines(DEFAULT_CHUNK_SIZE)
     while len(rows) > 0:
@@ -104,7 +102,7 @@ def flatten_ndjson(
     return df
 
 
-def check_ndjson_config_delimiter(normalize_config) -> dict:
+def check_normalize_config(normalize_config, database: Database) -> dict:
     """
     Validate pandas json_normalize() parameter for databases, since default params result in
      invalid column name. Default parameter result in the columns name containing '.' char.
@@ -118,17 +116,18 @@ def check_ndjson_config_delimiter(normalize_config) -> dict:
     replacement = "_"
     illegal_char = "."
 
-    meta_prefix = normalize_config.get("meta_prefix")
-    if meta_prefix and meta_prefix == illegal_char:
-        normalize_config["meta_prefix"] = replacement
+    if database in [Database.BIGQUERY, Database.SNOWFLAKE]:
+        meta_prefix = normalize_config.get("meta_prefix")
+        if meta_prefix and meta_prefix == illegal_char:
+            normalize_config["meta_prefix"] = replacement
 
-    record_prefix = normalize_config.get("record_prefix")
-    if record_prefix and record_prefix == illegal_char:
-        normalize_config["record_prefix"] = replacement
+        record_prefix = normalize_config.get("record_prefix")
+        if record_prefix and record_prefix == illegal_char:
+            normalize_config["record_prefix"] = replacement
 
-    sep = normalize_config.get("sep")
-    if sep is None or sep == illegal_char:
-        normalize_config["sep"] = replacement
+        sep = normalize_config.get("sep")
+        if sep is None or sep == illegal_char:
+            normalize_config["sep"] = replacement
 
     return normalize_config
 

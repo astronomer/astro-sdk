@@ -8,9 +8,14 @@ from airflow.models import BaseOperator
 from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils import get_hook
+from astro.utils.database import get_database_from_conn_id
 from astro.utils.dependencies import gcs, s3
 from astro.utils.file import get_filetype
-from astro.utils.load import load_dataframe_into_sql_table, load_file_into_dataframe
+from astro.utils.load import (
+    check_normalize_config,
+    load_dataframe_into_sql_table,
+    load_file_into_dataframe,
+)
 from astro.utils.path import get_paths, get_transport_params, validate_path
 from astro.utils.task_id_helper import get_task_id
 
@@ -60,6 +65,11 @@ class AgnosticLoadFile(BaseOperator):
         """
         if self.file_conn_id:
             BaseHook.get_connection(self.file_conn_id)
+
+        self.normalize_config = check_normalize_config(
+            normalize_config=self.normalize_config,
+            database=get_database_from_conn_id(self.output_table.conn_id),
+        )
 
         hook = get_hook(
             conn_id=self.output_table.conn_id,
