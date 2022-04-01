@@ -63,6 +63,7 @@ class SaveFile(BaseOperator):
             df = self.convert_sql_table_to_dataframe()
         elif type(self.input) == pd.DataFrame:
             df = self.input
+            df = self.input
         else:
             raise ValueError(
                 "Expected input_table to be Table or dataframe. Got %s",
@@ -196,8 +197,9 @@ def save_file(
     :type task_id: str
     """
 
-    task_id = task_id if task_id is not None else get_task_id("save_file", "")
-    task_id = task_id.rstrip("_")
+    task_id = (
+        task_id if task_id is not None else get_task_id("save_file", output_file_path)
+    )
 
     return SaveFile(
         task_id=task_id,
