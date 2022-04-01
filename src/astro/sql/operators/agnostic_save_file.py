@@ -197,6 +197,7 @@ def save_file(
     """
 
     task_id = task_id if task_id is not None else get_task_id("save_file", "")
+    task_id = task_id.rstrip("_")
 
     return SaveFile(
         task_id=task_id,
