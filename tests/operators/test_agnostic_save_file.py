@@ -51,8 +51,7 @@ def s3fs_creds():
 def test_save_dataframe_to_local(sample_dag):
     @adf
     def make_df():
-        d = {"col1": [1, 2], "col2": [3, 4]}
-        return pd.DataFrame(data=d)
+        return pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
 
     with sample_dag:
         df = make_df()
