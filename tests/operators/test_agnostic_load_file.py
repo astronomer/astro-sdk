@@ -421,8 +421,9 @@ def test_aql_gcs_file_to_postgres_ndjson_with_string_path(
     _, hook = sql_server
 
     with sample_dag:
-        load_main = load_file(
-            path=str(CWD) + "/../data/github_nested.ndjson",
+        load_file(
+            # path=str(CWD) + "/../data/github_nested.ndjson",
+            path=str(CWD) + "/../data/temp.ndjson",
             output_table=tmp_table,
             normalize_config={
                 "record_path": [["payload", "shas"]],

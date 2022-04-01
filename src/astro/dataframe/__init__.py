@@ -17,7 +17,8 @@ def dataframe(
 ):
     """
     This function allows a user to run python functions in Airflow but with the huge benefit that SQL files
-    will automatically be turned into dataframes and resulting dataframes can automatically used in astro.sql functions
+    will automatically be turned into dataframes and resulting dataframes can automatically be used in astro.sql
+    functions
     """
     param_map = {
         "conn_id": conn_id,
