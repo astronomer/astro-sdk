@@ -74,14 +74,16 @@ def flatten_ndjson(
     normalize_config: Union[None, dict], stream: io.TextIOWrapper
 ) -> pd.DataFrame:
     """
+    """
     Flatten the nested ndjson/json.
-     :param normalize_config: parameters in dict format of pandas json_normalize() function.
+
+    :param normalize_config: parameters in dict format of pandas json_normalize() function.
         https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html
-     :param stream: io.TextIOWrapper object for the file
-     :type normalize_config: dict
-     :type stream: io.TextIOWrapper
-     :return: return dataframe containing the loaded data
-     :rtype: `pandas.DataFrame`
+    :param stream: io.TextIOWrapper object for the file
+    :type normalize_config: dict
+    :type stream: io.TextIOWrapper
+    :return: return dataframe containing the loaded data
+    :rtype: `pandas.DataFrame`
     """
 
     normalize_config = normalize_config or {}
