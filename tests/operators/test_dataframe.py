@@ -10,8 +10,8 @@ import astro.sql as aql
 from astro import dataframe as df
 from astro.constants import SUPPORTED_DATABASES, Database
 from astro.settings import SCHEMA
-from tests.operators import utils as test_utils
 from astro.sql.table import Table
+from tests.operators import utils as test_utils
 
 # Import Operator
 
@@ -41,10 +41,7 @@ def test_dataframe_from_sql_basic(sample_dag, sql_server, test_table):
 
     @df
     def my_df_func(df: pandas.DataFrame):
-        if sql_name != "snowflake":
-            return df.sell.count()
-        else:
-            return df.SELL.count()
+        return df.sell.count()
 
     with sample_dag:
         f = my_df_func(df=test_table)
@@ -78,10 +75,7 @@ def test_dataframe_from_sql_custom_task_id(sample_dag, sql_server, test_table):
 
     @df(task_id="foo")
     def my_df_func(df: pandas.DataFrame):
-        if sql_name != "snowflake":
-            return df.sell.count()
-        else:
-            return df.SELL.count()
+        return df.sell.count()
 
     with sample_dag:
         for i in range(5):
@@ -120,10 +114,7 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, sql_server, test_table):
 
     @df(conn_id=test_table.conn_id, database=test_table.database)
     def my_df_func(df: pandas.DataFrame):
-        if sql_name != "snowflake":
-            return df.sell.count()
-        else:
-            return df.SELL.count()
+        return df.sell.count()
 
     with sample_dag:
         res = my_df_func(test_table)
@@ -158,10 +149,7 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(sample_dag, sql_server, test_
 
     @df(conn_id=test_table.conn_id, database=test_table.database)
     def my_df_func(df_1: pandas.DataFrame, df_2: pandas.DataFrame):
-        if sql_name != "snowflake":
-            return df_1.sell.count() + df_2.sell.count()
-        else:
-            return df_1.SELL.count() + df_2.SELL.count()
+        return df_1.sell.count() + df_2.sell.count()
 
     with sample_dag:
         res = my_df_func(test_table, df_2=test_table)
@@ -230,8 +218,6 @@ def test_postgres_dataframe_without_table_arg(sample_dag):
 
     with sample_dag:
         plain_df = sample_df()
-        pg_df = sample_pg(
-            conn_id="postgres_conn", database="pagila", input=plain_df
-        )
+        pg_df = sample_pg(conn_id="postgres_conn", database="pagila", input=plain_df)
         validate_result(pg_df)
     test_utils.run_dag(sample_dag)
