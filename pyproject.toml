@@ -37,6 +37,7 @@ classifiers = [
 
 [project.optional-dependencies]
 tests = [
+    "click==8.0.0",
     "pytest>=6.0",
     "pytest-split",
     "pytest-dotenv",

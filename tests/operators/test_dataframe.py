@@ -92,6 +92,29 @@ class TestDataframeFromSQL(unittest.TestCase):
 
         return f
 
+    def test_postgres_dataframe_without_table_arg(self):
+        @df
+        def validate_result(df: pandas.DataFrame):
+            assert df.iloc[0].to_dict()["colors"] == "red"
+
+        @df
+        def sample_df():
+            return pandas.DataFrame(
+                {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
+            )
+
+        @aql.transform
+        def sample_pg(input: Table):
+            return "SELECT * FROM {{input}}"
+
+        with self.dag:
+            plain_df = sample_df()
+            pg_df = sample_pg(
+                conn_id="postgres_conn", database="pagila", input=plain_df
+            )
+            validate_result(pg_df)
+        test_utils.run_dag(self.dag)
+
     def test_dataframe_from_sql_basic(self):
         @df
         def my_df_func(df: pandas.DataFrame):
