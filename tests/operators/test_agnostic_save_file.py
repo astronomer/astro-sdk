@@ -162,7 +162,7 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
                     overwrite=False,
                 )
             test_utils.run_dag(sample_dag)
-        expected_error = f"{temp_file.name} file exists."
+        expected_error = f"{temp_file.name} file already exists."
         assert expected_error in caplog.text
 
 
@@ -204,7 +204,7 @@ def test_save_table_remote_file_exists_overwrite_false(
             )
         test_utils.run_dag(sample_dag)
 
-    expected_error = f"{object_paths[0]} file exists."
+    expected_error = f"{object_paths[0]} file already exists."
     assert expected_error in caplog.text
 
 
