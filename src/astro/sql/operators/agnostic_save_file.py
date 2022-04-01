@@ -74,7 +74,7 @@ class SaveFile(BaseOperator):
         ):
             self.agnostic_write_file(df, self.output_file_path, self.output_conn_id)
         else:
-            raise FileExistsError(f"{self.output_file_path} file exists.")
+            raise FileExistsError(f"{self.output_file_path} file already exists.")
 
     def file_exists(self, output_file_path, output_conn_id=None):
         transport_params = {
