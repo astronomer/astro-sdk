@@ -7,11 +7,11 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 
 import logging
 import pathlib
-import unittest.mock
+import unittest
 
-from airflow.hooks.sqlite_hook import SqliteHook
 from airflow.models import DAG
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from airflow.utils import timezone
 
 # Import Operator
