@@ -8,7 +8,7 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 import logging
 import os
 import pathlib
-import unittest.mock
+import unittest
 
 from airflow.utils import timezone
 
