@@ -1,5 +1,5 @@
 from distutils import log as logger
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from airflow.hooks.base import BaseHook
 from sqlalchemy import FLOAT, and_, cast, column, func, select, text
@@ -135,7 +135,9 @@ class AgnosticBooleanCheck(SqlDecoratedOperator):
         )
 
 
-def boolean_check(table: Table, checks: List[Check] = [], max_rows_returned: int = 100):
+def boolean_check(
+    table: Table, checks: Optional[List[Check]] = None, max_rows_returned: int = 100
+):
     """
     :param table: table name
     :type table: str
@@ -144,6 +146,8 @@ def boolean_check(table: Table, checks: List[Check] = [], max_rows_returned: int
     :param max_rows_returned: number of row returned if the check fails.
     :type max_rows_returned: int
     """
+    if checks is None:
+        checks = []
 
     return AgnosticBooleanCheck(
         table=table, checks=checks, max_rows_returned=max_rows_returned
