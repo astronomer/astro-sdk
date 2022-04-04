@@ -63,7 +63,6 @@ class SaveFile(BaseOperator):
             df = self.convert_sql_table_to_dataframe()
         elif type(self.input) == pd.DataFrame:
             df = self.input
-            df = self.input
         else:
             raise ValueError(
                 "Expected input_table to be Table or dataframe. Got %s",
