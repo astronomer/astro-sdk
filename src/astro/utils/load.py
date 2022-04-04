@@ -83,7 +83,6 @@ def flatten_ndjson(
     :return: return dataframe containing the loaded data
     :rtype: `pandas.DataFrame`
     """
-
     normalize_config = normalize_config or {}
 
     df = None
