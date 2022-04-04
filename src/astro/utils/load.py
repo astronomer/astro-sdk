@@ -101,12 +101,12 @@ def flatten_ndjson(
 def populate_normalize_config(ndjson_normalize_sep, database: Database) -> dict:
     """
     Validate pandas json_normalize() parameter for databases, since default params result in
-     invalid column name. Default parameter result in the columns name containing '.' char.
-     :param normalize_config: :param normalize_config: config in dict format of pandas json_normalize() function.
+    invalid column name. Default parameter result in the columns name containing '.' char.
+    :param ndjson_normalize_sep: separator used to normalize nested ndjson.
         https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html
-     :type normalize_config: dict
-     :return: return updated config
-     :rtype: `dict`
+    :type ndjson_normalize_sep: str
+    :return: return updated config
+    :rtype: `dict`
     """
     normalize_config = {
         "meta_prefix": ndjson_normalize_sep,
