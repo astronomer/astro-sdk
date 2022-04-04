@@ -13,7 +13,7 @@ Run test:
 import logging
 import pathlib
 import time
-import unittest.mock
+import unittest
 
 import pandas as pd
 from airflow.executors.debug_executor import DebugExecutor

@@ -1,7 +1,7 @@
 import logging
 import os
 import pathlib
-import unittest.mock
+import unittest
 
 import pandas as pd
 import pytest

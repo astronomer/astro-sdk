@@ -48,7 +48,7 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s test_examples_by_dependency
+      - run: nox -s test_examples_by_dependency -- --cov=src --cov-report=xml --cov-branch
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
@@ -111,7 +111,7 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s test -- --splits 12 --group ${{ matrix.group }}
+      - run: nox -s test -- --splits 12 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
