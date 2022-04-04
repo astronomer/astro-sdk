@@ -237,7 +237,7 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
 def test_save_table_remote_file_exists_overwrite_false(
     sample_dag, test_table, sql_server, remote_file, caplog
 ):
-    conn_id, object_paths = remote_file
+    _, object_paths = remote_file
 
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
@@ -331,7 +331,6 @@ def load_to_dataframe(filepath, file_type):
     ids=["test-table"],
 )
 def test_save_file(sample_dag, sql_server, file_type, test_table):
-    sql_name, sql_hook = sql_server
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         filepath = Path(tmp_dir, f"sample.{file_type}")
