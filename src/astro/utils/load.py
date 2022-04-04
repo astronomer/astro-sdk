@@ -75,7 +75,6 @@ def flatten_ndjson(
 ) -> pd.DataFrame:
     """
     Flatten the nested ndjson/json.
-
     :param normalize_config: parameters in dict format of pandas json_normalize() function.
         https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html
     :param stream: io.TextIOWrapper object for the file
