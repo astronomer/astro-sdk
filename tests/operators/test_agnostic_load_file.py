@@ -421,6 +421,9 @@ def test_load_file_chunks(sample_dag, sql_server, test_table):
 def test_aql_nested_ndjson_file_with_default_sep_param(
     sample_dag, sql_server, test_table
 ):
+    """
+    Test the flattening of single level nested ndjson, with default separator '_'.
+    """
     _, hook = sql_server
     with sample_dag:
         load_file(
@@ -438,6 +441,9 @@ def test_aql_nested_ndjson_file_with_default_sep_param(
 def test_aql_nested_ndjson_file_to_bigquery_explicit_sep_params(
     sample_dag, sql_server, test_table
 ):
+    """
+    Test the flattening of single level nested ndjson, with explicit separator '___'.
+    """
     _, hook = sql_server
     with sample_dag:
         load_file(
@@ -456,7 +462,10 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_sep_params(
 def test_aql_multilevel_nested_ndjson_file_default_params(
     sample_dag, sql_server, test_table, caplog
 ):
-    _, hook = sql_server
+    """
+    Test the flattening of multilevel level nested ndjson, with default '_'.
+    Expected to fail since we do not support flattening of multilevel ndjson.
+    """
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
             load_file(
