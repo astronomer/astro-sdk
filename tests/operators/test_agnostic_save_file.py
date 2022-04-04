@@ -28,6 +28,7 @@ from astro.settings import SCHEMA
 
 # Import Operator
 from astro.sql.operators.agnostic_save_file import save_file
+from astro.utils.dependencies import gcs
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
@@ -129,6 +130,51 @@ def test_save_all_db_tables_to_S3(sample_dag, test_table, sql_server):
     # Delete object from S3
     s3 = boto3.Session(_creds["key"], _creds["secret"]).resource("s3")
     s3.Object("tmp9", file_name).delete()
+
+
+@pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
+@pytest.mark.parametrize(
+    "test_table",
+    [
+        {
+            "path": str(CWD) + "/../data/homes2.csv",
+            "load_table": True,
+            "is_temp": False,
+            "param": {
+                "schema": SCHEMA,
+                "table_name": test_utils.get_table_name("test_stats_check_1"),
+            },
+        }
+    ],
+    indirect=True,
+    ids=["temp_table"],
+)
+def test_save_all_db_tables_to_GCS(sample_dag, test_table, sql_server):
+
+    sql_name, hook = sql_server
+    file_name = f"{test_utils.get_table_name('test_save')}.csv"
+    bucket = "dag-authoring"
+
+    OUTPUT_FILE_PATH = f"gs://{bucket}/test/{file_name}"
+
+    with sample_dag:
+        save_file(
+            input=test_table,
+            output_file_path=OUTPUT_FILE_PATH,
+            output_conn_id="google_cloud_default",
+            overwrite=True,
+        )
+    test_utils.run_dag(sample_dag)
+
+    df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
+
+    if sql_name != "snowflake":
+        assert (df["sell"].sort_values() == [129, 138, 142, 175, 232]).all()
+    else:
+        assert (df["SELL"].sort_values() == [129, 138, 142, 175, 232]).all()
+
+    hook = gcs.GCSHook(gcp_conn_id="google_cloud_default")
+    hook.delete(bucket, f"test/{file_name}")
 
 
 @pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
