@@ -12,9 +12,9 @@ from astro.utils.database import get_database_from_conn_id
 from astro.utils.dependencies import gcs, s3
 from astro.utils.file import get_filetype
 from astro.utils.load import (
-    check_normalize_config,
     load_dataframe_into_sql_table,
     load_file_into_dataframe,
+    populate_normalize_config,
 )
 from astro.utils.path import get_paths, get_transport_params, validate_path
 from astro.utils.task_id_helper import get_task_id
@@ -46,7 +46,7 @@ class AgnosticLoadFile(BaseOperator):
         file_conn_id="",
         chunksize=DEFAULT_CHUNK_SIZE,
         if_exists="replace",
-        normalize_config=None,
+        ndjson_normalize_sep="_",
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -57,7 +57,8 @@ class AgnosticLoadFile(BaseOperator):
         self.kwargs = kwargs
         self.output_table = output_table
         self.if_exists = if_exists
-        self.normalize_config = normalize_config or {}
+        self.ndjson_normalize_sep = ndjson_normalize_sep
+        self.normalize_config = None
 
     def execute(self, context):
         """
@@ -66,8 +67,8 @@ class AgnosticLoadFile(BaseOperator):
         if self.file_conn_id:
             BaseHook.get_connection(self.file_conn_id)
 
-        self.normalize_config = check_normalize_config(
-            normalize_config=self.normalize_config,
+        self.normalize_config = populate_normalize_config(
+            ndjson_normalize_sep=self.ndjson_normalize_sep,
             database=get_database_from_conn_id(self.output_table.conn_id),
         )
 
@@ -164,7 +165,7 @@ def load_file(
     file_conn_id=None,
     task_id=None,
     if_exists="replace",
-    normalize_config=None,
+    ndjson_normalize_sep="_",
     **kwargs,
 ):
     """Convert AgnosticLoadFile into a function.
@@ -179,9 +180,11 @@ def load_file(
     :type file_conn_id: str
     :param task_id: task id, optional.
     :type task_id: str
-    :param normalize_config: config dict for pandas json_normalize method
-        https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html
-    :type normalize_config: dict
+    :param ndjson_normalize_sep: separator used to normalize nested ndjson.
+        ex - {"a": {"b":"c"}} will result in
+            column - "a_b"
+            where ndjson_normalize_sep = "_"
+    :type ndjson_normalize_sep: str
     """
 
     # Note - using path for task id is causing issues as it's a pattern and
@@ -194,6 +197,6 @@ def load_file(
         output_table=output_table,
         file_conn_id=file_conn_id,
         if_exists=if_exists,
-        normalize_config=normalize_config,
+        ndjson_normalize_sep=ndjson_normalize_sep,
         **kwargs,
     ).output

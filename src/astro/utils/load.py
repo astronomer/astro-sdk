@@ -98,7 +98,7 @@ def flatten_ndjson(
     return df
 
 
-def check_normalize_config(normalize_config, database: Database) -> dict:
+def populate_normalize_config(ndjson_normalize_sep, database: Database) -> dict:
     """
     Validate pandas json_normalize() parameter for databases, since default params result in
      invalid column name. Default parameter result in the columns name containing '.' char.
@@ -108,12 +108,16 @@ def check_normalize_config(normalize_config, database: Database) -> dict:
      :return: return updated config
      :rtype: `dict`
     """
-
+    normalize_config = {
+        "meta_prefix": ndjson_normalize_sep,
+        "record_prefix": ndjson_normalize_sep,
+        "sep": ndjson_normalize_sep,
+    }
     replacement = "_"
     illegal_char = "."
 
     if database in [Database.BIGQUERY, Database.SNOWFLAKE]:
-        meta_prefix = normalize_config.get("meta_prefix")
+        meta_prefix = ndjson_normalize_sep
         if meta_prefix and meta_prefix == illegal_char:
             normalize_config["meta_prefix"] = replacement
 

@@ -22,6 +22,7 @@ from airflow.utils import timezone
 from google.cloud import bigquery
 from pandas.testing import assert_frame_equal
 
+from astro.constants import Database
 from astro.sql.operators.agnostic_load_file import load_file
 from astro.sql.table import Table, TempTable
 from tests.operators import utils as test_utils
@@ -414,66 +415,54 @@ def test_load_file_chunks(sample_dag, sql_server, test_table):
     assert kwargs[chunk_size_argument] == 1000000
 
 
-@pytest.mark.parametrize("sql_server", ["postgres", "bigquery"], indirect=True)
-def test_aql_gcs_file_to_postgres_ndjson_with_string_path(
-    sample_dag, sql_server, test_table
-):
-    _, hook = sql_server
-
-    with sample_dag:
-        load_file(
-            path=str(CWD) + "/../data/github_nested.ndjson",
-            output_table=test_table,
-            normalize_config={
-                "record_path": [["payload", "shas"]],
-                "meta": [["repository", "url"], ["actor_attributes", "blog"]],
-                "meta_prefix": ".",
-                "record_prefix": ".",
-            },
-        )
-    test_utils.run_dag(sample_dag)
-
-    df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
-    assert df.shape == (11, 6)
-
-
-@pytest.mark.parametrize("sql_server", ["postgres", "bigquery"], indirect=True)
-def test_aql_gcs_nested_ndjson_file_with_string_path(
+@pytest.mark.parametrize(
+    "sql_server", [Database.POSTGRES.value, Database.BIGQUERY.value], indirect=True
+)
+def test_aql_nested_ndjson_file_with_default_sep_param(
     sample_dag, sql_server, test_table
 ):
     _, hook = sql_server
     with sample_dag:
         load_file(
-            path=str(CWD) + "/../data/github_nested.ndjson",
+            path=str(CWD) + "/../data/github_single_level_nested.ndjson",
             output_table=test_table,
-            normalize_config={
-                "record_path": [["payload", "shas"]],
-                "meta": [["repository", "url"], ["actor_attributes", "blog"]],
-                "meta_prefix": ".",
-                "record_prefix": ".",
-            },
         )
     test_utils.run_dag(sample_dag)
 
     df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
-    assert df.shape == (11, 6)
+    assert df.shape == (1, 36)
+    assert "payload_size" in df.columns
 
 
-@pytest.mark.parametrize("sql_server", ["bigquery"], indirect=True)
-def test_aql_gcs_nested_ndjson_file_to_bigquery_default_params(
+@pytest.mark.parametrize("sql_server", [Database.BIGQUERY.value], indirect=True)
+def test_aql_nested_ndjson_file_to_bigquery_explicit_sep_params(
     sample_dag, sql_server, test_table
 ):
     _, hook = sql_server
     with sample_dag:
         load_file(
-            path=str(CWD) + "/../data/github_nested.ndjson",
+            path=str(CWD) + "/../data/github_single_level_nested.ndjson",
             output_table=test_table,
-            normalize_config={
-                "record_path": [["payload", "shas"]],
-                "meta": [["repository", "url"], ["actor_attributes", "blog"]],
-            },
+            ndjson_normalize_sep="___",
         )
     test_utils.run_dag(sample_dag)
 
     df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
-    assert df.shape == (11, 6)
+    assert df.shape == (1, 36)
+    assert "payload___size" in df.columns
+
+
+@pytest.mark.parametrize("sql_server", [Database.POSTGRES.value], indirect=True)
+def test_aql_multilevel_nested_ndjson_file_default_params(
+    sample_dag, sql_server, test_table, caplog
+):
+    _, hook = sql_server
+    with pytest.raises(BackfillUnfinished):
+        with sample_dag:
+            load_file(
+                path=str(CWD) + "/../data/github_multi_level_nested.ndjson",
+                output_table=test_table,
+            )
+        test_utils.run_dag(sample_dag)
+    expected_error = "can't adapt type 'dict"
+    assert expected_error in caplog.text
