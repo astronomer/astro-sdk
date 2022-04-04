@@ -1,4 +1,4 @@
-from typing import Dict, List, Set
+from typing import Dict, List, Optional, Set
 
 from sqlalchemy import MetaData, case, func, or_, select
 from sqlalchemy.sql.schema import Table as SqlaTable
@@ -266,7 +266,7 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
 def stats_check(
     main_table: Table,
     compare_table: Table,
-    checks: List[OutlierCheck] = [],
+    checks: Optional[List[OutlierCheck]] = None,
     max_rows_returned: int = 100,
 ):
     """
@@ -279,6 +279,8 @@ def stats_check(
     :param max_rows_returned: number of row returned if the check fails.
     :type max_rows_returned: int
     """
+    if checks is None:
+        checks = []
 
     return AgnosticStatsCheck(
         main_table=main_table,

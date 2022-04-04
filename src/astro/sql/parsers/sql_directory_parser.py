@@ -237,7 +237,7 @@ class ParsedSqlOperator(SqlDecoratedOperator):
         sql,
         parameters,
         file_name,
-        op_kwargs={},
+        op_kwargs=None,
         conn_id: Optional[str] = None,
         database: Optional[str] = None,
         schema: Optional[str] = None,
@@ -245,6 +245,8 @@ class ParsedSqlOperator(SqlDecoratedOperator):
         role: Optional[str] = None,
         **kwargs,
     ):
+        if op_kwargs is None:
+            op_kwargs = {}
         self.sql = sql
         self.parameters = parameters
         task_id = get_unique_task_id(file_name.replace(".sql", ""))

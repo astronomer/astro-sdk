@@ -1,5 +1,5 @@
 import importlib
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from sqlalchemy import MetaData, cast, column, insert, select
 from sqlalchemy.sql.schema import Table as SqlaTable
@@ -23,10 +23,14 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
         self,
         append_table: Table,
         main_table: Table,
-        columns: List[str] = [],
-        casted_columns: dict = {},
+        columns: Optional[List[str]] = None,
+        casted_columns: Optional[dict] = None,
         **kwargs,
     ):
+        if columns is None:
+            columns = []
+        if casted_columns is None:
+            casted_columns = {}
         self.append_table = append_table
         self.main_table = main_table
         self.sql = ""

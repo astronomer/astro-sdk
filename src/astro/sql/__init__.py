@@ -69,10 +69,14 @@ def run_raw_sql(
 def append(
     append_table: Table,
     main_table: Table,
-    columns: List[str] = [],
-    casted_columns: dict = {},
+    columns: Optional[List[str]] = None,
+    casted_columns: Optional[dict] = None,
     **kwargs,
 ):
+    if columns is None:
+        columns = []
+    if casted_columns is None:
+        casted_columns = {}
     return SqlAppendOperator(
         main_table=main_table,
         append_table=append_table,
