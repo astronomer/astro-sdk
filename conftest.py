@@ -93,6 +93,11 @@ def test_table(request, sql_server):  # noqa: C901
         load_table = table_param.get("load_table", False)
         override_table_options = table_param.get("param", {})
 
+        if is_tmp_table and load_table:
+            raise ValueError(
+                "Temp Table cannot be populated with data. Use 'is_temp=False' instead."
+            )
+
         if database == Database.SNOWFLAKE:
             default_table_options = {
                 "conn_id": hook.snowflake_conn_id,
@@ -199,7 +204,7 @@ def remote_file(request):
         session.add(new_connection)
         session.commit()
 
-    filename = pathlib.Path(f"tests/data/sample.{file_extension}")
+    filename = pathlib.Path(f"{CWD}/tests/data/sample.{file_extension}")
     object_paths = []
     unique_value = uuid.uuid4()
     for count in range(no_of_files):

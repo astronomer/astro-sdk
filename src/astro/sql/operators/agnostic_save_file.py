@@ -68,14 +68,13 @@ class SaveFile(BaseOperator):
                 "Expected input_table to be Table or dataframe. Got %s",
                 type(self.input),
             )
-
         # Write file if overwrite == True or if file doesn't exist.
         if self.overwrite or not self.file_exists(
             self.output_file_path, self.output_conn_id
         ):
             self.agnostic_write_file(df, self.output_file_path, self.output_conn_id)
         else:
-            raise FileExistsError
+            raise FileExistsError(f"{self.output_file_path} file already exists.")
 
     def file_exists(self, output_file_path, output_conn_id=None):
         transport_params = {
