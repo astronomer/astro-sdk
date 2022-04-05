@@ -40,7 +40,7 @@ def test_dataframe_from_sql_basic(sample_dag, sql_server, test_table):
     """Test basic operation of dataframe operator."""
 
     @df
-    def my_df_func(df: pandas.DataFrame):
+    def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
         return df.sell.count()
 
     with sample_dag:
@@ -74,7 +74,7 @@ def test_dataframe_from_sql_custom_task_id(sample_dag, sql_server, test_table):
     """Test custom and taskId increment when same task is added multiple times."""
 
     @df(task_id="foo")
-    def my_df_func(df: pandas.DataFrame):
+    def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
         return df.sell.count()
 
     with sample_dag:
@@ -106,7 +106,7 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, sql_server, test_table):
     """Test basic operation of dataframe operator with op_args."""
 
     @df(conn_id=test_table.conn_id, database=test_table.database)
-    def my_df_func(df: pandas.DataFrame):
+    def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
         return df.sell.count()
 
     with sample_dag:
@@ -141,7 +141,7 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(sample_dag, sql_server, test_
     """Test dataframe creation from table object in args and kwargs."""
 
     @df(conn_id=test_table.conn_id, database=test_table.database)
-    def my_df_func(df_1: pandas.DataFrame, df_2: pandas.DataFrame):
+    def my_df_func(df_1: pandas.DataFrame, df_2: pandas.DataFrame):  # skipcq: PY-D0003
         return df_1.sell.count() + df_2.sell.count()
 
     with sample_dag:
@@ -187,7 +187,7 @@ def test_snow_dataframe_with_lower_and_upper_case(
     """
 
     @df(identifiers_as_lower=identifiers_as_lower)
-    def my_df_func(df: pandas.DataFrame):
+    def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
         return df.columns
 
     with sample_dag:
@@ -204,17 +204,17 @@ def test_postgres_dataframe_without_table_arg(sample_dag):
     """Test dataframe operator without table argument"""
 
     @df
-    def validate_result(df: pandas.DataFrame):
+    def validate_result(df: pandas.DataFrame):  # skipcq: PY-D0003
         assert df.iloc[0].to_dict()["colors"] == "red"
 
     @df
-    def sample_df():
+    def sample_df():  # skipcq: PY-D0003
         return pandas.DataFrame(
             {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
         )
 
     @aql.transform
-    def sample_pg(input_table: Table):
+    def sample_pg(input_table: Table):  # skipcq: PY-D0003
         return "SELECT * FROM {{input_table}}"
 
     with sample_dag:
