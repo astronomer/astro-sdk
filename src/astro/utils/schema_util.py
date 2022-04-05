@@ -1,7 +1,5 @@
 from typing import List
 
-from airflow.hooks.base import BaseHook
-
 from astro.sql.table import Table
 from astro.utils.dependencies import postgres_sql
 
@@ -36,13 +34,6 @@ def create_schema_query(conn_type, hook, schema_id, user):
         )
     elif conn_type in ["snowflake", "google_cloud_platform", "bigquery", "sqlite"]:
         return f"CREATE SCHEMA IF NOT EXISTS {schema_id}"
-
-
-def get_table_name(table: Table):
-    conn_type = BaseHook.get_connection(table.conn_id).conn_type
-    if conn_type in ["bigquery"]:
-        return table.qualified_name()
-    return table.table_name
 
 
 def tables_from_same_db(tables: List[Table]):

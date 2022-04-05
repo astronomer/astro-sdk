@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 
 import pandas as pd
 import smart_open
-from airflow.models import BaseOperator, DagRun, TaskInstance
+from airflow.models import BaseOperator
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 
 from astro.constants import Database
@@ -161,12 +161,6 @@ class SaveFile(BaseOperator):
             serialiser[self.output_file_format](
                 stream, **serialiser_params.get(self.output_file_format, {})
             )
-
-    @staticmethod
-    def create_table_name(context):
-        ti: TaskInstance = context["ti"]
-        dag_run: DagRun = ti.get_dagrun()
-        return f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}"
 
 
 def save_file(

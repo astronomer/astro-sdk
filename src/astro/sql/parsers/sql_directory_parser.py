@@ -215,14 +215,6 @@ def find_templated_fields(file_string):
     return [y[2:-2] for y in re.findall(r"\{\{[^}]*\}\}", file_string)]
 
 
-def wrap_template_variables(sql, template_vars):
-    words = sql.split(" ")
-    fixed_words = [
-        "{" + template_vars.get(w) + "}" if template_vars.get(w) else w for w in words
-    ]
-    return " ".join(fixed_words)
-
-
 class ParsedSqlOperator(SqlDecoratedOperator):
     template_fields = ("parameters",)
 
