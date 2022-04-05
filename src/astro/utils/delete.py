@@ -31,14 +31,14 @@ def delete_dataframe_rows_from_table(
         role=target_table.role,
     )
     tmp_table_name = create_unique_table_name()
-    tmp_table = tmp_table.to_table(tmp_table_name)
-    load_dataframe_into_sql_table(pandas_dataframe, tmp_table, hook)
+    table = tmp_table.to_table(tmp_table_name)
+    load_dataframe_into_sql_table(pandas_dataframe, table, hook)
 
     # Then we remove the (dataframe) temporary table values from the target table
     engine = get_sqlalchemy_engine(hook)
     run_sql(
         engine,
-        f"DELETE FROM {target_table.qualified_name()} WHERE Id IN (SELECT Id FROM {tmp_table.qualified_name()})",
+        f"DELETE FROM {target_table.qualified_name()} WHERE Id IN (SELECT Id FROM {table.qualified_name()})",
     )
 
     # Finally, we delete the temporary table which had the dataframe values
