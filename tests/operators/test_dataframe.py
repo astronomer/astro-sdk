@@ -37,7 +37,7 @@ CWD = pathlib.Path(__file__).parent
     indirect=True,
 )
 def test_dataframe_from_sql_basic(sample_dag, sql_server, test_table):
-    sql_name, hook = sql_server
+    """Test basic operation of dataframe operator."""
 
     @df
     def my_df_func(df: pandas.DataFrame):
@@ -103,7 +103,7 @@ def test_dataframe_from_sql_custom_task_id(sample_dag, sql_server, test_table):
     indirect=True,
 )
 def test_dataframe_from_sql_basic_op_arg(sample_dag, sql_server, test_table):
-    """Test basic operation of dataframe operator."""
+    """Test basic operation of dataframe operator with op_args."""
 
     @df(conn_id=test_table.conn_id, database=test_table.database)
     def my_df_func(df: pandas.DataFrame):
@@ -138,7 +138,7 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, sql_server, test_table):
     indirect=True,
 )
 def test_dataframe_from_sql_basic_op_arg_and_kwarg(sample_dag, sql_server, test_table):
-    """test dataframe creation from table object in args and kwargs."""
+    """Test dataframe creation from table object in args and kwargs."""
 
     @df(conn_id=test_table.conn_id, database=test_table.database)
     def my_df_func(df_1: pandas.DataFrame, df_2: pandas.DataFrame):
@@ -180,6 +180,12 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(sample_dag, sql_server, test_
 def test_snow_dataframe_with_lower_and_upper_case(
     sample_dag, sql_server, test_table, identifiers_as_lower
 ):
+    """
+    Test dataframe operator 'identifiers_as_lower' param which converts
+    all col names in lower case, which is useful to maintain consistency,
+    since snowflake return all col name in caps.
+    """
+
     @df(identifiers_as_lower=identifiers_as_lower)
     def my_df_func(df: pandas.DataFrame):
         return df.columns
@@ -195,6 +201,8 @@ def test_snow_dataframe_with_lower_and_upper_case(
 
 
 def test_postgres_dataframe_without_table_arg(sample_dag):
+    """Test dataframe operator without table argument"""
+
     @df
     def validate_result(df: pandas.DataFrame):
         assert df.iloc[0].to_dict()["colors"] == "red"
@@ -206,11 +214,13 @@ def test_postgres_dataframe_without_table_arg(sample_dag):
         )
 
     @aql.transform
-    def sample_pg(input: Table):
-        return "SELECT * FROM {{input}}"
+    def sample_pg(input_table: Table):
+        return "SELECT * FROM {{input_table}}"
 
     with sample_dag:
         plain_df = sample_df()
-        pg_df = sample_pg(conn_id="postgres_conn", database="pagila", input=plain_df)
+        pg_df = sample_pg(
+            conn_id="postgres_conn", database="pagila", input_table=plain_df
+        )
         validate_result(pg_df)
     test_utils.run_dag(sample_dag)
