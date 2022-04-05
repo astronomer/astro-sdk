@@ -20,6 +20,7 @@ from airflow.exceptions import BackfillUnfinished
 from airflow.utils import timezone
 from pandas.testing import assert_frame_equal
 
+from astro.constants import Database
 from astro.sql.operators.agnostic_load_file import load_file
 from astro.sql.table import Table
 from tests.operators import utils as test_utils
@@ -43,7 +44,6 @@ CWD = pathlib.Path(__file__).parent
 )
 def test_load_file_with_http_path_file(sample_dag, test_table, sql_server):
     sql_name, hook = sql_server
-
     with sample_dag:
         load_file(
             path="https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/homes_main.csv",
@@ -220,6 +220,7 @@ def test_aql_load_file_pattern(remote_file, sample_dag, test_table, sql_server):
 
     df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
     test_df_rows = pd.read_csv(filename).shape[0]
+
     assert test_df_rows * 2 == df.shape[0]
 
 
@@ -395,3 +396,82 @@ def test_load_file_chunks(sample_dag, sql_server, test_table):
 
     _, kwargs = mock_chunk_function.call_args
     assert kwargs[chunk_size_argument] == 1000000
+
+
+@pytest.mark.parametrize(
+    "sql_server", [Database.POSTGRES.value, Database.BIGQUERY.value], indirect=True
+)
+def test_aql_nested_ndjson_file_with_default_sep_param(
+    sample_dag, sql_server, test_table
+):
+    """Test the flattening of single level nested ndjson, with default separator '_'."""
+    _, hook = sql_server
+    with sample_dag:
+        load_file(
+            path=str(CWD) + "/../data/github_single_level_nested.ndjson",
+            output_table=test_table,
+        )
+    test_utils.run_dag(sample_dag)
+
+    df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    assert df.shape == (1, 36)
+    assert "payload_size" in df.columns
+
+
+@pytest.mark.parametrize("sql_server", [Database.BIGQUERY.value], indirect=True)
+def test_aql_nested_ndjson_file_to_bigquery_explicit_sep_params(
+    sample_dag, sql_server, test_table
+):
+    """Test the flattening of single level nested ndjson, with explicit separator '___'."""
+    _, hook = sql_server
+    with sample_dag:
+        load_file(
+            path=str(CWD) + "/../data/github_single_level_nested.ndjson",
+            output_table=test_table,
+            ndjson_normalize_sep="___",
+        )
+    test_utils.run_dag(sample_dag)
+
+    df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    assert df.shape == (1, 36)
+    assert "payload___size" in df.columns
+
+
+@pytest.mark.parametrize("sql_server", [Database.BIGQUERY.value], indirect=True)
+def test_aql_nested_ndjson_file_to_bigquery_explicit_illegal_sep_params(
+    sample_dag, sql_server, test_table
+):
+    """Test the flattening of single level nested ndjson, with explicit separator illegal '.',
+    since '.' is not acceptable in col names in bigquery.
+    """
+    _, hook = sql_server
+    with sample_dag:
+        load_file(
+            path=str(CWD) + "/../data/github_single_level_nested.ndjson",
+            output_table=test_table,
+            ndjson_normalize_sep=".",
+        )
+    test_utils.run_dag(sample_dag)
+
+    df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    assert df.shape == (1, 36)
+    assert "payload_size" in df.columns
+
+
+@pytest.mark.parametrize("sql_server", [Database.POSTGRES.value], indirect=True)
+def test_aql_multilevel_nested_ndjson_file_default_params(
+    sample_dag, sql_server, test_table, caplog
+):
+    """
+    Test the flattening of multilevel level nested ndjson, with default '_'.
+    Expected to fail since we do not support flattening of multilevel ndjson.
+    """
+    with pytest.raises(BackfillUnfinished):
+        with sample_dag:
+            load_file(
+                path=str(CWD) + "/../data/github_multi_level_nested.ndjson",
+                output_table=test_table,
+            )
+        test_utils.run_dag(sample_dag)
+    expected_error = "can't adapt type 'dict"
+    assert expected_error in caplog.text
