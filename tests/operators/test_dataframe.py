@@ -71,26 +71,19 @@ def test_dataframe_from_sql_basic(sample_dag, sql_server, test_table):
     indirect=True,
 )
 def test_dataframe_from_sql_custom_task_id(sample_dag, sql_server, test_table):
-    sql_name, hook = sql_server
+    """Test custom and taskId increment when same task is added multiple times."""
 
     @df(task_id="foo")
     def my_df_func(df: pandas.DataFrame):
         return df.sell.count()
 
     with sample_dag:
-        for i in range(5):
+        for _ in range(5):
             # ensure we can create multiple tasks
-            f = my_df_func(df=test_table)
+            my_df_func(df=test_table)
 
     task_ids = [x.task_id for x in sample_dag.tasks]
     assert task_ids == ["foo", "foo__1", "foo__2", "foo__3", "foo__4"]
-
-    test_utils.run_dag(sample_dag)
-
-    assert (
-        XCom.get_one(execution_date=DEFAULT_DATE, key=f.key, task_id=f.operator.task_id)
-        == 5
-    )
 
 
 @pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
@@ -110,7 +103,7 @@ def test_dataframe_from_sql_custom_task_id(sample_dag, sql_server, test_table):
     indirect=True,
 )
 def test_dataframe_from_sql_basic_op_arg(sample_dag, sql_server, test_table):
-    sql_name, hook = sql_server
+    """Test basic operation of dataframe operator."""
 
     @df(conn_id=test_table.conn_id, database=test_table.database)
     def my_df_func(df: pandas.DataFrame):
@@ -145,7 +138,7 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, sql_server, test_table):
     indirect=True,
 )
 def test_dataframe_from_sql_basic_op_arg_and_kwarg(sample_dag, sql_server, test_table):
-    sql_name, hook = sql_server
+    """test dataframe creation from table object in args and kwargs."""
 
     @df(conn_id=test_table.conn_id, database=test_table.database)
     def my_df_func(df_1: pandas.DataFrame, df_2: pandas.DataFrame):
