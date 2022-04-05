@@ -31,6 +31,8 @@ class AgnosticLoadFile(BaseOperator):
     :type file_conn_id: str
     :param output_conn_id: Database connection id.
     :type output_conn_id: str
+    :param ndjson_normalize_sep: separator used to normalize nested ndjson.
+    :type ndjson_normalize_sep: str
     """
 
     template_fields = (
