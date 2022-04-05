@@ -1,11 +1,9 @@
 import inspect
-from builtins import NotImplementedError
 from typing import Callable, Dict, Iterable, Mapping, Optional, Union
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator, task_decorator_factory
 from airflow.hooks.base import BaseHook
-from airflow.models import DagRun, TaskInstance
 from airflow.utils.db import provide_session
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.sql.functions import Function
@@ -85,14 +83,12 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 return self.handler(cursor)
             return cursor
 
-        self.output_schema = self.schema or SCHEMA
         self._set_variables_from_first_table()
 
         conn = BaseHook.get_connection(self.conn_id)
 
         self.schema = self.schema or SCHEMA
         self.user = conn.login
-        self.run_id = context.get("run_id")
 
         self.convert_op_arg_dataframes()
         self.convert_op_kwarg_dataframes()
@@ -186,13 +182,13 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             }
         self.parameters.update(self.op_kwargs)  # type: ignore
 
-    def handle_output_table_schema(self, output_table_name, schema=None):
+    def handle_output_table_schema(self, output_table_name, schema=None) -> str:
         """
         In postgres, we set the schema in the query itself instead of as a query parameter.
         This function adds the necessary {schema}.{table} notation.
-        :param output_table_name:
+
+        :param output_table_name: Output table name
         :param schema: an optional schema if the output_table has a schema set. Defaults to the temp schema
-        :return:
         """
         schema = schema or SCHEMA
         database = get_database_from_conn_id(self.conn_id)
@@ -249,12 +245,6 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         else:
             statement = f"CREATE TABLE {output_table_name} AS ({clean_trailing_semicolon(query)});"
         return statement
-
-    @staticmethod
-    def create_output_csv_path(context):
-        ti: TaskInstance = context["ti"]
-        dag_run: DagRun = ti.get_dagrun()
-        return f"{dag_run.dag_id}_{ti.task_id}_{int(ti.execution_date.timestamp())}.csv"
 
     def handle_dataframe_func(self, input_table):
         raise NotImplementedError("Need to add dataframe func to class")
