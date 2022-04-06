@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.engine.result import ResultProxy
 
-from astro.constants import Database
+from astro.constants import CONN_TYPE_TO_DATABASE, Database
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 
 
@@ -20,16 +20,8 @@ def get_database_from_conn_id(conn_id: str) -> Database:
     :rtype: astro.constants.Database enum item
     """
     conn_type = BaseHook.get_connection(conn_id).conn_type
-    type_to_db = {
-        "postgres": Database.POSTGRES,
-        "postgresql": Database.POSTGRES,
-        "sqlite": Database.SQLITE,
-        "bigquery": Database.BIGQUERY,
-        "snowflake": Database.SNOWFLAKE,
-        "google_cloud_platform": Database.BIGQUERY,
-    }
     try:
-        database_name = type_to_db[conn_type]
+        database_name = CONN_TYPE_TO_DATABASE[conn_type]
     except KeyError:
         raise ValueError(f"Unsupported database <{conn_type}>")
     return database_name

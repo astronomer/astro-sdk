@@ -229,6 +229,7 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
             "postgres": Database.POSTGRES,
             "postgresql": Database.POSTGRES,
             "bigquery": Database.BIGQUERY,
+            "gcpbigquery": Database.BIGQUERY,
             "google_cloud_platform": Database.BIGQUERY,
         }
 
