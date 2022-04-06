@@ -18,6 +18,31 @@ jobs:
           path: ~/.cache/pip
           key: ${{ hashFiles('pyproject.toml') }}
       - uses: pre-commit/action@v2.0.3
+  Mypy:
+    runs-on: ubuntu-latest
+    name: Mypy
+    env:
+      MYPY_FORCE_COLOR: 1
+      TERM: xterm-color
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+          key: mypy-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+      - name: Install Dependencies
+        run: |
+          pip install wheel
+          pip install -U -e .[all,mypy]
+      - name: Run Mypy
+        run: |
+          mypy --version
+          mypy
   Run-Optional-Packages-tests:
     runs-on: ubuntu-latest
     services:
