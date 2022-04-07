@@ -1,5 +1,4 @@
 from abc import ABCMeta
-from functools import cached_property
 
 import pandas as pd
 from airflow.models import DagRun, TaskInstance
@@ -22,22 +21,22 @@ class BaseDB(metaclass=ABCMeta):
         self.schema = self.table.schema
         self.warehouse = self.table.warehouse
 
-    @cached_property
+    @property
     def hook(self):
-        return ...
+        raise NotImplementedError
 
-    @cached_property
+    @property
     def conn(self):
-        return ...
+        raise NotImplementedError
 
     def get_sqlalchemy_engine(self):
-        pass
+        raise NotImplementedError
 
     def load_file(self, file):
-        pass
+        raise NotImplementedError
 
     def save_file(self, file):
-        pass
+        raise NotImplementedError
 
     def load_pandas_dataframe(
         self,
@@ -58,10 +57,10 @@ class BaseDB(metaclass=ABCMeta):
         )
 
     def get_pandas_dataframe(self):
-        pass
+        raise NotImplementedError
 
     def run_sql(self, sql):
-        pass
+        raise NotImplementedError
 
     def generate_table_name(self, context) -> str:
         ti: TaskInstance = context["ti"]
@@ -74,17 +73,17 @@ class BaseDB(metaclass=ABCMeta):
         return table_name
 
     def generate_temp_table_name(self, table_name):
-        pass
+        raise NotImplementedError
 
     @property
     def qualified_name(self):
         return f"{self.schema}.{self.table_name}" if self.schema else self.table_name
 
     def create_table(self):
-        pass
+        raise NotImplementedError
 
     def drop_table(self):
-        pass
+        raise NotImplementedError
 
     def schema_exists(self):
         return False
