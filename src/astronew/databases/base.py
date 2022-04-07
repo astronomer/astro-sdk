@@ -3,6 +3,7 @@ from abc import ABCMeta
 import pandas as pd
 from airflow.models import DagRun, TaskInstance
 
+from astro.settings import SCHEMA
 from astronew.constants import DEFAULT_CHUNK_SIZE
 from astronew.table import Table
 
@@ -18,7 +19,7 @@ class BaseDB(metaclass=ABCMeta):
         self.table_name = self.table.table_name
         self.conn_id = self.table.conn_id
         self.database = self.table.database
-        self.schema = self.table.schema
+        self.schema = self.table.schema or SCHEMA
         self.warehouse = self.table.warehouse
 
     @property
@@ -30,7 +31,7 @@ class BaseDB(metaclass=ABCMeta):
         raise NotImplementedError
 
     def get_sqlalchemy_engine(self):
-        raise NotImplementedError
+        return self.hook.get_sqlalchemy_engine()
 
     def load_file(self, file):
         raise NotImplementedError
@@ -56,8 +57,12 @@ class BaseDB(metaclass=ABCMeta):
             index=False,
         )
 
-    def get_pandas_dataframe(self):
-        raise NotImplementedError
+    def get_pandas_dataframe(self, identifiers_as_lower=False) -> pd.DataFrame:
+        engine = self.get_sqlalchemy_engine()
+        df = pd.read_sql_table(self.qualified_name, engine)
+        if identifiers_as_lower:
+            df.columns = [col_label.lower() for col_label in df.columns]
+        return df
 
     def run_sql(self, sql):
         raise NotImplementedError

@@ -1,8 +1,10 @@
+import os
 from enum import Enum
 
 DEFAULT_CHUNK_SIZE = 1000000
 PYPI_PROJECT_NAME = "astro-projects"
 DEFAULT_SCHEMA = "tmp_astro"
+SCHEMA = os.getenv("AIRFLOW__ASTRO__SQL_SCHEMA") or DEFAULT_SCHEMA
 
 LOAD_DATAFRAME_BYTES_LIMIT = 512000  # takes < 3 seconds
 LOAD_COLUMN_AUTO_DETECT_ROWS = 1000
