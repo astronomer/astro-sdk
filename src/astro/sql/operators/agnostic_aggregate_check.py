@@ -1,3 +1,5 @@
+from typing import Optional
+
 from airflow.utils.context import Context
 
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
@@ -12,9 +14,9 @@ class AgnosticAggregateCheck(SqlDecoratedOperator):
         self,
         table: Table,
         check: str,
-        greater_than: float = None,
-        less_than: float = None,
-        equal_to: float = None,
+        greater_than: Optional[float] = None,
+        less_than: Optional[float] = None,
+        equal_to: Optional[float] = None,
         **kwargs,
     ):
         """Validate that a table has expected aggregation value.
@@ -111,9 +113,9 @@ class AgnosticAggregateCheck(SqlDecoratedOperator):
 def aggregate_check(
     table: Table,
     check: str,
-    greater_than: float = None,
-    less_than: float = None,
-    equal_to: float = None,
+    greater_than: Optional[float] = None,
+    less_than: Optional[float] = None,
+    equal_to: Optional[float] = None,
 ) -> AgnosticAggregateCheck:
     """
     :param table: table name

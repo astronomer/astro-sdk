@@ -19,45 +19,35 @@ class MissingPackage(type):
 
 
 class GoogleMissingPackage(metaclass=MissingPackage):
-    """
-    Class used to represent missing dependencies related to Google services.
-    """
+    """Class used to represent missing dependencies related to Google services."""
 
     package_name = "apache-airflow-providers-google"
     related_extras = "google"
 
 
 class AmazonMissingPackage(metaclass=MissingPackage):
-    """
-    Class used to represent missing dependencies related to Amazon services.
-    """
+    """Class used to represent missing dependencies related to Amazon services."""
 
     package_name = "apache-airflow-providers-amazon"
     related_extras = "amazon"
 
 
 class SnowflakeMissingPackage(metaclass=MissingPackage):
-    """
-    Class used to represent missing dependencies related to Snowflake.
-    """
+    """Class used to represent missing dependencies related to Snowflake."""
 
     package_name = "apache-airflow-providers-snowflake"
     related_extras = "snowflake"
 
 
 class SnowflakePandasMissingPackage(metaclass=MissingPackage):
-    """
-    Class used to represent missing dependencies related to Snowflake & Pandas.
-    """
+    """Class used to represent missing dependencies related to Snowflake & Pandas."""
 
     package_name = "snowflake-connector-python[pandas]"
     related_extras = "snowflake"
 
 
 class PostgresMissingPackage(metaclass=MissingPackage):
-    """
-    Class used to represent missing dependencies related to Postgres.
-    """
+    """Class used to represent missing dependencies related to Postgres."""
 
     package_name = "apache-airflow-providers-postgres"
     related_extras = "postgres"
@@ -81,18 +71,18 @@ except ModuleNotFoundError:
     pandas_tools = SnowflakePandasMissingPackage
 
 try:
-    from airflow.providers.amazon.aws.hooks import s3
-    from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
+    from airflow.providers.amazon.aws.hooks import base_aws, s3  # skipcq: PYL-C0412
     from boto3 import Session as BotoSession
 except ModuleNotFoundError:
     s3 = AmazonMissingPackage
     AwsBaseHook = AmazonMissingPackage
     BotoSession = AmazonMissingPackage
+else:
+    AwsBaseHook = base_aws.AwsBaseHook  # type: ignore
 
 try:
-    from airflow.providers.google.cloud.hooks import gcs
+    from airflow.providers.google.cloud.hooks import gcs  # skipcq: PYL-C0412
     from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-    from airflow.providers.google.cloud.hooks.gcs import GCSHook
     from google.cloud import bigquery
     from google.cloud.storage import Client as GCSClient
     from google.oauth2 import service_account as google_service_account
@@ -103,3 +93,5 @@ except ModuleNotFoundError:
     GCSHook = GoogleMissingPackage
     gcs = GoogleMissingPackage
     google_service_account = GoogleMissingPackage
+else:
+    GCSHook = gcs.GCSHook  # type: ignore

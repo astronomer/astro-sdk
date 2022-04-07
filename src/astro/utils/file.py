@@ -33,10 +33,9 @@ def get_filetype(filepath: Union[str, pathlib.PosixPath]) -> FileType:
         extension = filepath.split(".")[-1]
 
     try:
-        filetype = getattr(FileType, extension.upper())
-    except AttributeError:
+        return FileType[extension.upper()]
+    except KeyError:
         raise ValueError(f"Unsupported filetype '{extension}' from file '{filepath}'.")
-    return filetype
 
 
 def is_binary(filetype: FileType) -> bool:
@@ -64,4 +63,4 @@ def is_small(filepath: str) -> bool:
     :rtype: boolean
     """
     size_in_bytes = get_size(filepath)
-    return size_in_bytes <= LOAD_DATAFRAME_BYTES_LIMIT
+    return bool(size_in_bytes <= LOAD_DATAFRAME_BYTES_LIMIT)

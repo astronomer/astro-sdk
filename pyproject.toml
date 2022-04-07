@@ -32,7 +32,6 @@ classifiers = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Topic :: Database",
 ]
 
@@ -99,6 +98,12 @@ markers = [
 name = "astro"  # Or "astro.sql" if you just want this directory, not the entire 'astro'.
 
 [tool.mypy]
+color_output = true
+#disallow_any_generics = true
+#disallow_incomplete_defs = true
+#disallow_untyped_defs = true
+#explicit_package_bases = true
+# TODO: Once we complete #281 we can replace the files parameter by the mypy_path
 files = [
     "src/astro/settings.py",
     "src/astro/sql/__init__.py",
@@ -106,3 +111,12 @@ files = [
     "src/astro/sql/operators/agnostic_boolean_check.py"
 ]
 follow_imports = "skip"
+namespace_packages = true
+no_implicit_optional = true
+pretty = true
+strict_equality = true
+show_error_codes = true
+show_error_context = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unused_configs = true
