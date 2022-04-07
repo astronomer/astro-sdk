@@ -246,9 +246,6 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             statement = f"CREATE TABLE {output_table_name} AS ({clean_trailing_semicolon(query)});"
         return statement
 
-    def handle_dataframe_func(self, input_table):
-        raise NotImplementedError("Need to add dataframe func to class")
-
     @provide_session
     def pre_execute(self, context, session=None):
         """This hook is triggered right before self.execute() is called."""
@@ -259,10 +256,6 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         This hook is triggered right after self.execute() is called.
         """
         pass
-
-    def _table_exists_in_db(self, conn: str, table_name: str):
-        """Override this method to enable sensing db."""
-        raise NotImplementedError("Add _table_exists_in_db method to class")
 
     def _process_params(self):
         if self.conn_type == "snowflake":
