@@ -43,6 +43,11 @@ class Table:
             f"schema={self.schema}, conn_id={self.conn_id}, warehouse={self.warehouse}, role={self.role})"
         )
 
+    def get_database(self):
+        from .databases import get_db_from_table
+
+        return get_db_from_table(self)
+
 
 class TempTable(Table):
     def __init__(self, conn_id=None, database=None, schema=None, warehouse="", role=""):
