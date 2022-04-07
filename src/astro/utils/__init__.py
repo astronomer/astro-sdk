@@ -1,10 +1,19 @@
+from typing import Type, Union
+
 from airflow.hooks.base import BaseHook
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 
-from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
+from astro.utils.dependencies import (
+    BigQueryHook,
+    MissingPackage,
+    PostgresHook,
+    SnowflakeHook,
+)
 
 
-def get_hook(conn_id, database, role=None, schema=None, warehouse=None):
+def get_hook(
+    conn_id, database, role=None, schema=None, warehouse=None
+) -> Union[BigQueryHook, PostgresHook, SqliteHook, SnowflakeHook, Type[MissingPackage]]:
     """
     Retrieve the relevant Airflow hook depending on the given arguments.
     """

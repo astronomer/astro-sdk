@@ -32,6 +32,7 @@ classifiers = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Topic :: Database",
 ]
 
@@ -43,7 +44,9 @@ tests = [
     "pytest-dotenv",
     "requests-mock",
     "pytest-cov",
-    "pytest-describe"
+    "pytest-describe",
+    "mypy",
+    "sqlalchemy-stubs"  # Change when sqlalchemy is upgraded https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html
 ]
 google = [
     "apache-airflow-providers-google",
@@ -94,3 +97,12 @@ markers = [
 
 [tool.flit.module]
 name = "astro"  # Or "astro.sql" if you just want this directory, not the entire 'astro'.
+
+[tool.mypy]
+files = [
+    "src/astro/settings.py",
+    "src/astro/sql/__init__.py",
+    "src/astro/sql/operators/agnostic_aggregate_check.py",
+    "src/astro/sql/operators/agnostic_boolean_check.py"
+]
+follow_imports = "skip"
