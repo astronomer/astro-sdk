@@ -29,7 +29,7 @@ def test(session: nox.Session) -> None:
     session.run("pytest", *session.posargs)
 
 
-@nox.session(python=["3.10"])
+@nox.session(python=["3.8"])
 def type_check(session: nox.Session) -> None:
     """Run MyPy checks."""
     session.install("-e", ".[all]")
@@ -37,7 +37,7 @@ def type_check(session: nox.Session) -> None:
     session.run("mypy")
 
 
-@nox.session(python=["3.10"])
+@nox.session()
 @nox.parametrize(
     "extras",
     [
