@@ -1,5 +1,6 @@
 import random
 import string
+from typing import Optional
 
 from airflow.hooks.base import BaseHook
 from airflow.models import DagRun, TaskInstance
@@ -90,7 +91,7 @@ class TempTable(Table):
             schema=schema,
         )
 
-    def to_table(self, table_name: str, schema: str = None) -> Table:
+    def to_table(self, table_name: str, schema: Optional[str] = None) -> Table:
         self.table_name = table_name
         self.schema = schema or self.schema or SCHEMA
 

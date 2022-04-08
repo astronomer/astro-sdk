@@ -50,7 +50,7 @@ def run_raw_sql(
     database: Optional[str] = None,
     schema: Optional[str] = None,
     warehouse: Optional[str] = None,
-    handler: Callable = None,
+    handler: Optional[Callable] = None,
 ):
     return transform_decorator(
         python_callable=python_callable,
