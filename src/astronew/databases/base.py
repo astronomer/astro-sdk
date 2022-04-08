@@ -64,8 +64,8 @@ class BaseDB(metaclass=ABCMeta):
             df.columns = [col_label.lower() for col_label in df.columns]
         return df
 
-    def run_sql(self, sql):
-        raise NotImplementedError
+    def run_sql(self, sql, parameters=None):
+        return self.hook.run(sql, parameters)
 
     def generate_table_name(self, context) -> str:
         ti: TaskInstance = context["ti"]
@@ -87,14 +87,20 @@ class BaseDB(metaclass=ABCMeta):
     def create_table(self):
         raise NotImplementedError
 
+    def drop_table_query(self):
+        return f"DROP TABLE IF EXISTS {self.qualified_name}"
+
     def drop_table(self):
-        raise NotImplementedError
+        self.hook.run(self.drop_table_query())
 
     def schema_exists(self):
         return False
 
     def create_schema_query(self, schema_id):
         return f"CREATE SCHEMA IF NOT EXISTS {schema_id}"
+
+    def create_default_schema_if_needed(self):
+        self.hook.run(self.create_schema_query(SCHEMA))
 
     def create_schema_if_needed(self):
         if self.schema and not self.schema_exists():
@@ -121,3 +127,13 @@ class BaseDB(metaclass=ABCMeta):
             "sep": ndjson_normalize_sep,
         }
         return normalize_config
+
+    # -- Transformations --
+    @staticmethod
+    def add_templates_to_context(parameters, context):
+        for k, v in parameters.items():
+            if isinstance(v, Table):
+                context[k] = v.get_database().qualified_name
+            else:
+                context[k] = ":" + k
+        return context

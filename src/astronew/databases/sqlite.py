@@ -52,3 +52,11 @@ class Sqlite(BaseDB):
             method="multi",
             index=False,
         )
+
+    def create_default_schema_if_needed(self):
+        """SQLite does not support schemas."""
+        pass
+
+    def create_schema_if_needed(self):
+        """SQLite does not support schemas."""
+        pass
