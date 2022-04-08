@@ -218,12 +218,6 @@ def find_templated_fields(file_string):
 class ParsedSqlOperator(SqlDecoratedOperator):
     template_fields = ("parameters",)
 
-    def _table_exists_in_db(self, conn: str, table_name: str):
-        pass
-
-    def handle_dataframe_func(self, input_table):
-        pass
-
     def __init__(
         self,
         sql,
