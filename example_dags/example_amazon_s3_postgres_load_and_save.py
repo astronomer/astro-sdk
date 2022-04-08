@@ -1,3 +1,5 @@
+import os
+
 from airflow.decorators import dag
 from airflow.utils import timezone
 
@@ -10,6 +12,7 @@ default_args = {
     "retries": 1,
     "retry_delay": 0,
 }
+s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
 
 
 @dag(
@@ -20,7 +23,7 @@ default_args = {
 )
 def example_amazon_s3_postgres_load_and_save():
     t1 = aql.load_file(
-        path="s3://tmp9/homes.csv",
+        path=f"{s3_bucket}/homes.csv",
         file_conn_id="",
         output_table=Table(
             "expected_table_from_s3", conn_id="postgres_conn", database="postgres"
@@ -29,7 +32,7 @@ def example_amazon_s3_postgres_load_and_save():
 
     aql.save_file(
         input=t1,
-        output_file_path="s3://tmp9/homes.csv",
+        output_file_path=f"{s3_bucket}/homes.csv",
         overwrite=True,
     )
 

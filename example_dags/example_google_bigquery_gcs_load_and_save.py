@@ -12,6 +12,7 @@ Pre-requisites:
  - You can either specify a service account key file and set `GOOGLE_APPLICATION_CREDENTIALS`
     with the file path to the service account.
 """
+import os
 
 import pandas as pd
 from airflow.models.dag import DAG
@@ -20,6 +21,8 @@ from airflow.utils import timezone
 import astro.sql as aql
 from astro import dataframe
 from astro.sql.table import Table
+
+gcs_bucket = os.getenv("GCS_BUCKET", "gs://dag-authoring")
 
 with DAG(
     dag_id="example_google_bigquery_gcs_load_and_save",
@@ -47,7 +50,7 @@ with DAG(
     aql.save_file(
         task_id="save_to_gcs",
         input=t2,
-        output_file_path="gs://dag-authoring/{{ task_instance_key_str }}/top_5_movies.csv",
+        output_file_path=f"{gcs_bucket}/{{ task_instance_key_str }}/top_5_movies.csv",
         output_file_format="csv",
         output_conn_id="gcp_conn",
         overwrite=True,
