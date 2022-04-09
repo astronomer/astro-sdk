@@ -63,7 +63,7 @@ class TestMissingPackages(unittest.TestCase):
 
             assert (
                 str(error.value)
-                == "Error loading the module airflow.providers.google.cloud.hooks.bigquery,"
+                == "Error loading the package apache-airflow-providers-google,"
                 " please make sure all the dependencies are installed. try - pip install"
                 " astro-projects[google]"
             )
@@ -77,7 +77,7 @@ class TestMissingPackages(unittest.TestCase):
 
             assert (
                 str(error.value)
-                == "Error loading the module airflow.providers.postgres.hooks.postgres,"
+                == "Error loading the package apache-airflow-providers-postgres,"
                 " please make sure all the dependencies are installed. try - pip install"
                 " astro-projects[postgres]"
             )
@@ -91,7 +91,7 @@ class TestMissingPackages(unittest.TestCase):
 
             assert (
                 str(error.value)
-                == "Error loading the module airflow.providers.snowflake.hooks.snowflake,"
+                == "Error loading the package apache-airflow-providers-snowflake,"
                 " please make sure all the dependencies are installed. try - pip install"
                 " astro-projects[snowflake]"
             )

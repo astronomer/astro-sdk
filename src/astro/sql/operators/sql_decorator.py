@@ -27,8 +27,8 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         self,
         conn_id: Optional[str] = None,
         autocommit: bool = False,
-        parameters: dict = None,
-        handler: Function = None,
+        parameters: Optional[dict] = None,
+        handler: Optional[Function] = None,
         database: Optional[str] = None,
         schema: Optional[str] = None,
         warehouse: Optional[str] = None,
@@ -182,7 +182,9 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             }
         self.parameters.update(self.op_kwargs)  # type: ignore
 
-    def handle_output_table_schema(self, output_table_name, schema=None) -> str:
+    def handle_output_table_schema(
+        self, output_table_name: str, schema: Optional[str] = None
+    ) -> str:
         """
         In postgres, we set the schema in the query itself instead of as a query parameter.
         This function adds the necessary {schema}.{table} notation.
@@ -373,7 +375,7 @@ def transform_decorator(
     schema: Optional[str] = None,
     warehouse: Optional[str] = None,
     raw_sql: bool = False,
-    handler: Callable = None,
+    handler: Optional[Callable] = None,
 ):
     """
     :param python_callable:

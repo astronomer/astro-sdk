@@ -46,19 +46,36 @@ def aggregate_data(df: pd.DataFrame):
     catchup=False,
 )
 def example_amazon_s3_snowflake_transform():
+
+    s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
+
+    input_table_1 = Table(
+        "ADOPTION_CENTER_1",
+        database=os.environ["SNOWFLAKE_DATABASE"],
+        schema=os.environ["SNOWFLAKE_SCHEMA"],
+        conn_id="snowflake_conn",
+    )
+    input_table_2 = Table(
+        "ADOPTION_CENTER_2",
+        database=os.environ["SNOWFLAKE_DATABASE"],
+        schema=os.environ["SNOWFLAKE_SCHEMA"],
+        conn_id="snowflake_conn",
+    )
+
+    temp_table_1 = aql.load_file(
+        path=f"{s3_bucket}/ADOPTION_CENTER_1.csv",
+        file_conn_id="",
+        output_table=input_table_1,
+    )
+    temp_table_2 = aql.load_file(
+        path=f"{s3_bucket}/ADOPTION_CENTER_2.csv",
+        file_conn_id="",
+        output_table=input_table_2,
+    )
+
     combined_data = combine_data(
-        center_1=Table(
-            "ADOPTION_CENTER_1",
-            database=os.environ["SNOWFLAKE_DATABASE"],
-            schema=os.environ["SNOWFLAKE_SCHEMA"],
-            conn_id="snowflake_conn",
-        ),
-        center_2=Table(
-            "ADOPTION_CENTER_2",
-            database=os.environ["SNOWFLAKE_DATABASE"],
-            schema=os.environ["SNOWFLAKE_SCHEMA"],
-            conn_id="snowflake_conn",
-        ),
+        center_1=temp_table_1,
+        center_2=temp_table_2,
     )
 
     cleaned_data = clean_data(combined_data)

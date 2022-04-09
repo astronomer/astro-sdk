@@ -4,7 +4,7 @@ Functions for loading data from a source location to a destination location.
 import io
 import json
 import tempfile
-from typing import Union
+from typing import Optional, Union
 
 import pandas as pd
 import pyarrow as pa
@@ -30,9 +30,9 @@ from astro.utils.schema_util import create_schema_query, schema_exists
 
 def load_file_into_dataframe(
     filepath: str,
-    filetype: FileType = None,
-    transport_params: Union[None, dict] = None,
-    normalize_config: Union[None, dict] = None,
+    filetype: Optional[FileType] = None,
+    transport_params: Optional[dict] = None,
+    normalize_config: Optional[dict] = None,
     **kwargs,
 ) -> pd.DataFrame:
     """
@@ -134,7 +134,7 @@ def populate_normalize_config(ndjson_normalize_sep, database: Database) -> dict:
 
 def load_file_rows_into_dataframe(
     filepath: str,
-    filetype: FileType = None,
+    filetype: Optional[FileType] = None,
     rows_count: int = LOAD_COLUMN_AUTO_DETECT_ROWS,
 ) -> pd.DataFrame:
     """
@@ -293,9 +293,9 @@ def load_dataframe_into_sql_table(
 
 def copy_remote_file_to_local(
     source_filepath: str,
-    target_filepath: str = None,
+    target_filepath: Optional[str] = None,
     is_binary: bool = False,
-    transport_params: Union[None, dict] = None,
+    transport_params: Optional[dict] = None,
 ) -> str:
     """
     Copy the contents of a file (which may be available locally or remotely) to a local file.

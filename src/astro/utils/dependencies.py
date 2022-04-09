@@ -1,86 +1,97 @@
 from astro import constants
 
 
-class MissingPackage:
-    def __init__(self, module_name, related_extras):
-        self.module_name = module_name
-        self.related_extras = related_extras
+class MissingPackage(type):
+    """
+    Base class used to handle missing packages.
+    Raises an exception if the user attempts to access a class attribute.
+    """
 
-    def __getattr__(self, item):
+    package_name: str = ""
+    related_extras: str = ""
+
+    def __getattr__(cls, key: str) -> None:
         raise RuntimeError(
-            f"Error loading the module {self.module_name},"
+            f"Error loading the package {cls.package_name},"
             f" please make sure all the dependencies are installed."
-            f" try - pip install {constants.PYPI_PROJECT_NAME}[{self.related_extras}]"
+            f" try - pip install {constants.PYPI_PROJECT_NAME}[{cls.related_extras}]"
         )
 
 
-try:
-    from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-except ModuleNotFoundError:
-    BigQueryHook = MissingPackage(
-        "airflow.providers.google.cloud.hooks.bigquery", "google"
-    )
+class GoogleMissingPackage(metaclass=MissingPackage):
+    """Class used to represent missing dependencies related to Google services."""
+
+    package_name = "apache-airflow-providers-google"
+    related_extras = "google"
+
+
+class AmazonMissingPackage(metaclass=MissingPackage):
+    """Class used to represent missing dependencies related to Amazon services."""
+
+    package_name = "apache-airflow-providers-amazon"
+    related_extras = "amazon"
+
+
+class SnowflakeMissingPackage(metaclass=MissingPackage):
+    """Class used to represent missing dependencies related to Snowflake."""
+
+    package_name = "apache-airflow-providers-snowflake"
+    related_extras = "snowflake"
+
+
+class SnowflakePandasMissingPackage(metaclass=MissingPackage):
+    """Class used to represent missing dependencies related to Snowflake & Pandas."""
+
+    package_name = "snowflake-connector-python[pandas]"
+    related_extras = "snowflake"
+
+
+class PostgresMissingPackage(metaclass=MissingPackage):
+    """Class used to represent missing dependencies related to Postgres."""
+
+    package_name = "apache-airflow-providers-postgres"
+    related_extras = "postgres"
+
 
 try:
     from airflow.providers.postgres.hooks.postgres import PostgresHook
+    from psycopg2 import sql as postgres_sql
 except ModuleNotFoundError:
-    PostgresHook = MissingPackage(
-        "airflow.providers.postgres.hooks.postgres", "postgres"
-    )
+    PostgresHook = PostgresMissingPackage
+    postgres_sql = PostgresMissingPackage
 
 try:
     from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 except ModuleNotFoundError:
-    SnowflakeHook = MissingPackage(
-        "airflow.providers.snowflake.hooks.snowflake", "snowflake"
-    )
+    SnowflakeHook = SnowflakeMissingPackage
 
 try:
     from snowflake.connector import pandas_tools
 except ModuleNotFoundError:
-    pandas_tools = MissingPackage("snowflake-connector-python[pandas]", "postgres")
+    pandas_tools = SnowflakePandasMissingPackage
 
 try:
+    from airflow.providers.amazon.aws.hooks import base_aws, s3  # skipcq: PYL-C0412
     from boto3 import Session as BotoSession
 except ModuleNotFoundError:
-    BotoSession = MissingPackage("s3fs", "amazon")
+    s3 = AmazonMissingPackage
+    AwsBaseHook = AmazonMissingPackage
+    BotoSession = AmazonMissingPackage
+else:
+    AwsBaseHook = base_aws.AwsBaseHook  # type: ignore
 
 try:
-    from google.cloud.storage import Client as GCSClient
-except ModuleNotFoundError:
-    GCSClient = MissingPackage("apache-airflow-providers-google", "google")
-
-try:
+    from airflow.providers.google.cloud.hooks import gcs  # skipcq: PYL-C0412
+    from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
     from google.cloud import bigquery
-except ModuleNotFoundError:
-    bigquery = MissingPackage("apache-airflow-providers-google", "google")
-
-try:
+    from google.cloud.storage import Client as GCSClient
     from google.oauth2 import service_account as google_service_account
 except ModuleNotFoundError:
-    google_service_account = MissingPackage("apache-airflow-providers-google", "google")
-
-try:
-    from psycopg2 import sql as postgres_sql
-except ModuleNotFoundError:
-    postgres_sql = MissingPackage("psycopg2", "postgres")
-
-try:
-    from airflow.providers.amazon.aws.hooks.base_aws import AwsBaseHook
-except ModuleNotFoundError:
-    AwsBaseHook = MissingPackage("apache-airflow-providers-amazon", "amazon")
-
-try:
-    from airflow.providers.google.cloud.hooks.gcs import GCSHook
-except ModuleNotFoundError:
-    GCSHook = MissingPackage("apache-airflow-providers-google", "google")
-
-try:
-    from airflow.providers.amazon.aws.hooks import s3
-except ModuleNotFoundError:
-    s3 = MissingPackage("apache-airflow-providers-amazon", "amazon")
-
-try:
-    from airflow.providers.google.cloud.hooks import gcs
-except ModuleNotFoundError:
-    gcs = MissingPackage("apache-airflow-providers-google", "google")
+    BigQueryHook = GoogleMissingPackage
+    bigquery = GoogleMissingPackage
+    GCSClient = GoogleMissingPackage
+    GCSHook = GoogleMissingPackage
+    gcs = GoogleMissingPackage
+    google_service_account = GoogleMissingPackage
+else:
+    GCSHook = gcs.GCSHook  # type: ignore

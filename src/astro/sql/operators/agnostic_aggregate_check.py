@@ -1,8 +1,9 @@
-from typing import Dict
+from typing import Optional
 
-from sqlalchemy.sql.schema import Table
+from airflow.utils.context import Context
 
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.table import Table
 from astro.utils.task_id_helper import get_unique_task_id
 
 
@@ -13,9 +14,9 @@ class AgnosticAggregateCheck(SqlDecoratedOperator):
         self,
         table: Table,
         check: str,
-        greater_than: float = None,
-        less_than: float = None,
-        equal_to: float = None,
+        greater_than: Optional[float] = None,
+        less_than: Optional[float] = None,
+        equal_to: Optional[float] = None,
         **kwargs,
     ):
         """Validate that a table has expected aggregation value.
@@ -23,19 +24,12 @@ class AgnosticAggregateCheck(SqlDecoratedOperator):
         equal_to can be used to check a value.
 
         :param table: table name
-        :type table: str
         :param check: SQL statement
-        :type check: str
         :param greater_than: min expected value
-        :type greater_than: float
         :param less_than: max expected value
-        :type less_than: float
         :param equal_to: expected value
-        :type equal_to: float
         :param conn_id: connection id
-        :type conn_id: str
         :param database: database name
-        :type database: str
         """
         self.table = table
         self.check = check
@@ -75,7 +69,7 @@ class AgnosticAggregateCheck(SqlDecoratedOperator):
             **kwargs,
         )
 
-    def execute(self, context: Dict):
+    def execute(self, context: Context) -> Table:
         self.conn_id = self.table.conn_id
         self.database = self.table.database
         self.sql = self.check
@@ -119,10 +113,10 @@ class AgnosticAggregateCheck(SqlDecoratedOperator):
 def aggregate_check(
     table: Table,
     check: str,
-    greater_than: float = None,
-    less_than: float = None,
-    equal_to: float = None,
-):
+    greater_than: Optional[float] = None,
+    less_than: Optional[float] = None,
+    equal_to: Optional[float] = None,
+) -> AgnosticAggregateCheck:
     """
     :param table: table name
     :type table: str

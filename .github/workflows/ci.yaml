@@ -8,16 +8,37 @@ jobs:
   Pre-Commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
         with:
           python-version: '3.9'
           architecture: 'x64'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: ~/.cache/pip
           key: ${{ hashFiles('pyproject.toml') }}
       - uses: pre-commit/action@v2.0.3
+
+  Type-Check:
+    runs-on: ubuntu-latest
+    env:
+      MYPY_FORCE_COLOR: 1
+      TERM: xterm-color
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+      - uses: actions/cache@v3
+        with:
+           path: |
+             ~/.cache/pip
+             .nox
+           key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+      - run: pip3 install nox
+      - run: nox -s type_check
+
   Run-Optional-Packages-tests:
     runs-on: ubuntu-latest
     services:
@@ -33,12 +54,12 @@ jobs:
         ports:
           - 5432:5432
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
         with:
           python-version: '3.8'
           architecture: 'x64'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: |
             ~/.cache/pip
@@ -96,12 +117,12 @@ jobs:
         ports:
           - 5432:5432
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
         with:
           python-version: '3.8'
           architecture: 'x64'
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: |
             ~/.cache/pip
@@ -146,9 +167,9 @@ jobs:
       - Run-Optional-Packages-tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python 3.8
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: 3.8
       - name: Install coverage

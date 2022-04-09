@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 
 from airflow.models import DAG
@@ -6,6 +7,8 @@ from pandas import DataFrame
 from astro import sql as aql
 from astro.dataframe import dataframe as df
 from astro.sql.table import Table, TempTable
+
+s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
 
 default_args = {
     "owner": "airflow",
@@ -34,7 +37,7 @@ def my_df_func(input_df: DataFrame):
 
 with dag:
     my_homes_table = aql.load_file(
-        path="s3://tmp9/homes.csv",
+        path=f"{s3_bucket}/homes.csv",
         output_table=TempTable(
             database="pagila",
             conn_id="postgres_conn",
