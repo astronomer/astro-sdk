@@ -30,6 +30,7 @@ def get_hook(
         },
         "google_cloud_platform": {"use_legacy_sql": False, "gcp_conn_id": conn_id},
         "bigquery": {"use_legacy_sql": False, "gcp_conn_id": conn_id},
+        "gcpbigquery": {"use_legacy_sql": False, "gcp_conn_id": conn_id},
         "sqlite": {"sqlite_conn_id": conn_id},
     }
     type_to_hook = {
@@ -38,6 +39,7 @@ def get_hook(
         "snowflake": SnowflakeHook,
         "google_cloud_platform": BigQueryHook,
         "bigquery": BigQueryHook,
+        "gcpbigquery": BigQueryHook,
         "sqlite": SqliteHook,
     }
     try:
