@@ -1,5 +1,36 @@
 # Changelog
 
+
+## 0.8.0
+
+Feature:
+
+*`load_file` support for nested NDJSON files [#257](https://github.com/astro-projects/astro/issues/257)
+
+Breaking change:
+* `aql.dataframe` switches the capitalization to lowercase by default. This behaviour can be changed by using `identifiers_as_lower` [#154](https://github.com/astro-projects/astro/issues/154)
+
+Documentation:
+* Fix commands in README.md [#242](https://github.com/astro-projects/astro/issues/242)
+* Add scripts to auto-generate Sphinx documentation
+
+Enhancements:
+* Improve type hints coverage
+* Improve Amazon S3 example DAG, so it does not rely on pre-populated data [#293](https://github.com/astro-projects/astro/issues/293)
+* Add example DAG to load/export from BigQuery [#265](https://github.com/astro-projects/astro/issues/265)
+* Fix usages of mutable default args [#267](https://github.com/astro-projects/astro/issues/267)
+* Enable DeepSource validation [#299](https://github.com/astro-projects/astro/issues/299)
+* Improve code quality and coverage
+
+Bug fixes:
+* Support `gcpbigquery` connections [#294](https://github.com/astro-projects/astro/issues/294)
+* Support `params` argument in `aql.render` to override SQL Jinja template values [#254](https://github.com/astro-projects/astro/issues/254)
+* Fix `aql.dataframe` when table arg is absent [#259](https://github.com/astro-projects/astro/issues/259)
+
+Others:
+* Refactor integration tests, so they can run across all supported databases [#229](https://github.com/astro-projects/astro/issues/229), [#234](https://github.com/astro-projects/astro/issues/234), [#235](https://github.com/astro-projects/astro/issues/235), [#236](https://github.com/astro-projects/astro/issues/236), [#206](https://github.com/astro-projects/astro/issues/206), [#217](https://github.com/astro-projects/astro/issues/217)
+
+
 ## 0.7.0
 
 Feature:
