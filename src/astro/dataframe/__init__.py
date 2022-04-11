@@ -1,8 +1,10 @@
-from typing import Callable, Optional
+from typing import Any, Callable, Optional, TypeVar, Union
 
 from airflow.decorators.base import task_decorator_factory
 
 from astro.sql.operators.sql_dataframe import SqlDataframeOperator
+
+T = TypeVar("T", bound=Callable)
 
 
 def dataframe(
@@ -14,7 +16,7 @@ def dataframe(
     warehouse: Optional[str] = None,
     task_id: Optional[str] = None,
     identifiers_as_lower: Optional[bool] = True,
-):
+) -> Union[Callable[[T], T], Any]:
     """
     This function allows a user to run python functions in Airflow but with the huge benefit that SQL files
     will automatically be turned into dataframes and resulting dataframes can automatically used in astro.sql functions
