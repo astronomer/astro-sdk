@@ -42,9 +42,8 @@ def test_sql_decorator_basic_functionality(sample_dag, sql_server, test_table):
         if result.fetchone()[0] != 240:
             raise ValueError
 
-    def null_function():
+    def null_function():  # skipcq: PTC-W0049
         """dummy function"""
-        pass
 
     with sample_dag:
         SqlDecoratedOperator(
