@@ -1,7 +1,6 @@
 import math
 import pathlib
 
-import pandas as pd
 import pytest
 from airflow.decorators import task_group
 from airflow.utils import timezone
@@ -101,7 +100,7 @@ def add_constraint(table: Table, columns):
 
 
 @adf
-def validate_results(df: pd.DataFrame, mode, sql_type):
+def validate_results(df, mode, sql_type):
     # make columns lower and reverse due to snowflake defaulting to uppercase
     # Also reverse because BQ and snowflake seem to reverse row order
     if sql_type in ["snowflake", "bigquery"]:
