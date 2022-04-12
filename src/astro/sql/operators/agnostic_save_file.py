@@ -26,7 +26,7 @@ class SaveFile(BaseOperator):
     """
 
     template_fields = (
-        "input",
+        "input_data",
         "output_file_path",
         "output_conn_id",
         "output_file_format",
@@ -55,9 +55,9 @@ class SaveFile(BaseOperator):
         Infers SQL database type based on connection.
         """
         # Infer db type from `input_conn_id`.
-        if type(self.input_data) == Table:
+        if type(self.input_data) is Table:
             df = self.convert_sql_table_to_dataframe()
-        elif type(self.input_data) == pd.DataFrame:
+        elif type(self.input_data) is pd.DataFrame:
             df = self.input_data
         else:
             raise ValueError(
@@ -72,6 +72,7 @@ class SaveFile(BaseOperator):
 
     def file_exists(self, output_file_path: str) -> bool:
         def null_scheme(_: Any = None) -> dict:
+            """dummy function to get dummy creds"""
             return {}
 
         transport_dict: Dict[str, Callable[[Optional[str]], dict]] = {
@@ -141,6 +142,7 @@ class SaveFile(BaseOperator):
         """
 
         def null_scheme(_: Any = None) -> dict:
+            """dummy function to get dummy creds"""
             return {}
 
         transport_dict: Dict[str, Callable[[Optional[str]], dict]] = {

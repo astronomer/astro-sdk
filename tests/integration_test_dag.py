@@ -66,7 +66,7 @@ def run_validation(input_table: Table):
         equal_to=47,
     )
     aql.save_file(
-        input=agg_validated_table.output,
+        input_data=agg_validated_table.output,
         output_file_path="/tmp/out_agg.csv",
         overwrite=True,
     )
