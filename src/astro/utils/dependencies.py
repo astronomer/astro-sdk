@@ -21,12 +21,18 @@ class MissingPackage(type):
 class GoogleMissingPackage(metaclass=MissingPackage):
     """Class used to represent missing dependencies related to Google services."""
 
+    def __init__(self, *args, **kwargs):
+        pass
+
     package_name = "apache-airflow-providers-google"
     related_extras = "google"
 
 
 class AmazonMissingPackage(metaclass=MissingPackage):
     """Class used to represent missing dependencies related to Amazon services."""
+
+    def __init__(self, *args, **kwargs):
+        pass
 
     package_name = "apache-airflow-providers-amazon"
     related_extras = "amazon"

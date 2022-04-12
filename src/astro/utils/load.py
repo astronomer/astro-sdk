@@ -4,7 +4,7 @@ Functions for loading data from a source location to a destination location.
 import io
 import json
 import tempfile
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 
 import pandas as pd
 import pyarrow as pa
@@ -97,7 +97,9 @@ def flatten_ndjson(
     return df
 
 
-def populate_normalize_config(ndjson_normalize_sep, database: Database) -> dict:
+def populate_normalize_config(
+    ndjson_normalize_sep, database: Database
+) -> Dict[str, str]:
     """
     Validate pandas json_normalize() parameter for databases, since default params result in
     invalid column name. Default parameter result in the columns name containing '.' char.
