@@ -111,6 +111,10 @@ files = [
     "src/astro/sql/operators/agnostic_boolean_check.py",
     "src/astro/__init__.py",
     "src/astro/dataframe/__init__.py"
+    "src/astro/sql/operators/agnostic_load_file.py",
+    "src/astro/sql/operators/agnostic_save_file.py",
+    "src/astro/sql/operators/agnostic_sql_append.py",
+    "src/astro/sql/operators/agnostic_sql_merge.py"
 ]
 follow_imports = "skip"
 namespace_packages = true
@@ -122,3 +126,4 @@ show_error_context = true
 warn_redundant_casts = true
 warn_return_any = true
 warn_unused_configs = true
+ignore_missing_imports = true
