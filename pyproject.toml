@@ -124,3 +124,4 @@ show_error_context = true
 warn_redundant_casts = true
 warn_return_any = true
 warn_unused_configs = true
+ignore_missing_imports = true
