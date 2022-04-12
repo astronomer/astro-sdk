@@ -1,6 +1,4 @@
-import glob
 from typing import Union
-from urllib.parse import urlparse, urlunparse
 
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator
@@ -9,7 +7,6 @@ from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils import get_hook
 from astro.utils.database import get_database_from_conn_id
-from astro.utils.dependencies import gcs, s3
 from astro.utils.file import get_filetype
 from astro.utils.load import (
     load_dataframe_into_sql_table,
@@ -127,38 +124,6 @@ class AgnosticLoadFile(BaseOperator):
         return load_file_into_dataframe(
             filepath, filetype, transport_params, normalize_config=self.normalize_config
         )
-
-    def get_paths(self, path, file_conn_id):
-        url = urlparse(path)
-        file_location = url.scheme
-        return {
-            "s3": self.get_paths_from_s3_or_gcs,
-            "gs": self.get_paths_from_s3_or_gcs,
-            "http": lambda url, file_conn_id: [urlunparse(list(url))],
-            "https": lambda url, file_conn_id: [urlunparse(list(url))],
-            "": self.get_paths_from_filesystem,
-        }[file_location](url, file_conn_id)
-
-    def get_prefix_list(self, scheme, conn_id, bucket_name, prefix):
-        if scheme == "s3":
-            hook = s3.S3Hook(aws_conn_id=conn_id) if conn_id else s3.S3Hook()
-            return hook.list_keys(bucket_name=bucket_name, prefix=prefix)
-        elif scheme == "gs":
-            hook = gcs.GCSHook(gcp_conn_id=conn_id) if conn_id else gcs.GCSHook()
-            return hook.list(bucket_name=bucket_name, prefix=prefix)
-
-    def get_paths_from_s3_or_gcs(self, url, file_conn_id=None):
-        bucket = url.netloc
-        prefix = url.path
-        list_keys = self.get_prefix_list(
-            url.scheme, file_conn_id, bucket_name=bucket, prefix=prefix[1:]
-        )
-        return [
-            urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in list_keys
-        ]
-
-    def get_paths_from_filesystem(self, url, file_conn_id):
-        return glob.glob(url.path)
 
 
 def load_file(
