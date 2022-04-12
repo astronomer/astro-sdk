@@ -52,6 +52,7 @@ CWD = pathlib.Path(__file__).parent
     indirect=True,
 )
 def test_truncate(sql_server, test_table, sample_dag):
+    """Test truncate operator for all databases."""
     sql_name, hook = sql_server
     df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
     assert df.count()[0] == 5
