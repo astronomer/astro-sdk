@@ -18,7 +18,7 @@ from astro.utils.task_id_helper import get_task_id
 class SaveFile(BaseOperator):
     """Write SQL table to csv/parquet on local/S3/GCS.
 
-    :param input_table: Table to convert to file
+    :param input_data: Table to convert to file
     :param output_file_path: Path and name of table to create.
     :param output_conn_id: File system connection id (if S3 or GCS).
     :param overwrite: Overwrite file if exists. Default False.
@@ -34,7 +34,7 @@ class SaveFile(BaseOperator):
 
     def __init__(
         self,
-        input: Union[Table, pd.DataFrame],
+        input_data: Union[Table, pd.DataFrame],
         output_file_path: str = "",
         output_conn_id: Optional[str] = None,
         output_file_format: str = "csv",
@@ -43,7 +43,7 @@ class SaveFile(BaseOperator):
     ) -> None:
         super().__init__(**kwargs)
         self.output_file_path = output_file_path
-        self.input = input
+        self.input_data = input_data
         self.output_conn_id = output_conn_id
         self.overwrite = overwrite
         self.output_file_format = output_file_format
@@ -55,14 +55,14 @@ class SaveFile(BaseOperator):
         Infers SQL database type based on connection.
         """
         # Infer db type from `input_conn_id`.
-        if type(self.input) == Table:
+        if type(self.input_data) == Table:
             df = self.convert_sql_table_to_dataframe()
-        elif type(self.input) == pd.DataFrame:
-            df = self.input
+        elif type(self.input_data) == pd.DataFrame:
+            df = self.input_data
         else:
             raise ValueError(
                 "Expected input_table to be Table or dataframe. Got %s",
-                type(self.input),
+                type(self.input_data),
             )
         # Write file if overwrite == True or if file doesn't exist.
         if self.overwrite or not self.file_exists(self.output_file_path):
@@ -71,7 +71,7 @@ class SaveFile(BaseOperator):
             raise FileExistsError(f"{self.output_file_path} file already exists.")
 
     def file_exists(self, output_file_path: str) -> bool:
-        def null_scheme(conn: Any = None) -> dict:
+        def null_scheme(_: Any = None) -> dict:
             return {}
 
         transport_dict: Dict[str, Callable[[Optional[str]], dict]] = {
@@ -92,7 +92,7 @@ class SaveFile(BaseOperator):
     def convert_sql_table_to_dataframe(
         self,
     ) -> Union[pd.DataFrame, Iterator[pd.DataFrame]]:
-        input_table = self.input
+        input_table = self.input_data
         database = get_database_from_conn_id(input_table.conn_id)
 
         # Select database Hook based on `conn` type
@@ -140,7 +140,7 @@ class SaveFile(BaseOperator):
         Select output file format based on param output_file_format to class.
         """
 
-        def null_scheme(conn: Any = None) -> dict:
+        def null_scheme(_: Any = None) -> dict:
             return {}
 
         transport_dict: Dict[str, Callable[[Optional[str]], dict]] = {
@@ -170,7 +170,7 @@ class SaveFile(BaseOperator):
 
 
 def save_file(
-    input: Union[Table, pd.DataFrame],
+    input_data: Union[Table, pd.DataFrame],
     output_file_path: str = "",
     output_conn_id: Optional[str] = None,
     overwrite: bool = False,
@@ -183,7 +183,7 @@ def save_file(
     Returns an XComArg object.
 
     :param output_file_path: Path and name of table to create.
-    :param table: Input table name.
+    :param input_data: Input table / dataframe.
     :param output_conn_id: File system connection id (if S3 or GCS).
     :param overwrite: Overwrite file if exists. Default False.
     :param output_file_format: file formats, valid values csv/parquet. Default: 'csv'.
@@ -197,7 +197,7 @@ def save_file(
     return SaveFile(
         task_id=task_id,
         output_file_path=output_file_path,
-        input=input,
+        input_data=input_data,
         output_conn_id=output_conn_id,
         overwrite=overwrite,
         output_file_format=output_file_format,

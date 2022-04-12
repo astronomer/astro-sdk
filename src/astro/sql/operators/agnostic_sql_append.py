@@ -69,7 +69,6 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
             append_table=self.append_table,
             columns=self.columns,
             casted_columns=self.casted_columns,
-            conn_id=self.main_table.conn_id,
         )
         super().execute(context)
         return self.main_table
@@ -80,7 +79,6 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
         columns: List[str],
         casted_columns: dict,
         append_table: Union[Table, TempTable],
-        conn_id: str,
     ):
         engine = self.get_sql_alchemy_engine()
         if self.schema and get_database_name(engine) != Database.SQLITE:
