@@ -49,7 +49,7 @@ with DAG(
 
     aql.save_file(
         task_id="save_to_gcs",
-        input=t2,
+        input_data=t2,
         output_file_path=f"{gcs_bucket}/{{ task_instance_key_str }}/top_5_movies.csv",
         output_file_format="csv",
         output_conn_id="gcp_conn",

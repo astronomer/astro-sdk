@@ -1,12 +1,13 @@
 import importlib
-from typing import Dict, List, Optional
+from typing import List, Optional, Union
 
 from sqlalchemy import MetaData, cast, column, insert, select
+from sqlalchemy.sql.elements import Cast, ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import Database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
-from astro.sql.table import Table
+from astro.sql.table import Table, TempTable
 from astro.utils.database import get_database_name
 from astro.utils.schema_util import (
     get_error_string_for_multiple_dbs,
@@ -21,12 +22,12 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
 
     def __init__(
         self,
-        append_table: Table,
-        main_table: Table,
+        append_table: Union[Table, TempTable],
+        main_table: Union[Table, TempTable],
         columns: Optional[List[str]] = None,
         casted_columns: Optional[dict] = None,
         **kwargs,
-    ):
+    ) -> None:
         if columns is None:
             columns = []
         if casted_columns is None:
@@ -52,7 +53,7 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
             **kwargs,
         )
 
-    def execute(self, context: Dict):
+    def execute(self, context: dict) -> Union[Table, TempTable]:
         if not tables_from_same_db([self.append_table, self.main_table]):
             raise ValueError(
                 get_error_string_for_multiple_dbs([self.append_table, self.main_table])
@@ -68,13 +69,16 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
             append_table=self.append_table,
             columns=self.columns,
             casted_columns=self.casted_columns,
-            conn_id=self.main_table.conn_id,
         )
         super().execute(context)
         return self.main_table
 
     def append(
-        self, main_table: Table, columns, casted_columns, append_table: Table, conn_id
+        self,
+        main_table: Union[Table, TempTable],
+        columns: List[str],
+        casted_columns: dict,
+        append_table: Union[Table, TempTable],
     ):
         engine = self.get_sql_alchemy_engine()
         if self.schema and get_database_name(engine) != Database.SQLITE:
@@ -89,7 +93,7 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
             append_table.table_name, metadata, autoload_with=engine
         )
 
-        column_names = [column(c) for c in columns]
+        column_names: List[Union[ColumnClause, Cast]] = [column(c) for c in columns]
         sqlalchemy = importlib.import_module("sqlalchemy")
         casted_fields = [
             cast(column(k), getattr(sqlalchemy, v)) for k, v in casted_columns.items()

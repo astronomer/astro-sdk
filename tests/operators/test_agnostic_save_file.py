@@ -56,7 +56,9 @@ def test_save_dataframe_to_local(sample_dag):
 
     with sample_dag:
         df = make_df()
-        aql.save_file(input=df, output_file_path="/tmp/saved_df.csv", overwrite=True)
+        aql.save_file(
+            input_data=df, output_file_path="/tmp/saved_df.csv", overwrite=True
+        )
     test_utils.run_dag(sample_dag)
 
     df = pd.read_csv("/tmp/saved_df.csv")
@@ -74,7 +76,9 @@ def test_save_temp_table_to_local(sample_dag, sql_server, test_table):
     data_path = str(CWD) + "/../data/homes.csv"
     with sample_dag:
         table = aql.load_file(path=data_path, file_conn_id="", output_table=test_table)
-        aql.save_file(input=table, output_file_path="/tmp/saved_df.csv", overwrite=True)
+        aql.save_file(
+            input_data=table, output_file_path="/tmp/saved_df.csv", overwrite=True
+        )
     test_utils.run_dag(sample_dag)
 
     output_df = pd.read_csv("/tmp/saved_df.csv")
@@ -109,7 +113,7 @@ def test_save_all_db_tables_to_S3(sample_dag, test_table, sql_server):
 
     with sample_dag:
         save_file(
-            input=test_table,
+            input_data=test_table,
             output_file_path=OUTPUT_FILE_PATH,
             output_conn_id="aws_default",
             overwrite=True,
@@ -159,7 +163,7 @@ def test_save_all_db_tables_to_GCS(sample_dag, test_table, sql_server):
 
     with sample_dag:
         save_file(
-            input=test_table,
+            input_data=test_table,
             output_file_path=OUTPUT_FILE_PATH,
             output_conn_id="google_cloud_default",
             overwrite=True,
@@ -201,7 +205,7 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
         with pytest.raises(BackfillUnfinished):
             with sample_dag:
                 save_file(
-                    input=test_table,
+                    input_data=test_table,
                     output_file_path=temp_file.name,
                     output_conn_id=None,
                     overwrite=False,
@@ -242,7 +246,7 @@ def test_save_table_remote_file_exists_overwrite_false(
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
             save_file(
-                input=test_table,
+                input_data=test_table,
                 output_file_path=object_paths[0],
                 output_conn_id="aws_default",
                 overwrite=False,
@@ -278,7 +282,7 @@ def test_unique_task_id_for_same_path(sample_dag, sql_server, test_table):
     with sample_dag:
         for i in range(4):
             params = {
-                "input": test_table,
+                "input_data": test_table,
                 "output_file_path": OUTPUT_FILE_PATH,
                 "output_conn_id": None,
                 "overwrite": True,
@@ -336,7 +340,7 @@ def test_save_file(sample_dag, sql_server, file_type, test_table):
         filepath = Path(tmp_dir, f"sample.{file_type}")
         with sample_dag:
             save_file(
-                input=test_table,
+                input_data=test_table,
                 output_file_path=str(filepath),
                 output_file_format=file_type,
                 output_conn_id=None,

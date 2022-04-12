@@ -1,7 +1,9 @@
-from typing import Union
+from typing import Any, Dict, List, Optional, Union
 
+import pandas as pd
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator
+from airflow.models.xcom_arg import XComArg
 
 from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.sql.table import Table, TempTable, create_table_name
@@ -21,15 +23,10 @@ class AgnosticLoadFile(BaseOperator):
     """Load S3/local table to postgres/snowflake database.
 
     :param path: File path.
-    :type path: str
     :param output_table_name: Name of table to create.
-    :type output_table_name: str
     :param file_conn_id: Airflow connection id of input file (optional)
-    :type file_conn_id: str
     :param output_conn_id: Database connection id.
-    :type output_conn_id: str
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
-    :type ndjson_normalize_sep: str
     """
 
     template_fields = (
@@ -40,12 +37,12 @@ class AgnosticLoadFile(BaseOperator):
 
     def __init__(
         self,
-        path,
+        path: str,
         output_table: Union[TempTable, Table],
-        file_conn_id="",
-        chunksize=DEFAULT_CHUNK_SIZE,
-        if_exists="replace",
-        ndjson_normalize_sep="_",
+        file_conn_id: Optional[str] = None,
+        chunksize: int = DEFAULT_CHUNK_SIZE,
+        if_exists: str = "replace",
+        ndjson_normalize_sep: str = "_",
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -54,12 +51,11 @@ class AgnosticLoadFile(BaseOperator):
         self.chunksize = chunksize
         self.file_conn_id = file_conn_id
         self.kwargs = kwargs
-        self.output_table = output_table
         self.if_exists = if_exists
         self.ndjson_normalize_sep = ndjson_normalize_sep
-        self.normalize_config = None
+        self.normalize_config: Dict[str, str] = {}
 
-    def execute(self, context):
+    def execute(self, context: Any) -> Union[TempTable, Table]:
         """
         Load an existing dataset from a supported file into a SQL table.
         """
@@ -82,7 +78,9 @@ class AgnosticLoadFile(BaseOperator):
         transport_params = get_transport_params(paths[0], self.file_conn_id)
         return self.load_using_pandas(context, paths, hook, transport_params)
 
-    def load_using_pandas(self, context, paths, hook, transport_params):
+    def load_using_pandas(
+        self, context: Any, paths: List[str], hook: BaseHook, transport_params: dict
+    ) -> Union[TempTable, Table]:
         """Loads csv/parquet table from local/S3/GCS with Pandas.
 
         Infers SQL database type based on connection then loads table to db.
@@ -105,7 +103,7 @@ class AgnosticLoadFile(BaseOperator):
 
         return self.output_table
 
-    def _configure_output_table(self, context):
+    def _configure_output_table(self, context: Any) -> None:
         # TODO: Move this function to the SQLDecorator, so it can be reused across operators
         if isinstance(self.output_table, TempTable):
             self.output_table = self.output_table.to_table(
@@ -114,7 +112,9 @@ class AgnosticLoadFile(BaseOperator):
         if not self.output_table.table_name:
             self.output_table.table_name = create_table_name(context=context)
 
-    def _load_file_into_dataframe(self, filepath, transport_params):
+    def _load_file_into_dataframe(
+        self, filepath: str, transport_params: dict
+    ) -> pd.DataFrame:
         """Read file with Pandas.
 
         Select method based on `file_type` (S3 or local).
@@ -127,31 +127,27 @@ class AgnosticLoadFile(BaseOperator):
 
 
 def load_file(
-    path,
-    output_table=None,
-    file_conn_id=None,
-    task_id=None,
-    if_exists="replace",
-    ndjson_normalize_sep="_",
+    path: str,
+    output_table: Union[TempTable, Table],
+    file_conn_id: Optional[str] = None,
+    task_id: Optional[str] = None,
+    if_exists: str = "replace",
+    ndjson_normalize_sep: str = "_",
     **kwargs,
-):
+) -> XComArg:
     """Convert AgnosticLoadFile into a function.
 
     Returns an XComArg object.
 
     :param path: File path.
-    :type path: str
     :param output_table: Table to create
-    :type output_table: Table
     :param file_conn_id: Airflow connection id of input file (optional)
-    :type file_conn_id: str
     :param task_id: task id, optional.
-    :type task_id: str
+    :param if_exists: default override an existing Table. Options: fail, replace, append
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
         ex - {"a": {"b":"c"}} will result in
             column - "a_b"
             where ndjson_normalize_sep = "_"
-    :type ndjson_normalize_sep: str
     """
 
     # Note - using path for task id is causing issues as it's a pattern and

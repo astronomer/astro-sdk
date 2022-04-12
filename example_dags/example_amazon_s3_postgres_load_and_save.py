@@ -31,7 +31,7 @@ def example_amazon_s3_postgres_load_and_save():
     )
 
     aql.save_file(
-        input=t1,
+        input_data=t1,
         output_file_path=f"{s3_bucket}/homes.csv",
         overwrite=True,
     )

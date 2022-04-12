@@ -72,8 +72,9 @@ class TestSQLParsing(unittest.TestCase):
             )
 
     def test_parse_missing_table_with_input_and_upstream(self):
+        # To Do - Check if adding 'output_table' param is acceptable or not.
         with self.dag:
-            agg_orders = aql.load_file("s3://foo")
+            agg_orders = aql.load_file("s3://foo", output_table=Table())
             aql.render(
                 "missing_table_dag",
                 agg_orders=agg_orders,
