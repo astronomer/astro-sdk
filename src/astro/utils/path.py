@@ -1,5 +1,4 @@
 import glob
-import os
 import pathlib
 from urllib.parse import urlparse, urlunparse
 
@@ -28,20 +27,6 @@ def get_location(path):
                 f"Unsupported scheme '{file_scheme}' from path '{path}'"
             )  # TODO: Use string interpolation as opposed to fstring
     return location
-
-
-def validate_path(path):
-    """
-    Check if the give path is either a valid URI or a local file.
-
-    :param path: Either local filesystem path or remote URI
-    :type path: str
-    :return: if fails, raise `ValueError`
-    :rtype: `ValueError`
-    """
-    result = urlparse(path)
-    if not (all([result.scheme, result.netloc]) or os.path.isfile(path)):
-        raise ValueError(f"Invalid path: '{path}'")
 
 
 def get_transport_params(path, conn_id):
@@ -98,16 +83,3 @@ def get_paths(path, conn_id=None):
             urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in prefixes
         ]
     return paths
-
-
-def is_local(path):
-    """
-    Check if a path is local to the filesystem or not.
-
-    :param path: Either a filesystem path or remote URI
-    :type path: str
-    :return: True or False
-    :rtype: bool
-    """
-    file_location = get_location(path)
-    return file_location == FileLocation.LOCAL

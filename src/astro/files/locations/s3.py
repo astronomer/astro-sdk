@@ -4,11 +4,11 @@ from urllib.parse import urlparse, urlunparse
 
 from airflow.hooks.base import BaseHook
 
-from astro.files.locations.base import FileLocationAbstract
+from astro.files.locations.base import LocationAbstract
 from astro.utils.dependencies import AwsBaseHook, BotoSession, s3
 
 
-class S3(FileLocationAbstract):
+class S3(LocationAbstract):
     """Handler S3 object store operations"""
 
     @staticmethod

@@ -1,11 +1,11 @@
 from typing import Dict, List, Optional
 from urllib.parse import urlparse, urlunparse
 
-from astro.files.locations.base import FileLocationAbstract
+from astro.files.locations.base import LocationAbstract
 from astro.utils.dependencies import GCSClient, GCSHook, gcs
 
 
-class GS(FileLocationAbstract):
+class GS(LocationAbstract):
     """Handler GS object store operations"""
 
     def get_transport_params(self, path: str, conn_id: Optional[str]) -> Dict:

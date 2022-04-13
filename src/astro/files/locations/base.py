@@ -5,14 +5,6 @@ from typing import List, Optional
 class LocationAbstract(ABC):
     """Base Location abstract class"""
 
-
-class APILocationAbstract(LocationAbstract):
-    """API based location abstract class"""
-
-
-class FileLocationAbstract(LocationAbstract):
-    """File based location abstract class"""
-
     @abstractmethod
     def get_paths(self, path: str, conn_id: Optional[str]) -> List[str]:
         """Resolve patterns in path

@@ -16,7 +16,6 @@ from astro.utils.load import (
     load_file_into_dataframe,
     populate_normalize_config,
 )
-from astro.utils.path import validate_path
 from astro.utils.task_id_helper import get_task_id
 
 
@@ -74,15 +73,17 @@ class AgnosticLoadFile(BaseOperator):
             warehouse=self.output_table.warehouse,
         )
 
-        # paths = get_paths(self.path, self.file_conn_id)
-        # transport_params = get_transport_params(paths[0], self.file_conn_id)
         source = Location(self.path, self.file_conn_id)
         return self.load_using_pandas(
             context, source.paths, hook, source.transport_params
         )
 
     def load_using_pandas(
-        self, context: Any, paths: List[str], hook: BaseHook, transport_params: dict
+        self,
+        context: Any,
+        paths: List[str],
+        hook: BaseHook,
+        transport_params: Union[dict, None],
     ) -> Union[TempTable, Table]:
         """Loads csv/parquet table from local/S3/GCS with Pandas.
 
@@ -116,13 +117,12 @@ class AgnosticLoadFile(BaseOperator):
             self.output_table.table_name = create_table_name(context=context)
 
     def _load_file_into_dataframe(
-        self, filepath: str, transport_params: dict
+        self, filepath: str, transport_params: Union[dict, None]
     ) -> pd.DataFrame:
         """Read file with Pandas.
 
         Select method based on `file_type` (S3 or local).
         """
-        validate_path(filepath)
         filetype = get_filetype(filepath)
         return load_file_into_dataframe(
             filepath, filetype, transport_params, normalize_config=self.normalize_config
