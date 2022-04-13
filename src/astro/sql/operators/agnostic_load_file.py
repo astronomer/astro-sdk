@@ -6,6 +6,7 @@ from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
 from astro.constants import DEFAULT_CHUNK_SIZE
+from astro.files.locations import Location
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils import get_hook
 from astro.utils.database import get_database_from_conn_id
@@ -15,17 +16,16 @@ from astro.utils.load import (
     load_file_into_dataframe,
     populate_normalize_config,
 )
-from astro.utils.path import get_paths, get_transport_params, validate_path
+from astro.utils.path import validate_path
 from astro.utils.task_id_helper import get_task_id
 
 
 class AgnosticLoadFile(BaseOperator):
-    """Load S3/local table to postgres/snowflake database.
-
-    :param path: File path.
-    :param output_table_name: Name of table to create.
+    """Load S3/local table to postgres/snowflake database
+    :param path: File path
+    :param output_table_name: Name of table to create
     :param file_conn_id: Airflow connection id of input file (optional)
-    :param output_conn_id: Database connection id.
+    :param output_conn_id: Database connection id
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
     """
 
@@ -74,9 +74,12 @@ class AgnosticLoadFile(BaseOperator):
             warehouse=self.output_table.warehouse,
         )
 
-        paths = get_paths(self.path, self.file_conn_id)
-        transport_params = get_transport_params(paths[0], self.file_conn_id)
-        return self.load_using_pandas(context, paths, hook, transport_params)
+        # paths = get_paths(self.path, self.file_conn_id)
+        # transport_params = get_transport_params(paths[0], self.file_conn_id)
+        source = Location(self.path, self.file_conn_id)
+        return self.load_using_pandas(
+            context, source.paths, hook, source.transport_params
+        )
 
     def load_using_pandas(
         self, context: Any, paths: List[str], hook: BaseHook, transport_params: dict
