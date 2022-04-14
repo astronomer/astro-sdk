@@ -28,6 +28,7 @@ sample_filepaths_ids = [items[0].value for items in sample_filepaths_per_locatio
 
 @pytest.fixture()
 def local_dir():
+    """create temp dir"""
     os.mkdir(LOCAL_DIR)
     open(LOCAL_DIR_FILE_1, "a").close()
     open(LOCAL_DIR_FILE_2, "a").close()
@@ -35,13 +36,13 @@ def local_dir():
     shutil.rmtree(LOCAL_DIR)
 
 
-def describe_get_location():
+def describe_get_location():  # skipcq: PY-D0003
     @pytest.mark.parametrize(
         "expected_location,filepath",
         sample_filepaths_per_location,
         ids=sample_filepaths_ids,
     )
-    def with_supported_location(expected_location, filepath):
+    def with_supported_location(expected_location, filepath):  # skipcq: PTC-W0065
         location = location_type(filepath)
         assert location == expected_location
 
@@ -53,9 +54,9 @@ def describe_get_location():
         assert exc_info.value.args[0] == expected_msg
 
 
-def describe_validate_path():
+def describe_validate_path():  # skipcq: PY-D0003
     @pytest.mark.parametrize("filepath", sample_filepaths, ids=sample_filepaths_ids)
-    def with_supported_filepaths(filepath):
+    def with_supported_filepaths(filepath):  # skipcq: PTC-W0065, PY-D0003
         location = location_factory(filepath)
         assert location.is_valid_path(filepath) is True
 
@@ -67,7 +68,7 @@ def describe_validate_path():
         assert exc_info.value.args[0] == expected_msg
 
 
-def describe_get_transport_params():
+def describe_get_transport_params():  # skipcq: PY-D0003
     def with_gcs():  # skipcq: PYL-W0612, PTC-W0065, PY-D0003
         path = "gs://bucket/some-file"
         location = location_factory(path)
@@ -99,7 +100,7 @@ def describe_get_transport_params():
         assert credentials is None
 
 
-def describe_get_paths():
+def describe_get_paths():  # skipcq: PY-D0003
     def with_api():  # skipcq: PYL-W0612, PTC-W0065, PY-D0003
         path = "http://domain/some-file.txt"
         location = location_factory(path)
@@ -133,7 +134,7 @@ def describe_get_paths():
         ids=["google", "amazon"],
         indirect=True,
     )
-    def with_remote_object_store_prefix(remote_file):
+    def with_remote_object_store_prefix(remote_file):  # skipcq: PY-D0003
         _, objects_uris = remote_file
         objects_prefix = objects_uris[0][:-5]
         location = location_factory(objects_prefix)
