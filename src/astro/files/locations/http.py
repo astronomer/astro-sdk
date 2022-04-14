@@ -5,6 +5,8 @@ from astro.files.locations.base import Location
 
 
 class Http(Location):
+    """Handler http location operations"""
+
     location_type = FileLocation.HTTP
 
     def get_paths(self) -> List[str]:

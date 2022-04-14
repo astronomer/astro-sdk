@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 class Location(ABC):
     """Base Location abstract class"""
 
-    def __init__(self, path: str, conn_id: Optional[str]):
+    def __init__(self, path: str, conn_id: Optional[str] = None):
         """
         Location class constructor
         :param path: Path to a file in the filesystem/Object stores

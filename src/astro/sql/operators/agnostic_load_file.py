@@ -138,14 +138,12 @@ def load_file(
     ndjson_normalize_sep: str = "_",
     **kwargs,
 ) -> XComArg:
-    """Convert AgnosticLoadFile into a function.
-
-    Returns an XComArg object.
-
-    :param path: File path.
+    """Convert AgnosticLoadFile into a function
+    Returns an XComArg object
+    :param path: File path
     :param output_table: Table to create
     :param file_conn_id: Airflow connection id of input file (optional)
-    :param task_id: task id, optional.
+    :param task_id: task id, optional
     :param if_exists: default override an existing Table. Options: fail, replace, append
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
         ex - {"a": {"b":"c"}} will result in

@@ -28,7 +28,6 @@ def location_type(path: str) -> FileLocation:
     """Identify where a file is located
     :param path: Path to a file in the filesystem/Object stores
     """
-
     file_scheme = urlparse(path).scheme
     if file_scheme == "":
         location = FileLocation.LOCAL
@@ -36,7 +35,5 @@ def location_type(path: str) -> FileLocation:
         try:
             location = getattr(FileLocation, file_scheme.upper())
         except (UnboundLocalError, AttributeError):
-            raise ValueError(
-                f"Unsupported scheme '{file_scheme}' from path '{path}'"
-            )  # TODO: Use string interpolation as opposed to fstring
+            raise ValueError(f"Unsupported scheme '{file_scheme}' from path '{path}'")
     return location

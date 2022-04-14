@@ -1,6 +1,6 @@
 import pytest
 
-from astro.files.locations import Location
+from astro.files.locations import location_factory
 
 
 def describe_get_paths():
@@ -14,6 +14,6 @@ def describe_get_paths():
     def with_remote_object_store_prefix(remote_file):
         _, objects_uris = remote_file
         objects_prefix = objects_uris[0][:-5]
-        location = Location(objects_prefix)
+        location = location_factory(objects_prefix)
         assert len(objects_uris) == 2
         assert sorted(location.get_paths()) == sorted(objects_uris)
