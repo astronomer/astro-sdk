@@ -1,20 +1,20 @@
 import glob
 import pathlib
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Union
 from urllib.parse import urlparse
 
-from astro.files.locations.base import LocationAbstract
+from astro.constants import FileLocation
+from astro.files.locations.base import Location
 
 
-class Local(LocationAbstract):
+class Local(Location):
     """Handler Local file path operations"""
 
-    def get_paths(self, path: str, conn_id: Optional[str]) -> List[str]:
-        """Resolve local filepath
-        :param path: Path to a file in the filesystem/Object stores
-        :param conn_id: Airflow connection ID
-        """
-        url = urlparse(path)
+    location_type = FileLocation.LOCAL
+
+    def get_paths(self) -> List[str]:
+        """Resolve local filepath"""
+        url = urlparse(self.path)
         path_object = pathlib.Path(url.path)
         if path_object.is_dir():
             paths = [str(filepath) for filepath in path_object.rglob("*")]
@@ -22,11 +22,6 @@ class Local(LocationAbstract):
             paths = glob.glob(url.path)
         return paths
 
-    def get_transport_params(
-        self, path: str, conn_id: Optional[str]
-    ) -> Union[Dict, None]:
-        """Dummy method
-        :param path: Path to a file in the filesystem/Object stores
-        :param conn_id: Airflow connection ID
-        """
+    def get_transport_params(self) -> Union[Dict, None]:
+        """Dummy method"""
         return None

@@ -16,4 +16,4 @@ def describe_get_paths():
         objects_prefix = objects_uris[0][:-5]
         location = Location(objects_prefix)
         assert len(objects_uris) == 2
-        assert sorted(location.paths) == sorted(objects_uris)
+        assert sorted(location.get_paths()) == sorted(objects_uris)

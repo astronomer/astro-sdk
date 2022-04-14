@@ -6,7 +6,7 @@ import uuid
 import pytest
 
 from astro.constants import FileLocation
-from astro.files.locations import Location
+from astro.files.locations import location_factory
 
 CWD = pathlib.Path(__file__).parent
 
@@ -42,13 +42,13 @@ def describe_get_location():
         ids=sample_filepaths_ids,
     )
     def with_supported_location(expected_location, filepath):
-        location = Location(filepath)
+        location = location_factory(filepath)
         assert location.location_type == expected_location
 
     def with_unsupported_location_raises_exception():
         unsupported_filepath = "invalid://some-file"
         with pytest.raises(ValueError) as exc_info:
-            location = Location(unsupported_filepath)
+            location = location_factory(unsupported_filepath)
             print(location.location_type)
         expected_msg = "Unsupported scheme 'invalid' from path 'invalid://some-file'"
         assert exc_info.value.args[0] == expected_msg
@@ -57,13 +57,13 @@ def describe_get_location():
 def describe_validate_path():
     @pytest.mark.parametrize("filepath", sample_filepaths, ids=sample_filepaths_ids)
     def with_supported_filepaths(filepath):
-        location = Location(filepath)
+        location = location_factory(filepath)
         assert location.is_valid_path(filepath) is True
 
     def with_unsupported_path_raises_exception():
         nonexistent_file = "/tmp/nonexistent-file"
         with pytest.raises(ValueError) as exc_info:
-            _ = Location(nonexistent_file)
+            _ = location_factory(nonexistent_file)
         expected_msg = "Invalid path: '/tmp/nonexistent-file'"
         assert exc_info.value.args[0] == expected_msg
 
@@ -71,58 +71,58 @@ def describe_validate_path():
 def describe_get_transport_params():
     def with_gcs():
         path = "gs://bucket/some-file"
-        location = Location(path)
-        credentials = location.transport_params
+        location = location_factory(path)
+        credentials = location.get_transport_params()
         assert "google.cloud.storage.client.Client" in str(
             credentials["client"].__class__
         )
 
     def with_s3():
         path = "s3://bucket/some-file"
-        location = Location(path)
-        credentials = location.transport_params
+        location = location_factory(path)
+        credentials = location.get_transport_params()
         assert "botocore.client.S3" in str(credentials["client"].__class__)
 
     def with_local():
-        location = Location(LOCAL_FILEPATH)
-        credentials = location.transport_params
+        location = location_factory(LOCAL_FILEPATH)
+        credentials = location.get_transport_params()
         assert credentials is None
 
     def with_api():
         path = "http://domain/file"
-        location = Location(path)
-        credentials = location.transport_params
+        location = location_factory(path)
+        credentials = location.get_transport_params()
         assert credentials is None
 
         path = "https://domain/file"
-        location = Location(path)
-        credentials = location.transport_params
+        location = location_factory(path)
+        credentials = location.get_transport_params()
         assert credentials is None
 
 
 def describe_get_paths():
     def with_api():
         path = "http://domain/some-file.txt"
-        location = Location(path)
-        assert location.paths == [path]
+        location = location_factory(path)
+        assert location.get_paths() == [path]
 
         path = "https://domain/some-file.txt"
-        location = Location(path)
-        assert location.paths == [path]
+        location = location_factory(path)
+        assert location.get_paths() == [path]
 
     def with_local_dir(local_dir):
         path = LOCAL_DIR
-        location = Location(path)
-        assert sorted(location.paths) == [LOCAL_DIR_FILE_1, LOCAL_DIR_FILE_2]
+        location = location_factory(path)
+        assert sorted(location.get_paths()) == [LOCAL_DIR_FILE_1, LOCAL_DIR_FILE_2]
 
     def with_local_prefix(local_dir):
         path = LOCAL_DIR + "file_*"
-        location = Location(path)
-        assert sorted(location.paths) == [LOCAL_DIR_FILE_1, LOCAL_DIR_FILE_2]
+        location = location_factory(path)
+        assert sorted(location.get_paths()) == [LOCAL_DIR_FILE_1, LOCAL_DIR_FILE_2]
 
     def with_unsupported_location(local_dir):
         path = "invalid://some-file"
         with pytest.raises(ValueError) as exc_info:
-            _ = Location(path)
+            _ = location_factory(path)
         expected_msg = "Unsupported scheme 'invalid' from path 'invalid://some-file'"
         assert exc_info.value.args[0] == expected_msg
