@@ -6,7 +6,7 @@ import uuid
 import pytest
 
 from astro.constants import FileLocation
-from astro.files.locations import location_factory
+from astro.files.locations import location_factory, location_type
 
 CWD = pathlib.Path(__file__).parent
 
@@ -42,14 +42,13 @@ def describe_get_location():
         ids=sample_filepaths_ids,
     )
     def with_supported_location(expected_location, filepath):
-        location = location_factory(filepath)
-        assert location.location_type == expected_location
+        location = location_type(filepath)
+        assert location == expected_location
 
     def with_unsupported_location_raises_exception():  # skipcq: PYL-W0612, PTC-W0065, PY-D0003
         unsupported_filepath = "invalid://some-file"
         with pytest.raises(ValueError) as exc_info:
-            location = location_factory(unsupported_filepath)
-            print(location.location_type)
+            _ = location_type(unsupported_filepath)
         expected_msg = "Unsupported scheme 'invalid' from path 'invalid://some-file'"
         assert exc_info.value.args[0] == expected_msg
 
@@ -126,3 +125,17 @@ def describe_get_paths():
             _ = location_factory(path)
         expected_msg = "Unsupported scheme 'invalid' from path 'invalid://some-file'"
         assert exc_info.value.args[0] == expected_msg
+
+    @pytest.mark.integration
+    @pytest.mark.parametrize(
+        "remote_file",
+        [{"name": "google", "count": 2}, {"name": "amazon", "count": 2}],
+        ids=["google", "amazon"],
+        indirect=True,
+    )
+    def with_remote_object_store_prefix(remote_file):
+        _, objects_uris = remote_file
+        objects_prefix = objects_uris[0][:-5]
+        location = location_factory(objects_prefix)
+        assert len(objects_uris) == 2
+        assert sorted(location.get_paths()) == sorted(objects_uris)
