@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.1
+
+Bug fix:
+* Snowflake transform without `input_table` [#319](https://github.com/astro-projects/astro/issues/319)
+
 
 ## 0.8.0
 

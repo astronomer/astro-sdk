@@ -109,6 +109,8 @@ files = [
     "src/astro/sql/__init__.py",
     "src/astro/sql/operators/agnostic_aggregate_check.py",
     "src/astro/sql/operators/agnostic_boolean_check.py",
+    "src/astro/__init__.py",
+    "src/astro/dataframe/__init__.py",
     "src/astro/sql/operators/agnostic_load_file.py",
     "src/astro/sql/operators/agnostic_save_file.py",
     "src/astro/sql/operators/agnostic_sql_append.py",

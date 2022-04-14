@@ -1,6 +1,6 @@
 """A decorator that allows users to run SQL queries natively in Airflow."""
 
-__version__ = "0.8.0"
+__version__ = "0.8.1"
 
 from astro.dataframe import dataframe  # noqa: F401
 
@@ -9,7 +9,7 @@ from astro.dataframe import dataframe  # noqa: F401
 # for certain features. We recognize it's a bit unclean to define these in
 # multiple places, but at this point it's the only workaround if you'd like
 # your custom conn type to show up in the Airflow UI.
-def get_provider_info():
+def get_provider_info() -> dict:
     return {
         # Required.
         "package-name": "astro-projects",
