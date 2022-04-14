@@ -78,6 +78,7 @@ def run_role_query(dag, table, role):
             path=str(CWD) + "/../../data/homes.csv",
             output_table=table,
         )
+
         f = sample_snow(
             input_table=loaded_table,
             output_table=TempTable(
@@ -105,3 +106,32 @@ def test_roles_failing(sql_server, sample_dag, test_table):
 def test_roles_passing(sql_server, sample_dag, test_table):
     test_table.role = os.getenv("SNOWFLAKE_ROLE")
     run_role_query(sample_dag, test_table, role=os.getenv("SNOWFLAKE_ROLE"))
+
+
+def run_simple_transform(dag, table, role):
+    """Reproduces a live issue #319"""
+
+    @aql.transform(conn_id="snowflake_conn")
+    def select_without_input_table():
+        """A transform without input_table"""
+        return """
+            select catalog_name as database,
+                schema_name,
+                schema_owner,
+                created,
+                last_altered
+            from information_schema.schemata
+            order by schema_name;
+        """
+
+    with dag:
+        select_without_input_table(output_table=table)
+
+    test_utils.run_dag(dag)
+
+
+@pytest.mark.parametrize("sql_server", ["snowflake"], indirect=True)
+def test_transform_without_input_table(sql_server, sample_dag, test_table):
+    """Reproduces issue #319"""
+    test_table.role = os.getenv("SNOWFLAKE_ROLE")
+    run_simple_transform(sample_dag, test_table, role=os.getenv("SNOWFLAKE_ROLE"))
