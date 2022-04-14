@@ -9,7 +9,7 @@ from astro.files.locations.local import Local
 from astro.files.locations.s3 import S3
 
 
-def location_factory(path: str, conn_id: Optional[str]) -> Location:
+def location_factory(path: str, conn_id: Optional[str] = None) -> Location:
     """Location factory method to generate location class
     :param path: Path to a file in the filesystem/Object stores
     :param conn_id: Airflow connection ID
