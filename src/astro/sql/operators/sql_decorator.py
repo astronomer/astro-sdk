@@ -52,8 +52,8 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         if self.op_kwargs.get("handler"):
             self.handler = self.op_kwargs.pop("handler")
 
-        self.database = self.op_kwargs.pop("database", database)
         self.conn_id = self.op_kwargs.pop("conn_id", conn_id)
+        self.database = self.op_kwargs.pop("database", database)
         self.schema = self.op_kwargs.pop("schema", schema)
         self.warehouse = self.op_kwargs.pop("warehouse", warehouse)
         self.role = self.op_kwargs.pop("role", role)
@@ -65,6 +65,10 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
     @property
     def conn_type(self):
         return BaseHook.get_connection(self.conn_id).conn_type
+
+    @property
+    def database_from_conn_id(self):
+        return BaseHook.get_connection(self.conn_id).extra_dejson.get("database")
 
     @property
     def hook(self):
@@ -84,6 +88,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             return cursor
 
         self._set_variables_from_first_table()
+        self.database = self.database or self.database_from_conn_id
 
         conn = BaseHook.get_connection(self.conn_id)
 
