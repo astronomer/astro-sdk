@@ -18,7 +18,7 @@ class Location(ABC):
             self.path = path
             self.conn_id = conn_id
         else:
-            raise ValueError(f"Invalid path {path}")
+            raise ValueError(f"Invalid path: '{path}'")
 
     @property
     @abstractmethod

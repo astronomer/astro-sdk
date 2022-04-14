@@ -10,7 +10,7 @@ from astro.files.locations import location_factory, location_type
 
 CWD = pathlib.Path(__file__).parent
 
-LOCAL_FILEPATH = f"{CWD}/../../../data/homes2.csv"
+LOCAL_FILEPATH = f"{CWD}/../../data/homes2.csv"
 LOCAL_DIR = f"/tmp/{uuid.uuid4()}/"
 LOCAL_DIR_FILE_1 = str(pathlib.Path(LOCAL_DIR, "file_1.txt"))
 LOCAL_DIR_FILE_2 = str(pathlib.Path(LOCAL_DIR, "file_2.txt"))
