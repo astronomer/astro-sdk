@@ -36,17 +36,21 @@ def local_dir():
     shutil.rmtree(LOCAL_DIR)
 
 
-def describe_get_location():  # skipcq: PY-D0003
+def describe_location_type():
+    """test location_type()"""
+
     @pytest.mark.parametrize(
         "expected_location,filepath",
         sample_filepaths_per_location,
         ids=sample_filepaths_ids,
-    )  # skipcq: PTC-W0065, PY-D0003
+    )  # skipcq: PTC-W0065
     def with_supported_location(expected_location, filepath):  # skipcq: PTC-W0065
+        """With all the supported locations"""
         location = location_type(filepath)
         assert location == expected_location
 
-    def with_unsupported_location_raises_exception():  # skipcq: PYL-W0612, PTC-W0065, PY-D0003
+    def with_unsupported_location_raises_exception():  # skipcq: PYL-W0612, PTC-W0065
+        """With all the unsupported locations, should raise a valueError exception"""
         unsupported_filepath = "invalid://some-file"
         with pytest.raises(ValueError) as exc_info:
             _ = location_type(unsupported_filepath)
@@ -54,13 +58,17 @@ def describe_get_location():  # skipcq: PY-D0003
         assert exc_info.value.args[0] == expected_msg
 
 
-def describe_validate_path():  # skipcq: PY-D0003
+def describe_is_valid_path():
+    """test is_valid_path() method"""
+
     @pytest.mark.parametrize("filepath", sample_filepaths, ids=sample_filepaths_ids)
-    def with_supported_filepaths(filepath):  # skipcq: PTC-W0065, PY-D0003
+    def with_supported_filepaths(filepath):  # skipcq: PTC-W0065
+        """With supported file paths"""
         location = location_factory(filepath)
         assert location.is_valid_path(filepath) is True
 
-    def with_unsupported_path_raises_exception():  # skipcq: PYL-W0612, PTC-W0065, PY-D0003
+    def with_unsupported_path_raises_exception():  # skipcq: PYL-W0612, PTC-W0065
+        """With all the unsupported locations, should raise a valueError exception"""
         nonexistent_file = "/tmp/nonexistent-file"
         with pytest.raises(ValueError) as exc_info:
             _ = location_factory(nonexistent_file)
@@ -68,8 +76,11 @@ def describe_validate_path():  # skipcq: PY-D0003
         assert exc_info.value.args[0] == expected_msg
 
 
-def describe_get_transport_params():  # skipcq: PY-D0003
-    def with_gcs():  # skipcq: PYL-W0612, PTC-W0065, PY-D0003
+def describe_get_transport_params():
+    """test get_transport_params() method"""
+
+    def with_gcs():  # skipcq: PYL-W0612, PTC-W0065
+        """with GCS filepath"""
         path = "gs://bucket/some-file"
         location = location_factory(path)
         credentials = location.get_transport_params()
@@ -77,18 +88,21 @@ def describe_get_transport_params():  # skipcq: PY-D0003
             credentials["client"].__class__
         )
 
-    def with_s3():  # skipcq: PYL-W0612, PTC-W0065, PY-D0003
+    def with_s3():  # skipcq: PYL-W0612, PTC-W0065
+        """with S3 filepath"""
         path = "s3://bucket/some-file"
         location = location_factory(path)
         credentials = location.get_transport_params()
         assert "botocore.client.S3" in str(credentials["client"].__class__)
 
-    def with_local():  # skipcq: PYL-W0612, PTC-W0065, PY-D0003
+    def with_local():  # skipcq: PYL-W0612, PTC-W0065
+        """with local filepath"""
         location = location_factory(LOCAL_FILEPATH)
         credentials = location.get_transport_params()
         assert credentials is None
 
-    def with_api():  # skipcq: PYL-W0612, PTC-W0065, PY-D0003
+    def with_api():  # skipcq: PYL-W0612, PTC-W0065
+        """with API endpoint"""
         path = "http://domain/file"
         location = location_factory(path)
         credentials = location.get_transport_params()
@@ -100,8 +114,11 @@ def describe_get_transport_params():  # skipcq: PY-D0003
         assert credentials is None
 
 
-def describe_get_paths():  # skipcq: PY-D0003
-    def with_api():  # skipcq: PYL-W0612, PTC-W0065, PY-D0003
+def describe_get_paths():
+    """test get_paths() method"""
+
+    def with_api():  # skipcq: PYL-W0612, PTC-W0065
+        """with API endpoint"""
         path = "http://domain/some-file.txt"
         location = location_factory(path)
         assert location.get_paths() == [path]
@@ -110,17 +127,20 @@ def describe_get_paths():  # skipcq: PY-D0003
         location = location_factory(path)
         assert location.get_paths() == [path]
 
-    def with_local_dir(local_dir):  # skipcq: PYL-W0612, PTC-W0065, PY-D0003
+    def with_local_dir(local_dir):  # skipcq: PYL-W0612, PTC-W0065
+        """with local filepath"""
         path = LOCAL_DIR
         location = location_factory(path)
         assert sorted(location.get_paths()) == [LOCAL_DIR_FILE_1, LOCAL_DIR_FILE_2]
 
-    def with_local_prefix(local_dir):  # skipcq: PYL-W0612, PTC-W0065, PY-D0003
+    def with_local_prefix(local_dir):  # skipcq: PYL-W0612, PTC-W0065
+        """with local filepath having glob pattern"""
         path = LOCAL_DIR + "file_*"
         location = location_factory(path)
         assert sorted(location.get_paths()) == [LOCAL_DIR_FILE_1, LOCAL_DIR_FILE_2]
 
-    def with_unsupported_location(local_dir):  # skipcq: PYL-W0612, PTC-W0065, PY-D0003
+    def with_unsupported_location(local_dir):  # skipcq: PYL-W0612, PTC-W0065
+        """with unsupported filepath"""
         path = "invalid://some-file"
         with pytest.raises(ValueError) as exc_info:
             _ = location_factory(path)
@@ -134,7 +154,8 @@ def describe_get_paths():  # skipcq: PY-D0003
         ids=["google", "amazon"],
         indirect=True,
     )  # skipcq: PY-D0003
-    def with_remote_object_store_prefix(remote_file):  # skipcq: PY-D0003
+    def with_remote_object_store_prefix(remote_file):
+        """with remote filepath having prefix"""
         _, objects_uris = remote_file
         objects_prefix = objects_uris[0][:-5]
         location = location_factory(objects_prefix)
