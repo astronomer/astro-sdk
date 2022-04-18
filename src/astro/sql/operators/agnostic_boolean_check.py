@@ -6,7 +6,7 @@ from sqlalchemy import FLOAT, and_, cast, column, func, select, text
 from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.sql.selectable import Select
 
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.operators.sql_decorator import SqlExecutor
 from astro.sql.table import Table
 from astro.utils.task_id_helper import get_unique_task_id
 
@@ -32,7 +32,7 @@ class Check:
         return value
 
 
-class AgnosticBooleanCheck(SqlDecoratedOperator):
+class AgnosticBooleanCheck(SqlExecutor):
     template_fields = ("table",)
 
     def __init__(
@@ -53,15 +53,9 @@ class AgnosticBooleanCheck(SqlDecoratedOperator):
         def handler_func(results):
             return results.fetchall()
 
-        def null_function() -> None:
-            pass
-
         super().__init__(
-            raw_sql=True,
             parameters={},
             task_id=task_id,
-            op_args=(),
-            python_callable=null_function,
             handler=handler_func,
             **kwargs,
         )

@@ -3,7 +3,7 @@ from typing import Dict, List, Union
 from airflow.exceptions import AirflowException
 
 from astro.constants import Database
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.operators.sql_decorator import SqlExecutor
 from astro.sql.table import Table, TempTable
 from astro.utils.bigquery_merge_func import bigquery_merge_func
 from astro.utils.database import create_database_from_conn_id
@@ -17,7 +17,7 @@ from astro.utils.sqlite_merge_func import sqlite_merge_func
 from astro.utils.task_id_helper import get_unique_task_id
 
 
-class SqlMergeOperator(SqlDecoratedOperator):
+class SqlMergeOperator(SqlExecutor):
     template_fields = ("target_table", "merge_table")
 
     def __init__(
@@ -38,15 +38,9 @@ class SqlMergeOperator(SqlDecoratedOperator):
         self.conflict_strategy = conflict_strategy
         task_id = get_unique_task_id("merge_table")
 
-        def null_function():
-            pass
-
         super().__init__(
-            raw_sql=True,
             parameters={},
             task_id=kwargs.get("task_id") or task_id,
-            op_args=(),
-            python_callable=null_function,
             **kwargs,
         )
 

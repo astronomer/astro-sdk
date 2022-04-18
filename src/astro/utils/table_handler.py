@@ -15,6 +15,9 @@ class TableHandler:
         to create default values.
         """
         first_table: Optional[Table] = None
+
+        # where is op_args getting init from?
+        # collect only tables in first_table and select the 1st one.
         if self.op_args:
             table_index = [
                 x for x, t in enumerate(self.op_args) if isinstance(t, Table)
@@ -70,6 +73,7 @@ class TableHandler:
             self.warehouse = first_table.warehouse or self.warehouse
             self.role = first_table.role or self.role
 
+    # method needs to renamed - populate_output_table_params()
     def populate_output_table(self):
         self.output_table.conn_id = self.output_table.conn_id or self.conn_id
         self.output_table.database = self.output_table.database or self.database

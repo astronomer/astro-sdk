@@ -4,7 +4,7 @@ from sqlalchemy import MetaData, case, func, or_, select
 from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import Database
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.operators.sql_decorator import SqlExecutor
 from astro.sql.table import Table
 from astro.utils.database import create_database_from_conn_id
 from astro.utils.schema_util import (
@@ -165,7 +165,7 @@ class ChecksHandler:
         return failed_checks_sql
 
 
-class AgnosticStatsCheck(SqlDecoratedOperator):
+class AgnosticStatsCheck(SqlExecutor):
     def __init__(
         self,
         checks: List[OutlierCheck],
@@ -201,23 +201,17 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
                 get_error_string_for_multiple_dbs([main_table, compare_table])
             )
 
-        def null_function():
-            pass
-
         def handler_func(results):
             return results.fetchall()
 
         super().__init__(
-            raw_sql=True,
             parameters={},
             conn_id=main_table.conn_id,
             database=main_table.database,
             schema=main_table.schema,
             warehouse=main_table.warehouse,
             task_id=task_id,
-            op_args=(),
             handler=handler_func,
-            python_callable=null_function,
             **kwargs,
         )
 

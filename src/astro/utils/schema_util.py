@@ -5,6 +5,7 @@ from astro.utils.dependencies import postgres_sql
 
 
 def schema_exists(hook, schema, conn_type):
+    # why this is not happening for bigquery??
     if conn_type in ["postgresql", "postgres"]:
         created_schemas = hook.run(
             "SELECT schema_name FROM information_schema.schemata;",

@@ -6,18 +6,17 @@ from sqlalchemy.sql.elements import Cast, ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import Database
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.operators.sql_decorator import SqlExecutor
 from astro.sql.table import Table, TempTable
 from astro.utils.database import get_database_name
 from astro.utils.schema_util import (
     get_error_string_for_multiple_dbs,
     tables_from_same_db,
 )
-from astro.utils.table_handler import TableHandler
 from astro.utils.task_id_helper import get_unique_task_id
 
 
-class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
+class SqlAppendOperator(SqlExecutor):
     template_fields = ("main_table", "append_table")
 
     def __init__(
@@ -40,15 +39,9 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
         self.casted_columns = casted_columns
         task_id = get_unique_task_id("append_table")
 
-        def null_function():
-            pass
-
         super().__init__(
-            raw_sql=True,
             parameters={},
             task_id=kwargs.get("task_id") or task_id,
-            op_args=(),
-            python_callable=null_function,
             handler=lambda x: None,
             **kwargs,
         )
