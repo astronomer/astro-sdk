@@ -16,8 +16,8 @@ class TableHandler:
         """
         first_table: Optional[Table] = None
         if self.op_args:
-            table_index = [x for x, t in enumerate(self.op_args) if type(t) == Table]
-            conn_id_set = {x.conn_id for x in self.op_args if type(x) == Table}
+            table_index = [x for x, t in enumerate(self.op_args) if type(t) is Table]
+            conn_id_set = {x.conn_id for x in self.op_args if type(x) is Table}
             # Check to see if all tables belong to same conn_id. Otherwise, we this can go wrong for cases
             # 1. When we have tables from different DBs.
             # 2. When we have tables from different conn_id, since they can be configured with different
@@ -30,9 +30,9 @@ class TableHandler:
                 for x in inspect.signature(self.python_callable).parameters.values()
                 if (
                     x.annotation == Table
-                    and type(self.op_kwargs[x.name]) == Table
+                    and type(self.op_kwargs[x.name]) is Table
                     or x.annotation == pandas.DataFrame
-                    and type(self.op_kwargs[x.name]) == Table
+                    and type(self.op_kwargs[x.name]) is Table
                 )
             ]
             conn_id_set = {
@@ -40,9 +40,9 @@ class TableHandler:
                 for x in inspect.signature(self.python_callable).parameters.values()
                 if (
                     x.annotation == Table
-                    and type(self.op_kwargs[x.name]) == Table
+                    and type(self.op_kwargs[x.name]) is Table
                     or x.annotation == pandas.DataFrame
-                    and type(self.op_kwargs[x.name]) == Table
+                    and type(self.op_kwargs[x.name]) is Table
                 )
             }
             if table_kwargs and len(conn_id_set) == 1:
@@ -51,9 +51,9 @@ class TableHandler:
         # If there is no first table via op_ags or kwargs, we check the parameters
         elif not first_table:
             if self.parameters:
-                param_tables = [t for t in self.parameters.values() if type(t) == Table]
+                param_tables = [t for t in self.parameters.values() if type(t) is Table]
                 conn_id_set = {
-                    t.conn_id for t in self.parameters.values() if type(t) == Table
+                    t.conn_id for t in self.parameters.values() if type(t) is Table
                 }
                 if param_tables and len(conn_id_set) == 1:
                     first_table = param_tables[0]
