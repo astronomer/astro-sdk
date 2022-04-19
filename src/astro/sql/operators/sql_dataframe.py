@@ -86,7 +86,6 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         }
 
     def execute(self, context: Dict):
-        # self._set_variables_from_first_table()
         self.handle_op_args()
         self.handle_op_kwargs()
 
