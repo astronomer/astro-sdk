@@ -1,3 +1,7 @@
+"""
+Tests specific to the Sqlite Database implementation.
+"""
+
 from urllib.parse import urlparse
 
 import pytest
@@ -26,7 +30,7 @@ def test_get_database_from_conn_id(conn_id):
     ],
     ids=SUPPORTED_CONN_IDS,
 )
-def test_sqlalchemy_engine(conn_id, expected_uri):
+def test_sqlite_sqlalchemy_engine(conn_id, expected_uri):
     database = SqliteDatabase(conn_id)
     engine = database.sqlalchemy_engine
     assert isinstance(engine, sqlalchemy.engine.base.Engine)
@@ -34,14 +38,14 @@ def test_sqlalchemy_engine(conn_id, expected_uri):
     assert url.path == expected_uri
 
 
-def test_run_sql():
-    statement = "SELECT    1 + 1;"
+def test_sqlite_run_sql():
+    statement = "SELECT 1 + 1;"
     database = SqliteDatabase(DEFAULT_CONN_ID)
     response = database.run_sql(statement)
     assert response.first()[0] == 2
 
 
-def test_create_table():
+def test_sqlite_create_and_drop_table_with_columns():
     sample_table = Table(
         columns=[
             sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
@@ -58,4 +62,14 @@ def test_create_table():
 
     database.create_table(sample_table)
     response = database.run_sql(statement)
-    assert response.first() == (0, "id", "INTEGER", 1, None, 1)
+    rows = response.fetchall()
+    assert rows[0] == (0, "id", "INTEGER", 1, None, 1)
+    assert rows[1] == (1, "name", "VARCHAR(60)", 1, None, 0)
+    database.drop_table(sample_table)
+
+    response = database.run_sql(statement)
+    assert response.first() is None
+
+
+def test_load_file_to_table():
+    pass

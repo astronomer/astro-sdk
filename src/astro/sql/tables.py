@@ -18,6 +18,9 @@ class Metadata:
 
 @dataclass
 class Table:
+    # TODO: discuss alternative names to this class, since it contains metadata as opposed to be the
+    # SQL table itself
+    # Some ideas: TableRef
     name: Optional[str] = None
     metadata: Optional[Metadata] = None
     columns: Optional[List[Column]] = None
@@ -39,7 +42,3 @@ class Table:
             for _ in range(MAX_TABLE_NAME_LENGTH - 1)
         )
         return unique_id
-
-    @property
-    def qualified_name(self):
-        return self.name

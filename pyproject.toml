@@ -15,12 +15,12 @@ license = {file = "LICENSE"}
 requires-python = ">=3.7"
 dependencies = [
     "apache-airflow>=2.0",
-    "python-frontmatter",
-    "pandas>=1.3.4,<=1.3.5",
-    "SQLAlchemy>=1.3.18,<=1.3.24",
     "markupsafe>=1.1.1,<2.1.0",
+    "pandas>=1.3.4,<=1.3.5",
+    "pyarrow",
+    "python-frontmatter",
     "smart-open",
-    "pyarrow"
+    "SQLAlchemy>=1.3.18,<=1.3.24"
 ]
 
 keywords = ["airflow", "provider", "astronomer", "sql", "decorator", "task flow", "elt", "etl", "dag"]
@@ -68,13 +68,13 @@ amazon = [
 all = [
     "apache-airflow-providers-amazon",
     "apache-airflow-providers-google>=6.4.0",
-    "sqlalchemy-bigquery==1.3.0",
-    "smart-open[all]>=5.2.1",
-    "s3fs",
+    "apache-airflow-providers-postgres",
     "apache-airflow-providers-snowflake",
-    "snowflake-sqlalchemy>=1.2.0,<=1.2.4",
+    "smart-open[all]>=5.2.1",
     "snowflake-connector-python[pandas]",
-    "apache-airflow-providers-postgres"
+    "snowflake-sqlalchemy>=1.2.0,<=1.2.4",
+    "sqlalchemy-bigquery==1.3.0",
+    "s3fs"
 ]
 doc = [
     "sphinx==4.4.0"

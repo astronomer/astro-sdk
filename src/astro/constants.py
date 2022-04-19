@@ -1,4 +1,12 @@
+import sys
 from enum import Enum
+
+# typing.Literal was only introduced in Python 3.8, and we support Python 3.7
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from typing_extensions import Literal
+
 
 DEFAULT_CHUNK_SIZE = 1000000
 PYPI_PROJECT_NAME = "astro-projects"
@@ -46,3 +54,6 @@ CONN_TYPE_TO_DATABASE = {
     "google_cloud_platform": Database.BIGQUERY,
     "snowflake": Database.SNOWFLAKE,
 }
+
+LoadExistStrategy = Literal["replace", "append"]
+MergeConflictStrategy = Literal["ignore", "update", "exception"]
