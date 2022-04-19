@@ -17,7 +17,12 @@ class TableHandler:
         first_table: Optional[Table] = None
         if self.op_args:
             table_index = [x for x, t in enumerate(self.op_args) if type(t) == Table]
-            if table_index:
+            conn_id_set = {x.conn_id for x in self.op_args if type(x) == Table}
+            # Check to see if all tables belong to same conn_id. Otherwise, we this can go wrong for cases
+            # 1. When we have tables from different DBs.
+            # 2. When we have tables from different conn_id, since they can be configured with different
+            # database/schema etc.
+            if table_index and len(conn_id_set) == 1:
                 first_table = self.op_args[table_index[0]]
         elif not first_table:
             table_kwargs = [
@@ -30,14 +35,27 @@ class TableHandler:
                     and type(self.op_kwargs[x.name]) == Table
                 )
             ]
-            if table_kwargs:
+            conn_id_set = {
+                self.op_kwargs[x.name].conn_id
+                for x in inspect.signature(self.python_callable).parameters.values()
+                if (
+                    x.annotation == Table
+                    and type(self.op_kwargs[x.name]) == Table
+                    or x.annotation == pandas.DataFrame
+                    and type(self.op_kwargs[x.name]) == Table
+                )
+            }
+            if table_kwargs and len(conn_id_set) == 1:
                 first_table = self.op_kwargs[table_kwargs[0].name]
 
         # If there is no first table via op_ags or kwargs, we check the parameters
         elif not first_table:
             if self.parameters:
                 param_tables = [t for t in self.parameters.values() if type(t) == Table]
-                if param_tables:
+                conn_id_set = {
+                    t.conn_id for t in self.parameters.values() if type(t) == Table
+                }
+                if param_tables and len(conn_id_set) == 1:
                     first_table = param_tables[0]
 
         if first_table:
