@@ -21,10 +21,10 @@ def location_factory(path: str, conn_id: Optional[str] = None) -> Location:
         FileLocation.HTTP: Http,
         FileLocation.HTTPS: Http,
     }
-    return location_to_object[location_type(path)](path, conn_id)
+    return location_to_object[get_location_type(path)](path, conn_id)
 
 
-def location_type(path: str) -> FileLocation:
+def get_location_type(path: str) -> FileLocation:
     """Identify where a file is located
     :param path: Path to a file in the filesystem/Object stores
     """
