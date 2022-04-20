@@ -33,7 +33,7 @@ def local_dir():
 def describe_get_location_type():
     """test get_location_type()"""
 
-    def with_supported_location(expected_location):  # skipcq: PTC-W0065
+    def with_supported_location(expected_location):  # skipcq: PTC-W0065, PYL-W0612
         """With all the supported locations"""
         location = get_location_type(LOCAL_FILEPATH)
         assert location == expected_location
@@ -50,7 +50,7 @@ def describe_get_location_type():
 def describe_is_valid_path():
     """test is_valid_path() method"""
 
-    def with_supported_filepaths():  # skipcq: PTC-W0065
+    def with_supported_filepaths():  # skipcq: PTC-W0065, PYL-W0612
         """With supported file paths"""
         location = location_factory(LOCAL_FILEPATH)
         assert location.is_valid_path(LOCAL_FILEPATH) is True
