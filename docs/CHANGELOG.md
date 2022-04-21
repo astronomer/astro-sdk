@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.2
+
+Bug fix:
+* Support dataframes from different databases in dataframe operator [#325](https://github.com/astro-projects/astro/pull/325)
+
+Enhancements:
+* Add integration testcase for `SqlDecoratedOperator` to test execution of Raw SQL [#316](https://github.com/astro-projects/astro/pull/316)
+
 ## 0.8.1
 
 Bug fix:
