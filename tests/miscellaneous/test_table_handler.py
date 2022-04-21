@@ -5,7 +5,7 @@ from astro.utils.table_handler import TableHandler
 def test__set_variables_from_first_table_with_same_db_tables_in_op_args():
     """Test _set_variables_from_first_table() when the tables passed are with same tables"""
 
-    def dummy_function(param_1: str, param_2: str):
+    def dummy_function(param_1: str, param_2: str):  # skipcq: PTC-W0049, PY-D0003
         pass
 
     handler = TableHandler()
@@ -39,7 +39,7 @@ def test__set_variables_from_first_table_with_same_db_tables_in_op_args():
 def test__set_variables_from_first_table_with_different_db_tables_in_op_args():
     """Test _set_variables_from_first_table() when the tables passed are with same tables"""
 
-    def dummy_function(param_1: str, param_2: str):
+    def dummy_function(param_1: str, param_2: str):  # skipcq: PTC-W0049, PY-D0003
         pass
 
     handler = TableHandler()
@@ -88,7 +88,7 @@ def test__set_variables_from_first_table_with_same_db_tables_in_python_callable(
         role="role_1",
     )
 
-    def dummy_function(param_1: Table, param_2: Table):
+    def dummy_function(param_1: Table, param_2: Table):  # skipcq: PTC-W0049, PY-D0003
         pass
 
     handler = TableHandler()
@@ -110,7 +110,6 @@ def test__set_variables_from_first_table_with_same_db_tables_in_python_callable(
 
 def test__set_variables_from_first_table_with_different_db_tables_in_python_callable():
     """Test _set_variables_from_first_table() when the tables passed are with same tables in python_callable"""
-
     table_1 = Table(
         conn_id="conn_1",
         database="database_1",
@@ -126,7 +125,7 @@ def test__set_variables_from_first_table_with_different_db_tables_in_python_call
         role="role_2",
     )
 
-    def dummy_function(param_1: Table, param_2: Table):
+    def dummy_function(param_1: Table, param_2: Table):  # skipcq: PTC-W0049, PY-D0003
         pass
 
     handler = TableHandler()
@@ -149,7 +148,7 @@ def test__set_variables_from_first_table_with_different_db_tables_in_python_call
 def test__set_variables_from_first_table_with_same_db_tables_in_parameters():
     """Test _set_variables_from_first_table() when the tables passed are with same tables in parameters"""
 
-    def dummy_function(param_1: str, param_2: str):
+    def dummy_function(param_1: str, param_2: str):  # skipcq: PTC-W0049, PY-D0003
         pass
 
     handler = TableHandler()
@@ -185,7 +184,7 @@ def test__set_variables_from_first_table_with_same_db_tables_in_parameters():
 def test__set_variables_from_first_table_with_different_db_tables_in_parameters():
     """Test _set_variables_from_first_table() when the tables passed are with same tables in parameters"""
 
-    def dummy_function(param_1: str, param_2: str):
+    def dummy_function(param_1: str, param_2: str):  # skipcq: PTC-W0049, PY-D0003
         pass
 
     handler = TableHandler()
