@@ -33,10 +33,10 @@ def local_dir():
 def describe_get_location_type():
     """test get_location_type()"""
 
-    def with_supported_location(expected_location):  # skipcq: PTC-W0065, PYL-W0612
+    def with_supported_location():  # skipcq: PTC-W0065, PYL-W0612
         """With all the supported locations"""
         location = get_location_type(LOCAL_FILEPATH)
-        assert location == expected_location
+        assert location == FileLocation.LOCAL
 
     def with_unsupported_location_raises_exception():  # skipcq: PYL-W0612, PTC-W0065
         """With all the unsupported locations, should raise a valueError exception"""
