@@ -26,7 +26,8 @@ class TableHandler:
             # database/schema etc.
             if table_index and len(conn_id_set) == 1:
                 first_table = self.op_args[table_index[0]]
-        elif not first_table:
+
+        if not first_table and self.op_kwargs and self.python_callable:
             table_kwargs = [
                 x
                 for x in inspect.signature(self.python_callable).parameters.values()
@@ -51,7 +52,7 @@ class TableHandler:
                 first_table = self.op_kwargs[table_kwargs[0].name]
 
         # If there is no first table via op_ags or kwargs, we check the parameters
-        elif not first_table:
+        if not first_table and self.parameters:
             if self.parameters:
                 param_tables = [
                     t for t in self.parameters.values() if isinstance(t, Table)
