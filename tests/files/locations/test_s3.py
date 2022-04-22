@@ -1,4 +1,5 @@
 import pytest
+from botocore.client import BaseClient
 
 from astro.files.locations import location_factory
 
@@ -11,7 +12,7 @@ def describe_get_transport_params():
         path = "s3://bucket/some-file"
         location = location_factory(path)
         credentials = location.get_transport_params()
-        assert "botocore.client.S3" in str(credentials["client"].__class__)
+        assert isinstance(credentials["client"], BaseClient)
 
 
 @pytest.mark.integration
