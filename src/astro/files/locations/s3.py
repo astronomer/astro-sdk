@@ -24,7 +24,7 @@ class S3(Location):
         if self.conn_id:
             session = s3.S3Hook(aws_conn_id=self.conn_id).get_session()
         else:
-            key, secret = S3._parse_s3_env_var()
+            key, secret = self._parse_s3_env_var()
             session = BotoSession(
                 aws_access_key_id=key,
                 aws_secret_access_key=secret,
