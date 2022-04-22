@@ -40,7 +40,8 @@ class Location(ABC):
     @staticmethod
     def is_valid_path(path: str) -> bool:
         """
-        Check if the give path is either a valid URI or a local file
+        Check if the given path is either a valid URI or a local file
+
         :param path: Either local filesystem path or remote URI
         """
         result = urlparse(path)
