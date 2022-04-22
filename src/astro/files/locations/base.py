@@ -11,6 +11,7 @@ class Location(ABC):
     def __init__(self, path: str, conn_id: Optional[str] = None):
         """
         Location class constructor
+
         :param path: Path to a file in the filesystem/Object stores
         :param conn_id: Airflow connection ID
         """
