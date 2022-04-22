@@ -46,7 +46,7 @@ class Location(ABC):
         """
         result = urlparse(path)
         if not (
-            all([result.scheme, result.netloc])
+            (result.scheme and result.netloc)
             or os.path.isfile(path)
             or glob.glob(result.path)
         ):
