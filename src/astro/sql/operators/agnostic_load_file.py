@@ -21,6 +21,7 @@ from astro.utils.task_id_helper import get_task_id
 
 class AgnosticLoadFile(BaseOperator):
     """Load S3/local table to postgres/snowflake database
+
     :param path: File path
     :param output_table_name: Name of table to create
     :param file_conn_id: Airflow connection id of input file (optional)
