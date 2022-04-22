@@ -1,5 +1,5 @@
 import pathlib
-from abc import ABCMeta
+from abc import ABC
 from typing import List, Optional, Union
 
 import pandas as pd
@@ -10,7 +10,7 @@ from astro.constants import LoadExistStrategy, MergeConflictStrategy
 from astro.sql.tables import Table
 
 
-class Database(metaclass=ABCMeta):
+class BaseDatabase(ABC):
     """
     Base class to represent all the Database interactions.
 
@@ -100,7 +100,9 @@ class Database(metaclass=ABCMeta):
         self,
         statement: str,
         target_table: Table,
-        source_tables: Optional[List[Table]] = None,
+        source_tables: Optional[
+            List[Table]
+        ] = None,  # TODO: check if this parameter makes sense. This logic can be part of a templating/rendering engine
         parameters: Optional[dict] = None,
     ) -> None:
         """
@@ -111,6 +113,8 @@ class Database(metaclass=ABCMeta):
         :param parameters: (Optional) parameters to be used to render the SQL query
         :param source_tables: (Optional) list of tables used by the SQL statement
         """
+        # TODO: Discuss if we need to support if_exists here
+        # if we do, we probably need to rename this method
         raise NotImplementedError
 
     def drop_table(self, table: Table) -> None:
@@ -159,6 +163,22 @@ class Database(metaclass=ABCMeta):
         """
         raise NotImplementedError
 
+    def append_table(
+        self,
+        source_table: Table,
+        target_table: Table,
+        if_conflicts: MergeConflictStrategy = "exception",
+    ):
+        """
+        Append the source table rows into a destination table.
+        The argument `if_conflicts` allows the user to define how to handle conflicts.
+
+        :param source_table: Contains the rows to be appended to the target_table
+        :param target_table: Contains the destination table in which the rows will be appended
+        :param if_conflicts: The strategy to be applied if there are conflicts.
+        """
+        raise NotImplementedError
+
     # ---------------------------------------------------------
     # Extract methods
     # ---------------------------------------------------------
@@ -175,29 +195,9 @@ class Database(metaclass=ABCMeta):
         # extension to decide what is the file format.
         raise NotImplementedError
 
-    def export_table_to_dataframe(self, source_table: Table) -> pd.DataFrame:
+    def export_table_to_pandas_dataframe(self, source_table: Table) -> pd.DataFrame:
         """
         Copy the content of a table to an in-memory Pandas dataframe.
 
         :param source_table: An existing table in the database"""
-        raise NotImplementedError
-
-    # ---------------------------------------------------------
-    # Transformation methods
-    # ---------------------------------------------------------
-
-    def append_tables(
-        self,
-        source_tables: List[Table],
-        target_table: Table,
-        if_conflicts: MergeConflictStrategy = "exception",
-    ):
-        """
-        Append the source tables into a destination table.
-        The argument `if_conflicts` allows the user to define how to handle conflicts.
-
-        :param source_tables: Contains the rows to be appended to the target_table
-        :param target_table: Contains the destination table in which the rows will be appended
-        :param if_conflicts: The strategy to be applied if there are conflicts.
-        """
         raise NotImplementedError

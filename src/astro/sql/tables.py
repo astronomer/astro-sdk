@@ -21,7 +21,7 @@ class Table:
     # TODO: discuss alternative names to this class, since it contains metadata as opposed to be the
     # SQL table itself
     # Some ideas: TableRef
-    name: Optional[str] = None
+    name: str = ""
     metadata: Optional[Metadata] = None
     columns: Optional[List[Column]] = None
     temp: bool = False
@@ -33,7 +33,7 @@ class Table:
         if self.metadata is None:
             self.metadata = Metadata()
 
-        if self.name is None:
+        if not self.name:
             self.name = self._create_unique_table_name()
 
     def _create_unique_table_name(self):
