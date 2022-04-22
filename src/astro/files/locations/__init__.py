@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 
 from astro.constants import FileLocation
 from astro.files.locations.base import Location
-from astro.files.locations.gcs import GS
+from astro.files.locations.gcs import GCS
 from astro.files.locations.http import Http
 from astro.files.locations.local import Local
 from astro.files.locations.s3 import S3
@@ -14,10 +14,10 @@ def location_factory(path: str, conn_id: Optional[str] = None) -> Location:
     :param path: Path to a file in the filesystem/Object stores
     :param conn_id: Airflow connection ID
     """
-    location_to_object: Dict[FileLocation, Type[Union[S3, GS, Local, Http]]] = {
+    location_to_object: Dict[FileLocation, Type[Union[S3, GCS, Local, Http]]] = {
         FileLocation.LOCAL: Local,
         FileLocation.S3: S3,
-        FileLocation.GS: GS,
+        FileLocation.GS: GCS,
         FileLocation.HTTP: Http,
         FileLocation.HTTPS: Http,
     }
