@@ -3,16 +3,6 @@ import pytest
 from astro.files.locations import location_factory
 
 
-def describe_is_valid_path():
-    """test is_valid_path() method"""
-
-    def with_supported_filepaths():  # skipcq: PTC-W0065, PYL-W0612
-        """With supported file paths"""
-        filepath = "s3://bucket/some-file"
-        location = location_factory(filepath)
-        assert location.is_valid_path(filepath) is True
-
-
 def describe_get_transport_params():
     """test get_transport_params() method"""
 

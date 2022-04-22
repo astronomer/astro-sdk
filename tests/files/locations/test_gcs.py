@@ -3,27 +3,12 @@ import pytest
 from astro.files.locations import location_factory
 
 
-def describe_is_valid_path():
-    """test is_valid_path() method"""
-
-    def with_supported_filepaths():  # skipcq: PTC-W0065, PYL-W0612
-        """With supported file paths"""
-        filepath = "gs://bucket/some-file"
-        location = location_factory(filepath)
-        assert location.is_valid_path(filepath) is True
-
-
-def describe_get_transport_params():
-    """test get_transport_params() method"""
-
-    def with_gcs():  # skipcq: PYL-W0612, PTC-W0065
-        """with GCS filepath"""
-        path = "gs://bucket/some-file"
-        location = location_factory(path)
-        credentials = location.get_transport_params()
-        assert "google.cloud.storage.client.Client" in str(
-            credentials["client"].__class__
-        )
+def test_get_transport_params_for_gcs():  # skipcq: PYL-W0612, PTC-W0065
+    """test get_transport_params() method which should return gcs client"""
+    path = "gs://bucket/some-file"
+    location = location_factory(path)
+    credentials = location.get_transport_params()
+    assert "google.cloud.storage.client.Client" in str(credentials["client"].__class__)
 
 
 @pytest.mark.integration

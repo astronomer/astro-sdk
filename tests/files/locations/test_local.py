@@ -47,23 +47,6 @@ def describe_get_location_type():
         assert exc_info.value.args[0] == expected_msg
 
 
-def describe_is_valid_path():
-    """test is_valid_path() method"""
-
-    def with_supported_filepaths():  # skipcq: PTC-W0065, PYL-W0612
-        """With supported file paths"""
-        location = location_factory(LOCAL_FILEPATH)
-        assert location.is_valid_path(LOCAL_FILEPATH) is True
-
-    def with_unsupported_path_raises_exception():  # skipcq: PYL-W0612, PTC-W0065
-        """With all the unsupported locations, should raise a valueError exception"""
-        nonexistent_file = "/tmp/nonexistent-file"
-        with pytest.raises(ValueError) as exc_info:
-            _ = location_factory(nonexistent_file)
-        expected_msg = "Invalid path: '/tmp/nonexistent-file'"
-        assert exc_info.value.args[0] == expected_msg
-
-
 def describe_get_transport_params():
     """test get_transport_params() method"""
 

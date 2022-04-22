@@ -33,7 +33,7 @@ def get_location_type(path: str) -> FileLocation:
         location = FileLocation.LOCAL
     else:
         try:
-            location = getattr(FileLocation, file_scheme.upper())
-        except (UnboundLocalError, AttributeError):
+            location = FileLocation(file_scheme)
+        except ValueError:
             raise ValueError(f"Unsupported scheme '{file_scheme}' from path '{path}'")
     return location
