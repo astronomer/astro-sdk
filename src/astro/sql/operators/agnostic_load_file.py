@@ -139,8 +139,8 @@ def load_file(
     ndjson_normalize_sep: str = "_",
     **kwargs,
 ) -> XComArg:
-    """Convert AgnosticLoadFile into a function
-    Returns an XComArg object
+    """Convert AgnosticLoadFile into a function that Returns an XComArg object
+
     :param path: File path
     :param output_table: Table to create
     :param file_conn_id: Airflow connection id of input file (optional)
