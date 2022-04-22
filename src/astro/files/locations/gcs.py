@@ -3,7 +3,7 @@ from urllib.parse import urlparse, urlunparse
 
 from astro.constants import FileLocation
 from astro.files.locations.base import Location
-from astro.utils.dependencies import GCSClient, GCSHook, gcs
+from astro.utils.dependencies import gcs
 
 
 class GCS(Location):
@@ -14,10 +14,13 @@ class GCS(Location):
     def get_transport_params(self) -> Dict:
         """get GCS credentials for storage"""
         if self.conn_id:
-            gcs_hook = GCSHook(self.conn_id)
+            gcs_hook = gcs.GCSHook(self.conn_id)
             client = gcs_hook.get_conn()  # type: ignore
         else:
-            client = GCSClient()
+            hook = (
+                gcs.GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else gcs.GCSHook()
+            )
+            client = hook.get_conn()
 
         return {"client": client}
 
