@@ -1,13 +1,24 @@
+import os
 import pathlib
 from abc import ABC
 from typing import List, Optional, Union
 
 import pandas as pd
+import smart_open
 import sqlalchemy
 from airflow.hooks.base import BaseHook
 
-from astro.constants import LoadExistStrategy, MergeConflictStrategy
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    ExportExistsStrategy,
+    FileLocation,
+    FileType,
+    LoadExistStrategy,
+    MergeConflictStrategy,
+)
 from astro.sql.tables import Table
+from astro.utils.file import get_filetype
+from astro.utils.path import get_location, get_transport_params
 
 
 class BaseDatabase(ABC):
@@ -87,14 +98,9 @@ class BaseDatabase(ABC):
 
         :param table: The table to be created.
         """
-        if table.metadata:
-            metadata = sqlalchemy.MetaData(schema=table.metadata.schema)
-            sqlalchemy_table = sqlalchemy.Table(table.name, metadata, *table.columns)
-        else:
-            sqlalchemy_table = sqlalchemy.Table(table.name, None, *table.columns)
-        metadata.create_all(
-            self.sqlalchemy_engine, tables=[sqlalchemy_table]
-        )  # mypy: ignore-errors
+        metadata = table.sqlalchemy_metadata
+        sqlalchemy_table = sqlalchemy.Table(table.name, metadata, *table.columns)
+        metadata.create_all(self.sqlalchemy_engine, tables=[sqlalchemy_table])
 
     def create_table_from_statement(
         self,
@@ -136,6 +142,7 @@ class BaseDatabase(ABC):
         source_file: Union[str, pathlib.Path],
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
     ) -> None:
         """
         Create a table with the file's contents.
@@ -144,6 +151,7 @@ class BaseDatabase(ABC):
         :param source_file: Local or remote filepath
         :param target_table: Table in which the file will be loaded
         :param if_exists: Strategy to be used in case the target table already exists.
+        :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
         raise NotImplementedError
 
@@ -152,6 +160,7 @@ class BaseDatabase(ABC):
         source_dataframe: pd.DataFrame,
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
     ) -> None:
         """
         Create a table with the dataframe's contents.
@@ -160,8 +169,16 @@ class BaseDatabase(ABC):
         :param source_dataframe: Local or remote filepath
         :param target_table: Table in which the file will be loaded
         :param if_exists: Strategy to be used in case the target table already exists.
+        :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
-        raise NotImplementedError
+        source_dataframe.to_sql(
+            target_table.name,
+            con=self.sqlalchemy_engine,
+            if_exists=if_exists,
+            chunksize=chunk_size,
+            method="multi",
+            index=False,
+        )
 
     def append_table(
         self,
@@ -182,8 +199,27 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
     # Extract methods
     # ---------------------------------------------------------
+    def export_table_to_pandas_dataframe(self, source_table: Table) -> pd.DataFrame:
+        """
+        Copy the content of a table to an in-memory Pandas dataframe.
+
+        :param source_table: An existing table in the database
+        """
+        return pd.read_sql(
+            f"SELECT * FROM {self.get_table_qualified_name(source_table)}",
+            con=self.sqlalchemy_engine,
+        )
+
     def export_table_to_file(
-        self, source_table: Table, target_file: Union[str, pathlib.Path]
+        self,
+        source_table: Table,
+        target_file: Union[
+            str, pathlib.Path
+        ],  # The target file object should contain conn_id and serializer
+        target_file_conn_id: Optional[
+            str
+        ] = None,  # TODO: join it in a single object, only keeping target_file
+        if_exists: ExportExistsStrategy = "exception",
     ) -> None:
         """
         Copy the content of a table to a target file of supported type, in a supported location.
@@ -191,13 +227,38 @@ class BaseDatabase(ABC):
         :param source_table: An existing table in the database
         :param target_file: The path to the file to which we aim to dump the content of the database.
         """
-        # TODO: we probably want to have a class to abstract File. This would allow us to not have to rely on the file
-        # extension to decide what is the file format.
-        raise NotImplementedError
+        # TODO: we probably want to have a class to abstract File. The File object would contain any normalization
+        # and the filetype, in case the extension isn't representative of the file type.
 
-    def export_table_to_pandas_dataframe(self, source_table: Table) -> pd.DataFrame:
-        """
-        Copy the content of a table to an in-memory Pandas dataframe.
+        # TODO: the check if the file exists should be specific per filesystem, this does not work for remote files
+        if if_exists == "exception" and os.path.isfile(target_file):
+            raise FileExistsError(f"The file {target_file} already exists.")
 
-        :param source_table: An existing table in the database"""
-        raise NotImplementedError
+        # TODO: the following dictionaries should belong to the file object
+        filetype = get_filetype(target_file)
+        file_location = get_location(target_file)
+        if file_location in [FileLocation.S3, FileLocation.GS]:
+            credentials = get_transport_params(target_file, conn_id=target_file_conn_id)
+        else:
+            credentials = None
+
+        df = self.export_table_to_pandas_dataframe(source_table)
+        serializer = {
+            FileType.PARQUET: df.to_parquet,
+            FileType.CSV: df.to_csv,
+            FileType.JSON: df.to_json,
+            FileType.NDJSON: df.to_json,
+        }
+        serializer_params = {
+            FileType.CSV: {"index": False},
+            FileType.JSON: {"orient": "records"},
+            FileType.NDJSON: {"orient": "records", "lines": True},
+        }
+        # TODO: until here - the lines above should be simplified by the File object
+
+        with smart_open.open(
+            target_file, mode="wb", transport_params=credentials
+        ) as stream:
+            serializer[filetype](
+                stream, index=False, **serializer_params.get(filetype, {})
+            )

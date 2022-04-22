@@ -303,19 +303,6 @@ def test_unique_task_id_for_same_path(sample_dag, sql_server, test_table):
     os.remove(OUTPUT_FILE_PATH)
 
 
-def load_to_dataframe(filepath, file_type):
-    read = {
-        "parquet": pd.read_parquet,
-        "csv": pd.read_csv,
-        "json": pd.read_json,
-        "ndjson": pd.read_json,
-    }
-    read_params = {"ndjson": {"lines": True}}
-    mode = {"parquet": "rb"}
-    with open(filepath, mode.get(file_type, "r")) as fp:
-        return read[file_type](fp, **read_params.get(file_type, {}))
-
-
 @pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
 @pytest.mark.parametrize("file_type", SUPPORTED_FILE_TYPES)
 @pytest.mark.parametrize(
@@ -348,7 +335,7 @@ def test_save_file(sample_dag, sql_server, file_type, test_table):
             )
         test_utils.run_dag(sample_dag)
 
-        df = load_to_dataframe(filepath, file_type)
+        df = test_utils.load_to_dataframe(filepath, file_type)
         assert len(df) == 3
         expected = pd.DataFrame(
             [

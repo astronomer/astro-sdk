@@ -118,3 +118,16 @@ def get_dataframe_from_table(sql_name: str, test_table: Union[Table, TempTable],
             con=hook.get_conn(),
         )
     return df
+
+
+def load_to_dataframe(filepath, file_type):
+    read = {
+        "parquet": pd.read_parquet,
+        "csv": pd.read_csv,
+        "json": pd.read_json,
+        "ndjson": pd.read_json,
+    }
+    read_params = {"ndjson": {"lines": True}}
+    mode = {"parquet": "rb"}
+    with open(filepath, mode.get(file_type, "r")) as fp:
+        return read[file_type](fp, **read_params.get(file_type, {}))

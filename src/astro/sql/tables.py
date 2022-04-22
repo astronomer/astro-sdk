@@ -3,7 +3,7 @@ import string
 from dataclasses import dataclass
 from typing import List, Optional, Union
 
-from sqlalchemy import Column
+from sqlalchemy import Column, MetaData
 
 MAX_TABLE_NAME_LENGTH = 63
 
@@ -20,7 +20,7 @@ class Metadata:
 class Table:
     # TODO: discuss alternative names to this class, since it contains metadata as opposed to be the
     # SQL table itself
-    # Some ideas: TableRef
+    # Some ideas: TableRef, TableMetadata, TableData, TableDataset
     name: str = ""
     metadata: Optional[Metadata] = None
     columns: Optional[List[Column]] = None
@@ -42,3 +42,14 @@ class Table:
             for _ in range(MAX_TABLE_NAME_LENGTH - 1)
         )
         return unique_id
+
+    @property
+    def sqlalchemy_metadata(self) -> MetaData:
+        """
+        Return Sqlalchemy metadata for the given table.
+        """
+        if self.metadata and self.metadata.schema:
+            alchemy_metadata = MetaData(schema=self.metadata.schema)
+        else:
+            alchemy_metadata = MetaData()
+        return alchemy_metadata
