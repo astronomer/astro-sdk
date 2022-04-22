@@ -33,7 +33,7 @@ def describe_get_transport_params():
     ids=["google"],
     indirect=True,
 )  # skipcq: PY-D0003
-def with_remote_object_store_prefix(remote_file):
+def test_remote_object_store_prefix(remote_file):
     """with remote filepath having prefix"""
     _, objects_uris = remote_file
     objects_prefix = objects_uris[0][:-5]
