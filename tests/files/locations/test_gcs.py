@@ -1,4 +1,5 @@
-import pytest
+from unittest.mock import patch
+
 from google.cloud.storage import Client
 
 from astro.files.locations import location_factory
@@ -12,17 +13,13 @@ def test_get_transport_params_for_gcs():  # skipcq: PYL-W0612, PTC-W0065
     assert isinstance(credentials["client"], Client)
 
 
-@pytest.mark.integration
-@pytest.mark.parametrize(
-    "remote_file",
-    [{"name": "google", "count": 2}],
-    ids=["google"],
-    indirect=True,
-)  # skipcq: PY-D0003
+@patch(
+    "airflow.providers.google.cloud.hooks.gcs.GCSHook.list",
+    return_value=["house1.csv", "house2.csv"],
+)
 def test_remote_object_store_prefix(remote_file):
     """with remote filepath having prefix"""
-    _, objects_uris = remote_file
-    objects_prefix = objects_uris[0][:-5]
-    location = location_factory(objects_prefix)
-    assert len(objects_uris) == 2
-    assert sorted(location.get_paths()) == sorted(objects_uris)
+    location = location_factory("gs://tmp/house")
+    assert sorted(location.get_paths()) == sorted(
+        ["gs://tmp/house1.csv", "gs://tmp/house2.csv"]
+    )

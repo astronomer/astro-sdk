@@ -1,4 +1,5 @@
-import pytest
+from unittest.mock import patch
+
 from botocore.client import BaseClient
 
 from astro.files.locations import location_factory
@@ -15,17 +16,13 @@ def describe_get_transport_params():
         assert isinstance(credentials["client"], BaseClient)
 
 
-@pytest.mark.integration
-@pytest.mark.parametrize(
-    "remote_file",
-    [{"name": "amazon", "count": 2}],
-    ids=["amazon"],
-    indirect=True,
-)  # skipcq: PY-D0003
+@patch(
+    "airflow.providers.amazon.aws.hooks.s3.S3Hook.list_keys",
+    return_value=["house1.csv", "house2.csv"],
+)
 def test_remote_object_store_prefix(remote_file):
     """with remote filepath having prefix"""
-    _, objects_uris = remote_file
-    objects_prefix = objects_uris[0][:-5]
-    location = location_factory(objects_prefix)
-    assert len(objects_uris) == 2
-    assert sorted(location.get_paths()) == sorted(objects_uris)
+    location = location_factory("s3://tmp/house")
+    assert sorted(location.get_paths()) == sorted(
+        ["s3://tmp/house1.csv", "s3://tmp/house2.csv"]
+    )
