@@ -2,11 +2,9 @@ import os
 from typing import Dict, List, Tuple
 from urllib.parse import urlparse, urlunparse
 
-from airflow.hooks.base import BaseHook
-
 from astro.constants import FileLocation
 from astro.files.locations.base import Location
-from astro.utils.dependencies import AwsBaseHook, BotoSession, s3
+from astro.utils.dependencies import BotoSession, s3
 
 
 class S3(Location):
@@ -24,10 +22,7 @@ class S3(Location):
         s3fs enables pandas to write to s3
         """
         if self.conn_id:
-            # The following line raises a friendly exception
-            BaseHook.get_connection(self.conn_id)
-            aws_hook = AwsBaseHook(self.conn_id, client_type="S3")
-            session = aws_hook.get_session()  # type: ignore
+            session = s3.S3Hook(aws_conn_id=self.conn_id).get_session()
         else:
             key, secret = S3._parse_s3_env_var()
             session = BotoSession(
