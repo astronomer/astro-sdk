@@ -3,7 +3,8 @@ import pathlib
 import pytest
 
 from astro.constants import FileLocation
-from astro.files.locations import get_location_type, location_factory
+from astro.files.locations import location_factory
+from astro.files.locations.base import Location
 
 CWD = pathlib.Path(__file__).parent
 
@@ -25,7 +26,7 @@ def describe_get_location_type():
     )  # skipcq: PTC-W0065
     def with_supported_location(expected_location, filepath):  # skipcq: PTC-W0065
         """With all the supported locations"""
-        location = get_location_type(filepath)
+        location = Location.get_location_type(filepath)
         assert location == expected_location
 
 

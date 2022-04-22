@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 from urllib.parse import urlparse
 
+from astro.constants import FileLocation
+
 
 class Location(ABC):
     """Base Location abstract class"""
@@ -44,6 +46,11 @@ class Location(ABC):
 
         :param path: Either local filesystem path or remote URI
         """
+        try:
+            Location.get_location_type(path)
+        except ValueError:
+            return False
+
         result = urlparse(path)
         if not (
             (result.scheme and result.netloc)
@@ -52,3 +59,20 @@ class Location(ABC):
         ):
             return False
         return True
+
+    @staticmethod
+    def get_location_type(path: str) -> FileLocation:
+        """Identify where a file is located
+        :param path: Path to a file in the filesystem/Object stores
+        """
+        file_scheme = urlparse(path).scheme
+        if file_scheme == "":
+            location = FileLocation.LOCAL
+        else:
+            try:
+                location = FileLocation(file_scheme)
+            except ValueError:
+                raise ValueError(
+                    f"Unsupported scheme '{file_scheme}' from path '{path}'"
+                )
+        return location

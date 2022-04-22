@@ -1,4 +1,5 @@
 import pytest
+from google.cloud.storage import Client
 
 from astro.files.locations import location_factory
 
@@ -8,7 +9,7 @@ def test_get_transport_params_for_gcs():  # skipcq: PYL-W0612, PTC-W0065
     path = "gs://bucket/some-file"
     location = location_factory(path)
     credentials = location.get_transport_params()
-    assert "google.cloud.storage.client.Client" in str(credentials["client"].__class__)
+    assert isinstance(credentials["client"], Client)
 
 
 @pytest.mark.integration
