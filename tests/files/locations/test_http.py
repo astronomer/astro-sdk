@@ -35,7 +35,6 @@ def describe_get_location_type():
 )
 def test_get_transport_params(path):  # skipcq: PYL-W0612, PTC-W0065
     """test get_transport_params() with API endpoint"""
-    # path = "http://domain/file"
     location = location_factory(path)
     credentials = location.get_transport_params()
     assert credentials is None
@@ -48,6 +47,5 @@ def test_get_transport_params(path):  # skipcq: PYL-W0612, PTC-W0065
 )
 def test_describe_get_paths(path):  # skipcq: PYL-W0612, PTC-W0065
     """test get_paths with API endpoint"""
-    # path = "http://domain/some-file.txt"
     location = location_factory(path)
     assert location.get_paths() == [path]

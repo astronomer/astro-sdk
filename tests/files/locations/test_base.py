@@ -20,19 +20,19 @@ sample_filepaths_ids = [items[0].value for items in sample_filepaths_per_locatio
 
 
 @pytest.fixture()
-def local_file():
+def local_file():  # skipcq: PY-D0003
     open(LOCAL_FILEPATH, "a").close()
     yield
     os.remove(LOCAL_FILEPATH)
 
 
-def describe_validate_path():
+def describe_validate_path():  # skipcq: PY-D0003
     @pytest.mark.parametrize("filepath", sample_filepaths, ids=sample_filepaths_ids)
-    def with_supported_filepaths(local_file, filepath):
+    def with_supported_filepaths(local_file, filepath):  # skipcq: PTC-W0065, PY-D0003
         location = location_factory(filepath)
         assert location.is_valid_path(filepath) is True
 
-    def with_unsupported_path_raises_exception():
+    def with_unsupported_path_raises_exception():  # skipcq: PYL-W0612, PTC-W0065, PY-D0003
         nonexistent_file = "/tmp/nonexistent-file"
         with pytest.raises(ValueError) as exc_info:
             _ = location_factory(nonexistent_file)

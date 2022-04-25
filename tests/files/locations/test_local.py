@@ -54,8 +54,7 @@ def describe_get_transport_params():
     def with_local():  # skipcq: PYL-W0612, PTC-W0065
         """with local filepath"""
         location = Local(LOCAL_FILEPATH)
-        credentials = location.get_transport_params()
-        assert credentials is None
+        assert location.get_transport_params() is None
 
 
 def describe_get_paths():
@@ -63,7 +62,7 @@ def describe_get_paths():
 
     @pytest.mark.parametrize(
         "path", [LOCAL_DIR, LOCAL_DIR + "file_*"], ids=["without-prefix", "with-prefix"]
-    )
+    )  # skipcq: PTC-W0065
     def with_local_dir(local_dir, path):  # skipcq: PYL-W0612, PTC-W0065
         """with local filepath"""
         location = Local(path)
