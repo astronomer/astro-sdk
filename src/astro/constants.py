@@ -57,4 +57,4 @@ CONN_TYPE_TO_DATABASE = {
 
 LoadExistStrategy = Literal["replace", "append"]
 ExportExistsStrategy = Literal["replace", "exception"]
-MergeConflictStrategy = Literal["ignore", "update", "exception"]
+AppendConflictStrategy = Literal["ignore", "update", "exception"]

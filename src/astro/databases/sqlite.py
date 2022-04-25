@@ -6,7 +6,11 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.engine.result import ResultProxy
 
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    AppendConflictStrategy,
+    LoadExistStrategy,
+)
 from astro.databases.base import BaseDatabase
 from astro.sql.tables import Table
 from astro.utils.load import load_file_into_dataframe
@@ -90,7 +94,7 @@ class Database(BaseDatabase):
         self,
         source_table: Table,
         target_table: Table,
-        if_conflicts: MergeConflictStrategy = "exception",
+        if_conflicts: AppendConflictStrategy = "exception",
     ):
         """
         Append the source table rows into a destination table.
@@ -98,6 +102,16 @@ class Database(BaseDatabase):
 
         :param source_table: Contains the rows to be appended to the target_table
         :param target_table: Contains the destination table in which the rows will be appended
-        :param if_conflicts: The strategy to be applied if there are conflicts.
+        :param if_conflicts: The strategy to be applied if there are conflicts. Options:
+            * exception: Raises an exception if there is a conflict
+            * ignore: Ignores the source row value if it conflicts with a value in the target table
+            * update: Updates the target row with the content of the source file
         """
+        # TODO: missing
+        # previous append implementation
+        # -> raises exception
+        # previous merge implementation
+        # -> ignore / update
+        # select(target_table.columns).from_select(source_table.columns)
+
         raise NotImplementedError

@@ -1,7 +1,7 @@
 import os
 import pathlib
 from abc import ABC
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 import smart_open
@@ -10,11 +10,11 @@ from airflow.hooks.base import BaseHook
 
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
+    AppendConflictStrategy,
     ExportExistsStrategy,
     FileLocation,
     FileType,
     LoadExistStrategy,
-    MergeConflictStrategy,
 )
 from astro.sql.tables import Table
 from astro.utils.file import get_filetype
@@ -36,7 +36,7 @@ class BaseDatabase(ABC):
 
     _create_schema_statement: str = "CREATE SCHEMA IF NOT EXISTS {}"
     _drop_table_statement: str = "DROP TABLE IF EXISTS {}"
-    _create_table_statement: str = ""
+    _create_table_statement: str = "CREATE TABLE IF NOT EXISTS {} AS {}"
 
     def __init__(self, conn_id: str):
         self.conn_id = conn_id
@@ -102,13 +102,10 @@ class BaseDatabase(ABC):
         sqlalchemy_table = sqlalchemy.Table(table.name, metadata, *table.columns)
         metadata.create_all(self.sqlalchemy_engine, tables=[sqlalchemy_table])
 
-    def create_table_from_statement(
+    def create_table_from_select_statement(
         self,
         statement: str,
         target_table: Table,
-        source_tables: Optional[
-            List[Table]
-        ] = None,  # TODO: check if this parameter makes sense. This logic can be part of a templating/rendering engine
         parameters: Optional[dict] = None,
     ) -> None:
         """
@@ -117,11 +114,11 @@ class BaseDatabase(ABC):
         :param statement: SQL query statement
         :param target_table: Destination table where results will be recorded.
         :param parameters: (Optional) parameters to be used to render the SQL query
-        :param source_tables: (Optional) list of tables used by the SQL statement
         """
-        # TODO: Discuss if we need to support if_exists here
-        # if we do, we probably need to rename this method
-        raise NotImplementedError
+        statement = self._create_table_statement.format(
+            self.get_table_qualified_name(target_table), statement
+        )
+        self.hook.run(statement, parameters)
 
     def drop_table(self, table: Table) -> None:
         """
@@ -184,7 +181,7 @@ class BaseDatabase(ABC):
         self,
         source_table: Table,
         target_table: Table,
-        if_conflicts: MergeConflictStrategy = "exception",
+        if_conflicts: AppendConflictStrategy = "exception",
     ):
         """
         Append the source table rows into a destination table.
@@ -259,6 +256,4 @@ class BaseDatabase(ABC):
         with smart_open.open(
             target_file, mode="wb", transport_params=credentials
         ) as stream:
-            serializer[filetype](
-                stream, index=False, **serializer_params.get(filetype, {})
-            )
+            serializer[filetype](stream, **serializer_params.get(filetype, {}))

@@ -36,7 +36,7 @@ class Table:
         if not self.name:
             self.name = self._create_unique_table_name()
 
-    def _create_unique_table_name(self):
+    def _create_unique_table_name(self) -> str:
         unique_id = random.choice(string.ascii_lowercase) + "".join(
             random.choice(string.ascii_lowercase + string.digits)
             for _ in range(MAX_TABLE_NAME_LENGTH - 1)

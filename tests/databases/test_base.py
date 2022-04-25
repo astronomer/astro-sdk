@@ -47,14 +47,6 @@ def test_subclass_missing_load_pandas_dataframe_to_table_raises_exception():
         db.load_pandas_dataframe_to_table(df, table)
 
 
-def test_subclass_missing_create_table_from_statement_raises_exception():
-    db = DatabaseSubclass(conn_id="fake_conn_id")
-    statement = ""
-    table = Table()
-    with pytest.raises(NotImplementedError):
-        db.create_table_from_statement(statement, table)
-
-
 def test_subclass_missing_append_table_raises_exception():
     db = DatabaseSubclass(conn_id="fake_conn_id")
     source_table = Table()

@@ -189,3 +189,26 @@ def test_export_table_to_file_in_the_cloud():
         # target_file_conn_id="google_cloud_default",
         if_exists="replace",
     )
+
+
+def test_create_table_from_select_statement():
+    # TODO: use table fixture (teardown)
+    database = SqliteDatabase()
+    filepath = pathlib.Path(CWD.parent, "data/sample.csv")
+    original_table = Table()
+    database.load_file_to_table(filepath, original_table)
+
+    # actual test
+    statement = "SELECT * FROM {} WHERE id = 1;".format(
+        database.get_table_qualified_name(original_table)
+    )
+    target_table = Table()
+    database.create_table_from_select_statement(statement, target_table)
+
+    df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
+    assert len(df) == 1
+    expected = pd.DataFrame([{"id": 1, "name": "First"}])
+    df = df.rename(columns=str.lower)
+    df = df.astype({"id": "int64"})
+    expected = expected.astype({"id": "int64"})
+    assert_frame_equal(df, expected)
