@@ -10,7 +10,7 @@ import sqlalchemy
 from pandas.testing import assert_frame_equal
 
 from astro.databases import get_database_from_conn_id
-from astro.databases.sqlite import Database as SqliteDatabase
+from astro.databases.sqlite import SqliteDatabase
 from astro.sql.tables import Table
 from tests.operators import utils as test_utils
 

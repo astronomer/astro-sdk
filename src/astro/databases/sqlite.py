@@ -18,8 +18,10 @@ from astro.utils.load import load_file_into_dataframe
 DEFAULT_CONN_ID = "sqlite_default"
 
 
-class Database(BaseDatabase):
+class SqliteDatabase(BaseDatabase):
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
+        if not conn_id:
+            conn_id = DEFAULT_CONN_ID
         self.conn_id = conn_id
 
     @property
@@ -62,7 +64,7 @@ class Database(BaseDatabase):
 
         :param table: The table we want to retrieve the qualified name for.
         """
-        return table.name
+        return str(table.name)
 
     # ---------------------------------------------------------
     # Load methods
