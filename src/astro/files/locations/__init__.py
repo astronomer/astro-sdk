@@ -28,4 +28,5 @@ def location_factory(path: str, conn_id: Optional[str] = None) -> Location:
     filetype: FileLocation = Location.get_location_type(path)
     module_path = DEFAULT_CONN_TYPE_TO_MODULE_PATH[filetype.value]
     module_ref = importlib.import_module(module_path)
-    return getattr(module_ref, location_to_class[filetype])(path, conn_id)
+    location: Location = getattr(module_ref, location_to_class[filetype])(path, conn_id)
+    return location
