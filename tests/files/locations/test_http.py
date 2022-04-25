@@ -30,31 +30,24 @@ def describe_get_location_type():
         assert location == expected_location
 
 
-def describe_get_transport_params():
-    """test get_transport_params() method"""
-
-    def with_api():  # skipcq: PYL-W0612, PTC-W0065
-        """with API endpoint"""
-        path = "http://domain/file"
-        location = location_factory(path)
-        credentials = location.get_transport_params()
-        assert credentials is None
-
-        path = "https://domain/file"
-        location = location_factory(path)
-        credentials = location.get_transport_params()
-        assert credentials is None
+@pytest.mark.parametrize(
+    "path", ["http://domain/file", "https://domain/file"], ids=["http", "https"]
+)
+def test_get_transport_params(path):  # skipcq: PYL-W0612, PTC-W0065
+    """test get_transport_params() with API endpoint"""
+    # path = "http://domain/file"
+    location = location_factory(path)
+    credentials = location.get_transport_params()
+    assert credentials is None
 
 
-def describe_get_paths():
-    """test get_paths() method"""
-
-    def with_api():  # skipcq: PYL-W0612, PTC-W0065
-        """with API endpoint"""
-        path = "http://domain/some-file.txt"
-        location = location_factory(path)
-        assert location.get_paths() == [path]
-
-        path = "https://domain/some-file.txt"
-        location = location_factory(path)
-        assert location.get_paths() == [path]
+@pytest.mark.parametrize(
+    "path",
+    ["https://domain/some-file.txt", "http://domain/some-file.txt"],
+    ids=["http", "https"],
+)
+def test_describe_get_paths(path):  # skipcq: PYL-W0612, PTC-W0065
+    """test get_paths with API endpoint"""
+    # path = "http://domain/some-file.txt"
+    location = location_factory(path)
+    assert location.get_paths() == [path]
