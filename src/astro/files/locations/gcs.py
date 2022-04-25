@@ -13,14 +13,8 @@ class GCS(Location):
 
     def get_transport_params(self) -> Dict:
         """get GCS credentials for storage"""
-        if self.conn_id:
-            gcs_hook = gcs.GCSHook(self.conn_id)
-            client = gcs_hook.get_conn()  # type: ignore
-        else:
-            hook = (
-                gcs.GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else gcs.GCSHook()
-            )
-            client = hook.get_conn()
+        hook = gcs.GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else gcs.GCSHook()
+        client = hook.get_conn()
 
         return {"client": client}
 
