@@ -136,7 +136,7 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
     def load_file_to_table(
         self,
-        source_file: Union[str, pathlib.Path],
+        source_file: str,
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
@@ -211,7 +211,7 @@ class BaseDatabase(ABC):
         self,
         source_table: Table,
         target_file: Union[
-            str, pathlib.Path
+            str, pathlib.PosixPath
         ],  # The target file object should contain conn_id and serializer
         target_file_conn_id: Optional[
             str

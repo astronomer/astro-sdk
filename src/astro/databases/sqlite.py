@@ -1,4 +1,3 @@
-import pathlib
 from typing import Optional, Union
 
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
@@ -71,9 +70,7 @@ class SqliteDatabase(BaseDatabase):
     # ---------------------------------------------------------
     def load_file_to_table(
         self,
-        source_file: Union[
-            str, pathlib.Path
-        ],  # TODO: replace by File object, which will contain normalization config
+        source_file: str,  # TODO: replace by File object, which will contain normalization config
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,

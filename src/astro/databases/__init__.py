@@ -1,12 +1,8 @@
-"""
-
-"""
 import importlib
 from pathlib import Path
 
 from airflow.hooks.base import BaseHook
 
-from astro.databases.base import BaseDatabase
 from astro.utils.path import get_dict_with_module_names_to_dot_notations
 
 DEFAULT_CONN_TYPE_TO_MODULE_PATH = get_dict_with_module_names_to_dot_notations(
@@ -23,7 +19,13 @@ CONN_TYPE_TO_MODULE_PATH = {
 SUPPORTED_DATABASES = set(DEFAULT_CONN_TYPE_TO_MODULE_PATH.keys())
 
 
-def get_database_from_conn_id(conn_id: str = "") -> BaseDatabase:
+def get_database_from_conn_id(conn_id: str = ""):
+    """
+    Given a conn_id, return the associated Database class.
+    If null, the Database class defaults to the default Airflow connection, if it exists.
+
+    :param conn_id: Database connection ID in Airflow
+    """
     conn_type = BaseHook.get_connection(conn_id).conn_type
     module_path = CONN_TYPE_TO_MODULE_PATH[conn_type]
     module = importlib.import_module(module_path)
