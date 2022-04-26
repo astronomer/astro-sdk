@@ -1,15 +1,13 @@
-from typing import Any, Callable, Dict, Iterator, Optional, Union
-from urllib.parse import urlparse
+from typing import Iterator, Optional, Union
 
 import pandas as pd
-import smart_open
 from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 
 from astro.constants import Database
+from astro.files import File
 from astro.sql.table import Table
-from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
 from astro.utils.database import get_database_from_conn_id
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from astro.utils.task_id_helper import get_task_id
@@ -65,30 +63,11 @@ class SaveFile(BaseOperator):
                 type(self.input_data),
             )
         # Write file if overwrite == True or if file doesn't exist.
-        if self.overwrite or not self.file_exists(self.output_file_path):
-            self.agnostic_write_file(df, self.output_file_path)
+        file = File(self.output_file_path, self.output_conn_id)
+        if self.overwrite or not file.exists():
+            file.write(df)
         else:
             raise FileExistsError(f"{self.output_file_path} file already exists.")
-
-    def file_exists(self, output_file_path: str) -> bool:
-        def null_scheme(_: Any = None) -> dict:
-            """dummy function to get dummy creds"""
-            return {}
-
-        transport_dict: Dict[str, Callable[[Optional[str]], dict]] = {
-            "s3": s3fs_creds,
-            "gs": gcs_client,
-            "": null_scheme,
-        }
-        transport_params = transport_dict[urlparse(output_file_path).scheme](None)
-
-        try:
-            with smart_open.open(
-                output_file_path, mode="r", transport_params=transport_params
-            ):
-                return True
-        except OSError:
-            return False
 
     def convert_sql_table_to_dataframe(
         self,
@@ -134,41 +113,6 @@ class SaveFile(BaseOperator):
             f"SELECT * FROM {input_table.qualified_name()}",
             con=input_hook.get_sqlalchemy_engine(),
         )
-
-    def agnostic_write_file(self, df: pd.DataFrame, output_file_path: str) -> None:
-        """Write dataframe to csv/parquet files formats
-
-        Select output file format based on param output_file_format to class.
-        """
-
-        def null_scheme(_: Any = None) -> dict:
-            """dummy function to get dummy creds"""
-            return {}
-
-        transport_dict: Dict[str, Callable[[Optional[str]], dict]] = {
-            "s3": s3fs_creds,
-            "gs": gcs_client,
-            "": null_scheme,
-        }
-        transport_params = transport_dict[urlparse(output_file_path).scheme](None)
-
-        serialiser = {
-            "parquet": df.to_parquet,
-            "csv": df.to_csv,
-            "json": df.to_json,
-            "ndjson": df.to_json,
-        }
-        serialiser_params = {
-            "csv": {"index": False},
-            "json": {"orient": "records"},
-            "ndjson": {"orient": "records", "lines": True},
-        }
-        with smart_open.open(
-            output_file_path, mode="wb", transport_params=transport_params
-        ) as stream:
-            serialiser[self.output_file_format](
-                stream, **serialiser_params.get(self.output_file_format, {})
-            )
 
 
 def save_file(

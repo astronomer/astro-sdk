@@ -201,7 +201,7 @@ def test_save_all_db_tables_to_GCS(sample_dag, test_table, sql_server):
 def test_save_all_db_tables_to_local_file_exists_overwrite_false(
     sample_dag, test_table, sql_server, caplog
 ):
-    with tempfile.NamedTemporaryFile() as temp_file:
+    with tempfile.NamedTemporaryFile(suffix=".csv") as temp_file:
         with pytest.raises(BackfillUnfinished):
             with sample_dag:
                 save_file(

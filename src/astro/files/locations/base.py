@@ -1,8 +1,12 @@
 import glob
 import os
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Union
+from pathlib import Path
+from typing import Any, List, Optional, Dict, Union
+
 from urllib.parse import urlparse
+
+import smart_open
 
 from astro.constants import FileLocation
 
@@ -54,8 +58,19 @@ class Location(ABC):
         if not (
             (result.scheme and result.netloc)
             or os.path.isfile(path)
+            or Location.check_non_existing_local_file_path(path)
             or glob.glob(result.path)
         ):
+            return False
+        return True
+
+    @staticmethod
+    def check_non_existing_local_file_path(path: str) -> bool:
+        """Check if the path is valid by creating and temp file and then deleting it. Assumes the file don't exist"""
+        try:
+            Path(path).touch()
+            os.remove(path)
+        except OSError:
             return False
         return True
 
@@ -75,3 +90,18 @@ class Location(ABC):
                     f"Unsupported scheme '{file_scheme}' from path '{path}'"
                 )
         return location
+
+    def exists(self) -> bool:
+        """Check if the file exists or not"""
+
+        def null_scheme(_: Any = None) -> dict:
+            """dummy function to get dummy creds"""
+            return {}
+
+        try:
+            with smart_open.open(
+                self.path, mode="r", transport_params=self.get_transport_params()
+            ):
+                return True
+        except OSError:
+            return False
