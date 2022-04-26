@@ -8,6 +8,7 @@ from airflow.executors.debug_executor import DebugExecutor
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from airflow.utils import timezone
 from airflow.utils.state import State
+from pandas.testing import assert_frame_equal
 
 from astro.sql.table import Table, TempTable
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook, bigquery
@@ -131,3 +132,10 @@ def load_to_dataframe(filepath, file_type):
     mode = {"parquet": "rb"}
     with open(filepath, mode.get(file_type, "r")) as fp:
         return read[file_type](fp, **read_params.get(file_type, {}))
+
+
+def assert_dataframes_are_equal(df: pd.DataFrame, expected: pd.DataFrame) -> None:
+    df = df.rename(columns=str.lower)
+    df = df.astype({"id": "int64"})
+    expected = expected.astype({"id": "int64"})
+    assert_frame_equal(df, expected)

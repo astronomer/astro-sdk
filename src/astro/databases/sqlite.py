@@ -109,7 +109,7 @@ class SqliteDatabase(BaseDatabase):
             * ignore: Ignores the source row value if it conflicts with a value in the target table
             * update: Updates the target row with the content of the source file
         """
-        # TODO: missing
+        # TODO: implement this method.
         # previous append implementation
         # -> raises exception
         # previous merge implementation

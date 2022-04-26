@@ -7,8 +7,8 @@ from urllib.parse import urlparse
 import pandas as pd
 import pytest
 import sqlalchemy
-from pandas.testing import assert_frame_equal
 
+from astro.constants import Database
 from astro.databases import get_database_from_conn_id
 from astro.databases.sqlite import SqliteDatabase
 from astro.sql.tables import Table
@@ -53,59 +53,73 @@ def test_sqlite_run_sql():
     assert response.first()[0] == 2
 
 
-@pytest.mark.integration
-def test_sqlite_create_and_drop_table_with_columns():
-    # TODO: use table fixture (teardown) and split this test into two - one for creating and another for dropping
-    # Move this test to a place where we can use parametrize
-    sample_table = Table(
-        columns=[
-            sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
-            sqlalchemy.Column(
-                "name", sqlalchemy.String(60), nullable=False, key="name"
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SQLITE,
+            "table": Table(
+                columns=[
+                    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
+                    sqlalchemy.Column(
+                        "name", sqlalchemy.String(60), nullable=False, key="name"
+                    ),
+                ]
             ),
-        ]
-    )
-    database = SqliteDatabase()
-    database.drop_table(sample_table)
-    statement = f"PRAGMA table_info({sample_table.name});"
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.integration
+def test_sqlite_create_table_with_columns(database_table_fixture):
+    database, table = database_table_fixture
+
+    statement = f"PRAGMA table_info({table.name});"
     response = database.run_sql(statement)
     assert response.first() is None
 
-    database.create_table(sample_table)
+    database.create_table(table)
     response = database.run_sql(statement)
     rows = response.fetchall()
     assert len(rows) == 2
     assert rows[0] == (0, "id", "INTEGER", 1, None, 1)
     assert rows[1] == (1, "name", "VARCHAR(60)", 1, None, 0)
-    database.drop_table(sample_table)
-
-    response = database.run_sql(statement)
-    assert response.first() is None
 
 
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.SQLITE},
+    ],
+    indirect=True,
+)
 @pytest.mark.integration
-def test_load_pandas_dataframe_to_table():
-    # TODO: use table fixture (teardown)
-    database = SqliteDatabase()
-    data = {"id": [1, 2]}
-    pandas_dataframe = pd.DataFrame(data=data)
-    target_table = Table()
-    database.load_pandas_dataframe_to_table(pandas_dataframe, target_table)
+def test_load_pandas_dataframe_to_table(database_table_fixture):
+    database, table = database_table_fixture
 
-    statement = f"SELECT * FROM {target_table.name};"
+    pandas_dataframe = pd.DataFrame(data={"id": [1, 2]})
+    database.load_pandas_dataframe_to_table(pandas_dataframe, table)
+
+    statement = f"SELECT * FROM {table.name};"
     response = database.run_sql(statement)
+
     rows = response.fetchall()
     assert len(rows) == 2
     assert rows[0] == (1,)
     assert rows[1] == (2,)
 
 
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.SQLITE},
+    ],
+    indirect=True,
+)
 @pytest.mark.integration
-def test_load_file_to_table():
-    # TODO: use table fixture (teardown)
-    database = SqliteDatabase()
+def test_load_file_to_table(database_table_fixture):
+    database, target_table = database_table_fixture
     filepath = pathlib.Path(CWD.parent, "data/sample.csv")
-    target_table = Table()
     database.load_file_to_table(filepath, target_table)
 
     df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
@@ -117,17 +131,22 @@ def test_load_file_to_table():
             {"id": 3, "name": "Third with unicode पांचाल"},
         ]
     )
-    df = df.rename(columns=str.lower)
-    df = df.astype({"id": "int64"})
-    expected = expected.astype({"id": "int64"})
-    assert_frame_equal(df, expected)
+    test_utils.assert_dataframes_are_equal(df, expected)
 
 
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.SQLITE},
+    ],
+    indirect=True,
+)
 @pytest.mark.integration
-def test_export_table_to_file_file_already_exists_raises_exception():
-    database = SqliteDatabase()
+def test_export_table_to_file_file_already_exists_raises_exception(
+    database_table_fixture,
+):
+    database, source_table = database_table_fixture
     filepath = pathlib.Path(CWD.parent, "data/sample.csv")
-    source_table = Table()
     with pytest.raises(FileExistsError) as exception_info:
         database.export_table_to_file(source_table, filepath)
     err_msg = exception_info.value.args[0]
@@ -135,22 +154,20 @@ def test_export_table_to_file_file_already_exists_raises_exception():
     assert err_msg.endswith("tests/data/sample.csv already exists.")
 
 
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SQLITE,
+            "filepath": pathlib.Path(CWD.parent, "data/sample.csv"),
+        }
+    ],
+    indirect=True,
+)
 @pytest.mark.integration
-def test_export_table_to_file_overrides_existing_file():
-    # TODO: use table fixture (teardown)
-    # setup
-    df = pd.DataFrame(
-        [
-            {"id": 1, "name": "First"},
-            {"id": 2, "name": "Second"},
-            {"id": 3, "name": "Third with unicode पांचाल"},
-        ]
-    )
-    populated_table = Table()
-    database = SqliteDatabase()
-    database.load_pandas_dataframe_to_table(df, populated_table)
+def test_export_table_to_file_overrides_existing_file(database_table_fixture):
+    database, populated_table = database_table_fixture
 
-    # actual test
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     database.export_table_to_file(populated_table, filepath, if_exists="replace")
 
@@ -166,39 +183,53 @@ def test_export_table_to_file_overrides_existing_file():
     assert df.rename(columns=str.lower).equals(expected)
 
 
-def test_export_table_to_file_in_the_cloud():
-    # TODO: use table fixture (teardown)
-    # TODO: use remote_file fixture (teardown)
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SQLITE,
+            "filepath": pathlib.Path(CWD.parent, "data/sample.csv"),
+        }
+    ],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    "cloud_object_fixture",
+    [{"provider": "google", "extension": "csv"}],
+    indirect=True,
+)
+@pytest.mark.integration
+def test_export_table_to_file_in_the_cloud(
+    database_table_fixture, cloud_object_fixture
+):
+    object_path, hook = cloud_object_fixture
+    database, populated_table = database_table_fixture
 
-    df = pd.DataFrame(
-        [
-            {"id": 1, "name": "First"},
-            {"id": 2, "name": "Second"},
-            {"id": 3, "name": "Third with unicode पांचाल"},
-        ]
-    )
-    populated_table = Table()
-    database = SqliteDatabase()
-    database.load_pandas_dataframe_to_table(df, populated_table)
-
-    # actual test
-    filepath = "gs://dag-authoring/test/sample.csv"
     database.export_table_to_file(
         populated_table,
-        filepath,
-        # target_file_conn_id="google_cloud_default",
+        object_path,
         if_exists="replace",
     )
+    object_prefix = object_path[object_path.find("test") :]
+    bucket = object_path[object_path.find("//") + 2 : object_path.find("/test")]
+    file_content = hook.download(bucket, object_prefix).decode("utf-8")
+    expected = "id,name\n1,First\n2,Second\n3,Third with unicode पांचाल\n"
+    assert file_content == expected
 
 
-def test_create_table_from_select_statement():
-    # TODO: use table fixture (teardown)
-    database = SqliteDatabase()
-    filepath = pathlib.Path(CWD.parent, "data/sample.csv")
-    original_table = Table()
-    database.load_file_to_table(filepath, original_table)
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SQLITE,
+            "filepath": pathlib.Path(CWD.parent, "data/sample.csv"),
+        }
+    ],
+    indirect=True,
+)
+def test_create_table_from_select_statement(database_table_fixture):
+    database, original_table = database_table_fixture
 
-    # actual test
     statement = "SELECT * FROM {} WHERE id = 1;".format(
         database.get_table_qualified_name(original_table)
     )
@@ -208,7 +239,5 @@ def test_create_table_from_select_statement():
     df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
     assert len(df) == 1
     expected = pd.DataFrame([{"id": 1, "name": "First"}])
-    df = df.rename(columns=str.lower)
-    df = df.astype({"id": "int64"})
-    expected = expected.astype({"id": "int64"})
-    assert_frame_equal(df, expected)
+    test_utils.assert_dataframes_are_equal(df, expected)
+    database.drop_table(target_table)

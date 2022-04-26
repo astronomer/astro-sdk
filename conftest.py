@@ -14,8 +14,10 @@ from airflow.utils.db import create_default_connections
 from airflow.utils.session import create_session, provide_session
 
 from astro.constants import Database, FileType
+from astro.databases import get_database_from_conn_id
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_unique_table_name
+from astro.sql.tables import Table as NewTable
 from astro.utils.cloud_storage_creds import parse_s3_env_var
 from astro.utils.database import get_database_name
 from astro.utils.dependencies import BigQueryHook, gcs, s3
@@ -237,3 +239,54 @@ def remote_file(request):
 
     session.delete(new_connection)
     session.flush()
+
+
+@pytest.fixture
+def database_table_fixture(request):
+    params = request.param
+    table = params.get("table", NewTable())
+    filepath = params.get("filepath", "")
+
+    database_name = params["database"]
+    database_name_to_conn_id = {Database.SQLITE: "sqlite_default"}
+    conn_id = database_name_to_conn_id[database_name]
+    database = get_database_from_conn_id(conn_id)
+
+    database.drop_table(table)
+    if filepath:
+        database.load_file_to_table(filepath, table)
+    yield database, table
+
+    database.drop_table(table)
+
+
+@pytest.fixture
+def cloud_object_fixture(request):
+    params = request.param
+    provider = params["provider"]
+    file_suffix = params.get("file_suffix", "")
+    file_extension = params.get("file_extension", "csv")
+
+    unique_value = uuid.uuid4()
+    object_prefix = f"test/{unique_value}{file_suffix}.{file_extension}"
+    if provider == "google":
+        bucket_name = os.getenv("GOOGLE_BUCKET", "dag-authoring")
+        object_path = f"gs://{bucket_name}/{object_prefix}"
+        hook = gcs.GCSHook()
+        hook.exists(bucket_name, object_prefix) and hook.delete(
+            bucket_name, object_prefix
+        )
+    else:
+        bucket_name = os.getenv("AWS_BUCKET", "tmp9")
+        object_path = f"s3://{bucket_name}/{object_prefix}"
+        hook = s3.S3Hook()
+        hook.delete_objects(bucket_name, object_prefix)
+
+    yield object_path, hook
+
+    if provider == "google":
+        hook.exists(bucket_name, object_prefix) and hook.delete(
+            bucket_name, object_prefix
+        )
+    else:
+        hook.delete_objects(bucket_name, object_prefix)
