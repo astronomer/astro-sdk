@@ -34,7 +34,7 @@ class Location(ABC):
         """Resolve patterns in path"""
         raise NotImplementedError
 
-    def get_transport_params(self) -> Union[Dict, None]:
+    def get_transport_params(self) -> Union[Dict, None]:  # skipcq: PYL-R0201
         """Get credentials required by smart open to access files"""
         return None
 

@@ -16,18 +16,17 @@ sample_filepaths = [items[1] for items in sample_filepaths_per_location]
 sample_filepaths_ids = [items[0].value for items in sample_filepaths_per_location]
 
 
-def describe_get_location_type():
-    """test get_location_type()"""
-
-    @pytest.mark.parametrize(
-        "expected_location,filepath",
-        sample_filepaths_per_location,
-        ids=sample_filepaths_ids,
-    )  # skipcq: PTC-W0065
-    def with_supported_location(expected_location, filepath):  # skipcq: PTC-W0065
-        """With all the supported locations"""
-        location = Location.get_location_type(filepath)
-        assert location == expected_location
+@pytest.mark.parametrize(
+    "expected_location,filepath",
+    sample_filepaths_per_location,
+    ids=sample_filepaths_ids,
+)  # skipcq: PTC-W0065
+def test_get_location_type_with_supported_location(
+    expected_location, filepath
+):  # skipcq: PTC-W0065
+    """test get_location_type() with all the supported locations"""
+    location = Location.get_location_type(filepath)
+    assert location == expected_location
 
 
 @pytest.mark.parametrize(

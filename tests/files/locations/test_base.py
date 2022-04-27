@@ -26,15 +26,17 @@ def local_file():  # skipcq: PY-D0003
     os.remove(LOCAL_FILEPATH)
 
 
-def describe_validate_path():  # skipcq: PY-D0003
-    @pytest.mark.parametrize("filepath", sample_filepaths, ids=sample_filepaths_ids)
-    def with_supported_filepaths(local_file, filepath):  # skipcq: PTC-W0065, PY-D0003
-        location = location_factory(filepath)
-        assert location.is_valid_path(filepath) is True
+@pytest.mark.parametrize("filepath", sample_filepaths, ids=sample_filepaths_ids)
+def test_validate_path_with_supported_filepaths(
+    local_file, filepath
+):  # skipcq: PY-D0003
+    location = location_factory(filepath)
+    assert location.is_valid_path(filepath) is True
 
-    def with_unsupported_path_raises_exception():  # skipcq: PYL-W0612, PTC-W0065, PY-D0003
-        nonexistent_file = "/tmp/nonexistent-file"
-        with pytest.raises(ValueError) as exc_info:
-            _ = location_factory(nonexistent_file)
-        expected_msg = "Invalid path: '/tmp/nonexistent-file'"
-        assert exc_info.value.args[0] == expected_msg
+
+def test_validate_path_with_unsupported_path_raises_exception():  # skipcq: PYL-W0612, PY-D0003
+    nonexistent_file = "/tmp/nonexistent-file"
+    with pytest.raises(ValueError) as exc_info:
+        _ = location_factory(nonexistent_file)
+    expected_msg = "Invalid path: '/tmp/nonexistent-file'"
+    assert exc_info.value.args[0] == expected_msg

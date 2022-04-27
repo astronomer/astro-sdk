@@ -5,15 +5,12 @@ from botocore.client import BaseClient
 from astro.files.locations import location_factory
 
 
-def describe_get_transport_params():
-    """test get_transport_params() method"""
-
-    def with_s3():  # skipcq: PYL-W0612, PTC-W0065
-        """with S3 filepath"""
-        path = "s3://bucket/some-file"
-        location = location_factory(path)
-        credentials = location.get_transport_params()
-        assert isinstance(credentials["client"], BaseClient)
+def test_get_transport_params_with_s3():  # skipcq: PYL-W0612
+    """test get_transport_params() method with S3 filepath"""
+    path = "s3://bucket/some-file"
+    location = location_factory(path)
+    credentials = location.get_transport_params()
+    assert isinstance(credentials["client"], BaseClient)
 
 
 @patch(
