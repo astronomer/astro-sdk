@@ -14,7 +14,7 @@ from astro.databases.base import BaseDatabase
 from astro.sql.tables import Table
 from astro.utils.load import load_file_into_dataframe
 
-DEFAULT_CONN_ID = "sqlite_default"
+DEFAULT_CONN_ID = SqliteHook.default_conn_name
 
 
 class SqliteDatabase(BaseDatabase):
