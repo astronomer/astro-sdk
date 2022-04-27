@@ -19,11 +19,11 @@ def location_factory(path: str, conn_id: Optional[str] = None) -> Location:
     :param conn_id: Airflow connection ID
     """
     location_to_class: Dict[FileLocation, str] = {
-        FileLocation.LOCAL: "Local",
-        FileLocation.S3: "S3",
-        FileLocation.GS: "GCS",
-        FileLocation.HTTP: "Http",
-        FileLocation.HTTPS: "Http",
+        FileLocation.LOCAL: "LocalLocation",
+        FileLocation.S3: "S3Location",
+        FileLocation.GS: "GCSLocation",
+        FileLocation.HTTP: "HttpLocation",
+        FileLocation.HTTPS: "HttpLocation",
     }
     filetype: FileLocation = Location.get_location_type(path)
     module_path = DEFAULT_CONN_TYPE_TO_MODULE_PATH[filetype.value]
