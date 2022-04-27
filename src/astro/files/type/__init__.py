@@ -35,5 +35,5 @@ def get_filetype(filepath: Union[str, pathlib.PosixPath]) -> FileTypeConstants:
 
     try:
         return FileTypeConstants(extension)
-    except KeyError:
+    except ValueError:
         raise ValueError(f"Unsupported filetype '{extension}' from file '{filepath}'.")

@@ -5,10 +5,9 @@ from typing import List, Optional
 import pandas as pd
 import smart_open
 
-from astro.constants import LOAD_DATAFRAME_BYTES_LIMIT, FileType
+from astro.constants import FileType
 from astro.files.locations import location_factory
 from astro.files.type import type_factory
-from astro.utils.file import get_size
 
 
 class File:
@@ -44,17 +43,6 @@ class File:
         """
         result: bool = self.type.name == FileType.PARQUET
         return result
-
-    def is_small(self) -> bool:
-        """
-        Checks if a file is small enough to be loaded into a Pandas dataframe in memory efficiently.
-        This value was obtained through performance tests.
-
-        :return: If the file is small enough
-        :rtype: boolean
-        """
-        size_in_bytes = get_size(self.path)
-        return bool(size_in_bytes <= LOAD_DATAFRAME_BYTES_LIMIT)
 
     def write(self, df: pd.DataFrame) -> None:
         """Write dataframe to all supported files formats
