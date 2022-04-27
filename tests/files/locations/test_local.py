@@ -7,7 +7,7 @@ import pytest
 
 from astro.constants import FileLocation
 from astro.files.locations.base import Location
-from astro.files.locations.local import Local
+from astro.files.locations.local import LocalLocation
 
 CWD = pathlib.Path(__file__).parent
 
@@ -53,7 +53,7 @@ def describe_get_transport_params():
 
     def with_local():  # skipcq: PYL-W0612, PTC-W0065
         """with local filepath"""
-        location = Local(LOCAL_FILEPATH)
+        location = LocalLocation(LOCAL_FILEPATH)
         assert location.get_transport_params() is None
 
 
@@ -65,13 +65,13 @@ def describe_get_paths():
     )  # skipcq: PTC-W0065
     def with_local_dir(local_dir, path):  # skipcq: PYL-W0612, PTC-W0065
         """with local filepath"""
-        location = Local(path)
+        location = LocalLocation(path)
         assert sorted(location.get_paths()) == [LOCAL_DIR_FILE_1, LOCAL_DIR_FILE_2]
 
     def with_unsupported_location(local_dir):  # skipcq: PYL-W0612, PTC-W0065
         """with unsupported filepath"""
         path = "invalid://some-file"
         with pytest.raises(ValueError) as exc_info:
-            _ = Local(path)
+            _ = LocalLocation(path)
         expected_msg = "Invalid path: 'invalid://some-file'"
         assert exc_info.value.args[0] == expected_msg
