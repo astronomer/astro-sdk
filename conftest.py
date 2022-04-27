@@ -243,6 +243,21 @@ def remote_file(request):
 
 @pytest.fixture
 def database_table_fixture(request):
+    """
+    Given request.param in the format:
+        {
+            "database": Database.SQLITE,  # mandatory, may be any supported database
+            "table": astro.sql.tables.Table(),  # optional, will create a table unless it is passed
+            "filepath": ""  # optional, filepath to be used to load data to the table.
+        }
+    This fixture yields the following during setup:
+        (database, table)
+    Example:
+        (astro.databases.sqlite.SqliteDatabase(), Table())
+
+    If the table exists, it is deleted during the tests setup and tear down.
+    The table will only be created during setup if request.param contains the `filepath` parameter.
+    """
     params = request.param
     table = params.get("table", NewTable())
     filepath = params.get("filepath", "")
@@ -262,6 +277,20 @@ def database_table_fixture(request):
 
 @pytest.fixture
 def cloud_object_fixture(request):
+    """
+    Given request.param in the format:
+        {
+            "provider": "google",  # mandatory, may be "google" or "amazon"
+            "file_suffix": "",  # optional, in case the user wants to add a suffix between the file name & extension
+            "file_extension": ".csv"  # optional, defaults to .csv if not given
+        }
+    Yield the following during setup:
+        (object_uri, hook)
+    Example:
+        ("gs://some-bucket/test/8df8aea0-9b2e-4671-b84e-2d48f42a182f.csv", GCSHook)
+
+    If the object exists, it is deleted during the tests setup and tear down.
+    """
     params = request.param
     provider = params["provider"]
     file_suffix = params.get("file_suffix", "")
