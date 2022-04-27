@@ -11,6 +11,7 @@ import sqlalchemy
 from astro.constants import Database
 from astro.databases import get_database_from_conn_id
 from astro.databases.sqlite import SqliteDatabase
+from astro.exceptions import NonExistentTableException
 from astro.sql.tables import Table
 from tests.operators import utils as test_utils
 
@@ -51,6 +52,12 @@ def test_sqlite_run_sql():
     database = SqliteDatabase()
     response = database.run_sql(statement)
     assert response.first()[0] == 2
+
+
+@pytest.mark.integration
+def test_table_exists_raises_exception():
+    database = SqliteDatabase()
+    assert not database.table_exists(Table(name="inexistent-table"))
 
 
 @pytest.mark.parametrize(
@@ -181,6 +188,23 @@ def test_export_table_to_file_overrides_existing_file(database_table_fixture):
         ]
     )
     assert df.rename(columns=str.lower).equals(expected)
+
+
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [{"database": Database.SQLITE}],
+    indirect=True,
+)
+def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
+    database_table_fixture,
+):
+    database, non_existent_table = database_table_fixture
+
+    with pytest.raises(NonExistentTableException) as exc_info:
+        database.export_table_to_pandas_dataframe(non_existent_table)
+    error_message = exc_info.value.args[0]
+    assert error_message.startswith("The table")
+    assert error_message.endswith("does not exist")
 
 
 @pytest.mark.parametrize(

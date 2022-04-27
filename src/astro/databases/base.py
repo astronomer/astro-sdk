@@ -16,6 +16,7 @@ from astro.constants import (
     FileType,
     LoadExistStrategy,
 )
+from astro.exceptions import NonExistentTableException
 from astro.sql.tables import Table
 from astro.utils.file import get_filetype
 from astro.utils.path import get_location, get_transport_params
@@ -73,6 +74,16 @@ class BaseDatabase(ABC):
         :param parameters: Optional parameters to be used to render the query
         """
         return self.hook.run(sql_statement, parameters)
+
+    def table_exists(self, table: Table) -> bool:
+        """
+        Check if a table exists in the database.
+
+        :param table: Details of the table we want to check that exists
+        """
+        table_qualified_name = self.get_table_qualified_name(table)
+        inspector = sqlalchemy.inspect(self.sqlalchemy_engine)
+        return bool(inspector.dialect.has_table(self.connection, table_qualified_name))
 
     # ---------------------------------------------------------
     # Table metadata
@@ -202,10 +213,16 @@ class BaseDatabase(ABC):
 
         :param source_table: An existing table in the database
         """
-        return pd.read_sql(
-            f"SELECT * FROM {self.get_table_qualified_name(source_table)}",
-            con=self.sqlalchemy_engine,
-        )
+        table_qualified_name = self.get_table_qualified_name(source_table)
+        if self.table_exists(source_table):
+            return pd.read_sql(
+                f"SELECT * FROM {table_qualified_name}",
+                con=self.sqlalchemy_engine,
+            )
+        else:
+            raise NonExistentTableException(
+                "The table %s does not exist" % table_qualified_name
+            )
 
     def export_table_to_file(
         self,
