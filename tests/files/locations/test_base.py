@@ -27,14 +27,14 @@ def local_file():  # skipcq: PY-D0003
 
 
 @pytest.mark.parametrize("filepath", sample_filepaths, ids=sample_filepaths_ids)
-def test_validate_path_with_supported_filepaths(
-    local_file, filepath
-):  # skipcq: PY-D0003
+def test_validate_path_with_supported_filepaths(local_file, filepath):
+    """Test is_valid_path with supported paths"""
     location = location_factory(filepath)
     assert location.is_valid_path(filepath) is True
 
 
-def test_validate_path_with_unsupported_path_raises_exception():  # skipcq: PYL-W0612, PY-D0003
+def test_validate_path_with_unsupported_path_raises_exception():  # skipcq: PYL-W0612
+    """Test is_valid_path with unsupported paths"""
     nonexistent_file = "/tmp/nonexistent-file"
     with pytest.raises(ValueError) as exc_info:
         _ = location_factory(nonexistent_file)
