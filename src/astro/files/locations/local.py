@@ -1,13 +1,13 @@
 import glob
 import pathlib
-from typing import Dict, List, Union
+from typing import List
 from urllib.parse import urlparse
 
 from astro.constants import FileLocation
 from astro.files.locations.base import Location
 
 
-class Local(Location):
+class LocalLocation(Location):
     """Handler Local file path operations"""
 
     location_type = FileLocation.LOCAL
@@ -21,7 +21,3 @@ class Local(Location):
         else:
             paths = glob.glob(url.path)
         return paths
-
-    def get_transport_params(self) -> Union[Dict, None]:
-        """Dummy method"""
-        return None

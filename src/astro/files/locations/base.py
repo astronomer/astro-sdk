@@ -1,7 +1,7 @@
 import glob
 import os
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import Dict, List, Optional, Union
 from urllib.parse import urlparse
 
 from astro.constants import FileLocation
@@ -12,7 +12,7 @@ class Location(ABC):
 
     def __init__(self, path: str, conn_id: Optional[str] = None):
         """
-        Location class constructor
+        Manages and provide interface for the operation for all the supported locations.
 
         :param path: Path to a file in the filesystem/Object stores
         :param conn_id: Airflow connection ID
@@ -34,10 +34,9 @@ class Location(ABC):
         """Resolve patterns in path"""
         raise NotImplementedError
 
-    @abstractmethod
-    def get_transport_params(self):
+    def get_transport_params(self) -> Union[Dict, None]:
         """Get credentials required by smart open to access files"""
-        raise NotImplementedError
+        return None
 
     @staticmethod
     def is_valid_path(path: str) -> bool:

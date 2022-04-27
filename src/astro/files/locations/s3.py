@@ -4,10 +4,10 @@ from urllib.parse import urlparse, urlunparse
 
 from astro.constants import FileLocation
 from astro.files.locations.base import Location
-from astro.utils.dependencies import BotoSession, s3
+from astro.utils.dependencies import s3
 
 
-class S3(Location):
+class S3Location(Location):
     """Handler S3 object store operations"""
 
     location_type = FileLocation.S3
@@ -21,14 +21,8 @@ class S3(Location):
         """Structure s3fs credentials from Airflow connection.
         s3fs enables pandas to write to s3
         """
-        if self.conn_id:
-            session = s3.S3Hook(aws_conn_id=self.conn_id).get_session()
-        else:
-            key, secret = self._parse_s3_env_var()
-            session = BotoSession(
-                aws_access_key_id=key,
-                aws_secret_access_key=secret,
-            )
+        hook = s3.S3Hook(aws_conn_id=self.conn_id) if self.conn_id else s3.S3Hook()
+        session = hook.get_session()
         return {"client": session.client("s3")}
 
     def get_paths(self) -> List[str]:
