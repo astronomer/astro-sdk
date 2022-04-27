@@ -302,6 +302,7 @@ def cloud_object_fixture(request):
         bucket_name = os.getenv("GOOGLE_BUCKET", "dag-authoring")
         object_path = f"gs://{bucket_name}/{object_prefix}"
         hook = gcs.GCSHook()
+        # if an object doesn't exist, hook.delete fails:
         hook.exists(bucket_name, object_prefix) and hook.delete(
             bucket_name, object_prefix
         )
@@ -314,6 +315,7 @@ def cloud_object_fixture(request):
     yield object_path, hook
 
     if provider == "google":
+        # if an object doesn't exist, hook.delete fails:
         hook.exists(bucket_name, object_prefix) and hook.delete(
             bucket_name, object_prefix
         )
