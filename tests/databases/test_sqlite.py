@@ -1,6 +1,7 @@
 """
 Tests specific to the Sqlite Database implementation.
 """
+import os
 import pathlib
 from urllib.parse import urlparse
 
@@ -13,6 +14,7 @@ from astro.databases import get_database_from_conn_id
 from astro.databases.sqlite import SqliteDatabase
 from astro.exceptions import NonExistentTableException
 from astro.sql.tables import Table
+from astro.utils.load import copy_remote_file_to_local
 from tests.operators import utils as test_utils
 
 DEFAULT_CONN_ID = "sqlite_default"
@@ -60,6 +62,7 @@ def test_table_exists_raises_exception():
     assert not database.table_exists(Table(name="inexistent-table"))
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
@@ -76,8 +79,8 @@ def test_table_exists_raises_exception():
         }
     ],
     indirect=True,
+    ids=["sqlite"],
 )
-@pytest.mark.integration
 def test_sqlite_create_table_with_columns(database_table_fixture):
     database, table = database_table_fixture
 
@@ -93,14 +96,15 @@ def test_sqlite_create_table_with_columns(database_table_fixture):
     assert rows[1] == (1, "name", "VARCHAR(60)", 1, None, 0)
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
         {"database": Database.SQLITE},
     ],
     indirect=True,
+    ids=["sqlite"],
 )
-@pytest.mark.integration
 def test_load_pandas_dataframe_to_table(database_table_fixture):
     database, table = database_table_fixture
 
@@ -116,14 +120,15 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
     assert rows[1] == (2,)
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
         {"database": Database.SQLITE},
     ],
     indirect=True,
+    ids=["sqlite"],
 )
-@pytest.mark.integration
 def test_load_file_to_table(database_table_fixture):
     database, target_table = database_table_fixture
     filepath = pathlib.Path(CWD.parent, "data/sample.csv")
@@ -147,8 +152,8 @@ def test_load_file_to_table(database_table_fixture):
         {"database": Database.SQLITE},
     ],
     indirect=True,
+    ids=["sqlite"],
 )
-@pytest.mark.integration
 def test_export_table_to_file_file_already_exists_raises_exception(
     database_table_fixture,
 ):
@@ -161,6 +166,7 @@ def test_export_table_to_file_file_already_exists_raises_exception(
     assert err_msg.endswith("tests/data/sample.csv already exists.")
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
@@ -170,8 +176,8 @@ def test_export_table_to_file_file_already_exists_raises_exception(
         }
     ],
     indirect=True,
+    ids=["sqlite"],
 )
-@pytest.mark.integration
 def test_export_table_to_file_overrides_existing_file(database_table_fixture):
     database, populated_table = database_table_fixture
 
@@ -190,10 +196,12 @@ def test_export_table_to_file_overrides_existing_file(database_table_fixture):
     assert df.rename(columns=str.lower).equals(expected)
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [{"database": Database.SQLITE}],
     indirect=True,
+    ids=["sqlite"],
 )
 def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     database_table_fixture,
@@ -207,6 +215,7 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     assert error_message.endswith("does not exist")
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
@@ -216,17 +225,18 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
         }
     ],
     indirect=True,
+    ids=["sqlite"],
 )
 @pytest.mark.parametrize(
-    "cloud_object_fixture",
+    "remote_files_fixture",
     [{"provider": "google", "extension": "csv"}],
     indirect=True,
+    ids=["google"],
 )
-@pytest.mark.integration
 def test_export_table_to_file_in_the_cloud(
-    database_table_fixture, cloud_object_fixture
+    database_table_fixture, remote_files_fixture
 ):
-    object_path, hook = cloud_object_fixture
+    object_path = remote_files_fixture[0]
     database, populated_table = database_table_fixture
 
     database.export_table_to_file(
@@ -234,13 +244,22 @@ def test_export_table_to_file_in_the_cloud(
         object_path,
         if_exists="replace",
     )
-    object_prefix = object_path[object_path.find("test") :]
-    bucket = object_path[object_path.find("//") + 2 : object_path.find("/test")]
-    file_content = hook.download(bucket, object_prefix).decode("utf-8")
-    expected = "id,name\n1,First\n2,Second\n3,Third with unicode पांचाल\n"
-    assert file_content == expected
+
+    filepath = copy_remote_file_to_local(object_path)
+    df = pd.read_csv(filepath)
+    assert len(df) == 3
+    expected = pd.DataFrame(
+        [
+            {"id": 1, "name": "First"},
+            {"id": 2, "name": "Second"},
+            {"id": 3, "name": "Third with unicode पांचाल"},
+        ]
+    )
+    test_utils.assert_dataframes_are_equal(df, expected)
+    os.remove(filepath)
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
@@ -250,6 +269,7 @@ def test_export_table_to_file_in_the_cloud(
         }
     ],
     indirect=True,
+    ids=["sqlite"],
 )
 def test_create_table_from_select_statement(database_table_fixture):
     database, original_table = database_table_fixture

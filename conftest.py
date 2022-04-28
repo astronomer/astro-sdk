@@ -276,48 +276,62 @@ def database_table_fixture(request):
 
 
 @pytest.fixture
-def cloud_object_fixture(request):
+def remote_files_fixture(request):
     """
+    Fixture used to create a list of remote object filenames and return the correspondent hook to access them.
+    This fixture may create the remote objects if the parameter "
+
     Given request.param in the format:
         {
             "provider": "google",  # mandatory, may be "google" or "amazon"
-            "file_suffix": "",  # optional, in case the user wants to add a suffix between the file name & extension
-            "file_extension": ".csv"  # optional, defaults to .csv if not given
+            "file_count": "",  # optional, in case the user wants to create multiple files
+            "file_extension": FileType  # optional, defaults to .csv if not given
         }
     Yield the following during setup:
-        (object_uri, hook)
+        [object1_uri, object2_uri]
     Example:
-        ("gs://some-bucket/test/8df8aea0-9b2e-4671-b84e-2d48f42a182f.csv", GCSHook)
+        [
+            "gs://some-bucket/test/8df8aea0-9b2e-4671-b84e-2d48f42a182f0.csv",
+            "gs://some-bucket/test/8df8aea0-9b2e-4671-b84e-2d48f42a182f1.csv"
+        ]
 
-    If the object exists, it is deleted during the tests setup and tear down.
+    If the objects exist, they are deleted during the tests setup and tear down.
     """
     params = request.param
     provider = params["provider"]
-    file_suffix = params.get("file_suffix", "")
-    file_extension = params.get("file_extension", "csv")
+    file_count = params.get("file_count", 1)
+    file_extension = params.get("file_extension", FileType.CSV).value
 
     unique_value = uuid.uuid4()
-    object_prefix = f"test/{unique_value}{file_suffix}.{file_extension}"
-    if provider == "google":
-        bucket_name = os.getenv("GOOGLE_BUCKET", "dag-authoring")
-        object_path = f"gs://{bucket_name}/{object_prefix}"
-        hook = gcs.GCSHook()
-        # if an object doesn't exist, hook.delete fails:
-        hook.exists(bucket_name, object_prefix) and hook.delete(
-            bucket_name, object_prefix
-        )
-    else:
-        bucket_name = os.getenv("AWS_BUCKET", "tmp9")
-        object_path = f"s3://{bucket_name}/{object_prefix}"
-        hook = s3.S3Hook()
-        hook.delete_objects(bucket_name, object_prefix)
 
-    yield object_path, hook
+    object_path_list = []
+    object_prefix_list = []
+    for item_count in range(file_count):
+        object_prefix = f"test/{unique_value}{item_count}.{file_extension}"
+        if provider == "google":
+            bucket_name = os.getenv("GOOGLE_BUCKET", "dag-authoring")
+            object_path = f"gs://{bucket_name}/{object_prefix}"
+            hook = gcs.GCSHook()
+            # if an object doesn't exist, GCSHook.delete fails:
+            hook.exists(bucket_name, object_prefix) and hook.delete(
+                bucket_name, object_prefix
+            )
+        else:
+            bucket_name = os.getenv("AWS_BUCKET", "tmp9")
+            object_path = f"s3://{bucket_name}/{object_prefix}"
+            hook = s3.S3Hook()
+            hook.delete_objects(bucket_name, object_prefix)
+        object_path_list.append(object_path)
+        object_prefix_list.append(object_prefix)
+
+    yield object_path_list
 
     if provider == "google":
-        # if an object doesn't exist, hook.delete fails:
-        hook.exists(bucket_name, object_prefix) and hook.delete(
-            bucket_name, object_prefix
-        )
+        for object_prefix in object_prefix_list:
+            # if an object doesn't exist, GCSHook.delete fails:
+            hook.exists(bucket_name, object_prefix) and hook.delete(
+                bucket_name, object_prefix
+            )
     else:
-        hook.delete_objects(bucket_name, object_prefix)
+        for object_prefix in object_prefix_list:
+            hook.delete_objects(bucket_name, object_prefix)
