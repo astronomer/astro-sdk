@@ -15,7 +15,6 @@ class GCSLocation(BaseFileLocation):
         """get GCS credentials for storage"""
         hook = gcs.GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else gcs.GCSHook()
         client = hook.get_conn()
-
         return {"client": client}
 
     def get_paths(self) -> List[str]:

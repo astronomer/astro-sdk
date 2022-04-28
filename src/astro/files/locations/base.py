@@ -62,6 +62,7 @@ class BaseFileLocation(ABC):
     @staticmethod
     def get_location_type(path: str) -> FileLocation:
         """Identify where a file is located
+
         :param path: Path to a file in the filesystem/Object stores
         """
         file_scheme = urlparse(path).scheme

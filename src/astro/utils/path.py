@@ -5,6 +5,7 @@ from typing import Dict
 def get_module_dot_notation(module_path: pathlib.Path) -> str:
     """
     Given a module path, return the dot notation import string starting at astro.
+
     :param module_path: Path to the module of interest
     :return: String containing the absolute dot notation path to the module
     """

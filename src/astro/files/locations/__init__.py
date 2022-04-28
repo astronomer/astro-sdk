@@ -14,7 +14,9 @@ DEFAULT_CONN_TYPE_TO_MODULE_PATH["gs"] = DEFAULT_CONN_TYPE_TO_MODULE_PATH["gcs"]
 
 
 def location_factory(path: str, conn_id: Optional[str] = None) -> BaseFileLocation:
-    """Location factory method to generate location class
+    """
+    Location factory method to generate location class
+
     :param path: Path to a file in the filesystem/Object stores
     :param conn_id: Airflow connection ID
     """
