@@ -216,7 +216,8 @@ class BaseDatabase(ABC):
         table_qualified_name = self.get_table_qualified_name(source_table)
         if self.table_exists(source_table):
             return pd.read_sql(
-                f"SELECT * FROM {table_qualified_name}",
+                # We are avoiding SQL injection by confirming the table exists before this statement
+                f"SELECT * FROM {table_qualified_name}",  # skipcq BAN-B608
                 con=self.sqlalchemy_engine,
             )
         else:
