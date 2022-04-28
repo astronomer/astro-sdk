@@ -6,6 +6,7 @@ from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
 from astro.constants import DEFAULT_CHUNK_SIZE
+from astro.files.locations import location_factory
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils import get_hook
 from astro.utils.database import get_database_from_conn_id
@@ -15,17 +16,16 @@ from astro.utils.load import (
     load_file_into_dataframe,
     populate_normalize_config,
 )
-from astro.utils.path import get_paths, get_transport_params, validate_path
 from astro.utils.task_id_helper import get_task_id
 
 
 class AgnosticLoadFile(BaseOperator):
-    """Load S3/local table to postgres/snowflake database.
+    """Load S3/local table to postgres/snowflake database
 
-    :param path: File path.
-    :param output_table_name: Name of table to create.
+    :param path: File path
+    :param output_table_name: Name of table to create
     :param file_conn_id: Airflow connection id of input file (optional)
-    :param output_conn_id: Database connection id.
+    :param output_conn_id: Database connection id
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
     """
 
@@ -74,12 +74,17 @@ class AgnosticLoadFile(BaseOperator):
             warehouse=self.output_table.warehouse,
         )
 
-        paths = get_paths(self.path, self.file_conn_id)
-        transport_params = get_transport_params(paths[0], self.file_conn_id)
-        return self.load_using_pandas(context, paths, hook, transport_params)
+        source = location_factory(self.path, self.file_conn_id)
+        return self.load_using_pandas(
+            context, source.get_paths(), hook, source.get_transport_params()
+        )
 
     def load_using_pandas(
-        self, context: Any, paths: List[str], hook: BaseHook, transport_params: dict
+        self,
+        context: Any,
+        paths: List[str],
+        hook: BaseHook,
+        transport_params: Union[dict, None],
     ) -> Union[TempTable, Table]:
         """Loads csv/parquet table from local/S3/GCS with Pandas.
 
@@ -113,13 +118,12 @@ class AgnosticLoadFile(BaseOperator):
             self.output_table.table_name = create_table_name(context=context)
 
     def _load_file_into_dataframe(
-        self, filepath: str, transport_params: dict
+        self, filepath: str, transport_params: Union[dict, None]
     ) -> pd.DataFrame:
         """Read file with Pandas.
 
         Select method based on `file_type` (S3 or local).
         """
-        validate_path(filepath)
         filetype = get_filetype(filepath)
         return load_file_into_dataframe(
             filepath, filetype, transport_params, normalize_config=self.normalize_config
@@ -135,14 +139,12 @@ def load_file(
     ndjson_normalize_sep: str = "_",
     **kwargs,
 ) -> XComArg:
-    """Convert AgnosticLoadFile into a function.
+    """Convert AgnosticLoadFile into a function that Returns an XComArg object
 
-    Returns an XComArg object.
-
-    :param path: File path.
+    :param path: File path
     :param output_table: Table to create
     :param file_conn_id: Airflow connection id of input file (optional)
-    :param task_id: task id, optional.
+    :param task_id: task id, optional
     :param if_exists: default override an existing Table. Options: fail, replace, append
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
         ex - {"a": {"b":"c"}} will result in
