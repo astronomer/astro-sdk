@@ -39,7 +39,7 @@ class AgnosticLoadFile(BaseOperator):
         self,
         path: str,
         output_table: Union[TempTable, Table],
-        file_conn_id: Optional[str] = None,
+        file_conn_id: Optional[str] = "",
         chunksize: int = DEFAULT_CHUNK_SIZE,
         if_exists: str = "replace",
         ndjson_normalize_sep: str = "_",
@@ -133,7 +133,7 @@ class AgnosticLoadFile(BaseOperator):
 def load_file(
     path: str,
     output_table: Union[TempTable, Table],
-    file_conn_id: Optional[str] = None,
+    file_conn_id: Optional[str] = "",
     task_id: Optional[str] = None,
     if_exists: str = "replace",
     ndjson_normalize_sep: str = "_",

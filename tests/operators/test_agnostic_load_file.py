@@ -23,6 +23,7 @@ from pandas.testing import assert_frame_equal
 from astro.constants import Database
 from astro.sql.operators.agnostic_load_file import load_file
 from astro.sql.table import Table
+from astro.utils.dependencies import gcs, s3
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
@@ -58,8 +59,8 @@ def test_load_file_with_http_path_file(sample_dag, test_table, sql_server):
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    "remote_file",
-    [{"name": "google"}, {"name": "amazon"}],
+    "remote_files_fixture",
+    [{"provider": "google"}, {"provider": "amazon"}],
     indirect=True,
     ids=["google_gcs", "amazon_s3"],
 )
@@ -72,12 +73,14 @@ def test_load_file_with_http_path_file(sample_dag, test_table, sql_server):
     indirect=True,
     ids=["temp_table", "named_table"],
 )
-def test_aql_load_remote_file_to_dbs(sample_dag, test_table, sql_server, remote_file):
+def test_aql_load_remote_file_to_dbs(
+    sample_dag, test_table, sql_server, remote_files_fixture
+):
     sql_name, hook = sql_server
-    file_conn_id, file_uri = remote_file
+    file_uri = remote_files_fixture[0]
 
     with sample_dag:
-        load_file(path=file_uri[0], file_conn_id=file_conn_id, output_table=test_table)
+        load_file(path=file_uri, output_table=test_table)
     test_utils.run_dag(sample_dag)
 
     df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
@@ -107,8 +110,8 @@ def test_aql_replace_existing_table(sample_dag, test_table, sql_server):
     data_path_1 = str(CWD) + "/../data/homes.csv"
     data_path_2 = str(CWD) + "/../data/homes2.csv"
     with sample_dag:
-        task_1 = load_file(path=data_path_1, file_conn_id="", output_table=test_table)
-        task_2 = load_file(path=data_path_2, file_conn_id="", output_table=test_table)
+        task_1 = load_file(path=data_path_1, output_table=test_table)
+        task_2 = load_file(path=data_path_2, output_table=test_table)
         task_1 >> task_2
     test_utils.run_dag(sample_dag)
 
@@ -132,7 +135,7 @@ def test_aql_local_file_with_no_table_name(sample_dag, test_table, sql_server):
     sql_name, hook = sql_server
     data_path = str(CWD) + "/../data/homes.csv"
     with sample_dag:
-        load_file(path=data_path, file_conn_id="", output_table=test_table)
+        load_file(path=data_path, output_table=test_table)
     test_utils.run_dag(sample_dag)
 
     df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
@@ -199,21 +202,22 @@ def test_load_file_templated_filename(sample_dag, sql_server, test_table):
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    "remote_file",
-    [{"name": "google", "count": 2}, {"name": "amazon", "count": 2}],
+    "remote_files_fixture",
+    [{"provider": "google", "file_count": 2}, {"provider": "amazon", "file_count": 2}],
     ids=["google", "amazon"],
     indirect=True,
 )
 @pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
-def test_aql_load_file_pattern(remote_file, sample_dag, test_table, sql_server):
-    file_conn_id, file_prefix = remote_file
+def test_aql_load_file_pattern(
+    remote_files_fixture, sample_dag, test_table, sql_server
+):
+    remote_object_uri = remote_files_fixture[0]
     filename = pathlib.Path(CWD.parent, "data/sample.csv")
     sql_name, hook = sql_server
 
     with sample_dag:
         load_file(
-            path=file_prefix[0][0:-5],
-            file_conn_id=file_conn_id,
+            path=remote_object_uri[0][0:-5],
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
@@ -250,16 +254,20 @@ def test_aql_load_file_local_file_pattern(sample_dag, test_table, sql_server):
 @pytest.mark.integration
 @pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
 @pytest.mark.parametrize(
-    "remote_file",
+    "remote_files_fixture",
     [{"name": "google"}, {"name": "amazon"}],
     indirect=True,
     ids=["google", "amazon"],
 )
 def test_load_file_using_file_connection(
-    sample_dag, remote_file, sql_server, test_table
+    sample_dag, remote_files_fixture, sql_server, test_table
 ):
     database_name, sql_hook = sql_server
-    file_conn_id, file_uri = remote_file
+    file_uri = remote_files_fixture
+    if file_uri.startswith("s3"):
+        file_conn_id = s3.S3Hook.default_conn_name
+    else:
+        file_conn_id = gcs.GCSHook.default_conn_name
     with sample_dag:
         load_file(
             path=file_uri[0],

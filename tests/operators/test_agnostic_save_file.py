@@ -233,27 +233,26 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
     ids=["temp_table"],
 )
 @pytest.mark.parametrize(
-    "remote_file",
-    [{"name": "google"}, {"name": "amazon"}],
+    "remote_files_fixture",
+    [{"provider": "google"}, {"provider": "amazon"}],
     indirect=True,
-    ids=["google_gcs", "amazon_s3"],
+    ids=["google", "amazon"],
 )
 def test_save_table_remote_file_exists_overwrite_false(
-    sample_dag, test_table, sql_server, remote_file, caplog
+    sample_dag, test_table, sql_server, remote_files_fixture, caplog
 ):
-    _, object_paths = remote_file
 
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
             save_file(
                 input_data=test_table,
-                output_file_path=object_paths[0],
+                output_file_path=remote_files_fixture[0],
                 output_conn_id="aws_default",
                 overwrite=False,
             )
         test_utils.run_dag(sample_dag)
 
-    expected_error = f"{object_paths[0]} file already exists."
+    expected_error = f"{remote_files_fixture[0]} file already exists."
     assert expected_error in caplog.text
 
 

@@ -229,7 +229,7 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
 )
 @pytest.mark.parametrize(
     "remote_files_fixture",
-    [{"provider": "google", "extension": "csv"}],
+    [{"provider": "google", "file_create": False}],
     indirect=True,
     ids=["google"],
 )
