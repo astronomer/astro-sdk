@@ -19,8 +19,6 @@ DEFAULT_CONN_ID = SqliteHook.default_conn_name
 
 class SqliteDatabase(BaseDatabase):
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
-        if not conn_id:
-            conn_id = DEFAULT_CONN_ID
         self.conn_id = conn_id
 
     @property
