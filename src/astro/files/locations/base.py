@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 from astro.constants import FileLocation
 
 
-class Location(ABC):
+class BaseFileLocation(ABC):
     """Base Location abstract class"""
 
     def __init__(self, path: str, conn_id: Optional[str] = None):
@@ -17,7 +17,7 @@ class Location(ABC):
         :param path: Path to a file in the filesystem/Object stores
         :param conn_id: Airflow connection ID
         """
-        if Location.is_valid_path(path):
+        if BaseFileLocation.is_valid_path(path):
             self.path = path
             self.conn_id = conn_id
         else:
@@ -46,7 +46,7 @@ class Location(ABC):
         :param path: Either local filesystem path or remote URI
         """
         try:
-            Location.get_location_type(path)
+            BaseFileLocation.get_location_type(path)
         except ValueError:
             return False
 

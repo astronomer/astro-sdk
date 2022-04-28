@@ -6,7 +6,7 @@ import uuid
 import pytest
 
 from astro.constants import FileLocation
-from astro.files.locations.base import Location
+from astro.files.locations.base import BaseFileLocation
 from astro.files.locations.local import LocalLocation
 
 CWD = pathlib.Path(__file__).parent
@@ -33,7 +33,7 @@ def local_dir():
 
 def test_get_location_type_with_supported_location():  # skipcq: PYL-W0612
     """With all the supported locations"""
-    location = Location.get_location_type(LOCAL_FILEPATH)
+    location = BaseFileLocation.get_location_type(LOCAL_FILEPATH)
     assert location == FileLocation.LOCAL
 
 
@@ -41,7 +41,7 @@ def test_get_location_type_with_unsupported_location_raises_exception():  # skip
     """With all the unsupported locations, should raise a valueError exception"""
     unsupported_filepath = "invalid://some-file"
     with pytest.raises(ValueError) as exc_info:
-        _ = Location.get_location_type(unsupported_filepath)
+        _ = BaseFileLocation.get_location_type(unsupported_filepath)
     expected_msg = "Unsupported scheme 'invalid' from path 'invalid://some-file'"
     assert exc_info.value.args[0] == expected_msg
 
