@@ -2,8 +2,7 @@ import glob
 import os
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, List, Optional, Dict, Union
-
+from typing import Dict, List, Optional, Union
 from urllib.parse import urlparse
 
 import smart_open
@@ -93,10 +92,6 @@ class Location(ABC):
 
     def exists(self) -> bool:
         """Check if the file exists or not"""
-
-        def null_scheme(_: Any = None) -> dict:
-            """dummy function to get dummy creds"""
-            return {}
 
         try:
             with smart_open.open(
