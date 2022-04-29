@@ -16,7 +16,7 @@ from astro.utils.database import (
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 
 
-def describe_create_database_from_conn_id():
+def describe_create_database():
     def with_supported_databases(session):
         assert create_database_from_conn_id("postgres_default") == Database.POSTGRES
         assert create_database_from_conn_id("sqlite_default") == Database.SQLITE
