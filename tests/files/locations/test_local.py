@@ -49,7 +49,7 @@ def test_get_location_type_with_unsupported_location_raises_exception():  # skip
 def test_get_transport_params_with_local():  # skipcq: PYL-W0612
     """with local filepath"""
     location = LocalLocation(LOCAL_FILEPATH)
-    assert location.get_transport_params() is None
+    assert location.transport_params is None
 
 
 @pytest.mark.parametrize(
@@ -58,7 +58,7 @@ def test_get_transport_params_with_local():  # skipcq: PYL-W0612
 def test_get_paths_with_local_dir(local_dir, path):  # skipcq: PYL-W0612
     """with local filepath"""
     location = LocalLocation(path)
-    assert sorted(location.get_paths()) == [LOCAL_DIR_FILE_1, LOCAL_DIR_FILE_2]
+    assert sorted(location.paths) == [LOCAL_DIR_FILE_1, LOCAL_DIR_FILE_2]
 
 
 def test_get_paths_with_unsupported_location(local_dir):  # skipcq: PYL-W0612

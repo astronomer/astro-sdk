@@ -13,7 +13,7 @@ from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_unique_table_name
 from astro.utils import get_hook, postgres_transform, snowflake_transform
 from astro.utils.database import (
-    get_database_from_conn_id,
+    create_database_from_conn_id,
     get_sqlalchemy_engine,
     run_sql,
 )
@@ -198,7 +198,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         :param schema: an optional schema if the output_table has a schema set. Defaults to the temp schema
         """
         schema = schema or SCHEMA
-        database = get_database_from_conn_id(self.conn_id)
+        database = create_database_from_conn_id(self.conn_id)
         if database in (Database.POSTGRES, Database.BIGQUERY) and self.schema:
             output_table_name = schema + "." + output_table_name
         elif database == Database.SNOWFLAKE and self.schema and "." not in self.sql:
@@ -271,7 +271,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             )
 
     def _add_templates_to_context(self, context):
-        database = get_database_from_conn_id(self.conn_id)
+        database = create_database_from_conn_id(self.conn_id)
         if database in (Database.POSTGRES, Database.BIGQUERY):
             return postgres_transform.add_templates_to_context(self.parameters, context)
         elif database == Database.SNOWFLAKE:

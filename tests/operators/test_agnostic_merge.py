@@ -10,7 +10,7 @@ from astro import sql as aql
 from astro.constants import Database
 from astro.dataframe import dataframe as adf
 from astro.sql.table import Table, TempTable
-from astro.utils.database import get_database_from_conn_id
+from astro.utils.database import create_database_from_conn_id
 from tests.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -41,8 +41,8 @@ def merge_keys(sql_server, mode):
 
     if sql_name == "snowflake":
         return {k: k for k in keys}
-    else:
-        return keys
+
+    return keys
 
 
 @pytest.fixture
@@ -68,16 +68,16 @@ def merge_parameters(request, sql_server):
             },
             mode,
         )
-    elif mode == "update":
-        return (
-            {
-                "merge_keys": merge_keys(sql_server, mode),
-                "target_columns": ["list", "sell", "taxes"],
-                "merge_columns": ["list", "sell", "age"],
-                "conflict_strategy": "update",
-            },
-            mode,
-        )
+    # elif mode == "update":
+    return (
+        {
+            "merge_keys": merge_keys(sql_server, mode),
+            "target_columns": ["list", "sell", "taxes"],
+            "merge_columns": ["list", "sell", "age"],
+            "conflict_strategy": "update",
+        },
+        mode,
+    )
 
 
 @aql.transform
@@ -87,13 +87,14 @@ def do_a_thing(input_table: Table):
 
 @aql.run_raw_sql
 def add_constraint(table: Table, columns):
-    database = get_database_from_conn_id(table.conn_id)
+    database = create_database_from_conn_id(table.conn_id)
     if database == Database.SQLITE:
         return (
             "CREATE UNIQUE INDEX unique_index ON {{table}}" + f"({','.join(columns)})"
         )
     elif database == Database.BIGQUERY:
         return ""
+
     return (
         "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE"
         + f" ({','.join(columns)})"

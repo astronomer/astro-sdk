@@ -8,6 +8,7 @@ from airflow.executors.debug_executor import DebugExecutor
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from airflow.utils import timezone
 from airflow.utils.state import State
+from pandas.testing import assert_frame_equal
 
 from astro.sql.table import Table, TempTable
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook, bigquery
@@ -118,3 +119,26 @@ def get_dataframe_from_table(sql_name: str, test_table: Union[Table, TempTable],
             con=hook.get_conn(),
         )
     return df
+
+
+def load_to_dataframe(filepath, file_type):
+    read = {
+        "parquet": pd.read_parquet,
+        "csv": pd.read_csv,
+        "json": pd.read_json,
+        "ndjson": pd.read_json,
+    }
+    read_params = {"ndjson": {"lines": True}}
+    mode = {"parquet": "rb"}
+    with open(filepath, mode.get(file_type, "r")) as fp:
+        return read[file_type](fp, **read_params.get(file_type, {}))
+
+
+def assert_dataframes_are_equal(df: pd.DataFrame, expected: pd.DataFrame) -> None:
+    """
+    Auxiliary function to compare similarity of dataframes to avoid repeating this logic in many tests.
+    """
+    df = df.rename(columns=str.lower)
+    df = df.astype({"id": "int64"})
+    expected = expected.astype({"id": "int64"})
+    assert_frame_equal(df, expected)

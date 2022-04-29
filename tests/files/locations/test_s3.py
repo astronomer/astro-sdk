@@ -2,14 +2,14 @@ from unittest.mock import patch
 
 from botocore.client import BaseClient
 
-from astro.files.locations import location_factory
+from astro.files.locations import create_file_location
 
 
 def test_get_transport_params_with_s3():  # skipcq: PYL-W0612
     """test get_transport_params() method with S3 filepath"""
     path = "s3://bucket/some-file"
-    location = location_factory(path)
-    credentials = location.get_transport_params()
+    location = create_file_location(path)
+    credentials = location.transport_params
     assert isinstance(credentials["client"], BaseClient)
 
 
@@ -19,7 +19,7 @@ def test_get_transport_params_with_s3():  # skipcq: PYL-W0612
 )
 def test_remote_object_store_prefix(remote_file):
     """with remote filepath having prefix"""
-    location = location_factory("s3://tmp/house")
-    assert sorted(location.get_paths()) == sorted(
+    location = create_file_location("s3://tmp/house")
+    assert sorted(location.paths) == sorted(
         ["s3://tmp/house1.csv", "s3://tmp/house2.csv"]
     )

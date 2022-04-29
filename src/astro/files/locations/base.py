@@ -1,5 +1,3 @@
-import glob
-import os
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Union
 from urllib.parse import urlparse
@@ -29,12 +27,14 @@ class BaseFileLocation(ABC):
         """Property to identify location type"""
         raise NotImplementedError
 
+    @property
     @abstractmethod
-    def get_paths(self) -> List[str]:
+    def paths(self) -> List[str]:
         """Resolve patterns in path"""
         raise NotImplementedError
 
-    def get_transport_params(self) -> Union[Dict, None]:  # skipcq: PYL-R0201
+    @property
+    def transport_params(self) -> Union[Dict, None]:  # skipcq: PYL-R0201
         """Get credentials required by smart open to access files"""
         return None
 
@@ -50,13 +50,6 @@ class BaseFileLocation(ABC):
         except ValueError:
             return False
 
-        result = urlparse(path)
-        if not (
-            (result.scheme and result.netloc)
-            or os.path.isfile(path)
-            or glob.glob(result.path)
-        ):
-            return False
         return True
 
     @staticmethod

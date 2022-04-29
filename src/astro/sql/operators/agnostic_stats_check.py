@@ -6,7 +6,7 @@ from sqlalchemy.sql.schema import Table as SqlaTable
 from astro.constants import Database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.table import Table
-from astro.utils.database import get_database_from_conn_id
+from astro.utils.database import create_database_from_conn_id
 from astro.utils.schema_util import (
     get_error_string_for_multiple_dbs,
     tables_from_same_db,
@@ -222,7 +222,7 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
         )
 
     def execute(self, context: Dict):
-        database = get_database_from_conn_id(self.conn_id)
+        database = create_database_from_conn_id(self.conn_id)
         check_handler = ChecksHandler(self.checks)
 
         valid_db = {

@@ -1,6 +1,6 @@
 import importlib
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional
 
 from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
@@ -13,24 +13,17 @@ DEFAULT_CONN_TYPE_TO_MODULE_PATH["https"] = DEFAULT_CONN_TYPE_TO_MODULE_PATH["ht
 DEFAULT_CONN_TYPE_TO_MODULE_PATH["gs"] = DEFAULT_CONN_TYPE_TO_MODULE_PATH["gcs"]
 
 
-def location_factory(path: str, conn_id: Optional[str] = None) -> BaseFileLocation:
+def create_file_location(path: str, conn_id: Optional[str] = None) -> BaseFileLocation:
     """
     Location factory method to generate location class
 
     :param path: Path to a file in the filesystem/Object stores
     :param conn_id: Airflow connection ID
     """
-    location_to_class: Dict[FileLocation, str] = {
-        FileLocation.LOCAL: "LocalLocation",
-        FileLocation.S3: "S3Location",
-        FileLocation.GS: "GCSLocation",
-        FileLocation.HTTP: "HttpLocation",
-        FileLocation.HTTPS: "HttpLocation",
-    }
     filetype: FileLocation = BaseFileLocation.get_location_type(path)
     module_path = DEFAULT_CONN_TYPE_TO_MODULE_PATH[filetype.value]
+    module_name = module_path.split(".")[-1]
+    class_name = module_name.title() + "Location"
     module_ref = importlib.import_module(module_path)
-    location: BaseFileLocation = getattr(module_ref, location_to_class[filetype])(
-        path, conn_id
-    )
+    location: BaseFileLocation = getattr(module_ref, class_name)(path, conn_id)
     return location
