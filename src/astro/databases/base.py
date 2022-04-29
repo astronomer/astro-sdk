@@ -42,23 +42,17 @@ class BaseDatabase(ABC):
 
     @property
     def hook(self) -> BaseHook:
-        """
-        Return an instance of the database-specific Airflow hook.
-        """
+        """Return an instance of the database-specific Airflow hook."""
         raise NotImplementedError
 
     @property
     def connection(self) -> sqlalchemy.engine.base.Connection:
-        """
-        Return a Sqlalchemy connection object for the given database.
-        """
+        """Return a Sqlalchemy connection object for the given database."""
         return self.sqlalchemy_engine.connect()
 
     @property
     def sqlalchemy_engine(self) -> sqlalchemy.engine.base.Engine:
-        """
-        Return Sqlalchemy engine.
-        """
+        """Return Sqlalchemy engine."""
         return self.hook.get_sqlalchemy_engine()
 
     def run_sql(self, sql_statement: str, parameters: Optional[dict] = None):
@@ -127,7 +121,7 @@ class BaseDatabase(ABC):
         statement = self._create_table_statement.format(
             self.get_table_qualified_name(target_table), statement
         )
-        self.hook.run(statement, parameters)
+        self.run_sql(statement, parameters)
 
     def drop_table(self, table: Table) -> None:
         """
@@ -138,7 +132,7 @@ class BaseDatabase(ABC):
         statement = self._drop_table_statement.format(
             self.get_table_qualified_name(table)
         )
-        self.hook.run(statement)
+        self.run_sql(statement)
 
     # ---------------------------------------------------------
     # Table load methods
@@ -218,10 +212,10 @@ class BaseDatabase(ABC):
                 f"SELECT * FROM {table_qualified_name}",  # skipcq BAN-B608
                 con=self.sqlalchemy_engine,
             )
-        else:
-            raise NonExistentTableException(
-                "The table %s does not exist" % table_qualified_name
-            )
+
+        raise NonExistentTableException(
+            "The table %s does not exist" % table_qualified_name
+        )
 
     def export_table_to_file(
         self,

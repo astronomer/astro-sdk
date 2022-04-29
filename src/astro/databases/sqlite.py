@@ -18,21 +18,22 @@ DEFAULT_CONN_ID = SqliteHook.default_conn_name
 
 
 class SqliteDatabase(BaseDatabase):
+    """
+    Handle interactions with Sqlite databases. If this class is successful, we should not have any Sqlite-specific
+    logic in other parts of our code-base.
+    """
+
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
         super().__init__(conn_id)
 
     @property
     def hook(self):
-        """
-        Retrieve Airflow hook to interface with the Sqlite database.
-        """
+        """Retrieve Airflow hook to interface with the Sqlite database."""
         return SqliteHook(sqlite_conn_id=self.conn_id)
 
     @property
     def sqlalchemy_engine(self) -> Engine:
-        """
-        Return SQAlchemy engine.
-        """
+        """Return SQAlchemy engine."""
         uri = self.hook.get_uri()
         if "////" not in uri:
             uri = uri.replace("///", "////")

@@ -9,7 +9,7 @@ class DatabaseSubclass(BaseDatabase):
     pass
 
 
-def test_subclass_missing_hook_raises_exception():
+def test_subclass_missing_not_implemented_methods_raise_exception():
     db = DatabaseSubclass(conn_id="fake_conn_id")
     with pytest.raises(NotImplementedError):
         db.hook

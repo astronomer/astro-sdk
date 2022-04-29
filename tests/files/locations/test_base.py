@@ -28,6 +28,6 @@ def local_file():  # skipcq: PY-D0003
 
 @pytest.mark.parametrize("filepath", sample_filepaths, ids=sample_filepaths_ids)
 def test_validate_path_with_supported_filepaths(local_file, filepath):
-    """Test is_valid_patfilesh with supported paths"""
+    """Test is_valid_path with supported paths"""
     location = create_file_location(filepath)
     assert location.is_valid_path(filepath) is True

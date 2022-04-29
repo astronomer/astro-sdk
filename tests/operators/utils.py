@@ -135,6 +135,9 @@ def load_to_dataframe(filepath, file_type):
 
 
 def assert_dataframes_are_equal(df: pd.DataFrame, expected: pd.DataFrame) -> None:
+    """
+    Auxiliary function to compare similarity of dataframes to avoid repeating this logic in many tests.
+    """
     df = df.rename(columns=str.lower)
     df = df.astype({"id": "int64"})
     expected = expected.astype({"id": "int64"})
