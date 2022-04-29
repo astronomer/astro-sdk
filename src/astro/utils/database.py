@@ -95,5 +95,5 @@ def run_sql(
     connection = engine.connect()
     if isinstance(sql_statement, str):
         return connection.execute(text(sql_statement), parameters)
-    else:
-        return connection.execute(sql_statement, parameters)
+
+    return connection.execute(sql_statement, parameters)

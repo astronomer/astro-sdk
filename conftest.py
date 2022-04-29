@@ -320,9 +320,9 @@ def remote_files_fixture(request):
                 hook.upload(bucket_name, object_prefix, source_path)
             else:
                 # if an object doesn't exist, GCSHook.delete fails:
-                hook.exists(bucket_name, object_prefix) and hook.delete(
+                hook.exists(  # skipcq: PYL-W0106
                     bucket_name, object_prefix
-                )  # skipcq: PYL-W0106
+                ) and hook.delete(bucket_name, object_prefix)
         else:
             bucket_name = os.getenv("AWS_BUCKET", "tmp9")
             object_path = f"s3://{bucket_name}/{object_prefix}"
@@ -339,9 +339,9 @@ def remote_files_fixture(request):
     if provider == "google":
         for object_prefix in object_prefix_list:
             # if an object doesn't exist, GCSHook.delete fails:
-            hook.exists(bucket_name, object_prefix) and hook.delete(
+            hook.exists(  # skipcq: PYL-W0106
                 bucket_name, object_prefix
-            )  # skipcq: PYL-W0106
+            ) and hook.delete(bucket_name, object_prefix)
     else:
         for object_prefix in object_prefix_list:
             hook.delete_objects(bucket_name, object_prefix)

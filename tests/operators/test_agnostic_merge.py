@@ -41,8 +41,8 @@ def merge_keys(sql_server, mode):
 
     if sql_name == "snowflake":
         return {k: k for k in keys}
-    else:
-        return keys
+
+    return keys
 
 
 @pytest.fixture
@@ -68,16 +68,16 @@ def merge_parameters(request, sql_server):
             },
             mode,
         )
-    elif mode == "update":
-        return (
-            {
-                "merge_keys": merge_keys(sql_server, mode),
-                "target_columns": ["list", "sell", "taxes"],
-                "merge_columns": ["list", "sell", "age"],
-                "conflict_strategy": "update",
-            },
-            mode,
-        )
+    # elif mode == "update":
+    return (
+        {
+            "merge_keys": merge_keys(sql_server, mode),
+            "target_columns": ["list", "sell", "taxes"],
+            "merge_columns": ["list", "sell", "age"],
+            "conflict_strategy": "update",
+        },
+        mode,
+    )
 
 
 @aql.transform
@@ -94,6 +94,7 @@ def add_constraint(table: Table, columns):
         )
     elif database == Database.BIGQUERY:
         return ""
+
     return (
         "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE"
         + f" ({','.join(columns)})"
