@@ -10,7 +10,7 @@ from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from astro.constants import Database
 from astro.sql.table import Table
 from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
-from astro.utils.database import get_database_from_conn_id
+from astro.utils.database import create_database_from_conn_id
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from astro.utils.task_id_helper import get_task_id
 
@@ -94,7 +94,7 @@ class SaveFile(BaseOperator):
         self,
     ) -> Union[pd.DataFrame, Iterator[pd.DataFrame]]:
         input_table = self.input_data
-        database = get_database_from_conn_id(input_table.conn_id)
+        database = create_database_from_conn_id(input_table.conn_id)
 
         # Select database Hook based on `conn` type
         hook_kwargs = {

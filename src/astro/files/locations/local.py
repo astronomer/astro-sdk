@@ -12,7 +12,8 @@ class LocalLocation(BaseFileLocation):
 
     location_type = FileLocation.LOCAL
 
-    def get_paths(self) -> List[str]:
+    @property
+    def paths(self) -> List[str]:
         """Resolve local filepath"""
         url = urlparse(self.path)
         path_object = pathlib.Path(url.path)

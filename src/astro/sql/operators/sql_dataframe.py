@@ -9,7 +9,7 @@ from astro.constants import Database
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils import get_hook
-from astro.utils.database import get_database_from_conn_id
+from astro.utils.database import create_database_from_conn_id
 from astro.utils.dependencies import (
     BigQueryHook,
     PostgresHook,
@@ -126,7 +126,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         )
 
     def _get_dataframe(self, table: Table):
-        database = get_database_from_conn_id(table.conn_id)
+        database = create_database_from_conn_id(table.conn_id)
         self.log.info(f"Getting dataframe for {table}")
         if database in (Database.POSTGRES, Database.POSTGRESQL):
             self.hook = PostgresHook(

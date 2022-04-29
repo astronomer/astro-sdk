@@ -9,6 +9,7 @@ class HttpLocation(BaseFileLocation):
 
     location_type = FileLocation.HTTP
 
-    def get_paths(self) -> List[str]:
+    @property
+    def paths(self) -> List[str]:
         """Resolve patterns in path"""
         return [self.path]

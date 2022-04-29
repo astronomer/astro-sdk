@@ -4,7 +4,7 @@ import uuid
 import pytest
 
 from astro.constants import FileLocation
-from astro.files.locations import location_factory
+from astro.files.locations import create_file_location
 
 LOCAL_FILEPATH = f"/tmp/{uuid.uuid4()}"
 
@@ -28,8 +28,8 @@ def local_file():  # skipcq: PY-D0003
 
 @pytest.mark.parametrize("filepath", sample_filepaths, ids=sample_filepaths_ids)
 def test_validate_path_with_supported_filepaths(local_file, filepath):
-    """Test is_valid_path with supported paths"""
-    location = location_factory(filepath)
+    """Test is_valid_patfilesh with supported paths"""
+    location = create_file_location(filepath)
     assert location.is_valid_path(filepath) is True
 
 
@@ -37,6 +37,6 @@ def test_validate_path_with_unsupported_path_raises_exception():  # skipcq: PYL-
     """Test is_valid_path with unsupported paths"""
     nonexistent_file = "/tmp/nonexistent-file"
     with pytest.raises(ValueError) as exc_info:
-        _ = location_factory(nonexistent_file)
+        _ = create_file_location(nonexistent_file)
     expected_msg = "Invalid path: '/tmp/nonexistent-file'"
     assert exc_info.value.args[0] == expected_msg

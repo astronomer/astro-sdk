@@ -10,7 +10,7 @@ import pytest
 import sqlalchemy
 
 from astro.constants import Database
-from astro.databases import get_database_from_conn_id
+from astro.databases import create_database_from_conn_id
 from astro.databases.sqlite import SqliteDatabase
 from astro.exceptions import NonExistentTableException
 from astro.sql.tables import Table
@@ -27,8 +27,8 @@ TEST_TABLE = Table()
 
 
 @pytest.mark.parametrize("conn_id", SUPPORTED_CONN_IDS)
-def test_get_database_from_conn_id(conn_id):
-    database = get_database_from_conn_id(conn_id)
+def test_create_database_from_conn_id(conn_id):
+    database = create_database_from_conn_id(conn_id)
     assert isinstance(database, SqliteDatabase)
 
 

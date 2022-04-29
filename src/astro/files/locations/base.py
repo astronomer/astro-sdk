@@ -29,12 +29,14 @@ class BaseFileLocation(ABC):
         """Property to identify location type"""
         raise NotImplementedError
 
+    @property
     @abstractmethod
-    def get_paths(self) -> List[str]:
+    def paths(self) -> List[str]:
         """Resolve patterns in path"""
         raise NotImplementedError
 
-    def get_transport_params(self) -> Union[Dict, None]:  # skipcq: PYL-R0201
+    @property
+    def transport_params(self) -> Union[Dict, None]:  # skipcq: PYL-R0201
         """Get credentials required by smart open to access files"""
         return None
 

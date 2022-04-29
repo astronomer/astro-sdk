@@ -6,18 +6,20 @@ from astro.files.locations.base import BaseFileLocation
 from astro.utils.dependencies import gcs
 
 
-class GCSLocation(BaseFileLocation):
+class GcsLocation(BaseFileLocation):
     """Handler GS object store operations"""
 
     location_type = FileLocation.GS
 
-    def get_transport_params(self) -> Dict:
+    @property
+    def transport_params(self) -> Dict:
         """get GCS credentials for storage"""
         hook = gcs.GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else gcs.GCSHook()
         client = hook.get_conn()
         return {"client": client}
 
-    def get_paths(self) -> List[str]:
+    @property
+    def paths(self) -> List[str]:
         """Resolve GS file paths with prefix"""
         url = urlparse(self.path)
         bucket_name = url.netloc

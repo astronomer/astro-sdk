@@ -10,7 +10,7 @@ from astro.constants import CONN_TYPE_TO_DATABASE, Database
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 
 
-def get_database_from_conn_id(conn_id: str) -> Database:
+def create_database_from_conn_id(conn_id: str) -> Database:
     """
     Given a conn_id, identify the database name.
 

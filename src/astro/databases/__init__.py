@@ -20,7 +20,7 @@ CONN_TYPE_TO_MODULE_PATH = {
 SUPPORTED_DATABASES = set(DEFAULT_CONN_TYPE_TO_MODULE_PATH.keys())
 
 
-def get_database_from_conn_id(conn_id: str) -> BaseDatabase:
+def create_database_from_conn_id(conn_id: str) -> BaseDatabase:
     """
     Given a conn_id, return the associated Database class.
 
@@ -31,4 +31,5 @@ def get_database_from_conn_id(conn_id: str) -> BaseDatabase:
     module = importlib.import_module(module_path)
     module_name = module_path.split(".")[-1]
     class_name = module_name.title() + "Database"
-    return getattr(module, class_name)(conn_id)
+    database: BaseDatabase = getattr(module, class_name)(conn_id)
+    return database

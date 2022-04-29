@@ -17,7 +17,8 @@ class S3Location(BaseFileLocation):
         """Return S3 ID/KEY pair from environment vars"""
         return os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"]
 
-    def get_transport_params(self) -> Dict:
+    @property
+    def transport_params(self) -> Dict:
         """Structure s3fs credentials from Airflow connection.
         s3fs enables pandas to write to s3
         """
@@ -25,7 +26,8 @@ class S3Location(BaseFileLocation):
         session = hook.get_session()
         return {"client": session.client("s3")}
 
-    def get_paths(self) -> List[str]:
+    @property
+    def paths(self) -> List[str]:
         """Resolve S3 file paths with prefix"""
         url = urlparse(self.path)
         bucket_name = url.netloc

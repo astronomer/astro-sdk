@@ -14,7 +14,7 @@ from airflow.utils.db import create_default_connections
 from airflow.utils.session import create_session, provide_session
 
 from astro.constants import Database, FileType
-from astro.databases import get_database_from_conn_id
+from astro.databases import create_database_from_conn_id
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_unique_table_name
 from astro.sql.tables import Table as NewTable
@@ -265,7 +265,7 @@ def database_table_fixture(request):
     database_name = params["database"]
     database_name_to_conn_id = {Database.SQLITE: "sqlite_default"}
     conn_id = database_name_to_conn_id[database_name]
-    database = get_database_from_conn_id(conn_id)
+    database = create_database_from_conn_id(conn_id)
 
     database.drop_table(table)
     if filepath:

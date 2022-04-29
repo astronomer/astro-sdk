@@ -1,7 +1,6 @@
 import os
-import pathlib
 from abc import ABC
-from typing import Optional, Union
+from typing import Optional
 
 import pandas as pd
 import smart_open
@@ -12,14 +11,13 @@ from astro.constants import (
     DEFAULT_CHUNK_SIZE,
     AppendConflictStrategy,
     ExportExistsStrategy,
-    FileLocation,
     FileType,
     LoadExistStrategy,
 )
 from astro.exceptions import NonExistentTableException
+from astro.files.locations import create_file_location
 from astro.sql.tables import Table
 from astro.utils.file import get_filetype
-from astro.utils.path import get_location, get_transport_params
 
 
 class BaseDatabase(ABC):
@@ -228,9 +226,7 @@ class BaseDatabase(ABC):
     def export_table_to_file(
         self,
         source_table: Table,
-        target_file: Union[
-            str, pathlib.PosixPath
-        ],  # The target file object should contain conn_id and serializer
+        target_file: str,  # The target file object should contain conn_id and serializer
         target_file_conn_id: Optional[
             str
         ] = None,  # TODO: join it in a single object, only keeping target_file
@@ -251,11 +247,7 @@ class BaseDatabase(ABC):
 
         # TODO: the following dictionaries should belong to the file object
         filetype = get_filetype(target_file)
-        file_location = get_location(target_file)
-        if file_location in [FileLocation.S3, FileLocation.GS]:
-            credentials = get_transport_params(target_file, conn_id=target_file_conn_id)
-        else:
-            credentials = None
+        file_location = create_file_location(target_file)
 
         df = self.export_table_to_pandas_dataframe(source_table)
         serializer = {
@@ -272,6 +264,6 @@ class BaseDatabase(ABC):
         # TODO: until here - the lines above should be simplified by the File object
 
         with smart_open.open(
-            target_file, mode="wb", transport_params=credentials
+            target_file, mode="wb", transport_params=file_location.transport_params
         ) as stream:
             serializer[filetype](stream, **serializer_params.get(filetype, {}))

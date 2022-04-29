@@ -7,7 +7,7 @@ from sqlalchemy.sql.schema import Table as SqlaTable
 from astro.constants import Database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.table import Table
-from astro.utils.database import get_database_from_conn_id
+from astro.utils.database import create_database_from_conn_id
 
 
 class SqlTruncateOperator(SqlDecoratedOperator):
@@ -39,7 +39,7 @@ class SqlTruncateOperator(SqlDecoratedOperator):
         )
 
     def execute(self, context: Dict):
-        database = get_database_from_conn_id(self.table.conn_id)
+        database = create_database_from_conn_id(self.table.conn_id)
         if self.table.schema and database == Database.SQLITE:
             metadata = MetaData()
         else:

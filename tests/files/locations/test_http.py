@@ -3,7 +3,7 @@ import pathlib
 import pytest
 
 from astro.constants import FileLocation
-from astro.files.locations import location_factory
+from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
 
 CWD = pathlib.Path(__file__).parent
@@ -34,8 +34,8 @@ def test_get_location_type_with_supported_location(
 )
 def test_get_transport_params(path):  # skipcq: PYL-W0612, PTC-W0065
     """test get_transport_params() with API endpoint"""
-    location = location_factory(path)
-    credentials = location.get_transport_params()
+    location = create_file_location(path)
+    credentials = location.transport_params
     assert credentials is None
 
 
@@ -46,5 +46,5 @@ def test_get_transport_params(path):  # skipcq: PYL-W0612, PTC-W0065
 )
 def test_describe_get_paths(path):  # skipcq: PYL-W0612, PTC-W0065
     """test get_paths with API endpoint"""
-    location = location_factory(path)
-    assert location.get_paths() == [path]
+    location = create_file_location(path)
+    assert location.paths == [path]

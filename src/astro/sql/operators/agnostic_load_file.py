@@ -6,10 +6,10 @@ from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
 from astro.constants import DEFAULT_CHUNK_SIZE
-from astro.files.locations import location_factory
+from astro.files.locations import create_file_location
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils import get_hook
-from astro.utils.database import get_database_from_conn_id
+from astro.utils.database import create_database_from_conn_id
 from astro.utils.file import get_filetype
 from astro.utils.load import (
     load_dataframe_into_sql_table,
@@ -64,7 +64,7 @@ class AgnosticLoadFile(BaseOperator):
 
         self.normalize_config = populate_normalize_config(
             ndjson_normalize_sep=self.ndjson_normalize_sep,
-            database=get_database_from_conn_id(self.output_table.conn_id),
+            database=create_database_from_conn_id(self.output_table.conn_id),
         )
 
         hook = get_hook(
@@ -74,9 +74,9 @@ class AgnosticLoadFile(BaseOperator):
             warehouse=self.output_table.warehouse,
         )
 
-        source = location_factory(self.path, self.file_conn_id)
+        source = create_file_location(self.path, self.file_conn_id)
         return self.load_using_pandas(
-            context, source.get_paths(), hook, source.get_transport_params()
+            context, source.paths, hook, source.transport_params
         )
 
     def load_using_pandas(

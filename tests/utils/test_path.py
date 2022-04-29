@@ -4,7 +4,7 @@ from astro import databases, settings
 from astro.databases import sqlite
 from astro.utils.path import (
     get_dict_with_module_names_to_dot_notations,
-    get_module_dot_notation
+    get_module_dot_notation,
 )
 
 
