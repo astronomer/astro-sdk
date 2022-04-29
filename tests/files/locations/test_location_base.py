@@ -33,8 +33,8 @@ def describe_validate_path():  # skipcq: PY-D0003
         assert location.is_valid_path(filepath) is True
 
     def with_unsupported_path_raises_exception():  # skipcq: PYL-W0612, PTC-W0065, PY-D0003
-        nonexistent_file = "/tmp/nonexistent-file"
+        nonexistent_file = "somescheme://tmp/nonexistent-file/"
         with pytest.raises(ValueError) as exc_info:
             _ = location_factory(nonexistent_file)
-        expected_msg = "Invalid path: '/tmp/nonexistent-file'"
+        expected_msg = f"Unsupported scheme 'somescheme' from path '{nonexistent_file}'"
         assert exc_info.value.args[0] == expected_msg

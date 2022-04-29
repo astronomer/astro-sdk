@@ -40,7 +40,7 @@ def test_is_binary(filetype):
 
 def test_get_size():
     """Test get_size() of for local file."""
-    assert File(sample_file).get_size() == 65
+    assert File(str(sample_file.absolute())).get_size() == 65
 
 
 def test_path_property():
