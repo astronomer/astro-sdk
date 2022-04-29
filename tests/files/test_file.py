@@ -106,20 +106,22 @@ def test_write(mocked_smart_open, filetype, locations):
         FileType.NDJSON: "astro.files.type.NdJson.write",
         FileType.PARQUET: "astro.files.type.Parquet.write",
     }
-    mocked_write = patch(filetype_to_class[FileType(filetype)]).start()
+    with patch(filetype_to_class[FileType(filetype)]) as mocked_write:
 
-    path = locations["path"] + "." + filetype
+        path = locations["path"] + "." + filetype
 
-    File(path).write(df=df)
-    mocked_smart_open.assert_called()
-    kwargs = mocked_smart_open.call_args.kwargs
-    args = mocked_smart_open.call_args.args
-    if kwargs["transport_params"]:
-        assert isinstance(kwargs["transport_params"]["client"], locations["instance"])
-    assert path == args[0]
-    mocked_write.assert_called()
+        File(path).write(df=df)
+        mocked_smart_open.assert_called()
+        kwargs = mocked_smart_open.call_args.kwargs
+        args = mocked_smart_open.call_args.args
+        if kwargs["transport_params"]:
+            assert isinstance(
+                kwargs["transport_params"]["client"], locations["instance"]
+            )
+        assert path == args[0]
 
-    mocked_write.stop()
+        mocked_write.assert_called()
+        mocked_write.stop()
 
 
 @pytest.mark.parametrize(
@@ -149,20 +151,20 @@ def test_read(mocked_smart_open, filetype, locations):
         FileType.NDJSON: "astro.files.type.NdJson.read",
         FileType.PARQUET: "astro.files.type.Parquet.read",
     }
-    mocked_read = patch(filetype_to_class[FileType(filetype)]).start()
+    with patch(filetype_to_class[FileType(filetype)]) as mocked_read:
 
-    path = locations["path"] + "." + filetype
+        path = locations["path"] + "." + filetype
 
-    File(path).read(normalize_config=None)
-    mocked_smart_open.assert_called()
-    kwargs = mocked_smart_open.call_args.kwargs
-    args = mocked_smart_open.call_args.args
-    if kwargs["transport_params"]:
-        assert isinstance(kwargs["transport_params"]["client"], locations["instance"])
-    assert path == args[0]
-    mocked_read.assert_called()
-
-    mocked_read.stop()
+        File(path).read(normalize_config=None)
+        mocked_smart_open.assert_called()
+        kwargs = mocked_smart_open.call_args.kwargs
+        args = mocked_smart_open.call_args.args
+        if kwargs["transport_params"]:
+            assert isinstance(
+                kwargs["transport_params"]["client"], locations["instance"]
+            )
+        assert path == args[0]
+        mocked_read.assert_called()
 
 
 @pytest.mark.parametrize("file_location", SUPPORTED_FILE_LOCATIONS)
@@ -182,11 +184,8 @@ def test_get_files(file_type, file_location):
 
     patch_module = filetype_to_class[FileLocation(file_location)]
 
-    mocket_get_path = patch(patch_module).start()
-
-    files = get_files(path)
-    for file in files:
-        assert file.location.location_type.value == file_location
-        assert file.type.name.value == file_type
-
-    mocket_get_path.stop()
+    with patch(patch_module):
+        files = get_files(path)
+        for file in files:
+            assert file.location.location_type.value == file_location
+            assert file.type.name.value == file_type
