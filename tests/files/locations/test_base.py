@@ -31,12 +31,3 @@ def test_validate_path_with_supported_filepaths(local_file, filepath):
     """Test is_valid_patfilesh with supported paths"""
     location = create_file_location(filepath)
     assert location.is_valid_path(filepath) is True
-
-
-def test_validate_path_with_unsupported_path_raises_exception():  # skipcq: PYL-W0612
-    """Test is_valid_path with unsupported paths"""
-    nonexistent_file = "/tmp/nonexistent-file"
-    with pytest.raises(ValueError) as exc_info:
-        _ = create_file_location(nonexistent_file)
-    expected_msg = "Invalid path: '/tmp/nonexistent-file'"
-    assert exc_info.value.args[0] == expected_msg

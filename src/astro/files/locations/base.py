@@ -1,5 +1,3 @@
-import glob
-import os
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Union
 from urllib.parse import urlparse
@@ -52,13 +50,6 @@ class BaseFileLocation(ABC):
         except ValueError:
             return False
 
-        result = urlparse(path)
-        if not (
-            (result.scheme and result.netloc)
-            or os.path.isfile(path)
-            or glob.glob(result.path)
-        ):
-            return False
         return True
 
     @staticmethod
