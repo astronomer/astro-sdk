@@ -5,7 +5,6 @@ import uuid
 import pandas as pd
 import pytest
 import yaml
-from airflow import settings
 from airflow.hooks.base import BaseHook
 from airflow.models import DAG, Connection, DagRun
 from airflow.models import TaskInstance as TI
@@ -18,7 +17,6 @@ from astro.databases import create_database
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_unique_table_name
 from astro.sql.tables import Table as NewTable
-from astro.utils.cloud_storage_creds import parse_s3_env_var
 from astro.utils.database import get_database_name
 from astro.utils.dependencies import BigQueryHook, gcs, s3
 from astro.utils.load import load_dataframe_into_sql_table
@@ -171,74 +169,6 @@ def sql_server(request):
     yield (sql_name, hook)
     if not isinstance(hook, BigQueryHook):
         hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
-
-
-@pytest.fixture
-def remote_file(request):
-    param = request.param
-    provider = param["name"]
-    no_of_files = param.get("count", 1)
-    file_extension = param.get("filetype", FileType.CSV).value
-
-    if provider == "google":
-        conn_id = "test_google"
-        conn_type = "google_cloud_platform"
-        extra = {
-            "extra__google_cloud_platform__key_path": os.getenv(
-                "GOOGLE_APPLICATION_CREDENTIALS"
-            )
-        }
-    elif provider == "amazon":
-        key, secret = parse_s3_env_var()
-        conn_id = "test_amazon"
-        conn_type = "S3"
-        extra = {"aws_access_key_id": key, "aws_secret_access_key": secret}
-    else:
-        raise ValueError(f"File location {provider} not supported")
-
-    new_connection = Connection(conn_id=conn_id, conn_type=conn_type, extra=extra)
-    session = settings.Session()
-    if not (
-        session.query(Connection)
-        .filter(Connection.conn_id == new_connection.conn_id)
-        .first()
-    ):
-        session.add(new_connection)
-        session.commit()
-
-    filename = pathlib.Path(f"{CWD}/tests/data/sample.{file_extension}")
-    object_paths = []
-    unique_value = uuid.uuid4()
-    for count in range(no_of_files):
-        object_prefix = f"test/{unique_value}__{count}.{file_extension}"
-        if provider == "google":
-            bucket_name = os.getenv("GOOGLE_BUCKET", "dag-authoring")
-            hook = gcs.GCSHook(gcp_conn_id=conn_id)
-            hook.upload(bucket_name, object_prefix, filename)
-            object_path = f"gs://{bucket_name}/{object_prefix}"
-        else:
-            bucket_name = os.getenv("AWS_BUCKET", "tmp9")
-            hook = s3.S3Hook(aws_conn_id=conn_id)
-            hook.load_file(filename, object_prefix, bucket_name)
-            object_path = f"s3://{bucket_name}/{object_prefix}"
-
-        object_paths.append(object_path)
-
-    yield conn_id, object_paths
-
-    for count in range(no_of_files):
-        object_prefix = f"test/{unique_value}__{count}.{file_extension}"
-        if provider == "google":
-            if hook.exists(bucket_name, object_prefix):
-                hook.delete(bucket_name, object_prefix)
-        else:
-            if hook.check_for_prefix(
-                object_prefix, delimiter="/", bucket_name=bucket_name
-            ):
-                hook.delete_objects(bucket_name, object_prefix)
-
-    session.delete(new_connection)
-    session.flush()
 
 
 @pytest.fixture
