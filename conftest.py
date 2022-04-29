@@ -322,7 +322,7 @@ def remote_files_fixture(request):
                 # if an object doesn't exist, GCSHook.delete fails:
                 hook.exists(bucket_name, object_prefix) and hook.delete(
                     bucket_name, object_prefix
-                )
+                )  # skipcq: PYL-W0106
         else:
             bucket_name = os.getenv("AWS_BUCKET", "tmp9")
             object_path = f"s3://{bucket_name}/{object_prefix}"
@@ -341,7 +341,7 @@ def remote_files_fixture(request):
             # if an object doesn't exist, GCSHook.delete fails:
             hook.exists(bucket_name, object_prefix) and hook.delete(
                 bucket_name, object_prefix
-            )
+            )  # skipcq: PYL-W0106
     else:
         for object_prefix in object_prefix_list:
             hook.delete_objects(bucket_name, object_prefix)

@@ -227,9 +227,7 @@ class BaseDatabase(ABC):
         self,
         source_table: Table,
         target_file: str,  # The target file object should contain conn_id and serializer
-        target_file_conn_id: Optional[
-            str
-        ] = None,  # TODO: join it in a single object, only keeping target_file
+        # target_file_conn_id: Optional[str] = None,  # TODO: join it in a single object, only keeping target_file
         if_exists: ExportExistsStrategy = "exception",
     ) -> None:
         """
