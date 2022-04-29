@@ -217,7 +217,7 @@ def test_aql_load_file_pattern(
 
     with sample_dag:
         load_file(
-            path=remote_object_uri[0][0:-5],
+            path=remote_object_uri[0:-5],
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
@@ -255,7 +255,7 @@ def test_aql_load_file_local_file_pattern(sample_dag, test_table, sql_server):
 @pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
 @pytest.mark.parametrize(
     "remote_files_fixture",
-    [{"name": "google"}, {"name": "amazon"}],
+    [{"provider": "google"}, {"provider": "amazon"}],
     indirect=True,
     ids=["google", "amazon"],
 )
@@ -263,14 +263,14 @@ def test_load_file_using_file_connection(
     sample_dag, remote_files_fixture, sql_server, test_table
 ):
     database_name, sql_hook = sql_server
-    file_uri = remote_files_fixture
+    file_uri = remote_files_fixture[0]
     if file_uri.startswith("s3"):
         file_conn_id = s3.S3Hook.default_conn_name
     else:
         file_conn_id = gcs.GCSHook.default_conn_name
     with sample_dag:
         load_file(
-            path=file_uri[0],
+            path=file_uri,
             file_conn_id=file_conn_id,
             output_table=test_table,
         )
