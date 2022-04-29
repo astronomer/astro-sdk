@@ -3,11 +3,11 @@ from typing import Dict, List, Tuple
 from urllib.parse import urlparse, urlunparse
 
 from astro.constants import FileLocation
-from astro.files.locations.base import Location
+from astro.files.locations.base import BaseFileLocation
 from astro.utils.dependencies import s3
 
 
-class S3Location(Location):
+class S3Location(BaseFileLocation):
     """Handler S3 object store operations"""
 
     location_type = FileLocation.S3

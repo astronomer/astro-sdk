@@ -2,11 +2,11 @@ from typing import Dict, List
 from urllib.parse import urlparse, urlunparse
 
 from astro.constants import FileLocation
-from astro.files.locations.base import Location
+from astro.files.locations.base import BaseFileLocation
 from astro.utils.dependencies import gcs
 
 
-class GCSLocation(Location):
+class GCSLocation(BaseFileLocation):
     """Handler GS object store operations"""
 
     location_type = FileLocation.GS
@@ -15,7 +15,6 @@ class GCSLocation(Location):
         """get GCS credentials for storage"""
         hook = gcs.GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else gcs.GCSHook()
         client = hook.get_conn()
-
         return {"client": client}
 
     def get_paths(self) -> List[str]:

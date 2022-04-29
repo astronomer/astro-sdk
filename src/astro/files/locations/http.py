@@ -1,10 +1,10 @@
 from typing import List
 
 from astro.constants import FileLocation
-from astro.files.locations.base import Location
+from astro.files.locations.base import BaseFileLocation
 
 
-class HttpLocation(Location):
+class HttpLocation(BaseFileLocation):
     """Handler http location operations"""
 
     location_type = FileLocation.HTTP
