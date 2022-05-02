@@ -6,8 +6,8 @@ import pandas as pd
 import smart_open
 
 from astro.constants import FileType
-from astro.files.locations import location_factory
-from astro.files.type import type_factory
+from astro.files.locations import create_file_location
+from astro.files.type import create_type_factory
 
 
 class File:
@@ -17,8 +17,8 @@ class File:
         :param path: Path to a file in the filesystem/Object stores
         :param conn_id: Airflow connection ID
         """
-        self.location = location_factory(path, conn_id)
-        self.type = type_factory(path)
+        self.location = create_file_location(path, conn_id)
+        self.type = create_type_factory(path)
 
     @property
     def path(self):
@@ -76,5 +76,5 @@ def get_files(path_pattern: str, conn_id: Optional[str] = None) -> List[File]:
     supports glob and prefix pattern for object stores
     :param conn_id: Airflow connection ID
     """
-    location = location_factory(path_pattern, conn_id)
+    location = create_file_location(path_pattern, conn_id)
     return [File(path, conn_id) for path in location.get_paths()]

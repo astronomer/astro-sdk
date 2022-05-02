@@ -9,7 +9,7 @@ from astro.files.type.ndjson import NdJson
 from astro.files.type.parquet import Parquet
 
 
-def type_factory(path: str):
+def create_type_factory(path: str):
     filetype_to_class: Dict[FileTypeConstants, Type[FileType]] = {
         FileTypeConstants.CSV: CSV,
         FileTypeConstants.JSON: Json,
