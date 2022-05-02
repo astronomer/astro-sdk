@@ -5,7 +5,6 @@ import uuid
 import pandas as pd
 import pytest
 import yaml
-from airflow import settings
 from airflow.hooks.base import BaseHook
 from airflow.models import DAG, Connection, DagRun
 from airflow.models import TaskInstance as TI
@@ -14,9 +13,10 @@ from airflow.utils.db import create_default_connections
 from airflow.utils.session import create_session, provide_session
 
 from astro.constants import Database, FileType
+from astro.databases import create_database
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_unique_table_name
-from astro.utils.cloud_storage_creds import parse_s3_env_var
+from astro.sql.tables import Table as NewTable
 from astro.utils.database import get_database_name
 from astro.utils.dependencies import BigQueryHook, gcs, s3
 from astro.utils.load import load_dataframe_into_sql_table
@@ -172,68 +172,106 @@ def sql_server(request):
 
 
 @pytest.fixture
-def remote_file(request):
-    param = request.param
-    provider = param["name"]
-    no_of_files = param.get("count", 1)
-    file_extension = param.get("filetype", FileType.CSV).value
-
-    if provider == "google":
-        conn_id = "test_google"
-        conn_type = "google_cloud_platform"
-        extra = {
-            "extra__google_cloud_platform__key_path": os.getenv(
-                "GOOGLE_APPLICATION_CREDENTIALS"
-            )
+def database_table_fixture(request):
+    """
+    Given request.param in the format:
+        {
+            "database": Database.SQLITE,  # mandatory, may be any supported database
+            "table": astro.sql.tables.Table(),  # optional, will create a table unless it is passed
+            "filepath": ""  # optional, filepath to be used to load data to the table.
         }
-    elif provider == "amazon":
-        key, secret = parse_s3_env_var()
-        conn_id = "test_amazon"
-        conn_type = "S3"
-        extra = {"aws_access_key_id": key, "aws_secret_access_key": secret}
-    else:
-        raise ValueError(f"File location {provider} not supported")
+    This fixture yields the following during setup:
+        (database, table)
+    Example:
+        (astro.databases.sqlite.SqliteDatabase(), Table())
 
-    new_connection = Connection(conn_id=conn_id, conn_type=conn_type, extra=extra)
-    session = settings.Session()
-    if not (
-        session.query(Connection)
-        .filter(Connection.conn_id == new_connection.conn_id)
-        .first()
-    ):
-        session.add(new_connection)
-        session.commit()
+    If the table exists, it is deleted during the tests setup and tear down.
+    The table will only be created during setup if request.param contains the `filepath` parameter.
+    """
+    params = request.param
+    table = params.get("table", NewTable())
+    filepath = params.get("filepath", "")
 
-    filename = pathlib.Path(f"{CWD}/tests/data/sample.{file_extension}")
-    object_paths = []
+    database_name = params["database"]
+    database_name_to_conn_id = {Database.SQLITE: "sqlite_default"}
+    conn_id = database_name_to_conn_id[database_name]
+    database = create_database(conn_id)
+
+    database.drop_table(table)
+    if filepath:
+        database.load_file_to_table(filepath, table)
+    yield database, table
+
+    database.drop_table(table)
+
+
+@pytest.fixture
+def remote_files_fixture(request):
+    """
+    Return a list of remote object filenames.
+    By default, this fixture also creates objects using sample.<filetype>, unless
+    the user uses file_create=false.
+
+    Given request.param in the format:
+        {
+            "provider": "google",  # mandatory, may be "google" or "amazon"
+            "file_count": 2,  # optional, in case the user wants to create multiple files
+            "filetype": FileType.CSV  # optional, defaults to .csv if not given,
+            "file_create": False
+        }
+    Yield the following during setup:
+        [object1_uri, object2_uri]
+    Example:
+        [
+            "gs://some-bucket/test/8df8aea0-9b2e-4671-b84e-2d48f42a182f0.csv",
+            "gs://some-bucket/test/8df8aea0-9b2e-4671-b84e-2d48f42a182f1.csv"
+        ]
+
+    If the objects exist, they are deleted during the tests setup and tear down.
+    """
+    params = request.param
+    provider = params["provider"]
+    file_count = params.get("file_count", 1)
+    file_extension = params.get("filetype", FileType.CSV).value
+    file_create = params.get("file_create", True)
+
+    source_path = pathlib.Path(f"{CWD}/tests/data/sample.{file_extension}")
+
+    object_path_list = []
+    object_prefix_list = []
     unique_value = uuid.uuid4()
-    for count in range(no_of_files):
-        object_prefix = f"test/{unique_value}__{count}.{file_extension}"
+    for item_count in range(file_count):
+        object_prefix = f"test/{unique_value}{item_count}.{file_extension}"
         if provider == "google":
             bucket_name = os.getenv("GOOGLE_BUCKET", "dag-authoring")
-            hook = gcs.GCSHook(gcp_conn_id=conn_id)
-            hook.upload(bucket_name, object_prefix, filename)
             object_path = f"gs://{bucket_name}/{object_prefix}"
+            hook = gcs.GCSHook()
+            if file_create:
+                hook.upload(bucket_name, object_prefix, source_path)
+            else:
+                # if an object doesn't exist, GCSHook.delete fails:
+                hook.exists(  # skipcq: PYL-W0106
+                    bucket_name, object_prefix
+                ) and hook.delete(bucket_name, object_prefix)
         else:
             bucket_name = os.getenv("AWS_BUCKET", "tmp9")
-            hook = s3.S3Hook(aws_conn_id=conn_id)
-            hook.load_file(filename, object_prefix, bucket_name)
             object_path = f"s3://{bucket_name}/{object_prefix}"
-
-        object_paths.append(object_path)
-
-    yield conn_id, object_paths
-
-    for count in range(no_of_files):
-        object_prefix = f"test/{unique_value}__{count}.{file_extension}"
-        if provider == "google":
-            if hook.exists(bucket_name, object_prefix):
-                hook.delete(bucket_name, object_prefix)
-        else:
-            if hook.check_for_prefix(
-                object_prefix, delimiter="/", bucket_name=bucket_name
-            ):
+            hook = s3.S3Hook()
+            if file_create:
+                hook.load_file(source_path, object_prefix, bucket_name)
+            else:
                 hook.delete_objects(bucket_name, object_prefix)
+        object_path_list.append(object_path)
+        object_prefix_list.append(object_prefix)
 
-    session.delete(new_connection)
-    session.flush()
+    yield object_path_list
+
+    if provider == "google":
+        for object_prefix in object_prefix_list:
+            # if an object doesn't exist, GCSHook.delete fails:
+            hook.exists(  # skipcq: PYL-W0106
+                bucket_name, object_prefix
+            ) and hook.delete(bucket_name, object_prefix)
+    else:
+        for object_prefix in object_prefix_list:
+            hook.delete_objects(bucket_name, object_prefix)

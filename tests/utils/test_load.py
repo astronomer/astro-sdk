@@ -188,40 +188,40 @@ def describe_load_dataframe_into_sql_table():
 def describe_copy_remote_file_to_local():
     @pytest.mark.integration
     @pytest.mark.parametrize(
-        "remote_file",
-        [{"name": "google", "count": 1, "filetype": FileType.PARQUET}],
+        "remote_files_fixture",
+        [{"provider": "google", "count": 1, "filetype": FileType.PARQUET}],
         indirect=True,
+        ids=["google"],
     )
-    def with_binary_parquet_file_from_google_gcs(remote_file):
-        _, object_uris = remote_file
-        object_uri = object_uris[0]
+    def with_binary_parquet_file_from_google_gcs(remote_files_fixture):
+        object_uri = remote_files_fixture[0]
         local_file = copy_remote_file_to_local(object_uri, is_binary=True)
         original_file = pathlib.Path(CWD.parent, "data/sample.parquet")
         assert cmp(local_file, original_file)
 
     @pytest.mark.integration
     @pytest.mark.parametrize(
-        "remote_file",
-        [{"name": "amazon", "count": 1, "filetype": FileType.CSV}],
+        "remote_files_fixture",
+        [{"provider": "amazon", "count": 1, "filetype": FileType.CSV}],
         indirect=True,
+        ids=["amazon"],
     )
-    def with_non_binary_csv_file_from_amazon_s3(remote_file):
-        _, object_uris = remote_file
-        object_uri = object_uris[0]
+    def with_non_binary_csv_file_from_amazon_s3(remote_files_fixture):
+        object_uri = remote_files_fixture[0]
         local_file = copy_remote_file_to_local(object_uri)
         original_file = pathlib.Path(CWD.parent, "data/sample.csv")
         assert cmp(local_file, original_file)
 
     @pytest.mark.integration
     @pytest.mark.parametrize(
-        "remote_file",
-        [{"name": "google", "count": 1, "filetype": FileType.JSON}],
+        "remote_files_fixture",
+        [{"provider": "google", "count": 1, "filetype": FileType.JSON}],
         indirect=True,
+        ids=["google"],
     )
-    def with_target_filepath_from_google_gcs(remote_file):
-        _, object_uris = remote_file
-        object_uri = object_uris[0]
+    def with_target_filepath(remote_files_fixture):
+        object_uri = remote_files_fixture[0]
         with tempfile.NamedTemporaryFile() as target_fp:
             copy_remote_file_to_local(object_uri, target_filepath=target_fp.name)
-            original_file = pathlib.Path(CWD.parent, "data/sample.json")
+            original_file = str(pathlib.Path(CWD.parent, "data/sample.json"))
             assert cmp(target_fp.name, original_file)

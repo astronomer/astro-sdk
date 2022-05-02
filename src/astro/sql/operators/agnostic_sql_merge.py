@@ -6,7 +6,7 @@ from astro.constants import Database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.table import Table, TempTable
 from astro.utils.bigquery_merge_func import bigquery_merge_func
-from astro.utils.database import get_database_from_conn_id
+from astro.utils.database import create_database_from_conn_id
 from astro.utils.postgres_merge_func import postgres_merge_func
 from astro.utils.schema_util import (
     get_error_string_for_multiple_dbs,
@@ -60,7 +60,7 @@ class SqlMergeOperator(SqlDecoratedOperator):
                 get_error_string_for_multiple_dbs([self.target_table, self.merge_table])
             )
 
-        database = get_database_from_conn_id(self.conn_id)
+        database = create_database_from_conn_id(self.conn_id)
         if database in (Database.POSTGRES, Database.POSTGRESQL):
             self.sql = postgres_merge_func(
                 target_table=self.target_table,

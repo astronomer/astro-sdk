@@ -8,7 +8,7 @@ from sqlalchemy.engine.base import Engine
 
 from astro.constants import Database
 from astro.utils.database import (
-    get_database_from_conn_id,
+    create_database_from_conn_id,
     get_database_name,
     get_sqlalchemy_engine,
     run_sql,
@@ -16,16 +16,16 @@ from astro.utils.database import (
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 
 
-def describe_get_database_from_conn_id():
+def describe_create_database():
     def with_supported_databases(session):
-        assert get_database_from_conn_id("postgres_default") == Database.POSTGRES
-        assert get_database_from_conn_id("sqlite_default") == Database.SQLITE
-        assert get_database_from_conn_id("google_cloud_default") == Database.BIGQUERY
-        assert get_database_from_conn_id("snowflake_conn") == Database.SNOWFLAKE
+        assert create_database_from_conn_id("postgres_default") == Database.POSTGRES
+        assert create_database_from_conn_id("sqlite_default") == Database.SQLITE
+        assert create_database_from_conn_id("google_cloud_default") == Database.BIGQUERY
+        assert create_database_from_conn_id("snowflake_conn") == Database.SNOWFLAKE
 
     def with_unsupported_database(session):
         with pytest.raises(ValueError) as exc_info:
-            assert get_database_from_conn_id("cassandra_default")
+            assert create_database_from_conn_id("cassandra_default")
         expected_msg = "Unsupported database <cassandra>"
         assert exc_info.value.args[0] == expected_msg
 

@@ -4,7 +4,7 @@ import uuid
 import pytest
 
 from astro.constants import FileLocation
-from astro.files.locations import location_factory
+from astro.files.locations import create_file_location
 
 LOCAL_FILEPATH = f"/tmp/{uuid.uuid4()}"
 
@@ -26,15 +26,8 @@ def local_file():  # skipcq: PY-D0003
     os.remove(LOCAL_FILEPATH)
 
 
-def describe_validate_path():  # skipcq: PY-D0003
-    @pytest.mark.parametrize("filepath", sample_filepaths, ids=sample_filepaths_ids)
-    def with_supported_filepaths(local_file, filepath):  # skipcq: PTC-W0065, PY-D0003
-        location = location_factory(filepath)
-        assert location.is_valid_path(filepath) is True
-
-    def with_unsupported_path_raises_exception():  # skipcq: PYL-W0612, PTC-W0065, PY-D0003
-        nonexistent_file = "somescheme://tmp/nonexistent-file/"
-        with pytest.raises(ValueError) as exc_info:
-            _ = location_factory(nonexistent_file)
-        expected_msg = f"Unsupported scheme 'somescheme' from path '{nonexistent_file}'"
-        assert exc_info.value.args[0] == expected_msg
+@pytest.mark.parametrize("filepath", sample_filepaths, ids=sample_filepaths_ids)
+def test_validate_path_with_supported_filepaths(local_file, filepath):
+    """Test is_valid_path with supported paths"""
+    location = create_file_location(filepath)
+    assert location.is_valid_path(filepath) is True

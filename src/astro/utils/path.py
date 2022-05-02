@@ -23,17 +23,20 @@ def get_dict_with_module_names_to_dot_notations(
     Given a directory, recursively identify which modules exist within it
     (ignoring __init__.py & base.py) and create a dictionary which has module names
     as keys and the values are the dot notation import paths.
+
     An example:
          ├── package
              ├── module.py
              ├── subpackage
                 ├── __init__.py
                 └── subpackage_module.py
+
     Running:
         from pathlib import Path
         from astro.utils.path import get_dict_with_module_names_to_dot_notations
         values = get_dict_with_module_names_to_dot_notations(Path("package"))
         print(values)
+
     Prints:
         {
             "module": "package.module",

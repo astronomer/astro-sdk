@@ -32,12 +32,14 @@ class BaseFileLocation(ABC):
         """Property to identify location type"""
         raise NotImplementedError
 
+    @property
     @abstractmethod
-    def get_paths(self) -> List[str]:
+    def paths(self) -> List[str]:
         """Resolve patterns in path"""
         raise NotImplementedError
 
-    def get_transport_params(self) -> Union[Dict, None]:  # skipcq: PYL-R0201
+    @property
+    def transport_params(self) -> Union[Dict, None]:  # skipcq: PYL-R0201
         """Get credentials required by smart open to access files"""
         return None
 
@@ -65,6 +67,7 @@ class BaseFileLocation(ABC):
             or glob.glob(result.path)
         ):
             return False
+
         return True
 
     @staticmethod
@@ -100,7 +103,7 @@ class BaseFileLocation(ABC):
 
         try:
             with smart_open.open(
-                self.path, mode="r", transport_params=self.get_transport_params()
+                self.path, mode="r", transport_params=self.transport_params
             ):
                 return True
         except OSError:

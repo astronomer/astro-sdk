@@ -8,7 +8,7 @@ from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.files import get_files
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils import get_hook
-from astro.utils.database import get_database_from_conn_id
+from astro.utils.database import create_database_from_conn_id
 from astro.utils.load import load_dataframe_into_sql_table, populate_normalize_config
 from astro.utils.task_id_helper import get_task_id
 
@@ -33,7 +33,7 @@ class AgnosticLoadFile(BaseOperator):
         self,
         path: str,
         output_table: Union[TempTable, Table],
-        file_conn_id: Optional[str] = None,
+        file_conn_id: Optional[str] = "",
         chunksize: int = DEFAULT_CHUNK_SIZE,
         if_exists: str = "replace",
         ndjson_normalize_sep: str = "_",
@@ -58,7 +58,7 @@ class AgnosticLoadFile(BaseOperator):
 
         self.normalize_config = populate_normalize_config(
             ndjson_normalize_sep=self.ndjson_normalize_sep,
-            database=get_database_from_conn_id(self.output_table.conn_id),
+            database=create_database_from_conn_id(self.output_table.conn_id),
         )
 
         hook = get_hook(
@@ -109,7 +109,7 @@ class AgnosticLoadFile(BaseOperator):
 def load_file(
     path: str,
     output_table: Union[TempTable, Table],
-    file_conn_id: Optional[str] = None,
+    file_conn_id: Optional[str] = "",
     task_id: Optional[str] = None,
     if_exists: str = "replace",
     ndjson_normalize_sep: str = "_",
