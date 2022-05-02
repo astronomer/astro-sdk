@@ -21,12 +21,33 @@ def create_file_location(path: str, conn_id: Optional[str] = None) -> BaseFileLo
     """
     filetype: FileLocation = BaseFileLocation.get_location_type(path)
     module_path = DEFAULT_CONN_TYPE_TO_MODULE_PATH[filetype.value]
-    module_name = module_path.split(".")[-1]
     module_ref = importlib.import_module(module_path)
-    class_name = module_name.title() + "Location"
-    if hasattr(module_ref, class_name):
-        location: BaseFileLocation = getattr(module_ref, class_name)(path, conn_id)
-    else:
-        class_name = module_name.upper() + "Location"
-        location = getattr(module_ref, class_name)(path, conn_id)
+    class_name = get_class_name(module_ref)
+    location: BaseFileLocation = getattr(module_ref, class_name)(path, conn_id)
     return location
+
+
+def get_class_name(module_ref: BaseFileLocation, suffix: str = "Location") -> str:
+    """Get class name to be dynamically imported. Class name are expected to be in following formats
+    example -
+    module name: test
+    suffix: Abc
+
+    expected class names -
+        1. TESTAbc
+        2. TestAbc
+    :param module_ref: Module from which to get class location type implementation
+    """
+
+    module_name = module_ref.__name__.split(".")[-1]
+    class_names_formats = [
+        f"{module_name.title()}{suffix}",
+        f"{module_name.upper()}{suffix}",
+    ]
+    for class_names_format in class_names_formats:
+        if hasattr(module_ref, class_names_format):
+            return class_names_format
+
+    raise ValueError(
+        "No expected class name found, please note that the class names should an expected formats."
+    )
