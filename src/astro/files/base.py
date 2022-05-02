@@ -49,7 +49,7 @@ class File:
         :param df: pandas dataframe
         """
         with smart_open.open(
-            self.path, mode="wb", transport_params=self.location.get_transport_params()
+            self.path, mode="wb", transport_params=self.location.transport_params
         ) as stream:
             self.type.write(stream=stream, df=df)
 
@@ -59,7 +59,7 @@ class File:
         """
         mode = "rb" if self.is_binary() else "r"
         with smart_open.open(
-            self.path, mode=mode, transport_params=self.location.get_transport_params()
+            self.path, mode=mode, transport_params=self.location.transport_params
         ) as stream:
             return self.type.read(stream, normalize_config=normalize_config, **kwargs)
 
@@ -77,4 +77,4 @@ def get_files(path_pattern: str, conn_id: Optional[str] = None) -> List[File]:
     :param conn_id: Airflow connection ID
     """
     location = create_file_location(path_pattern, conn_id)
-    return [File(path, conn_id) for path in location.get_paths()]
+    return [File(path, conn_id) for path in location.paths]
