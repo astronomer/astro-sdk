@@ -1,6 +1,6 @@
 import importlib
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
@@ -27,7 +27,7 @@ def create_file_location(path: str, conn_id: Optional[str] = None) -> BaseFileLo
     return location
 
 
-def get_class_name(module_ref: BaseFileLocation, suffix: str = "Location") -> str:
+def get_class_name(module_ref: Any, suffix: str = "Location") -> str:
     """Get class name to be dynamically imported. Class name are expected to be in following formats
     example -
     module name: test
