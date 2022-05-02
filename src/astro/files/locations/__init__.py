@@ -22,7 +22,11 @@ def create_file_location(path: str, conn_id: Optional[str] = None) -> BaseFileLo
     filetype: FileLocation = BaseFileLocation.get_location_type(path)
     module_path = DEFAULT_CONN_TYPE_TO_MODULE_PATH[filetype.value]
     module_name = module_path.split(".")[-1]
-    class_name = module_name.title() + "Location"
     module_ref = importlib.import_module(module_path)
-    location: BaseFileLocation = getattr(module_ref, class_name)(path, conn_id)
+    class_name = module_name.title() + "Location"
+    if hasattr(module_ref, class_name):
+        location: BaseFileLocation = getattr(module_ref, class_name)(path, conn_id)
+    else:
+        class_name = module_name.upper() + "Location"
+        location = getattr(module_ref, class_name)(path, conn_id)
     return location

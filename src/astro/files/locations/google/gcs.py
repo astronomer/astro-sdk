@@ -6,7 +6,7 @@ from astro.files.locations.base import BaseFileLocation
 from astro.utils.dependencies import gcs
 
 
-class GcsLocation(BaseFileLocation):
+class GCSLocation(BaseFileLocation):
     """Handler GS object store operations"""
 
     location_type = FileLocation.GS

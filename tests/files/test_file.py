@@ -171,11 +171,11 @@ def test_read(mocked_smart_open, filetype, locations):
 @pytest.mark.parametrize("file_type", SUPPORTED_FILE_TYPES)
 def test_get_files(file_type, file_location):
     filetype_to_class = {
-        FileLocation.LOCAL: "astro.files.locations.local.LocalLocation.get_paths",
-        FileLocation.HTTP: "astro.files.locations.http.HttpLocation.get_paths",
-        FileLocation.HTTPS: "astro.files.locations.http.HttpLocation.get_paths",
-        FileLocation.GS: "astro.files.locations.gcs.GCSLocation.get_paths",
-        FileLocation.S3: "astro.files.locations.s3.S3Location.get_paths",
+        FileLocation.LOCAL: "astro.files.locations.local.LocalLocation.paths",
+        FileLocation.HTTP: "astro.files.locations.http.HttpLocation.paths",
+        FileLocation.HTTPS: "astro.files.locations.http.HttpLocation.paths",
+        FileLocation.GS: "astro.files.locations.google.gcs.GCSLocation.paths",
+        FileLocation.S3: "astro.files.locations.amazon.s3.S3Location.paths",
     }
 
     path = f"{file_location}://tmp/sample.{file_type}"
