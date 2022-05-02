@@ -53,7 +53,11 @@ class BaseFileLocation(ABC):
         except ValueError:
             return False
 
-        result = urlparse(path)
+        try:
+            result = urlparse(path)
+        except ValueError:
+            return False
+
         if not (
             (result.scheme and result.netloc)
             or os.path.isfile(path)
