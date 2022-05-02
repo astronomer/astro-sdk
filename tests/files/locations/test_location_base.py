@@ -4,7 +4,7 @@ import uuid
 import pytest
 
 from astro.constants import FileLocation
-from astro.files.locations import create_file_location
+from astro.files.locations import create_file_location, get_class_name
 
 LOCAL_FILEPATH = f"/tmp/{uuid.uuid4()}"
 
@@ -31,3 +31,29 @@ def test_validate_path_with_supported_filepaths(local_file, filepath):
     """Test is_valid_path with supported paths"""
     location = create_file_location(filepath)
     assert location.is_valid_path(filepath) is True
+
+
+def test_get_class_name_method_valid_name():
+    class Test:
+        __name__ = "test.some"
+
+        class TestLocation:
+            def __init__(self):
+                pass
+
+    assert get_class_name(Test) == "TestLocation"
+
+
+def test_get_class_name_method_invalid_name():
+    class Test:
+        __name__ = "test.some"
+
+        class SomethingElseLocation:
+            def __init__(self):
+                pass
+
+    with pytest.raises(ValueError) as exc_info:
+        get_class_name(Test)
+
+    expected_msg = "No expected class name found, please note that the class names should an expected formats."
+    assert exc_info.value.args[0] == expected_msg
