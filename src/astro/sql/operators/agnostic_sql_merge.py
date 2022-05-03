@@ -54,7 +54,7 @@ class SqlMergeOperator(SqlExecutor):
                 get_error_string_for_multiple_dbs([self.target_table, self.merge_table])
             )
 
-        database = create_database_from_conn_id(self.conn_id)
+        database = create_database_from_conn_id(self.conn_id)  # type: ignore
         if database in (Database.POSTGRES, Database.POSTGRESQL):
             self.sql = postgres_merge_func(
                 target_table=self.target_table,

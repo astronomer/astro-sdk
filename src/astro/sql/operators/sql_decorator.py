@@ -119,7 +119,7 @@ class SqlExecutor(BaseOperator):
 
     def _add_templates_to_context(self, context):
         # candidate for database refactor
-        database = get_database_from_conn_id(self.conn_id)
+        database = create_database_from_conn_id(self.conn_id)
         if database in (Database.POSTGRES, Database.BIGQUERY):
             return postgres_transform.add_templates_to_context(self.parameters, context)
         elif database == Database.SNOWFLAKE:

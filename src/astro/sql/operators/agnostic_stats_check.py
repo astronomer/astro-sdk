@@ -216,7 +216,7 @@ class AgnosticStatsCheck(SqlExecutor):
         )
 
     def execute(self, context: Dict):
-        database = create_database_from_conn_id(self.conn_id)
+        database = create_database_from_conn_id(self.conn_id)  # type: ignore
         check_handler = ChecksHandler(self.checks)
 
         valid_db = {
