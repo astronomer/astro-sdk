@@ -4,7 +4,7 @@ from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
 
 
-class HttpLocation(BaseFileLocation):
+class HTTPLocation(BaseFileLocation):
     """Handler http location operations"""
 
     location_type = FileLocation.HTTP

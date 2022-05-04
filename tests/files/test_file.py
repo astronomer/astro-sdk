@@ -172,8 +172,8 @@ def test_read(mocked_smart_open, filetype, locations):
 def test_get_files(file_type, file_location):
     filetype_to_class = {
         FileLocation.LOCAL: "astro.files.locations.local.LocalLocation.paths",
-        FileLocation.HTTP: "astro.files.locations.http.HttpLocation.paths",
-        FileLocation.HTTPS: "astro.files.locations.http.HttpLocation.paths",
+        FileLocation.HTTP: "astro.files.locations.http.HTTPLocation.paths",
+        FileLocation.HTTPS: "astro.files.locations.http.HTTPLocation.paths",
         FileLocation.GS: "astro.files.locations.google.gcs.GCSLocation.paths",
         FileLocation.S3: "astro.files.locations.amazon.s3.S3Location.paths",
     }
