@@ -49,6 +49,7 @@ class File:
 
     def write_from_dataframe(self, df: pd.DataFrame) -> None:
         """Write dataframe to all supported files formats
+
         :param df: pandas dataframe
         """
         with smart_open.open(
@@ -60,6 +61,7 @@ class File:
         self, normalize_config: Optional[dict] = None, **kwargs
     ) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes
+
         :param normalize_config: normalize_config: parameters in dict format of pandas json_normalize() function.
         """
         mode = "rb" if self.is_binary() else "r"
