@@ -5,7 +5,7 @@ import smart_open
 
 from astro.constants import FileType
 from astro.files.locations import create_file_location
-from astro.files.type import create_type_factory
+from astro.files.type import create_file_type
 
 
 class File:
@@ -20,7 +20,7 @@ class File:
         :param conn_id: Airflow connection ID
         """
         self.location = create_file_location(path, conn_id)
-        self.type = create_type_factory(path)
+        self.type = create_file_type(path)
 
     @property
     def path(self):
