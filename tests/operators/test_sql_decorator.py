@@ -58,3 +58,101 @@ def test_sql_decorator_basic_functionality(sample_dag, sql_server, test_table):
             sql=f"SELECT list FROM {test_table.qualified_name()} WHERE sell=232",
         )
     test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.parametrize(
+    "sql_server",
+    [
+        "snowflake",
+    ],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    "test_table",
+    [
+        {
+            "path": str(CWD) + "/../data/sample.csv",
+            "load_table": True,
+            "is_temp": False,
+            "param": {
+                "schema": SCHEMA,
+                "table_name": test_utils.get_table_name("test"),
+            },
+        }
+    ],
+    indirect=True,
+)
+def test_sql_decorator_does_not_create_schema_when_the_schema_exists(
+    sample_dag, sql_server, test_table
+):
+    """Test basic sql execution of SqlDecoratedOperator."""
+    _, hook = sql_server
+
+    sql_statement = f"SELECT * FROM {test_table.qualified_name()} WHERE id=4"
+    df = hook.get_pandas_df(sql_statement)
+    assert df.empty
+
+    with sample_dag:
+        SqlDecoratedOperator(
+            raw_sql=True,
+            parameters={},
+            task_id="SomeTask",
+            op_args=(),
+            conn_id=test_table.conn_id,
+            database=test_table.database,
+            python_callable=lambda: None,
+            sql=f"INSERT INTO {test_table.qualified_name()} (id, name) VALUES (4, 'New Person');",
+        )
+    test_utils.run_dag(sample_dag)
+
+    df = hook.get_pandas_df(sql_statement)
+    assert df.to_dict("r") == [{"ID": 4, "NAME": "New Person"}]
+
+
+@pytest.mark.parametrize(
+    "sql_server",
+    [
+        "postgres",
+    ],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    "test_table",
+    [
+        {
+            "path": str(CWD) + "/../data/sample.csv",
+            "load_table": True,
+            "is_temp": False,
+            "param": {
+                "schema": "some_new_schema",
+                "table_name": test_utils.get_table_name("test"),
+            },
+        }
+    ],
+    indirect=True,
+)
+def test_sql_decorator_creates_schema_when_it_does_not_exist(
+    sample_dag, sql_server, test_table
+):
+    """Test basic sql execution of SqlDecoratedOperator."""
+    _, hook = sql_server
+
+    sql_statement = f"SELECT * FROM {test_table.qualified_name()} WHERE id=4"
+    df = hook.get_pandas_df(sql_statement)
+    assert df.empty
+
+    with sample_dag:
+        SqlDecoratedOperator(
+            raw_sql=True,
+            parameters={},
+            task_id="SomeTask",
+            op_args=(),
+            conn_id=test_table.conn_id,
+            database=test_table.database,
+            python_callable=lambda: None,
+            sql=f"INSERT INTO {test_table.qualified_name()} (id, name) VALUES (4, 'New Person');",
+        )
+    test_utils.run_dag(sample_dag)
+
+    df = hook.get_pandas_df(sql_statement)
+    assert df.to_dict("r") == [{"id": 4, "name": "New Person"}]
