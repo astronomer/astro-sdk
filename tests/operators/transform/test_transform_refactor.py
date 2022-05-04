@@ -1,0 +1,132 @@
+import pathlib
+
+import pandas as pd
+import pytest
+from airflow.decorators import task
+
+from astro import sql as aql
+from astro.constants import Database
+from astro.dataframe import dataframe as adf
+from astro.sql.tables import Table
+from tests.operators import utils as test_utils
+
+cwd = pathlib.Path(__file__).parent
+
+
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SQLITE,
+        },
+        {
+            "database": Database.POSTGRES,
+        },
+        {
+            "database": Database.SNOWFLAKE,
+        },
+        {
+            "database": Database.BIGQUERY,
+        },
+    ],
+    indirect=True,
+    ids=["sqlite", "postgres", "snowflake", "bigquery"],
+)
+def test_dataframe_transform(sample_dag, database_table_fixture):
+    db, test_table = database_table_fixture
+    test_table.conn_id = db.conn_id
+    print("test_dataframe_to_database")
+
+    @adf(_experimental=True)
+    def get_dataframe():
+        return pd.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
+
+    @aql.transform(_experimental=True)
+    def sample_pg(input_table: Table):
+        return "SELECT * FROM {{input_table}}"
+
+    @adf(_experimental=True)
+    def validate_dataframe(df: pd.DataFrame):
+        df.columns = df.columns.str.lower()
+        df = df.sort_values(by=df.columns.tolist()).reset_index(drop=True)
+        assert df.equals(
+            pd.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
+        )
+
+    with sample_dag:
+        my_df = get_dataframe(output_table=test_table)
+        pg_df = sample_pg(my_df)
+        validate_dataframe(pg_df)
+    test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.parametrize(
+    "sql_server",
+    [
+        "snowflake",
+        "postgres",
+        "bigquery",
+        "sqlite",
+    ],
+    indirect=True,
+)
+def test_transform(sql_server, sample_dag, test_table):
+    @aql.transform(_experimental=True)
+    def sample_function(input_table: Table):
+        return "SELECT * FROM {{input_table}} LIMIT 10"
+
+    @adf(_experimental=True)
+    def validate_table(df: pd.DataFrame):
+        assert len(df) == 10
+
+    with sample_dag:
+        homes_file = aql.load_file(
+            path=str(cwd) + "/../../data/homes.csv",
+            output_table=test_table,
+        )
+        first_model = sample_function(
+            input_table=homes_file,
+        )
+        inherit_model = sample_function(
+            input_table=first_model,
+        )
+        validate_table(inherit_model)
+    test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.parametrize(
+    "sql_server",
+    [
+        "snowflake",
+        "postgres",
+        "bigquery",
+        "sqlite",
+    ],
+    indirect=True,
+)
+def test_raw_sql(sql_server, sample_dag, test_table):
+    @aql.run_raw_sql(_experimental=True)
+    def raw_sql_query(my_input_table: Table, created_table: Table, num_rows: int):
+        return "SELECT * FROM {{my_input_table}} LIMIT {{num_rows}}"
+
+    @task
+    def validate_raw_sql(cur):
+        print(cur)
+
+    with sample_dag:
+        homes_file = aql.load_file(
+            path=str(cwd) + "/../../data/homes.csv",
+            output_table=test_table,
+        )
+        raw_sql_result = (
+            raw_sql_query(
+                my_input_table=homes_file,
+                created_table=test_table.to_table(
+                    sample_dag.dag_id + "_RAW_SQL_CREATE"
+                ),
+                num_rows=5,
+                handler=lambda cur: cur.fetchall(),
+            ),
+        )
+        validate_raw_sql(raw_sql_result)
+    test_utils.run_dag(sample_dag)

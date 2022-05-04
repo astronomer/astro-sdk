@@ -44,3 +44,18 @@ class SqliteDatabase(BaseDatabase):
         :param table: The table we want to retrieve the qualified name for.
         """
         return str(table.name)
+
+    def create_schema_if_needed(self, schema):
+        """
+        Since SQLite does not have schemas, we do not need to set a schema here
+        :param schema:
+        :return:
+        """
+
+    def schema_exists(self, schema):
+        """
+
+        :param schema:
+        :return:
+        """
+        return False

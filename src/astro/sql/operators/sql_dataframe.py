@@ -62,7 +62,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             **kwargs,
         )
 
-    def handle_op_args(self):
+    def load_op_arg_table_into_dataframe(self):
         full_spec = inspect.getfullargspec(self.python_callable)
         op_args = list(self.op_args)
         ret_args = []
@@ -77,7 +77,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
                 ret_args.append(arg)
         self.op_args = tuple(ret_args)
 
-    def handle_op_kwargs(self):
+    def load_op_kwarg_table_into_dataframe(self):
         param_types = inspect.signature(self.python_callable).parameters
         self.op_kwargs = {
             k: self._get_dataframe(v)
@@ -88,8 +88,8 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
 
     def execute(self, context: Dict):  # skipcq: PYL-W0613
         self._set_variables_from_first_table()
-        self.handle_op_args()
-        self.handle_op_kwargs()
+        self.load_op_arg_table_into_dataframe()
+        self.load_op_kwarg_table_into_dataframe()
 
         pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
         if self.output_table:

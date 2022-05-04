@@ -1,4 +1,6 @@
 """Snowflake database implementation."""
+from typing import Dict
+
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from pandas.io.sql import SQLDatabase
@@ -75,3 +77,50 @@ class SnowflakeDatabase(BaseDatabase):
             chunk_size=chunk_size,
             quote_identifiers=False,
         )
+
+    def add_templates_to_context(self, parameters: Dict, context: Dict) -> Dict:
+        """
+        When running functions through the `aql.transform` and `aql.render` functions, we need to add
+        the parameters given to the SQL statement to the Airflow context dictionary. This is how we can
+        then use jinja to render those parameters into the SQL function when users use the {{}} syntax
+        (e.g. "SELECT * FROM {{input_table}}").
+
+        With this system we should handle Table objects differently from other variables. Since we will later
+        pass the parameter dictionary into SQLAlchemy, the safest (From a security standpoint) default is to use
+        a `:variable` syntax. This syntax will ensure that SQLAlchemy treats the value as an unsafe template. With
+        Table objects, however, we have to give a raw value or the query will not work. Because of this we recommend
+        looking into the documentation of your database and seeing what best practices exist (e.g. Identifier wrappers
+        in snowflake).
+
+        :param parameters: A Dict of SQL key-value parameters
+        :param context: Airflow Context dictionary
+        :return: Dictionary with values with Table type replaced with the table name
+        """
+        for k, v in parameters.items():
+            if isinstance(v, Table):
+                context[k] = "IDENTIFIER(:" + k + ")"
+            else:
+                context[k] = ":" + k
+        return context
+
+    def process_sql_parameters(self, parameters: Dict) -> Dict:
+        """Used in conjunction with add_templates_to_context to pass the name of the table"""
+        return {
+            k: (self.get_table_qualified_name(v) if isinstance(v, Table) else v)
+            for k, v in parameters.items()
+        }
+
+    def schema_exists(self, schema):
+        """
+        Checks if a schema exists in the database
+
+        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        """
+        created_schemas = [
+            x["SCHEMA_NAME"]
+            for x in self.hook.run(
+                "SELECT SCHEMA_NAME from information_schema.schemata WHERE LOWER(SCHEMA_NAME) = %(schema_name)s;",
+                parameters={"schema_name": schema.lower()},
+            )
+        ]
+        return len(created_schemas) == 1
