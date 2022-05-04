@@ -16,7 +16,7 @@ class NDJSONFileType(FileType):
         :param stream: file stream object
         """
         normalize_config = kwargs.pop("normalize_config")
-        return self.flatten_ndjson(normalize_config, stream)
+        return self.flatten(normalize_config, stream)
 
     def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
         """Write ndjson file to one of the supported locations
@@ -30,7 +30,7 @@ class NDJSONFileType(FileType):
     def name(self):
         return FileTypeConstants.NDJSON
 
-    def flatten_ndjson(
+    def flatten(
         self, normalize_config: Union[None, dict], stream: io.TextIOWrapper
     ) -> pd.DataFrame:
         """
