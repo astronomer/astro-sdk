@@ -63,18 +63,22 @@ class BaseFileLocation(ABC):
 
         try:
             result = urlparse(path)
+
+            if not (
+                (
+                    result.scheme
+                    and result.netloc
+                    and (result.port or result.port is None)
+                )
+                or os.path.isfile(path)
+                or BaseFileLocation.check_non_existing_local_file_path(path)
+                or glob.glob(result.path)
+            ):
+                return False
+
+            return True
         except ValueError:
             return False
-
-        if not (
-            (result.scheme and result.netloc)
-            or os.path.isfile(path)
-            or BaseFileLocation.check_non_existing_local_file_path(path)
-            or glob.glob(result.path)
-        ):
-            return False
-
-        return True
 
     @staticmethod
     def check_non_existing_local_file_path(path: str) -> bool:

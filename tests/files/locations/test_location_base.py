@@ -33,6 +33,15 @@ def test_validate_path_with_supported_filepaths(local_file, filepath):
     assert location.is_valid_path(filepath) is True
 
 
+@pytest.mark.parametrize(
+    "filepath", ["http://somewebsite.com:80000000/", "/dev/null/test.py"]
+)
+def test_validate_path_with_unsupported_filepaths(filepath):
+    """Test is_valid_path with supported paths"""
+    with pytest.raises(ValueError):
+        _ = create_file_location(filepath)
+
+
 def test_get_class_name_method_valid_name():
     class Test:
         __name__ = "test.some"
