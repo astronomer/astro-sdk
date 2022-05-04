@@ -73,7 +73,7 @@ def test_exists(mocked_smart_open, files):
 
 
 @pytest.mark.parametrize(
-    "type_method_map_fixture", [{"method": "write_from_dataframe"}], indirect=True
+    "type_method_map_fixture", [{"method": "create_from_dataframe"}], indirect=True
 )
 @pytest.mark.parametrize(
     "locations",
@@ -102,7 +102,7 @@ def test_write(mocked_smart_open, filetype, locations, type_method_map_fixture):
 
         path = locations["path"] + "." + filetype
 
-        File(path).write_from_dataframe(df=df)
+        File(path).create_from_dataframe(df=df)
         mocked_smart_open.assert_called()
         kwargs = mocked_smart_open.call_args.kwargs
         args = mocked_smart_open.call_args.args
@@ -117,7 +117,7 @@ def test_write(mocked_smart_open, filetype, locations, type_method_map_fixture):
 
 
 @pytest.mark.parametrize(
-    "type_method_map_fixture", [{"method": "read_to_dataframe"}], indirect=True
+    "type_method_map_fixture", [{"method": "export_to_dataframe"}], indirect=True
 )
 @pytest.mark.parametrize(
     "locations",
@@ -144,7 +144,7 @@ def test_read(mocked_smart_open, filetype, locations, type_method_map_fixture):
 
         path = locations["path"] + "." + filetype
 
-        File(path).read_to_dataframe(normalize_config=None)
+        File(path).export_to_dataframe(normalize_config=None)
         mocked_smart_open.assert_called()
         kwargs = mocked_smart_open.call_args.kwargs
         args = mocked_smart_open.call_args.args
@@ -157,7 +157,7 @@ def test_read(mocked_smart_open, filetype, locations, type_method_map_fixture):
 
 
 @pytest.mark.parametrize(
-    "type_method_map_fixture", [{"method": "read_to_dataframe"}], indirect=True
+    "type_method_map_fixture", [{"method": "export_to_dataframe"}], indirect=True
 )
 @pytest.mark.parametrize(
     "locations",
@@ -186,7 +186,7 @@ def test_read_with_explicit_valid_type(
 
         path = locations["path"]
 
-        File(path=path, filetype=FileType(filetype)).read_to_dataframe(
+        File(path=path, filetype=FileType(filetype)).export_to_dataframe(
             normalize_config=None
         )
         mocked_smart_open.assert_called()
