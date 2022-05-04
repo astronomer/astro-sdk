@@ -11,6 +11,10 @@ from astro.files.type import create_type_factory
 
 
 class File:
+    """Handle all file operations, and abstract away the details related to location and file types.
+    Intended to be used within library.
+    """
+
     def __init__(self, path: str, conn_id: Optional[str] = None):
         """Init file object which represent a single file in local/object stores
 
