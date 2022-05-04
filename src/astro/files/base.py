@@ -1,5 +1,3 @@
-import os
-import pathlib
 from typing import List, Optional
 
 import pandas as pd
@@ -28,15 +26,16 @@ class File:
     def path(self):
         return self.location.path
 
-    def get_size(self) -> int:
+    @property
+    def size(self) -> int:
         """
         Return the size (bytes) of the given file.
 
         :return: File size in bytes
         :rtype: int
         """
-        path = pathlib.Path(self.path)
-        return os.path.getsize(path)
+        size: int = self.location.size
+        return size
 
     def is_binary(self) -> bool:
         """

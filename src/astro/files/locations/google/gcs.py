@@ -30,3 +30,7 @@ class GCSLocation(BaseFileLocation):
             urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in prefixes
         ]
         return paths
+
+    @property
+    def size(self) -> int:
+        return -1

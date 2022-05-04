@@ -43,6 +43,12 @@ class BaseFileLocation(ABC):
         """Get credentials required by smart open to access files"""
         return None
 
+    @property
+    @abstractmethod
+    def size(self):
+        """Resolve patterns in path"""
+        raise NotImplementedError
+
     @staticmethod
     def is_valid_path(path: str) -> bool:
         """

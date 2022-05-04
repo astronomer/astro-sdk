@@ -13,3 +13,7 @@ class HttpLocation(BaseFileLocation):
     def paths(self) -> List[str]:
         """Resolve patterns in path"""
         return [self.path]
+
+    @property
+    def size(self) -> int:
+        return -1
