@@ -106,11 +106,13 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
 
         output_table_name: str = ""
 
+        self._set_schema_if_needed()
+
         if not self.raw_sql:
-            self._set_schema_if_needed()
 
             if not self.output_table or type(self.output_table) == TempTable:
                 output_table_name = create_unique_table_name()
+                self._set_schema_if_needed(schema=SCHEMA)
                 full_output_table_name = self.handle_output_table_schema(
                     # Since there is no output table defined we have to assume default schema
                     output_table_name,
