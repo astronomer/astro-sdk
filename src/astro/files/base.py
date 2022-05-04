@@ -53,7 +53,7 @@ class File:
         return result
 
     def create_from_dataframe(self, df: pd.DataFrame) -> None:
-        """Write dataframe to all supported files formats
+        """Create a file in the desired location using the values of a dataframe.
 
         :param df: pandas dataframe
         """
@@ -62,7 +62,7 @@ class File:
         ) as stream:
             self.type.create_from_dataframe(stream=stream, df=df)
 
-    def read_to_dataframe(
+    def export_to_dataframe(
         self, normalize_config: Optional[dict] = None, **kwargs
     ) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes
@@ -73,7 +73,7 @@ class File:
         with smart_open.open(
             self.path, mode=mode, transport_params=self.location.transport_params
         ) as stream:
-            return self.type.read_to_dataframe(
+            return self.type.export_to_dataframe(
                 stream, normalize_config=normalize_config, **kwargs
             )
 
