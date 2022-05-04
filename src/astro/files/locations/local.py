@@ -1,4 +1,5 @@
 import glob
+import os
 import pathlib
 from typing import List
 from urllib.parse import urlparse
@@ -22,3 +23,13 @@ class LocalLocation(BaseFileLocation):
         else:
             paths = glob.glob(url.path)
         return paths
+
+    @property
+    def size(self):
+        """Return the size in bytes of the given file.
+
+        :return: File size in bytes
+        :rtype: int
+        """
+        path = pathlib.Path(self.path)
+        return os.path.getsize(path)

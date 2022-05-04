@@ -19,6 +19,9 @@ LOCAL_DIR_FILE_2 = str(pathlib.Path(LOCAL_DIR, "file_2.txt"))
 sample_filepaths_per_location = [
     (FileLocation.LOCAL, LOCAL_FILEPATH),
 ]
+sample_file = pathlib.Path(
+    pathlib.Path(__file__).parent.parent.parent, "data/sample.csv"
+)
 
 
 @pytest.fixture()
@@ -68,3 +71,8 @@ def test_get_paths_with_unsupported_location(local_dir):  # skipcq: PYL-W0612
         _ = LocalLocation(path)
     expected_msg = "Invalid path: 'invalid://some-file'"
     assert exc_info.value.args[0] == expected_msg
+
+
+def test_size():
+    """Test get_size() of for local file."""
+    assert LocalLocation(str(sample_file.absolute())).size == 65

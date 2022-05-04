@@ -1,6 +1,11 @@
+import glob
+import os
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Dict, List, Optional, Union
 from urllib.parse import urlparse
+
+import smart_open
 
 from astro.constants import FileLocation
 
@@ -38,6 +43,12 @@ class BaseFileLocation(ABC):
         """Get credentials required by smart open to access files"""
         return None
 
+    @property
+    @abstractmethod
+    def size(self):
+        """Return the size in bytes of the given file"""
+        raise NotImplementedError
+
     @staticmethod
     def is_valid_path(path: str) -> bool:
         """
@@ -50,6 +61,33 @@ class BaseFileLocation(ABC):
         except ValueError:
             return False
 
+        try:
+            result = urlparse(path)
+
+            if not (
+                (
+                    result.scheme
+                    and result.netloc
+                    and (result.port or result.port is None)
+                )
+                or os.path.isfile(path)
+                or BaseFileLocation.check_non_existing_local_file_path(path)
+                or glob.glob(result.path)
+            ):
+                return False
+
+            return True
+        except ValueError:
+            return False
+
+    @staticmethod
+    def check_non_existing_local_file_path(path: str) -> bool:
+        """Check if the path is valid by creating and temp file and then deleting it. Assumes the file don't exist"""
+        try:
+            Path(path).touch()
+            os.remove(path)
+        except OSError:
+            return False
         return True
 
     @staticmethod
@@ -69,3 +107,13 @@ class BaseFileLocation(ABC):
                     f"Unsupported scheme '{file_scheme}' from path '{path}'"
                 )
         return location
+
+    def exists(self) -> bool:
+        """Check if the file exists or not"""
+        try:
+            with smart_open.open(
+                self.path, mode="r", transport_params=self.transport_params
+            ):
+                return True
+        except OSError:
+            return False

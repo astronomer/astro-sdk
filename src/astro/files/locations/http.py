@@ -4,7 +4,7 @@ from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
 
 
-class HttpLocation(BaseFileLocation):
+class HTTPLocation(BaseFileLocation):
     """Handler http location operations"""
 
     location_type = FileLocation.HTTP
@@ -13,3 +13,7 @@ class HttpLocation(BaseFileLocation):
     def paths(self) -> List[str]:
         """Resolve patterns in path"""
         return [self.path]
+
+    @property
+    def size(self) -> int:
+        return -1

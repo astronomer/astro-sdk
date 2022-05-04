@@ -1,21 +1,15 @@
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional, Union
 
-import pandas as pd
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
 from astro.constants import DEFAULT_CHUNK_SIZE
-from astro.files.locations import create_file_location
+from astro.files import get_files
 from astro.sql.table import Table, TempTable, create_table_name
 from astro.utils import get_hook
 from astro.utils.database import create_database_from_conn_id
-from astro.utils.file import get_filetype
-from astro.utils.load import (
-    load_dataframe_into_sql_table,
-    load_file_into_dataframe,
-    populate_normalize_config,
-)
+from astro.utils.load import load_dataframe_into_sql_table, populate_normalize_config
 from astro.utils.task_id_helper import get_task_id
 
 
@@ -74,29 +68,21 @@ class AgnosticLoadFile(BaseOperator):
             warehouse=self.output_table.warehouse,
         )
 
-        source = create_file_location(self.path, self.file_conn_id)
-        return self.load_using_pandas(
-            context, source.paths, hook, source.transport_params
-        )
+        self._configure_output_table(context)
+        return self.load_data(hook=hook, path=self.path, file_conn_id=self.file_conn_id)
 
-    def load_using_pandas(
-        self,
-        context: Any,
-        paths: List[str],
-        hook: BaseHook,
-        transport_params: Union[dict, None],
+    def load_data(
+        self, path: str, hook: BaseHook, file_conn_id: Optional[str] = None
     ) -> Union[TempTable, Table]:
         """Loads csv/parquet table from local/S3/GCS with Pandas.
-
         Infers SQL database type based on connection then loads table to db.
         """
-        self._configure_output_table(context)
         self.log.info(f"Loading {self.path} into {self.output_table}...")
         if_exists = self.if_exists
-        for path in paths:
-            pandas_dataframe = self._load_file_into_dataframe(path, transport_params)
+        for file in get_files(path, file_conn_id):
+            dataframe = file.export_to_dataframe(normalize_config=self.normalize_config)
             load_dataframe_into_sql_table(
-                pandas_dataframe,
+                dataframe,
                 self.output_table,
                 hook,
                 self.chunksize,
@@ -117,18 +103,6 @@ class AgnosticLoadFile(BaseOperator):
         if not self.output_table.table_name:
             self.output_table.table_name = create_table_name(context=context)
 
-    def _load_file_into_dataframe(
-        self, filepath: str, transport_params: Union[dict, None]
-    ) -> pd.DataFrame:
-        """Read file with Pandas.
-
-        Select method based on `file_type` (S3 or local).
-        """
-        filetype = get_filetype(filepath)
-        return load_file_into_dataframe(
-            filepath, filetype, transport_params, normalize_config=self.normalize_config
-        )
-
 
 def load_file(
     path: str,
@@ -140,7 +114,6 @@ def load_file(
     **kwargs,
 ) -> XComArg:
     """Convert AgnosticLoadFile into a function that Returns an XComArg object
-
     :param path: File path
     :param output_table: Table to create
     :param file_conn_id: Airflow connection id of input file (optional)
