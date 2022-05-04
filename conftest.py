@@ -12,7 +12,7 @@ from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import create_session, provide_session
 
-from astro.constants import Database, FileType
+from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_unique_table_name
@@ -275,3 +275,53 @@ def remote_files_fixture(request):
     else:
         for object_prefix in object_prefix_list:
             hook.delete_objects(bucket_name, object_prefix)
+
+
+def method_map_fixture(method, base_path, classes, get):
+    """Generic method to generate paths to method/property with a package."""
+    filetype_to_class = {get(cls): f"{base_path[0]}.{cls}.{method}" for cls in classes}
+    return filetype_to_class
+
+
+@pytest.fixture
+def type_method_map_fixture(request):
+    """Get paths for type's package for methods"""
+    method = request.param["method"]
+    classes = ["JSONFileType", "CSVFileType", "NDJSONFileType", "ParquetFileType"]
+    base_path = ("astro.files.type",)
+    suffix = "FileType"
+
+    yield method_map_fixture(
+        method=method,
+        classes=classes,
+        base_path=base_path,
+        get=lambda x: FileType(x.rstrip(suffix).lower()),
+    )
+
+
+@pytest.fixture
+def locations_method_map_fixture(request):
+    """Get paths for location's package for methods"""
+    method = request.param["method"]
+    classes = [
+        "local.LocalLocation",
+        "http.HTTPLocation",
+        "google.gcs.GCSLocation",
+        "amazon.s3.S3Location",
+    ]
+    base_path = ("astro.files.locations",)
+    suffix = "Location"
+
+    synonyms = {"gcs": "gs"}
+
+    def get_location_type(cls):
+        val = cls.split(".")[-1].rstrip(suffix).lower()
+        if val in synonyms:
+            val = synonyms[val]
+        return FileLocation(val)
+
+    result = method_map_fixture(
+        method=method, classes=classes, base_path=base_path, get=get_location_type
+    )
+    result[FileLocation("https")] = result[FileLocation("http")]
+    yield result
