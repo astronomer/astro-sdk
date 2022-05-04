@@ -251,3 +251,37 @@ class BaseDatabase(ABC):
 
         df = self.export_table_to_pandas_dataframe(source_table)
         target_file.create_from_dataframe(df)
+
+    # ---------------------------------------------------------
+    # Schema Management
+    # ---------------------------------------------------------
+
+    def set_schema_if_needed(self, schema):
+        """
+
+        :param schema:
+        :return:
+        """
+        raise NotImplementedError
+
+    def schema_exists(self, schema):
+        """
+
+        :param schema:
+        :return:
+        """
+        raise NotImplementedError
+
+    def add_templates_to_context(self, parameters, context):
+        """
+
+        :param parameters:
+        :param context:
+        :return:
+        """
+        for k, v in parameters.items():
+            if isinstance(v, Table):
+                context[k] = v.name
+            else:
+                context[k] = ":" + k
+        return context

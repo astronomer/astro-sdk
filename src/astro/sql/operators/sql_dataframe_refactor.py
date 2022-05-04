@@ -3,21 +3,15 @@ from typing import Dict, Optional
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
-from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 
-from astro.constants import Database
+from astro.databases import create_database
 from astro.settings import SCHEMA
-from astro.sql.table import Table, TempTable, create_table_name
-from astro.utils import get_hook
-from astro.utils.database import create_database_from_conn_id
-from astro.utils.dependencies import (
-    BigQueryHook,
-    PostgresHook,
-    SnowflakeHook,
-    postgres_sql,
-)
-from astro.utils.load import load_dataframe_into_sql_table
-from astro.utils.table_handler import TableHandler
+from astro.sql.table import Table as OldTable
+from astro.sql.table import TempTable
+from astro.sql.tables import Metadata
+from astro.sql.tables import Table as NewTable
+from astro.utils.dependencies import SnowflakeHook
+from astro.utils.table_handler_new import TableHandler
 
 
 class SqlDataframeOperator(DecoratedOperator, TableHandler):
@@ -51,7 +45,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         self.kwargs = kwargs or {}
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
         if self.op_kwargs.get("output_table"):
-            self.output_table: Optional[Table] = self.op_kwargs.pop("output_table")
+            self.output_table: Optional[NewTable] = self.op_kwargs.pop("output_table")
         else:
             self.output_table = None
         self.op_args = self.kwargs.get("op_args")  # type: ignore
@@ -69,7 +63,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             current_arg = full_spec.args.pop(0)
             if (
                 full_spec.annotations[current_arg] == pd.DataFrame
-                and type(arg) == Table
+                and type(arg) == NewTable
             ):
                 ret_args.append(self._get_dataframe(arg))
             else:
@@ -80,36 +74,63 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         param_types = inspect.signature(self.python_callable).parameters
         self.op_kwargs = {
             k: self._get_dataframe(v)
-            if param_types.get(k).annotation == pd.DataFrame and type(v) == Table
+            if param_types.get(k).annotation == pd.DataFrame and type(v) == NewTable
             else v
             for k, v in self.op_kwargs.items()
         }
 
+    def convert_old_table_to_new(self, table):
+        if isinstance(table, TempTable):
+            table = table.to_table(None)
+        if isinstance(table, OldTable):
+            table = NewTable(
+                conn_id=table.conn_id,
+                name=table.table_name,
+                metadata=Metadata(
+                    schema=table.schema,
+                    warehouse=table.warehouse,
+                    database=table.database,
+                ),
+            )
+        return table
+
+    def handle_conversions(self):
+        """
+        This is a temporary holdover until all other functions use the new table format
+        :return:
+        """
+        self.op_args = [
+            self.convert_old_table_to_new(t) if isinstance(t, OldTable) else t
+            for t in self.op_args  # type: ignore
+        ]  # type: ignore
+        self.op_kwargs = {
+            k: self.convert_old_table_to_new(t) if isinstance(t, OldTable) else t
+            for k, t in self.op_kwargs.items()
+        }
+
     def execute(self, context: Dict):
+        self.handle_conversions()
         self._set_variables_from_first_table()
         self.load_op_arg_table_into_dataframe()
         self.load_op_kwarg_table_into_dataframe()
 
         pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
         if self.output_table:
+            self.output_table = self.convert_old_table_to_new(self.output_table)
             self.populate_output_table()
-            if type(self.output_table) == TempTable:
-                self.output_table = self.output_table.to_table(
-                    table_name=create_table_name(context=context), schema=SCHEMA
-                )
-            self.output_table.schema = self.output_table.schema or SCHEMA
-            hook = get_hook(
-                conn_id=self.output_table.conn_id,
-                database=self.output_table.database,
-                schema=self.output_table.schema,
-                warehouse=self.output_table.warehouse,
+            self.conn_id = self.conn_id or self.output_table.conn_id
+            self.output_table.metadata.schema = (
+                self.output_table.metadata.schema or SCHEMA
             )
-            load_dataframe_into_sql_table(pandas_dataframe, self.output_table, hook)
+            database = create_database(self.conn_id)
+            database.load_pandas_dataframe_to_table(
+                source_dataframe=pandas_dataframe, target_table=self.output_table
+            )
             return self.output_table
         else:
             return pandas_dataframe
 
-    def get_snow_hook(self, table: Table) -> SnowflakeHook:
+    def get_snow_hook(self, table: NewTable) -> SnowflakeHook:
         """
         Create and return SnowflakeHook.
         :return: a SnowflakeHook instance.
@@ -117,46 +138,17 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         """
         return SnowflakeHook(
             snowflake_conn_id=table.conn_id,
-            warehouse=table.warehouse,
-            database=table.database,
+            warehouse=table.metadata.warehouse,
+            database=table.metadata.database,
             role=self.role,
-            schema=table.schema,
+            schema=table.metadata.schema,
             authenticator=None,
             session_parameters=None,
         )
 
-    def _get_dataframe(self, table: Table):
-        database = create_database_from_conn_id(table.conn_id)
-        self.log.info(f"Getting dataframe for {table}")
-        if database in (Database.POSTGRES, Database.POSTGRESQL):
-            self.hook = PostgresHook(
-                postgres_conn_id=table.conn_id, schema=table.database
-            )
-            schema = table.schema or SCHEMA
-            query = (
-                postgres_sql.SQL("SELECT * FROM {schema}.{input_table}")
-                .format(
-                    schema=postgres_sql.Identifier(schema),
-                    input_table=postgres_sql.Identifier(table.table_name),
-                )
-                .as_string(self.hook.get_conn())
-            )
-            df = self.hook.get_pandas_df(query)
-        elif database == Database.SNOWFLAKE:
-            hook = self.get_snow_hook(table)
-            df = hook.get_pandas_df(
-                "SELECT * FROM IDENTIFIER(%(input_table)s)",
-                parameters={"input_table": table.table_name},
-            )
-        elif database == Database.SQLITE:
-            hook = SqliteHook(sqlite_conn_id=table.conn_id, database=table.database)
-            engine = hook.get_sqlalchemy_engine()
-            df = pd.read_sql_table(table.table_name, engine)
-        elif database == Database.BIGQUERY:
-            hook = BigQueryHook(gcp_conn_id=table.conn_id)
-            engine = hook.get_sqlalchemy_engine()
-            df = pd.read_sql_table(table.qualified_name(), engine)
-
+    def _get_dataframe(self, table: NewTable):
+        database = create_database(self.conn_id)
+        df = database.export_table_to_pandas_dataframe(source_table=table)
         if self.identifiers_as_lower:
             df.columns = [col_label.lower() for col_label in df.columns]
         return df

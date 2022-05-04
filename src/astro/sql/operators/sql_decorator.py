@@ -367,10 +367,18 @@ def _transform_task(
         Defaults to False.
     :type multiple_outputs: bool
     """
+    from astro.sql.operators.sql_decorator_refactor import (
+        SqlDecoratedOperator as SQLNew,
+    )
+
+    sql_class = SqlDecoratedOperator
+    if kwargs.get("_experimental", False):
+        sql_class = SQLNew
+        kwargs.pop("_experimental")
     return task_decorator_factory(
         python_callable=python_callable,
         multiple_outputs=multiple_outputs,
-        decorated_operator_class=SqlDecoratedOperator,  # type: ignore
+        decorated_operator_class=sql_class,  # type: ignore
         **kwargs,
     )
 
@@ -386,6 +394,7 @@ def transform_decorator(
     warehouse: Optional[str] = None,
     raw_sql: bool = False,
     handler: Optional[Callable] = None,
+    **kwargs,
 ):
     """
     :param python_callable:
@@ -413,4 +422,5 @@ def transform_decorator(
         warehouse=warehouse,
         raw_sql=raw_sql,
         handler=handler,
+        **kwargs,
     )

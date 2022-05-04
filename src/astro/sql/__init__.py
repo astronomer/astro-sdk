@@ -29,6 +29,7 @@ def transform(
     database: Optional[str] = None,
     schema: Optional[str] = None,
     warehouse: Optional[str] = None,
+    **kwargs,
 ):
     return transform_decorator(
         python_callable=python_callable,
@@ -39,6 +40,7 @@ def transform(
         database=database,
         schema=schema,
         warehouse=warehouse,
+        **kwargs,
     )
 
 
@@ -52,6 +54,7 @@ def run_raw_sql(
     schema: Optional[str] = None,
     warehouse: Optional[str] = None,
     handler: Optional[Callable] = None,
+    **kwargs,
 ):
     return transform_decorator(
         python_callable=python_callable,
@@ -64,6 +67,7 @@ def run_raw_sql(
         warehouse=warehouse,
         handler=handler,
         raw_sql=True,
+        **kwargs,
     )
 
 
