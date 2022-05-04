@@ -82,7 +82,7 @@ class AgnosticLoadFile(BaseOperator):
         self.log.info(f"Loading {self.path} into {self.output_table}...")
         if_exists = self.if_exists
         for file in get_files(path, file_conn_id):
-            dataframe = file.read(normalize_config=self.normalize_config)
+            dataframe = file.read_to_dataframe(normalize_config=self.normalize_config)
             load_dataframe_into_sql_table(
                 dataframe,
                 self.output_table,
