@@ -44,16 +44,18 @@ class File:
         result: bool = self.type.name == FileType.PARQUET
         return result
 
-    def write(self, df: pd.DataFrame) -> None:
+    def write_from_dataframe(self, df: pd.DataFrame) -> None:
         """Write dataframe to all supported files formats
         :param df: pandas dataframe
         """
         with smart_open.open(
             self.path, mode="wb", transport_params=self.location.transport_params
         ) as stream:
-            self.type.write(stream=stream, df=df)
+            self.type.write_from_dataframe(stream=stream, df=df)
 
-    def read(self, normalize_config: Optional[dict] = None, **kwargs) -> pd.DataFrame:
+    def read_to_dataframe(
+        self, normalize_config: Optional[dict] = None, **kwargs
+    ) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes
         :param normalize_config: normalize_config: parameters in dict format of pandas json_normalize() function.
         """
@@ -61,7 +63,9 @@ class File:
         with smart_open.open(
             self.path, mode=mode, transport_params=self.location.transport_params
         ) as stream:
-            return self.type.read(stream, normalize_config=normalize_config, **kwargs)
+            return self.type.read_to_dataframe(
+                stream, normalize_config=normalize_config, **kwargs
+            )
 
     def exists(self) -> bool:
         """Check if the file exists or not"""

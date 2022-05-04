@@ -101,16 +101,16 @@ def test_write(mocked_smart_open, filetype, locations):
     data = {"id": [1, 2, 3], "name": ["First", "Second", "Third with unicode पांचाल"]}
     df = pd.DataFrame(data=data)
     filetype_to_class = {
-        FileType.JSON: "astro.files.type.Json.write",
-        FileType.CSV: "astro.files.type.CSV.write",
-        FileType.NDJSON: "astro.files.type.NdJson.write",
-        FileType.PARQUET: "astro.files.type.Parquet.write",
+        FileType.JSON: "astro.files.type.Json.write_from_dataframe",
+        FileType.CSV: "astro.files.type.CSV.write_from_dataframe",
+        FileType.NDJSON: "astro.files.type.NdJson.write_from_dataframe",
+        FileType.PARQUET: "astro.files.type.Parquet.write_from_dataframe",
     }
     with patch(filetype_to_class[FileType(filetype)]) as mocked_write:
 
         path = locations["path"] + "." + filetype
 
-        File(path).write(df=df)
+        File(path).write_from_dataframe(df=df)
         mocked_smart_open.assert_called()
         kwargs = mocked_smart_open.call_args.kwargs
         args = mocked_smart_open.call_args.args
@@ -146,16 +146,16 @@ def test_write(mocked_smart_open, filetype, locations):
 @patch("astro.files.base.smart_open.open")
 def test_read(mocked_smart_open, filetype, locations):
     filetype_to_class = {
-        FileType.JSON: "astro.files.type.Json.read",
-        FileType.CSV: "astro.files.type.CSV.read",
-        FileType.NDJSON: "astro.files.type.NdJson.read",
-        FileType.PARQUET: "astro.files.type.Parquet.read",
+        FileType.JSON: "astro.files.type.Json.read_to_dataframe",
+        FileType.CSV: "astro.files.type.CSV.read_to_dataframe",
+        FileType.NDJSON: "astro.files.type.NdJson.read_to_dataframe",
+        FileType.PARQUET: "astro.files.type.Parquet.read_to_dataframe",
     }
     with patch(filetype_to_class[FileType(filetype)]) as mocked_read:
 
         path = locations["path"] + "." + filetype
 
-        File(path).read(normalize_config=None)
+        File(path).read_to_dataframe(normalize_config=None)
         mocked_smart_open.assert_called()
         kwargs = mocked_smart_open.call_args.kwargs
         args = mocked_smart_open.call_args.args

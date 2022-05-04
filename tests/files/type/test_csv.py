@@ -14,7 +14,7 @@ def test_read_csv_file():
     path = str(sample_file.absolute())
     csv_type = CSV(path)
     with open(path) as file:
-        df = csv_type.read(file, normalize_config=None)
+        df = csv_type.read_to_dataframe(file, normalize_config=None)
     assert df.shape == (3, 2)
 
 
@@ -28,5 +28,5 @@ def test_write_csv_file():
         df = pd.DataFrame(data=data)
 
         csv_type = CSV(path)
-        csv_type.write(stream=temp_file, df=df)
+        csv_type.write_from_dataframe(stream=temp_file, df=df)
         assert pd.read_csv(path).shape == (3, 2)

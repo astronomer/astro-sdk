@@ -14,7 +14,7 @@ def test_read_json_file():
     path = str(sample_file.absolute())
     json_type = Json(path)
     with open(path) as file:
-        df = json_type.read(file, normalize_config=None)
+        df = json_type.read_to_dataframe(file, normalize_config=None)
     assert df.shape == (3, 2)
 
 
@@ -28,5 +28,5 @@ def test_write_json_file():
         df = pd.DataFrame(data=data)
 
         json_type = Json(path)
-        json_type.write(stream=temp_file, df=df)
+        json_type.write_from_dataframe(stream=temp_file, df=df)
         assert pd.read_json(path).shape == (3, 2)

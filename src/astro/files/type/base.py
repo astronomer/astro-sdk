@@ -9,7 +9,7 @@ class FileType(ABC):
         self.path = path
 
     @abstractmethod
-    def read(self, stream, **kwargs) -> pd.DataFrame:
+    def read_to_dataframe(self, stream, **kwargs) -> pd.DataFrame:
         """read file from one of the supported locations and return dataframe
 
         :param stream: file stream object
@@ -17,7 +17,7 @@ class FileType(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def write(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
+    def write_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
         """Write file to one of the supported locations
 
         :param df: pandas dataframe

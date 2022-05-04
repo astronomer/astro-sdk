@@ -7,7 +7,7 @@ from astro.files.type.base import FileType
 
 
 class Parquet(FileType):
-    def read(self, stream, **kwargs):
+    def read_to_dataframe(self, stream, **kwargs):
         """read parquet file from one of the supported locations and return dataframe
 
         :param stream: file stream object
@@ -18,7 +18,7 @@ class Parquet(FileType):
         # return pa.Table.from_batches([first_rows]).to_pandas()
         return pd.read_parquet(stream, **kwargs)
 
-    def write(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
+    def write_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
         """Write parquet file to one of the supported locations
 
         :param df: pandas dataframe

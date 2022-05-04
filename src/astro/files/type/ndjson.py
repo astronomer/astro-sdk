@@ -10,7 +10,7 @@ from astro.files.type.base import FileType
 
 
 class NdJson(FileType):
-    def read(self, stream, **kwargs):
+    def read_to_dataframe(self, stream, **kwargs):
         """read ndjson file from one of the supported locations and return dataframe
 
         :param stream: file stream object
@@ -18,7 +18,7 @@ class NdJson(FileType):
         normalize_config = kwargs.pop("normalize_config")
         return self.flatten_ndjson(normalize_config, stream)
 
-    def write(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
+    def write_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
         """Write ndjson file to one of the supported locations
 
         :param df: pandas dataframe
