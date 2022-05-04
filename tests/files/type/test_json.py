@@ -11,6 +11,7 @@ sample_file = pathlib.Path(
 
 
 def test_read_json_file():
+    """Test reading of json file from local location"""
     path = str(sample_file.absolute())
     json_type = JSONFileType(path)
     with open(path) as file:
@@ -19,6 +20,7 @@ def test_read_json_file():
 
 
 def test_write_json_file():
+    """Test writing of json file from local location"""
     with tempfile.NamedTemporaryFile() as temp_file:
         path = temp_file.name
         data = {

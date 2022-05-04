@@ -75,10 +75,8 @@ class AgnosticLoadFile(BaseOperator):
         self, path: str, hook: BaseHook, file_conn_id: Optional[str] = None
     ) -> Union[TempTable, Table]:
         """Loads csv/parquet table from local/S3/GCS with Pandas.
-
         Infers SQL database type based on connection then loads table to db.
         """
-
         self.log.info(f"Loading {self.path} into {self.output_table}...")
         if_exists = self.if_exists
         for file in get_files(path, file_conn_id):
@@ -116,7 +114,6 @@ def load_file(
     **kwargs,
 ) -> XComArg:
     """Convert AgnosticLoadFile into a function that Returns an XComArg object
-
     :param path: File path
     :param output_table: Table to create
     :param file_conn_id: Airflow connection id of input file (optional)

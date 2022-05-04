@@ -10,13 +10,15 @@ from astro.files.type.base import FileType
 
 
 class NDJSONFileType(FileType):
+    """Concrete implementation to handle NDJSON file type"""
+
     def export_to_dataframe(self, stream, **kwargs):
         """read ndjson file from one of the supported locations and return dataframe
 
         :param stream: file stream object
         """
         normalize_config = kwargs.pop("normalize_config")
-        return self.flatten(normalize_config, stream)
+        return NDJSONFileType.flatten(normalize_config, stream)
 
     def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
         """Write ndjson file to one of the supported locations
@@ -30,8 +32,9 @@ class NDJSONFileType(FileType):
     def name(self):
         return FileTypeConstants.NDJSON
 
+    @staticmethod
     def flatten(
-        self, normalize_config: Union[None, dict], stream: io.TextIOWrapper
+        normalize_config: Union[None, dict], stream: io.TextIOWrapper
     ) -> pd.DataFrame:
         """
         Flatten the nested ndjson/json.

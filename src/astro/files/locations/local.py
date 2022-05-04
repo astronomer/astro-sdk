@@ -26,7 +26,7 @@ class LocalLocation(BaseFileLocation):
 
     @property
     def size(self):
-        """Return the size (bytes) of the given file.
+        """Return the size in bytes of the given file.
 
         :return: File size in bytes
         :rtype: int

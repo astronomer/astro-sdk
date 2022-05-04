@@ -11,6 +11,7 @@ sample_file = pathlib.Path(
 
 
 def test_read_parquet_file():
+    """Test reading of parquet file from local location"""
     path = str(sample_file.absolute())
     parquet_type = ParquetFileType(path)
     with open(path, mode="rb") as file:
@@ -19,6 +20,7 @@ def test_read_parquet_file():
 
 
 def test_write_parquet_file():
+    """Test writing of parquet file from local location"""
     with tempfile.NamedTemporaryFile() as temp_file:
         path = temp_file.name
         data = {

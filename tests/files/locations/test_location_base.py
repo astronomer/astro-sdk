@@ -43,23 +43,21 @@ def test_validate_path_with_unsupported_filepaths(filepath):
 
 
 def test_get_class_name_method_valid_name():
-    class Test:
+    class Test:  # skipcq: PY-D0002
         __name__ = "test.some"
 
-        class TestLocation:
-            def __init__(self):
-                pass
+        class TestLocation:  # skipcq: PY-D0002
+            pass
 
     assert get_class_name(Test) == "TestLocation"
 
 
 def test_get_class_name_method_invalid_name():
-    class Test:
+    class Test:  # skipcq: PY-D0002
         __name__ = "test.some"
 
-        class SomethingElseLocation:
-            def __init__(self):
-                pass
+        class SomethingElseLocation:  # skipcq: PY-D0002
+            pass
 
     with pytest.raises(ValueError) as exc_info:
         get_class_name(Test)

@@ -10,6 +10,7 @@ from astro.files.type.parquet import ParquetFileType
 
 
 def create_file_type(path: str, filetype: Union[FileTypeConstants, None] = None):
+    """Factory method to create FileType super objects based on the file extension in path or filetype specified."""
     filetype_to_class: Dict[FileTypeConstants, Type[FileType]] = {
         FileTypeConstants.CSV: CSVFileType,
         FileTypeConstants.JSON: JSONFileType,

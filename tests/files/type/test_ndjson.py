@@ -12,6 +12,7 @@ sample_file = pathlib.Path(
 
 
 def test_read_ndjson_file():
+    """Test reading of ndjson file from local location"""
     path = str(sample_file.absolute())
     json_type = NDJSONFileType(path)
     with open(path) as file:
@@ -20,6 +21,7 @@ def test_read_ndjson_file():
 
 
 def test_write_ndjson_file():
+    """Test writing of ndjson file from local location"""
     with tempfile.NamedTemporaryFile() as temp_file:
         path = temp_file.name
         data = {
@@ -31,8 +33,9 @@ def test_write_ndjson_file():
         json_type = NDJSONFileType(path)
         json_type.create_from_dataframe(stream=temp_file, df=df)
 
+        count = 0
         with open(temp_file.name) as file:
-            for count, line in enumerate(file):
+            for _, line in enumerate(file):
                 assert len(json.loads(line).keys()) == 2
-        # Since count starts from 0.
-        assert (count + 1) == 3
+                count = count + 1
+        assert count == 3

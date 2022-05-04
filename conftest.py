@@ -315,8 +315,9 @@ def locations_method_map_fixture(request):
     synonyms = {"gcs": "gs"}
 
     def get_location_type(cls):
+        """getter for location type"""
         val = cls.split(".")[-1].rstrip(suffix).lower()
-        if val in synonyms:
+        if synonyms.get(val):
             val = synonyms[val]
         return FileLocation(val)
 

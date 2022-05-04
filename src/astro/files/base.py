@@ -34,7 +34,7 @@ class File:
     @property
     def size(self) -> int:
         """
-        Return the size (bytes) of the given file.
+        Return the size in bytes of the given file.
 
         :return: File size in bytes
         :rtype: int

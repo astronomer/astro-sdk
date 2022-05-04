@@ -11,6 +11,7 @@ sample_file = pathlib.Path(
 
 
 def test_read_csv_file():
+    """Test reading of csv file from local location"""
     path = str(sample_file.absolute())
     csv_type = CSVFileType(path)
     with open(path) as file:
@@ -19,6 +20,7 @@ def test_read_csv_file():
 
 
 def test_write_csv_file():
+    """Test writing of csv file from local location"""
     with tempfile.NamedTemporaryFile() as temp_file:
         path = temp_file.name
         data = {

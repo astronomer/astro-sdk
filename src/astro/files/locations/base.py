@@ -46,7 +46,7 @@ class BaseFileLocation(ABC):
     @property
     @abstractmethod
     def size(self):
-        """Resolve patterns in path"""
+        """Return the size in bytes of the given file"""
         raise NotImplementedError
 
     @staticmethod
@@ -110,7 +110,6 @@ class BaseFileLocation(ABC):
 
     def exists(self) -> bool:
         """Check if the file exists or not"""
-
         try:
             with smart_open.open(
                 self.path, mode="r", transport_params=self.transport_params

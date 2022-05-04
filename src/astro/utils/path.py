@@ -64,7 +64,6 @@ def get_class_name(module_ref: Any, suffix: str = "Location") -> str:
     :param module_ref: Module from which to get class location type implementation
     :param suffix: suffix for class name
     """
-
     module_name = module_ref.__name__.split(".")[-1]
     class_names_formats = [
         f"{module_name.title()}{suffix}",

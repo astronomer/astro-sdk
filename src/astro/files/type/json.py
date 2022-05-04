@@ -7,6 +7,8 @@ from astro.files.type.base import FileType
 
 
 class JSONFileType(FileType):
+    """Concrete implementation to handle JSON file type"""
+
     def export_to_dataframe(self, stream: io.TextIOWrapper, **kwargs):
         """read json file from one of the supported locations and return dataframe
 

@@ -63,6 +63,7 @@ def test_path_property():
 )
 @patch("astro.files.locations.base.smart_open.open")
 def test_exists(mocked_smart_open, files):
+    """Test existence of files across supported locations"""
     File(files["path"]).exists()
     mocked_smart_open.assert_called()
     kwargs = mocked_smart_open.call_args.kwargs
@@ -95,7 +96,10 @@ def test_exists(mocked_smart_open, files):
 )
 @pytest.mark.parametrize("filetype", SUPPORTED_FILE_TYPES)
 @patch("astro.files.base.smart_open.open")
-def test_write(mocked_smart_open, filetype, locations, type_method_map_fixture):
+def test_create_from_dataframe(
+    mocked_smart_open, filetype, locations, type_method_map_fixture
+):
+    """Test create_from_dataframe() for all locations and filetypes"""
     data = {"id": [1, 2, 3], "name": ["First", "Second", "Third with unicode पांचाल"]}
     df = pd.DataFrame(data=data)
     with patch(type_method_map_fixture[FileType(filetype)]) as mocked_write:
@@ -139,7 +143,10 @@ def test_write(mocked_smart_open, filetype, locations, type_method_map_fixture):
 )
 @pytest.mark.parametrize("filetype", SUPPORTED_FILE_TYPES)
 @patch("astro.files.base.smart_open.open")
-def test_read(mocked_smart_open, filetype, locations, type_method_map_fixture):
+def test_export_to_dataframe(
+    mocked_smart_open, filetype, locations, type_method_map_fixture
+):
+    """Test export_to_dataframe() for all locations and filetypes"""
     with patch(type_method_map_fixture[FileType(filetype)]) as mocked_read:
 
         path = locations["path"] + "." + filetype
@@ -182,6 +189,7 @@ def test_read(mocked_smart_open, filetype, locations, type_method_map_fixture):
 def test_read_with_explicit_valid_type(
     mocked_smart_open, filetype, locations, type_method_map_fixture
 ):
+    """Test export_to_dataframe() for all locations and filetypes, where the file type is explicitly specified"""
     with patch(type_method_map_fixture[FileType(filetype)]) as mocked_read:
 
         path = locations["path"]
@@ -206,6 +214,7 @@ def test_read_with_explicit_valid_type(
 @pytest.mark.parametrize("file_location", SUPPORTED_FILE_LOCATIONS)
 @pytest.mark.parametrize("file_type", SUPPORTED_FILE_TYPES)
 def test_get_files(file_type, file_location, locations_method_map_fixture):
+    """Test get_files to resolve the patterns within paths"""
     path = f"{file_location}://tmp/sample.{file_type}"
     if file_location == FileLocation.LOCAL.value:
         path = f"/tmp/sample.{file_type}"
