@@ -162,6 +162,50 @@ def test_read(mocked_smart_open, filetype, locations, type_method_map_fixture):
 
 
 @pytest.mark.parametrize(
+    "type_method_map_fixture", [{"method": "read_to_dataframe"}], indirect=True
+)
+@pytest.mark.parametrize(
+    "locations",
+    [
+        {
+            "path": "/tmp/sample",
+            "instance": None,
+        },
+        {
+            "path": "s3://tmp/sample",
+            "instance": BaseClient,
+        },
+        {
+            "path": "gs://tmp/sample",
+            "instance": Client,
+        },
+    ],
+    ids=["local", "s3", "gcs"],
+)
+@pytest.mark.parametrize("filetype", SUPPORTED_FILE_TYPES)
+@patch("astro.files.base.smart_open.open")
+def test_read_with_explicit_valid_type(
+    mocked_smart_open, filetype, locations, type_method_map_fixture
+):
+    with patch(type_method_map_fixture[FileType(filetype)]) as mocked_read:
+
+        path = locations["path"]
+
+        File(path=path, filetype=FileType(filetype)).read_to_dataframe(
+            normalize_config=None
+        )
+        mocked_smart_open.assert_called()
+        kwargs = mocked_smart_open.call_args.kwargs
+        args = mocked_smart_open.call_args.args
+        if kwargs["transport_params"]:
+            assert isinstance(
+                kwargs["transport_params"]["client"], locations["instance"]
+            )
+        assert path == args[0]
+        mocked_read.assert_called()
+
+
+@pytest.mark.parametrize(
     "locations_method_map_fixture", [{"method": "paths"}], indirect=True
 )
 @pytest.mark.parametrize("file_location", SUPPORTED_FILE_LOCATIONS)

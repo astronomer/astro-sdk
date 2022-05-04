@@ -9,14 +9,22 @@ from astro.files.type.ndjson import NDJSONFileType
 from astro.files.type.parquet import ParquetFileType
 
 
-def create_file_type(path: str):
+def create_file_type(path: str, filetype: Union[FileType, None] = None):
     filetype_to_class: Dict[FileTypeConstants, Type[FileType]] = {
         FileTypeConstants.CSV: CSVFileType,
         FileTypeConstants.JSON: JSONFileType,
         FileTypeConstants.NDJSON: NDJSONFileType,
         FileTypeConstants.PARQUET: ParquetFileType,
     }
-    return filetype_to_class[get_filetype(path)](path)
+    if not filetype:
+        filetype = get_filetype(path)
+
+    try:
+        return filetype_to_class[filetype](path)
+    except KeyError:
+        raise ValueError(
+            f"Non supported file type provided {filetype}, file_type should be among {', '.join(FileTypeConstants)}."
+        )
 
 
 def get_filetype(filepath: Union[str, pathlib.PosixPath]) -> FileTypeConstants:

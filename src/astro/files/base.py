@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import pandas as pd
 import smart_open
@@ -13,14 +13,19 @@ class File:
     Intended to be used within library.
     """
 
-    def __init__(self, path: str, conn_id: Optional[str] = None):
+    def __init__(
+        self,
+        path: str,
+        conn_id: Optional[str] = None,
+        filetype: Union[FileType, None] = None,
+    ):
         """Init file object which represent a single file in local/object stores
 
         :param path: Path to a file in the filesystem/Object stores
         :param conn_id: Airflow connection ID
         """
         self.location = create_file_location(path, conn_id)
-        self.type = create_file_type(path)
+        self.type = create_file_type(path=path, filetype=filetype)
 
     @property
     def path(self):
