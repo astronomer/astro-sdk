@@ -80,6 +80,9 @@ class File:
 
 def get_files(path_pattern: str, conn_id: Optional[str] = None) -> List[File]:
     """get file objects by resolving path_pattern from local/object stores
+    path_pattern can be
+    1. local location - glob pattern
+    2. s3/gcs location - prefix
 
     :param path_pattern: path/pattern to a file in the filesystem/Object stores,
     supports glob and prefix pattern for object stores
