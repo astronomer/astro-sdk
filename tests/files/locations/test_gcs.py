@@ -23,3 +23,9 @@ def test_remote_object_store_prefix(remote_file):
     assert sorted(location.paths) == sorted(
         ["gs://tmp/house1.csv", "gs://tmp/house2.csv"]
     )
+
+
+def test_size():
+    """Test get_size() of for local file."""
+    location = create_file_location("gs://tmp/house1.csv")
+    assert location.size == -1

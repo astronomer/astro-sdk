@@ -15,7 +15,7 @@ class CSVFileType(FileType):
         kwargs.pop("normalize_config")
         return pd.read_csv(stream, **kwargs)
 
-    def write_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
+    def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
         """Write csv file to one of the supported locations
 
         :param df: pandas dataframe

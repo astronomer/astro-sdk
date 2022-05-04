@@ -52,7 +52,7 @@ class File:
         result: bool = self.type.name == FileType.PARQUET
         return result
 
-    def write_from_dataframe(self, df: pd.DataFrame) -> None:
+    def create_from_dataframe(self, df: pd.DataFrame) -> None:
         """Write dataframe to all supported files formats
 
         :param df: pandas dataframe
@@ -60,7 +60,7 @@ class File:
         with smart_open.open(
             self.path, mode="wb", transport_params=self.location.transport_params
         ) as stream:
-            self.type.write_from_dataframe(stream=stream, df=df)
+            self.type.create_from_dataframe(stream=stream, df=df)
 
     def read_to_dataframe(
         self, normalize_config: Optional[dict] = None, **kwargs

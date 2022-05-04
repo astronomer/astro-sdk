@@ -48,3 +48,9 @@ def test_describe_get_paths(path):  # skipcq: PYL-W0612, PTC-W0065
     """test get_paths with API endpoint"""
     location = create_file_location(path)
     assert location.paths == [path]
+
+
+def test_size():
+    """Test get_size() of for local file."""
+    location = create_file_location("http://tmp/house2.csv")
+    assert location.size == -1

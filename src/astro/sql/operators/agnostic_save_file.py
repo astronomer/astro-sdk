@@ -65,7 +65,7 @@ class SaveFile(BaseOperator):
         # Write file if overwrite == True or if file doesn't exist.
         file = File(self.output_file_path, self.output_conn_id)
         if self.overwrite or not file.exists():
-            file.write_from_dataframe(df)
+            file.create_from_dataframe(df)
         else:
             raise FileExistsError(f"{self.output_file_path} file already exists.")
 

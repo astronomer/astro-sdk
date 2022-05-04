@@ -18,7 +18,7 @@ class ParquetFileType(FileType):
         # return pa.Table.from_batches([first_rows]).to_pandas()
         return pd.read_parquet(stream, **kwargs)
 
-    def write_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
+    def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
         """Write parquet file to one of the supported locations
 
         :param df: pandas dataframe

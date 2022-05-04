@@ -38,11 +38,6 @@ def test_is_binary(filetype):
     assert File(filetype[1]).is_binary() == filetype[0]
 
 
-def test_size():
-    """Test get_size() of for local file."""
-    assert File(str(sample_file.absolute())).size == 65
-
-
 def test_path_property():
     """Test path property is having correct path"""
     path = "/tmp/sample.csv"

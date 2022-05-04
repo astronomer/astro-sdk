@@ -15,7 +15,7 @@ class JSONFileType(FileType):
         kwargs.pop("normalize_config")
         return pd.read_json(stream, **kwargs)
 
-    def write_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
+    def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
         """Write json file to one of the supported locations
 
         :param df: pandas dataframe
