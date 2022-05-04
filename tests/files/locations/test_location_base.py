@@ -43,6 +43,8 @@ def test_validate_path_with_unsupported_filepaths(filepath):
 
 
 def test_get_class_name_method_valid_name():
+    """Test valid case of implicit naming dependency among the module name and class name for dynamic imports"""
+
     class Test:  # skipcq: PY-D0002
         __name__ = "test.some"
 
@@ -53,6 +55,8 @@ def test_get_class_name_method_valid_name():
 
 
 def test_get_class_name_method_invalid_name():
+    """Test invalid case of implicit naming dependency among the module name and class name for dynamic imports"""
+
     class Test:  # skipcq: PY-D0002
         __name__ = "test.some"
 
