@@ -3,18 +3,18 @@ from typing import Dict, Type, Union
 
 from astro.constants import FileType as FileTypeConstants
 from astro.files.type.base import FileType
-from astro.files.type.csv import CSV
-from astro.files.type.json import Json
-from astro.files.type.ndjson import NdJson
-from astro.files.type.parquet import Parquet
+from astro.files.type.csv import CSVFileType
+from astro.files.type.json import JSONFileType
+from astro.files.type.ndjson import NDJSONFileType
+from astro.files.type.parquet import ParquetFileType
 
 
 def create_file_type(path: str):
     filetype_to_class: Dict[FileTypeConstants, Type[FileType]] = {
-        FileTypeConstants.CSV: CSV,
-        FileTypeConstants.JSON: Json,
-        FileTypeConstants.NDJSON: NdJson,
-        FileTypeConstants.PARQUET: Parquet,
+        FileTypeConstants.CSV: CSVFileType,
+        FileTypeConstants.JSON: JSONFileType,
+        FileTypeConstants.NDJSON: NDJSONFileType,
+        FileTypeConstants.PARQUET: ParquetFileType,
     }
     return filetype_to_class[get_filetype(path)](path)
 

@@ -9,7 +9,7 @@ from astro.constants import FileType as FileTypeConstants
 from astro.files.type.base import FileType
 
 
-class NdJson(FileType):
+class NDJSONFileType(FileType):
     def read_to_dataframe(self, stream, **kwargs):
         """read ndjson file from one of the supported locations and return dataframe
 

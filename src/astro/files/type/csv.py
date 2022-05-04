@@ -6,7 +6,7 @@ from astro.constants import FileType as FileTypeConstants
 from astro.files.type.base import FileType
 
 
-class CSV(FileType):
+class CSVFileType(FileType):
     def read_to_dataframe(self, stream, **kwargs) -> pd.DataFrame:
         """read csv file from one of the supported locations and return dataframe
 

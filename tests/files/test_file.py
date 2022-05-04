@@ -101,10 +101,10 @@ def test_write(mocked_smart_open, filetype, locations):
     data = {"id": [1, 2, 3], "name": ["First", "Second", "Third with unicode पांचाल"]}
     df = pd.DataFrame(data=data)
     filetype_to_class = {
-        FileType.JSON: "astro.files.type.Json.write_from_dataframe",
-        FileType.CSV: "astro.files.type.CSV.write_from_dataframe",
-        FileType.NDJSON: "astro.files.type.NdJson.write_from_dataframe",
-        FileType.PARQUET: "astro.files.type.Parquet.write_from_dataframe",
+        FileType.JSON: "astro.files.type.JSONFileType.write_from_dataframe",
+        FileType.CSV: "astro.files.type.CSVFileType.write_from_dataframe",
+        FileType.NDJSON: "astro.files.type.NDJSONFileType.write_from_dataframe",
+        FileType.PARQUET: "astro.files.type.ParquetFileType.write_from_dataframe",
     }
     with patch(filetype_to_class[FileType(filetype)]) as mocked_write:
 
@@ -146,10 +146,10 @@ def test_write(mocked_smart_open, filetype, locations):
 @patch("astro.files.base.smart_open.open")
 def test_read(mocked_smart_open, filetype, locations):
     filetype_to_class = {
-        FileType.JSON: "astro.files.type.Json.read_to_dataframe",
-        FileType.CSV: "astro.files.type.CSV.read_to_dataframe",
-        FileType.NDJSON: "astro.files.type.NdJson.read_to_dataframe",
-        FileType.PARQUET: "astro.files.type.Parquet.read_to_dataframe",
+        FileType.JSON: "astro.files.type.JSONFileType.read_to_dataframe",
+        FileType.CSV: "astro.files.type.CSVFileType.read_to_dataframe",
+        FileType.NDJSON: "astro.files.type.NDJSONFileType.read_to_dataframe",
+        FileType.PARQUET: "astro.files.type.ParquetFileType.read_to_dataframe",
     }
     with patch(filetype_to_class[FileType(filetype)]) as mocked_read:
 

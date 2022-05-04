@@ -6,7 +6,7 @@ from astro.constants import FileType as FileTypeConstants
 from astro.files.type.base import FileType
 
 
-class Json(FileType):
+class JSONFileType(FileType):
     def read_to_dataframe(self, stream: io.TextIOWrapper, **kwargs):
         """read json file from one of the supported locations and return dataframe
 

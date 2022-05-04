@@ -3,7 +3,7 @@ import tempfile
 
 import pandas as pd
 
-from astro.files.type import Parquet
+from astro.files.type import ParquetFileType
 
 sample_file = pathlib.Path(
     pathlib.Path(__file__).parent.parent.parent, "data/sample.parquet"
@@ -12,7 +12,7 @@ sample_file = pathlib.Path(
 
 def test_read_parquet_file():
     path = str(sample_file.absolute())
-    parquet_type = Parquet(path)
+    parquet_type = ParquetFileType(path)
     with open(path, mode="rb") as file:
         df = parquet_type.read_to_dataframe(file, normalize_config=None)
     assert df.shape == (3, 2)
@@ -27,6 +27,6 @@ def test_write_parquet_file():
         }
         df = pd.DataFrame(data=data)
 
-        parquet_type = Parquet(path)
+        parquet_type = ParquetFileType(path)
         parquet_type.write_from_dataframe(stream=temp_file, df=df)
         assert pd.read_parquet(temp_file).shape == (3, 2)

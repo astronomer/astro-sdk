@@ -4,7 +4,7 @@ import tempfile
 
 import pandas as pd
 
-from astro.files.type import NdJson
+from astro.files.type import NDJSONFileType
 
 sample_file = pathlib.Path(
     pathlib.Path(__file__).parent.parent.parent, "data/sample.ndjson"
@@ -13,7 +13,7 @@ sample_file = pathlib.Path(
 
 def test_read_ndjson_file():
     path = str(sample_file.absolute())
-    json_type = NdJson(path)
+    json_type = NDJSONFileType(path)
     with open(path) as file:
         df = json_type.read_to_dataframe(file, normalize_config=None)
     assert df.shape == (3, 2)
@@ -28,7 +28,7 @@ def test_write_ndjson_file():
         }
         df = pd.DataFrame(data=data)
 
-        json_type = NdJson(path)
+        json_type = NDJSONFileType(path)
         json_type.write_from_dataframe(stream=temp_file, df=df)
 
         with open(temp_file.name) as file:
