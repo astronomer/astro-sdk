@@ -172,6 +172,23 @@ def sql_server(request):
 
 
 @pytest.fixture
+def schema_fixture(request, sql_server):
+    """
+    Given request.param in the format:
+        "someschema"  # name of the schema to be created
+
+    If the schema exists, it is deleted during the tests setup and tear down.
+    """
+    schema_name = request.param
+    _, hook = sql_server
+
+    hook.run(f"DROP SCHEMA IF EXISTS {schema_name}")
+    yield
+
+    hook.run(f"DROP SCHEMA IF EXISTS {schema_name}")
+
+
+@pytest.fixture
 def database_table_fixture(request):
     """
     Given request.param in the format:

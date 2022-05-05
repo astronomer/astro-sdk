@@ -5,7 +5,6 @@ import pandas as pd
 from airflow.decorators.base import DecoratedOperator, task_decorator_factory
 from airflow.hooks.base import BaseHook
 from airflow.utils.db import provide_session
-from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.sql.functions import Function
 
 from astro.constants import Database
@@ -81,6 +80,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         )
 
     def execute(self, context: Dict):
+
         if not isinstance(self.sql, str):
             cursor = self._run_sql(self.sql, self.parameters)
             if self.handler is not None:
@@ -105,18 +105,14 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         self._process_params()
 
         output_table_name: str = ""
-        # Create DEFAULT SCHEMA if not created.
-        self._set_schema_if_needed(SCHEMA)
+
+        self._set_schema_if_needed()
 
         if not self.raw_sql:
-            # Create a table name for the temp table
-            if not schema_exists(
-                hook=self.hook, schema=self.schema, conn_type=self.conn_type
-            ):
-                self._set_schema_if_needed()
 
             if not self.output_table or type(self.output_table) == TempTable:
                 output_table_name = create_unique_table_name()
+                self._set_schema_if_needed(schema=SCHEMA)
                 full_output_table_name = self.handle_output_table_schema(
                     # Since there is no output table defined we have to assume default schema
                     output_table_name,
@@ -206,17 +202,26 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         return output_table_name
 
     def _set_schema_if_needed(self, schema=None):
-        if self.conn_type in ["postgres", "snowflake", "bigquery"]:
+        if schema is None:
+            schema = self.schema
+
+        database_expects_schema = self.conn_type in [
+            "postgres",
+            "snowflake",
+            "bigquery",
+        ]
+        schema_exist_ = schema_exists(
+            hook=self.hook, schema=schema, conn_type=self.conn_type
+        )
+
+        if database_expects_schema and not schema_exist_:
             schema_statement = create_schema_query(
                 conn_type=self.conn_type,
                 hook=self.hook,
-                schema_id=schema if schema else self.schema,
+                schema_id=schema,
                 user=self.user,
             )
-            try:
-                self._run_sql(schema_statement, {})
-            except ProgrammingError as e:
-                print(e)
+            self._run_sql(schema_statement, {})
 
     def get_sql_alchemy_engine(self):
         return get_sqlalchemy_engine(self.hook)
