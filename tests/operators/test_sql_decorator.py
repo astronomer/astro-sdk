@@ -7,6 +7,7 @@ from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from tests.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
+TEST_SCHEMA = test_utils.get_table_name("test")
 
 
 @pytest.mark.parametrize(
@@ -62,9 +63,7 @@ def test_sql_decorator_basic_functionality(sample_dag, sql_server, test_table):
 
 @pytest.mark.parametrize(
     "sql_server",
-    [
-        "snowflake",
-    ],
+    ["snowflake", "bigquery", "postgres"],
     indirect=True,
 )
 @pytest.mark.parametrize(
@@ -75,7 +74,6 @@ def test_sql_decorator_basic_functionality(sample_dag, sql_server, test_table):
             "load_table": True,
             "is_temp": False,
             "param": {
-                "schema": SCHEMA,
                 "table_name": test_utils.get_table_name("test"),
             },
         }
@@ -105,17 +103,16 @@ def test_sql_decorator_does_not_create_schema_when_the_schema_exists(
         )
     test_utils.run_dag(sample_dag)
 
-    df = hook.get_pandas_df(sql_statement)
-    assert df.to_dict("r") == [{"ID": 4, "NAME": "New Person"}]
+    df = hook.get_pandas_df(sql_statement).rename(columns=str.lower)
+    assert df.to_dict("r") == [{"id": 4, "name": "New Person"}]
 
 
 @pytest.mark.parametrize(
     "sql_server",
-    [
-        "postgres",
-    ],
+    ["postgres", "bigquery"],
     indirect=True,
 )
+@pytest.mark.parametrize("schema_fixture", [TEST_SCHEMA], indirect=True)
 @pytest.mark.parametrize(
     "test_table",
     [
@@ -124,7 +121,7 @@ def test_sql_decorator_does_not_create_schema_when_the_schema_exists(
             "load_table": True,
             "is_temp": False,
             "param": {
-                "schema": "some_new_schema",
+                "schema": TEST_SCHEMA,
                 "table_name": test_utils.get_table_name("test"),
             },
         }
@@ -132,7 +129,7 @@ def test_sql_decorator_does_not_create_schema_when_the_schema_exists(
     indirect=True,
 )
 def test_sql_decorator_creates_schema_when_it_does_not_exist(
-    sample_dag, sql_server, test_table
+    sample_dag, sql_server, schema_fixture, test_table
 ):
     """Test basic sql execution of SqlDecoratedOperator."""
     _, hook = sql_server
