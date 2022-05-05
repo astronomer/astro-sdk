@@ -195,14 +195,14 @@ def remote_file(request):
         raise ValueError(f"File location {provider} not supported")
 
     new_connection = Connection(conn_id=conn_id, conn_type=conn_type, extra=extra)
-    session = settings.Session()
+    session_ = settings.Session()
     if not (
-        session.query(Connection)
+        session_.query(Connection)
         .filter(Connection.conn_id == new_connection.conn_id)
         .first()
     ):
-        session.add(new_connection)
-        session.commit()
+        session_.add(new_connection)
+        session_.commit()
 
     filename = pathlib.Path(f"{CWD}/tests/data/sample.{file_extension}")
     object_paths = []
@@ -235,10 +235,11 @@ def remote_file(request):
             ):
                 hook.delete_objects(bucket_name, object_prefix)
 
-    session.delete(new_connection)
-    session.flush()
+    session_.delete(new_connection)
+    session_.flush()
 
 
+@pytest.fixture
 def schema_fixture(request, sql_server):
     """
     Given request.param in the format:

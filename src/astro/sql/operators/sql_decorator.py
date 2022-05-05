@@ -4,7 +4,6 @@ from typing import Callable, Dict, Iterable, Mapping, Optional, Union
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator, task_decorator_factory
 from airflow.hooks.base import BaseHook
-from airflow.utils.db import provide_session
 from sqlalchemy.sql.functions import Function
 
 from astro.constants import Database
@@ -36,6 +35,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         sql="",
         **kwargs,
     ):
+        self.op_args = ()
         self.raw_sql = raw_sql
         self.autocommit = autocommit
         self.parameters = parameters
@@ -110,7 +110,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
 
         if not self.raw_sql:
 
-            if not self.output_table or type(self.output_table) == TempTable:
+            if not self.output_table or isinstance(self.output_table, TempTable):
                 output_table_name = create_unique_table_name()
                 self._set_schema_if_needed(schema=SCHEMA)
                 full_output_table_name = self.handle_output_table_schema(
@@ -131,13 +131,13 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         else:
             # If there's no SQL to run we simply return
             if self.sql == "" or not self.sql:
-                return
+                return None
 
         query_result = self._run_sql(self.sql, self.parameters)
         # Run execute function of subclassed Operator.
 
         if self.output_table:
-            if type(self.output_table) == TempTable:
+            if isinstance(self.output_table, TempTable):
                 self.output_table = self.output_table.to_table(
                     table_name=output_table_name, schema=self.output_table.schema
                 )
@@ -258,17 +258,6 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             statement = f"CREATE TABLE {output_table_name} AS ({clean_trailing_semicolon(query)});"
         return statement
 
-    @provide_session
-    def pre_execute(self, context, session=None):
-        """This hook is triggered right before self.execute() is called."""
-        pass
-
-    def post_execute(self, context, result=None):
-        """
-        This hook is triggered right after self.execute() is called.
-        """
-        pass
-
     def _process_params(self):
         if self.conn_type == "snowflake":
             self.parameters = snowflake_transform.process_params(
@@ -279,14 +268,14 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         database = get_database_from_conn_id(self.conn_id)
         if database in (Database.POSTGRES, Database.BIGQUERY):
             return postgres_transform.add_templates_to_context(self.parameters, context)
-        elif database == Database.SNOWFLAKE:
+        if database == Database.SNOWFLAKE:
             return snowflake_transform.add_templates_to_context(
                 self.parameters, context
             )
-        else:
-            return self.default_transform(self.parameters, context)
+        return self.default_transform(self.parameters, context)
 
-    def default_transform(self, parameters, context):
+    @staticmethod
+    def default_transform(parameters, context):
         for k, v in parameters.items():
             if isinstance(v, Table):
                 context[k] = v.table_name
@@ -294,15 +283,10 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 context[k] = ":" + k
         return context
 
-    def _cleanup(self):
-        """Remove DAG's objects from S3 and db."""
-        # To-do
-        pass
-
     def convert_op_arg_dataframes(self):
         final_args = []
-        for i, arg in enumerate(self.op_args):
-            if type(arg) == pd.DataFrame:
+        for arg in self.op_args:
+            if isinstance(arg, pd.DataFrame):
                 pandas_dataframe = arg
                 output_table_name = create_unique_table_name()
                 output_table = Table(
@@ -327,7 +311,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
     def convert_op_kwarg_dataframes(self):
         final_kwargs = {}
         for key, value in self.op_kwargs.items():
-            if type(value) == pd.DataFrame:
+            if isinstance(value, pd.DataFrame):
                 pandas_dataframe = value
                 output_table_name = create_unique_table_name()
                 output_table = Table(
