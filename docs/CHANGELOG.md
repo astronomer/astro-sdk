@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.3
+
+Bug fix:
+* Do not attempt to create a schema if it already exists [#329](https://github.com/astro-projects/astro/issues/329).
+
+
 ## 0.8.2
 
 Bug fix:
@@ -7,6 +13,7 @@ Bug fix:
 
 Enhancements:
 * Add integration testcase for `SqlDecoratedOperator` to test execution of Raw SQL [#316](https://github.com/astro-projects/astro/pull/316)
+
 
 ## 0.8.1
 

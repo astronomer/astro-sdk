@@ -1,6 +1,6 @@
 """A decorator that allows users to run SQL queries natively in Airflow."""
 
-__version__ = "0.8.2"
+__version__ = "0.8.3"
 
 from astro.dataframe import dataframe  # noqa: F401
 
