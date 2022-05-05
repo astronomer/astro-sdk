@@ -1,9 +1,9 @@
 name: Build and test astro
 on:
   push:
-    branches: [ 'main' ]
+    branches: [ 'main', 'release-0.8' ]
   pull_request:
-    branches: [ 'main' ]
+    branches: [ 'main', 'release-0.8' ]
 jobs:
   Pre-Commit:
     runs-on: ubuntu-latest
