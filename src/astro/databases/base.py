@@ -172,7 +172,7 @@ class BaseDatabase(ABC):
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
         source_dataframe.to_sql(
-            target_table.name,
+            self.get_table_qualified_name(target_table),
             con=self.sqlalchemy_engine,
             if_exists=if_exists,
             chunksize=chunk_size,

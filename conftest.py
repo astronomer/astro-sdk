@@ -210,7 +210,10 @@ def database_table_fixture(request):
     filepath = params.get("filepath", "")
 
     database_name = params["database"]
-    database_name_to_conn_id = {Database.SQLITE: "sqlite_default"}
+    database_name_to_conn_id = {
+        Database.SQLITE: "sqlite_default",
+        Database.BIGQUERY: "google_cloud_default",
+    }
     conn_id = database_name_to_conn_id[database_name]
     database = create_database(conn_id)
 
