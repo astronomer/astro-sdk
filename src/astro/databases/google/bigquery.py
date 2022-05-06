@@ -57,11 +57,8 @@ class BigqueryDatabase(BaseDatabase):
 
         :param table: The table we want to retrieve the qualified name for.
         """
-        qualified_name: str = (
-            table.metadata.schema + "." + table.name
-            if table.metadata.schema
-            else table.name
-        )
+        schema = table.metadata.schema if table.metadata else None
+        qualified_name: str = schema + "." + table.name if schema else table.name
         return qualified_name
 
     def append_table(
