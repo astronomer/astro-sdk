@@ -10,7 +10,6 @@ from astro.sql.table import Table as OldTable
 from astro.sql.table import TempTable
 from astro.sql.tables import Metadata
 from astro.sql.tables import Table as NewTable
-from astro.utils.dependencies import SnowflakeHook
 from astro.utils.table_handler_new import TableHandler
 
 
@@ -79,7 +78,15 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             for k, v in self.op_kwargs.items()
         }
 
-    def convert_old_table_to_new(self, table):
+    @staticmethod
+    def convert_old_table_to_new(table):
+        """
+        This function is only temporary until other functions use the new table format.
+
+        Converts a TempTable or a Table object into the new Table format.
+        :param table:
+        :return:
+        """
         if isinstance(table, TempTable):
             table = table.to_table(None)
         if isinstance(table, OldTable):
@@ -96,7 +103,8 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
 
     def handle_conversions(self):
         """
-        This is a temporary holdover until all other functions use the new table format
+        This is a temporary holdover until all other functions use the new table format.
+        Converts old tables to new tables for op_args and op_kwargs.
         :return:
         """
         self.op_args = [
@@ -129,22 +137,6 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             return self.output_table
         else:
             return pandas_dataframe
-
-    def get_snow_hook(self, table: NewTable) -> SnowflakeHook:
-        """
-        Create and return SnowflakeHook.
-        :return: a SnowflakeHook instance.
-        :rtype: SnowflakeHook
-        """
-        return SnowflakeHook(
-            snowflake_conn_id=table.conn_id,
-            warehouse=table.metadata.warehouse,
-            database=table.metadata.database,
-            role=self.role,
-            schema=table.metadata.schema,
-            authenticator=None,
-            session_parameters=None,
-        )
 
     def _get_dataframe(self, table: NewTable):
         database = create_database(self.conn_id)

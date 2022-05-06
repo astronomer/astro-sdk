@@ -258,6 +258,8 @@ class BaseDatabase(ABC):
 
     def set_schema_if_needed(self, schema):
         """
+        This function checks if the expected schema exists in the database. If the schema does not exist,
+        it will attempt to create it.
 
         :param schema:
         :return:
@@ -266,6 +268,7 @@ class BaseDatabase(ABC):
 
     def schema_exists(self, schema):
         """
+        Checks if a schema exists in the database
 
         :param schema:
         :return:
@@ -274,6 +277,17 @@ class BaseDatabase(ABC):
 
     def add_templates_to_context(self, parameters, context):
         """
+        When running functions through the `aql.transform` and `aql.render` functions, we need to add
+        the parameters given to the SQL statement to the Airflow context dictionary. This is how we can
+        then use jinja to render those parameters into the SQL function when users use the {{}} syntax
+        (e.g. "SELECT * FROM {{input_table}}").
+
+        With this system we should handle Table objects differently from other variables. Since we will later
+        pass the parameter dictionary into SQLAlchemy, the safest (From a security standpoint) default is to use
+        a `:variable` syntax. This syntax will ensure that SQLAlchemy treats the value as an unsafe template. With
+        Table objects, however, we have to give a raw value or the query will not work. Because of this we recommend
+        looking into the documentation of your database and seeing what best practices exist (e.g. Identifier wrappers
+        in snowflake).
 
         :param parameters:
         :param context:

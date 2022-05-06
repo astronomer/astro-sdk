@@ -7,6 +7,7 @@ from sqlalchemy.sql.functions import Function
 
 from astro.databases import create_database
 from astro.sql.table import Table as OldTable
+from astro.sql.table import TempTable
 from astro.sql.tables import Metadata, Table
 from astro.utils.sql_refactor import SQL
 from astro.utils.table_handler_new import TableHandler
@@ -51,14 +52,28 @@ class SqlDecoratedOperator(SQL, DecoratedOperator, TableHandler):
             **kwargs,
         )
 
-    def convert_old_table_to_new(self, table):
-        return Table(
-            conn_id=table.conn_id,
-            name=table.table_name,
-            metadata=Metadata(
-                schema=table.schema, warehouse=table.warehouse, database=table.database
-            ),
-        )
+    @staticmethod
+    def convert_old_table_to_new(table):
+        """
+        This function is only temporary until other functions use the new table format.
+
+        Converts a TempTable or a Table object into the new Table format.
+        :param table:
+        :return:
+        """
+        if isinstance(table, TempTable):
+            table = table.to_table(None)
+        if isinstance(table, OldTable):
+            table = Table(
+                conn_id=table.conn_id,
+                name=table.table_name,
+                metadata=Metadata(
+                    schema=table.schema,
+                    warehouse=table.warehouse,
+                    database=table.database,
+                ),
+            )
+        return table
 
     def execute(self, context: Dict):
         self.handle_conversions()
@@ -68,7 +83,7 @@ class SqlDecoratedOperator(SQL, DecoratedOperator, TableHandler):
         self.load_op_arg_dataframes_into_sql()
         self.load_op_kwarg_dataframes_into_sql()
         self.read_sql_from_function()
-        self.handle_params(context)
+        self.move_function_params_into_sql_params(context)
         self.template(context)
         self.handle_schema()
         self.create_output_table(self.output_table_name)
@@ -132,14 +147,10 @@ class SqlDecoratedOperator(SQL, DecoratedOperator, TableHandler):
             with open(self.sql) as file:
                 self.sql = file.read().replace("\n", " ")
 
-    # TODO: Is this function doing too many things?
-    def handle_params(self, context):
+    def move_function_params_into_sql_params(self, context):
         """
-        This function does the following:
-
-        1. Pull values from the function op_args and op_kwargs and places them into
+        Pulls values from the function op_args and op_kwargs and places them into
         parameters for SQLAlchemy to parse
-        2. Renders each parameter given the current task context
         :param context:
         :return:
         """
@@ -153,12 +164,11 @@ class SqlDecoratedOperator(SQL, DecoratedOperator, TableHandler):
             self.parameters = {
                 k: self.render_template(v, context) for k, v in self.parameters.items()  # type: ignore
             }
-        # TODO why are there two of this line?
         self.parameters.update(self.op_kwargs)  # type: ignore
 
     def load_op_arg_dataframes_into_sql(self):
         final_args = []
-        for i, arg in enumerate(self.op_args):
+        for arg in self.op_args:
             if type(arg) == pd.DataFrame:
                 output_table = Table(
                     conn_id=self.conn_id,

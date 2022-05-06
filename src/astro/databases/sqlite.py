@@ -51,7 +51,7 @@ class SqliteDatabase(BaseDatabase):
         :param schema:
         :return:
         """
-        pass
+        return
 
     def schema_exists(self, schema):
         """
