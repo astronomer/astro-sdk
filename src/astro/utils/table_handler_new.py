@@ -52,15 +52,12 @@ class TableHandler:
 
         # If there is no first table via op_ags or kwargs, we check the parameters
         if not first_table and self.parameters:
-            if self.parameters:
-                param_tables = [
-                    t for t in self.parameters.values() if isinstance(t, Table)
-                ]
-                conn_id_set = {
-                    t.conn_id for t in self.parameters.values() if isinstance(t, Table)
-                }
-                if param_tables and len(conn_id_set) == 1:
-                    first_table = param_tables[0]
+            param_tables = [t for t in self.parameters.values() if isinstance(t, Table)]
+            conn_id_set = {
+                t.conn_id for t in self.parameters.values() if isinstance(t, Table)
+            }
+            if param_tables and len(conn_id_set) == 1:
+                first_table = param_tables[0]
 
         if first_table:
             self.conn_id = first_table.conn_id or self.conn_id

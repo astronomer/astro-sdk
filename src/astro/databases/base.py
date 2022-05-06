@@ -275,7 +275,7 @@ class BaseDatabase(ABC):
         """
         raise NotImplementedError
 
-    def add_templates_to_context(self, parameters, context):
+    def add_templates_to_context(self, parameters, context):  # skipcq
         """
         When running functions through the `aql.transform` and `aql.render` functions, we need to add
         the parameters given to the SQL statement to the Airflow context dictionary. This is how we can

@@ -116,7 +116,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             for k, t in self.op_kwargs.items()
         }
 
-    def execute(self, context: Dict):
+    def execute(self, context: Dict):  # skipcq
         self.handle_conversions()
         self._set_variables_from_first_table()
         self.load_op_arg_table_into_dataframe()
@@ -135,8 +135,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
                 source_dataframe=pandas_dataframe, target_table=self.output_table
             )
             return self.output_table
-        else:
-            return pandas_dataframe
+        return pandas_dataframe
 
     def _get_dataframe(self, table: NewTable):
         database = create_database(self.conn_id)

@@ -120,13 +120,12 @@ class SqlDecoratedOperator(SQL, DecoratedOperator, TableHandler):
             self.populate_output_table()
             self.log.info("Returning table %s", self.output_table)
             return self.output_table
-        else:
-            self.output_table = Table(
-                name=output_table_name,
-            )
-            self.populate_output_table()
-            self.log.info("Returning table %s", self.output_table)
-            return self.output_table
+        self.output_table = Table(
+            name=output_table_name,
+        )
+        self.populate_output_table()
+        self.log.info("Returning table %s", self.output_table)
+        return self.output_table
 
     def read_sql_from_function(self):
         """
