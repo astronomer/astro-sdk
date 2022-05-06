@@ -82,6 +82,9 @@ class File:
         file_exists: bool = self.location.exists()
         return file_exists
 
+    def __str__(self):
+        return self.path
+
 
 def get_files(path_pattern: str, conn_id: Optional[str] = None) -> List[File]:
     """get file objects by resolving path_pattern from local/object stores

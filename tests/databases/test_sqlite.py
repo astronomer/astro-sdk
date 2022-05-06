@@ -11,6 +11,7 @@ from astro.constants import Database
 from astro.databases import create_database
 from astro.databases.sqlite import SqliteDatabase
 from astro.exceptions import NonExistentTableException
+from astro.files import File
 from astro.sql.tables import Table
 from astro.utils.load import copy_remote_file_to_local
 from tests.operators import utils as test_utils
@@ -129,8 +130,8 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
 )
 def test_load_file_to_table(database_table_fixture):
     database, target_table = database_table_fixture
-    filepath = pathlib.Path(CWD.parent, "data/sample.csv")
-    database.load_file_to_table(filepath, target_table)
+    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv").absolute())
+    database.load_file_to_table(File(filepath), target_table)
 
     df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
     assert len(df) == 3
@@ -158,7 +159,7 @@ def test_export_table_to_file_file_already_exists_raises_exception(
     database, source_table = database_table_fixture
     filepath = pathlib.Path(CWD.parent, "data/sample.csv")
     with pytest.raises(FileExistsError) as exception_info:
-        database.export_table_to_file(source_table, filepath)
+        database.export_table_to_file(source_table, File(str(filepath.absolute())))
     err_msg = exception_info.value.args[0]
     assert err_msg.startswith("The file")
     assert err_msg.endswith("tests/data/sample.csv already exists.")
@@ -180,7 +181,7 @@ def test_export_table_to_file_overrides_existing_file(database_table_fixture):
     database, populated_table = database_table_fixture
 
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
-    database.export_table_to_file(populated_table, filepath, if_exists="replace")
+    database.export_table_to_file(populated_table, File(filepath), if_exists="replace")
 
     df = test_utils.load_to_dataframe(filepath, "csv")
     assert len(df) == 3
@@ -239,7 +240,7 @@ def test_export_table_to_file_in_the_cloud(
 
     database.export_table_to_file(
         populated_table,
-        object_path,
+        File(object_path),
         if_exists="replace",
     )
 
