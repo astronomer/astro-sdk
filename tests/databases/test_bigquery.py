@@ -175,7 +175,7 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
 )
 def test_load_file_to_table(database_table_fixture):
     database, target_table = database_table_fixture
-    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv").absolute())
+    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     database.load_file_to_table(File(filepath), target_table)
 
     df = database.hook.get_pandas_df(
@@ -209,7 +209,7 @@ def test_export_table_to_file_file_already_exists_raises_exception(
     database, source_table = database_table_fixture
     filepath = pathlib.Path(CWD.parent, "data/sample.csv")
     with pytest.raises(FileExistsError) as exception_info:
-        database.export_table_to_file(source_table, File(str(filepath.absolute())))
+        database.export_table_to_file(source_table, File(str(filepath)))
     err_msg = exception_info.value.args[0]
     assert err_msg.startswith("The file")
     assert err_msg.endswith("tests/data/sample.csv already exists.")

@@ -14,6 +14,7 @@ from airflow.utils.session import create_session, provide_session
 
 from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
+from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_unique_table_name
 from astro.sql.tables import Table as NewTable
@@ -219,7 +220,7 @@ def database_table_fixture(request):
 
     database.drop_table(table)
     if filepath:
-        database.load_file_to_table(filepath, table)
+        database.load_file_to_table(File(str(filepath)), table)
     yield database, table
 
     database.drop_table(table)
