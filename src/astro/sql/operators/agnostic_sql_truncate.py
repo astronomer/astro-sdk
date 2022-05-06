@@ -1,51 +1,28 @@
 from typing import Dict
 
 from airflow.decorators.base import get_unique_task_id
-from sqlalchemy import MetaData
-from sqlalchemy.sql.schema import Table as SqlaTable
+from airflow.models import BaseOperator
 
-from astro.constants import Database
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
-from astro.sql.table import Table
-from astro.utils.database import create_database_from_conn_id
+from astro.databases import create_database
+from astro.sql.tables import Table
 
 
-class SqlTruncateOperator(SqlDecoratedOperator):
+class SqlTruncateOperator(BaseOperator):
     def __init__(
         self,
         table: Table,
+        task_id: str = "",
         **kwargs,
     ):
-        self.sql = ""
         self.table = table
-
-        task_id = get_unique_task_id(table.table_name + "_truncate")
-
-        def null_function(table: Table):
-            pass
-
+        task_id = task_id or get_unique_task_id(table.name + "_truncate")
         super().__init__(
-            raw_sql=True,
-            parameters={},
             task_id=task_id,
-            op_args=(),
-            op_kwargs={"table": table},
-            python_callable=null_function,
-            conn_id=self.table.conn_id,
-            database=self.table.database,
-            schema=self.table.schema,
-            warehouse=self.table.warehouse,
             **kwargs,
         )
 
-    def execute(self, context: Dict):
-        database = create_database_from_conn_id(self.table.conn_id)
-        if self.table.schema and database == Database.SQLITE:
-            metadata = MetaData()
-        else:
-            metadata = MetaData(schema=self.table.schema)
-
-        engine = self.get_sql_alchemy_engine()
-        table_sqla = SqlaTable(self.table.table_name, metadata, autoload_with=engine)
-        self.sql = table_sqla.delete()
-        super().execute(context)
+    def execute(self, context: Dict) -> None:  # skipcq: PYL-W0613
+        database = create_database(self.table.conn_id)
+        if not self.table.metadata and database.default_metadata:
+            self.table.metadata = database.default_metadata
+        database.drop_table(self.table)

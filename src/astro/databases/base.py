@@ -13,7 +13,7 @@ from astro.constants import (
 )
 from astro.exceptions import NonExistentTableException
 from astro.files import File
-from astro.sql.tables import Table
+from astro.sql.tables import Metadata, Table
 
 
 class BaseDatabase(ABC):
@@ -61,9 +61,11 @@ class BaseDatabase(ABC):
         :param sql_statement: Contains SQL query to be run against database
         :param parameters: Optional parameters to be used to render the query
         """
-        if parameters is None:
-            parameters = {}
-        return self.connection.execute(sql_statement, parameters)
+        if parameters:
+            result = self.hook.run(sql_statement, parameters)
+        else:
+            result = self.hook.run(sql_statement)
+        return result
 
     def table_exists(self, table: Table) -> bool:
         """
@@ -91,6 +93,10 @@ class BaseDatabase(ABC):
         schema = table.metadata.schema if table.metadata else None
         qualified_name: str = f"{schema}.{table.name}" if schema else table.name
         return qualified_name
+
+    @property
+    def default_metadata(self) -> Metadata:
+        raise NotImplementedError
 
     # ---------------------------------------------------------
     # Table creation & deletion methods
@@ -145,16 +151,17 @@ class BaseDatabase(ABC):
         chunk_size: int = DEFAULT_CHUNK_SIZE,
     ) -> None:
         """
-        Create a table with the file's contents.
-        If the table already exists, append or replace the content, depending on the value of `if_exists`.
+        Upload the content of the source file to the target database.
+        If the table instance does not contain columns, this method automatically identify them using Pandas.
 
-        :param source_file: Local or remote filepath
-        :param target_table: Table in which the file will be loaded
-        :param if_exists: Strategy to be used in case the target table already exists.
+        :param source_file: Path to original file (e.g. a "/tmp/sample_data.csv")
+        :param target_table: Details of the target table
+        :param if_exists: Strategy to be applied in case the target table exists
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
+        dataframe = source_file.export_to_dataframe()
         self.load_pandas_dataframe_to_table(
-            source_file.export_to_dataframe(),
+            dataframe,
             target_table,
             if_exists,
             chunk_size,

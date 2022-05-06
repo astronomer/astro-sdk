@@ -1,10 +1,12 @@
-from airflow.providers.sqlite.hooks.sqlite import SqliteHook
-from sqlalchemy import create_engine
-from sqlalchemy.engine.base import Engine
+from typing import Optional, Union
 
-from astro.constants import AppendConflictStrategy
+from airflow.providers.sqlite.hooks.sqlite import SqliteHook
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine.base import Engine
+from sqlalchemy.engine.result import ResultProxy
+
 from astro.databases.base import BaseDatabase
-from astro.sql.tables import Table
+from astro.sql.tables import Metadata, Table
 
 DEFAULT_CONN_ID = SqliteHook.default_conn_name
 
@@ -31,6 +33,24 @@ class SqliteDatabase(BaseDatabase):
             uri = uri.replace("///", "////")
         return create_engine(uri)
 
+    def run_sql(
+        self, sql_statement: Union[text, str], parameters: Optional[dict] = None
+    ) -> ResultProxy:
+        """
+        Run given SQL statement in the database using the Sqlalchemy engine.
+
+        :param sql_statement: SQL statement to be run on the engine
+        :param parameters: (optional) Parameters to be passed to the SQL statement
+        :return: Result of running the statement.
+        """
+        if parameters is None:
+            parameters = {}
+        return self.connection.execute(sql_statement, parameters)
+
+    @property
+    def default_metadata(self) -> Metadata:
+        return Metadata()
+
     # ---------------------------------------------------------
     # Table metadata
     # ---------------------------------------------------------
@@ -41,29 +61,3 @@ class SqliteDatabase(BaseDatabase):
         :param table: The table we want to retrieve the qualified name for.
         """
         return str(table.name)
-
-    def append_table(
-        self,
-        source_table: Table,
-        target_table: Table,
-        if_conflicts: AppendConflictStrategy = "exception",
-    ):
-        """
-        Append the source table rows into a destination table.
-        The argument `if_conflicts` allows the user to define how to handle conflicts.
-
-        :param source_table: Contains the rows to be appended to the target_table
-        :param target_table: Contains the destination table in which the rows will be appended
-        :param if_conflicts: The strategy to be applied if there are conflicts. Options:
-            * exception: Raises an exception if there is a conflict
-            * ignore: Ignores the source row value if it conflicts with a value in the target table
-            * update: Updates the target row with the content of the source file
-        """
-        # TODO: implement this method.
-        # previous append implementation
-        # -> raises exception
-        # previous merge implementation
-        # -> ignore / update
-        # select(target_table.columns).from_select(source_table.columns)
-
-        raise NotImplementedError

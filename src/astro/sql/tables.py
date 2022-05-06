@@ -15,10 +15,15 @@ class Metadata:
     be database-specific.
     """
 
+    # e.g.: Postgres, Snowflake:
     schema: Union[str, None] = None
+    # e.g.: Snowflake:
+    account: Union[str, None] = None
     database: Union[str, None] = None
-    warehouse: Union[str, None] = None
+    host: Union[str, None] = None
+    region: Union[str, None] = None
     role: Union[str, None] = None
+    warehouse: Union[str, None] = None
 
 
 @dataclass
@@ -46,6 +51,7 @@ class Table:
 
         if not self.name:
             self.name = self._create_unique_table_name()
+            self.temp = True
 
     @staticmethod
     def _create_unique_table_name() -> str:

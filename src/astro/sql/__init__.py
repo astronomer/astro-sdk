@@ -16,7 +16,8 @@ from astro.sql.operators.sql_decorator import (  # noqa: F401
     transform_decorator,
 )
 from astro.sql.parsers.sql_directory_parser import render  # noqa: F401
-from astro.sql.table import Table
+from astro.sql.table import Table as OldTable
+from astro.sql.tables import Table
 
 
 def transform(
@@ -67,8 +68,8 @@ def run_raw_sql(
 
 
 def append(
-    append_table: Table,
-    main_table: Table,
+    append_table: OldTable,
+    main_table: OldTable,
     columns: Optional[List[str]] = None,
     casted_columns: Optional[dict] = None,
     **kwargs,
@@ -87,8 +88,8 @@ def append(
 
 
 def merge(
-    target_table: Table,
-    merge_table: Table,
+    target_table: OldTable,
+    merge_table: OldTable,
     merge_keys: Union[List, dict],
     target_columns: List[str],
     merge_columns: List[str],
@@ -127,13 +128,10 @@ def merge(
 def truncate(
     table: Table,
     **kwargs,
-):
+) -> SqlTruncateOperator:
     """`
-    :param table: The table that we will truncate
-    :param database:
-    :param schema: Snowflake, specific. Specify Snowflake schema
+    :param table: Table to be truncated
     :param kwargs:
-    :return:
     """
 
-    return SqlTruncateOperator(table=table)
+    return SqlTruncateOperator(table=table, **kwargs)

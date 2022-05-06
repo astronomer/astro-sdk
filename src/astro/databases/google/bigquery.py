@@ -1,15 +1,14 @@
+"""Google BigQuery table implementation."""
+
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
-from astro.constants import (
-    DEFAULT_CHUNK_SIZE,
-    AppendConflictStrategy,
-    LoadExistStrategy,
-)
+from astro import settings
+from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 from astro.databases.base import BaseDatabase
-from astro.sql.tables import Table
+from astro.sql.tables import Metadata, Table
 
 DEFAULT_CONN_ID = BigQueryHook.default_conn_name
 
@@ -25,8 +24,8 @@ class BigqueryDatabase(BaseDatabase):
 
     @property
     def hook(self):
-        """Retrieve Airflow hook to interface with the Sqlite database."""
-        return BigQueryHook(gcp_conn_id=self.conn_id)
+        """Retrieve Airflow hook to interface with the BigQuery database."""
+        return BigQueryHook(gcp_conn_id=self.conn_id, use_legacy_sql=False)
 
     @property
     def sqlalchemy_engine(self) -> Engine:
@@ -36,39 +35,19 @@ class BigqueryDatabase(BaseDatabase):
 
     def get_table_qualified_name(self, table: Table) -> str:
         """
-        Return the table qualified name.
+        Return table qualified name for BigQuery.
 
         :param table: The table we want to retrieve the qualified name for.
         """
-        schema = table.metadata.schema if table.metadata else None
-        qualified_name: str = schema + "." + table.name if schema else table.name
+        if table.metadata is not None and table.metadata.schema is not None:
+            qualified_name = f"{table.metadata.schema}.{table.name}"
+        else:
+            qualified_name = table.name
         return qualified_name
 
-    def append_table(
-        self,
-        source_table: Table,
-        target_table: Table,
-        if_conflicts: AppendConflictStrategy = "exception",
-    ):
-        """
-        Append the source table rows into a destination table.
-        The argument `if_conflicts` allows the user to define how to handle conflicts.
-
-        :param source_table: Contains the rows to be appended to the target_table
-        :param target_table: Contains the destination table in which the rows will be appended
-        :param if_conflicts: The strategy to be applied if there are conflicts. Options:
-            * exception: Raises an exception if there is a conflict
-            * ignore: Ignores the source row value if it conflicts with a value in the target table
-            * update: Updates the target row with the content of the source file
-        """
-        # TODO: implement this method.
-        # previous append implementation
-        # -> raises exception
-        # previous merge implementation
-        # -> ignore / update
-        # select(target_table.columns).from_select(source_table.columns)
-
-        raise NotImplementedError
+    @property
+    def default_metadata(self) -> Metadata:
+        return Metadata(schema=settings.SCHEMA, database=self.hook.project_id)
 
     def load_pandas_dataframe_to_table(
         self,

@@ -1,9 +1,4 @@
-"""
-Unittest module to test Operators.
-
-Requires the unittest, pytest, and requests-mock Python libraries.
-
-"""
+"""Tests to cover the truncate decorator"""
 
 import logging
 import pathlib
@@ -11,56 +6,50 @@ import pathlib
 import pytest
 from airflow.utils import timezone
 
-# Import Operator
 import astro.sql as aql
-from astro.settings import SCHEMA
+from astro.constants import Database
+from astro.files import File
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
-DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 CWD = pathlib.Path(__file__).parent
+DEFAULT_DATE = timezone.datetime(2016, 1, 1)
+DEFAULT_FILEPATH = str(pathlib.Path(CWD.parent, "data/sample.csv").absolute())
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
-    "sql_server",
-    [
-        pytest.param(
-            "bigquery",
-            marks=pytest.mark.xfail(
-                reason="400 DELETE must have a WHERE clause at [1:1]"
-            ),
-        ),
-        "snowflake",
-        "postgres",
-        "sqlite",
-    ],
-    indirect=True,
-)
-@pytest.mark.parametrize(
-    "test_table",
+    "database_table_fixture",
     [
         {
-            "path": str(CWD) + "/../data/homes2.csv",
-            "load_table": True,
-            "is_temp": False,
-            "param": {
-                "schema": SCHEMA,
-                "table_name": test_utils.get_table_name("test_stats_check_1"),
-            },
+            "database": Database.SQLITE,
+            "file": File(DEFAULT_FILEPATH),
+        },
+        {
+            "database": Database.POSTGRES,
+            "file": File(DEFAULT_FILEPATH),
+        },
+        {
+            "database": Database.BIGQUERY,
+            "file": File(DEFAULT_FILEPATH),
+        },
+        {
+            "database": Database.SNOWFLAKE,
+            "file": File(DEFAULT_FILEPATH),
         },
     ],
     indirect=True,
+    ids=["sqlite", "postgres", "bigquery", "snowflake"],
 )
-def test_truncate(sql_server, test_table, sample_dag):
+def test_truncate(database_table_fixture, sample_dag):
     """Test truncate operator for all databases."""
-    sql_name, hook = sql_server
-    df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
-    assert df.count()[0] == 5
+    database, test_table = database_table_fixture
+    assert database.table_exists(test_table)
+
     with sample_dag:
         aql.truncate(
             table=test_table,
         )
     test_utils.run_dag(sample_dag)
 
-    df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
-    assert df.count()[0] == 0
+    assert not database.table_exists(test_table)
