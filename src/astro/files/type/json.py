@@ -14,7 +14,6 @@ class JSONFileType(FileType):
 
         :param stream: file stream object
         """
-        kwargs.pop("normalize_config")
         return pd.read_json(stream, **kwargs)
 
     def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:

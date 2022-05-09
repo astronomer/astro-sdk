@@ -2,6 +2,7 @@ import pytest
 from pandas import DataFrame
 
 from astro.databases.base import BaseDatabase
+from astro.files import File
 from astro.sql.tables import Table
 
 
@@ -31,14 +32,6 @@ def test_subclass_missing_get_table_qualified_name_raises_exception():
         db.get_table_qualified_name(table)
 
 
-def test_subclass_missing_load_file_to_table_raises_exception():
-    db = DatabaseSubclass(conn_id="fake_conn_id")
-    table = Table()
-    filepath = "/tmp/filepath.csv"
-    with pytest.raises(NotImplementedError):
-        db.load_file_to_table(filepath, table)
-
-
 def test_subclass_missing_load_pandas_dataframe_to_table_raises_exception():
     db = DatabaseSubclass(conn_id="fake_conn_id")
     table = Table()
@@ -58,7 +51,7 @@ def test_subclass_missing_append_table_raises_exception():
 def test_subclass_missing_export_table_to_file_raises_exception():
     db = DatabaseSubclass(conn_id="fake_conn_id")
     table = Table()
-    filepath = "/tmp/filepath.csv"
+    filepath = File("/tmp/filepath.csv")
     with pytest.raises(NotImplementedError):
         db.export_table_to_file(table, filepath)
 

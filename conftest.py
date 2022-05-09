@@ -207,16 +207,19 @@ def database_table_fixture(request):
     """
     params = request.param
     table = params.get("table", NewTable())
-    filepath = params.get("filepath", "")
+    file = params.get("file", None)
 
     database_name = params["database"]
-    database_name_to_conn_id = {Database.SQLITE: "sqlite_default"}
+    database_name_to_conn_id = {
+        Database.SQLITE: "sqlite_default",
+        Database.BIGQUERY: "google_cloud_default",
+    }
     conn_id = database_name_to_conn_id[database_name]
     database = create_database(conn_id)
 
     database.drop_table(table)
-    if filepath:
-        database.load_file_to_table(filepath, table)
+    if file:
+        database.load_file_to_table(file, table)
     yield database, table
 
     database.drop_table(table)

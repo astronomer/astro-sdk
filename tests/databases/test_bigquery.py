@@ -9,15 +9,16 @@ import sqlalchemy
 
 from astro.constants import Database
 from astro.databases import create_database
-from astro.databases.sqlite import SqliteDatabase
+from astro.databases.google.bigquery import BigqueryDatabase
 from astro.exceptions import NonExistentTableException
 from astro.files import File
-from astro.sql.tables import Table
+from astro.settings import SCHEMA
+from astro.sql.tables import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
 from tests.operators import utils as test_utils
 
-DEFAULT_CONN_ID = "sqlite_default"
-CUSTOM_CONN_ID = "sqlite_conn"
+DEFAULT_CONN_ID = "google_cloud_default"
+CUSTOM_CONN_ID = "gcp_conn"
 SUPPORTED_CONN_IDS = [DEFAULT_CONN_ID, CUSTOM_CONN_ID]
 CWD = pathlib.Path(__file__).parent
 
@@ -25,40 +26,46 @@ CWD = pathlib.Path(__file__).parent
 TEST_TABLE = Table()
 
 
+# To Do: How are the default connection created for providers bigquery.
 @pytest.mark.parametrize("conn_id", SUPPORTED_CONN_IDS)
 def test_create_database(conn_id):
+    """Test creation of database"""
     database = create_database(conn_id)
-    assert isinstance(database, SqliteDatabase)
+    assert isinstance(database, BigqueryDatabase)
 
 
 @pytest.mark.parametrize(
     "conn_id,expected_uri",
     [
-        (DEFAULT_CONN_ID, "//tmp/sqlite_default.db"),
-        (CUSTOM_CONN_ID, "////tmp/sqlite.db"),
+        (DEFAULT_CONN_ID, "bigquery://astronomer-dag-authoring"),
+        (CUSTOM_CONN_ID, "bigquery://astronomer-dag-authoring"),
     ],
     ids=SUPPORTED_CONN_IDS,
 )
-def test_sqlite_sqlalchemy_engine(conn_id, expected_uri):
-    database = SqliteDatabase(conn_id)
+def test_bigquery_sqlalchemy_engine(conn_id, expected_uri):
+    """Test getting a bigquery based sqla engine."""
+    database = BigqueryDatabase(conn_id)
     engine = database.sqlalchemy_engine
     assert isinstance(engine, sqlalchemy.engine.base.Engine)
     url = urlparse(str(engine.url))
-    assert url.path == expected_uri
+    assert url.geturl() == expected_uri
 
 
 @pytest.mark.integration
-def test_sqlite_run_sql():
+def test_bigquery_run_sql():
+    """Test run_sql against bigquery database"""
     statement = "SELECT 1 + 1;"
-    database = SqliteDatabase()
+    database = BigqueryDatabase(conn_id=DEFAULT_CONN_ID)
     response = database.run_sql(statement)
     assert response.first()[0] == 2
 
 
 @pytest.mark.integration
 def test_table_exists_raises_exception():
-    database = SqliteDatabase()
-    assert not database.table_exists(Table(name="inexistent-table"))
+    """Test if table exists in bigquery database"""
+    database = BigqueryDatabase(conn_id=DEFAULT_CONN_ID)
+    table = Table(name="inexistent-table", metadata=Metadata(schema=SCHEMA))
+    assert not database.table_exists(table)
 
 
 @pytest.mark.integration
@@ -66,24 +73,26 @@ def test_table_exists_raises_exception():
     "database_table_fixture",
     [
         {
-            "database": Database.SQLITE,
+            "database": Database.BIGQUERY,
             "table": Table(
+                metadata=Metadata(schema=SCHEMA),
                 columns=[
                     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
                     sqlalchemy.Column(
                         "name", sqlalchemy.String(60), nullable=False, key="name"
                     ),
-                ]
+                ],
             ),
         }
     ],
     indirect=True,
-    ids=["sqlite"],
+    ids=["bigquery"],
 )
-def test_sqlite_create_table_with_columns(database_table_fixture):
+def test_bigquery_create_table_with_columns(database_table_fixture):
+    """Test table creation with columns data"""
     database, table = database_table_fixture
 
-    statement = f"PRAGMA table_info({table.name});"
+    statement = f"SELECT * FROM {table.metadata.schema}.INFORMATION_SCHEMA.COLUMNS WHERE table_name='{table.name}'"
     response = database.run_sql(statement)
     assert response.first() is None
 
@@ -91,26 +100,64 @@ def test_sqlite_create_table_with_columns(database_table_fixture):
     response = database.run_sql(statement)
     rows = response.fetchall()
     assert len(rows) == 2
-    assert rows[0] == (0, "id", "INTEGER", 1, None, 1)
-    assert rows[1] == (1, "name", "VARCHAR(60)", 1, None, 0)
+    assert rows[0] == (
+        "astronomer-dag-authoring",
+        f"{table.metadata.schema}",
+        f"{table.name}",
+        "id",
+        1,
+        "NO",
+        "INT64",
+        "NEVER",
+        None,
+        None,
+        "NO",
+        None,
+        "NO",
+        "NO",
+        None,
+        "NULL",
+    )
+    assert rows[1] == (
+        "astronomer-dag-authoring",
+        f"{table.metadata.schema}",
+        f"{table.name}",
+        "name",
+        2,
+        "NO",
+        "STRING(60)",
+        "NEVER",
+        None,
+        None,
+        "NO",
+        None,
+        "NO",
+        "NO",
+        None,
+        "NULL",
+    )
 
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SQLITE},
+        {
+            "database": Database.BIGQUERY,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
     ],
     indirect=True,
-    ids=["sqlite"],
+    ids=["bigquery"],
 )
 def test_load_pandas_dataframe_to_table(database_table_fixture):
+    """Test load_pandas_dataframe_to_table against bigquery"""
     database, table = database_table_fixture
 
     pandas_dataframe = pd.DataFrame(data={"id": [1, 2]})
     database.load_pandas_dataframe_to_table(pandas_dataframe, table)
 
-    statement = f"SELECT * FROM {table.name};"
+    statement = f"SELECT * FROM {database.get_table_qualified_name(table)};"
     response = database.run_sql(statement)
 
     rows = response.fetchall()
@@ -123,17 +170,23 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SQLITE},
+        {
+            "database": Database.BIGQUERY,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
     ],
     indirect=True,
-    ids=["sqlite"],
+    ids=["bigquery"],
 )
 def test_load_file_to_table(database_table_fixture):
+    """Test loading on files to bigquery database"""
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     database.load_file_to_table(File(filepath), target_table)
 
-    df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
+    df = database.hook.get_pandas_df(
+        f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
+    )
     assert len(df) == 3
     expected = pd.DataFrame(
         [
@@ -148,14 +201,21 @@ def test_load_file_to_table(database_table_fixture):
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SQLITE},
+        {
+            "database": Database.BIGQUERY,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
     ],
     indirect=True,
-    ids=["sqlite"],
+    ids=["bigquery"],
 )
 def test_export_table_to_file_file_already_exists_raises_exception(
     database_table_fixture,
 ):
+    """
+    Test export_table_to_file_file() where the end file already exists, should result in exception
+    when the override option is False
+    """
     database, source_table = database_table_fixture
     filepath = pathlib.Path(CWD.parent, "data/sample.csv")
     with pytest.raises(FileExistsError) as exception_info:
@@ -170,17 +230,22 @@ def test_export_table_to_file_file_already_exists_raises_exception(
     "database_table_fixture",
     [
         {
-            "database": Database.SQLITE,
+            "database": Database.BIGQUERY,
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
-        }
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
     ],
     indirect=True,
-    ids=["sqlite"],
+    ids=["bigquery"],
 )
 def test_export_table_to_file_overrides_existing_file(database_table_fixture):
+    """
+    Test export_table_to_file_file() where the end file already exists,
+    should result in overriding the existing file
+    """
     database, populated_table = database_table_fixture
 
-    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv").absolute())
+    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     database.export_table_to_file(populated_table, File(filepath), if_exists="replace")
 
     df = test_utils.load_to_dataframe(filepath, "csv")
@@ -198,13 +263,14 @@ def test_export_table_to_file_overrides_existing_file(database_table_fixture):
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
-    [{"database": Database.SQLITE}],
+    [{"database": Database.BIGQUERY, "table": Table(metadata=Metadata(schema=SCHEMA))}],
     indirect=True,
-    ids=["sqlite"],
+    ids=["bigquery"],
 )
 def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     database_table_fixture,
 ):
+    """Test export_table_to_file_file() where the table don't exist, should result in exception"""
     database, non_existent_table = database_table_fixture
 
     with pytest.raises(NonExistentTableException) as exc_info:
@@ -219,12 +285,13 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     "database_table_fixture",
     [
         {
-            "database": Database.SQLITE,
+            "database": Database.BIGQUERY,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
         }
     ],
     indirect=True,
-    ids=["sqlite"],
+    ids=["bigquery"],
 )
 @pytest.mark.parametrize(
     "remote_files_fixture",
@@ -235,6 +302,7 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
 def test_export_table_to_file_in_the_cloud(
     database_table_fixture, remote_files_fixture
 ):
+    """Test export_table_to_file_file() where end file location is in cloud object stores"""
     object_path = remote_files_fixture[0]
     database, populated_table = database_table_fixture
 
@@ -263,23 +331,27 @@ def test_export_table_to_file_in_the_cloud(
     "database_table_fixture",
     [
         {
-            "database": Database.SQLITE,
+            "database": Database.BIGQUERY,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
         }
     ],
     indirect=True,
-    ids=["sqlite"],
+    ids=["bigquery"],
 )
 def test_create_table_from_select_statement(database_table_fixture):
+    """Test table creation via select statement"""
     database, original_table = database_table_fixture
 
     statement = "SELECT * FROM {} WHERE id = 1;".format(
         database.get_table_qualified_name(original_table)
     )
-    target_table = Table()
+    target_table = Table(metadata=Metadata(schema=SCHEMA))
     database.create_table_from_select_statement(statement, target_table)
 
-    df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
+    df = database.hook.get_pandas_df(
+        f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
+    )
     assert len(df) == 1
     expected = pd.DataFrame([{"id": 1, "name": "First"}])
     test_utils.assert_dataframes_are_equal(df, expected)
