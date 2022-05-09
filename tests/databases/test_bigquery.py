@@ -221,7 +221,7 @@ def test_export_table_to_file_file_already_exists_raises_exception(
     [
         {
             "database": Database.BIGQUERY,
-            "filepath": pathlib.Path(CWD.parent, "data/sample.csv"),
+            "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
             "table": Table(metadata=Metadata(schema=SCHEMA)),
         },
     ],
@@ -272,7 +272,7 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
         {
             "database": Database.BIGQUERY,
             "table": Table(metadata=Metadata(schema=SCHEMA)),
-            "filepath": pathlib.Path(CWD.parent, "data/sample.csv"),
+            "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
         }
     ],
     indirect=True,
@@ -317,7 +317,7 @@ def test_export_table_to_file_in_the_cloud(
         {
             "database": Database.BIGQUERY,
             "table": Table(metadata=Metadata(schema=SCHEMA)),
-            "filepath": pathlib.Path(CWD.parent, "data/sample.csv"),
+            "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
         }
     ],
     indirect=True,
