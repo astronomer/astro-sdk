@@ -18,14 +18,18 @@ class File:
         path: str,
         conn_id: Optional[str] = None,
         filetype: Union[FileType, None] = None,
+        normalize_config: Optional[dict] = None,
     ):
         """Init file object which represent a single file in local/object stores
 
         :param path: Path to a file in the filesystem/Object stores
         :param conn_id: Airflow connection ID
+        :param normalize_config: normalize_config: parameters in dict format of pandas json_normalize() function.
         """
         self.location = create_file_location(path, conn_id)
-        self.type = create_file_type(path=path, filetype=filetype)
+        self.type = create_file_type(
+            path=path, filetype=filetype, normalize_config=normalize_config
+        )
 
     @property
     def path(self):

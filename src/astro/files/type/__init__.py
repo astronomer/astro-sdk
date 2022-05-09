@@ -1,5 +1,5 @@
 import pathlib
-from typing import Dict, Type, Union
+from typing import Dict, Optional, Type, Union
 
 from astro.constants import FileType as FileTypeConstants
 from astro.files.type.base import FileType
@@ -9,7 +9,11 @@ from astro.files.type.ndjson import NDJSONFileType
 from astro.files.type.parquet import ParquetFileType
 
 
-def create_file_type(path: str, filetype: Union[FileTypeConstants, None] = None):
+def create_file_type(
+    path: str,
+    filetype: Union[FileTypeConstants, None] = None,
+    normalize_config: Optional[dict] = None,
+):
     """Factory method to create FileType super objects based on the file extension in path or filetype specified."""
     filetype_to_class: Dict[FileTypeConstants, Type[FileType]] = {
         FileTypeConstants.CSV: CSVFileType,
@@ -21,7 +25,7 @@ def create_file_type(path: str, filetype: Union[FileTypeConstants, None] = None)
         filetype = get_filetype(path)
 
     try:
-        return filetype_to_class[filetype](path)
+        return filetype_to_class[filetype](path=path, normalize_config=normalize_config)
     except KeyError:
         raise ValueError(
             f"Non supported file type provided {filetype}, file_type should be among {', '.join(FileTypeConstants)}."

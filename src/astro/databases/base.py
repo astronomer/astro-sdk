@@ -139,7 +139,6 @@ class BaseDatabase(ABC):
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
-        normalize_config: Optional[dict] = None,
     ) -> None:
         """
         Create a table with the file's contents.
@@ -149,10 +148,9 @@ class BaseDatabase(ABC):
         :param target_table: Table in which the file will be loaded
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
-        :param normalize_config: normalize_config: parameters in dict format of pandas json_normalize() function.
         """
         self.load_pandas_dataframe_to_table(
-            source_file.export_to_dataframe(normalize_config=normalize_config),
+            source_file.export_to_dataframe(),
             target_table,
             if_exists,
             chunk_size,
