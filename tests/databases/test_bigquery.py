@@ -29,6 +29,7 @@ TEST_TABLE = Table()
 # To Do: How are the default connection created for providers bigquery.
 @pytest.mark.parametrize("conn_id", SUPPORTED_CONN_IDS)
 def test_create_database(conn_id):
+    """Test creation of database"""
     database = create_database(conn_id)
     assert isinstance(database, BigqueryDatabase)
 
@@ -211,8 +212,10 @@ def test_load_file_to_table(database_table_fixture):
 def test_export_table_to_file_file_already_exists_raises_exception(
     database_table_fixture,
 ):
-    """Test export_table_to_file_file() where the end file already exists, should result in exception
-    when the override option is False"""
+    """
+    Test export_table_to_file_file() where the end file already exists, should result in exception
+    when the override option is False
+    """
     database, source_table = database_table_fixture
     filepath = pathlib.Path(CWD.parent, "data/sample.csv")
     with pytest.raises(FileExistsError) as exception_info:
@@ -236,8 +239,10 @@ def test_export_table_to_file_file_already_exists_raises_exception(
     ids=["bigquery"],
 )
 def test_export_table_to_file_overrides_existing_file(database_table_fixture):
-    """Test export_table_to_file_file() where the end file already exists,
-    should result in overriding the existing file"""
+    """
+    Test export_table_to_file_file() where the end file already exists,
+    should result in overriding the existing file
+    """
     database, populated_table = database_table_fixture
 
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
