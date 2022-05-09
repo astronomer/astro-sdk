@@ -58,6 +58,7 @@ class BaseDatabase(ABC):
     def run_sql(self, sql_statement: str, parameters: Optional[dict] = None):
         """
         Return the results to running a SQL statement.
+        Return the results to running a SQL statement.
 
         Whenever possible, this method should be implemented using Airflow Hooks,
         since this will simplify the integration with Async operators.
@@ -90,7 +91,9 @@ class BaseDatabase(ABC):
         # Initially this method belonged to the Table class.
         # However, in order to have an agnostic table class implementation,
         # we are keeping all methods which vary depending on the database within the Database class.
-        raise NotImplementedError
+        schema = table.metadata.schema if table.metadata else None
+        qualified_name: str = schema + "." + table.name if schema else table.name
+        return qualified_name
 
     # ---------------------------------------------------------
     # Table creation & deletion methods
