@@ -42,6 +42,7 @@ def test_create_database(conn_id):
     ids=SUPPORTED_CONN_IDS,
 )
 def test_bigquery_sqlalchemy_engine(conn_id, expected_uri):
+    """Test getting a bigquery based sqla engine."""
     database = BigqueryDatabase(conn_id)
     engine = database.sqlalchemy_engine
     assert isinstance(engine, sqlalchemy.engine.base.Engine)
@@ -51,15 +52,16 @@ def test_bigquery_sqlalchemy_engine(conn_id, expected_uri):
 
 @pytest.mark.integration
 def test_bigquery_run_sql():
+    """Test run_sql against bigquery database"""
     statement = "SELECT 1 + 1;"
     database = BigqueryDatabase(conn_id=DEFAULT_CONN_ID)
     response = database.run_sql(statement)
     assert response.first()[0] == 2
 
 
-# To do - also add for a positive case
 @pytest.mark.integration
 def test_table_exists_raises_exception():
+    """Test if table exists in bigquery database"""
     database = BigqueryDatabase(conn_id=DEFAULT_CONN_ID)
     table = Table(name="inexistent-table", metadata=Metadata(schema=SCHEMA))
     assert not database.table_exists(table)
@@ -86,6 +88,7 @@ def test_table_exists_raises_exception():
     ids=["bigquery"],
 )
 def test_bigquery_create_table_with_columns(database_table_fixture):
+    """Test table creation with columns data"""
     database, table = database_table_fixture
 
     statement = f"SELECT * FROM {table.metadata.schema}.INFORMATION_SCHEMA.COLUMNS WHERE table_name='{table.name}'"
@@ -147,6 +150,7 @@ def test_bigquery_create_table_with_columns(database_table_fixture):
     ids=["bigquery"],
 )
 def test_load_pandas_dataframe_to_table(database_table_fixture):
+    """Test load_pandas_dataframe_to_table against bigquery"""
     database, table = database_table_fixture
 
     pandas_dataframe = pd.DataFrame(data={"id": [1, 2]})
@@ -174,6 +178,7 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
     ids=["bigquery"],
 )
 def test_load_file_to_table(database_table_fixture):
+    """Test loading on files to bigquery database"""
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     database.load_file_to_table(File(filepath), target_table)
@@ -206,6 +211,8 @@ def test_load_file_to_table(database_table_fixture):
 def test_export_table_to_file_file_already_exists_raises_exception(
     database_table_fixture,
 ):
+    """Test export_table_to_file_file() where the end file already exists, should result in exception
+    when the override option is False"""
     database, source_table = database_table_fixture
     filepath = pathlib.Path(CWD.parent, "data/sample.csv")
     with pytest.raises(FileExistsError) as exception_info:
@@ -229,6 +236,8 @@ def test_export_table_to_file_file_already_exists_raises_exception(
     ids=["bigquery"],
 )
 def test_export_table_to_file_overrides_existing_file(database_table_fixture):
+    """Test export_table_to_file_file() where the end file already exists,
+    should result in overriding the existing file"""
     database, populated_table = database_table_fixture
 
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
@@ -256,6 +265,7 @@ def test_export_table_to_file_overrides_existing_file(database_table_fixture):
 def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     database_table_fixture,
 ):
+    """Test export_table_to_file_file() where the table don't exist, should result in exception"""
     database, non_existent_table = database_table_fixture
 
     with pytest.raises(NonExistentTableException) as exc_info:
@@ -287,6 +297,7 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
 def test_export_table_to_file_in_the_cloud(
     database_table_fixture, remote_files_fixture
 ):
+    """Test export_table_to_file_file() where end file location is in cloud object stores"""
     object_path = remote_files_fixture[0]
     database, populated_table = database_table_fixture
 
@@ -324,6 +335,7 @@ def test_export_table_to_file_in_the_cloud(
     ids=["bigquery"],
 )
 def test_create_table_from_select_statement(database_table_fixture):
+    """Test table creation via select statement"""
     database, original_table = database_table_fixture
 
     statement = "SELECT * FROM {} WHERE id = 1;".format(

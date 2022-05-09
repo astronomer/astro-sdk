@@ -24,6 +24,7 @@ class File:
 
         :param path: Path to a file in the filesystem/Object stores
         :param conn_id: Airflow connection ID
+        :param filetype: constant to provide an explicit file type
         :param normalize_config: normalize_config: parameters in dict format of pandas json_normalize() function.
         """
         self.location = create_file_location(path, conn_id)
@@ -66,13 +67,8 @@ class File:
         ) as stream:
             self.type.create_from_dataframe(stream=stream, df=df)
 
-    def export_to_dataframe(
-        self, normalize_config: Optional[dict] = None, **kwargs
-    ) -> pd.DataFrame:
-        """Read file from all supported location and convert them into dataframes
-
-        :param normalize_config: normalize_config: parameters in dict format of pandas json_normalize() function.
-        """
+    def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
+        """Read file from all supported location and convert them into dataframes"""
         mode = "rb" if self.is_binary() else "r"
         with smart_open.open(
             self.path, mode=mode, transport_params=self.location.transport_params
@@ -88,7 +84,12 @@ class File:
         return self.path
 
 
-def get_files(path_pattern: str, conn_id: Optional[str] = None) -> List[File]:
+def get_files(
+    path_pattern: str,
+    conn_id: Optional[str] = None,
+    filetype: Union[FileType, None] = None,
+    normalize_config: Optional[dict] = None,
+) -> List[File]:
     """get file objects by resolving path_pattern from local/object stores
     path_pattern can be
     1. local location - glob pattern
@@ -97,6 +98,16 @@ def get_files(path_pattern: str, conn_id: Optional[str] = None) -> List[File]:
     :param path_pattern: path/pattern to a file in the filesystem/Object stores,
     supports glob and prefix pattern for object stores
     :param conn_id: Airflow connection ID
+    :param filetype: constant to provide an explicit file type
+    :param normalize_config: normalize_config: parameters in dict format of pandas json_normalize() function.
     """
     location = create_file_location(path_pattern, conn_id)
-    return [File(path, conn_id) for path in location.paths]
+    return [
+        File(
+            path=path,
+            conn_id=conn_id,
+            filetype=filetype,
+            normalize_config=normalize_config,
+        )
+        for path in location.paths
+    ]
