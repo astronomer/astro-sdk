@@ -15,7 +15,7 @@ def test_read_parquet_file():
     path = str(sample_file.absolute())
     parquet_type = ParquetFileType(path)
     with open(path, mode="rb") as file:
-        df = parquet_type.export_to_dataframe(file, normalize_config=None)
+        df = parquet_type.export_to_dataframe(file)
     assert df.shape == (3, 2)
 
 

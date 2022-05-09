@@ -15,7 +15,7 @@ def test_read_json_file():
     path = str(sample_file.absolute())
     json_type = JSONFileType(path)
     with open(path) as file:
-        df = json_type.export_to_dataframe(file, normalize_config=None)
+        df = json_type.export_to_dataframe(file)
     assert df.shape == (3, 2)
 
 

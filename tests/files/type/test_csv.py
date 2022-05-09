@@ -15,7 +15,7 @@ def test_read_csv_file():
     path = str(sample_file.absolute())
     csv_type = CSVFileType(path)
     with open(path) as file:
-        df = csv_type.export_to_dataframe(file, normalize_config=None)
+        df = csv_type.export_to_dataframe(file)
     assert df.shape == (3, 2)
 
 
