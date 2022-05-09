@@ -77,9 +77,7 @@ class File:
         with smart_open.open(
             self.path, mode=mode, transport_params=self.location.transport_params
         ) as stream:
-            return self.type.export_to_dataframe(
-                stream, normalize_config=normalize_config, **kwargs
-            )
+            return self.type.export_to_dataframe(stream, **kwargs)
 
     def exists(self) -> bool:
         """Check if the file exists or not"""
