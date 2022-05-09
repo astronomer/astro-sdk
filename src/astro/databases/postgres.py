@@ -3,6 +3,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from astro.databases.base import BaseDatabase
 from astro.sql.tables import Table
 
+
 DEFAULT_CONN_ID = PostgresHook.default_conn_name
 
 
@@ -28,3 +29,4 @@ class PostgresDatabase(BaseDatabase):
         :param table: The table we want to retrieve the qualified name for.
         """
         return str(table.name)
+

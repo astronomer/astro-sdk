@@ -54,6 +54,7 @@ class BaseDatabase(ABC):
     def run_sql(self, sql_statement: str, parameters: Optional[dict] = None):
         """
         Return the results to running a SQL statement.
+        Return the results to running a SQL statement.
 
         Whenever possible, this method should be implemented using Airflow Hooks,
         since this will simplify the integration with Async operators.
