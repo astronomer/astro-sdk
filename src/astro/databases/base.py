@@ -79,7 +79,7 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
     # Table metadata
     # ---------------------------------------------------------
-    def get_table_qualified_name(self, table: Table) -> str:
+    def get_table_qualified_name(self, table: Table) -> str:  # skipcq: PYL-R0201
         """
         Return table qualified name. This is Database-specific.
         For instance, in Sqlite this is the table name. In Snowflake, however, it is the database, schema and table

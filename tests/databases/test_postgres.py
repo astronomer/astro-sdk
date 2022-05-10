@@ -36,7 +36,7 @@ def test_create_database(conn_id):
     "conn_id,expected_uri",
     [
         (DEFAULT_CONN_ID, "postgresql://postgres:airflow@postgres/airflow"),
-        (CUSTOM_CONN_ID, "postgresql://postgres:postgres@0.0.0.0:5433/pagila"),
+        (CUSTOM_CONN_ID, "postgresql://postgres:postgres@localhost:5433"),
     ],
     ids=SUPPORTED_CONN_IDS,
 )
@@ -100,9 +100,14 @@ def test_postgres_create_table_with_columns(database_table_fixture):
     response = database.run_sql(statement)
     rows = response.fetchall()
     assert len(rows) == 2
-    assert rows[0][0:4] == ("pagila", f"{table.metadata.schema}", f"{table.name}", "id")
+    assert rows[0][0:4] == (
+        "postgres",
+        f"{table.metadata.schema}",
+        f"{table.name}",
+        "id",
+    )
     assert rows[1][0:4] == (
-        "pagila",
+        "postgres",
         f"{table.metadata.schema}",
         f"{table.name}",
         "name",
