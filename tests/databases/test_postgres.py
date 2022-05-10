@@ -36,7 +36,7 @@ def test_create_database(conn_id):
     "conn_id,expected_uri",
     [
         (DEFAULT_CONN_ID, "postgresql://postgres:airflow@postgres/airflow"),
-        (CUSTOM_CONN_ID, "postgresql://postgres:postgres@localhost:5433"),
+        (CUSTOM_CONN_ID, "postgresql://postgres:postgres@localhost:5432"),
     ],
     ids=SUPPORTED_CONN_IDS,
 )
