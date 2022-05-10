@@ -62,7 +62,9 @@ class BaseDatabase(ABC):
         :param sql_statement: Contains SQL query to be run against database
         :param parameters: Optional parameters to be used to render the query
         """
-        return self.hook.run(sql_statement, parameters)
+        if parameters is None:
+            parameters = {}
+        return self.connection.execute(sql_statement, parameters)
 
     def table_exists(self, table: Table) -> bool:
         """

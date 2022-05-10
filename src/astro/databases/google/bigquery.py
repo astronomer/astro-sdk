@@ -1,10 +1,7 @@
-from typing import Optional, Union
-
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
-from sqlalchemy.engine.result import ResultProxy
 
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
@@ -36,20 +33,6 @@ class BigqueryDatabase(BaseDatabase):
         """Return SQAlchemy engine."""
         uri = self.hook.get_uri()
         return create_engine(uri)
-
-    def run_sql(
-        self, sql_statement: Union[text, str], parameters: Optional[dict] = None
-    ) -> ResultProxy:
-        """
-        Run given SQL statement in the database using the Sqlalchemy engine.
-
-        :param sql_statement: SQL statement to be run on the engine
-        :param parameters: (optional) Parameters to be passed to the SQL statement
-        :return: Result of running the statement.
-        """
-        if parameters is None:
-            parameters = {}
-        return self.connection.execute(sql_statement, parameters)
 
     def get_table_qualified_name(self, table: Table) -> str:
         """
