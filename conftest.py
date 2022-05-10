@@ -213,7 +213,7 @@ def database_table_fixture(request):
     database_name_to_conn_id = {
         Database.SQLITE: "sqlite_default",
         Database.BIGQUERY: "google_cloud_default",
-        Database.POSTGRES: "postgres_conn",
+        Database.POSTGRES: "postgres_default",
     }
     conn_id = database_name_to_conn_id[database_name]
     database = create_database(conn_id)
