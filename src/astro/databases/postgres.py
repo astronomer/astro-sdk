@@ -27,5 +27,4 @@ class PostgresDatabase(BaseDatabase):
 
         :param table: The table we want to retrieve the qualified name for.
         """
-        name: str = table.name
-        return name
+        return str(table.name)
