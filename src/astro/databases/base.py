@@ -89,7 +89,7 @@ class BaseDatabase(ABC):
         # However, in order to have an agnostic table class implementation,
         # we are keeping all methods which vary depending on the database within the Database class.
         schema = table.metadata.schema if table.metadata else None
-        qualified_name: str = schema + "." + table.name if schema else table.name
+        qualified_name: str = f"{schema}.{table.name}" if schema else table.name
         return qualified_name
 
     # ---------------------------------------------------------
