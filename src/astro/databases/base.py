@@ -1,5 +1,6 @@
 from abc import ABC
-from typing import Optional, Tuple
+
+from typing import List, Optional, Tuple
 
 import pandas as pd
 import sqlalchemy
@@ -33,6 +34,9 @@ class BaseDatabase(ABC):
     _create_schema_statement: str = "CREATE SCHEMA IF NOT EXISTS {}"
     _drop_table_statement: str = "DROP TABLE IF EXISTS {}"
     _create_table_statement: str = "CREATE TABLE IF NOT EXISTS {} AS {}"
+
+    illegal_column_name_chars: List[str] = []
+    illegal_column_name_chars_replacement: List[str] = []
 
     def __init__(self, conn_id: str):
         self.conn_id = conn_id

@@ -187,7 +187,7 @@ def test_export_table_to_file_file_already_exists_raises_exception(
         database.export_table_to_file(source_table, File(str(filepath)))
     err_msg = exception_info.value.args[0]
     assert err_msg.startswith("The file")
-    assert err_msg.endswith("tests/data/sample.csv already exists.")
+    assert err_msg.endswith("already exists.")
 
 
 @pytest.mark.integration

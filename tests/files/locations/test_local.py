@@ -64,15 +64,6 @@ def test_get_paths_with_local_dir(local_dir, path):  # skipcq: PYL-W0612
     assert sorted(location.paths) == [LOCAL_DIR_FILE_1, LOCAL_DIR_FILE_2]
 
 
-def test_get_paths_with_unsupported_location(local_dir):  # skipcq: PYL-W0612
-    """with unsupported filepath"""
-    path = "invalid://some-file"
-    with pytest.raises(ValueError) as exc_info:
-        _ = LocalLocation(path)
-    expected_msg = "Invalid path: 'invalid://some-file'"
-    assert exc_info.value.args[0] == expected_msg
-
-
 def test_size():
     """Test get_size() of for local file."""
     assert LocalLocation(str(sample_file.absolute())).size == 65

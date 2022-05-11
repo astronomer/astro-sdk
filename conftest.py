@@ -137,6 +137,81 @@ def test_table(request, sql_server):  # noqa: C901
 
 
 @pytest.fixture
+def table_fixture(request, sql_server):  # noqa: C901
+    tables = []
+    tables_params = [{}]
+
+    if getattr(request, "param", None):
+        if isinstance(request.param, list):
+            tables_params = request.param
+        else:
+            tables_params = [request.param]
+
+    sql_name, hook = sql_server
+    database = get_database_name(hook)
+
+    for table_param in tables_params:
+        load_table = table_param.get("load_table", False)
+        override_table_options = table_param.get("param", {})
+
+        if database == Database.SNOWFLAKE:
+            default_table_options = {
+                "conn_id": hook.snowflake_conn_id,
+                "metadata": Metadata(
+                    database=hook.database,
+                    warehouse=hook.warehouse,
+                    schema=hook.schema,
+                ),
+            }
+        elif database == Database.POSTGRES:
+            default_table_options = {
+                "conn_id": hook.postgres_conn_id,
+                "metadata": Metadata(database=hook.schema),
+            }
+        elif database == Database.SQLITE:
+            default_table_options = {
+                "conn_id": hook.sqlite_conn_id,
+                "metadata": Metadata(
+                    database="sqlite",
+                ),
+            }
+        elif database == Database.BIGQUERY:
+            default_table_options = {
+                "conn_id": hook.gcp_conn_id,
+                "metadata": Metadata(
+                    schema=SCHEMA,
+                ),
+            }
+        else:
+            raise ValueError("Unsupported Database")
+
+        default_table_options.update(override_table_options)
+        tables.append(Table(**default_table_options))
+
+        path = table_param.get("path")
+        if load_table and path:
+            df = pd.read_csv(path)
+            db = create_database(default_table_options["conn_id"])
+            db.load_pandas_dataframe_to_table(df, tables[-1])
+
+    yield tables if len(tables) > 1 else tables[0]
+
+    for table in tables:
+        db = create_database(table.conn_id)
+        hook.run(f"DROP TABLE IF EXISTS {db.get_table_qualified_name(table)}")
+
+        if database == Database.SQLITE:
+            hook.run("DROP INDEX IF EXISTS unique_index")
+        elif database in (Database.POSTGRES, Database.POSTGRESQL):
+            # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
+            # Example: tables which are not fixtures and constraints.
+            # This is an aggressive approach towards tearing down:
+            schema = getattr(table.metadata, "schema", None)
+            if schema:
+                hook.run(f"DROP SCHEMA IF EXISTS {table.metadata.schema} CASCADE;")
+
+
+@pytest.fixture
 def output_table(request):
     table_type = request.param
     if table_type == "None":

@@ -9,6 +9,7 @@ from astro import sql as aql
 from astro.databases import create_database
 from astro.databases.sqlite import SqliteDatabase
 from astro.dataframe import dataframe as adf
+from astro.files import File
 from astro.sql.table import Table
 from tests.operators import utils as test_utils
 
@@ -80,11 +81,11 @@ def add_constraint(table: Table):
 @task_group
 def run_append(output_specs: Table):
     load_main = aql.load_file(
-        path=str(CWD) + "/data/homes_main.csv",
+        input_file=File(path=str(CWD) + "/data/homes_main.csv"),
         output_table=output_specs,
     )
     load_append = aql.load_file(
-        path=str(CWD) + "/data/homes_append.csv",
+        input_file=File(path=str(CWD) + "/data/homes_append.csv"),
         output_table=output_specs,
     )
 
@@ -98,11 +99,11 @@ def run_append(output_specs: Table):
 @task_group
 def run_merge(output_specs: Table, merge_keys):
     main_table = aql.load_file(
-        path=str(CWD) + "/data/homes_merge_1.csv",
+        input_file=File(path=str(CWD) + "/data/homes_merge_1.csv"),
         output_table=output_specs,
     )
     merge_table = aql.load_file(
-        path=str(CWD) + "/data/homes_merge_2.csv",
+        input_file=File(path=str(CWD) + "/data/homes_merge_2.csv"),
         output_table=output_specs,
     )
 
@@ -134,7 +135,8 @@ def test_full_dag(sql_server, sample_dag, test_table):
     with sample_dag:
         output_table = test_table
         loaded_table = aql.load_file(
-            str(CWD) + "/data/homes.csv", output_table=output_table
+            input_file=File(path=str(CWD) + "/data/homes.csv"),
+            output_table=output_table,
         )
         tranformed_table = apply_transform(loaded_table)
         run_dataframe_funcs(tranformed_table)

@@ -34,3 +34,7 @@ class FileType(ABC):
     def name(self):
         """get file type"""
         raise NotImplementedError
+
+    def __str__(self):
+        """String representation of type"""
+        return self.name.value

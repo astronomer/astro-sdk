@@ -1,4 +1,6 @@
 """Google BigQuery table implementation."""
+from typing import List
+
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from google.api_core.exceptions import NotFound as GoogleNotFound
@@ -18,6 +20,9 @@ class BigqueryDatabase(BaseDatabase):
     Handle interactions with Bigquery databases. If this class is successful, we should not have any Bigquery-specific
     logic in other parts of our code-base.
     """
+
+    illegal_column_name_chars: List[str] = ["."]
+    illegal_column_name_chars_replacement: List[str] = ["_"]
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
         super().__init__(conn_id)

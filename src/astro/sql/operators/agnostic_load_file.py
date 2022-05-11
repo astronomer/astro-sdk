@@ -4,47 +4,40 @@ from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
-from astro.constants import DEFAULT_CHUNK_SIZE
-from astro.databases import create_database
-from astro.files import get_files
-from astro.sql.table import Table, create_table_name
-from astro.utils import get_hook
-from astro.utils.database import create_database_from_conn_id
-from astro.utils.load import load_dataframe_into_sql_table, populate_normalize_config
+from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
+from astro.databases import BaseDatabase, create_database
+from astro.files import File, get_files
+from astro.sql.table import Table
+from astro.utils.load import populate_normalize_config
+
 from astro.utils.task_id_helper import get_task_id
 
 
 class AgnosticLoadFile(BaseOperator):
     """Load S3/local table to postgres/snowflake database
 
-    :param path: File path
+    :param input_file: File path and conn_id for object stores
     :param output_table_name: Name of table to create
     :param file_conn_id: Airflow connection id of input file (optional)
     :param output_conn_id: Database connection id
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
     """
 
-    template_fields = (
-        "output_table",
-        "file_conn_id",
-        "path",
-    )
+    template_fields = ("output_table", "input_file")
 
     def __init__(
         self,
-        path: str,
+        input_file: File,
         output_table: Table,
-        file_conn_id: Optional[str] = "",
-        chunksize: int = DEFAULT_CHUNK_SIZE,
-        if_exists: str = "replace",
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        if_exists: LoadExistStrategy = "replace",
         ndjson_normalize_sep: str = "_",
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.output_table: Table = output_table
-        self.path = path
-        self.chunksize = chunksize
-        self.file_conn_id = file_conn_id
+        self.input_file = input_file
+        self.chunk_size = chunk_size
         self.kwargs = kwargs
         self.if_exists = if_exists
         self.ndjson_normalize_sep = ndjson_normalize_sep
@@ -54,41 +47,30 @@ class AgnosticLoadFile(BaseOperator):
         """
         Load an existing dataset from a supported file into a SQL table.
         """
-        if self.file_conn_id:
-            BaseHook.get_connection(self.file_conn_id)
+        if self.input_file.conn_id:
+            BaseHook.get_connection(self.input_file.conn_id)
 
+        database = create_database(self.output_table.conn_id)
         self.normalize_config = populate_normalize_config(
             ndjson_normalize_sep=self.ndjson_normalize_sep,
-            database=create_database_from_conn_id(self.output_table.conn_id),
+            database=database,
         )
+        return self.load_data(database=database, input_file=self.input_file)
 
-        hook = get_hook(
-            conn_id=self.output_table.conn_id,
-            database=self.output_table.metadata.database,
-            schema=self.output_table.metadata.schema,
-        )
-
-        self._configure_output_table(context)
-        return self.load_data(hook=hook, path=self.path, file_conn_id=self.file_conn_id)
-
-    def load_data(
-        self, path: str, hook: BaseHook, file_conn_id: Optional[str] = None
-    ) -> Table:
+    def load_data(self, input_file: File, database: BaseDatabase) -> Table:
         """Loads csv/parquet table from local/S3/GCS with Pandas.
         Infers SQL database type based on connection then loads table to db.
         """
-        self.log.info(f"Loading {self.path} into {self.output_table}...")
+        self.log.info(f"Loading {self.input_file.path} into {self.output_table}...")
         if_exists = self.if_exists
         for file in get_files(
-            path, file_conn_id, normalize_config=self.normalize_config
+            input_file.path, input_file.conn_id, normalize_config=self.normalize_config
         ):
-            dataframe = file.export_to_dataframe()
-            load_dataframe_into_sql_table(
-                dataframe,
-                self.output_table,
-                hook,
-                self.chunksize,
+            database.load_pandas_dataframe_to_table(
+                source_dataframe=file.export_to_dataframe(),
+                target_table=self.output_table,
                 if_exists=if_exists,
+                chunk_size=self.chunk_size,
             )
             if_exists = "append"
 
@@ -96,28 +78,18 @@ class AgnosticLoadFile(BaseOperator):
 
         return self.output_table
 
-    def _configure_output_table(self, context: Any) -> None:
-        # TODO: Move this function to the SQLDecorator, so it can be reused across operators
-        if not self.output_table.name:
-            self.output_table.name = create_table_name(context=context)
-        db = create_database(self.output_table.conn_id)
-        self.output_table = db.populate_table_metadata(self.output_table)
-        db.create_schema_if_needed(self.output_table.metadata.schema)
-
 
 def load_file(
-    path: str,
+    input_file: File,
     output_table: Table,
-    file_conn_id: Optional[str] = "",
     task_id: Optional[str] = None,
-    if_exists: str = "replace",
+    if_exists: LoadExistStrategy = "replace",
     ndjson_normalize_sep: str = "_",
     **kwargs,
 ) -> XComArg:
     """Convert AgnosticLoadFile into a function that Returns an XComArg object
-    :param path: File path
+    :param input_file: File path and conn_id for object stores
     :param output_table: Table to create
-    :param file_conn_id: Airflow connection id of input file (optional)
     :param task_id: task id, optional
     :param if_exists: default override an existing Table. Options: fail, replace, append
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
@@ -132,9 +104,8 @@ def load_file(
 
     return AgnosticLoadFile(
         task_id=task_id,
-        path=path,
+        input_file=input_file,
         output_table=output_table,
-        file_conn_id=file_conn_id,
         if_exists=if_exists,
         ndjson_normalize_sep=ndjson_normalize_sep,
         **kwargs,

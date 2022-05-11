@@ -4,7 +4,8 @@ from datetime import datetime
 import pandas as pd
 from airflow.decorators import dag
 
-from astro.dataframe import dataframe
+from astro import dataframe
+from astro.files import File
 from astro.sql import append, load_file, run_raw_sql, transform, truncate
 from astro.sql.table import Metadata, Table
 
@@ -75,7 +76,7 @@ def example_snowflake_partial_table_with_append():
 
     # Initial load of homes data csv's into Snowflake
     homes_data1 = load_file(
-        path=FILE_PATH + "homes.csv",
+        input_file=File(path=FILE_PATH + "homes.csv"),
         output_table=Table(
             name="homes",
             conn_id=SNOWFLAKE_CONN_ID,
@@ -87,7 +88,7 @@ def example_snowflake_partial_table_with_append():
     )
 
     homes_data2 = load_file(
-        path=FILE_PATH + "homes2.csv",
+        input_file=File(path=FILE_PATH + "homes2.csv"),
         output_table=Table(
             name="homes2",
             conn_id=SNOWFLAKE_CONN_ID,
