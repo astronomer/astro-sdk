@@ -19,7 +19,7 @@ from tests.operators import utils as test_utils
 
 DEFAULT_CONN_ID = "snowflake_default"
 CUSTOM_CONN_ID = "snowflake_conn"
-SUPPORTED_CONN_IDS = [DEFAULT_CONN_ID, CUSTOM_CONN_ID]
+SUPPORTED_CONN_IDS = [CUSTOM_CONN_ID]
 CWD = pathlib.Path(__file__).parent
 
 TEST_TABLE = Table()
@@ -30,23 +30,6 @@ def test_create_database(conn_id):
     """Test creation of database"""
     database = create_database(conn_id)
     assert isinstance(database, SnowflakeDatabase)
-
-
-# @pytest.mark.parametrize(
-#     "conn_id,expected_uri",
-#     [
-#         (DEFAULT_CONN_ID, ""),
-#         (CUSTOM_CONN_ID, ""),
-#     ],
-#     ids=SUPPORTED_CONN_IDS,
-# )
-# def test_snowflake_sqlalchemy_engine(conn_id, expected_uri):
-#     """Test getting a snowflake based sqla engine."""
-#     database = SnowflakeDatabase(conn_id)
-#     engine = database.sqlalchemy_engine
-#     assert isinstance(engine, sqlalchemy.engine.base.Engine)
-#     url = urlparse(str(engine.url))
-#     assert url.geturl() == expected_uri
 
 
 @pytest.mark.integration
