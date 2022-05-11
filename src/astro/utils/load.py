@@ -4,7 +4,7 @@ Functions for loading data from a source location to a destination location.
 import io
 import json
 import tempfile
-from typing import Dict, Optional, Union
+from typing import Any, Dict, Optional, Union
 
 import pandas as pd
 import pyarrow as pa
@@ -21,6 +21,7 @@ from astro.constants import (
     Database,
     FileType,
 )
+from astro.databases import BaseDatabase
 from astro.sql.table import Table
 from astro.utils.database import get_database_name, get_sqlalchemy_engine
 from astro.utils.dependencies import pandas_tools
@@ -98,7 +99,8 @@ def flatten_ndjson(
 
 
 def populate_normalize_config(
-    ndjson_normalize_sep, database: Database
+    database: BaseDatabase,
+    ndjson_normalize_sep: str = "_",
 ) -> Dict[str, str]:
     """
     Validate pandas json_normalize() parameter for databases, since default params result in
@@ -106,30 +108,34 @@ def populate_normalize_config(
 
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
         https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html
-    :type ndjson_normalize_sep: str
-    :return: return updated config
-    :rtype: `dict`
+    :param database: supported database
     """
-    normalize_config = {
+
+    def replace_illegal_columns_chars(char: str, database: BaseDatabase) -> str:
+        index = (
+            database.illegal_column_name_chars.index(char)
+            if char in database.illegal_column_name_chars
+            else None
+        )
+        if index is not None:
+            return str(database.illegal_column_name_chars_replacement[index])
+        else:
+            return str(char)
+
+    normalize_config: Dict[str, Any] = {
         "meta_prefix": ndjson_normalize_sep,
         "record_prefix": ndjson_normalize_sep,
         "sep": ndjson_normalize_sep,
     }
-    replacement = "_"
-    illegal_char = "."
-
-    if database in [Database.BIGQUERY, Database.SNOWFLAKE]:
-        meta_prefix = ndjson_normalize_sep
-        if meta_prefix and meta_prefix == illegal_char:
-            normalize_config["meta_prefix"] = replacement
-
-        record_prefix = normalize_config.get("record_prefix")
-        if record_prefix and record_prefix == illegal_char:
-            normalize_config["record_prefix"] = replacement
-
-        sep = normalize_config.get("sep")
-        if sep is None or sep == illegal_char:
-            normalize_config["sep"] = replacement
+    normalize_config["meta_prefix"] = replace_illegal_columns_chars(
+        normalize_config["meta_prefix"], database
+    )
+    normalize_config["record_prefix"] = replace_illegal_columns_chars(
+        normalize_config["record_prefix"], database
+    )
+    normalize_config["sep"] = replace_illegal_columns_chars(
+        normalize_config["sep"], database
+    )
 
     return normalize_config
 

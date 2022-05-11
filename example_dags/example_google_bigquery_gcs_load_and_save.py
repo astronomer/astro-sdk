@@ -20,6 +20,7 @@ from airflow.utils import timezone
 
 import astro.sql as aql
 from astro import dataframe
+from astro.files import File
 from astro.sql.table import Metadata, Table
 
 gcs_bucket = os.getenv("GCS_BUCKET", "gs://dag-authoring")
@@ -31,7 +32,9 @@ with DAG(
 ) as dag:
     t1 = aql.load_file(
         task_id="load_from_github_to_bq",
-        path="https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/imdb.csv",
+        input_file=File(
+            path="https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/imdb.csv"
+        ),
         output_table=Table(
             name="imdb_movies", conn_id="bigquery", metadata=Metadata(schema="astro")
         ),
@@ -52,8 +55,9 @@ with DAG(
     aql.save_file(
         task_id="save_to_gcs",
         input_data=t2,
-        output_file_path=f"{gcs_bucket}/{{ task_instance_key_str }}/top_5_movies.csv",
-        output_file_format="csv",
-        output_conn_id="gcp_conn",
-        overwrite=True,
+        output_file=File(
+            path=f"{gcs_bucket}/{{ task_instance_key_str }}/top_5_movies.csv",
+            conn_id="gcp_conn",
+        ),
+        if_exists="replace",
     )

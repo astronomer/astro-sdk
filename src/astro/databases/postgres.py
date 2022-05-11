@@ -1,4 +1,5 @@
 """Postgres database implementation."""
+from typing import List
 
 import pandas as pd
 import sqlalchemy
@@ -6,7 +7,9 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 from astro.databases.base import BaseDatabase
+
 from astro.settings import SCHEMA
+
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = PostgresHook.default_conn_name
@@ -17,6 +20,9 @@ class PostgresDatabase(BaseDatabase):
     Handle interactions with Postgres databases. If this class is successful, we should not have any Postgres-specific
     logic in other parts of our code-base.
     """
+
+    illegal_column_name_chars: List[str] = ["."]
+    illegal_column_name_chars_replacement: List[str] = ["_"]
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
         super().__init__(conn_id)
@@ -76,11 +82,38 @@ class PostgresDatabase(BaseDatabase):
         """
         self.create_schema_if_needed(target_table.metadata.schema)
         source_dataframe.to_sql(
-            schema=target_table.metadata.schema,
-            name=target_table.name,
+            target_table.name,
+            schema=target_table.metadata.schema.lower(),
             con=self.sqlalchemy_engine,
             if_exists=if_exists,
             chunksize=chunk_size,
             method="multi",
             index=False,
         )
+
+    def get_table_qualified_name(self, table: Table) -> str:  # skipcq: PYL-R0201
+        """
+        Return table qualified name. This is Database-specific.
+        For instance, in Sqlite this is the table name. In Snowflake, however, it is the database, schema and table
+
+        :param table: The table we want to retrieve the qualified name for.
+        """
+        # Initially this method belonged to the Table class.
+        # However, in order to have an agnostic table class implementation,
+        # we are keeping all methods which vary depending on the database within the Database class.
+        if table.metadata and table.metadata.schema:
+            qualified_name = f"{table.metadata.schema.lower()}.{table.name}"
+        else:
+            qualified_name = table.name
+        return qualified_name
+
+    def table_exists(self, table: Table) -> bool:
+        """
+        Check if a table exists in the database
+
+        :param table: Details of the table we want to check that exists
+        """
+        schema = getattr(table.metadata, "schema", None)
+        schema = schema.lower() if schema else None
+        inspector = sqlalchemy.inspect(self.sqlalchemy_engine)
+        return bool(inspector.dialect.has_table(self.connection, table.name, schema))

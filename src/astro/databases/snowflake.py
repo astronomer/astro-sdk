@@ -63,7 +63,7 @@ class SnowflakeDatabase(BaseDatabase):
 
         db.prep_table(
             source_dataframe,
-            target_table.name,
+            target_table.name.lower(),
             schema=schema,
             if_exists=if_exists,
             index=False,

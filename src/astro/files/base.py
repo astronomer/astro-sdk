@@ -13,6 +13,8 @@ class File:
     Intended to be used within library.
     """
 
+    template_fields = ("location",)
+
     def __init__(
         self,
         path: str,
@@ -35,6 +37,10 @@ class File:
     @property
     def path(self):
         return self.location.path
+
+    @property
+    def conn_id(self):
+        return self.location.conn_id
 
     @property
     def size(self) -> int:
@@ -81,7 +87,7 @@ class File:
         return file_exists
 
     def __str__(self):
-        return self.path
+        return f"location={self.location}, type={self.type}"
 
 
 def get_files(

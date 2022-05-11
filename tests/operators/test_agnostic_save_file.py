@@ -24,6 +24,7 @@ from airflow.utils import timezone
 import astro.dataframe as adf
 import astro.sql as aql
 from astro.constants import SUPPORTED_DATABASES, SUPPORTED_FILE_TYPES, Database
+from astro.files import File
 from astro.settings import SCHEMA
 
 # Import Operator
@@ -58,7 +59,9 @@ def test_save_dataframe_to_local(sample_dag):
     with sample_dag:
         df = make_df()
         aql.save_file(
-            input_data=df, output_file_path="/tmp/saved_df.csv", overwrite=True
+            input_data=df,
+            output_file=File(path="/tmp/saved_df.csv"),
+            if_exists="replace",
         )
     test_utils.run_dag(sample_dag)
 
@@ -68,17 +71,21 @@ def test_save_dataframe_to_local(sample_dag):
 
 @pytest.mark.parametrize("sql_server", [Database.SQLITE.value], indirect=True)
 @pytest.mark.parametrize(
-    "test_table",
-    [{"is_temp": True}],
+    "table_fixture",
+    [{}],
     indirect=True,
-    ids=["temp_table"],
+    ids=["table"],
 )
-def test_save_temp_table_to_local(sample_dag, sql_server, test_table):
+def test_save_temp_table_to_local(sample_dag, sql_server, table_fixture):
     data_path = str(CWD) + "/../data/homes.csv"
     with sample_dag:
-        table = aql.load_file(path=data_path, file_conn_id="", output_table=test_table)
+        table = aql.load_file(
+            input_file=File(path=data_path), output_table=table_fixture
+        )
         aql.save_file(
-            input_data=table, output_file_path="/tmp/saved_df.csv", overwrite=True
+            input_data=table,
+            output_file=File(path="/tmp/saved_df.csv"),
+            if_exists="replace",
         )
     test_utils.run_dag(sample_dag)
 
@@ -89,12 +96,11 @@ def test_save_temp_table_to_local(sample_dag, sql_server, test_table):
 
 @pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
 @pytest.mark.parametrize(
-    "test_table",
+    "table_fixture",
     [
         {
             "path": str(CWD) + "/../data/homes.csv",
             "load_table": True,
-            "is_temp": False,
             "param": {
                 "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_1"),
@@ -104,7 +110,7 @@ def test_save_temp_table_to_local(sample_dag, sql_server, test_table):
     indirect=True,
     ids=["temp_table"],
 )
-def test_save_all_db_tables_to_S3(sample_dag, test_table, sql_server):
+def test_save_all_db_tables_to_S3(sample_dag, table_fixture, sql_server):
 
     _creds = s3fs_creds()
     sql_name, hook = sql_server
@@ -114,14 +120,13 @@ def test_save_all_db_tables_to_S3(sample_dag, test_table, sql_server):
 
     with sample_dag:
         save_file(
-            input_data=test_table,
-            output_file_path=OUTPUT_FILE_PATH,
-            output_conn_id="aws_default",
-            overwrite=True,
+            input_data=table_fixture,
+            output_file=File(path=OUTPUT_FILE_PATH, conn_id="aws_default"),
+            if_exists="replace",
         )
     test_utils.run_dag(sample_dag)
 
-    df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
+    df = test_utils.get_dataframe_from_table(sql_name, table_fixture, hook)
 
     # # Read output CSV
     df_file = pd.read_csv(OUTPUT_FILE_PATH, storage_options=s3fs_creds())
@@ -139,12 +144,11 @@ def test_save_all_db_tables_to_S3(sample_dag, test_table, sql_server):
 
 @pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
 @pytest.mark.parametrize(
-    "test_table",
+    "table_fixture",
     [
         {
             "path": str(CWD) + "/../data/homes2.csv",
             "load_table": True,
-            "is_temp": False,
             "param": {
                 "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_1"),
@@ -154,7 +158,7 @@ def test_save_all_db_tables_to_S3(sample_dag, test_table, sql_server):
     indirect=True,
     ids=["temp_table"],
 )
-def test_save_all_db_tables_to_GCS(sample_dag, test_table, sql_server):
+def test_save_all_db_tables_to_GCS(sample_dag, table_fixture, sql_server):
 
     sql_name, hook = sql_server
     file_name = f"{test_utils.get_table_name('test_save')}.csv"
@@ -164,14 +168,13 @@ def test_save_all_db_tables_to_GCS(sample_dag, test_table, sql_server):
 
     with sample_dag:
         save_file(
-            input_data=test_table,
-            output_file_path=OUTPUT_FILE_PATH,
-            output_conn_id="google_cloud_default",
-            overwrite=True,
+            input_data=table_fixture,
+            output_file=File(path=OUTPUT_FILE_PATH, conn_id="google_cloud_default"),
+            if_exists="replace",
         )
     test_utils.run_dag(sample_dag)
 
-    df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
+    df = test_utils.get_dataframe_from_table(sql_name, table_fixture, hook)
 
     if sql_name != "snowflake":
         assert (df["sell"].sort_values() == [129, 138, 142, 175, 232]).all()
@@ -184,7 +187,7 @@ def test_save_all_db_tables_to_GCS(sample_dag, test_table, sql_server):
 
 @pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
 @pytest.mark.parametrize(
-    "test_table",
+    "table_fixture",
     [
         {
             "path": str(CWD) + "/../data/homes.csv",
@@ -197,19 +200,18 @@ def test_save_all_db_tables_to_GCS(sample_dag, test_table, sql_server):
         }
     ],
     indirect=True,
-    ids=["temp_table"],
+    ids=["table"],
 )
 def test_save_all_db_tables_to_local_file_exists_overwrite_false(
-    sample_dag, test_table, sql_server, caplog
+    sample_dag, table_fixture, sql_server, caplog
 ):
     with tempfile.NamedTemporaryFile(suffix=".csv") as temp_file:
         with pytest.raises(BackfillUnfinished):
             with sample_dag:
                 save_file(
-                    input_data=test_table,
-                    output_file_path=temp_file.name,
-                    output_conn_id=None,
-                    overwrite=False,
+                    input_data=table_fixture,
+                    output_file=File(path=temp_file.name),
+                    if_exists="exception",
                 )
             test_utils.run_dag(sample_dag)
         expected_error = f"{temp_file.name} file already exists."
@@ -218,12 +220,11 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
 
 @pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
 @pytest.mark.parametrize(
-    "test_table",
+    "table_fixture",
     [
         {
             "path": str(CWD) + "/../data/homes.csv",
             "load_table": True,
-            "is_temp": False,
             "param": {
                 "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_1"),
@@ -231,7 +232,7 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
         }
     ],
     indirect=True,
-    ids=["temp_table"],
+    ids=["table"],
 )
 @pytest.mark.parametrize(
     "remote_files_fixture",
@@ -240,16 +241,15 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
     ids=["google", "amazon"],
 )
 def test_save_table_remote_file_exists_overwrite_false(
-    sample_dag, test_table, sql_server, remote_files_fixture, caplog
+    sample_dag, table_fixture, sql_server, remote_files_fixture, caplog
 ):
 
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
             save_file(
-                input_data=test_table,
-                output_file_path=remote_files_fixture[0],
-                output_conn_id="aws_default",
-                overwrite=False,
+                input_data=table_fixture,
+                output_file=File(path=remote_files_fixture[0], conn_id="aws_default"),
+                if_exists="exception",
             )
         test_utils.run_dag(sample_dag)
 
@@ -259,10 +259,9 @@ def test_save_table_remote_file_exists_overwrite_false(
 
 @pytest.mark.parametrize("sql_server", [Database.SQLITE.value], indirect=True)
 @pytest.mark.parametrize(
-    "test_table",
+    "table_fixture",
     [
         {
-            "is_temp": False,
             "path": str(CWD) + "/../data/homes2.csv",
             "load_table": True,
             "param": {
@@ -274,7 +273,7 @@ def test_save_table_remote_file_exists_overwrite_false(
     indirect=True,
     ids=["temp_table"],
 )
-def test_unique_task_id_for_same_path(sample_dag, sql_server, test_table):
+def test_unique_task_id_for_same_path(sample_dag, sql_server, table_fixture):
     file_name = f"{test_utils.get_table_name('output')}.csv"
     OUTPUT_FILE_PATH = str(CWD) + f"/../data/{file_name}"
 
@@ -282,10 +281,9 @@ def test_unique_task_id_for_same_path(sample_dag, sql_server, test_table):
     with sample_dag:
         for i in range(4):
             params = {
-                "input_data": test_table,
-                "output_file_path": OUTPUT_FILE_PATH,
-                "output_conn_id": None,
-                "overwrite": True,
+                "input_data": table_fixture,
+                "output_file": File(path=OUTPUT_FILE_PATH),
+                "if_exists": "replace",
             }
 
             if i == 3:
@@ -306,12 +304,11 @@ def test_unique_task_id_for_same_path(sample_dag, sql_server, test_table):
 @pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
 @pytest.mark.parametrize("file_type", SUPPORTED_FILE_TYPES)
 @pytest.mark.parametrize(
-    "test_table",
+    "table_fixture",
     [
         {
             "path": str(CWD) + "/../data/sample.csv",
             "load_table": True,
-            "is_temp": False,
             "param": {
                 "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_1"),
@@ -321,17 +318,15 @@ def test_unique_task_id_for_same_path(sample_dag, sql_server, test_table):
     indirect=True,
     ids=["test-table"],
 )
-def test_save_file(sample_dag, sql_server, file_type, test_table):
+def test_save_file(sample_dag, sql_server, file_type, table_fixture):
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         filepath = Path(tmp_dir, f"sample.{file_type}")
         with sample_dag:
             save_file(
-                input_data=test_table,
-                output_file_path=str(filepath),
-                output_file_format=file_type,
-                output_conn_id=None,
-                overwrite=False,
+                input_data=table_fixture,
+                output_file=File(path=str(filepath)),
+                if_exists="exception",
             )
         test_utils.run_dag(sample_dag)
 
