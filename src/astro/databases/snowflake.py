@@ -24,16 +24,6 @@ class SnowflakeDatabase(BaseDatabase):
         """Retrieve Airflow hook to interface with the Postgres database."""
         return SnowflakeHook(snowflake_conn_id=self.conn_id)
 
-    # def get_table_qualified_name(self, table: Table) -> str:
-    #     """
-    #     Return table qualified name. This is Database-specific.
-    #     For instance, in Sqlite this is the table name. In Snowflake, however, it is the database, schema and table
-    #
-    #     :param table: The table we want to retrieve the qualified name for.
-    #     """
-    #     name: str = table.name
-    #     return name
-
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,
@@ -50,14 +40,17 @@ class SnowflakeDatabase(BaseDatabase):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
-
         db = SQLDatabase(engine=self.sqlalchemy_engine)
         # Make columns uppercase to prevent weird errors in snowflake
         source_dataframe.columns = source_dataframe.columns.str.upper()
+        schema = None
+        if target_table.metadata:
+            schema = getattr(target_table.metadata, "schema")
+
         db.prep_table(
             source_dataframe,
             target_table.name,
-            schema=target_table.metadata.schema,
+            schema=schema,
             if_exists=if_exists,
             index=False,
         )
