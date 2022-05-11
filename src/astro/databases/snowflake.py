@@ -45,7 +45,7 @@ class SnowflakeDatabase(BaseDatabase):
         source_dataframe.columns = source_dataframe.columns.str.upper()
         schema = None
         if target_table.metadata:
-            schema = getattr(target_table.metadata, "schema")
+            schema = getattr(target_table.metadata, "schema", None)
 
         db.prep_table(
             source_dataframe,
