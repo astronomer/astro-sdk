@@ -61,7 +61,9 @@ class BaseDatabase(ABC):
         :param sql_statement: Contains SQL query to be run against database
         :param parameters: Optional parameters to be used to render the query
         """
-        return self.hook.run(sql_statement, parameters)
+        if parameters is None:
+            parameters = {}
+        return self.connection.execute(sql_statement, parameters)
 
     def table_exists(self, table: Table) -> bool:
         """
@@ -76,7 +78,7 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
     # Table metadata
     # ---------------------------------------------------------
-    def get_table_qualified_name(self, table: Table) -> str:
+    def get_table_qualified_name(self, table: Table) -> str:  # skipcq: PYL-R0201
         """
         Return table qualified name. This is Database-specific.
         For instance, in Sqlite this is the table name. In Snowflake, however, it is the database, schema and table
@@ -86,7 +88,9 @@ class BaseDatabase(ABC):
         # Initially this method belonged to the Table class.
         # However, in order to have an agnostic table class implementation,
         # we are keeping all methods which vary depending on the database within the Database class.
-        raise NotImplementedError
+        schema = table.metadata.schema if table.metadata else None
+        qualified_name: str = f"{schema}.{table.name}" if schema else table.name
+        return qualified_name
 
     # ---------------------------------------------------------
     # Table creation & deletion methods
