@@ -12,7 +12,7 @@ DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
 
 class SnowflakeDatabase(BaseDatabase):
     """
-    Handle interactions with Postgres databases. If this class is successful, we should not have any Postgres-specific
+    Handle interactions with snowflake databases. If this class is successful, we should not have any snowflake-specific
     logic in other parts of our code-base.
     """
 
@@ -21,7 +21,7 @@ class SnowflakeDatabase(BaseDatabase):
 
     @property
     def hook(self):
-        """Retrieve Airflow hook to interface with the Postgres database."""
+        """Retrieve Airflow hook to interface with the snowflake database."""
         return SnowflakeHook(snowflake_conn_id=self.conn_id)
 
     def load_pandas_dataframe_to_table(
