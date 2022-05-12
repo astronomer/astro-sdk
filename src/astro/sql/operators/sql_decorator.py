@@ -1,5 +1,5 @@
 import inspect
-from typing import Callable, Dict, Iterable, Mapping, Optional, Union
+from typing import Callable, Dict, Iterable, List, Mapping, Optional, Union
 
 import pandas as pd
 from airflow.decorators.base import (
@@ -8,8 +8,6 @@ from airflow.decorators.base import (
     task_decorator_factory,
 )
 from airflow.hooks.base import BaseHook
-from airflow.utils.db import provide_session
-from sqlalchemy.sql.functions import Function
 
 from astro.constants import Database
 from astro.settings import SCHEMA
@@ -22,7 +20,6 @@ from astro.utils.database import (
 )
 from astro.utils.load import load_dataframe_into_sql_table
 from astro.utils.schema_util import create_schema_query, schema_exists
-from astro.utils.table_handler import TableHandler
 
 
 class SqlExecutor(BaseOperator):
@@ -146,13 +143,13 @@ class SqlExecutor(BaseOperator):
             )
 
 
-class SqlDecoratedOperator(DecoratedOperator, TableHandler):
+class SqlDecoratedOperator(DecoratedOperator):
     def __init__(
         self,
         conn_id: Optional[str] = None,
         autocommit: bool = False,
         parameters: Optional[dict] = None,
-        handler: Optional[Function] = None,
+        handler: Optional[Callable] = None,
         database: Optional[str] = None,
         schema: Optional[str] = None,
         warehouse: Optional[str] = None,
@@ -161,6 +158,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         sql="",
         **kwargs,
     ):
+        super().__init__(**kwargs)
         # Init vars
         self.raw_sql = raw_sql
         self.autocommit = autocommit
@@ -173,25 +171,35 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
 
         # get output table from op_kwargs
-        if self.op_kwargs.get("output_table"):
-            self.output_table: Optional[Table] = self.op_kwargs.pop("output_table")
-        else:
-            self.output_table = None
-
-        # handler function for processing resultProxy
-        if self.op_kwargs.get("handler"):
-            self.handler = self.op_kwargs.pop("handler")
+        self.output_table: Optional[Table] = self.op_kwargs.pop("output_table", None)
 
         # init db related params via op_kwargs
+        # todo (kaxil): same as above, shouldn't we use the value that is explicitly passed
+        # Example: self.conn_id = self.conn_id or self.op_kwargs.pop("conn_id", None)
+        # Do we need op_kwargs.pop vs op_kwargs.get
         self.conn_id = self.op_kwargs.pop("conn_id", conn_id)
         self.database = self.op_kwargs.pop("database", database)
         self.schema = self.op_kwargs.pop("schema", schema)
         self.warehouse = self.op_kwargs.pop("warehouse", warehouse)
         self.role = self.op_kwargs.pop("role", role)
 
-        super().__init__(
-            **kwargs,
-        )
+        # handler function for processing resultProxy
+        self.handler = self.op_kwargs.pop("handler", handler)
+
+        # find the first table from the inputs to infer below params
+        input_table = self._extract_input_table()
+        if input_table:
+            self.conn_id = input_table.conn_id or self.conn_id
+            self.database = input_table.database or self.database
+            self.schema = input_table.schema or self.schema
+            self.warehouse = input_table.warehouse or self.warehouse
+            self.role = input_table.role or self.role
+
+        if self.output_table:
+            self.output_table.conn_id = self.output_table.conn_id or self.conn_id
+            self.output_table.database = self.output_table.database or self.database
+            self.output_table.warehouse = self.output_table.warehouse or self.warehouse
+            self.output_table.schema = self.output_table.schema or SCHEMA
 
     @property
     def conn_type(self):
@@ -213,7 +221,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
 
     def execute(self, context: Dict):
 
-        # check for string/sqla based sql queries
+        # check for string/sqla based sql queries (This is used for append, merge and all checks incl. stats)
         if not isinstance(self.sql, str):
             cursor = self._run_sql(self.sql, self.parameters)
             if self.handler is not None:
@@ -221,7 +229,6 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             return cursor
 
         # init db related vars
-        self._set_variables_from_first_table()
         self.database = self.database or self.database_from_conn_id
 
         # init db var - schema, user
@@ -293,7 +300,6 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
 
             self.log.info("Returning table %s", self.output_table)
             # misleading method name - populate_output_table_params()
-            self.populate_output_table()
             return self.output_table
 
         elif self.raw_sql:
@@ -306,7 +312,6 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 table_name=output_table_name,
             )
             # misleading method name - populate_output_table_params()
-            self.populate_output_table()
             self.log.info("Returning table %s", self.output_table)
             return self.output_table
 
@@ -389,6 +394,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         return get_sqlalchemy_engine(self.hook)
 
     def _run_sql(self, sql, parameters=None):
+        """Run SQL using SQLAlchemy Engine"""
         return run_sql(
             engine=self.get_sql_alchemy_engine(),
             sql_statement=sql,
@@ -421,17 +427,6 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             statement = f"CREATE TABLE {output_table_name} AS ({clean_trailing_semicolon(query)});"
         return statement
 
-    @provide_session
-    def pre_execute(self, context, session=None):
-        """This hook is triggered right before self.execute() is called."""
-        pass
-
-    def post_execute(self, context, result=None):
-        """
-        This hook is triggered right after self.execute() is called.
-        """
-        pass
-
     # name can be improved.
     def _process_params(self):
         if self.conn_type == "snowflake":
@@ -451,6 +446,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         else:
             return self.default_transform(self.parameters, context)
 
+    # This should be removed in Database refactor
     def default_transform(self, parameters, context):
         for k, v in parameters.items():
             if isinstance(v, Table):
@@ -460,16 +456,11 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 context[k] = ":" + k
         return context
 
-    def _cleanup(self):
-        """Remove DAG's objects from S3 and db."""
-        # To-do
-        pass
-
     # misleading name - should be load_dataframes_from_op_args_to_sql_table
     def load_dataframes_from_op_args_to_sql_table(self):
         final_args = []
         for i, arg in enumerate(self.op_args):
-            if type(arg) == pd.DataFrame:
+            if isinstance(arg, pd.DataFrame):
                 pandas_dataframe = arg
                 output_table_name = create_unique_table_name()
                 output_table = Table(
@@ -495,7 +486,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
     def load_dataframes_from_op_kwargs_to_sql_table(self):
         final_kwargs = {}
         for key, value in self.op_kwargs.items():
-            if type(value) == pd.DataFrame:
+            if isinstance(value, pd.DataFrame):
                 pandas_dataframe = value
                 output_table_name = create_unique_table_name()
                 output_table = Table(
@@ -516,6 +507,52 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             else:
                 final_kwargs[key] = value
         self.op_kwargs = final_kwargs
+
+    # todo: Add unit tests or replace the unit tests for Table Handler
+    def _extract_input_table(self) -> Optional[Table]:
+        """
+        When we create our SQL operation, we run with the assumption that the first table given is the "main table".
+        This means that a user doesn't need to define default conn_id, database, etc. in the function unless they want
+        to create default values.
+        """
+        if self.op_args:
+            self.log.debug("Extracting Input table from op_args")
+            args_of_table_type = [arg for arg in self.op_args if isinstance(arg, Table)]
+
+            # Check to see if all tables belong to same conn_id. Otherwise, we this can go wrong for cases
+            # 1. When we have tables from different DBs.
+            # 2. When we have tables from different conn_id, since they can be configured with different
+            # database/schema etc.
+            if (
+                len(args_of_table_type) == 1
+                or len({arg.conn_id for arg in args_of_table_type}) == 1
+            ):
+                return args_of_table_type[0]
+
+        if self.op_kwargs and self.python_callable:
+            self.log.debug("Extracting Input table from op_kwargs")
+            kwargs_of_table_type: List[Table] = [
+                self.op_kwargs[kwarg.name]
+                for kwarg in inspect.signature(self.python_callable).parameters.values()
+                if isinstance(self.op_kwargs[kwarg.name], Table)
+            ]
+            if (
+                len(kwargs_of_table_type) == 1
+                or len({kwarg.conn_id for kwarg in kwargs_of_table_type}) == 1
+            ):
+                return kwargs_of_table_type[0]
+
+        # If there is no first table via op_ags or kwargs, we check the parameters
+        if self.parameters:
+            params_of_table_type = [
+                param for param in self.parameters.values() if isinstance(param, Table)
+            ]
+            if (
+                len(params_of_table_type) == 1
+                or len({param.conn_id for param in params_of_table_type}) == 1
+            ):
+                return params_of_table_type[0]
+        return None
 
 
 def _transform_task(
