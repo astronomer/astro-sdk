@@ -1,8 +1,6 @@
 import inspect
 from typing import Optional
 
-import pandas
-
 from astro.sql.tables import Metadata, Table
 
 
@@ -15,49 +13,40 @@ class TableHandler:
         """
         first_table: Optional[Table] = None
         if self.op_args:
-            table_index = [
-                x for x, t in enumerate(self.op_args) if isinstance(t, Table)
-            ]
-            conn_id_set = {x.conn_id for x in self.op_args if isinstance(x, Table)}
+            args_of_table_type = [arg for arg in self.op_args if isinstance(arg, Table)]
+
             # Check to see if all tables belong to same conn_id. Otherwise, we this can go wrong for cases
             # 1. When we have tables from different DBs.
             # 2. When we have tables from different conn_id, since they can be configured with different
             # database/schema etc.
-            if table_index and len(conn_id_set) == 1:
-                first_table = self.op_args[table_index[0]]
+            if (
+                len(args_of_table_type) == 1
+                or len({arg.conn_id for arg in args_of_table_type}) == 1
+            ):
+                first_table = args_of_table_type[0]
 
         if not first_table and self.op_kwargs and self.python_callable:
-            table_kwargs = [
-                x
-                for x in inspect.signature(self.python_callable).parameters.values()
-                if (
-                    x.annotation == Table
-                    and isinstance(self.op_kwargs[x.name], Table)
-                    or x.annotation == pandas.DataFrame
-                    and isinstance(self.op_kwargs[x.name], Table)
-                )
+            kwargs_of_table_type = [
+                self.op_kwargs[kwarg.name]
+                for kwarg in inspect.signature(self.python_callable).parameters.values()
+                if isinstance(self.op_kwargs[kwarg.name], Table)
             ]
-            conn_id_set = {
-                self.op_kwargs[x.name].conn_id
-                for x in inspect.signature(self.python_callable).parameters.values()
-                if (
-                    x.annotation == Table
-                    and isinstance(self.op_kwargs[x.name], Table)
-                    or x.annotation == pandas.DataFrame
-                    and isinstance(self.op_kwargs[x.name], Table)
-                )
-            }
-            if table_kwargs and len(conn_id_set) == 1:
-                first_table = self.op_kwargs[table_kwargs[0].name]
+            if (
+                len(kwargs_of_table_type) == 1
+                or len({kwarg.conn_id for kwarg in kwargs_of_table_type}) == 1
+            ):
+                first_table = kwargs_of_table_type[0]
 
         # If there is no first table via op_ags or kwargs, we check the parameters
         if not first_table and self.parameters:
-            param_tables = [t for t in self.parameters.values() if isinstance(t, Table)]
-            conn_id_set = {
-                t.conn_id for t in self.parameters.values() if isinstance(t, Table)
-            }
-            if param_tables and len(conn_id_set) == 1:
-                first_table = param_tables[0]
+            params_of_table_type = [
+                param for param in self.parameters.values() if isinstance(param, Table)
+            ]
+            if (
+                len(params_of_table_type) == 1
+                or len({param.conn_id for param in params_of_table_type}) == 1
+            ):
+                first_table = params_of_table_type[0]
 
         if first_table:
             self.conn_id = first_table.conn_id or self.conn_id
