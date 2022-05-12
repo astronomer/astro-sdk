@@ -20,6 +20,7 @@ from astro.utils.database import (
 )
 from astro.utils.load import load_dataframe_into_sql_table
 from astro.utils.schema_util import create_schema_query, schema_exists
+from astro.utils.table_handler import TableHandler
 
 
 class SqlExecutor(BaseOperator):
@@ -143,7 +144,7 @@ class SqlExecutor(BaseOperator):
             )
 
 
-class SqlDecoratedOperator(DecoratedOperator):
+class SqlDecoratedOperator(DecoratedOperator, TableHandler):
     def __init__(
         self,
         conn_id: Optional[str] = None,
