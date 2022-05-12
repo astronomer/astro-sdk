@@ -214,6 +214,7 @@ def database_table_fixture(request):
         Database.SQLITE: "sqlite_default",
         Database.BIGQUERY: "google_cloud_default",
         Database.POSTGRES: "postgres_conn",
+        Database.SNOWFLAKE: "snowflake_conn",
     }
     conn_id = database_name_to_conn_id[database_name]
     database = create_database(conn_id)
