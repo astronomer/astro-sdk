@@ -44,11 +44,10 @@ class SQL(BaseOperator):
 
     def handle_schema(self):
         # Create DEFAULT SCHEMA if not created.
-        self.database_impl.set_schema_if_needed(SCHEMA)
+        self.database_impl.create_schema_if_needed(SCHEMA)
         if not self.raw_sql:
             # Create a table name for the temp table
-            if not self.database_impl.schema_exists(self.schema):
-                self.database_impl.set_schema_if_needed(self.schema)
+            self.database_impl.create_schema_if_needed(self.schema)
             self.database_impl.drop_table(
                 Table(
                     name=self.output_table_name,
@@ -70,9 +69,8 @@ class SQL(BaseOperator):
             return self._output_table_name
         if not self.output_table:
             self.output_table = Table()
-            self._output_table_name = self.output_table.name
-        else:
-            self._output_table_name = self.output_table.name
+        self._output_table_name = self.output_table.name
+        return self._output_table_name
 
     def template(self, context: Dict):
 

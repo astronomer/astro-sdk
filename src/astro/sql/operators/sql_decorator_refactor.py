@@ -14,6 +14,7 @@ from astro.utils.table_handler_new import TableHandler
 
 
 class SqlDecoratedOperator(SQL, DecoratedOperator, TableHandler):
+    # todo: Add docstrings
     def __init__(
         self,
         conn_id: Optional[str] = None,
@@ -30,13 +31,8 @@ class SqlDecoratedOperator(SQL, DecoratedOperator, TableHandler):
     ):
         self.kwargs = kwargs or {}
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
-        if self.op_kwargs.get("output_table"):
-            self.output_table: Optional[Table] = self.op_kwargs.pop("output_table")
-        else:
-            self.output_table = None
-
-        if self.op_kwargs.get("handler"):
-            self.handler = self.op_kwargs.pop("handler")
+        self.output_table: Optional[Table] = self.op_kwargs.pop("output_table", None)
+        self.handler = self.op_kwargs.pop("handler", None)
 
         super().__init__(
             sql=sql,
@@ -53,13 +49,12 @@ class SqlDecoratedOperator(SQL, DecoratedOperator, TableHandler):
         )
 
     @staticmethod
-    def convert_old_table_to_new(table):
+    def convert_old_table_to_new(table: OldTable) -> Table:
         """
         This function is only temporary until other functions use the new table format.
 
         Converts a TempTable or a Table object into the new Table format.
-        :param table:
-        :return:
+        :param table: old table
         """
         if isinstance(table, TempTable):
             table = table.to_table(None)
@@ -80,13 +75,18 @@ class SqlDecoratedOperator(SQL, DecoratedOperator, TableHandler):
 
         self._set_variables_from_first_table()
         self.database_impl = create_database(self.conn_id)
+
+        # Find and load dataframes from op_arg and op_kwarg into Table
+        self.create_output_table(self.output_table_name)
         self.load_op_arg_dataframes_into_sql()
         self.load_op_kwarg_dataframes_into_sql()
+
+        # Get SQL from function and render templates in the SQL String
         self.read_sql_from_function()
         self.move_function_params_into_sql_params(context)
         self.template(context)
         self.handle_schema()
-        self.create_output_table(self.output_table_name)
+
         if self.raw_sql:
             result = self.database_impl.run_sql(
                 sql_statement=self.sql, parameters=self.parameters
@@ -104,7 +104,6 @@ class SqlDecoratedOperator(SQL, DecoratedOperator, TableHandler):
     def handle_conversions(self):
         """
         This is a temporary holdover until all other functions use the new table format
-        :return:
         """
         self.op_args = [
             self.convert_old_table_to_new(t) if isinstance(t, OldTable) else t
@@ -115,43 +114,38 @@ class SqlDecoratedOperator(SQL, DecoratedOperator, TableHandler):
             for k, t in self.op_kwargs.items()
         }
 
-    def create_output_table(self, output_table_name):
-        if self.output_table:
-            self.populate_output_table()
-            self.log.info("Returning table %s", self.output_table)
-            return self.output_table
-        self.output_table = Table(
-            name=output_table_name,
-        )
+    def create_output_table(self, output_table_name: str) -> Table:
+        if not self.output_table:
+            self.output_table = Table(name=output_table_name)
         self.populate_output_table()
         self.log.info("Returning table %s", self.output_table)
         return self.output_table
 
-    def read_sql_from_function(self):
+    def read_sql_from_function(self) -> None:
         """
         This function runs the provided python function and stores the resulting
         SQL query in the `sql` attribute. We can also store parameters if the user
         provides a dictionary.
-        :return:
         """
         if self.sql == "":
-            sql_stuff = self.python_callable(*self.op_args, **self.op_kwargs)
+            # Runs the Python Callable which returns a string
+            returned_value = self.python_callable(*self.op_args, **self.op_kwargs)
             # If we return two things, assume the second thing is the params
-            if len(sql_stuff) == 2:
-                self.sql, self.parameters = sql_stuff
+            if len(returned_value) == 2:
+                self.sql, self.parameters = returned_value
             else:
-                self.sql = sql_stuff
+                self.sql = returned_value
                 self.parameters = {}
-        elif self.sql[-4:] == ".sql":
+        elif self.sql.endswith(".sql"):
             with open(self.sql) as file:
                 self.sql = file.read().replace("\n", " ")
 
-    def move_function_params_into_sql_params(self, context):
+    def move_function_params_into_sql_params(self, context: Dict) -> None:
         """
         Pulls values from the function op_args and op_kwargs and places them into
         parameters for SQLAlchemy to parse
-        :param context:
-        :return:
+
+        :param context: Airflow's Context dictionary used for rendering templates
         """
         if self.op_kwargs:
             self.parameters.update(self.op_kwargs)  # type: ignore
@@ -163,44 +157,29 @@ class SqlDecoratedOperator(SQL, DecoratedOperator, TableHandler):
             self.parameters = {
                 k: self.render_template(v, context) for k, v in self.parameters.items()  # type: ignore
             }
-        self.parameters.update(self.op_kwargs)  # type: ignore
 
     def load_op_arg_dataframes_into_sql(self):
+        """Identifies dataframes in op_args and loads them to the table"""
         final_args = []
         for arg in self.op_args:
-            if type(arg) == pd.DataFrame:
-                output_table = Table(
-                    conn_id=self.conn_id,
-                    metadata=Metadata(
-                        database=self.database,
-                        schema=self.schema,
-                        warehouse=self.warehouse,
-                    ),
-                )
+            if isinstance(arg, pd.DataFrame):
                 self.database_impl.load_pandas_dataframe_to_table(
-                    source_dataframe=arg, target_table=output_table
+                    source_dataframe=arg, target_table=self.output_table
                 )
-                final_args.append(output_table)
+                final_args.append(self.output_table)
             else:
                 final_args.append(arg)
             self.op_args = tuple(final_args)
 
     def load_op_kwarg_dataframes_into_sql(self):
+        """Identifies dataframes in op_kwargs and loads them to the table"""
         final_kwargs = {}
         for key, value in self.op_kwargs.items():
-            if type(value) == pd.DataFrame:
-                output_table = Table(
-                    conn_id=self.conn_id,
-                    metadata=Metadata(
-                        database=self.database,
-                        schema=self.schema,
-                        warehouse=self.warehouse,
-                    ),
-                )
+            if isinstance(value, pd.DataFrame):
                 self.database_impl.load_pandas_dataframe_to_table(
-                    source_dataframe=value, target_table=output_table
+                    source_dataframe=value, target_table=self.output_table
                 )
-                final_kwargs[key] = output_table
+                final_kwargs[key] = self.output_table
             else:
                 final_kwargs[key] = value
         self.op_kwargs = final_kwargs

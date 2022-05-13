@@ -4,7 +4,6 @@ from typing import Callable, Dict, Iterable, Mapping, Optional, Union
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator, task_decorator_factory
 from airflow.hooks.base import BaseHook
-from airflow.utils.db import provide_session
 from sqlalchemy.sql.functions import Function
 
 from astro.constants import Database
@@ -258,17 +257,6 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             statement = f"CREATE TABLE {output_table_name} AS ({clean_trailing_semicolon(query)});"
         return statement
 
-    @provide_session
-    def pre_execute(self, context, session=None):
-        """This hook is triggered right before self.execute() is called."""
-        pass
-
-    def post_execute(self, context, result=None):
-        """
-        This hook is triggered right after self.execute() is called.
-        """
-        pass
-
     def _process_params(self):
         if self.conn_type == "snowflake":
             self.parameters = snowflake_transform.process_params(
@@ -294,15 +282,10 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 context[k] = ":" + k
         return context
 
-    def _cleanup(self):
-        """Remove DAG's objects from S3 and db."""
-        # To-do
-        pass
-
     def convert_op_arg_dataframes(self):
         final_args = []
         for i, arg in enumerate(self.op_args):
-            if type(arg) == pd.DataFrame:
+            if isinstance(arg, pd.DataFrame):
                 pandas_dataframe = arg
                 output_table_name = create_unique_table_name()
                 output_table = Table(
@@ -327,7 +310,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
     def convert_op_kwarg_dataframes(self):
         final_kwargs = {}
         for key, value in self.op_kwargs.items():
-            if type(value) == pd.DataFrame:
+            if isinstance(value, pd.DataFrame):
                 pandas_dataframe = value
                 output_table_name = create_unique_table_name()
                 output_table = Table(
@@ -360,7 +343,6 @@ def _transform_task(
     Accepts kwargs for operator kwarg. Can be reused in a single DAG.
 
     :param python_callable: Function to decorate
-    :type python_callable: Optional[Callable]
     :param multiple_outputs: if set, function return value will be
         unrolled to multiple XCom values. List/Tuples will unroll to xcom values
         with index as key. Dict will unroll to xcom values with keys as XCom keys.
@@ -397,19 +379,14 @@ def transform_decorator(
     **kwargs,
 ):
     """
-    :param python_callable:
-    :param multiple_outputs:
-    :param postgres_conn_id: The :ref:`postgres conn id <howto/connection:postgres>`
-        reference to a specific postgres database.
-    :type postgres_conn_id: str
-    :param autocommit: if True, each command is automatically committed.
-        (default value: False)
-    :type autocommit: bool
-    :param parameters: (optional) the parameters to render the SQL query with.
-    :type parameters: dict or iterable
+    :param python_callable: A reference to an object that is callable
+    :param multiple_outputs: if set, function return value will be
+        unrolled to multiple XCom values. Dict will unroll to xcom values with keys as keys.
+        Defaults to False.
+    :param conn_id: The reference to a specific Database for input and output table.
+    :param autocommit: if True, each command is automatically committed. (default value: False)
+    :param parameters: The parameters to render the SQL query with.
     :param database: name of database which overwrite defined one in connection
-    :type database: str
-    @return:
     """
     return _transform_task(
         python_callable=python_callable,

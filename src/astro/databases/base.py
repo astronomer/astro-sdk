@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Optional
+from typing import Dict, Optional
 
 import pandas as pd
 import sqlalchemy
@@ -256,26 +256,31 @@ class BaseDatabase(ABC):
     # Schema Management
     # ---------------------------------------------------------
 
-    def set_schema_if_needed(self, schema):
+    def create_schema_if_needed(self, schema):
         """
         This function checks if the expected schema exists in the database. If the schema does not exist,
         it will attempt to create it.
 
-        :param schema:
-        :return:
+        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
         """
-        raise NotImplementedError
+        statement = self._create_schema_statement.format(schema)
+        self.run_sql(statement)
 
     def schema_exists(self, schema):
         """
         Checks if a schema exists in the database
 
-        :param schema:
-        :return:
+        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
         """
         raise NotImplementedError
 
-    def add_templates_to_context(self, parameters, context):  # skipcq
+    # ---------------------------------------------------------
+    # Context & Template Rendering methods (Transformations)
+    # ---------------------------------------------------------
+
+    def add_templates_to_context(
+        self, parameters: Dict, context: Dict
+    ) -> Dict:  # skipcq
         """
         When running functions through the `aql.transform` and `aql.render` functions, we need to add
         the parameters given to the SQL statement to the Airflow context dictionary. This is how we can
@@ -289,13 +294,20 @@ class BaseDatabase(ABC):
         looking into the documentation of your database and seeing what best practices exist (e.g. Identifier wrappers
         in snowflake).
 
-        :param parameters:
-        :param context:
-        :return:
+        :param parameters: A Dict of SQL key-value parameters
+        :param context: Airflow Context dictionary
+        :return: Dictionary with values with Table type replaced with the table name
         """
         for k, v in parameters.items():
             if isinstance(v, Table):
-                context[k] = v.name
+                context[k] = self.get_table_qualified_name(v)
             else:
                 context[k] = ":" + k
         return context
+
+    def process_sql_parameters(self, parameters: Dict):
+        """
+        Used for DB-specific processing on parameters. It is used in Snowflake in conjunction with
+        add_templates_to_context to pass the name of the table
+        """
+        return parameters
