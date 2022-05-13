@@ -21,6 +21,7 @@ from airflow.utils import timezone
 from pandas.testing import assert_frame_equal
 
 from astro.constants import Database
+from astro.databases import create_database
 from astro.sql.operators.agnostic_load_file import load_file
 from astro.sql.tables import Metadata, Table
 from astro.utils.dependencies import gcs, s3
@@ -195,8 +196,10 @@ def test_load_file_templated_filename(sample_dag, sql_server, test_table):
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
-
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    db = create_database(test_table.conn_id)
+    df = sql_hook.get_pandas_df(
+        f"SELECT * FROM {db.get_table_qualified_name(test_table)}"
+    )
     assert len(df) == 3
 
 
@@ -244,9 +247,11 @@ def test_aql_load_file_local_file_pattern(sample_dag, test_table, sql_server):
         )
     test_utils.run_dag(sample_dag)
 
+    db = create_database(test_table.conn_id)
     # Read table from db
     df = pd.read_sql(
-        f"SELECT * FROM {test_table.qualified_name()}", con=sql_hook.get_conn()
+        f"SELECT * FROM {db.get_table_qualified_name(test_table)}",
+        con=sql_hook.get_conn(),
     )
     assert test_df_rows * 2 == df.shape[0]
 
@@ -275,8 +280,10 @@ def test_load_file_using_file_connection(
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
-
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    db = create_database(test_table.conn_id)
+    df = sql_hook.get_pandas_df(
+        f"SELECT * FROM {db.get_table_qualified_name(test_table)}"
+    )
     assert len(df) == 3
 
 
@@ -317,7 +324,10 @@ def test_load_file(sample_dag, sql_server, file_type, test_table):
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    db = create_database(test_table.conn_id)
+    df = sql_hook.get_pandas_df(
+        f"SELECT * FROM {db.get_table_qualified_name(test_table)}"
+    )
 
     assert len(df) == 3
     expected = pd.DataFrame(
@@ -344,7 +354,7 @@ def test_load_file(sample_dag, sql_server, file_type, test_table):
 )
 @pytest.mark.parametrize(
     "test_table",
-    [{"is_temp": False, "param": {"schema": "custom_schema"}}],
+    [{"is_temp": False, "param": {"metadata": Metadata(schema="custom_schema")}}],
     indirect=True,
 )
 @pytest.mark.parametrize("file_type", ["csv"])
@@ -358,7 +368,10 @@ def test_load_file_with_named_schema(sample_dag, sql_server, file_type, test_tab
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    db = create_database(test_table.conn_id)
+    df = sql_hook.get_pandas_df(
+        f"SELECT * FROM {db.get_table_qualified_name(test_table)}"
+    )
     assert len(df) == 3
     expected = pd.DataFrame(
         [
@@ -420,8 +433,8 @@ def test_aql_nested_ndjson_file_with_default_sep_param(
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
-
-    df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    db = create_database(test_table.conn_id)
+    df = hook.get_pandas_df(f"SELECT * FROM {db.get_table_qualified_name(test_table)}")
     assert df.shape == (1, 36)
     assert "payload_size" in df.columns
 
@@ -439,8 +452,8 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_sep_params(
             ndjson_normalize_sep="___",
         )
     test_utils.run_dag(sample_dag)
-
-    df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    db = create_database(test_table.conn_id)
+    df = hook.get_pandas_df(f"SELECT * FROM {db.get_table_qualified_name(test_table)}")
     assert df.shape == (1, 36)
     assert "payload___size" in df.columns
 
@@ -460,8 +473,8 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_illegal_sep_params(
             ndjson_normalize_sep=".",
         )
     test_utils.run_dag(sample_dag)
-
-    df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    db = create_database(test_table.conn_id)
+    df = hook.get_pandas_df(f"SELECT * FROM {db.get_table_qualified_name(test_table)}")
     assert df.shape == (1, 36)
     assert "payload_size" in df.columns
 

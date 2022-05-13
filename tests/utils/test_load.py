@@ -13,6 +13,7 @@ from astro.constants import (
     Database,
     FileType,
 )
+from astro.databases import create_database
 from astro.settings import SCHEMA
 from astro.sql.table import create_unique_table_name
 from astro.utils.database import get_sqlalchemy_engine
@@ -36,11 +37,13 @@ EXPECTED_DATA = pd.DataFrame(
 
 
 def create_table(database, hook, table):
-    hook.run(f"DROP TABLE IF EXISTS {table.qualified_name()}")
+    db = create_database(table.conn_id)
+    qualified_name = db.get_table_qualified_name(table)
+    hook.run(f"DROP TABLE IF EXISTS {qualified_name}")
     if database == Database.BIGQUERY.value:
-        hook.run(f"CREATE TABLE {table.qualified_name()} (ID int, Name string);")
+        hook.run(f"CREATE TABLE {qualified_name} (ID int, Name string);")
     else:
-        hook.run(f"CREATE TABLE {table.qualified_name()} (ID int, Name varchar(255));")
+        hook.run(f"CREATE TABLE {qualified_name} (ID int, Name varchar(255));")
 
 
 def describe_load_file_into_dataframe():
@@ -127,10 +130,10 @@ def describe_load_file_into_sql_table():
         load_file_into_sql_table(
             filepath=filepath,
             filetype=FileType.NDJSON,
-            table_name=test_table.table_name,
+            table_name=test_table.name,
             engine=engine,
         )
-        computed = hook.get_pandas_df(f"SELECT * FROM {test_table.table_name}")
+        computed = hook.get_pandas_df(f"SELECT * FROM {test_table.name}")
         computed = computed.rename(columns=str.lower)
         assert_frame_equal(computed, EXPECTED_DATA)
 
@@ -140,7 +143,7 @@ def describe_load_dataframe_into_sql_table():
     @pytest.mark.parametrize("sql_server", ["postgres"], indirect=True)
     @pytest.mark.parametrize(
         "test_table",
-        [{"is_temp": False, "param": {"table_name": table_name}}],
+        [{"param": {"name": table_name}}],
         ids=["named_table"],
         indirect=True,
     )
@@ -148,9 +151,12 @@ def describe_load_dataframe_into_sql_table():
         database, hook = sql_server
         create_table(database, hook, test_table)
         dataframe = pd.DataFrame([{"id": 27, "name": "Jim Morrison"}])
-        test_table.schema = SCHEMA
+        test_table.metadata.schema = SCHEMA
         load_dataframe_into_sql_table(dataframe, test_table, hook)
-        computed = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+        db = create_database(test_table.conn_id)
+        computed = hook.get_pandas_df(
+            f"SELECT * FROM {db.get_table_qualified_name(test_table)}"
+        )
         computed = computed.rename(columns=str.lower)
         expected = pd.DataFrame(
             [
@@ -158,13 +164,13 @@ def describe_load_dataframe_into_sql_table():
             ]
         )
         assert_frame_equal(computed, expected)
-        hook.run(f"DROP TABLE IF EXISTS {test_table.qualified_name()}")
+        hook.run(f"DROP TABLE IF EXISTS { db.get_table_qualified_name(test_table)}")
 
     @pytest.mark.integration
     @pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
     @pytest.mark.parametrize(
         "test_table",
-        [{"is_temp": False, "param": {"table_name": table_name}}],
+        [{"param": {"name": table_name}}],
         ids=["named_table"],
         indirect=True,
     )
@@ -173,7 +179,10 @@ def describe_load_dataframe_into_sql_table():
         create_table(database, hook, test_table)
         dataframe = pd.DataFrame([{"id": 27, "name": "Jim Morrison"}])
         load_dataframe_into_sql_table(dataframe, test_table, hook)
-        computed = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+        db = create_database(test_table.conn_id)
+        computed = hook.get_pandas_df(
+            f"SELECT * FROM {db.get_table_qualified_name(test_table)}"
+        )
         expected = pd.DataFrame(
             [
                 {"id": 27, "name": "Jim Morrison"},

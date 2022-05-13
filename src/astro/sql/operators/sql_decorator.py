@@ -8,6 +8,7 @@ from airflow.utils.db import provide_session
 from sqlalchemy.sql.functions import Function
 
 from astro.constants import Database
+from astro.databases import create_database
 from astro.settings import SCHEMA
 from astro.sql.tables import Metadata, Table
 from astro.utils import get_hook, postgres_transform, snowflake_transform
@@ -119,17 +120,29 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             #         schema=SCHEMA,
             #     )
             # else:
-            output_table_name = getattr(self.output_table, "name")
-            metadata = getattr(self.output_table, "metadata")
-            schema = getattr(metadata, "schema")
-            full_output_table_name = self.handle_output_table_schema(
-                output_table_name, schema=schema
-            )
+            #     output_table_name = getattr(self.output_table, "name", None)
+            #     metadata = getattr(self.output_table, "metadata", None)
+            #     schema = getattr(metadata, "schema", None)
+            #     full_output_table_name = self.handle_output_table_schema(
+            #         output_table_name, schema=schema
+            #     )
+
+            if self.output_table is None:
+                self.output_table = Table(
+                    name=output_table_name,
+                    conn_id=self.conn_id,
+                    metadata=Metadata(schema=SCHEMA),
+                )
+
+            db = create_database(self.conn_id)
 
             self._run_sql(
-                f"DROP TABLE IF EXISTS {full_output_table_name};", self.parameters
+                f"DROP TABLE IF EXISTS {db.get_table_qualified_name(self.output_table)};",
+                self.parameters,
             )
-            self.sql = self.create_temporary_table(self.sql, full_output_table_name)
+            self.sql = self.create_temporary_table(
+                self.sql, db.get_table_qualified_name(self.output_table)
+            )
         else:
             # If there's no SQL to run we simply return
             if self.sql == "" or not self.sql:
@@ -198,9 +211,9 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         schema = schema or SCHEMA
         database = create_database_from_conn_id(self.conn_id)
         if database in (Database.POSTGRES, Database.BIGQUERY) and self.schema:
-            output_table_name = schema + "." + output_table_name
+            output_table_name = f"{schema}.{output_table_name}"
         elif database == Database.SNOWFLAKE and self.schema and "." not in self.sql:
-            output_table_name = self.database + "." + schema + "." + output_table_name
+            output_table_name = f"{self.database}.{schema}.{output_table_name}"
         return output_table_name
 
     def _set_schema_if_needed(self, schema=None):

@@ -11,7 +11,7 @@ from airflow.models.dag import DagContext
 from airflow.models.xcom_arg import XComArg
 
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
-from astro.sql.tables import Table
+from astro.sql.tables import Metadata, Table
 
 
 def get_paths_for_render(path):
@@ -81,6 +81,8 @@ def render_single_path(
             }
             if front_matter_opts.get("output_table"):
                 out_table_dict = front_matter_opts.pop("output_table")
+                if "metadata" in out_table_dict:
+                    out_table_dict["metadata"] = Metadata(**out_table_dict["metadata"])
                 op_kwargs = {"output_table": Table(**out_table_dict)}
             operator_kwargs = set_kwargs_with_defaults(
                 front_matter_opts, conn_id, database, role, schema, warehouse
@@ -255,10 +257,10 @@ class ParsedSqlOperator(SqlDecoratedOperator):
 
     def set_values(self, table: Table):
         self.conn_id = self.conn_id or table.conn_id  # type: ignore
-        self.schema = self.schema or table.schema  # type: ignore
-        self.database = self.database or table.database  # type: ignore
-        self.warehouse = self.warehouse or table.warehouse  # type: ignore
-        self.role = self.role or table.role  # type: ignore
+        self.schema = self.schema or getattr(table.metadata, "schema", None)  # type: ignore
+        self.database = self.database or getattr(table.metadata, "database", None)  # type: ignore
+        self.warehouse = self.warehouse or getattr(table.metadata, "warehouse", None)  # type: ignore
+        self.role = self.role or getattr(table.metadata, "role", None)  # type: ignore
 
     def execute(self, context: Dict):
         if self.parameters:

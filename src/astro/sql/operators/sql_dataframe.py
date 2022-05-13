@@ -9,7 +9,6 @@ from astro.constants import Database
 from astro.databases import create_database
 from astro.settings import SCHEMA
 from astro.sql.tables import Metadata, Table
-from astro.utils import get_hook
 from astro.utils.database import create_database_from_conn_id
 from astro.utils.dependencies import (
     BigQueryHook,
@@ -17,7 +16,6 @@ from astro.utils.dependencies import (
     SnowflakeHook,
     postgres_sql,
 )
-from astro.utils.load import load_dataframe_into_sql_table
 from astro.utils.table_handler import TableHandler
 
 
@@ -104,13 +102,17 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             else:
                 self.output_table.metadata = Metadata(schema=schema)
 
-            hook = get_hook(
-                conn_id=self.output_table.conn_id,
-                database=getattr(self.output_table.metadata, "database", None),
-                schema=getattr(self.output_table.metadata, "schema", None),
-                warehouse=getattr(self.output_table.metadata, "warehouse", None),
+            # hook = get_hook(
+            #     conn_id=self.output_table.conn_id,
+            #     database=getattr(self.output_table.metadata, "database", None),
+            #     schema=getattr(self.output_table.metadata, "schema", None),
+            #     warehouse=getattr(self.output_table.metadata, "warehouse", None),
+            # )
+            db = create_database(self.output_table.conn_id)
+            db.load_pandas_dataframe_to_table(
+                source_dataframe=pandas_dataframe, target_table=self.output_table
             )
-            load_dataframe_into_sql_table(pandas_dataframe, self.output_table, hook)
+            # load_dataframe_into_sql_table(pandas_dataframe, self.output_table, hook)
             return self.output_table
         else:
             return pandas_dataframe
@@ -134,6 +136,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
     def _get_dataframe(self, table: Table):
         database = create_database_from_conn_id(table.conn_id)
         self.log.info(f"Getting dataframe for {table}")
+        db = create_database(table.conn_id)
         if database in (Database.POSTGRES, Database.POSTGRESQL):
             self.hook = PostgresHook(
                 postgres_conn_id=table.conn_id,
@@ -141,10 +144,12 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             )
             schema = getattr(table.metadata, "schema", None) or SCHEMA
             query = (
-                postgres_sql.SQL("SELECT * FROM {schema}.{input_table}")
+                postgres_sql.SQL("SELECT * FROM {input_table}")
                 .format(
                     schema=postgres_sql.Identifier(schema),
-                    input_table=postgres_sql.Identifier(table.name),
+                    input_table=postgres_sql.Identifier(
+                        db.get_table_qualified_name(table)
+                    ),
                 )
                 .as_string(self.hook.get_conn())
             )
@@ -153,7 +158,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             hook = self.get_snow_hook(table)
             df = hook.get_pandas_df(
                 "SELECT * FROM IDENTIFIER(%(input_table)s)",
-                parameters={"input_table": table.name},
+                parameters={"input_table": db.get_table_qualified_name(table)},
             )
         elif database == Database.SQLITE:
             hook = SqliteHook(
@@ -161,11 +166,10 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
                 database=getattr(table.metadata, "database", None),
             )
             engine = hook.get_sqlalchemy_engine()
-            df = pd.read_sql_table(table.name, engine)
+            df = pd.read_sql_table(db.get_table_qualified_name(table), engine)
         elif database == Database.BIGQUERY:
             hook = BigQueryHook(gcp_conn_id=table.conn_id)
             engine = hook.get_sqlalchemy_engine()
-            db = create_database(table.conn_id)
             df = pd.read_sql_table(db.get_table_qualified_name(table), engine)
 
         if self.identifiers_as_lower:

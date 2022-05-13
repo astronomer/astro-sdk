@@ -3,6 +3,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from astro.constants import Database
+from astro.databases import create_database
 from astro.sql.table import create_unique_table_name
 from astro.utils.delete import delete_dataframe_rows_from_table
 
@@ -12,11 +13,13 @@ DEFAULT_SQLITE_CONN_ID = "sqlite_default"
 
 
 def create_table(database, hook, table):
-    hook.run(f"DROP TABLE IF EXISTS {table.qualified_name()}")
+    db = create_database(table.conn_id)
+    qualified_name = db.get_table_qualified_name(table)
+    hook.run(f"DROP TABLE IF EXISTS {qualified_name}")
     if database == Database.BIGQUERY.value:
-        hook.run(f"CREATE TABLE {table.qualified_name()} (ID int, Name string);")
+        hook.run(f"CREATE TABLE {qualified_name} (ID int, Name string);")
     else:
-        hook.run(f"CREATE TABLE {table.qualified_name()} (ID int, Name varchar(255));")
+        hook.run(f"CREATE TABLE {qualified_name} (ID int, Name varchar(255));")
     hook.run(f"INSERT INTO {table_name} (ID, Name) VALUES (1, 'Janis Joplin');")
     hook.run(f"INSERT INTO {table_name} (ID, Name) VALUES (2, 'Jimi Hendrix');")
 
@@ -25,7 +28,7 @@ def create_table(database, hook, table):
 @pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
 @pytest.mark.parametrize(
     "test_table",
-    [{"is_temp": False, "param": {"table_name": table_name}}],
+    [{"param": {"name": table_name}}],
     ids=["named_table"],
     indirect=True,
 )
@@ -35,7 +38,7 @@ def test_delete_dataframe_rows_from_table(test_table, sql_server):
     create_table(database, hook, original_table)
     dataframe = pd.DataFrame([{"id": 2, "name": "Jimi Hendrix"}])
     delete_dataframe_rows_from_table(dataframe, original_table, hook)
-    df = hook.get_pandas_df(f"SELECT * FROM {original_table.table_name}")
+    df = hook.get_pandas_df(f"SELECT * FROM {original_table.name}")
     df = df.rename(columns=str.lower)
 
     assert len(df) == 1

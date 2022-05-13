@@ -26,6 +26,7 @@ from airflow.utils.state import State
 
 # Import Operator
 import astro.sql as aql
+from astro.databases import create_database
 from astro.sql.tables import Table
 from tests.operators import utils as test_utils
 
@@ -132,9 +133,9 @@ class TestSQLiteAppend(unittest.TestCase):
                 append_table=load_append,
             )
         test_utils.run_dag(self.dag)
-
+        db = create_database(load_main.operator.output_table.conn_id)
         df = pd.read_sql(
-            f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
+            f"SELECT * FROM {db.get_table_qualified_name(load_main.operator.output_table)}",
             con=hook.get_conn(),
         )
 
@@ -164,8 +165,9 @@ class TestSQLiteAppend(unittest.TestCase):
                 append_table=load_append,
             )
         test_utils.run_dag(self.dag)
+        db = create_database(load_main.operator.output_table.conn_id)
         df = pd.read_sql(
-            f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
+            f"SELECT * FROM {db.get_table_qualified_name(load_main.operator.output_table)}",
             con=hook.get_conn(),
         )
 
@@ -197,8 +199,9 @@ class TestSQLiteAppend(unittest.TestCase):
                 append_table=load_append,
             )
         test_utils.run_dag(self.dag)
+        db = create_database(load_main.operator.output_table.conn_id)
         df = pd.read_sql(
-            f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
+            f"SELECT * FROM {db.get_table_qualified_name(load_main.operator.output_table)}",
             con=hook.get_conn(),
         )
 
@@ -229,9 +232,9 @@ class TestSQLiteAppend(unittest.TestCase):
                 append_table=load_append,
             )
         test_utils.run_dag(self.dag)
-
+        db = create_database(load_main.operator.output_table.conn_id)
         df = pd.read_sql(
-            f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
+            f"SELECT * FROM {db.get_table_qualified_name(load_main.operator.output_table)}",
             con=hook.get_conn(),
         )
 

@@ -16,6 +16,7 @@ from airflow.utils import timezone
 # Import Operator
 import astro.sql as aql
 from astro.settings import SCHEMA
+from astro.sql.tables import Metadata
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
@@ -42,8 +43,8 @@ TABLES_CACHE: Dict[str, Dict] = {}
                 "load_table": True,
                 "is_temp": False,
                 "param": {
-                    "schema": SCHEMA,
-                    "table_name": test_utils.get_table_name("test_stats_check_1"),
+                    "metadata": Metadata(schema=SCHEMA),
+                    "name": test_utils.get_table_name("test_stats_check_1"),
                 },
             },
             {
@@ -52,7 +53,7 @@ TABLES_CACHE: Dict[str, Dict] = {}
                 "is_temp": False,
                 "param": {
                     "schema": SCHEMA,
-                    "table_name": test_utils.get_table_name("test_stats_check_2"),
+                    "name": test_utils.get_table_name("test_stats_check_2"),
                 },
             },
         ],
@@ -88,8 +89,8 @@ def test_stats_check_outlier_dont_exists(sample_dag, sql_server, test_table):
                 "load_table": True,
                 "is_temp": False,
                 "param": {
-                    "schema": SCHEMA,
-                    "table_name": test_utils.get_table_name("test_stats_check_1"),
+                    "metadata": Metadata(schema=SCHEMA),
+                    "name": test_utils.get_table_name("test_stats_check_1"),
                 },
             },
             {
@@ -98,7 +99,7 @@ def test_stats_check_outlier_dont_exists(sample_dag, sql_server, test_table):
                 "is_temp": False,
                 "param": {
                     "schema": SCHEMA,
-                    "table_name": test_utils.get_table_name("test_stats_check_2"),
+                    "name": test_utils.get_table_name("test_stats_check_2"),
                 },
             },
         ],
