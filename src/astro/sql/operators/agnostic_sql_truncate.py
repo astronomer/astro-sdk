@@ -6,7 +6,7 @@ from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import Database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
-from astro.sql.table import Table
+from astro.sql.tables import Table
 from astro.utils.database import create_database_from_conn_id
 
 
@@ -19,7 +19,7 @@ class SqlTruncateOperator(SqlDecoratedOperator):
         self.sql = ""
         self.table = table
 
-        task_id = get_unique_task_id(table.table_name + "_truncate")
+        task_id = get_unique_task_id(table.name + "_truncate")
 
         def null_function(table: Table):
             pass
@@ -32,20 +32,20 @@ class SqlTruncateOperator(SqlDecoratedOperator):
             op_kwargs={"table": table},
             python_callable=null_function,
             conn_id=self.table.conn_id,
-            database=self.table.database,
-            schema=self.table.schema,
-            warehouse=self.table.warehouse,
+            database=getattr(self.table.metadata, "database", None),
+            schema=getattr(self.table.metadata, "schema", None),
+            warehouse=getattr(self.table.metadata, "warehouse", None),
             **kwargs,
         )
 
     def execute(self, context: Dict):
         database = create_database_from_conn_id(self.table.conn_id)
-        if self.table.schema and database == Database.SQLITE:
+        if getattr(self.table.metadata, "schema", None) and database == Database.SQLITE:
             metadata = MetaData()
         else:
-            metadata = MetaData(schema=self.table.schema)
+            metadata = MetaData(schema=getattr(self.table.metadata, "schema", None))
 
         engine = self.get_sql_alchemy_engine()
-        table_sqla = SqlaTable(self.table.table_name, metadata, autoload_with=engine)
+        table_sqla = SqlaTable(self.table.name, metadata, autoload_with=engine)
         self.sql = table_sqla.delete()
         super().execute(context)

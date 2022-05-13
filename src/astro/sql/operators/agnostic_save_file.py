@@ -6,8 +6,9 @@ from airflow.models.xcom_arg import XComArg
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 
 from astro.constants import Database
+from astro.databases import create_database
 from astro.files import File
-from astro.sql.table import Table
+from astro.sql.tables import Table
 from astro.utils.database import create_database_from_conn_id
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from astro.utils.task_id_helper import get_task_id
@@ -79,13 +80,13 @@ class SaveFile(BaseOperator):
         hook_kwargs = {
             Database.POSTGRES: {
                 "postgres_conn_id": input_table.conn_id,
-                "schema": input_table.database,
+                "schema": getattr(input_table.metadata, "database"),
             },
             Database.SNOWFLAKE: {
                 "snowflake_conn_id": input_table.conn_id,
-                "database": input_table.database,
-                "schema": input_table.schema,
-                "warehouse": input_table.warehouse,
+                "database": getattr(input_table.metadata, "database"),
+                "schema": getattr(input_table.metadata, "schema"),
+                "warehouse": getattr(input_table.metadata, "warehouse"),
             },
             Database.BIGQUERY: {
                 "use_legacy_sql": False,
@@ -109,8 +110,9 @@ class SaveFile(BaseOperator):
                 f"Support types: {list(hook_class.keys())}"
             )
 
+        db = create_database(input_table.conn_id)
         return pd.read_sql(
-            f"SELECT * FROM {input_table.qualified_name()}",
+            f"SELECT * FROM {db.get_table_qualified_name(input_table)}",
             con=input_hook.get_sqlalchemy_engine(),
         )
 

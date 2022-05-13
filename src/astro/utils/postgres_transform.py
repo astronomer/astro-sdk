@@ -1,10 +1,12 @@
-from astro.sql.table import Table
+from astro.databases import create_database
+from astro.sql.tables import Table
 
 
 def add_templates_to_context(parameters, context):
     for k, v in parameters.items():
         if isinstance(v, Table):
-            context[k] = v.qualified_name()
+            db = create_database(v.conn_id)
+            context[k] = db.get_table_qualified_name(v)
         else:
             context[k] = ":" + k
     return context

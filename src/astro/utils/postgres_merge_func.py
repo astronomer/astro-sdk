@@ -1,4 +1,5 @@
-from astro.sql.table import Table
+from astro.databases import create_database
+from astro.sql.tables import Table
 from astro.utils.dependencies import PostgresHook, postgres_sql
 
 
@@ -24,11 +25,13 @@ def postgres_merge_func(
         postgres_sql.SQL("{x}=EXCLUDED.{y}").format(x=x, y=y) for x, y in column_pairs
     ]
 
+    db = create_database(merge_table.conn_id)
+
     query = postgres_sql.SQL(statement).format(
         target_columns=postgres_sql.SQL(",").join(target_column_names),
-        main_table=postgres_sql.Identifier(*target_table.identifier_args()),
+        main_table=postgres_sql.Identifier(*db.get_table_qualified_name(target_table)),
         append_columns=postgres_sql.SQL(",").join(append_column_names),
-        append_table=postgres_sql.Identifier(*merge_table.identifier_args()),
+        append_table=postgres_sql.Identifier(*db.get_table_qualified_name(merge_table)),
         update_statements=postgres_sql.SQL(",").join(update_statements),
         merge_keys=postgres_sql.SQL(",").join(
             [postgres_sql.Identifier(x) for x in merge_keys]

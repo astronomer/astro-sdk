@@ -16,7 +16,7 @@ from astro.sql.operators.sql_decorator import (  # noqa: F401
     transform_decorator,
 )
 from astro.sql.parsers.sql_directory_parser import render  # noqa: F401
-from astro.sql.table import Table
+from astro.sql.tables import Table
 
 
 def transform(

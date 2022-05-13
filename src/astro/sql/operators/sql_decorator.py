@@ -9,7 +9,7 @@ from sqlalchemy.sql.functions import Function
 
 from astro.constants import Database
 from astro.settings import SCHEMA
-from astro.sql.table import Table, TempTable, create_unique_table_name
+from astro.sql.tables import Metadata, Table
 from astro.utils import get_hook, postgres_transform, snowflake_transform
 from astro.utils.database import (
     create_database_from_conn_id,
@@ -110,19 +110,21 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
 
         if not self.raw_sql:
 
-            if not self.output_table or type(self.output_table) == TempTable:
-                output_table_name = create_unique_table_name()
-                self._set_schema_if_needed(schema=SCHEMA)
-                full_output_table_name = self.handle_output_table_schema(
-                    # Since there is no output table defined we have to assume default schema
-                    output_table_name,
-                    schema=SCHEMA,
-                )
-            else:
-                output_table_name = self.output_table.table_name
-                full_output_table_name = self.handle_output_table_schema(
-                    output_table_name, schema=self.output_table.schema
-                )
+            # if not self.output_table or type(self.output_table) == TempTable:
+            #     output_table_name = create_unique_table_name()
+            #     self._set_schema_if_needed(schema=SCHEMA)
+            #     full_output_table_name = self.handle_output_table_schema(
+            #         # Since there is no output table defined we have to assume default schema
+            #         output_table_name,
+            #         schema=SCHEMA,
+            #     )
+            # else:
+            output_table_name = getattr(self.output_table, "name")
+            metadata = getattr(self.output_table, "metadata")
+            schema = getattr(metadata, "schema")
+            full_output_table_name = self.handle_output_table_schema(
+                output_table_name, schema=schema
+            )
 
             self._run_sql(
                 f"DROP TABLE IF EXISTS {full_output_table_name};", self.parameters
@@ -137,21 +139,21 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         # Run execute function of subclassed Operator.
 
         if self.output_table:
-            if type(self.output_table) == TempTable:
-                self.output_table = self.output_table.to_table(
-                    table_name=output_table_name, schema=self.output_table.schema
-                )
+            # if type(self.output_table) == TempTable:
+            #     self.output_table = self.output_table.to_table(
+            #         table_name=output_table_name, schema=self.output_table.schema
+            #     )
             self.log.info("Returning table %s", self.output_table)
             self.populate_output_table()
             return self.output_table
 
-        elif self.raw_sql:
+        if self.raw_sql:
             if self.handler is not None:
                 return self.handler(query_result)
             return None
         else:
             self.output_table = Table(
-                table_name=output_table_name,
+                name=output_table_name,
             )
             self.populate_output_table()
             self.log.info("Returning table %s", self.output_table)
@@ -289,7 +291,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
     def default_transform(self, parameters, context):
         for k, v in parameters.items():
             if isinstance(v, Table):
-                context[k] = v.table_name
+                context[k] = v.name
             else:
                 context[k] = ":" + k
         return context
@@ -304,13 +306,14 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         for i, arg in enumerate(self.op_args):
             if type(arg) == pd.DataFrame:
                 pandas_dataframe = arg
-                output_table_name = create_unique_table_name()
+                # output_table_name = create_unique_table_name()
                 output_table = Table(
-                    table_name=output_table_name,
                     conn_id=self.conn_id,
-                    database=self.database,
-                    schema=self.schema,
-                    warehouse=self.warehouse,
+                    metadata=Metadata(
+                        database=self.database,
+                        schema=self.schema,
+                        warehouse=self.warehouse,
+                    ),
                 )
                 hook = get_hook(
                     conn_id=self.conn_id,
@@ -329,13 +332,13 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         for key, value in self.op_kwargs.items():
             if type(value) == pd.DataFrame:
                 pandas_dataframe = value
-                output_table_name = create_unique_table_name()
                 output_table = Table(
-                    table_name=output_table_name,
                     conn_id=self.conn_id,
-                    database=self.database,
-                    schema=self.schema,
-                    warehouse=self.warehouse,
+                    metadata=Metadata(
+                        database=self.database,
+                        schema=self.schema,
+                        warehouse=self.warehouse,
+                    ),
                 )
                 hook = get_hook(
                     conn_id=self.conn_id,

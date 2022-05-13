@@ -5,7 +5,7 @@ from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import Database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
-from astro.sql.table import Table
+from astro.sql.tables import Table
 from astro.utils.database import create_database_from_conn_id
 from astro.utils.schema_util import (
     get_error_string_for_multiple_dbs,
@@ -97,11 +97,9 @@ class ChecksHandler:
     def prepare_comparison_sql(
         self, main_table: Table, compare_table: Table, engine, metadata_obj
     ):
-        main_table_sqla = SqlaTable(
-            main_table.table_name, metadata_obj, autoload_with=engine
-        )
+        main_table_sqla = SqlaTable(main_table.name, metadata_obj, autoload_with=engine)
         compare_table_sqla = SqlaTable(
-            compare_table.table_name, metadata_obj, autoload_with=engine
+            compare_table.name, metadata_obj, autoload_with=engine
         )
 
         main_table_stats_sql = self.prepare_main_stats_sql(main_table, main_table_sqla)
@@ -139,11 +137,9 @@ class ChecksHandler:
         engine,
         metadata_obj,
     ):
-        main_table_sqla = SqlaTable(
-            main_table.table_name, metadata_obj, autoload_with=engine
-        )
+        main_table_sqla = SqlaTable(main_table.name, metadata_obj, autoload_with=engine)
         compare_table_sqla = SqlaTable(
-            compare_table.table_name, metadata_obj, autoload_with=engine
+            compare_table.name, metadata_obj, autoload_with=engine
         )
 
         main_stats = self.prepare_main_stats_sql(main_table, main_table_sqla)
@@ -192,9 +188,9 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
         self.max_rows_returned = max_rows_returned
         self.conn_id = main_table.conn_id
         self.checks = checks
-        self.database = main_table.database
+        self.database = getattr(main_table.metadata, "database", None)
 
-        task_id = main_table.table_name + "_" + "stats_check"
+        task_id = main_table.name + "_" + "stats_check"
 
         if not tables_from_same_db([main_table, compare_table]):
             raise ValueError(
@@ -211,9 +207,9 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
             raw_sql=True,
             parameters={},
             conn_id=main_table.conn_id,
-            database=main_table.database,
-            schema=main_table.schema,
-            warehouse=main_table.warehouse,
+            database=getattr(main_table.metadata, "database", None),
+            schema=getattr(main_table.metadata, "schema", None),
+            warehouse=getattr(main_table.metadata, "warehouse", None),
             task_id=task_id,
             op_args=(),
             handler=handler_func,
@@ -235,7 +231,9 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
 
         metadata_params = {}
         if database.value in valid_db:
-            metadata_params = {"schema": self.main_table.schema}
+            metadata_params = {
+                "schema": getattr(self.main_table.metadata, "schema", None)
+            }
         metadata = MetaData(**metadata_params)
 
         self.sql = check_handler.prepare_comparison_sql(

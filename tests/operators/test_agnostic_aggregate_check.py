@@ -9,7 +9,7 @@ from airflow.utils import timezone
 import astro.sql as aql
 from astro.constants import SUPPORTED_DATABASES, Database
 from astro.settings import SCHEMA
-from astro.sql.table import Table
+from astro.sql.tables import Metadata, Table
 from tests.operators.utils import get_table_name, run_dag
 
 log = logging.getLogger(__name__)
@@ -20,22 +20,26 @@ CWD = pathlib.Path(__file__).parent
 @pytest.fixture(scope="module")
 def table(request):
     aggregate_table = Table(
-        "aggregate_check_test",
-        database="pagila",
+        name="aggregate_check_test",
         conn_id="postgres_conn",
-        schema="airflow_test_dag",
+        metadata=Metadata(
+            database="pagila",
+            schema="airflow_test_dag",
+        ),
     )
     aggregate_table_bigquery = Table(
-        "aggregate_check_test",
+        name="aggregate_check_test",
         conn_id="bigquery",
-        schema=SCHEMA,
+        metadata=Metadata(schema=SCHEMA),
     )
-    aggregate_table_sqlite = Table("aggregate_check_test", conn_id="sqlite_conn")
+    aggregate_table_sqlite = Table(name="aggregate_check_test", conn_id="sqlite_conn")
     aggregate_table_snowflake = Table(
-        table_name=get_table_name("aggregate_check_test"),
-        database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
-        schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
-        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore
+        name=get_table_name("aggregate_check_test"),
+        metadata=Metadata(
+            database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore
+        ),
         conn_id="snowflake_conn",
     )
     path = str(CWD) + "/../data/homes_merge_1.csv"

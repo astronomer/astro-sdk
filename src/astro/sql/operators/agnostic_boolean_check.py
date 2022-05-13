@@ -6,8 +6,9 @@ from sqlalchemy import FLOAT, and_, cast, column, func, select, text
 from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.sql.selectable import Select
 
+from astro.databases import create_database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
-from astro.sql.table import Table
+from astro.sql.tables import Table
 from astro.utils.task_id_helper import get_unique_task_id
 
 
@@ -67,10 +68,11 @@ class AgnosticBooleanCheck(SqlDecoratedOperator):
         )
 
     def execute(self, context: Dict):
+        self.db_object = create_database(self.table.conn_id)
         self.conn_id = self.table.conn_id
-        self.database = self.table.database
-        self.schema = self.table.schema
-        self.warehouse = self.table.warehouse
+        self.database = getattr(self.table.metadata, "database", None)
+        self.schema = getattr(self.table.metadata, "schema", None)
+        self.warehouse = getattr(self.table.metadata, "warehouse", None)
 
         self.conn = BaseHook.get_connection(self.conn_id)
         self.parameters = {"table": self.table}
@@ -122,9 +124,10 @@ class AgnosticBooleanCheck(SqlDecoratedOperator):
         # Since we'll soon upgrade to SQLAlchemy 1.4.x, and the type validation changes significantly, it felt the best
         # for now was to ignore this particular type check issue.
         # More information on this topic: https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html
+
         temp_table = (
             select(sqla_checks_object)
-            .select_from(text(table.qualified_name()))  # type: ignore
+            .select_from(text(self.db_object.get_table_qualified_name(table)))  # type: ignore
             .alias("check_table")
         )
         return select([check.get_result() for check in checks]).select_from(temp_table)
@@ -132,7 +135,7 @@ class AgnosticBooleanCheck(SqlDecoratedOperator):
     def prep_results(self, results):
         return (
             select(["*"])
-            .select_from(text(self.table.qualified_name()))
+            .select_from(text(self.db_object.get_table_qualified_name(self.table)))
             .where(and_(*[text(self.checks[index].expression) for index in results]))
             .limit(self.max_rows_returned)
         )

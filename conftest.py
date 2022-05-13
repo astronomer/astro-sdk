@@ -15,8 +15,8 @@ from airflow.utils.session import create_session, provide_session
 from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
 from astro.settings import SCHEMA
-from astro.sql.table import Table, TempTable, create_unique_table_name
-from astro.sql.tables import Table as NewTable
+from astro.sql.table import create_unique_table_name
+from astro.sql.tables import Metadata, Table
 from astro.utils.database import get_database_name
 from astro.utils.dependencies import BigQueryHook, gcs, s3
 from astro.utils.load import load_dataframe_into_sql_table
@@ -89,14 +89,14 @@ def test_table(request, sql_server):  # noqa: C901
     database = get_database_name(hook)
 
     for table_param in tables_params:
-        is_tmp_table = table_param.get("is_temp", True)
+        # is_tmp_table = table_param.get("is_temp", True)
         load_table = table_param.get("load_table", False)
         override_table_options = table_param.get("param", {})
 
-        if is_tmp_table and load_table:
-            raise ValueError(
-                "Temp Table cannot be populated with data. Use 'is_temp=False' instead."
-            )
+        # if is_tmp_table and load_table:
+        #     raise ValueError(
+        #         "Temp Table cannot be populated with data. Use 'is_temp=False' instead."
+        #     )
 
         if database == Database.SNOWFLAKE:
             default_table_options = {
@@ -121,19 +121,16 @@ def test_table(request, sql_server):  # noqa: C901
             raise ValueError("Unsupported Database")
 
         default_table_options.update(override_table_options)
-        tables.append(
-            TempTable(**default_table_options)
-            if is_tmp_table
-            else Table(**default_table_options)
-        )
+        tables.append(Table(**default_table_options))
         if load_table:
             populate_table(path=table_param.get("path"), table=tables[-1], hook=hook)
 
     yield tables if len(tables) > 1 else tables[0]
 
     for table in tables:
-        if table.qualified_name():
-            hook.run(f"DROP TABLE IF EXISTS {table.qualified_name()}")
+        db = create_database(table.conn_id)
+        if db.get_table_qualified_name(table):
+            hook.run(f"DROP TABLE IF EXISTS {db.get_table_qualified_name(table)}")
 
         if database == Database.SQLITE:
             hook.run("DROP INDEX IF EXISTS unique_index")
@@ -141,18 +138,24 @@ def test_table(request, sql_server):  # noqa: C901
             # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
             # Example: tables which are not fixtures and constraints.
             # This is an aggressive approach towards tearing down:
-            hook.run(f"DROP SCHEMA IF EXISTS {table.schema} CASCADE;")
+            schema = getattr(table.metadata, "schema", None)
+            hook.run(f"DROP SCHEMA IF EXISTS {schema} CASCADE;")
 
 
 @pytest.fixture
 def output_table(request):
     table_type = request.param
+    # To do - resolve this.
     if table_type == "None":
-        return TempTable()
+        return Table("my_table")
     elif table_type == "partial":
         return Table("my_table")
     elif table_type == "full":
-        return Table("my_table", database="pagila", conn_id="postgres_conn")
+        return Table(
+            name="my_table",
+            conn_id="postgres_conn",
+            metadata=Metadata(database="pagila"),
+        )
 
 
 @pytest.fixture
@@ -206,7 +209,7 @@ def database_table_fixture(request):
     The table will only be created during setup if request.param contains the `filepath` parameter.
     """
     params = request.param
-    table = params.get("table", NewTable())
+    table = params.get("table", Table())
     file = params.get("file", None)
 
     database_name = params["database"]

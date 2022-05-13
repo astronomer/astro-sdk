@@ -21,7 +21,7 @@ from astro.constants import (
     Database,
     FileType,
 )
-from astro.sql.table import Table
+from astro.sql.tables import Table
 from astro.utils.database import get_database_name, get_sqlalchemy_engine
 from astro.utils.dependencies import pandas_tools
 from astro.utils.file import get_filetype, get_size
@@ -234,8 +234,8 @@ def load_dataframe_into_sql_table(
     database = get_database_name(hook)
     engine = get_sqlalchemy_engine(hook)
 
-    output_table_name = output_table.table_name
-    schema = output_table.schema
+    output_table_name = output_table.name
+    schema = getattr(output_table.metadata, "schema", None)
     conn = hook.get_connection(output_table.conn_id)
     user = conn.login
 

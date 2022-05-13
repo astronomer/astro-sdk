@@ -4,7 +4,7 @@ from typing import Optional
 import pandas
 
 from astro.settings import SCHEMA
-from astro.sql.table import Table
+from astro.sql.tables import Table
 
 
 class TableHandler:
@@ -65,13 +65,23 @@ class TableHandler:
 
         if first_table:
             self.conn_id = first_table.conn_id or self.conn_id
-            self.database = first_table.database or self.database
-            self.schema = first_table.schema or self.schema
-            self.warehouse = first_table.warehouse or self.warehouse
-            self.role = first_table.role or self.role
+            self.database = (
+                getattr(first_table.metadata, "database", None) or self.database
+            )
+            self.schema = getattr(first_table.metadata, "schema", None) or self.schema
+            self.warehouse = (
+                getattr(first_table.metadata, "warehouse", None) or self.warehouse
+            )
+            self.role = getattr(first_table.metadata, "role", None) or self.role
 
     def populate_output_table(self):
         self.output_table.conn_id = self.output_table.conn_id or self.conn_id
-        self.output_table.database = self.output_table.database or self.database
-        self.output_table.warehouse = self.output_table.warehouse or self.warehouse
-        self.output_table.schema = self.output_table.schema or SCHEMA
+        self.output_table.metadata.database = (
+            getattr(self.output_table.metadata, "database", None) or self.database
+        )
+        self.output_table.metadata.warehouse = (
+            getattr(self.output_table.metadata, "warehouse", None) or self.warehouse
+        )
+        self.output_table.metadata.schema = (
+            getattr(self.output_table.metadata, "schema", None) or SCHEMA
+        )

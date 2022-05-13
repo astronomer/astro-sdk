@@ -1,4 +1,5 @@
-from astro.sql.table import Table
+from astro.databases import create_database
+from astro.sql.tables import Table
 
 
 def bigquery_merge_func(
@@ -9,7 +10,8 @@ def bigquery_merge_func(
     merge_columns,
     conflict_strategy,
 ):
-    statement = f"MERGE {target_table.qualified_name()} T USING {merge_table.qualified_name()} S\
+    db = create_database(target_table.conn_id)
+    statement = f"MERGE {db.get_table_qualified_name(target_table)} T USING {db.get_table_qualified_name(merge_table)} S\
                 ON {' AND '.join(['T.' + col + '= S.' + col for col in merge_keys])}\
                 WHEN NOT MATCHED BY TARGET THEN INSERT ({','.join(target_columns)}) VALUES ({','.join(merge_columns)})"
 

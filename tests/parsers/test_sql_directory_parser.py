@@ -14,7 +14,7 @@ from airflow.utils.session import create_session
 
 import astro.sql as aql
 from astro.dataframe import dataframe as adf
-from astro.sql.table import Table
+from astro.sql.tables import Metadata, Table
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
@@ -120,11 +120,13 @@ class TestSQLParsing(unittest.TestCase):
             input_table = aql.load_file(
                 path=str(cwd) + "/../data/homes.csv",
                 output_table=Table(
-                    test_utils.get_table_name("snowflake_render_test"),
+                    name=test_utils.get_table_name("snowflake_render_test"),
                     conn_id="snowflake_conn",
-                    schema=os.getenv("SNOWFLAKE_SCHEMA"),
-                    database=os.getenv("SNOWFLAKE_DATABASE"),
-                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                    metadata=Metadata(
+                        schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                        database=os.getenv("SNOWFLAKE_DATABASE"),
+                        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                    ),
                 ),
             )
             models = aql.render(

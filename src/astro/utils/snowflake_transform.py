@@ -1,5 +1,5 @@
 from astro.settings import SCHEMA
-from astro.sql.table import Table
+from astro.sql.tables import Table
 
 
 def _handle_table(t: Table):
@@ -10,8 +10,9 @@ def _handle_table(t: Table):
     :return:
     """
 
-    snow_schema = t.schema or SCHEMA
-    return t.database + "." + snow_schema + "." + t.table_name
+    snow_schema = getattr(t.metadata, "schema", None) or SCHEMA
+    database = getattr(t.metadata, "database", None)
+    return f"{database}.{snow_schema}.{t.name}"
 
 
 def process_params(parameters):

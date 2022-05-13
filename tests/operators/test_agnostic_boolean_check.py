@@ -17,7 +17,7 @@ import astro.sql as aql
 from astro.constants import SUPPORTED_DATABASES
 from astro.settings import SCHEMA
 from astro.sql.operators.agnostic_boolean_check import Check
-from astro.sql.table import Table
+from astro.sql.tables import Metadata, Table
 from tests.operators.utils import get_table_name, run_dag
 
 log = logging.getLogger(__name__)
@@ -49,24 +49,28 @@ def drop_table_snowflake(
 @pytest.fixture(scope="module")
 def table(request):
     boolean_check_table = Table(
-        get_table_name("boolean_check_test"),
-        database="pagila",
+        name=get_table_name("boolean_check_test"),
+        metadata=Metadata(
+            database="pagila",
+            schema="airflow_test_dag",
+        ),
         conn_id="postgres_conn",
-        schema="airflow_test_dag",
     )
     boolean_check_table_bigquery = Table(
-        get_table_name("boolean_check_test"),
+        name=get_table_name("boolean_check_test"),
         conn_id="bigquery",
-        schema=SCHEMA,
+        metadata=Metadata(schema=SCHEMA),
     )
     boolean_check_table_sqlite = Table(
-        get_table_name("boolean_check_test"), conn_id="sqlite_conn"
+        name=get_table_name("boolean_check_test"), conn_id="sqlite_conn"
     )
     boolean_check_table_snowflake = Table(
-        table_name=get_table_name("boolean_check_test"),
-        database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
-        schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
-        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore
+        name=get_table_name("boolean_check_test"),
+        metadata=Metadata(
+            database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore
+        ),
         conn_id="snowflake_conn",
     )
     path = str(CWD) + "/../data/homes_append.csv"

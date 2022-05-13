@@ -1,4 +1,4 @@
-from astro.sql.table import Table
+from astro.sql.tables import Table
 
 
 def sqlite_merge_func(
@@ -23,9 +23,9 @@ def sqlite_merge_func(
 
     query = statement.format(
         target_columns=",".join(target_column_names),
-        main_table=target_table.table_name,
+        main_table=target_table.name,
         append_columns=",".join(append_column_names),
-        append_table=merge_table.table_name,
+        append_table=merge_table.name,
         update_statements=",".join(update_statements),
         merge_keys=",".join(list(merge_keys)),
     )
