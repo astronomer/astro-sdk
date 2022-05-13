@@ -6,7 +6,6 @@ from sqlalchemy.sql.elements import Cast, ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import Database
-from astro.databases import create_database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.tables import Table
 from astro.utils.database import get_database_name
@@ -93,13 +92,8 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
         else:
             metadata = MetaData()
         # TO Do - fix bigquery and postgres reflection table issue.
-        db = create_database(main_table.conn_id)
-        main_table_sqla = SqlaTable(
-            db.get_table_qualified_name(main_table), metadata, autoload_with=engine
-        )
-        append_table_sqla = SqlaTable(
-            db.get_table_qualified_name(append_table), metadata, autoload_with=engine
-        )
+        main_table_sqla = SqlaTable(main_table.name, metadata, autoload_with=engine)
+        append_table_sqla = SqlaTable(append_table.name, metadata, autoload_with=engine)
 
         column_names: List[Union[ColumnClause, Cast]] = [column(c) for c in columns]
         sqlalchemy = importlib.import_module("sqlalchemy")

@@ -117,7 +117,7 @@ def describe_load_file_into_sql_table():
     @pytest.mark.parametrize("sql_server", ["postgres"], indirect=True)
     @pytest.mark.parametrize(
         "test_table",
-        [{"is_temp": False, "param": {"table_name": table_name}}],
+        [{"is_temp": False, "param": {"name": table_name}}],
         ids=["named_table"],
         indirect=True,
     )
@@ -152,8 +152,11 @@ def describe_load_dataframe_into_sql_table():
         create_table(database, hook, test_table)
         dataframe = pd.DataFrame([{"id": 27, "name": "Jim Morrison"}])
         test_table.metadata.schema = SCHEMA
-        load_dataframe_into_sql_table(dataframe, test_table, hook)
         db = create_database(test_table.conn_id)
+        db.load_pandas_dataframe_to_table(
+            source_dataframe=dataframe, target_table=test_table
+        )
+
         computed = hook.get_pandas_df(
             f"SELECT * FROM {db.get_table_qualified_name(test_table)}"
         )
