@@ -6,7 +6,7 @@ from airflow.exceptions import BackfillUnfinished
 from airflow.utils import timezone
 
 import astro.sql as aql
-from astro.constants import SUPPORTED_DATABASES, Database
+from astro.constants import SUPPORTED_DATABASES
 from astro.sql.tables import Table
 from tests.operators.utils import run_dag
 
@@ -201,7 +201,7 @@ def test_all_three_params_provided_priority_given_to_equal_to_param(
 
 
 @pytest.mark.integration
-@pytest.mark.parametrize("sql_server", [Database.SQLITE.name], indirect=True)
+@pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
 @pytest.mark.parametrize(
     "test_table",
     [
@@ -229,7 +229,7 @@ def test_invalid_params_no_test_values(sample_dag, test_table):
 
 
 @pytest.mark.integration
-@pytest.mark.parametrize("sql_server", [Database.SQLITE.name], indirect=True)
+@pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
 @pytest.mark.parametrize(
     "test_table",
     [
