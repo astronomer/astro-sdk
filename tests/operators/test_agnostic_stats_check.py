@@ -44,7 +44,6 @@ TABLES_CACHE: Dict[str, Dict] = {}
                 "is_temp": False,
                 "param": {
                     "metadata": Metadata(schema=SCHEMA),
-                    "name": test_utils.get_table_name("test_stats_check_1"),
                 },
             },
             {
@@ -52,8 +51,7 @@ TABLES_CACHE: Dict[str, Dict] = {}
                 "load_table": True,
                 "is_temp": False,
                 "param": {
-                    "schema": SCHEMA,
-                    "name": test_utils.get_table_name("test_stats_check_2"),
+                    "metadata": Metadata(schema=SCHEMA),
                 },
             },
         ],
@@ -90,7 +88,6 @@ def test_stats_check_outlier_dont_exists(sample_dag, sql_server, test_table):
                 "is_temp": False,
                 "param": {
                     "metadata": Metadata(schema=SCHEMA),
-                    "name": test_utils.get_table_name("test_stats_check_1"),
                 },
             },
             {
@@ -98,8 +95,7 @@ def test_stats_check_outlier_dont_exists(sample_dag, sql_server, test_table):
                 "load_table": True,
                 "is_temp": False,
                 "param": {
-                    "schema": SCHEMA,
-                    "name": test_utils.get_table_name("test_stats_check_2"),
+                    "metadata": Metadata(schema=SCHEMA),
                 },
             },
         ],

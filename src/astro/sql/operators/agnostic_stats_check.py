@@ -3,10 +3,9 @@ from typing import Dict, List, Optional, Set
 from sqlalchemy import MetaData, case, func, or_, select
 from sqlalchemy.sql.schema import Table as SqlaTable
 
-from astro.constants import Database
+from astro.databases import create_database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.tables import Table
-from astro.utils.database import create_database_from_conn_id
 from astro.utils.schema_util import (
     get_error_string_for_multiple_dbs,
     tables_from_same_db,
@@ -97,9 +96,14 @@ class ChecksHandler:
     def prepare_comparison_sql(
         self, main_table: Table, compare_table: Table, engine, metadata_obj
     ):
-        main_table_sqla = SqlaTable(main_table.name, metadata_obj, autoload_with=engine)
+        db = create_database(main_table.conn_id)
+        main_table_sqla = SqlaTable(
+            db.get_table_qualified_name(main_table), metadata_obj, autoload_with=engine
+        )
         compare_table_sqla = SqlaTable(
-            compare_table.name, metadata_obj, autoload_with=engine
+            db.get_table_qualified_name(compare_table),
+            metadata_obj,
+            autoload_with=engine,
         )
 
         main_table_stats_sql = self.prepare_main_stats_sql(main_table, main_table_sqla)
@@ -137,9 +141,14 @@ class ChecksHandler:
         engine,
         metadata_obj,
     ):
-        main_table_sqla = SqlaTable(main_table.name, metadata_obj, autoload_with=engine)
+        db = create_database(main_table.conn_id)
+        main_table_sqla = SqlaTable(
+            db.get_table_qualified_name(main_table), metadata_obj, autoload_with=engine
+        )
         compare_table_sqla = SqlaTable(
-            compare_table.name, metadata_obj, autoload_with=engine
+            db.get_table_qualified_name(compare_table),
+            metadata_obj,
+            autoload_with=engine,
         )
 
         main_stats = self.prepare_main_stats_sql(main_table, main_table_sqla)
@@ -218,22 +227,9 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
         )
 
     def execute(self, context: Dict):
-        database = create_database_from_conn_id(self.conn_id)
         check_handler = ChecksHandler(self.checks)
 
-        valid_db = {
-            "postgres": Database.POSTGRES,
-            "postgresql": Database.POSTGRES,
-            "bigquery": Database.BIGQUERY,
-            "gcpbigquery": Database.BIGQUERY,
-            "google_cloud_platform": Database.BIGQUERY,
-        }
-
-        metadata_params = {}
-        if database.value in valid_db:
-            metadata_params = {
-                "schema": getattr(self.main_table.metadata, "schema", None)
-            }
+        metadata_params: Dict[str, str] = {}
         metadata = MetaData(**metadata_params)
 
         self.sql = check_handler.prepare_comparison_sql(
