@@ -146,13 +146,13 @@ def test_table(request, sql_server):  # noqa: C901
 
         if database == Database.SQLITE:
             hook.run("DROP INDEX IF EXISTS unique_index")
-        elif database in (Database.POSTGRES, Database.POSTGRESQL):
-            # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
-            # Example: tables which are not fixtures and constraints.
-            # This is an aggressive approach towards tearing down:
-            schema = getattr(table.metadata, "schema", None)
-            if schema:
-                hook.run(f"DROP SCHEMA IF EXISTS {table.metadata.schema} CASCADE;")
+        # elif database in (Database.POSTGRES, Database.POSTGRESQL):
+        #     # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
+        #     # Example: tables which are not fixtures and constraints.
+        #     # This is an aggressive approach towards tearing down:
+        #     schema = getattr(table.metadata, "schema", None)
+        #     if schema:
+        #         hook.run(f"DROP SCHEMA IF EXISTS {table.metadata.schema} CASCADE;")
 
 
 @pytest.fixture
