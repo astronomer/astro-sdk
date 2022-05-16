@@ -195,3 +195,7 @@ class Table:
 
         self.db = create_database(conn_id)
         self.conn_id = conn_id
+
+    def drop(self):
+        if self.db:
+            self.db.drop_table(self)
