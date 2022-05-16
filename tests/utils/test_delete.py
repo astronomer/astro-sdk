@@ -25,7 +25,7 @@ def create_table(database, hook, table):
 @pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
 @pytest.mark.parametrize(
     "test_table",
-    [{"is_temp": False, "param": {"table_name": table_name}}],
+    [{"is_temp": False, "param": {"name": table_name}}],
     ids=["named_table"],
     indirect=True,
 )

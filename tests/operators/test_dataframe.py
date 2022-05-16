@@ -30,7 +30,7 @@ CWD = pathlib.Path(__file__).parent
             "is_temp": False,
             "param": {
                 "schema": SCHEMA,
-                "table_name": test_utils.get_table_name("test_stats_check_2"),
+                "name": test_utils.get_table_name("test_stats_check_2"),
             },
         }
     ],
@@ -64,7 +64,7 @@ def test_dataframe_from_sql_basic(sample_dag, sql_server, test_table):
             "is_temp": False,
             "param": {
                 "schema": SCHEMA,
-                "table_name": test_utils.get_table_name("test_stats_check_2"),
+                "name": test_utils.get_table_name("test_stats_check_2"),
             },
         }
     ],
@@ -96,7 +96,7 @@ def test_dataframe_from_sql_custom_task_id(sample_dag, sql_server, test_table):
             "is_temp": False,
             "param": {
                 "schema": SCHEMA,
-                "table_name": test_utils.get_table_name("test_stats_check_2"),
+                "name": test_utils.get_table_name("test_stats_check_2"),
             },
         }
     ],
@@ -131,7 +131,7 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, sql_server, test_table):
             "is_temp": False,
             "param": {
                 "schema": SCHEMA,
-                "table_name": test_utils.get_table_name("test_stats_check_2"),
+                "name": test_utils.get_table_name("test_stats_check_2"),
             },
         }
     ],
@@ -166,7 +166,7 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(sample_dag, sql_server, test_
             "is_temp": False,
             "param": {
                 "schema": SCHEMA,
-                "table_name": test_utils.get_table_name("test_stats_check_2"),
+                "name": test_utils.get_table_name("test_stats_check_2"),
             },
         }
     ],

@@ -225,7 +225,7 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
             "is_temp": False,
             "param": {
                 "schema": SCHEMA,
-                "table_name": test_utils.get_table_name("test_stats_check_1"),
+                "name": test_utils.get_table_name("test_stats_check_1"),
             },
         }
     ],
@@ -266,7 +266,7 @@ def test_save_table_remote_file_exists_overwrite_false(
             "load_table": True,
             "param": {
                 "schema": SCHEMA,
-                "table_name": test_utils.get_table_name("test_save"),
+                "name": test_utils.get_table_name("test_save"),
             },
         }
     ],
@@ -313,7 +313,7 @@ def test_unique_task_id_for_same_path(sample_dag, sql_server, test_table):
             "is_temp": False,
             "param": {
                 "schema": SCHEMA,
-                "table_name": test_utils.get_table_name("test_stats_check_1"),
+                "name": test_utils.get_table_name("test_stats_check_1"),
             },
         }
     ],

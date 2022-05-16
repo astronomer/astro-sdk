@@ -114,7 +114,7 @@ def describe_load_file_into_sql_table():
     @pytest.mark.parametrize("sql_server", ["postgres"], indirect=True)
     @pytest.mark.parametrize(
         "test_table",
-        [{"is_temp": False, "param": {"table_name": table_name}}],
+        [{"is_temp": False, "param": {"name": table_name}}],
         ids=["named_table"],
         indirect=True,
     )
@@ -140,7 +140,7 @@ def describe_load_dataframe_into_sql_table():
     @pytest.mark.parametrize("sql_server", ["postgres"], indirect=True)
     @pytest.mark.parametrize(
         "test_table",
-        [{"is_temp": False, "param": {"table_name": table_name}}],
+        [{"is_temp": False, "param": {"name": table_name}}],
         ids=["named_table"],
         indirect=True,
     )
@@ -164,7 +164,7 @@ def describe_load_dataframe_into_sql_table():
     @pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
     @pytest.mark.parametrize(
         "test_table",
-        [{"is_temp": False, "param": {"table_name": table_name}}],
+        [{"is_temp": False, "param": {"name": table_name}}],
         ids=["named_table"],
         indirect=True,
     )
