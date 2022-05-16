@@ -12,6 +12,7 @@ from astro.databases import create_database
 from astro.databases.postgres import PostgresDatabase
 from astro.exceptions import NonExistentTableException
 from astro.files import File
+from astro.settings import SCHEMA
 from astro.sql.tables import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
 from tests.operators import utils as test_utils
@@ -21,7 +22,6 @@ CUSTOM_CONN_ID = "postgres_conn"
 SUPPORTED_CONN_IDS = [DEFAULT_CONN_ID, CUSTOM_CONN_ID]
 CWD = pathlib.Path(__file__).parent
 
-SCHEMA = "public"
 TEST_TABLE = Table()
 
 

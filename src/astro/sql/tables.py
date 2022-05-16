@@ -103,7 +103,7 @@ class Table:
             alchemy_metadata = MetaData()
         return alchemy_metadata
 
-    def __set_db(self):
+    def _set_db(self):
         if not self.db and self.conn_id:
             from astro.databases import create_database
 
@@ -112,7 +112,7 @@ class Table:
     @property
     def qualified_name(self) -> Optional[str]:
         """Return table qualified name. This is Database-specific."""
-        self.__set_db()
+        self._set_db()
         return str(self.db.get_table_qualified_name(self))
 
     def load_pandas_dataframe_to_table(
@@ -131,7 +131,7 @@ class Table:
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
-        self.__set_db()
+        self._set_db()
         self.db.load_pandas_dataframe_to_table(
             source_dataframe=source_dataframe,
             target_table=target_table,

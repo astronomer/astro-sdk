@@ -4,6 +4,7 @@ from typing import Optional
 import pandas as pd
 import sqlalchemy
 from airflow.hooks.base import BaseHook
+from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
@@ -223,16 +224,16 @@ class BaseDatabase(ABC):
         :param source_table: An existing table in the database
         """
         table_qualified_name = self.get_table_qualified_name(source_table)
-        if self.table_exists(source_table):
+        try:
             return pd.read_sql(
                 # We are avoiding SQL injection by confirming the table exists before this statement
                 f"SELECT * FROM {table_qualified_name}",  # skipcq BAN-B608
                 con=self.sqlalchemy_engine,
             )
-
-        raise NonExistentTableException(
-            "The table %s does not exist" % table_qualified_name
-        )
+        except (ProgrammingError, OperationalError):
+            raise NonExistentTableException(
+                "The table %s does not exist" % table_qualified_name
+            )
 
     def export_table_to_file(
         self,
