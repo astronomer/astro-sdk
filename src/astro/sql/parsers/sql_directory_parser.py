@@ -81,10 +81,7 @@ def render_single_path(
             }
             if front_matter_opts.get("output_table"):
                 out_table_dict = front_matter_opts.pop("output_table")
-                if out_table_dict.get("table_name"):
-                    op_kwargs = {"output_table": Table(**out_table_dict)}
-                # else:
-                #     op_kwargs = {"output_table": TempTable(**out_table_dict)}
+                op_kwargs = {"output_table": Table(**out_table_dict)}
             operator_kwargs = set_kwargs_with_defaults(
                 front_matter_opts, conn_id, database, role, schema, warehouse
             )

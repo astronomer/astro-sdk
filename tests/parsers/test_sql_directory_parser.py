@@ -95,7 +95,6 @@ class TestSQLParsing(unittest.TestCase):
 
         new_customers_table = rendered_tasks.get("get_new_customers")
         new_customer_output_table = new_customers_table.operator.output_table
-        assert new_customer_output_table.name == ""
         assert new_customer_output_table.schema is None
         assert new_customer_output_table.database == "my_db"
         assert new_customer_output_table.conn_id == "my_conn_id"
