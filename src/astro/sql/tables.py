@@ -9,7 +9,7 @@ from sqlalchemy import Column, MetaData
 
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 
-MAX_TABLE_NAME_LENGTH = 63
+MAX_TABLE_NAME_LENGTH = 45
 
 
 @dataclass
