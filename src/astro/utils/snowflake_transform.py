@@ -11,7 +11,7 @@ def _handle_table(t: Table):
     """
 
     snow_schema = t.schema or SCHEMA
-    return t.database + "." + snow_schema + "." + t.table_name
+    return f"{t.database}.{snow_schema}.{t.name}"
 
 
 def process_params(parameters):
