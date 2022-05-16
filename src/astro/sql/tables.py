@@ -62,13 +62,11 @@ class Table:
         metadata=None,
         columns=None,
     ):
-
-        from astro.databases import create_database
-
+        self.db = None
         self.name = name
         self.conn_id = conn_id
         if self.conn_id:
-            self.db = create_database(self.conn_id)
+            self.__set_db()
 
         self.metadata = metadata
         if self.metadata is None:
@@ -107,12 +105,17 @@ class Table:
             alchemy_metadata = MetaData()
         return alchemy_metadata
 
+    def __set_db(self):
+        if not self.db and self.conn_id:
+            from astro.databases import create_database
+
+            self.db = create_database(self.conn_id)
+
     @property
     def qualified_name(self) -> Optional[str]:
         """Return table qualified name. This is Database-specific."""
-        if self.db:
-            return str(self.db.get_table_qualified_name(self))
-        return None
+        self.__set_db()
+        return str(self.db.get_table_qualified_name(self))
 
     def load_pandas_dataframe_to_table(
         self,
@@ -130,6 +133,7 @@ class Table:
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
+        self.__set_db()
         self.db.load_pandas_dataframe_to_table(
             source_dataframe=source_dataframe,
             target_table=target_table,
@@ -138,8 +142,8 @@ class Table:
         )
 
     @property
-    def schema(self) -> str:
-        return str(getattr(self.metadata, "schema", None))
+    def schema(self) -> Optional[str]:
+        return getattr(self.metadata, "schema", None)
 
     @schema.setter
     def schema(self, val: str):
@@ -149,8 +153,8 @@ class Table:
         self.metadata.schema = val
 
     @property
-    def database(self) -> str:
-        return str(getattr(self.metadata, "database", None))
+    def database(self) -> Optional[str]:
+        return getattr(self.metadata, "database", None)
 
     @database.setter
     def database(self, val: str):
@@ -160,8 +164,8 @@ class Table:
         self.metadata.database = val
 
     @property
-    def warehouse(self) -> str:
-        return str(getattr(self.metadata, "warehouse", None))
+    def warehouse(self) -> Optional[str]:
+        return getattr(self.metadata, "warehouse", None)
 
     @warehouse.setter
     def warehouse(self, val: str):
@@ -171,8 +175,8 @@ class Table:
         self.metadata.warehouse = val
 
     @property
-    def role(self) -> str:
-        return str(getattr(self.metadata, "role", None))
+    def role(self) -> Optional[str]:
+        return getattr(self.metadata, "role", None)
 
     @role.setter
     def role(self, val: str):
@@ -189,12 +193,6 @@ class Table:
     @table_name.setter
     def table_name(self, val: str):
         self.name = val
-
-    def set_db(self, conn_id):
-        from astro.databases import create_database
-
-        self.db = create_database(conn_id)
-        self.conn_id = conn_id
 
     def drop(self):
         if self.db:
