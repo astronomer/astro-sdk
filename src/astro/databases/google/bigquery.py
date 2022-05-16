@@ -33,18 +33,6 @@ class BigqueryDatabase(BaseDatabase):
         uri = self.hook.get_uri()
         return create_engine(uri)
 
-    def get_table_qualified_name(self, table: Table) -> str:
-        """
-        Return table qualified name for BigQuery.
-
-        :param table: The table we want to retrieve the qualified name for.
-        """
-        if table.metadata is not None and table.metadata.schema is not None:
-            qualified_name = f"{table.metadata.schema}.{table.name}"
-        else:
-            qualified_name = table.name
-        return qualified_name
-
     @property
     def default_metadata(self) -> Metadata:
         return Metadata(schema=settings.SCHEMA, database=self.hook.project_id)

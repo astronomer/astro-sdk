@@ -25,18 +25,6 @@ class SnowflakeDatabase(BaseDatabase):
         """Retrieve Airflow hook to interface with the snowflake database."""
         return SnowflakeHook(snowflake_conn_id=self.conn_id)
 
-    def get_table_qualified_name(self, table: Table):
-        """
-        Return table qualified name for Snowflake.
-
-        :param table: The table we want to retrieve the qualified name for.
-        """
-        if table.metadata is not None and table.metadata.schema is not None:
-            qualified_name = f"{table.metadata.schema}.{table.name}"
-        else:
-            qualified_name = table.name
-        return qualified_name
-
     @property
     def default_metadata(self) -> Metadata:
         connection = self.hook.get_conn()

@@ -90,8 +90,10 @@ class BaseDatabase(ABC):
         # Initially this method belonged to the Table class.
         # However, in order to have an agnostic table class implementation,
         # we are keeping all methods which vary depending on the database within the Database class.
-        schema = table.metadata.schema if table.metadata else None
-        qualified_name: str = f"{schema}.{table.name}" if schema else table.name
+        if table.metadata is not None and table.metadata.schema is not None:
+            qualified_name = f"{table.metadata.schema}.{table.name}"
+        else:
+            qualified_name = table.name
         return qualified_name
 
     @property
@@ -151,12 +153,12 @@ class BaseDatabase(ABC):
         chunk_size: int = DEFAULT_CHUNK_SIZE,
     ) -> None:
         """
-        Upload the content of the source file to the target database.
-        If the table instance does not contain columns, this method automatically identify them using Pandas.
+        Load the content of the source file to the target database table.
+        If the table already exists, append or replace the content, depending on the value of `if_exists`.
 
-        :param source_file: Path to original file (e.g. a "/tmp/sample_data.csv")
-        :param target_table: Details of the target table
-        :param if_exists: Strategy to be applied in case the target table exists
+        :param source_file: Local or remote filepath (e.g. a File("/tmp/sample_data.csv"))
+        :param target_table: Table in which the file will be loaded
+        :param if_exists: Strategy to be used in case the target table already exists
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
         dataframe = source_file.export_to_dataframe()
