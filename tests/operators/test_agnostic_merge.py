@@ -1,5 +1,6 @@
 import math
 import pathlib
+from typing import List
 
 import pandas as pd
 import pytest
@@ -133,14 +134,14 @@ def validate_results(df: pd.DataFrame, mode, sql_type):
 
 
 @task_group
-def run_merge(output_specs: Table, merge_parameters, mode, sql_type):
+def run_merge(output_specs: List[Table], merge_parameters, mode, sql_type):
     main_table = aql.load_file(
         path=str(CWD) + "/../data/homes_merge_1.csv",
-        output_table=output_specs,
+        output_table=output_specs[0],
     )
     merge_table = aql.load_file(
         path=str(CWD) + "/../data/homes_merge_2.csv",
-        output_table=output_specs,
+        output_table=output_specs[1],
     )
 
     con1 = add_constraint(main_table, merge_parameters["merge_keys"])
@@ -174,10 +175,22 @@ def run_merge(output_specs: Table, merge_parameters, mode, sql_type):
     ],
     indirect=True,
 )
+@pytest.mark.parametrize(
+    "test_table",
+    [
+        [
+            {
+                "is_temp": False,
+            },
+            {"is_temp": False},
+        ],
+    ],
+    indirect=True,
+    ids=["table"],
+)
 def test_merge(sql_server, sample_dag, test_table, merge_parameters):
     sql_type, _ = sql_server
     merge_params, mode = merge_parameters
     with sample_dag:
-        output_table = test_table
-        run_merge(output_table, merge_params, mode, sql_type)
+        run_merge(test_table, merge_params, mode, sql_type)
     test_utils.run_dag(sample_dag)

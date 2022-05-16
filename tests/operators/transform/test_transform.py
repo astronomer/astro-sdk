@@ -109,9 +109,7 @@ def test_raw_sql(sql_server, sample_dag, test_table):
         raw_sql_result = (
             raw_sql_query(
                 my_input_table=homes_file,
-                created_table=test_table.to_table(
-                    sample_dag.dag_id + "_RAW_SQL_CREATE"
-                ),
+                created_table=test_table,
                 num_rows=5,
                 handler=lambda cur: cur.fetchall(),
             ),
