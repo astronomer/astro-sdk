@@ -90,12 +90,12 @@ class TestSQLParsing(unittest.TestCase):
         assert customers_table_task.operator.schema == "bar"
 
         customer_output_table = customers_table_task.operator.output_table
-        assert customer_output_table.table_name == "my_table"
+        assert customer_output_table.name == "my_table"
         assert customer_output_table.schema == "my_schema"
 
         new_customers_table = rendered_tasks.get("get_new_customers")
         new_customer_output_table = new_customers_table.operator.output_table
-        assert new_customer_output_table.table_name == ""
+        assert new_customer_output_table.name == ""
         assert new_customer_output_table.schema is None
         assert new_customer_output_table.database == "my_db"
         assert new_customer_output_table.conn_id == "my_conn_id"
