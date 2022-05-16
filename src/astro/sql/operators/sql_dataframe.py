@@ -134,7 +134,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             )
             schema = table.schema or SCHEMA
             query = (
-                postgres_sql.SQL("SELECT * FROM {input_table}")
+                postgres_sql.SQL("SELECT * FROM {schema}.{input_table}")
                 .format(
                     schema=postgres_sql.Identifier(schema),
                     input_table=postgres_sql.Identifier(table.name),
