@@ -65,8 +65,6 @@ class Table:
         self.db = None
         self.name = name
         self.conn_id = conn_id
-        if self.conn_id:
-            self.__set_db()
 
         self.metadata = metadata
         if self.metadata is None:
