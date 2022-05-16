@@ -293,7 +293,7 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(
     task_params = {
         "path": file_uri,
         "file_conn_id": file_conn_id,
-        "output_table": Table(table_name=OUTPUT_TABLE_NAME, **sql_server_params),
+        "output_table": Table(name=OUTPUT_TABLE_NAME, **sql_server_params),
     }
     with pytest.raises(BackfillUnfinished):
         with sample_dag:

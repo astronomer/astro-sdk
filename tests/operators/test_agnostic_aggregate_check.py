@@ -32,7 +32,7 @@ def table(request):
     )
     aggregate_table_sqlite = Table("aggregate_check_test", conn_id="sqlite_conn")
     aggregate_table_snowflake = Table(
-        table_name=get_table_name("aggregate_check_test"),
+        name=get_table_name("aggregate_check_test"),
         database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
         schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
         warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore

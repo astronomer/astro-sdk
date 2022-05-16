@@ -80,11 +80,11 @@ class TestSQLiteAppend(unittest.TestCase):
         self.MAIN_TABLE_NAME = "test_main"
         self.APPEND_TABLE_NAME = "test_append"
         self.main_table = Table(
-            table_name=self.MAIN_TABLE_NAME,
+            name=self.MAIN_TABLE_NAME,
             conn_id="sqlite_conn",
         )
         self.append_table = Table(
-            table_name=self.APPEND_TABLE_NAME,
+            name=self.APPEND_TABLE_NAME,
             conn_id="sqlite_conn",
         )
 

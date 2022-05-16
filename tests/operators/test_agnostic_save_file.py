@@ -96,7 +96,7 @@ def test_save_temp_table_to_local(sample_dag, sql_server, test_table):
             "is_temp": False,
             "param": {
                 "schema": SCHEMA,
-                "table_name": test_utils.get_table_name("test_stats_check_1"),
+                "name": test_utils.get_table_name("test_stats_check_1"),
             },
         }
     ],
@@ -146,7 +146,7 @@ def test_save_all_db_tables_to_S3(sample_dag, test_table, sql_server):
             "is_temp": False,
             "param": {
                 "schema": SCHEMA,
-                "table_name": test_utils.get_table_name("test_stats_check_1"),
+                "name": test_utils.get_table_name("test_stats_check_1"),
             },
         }
     ],
@@ -191,7 +191,7 @@ def test_save_all_db_tables_to_GCS(sample_dag, test_table, sql_server):
             "is_temp": False,
             "param": {
                 "schema": SCHEMA,
-                "table_name": test_utils.get_table_name("test_stats_check_1"),
+                "name": test_utils.get_table_name("test_stats_check_1"),
             },
         }
     ],

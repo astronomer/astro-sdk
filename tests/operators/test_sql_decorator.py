@@ -29,7 +29,7 @@ TEST_SCHEMA = test_utils.get_table_name("test")
             "is_temp": False,
             "param": {
                 "schema": SCHEMA,
-                "table_name": test_utils.get_table_name("test"),
+                "name": test_utils.get_table_name("test"),
             },
         }
     ],
@@ -74,7 +74,7 @@ def test_sql_decorator_basic_functionality(sample_dag, sql_server, test_table):
             "load_table": True,
             "is_temp": False,
             "param": {
-                "table_name": test_utils.get_table_name("test"),
+                "name": test_utils.get_table_name("test"),
             },
         }
     ],
@@ -122,7 +122,7 @@ def test_sql_decorator_does_not_create_schema_when_the_schema_exists(
             "is_temp": False,
             "param": {
                 "schema": TEST_SCHEMA,
-                "table_name": test_utils.get_table_name("test"),
+                "name": test_utils.get_table_name("test"),
             },
         }
     ],

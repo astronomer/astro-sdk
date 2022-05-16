@@ -44,7 +44,7 @@ def create_dag(database_name, table_args, dataset):
 
     with DAG(dag_name, schedule_interval=None, start_date=START_DATE) as dag:
         chunk_size = int(os.environ["ASTRO_CHUNKSIZE"])
-        table_metadata = Table(table_name=table_name, **table_args)
+        table_metadata = Table(name=table_name, **table_args)
         table_xcom = aql.load_file(  # noqa: F841
             path=dataset_path,
             task_id="load_csv",

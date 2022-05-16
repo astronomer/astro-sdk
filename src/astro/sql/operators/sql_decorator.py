@@ -307,7 +307,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 pandas_dataframe = arg
                 output_table_name = create_unique_table_name()
                 output_table = Table(
-                    table_name=output_table_name,
+                    name=output_table_name,
                     conn_id=self.conn_id,
                     database=self.database,
                     schema=self.schema,
@@ -332,7 +332,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 pandas_dataframe = value
                 output_table_name = create_unique_table_name()
                 output_table = Table(
-                    table_name=output_table_name,
+                    name=output_table_name,
                     conn_id=self.conn_id,
                     database=self.database,
                     schema=self.schema,

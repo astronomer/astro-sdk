@@ -63,7 +63,7 @@ def table(request):
         get_table_name("boolean_check_test"), conn_id="sqlite_conn"
     )
     boolean_check_table_snowflake = Table(
-        table_name=get_table_name("boolean_check_test"),
+        name=get_table_name("boolean_check_test"),
         database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
         schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
         warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore

@@ -47,7 +47,7 @@ class TestSnowflakeMerge(unittest.TestCase):
     def setUp(self):
         self.main_table_name = test_utils.get_table_name("merge_test_1")
         self.main_table = Table(
-            table_name=self.main_table_name,
+            name=self.main_table_name,
             database=os.getenv("SNOWFLAKE_DATABASE"),
             schema=os.getenv("SNOWFLAKE_SCHEMA"),
             warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
@@ -55,7 +55,7 @@ class TestSnowflakeMerge(unittest.TestCase):
         )
         self.merge_table_name = test_utils.get_table_name("merge_test_2")
         self.merge_table = Table(
-            table_name=self.merge_table_name,
+            name=self.merge_table_name,
             database=os.getenv("SNOWFLAKE_DATABASE"),
             schema=os.getenv("SNOWFLAKE_SCHEMA"),
             warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),

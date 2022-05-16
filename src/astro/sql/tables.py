@@ -65,19 +65,18 @@ class Table:
 
         from astro.databases import create_database
 
-        if self.conn_id:
-            self.db = create_database(self.conn_id)
-
         self.name = name
         self.conn_id = conn_id
+        if self.conn_id:
+            self.db = create_database(self.conn_id)
 
         self.metadata = metadata
         if self.metadata is None:
             self.metadata = Metadata()
-        self.metadata.database = database
-        self.metadata.schema = schema
-        self.metadata.warehouse = warehouse
-        self.metadata.role = role
+            self.metadata.database = database
+            self.metadata.schema = schema
+            self.metadata.warehouse = warehouse
+            self.metadata.role = role
 
         self.columns = columns
         if self.columns is None:
@@ -190,3 +189,9 @@ class Table:
     @table_name.setter
     def table_name(self, val: str):
         self.name = val
+
+    def set_db(self, conn_id):
+        from astro.databases import create_database
+
+        self.db = create_database(conn_id)
+        self.conn_id = conn_id
