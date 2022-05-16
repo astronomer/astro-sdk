@@ -5,7 +5,7 @@ import pandas as pd
 import sqlalchemy
 from airflow.hooks.base import BaseHook
 from sqlalchemy import MetaData
-from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.exc import OperationalError, ProgrammingError
 from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import (
@@ -232,7 +232,7 @@ class BaseDatabase(ABC):
                 f"SELECT * FROM {table_qualified_name}",  # skipcq BAN-B608
                 con=self.sqlalchemy_engine,
             )
-        except ProgrammingError:
+        except (ProgrammingError, OperationalError):
             # To Do : This code is possibly swallowing other errors.
             raise NonExistentTableException(
                 "The table %s does not exist" % table_qualified_name
