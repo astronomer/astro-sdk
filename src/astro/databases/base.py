@@ -61,10 +61,13 @@ class BaseDatabase(ABC):
         :param sql_statement: Contains SQL query to be run against database
         :param parameters: Optional parameters to be used to render the query
         """
-        if parameters:
-            result = self.hook.run(sql_statement, parameters)
+        if parameters is None:
+            parameters = {}
+
+        if isinstance(sql_statement, str):
+            result = self.connection.execute(sqlalchemy.text(sql_statement), parameters)
         else:
-            result = self.hook.run(sql_statement)
+            result = self.connection.execute(sql_statement, parameters)
         return result
 
     def table_exists(self, table: Table) -> bool:
@@ -90,7 +93,7 @@ class BaseDatabase(ABC):
         # Initially this method belonged to the Table class.
         # However, in order to have an agnostic table class implementation,
         # we are keeping all methods which vary depending on the database within the Database class.
-        if table.metadata is not None and table.metadata.schema is not None:
+        if table.metadata and table.metadata.schema:
             qualified_name = f"{table.metadata.schema}.{table.name}"
         else:
             qualified_name = table.name

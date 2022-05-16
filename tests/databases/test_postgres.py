@@ -73,7 +73,6 @@ def test_table_exists_raises_exception():
         {
             "database": Database.POSTGRES,
             "table": Table(
-                metadata=Metadata(schema=SCHEMA),
                 columns=[
                     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
                     sqlalchemy.Column(
@@ -102,13 +101,13 @@ def test_postgres_create_table_with_columns(database_table_fixture):
     assert len(rows) == 2
     assert rows[0][0:4] == (
         "postgres",
-        f"{table.metadata.schema}",
+        "public",
         f"{table.name}",
         "id",
     )
     assert rows[1][0:4] == (
         "postgres",
-        f"{table.metadata.schema}",
+        "public",
         f"{table.name}",
         "name",
     )
@@ -118,10 +117,7 @@ def test_postgres_create_table_with_columns(database_table_fixture):
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {
-            "database": Database.POSTGRES,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
-        },
+        {"database": Database.POSTGRES},
     ],
     indirect=True,
     ids=["postgres"],
@@ -146,10 +142,7 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {
-            "database": Database.POSTGRES,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
-        },
+        {"database": Database.POSTGRES},
     ],
     indirect=True,
     ids=["postgres"],
@@ -177,10 +170,7 @@ def test_load_file_to_table(database_table_fixture):
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {
-            "database": Database.POSTGRES,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
-        },
+        {"database": Database.POSTGRES},
     ],
     indirect=True,
     ids=["postgres"],
@@ -208,7 +198,6 @@ def test_export_table_to_file_file_already_exists_raises_exception(
         {
             "database": Database.POSTGRES,
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
-            "table": Table(metadata=Metadata(schema=SCHEMA, database="postgres")),
         },
     ],
     indirect=True,
@@ -239,7 +228,7 @@ def test_export_table_to_file_overrides_existing_file(database_table_fixture):
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
-    [{"database": Database.POSTGRES, "table": Table(metadata=Metadata(schema=SCHEMA))}],
+    [{"database": Database.POSTGRES}],
     indirect=True,
     ids=["postgres"],
 )
@@ -262,7 +251,6 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     [
         {
             "database": Database.POSTGRES,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
         }
     ],
@@ -308,12 +296,11 @@ def test_export_table_to_file_in_the_cloud(
     [
         {
             "database": Database.POSTGRES,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
         }
     ],
     indirect=True,
-    ids=["POSTGRES"],
+    ids=["postgres"],
 )
 def test_create_table_from_select_statement(database_table_fixture):
     """Test table creation via select statement"""
@@ -322,7 +309,7 @@ def test_create_table_from_select_statement(database_table_fixture):
     statement = "SELECT * FROM {} WHERE id = 1;".format(
         database.get_table_qualified_name(original_table)
     )
-    target_table = Table(metadata=Metadata(schema=SCHEMA))
+    target_table = Table()
     database.create_table_from_select_statement(statement, target_table)
 
     df = database.hook.get_pandas_df(

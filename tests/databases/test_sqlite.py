@@ -56,6 +56,15 @@ def test_sqlite_run_sql():
 
 
 @pytest.mark.integration
+def test_sqlite_run_sql_with_parameters():
+    """Test running a SQL query using SQLAlchemy templating engine"""
+    statement = "SELECT 1 + :value;"
+    database = SqliteDatabase()
+    response = database.run_sql(statement, parameters={"value": 1})
+    assert response.first()[0] == 2
+
+
+@pytest.mark.integration
 def test_table_exists_raises_exception():
     database = SqliteDatabase()
     assert not database.table_exists(Table(name="inexistent-table"))

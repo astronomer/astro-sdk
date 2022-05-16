@@ -23,6 +23,10 @@ class SqlTruncateOperator(BaseOperator):
 
     def execute(self, context: Dict) -> None:  # skipcq: PYL-W0613
         database = create_database(self.table.conn_id)
-        if not self.table.metadata and database.default_metadata:
+        if (
+            self.table.metadata
+            and self.table.metadata.is_empty()
+            and database.default_metadata
+        ):
             self.table.metadata = database.default_metadata
         database.drop_table(self.table)

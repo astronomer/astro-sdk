@@ -1,9 +1,6 @@
-from typing import Optional, Union
-
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
-from sqlalchemy.engine.result import ResultProxy
 
 from astro.databases.base import BaseDatabase
 from astro.sql.tables import Metadata, Table
@@ -32,20 +29,6 @@ class SqliteDatabase(BaseDatabase):
         if "////" not in uri:
             uri = uri.replace("///", "////")
         return create_engine(uri)
-
-    def run_sql(
-        self, sql_statement: Union[text, str], parameters: Optional[dict] = None
-    ) -> ResultProxy:
-        """
-        Run given SQL statement in the database using the Sqlalchemy engine.
-
-        :param sql_statement: SQL statement to be run on the engine
-        :param parameters: (optional) Parameters to be passed to the SQL statement
-        :return: Result of running the statement.
-        """
-        if parameters is None:
-            parameters = {}
-        return self.connection.execute(sql_statement, parameters)
 
     @property
     def default_metadata(self) -> Metadata:

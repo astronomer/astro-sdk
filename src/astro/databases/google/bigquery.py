@@ -1,5 +1,4 @@
 """Google BigQuery table implementation."""
-
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from sqlalchemy import create_engine
