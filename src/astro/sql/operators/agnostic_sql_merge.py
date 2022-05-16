@@ -4,7 +4,7 @@ from airflow.exceptions import AirflowException
 
 from astro.constants import Database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
-from astro.sql.table import Table, TempTable
+from astro.sql.tables import Table
 from astro.utils.bigquery_merge_func import bigquery_merge_func
 from astro.utils.database import create_database_from_conn_id
 from astro.utils.postgres_merge_func import postgres_merge_func
@@ -22,8 +22,8 @@ class SqlMergeOperator(SqlDecoratedOperator):
 
     def __init__(
         self,
-        target_table: Union[Table, TempTable],
-        merge_table: Union[Table, TempTable],
+        target_table: Table,
+        merge_table: Table,
         merge_keys: Union[List[str], Dict[str, str]],
         target_columns: List[str],
         merge_columns: List[str],
@@ -50,7 +50,7 @@ class SqlMergeOperator(SqlDecoratedOperator):
             **kwargs,
         )
 
-    def execute(self, context: dict) -> Union[Table, TempTable]:
+    def execute(self, context: dict) -> Table:
         self.database = self.target_table.database
         self.conn_id = self.target_table.conn_id
         self.schema = self.target_table.schema

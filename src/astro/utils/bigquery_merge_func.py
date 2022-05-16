@@ -1,4 +1,4 @@
-from astro.sql.table import Table
+from astro.sql.tables import Table
 
 
 def bigquery_merge_func(

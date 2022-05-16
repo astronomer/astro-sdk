@@ -6,8 +6,9 @@ from airflow.decorators import task, task_group
 from airflow.utils import timezone
 
 from astro import sql as aql
+from astro.databases.sqlite import SqliteDatabase
 from astro.dataframe import dataframe as adf
-from astro.sql.table import Table, TempTable
+from astro.sql.tables import Table
 from tests.operators import utils as test_utils
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("integration_test_table")
@@ -86,13 +87,13 @@ def run_dataframe_funcs(input_table: Table):
 
 @aql.run_raw_sql
 def add_constraint(table: Table):
-    if table.conn_type == "sqlite":
+    if isinstance(table.db, SqliteDatabase):
         return "CREATE UNIQUE INDEX unique_index ON {{table}}(list,sell)"
     return "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (list,sell)"
 
 
 @task_group
-def run_append(output_specs: TempTable):
+def run_append(output_specs: Table):
     load_main = aql.load_file(
         path=str(CWD) + "/data/homes_main.csv",
         output_table=output_specs,
@@ -110,7 +111,7 @@ def run_append(output_specs: TempTable):
 
 
 @task_group
-def run_merge(output_specs: TempTable, merge_keys):
+def run_merge(output_specs: Table, merge_keys):
     main_table = aql.load_file(
         path=str(CWD) + "/data/homes_merge_1.csv",
         output_table=output_specs,

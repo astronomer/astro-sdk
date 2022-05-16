@@ -17,7 +17,7 @@ import astro.sql as aql
 from astro.constants import SUPPORTED_DATABASES
 from astro.settings import SCHEMA
 from astro.sql.operators.agnostic_boolean_check import Check
-from astro.sql.table import Table
+from astro.sql.tables import Table
 from tests.operators.utils import get_table_name, run_dag
 
 log = logging.getLogger(__name__)

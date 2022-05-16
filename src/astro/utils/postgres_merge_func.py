@@ -1,4 +1,4 @@
-from astro.sql.table import Table
+from astro.sql.tables import Table
 from astro.utils.dependencies import PostgresHook, postgres_sql
 
 
@@ -26,9 +26,9 @@ def postgres_merge_func(
 
     query = postgres_sql.SQL(statement).format(
         target_columns=postgres_sql.SQL(",").join(target_column_names),
-        main_table=postgres_sql.Identifier(*target_table.identifier_args()),
+        main_table=postgres_sql.Identifier(*identifier_args(target_table)),
         append_columns=postgres_sql.SQL(",").join(append_column_names),
-        append_table=postgres_sql.Identifier(*merge_table.identifier_args()),
+        append_table=postgres_sql.Identifier(*identifier_args(merge_table)),
         update_statements=postgres_sql.SQL(",").join(update_statements),
         merge_keys=postgres_sql.SQL(",").join(
             [postgres_sql.Identifier(x) for x in merge_keys]
@@ -37,3 +37,7 @@ def postgres_merge_func(
 
     hook = PostgresHook(postgres_conn_id=target_table.conn_id)
     return query.as_string(hook.get_conn())
+
+
+def identifier_args(table):
+    return (table.schema, table.table_name) if table.schema else (table.table_name,)

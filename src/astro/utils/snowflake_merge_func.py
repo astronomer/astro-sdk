@@ -1,6 +1,6 @@
 from airflow.exceptions import AirflowException
 
-from astro.sql.table import Table
+from astro.sql.tables import Table
 
 
 def wrap_identifier(inp):

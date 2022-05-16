@@ -6,7 +6,7 @@ from airflow.exceptions import BackfillUnfinished
 
 from astro import sql as aql
 from astro.dataframe import dataframe as adf
-from astro.sql.table import TempTable
+from astro.sql.tables import Table
 from tests.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
@@ -95,8 +95,8 @@ def test_append(sql_server, sample_dag, test_table, append_params):
     indirect=True,
 )
 def test_append_on_tables_on_different_db(sample_dag, sql_server):
-    test_table_1 = TempTable(conn_id="postgres_conn")
-    test_table_2 = TempTable(conn_id="sqlite_conn")
+    test_table_1 = Table(conn_id="postgres_conn")
+    test_table_2 = Table(conn_id="sqlite_conn")
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
             load_main = aql.load_file(

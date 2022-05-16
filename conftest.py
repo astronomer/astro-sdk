@@ -15,8 +15,10 @@ from airflow.utils.session import create_session, provide_session
 from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
 from astro.settings import SCHEMA
-from astro.sql.table import Table, TempTable, create_unique_table_name
-from astro.sql.tables import Table as NewTable
+from astro.sql.table import create_unique_table_name
+from astro.sql.tables import Metadata, Table
+
+# from astro.sql.tables import Table as NewTable
 from astro.utils.database import get_database_name
 from astro.utils.dependencies import BigQueryHook, gcs, s3
 from astro.utils.load import load_dataframe_into_sql_table
@@ -122,7 +124,7 @@ def test_table(request, sql_server):  # noqa: C901
 
         default_table_options.update(override_table_options)
         tables.append(
-            TempTable(**default_table_options)
+            Table(**default_table_options)
             if is_tmp_table
             else Table(**default_table_options)
         )
@@ -148,11 +150,15 @@ def test_table(request, sql_server):  # noqa: C901
 def output_table(request):
     table_type = request.param
     if table_type == "None":
-        return TempTable()
+        return Table()
     elif table_type == "partial":
-        return Table("my_table")
+        return Table(name="my_table")
     elif table_type == "full":
-        return Table("my_table", database="pagila", conn_id="postgres_conn")
+        return Table(
+            name="my_table",
+            metadata=Metadata(database="pagila"),
+            conn_id="postgres_conn",
+        )
 
 
 @pytest.fixture
@@ -219,7 +225,7 @@ def database_table_fixture(request):
     database = create_database(conn_id)
 
     table = params.get(
-        "table", NewTable(conn_id=conn_id, metadata=database.default_metadata)
+        "table", Table(conn_id=conn_id, metadata=database.default_metadata)
     )
     database.drop_table(table)
     if file:

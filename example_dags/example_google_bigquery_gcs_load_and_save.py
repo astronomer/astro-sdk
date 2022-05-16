@@ -20,7 +20,7 @@ from airflow.utils import timezone
 
 import astro.sql as aql
 from astro import dataframe
-from astro.sql.table import Table
+from astro.sql.tables import Metadata, Table
 
 gcs_bucket = os.getenv("GCS_BUCKET", "gs://dag-authoring")
 
@@ -32,7 +32,9 @@ with DAG(
     t1 = aql.load_file(
         task_id="load_from_github_to_bq",
         path="https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/imdb.csv",
-        output_table=Table("imdb_movies", conn_id="bigquery", schema="astro"),
+        output_table=Table(
+            name="imdb_movies", conn_id="bigquery", metadata=Metadata(schema="astro")
+        ),
     )
 
     # Setting "identifiers_as_lower" to True will lowercase all column names

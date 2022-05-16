@@ -1,11 +1,15 @@
 import random
 import string
-from dataclasses import dataclass, fields
-from typing import List, Optional, Union
 
+from dataclasses import dataclass, fields
+from typing import Any, List, Optional, Union
+
+import pandas as pd
 from sqlalchemy import Column, MetaData
 
-MAX_TABLE_NAME_LENGTH = 62
+from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
+
+MAX_TABLE_NAME_LENGTH = 63
 
 
 @dataclass
@@ -47,7 +51,35 @@ class Table:
     columns: Optional[List[Column]] = None
     temp: bool = False
 
+    def __init__(
+        self,
+        name="",
+        conn_id=None,
+        database=None,
+        schema=None,
+        warehouse=None,
+        role=None,
+        metadata=None,
+        columns=None,
+    ):
+        self.metadata = metadata
+        if self.metadata is None:
+            self.metadata = Metadata()
+
+        self.columns = columns
+        self.name = name
+        self.conn_id = conn_id
+        self.metadata.database = database
+        self.metadata.schema = schema
+        self.metadata.warehouse = warehouse
+        self.metadata.role = role
+        self._conn_type = None
+
     def __post_init__(self):
+        from astro.databases import create_database
+
+        self.db = create_database(self.conn_id)
+
         if self.columns is None:
             self.columns = []
 
@@ -78,3 +110,84 @@ class Table:
         else:
             alchemy_metadata = MetaData()
         return alchemy_metadata
+
+    @property
+    def qualified_name(self):
+        """Return table qualified name. This is Database-specific."""
+        return self.db.get_table_qualified_name(self)
+
+    def load_pandas_dataframe_to_table(
+        self,
+        source_dataframe: pd.DataFrame,
+        target_table: Any,  # To Do - Fix me!
+        if_exists: LoadExistStrategy = "replace",
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+    ) -> None:
+        """
+        Create a table with the dataframe's contents.
+        If the table already exists, append or replace the content, depending on the value of `if_exists`.
+
+        :param source_dataframe: Local or remote filepath
+        :param target_table: Table in which the file will be loaded
+        :param if_exists: Strategy to be used in case the target table already exists.
+        :param chunk_size: Specify the number of rows in each batch to be written at a time.
+        """
+        self.db.load_pandas_dataframe_to_table(
+            source_dataframe=source_dataframe,
+            target_table=target_table,
+            if_exists=if_exists,
+            chunk_size=chunk_size,
+        )
+
+    @property
+    def schema(self) -> str:
+        return str(getattr(self.metadata, "schema", None))
+
+    @schema.setter
+    def schema(self, val: str):
+        if self.metadata is None:
+            self.metadata = Metadata()
+
+        self.metadata.schema = val
+
+    @property
+    def database(self) -> str:
+        return str(getattr(self.metadata, "database", None))
+
+    @database.setter
+    def database(self, val: str):
+        if self.metadata is None:
+            self.metadata = Metadata()
+
+        self.metadata.database = val
+
+    @property
+    def warehouse(self) -> str:
+        return str(getattr(self.metadata, "warehouse", None))
+
+    @warehouse.setter
+    def warehouse(self, val: str):
+        if self.metadata is None:
+            self.metadata = Metadata()
+
+        self.metadata.warehouse = val
+
+    @property
+    def role(self) -> str:
+        return str(getattr(self.metadata, "role", None))
+
+    @role.setter
+    def role(self, val: str):
+        if self.metadata is None:
+            self.metadata = Metadata()
+
+        self.metadata.role = val
+
+    @property
+    def table_name(self) -> str:
+        # To Do -- replace all the instance of table.table_name with table.name
+        return str(self.name)
+
+    @table_name.setter
+    def table_name(self, val: str):
+        self.name = val

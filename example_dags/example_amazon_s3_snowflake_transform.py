@@ -9,7 +9,7 @@ from airflow.decorators import dag
 
 from astro import dataframe as df
 from astro import sql as aql
-from astro.sql.table import Table
+from astro.sql.tables import Metadata, Table
 
 
 @aql.transform()
@@ -50,15 +50,19 @@ def example_amazon_s3_snowflake_transform():
     s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
 
     input_table_1 = Table(
-        "ADOPTION_CENTER_1",
-        database=os.environ["SNOWFLAKE_DATABASE"],
-        schema=os.environ["SNOWFLAKE_SCHEMA"],
+        name="ADOPTION_CENTER_1",
+        metadata=Metadata(
+            database=os.environ["SNOWFLAKE_DATABASE"],
+            schema=os.environ["SNOWFLAKE_SCHEMA"],
+        ),
         conn_id="snowflake_conn",
     )
     input_table_2 = Table(
         "ADOPTION_CENTER_2",
-        database=os.environ["SNOWFLAKE_DATABASE"],
-        schema=os.environ["SNOWFLAKE_SCHEMA"],
+        metadata=Metadata(
+            database=os.environ["SNOWFLAKE_DATABASE"],
+            schema=os.environ["SNOWFLAKE_SCHEMA"],
+        ),
         conn_id="snowflake_conn",
     )
 
@@ -82,8 +86,8 @@ def example_amazon_s3_snowflake_transform():
     aggregate_data(
         cleaned_data,
         output_table=Table(
-            "aggregated_adoptions_" + str(int(time.time())),
-            schema=os.environ["SNOWFLAKE_SCHEMA"],
+            name="aggregated_adoptions_" + str(int(time.time())),
+            metadata=Metadata(schema=os.environ["SNOWFLAKE_SCHEMA"]),
             conn_id="snowflake_conn",
         ),
     )

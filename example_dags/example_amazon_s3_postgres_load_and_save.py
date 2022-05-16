@@ -5,7 +5,7 @@ from airflow.utils import timezone
 
 # Import Operator
 import astro.sql as aql
-from astro.sql.table import Table
+from astro.sql.tables import Metadata, Table
 
 default_args = {
     "owner": "airflow",
@@ -26,7 +26,9 @@ def example_amazon_s3_postgres_load_and_save():
         path=f"{s3_bucket}/homes.csv",
         file_conn_id="",
         output_table=Table(
-            "expected_table_from_s3", conn_id="postgres_conn", database="postgres"
+            name="expected_table_from_s3",
+            conn_id="postgres_conn",
+            metadata=Metadata(database="postgres"),
         ),
     )
 

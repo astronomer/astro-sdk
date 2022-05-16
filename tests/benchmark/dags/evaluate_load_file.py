@@ -6,7 +6,7 @@ from pathlib import Path
 from airflow import DAG
 
 from astro import sql as aql
-from astro.sql.table import Table
+from astro.sql.tables import Table
 
 START_DATE = datetime(2000, 1, 1)
 

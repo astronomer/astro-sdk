@@ -22,7 +22,7 @@ from pandas.testing import assert_frame_equal
 
 from astro.constants import Database
 from astro.sql.operators.agnostic_load_file import load_file
-from astro.sql.table import Table
+from astro.sql.tables import Table
 from astro.utils.dependencies import gcs, s3
 from tests.operators import utils as test_utils
 

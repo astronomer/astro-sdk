@@ -26,7 +26,7 @@ from airflow.utils.state import State
 
 # Import Operator
 import astro.sql as aql
-from astro.sql.table import Table
+from astro.sql.tables import Table
 from tests.operators import utils as test_utils
 
 # from tests.operators import utils as test_utils

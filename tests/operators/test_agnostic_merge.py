@@ -9,7 +9,7 @@ from airflow.utils import timezone
 from astro import sql as aql
 from astro.constants import Database
 from astro.dataframe import dataframe as adf
-from astro.sql.table import Table, TempTable
+from astro.sql.tables import Table
 from astro.utils.database import create_database_from_conn_id
 from tests.operators import utils as test_utils
 
@@ -133,7 +133,7 @@ def validate_results(df: pd.DataFrame, mode, sql_type):
 
 
 @task_group
-def run_merge(output_specs: TempTable, merge_parameters, mode, sql_type):
+def run_merge(output_specs: Table, merge_parameters, mode, sql_type):
     main_table = aql.load_file(
         path=str(CWD) + "/../data/homes_merge_1.csv",
         output_table=output_specs,

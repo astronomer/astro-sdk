@@ -7,7 +7,7 @@ from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 
 from astro.constants import Database
 from astro.settings import SCHEMA
-from astro.sql.table import Table, TempTable, create_table_name
+from astro.sql.tables import Table
 from astro.utils import get_hook
 from astro.utils.database import create_database_from_conn_id
 from astro.utils.dependencies import (
@@ -93,10 +93,10 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
         if self.output_table:
             self.populate_output_table()
-            if type(self.output_table) == TempTable:
-                self.output_table = self.output_table.to_table(
-                    table_name=create_table_name(context=context), schema=SCHEMA
-                )
+            # if type(self.output_table) == TempTable:
+            #     self.output_table = self.output_table.to_table(
+            #         table_name=create_table_name(context=context), schema=SCHEMA
+            #     )
             self.output_table.schema = self.output_table.schema or SCHEMA
             hook = get_hook(
                 conn_id=self.output_table.conn_id,

@@ -9,7 +9,8 @@ from sqlalchemy.sql.functions import Function
 
 from astro.constants import Database
 from astro.settings import SCHEMA
-from astro.sql.table import Table, TempTable, create_unique_table_name
+from astro.sql.table import create_unique_table_name
+from astro.sql.tables import Table
 from astro.utils import get_hook, postgres_transform, snowflake_transform
 from astro.utils.database import (
     create_database_from_conn_id,
@@ -110,7 +111,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
 
         if not self.raw_sql:
 
-            if not self.output_table or type(self.output_table) == TempTable:
+            if not self.output_table:
                 output_table_name = create_unique_table_name()
                 self._set_schema_if_needed(schema=SCHEMA)
                 full_output_table_name = self.handle_output_table_schema(
@@ -137,10 +138,10 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         # Run execute function of subclassed Operator.
 
         if self.output_table:
-            if type(self.output_table) == TempTable:
-                self.output_table = self.output_table.to_table(
-                    table_name=output_table_name, schema=self.output_table.schema
-                )
+            # if type(self.output_table) == TempTable:
+            #     self.output_table = self.output_table.to_table(
+            #         table_name=output_table_name, schema=self.output_table.schema
+            #     )
             self.log.info("Returning table %s", self.output_table)
             self.populate_output_table()
             return self.output_table
@@ -151,7 +152,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
             return None
         else:
             self.output_table = Table(
-                table_name=output_table_name,
+                name=output_table_name,
             )
             self.populate_output_table()
             self.log.info("Returning table %s", self.output_table)

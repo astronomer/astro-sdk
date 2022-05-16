@@ -1,7 +1,7 @@
 import copy
 import os
 import time
-from typing import Optional, Union
+from typing import Optional
 
 import pandas as pd
 from airflow.executors.debug_executor import DebugExecutor
@@ -10,7 +10,7 @@ from airflow.utils import timezone
 from airflow.utils.state import State
 from pandas.testing import assert_frame_equal
 
-from astro.sql.table import Table, TempTable
+from astro.sql.tables import Table
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook, bigquery
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -106,7 +106,7 @@ def run_dag(dag):
     )
 
 
-def get_dataframe_from_table(sql_name: str, test_table: Union[Table, TempTable], hook):
+def get_dataframe_from_table(sql_name: str, test_table: Table, hook):
     if sql_name == "bigquery":
         client = bigquery.Client()
         query_job = client.query(

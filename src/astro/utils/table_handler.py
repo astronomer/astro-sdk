@@ -4,7 +4,7 @@ from typing import Optional
 import pandas
 
 from astro.settings import SCHEMA
-from astro.sql.table import Table
+from astro.sql.tables import Table
 
 
 class TableHandler:
