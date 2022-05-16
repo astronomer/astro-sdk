@@ -110,7 +110,7 @@ class SaveFile(BaseOperator):
             )
 
         return pd.read_sql(
-            f"SELECT * FROM {input_table.qualified_name()}",
+            f"SELECT * FROM {input_table.qualified_name}",
             con=input_hook.get_sqlalchemy_engine(),
         )
 

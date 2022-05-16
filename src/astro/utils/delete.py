@@ -36,8 +36,8 @@ def delete_dataframe_rows_from_table(
     engine = get_sqlalchemy_engine(hook)
     run_sql(
         engine,
-        f"DELETE FROM {target_table.qualified_name()} WHERE Id IN (SELECT Id FROM {named_table.qualified_name()})",
+        f"DELETE FROM {target_table.qualified_name} WHERE Id IN (SELECT Id FROM {named_table.qualified_name})",
     )
 
     # Finally, we delete the temporary table which had the dataframe values
-    run_sql(engine, f"DROP TABLE {named_table.qualified_name()}")
+    run_sql(engine, f"DROP TABLE {named_table.qualified_name}")

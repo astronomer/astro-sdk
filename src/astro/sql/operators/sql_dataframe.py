@@ -155,7 +155,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         elif database == Database.BIGQUERY:
             hook = BigQueryHook(gcp_conn_id=table.conn_id)
             engine = hook.get_sqlalchemy_engine()
-            df = pd.read_sql_table(table.qualified_name(), engine)
+            df = pd.read_sql_table(table.qualified_name, engine)
 
         if self.identifiers_as_lower:
             df.columns = [col_label.lower() for col_label in df.columns]

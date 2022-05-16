@@ -62,31 +62,28 @@ class Table:
         metadata=None,
         columns=None,
     ):
+
+        from astro.databases import create_database
+
+        if self.conn_id:
+            self.db = create_database(self.conn_id)
+
+        self.name = name
+        self.conn_id = conn_id
+
         self.metadata = metadata
         if self.metadata is None:
             self.metadata = Metadata()
-
-        self.columns = columns
-        self.name = name
-        self.conn_id = conn_id
         self.metadata.database = database
         self.metadata.schema = schema
         self.metadata.warehouse = warehouse
         self.metadata.role = role
-        self._conn_type = None
 
-    def __post_init__(self):
-        from astro.databases import create_database
-
-        self.db = create_database(self.conn_id)
-
+        self.columns = columns
         if self.columns is None:
             self.columns = []
 
-        if self.metadata is None:
-            self.metadata = Metadata()
-
-        if not self.name:
+        if not name:
             self.name = self._create_unique_table_name()
             self.temp = True
 
@@ -112,9 +109,11 @@ class Table:
         return alchemy_metadata
 
     @property
-    def qualified_name(self):
+    def qualified_name(self) -> Optional[str]:
         """Return table qualified name. This is Database-specific."""
-        return self.db.get_table_qualified_name(self)
+        if self.db:
+            return str(self.db.get_table_qualified_name(self))
+        return None
 
     def load_pandas_dataframe_to_table(
         self,

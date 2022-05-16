@@ -36,11 +36,11 @@ EXPECTED_DATA = pd.DataFrame(
 
 
 def create_table(database, hook, table):
-    hook.run(f"DROP TABLE IF EXISTS {table.qualified_name()}")
+    hook.run(f"DROP TABLE IF EXISTS {table.qualified_name}")
     if database == Database.BIGQUERY.value:
-        hook.run(f"CREATE TABLE {table.qualified_name()} (ID int, Name string);")
+        hook.run(f"CREATE TABLE {table.qualified_name} (ID int, Name string);")
     else:
-        hook.run(f"CREATE TABLE {table.qualified_name()} (ID int, Name varchar(255));")
+        hook.run(f"CREATE TABLE {table.qualified_name} (ID int, Name varchar(255));")
 
 
 def describe_load_file_into_dataframe():
@@ -150,7 +150,7 @@ def describe_load_dataframe_into_sql_table():
         dataframe = pd.DataFrame([{"id": 27, "name": "Jim Morrison"}])
         test_table.schema = SCHEMA
         load_dataframe_into_sql_table(dataframe, test_table, hook)
-        computed = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+        computed = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name}")
         computed = computed.rename(columns=str.lower)
         expected = pd.DataFrame(
             [
@@ -158,7 +158,7 @@ def describe_load_dataframe_into_sql_table():
             ]
         )
         assert_frame_equal(computed, expected)
-        hook.run(f"DROP TABLE IF EXISTS {test_table.qualified_name()}")
+        hook.run(f"DROP TABLE IF EXISTS {test_table.qualified_name}")
 
     @pytest.mark.integration
     @pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
@@ -173,7 +173,7 @@ def describe_load_dataframe_into_sql_table():
         create_table(database, hook, test_table)
         dataframe = pd.DataFrame([{"id": 27, "name": "Jim Morrison"}])
         load_dataframe_into_sql_table(dataframe, test_table, hook)
-        computed = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+        computed = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name}")
         expected = pd.DataFrame(
             [
                 {"id": 27, "name": "Jim Morrison"},

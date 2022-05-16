@@ -134,8 +134,8 @@ def test_table(request, sql_server):  # noqa: C901
     yield tables if len(tables) > 1 else tables[0]
 
     for table in tables:
-        if table.qualified_name():
-            hook.run(f"DROP TABLE IF EXISTS {table.qualified_name()}")
+        if table.qualified_name:
+            hook.run(f"DROP TABLE IF EXISTS {table.qualified_name}")
 
         if database == Database.SQLITE:
             hook.run("DROP INDEX IF EXISTS unique_index")

@@ -110,12 +110,12 @@ def get_dataframe_from_table(sql_name: str, test_table: Table, hook):
     if sql_name == "bigquery":
         client = bigquery.Client()
         query_job = client.query(
-            f"SELECT * FROM astronomer-dag-authoring.{test_table.qualified_name()}"
+            f"SELECT * FROM astronomer-dag-authoring.{test_table.qualified_name}"
         )
         df = query_job.to_dataframe()
     else:
         df = pd.read_sql(
-            f"SELECT * FROM {test_table.qualified_name()}",
+            f"SELECT * FROM {test_table.qualified_name}",
             con=hook.get_conn(),
         )
     return df

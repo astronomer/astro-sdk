@@ -196,7 +196,7 @@ def test_load_file_templated_filename(sample_dag, sql_server, test_table):
         )
     test_utils.run_dag(sample_dag)
 
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name}")
     assert len(df) == 3
 
 
@@ -246,7 +246,7 @@ def test_aql_load_file_local_file_pattern(sample_dag, test_table, sql_server):
 
     # Read table from db
     df = pd.read_sql(
-        f"SELECT * FROM {test_table.qualified_name()}", con=sql_hook.get_conn()
+        f"SELECT * FROM {test_table.qualified_name}", con=sql_hook.get_conn()
     )
     assert test_df_rows * 2 == df.shape[0]
 
@@ -276,7 +276,7 @@ def test_load_file_using_file_connection(
         )
     test_utils.run_dag(sample_dag)
 
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name}")
     assert len(df) == 3
 
 
@@ -317,7 +317,7 @@ def test_load_file(sample_dag, sql_server, file_type, test_table):
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name}")
 
     assert len(df) == 3
     expected = pd.DataFrame(
@@ -358,7 +358,7 @@ def test_load_file_with_named_schema(sample_dag, sql_server, file_type, test_tab
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name}")
     assert len(df) == 3
     expected = pd.DataFrame(
         [
@@ -421,7 +421,7 @@ def test_aql_nested_ndjson_file_with_default_sep_param(
         )
     test_utils.run_dag(sample_dag)
 
-    df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name}")
     assert df.shape == (1, 36)
     assert "payload_size" in df.columns
 
@@ -440,7 +440,7 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_sep_params(
         )
     test_utils.run_dag(sample_dag)
 
-    df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name}")
     assert df.shape == (1, 36)
     assert "payload___size" in df.columns
 
@@ -461,7 +461,7 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_illegal_sep_params(
         )
     test_utils.run_dag(sample_dag)
 
-    df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name}")
     assert df.shape == (1, 36)
     assert "payload_size" in df.columns
 
