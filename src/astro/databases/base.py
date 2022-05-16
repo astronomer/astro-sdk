@@ -1,9 +1,12 @@
 from abc import ABC
-from typing import Optional
+from typing import Dict, Optional
 
 import pandas as pd
 import sqlalchemy
 from airflow.hooks.base import BaseHook
+from sqlalchemy import MetaData
+from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
@@ -92,6 +95,16 @@ class BaseDatabase(ABC):
         qualified_name: str = f"{schema}.{table.name}" if schema else table.name
         return qualified_name
 
+    def get_sqla_table_object(self, table: Table) -> SqlaTable:
+        """
+        Return SQLAlchemy table object using reflections
+
+        :param table: The table we want to retrieve the qualified name for.
+        """
+        metadata_params: Dict[str, str] = {"schema": table.metadata.schema}
+        metadata = MetaData(**metadata_params)
+        return SqlaTable(table.name, metadata, autoload_with=self.sqlalchemy_engine)
+
     # ---------------------------------------------------------
     # Table creation & deletion methods
     # ---------------------------------------------------------
@@ -176,8 +189,10 @@ class BaseDatabase(ABC):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
+        schema = getattr(target_table.metadata, "schema", None)
         source_dataframe.to_sql(
-            self.get_table_qualified_name(target_table),
+            target_table.name,
+            schema=schema,
             con=self.sqlalchemy_engine,
             if_exists=if_exists,
             chunksize=chunk_size,
@@ -211,16 +226,17 @@ class BaseDatabase(ABC):
         :param source_table: An existing table in the database
         """
         table_qualified_name = self.get_table_qualified_name(source_table)
-        if self.table_exists(source_table):
+        try:
             return pd.read_sql(
                 # We are avoiding SQL injection by confirming the table exists before this statement
                 f"SELECT * FROM {table_qualified_name}",  # skipcq BAN-B608
                 con=self.sqlalchemy_engine,
             )
-
-        raise NonExistentTableException(
-            "The table %s does not exist" % table_qualified_name
-        )
+        except ProgrammingError:
+            # To Do : This code is possibly swallowing other errors.
+            raise NonExistentTableException(
+                "The table %s does not exist" % table_qualified_name
+            )
 
     def export_table_to_file(
         self,

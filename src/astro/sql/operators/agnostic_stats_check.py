@@ -1,7 +1,6 @@
 from typing import Dict, List, Optional, Set
 
 from sqlalchemy import MetaData, case, func, or_, select
-from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.databases import create_database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
@@ -97,14 +96,17 @@ class ChecksHandler:
         self, main_table: Table, compare_table: Table, engine, metadata_obj
     ):
         db = create_database(main_table.conn_id)
-        main_table_sqla = SqlaTable(
-            db.get_table_qualified_name(main_table), metadata_obj, autoload_with=engine
-        )
-        compare_table_sqla = SqlaTable(
-            db.get_table_qualified_name(compare_table),
-            metadata_obj,
-            autoload_with=engine,
-        )
+        main_table_sqla = db.get_sqla_table_object(main_table)
+        compare_table_sqla = db.get_sqla_table_object(compare_table)
+
+        # main_table_sqla = SqlaTable(
+        #     db.get_table_qualified_name(main_table), metadata_obj, autoload_with=engine
+        # )
+        # compare_table_sqla = SqlaTable(
+        #     db.get_table_qualified_name(compare_table),
+        #     metadata_obj,
+        #     autoload_with=engine,
+        # )
 
         main_table_stats_sql = self.prepare_main_stats_sql(main_table, main_table_sqla)
         cases_sql = self.prepare_cases_sql(main_table_stats_sql, compare_table_sqla)
@@ -142,14 +144,16 @@ class ChecksHandler:
         metadata_obj,
     ):
         db = create_database(main_table.conn_id)
-        main_table_sqla = SqlaTable(
-            db.get_table_qualified_name(main_table), metadata_obj, autoload_with=engine
-        )
-        compare_table_sqla = SqlaTable(
-            db.get_table_qualified_name(compare_table),
-            metadata_obj,
-            autoload_with=engine,
-        )
+        main_table_sqla = db.get_sqla_table_object(main_table)
+        compare_table_sqla = db.get_sqla_table_object(compare_table)
+        # main_table_sqla = SqlaTable(
+        #     db.get_table_qualified_name(main_table), metadata_obj, autoload_with=engine
+        # )
+        # compare_table_sqla = SqlaTable(
+        #     db.get_table_qualified_name(compare_table),
+        #     metadata_obj,
+        #     autoload_with=engine,
+        # )
 
         main_stats = self.prepare_main_stats_sql(main_table, main_table_sqla)
 

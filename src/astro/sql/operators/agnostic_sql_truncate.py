@@ -1,13 +1,10 @@
 from typing import Dict
 
 from airflow.decorators.base import get_unique_task_id
-from sqlalchemy import MetaData
-from sqlalchemy.sql.schema import Table as SqlaTable
 
-from astro.constants import Database
+from astro.databases import create_database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.tables import Table
-from astro.utils.database import create_database_from_conn_id
 
 
 class SqlTruncateOperator(SqlDecoratedOperator):
@@ -39,13 +36,15 @@ class SqlTruncateOperator(SqlDecoratedOperator):
         )
 
     def execute(self, context: Dict):
-        database = create_database_from_conn_id(self.table.conn_id)
-        if getattr(self.table.metadata, "schema", None) and database == Database.SQLITE:
-            metadata = MetaData()
-        else:
-            metadata = MetaData(schema=getattr(self.table.metadata, "schema", None))
+        # database = create_database_from_conn_id(self.table.conn_id)
+        # if getattr(self.table.metadata, "schema", None) and database == Database.SQLITE:
+        #     metadata = MetaData()
+        # else:
+        #     metadata = MetaData(schema=getattr(self.table.metadata, "schema", None))
 
-        engine = self.get_sql_alchemy_engine()
-        table_sqla = SqlaTable(self.table.name, metadata, autoload_with=engine)
+        # engine = self.get_sql_alchemy_engine()
+        db = create_database(self.table.conn_id)
+        table_sqla = db.get_sqla_table_object(self.table)
+        # table_sqla = SqlaTable(self.table.name, metadata, autoload_with=engine)
         self.sql = table_sqla.delete()
         super().execute(context)

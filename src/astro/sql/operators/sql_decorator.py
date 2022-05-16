@@ -17,7 +17,6 @@ from astro.utils.database import (
     get_sqlalchemy_engine,
     run_sql,
 )
-from astro.utils.load import load_dataframe_into_sql_table
 from astro.utils.schema_util import create_schema_query, schema_exists
 from astro.utils.table_handler import TableHandler
 
@@ -328,13 +327,17 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                         warehouse=self.warehouse,
                     ),
                 )
-                hook = get_hook(
-                    conn_id=self.conn_id,
-                    database=self.database,
-                    schema=self.schema,
-                    warehouse=self.warehouse,
+                # hook = get_hook(
+                #     conn_id=self.conn_id,
+                #     database=self.database,
+                #     schema=self.schema,
+                #     warehouse=self.warehouse,
+                # )
+                db = create_database(output_table.conn_id)
+                db.load_pandas_dataframe_to_table(
+                    source_dataframe=pandas_dataframe, target_table=output_table
                 )
-                load_dataframe_into_sql_table(pandas_dataframe, output_table, hook)
+                # load_dataframe_into_sql_table(pandas_dataframe, output_table, hook)
                 final_args.append(output_table)
             else:
                 final_args.append(arg)
@@ -353,13 +356,17 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                         warehouse=self.warehouse,
                     ),
                 )
-                hook = get_hook(
-                    conn_id=self.conn_id,
-                    database=self.database,
-                    schema=self.schema,
-                    warehouse=self.warehouse,
+                # hook = get_hook(
+                #     conn_id=self.conn_id,
+                #     database=self.database,
+                #     schema=self.schema,
+                #     warehouse=self.warehouse,
+                # )
+                db = create_database(output_table.conn_id)
+                db.load_pandas_dataframe_to_table(
+                    source_dataframe=pandas_dataframe, target_table=output_table
                 )
-                load_dataframe_into_sql_table(pandas_dataframe, output_table, hook)
+                # load_dataframe_into_sql_table(pandas_dataframe, output_table, hook)
                 final_kwargs[key] = output_table
             else:
                 final_kwargs[key] = value

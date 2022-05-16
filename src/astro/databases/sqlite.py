@@ -1,6 +1,9 @@
+from typing import Dict
+
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
-from sqlalchemy import create_engine
+from sqlalchemy import MetaData, create_engine
 from sqlalchemy.engine.base import Engine
+from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import AppendConflictStrategy
 from astro.databases.base import BaseDatabase
@@ -67,3 +70,17 @@ class SqliteDatabase(BaseDatabase):
         # select(target_table.columns).from_select(source_table.columns)
 
         raise NotImplementedError
+
+    def get_sqla_table_object(self, table: Table) -> SqlaTable:
+        """
+        Return SQLAlchemy table object using reflections
+
+        :param table: The table we want to retrieve the qualified name for.
+        """
+        metadata_params: Dict[str, str] = {}
+        metadata = MetaData(**metadata_params)
+        return SqlaTable(
+            self.get_table_qualified_name(table),
+            metadata,
+            autoload_with=self.sqlalchemy_engine,
+        )
