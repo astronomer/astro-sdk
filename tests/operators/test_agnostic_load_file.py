@@ -157,9 +157,9 @@ def test_unique_task_id_for_same_path(sample_dag):
                 "file_conn_id": "",
                 "output_table": Table(
                     name=OUTPUT_TABLE_NAME,
+                    conn_id="postgres_conn",
                     metadata=Metadata(
                         database="pagila",
-                        conn_id="postgres_conn",
                     ),
                 ),
             }

@@ -84,7 +84,9 @@ def render_single_path(
                 if out_table_dict.get("metadata", None):
                     metadata = out_table_dict.pop("metadata")
                 op_kwargs = {
-                    "output_table": Table(metadata=Metadata(metadata), **out_table_dict)
+                    "output_table": Table(
+                        metadata=Metadata(**metadata), **out_table_dict
+                    )
                 }
             operator_kwargs = set_kwargs_with_defaults(
                 front_matter_opts, conn_id, database, role, schema, warehouse
