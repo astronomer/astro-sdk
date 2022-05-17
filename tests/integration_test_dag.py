@@ -6,6 +6,7 @@ from airflow.decorators import task, task_group
 from airflow.utils import timezone
 
 from astro import sql as aql
+from astro.databases import create_database
 from astro.databases.sqlite import SqliteDatabase
 from astro.dataframe import dataframe as adf
 from astro.sql.tables import Table
@@ -87,7 +88,8 @@ def run_dataframe_funcs(input_table: Table):
 
 @aql.run_raw_sql
 def add_constraint(table: Table):
-    if isinstance(table.db, SqliteDatabase):
+    db = create_database(table.conn_id)
+    if isinstance(db, SqliteDatabase):
         return "CREATE UNIQUE INDEX unique_index ON {{table}}(list,sell)"
     return "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (list,sell)"
 
