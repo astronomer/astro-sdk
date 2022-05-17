@@ -1,7 +1,6 @@
 import inspect
 from typing import Dict, Optional
 
-import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from sqlalchemy.sql.functions import Function
 
@@ -9,11 +8,14 @@ from astro.databases import create_database
 from astro.sql.table import Table as OldTable
 from astro.sql.table import TempTable
 from astro.sql.tables import Metadata, Table
+from astro.utils.dataframe_function_handler import DataframeFunctionHandler
 from astro.utils.sql_refactor import SQL
 from astro.utils.table_handler_new import TableHandler
 
 
-class SqlDecoratedOperator(SQL, DecoratedOperator, TableHandler):
+class SqlDecoratedOperator(
+    SQL, DataframeFunctionHandler, DecoratedOperator, TableHandler
+):
     # todo: Add docstrings
     def __init__(
         self,
@@ -33,6 +35,7 @@ class SqlDecoratedOperator(SQL, DecoratedOperator, TableHandler):
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
         self.output_table: Optional[Table] = self.op_kwargs.pop("output_table", None)
         self.handler = self.op_kwargs.pop("handler", None)
+        self.sql = sql
 
         super().__init__(
             sql=sql,
@@ -70,8 +73,21 @@ class SqlDecoratedOperator(SQL, DecoratedOperator, TableHandler):
             )
         return table
 
+    def handle_table_conversions(self):
+        """
+        This is a temporary holdover until all other functions use the new table format
+        """
+        self.op_args = tuple(
+            self.convert_old_table_to_new(t) if isinstance(t, OldTable) else t
+            for t in self.op_args  # type: ignore
+        )  # type: ignore
+        self.op_kwargs = {
+            k: self.convert_old_table_to_new(t) if isinstance(t, OldTable) else t
+            for k, t in self.op_kwargs.items()
+        }
+
     def execute(self, context: Dict):
-        self.handle_conversions()
+        self.handle_table_conversions()
 
         self._set_variables_from_first_table()
         self.database_impl = create_database(self.conn_id)
@@ -100,19 +116,6 @@ class SqlDecoratedOperator(SQL, DecoratedOperator, TableHandler):
                 parameters=self.parameters,
             )
             return self.output_table
-
-    def handle_conversions(self):
-        """
-        This is a temporary holdover until all other functions use the new table format
-        """
-        self.op_args = [
-            self.convert_old_table_to_new(t) if isinstance(t, OldTable) else t
-            for t in self.op_args  # type: ignore
-        ]  # type: ignore
-        self.op_kwargs = {
-            k: self.convert_old_table_to_new(t) if isinstance(t, OldTable) else t
-            for k, t in self.op_kwargs.items()
-        }
 
     def create_output_table(self, output_table_name: str) -> Table:
         if not self.output_table:
@@ -157,29 +160,3 @@ class SqlDecoratedOperator(SQL, DecoratedOperator, TableHandler):
             self.parameters = {
                 k: self.render_template(v, context) for k, v in self.parameters.items()  # type: ignore
             }
-
-    def load_op_arg_dataframes_into_sql(self):
-        """Identifies dataframes in op_args and loads them to the table"""
-        final_args = []
-        for arg in self.op_args:
-            if isinstance(arg, pd.DataFrame):
-                self.database_impl.load_pandas_dataframe_to_table(
-                    source_dataframe=arg, target_table=self.output_table
-                )
-                final_args.append(self.output_table)
-            else:
-                final_args.append(arg)
-            self.op_args = tuple(final_args)
-
-    def load_op_kwarg_dataframes_into_sql(self):
-        """Identifies dataframes in op_kwargs and loads them to the table"""
-        final_kwargs = {}
-        for key, value in self.op_kwargs.items():
-            if isinstance(value, pd.DataFrame):
-                self.database_impl.load_pandas_dataframe_to_table(
-                    source_dataframe=value, target_table=self.output_table
-                )
-                final_kwargs[key] = self.output_table
-            else:
-                final_kwargs[key] = value
-        self.op_kwargs = final_kwargs

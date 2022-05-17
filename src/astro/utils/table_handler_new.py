@@ -1,10 +1,17 @@
 import inspect
-from typing import Optional
+from abc import ABC
+from typing import Callable, Optional, Tuple
 
 from astro.sql.tables import Metadata, Table
 
 
-class TableHandler:
+class TableHandler(ABC):
+    op_args: Tuple
+    op_kwargs: dict
+    python_callable: Callable
+    parameters: dict
+    output_table: Optional[Table]
+
     def _set_variables_from_first_table(self):
         """
         When we create our SQL operation, we run with the assumption that the first table given is the "main table".

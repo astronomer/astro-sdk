@@ -1,7 +1,5 @@
-import inspect
 from typing import Dict, Optional
 
-import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 
 from astro.databases import create_database
@@ -10,10 +8,11 @@ from astro.sql.table import Table as OldTable
 from astro.sql.table import TempTable
 from astro.sql.tables import Metadata
 from astro.sql.tables import Table as NewTable
+from astro.utils.dataframe_function_handler import DataframeFunctionHandler
 from astro.utils.table_handler_new import TableHandler
 
 
-class SqlDataframeOperator(DecoratedOperator, TableHandler):
+class SqlDataframeOperator(DataframeFunctionHandler, DecoratedOperator, TableHandler):
     def __init__(
         self,
         conn_id: Optional[str] = None,
@@ -40,7 +39,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         self.schema = schema
         self.warehouse = warehouse
         self.role = role
-        self.parameters = None
+        self.parameters = {}
         self.kwargs = kwargs or {}
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
         if self.op_kwargs.get("output_table"):
@@ -53,30 +52,6 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         super().__init__(
             **kwargs,
         )
-
-    def load_op_arg_table_into_dataframe(self):
-        full_spec = inspect.getfullargspec(self.python_callable)
-        op_args = list(self.op_args)
-        ret_args = []
-        for arg in op_args:
-            current_arg = full_spec.args.pop(0)
-            if (
-                full_spec.annotations[current_arg] == pd.DataFrame
-                and type(arg) == NewTable
-            ):
-                ret_args.append(self._get_dataframe(arg))
-            else:
-                ret_args.append(arg)
-        self.op_args = tuple(ret_args)
-
-    def load_op_kwarg_table_into_dataframe(self):
-        param_types = inspect.signature(self.python_callable).parameters
-        self.op_kwargs = {
-            k: self._get_dataframe(v)
-            if param_types.get(k).annotation == pd.DataFrame and type(v) == NewTable
-            else v
-            for k, v in self.op_kwargs.items()
-        }
 
     @staticmethod
     def convert_old_table_to_new(table):
@@ -107,10 +82,10 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         Converts old tables to new tables for op_args and op_kwargs.
         :return:
         """
-        self.op_args = [
+        self.op_args = tuple(
             self.convert_old_table_to_new(t) if isinstance(t, OldTable) else t
             for t in self.op_args  # type: ignore
-        ]  # type: ignore
+        )  # type: ignore
         self.op_kwargs = {
             k: self.convert_old_table_to_new(t) if isinstance(t, OldTable) else t
             for k, t in self.op_kwargs.items()
@@ -136,10 +111,3 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             )
             return self.output_table
         return pandas_dataframe
-
-    def _get_dataframe(self, table: NewTable):
-        database = create_database(self.conn_id)
-        df = database.export_table_to_pandas_dataframe(source_table=table)
-        if self.identifiers_as_lower:
-            df.columns = [col_label.lower() for col_label in df.columns]
-        return df
