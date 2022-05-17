@@ -17,8 +17,6 @@ from astro.databases import create_database
 from astro.settings import SCHEMA
 from astro.sql.table import create_unique_table_name
 from astro.sql.tables import Metadata, Table
-
-# from astro.sql.tables import Table as NewTable
 from astro.utils.database import get_database_name
 from astro.utils.dependencies import BigQueryHook, gcs, s3
 from astro.utils.load import load_dataframe_into_sql_table
@@ -78,6 +76,7 @@ def populate_table(path: str, table: Table, hook: BaseHook) -> None:
 
 @pytest.fixture
 def test_table(request, sql_server):  # noqa: C901
+    # FIXME: Delete this fixture by the end of the refactoring! Use database_table_fixture instead
     tables = []
     tables_params = [{"is_temp": True}]
 
@@ -163,6 +162,7 @@ def output_table(request):
 
 @pytest.fixture
 def sql_server(request):
+    # FIXME: delete this fixture by the end of the refactoring! Use database_table_fixture instead
     sql_name = request.param
     hook_parameters = test_utils.SQL_SERVER_HOOK_PARAMETERS.get(sql_name)
     hook_class = test_utils.SQL_SERVER_HOOK_CLASS.get(sql_name)
