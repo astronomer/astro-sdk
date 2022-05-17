@@ -26,12 +26,3 @@ class PostgresDatabase(BaseDatabase):
     def default_metadata(self) -> Metadata:
         schema = self.hook.schema
         return Metadata(schema=schema)
-
-    # def get_table_qualified_name(self, table: Table) -> str:
-    #     """
-    #     Return table qualified name. This is Database-specific.
-    #     For instance, in Sqlite this is the table name. In Snowflake, however, it is the database, schema and table
-    #
-    #     :param table: The table we want to retrieve the qualified name for.
-    #     """
-    #     return str(table.name)

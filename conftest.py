@@ -222,7 +222,6 @@ def database_table_fixture(request):
         Database.SNOWFLAKE: "snowflake_conn",
     }
     conn_id = database_name_to_conn_id[database_name]
-    table = params.get("table", Table(conn_id=conn_id))
     database = create_database(conn_id)
 
     table = params.get(
