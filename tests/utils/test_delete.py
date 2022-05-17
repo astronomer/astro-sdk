@@ -3,6 +3,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from astro.constants import Database
+from astro.databases import create_database
 from astro.sql.table import create_unique_table_name
 from astro.utils.delete import delete_dataframe_rows_from_table
 
@@ -12,13 +13,20 @@ DEFAULT_SQLITE_CONN_ID = "sqlite_default"
 
 
 def create_table(database, hook, table):
-    hook.run(f"DROP TABLE IF EXISTS {table.qualified_name}")
+    db = create_database(table.conn_id)
+    qualified_table_name = db.get_table_qualified_name(table)
+
+    hook.run(f"DROP TABLE IF EXISTS {qualified_table_name}")
     if database == Database.BIGQUERY.value:
-        hook.run(f"CREATE TABLE {table.qualified_name} (ID int, Name string);")
+        hook.run(f"CREATE TABLE {qualified_table_name} (ID int, Name string);")
     else:
-        hook.run(f"CREATE TABLE {table.qualified_name} (ID int, Name varchar(255));")
-    hook.run(f"INSERT INTO {table_name} (ID, Name) VALUES (1, 'Janis Joplin');")
-    hook.run(f"INSERT INTO {table_name} (ID, Name) VALUES (2, 'Jimi Hendrix');")
+        hook.run(f"CREATE TABLE {qualified_table_name} (ID int, Name varchar(255));")
+    hook.run(
+        f"INSERT INTO {qualified_table_name} (ID, Name) VALUES (1, 'Janis Joplin');"
+    )
+    hook.run(
+        f"INSERT INTO {qualified_table_name} (ID, Name) VALUES (2, 'Jimi Hendrix');"
+    )
 
 
 @pytest.mark.integration
