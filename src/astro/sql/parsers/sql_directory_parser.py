@@ -261,10 +261,10 @@ class ParsedSqlOperator(SqlDecoratedOperator):
 
     def set_values(self, table: Table):
         self.conn_id = self.conn_id or table.conn_id  # type: ignore
-        self.schema = self.schema or getattr(table.metadata, "schema", None)  # type: ignore
-        self.database = self.database or getattr(table.metadata, "database", None)  # type: ignore
-        self.warehouse = self.warehouse or getattr(table.metadata, "warehouse", None)  # type: ignore
-        self.role = self.role or getattr(table.metadata, "role", None)  # type: ignore
+        self.schema: str = self.schema or table.metadata.schema
+        self.database: str = self.database or table.metadata.database
+        self.warehouse: str = self.warehouse or table.metadata.warehouse
+        self.role: str = self.role or table.metadata.role
 
     def execute(self, context: Dict):
         if self.parameters:

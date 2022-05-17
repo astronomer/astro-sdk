@@ -27,9 +27,9 @@ def delete_dataframe_rows_from_table(
     named_table = Table(
         conn_id=target_table.conn_id,
         metadata=Metadata(
-            database=getattr(target_table.metadata, "database", None),
-            warehouse=getattr(target_table.metadata, "warehouse", None),
-            role=getattr(target_table.metadata, "role", None),
+            database=target_table.metadata.database,
+            warehouse=target_table.metadata.warehouse,
+            role=target_table.metadata.role,
         ),
     )
     load_dataframe_into_sql_table(pandas_dataframe, named_table, hook)

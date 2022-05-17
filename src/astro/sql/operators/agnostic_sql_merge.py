@@ -51,10 +51,10 @@ class SqlMergeOperator(SqlDecoratedOperator):
         )
 
     def execute(self, context: dict) -> Table:
-        self.database = getattr(self.target_table.metadata, "database", None)
+        self.database = self.target_table.metadata.database
         self.conn_id = self.target_table.conn_id
-        self.schema = getattr(self.target_table.metadata, "schema", None)
-        self.warehouse = getattr(self.target_table.metadata, "warehouse", None)
+        self.schema = self.target_table.metadata.schema
+        self.warehouse = self.target_table.metadata.warehouse
         if not tables_from_same_db([self.target_table, self.merge_table]):
             raise ValueError(
                 get_error_string_for_multiple_dbs([self.target_table, self.merge_table])

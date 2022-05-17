@@ -100,13 +100,13 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             #     )
 
             self.output_table.metadata.schema = (  # type: ignore
-                getattr(self.output_table.metadata, "schema", None) or SCHEMA
+                self.output_table.metadata.schema or SCHEMA
             )
             hook = get_hook(
                 conn_id=self.output_table.conn_id,
-                database=getattr(self.output_table.metadata, "database", None),
-                schema=getattr(self.output_table.metadata, "schema", None),
-                warehouse=getattr(self.output_table.metadata, "warehouse", None),
+                database=self.output_table.metadata.database,
+                schema=self.output_table.metadata.schema,
+                warehouse=self.output_table.metadata.warehouse,
             )
             load_dataframe_into_sql_table(pandas_dataframe, self.output_table, hook)
             return self.output_table
@@ -121,10 +121,10 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         """
         return SnowflakeHook(
             snowflake_conn_id=table.conn_id,
-            warehouse=getattr(table.metadata, "warehouse", None),
-            database=getattr(table.metadata, "database", None),
+            warehouse=table.metadata.warehouse,
+            database=table.metadata.database,
             role=self.role,
-            schema=getattr(table.metadata, "schema", None),
+            schema=table.metadata.schema,
             authenticator=None,
             session_parameters=None,
         )

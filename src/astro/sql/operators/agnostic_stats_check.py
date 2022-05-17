@@ -188,9 +188,9 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
         self.max_rows_returned = max_rows_returned
         self.conn_id = main_table.conn_id
         self.checks = checks
-        self.database = getattr(main_table.metadata, "database", None)
+        self.database = main_table.metadata.database
 
-        task_id = main_table.name + "_" + "stats_check"
+        task_id = f"{main_table.name}_stats_check"
 
         if not tables_from_same_db([main_table, compare_table]):
             raise ValueError(
@@ -207,9 +207,9 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
             raw_sql=True,
             parameters={},
             conn_id=main_table.conn_id,
-            database=getattr(main_table.metadata, "database", None),
-            schema=getattr(main_table.metadata, "schema", None),
-            warehouse=getattr(main_table.metadata, "warehouse", None),
+            database=main_table.metadata.database,
+            schema=main_table.metadata.schema,
+            warehouse=main_table.metadata.warehouse,
             task_id=task_id,
             op_args=(),
             handler=handler_func,
@@ -231,9 +231,7 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
 
         metadata_params = {}
         if database.value in valid_db:
-            metadata_params = {
-                "schema": getattr(self.main_table.metadata, "schema", None)
-            }
+            metadata_params = {"schema": self.main_table.metadata.schema}
         metadata = MetaData(**metadata_params)
 
         self.sql = check_handler.prepare_comparison_sql(

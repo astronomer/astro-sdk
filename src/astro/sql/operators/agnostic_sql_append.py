@@ -61,15 +61,16 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
 
         self.main_table.conn_id = self.main_table.conn_id or self.append_table.conn_id
         self.conn_id = self.main_table.conn_id or self.append_table.conn_id
-        self.database = getattr(self.main_table.metadata, "database", None) or getattr(
-            self.append_table.metadata, "database", None
+        self.database = (
+            self.main_table.metadata.database or self.append_table.metadata.database
         )
-        self.warehouse = getattr(
-            self.main_table.metadata, "warehouse", None
-        ) or getattr(self.append_table.metadata, "warehouse", None)
-        self.schema = getattr(self.append_table.metadata, "schema", None) or getattr(
-            self.append_table.metadata, "schema", None
+        self.warehouse = (
+            self.main_table.metadata.warehouse or self.append_table.metadata.warehouse
         )
+        self.schema = (
+            self.append_table.metadata.schema or self.append_table.metadata.schema
+        )
+
         self.sql = self.append(
             main_table=self.main_table,
             append_table=self.append_table,

@@ -10,8 +10,6 @@ def bigquery_merge_func(
     merge_columns,
     conflict_strategy,
 ):
-
-    assert target_table.conn_id == merge_table.conn_id
     database = create_database(target_table.conn_id)
     target_table_name = database.get_table_qualified_name(target_table)
     merge_table_name = database.get_table_qualified_name(merge_table)
