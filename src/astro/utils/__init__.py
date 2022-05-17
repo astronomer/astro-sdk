@@ -19,8 +19,8 @@ def get_hook(
     """
     conn_type = BaseHook.get_connection(conn_id).conn_type
     hook_kwargs = {
-        "postgresql": {"postgres_conn_id": conn_id, "schema": database},
-        "postgres": {"postgres_conn_id": conn_id, "schema": database},
+        "postgresql": {"postgres_conn_id": conn_id},
+        "postgres": {"postgres_conn_id": conn_id},
         "snowflake": {
             "snowflake_conn_id": conn_id,
             "database": database,
