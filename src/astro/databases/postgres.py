@@ -1,8 +1,9 @@
 """Postgres database implementation."""
+import sqlalchemy
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 from astro.databases.base import BaseDatabase
-from astro.sql.tables import Metadata
+from astro.sql.tables import Metadata, Table
 
 DEFAULT_CONN_ID = PostgresHook.default_conn_name
 
@@ -32,3 +33,16 @@ class PostgresDatabase(BaseDatabase):
             handler=lambda x: [y[0] for y in x.fetchall()],
         )
         return schema.upper() in [c.upper() for c in created_schemas]
+
+    def table_exists(self, table: Table) -> bool:
+        """
+        Check if a table exists in the database.
+
+        :param table: Details of the table we want to check that exists
+        """
+        inspector = sqlalchemy.inspect(self.sqlalchemy_engine)
+        return bool(
+            inspector.dialect.has_table(
+                self.connection, table.name, table.metadata.schema
+            )
+        )
