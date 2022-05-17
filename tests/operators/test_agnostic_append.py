@@ -6,6 +6,7 @@ from airflow.exceptions import BackfillUnfinished
 
 from astro import sql as aql
 from astro.dataframe import dataframe as adf
+from astro.settings import SCHEMA
 from astro.sql.tables import Table
 from tests.operators import utils as test_utils
 
@@ -66,22 +67,35 @@ def append_params(request):
     ],
     indirect=True,
 )
+@pytest.mark.parametrize(
+    "test_table",
+    [
+        [
+            {
+                "is_temp": False,
+                "param": {"schema": SCHEMA},
+                "path": str(CWD) + "/../data/homes_main.csv",
+                "load_table": True,
+            },
+            {
+                "is_temp": False,
+                "param": {"schema": SCHEMA},
+                "path": str(CWD) + "/../data/homes_append.csv",
+                "load_table": True,
+            },
+        ],
+    ],
+    indirect=True,
+    ids=["table"],
+)
 def test_append(sql_server, sample_dag, test_table, append_params):
     app_param, validate_append = append_params
 
     with sample_dag:
-        load_main = aql.load_file(
-            path=str(CWD) + "/../data/homes_main.csv",
-            output_table=test_table,
-        )
-        load_append = aql.load_file(
-            path=str(CWD) + "/../data/homes_append.csv",
-            output_table=test_table,
-        )
         appended_table = aql.append(
             **app_param,
-            main_table=load_main,
-            append_table=load_append,
+            main_table=test_table[0],
+            append_table=test_table[1],
         )
         validate_append(appended_table)
     test_utils.run_dag(sample_dag)

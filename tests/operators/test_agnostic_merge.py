@@ -10,6 +10,7 @@ from airflow.utils import timezone
 from astro import sql as aql
 from astro.constants import Database
 from astro.dataframe import dataframe as adf
+from astro.settings import SCHEMA
 from astro.sql.tables import Table
 from astro.utils.database import create_database_from_conn_id
 from tests.operators import utils as test_utils
@@ -135,20 +136,11 @@ def validate_results(df: pd.DataFrame, mode, sql_type):
 
 @task_group
 def run_merge(output_specs: List[Table], merge_parameters, mode, sql_type):
-    main_table = aql.load_file(
-        path=str(CWD) + "/../data/homes_merge_1.csv",
-        output_table=output_specs[0],
-    )
-    merge_table = aql.load_file(
-        path=str(CWD) + "/../data/homes_merge_2.csv",
-        output_table=output_specs[1],
-    )
-
-    con1 = add_constraint(main_table, merge_parameters["merge_keys"])
+    con1 = add_constraint(output_specs[0], merge_parameters["merge_keys"])
 
     merged_table = aql.merge(
-        target_table=main_table,
-        merge_table=merge_table,
+        target_table=output_specs[0],
+        merge_table=output_specs[1],
         **merge_parameters,
     )
     con1 >> merged_table
@@ -181,8 +173,16 @@ def run_merge(output_specs: List[Table], merge_parameters, mode, sql_type):
         [
             {
                 "is_temp": False,
+                "param": {"schema": SCHEMA},
+                "path": str(CWD) + "/../data/homes_merge_1.csv",
+                "load_table": True,
             },
-            {"is_temp": False},
+            {
+                "is_temp": False,
+                "param": {"schema": SCHEMA},
+                "path": str(CWD) + "/../data/homes_merge_2.csv",
+                "load_table": True,
+            },
         ],
     ],
     indirect=True,
