@@ -102,22 +102,27 @@ def test_table(request, sql_server):  # noqa: C901
         if database == Database.SNOWFLAKE:
             default_table_options = {
                 "conn_id": hook.snowflake_conn_id,
-                "database": hook.database,
-                "warehouse": hook.warehouse,
-                "schema": hook.schema,
+                "metadata": Metadata(
+                    database=hook.database,
+                    warehouse=hook.warehouse,
+                    schema=hook.schema,
+                ),
             }
         elif database == Database.POSTGRES:
             default_table_options = {
                 "conn_id": hook.postgres_conn_id,
-                "database": hook.schema,
+                "metadata": Metadata(database=hook.schema),
             }
         elif database == Database.SQLITE:
             default_table_options = {
                 "conn_id": hook.sqlite_conn_id,
-                "database": "sqlite",
+                "metadata": Metadata(database="sqlite"),
             }
         elif database == Database.BIGQUERY:
-            default_table_options = {"conn_id": hook.gcp_conn_id, "schema": SCHEMA}
+            default_table_options = {
+                "conn_id": hook.gcp_conn_id,
+                "metadata": Metadata(schema=SCHEMA),
+            }
         else:
             raise ValueError("Unsupported Database")
 
