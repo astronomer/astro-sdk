@@ -4,7 +4,6 @@ from typing import Optional
 import pandas as pd
 import sqlalchemy
 from airflow.hooks.base import BaseHook
-from sqlalchemy.exc import OperationalError, ProgrammingError
 
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
@@ -230,7 +229,7 @@ class BaseDatabase(ABC):
                 f"SELECT * FROM {table_qualified_name}",  # skipcq BAN-B608
                 con=self.sqlalchemy_engine,
             )
-        except (ProgrammingError, OperationalError):
+        except Exception:
             raise NonExistentTableException(
                 "The table %s does not exist" % table_qualified_name
             )
