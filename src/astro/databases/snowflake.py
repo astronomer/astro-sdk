@@ -1,10 +1,11 @@
+"""Snowflake database implementation."""
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from pandas.io.sql import SQLDatabase
 
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 from astro.databases.base import BaseDatabase
-from astro.sql.tables import Table
+from astro.sql.tables import Metadata, Table
 from astro.utils.dependencies import pandas_tools
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
@@ -23,6 +24,19 @@ class SnowflakeDatabase(BaseDatabase):
     def hook(self):
         """Retrieve Airflow hook to interface with the snowflake database."""
         return SnowflakeHook(snowflake_conn_id=self.conn_id)
+
+    @property
+    def default_metadata(self) -> Metadata:
+        connection = self.hook.get_conn()
+        return Metadata(
+            host=connection.account,
+            schema=connection.schema,
+            warehouse=connection.warehouse,
+            database=connection.database,
+            account=connection.account,
+            role=connection.role,
+            region=connection.region,
+        )
 
     def load_pandas_dataframe_to_table(
         self,

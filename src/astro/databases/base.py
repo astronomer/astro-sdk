@@ -13,7 +13,7 @@ from astro.constants import (
 )
 from astro.exceptions import NonExistentTableException
 from astro.files import File
-from astro.sql.tables import Table
+from astro.sql.tables import Metadata, Table
 
 
 class BaseDatabase(ABC):
@@ -63,7 +63,12 @@ class BaseDatabase(ABC):
         """
         if parameters is None:
             parameters = {}
-        return self.connection.execute(sql_statement, parameters)
+
+        if isinstance(sql_statement, str):
+            result = self.connection.execute(sqlalchemy.text(sql_statement), parameters)
+        else:
+            result = self.connection.execute(sql_statement, parameters)
+        return result
 
     def table_exists(self, table: Table) -> bool:
         """
@@ -88,9 +93,15 @@ class BaseDatabase(ABC):
         # Initially this method belonged to the Table class.
         # However, in order to have an agnostic table class implementation,
         # we are keeping all methods which vary depending on the database within the Database class.
-        schema = table.metadata.schema if table.metadata else None
-        qualified_name: str = f"{schema}.{table.name}" if schema else table.name
+        if table.metadata and table.metadata.schema:
+            qualified_name = f"{table.metadata.schema}.{table.name}"
+        else:
+            qualified_name = table.name
         return qualified_name
+
+    @property
+    def default_metadata(self) -> Metadata:
+        raise NotImplementedError
 
     # ---------------------------------------------------------
     # Table creation & deletion methods
@@ -145,16 +156,17 @@ class BaseDatabase(ABC):
         chunk_size: int = DEFAULT_CHUNK_SIZE,
     ) -> None:
         """
-        Create a table with the file's contents.
+        Load the content of the source file to the target database table.
         If the table already exists, append or replace the content, depending on the value of `if_exists`.
 
-        :param source_file: Local or remote filepath
+        :param source_file: Local or remote filepath (e.g. a File("/tmp/sample_data.csv"))
         :param target_table: Table in which the file will be loaded
-        :param if_exists: Strategy to be used in case the target table already exists.
+        :param if_exists: Strategy to be used in case the target table already exists
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
+        dataframe = source_file.export_to_dataframe()
         self.load_pandas_dataframe_to_table(
-            source_file.export_to_dataframe(),
+            dataframe,
             target_table,
             if_exists,
             chunk_size,

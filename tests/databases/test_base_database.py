@@ -22,6 +22,9 @@ def test_subclass_missing_not_implemented_methods_raise_exception():
         db.connection
 
     with pytest.raises(NotImplementedError):
+        db.default_metadata
+
+    with pytest.raises(NotImplementedError):
         db.run_sql("SELECT * FROM inexistent_table")
 
 

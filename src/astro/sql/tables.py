@@ -1,11 +1,11 @@
 import random
 import string
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from typing import List, Optional, Union
 
 from sqlalchemy import Column, MetaData
 
-MAX_TABLE_NAME_LENGTH = 63
+MAX_TABLE_NAME_LENGTH = 62
 
 
 @dataclass
@@ -15,10 +15,20 @@ class Metadata:
     be database-specific.
     """
 
+    # e.g.: Postgres, Snowflake:
     schema: Union[str, None] = None
+    # e.g.: Snowflake:
+    account: Union[str, None] = None
     database: Union[str, None] = None
-    warehouse: Union[str, None] = None
+    host: Union[str, None] = None
+    region: Union[str, None] = None
     role: Union[str, None] = None
+    warehouse: Union[str, None] = None
+
+    def is_empty(self):
+        """Check if all the fields are None."""
+        values = [getattr(self, field.name) for field in fields(self)]
+        return values.count(None) == len(values)
 
 
 @dataclass
@@ -46,16 +56,17 @@ class Table:
 
         if not self.name:
             self.name = self._create_unique_table_name()
+            self.temp = True
 
-    @staticmethod
-    def _create_unique_table_name() -> str:
+    def _create_unique_table_name(self) -> str:
         """
         If a table is instantiated without a name, create a unique table for it.
         This new name should be compatible with all supported databases.
         """
+        schema_length = len((self.metadata and self.metadata.schema) or "") + 1
         unique_id = random.choice(string.ascii_lowercase) + "".join(
             random.choice(string.ascii_lowercase + string.digits)
-            for _ in range(MAX_TABLE_NAME_LENGTH - 1)
+            for _ in range(MAX_TABLE_NAME_LENGTH - schema_length)
         )
         return unique_id
 

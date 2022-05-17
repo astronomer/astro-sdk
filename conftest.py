@@ -206,7 +206,6 @@ def database_table_fixture(request):
     The table will only be created during setup if request.param contains the `filepath` parameter.
     """
     params = request.param
-    table = params.get("table", NewTable())
     file = params.get("file", None)
 
     database_name = params["database"]
@@ -219,6 +218,9 @@ def database_table_fixture(request):
     conn_id = database_name_to_conn_id[database_name]
     database = create_database(conn_id)
 
+    table = params.get(
+        "table", NewTable(conn_id=conn_id, metadata=database.default_metadata)
+    )
     database.drop_table(table)
     if file:
         database.load_file_to_table(file, table)

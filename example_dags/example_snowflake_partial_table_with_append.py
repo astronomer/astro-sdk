@@ -7,6 +7,7 @@ from airflow.decorators import dag
 from astro import dataframe
 from astro.sql import append, load_file, run_raw_sql, transform, truncate
 from astro.sql.table import Table
+from astro.sql.tables import Table as NewTable
 
 """
 Example ETL DAG highlighting Astro functionality
@@ -127,13 +128,7 @@ def example_snowflake_partial_table_with_append():
     # Why? Between 2022-03-25 and 2022-04-11 it accumulated 301G (89 million rows) because
     # this example DAG used to append rows without deleting them
     truncate_results = truncate(
-        table=Table(
-            table_name="homes_reporting",
-            conn_id=SNOWFLAKE_CONN_ID,
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
-        )
+        table=NewTable(name="homes_reporting", conn_id=SNOWFLAKE_CONN_ID)
     )
     truncate_results.set_upstream(record_results)
 

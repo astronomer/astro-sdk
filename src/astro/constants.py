@@ -56,5 +56,9 @@ CONN_TYPE_TO_DATABASE = {
 }
 
 LoadExistStrategy = Literal["replace", "append"]
+
+
 ExportExistsStrategy = Literal["replace", "exception"]
-AppendConflictStrategy = Literal["ignore", "update", "exception"]
+
+# TODO: check how snowflake names these
+AppendConflictStrategy = Literal["append", "replace", "exception"]

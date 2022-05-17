@@ -27,6 +27,7 @@ TEST_TABLE = Table()
 
 @pytest.mark.parametrize("conn_id", SUPPORTED_CONN_IDS)
 def test_create_database(conn_id):
+    """Check that the database is created with the correct class."""
     database = create_database(conn_id)
     assert isinstance(database, SqliteDatabase)
 
@@ -40,6 +41,7 @@ def test_create_database(conn_id):
     ids=SUPPORTED_CONN_IDS,
 )
 def test_sqlite_sqlalchemy_engine(conn_id, expected_uri):
+    """Confirm that the SQLALchemy is created successfully."""
     database = SqliteDatabase(conn_id)
     engine = database.sqlalchemy_engine
     assert isinstance(engine, sqlalchemy.engine.base.Engine)
@@ -49,6 +51,7 @@ def test_sqlite_sqlalchemy_engine(conn_id, expected_uri):
 
 @pytest.mark.integration
 def test_sqlite_run_sql():
+    """Run a SQL statement using plain string."""
     statement = "SELECT 1 + 1;"
     database = SqliteDatabase()
     response = database.run_sql(statement)
@@ -56,7 +59,26 @@ def test_sqlite_run_sql():
 
 
 @pytest.mark.integration
+def test_sqlite_run_sql_with_sqlalchemy_text():
+    """Run a SQL statement using SQLAlchemy text"""
+    statement = sqlalchemy.text("SELECT 1 + 1;")
+    database = SqliteDatabase()
+    response = database.run_sql(statement)
+    assert response.first()[0] == 2
+
+
+@pytest.mark.integration
+def test_sqlite_run_sql_with_parameters():
+    """Test running a SQL query using SQLAlchemy templating engine"""
+    statement = "SELECT 1 + :value;"
+    database = SqliteDatabase()
+    response = database.run_sql(statement, parameters={"value": 1})
+    assert response.first()[0] == 2
+
+
+@pytest.mark.integration
 def test_table_exists_raises_exception():
+    """Raise an exception when checking for a non-existent table"""
     database = SqliteDatabase()
     assert not database.table_exists(Table(name="inexistent-table"))
 
@@ -81,6 +103,7 @@ def test_table_exists_raises_exception():
     ids=["sqlite"],
 )
 def test_sqlite_create_table_with_columns(database_table_fixture):
+    """Create a table using specific columns and types"""
     database, table = database_table_fixture
 
     statement = f"PRAGMA table_info({table.name});"
@@ -105,6 +128,7 @@ def test_sqlite_create_table_with_columns(database_table_fixture):
     ids=["sqlite"],
 )
 def test_load_pandas_dataframe_to_table(database_table_fixture):
+    """Load Pandas Dataframe to a SQL table"""
     database, table = database_table_fixture
 
     pandas_dataframe = pd.DataFrame(data={"id": [1, 2]})
@@ -129,6 +153,7 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
     ids=["sqlite"],
 )
 def test_load_file_to_table(database_table_fixture):
+    """Load a file to a SQL table"""
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     database.load_file_to_table(File(filepath), target_table)
@@ -156,6 +181,7 @@ def test_load_file_to_table(database_table_fixture):
 def test_export_table_to_file_file_already_exists_raises_exception(
     database_table_fixture,
 ):
+    """Raise exception if trying to export to file that exists"""
     database, source_table = database_table_fixture
     filepath = pathlib.Path(CWD.parent, "data/sample.csv")
     with pytest.raises(FileExistsError) as exception_info:
@@ -178,6 +204,7 @@ def test_export_table_to_file_file_already_exists_raises_exception(
     ids=["sqlite"],
 )
 def test_export_table_to_file_overrides_existing_file(database_table_fixture):
+    """Override file if using the replace option"""
     database, populated_table = database_table_fixture
 
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv").absolute())
@@ -205,6 +232,7 @@ def test_export_table_to_file_overrides_existing_file(database_table_fixture):
 def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     database_table_fixture,
 ):
+    """Export table to a Pandas dataframe"""
     database, non_existent_table = database_table_fixture
 
     with pytest.raises(NonExistentTableException) as exc_info:
@@ -235,6 +263,7 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
 def test_export_table_to_file_in_the_cloud(
     database_table_fixture, remote_files_fixture
 ):
+    """Export a SQL tale to a file in the cloud"""
     object_path = remote_files_fixture[0]
     database, populated_table = database_table_fixture
 
@@ -271,6 +300,7 @@ def test_export_table_to_file_in_the_cloud(
     ids=["sqlite"],
 )
 def test_create_table_from_select_statement(database_table_fixture):
+    """Create a table given a SQL select statement"""
     database, original_table = database_table_fixture
 
     statement = "SELECT * FROM {} WHERE id = 1;".format(
