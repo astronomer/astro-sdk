@@ -7,7 +7,7 @@ from astro.databases import create_database
 from astro.sql.tables import Table
 
 
-class SqlTruncateOperator(BaseOperator):
+class TruncateOperator(BaseOperator):
     def __init__(
         self,
         table: Table,

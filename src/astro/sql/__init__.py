@@ -6,7 +6,6 @@ from astro.sql.operators.agnostic_load_file import load_file  # noqa: F401
 from astro.sql.operators.agnostic_save_file import save_file  # noqa: F401
 from astro.sql.operators.agnostic_sql_append import SqlAppendOperator
 from astro.sql.operators.agnostic_sql_merge import SqlMergeOperator
-from astro.sql.operators.agnostic_sql_truncate import SqlTruncateOperator
 from astro.sql.operators.agnostic_stats_check import (  # noqa: F401
     OutlierCheck,
     stats_check,
@@ -15,6 +14,7 @@ from astro.sql.operators.sql_decorator import (  # noqa: F401
     SqlDecoratedOperator,
     transform_decorator,
 )
+from astro.sql.operators.truncate import TruncateOperator
 from astro.sql.parsers.sql_directory_parser import render  # noqa: F401
 from astro.sql.table import Table as OldTable
 from astro.sql.tables import Table
@@ -128,10 +128,10 @@ def merge(
 def truncate(
     table: Table,
     **kwargs,
-) -> SqlTruncateOperator:
+) -> TruncateOperator:
     """`
     :param table: Table to be truncated
     :param kwargs:
     """
 
-    return SqlTruncateOperator(table=table, **kwargs)
+    return TruncateOperator(table=table, **kwargs)
