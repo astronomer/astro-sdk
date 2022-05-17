@@ -275,9 +275,8 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
 
     with pytest.raises(NonExistentTableException) as exc_info:
         database.export_table_to_pandas_dataframe(non_existent_table)
-    error_message = exc_info.value.args[0]
-    assert error_message.startswith("The table")
-    assert error_message.endswith("does not exist")
+    error_message = str(exc_info.value.args[0])
+    assert "404 Not found: Table" in error_message
 
 
 @pytest.mark.integration
