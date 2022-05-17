@@ -59,7 +59,7 @@ def test_sql_decorator_basic_functionality(sample_dag, sql_server, test_table):
             handler=handler_func,
             python_callable=null_function,
             conn_id=test_table.conn_id,
-            database=test_table.database,
+            database=getattr(test_table.metadata, "database", None),
             sql=f"SELECT list FROM {qualified_name} WHERE sell=232",
         )
     test_utils.run_dag(sample_dag)
@@ -104,7 +104,7 @@ def test_sql_decorator_does_not_create_schema_when_the_schema_exists(
             task_id="SomeTask",
             op_args=(),
             conn_id=test_table.conn_id,
-            database=test_table.database,
+            database=getattr(test_table.metadata, "database", None),
             python_callable=lambda: None,
             sql=f"INSERT INTO {qualified_name} (id, name) VALUES (4, 'New Person');",
         )
@@ -155,7 +155,7 @@ def test_sql_decorator_creates_schema_when_it_does_not_exist(
             task_id="SomeTask",
             op_args=(),
             conn_id=test_table.conn_id,
-            database=test_table.database,
+            database=getattr(test_table.metadata, "database", None),
             python_callable=lambda: None,
             sql=f"INSERT INTO {qualified_name} (id, name) VALUES (4, 'New Person');",
         )

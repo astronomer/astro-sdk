@@ -43,7 +43,7 @@ def test_delete_dataframe_rows_from_table(test_table, sql_server):
     create_table(database, hook, original_table)
     dataframe = pd.DataFrame([{"id": 2, "name": "Jimi Hendrix"}])
     delete_dataframe_rows_from_table(dataframe, original_table, hook)
-    df = hook.get_pandas_df(f"SELECT * FROM {original_table.table_name}")
+    df = hook.get_pandas_df(f"SELECT * FROM {original_table.name}")
     df = df.rename(columns=str.lower)
 
     assert len(df) == 1

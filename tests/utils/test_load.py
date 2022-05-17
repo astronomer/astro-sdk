@@ -131,10 +131,10 @@ def describe_load_file_into_sql_table():
         load_file_into_sql_table(
             filepath=filepath,
             filetype=FileType.NDJSON,
-            table_name=test_table.table_name,
+            table_name=test_table.name,
             engine=engine,
         )
-        computed = hook.get_pandas_df(f"SELECT * FROM {test_table.table_name}")
+        computed = hook.get_pandas_df(f"SELECT * FROM {test_table.name}")
         computed = computed.rename(columns=str.lower)
         assert_frame_equal(computed, EXPECTED_DATA)
 
@@ -152,7 +152,7 @@ def describe_load_dataframe_into_sql_table():
         database, hook = sql_server
         create_table(database, hook, test_table)
         dataframe = pd.DataFrame([{"id": 27, "name": "Jim Morrison"}])
-        test_table.schema = SCHEMA
+        test_table.metadata.schema = SCHEMA
         load_dataframe_into_sql_table(dataframe, test_table, hook)
         db = create_database(test_table.conn_id)
         qualified_name = db.get_table_qualified_name(test_table)

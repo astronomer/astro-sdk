@@ -120,9 +120,10 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                     schema=SCHEMA,
                 )
             else:
-                output_table_name = self.output_table.table_name
+                output_table_name = self.output_table.name
                 full_output_table_name = self.handle_output_table_schema(
-                    output_table_name, schema=self.output_table.schema
+                    output_table_name,
+                    schema=getattr(self.output_table.metadata, "schema", None),
                 )
 
             self._run_sql(
@@ -290,7 +291,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
     def default_transform(self, parameters, context):
         for k, v in parameters.items():
             if isinstance(v, Table):
-                context[k] = v.table_name
+                context[k] = v.name
             else:
                 context[k] = ":" + k
         return context

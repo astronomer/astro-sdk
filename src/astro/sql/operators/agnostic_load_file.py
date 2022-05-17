@@ -64,9 +64,9 @@ class AgnosticLoadFile(BaseOperator):
 
         hook = get_hook(
             conn_id=self.output_table.conn_id,
-            database=self.output_table.database,
-            schema=self.output_table.schema,
-            warehouse=self.output_table.warehouse,
+            database=getattr(self.output_table.metadata, "database", None),
+            schema=getattr(self.output_table.metadata, "schema", None),
+            warehouse=getattr(self.output_table.metadata, "warehouse", None),
         )
 
         self._configure_output_table(context)
@@ -103,8 +103,8 @@ class AgnosticLoadFile(BaseOperator):
         #     self.output_table = self.output_table.to_table(
         #         create_table_name(context=context)
         #     )
-        if not self.output_table.table_name:
-            self.output_table.table_name = create_table_name(context=context)
+        if not self.output_table.name:
+            self.output_table.name = create_table_name(context=context)
 
 
 def load_file(

@@ -61,9 +61,15 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
 
         self.main_table.conn_id = self.main_table.conn_id or self.append_table.conn_id
         self.conn_id = self.main_table.conn_id or self.append_table.conn_id
-        self.database = self.main_table.database or self.append_table.database
-        self.warehouse = self.main_table.warehouse or self.append_table.warehouse
-        self.schema = self.main_table.schema or self.append_table.schema
+        self.database = getattr(self.main_table.metadata, "database", None) or getattr(
+            self.append_table.metadata, "database", None
+        )
+        self.warehouse = getattr(
+            self.main_table.metadata, "warehouse", None
+        ) or getattr(self.append_table.metadata, "warehouse", None)
+        self.schema = getattr(self.append_table.metadata, "schema", None) or getattr(
+            self.append_table.metadata, "schema", None
+        )
         self.sql = self.append(
             main_table=self.main_table,
             append_table=self.append_table,
@@ -86,12 +92,8 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
         else:
             metadata = MetaData()
         # TO Do - fix bigquery and postgres reflection table issue.
-        main_table_sqla = SqlaTable(
-            main_table.table_name, metadata, autoload_with=engine
-        )
-        append_table_sqla = SqlaTable(
-            append_table.table_name, metadata, autoload_with=engine
-        )
+        main_table_sqla = SqlaTable(main_table.name, metadata, autoload_with=engine)
+        append_table_sqla = SqlaTable(append_table.name, metadata, autoload_with=engine)
 
         column_names: List[Union[ColumnClause, Cast]] = [column(c) for c in columns]
         sqlalchemy = importlib.import_module("sqlalchemy")
