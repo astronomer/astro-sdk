@@ -9,7 +9,7 @@ from astro.settings import SCHEMA
 from astro.sql.tables import Metadata, Table
 
 
-class SQL(BaseOperator):
+class SQLHandler(BaseOperator):
     output_table = None
     database_impl: BaseDatabase = None  # type: ignore
 
@@ -28,7 +28,7 @@ class SQL(BaseOperator):
         **kwargs,
     ):
         self.autocommit = autocommit
-        self.parameters = parameters
+        self.parameters: dict = parameters or {}
         self.handler = handler
         self.kwargs = kwargs or {}
         self.sql = sql

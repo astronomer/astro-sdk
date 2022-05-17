@@ -9,12 +9,12 @@ from astro.sql.table import Table as OldTable
 from astro.sql.table import TempTable
 from astro.sql.tables import Metadata, Table
 from astro.utils.dataframe_function_handler import DataframeFunctionHandler
-from astro.utils.sql_refactor import SQL
+from astro.utils.sql_refactor import SQLHandler
 from astro.utils.table_handler_new import TableHandler
 
 
 class SqlDecoratedOperator(
-    SQL, DataframeFunctionHandler, DecoratedOperator, TableHandler
+    SQLHandler, DataframeFunctionHandler, DecoratedOperator, TableHandler
 ):
     # todo: Add docstrings
     def __init__(

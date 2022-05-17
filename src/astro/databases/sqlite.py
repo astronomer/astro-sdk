@@ -51,7 +51,7 @@ class SqliteDatabase(BaseDatabase):
         :param schema:
         :return:
         """
-        return
+        pass  # snowflake has no schemas, so we don't need to create one
 
     def schema_exists(self, schema):
         """

@@ -11,6 +11,10 @@ class TableHandler(ABC):
     python_callable: Callable
     parameters: dict
     output_table: Optional[Table]
+    warehouse: Optional[str]
+    schema: Optional[str]
+    database: Optional[str]
+    conn_id: Optional[str]
 
     def _set_variables_from_first_table(self):
         """

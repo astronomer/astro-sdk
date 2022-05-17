@@ -52,7 +52,7 @@ class DataframeFunctionHandler(ABC):
             current_arg = full_spec.args.pop(0)
             if (
                 full_spec.annotations[current_arg] == pd.DataFrame
-                and type(arg) == Table
+                and type(arg) is Table
             ):
                 ret_args.append(self._get_dataframe(arg))
             else:
@@ -63,7 +63,7 @@ class DataframeFunctionHandler(ABC):
         param_types = inspect.signature(self.python_callable).parameters
         self.op_kwargs = {
             k: self._get_dataframe(v)
-            if param_types.get(k).annotation == pd.DataFrame and type(v) == Table
+            if param_types.get(k).annotation is pd.DataFrame and type(v) is Table
             else v
             for k, v in self.op_kwargs.items()
         }
