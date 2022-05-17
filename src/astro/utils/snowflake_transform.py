@@ -9,9 +9,10 @@ def _handle_table(t: Table):
     :param t:
     :return:
     """
-
-    snow_schema = getattr(t.metadata, "schema", None) or SCHEMA
-    return f"{getattr(t.metadata, 'database', None)}.{snow_schema}.{t.name}"
+    schema = getattr(t.metadata, "schema", "") or SCHEMA
+    table_name = [getattr(t.metadata, "database", ""), schema, t.name]
+    table_name = [x for x in table_name if x]
+    return ".".join(table_name)
 
 
 def process_params(parameters):
