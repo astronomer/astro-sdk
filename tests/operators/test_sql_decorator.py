@@ -5,6 +5,7 @@ import pytest
 from astro.databases import create_database
 from astro.settings import SCHEMA
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.tables import Metadata
 from tests.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
@@ -29,7 +30,7 @@ TEST_SCHEMA = test_utils.get_table_name("test")
             "load_table": True,
             "is_temp": False,
             "param": {
-                "schema": SCHEMA,
+                "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test"),
             },
         }
@@ -128,7 +129,7 @@ def test_sql_decorator_does_not_create_schema_when_the_schema_exists(
             "load_table": True,
             "is_temp": False,
             "param": {
-                "schema": TEST_SCHEMA,
+                "metadata": Metadata(schema=TEST_SCHEMA),
                 "name": test_utils.get_table_name("test"),
             },
         }

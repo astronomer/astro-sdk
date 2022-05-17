@@ -7,7 +7,7 @@ from airflow.exceptions import BackfillUnfinished
 from astro import sql as aql
 from astro.dataframe import dataframe as adf
 from astro.settings import SCHEMA
-from astro.sql.tables import Table
+from astro.sql.tables import Metadata, Table
 from tests.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
@@ -73,13 +73,15 @@ def append_params(request):
         [
             {
                 "is_temp": False,
-                "param": {"schema": SCHEMA},
+                "param": {
+                    "metadata": Metadata(schema=SCHEMA),
+                },
                 "path": str(CWD) + "/../data/homes_main.csv",
                 "load_table": True,
             },
             {
                 "is_temp": False,
-                "param": {"schema": SCHEMA},
+                "param": {"metadata": Metadata(schema=SCHEMA)},
                 "path": str(CWD) + "/../data/homes_append.csv",
                 "load_table": True,
             },

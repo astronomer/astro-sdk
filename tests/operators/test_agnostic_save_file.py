@@ -28,6 +28,7 @@ from astro.settings import SCHEMA
 
 # Import Operator
 from astro.sql.operators.agnostic_save_file import save_file
+from astro.sql.tables import Metadata
 from astro.utils.dependencies import gcs
 from tests.operators import utils as test_utils
 
@@ -95,7 +96,7 @@ def test_save_temp_table_to_local(sample_dag, sql_server, test_table):
             "load_table": True,
             "is_temp": False,
             "param": {
-                "schema": SCHEMA,
+                "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_1"),
             },
         }
@@ -145,7 +146,7 @@ def test_save_all_db_tables_to_S3(sample_dag, test_table, sql_server):
             "load_table": True,
             "is_temp": False,
             "param": {
-                "schema": SCHEMA,
+                "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_1"),
             },
         }
@@ -190,7 +191,7 @@ def test_save_all_db_tables_to_GCS(sample_dag, test_table, sql_server):
             "load_table": True,
             "is_temp": False,
             "param": {
-                "schema": SCHEMA,
+                "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_1"),
             },
         }
@@ -224,7 +225,7 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
             "load_table": True,
             "is_temp": False,
             "param": {
-                "schema": SCHEMA,
+                "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_1"),
             },
         }
@@ -265,7 +266,7 @@ def test_save_table_remote_file_exists_overwrite_false(
             "path": str(CWD) + "/../data/homes2.csv",
             "load_table": True,
             "param": {
-                "schema": SCHEMA,
+                "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_save"),
             },
         }
@@ -312,7 +313,7 @@ def test_unique_task_id_for_same_path(sample_dag, sql_server, test_table):
             "load_table": True,
             "is_temp": False,
             "param": {
-                "schema": SCHEMA,
+                "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_1"),
             },
         }

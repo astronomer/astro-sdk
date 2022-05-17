@@ -355,7 +355,7 @@ def test_load_file(sample_dag, sql_server, file_type, test_table):
 )
 @pytest.mark.parametrize(
     "test_table",
-    [{"is_temp": False, "param": {"schema": "custom_schema"}}],
+    [{"is_temp": False, "param": {"metadata": Metadata(schema="custom_schema")}}],
     indirect=True,
 )
 @pytest.mark.parametrize("file_type", ["csv"])

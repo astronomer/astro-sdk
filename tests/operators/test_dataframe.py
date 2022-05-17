@@ -10,7 +10,7 @@ import astro.sql as aql
 from astro import dataframe as df
 from astro.constants import SUPPORTED_DATABASES, Database
 from astro.settings import SCHEMA
-from astro.sql.tables import Table
+from astro.sql.tables import Metadata, Table
 from tests.operators import utils as test_utils
 
 # Import Operator
@@ -29,7 +29,7 @@ CWD = pathlib.Path(__file__).parent
             "load_table": True,
             "is_temp": False,
             "param": {
-                "schema": SCHEMA,
+                "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_2"),
             },
         }
@@ -63,7 +63,7 @@ def test_dataframe_from_sql_basic(sample_dag, sql_server, test_table):
             "load_table": True,
             "is_temp": False,
             "param": {
-                "schema": SCHEMA,
+                "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_2"),
             },
         }
@@ -95,7 +95,7 @@ def test_dataframe_from_sql_custom_task_id(sample_dag, sql_server, test_table):
             "load_table": True,
             "is_temp": False,
             "param": {
-                "schema": SCHEMA,
+                "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_2"),
             },
         }
@@ -133,7 +133,7 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, sql_server, test_table):
             "load_table": True,
             "is_temp": False,
             "param": {
-                "schema": SCHEMA,
+                "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_2"),
             },
         }
@@ -171,7 +171,7 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(sample_dag, sql_server, test_
             "load_table": True,
             "is_temp": False,
             "param": {
-                "schema": SCHEMA,
+                "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_2"),
             },
         }
