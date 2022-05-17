@@ -6,6 +6,7 @@ from airflow.models.xcom_arg import XComArg
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 
 from astro.constants import Database
+from astro.databases import create_database
 from astro.files import File
 from astro.sql.tables import Table
 from astro.utils.database import create_database_from_conn_id
@@ -109,8 +110,10 @@ class SaveFile(BaseOperator):
                 f"Support types: {list(hook_class.keys())}"
             )
 
+        database = create_database(input_table.conn_id)
+        table_name = database.get_table_qualified_name(input_table)
         return pd.read_sql(
-            f"SELECT * FROM {input_table.qualified_name}",
+            f"SELECT * FROM {table_name}",
             con=input_hook.get_sqlalchemy_engine(),
         )
 

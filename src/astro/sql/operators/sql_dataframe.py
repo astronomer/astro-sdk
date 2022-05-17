@@ -6,6 +6,7 @@ from airflow.decorators.base import DecoratedOperator
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 
 from astro.constants import Database
+from astro.databases import create_database
 from astro.settings import SCHEMA
 from astro.sql.tables import Table
 from astro.utils import get_hook
@@ -153,9 +154,12 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             engine = hook.get_sqlalchemy_engine()
             df = pd.read_sql_table(table.table_name, engine)
         elif database == Database.BIGQUERY:
+            database = create_database(table.conn_id)
+            table_name = database.get_table_qualified_name(table)
+
             hook = BigQueryHook(gcp_conn_id=table.conn_id)
             engine = hook.get_sqlalchemy_engine()
-            df = pd.read_sql_table(table.qualified_name, engine)
+            df = pd.read_sql_table(table_name, engine)
 
         if self.identifiers_as_lower:
             df.columns = [col_label.lower() for col_label in df.columns]
