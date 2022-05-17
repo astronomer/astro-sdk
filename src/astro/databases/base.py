@@ -229,10 +229,8 @@ class BaseDatabase(ABC):
                 f"SELECT * FROM {table_qualified_name}",  # skipcq BAN-B608
                 con=self.sqlalchemy_engine,
             )
-        except Exception:
-            raise NonExistentTableException(
-                "The table %s does not exist" % table_qualified_name
-            )
+        except Exception as e:
+            raise NonExistentTableException(e)
 
     def export_table_to_file(
         self,
