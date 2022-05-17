@@ -80,7 +80,6 @@ class SaveFile(BaseOperator):
         hook_kwargs = {
             Database.POSTGRES: {
                 "postgres_conn_id": input_table.conn_id,
-                "schema": input_table.metadata.schema,
             },
             Database.SNOWFLAKE: {
                 "snowflake_conn_id": input_table.conn_id,
