@@ -30,8 +30,7 @@ cwd = pathlib.Path(__file__).parent
         },
     ],
     indirect=True,
-    ids=["postgres"]
-    # ids=["sqlite", "postgres", "snowflake", "bigquery"],
+    ids=["sqlite", "postgres", "snowflake", "bigquery"],
 )
 def test_dataframe_transform(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
