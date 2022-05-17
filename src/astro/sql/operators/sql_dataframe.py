@@ -161,8 +161,8 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             engine = hook.get_sqlalchemy_engine()
             df = pd.read_sql_table(table.name, engine)
         elif database == Database.BIGQUERY:
-            database = create_database(table.conn_id)
-            table_name = database.get_table_qualified_name(table)
+            db = create_database(table.conn_id)
+            table_name = db.get_table_qualified_name(table)
 
             hook = BigQueryHook(gcp_conn_id=table.conn_id)
             engine = hook.get_sqlalchemy_engine()

@@ -110,8 +110,8 @@ class SaveFile(BaseOperator):
                 f"Support types: {list(hook_class.keys())}"
             )
 
-        database = create_database(input_table.conn_id)
-        table_name = database.get_table_qualified_name(input_table)
+        db = create_database(input_table.conn_id)
+        table_name = db.get_table_qualified_name(input_table)
         return pd.read_sql(
             f"SELECT * FROM {table_name}",
             con=input_hook.get_sqlalchemy_engine(),
