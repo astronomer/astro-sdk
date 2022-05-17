@@ -58,7 +58,7 @@ def example_amazon_s3_snowflake_transform():
         conn_id="snowflake_conn",
     )
     input_table_2 = Table(
-        "ADOPTION_CENTER_2",
+        name="ADOPTION_CENTER_2",
         metadata=Metadata(
             database=os.environ["SNOWFLAKE_DATABASE"],
             schema=os.environ["SNOWFLAKE_SCHEMA"],

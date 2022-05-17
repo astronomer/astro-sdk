@@ -47,34 +47,14 @@ class Table:
     columns: Optional[List[Column]] = None
     temp: bool = False
 
-    def __init__(
-        self,
-        name="",
-        conn_id=None,
-        database=None,
-        schema=None,
-        warehouse=None,
-        role=None,
-        metadata=None,
-        columns=None,
-    ):
-        self.db = None
-        self.name = name
-        self.conn_id = conn_id
-
-        self.metadata = metadata
-        if self.metadata is None:
-            self.metadata = Metadata()
-            self.metadata.database = database
-            self.metadata.schema = schema
-            self.metadata.warehouse = warehouse
-            self.metadata.role = role
-
-        self.columns = columns
+    def __post_init__(self):
         if self.columns is None:
             self.columns = []
 
-        if not name:
+        if self.metadata is None:
+            self.metadata = Metadata()
+
+        if not self.name:
             self.name = self._create_unique_table_name()
             self.temp = True
 
@@ -98,9 +78,3 @@ class Table:
         else:
             alchemy_metadata = MetaData()
         return alchemy_metadata
-
-    def _set_db(self):
-        if not self.db and self.conn_id:
-            from astro.databases import create_database
-
-            self.db = create_database(self.conn_id)

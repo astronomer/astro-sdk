@@ -1,7 +1,8 @@
 ---
 output_table:
     name: AGGREGATED_HOMES
-    database: SANDBOX
+    metadata:
+        database: SANDBOX
 ---
 SELECT c.BEDS, AVG(c.SELL) as AVG_SELL, AVG(c.LIST) as AVG_LIST, AVG(c.TAXES) as AVG_TAXES
 FROM {{clean_homes}} c

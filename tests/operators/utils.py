@@ -11,7 +11,7 @@ from airflow.utils.state import State
 from pandas.testing import assert_frame_equal
 
 from astro.databases import create_database
-from astro.sql.tables import Table
+from astro.sql.tables import Metadata, Table
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook, bigquery
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -19,9 +19,11 @@ DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 SQL_SERVER_HOOK_PARAMETERS = {
     "snowflake": {
         "snowflake_conn_id": "snowflake_conn",
-        "schema": os.getenv("SNOWFLAKE_SCHEMA"),
-        "database": os.getenv("SNOWFLAKE_DATABASE"),
-        "warehouse": os.getenv("SNOWFLAKE_WAREHOUSE"),
+        "metadata": Metadata(
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+        ),
     },
     "postgres": {"postgres_conn_id": "postgres_conn"},
     "bigquery": {"gcp_conn_id": "google_cloud_default", "use_legacy_sql": False},

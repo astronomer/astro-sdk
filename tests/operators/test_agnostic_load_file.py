@@ -23,7 +23,7 @@ from pandas.testing import assert_frame_equal
 from astro.constants import Database
 from astro.databases import create_database
 from astro.sql.operators.agnostic_load_file import load_file
-from astro.sql.tables import Table
+from astro.sql.tables import Metadata, Table
 from astro.utils.dependencies import gcs, s3
 from tests.operators import utils as test_utils
 
@@ -156,9 +156,11 @@ def test_unique_task_id_for_same_path(sample_dag):
                 "path": str(CWD) + "/../data/homes.csv",
                 "file_conn_id": "",
                 "output_table": Table(
-                    OUTPUT_TABLE_NAME,
-                    database="pagila",
-                    conn_id="postgres_conn",
+                    name=OUTPUT_TABLE_NAME,
+                    metadata=Metadata(
+                        database="pagila",
+                        conn_id="postgres_conn",
+                    ),
                 ),
             }
             if index == 3:

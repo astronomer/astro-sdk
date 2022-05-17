@@ -13,7 +13,7 @@ import unittest
 from airflow.utils import timezone
 
 # Import Operator
-from astro.sql.tables import Table
+from astro.sql.tables import Metadata, Table
 from astro.utils.snowflake_merge_func import (
     is_valid_snow_identifier,
     snowflake_merge_func,
@@ -48,17 +48,21 @@ class TestSnowflakeMerge(unittest.TestCase):
         self.main_table_name = test_utils.get_table_name("merge_test_1")
         self.main_table = Table(
             name=self.main_table_name,
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            metadata=Metadata(
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            ),
             conn_id="snowflake_conn",
         )
         self.merge_table_name = test_utils.get_table_name("merge_test_2")
         self.merge_table = Table(
             name=self.merge_table_name,
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            metadata=Metadata(
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            ),
             conn_id="snowflake_conn",
         )
         super().setUp()

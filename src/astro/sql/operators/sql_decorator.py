@@ -10,7 +10,7 @@ from sqlalchemy.sql.functions import Function
 from astro.constants import Database
 from astro.settings import SCHEMA
 from astro.sql.table import create_unique_table_name
-from astro.sql.tables import Table
+from astro.sql.tables import Metadata, Table
 from astro.utils import get_hook, postgres_transform, snowflake_transform
 from astro.utils.database import (
     create_database_from_conn_id,
@@ -152,9 +152,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 return self.handler(query_result)
             return None
         else:
-            self.output_table = Table(
-                name=output_table_name,
-            )
+            self.output_table = Table(name=output_table_name)
             self.populate_output_table()
             self.log.info("Returning table %s", self.output_table)
             return self.output_table
@@ -310,9 +308,11 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 output_table = Table(
                     name=output_table_name,
                     conn_id=self.conn_id,
-                    database=self.database,
-                    schema=self.schema,
-                    warehouse=self.warehouse,
+                    metadata=Metadata(
+                        database=self.database,
+                        schema=self.schema,
+                        warehouse=self.warehouse,
+                    ),
                 )
                 hook = get_hook(
                     conn_id=self.conn_id,
@@ -335,9 +335,11 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                 output_table = Table(
                     name=output_table_name,
                     conn_id=self.conn_id,
-                    database=self.database,
-                    schema=self.schema,
-                    warehouse=self.warehouse,
+                    metadata=Metadata(
+                        database=self.database,
+                        schema=self.schema,
+                        warehouse=self.warehouse,
+                    ),
                 )
                 hook = get_hook(
                     conn_id=self.conn_id,

@@ -58,7 +58,7 @@ class Table:
 
     def __str__(self):
         return (
-            f"Table(table_name={self.name}, database={self.database}, "
+            f"Table(name={self.name}, database={self.database}, "
             f"schema={self.schema}, conn_id={self.conn_id}, warehouse={self.warehouse}, role={self.role})"
         )
 
