@@ -101,6 +101,7 @@ class SqlDecoratedOperator(
         self.read_sql_from_function()
         self.move_function_params_into_sql_params(context)
         self.template(context)
+        self.parameters = self.database_impl.process_sql_parameters(self.parameters)  # type: ignore
         self.handle_schema()
 
         if self.raw_sql:

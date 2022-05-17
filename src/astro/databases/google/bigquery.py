@@ -36,6 +36,9 @@ class BigqueryDatabase(BaseDatabase):
     def default_metadata(self) -> Metadata:
         return Metadata(schema=settings.SCHEMA, database=self.hook.project_id)
 
+    def schema_exists(self, schema):
+        return False
+
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,

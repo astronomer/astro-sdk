@@ -18,10 +18,20 @@ cwd = pathlib.Path(__file__).parent
     [
         {
             "database": Database.SQLITE,
-        }
+        },
+        {
+            "database": Database.POSTGRES,
+        },
+        {
+            "database": Database.SNOWFLAKE,
+        },
+        {
+            "database": Database.BIGQUERY,
+        },
     ],
     indirect=True,
-    ids=["sqlite"],
+    ids=["postgres"]
+    # ids=["sqlite", "postgres", "snowflake", "bigquery"],
 )
 def test_dataframe_transform(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
@@ -56,7 +66,7 @@ def test_dataframe_transform(sample_dag, database_table_fixture):
     [
         "snowflake",
         "postgres",
-        # "bigquery",
+        "bigquery",
         "sqlite",
     ],
     indirect=True,
@@ -88,9 +98,9 @@ def test_transform(sql_server, sample_dag, test_table):
 @pytest.mark.parametrize(
     "sql_server",
     [
-        # "snowflake",
-        # "postgres",
-        # "bigquery",
+        "snowflake",
+        "postgres",
+        "bigquery",
         "sqlite",
     ],
     indirect=True,

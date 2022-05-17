@@ -25,7 +25,7 @@ class PostgresDatabase(BaseDatabase):
     @property
     def default_metadata(self) -> Metadata:
         schema = self.hook.schema
-        return Metadata(schema=schema)
+        return Metadata(database=schema)
 
     def schema_exists(self, schema):
         created_schemas = self.hook.run(
