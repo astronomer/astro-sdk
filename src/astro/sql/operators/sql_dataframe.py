@@ -3,12 +3,19 @@ from typing import Dict, Optional
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
+from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 
-from astro.databases import create_database
+from astro.constants import Database
 from astro.settings import SCHEMA
 from astro.sql.tables import Table
 from astro.utils import get_hook
-from astro.utils.dependencies import SnowflakeHook
+from astro.utils.database import create_database_from_conn_id
+from astro.utils.dependencies import (
+    BigQueryHook,
+    PostgresHook,
+    SnowflakeHook,
+    postgres_sql,
+)
 from astro.utils.load import load_dataframe_into_sql_table
 from astro.utils.table_handler import TableHandler
 
@@ -119,38 +126,36 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         )
 
     def _get_dataframe(self, table: Table):
-        # database = create_database_from_conn_id(table.conn_id)
+        database = create_database_from_conn_id(table.conn_id)
         self.log.info(f"Getting dataframe for {table}")
-        db = create_database(table.conn_id)
-        df = db.export_table_to_pandas_dataframe(source_table=table)
-        # if database in (Database.POSTGRES, Database.POSTGRESQL):
-        #     self.hook = PostgresHook(
-        #         postgres_conn_id=table.conn_id, schema=table.database
-        #     )
-        #     schema = table.schema or SCHEMA
-        #     query = (
-        #         postgres_sql.SQL("SELECT * FROM {schema}.{input_table}")
-        #         .format(
-        #             schema=postgres_sql.Identifier(schema),
-        #             input_table=postgres_sql.Identifier(table.name),
-        #         )
-        #         .as_string(self.hook.get_conn())
-        #     )
-        #     df = self.hook.get_pandas_df(query)
-        # elif database == Database.SNOWFLAKE:
-        #     hook = self.get_snow_hook(table)
-        #     df = hook.get_pandas_df(
-        #         "SELECT * FROM IDENTIFIER(%(input_table)s)",
-        #         parameters={"input_table": table.table_name},
-        #     )
-        # elif database == Database.SQLITE:
-        #     hook = SqliteHook(sqlite_conn_id=table.conn_id, database=table.database)
-        #     engine = hook.get_sqlalchemy_engine()
-        #     df = pd.read_sql_table(table.table_name, engine)
-        # elif database == Database.BIGQUERY:
-        #     hook = BigQueryHook(gcp_conn_id=table.conn_id)
-        #     engine = hook.get_sqlalchemy_engine()
-        #     df = pd.read_sql_table(table.qualified_name, engine)
+        if database in (Database.POSTGRES, Database.POSTGRESQL):
+            self.hook = PostgresHook(
+                postgres_conn_id=table.conn_id, schema=table.database
+            )
+            schema = table.schema or SCHEMA
+            query = (
+                postgres_sql.SQL("SELECT * FROM {schema}.{input_table}")
+                .format(
+                    schema=postgres_sql.Identifier(schema),
+                    input_table=postgres_sql.Identifier(table.table_name),
+                )
+                .as_string(self.hook.get_conn())
+            )
+            df = self.hook.get_pandas_df(query)
+        elif database == Database.SNOWFLAKE:
+            hook = self.get_snow_hook(table)
+            df = hook.get_pandas_df(
+                "SELECT * FROM IDENTIFIER(%(input_table)s)",
+                parameters={"input_table": table.table_name},
+            )
+        elif database == Database.SQLITE:
+            hook = SqliteHook(sqlite_conn_id=table.conn_id, database=table.database)
+            engine = hook.get_sqlalchemy_engine()
+            df = pd.read_sql_table(table.table_name, engine)
+        elif database == Database.BIGQUERY:
+            hook = BigQueryHook(gcp_conn_id=table.conn_id)
+            engine = hook.get_sqlalchemy_engine()
+            df = pd.read_sql_table(table.qualified_name, engine)
 
         if self.identifiers_as_lower:
             df.columns = [col_label.lower() for col_label in df.columns]
