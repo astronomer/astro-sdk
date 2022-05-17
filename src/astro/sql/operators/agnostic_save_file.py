@@ -80,13 +80,13 @@ class SaveFile(BaseOperator):
         hook_kwargs = {
             Database.POSTGRES: {
                 "postgres_conn_id": input_table.conn_id,
-                "schema": input_table.database,
+                "schema": getattr(input_table.metadata, "database", None),
             },
             Database.SNOWFLAKE: {
                 "snowflake_conn_id": input_table.conn_id,
-                "database": input_table.database,
-                "schema": input_table.schema,
-                "warehouse": input_table.warehouse,
+                "database": getattr(input_table.metadata, "database", None),
+                "schema": getattr(input_table.metadata, "schema", None),
+                "warehouse": getattr(input_table.metadata, "warehouse", None),
             },
             Database.BIGQUERY: {
                 "use_legacy_sql": False,

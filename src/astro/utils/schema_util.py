@@ -55,4 +55,4 @@ def get_error_string_for_multiple_dbs(tables: List[Table]):
     :param tables: list of table
     :return: String: error string
     """
-    return f'Tables should belong to same db {", ".join([f"{table.table_name}: {table.conn_id}" for table in tables])}'
+    return f'Tables should belong to same db {", ".join([f"{table.name}: {table.conn_id}" for table in tables])}'

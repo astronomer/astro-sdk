@@ -105,7 +105,10 @@ def test_dataframe_from_sql_custom_task_id(sample_dag, sql_server, test_table):
 def test_dataframe_from_sql_basic_op_arg(sample_dag, sql_server, test_table):
     """Test basic operation of dataframe operator with op_args."""
 
-    @df(conn_id=test_table.conn_id, database=test_table.database)
+    @df(
+        conn_id=test_table.conn_id,
+        database=getattr(test_table.metadata, "database", None),
+    )
     def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
         return df.sell.count()
 
@@ -140,7 +143,10 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, sql_server, test_table):
 def test_dataframe_from_sql_basic_op_arg_and_kwarg(sample_dag, sql_server, test_table):
     """Test dataframe creation from table object in args and kwargs."""
 
-    @df(conn_id=test_table.conn_id, database=test_table.database)
+    @df(
+        conn_id=test_table.conn_id,
+        database=getattr(test_table.metadata, "database", None),
+    )
     def my_df_func(df_1: pandas.DataFrame, df_2: pandas.DataFrame):  # skipcq: PY-D0003
         return df_1.sell.count() + df_2.sell.count()
 

@@ -98,12 +98,15 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             #     self.output_table = self.output_table.to_table(
             #         table_name=create_table_name(context=context), schema=SCHEMA
             #     )
-            self.output_table.schema = self.output_table.schema or SCHEMA
+
+            self.output_table.metadata.schema = (  # type: ignore
+                getattr(self.output_table.metadata, "schema", None) or SCHEMA
+            )
             hook = get_hook(
                 conn_id=self.output_table.conn_id,
-                database=self.output_table.database,
-                schema=self.output_table.schema,
-                warehouse=self.output_table.warehouse,
+                database=getattr(self.output_table.metadata, "database", None),
+                schema=getattr(self.output_table.metadata, "schema", None),
+                warehouse=getattr(self.output_table.metadata, "warehouse", None),
             )
             load_dataframe_into_sql_table(pandas_dataframe, self.output_table, hook)
             return self.output_table
@@ -118,10 +121,10 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         """
         return SnowflakeHook(
             snowflake_conn_id=table.conn_id,
-            warehouse=table.warehouse,
-            database=table.database,
+            warehouse=getattr(table.metadata, "warehouse", None),
+            database=getattr(table.metadata, "database", None),
             role=self.role,
-            schema=table.schema,
+            schema=getattr(table.metadata, "schema", None),
             authenticator=None,
             session_parameters=None,
         )
@@ -131,14 +134,15 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         self.log.info(f"Getting dataframe for {table}")
         if database in (Database.POSTGRES, Database.POSTGRESQL):
             self.hook = PostgresHook(
-                postgres_conn_id=table.conn_id, schema=table.database
+                postgres_conn_id=table.conn_id,
+                schema=getattr(table.metadata, "database", None),
             )
-            schema = table.schema or SCHEMA
+            schema = getattr(table.metadata, "schema", None) or SCHEMA
             query = (
                 postgres_sql.SQL("SELECT * FROM {schema}.{input_table}")
                 .format(
                     schema=postgres_sql.Identifier(schema),
-                    input_table=postgres_sql.Identifier(table.table_name),
+                    input_table=postgres_sql.Identifier(table.name),
                 )
                 .as_string(self.hook.get_conn())
             )
@@ -147,12 +151,15 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             hook = self.get_snow_hook(table)
             df = hook.get_pandas_df(
                 "SELECT * FROM IDENTIFIER(%(input_table)s)",
-                parameters={"input_table": table.table_name},
+                parameters={"input_table": table.name},
             )
         elif database == Database.SQLITE:
-            hook = SqliteHook(sqlite_conn_id=table.conn_id, database=table.database)
+            hook = SqliteHook(
+                sqlite_conn_id=table.conn_id,
+                database=getattr(table.metadata, "database", None),
+            )
             engine = hook.get_sqlalchemy_engine()
-            df = pd.read_sql_table(table.table_name, engine)
+            df = pd.read_sql_table(table.name, engine)
         elif database == Database.BIGQUERY:
             database = create_database(table.conn_id)
             table_name = database.get_table_qualified_name(table)

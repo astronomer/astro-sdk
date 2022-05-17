@@ -69,9 +69,9 @@ class AgnosticBooleanCheck(SqlDecoratedOperator):
 
     def execute(self, context: Dict):
         self.conn_id = self.table.conn_id
-        self.database = self.table.database
-        self.schema = self.table.schema
-        self.warehouse = self.table.warehouse
+        self.database = getattr(self.table.metadata, "database", None)
+        self.schema = getattr(self.table.metadata, "schema", None)
+        self.warehouse = getattr(self.table.metadata, "warehouse", None)
 
         self.conn = BaseHook.get_connection(self.conn_id)
         self.parameters: Dict[str, Any] = {"table": self.table}

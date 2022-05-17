@@ -32,7 +32,7 @@ class Table:
         warehouse=None,
         role=None,
     ):
-        self.table_name = table_name
+        self.name = table_name
         self.conn_id = conn_id
         self.database = database
         self.schema = schema
@@ -48,19 +48,17 @@ class Table:
         return self._conn_type
 
     def identifier_args(self):
-        return (self.schema, self.table_name) if self.schema else (self.table_name,)
+        return (self.schema, self.name) if self.schema else (self.name,)
 
     def qualified_name(self):
         if self.conn_type == "sqlite":
-            return self.table_name
+            return self.name
         else:
-            return (
-                self.schema + "." + self.table_name if self.schema else self.table_name
-            )
+            return self.schema + "." + self.name if self.schema else self.name
 
     def __str__(self):
         return (
-            f"Table(table_name={self.table_name}, database={self.database}, "
+            f"Table(table_name={self.name}, database={self.database}, "
             f"schema={self.schema}, conn_id={self.conn_id}, warehouse={self.warehouse}, role={self.role})"
         )
 
@@ -72,18 +70,18 @@ class Table:
             warehouse=self.warehouse,
         )
 
-        query = f"DROP TABLE IF EXISTS {self.table_name};"
+        query = f"DROP TABLE IF EXISTS {self.name};"
         database_name = get_database_name(hook)
         if database_name == Database.BIGQUERY:
-            query = f"DROP TABLE IF EXISTS {self.schema}.{self.table_name};"
+            query = f"DROP TABLE IF EXISTS {self.schema}.{self.name};"
         hook.run(query)
 
 
 class TempTable(Table):
     def __init__(self, conn_id=None, database=None, schema=None, warehouse="", role=""):
-        self.table_name = ""
+        self.name = ""
         super().__init__(
-            table_name=self.table_name,
+            table_name=self.name,
             conn_id=conn_id,
             database=database,
             warehouse=warehouse,
@@ -92,7 +90,7 @@ class TempTable(Table):
         )
 
     def to_table(self, table_name: str, schema: Optional[str] = None) -> Table:
-        self.table_name = table_name
+        self.name = table_name
         self.schema = schema or self.schema or SCHEMA
 
         return Table(

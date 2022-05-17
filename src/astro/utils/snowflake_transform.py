@@ -10,8 +10,8 @@ def _handle_table(t: Table):
     :return:
     """
 
-    snow_schema = t.schema or SCHEMA
-    return f"{t.database}.{snow_schema}.{t.name}"
+    snow_schema = getattr(t.metadata, "schema", None) or SCHEMA
+    return f"{getattr(t.metadata, 'database', None)}.{snow_schema}.{t.name}"
 
 
 def process_params(parameters):

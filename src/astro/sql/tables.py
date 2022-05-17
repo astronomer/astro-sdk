@@ -1,12 +1,9 @@
 import random
 import string
 from dataclasses import dataclass, fields
-from typing import Any, List, Optional, Union
+from typing import List, Optional, Union
 
-import pandas as pd
 from sqlalchemy import Column, MetaData
-
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 
 MAX_TABLE_NAME_LENGTH = 45
 
@@ -108,83 +105,89 @@ class Table:
 
             self.db = create_database(self.conn_id)
 
-    def load_pandas_dataframe_to_table(
-        self,
-        source_dataframe: pd.DataFrame,
-        target_table: Any,  # To Do - Fix me!
-        if_exists: LoadExistStrategy = "replace",
-        chunk_size: int = DEFAULT_CHUNK_SIZE,
-    ) -> None:
-        """
-        Create a table with the dataframe's contents.
-        If the table already exists, append or replace the content, depending on the value of `if_exists`.
+    # @property
+    # def qualified_name(self) -> Optional[str]:
+    #     """Return table qualified name. This is Database-specific."""
+    #     self._set_db()
+    #     return str(self.db.get_table_qualified_name(self))
 
-        :param source_dataframe: Local or remote filepath
-        :param target_table: Table in which the file will be loaded
-        :param if_exists: Strategy to be used in case the target table already exists.
-        :param chunk_size: Specify the number of rows in each batch to be written at a time.
-        """
-        self._set_db()
-        self.db.load_pandas_dataframe_to_table(
-            source_dataframe=source_dataframe,
-            target_table=target_table,
-            if_exists=if_exists,
-            chunk_size=chunk_size,
-        )
+    # def load_pandas_dataframe_to_table(
+    #     self,
+    #     source_dataframe: pd.DataFrame,
+    #     target_table: Any,  # To Do - Fix me!
+    #     if_exists: LoadExistStrategy = "replace",
+    #     chunk_size: int = DEFAULT_CHUNK_SIZE,
+    # ) -> None:
+    #     """
+    #     Create a table with the dataframe's contents.
+    #     If the table already exists, append or replace the content, depending on the value of `if_exists`.
+    #
+    #     :param source_dataframe: Local or remote filepath
+    #     :param target_table: Table in which the file will be loaded
+    #     :param if_exists: Strategy to be used in case the target table already exists.
+    #     :param chunk_size: Specify the number of rows in each batch to be written at a time.
+    #     """
+    #     self._set_db()
+    #     self.db.load_pandas_dataframe_to_table(
+    #         source_dataframe=source_dataframe,
+    #         target_table=target_table,
+    #         if_exists=if_exists,
+    #         chunk_size=chunk_size,
+    #     )
 
-    @property
-    def schema(self) -> Optional[str]:
-        return getattr(self.metadata, "schema", None)
+    # @property
+    # def schema(self) -> Optional[str]:
+    #     return getattr(self.metadata, "schema", None)
+    #
+    # @schema.setter
+    # def schema(self, val: str):
+    #     if self.metadata is None:
+    #         self.metadata = Metadata()
+    #
+    #     self.metadata.schema = val
 
-    @schema.setter
-    def schema(self, val: str):
-        if self.metadata is None:
-            self.metadata = Metadata()
+    # @property
+    # def database(self) -> Optional[str]:
+    #     return getattr(self.metadata, "database", None)
+    #
+    # @database.setter
+    # def database(self, val: str):
+    #     if self.metadata is None:
+    #         self.metadata = Metadata()
+    #
+    #     self.metadata.database = val
 
-        self.metadata.schema = val
+    # @property
+    # def warehouse(self) -> Optional[str]:
+    #     return getattr(self.metadata, "warehouse", None)
+    #
+    # @warehouse.setter
+    # def warehouse(self, val: str):
+    #     if self.metadata is None:
+    #         self.metadata = Metadata()
+    #
+    #     self.metadata.warehouse = val
 
-    @property
-    def database(self) -> Optional[str]:
-        return getattr(self.metadata, "database", None)
+    # @property
+    # def role(self) -> Optional[str]:
+    #     return getattr(self.metadata, "role", None)
+    #
+    # @role.setter
+    # def role(self, val: str):
+    #     if self.metadata is None:
+    #         self.metadata = Metadata()
+    #
+    #     self.metadata.role = val
 
-    @database.setter
-    def database(self, val: str):
-        if self.metadata is None:
-            self.metadata = Metadata()
+    # @property
+    # def table_name(self) -> str:
+    #     # To Do -- replace all the instance of table.table_name with table.name
+    #     return str(self.name)
+    #
+    # @table_name.setter
+    # def table_name(self, val: str):
+    #     self.name = val
 
-        self.metadata.database = val
-
-    @property
-    def warehouse(self) -> Optional[str]:
-        return getattr(self.metadata, "warehouse", None)
-
-    @warehouse.setter
-    def warehouse(self, val: str):
-        if self.metadata is None:
-            self.metadata = Metadata()
-
-        self.metadata.warehouse = val
-
-    @property
-    def role(self) -> Optional[str]:
-        return getattr(self.metadata, "role", None)
-
-    @role.setter
-    def role(self, val: str):
-        if self.metadata is None:
-            self.metadata = Metadata()
-
-        self.metadata.role = val
-
-    @property
-    def table_name(self) -> str:
-        # To Do -- replace all the instance of table.table_name with table.name
-        return str(self.name)
-
-    @table_name.setter
-    def table_name(self, val: str):
-        self.name = val
-
-    def drop(self):
-        if self.db:
-            self.db.drop_table(self)
+    # def drop(self):
+    #     if self.db:
+    #         self.db.drop_table(self)
