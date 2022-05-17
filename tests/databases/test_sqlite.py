@@ -56,6 +56,14 @@ def test_sqlite_run_sql():
 
 
 @pytest.mark.integration
+def test_sqlite_run_sql_with_sqlalchemy_text():
+    statement = sqlalchemy.text("SELECT 1 + 1;")
+    database = SqliteDatabase()
+    response = database.run_sql(statement)
+    assert response.first()[0] == 2
+
+
+@pytest.mark.integration
 def test_sqlite_run_sql_with_parameters():
     """Test running a SQL query using SQLAlchemy templating engine"""
     statement = "SELECT 1 + :value;"
