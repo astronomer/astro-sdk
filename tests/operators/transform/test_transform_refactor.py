@@ -54,8 +54,8 @@ def test_dataframe_transform(sample_dag, database_table_fixture):
 @pytest.mark.parametrize(
     "sql_server",
     [
-        # "snowflake",
-        # "postgres",
+        "snowflake",
+        "postgres",
         # "bigquery",
         "sqlite",
     ],

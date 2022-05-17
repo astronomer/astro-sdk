@@ -263,8 +263,9 @@ class BaseDatabase(ABC):
 
         :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
         """
-        statement = self._create_schema_statement.format(schema)
-        self.run_sql(statement)
+        if not self.schema_exists(schema):
+            statement = self._create_schema_statement.format(schema)
+            self.run_sql(statement)
 
     def schema_exists(self, schema):
         """

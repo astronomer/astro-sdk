@@ -111,3 +111,12 @@ class SnowflakeDatabase(BaseDatabase):
             k: (self.get_table_qualified_name(v) if isinstance(v, Table) else v)
             for k, v in parameters.items()
         }
+
+    def schema_exists(self, schema):
+        created_schemas = [
+            x["SCHEMA_NAME"]
+            for x in self.hook.run(
+                "SELECT SCHEMA_NAME from information_schema.schemata;"
+            )
+        ]
+        return schema.upper() in [c.upper() for c in created_schemas]

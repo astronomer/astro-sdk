@@ -25,3 +25,10 @@ class PostgresDatabase(BaseDatabase):
     def default_metadata(self) -> Metadata:
         schema = self.hook.schema
         return Metadata(schema=schema)
+
+    def schema_exists(self, schema):
+        created_schemas = self.hook.run(
+            "SELECT schema_name FROM information_schema.schemata;",
+            handler=lambda x: [y[0] for y in x.fetchall()],
+        )
+        return schema.upper() in [c.upper() for c in created_schemas]
