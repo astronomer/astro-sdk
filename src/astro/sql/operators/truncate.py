@@ -8,6 +8,8 @@ from astro.sql.tables import Table
 
 
 class TruncateOperator(BaseOperator):
+    """Airflow Operator for truncating SQL tables."""
+
     def __init__(
         self,
         table: Table,
@@ -22,6 +24,7 @@ class TruncateOperator(BaseOperator):
         )
 
     def execute(self, context: Dict) -> None:  # skipcq: PYL-W0613
+        """Method run when the Airflow runner calls the operator."""
         database = create_database(self.table.conn_id)
         if (
             self.table.metadata
