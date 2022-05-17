@@ -43,16 +43,13 @@ class Table:
     # Some ideas: TableRef, TableMetadata, TableData, TableDataset
     conn_id: str = ""
     name: str = ""
-    metadata: Optional[Metadata] = None
+    metadata: Metadata = Metadata()
     columns: Optional[List[Column]] = None
     temp: bool = False
 
     def __post_init__(self):
         if self.columns is None:
             self.columns = []
-
-        if self.metadata is None:
-            self.metadata = Metadata()
 
         if not self.name:
             self.name = self._create_unique_table_name()
