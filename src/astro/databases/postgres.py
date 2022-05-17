@@ -1,13 +1,9 @@
-<<<<<<< HEAD
 """Postgres database implementation."""
-import pandas as pd
-=======
->>>>>>> 79ed091 (Fixed testcase.)
+
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 from astro.databases.base import BaseDatabase
 from astro.sql.tables import Metadata
-
 
 DEFAULT_CONN_ID = PostgresHook.default_conn_name
 
