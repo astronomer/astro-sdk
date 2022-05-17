@@ -235,7 +235,7 @@ def load_dataframe_into_sql_table(
     engine = get_sqlalchemy_engine(hook)
 
     output_table_name = output_table.name
-    schema = getattr(output_table.metadata, "schema", None)
+    schema = output_table.metadata.schema
     conn = hook.get_connection(output_table.conn_id)
     user = conn.login
 

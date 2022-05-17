@@ -64,9 +64,9 @@ class AgnosticLoadFile(BaseOperator):
 
         hook = get_hook(
             conn_id=self.output_table.conn_id,
-            database=getattr(self.output_table.metadata, "database", None),
-            schema=getattr(self.output_table.metadata, "schema", None),
-            warehouse=getattr(self.output_table.metadata, "warehouse", None),
+            database=self.output_table.metadata.database,
+            schema=self.output_table.metadata.schema,
+            warehouse=self.output_table.metadata.warehouse,
         )
 
         self._configure_output_table(context)

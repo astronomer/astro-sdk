@@ -71,7 +71,7 @@ class AgnosticAggregateCheck(SqlDecoratedOperator):
 
     def execute(self, context: Context) -> Table:
         self.conn_id = self.table.conn_id
-        self.database = getattr(self.table.metadata, "database", None)
+        self.database = self.table.metadata.database
         self.sql = self.check
         self.parameters = {"table": self.table}
 

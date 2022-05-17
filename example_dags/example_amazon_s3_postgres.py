@@ -6,7 +6,7 @@ from pandas import DataFrame
 
 from astro import sql as aql
 from astro.dataframe import dataframe as df
-from astro.sql.tables import Metadata, Table
+from astro.sql.tables import Table
 
 s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
 
@@ -39,7 +39,6 @@ with dag:
     my_homes_table = aql.load_file(
         path=f"{s3_bucket}/homes.csv",
         output_table=Table(
-            metadata=Metadata(database="pagila"),
             conn_id="postgres_conn",
         ),
     )

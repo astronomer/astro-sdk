@@ -134,10 +134,9 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         self.log.info(f"Getting dataframe for {table}")
         if database in (Database.POSTGRES, Database.POSTGRESQL):
             self.hook = PostgresHook(
-                postgres_conn_id=table.conn_id,
-                schema=getattr(table.metadata, "database", None),
+                postgres_conn_id=table.conn_id, schema=table.metadata.schema
             )
-            schema = getattr(table.metadata, "schema", None) or SCHEMA
+            schema = table.metadata.schema
             query = (
                 postgres_sql.SQL("SELECT * FROM {schema}.{input_table}")
                 .format(
@@ -154,10 +153,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
                 parameters={"input_table": table.name},
             )
         elif database == Database.SQLITE:
-            hook = SqliteHook(
-                sqlite_conn_id=table.conn_id,
-                database=getattr(table.metadata, "database", None),
-            )
+            hook = SqliteHook(sqlite_conn_id=table.conn_id)
             engine = hook.get_sqlalchemy_engine()
             df = pd.read_sql_table(table.name, engine)
         elif database == Database.BIGQUERY:

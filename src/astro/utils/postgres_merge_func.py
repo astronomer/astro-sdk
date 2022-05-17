@@ -40,5 +40,5 @@ def postgres_merge_func(
 
 
 def identifier_args(table):
-    schema = getattr(table.metadata, "schema", None)
+    schema = table.metadata.schema
     return (schema, table.name) if schema else (table.name,)

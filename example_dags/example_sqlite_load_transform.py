@@ -3,7 +3,7 @@ from datetime import datetime
 from airflow import DAG
 
 from astro import sql as aql
-from astro.sql.tables import Metadata, Table
+from astro.sql.tables import Table
 
 START_DATE = datetime(2000, 1, 1)
 
@@ -29,18 +29,13 @@ with DAG(
     imdb_movies = aql.load_file(
         path="https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/imdb.csv",
         task_id="load_csv",
-        output_table=Table(
-            name="imdb_movies",
-            conn_id="sqlite_default",
-            metadata=Metadata(database="sqlite"),
-        ),
+        output_table=Table(name="imdb_movies", conn_id="sqlite_default"),
     )
 
     top_five_animations(
         input_table=imdb_movies,
         output_table=Table(
             name="top_animation",
-            metadata=Metadata(database="sqlite"),
             conn_id="sqlite_default",
         ),
     )
