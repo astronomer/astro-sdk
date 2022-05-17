@@ -68,11 +68,11 @@ class TableHandler:
             self.database = (
                 getattr(first_table.metadata, "database", None) or self.database
             )
-            self.schema = getattr(first_table, "schema", None) or self.schema
+            self.schema = getattr(first_table.metadata, "schema", None) or self.schema
             self.warehouse = (
                 getattr(first_table.metadata, "warehouse", None) or self.warehouse
             )
-            self.role = first_table.role or self.role
+            self.role = getattr(first_table.metadata, "role", None) or self.role
 
     def populate_output_table(self):
         self.output_table.conn_id = self.output_table.conn_id or self.conn_id

@@ -142,7 +142,7 @@ def test_table(request, sql_server):  # noqa: C901
             # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
             # Example: tables which are not fixtures and constraints.
             # This is an aggressive approach towards tearing down:
-            hook.run(f"DROP SCHEMA IF EXISTS {table.schema} CASCADE;")
+            hook.run(f"DROP SCHEMA IF EXISTS {table.metadata.schema} CASCADE;")
 
 
 @pytest.fixture

@@ -105,11 +105,11 @@ class Table:
 
             self.db = create_database(self.conn_id)
 
-    # @property
-    # def qualified_name(self) -> Optional[str]:
-    #     """Return table qualified name. This is Database-specific."""
-    #     self._set_db()
-    #     return str(self.db.get_table_qualified_name(self))
+    @property
+    def qualified_name(self) -> Optional[str]:
+        """Return table qualified name. This is Database-specific."""
+        self._set_db()
+        return str(self.db.get_table_qualified_name(self))
 
     # def load_pandas_dataframe_to_table(
     #     self,
