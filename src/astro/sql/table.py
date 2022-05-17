@@ -8,6 +8,7 @@ from astro.constants import UNIQUE_TABLE_NAME_LENGTH
 MAX_TABLE_NAME_SIZE = 63
 
 
+# TODO: deprecate by the end of the refactoring
 def create_table_name(context) -> str:
     ti: TaskInstance = context["ti"]
     dag_run: DagRun = ti.get_dagrun()
@@ -19,6 +20,7 @@ def create_table_name(context) -> str:
     return table_name
 
 
+# TODO: deprecate by the end of the refactoring
 def create_unique_table_name(length: int = UNIQUE_TABLE_NAME_LENGTH) -> str:
     """
     Create a unique table name of the requested size, which is compatible with all supported databases.
