@@ -133,9 +133,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         database = create_database_from_conn_id(table.conn_id)
         self.log.info(f"Getting dataframe for {table}")
         if database in (Database.POSTGRES, Database.POSTGRESQL):
-            self.hook = PostgresHook(
-                postgres_conn_id=table.conn_id, schema=table.metadata.schema
-            )
+            self.hook = PostgresHook(postgres_conn_id=table.conn_id)
             schema = table.metadata.schema
             query = (
                 postgres_sql.SQL("SELECT * FROM {schema}.{input_table}")
