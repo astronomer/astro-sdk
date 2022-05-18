@@ -9,7 +9,7 @@ from airflow.utils.session import create_session
 
 import astro.sql as aql
 from astro import dataframe as adf
-from astro.sql.tables import Table
+from astro.sql.tables import Metadata, Table
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
@@ -109,7 +109,9 @@ def test_postgres(sample_dag, pg_query_result):
 
     with sample_dag:
         pg_table = pg_query(
-            input_table=Table(name="actor", conn_id="postgres_conn_pagila")
+            input_table=Table(
+                name="actor", conn_id="postgres_conn_pagila", metadata=Metadata()
+            )
         )
         validate(pg_table)
     test_utils.run_dag(sample_dag)
