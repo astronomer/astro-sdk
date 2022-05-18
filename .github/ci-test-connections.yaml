@@ -13,7 +13,7 @@ connections:
     schema: pagila
     login: postgres
     password: postgres
-    port: 5433
+    port: 5432
     extra:
   - conn_id: snowflake_conn
     conn_type: snowflake
