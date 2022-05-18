@@ -349,9 +349,7 @@ def _transform_task(
         Defaults to False.
     :type multiple_outputs: bool
     """
-    from astro.sql.operators.sql_decorator_refactor import (
-        SqlDecoratedOperator as SQLNew,
-    )
+    from astro.sql.operators.sql_decorator_refactor import TransformOperator as SQLNew
 
     sql_class = SqlDecoratedOperator
     if kwargs.get("_experimental", False):

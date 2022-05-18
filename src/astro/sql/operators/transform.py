@@ -13,7 +13,7 @@ from astro.utils.sql_refactor import SQLHandler
 from astro.utils.table_handler_new import TableHandler
 
 
-class SqlDecoratedOperator(
+class TransformOperator(
     SQLHandler, DataframeFunctionHandler, DecoratedOperator, TableHandler
 ):
     """Handles all decorator classes that can return a SQL function"""

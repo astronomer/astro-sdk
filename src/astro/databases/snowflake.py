@@ -104,9 +104,7 @@ class SnowflakeDatabase(BaseDatabase):
         return context
 
     def process_sql_parameters(self, parameters: Dict) -> Dict:
-        """
-        Used in conjunction with add_templates_to_context to pass the name of the table
-        """
+        """Used in conjunction with add_templates_to_context to pass the name of the table"""
         return {
             k: (self.get_table_qualified_name(v) if isinstance(v, Table) else v)
             for k, v in parameters.items()
