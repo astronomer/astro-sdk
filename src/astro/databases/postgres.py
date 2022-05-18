@@ -35,11 +35,12 @@ class PostgresDatabase(BaseDatabase):
 
         :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
         """
-        created_schemas = self.hook.run(
-            "SELECT schema_name FROM information_schema.schemata;",
+        schema_result = self.hook.run(
+            "SELECT schema_name FROM information_schema.schemata WHERE lower(schema_name) = lower(%(schema_name)s);",
+            parameters={"schema_name": schema.lower()},
             handler=lambda x: [y[0] for y in x.fetchall()],
         )
-        return schema.upper() in [c.upper() for c in created_schemas]
+        return len(schema_result) > 0
 
     def table_exists(self, table: Table) -> bool:
         """
