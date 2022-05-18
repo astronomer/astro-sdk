@@ -73,6 +73,7 @@ def test_table_exists_raises_exception():
         {
             "database": Database.POSTGRES,
             "table": Table(
+                metadata=Metadata(schema=SCHEMA),
                 columns=[
                     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
                     sqlalchemy.Column(
@@ -101,13 +102,13 @@ def test_postgres_create_table_with_columns(database_table_fixture):
     assert len(rows) == 2
     assert rows[0][0:4] == (
         "postgres",
-        "public",
+        SCHEMA,
         f"{table.name}",
         "id",
     )
     assert rows[1][0:4] == (
         "postgres",
-        "public",
+        SCHEMA,
         f"{table.name}",
         "name",
     )
