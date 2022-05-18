@@ -152,11 +152,13 @@ def test_table(request, sql_server):  # noqa: C901
 def output_table(request):
     table_type = request.param
     if table_type == "None":
-        return Table(metadata=Metadata())
+        return Table()
     elif table_type == "partial":
-        return Table(name="my_table", metadata=Metadata())
+        return Table(name="my_table")
     elif table_type == "full":
-        return Table(name="my_table", conn_id="postgres_conn", metadata=Metadata())
+        return Table(
+            name="my_table", conn_id="postgres_conn", metadata=Metadata(schema=SCHEMA)
+        )
 
 
 @pytest.fixture
