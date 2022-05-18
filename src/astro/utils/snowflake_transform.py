@@ -17,13 +17,13 @@ def _handle_table(t: Table):
 
 def process_params(parameters):
     return {
-        k: (_handle_table(v) if type(v) == Table else v) for k, v in parameters.items()
+        k: (_handle_table(v) if type(v) is Table else v) for k, v in parameters.items()
     }
 
 
 def add_templates_to_context(parameters, context):
     for k, v in parameters.items():
-        if type(v) == Table:
+        if type(v) is Table:
             context[k] = "IDENTIFIER(:" + k + ")"
         else:
             context[k] = ":" + k

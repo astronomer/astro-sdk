@@ -39,7 +39,6 @@ TEST_SCHEMA = test_utils.get_table_name("test")
 )
 def test_sql_decorator_basic_functionality(sample_dag, sql_server, test_table):
     """Test basic sql execution of SqlDecoratedOperator."""
-
     database = create_database(test_table.conn_id)
     qualified_name = database.get_table_qualified_name(test_table)
 

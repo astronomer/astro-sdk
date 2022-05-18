@@ -124,9 +124,7 @@ def is_valid_snow_identifier(name):
             return False  # invalid because no closing quote
 
         return ensure_internal_quotes_closed(name)
-
-    else:  # not quoted
-        return ensure_only_valid_characters(name)
+    return ensure_only_valid_characters(name)
 
 
 # test code to check for validate snowflake identifier

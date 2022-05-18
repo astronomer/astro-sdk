@@ -90,14 +90,8 @@ def test_table(request, sql_server):  # noqa: C901
     database = get_database_name(hook)
 
     for table_param in tables_params:
-        # is_tmp_table = table_param.get("is_temp", True)
         load_table = table_param.get("load_table", False)
         override_table_options = table_param.get("param", {})
-
-        # if is_tmp_table and load_table:
-        #     raise ValueError(
-        #         "Temp Table cannot be populated with data. Use 'is_temp=False' instead."
-        #     )
 
         if database == Database.SNOWFLAKE:
             default_table_options = {
@@ -111,7 +105,6 @@ def test_table(request, sql_server):  # noqa: C901
         elif database == Database.POSTGRES:
             default_table_options = {
                 "conn_id": hook.postgres_conn_id,
-                # "metadata": Metadata(schema=hook.schema),
             }
         elif database == Database.SQLITE:
             default_table_options = {"conn_id": hook.sqlite_conn_id}
@@ -124,11 +117,7 @@ def test_table(request, sql_server):  # noqa: C901
             raise ValueError("Unsupported Database")
 
         default_table_options.update(override_table_options)
-        tables.append(
-            Table(**default_table_options)
-            # if is_tmp_table
-            # else Table(**default_table_options)
-        )
+        tables.append(Table(**default_table_options))
         if load_table:
             populate_table(path=table_param.get("path"), table=tables[-1], hook=hook)
 

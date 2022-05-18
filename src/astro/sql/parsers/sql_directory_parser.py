@@ -193,7 +193,7 @@ def render(
                 )
             current_operator.parameters[param] = template_dict[param]
             # due to an edge case in XComArg, we need to explicitly set dependencies here
-            if type(template_dict[param]) == XComArg:
+            if type(template_dict[param]) is XComArg:
                 template_dict[param].operator >> current_operator
     ret = []
     for f in template_dict.values():
@@ -269,6 +269,6 @@ class ParsedSqlOperator(SqlDecoratedOperator):
     def execute(self, context: Dict):
         if self.parameters:
             for v in self.parameters.values():
-                if type(v) == Table:
+                if type(v) is Table:
                     self.set_values(v)
         return super().execute(context)

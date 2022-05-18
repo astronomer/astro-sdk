@@ -36,8 +36,7 @@ def merge_keys(sql_server):
 
     if sql_name == "snowflake":
         return {"list": "list", "sell": "sell"}
-    else:
-        return ["list", "sell"]
+    return ["list", "sell"]
 
 
 @aql.transform

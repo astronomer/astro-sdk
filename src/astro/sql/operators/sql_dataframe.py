@@ -86,7 +86,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             for k, v in self.op_kwargs.items()
         }
 
-    def execute(self, context: Dict):
+    def execute(self, context: Dict):  # skipcq: PYL-W0613
         self._set_variables_from_first_table()
         self.handle_op_args()
         self.handle_op_kwargs()
@@ -94,11 +94,6 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
         if self.output_table:
             self.populate_output_table()
-            # if type(self.output_table) == TempTable:
-            #     self.output_table = self.output_table.to_table(
-            #         table_name=create_table_name(context=context), schema=SCHEMA
-            #     )
-
             self.output_table.metadata.schema = (  # type: ignore
                 self.output_table.metadata.schema or SCHEMA
             )

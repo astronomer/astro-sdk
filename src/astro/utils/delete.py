@@ -22,7 +22,6 @@ def delete_dataframe_rows_from_table(
     :type target_table: astro.table.Table
     :type hook: Airflow Hook to the target database
     """
-
     # First we create a temporary table using the dataframe values
     named_table = Table(
         conn_id=target_table.conn_id,

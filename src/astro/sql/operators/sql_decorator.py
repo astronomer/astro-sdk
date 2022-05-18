@@ -139,10 +139,6 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         # Run execute function of subclassed Operator.
 
         if self.output_table:
-            # if type(self.output_table) == TempTable:
-            #     self.output_table = self.output_table.to_table(
-            #         table_name=output_table_name, schema=self.output_table.schema
-            #     )
             self.log.info("Returning table %s", self.output_table)
             self.populate_output_table()
             return self.output_table
