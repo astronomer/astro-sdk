@@ -74,9 +74,7 @@ class SqlDecoratedOperator(
         return table  # type: ignore
 
     def handle_table_conversions(self):
-        """
-        This is a temporary holdover until all other functions use the new table format
-        """
+        """This is a temporary holdover until all other functions use the new table format"""
         self.op_args = tuple(
             self.convert_old_table_to_new(t) if isinstance(t, OldTable) else t
             for t in self.op_args  # type: ignore

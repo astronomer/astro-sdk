@@ -15,6 +15,7 @@ class TableHandler(ABC):
     schema: str = ""
     database: str = ""
     conn_id: str = ""
+    role: str = ""
 
     def _set_variables_from_first_table(self):
         """
