@@ -1,6 +1,6 @@
 import random
 import string
-from dataclasses import dataclass, fields
+from dataclasses import dataclass, field, fields
 from typing import List, Optional, Union
 
 from sqlalchemy import Column, MetaData
@@ -43,7 +43,7 @@ class Table:
     # Some ideas: TableRef, TableMetadata, TableData, TableDataset
     conn_id: str = ""
     name: str = ""
-    metadata: Metadata = Metadata()
+    metadata: Metadata = field(default_factory=Metadata)
     columns: Optional[List[Column]] = None
     temp: bool = False
 
