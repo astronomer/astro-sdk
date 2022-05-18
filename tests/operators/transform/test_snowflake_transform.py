@@ -21,7 +21,7 @@ from airflow.utils import timezone
 # Import Operator
 from astro import sql as aql
 from astro.dataframe import dataframe as adf
-from astro.sql.table import Table, TempTable
+from astro.sql.table import Metadata, Table
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
@@ -55,12 +55,14 @@ def snowflake_table(table_name, role):
         table_name=table_name,
     )
     return Table(
-        table_name,
+        name=table_name,
         conn_id="snowflake_conn",
-        schema=os.getenv("SNOWFLAKE_SCHEMA"),
-        database=os.getenv("SNOWFLAKE_DATABASE"),
-        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-        role=role,
+        metadata=Metadata(
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            role=role,
+        ),
     )
 
 
@@ -81,11 +83,13 @@ def run_role_query(dag, table, role):
 
         f = sample_snow(
             input_table=loaded_table,
-            output_table=TempTable(
+            output_table=Table(
                 conn_id="snowflake_conn",
-                database=os.getenv("SNOWFLAKE_DATABASE"),
-                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-                role=role,
+                metadata=Metadata(
+                    database=os.getenv("SNOWFLAKE_DATABASE"),
+                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                    role=role,
+                ),
             ),
         )
         x = sample_snow(
@@ -97,14 +101,14 @@ def run_role_query(dag, table, role):
 
 @pytest.mark.parametrize("sql_server", ["snowflake"], indirect=True)
 def test_roles_failing(sql_server, sample_dag, test_table):
-    test_table.role = "foo"
+    test_table.metadata.role = "foo"
     with pytest.raises(Exception):
         run_role_query(sample_dag, test_table, role="foo")
 
 
 @pytest.mark.parametrize("sql_server", ["snowflake"], indirect=True)
 def test_roles_passing(sql_server, sample_dag, test_table):
-    test_table.role = os.getenv("SNOWFLAKE_ROLE")
+    test_table.metadata.role = os.getenv("SNOWFLAKE_ROLE")
     run_role_query(sample_dag, test_table, role=os.getenv("SNOWFLAKE_ROLE"))
 
 
@@ -133,5 +137,5 @@ def run_simple_transform(dag, table, role):
 @pytest.mark.parametrize("sql_server", ["snowflake"], indirect=True)
 def test_transform_without_input_table(sql_server, sample_dag, test_table):
     """Reproduces issue #319"""
-    test_table.role = os.getenv("SNOWFLAKE_ROLE")
+    test_table.metadata.role = os.getenv("SNOWFLAKE_ROLE")
     run_simple_transform(sample_dag, test_table, role=os.getenv("SNOWFLAKE_ROLE"))

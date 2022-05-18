@@ -6,8 +6,9 @@ from airflow.decorators.base import DecoratedOperator
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 
 from astro.constants import Database
+from astro.databases import create_database
 from astro.settings import SCHEMA
-from astro.sql.table import Table, TempTable, create_table_name
+from astro.sql.table import Table
 from astro.utils import get_hook
 from astro.utils.database import create_database_from_conn_id
 from astro.utils.dependencies import (
@@ -85,7 +86,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             for k, v in self.op_kwargs.items()
         }
 
-    def execute(self, context: Dict):
+    def execute(self, context: Dict):  # skipcq: PYL-W0613
         self._set_variables_from_first_table()
         self.handle_op_args()
         self.handle_op_kwargs()
@@ -93,16 +94,14 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
         if self.output_table:
             self.populate_output_table()
-            if type(self.output_table) == TempTable:
-                self.output_table = self.output_table.to_table(
-                    table_name=create_table_name(context=context), schema=SCHEMA
-                )
-            self.output_table.schema = self.output_table.schema or SCHEMA
+            self.output_table.metadata.schema = (  # type: ignore
+                self.output_table.metadata.schema or SCHEMA
+            )
             hook = get_hook(
                 conn_id=self.output_table.conn_id,
-                database=self.output_table.database,
-                schema=self.output_table.schema,
-                warehouse=self.output_table.warehouse,
+                database=self.output_table.metadata.database,
+                schema=self.output_table.metadata.schema,
+                warehouse=self.output_table.metadata.warehouse,
             )
             load_dataframe_into_sql_table(pandas_dataframe, self.output_table, hook)
             return self.output_table
@@ -117,10 +116,10 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         """
         return SnowflakeHook(
             snowflake_conn_id=table.conn_id,
-            warehouse=table.warehouse,
-            database=table.database,
+            warehouse=table.metadata.warehouse,
+            database=table.metadata.database,
             role=self.role,
-            schema=table.schema,
+            schema=table.metadata.schema,
             authenticator=None,
             session_parameters=None,
         )
@@ -129,15 +128,13 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         database = create_database_from_conn_id(table.conn_id)
         self.log.info(f"Getting dataframe for {table}")
         if database in (Database.POSTGRES, Database.POSTGRESQL):
-            self.hook = PostgresHook(
-                postgres_conn_id=table.conn_id, schema=table.database
-            )
-            schema = table.schema or SCHEMA
+            self.hook = PostgresHook(postgres_conn_id=table.conn_id)
+            schema = table.metadata.schema
             query = (
                 postgres_sql.SQL("SELECT * FROM {schema}.{input_table}")
                 .format(
                     schema=postgres_sql.Identifier(schema),
-                    input_table=postgres_sql.Identifier(table.table_name),
+                    input_table=postgres_sql.Identifier(table.name),
                 )
                 .as_string(self.hook.get_conn())
             )
@@ -146,16 +143,19 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             hook = self.get_snow_hook(table)
             df = hook.get_pandas_df(
                 "SELECT * FROM IDENTIFIER(%(input_table)s)",
-                parameters={"input_table": table.table_name},
+                parameters={"input_table": table.name},
             )
         elif database == Database.SQLITE:
-            hook = SqliteHook(sqlite_conn_id=table.conn_id, database=table.database)
+            hook = SqliteHook(sqlite_conn_id=table.conn_id)
             engine = hook.get_sqlalchemy_engine()
-            df = pd.read_sql_table(table.table_name, engine)
+            df = pd.read_sql_table(table.name, engine)
         elif database == Database.BIGQUERY:
+            db = create_database(table.conn_id)
+            table_name = db.get_table_qualified_name(table)
+
             hook = BigQueryHook(gcp_conn_id=table.conn_id)
             engine = hook.get_sqlalchemy_engine()
-            df = pd.read_sql_table(table.qualified_name(), engine)
+            df = pd.read_sql_table(table_name, engine)
 
         if self.identifiers_as_lower:
             df.columns = [col_label.lower() for col_label in df.columns]

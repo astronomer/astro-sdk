@@ -13,7 +13,7 @@ from astro.databases.snowflake import SnowflakeDatabase
 from astro.exceptions import NonExistentTableException
 from astro.files import File
 from astro.settings import SCHEMA
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
 from tests.operators import utils as test_utils
 

@@ -1,8 +1,9 @@
 """Postgres database implementation."""
+
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 from astro.databases.base import BaseDatabase
-from astro.sql.tables import Metadata
+from astro.sql.table import Metadata
 
 DEFAULT_CONN_ID = PostgresHook.default_conn_name
 
@@ -23,5 +24,5 @@ class PostgresDatabase(BaseDatabase):
 
     @property
     def default_metadata(self) -> Metadata:
-        schema = self.hook.schema
-        return Metadata(schema=schema)
+        # TODO: comment why
+        return Metadata(database=self.hook.schema)

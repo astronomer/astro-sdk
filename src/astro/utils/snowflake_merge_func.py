@@ -18,17 +18,17 @@ def snowflake_merge_func(
     statement = "merge into {{main_table}} using {{merge_table}} on " "{merge_clauses}"
 
     merge_target_dict = {
-        "merge_clause_target_" + str(i): target_table.table_name + "." + x
+        "merge_clause_target_" + str(i): target_table.name + "." + x
         for i, x in enumerate(merge_keys.keys())
     }
     merge_append_dict = {
-        "merge_clause_append_" + str(i): merge_table.table_name + "." + x
+        "merge_clause_append_" + str(i): merge_table.name + "." + x
         for i, x in enumerate(merge_keys.values())
     }
 
     statement = fill_in_merge_clauses(merge_append_dict, merge_target_dict, statement)
 
-    values_to_check = [target_table.table_name, merge_table.table_name]
+    values_to_check = [target_table.name, merge_table.name]
     values_to_check.extend(target_columns)
     values_to_check.extend(merge_columns)
     for v in values_to_check:
@@ -41,8 +41,8 @@ def snowflake_merge_func(
         statement += " when matched then UPDATE SET {merge_vals}"
         statement = fill_in_update_statement(
             statement,
-            target_table.table_name,
-            merge_table.table_name,
+            target_table.name,
+            merge_table.name,
             target_columns,
             merge_columns,
         )
@@ -50,8 +50,8 @@ def snowflake_merge_func(
         " when not matched then insert({target_columns}) values ({append_columns})"
     )
     statement = fill_in_append_statements(
-        target_table.table_name,
-        merge_table.table_name,
+        target_table.name,
+        merge_table.name,
         statement,
         target_columns,
         merge_columns,
@@ -124,9 +124,7 @@ def is_valid_snow_identifier(name):
             return False  # invalid because no closing quote
 
         return ensure_internal_quotes_closed(name)
-
-    else:  # not quoted
-        return ensure_only_valid_characters(name)
+    return ensure_only_valid_characters(name)
 
 
 # test code to check for validate snowflake identifier

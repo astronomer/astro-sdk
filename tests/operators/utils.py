@@ -1,7 +1,7 @@
 import copy
 import os
 import time
-from typing import Optional, Union
+from typing import Optional
 
 import pandas as pd
 from airflow.executors.debug_executor import DebugExecutor
@@ -10,7 +10,8 @@ from airflow.utils import timezone
 from airflow.utils.state import State
 from pandas.testing import assert_frame_equal
 
-from astro.sql.table import Table, TempTable
+from astro.databases import create_database
+from astro.sql.table import Metadata, Table
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook, bigquery
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -18,9 +19,11 @@ DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 SQL_SERVER_HOOK_PARAMETERS = {
     "snowflake": {
         "snowflake_conn_id": "snowflake_conn",
-        "schema": os.getenv("SNOWFLAKE_SCHEMA"),
-        "database": os.getenv("SNOWFLAKE_DATABASE"),
-        "warehouse": os.getenv("SNOWFLAKE_WAREHOUSE"),
+        "metadata": Metadata(
+            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            database=os.getenv("SNOWFLAKE_DATABASE"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+        ),
     },
     "postgres": {"postgres_conn_id": "postgres_conn"},
     "bigquery": {"gcp_conn_id": "google_cloud_default", "use_legacy_sql": False},
@@ -106,16 +109,19 @@ def run_dag(dag):
     )
 
 
-def get_dataframe_from_table(sql_name: str, test_table: Union[Table, TempTable], hook):
+def get_dataframe_from_table(sql_name: str, test_table: Table, hook):
+    database = create_database(test_table.conn_id)
+    qualified_name = database.get_table_qualified_name(test_table)
+
     if sql_name == "bigquery":
         client = bigquery.Client()
         query_job = client.query(
-            f"SELECT * FROM astronomer-dag-authoring.{test_table.qualified_name()}"
+            f"SELECT * FROM astronomer-dag-authoring.{qualified_name}"
         )
         df = query_job.to_dataframe()
     else:
         df = pd.read_sql(
-            f"SELECT * FROM {test_table.qualified_name()}",
+            f"SELECT * FROM {qualified_name}",
             con=hook.get_conn(),
         )
     return df

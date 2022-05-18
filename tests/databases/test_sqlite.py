@@ -12,7 +12,7 @@ from astro.databases import create_database
 from astro.databases.sqlite import SqliteDatabase
 from astro.exceptions import NonExistentTableException
 from astro.files import File
-from astro.sql.tables import Table
+from astro.sql.table import Table
 from astro.utils.load import copy_remote_file_to_local
 from tests.operators import utils as test_utils
 

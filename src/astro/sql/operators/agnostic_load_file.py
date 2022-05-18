@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator
@@ -6,7 +6,7 @@ from airflow.models.xcom_arg import XComArg
 
 from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.files import get_files
-from astro.sql.table import Table, TempTable, create_table_name
+from astro.sql.table import Table, create_table_name
 from astro.utils import get_hook
 from astro.utils.database import create_database_from_conn_id
 from astro.utils.load import load_dataframe_into_sql_table, populate_normalize_config
@@ -32,7 +32,7 @@ class AgnosticLoadFile(BaseOperator):
     def __init__(
         self,
         path: str,
-        output_table: Union[TempTable, Table],
+        output_table: Table,
         file_conn_id: Optional[str] = "",
         chunksize: int = DEFAULT_CHUNK_SIZE,
         if_exists: str = "replace",
@@ -40,7 +40,7 @@ class AgnosticLoadFile(BaseOperator):
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.output_table: Union[TempTable, Table] = output_table
+        self.output_table: Table = output_table
         self.path = path
         self.chunksize = chunksize
         self.file_conn_id = file_conn_id
@@ -49,7 +49,7 @@ class AgnosticLoadFile(BaseOperator):
         self.ndjson_normalize_sep = ndjson_normalize_sep
         self.normalize_config: Dict[str, str] = {}
 
-    def execute(self, context: Any) -> Union[TempTable, Table]:
+    def execute(self, context: Any) -> Table:
         """
         Load an existing dataset from a supported file into a SQL table.
         """
@@ -63,9 +63,9 @@ class AgnosticLoadFile(BaseOperator):
 
         hook = get_hook(
             conn_id=self.output_table.conn_id,
-            database=self.output_table.database,
-            schema=self.output_table.schema,
-            warehouse=self.output_table.warehouse,
+            database=self.output_table.metadata.database,
+            schema=self.output_table.metadata.schema,
+            warehouse=self.output_table.metadata.warehouse,
         )
 
         self._configure_output_table(context)
@@ -73,7 +73,7 @@ class AgnosticLoadFile(BaseOperator):
 
     def load_data(
         self, path: str, hook: BaseHook, file_conn_id: Optional[str] = None
-    ) -> Union[TempTable, Table]:
+    ) -> Table:
         """Loads csv/parquet table from local/S3/GCS with Pandas.
         Infers SQL database type based on connection then loads table to db.
         """
@@ -98,17 +98,13 @@ class AgnosticLoadFile(BaseOperator):
 
     def _configure_output_table(self, context: Any) -> None:
         # TODO: Move this function to the SQLDecorator, so it can be reused across operators
-        if isinstance(self.output_table, TempTable):
-            self.output_table = self.output_table.to_table(
-                create_table_name(context=context)
-            )
-        if not self.output_table.table_name:
-            self.output_table.table_name = create_table_name(context=context)
+        if not self.output_table.name:
+            self.output_table.name = create_table_name(context=context)
 
 
 def load_file(
     path: str,
-    output_table: Union[TempTable, Table],
+    output_table: Table,
     file_conn_id: Optional[str] = "",
     task_id: Optional[str] = None,
     if_exists: str = "replace",

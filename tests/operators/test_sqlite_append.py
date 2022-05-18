@@ -24,12 +24,12 @@ from airflow.utils import timezone
 from airflow.utils.session import create_session
 from airflow.utils.state import State
 
-# Import Operator
 import astro.sql as aql
+
+# Import Operator
+from astro.databases import create_database
 from astro.sql.table import Table
 from tests.operators import utils as test_utils
-
-# from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -80,11 +80,11 @@ class TestSQLiteAppend(unittest.TestCase):
         self.MAIN_TABLE_NAME = "test_main"
         self.APPEND_TABLE_NAME = "test_append"
         self.main_table = Table(
-            table_name=self.MAIN_TABLE_NAME,
+            name=self.MAIN_TABLE_NAME,
             conn_id="sqlite_conn",
         )
         self.append_table = Table(
-            table_name=self.APPEND_TABLE_NAME,
+            name=self.APPEND_TABLE_NAME,
             conn_id="sqlite_conn",
         )
 
@@ -133,8 +133,12 @@ class TestSQLiteAppend(unittest.TestCase):
             )
         test_utils.run_dag(self.dag)
 
+        database = create_database(load_main.operator.output_table.conn_id)
+        qualified_name = database.get_table_qualified_name(
+            load_main.operator.output_table
+        )
         df = pd.read_sql(
-            f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
+            f"SELECT * FROM {qualified_name}",
             con=hook.get_conn(),
         )
 
@@ -164,8 +168,13 @@ class TestSQLiteAppend(unittest.TestCase):
                 append_table=load_append,
             )
         test_utils.run_dag(self.dag)
+
+        database = create_database(load_main.operator.output_table.conn_id)
+        qualified_name = database.get_table_qualified_name(
+            load_main.operator.output_table
+        )
         df = pd.read_sql(
-            f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
+            f"SELECT * FROM {qualified_name}",
             con=hook.get_conn(),
         )
 
@@ -197,8 +206,12 @@ class TestSQLiteAppend(unittest.TestCase):
                 append_table=load_append,
             )
         test_utils.run_dag(self.dag)
+        database = create_database(load_main.operator.output_table.conn_id)
+        qualified_name = database.get_table_qualified_name(
+            load_main.operator.output_table
+        )
         df = pd.read_sql(
-            f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
+            f"SELECT * FROM {qualified_name}",
             con=hook.get_conn(),
         )
 
@@ -230,8 +243,12 @@ class TestSQLiteAppend(unittest.TestCase):
             )
         test_utils.run_dag(self.dag)
 
+        database = create_database(load_main.operator.output_table.conn_id)
+        qualified_name = database.get_table_qualified_name(
+            load_main.operator.output_table
+        )
         df = pd.read_sql(
-            f"SELECT * FROM {load_main.operator.output_table.qualified_name()}",
+            f"SELECT * FROM {qualified_name}",
             con=hook.get_conn(),
         )
 

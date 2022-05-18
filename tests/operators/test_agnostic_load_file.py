@@ -21,8 +21,9 @@ from airflow.utils import timezone
 from pandas.testing import assert_frame_equal
 
 from astro.constants import Database
+from astro.databases import create_database
 from astro.sql.operators.agnostic_load_file import load_file
-from astro.sql.table import Table
+from astro.sql.table import Metadata, Table
 from astro.utils.dependencies import gcs, s3
 from tests.operators import utils as test_utils
 
@@ -154,11 +155,7 @@ def test_unique_task_id_for_same_path(sample_dag):
             params = {
                 "path": str(CWD) + "/../data/homes.csv",
                 "file_conn_id": "",
-                "output_table": Table(
-                    OUTPUT_TABLE_NAME,
-                    database="pagila",
-                    conn_id="postgres_conn",
-                ),
+                "output_table": Table(name=OUTPUT_TABLE_NAME, conn_id="postgres_conn"),
             }
             if index == 3:
                 params["task_id"] = "task_id"
@@ -196,7 +193,9 @@ def test_load_file_templated_filename(sample_dag, sql_server, test_table):
         )
     test_utils.run_dag(sample_dag)
 
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    database = create_database(test_table.conn_id)
+    qualified_name = database.get_table_qualified_name(test_table)
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {qualified_name}")
     assert len(df) == 3
 
 
@@ -245,9 +244,9 @@ def test_aql_load_file_local_file_pattern(sample_dag, test_table, sql_server):
     test_utils.run_dag(sample_dag)
 
     # Read table from db
-    df = pd.read_sql(
-        f"SELECT * FROM {test_table.qualified_name()}", con=sql_hook.get_conn()
-    )
+    database = create_database(test_table.conn_id)
+    qualified_name = database.get_table_qualified_name(test_table)
+    df = pd.read_sql(f"SELECT * FROM {qualified_name}", con=sql_hook.get_conn())
     assert test_df_rows * 2 == df.shape[0]
 
 
@@ -276,7 +275,9 @@ def test_load_file_using_file_connection(
         )
     test_utils.run_dag(sample_dag)
 
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    database = create_database(test_table.conn_id)
+    qualified_name = database.get_table_qualified_name(test_table)
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {qualified_name}")
     assert len(df) == 3
 
 
@@ -293,7 +294,7 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(
     task_params = {
         "path": file_uri,
         "file_conn_id": file_conn_id,
-        "output_table": Table(table_name=OUTPUT_TABLE_NAME, **sql_server_params),
+        "output_table": Table(name=OUTPUT_TABLE_NAME, **sql_server_params),
     }
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
@@ -310,6 +311,7 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(
 @pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
 def test_load_file(sample_dag, sql_server, file_type, test_table):
     database_name, sql_hook = sql_server
+
     with sample_dag:
         load_file(
             path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}")),
@@ -317,7 +319,10 @@ def test_load_file(sample_dag, sql_server, file_type, test_table):
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+
+    database = create_database(test_table.conn_id)
+    qualified_name = database.get_table_qualified_name(test_table)
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {qualified_name}")
 
     assert len(df) == 3
     expected = pd.DataFrame(
@@ -344,7 +349,7 @@ def test_load_file(sample_dag, sql_server, file_type, test_table):
 )
 @pytest.mark.parametrize(
     "test_table",
-    [{"is_temp": False, "param": {"schema": "custom_schema"}}],
+    [{"is_temp": False, "param": {"metadata": Metadata(schema="custom_schema")}}],
     indirect=True,
 )
 @pytest.mark.parametrize("file_type", ["csv"])
@@ -358,7 +363,9 @@ def test_load_file_with_named_schema(sample_dag, sql_server, file_type, test_tab
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
-    df = sql_hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    database = create_database(test_table.conn_id)
+    qualified_name = database.get_table_qualified_name(test_table)
+    df = sql_hook.get_pandas_df(f"SELECT * FROM {qualified_name}")
     assert len(df) == 3
     expected = pd.DataFrame(
         [
@@ -421,7 +428,9 @@ def test_aql_nested_ndjson_file_with_default_sep_param(
         )
     test_utils.run_dag(sample_dag)
 
-    df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    database = create_database(test_table.conn_id)
+    qualified_name = database.get_table_qualified_name(test_table)
+    df = hook.get_pandas_df(f"SELECT * FROM {qualified_name}")
     assert df.shape == (1, 36)
     assert "payload_size" in df.columns
 
@@ -440,7 +449,9 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_sep_params(
         )
     test_utils.run_dag(sample_dag)
 
-    df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    database = create_database(test_table.conn_id)
+    qualified_name = database.get_table_qualified_name(test_table)
+    df = hook.get_pandas_df(f"SELECT * FROM {qualified_name}")
     assert df.shape == (1, 36)
     assert "payload___size" in df.columns
 
@@ -461,7 +472,9 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_illegal_sep_params(
         )
     test_utils.run_dag(sample_dag)
 
-    df = hook.get_pandas_df(f"SELECT * FROM {test_table.qualified_name()}")
+    database = create_database(test_table.conn_id)
+    qualified_name = database.get_table_qualified_name(test_table)
+    df = hook.get_pandas_df(f"SELECT * FROM {qualified_name}")
     assert df.shape == (1, 36)
     assert "payload_size" in df.columns
 

@@ -9,7 +9,7 @@ from airflow.utils.session import create_session
 
 import astro.sql as aql
 from astro import dataframe as adf
-from astro.sql.table import Table
+from astro.sql.table import Metadata, Table
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ def test_postgres_to_dataframe_partial_output(output_table, dag):
     with dag:
         pg_output = sample_pg(
             input_table=Table(
-                table_name="actor", conn_id="postgres_conn", database="pagila"
+                name="actor", conn_id="postgres_conn_pagila", metadata=Metadata()
             ),
             output_table=output_table,
         )
@@ -74,7 +74,7 @@ def test_with_invalid_dag_name(sample_dag):
     with sample_dag:
         pg_table = pg_query(
             input_table=Table(
-                table_name="actor", conn_id="postgres_conn", database="pagila"
+                name="actor", conn_id="postgres_conn_pagila", metadata=Metadata()
             )
         )
         validate(pg_table)
@@ -114,7 +114,7 @@ def test_postgres(sample_dag, pg_query_result):
     with sample_dag:
         pg_table = pg_query(
             input_table=Table(
-                table_name="actor", conn_id="postgres_conn", database="pagila"
+                name="actor", conn_id="postgres_conn_pagila", metadata=Metadata()
             )
         )
         validate(pg_table)
@@ -123,7 +123,7 @@ def test_postgres(sample_dag, pg_query_result):
 
 @pytest.mark.parametrize("sql_server", ["postgres"], indirect=True)
 def test_postgres_join(sample_dag, test_table, sql_server):
-    @aql.transform(conn_id="postgres_conn", database="pagila")
+    @aql.transform(conn_id="postgres_conn_pagila")
     def sample_pg(actor: Table, film_actor_join: Table, unsafe_parameter):
         return (
             "SELECT {{actor}}.actor_id, first_name, last_name, COUNT(film_id) "
@@ -142,8 +142,10 @@ def test_postgres_join(sample_dag, test_table, sql_server):
 
     with sample_dag:
         ret = sample_pg(
-            actor=Table(table_name="actor", conn_id="postgres_conn", database="pagila"),
-            film_actor_join=Table(table_name="film_actor"),
+            actor=Table(
+                name="actor", conn_id="postgres_conn_pagila", metadata=Metadata()
+            ),
+            film_actor_join=Table(name="film_actor", metadata=Metadata()),
             unsafe_parameter="G%%",
             output_table=test_table,
         )
@@ -160,6 +162,6 @@ def test_postgres_set_op_kwargs(sample_dag):
         return "SELECT * FROM actor WHERE last_name LIKE 'G%%'"
 
     with sample_dag:
-        pg_df = sample_pg(conn_id="postgres_conn", database="pagila")
+        pg_df = sample_pg(conn_id="postgres_conn_pagila")
         validate_result(pg_df)
     test_utils.run_dag(sample_dag)

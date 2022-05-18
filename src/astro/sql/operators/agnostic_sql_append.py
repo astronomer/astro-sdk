@@ -7,7 +7,7 @@ from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import Database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
-from astro.sql.table import Table, TempTable
+from astro.sql.table import Table
 from astro.utils.database import get_database_name
 from astro.utils.schema_util import (
     get_error_string_for_multiple_dbs,
@@ -22,8 +22,8 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
 
     def __init__(
         self,
-        append_table: Union[Table, TempTable],
-        main_table: Union[Table, TempTable],
+        append_table: Table,
+        main_table: Table,
         columns: Optional[List[str]] = None,
         casted_columns: Optional[dict] = None,
         **kwargs,
@@ -53,7 +53,7 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
             **kwargs,
         )
 
-    def execute(self, context: dict) -> Union[Table, TempTable]:
+    def execute(self, context: dict) -> Table:
         if not tables_from_same_db([self.append_table, self.main_table]):
             raise ValueError(
                 get_error_string_for_multiple_dbs([self.append_table, self.main_table])
@@ -61,9 +61,16 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
 
         self.main_table.conn_id = self.main_table.conn_id or self.append_table.conn_id
         self.conn_id = self.main_table.conn_id or self.append_table.conn_id
-        self.database = self.main_table.database or self.append_table.database
-        self.warehouse = self.main_table.warehouse or self.append_table.warehouse
-        self.schema = self.main_table.schema or self.append_table.schema
+        self.database = (
+            self.main_table.metadata.database or self.append_table.metadata.database
+        )
+        self.warehouse = (
+            self.main_table.metadata.warehouse or self.append_table.metadata.warehouse
+        )
+        self.schema = (
+            self.append_table.metadata.schema or self.append_table.metadata.schema
+        )
+
         self.sql = self.append(
             main_table=self.main_table,
             append_table=self.append_table,
@@ -75,10 +82,10 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
 
     def append(
         self,
-        main_table: Union[Table, TempTable],
+        main_table: Table,
         columns: List[str],
         casted_columns: dict,
-        append_table: Union[Table, TempTable],
+        append_table: Table,
     ):
         engine = self.get_sql_alchemy_engine()
         if self.schema and get_database_name(engine) != Database.SQLITE:
@@ -86,12 +93,8 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
         else:
             metadata = MetaData()
         # TO Do - fix bigquery and postgres reflection table issue.
-        main_table_sqla = SqlaTable(
-            main_table.table_name, metadata, autoload_with=engine
-        )
-        append_table_sqla = SqlaTable(
-            append_table.table_name, metadata, autoload_with=engine
-        )
+        main_table_sqla = SqlaTable(main_table.name, metadata, autoload_with=engine)
+        append_table_sqla = SqlaTable(append_table.name, metadata, autoload_with=engine)
 
         column_names: List[Union[ColumnClause, Cast]] = [column(c) for c in columns]
         sqlalchemy = importlib.import_module("sqlalchemy")

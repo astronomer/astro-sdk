@@ -11,7 +11,7 @@ from airflow.models.dag import DagContext
 from airflow.models.xcom_arg import XComArg
 
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
-from astro.sql.table import Table, TempTable
+from astro.sql.table import Metadata, Table
 
 
 def get_paths_for_render(path):
@@ -81,10 +81,13 @@ def render_single_path(
             }
             if front_matter_opts.get("output_table"):
                 out_table_dict = front_matter_opts.pop("output_table")
-                if out_table_dict.get("table_name"):
-                    op_kwargs = {"output_table": Table(**out_table_dict)}
-                else:
-                    op_kwargs = {"output_table": TempTable(**out_table_dict)}
+                if out_table_dict.get("metadata", None):
+                    metadata = out_table_dict.pop("metadata")
+                op_kwargs = {
+                    "output_table": Table(
+                        metadata=Metadata(**metadata), **out_table_dict
+                    )
+                }
             operator_kwargs = set_kwargs_with_defaults(
                 front_matter_opts, conn_id, database, role, schema, warehouse
             )
@@ -190,7 +193,7 @@ def render(
                 )
             current_operator.parameters[param] = template_dict[param]
             # due to an edge case in XComArg, we need to explicitly set dependencies here
-            if type(template_dict[param]) == XComArg:
+            if type(template_dict[param]) is XComArg:
                 template_dict[param].operator >> current_operator
     ret = []
     for f in template_dict.values():
@@ -258,14 +261,14 @@ class ParsedSqlOperator(SqlDecoratedOperator):
 
     def set_values(self, table: Table):
         self.conn_id = self.conn_id or table.conn_id  # type: ignore
-        self.schema = self.schema or table.schema  # type: ignore
-        self.database = self.database or table.database  # type: ignore
-        self.warehouse = self.warehouse or table.warehouse  # type: ignore
-        self.role = self.role or table.role  # type: ignore
+        self.schema = self.schema or table.metadata.schema  # type: ignore
+        self.database = self.database or table.metadata.database  # type: ignore
+        self.warehouse = self.warehouse or table.metadata.warehouse  # type: ignore
+        self.role = self.role or table.metadata.role  # type: ignore
 
     def execute(self, context: Dict):
         if self.parameters:
             for v in self.parameters.values():
-                if type(v) == Table:
+                if type(v) is Table:
                     self.set_values(v)
         return super().execute(context)

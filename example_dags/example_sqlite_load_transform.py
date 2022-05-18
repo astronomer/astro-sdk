@@ -29,14 +29,13 @@ with DAG(
     imdb_movies = aql.load_file(
         path="https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/imdb.csv",
         task_id="load_csv",
-        output_table=Table(
-            table_name="imdb_movies", database="sqlite", conn_id="sqlite_default"
-        ),
+        output_table=Table(name="imdb_movies", conn_id="sqlite_default"),
     )
 
     top_five_animations(
         input_table=imdb_movies,
         output_table=Table(
-            table_name="top_animation", database="sqlite", conn_id="sqlite_default"
+            name="top_animation",
+            conn_id="sqlite_default",
         ),
     )

@@ -25,9 +25,7 @@ def example_amazon_s3_postgres_load_and_save():
     t1 = aql.load_file(
         path=f"{s3_bucket}/homes.csv",
         file_conn_id="",
-        output_table=Table(
-            "expected_table_from_s3", conn_id="postgres_conn", database="postgres"
-        ),
+        output_table=Table(name="expected_table_from_s3", conn_id="postgres_conn"),
     )
 
     aql.save_file(

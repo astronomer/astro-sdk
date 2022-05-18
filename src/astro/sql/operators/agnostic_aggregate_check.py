@@ -71,7 +71,7 @@ class AgnosticAggregateCheck(SqlDecoratedOperator):
 
     def execute(self, context: Context) -> Table:
         self.conn_id = self.table.conn_id
-        self.database = self.table.database
+        self.database = self.table.metadata.database
         self.sql = self.check
         self.parameters = {"table": self.table}
 
@@ -85,7 +85,8 @@ class AgnosticAggregateCheck(SqlDecoratedOperator):
             raise ValueError(
                 f"Check Failed: query result value {query_result} not equal to {self.equal_to}."
             )
-        elif (
+
+        if (
             self.less_than is not None
             and self.greater_than is not None
             and (self.greater_than > query_result or query_result > self.less_than)
@@ -95,11 +96,13 @@ class AgnosticAggregateCheck(SqlDecoratedOperator):
                     query_result, self.greater_than, self.less_than
                 )
             )
-        elif self.less_than is not None and self.less_than < query_result:
+
+        if self.less_than is not None and self.less_than < query_result:
             raise ValueError(
                 f"Check Failed: query result value {query_result} not less than {self.less_than}."
             )
-        elif self.greater_than is not None and self.greater_than > query_result:
+
+        if self.greater_than is not None and self.greater_than > query_result:
             raise ValueError(
                 "Check Failed: query result value {} not greater than {}.".format(
                     query_result, self.greater_than

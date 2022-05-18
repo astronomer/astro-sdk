@@ -1,5 +1,6 @@
 import math
 import pathlib
+from typing import List
 
 import pandas as pd
 import pytest
@@ -9,7 +10,8 @@ from airflow.utils import timezone
 from astro import sql as aql
 from astro.constants import Database
 from astro.dataframe import dataframe as adf
-from astro.sql.table import Table, TempTable
+from astro.settings import SCHEMA
+from astro.sql.table import Metadata, Table
 from astro.utils.database import create_database_from_conn_id
 from tests.operators import utils as test_utils
 
@@ -133,21 +135,12 @@ def validate_results(df: pd.DataFrame, mode, sql_type):
 
 
 @task_group
-def run_merge(output_specs: TempTable, merge_parameters, mode, sql_type):
-    main_table = aql.load_file(
-        path=str(CWD) + "/../data/homes_merge_1.csv",
-        output_table=output_specs,
-    )
-    merge_table = aql.load_file(
-        path=str(CWD) + "/../data/homes_merge_2.csv",
-        output_table=output_specs,
-    )
-
-    con1 = add_constraint(main_table, merge_parameters["merge_keys"])
+def run_merge(output_specs: List[Table], merge_parameters, mode, sql_type):
+    con1 = add_constraint(output_specs[0], merge_parameters["merge_keys"])
 
     merged_table = aql.merge(
-        target_table=main_table,
-        merge_table=merge_table,
+        target_table=output_specs[0],
+        merge_table=output_specs[1],
         **merge_parameters,
     )
     con1 >> merged_table
@@ -174,10 +167,30 @@ def run_merge(output_specs: TempTable, merge_parameters, mode, sql_type):
     ],
     indirect=True,
 )
+@pytest.mark.parametrize(
+    "test_table",
+    [
+        [
+            {
+                "is_temp": False,
+                "param": {"metadata": Metadata(schema=SCHEMA)},
+                "path": str(CWD) + "/../data/homes_merge_1.csv",
+                "load_table": True,
+            },
+            {
+                "is_temp": False,
+                "param": {"metadata": Metadata(schema=SCHEMA)},
+                "path": str(CWD) + "/../data/homes_merge_2.csv",
+                "load_table": True,
+            },
+        ],
+    ],
+    indirect=True,
+    ids=["table"],
+)
 def test_merge(sql_server, sample_dag, test_table, merge_parameters):
     sql_type, _ = sql_server
     merge_params, mode = merge_parameters
     with sample_dag:
-        output_table = test_table
-        run_merge(output_table, merge_params, mode, sql_type)
+        run_merge(test_table, merge_params, mode, sql_type)
     test_utils.run_dag(sample_dag)

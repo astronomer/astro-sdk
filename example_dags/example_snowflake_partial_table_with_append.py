@@ -6,8 +6,7 @@ from airflow.decorators import dag
 
 from astro import dataframe
 from astro.sql import append, load_file, run_raw_sql, transform, truncate
-from astro.sql.table import Table
-from astro.sql.tables import Table as NewTable
+from astro.sql.table import Metadata, Table
 
 """
 Example ETL DAG highlighting Astro functionality
@@ -78,22 +77,26 @@ def example_snowflake_partial_table_with_append():
     homes_data1 = load_file(
         path=FILE_PATH + "homes.csv",
         output_table=Table(
-            table_name="homes",
+            name="homes",
             conn_id=SNOWFLAKE_CONN_ID,
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            metadata=Metadata(
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            ),
         ),
     )
 
     homes_data2 = load_file(
         path=FILE_PATH + "homes2.csv",
         output_table=Table(
-            table_name="homes2",
+            name="homes2",
             conn_id=SNOWFLAKE_CONN_ID,
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            metadata=Metadata(
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            ),
         ),
     )
 
@@ -101,16 +104,16 @@ def example_snowflake_partial_table_with_append():
     extracted_data = extract_data(
         homes1=homes_data1,
         homes2=homes_data2,
-        output_table=Table(table_name="combined_homes_data"),
+        output_table=Table(name="combined_homes_data"),
     )
 
     transformed_data = transform_data(
-        df=extracted_data, output_table=Table("homes_data_long")
+        df=extracted_data, output_table=Table(name="homes_data_long")
     )
 
     filtered_data = filter_data(
         homes_long=transformed_data,
-        output_table=Table(table_name="expensive_homes_long"),
+        output_table=Table(name="expensive_homes_long"),
     )
 
     create_results_table = create_table(conn_id=SNOWFLAKE_CONN_ID)
@@ -120,7 +123,7 @@ def example_snowflake_partial_table_with_append():
     record_results = append(
         append_table=filtered_data,
         columns=["sell", "list", "variable", "value"],
-        main_table=Table(table_name="homes_reporting"),
+        main_table=Table(name="homes_reporting"),
     )
     record_results.set_upstream(create_results_table)
 
@@ -128,7 +131,7 @@ def example_snowflake_partial_table_with_append():
     # Why? Between 2022-03-25 and 2022-04-11 it accumulated 301G (89 million rows) because
     # this example DAG used to append rows without deleting them
     truncate_results = truncate(
-        table=NewTable(name="homes_reporting", conn_id=SNOWFLAKE_CONN_ID)
+        table=Table(name="homes_reporting", conn_id=SNOWFLAKE_CONN_ID)
     )
     truncate_results.set_upstream(record_results)
 
