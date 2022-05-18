@@ -15,11 +15,6 @@ from astro.utils.table_handler_new import TableHandler
 class SqlDataframeOperator(DataframeFunctionHandler, DecoratedOperator, TableHandler):
     def __init__(
         self,
-        conn_id: str = "",
-        database: str = "",
-        schema: str = "",
-        warehouse: str = "",
-        role: str = "",
         identifiers_as_lower: bool = True,
         **kwargs,
     ):
@@ -34,12 +29,7 @@ class SqlDataframeOperator(DataframeFunctionHandler, DecoratedOperator, TableHan
         :param warehouse: (Snowflake) Which warehouse to use for the input table
         :param kwargs:
         """
-        self.conn_id = conn_id
-        self.database = database
-        self.schema = schema
-        self.warehouse = warehouse
-        self.role = role
-        self.parameters = {}
+        self.parameters: Dict = {}
         self.kwargs = kwargs or {}
         self.write_to_table = False
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
@@ -100,12 +90,10 @@ class SqlDataframeOperator(DataframeFunctionHandler, DecoratedOperator, TableHan
         pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
         if self.write_to_table:
             self.output_table = self.convert_old_table_to_new(self.output_table)
-            self.populate_output_table()
-            self.conn_id = self.conn_id or self.output_table.conn_id
             self.output_table.metadata.schema = (
                 self.output_table.metadata.schema or SCHEMA
             )
-            database = create_database(self.conn_id)
+            database = create_database(self.output_table.conn_id)
             database.load_pandas_dataframe_to_table(
                 source_dataframe=pandas_dataframe, target_table=self.output_table
             )
