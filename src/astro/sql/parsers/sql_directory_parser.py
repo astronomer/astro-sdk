@@ -11,7 +11,7 @@ from airflow.models.dag import DagContext
 from airflow.models.xcom_arg import XComArg
 
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 
 
 def get_paths_for_render(path):

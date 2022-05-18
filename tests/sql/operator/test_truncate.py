@@ -9,7 +9,7 @@ from airflow.utils import timezone
 import astro.sql as aql
 from astro.constants import Database
 from astro.files import File
-from astro.sql.tables import Table
+from astro.sql.table import Table
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)

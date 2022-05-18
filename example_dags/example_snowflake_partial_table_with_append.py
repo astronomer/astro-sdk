@@ -6,7 +6,7 @@ from airflow.decorators import dag
 
 from astro import dataframe
 from astro.sql import append, load_file, run_raw_sql, transform, truncate
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 
 """
 Example ETL DAG highlighting Astro functionality

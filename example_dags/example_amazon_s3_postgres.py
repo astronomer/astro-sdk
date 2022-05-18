@@ -6,7 +6,7 @@ from pandas import DataFrame
 
 from astro import sql as aql
 from astro.dataframe import dataframe as df
-from astro.sql.tables import Table
+from astro.sql.table import Table
 
 s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
 

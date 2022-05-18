@@ -5,7 +5,7 @@ from airflow.utils import timezone
 
 # Import Operator
 import astro.sql as aql
-from astro.sql.tables import Table
+from astro.sql.table import Table
 
 default_args = {
     "owner": "airflow",

@@ -8,7 +8,7 @@ from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from astro.constants import Database
 from astro.databases import create_database
 from astro.settings import SCHEMA
-from astro.sql.tables import Table
+from astro.sql.table import Table
 from astro.utils import get_hook
 from astro.utils.database import create_database_from_conn_id
 from astro.utils.dependencies import (

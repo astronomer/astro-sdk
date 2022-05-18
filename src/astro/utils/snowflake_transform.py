@@ -1,5 +1,5 @@
 from astro.settings import SCHEMA
-from astro.sql.tables import Table
+from astro.sql.table import Table
 
 
 def _handle_table(t: Table):

@@ -21,7 +21,7 @@ from airflow.utils import timezone
 # Import Operator
 from astro import sql as aql
 from astro.dataframe import dataframe as adf
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)

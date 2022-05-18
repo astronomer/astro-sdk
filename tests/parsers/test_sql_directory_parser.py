@@ -14,7 +14,7 @@ from airflow.utils.session import create_session
 
 import astro.sql as aql
 from astro.dataframe import dataframe as adf
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)

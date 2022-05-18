@@ -13,7 +13,7 @@ import unittest
 from airflow.utils import timezone
 
 # Import Operator
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 from astro.utils.snowflake_merge_func import (
     is_valid_snow_identifier,
     snowflake_merge_func,

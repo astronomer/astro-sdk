@@ -1,5 +1,5 @@
 from astro.databases import create_database
-from astro.sql.tables import Table
+from astro.sql.table import Table
 
 
 def bigquery_merge_func(

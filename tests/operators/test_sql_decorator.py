@@ -5,7 +5,7 @@ import pytest
 from astro.databases import create_database
 from astro.settings import SCHEMA
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
-from astro.sql.tables import Metadata
+from astro.sql.table import Metadata
 from tests.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent

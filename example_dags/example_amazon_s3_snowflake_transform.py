@@ -9,7 +9,7 @@ from airflow.decorators import dag
 
 from astro import dataframe as df
 from astro import sql as aql
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 
 
 @aql.transform()

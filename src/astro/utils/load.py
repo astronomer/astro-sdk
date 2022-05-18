@@ -21,7 +21,7 @@ from astro.constants import (
     Database,
     FileType,
 )
-from astro.sql.tables import Table
+from astro.sql.table import Table
 from astro.utils.database import get_database_name, get_sqlalchemy_engine
 from astro.utils.dependencies import pandas_tools
 from astro.utils.file import get_filetype, get_size

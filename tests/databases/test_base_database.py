@@ -2,7 +2,7 @@ import pytest
 from pandas import DataFrame
 
 from astro.databases.base import BaseDatabase
-from astro.sql.tables import Table
+from astro.sql.table import Table
 
 
 class DatabaseSubclass(BaseDatabase):

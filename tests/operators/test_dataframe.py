@@ -10,7 +10,7 @@ import astro.sql as aql
 from astro import dataframe as df
 from astro.constants import SUPPORTED_DATABASES, Database
 from astro.settings import SCHEMA
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 from tests.operators import utils as test_utils
 
 # Import Operator

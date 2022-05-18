@@ -6,8 +6,7 @@ from airflow.models.xcom_arg import XComArg
 
 from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.files import get_files
-from astro.sql.table import create_table_name
-from astro.sql.tables import Table
+from astro.sql.table import Table, create_table_name
 from astro.utils import get_hook
 from astro.utils.database import create_database_from_conn_id
 from astro.utils.load import load_dataframe_into_sql_table, populate_normalize_config
@@ -99,10 +98,6 @@ class AgnosticLoadFile(BaseOperator):
 
     def _configure_output_table(self, context: Any) -> None:
         # TODO: Move this function to the SQLDecorator, so it can be reused across operators
-        # if isinstance(self.output_table, TempTable):
-        #     self.output_table = self.output_table.to_table(
-        #         create_table_name(context=context)
-        #     )
         if not self.output_table.name:
             self.output_table.name = create_table_name(context=context)
 

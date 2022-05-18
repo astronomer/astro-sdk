@@ -7,7 +7,7 @@ from sqlalchemy.engine.base import Engine
 from astro import settings
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 from astro.databases.base import BaseDatabase
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = BigQueryHook.default_conn_name
 

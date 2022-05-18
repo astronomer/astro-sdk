@@ -4,7 +4,7 @@ from airflow.exceptions import AirflowException
 
 from astro.constants import Database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
-from astro.sql.tables import Table
+from astro.sql.table import Table
 from astro.utils.bigquery_merge_func import bigquery_merge_func
 from astro.utils.database import create_database_from_conn_id
 from astro.utils.postgres_merge_func import postgres_merge_func

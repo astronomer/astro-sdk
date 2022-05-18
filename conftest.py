@@ -15,8 +15,7 @@ from airflow.utils.session import create_session, provide_session
 from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
 from astro.settings import SCHEMA
-from astro.sql.table import create_unique_table_name
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table, create_unique_table_name
 from astro.utils.database import get_database_name
 from astro.utils.dependencies import BigQueryHook, gcs, s3
 from astro.utils.load import load_dataframe_into_sql_table

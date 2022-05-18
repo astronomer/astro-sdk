@@ -11,7 +11,7 @@ from airflow.utils.state import State
 from pandas.testing import assert_frame_equal
 
 from astro.databases import create_database
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook, bigquery
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)

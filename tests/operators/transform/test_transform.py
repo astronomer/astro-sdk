@@ -6,7 +6,7 @@ from airflow.decorators import task
 
 from astro import sql as aql
 from astro.dataframe import dataframe as adf
-from astro.sql.tables import Table
+from astro.sql.table import Table
 from tests.operators import utils as test_utils
 
 cwd = pathlib.Path(__file__).parent

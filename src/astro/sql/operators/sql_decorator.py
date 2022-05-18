@@ -9,8 +9,7 @@ from sqlalchemy.sql.functions import Function
 
 from astro.constants import Database
 from astro.settings import SCHEMA
-from astro.sql.table import create_unique_table_name
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table, create_unique_table_name
 from astro.utils import get_hook, postgres_transform, snowflake_transform
 from astro.utils.database import (
     create_database_from_conn_id,

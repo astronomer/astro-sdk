@@ -4,7 +4,7 @@ from datetime import datetime
 from airflow.models import DAG, Param
 
 from astro.sql import load_file, render
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 
 SNOWFLAKE_CONN_ID = "snowflake_conn"
 dir_path = os.path.dirname(os.path.realpath(__file__))

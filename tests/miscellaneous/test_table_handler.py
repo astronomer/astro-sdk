@@ -1,4 +1,4 @@
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 from astro.utils.table_handler import TableHandler
 
 

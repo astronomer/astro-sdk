@@ -7,7 +7,7 @@ from airflow.utils import timezone
 
 import astro.sql as aql
 from astro.constants import SUPPORTED_DATABASES
-from astro.sql.tables import Table
+from astro.sql.table import Table
 from tests.operators.utils import run_dag
 
 log = logging.getLogger(__name__)

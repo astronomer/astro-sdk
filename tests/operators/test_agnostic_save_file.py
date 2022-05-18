@@ -28,7 +28,7 @@ from astro.settings import SCHEMA
 
 # Import Operator
 from astro.sql.operators.agnostic_save_file import save_file
-from astro.sql.tables import Metadata
+from astro.sql.table import Metadata
 from astro.utils.dependencies import gcs
 from tests.operators import utils as test_utils
 

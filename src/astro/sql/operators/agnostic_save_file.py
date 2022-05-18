@@ -8,7 +8,7 @@ from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from astro.constants import Database
 from astro.databases import create_database
 from astro.files import File
-from astro.sql.tables import Table
+from astro.sql.table import Table
 from astro.utils.database import create_database_from_conn_id
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from astro.utils.task_id_helper import get_task_id

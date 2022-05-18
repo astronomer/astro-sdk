@@ -13,7 +13,7 @@ from astro.constants import (
 )
 from astro.exceptions import NonExistentTableException
 from astro.files import File
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 
 
 class BaseDatabase(ABC):

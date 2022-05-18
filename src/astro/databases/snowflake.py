@@ -5,7 +5,7 @@ from pandas.io.sql import SQLDatabase
 
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 from astro.databases.base import BaseDatabase
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 from astro.utils.dependencies import pandas_tools
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name

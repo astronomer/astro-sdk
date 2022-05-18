@@ -7,7 +7,7 @@ from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import Database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
-from astro.sql.tables import Table
+from astro.sql.table import Table
 from astro.utils.database import get_database_name
 from astro.utils.schema_util import (
     get_error_string_for_multiple_dbs,

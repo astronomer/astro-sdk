@@ -1,4 +1,4 @@
-from astro.sql.tables import Table
+from astro.sql.table import Table
 from astro.utils.dependencies import PostgresHook, postgres_sql
 
 

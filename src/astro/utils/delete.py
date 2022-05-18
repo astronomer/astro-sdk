@@ -2,7 +2,7 @@ import pandas as pd
 from airflow.hooks.base import BaseHook
 
 from astro.databases import create_database
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 from astro.utils.database import get_sqlalchemy_engine, run_sql
 from astro.utils.load import load_dataframe_into_sql_table
 
