@@ -3,8 +3,7 @@ from typing import Union
 from airflow.hooks.base import BaseHook
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from sqlalchemy import create_engine, text
-from sqlalchemy.engine import Engine
-from sqlalchemy.engine.result import ResultProxy
+from sqlalchemy.engine import Engine, ResultProxy
 
 from astro.constants import CONN_TYPE_TO_DATABASE, Database
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
@@ -88,7 +87,7 @@ def run_sql(
     :param parameters: (optional) Parameters to be passed to the SQL statement
     :type parameters: dict
     :return: Result of running the statement
-    :rtype: sqlalchemy.engine.result.ResultProxy
+    :rtype: sqlalchemy.engine.ResultProxy
     """
     if parameters is None:
         parameters = {}
