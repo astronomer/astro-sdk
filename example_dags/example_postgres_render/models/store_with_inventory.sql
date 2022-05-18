@@ -1,5 +1,5 @@
 ---
-conn_id: postgres_conn
+conn_id: postgres_conn_pagila
 database: pagila
 ---
 /*
