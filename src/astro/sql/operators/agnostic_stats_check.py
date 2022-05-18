@@ -4,7 +4,8 @@ from sqlalchemy import MetaData, case, func, or_, select
 from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import Database
-from astro.sql.operators.transform import TransformOperator
+from astro.databases import create_database
+from astro.sql.operators.sql_decorator_old import SqlDecoratedOperator
 from astro.sql.table import Table
 from astro.utils.database import create_database_from_conn_id
 from astro.utils.schema_util import (
@@ -161,7 +162,7 @@ class ChecksHandler:
         return failed_checks_sql
 
 
-class AgnosticStatsCheck(TransformOperator):
+class AgnosticStatsCheck(SqlDecoratedOperator):
     def __init__(
         self,
         checks: List[OutlierCheck],
@@ -219,6 +220,7 @@ class AgnosticStatsCheck(TransformOperator):
 
     def execute(self, context: Dict):
         database = create_database_from_conn_id(self.conn_id)
+        db_new = create_database(self.conn_id)
         check_handler = ChecksHandler(self.checks)
 
         valid_db = {
@@ -237,7 +239,7 @@ class AgnosticStatsCheck(TransformOperator):
         self.sql = check_handler.prepare_comparison_sql(
             main_table=self.main_table,
             compare_table=self.compare_table,
-            engine=self.get_sql_alchemy_engine(),
+            engine=db_new.sqlalchemy_engine,
             metadata_obj=metadata,
         )
 
@@ -249,7 +251,7 @@ class AgnosticStatsCheck(TransformOperator):
                 compare_table=self.compare_table,
                 failed_checks=failed_checks,
                 max_rows_returned=self.max_rows_returned,
-                engine=self.get_sql_alchemy_engine(),
+                engine=db_new.sqlalchemy_engine,
                 metadata_obj=metadata,
             )
             failed_values = {}

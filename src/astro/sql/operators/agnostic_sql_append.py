@@ -6,7 +6,7 @@ from sqlalchemy.sql.elements import Cast, ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import Database
-from astro.sql.operators.transform import TransformOperator
+from astro.sql.operators.sql_decorator_old import SqlDecoratedOperator
 from astro.sql.table import Table
 from astro.utils.database import get_database_name
 from astro.utils.schema_util import (
@@ -17,7 +17,7 @@ from astro.utils.table_handler import TableHandler
 from astro.utils.task_id_helper import get_unique_task_id
 
 
-class SqlAppendOperator(TransformOperator, TableHandler):
+class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
     template_fields = ("main_table", "append_table")
 
     def __init__(

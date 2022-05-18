@@ -2,12 +2,12 @@ from typing import Optional
 
 from airflow.utils.context import Context
 
-from astro.sql.operators.transform import TransformOperator
+from astro.sql.operators.sql_decorator_old import SqlDecoratedOperator
 from astro.sql.table import Table
 from astro.utils.task_id_helper import get_unique_task_id
 
 
-class AgnosticAggregateCheck(TransformOperator):
+class AgnosticAggregateCheck(SqlDecoratedOperator):
     template_fields = ("table",)
 
     def __init__(
