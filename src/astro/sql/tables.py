@@ -15,9 +15,9 @@ class Metadata:
     be database-specific.
     """
 
-    # e.g.: Postgres, Snowflake:
+    # This property is used by several databases, including: Postgres, Snowflake and BigQuery ("namespace")
     schema: Union[str, None] = None
-    # e.g.: Snowflake:
+    # All the properties below are Snowflake-specific:
     account: Union[str, None] = None
     database: Union[str, None] = None
     host: Union[str, None] = None

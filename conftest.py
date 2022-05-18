@@ -158,7 +158,6 @@ def output_table(request):
     elif table_type == "full":
         return Table(
             name="my_table",
-            metadata=Metadata(database="pagila"),
             conn_id="postgres_conn",
         )
 
