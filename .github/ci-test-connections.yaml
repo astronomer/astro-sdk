@@ -7,6 +7,14 @@ connections:
     password: postgres
     port: 5432
     extra:
+  - conn_id: postgres_conn_pagila
+    conn_type: postgres
+    extra: ~
+    host: localhost
+    login: postgres
+    password: postgres
+    port: 5433
+    schema: pagila
   - conn_id: snowflake_conn
     conn_type: snowflake
     host: https://gp21411.us-east-1.snowflakecomputing.com

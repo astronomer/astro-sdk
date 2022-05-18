@@ -49,7 +49,7 @@ def test_postgres_to_dataframe_partial_output(output_table, dag):
 
     with dag:
         pg_output = sample_pg(
-            input_table=Table(name="actor", conn_id="postgres_conn"),
+            input_table=Table(name="actor", conn_id="postgres_conn_pagila"),
             output_table=output_table,
         )
         validate(df=pg_output)
@@ -106,7 +106,9 @@ def test_postgres(sample_dag, pg_query_result):
         return pg_query_result
 
     with sample_dag:
-        pg_table = pg_query(input_table=Table(name="actor", conn_id="postgres_conn"))
+        pg_table = pg_query(
+            input_table=Table(name="actor", conn_id="postgres_conn_pagila")
+        )
         validate(pg_table)
     test_utils.run_dag(sample_dag)
 
