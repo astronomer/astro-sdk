@@ -9,6 +9,7 @@ from astro.constants import Database
 from astro.databases import create_database
 from astro.settings import SCHEMA
 from astro.sql.table import Table
+from astro.sqlite_utils import create_sqlalchemy_engine_with_sqlite
 from astro.utils import get_hook
 from astro.utils.database import create_database_from_conn_id
 from astro.utils.dependencies import (
@@ -147,7 +148,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             )
         elif database == Database.SQLITE:
             hook = SqliteHook(sqlite_conn_id=table.conn_id)
-            engine = hook.get_sqlalchemy_engine()
+            engine = create_sqlalchemy_engine_with_sqlite(hook)
             df = pd.read_sql_table(table.name, engine)
         elif database == Database.BIGQUERY:
             db = create_database(table.conn_id)

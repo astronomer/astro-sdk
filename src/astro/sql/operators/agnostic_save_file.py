@@ -9,6 +9,7 @@ from astro.constants import Database
 from astro.databases import create_database
 from astro.files import File
 from astro.sql.table import Table
+from astro.sqlite_utils import create_sqlalchemy_engine_with_sqlite
 from astro.utils.database import create_database_from_conn_id
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from astro.utils.task_id_helper import get_task_id
@@ -111,9 +112,15 @@ class SaveFile(BaseOperator):
 
         db = create_database(input_table.conn_id)
         table_name = db.get_table_qualified_name(input_table)
+
+        if database == Database.SQLITE:
+            con_engine = create_sqlalchemy_engine_with_sqlite(input_hook)
+        else:
+            con_engine = input_hook.get_sqlalchemy_engine()
+
         return pd.read_sql(
             f"SELECT * FROM {table_name}",
-            con=input_hook.get_sqlalchemy_engine(),
+            con=con_engine,
         )
 
 
