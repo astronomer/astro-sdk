@@ -1,35 +1,20 @@
-import inspect
-from typing import Dict, Optional
+from typing import Dict
 
-import pandas as pd
 from airflow.decorators.base import DecoratedOperator
-from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 
-from astro.constants import Database
 from astro.databases import create_database
 from astro.settings import SCHEMA
 from astro.sql.table import Table
-from astro.utils import get_hook
-from astro.utils.database import create_database_from_conn_id
-from astro.utils.dependencies import (
-    BigQueryHook,
-    PostgresHook,
-    SnowflakeHook,
-    postgres_sql,
-)
-from astro.utils.load import load_dataframe_into_sql_table
+from astro.utils.dataframe_function_handler import DataframeFunctionHandler
 from astro.utils.table_handler import TableHandler
 
 
-class SqlDataframeOperator(DecoratedOperator, TableHandler):
+class SqlDataframeOperator(DataframeFunctionHandler, DecoratedOperator, TableHandler):
+    """Helper class for `astro.df` decorator"""
+
     def __init__(
         self,
-        conn_id: Optional[str] = None,
-        database: Optional[str] = None,
-        schema: Optional[str] = None,
-        warehouse: Optional[str] = None,
-        role: Optional[str] = None,
-        identifiers_as_lower: Optional[bool] = True,
+        identifiers_as_lower: bool = True,
         **kwargs,
     ):
         """
@@ -43,18 +28,13 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         :param warehouse: (Snowflake) Which warehouse to use for the input table
         :param kwargs:
         """
-        self.conn_id = conn_id
-        self.database = database
-        self.schema = schema
-        self.warehouse = warehouse
-        self.role = role
-        self.parameters = None
+        self.parameters: Dict = {}
         self.kwargs = kwargs or {}
+        self.write_to_table = False
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
         if self.op_kwargs.get("output_table"):
-            self.output_table: Optional[Table] = self.op_kwargs.pop("output_table")
-        else:
-            self.output_table = None
+            self.output_table: Table = self.op_kwargs.pop("output_table")
+            self.write_to_table = True
         self.op_args = self.kwargs.get("op_args")  # type: ignore
         self.identifiers_as_lower = identifiers_as_lower
 
@@ -62,101 +42,19 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             **kwargs,
         )
 
-    def load_op_arg_table_into_dataframe(self):
-        full_spec = inspect.getfullargspec(self.python_callable)
-        op_args = list(self.op_args)
-        ret_args = []
-        for arg in op_args:
-            current_arg = full_spec.args.pop(0)
-            if (
-                full_spec.annotations[current_arg] == pd.DataFrame
-                and type(arg) == Table
-            ):
-                ret_args.append(self._get_dataframe(arg))
-            else:
-                ret_args.append(arg)
-        self.op_args = tuple(ret_args)
-
-    def load_op_kwarg_table_into_dataframe(self):
-        param_types = inspect.signature(self.python_callable).parameters
-        self.op_kwargs = {
-            k: self._get_dataframe(v)
-            if param_types.get(k).annotation == pd.DataFrame and type(v) == Table
-            else v
-            for k, v in self.op_kwargs.items()
-        }
-
-    def execute(self, context: Dict):  # skipcq: PYL-W0613
+    def execute(self, context: Dict):  # skipcq
         self._set_variables_from_first_table()
         self.load_op_arg_table_into_dataframe()
         self.load_op_kwarg_table_into_dataframe()
 
         pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
-        if self.output_table:
-            self.populate_output_table()
-            self.output_table.metadata.schema = (  # type: ignore
+        if self.write_to_table:
+            self.output_table.metadata.schema = (
                 self.output_table.metadata.schema or SCHEMA
             )
-            hook = get_hook(
-                conn_id=self.output_table.conn_id,
-                database=self.output_table.metadata.database,
-                schema=self.output_table.metadata.schema,
-                warehouse=self.output_table.metadata.warehouse,
+            database = create_database(self.output_table.conn_id)
+            database.load_pandas_dataframe_to_table(
+                source_dataframe=pandas_dataframe, target_table=self.output_table
             )
-            load_dataframe_into_sql_table(pandas_dataframe, self.output_table, hook)
             return self.output_table
-        else:
-            return pandas_dataframe
-
-    def get_snow_hook(self, table: Table) -> SnowflakeHook:
-        """
-        Create and return SnowflakeHook.
-        :return: a SnowflakeHook instance.
-        :rtype: SnowflakeHook
-        """
-        return SnowflakeHook(
-            snowflake_conn_id=table.conn_id,
-            warehouse=table.metadata.warehouse,
-            database=table.metadata.database,
-            role=self.role,
-            schema=table.metadata.schema,
-            authenticator=None,
-            session_parameters=None,
-        )
-
-    def _get_dataframe(self, table: Table):
-        database = create_database_from_conn_id(table.conn_id)
-        self.log.info(f"Getting dataframe for {table}")
-        if database in (Database.POSTGRES, Database.POSTGRESQL):
-            self.hook = PostgresHook(postgres_conn_id=table.conn_id)
-            schema = table.metadata.schema
-            query = (
-                postgres_sql.SQL("SELECT * FROM {schema}.{input_table}")
-                .format(
-                    schema=postgres_sql.Identifier(schema),
-                    input_table=postgres_sql.Identifier(table.name),
-                )
-                .as_string(self.hook.get_conn())
-            )
-            df = self.hook.get_pandas_df(query)
-        elif database == Database.SNOWFLAKE:
-            hook = self.get_snow_hook(table)
-            df = hook.get_pandas_df(
-                "SELECT * FROM IDENTIFIER(%(input_table)s)",
-                parameters={"input_table": table.name},
-            )
-        elif database == Database.SQLITE:
-            hook = SqliteHook(sqlite_conn_id=table.conn_id)
-            engine = hook.get_sqlalchemy_engine()
-            df = pd.read_sql_table(table.name, engine)
-        elif database == Database.BIGQUERY:
-            db = create_database(table.conn_id)
-            table_name = db.get_table_qualified_name(table)
-
-            hook = BigQueryHook(gcp_conn_id=table.conn_id)
-            engine = hook.get_sqlalchemy_engine()
-            df = pd.read_sql_table(table_name, engine)
-
-        if self.identifiers_as_lower:
-            df.columns = [col_label.lower() for col_label in df.columns]
-        return df
+        return pandas_dataframe

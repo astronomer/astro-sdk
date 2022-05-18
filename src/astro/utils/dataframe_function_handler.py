@@ -6,7 +6,7 @@ import pandas as pd
 
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
-from astro.sql.tables import Table
+from astro.sql.table import Table
 
 
 class DataframeFunctionHandler(ABC):

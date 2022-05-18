@@ -4,7 +4,7 @@ from sqlalchemy import MetaData, case, func, or_, select
 from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import Database
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.operators.transform import TransformOperator
 from astro.sql.table import Table
 from astro.utils.database import create_database_from_conn_id
 from astro.utils.schema_util import (
@@ -161,7 +161,7 @@ class ChecksHandler:
         return failed_checks_sql
 
 
-class AgnosticStatsCheck(SqlDecoratedOperator):
+class AgnosticStatsCheck(TransformOperator):
     def __init__(
         self,
         checks: List[OutlierCheck],

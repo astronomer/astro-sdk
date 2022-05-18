@@ -66,6 +66,7 @@ class AgnosticLoadFile(BaseOperator):
             database=self.output_table.metadata.database,
             schema=self.output_table.metadata.schema,
             warehouse=self.output_table.metadata.warehouse,
+            role=self.output_table.metadata.role,
         )
 
         self._configure_output_table(context)

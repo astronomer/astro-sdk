@@ -6,7 +6,7 @@ from sqlalchemy.sql.functions import Function
 
 from astro.databases.base import BaseDatabase
 from astro.settings import SCHEMA
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 
 
 class SQLHandler(BaseOperator):

@@ -10,10 +10,7 @@ from astro.sql.operators.agnostic_stats_check import (  # noqa: F401
     OutlierCheck,
     stats_check,
 )
-from astro.sql.operators.sql_decorator import (  # noqa: F401
-    SqlDecoratedOperator,
-    transform_decorator,
-)
+from astro.sql.operators.transform import transform_decorator  # noqa: F401
 from astro.sql.operators.truncate import TruncateOperator
 from astro.sql.parsers.sql_directory_parser import render  # noqa: F401
 from astro.sql.table import Table

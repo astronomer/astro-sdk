@@ -4,7 +4,7 @@ import pytest
 
 from astro.databases import create_database
 from astro.settings import SCHEMA
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.operators.transform import TransformOperator
 from astro.sql.table import Metadata
 from tests.operators import utils as test_utils
 
@@ -51,7 +51,7 @@ def test_sql_decorator_basic_functionality(sample_dag, sql_server, test_table):
         """dummy function"""
 
     with sample_dag:
-        SqlDecoratedOperator(
+        TransformOperator(
             raw_sql=True,
             parameters={},
             task_id="SomeTask",
@@ -98,7 +98,7 @@ def test_sql_decorator_does_not_create_schema_when_the_schema_exists(
     assert df.empty
 
     with sample_dag:
-        SqlDecoratedOperator(
+        TransformOperator(
             raw_sql=True,
             parameters={},
             task_id="SomeTask",
@@ -149,7 +149,7 @@ def test_sql_decorator_creates_schema_when_it_does_not_exist(
     assert df.empty
 
     with sample_dag:
-        SqlDecoratedOperator(
+        TransformOperator(
             raw_sql=True,
             parameters={},
             task_id="SomeTask",

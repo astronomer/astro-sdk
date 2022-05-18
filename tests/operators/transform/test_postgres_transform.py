@@ -8,7 +8,7 @@ from airflow.utils import timezone
 from airflow.utils.session import create_session
 
 import astro.sql as aql
-from astro import dataframe as adf
+from astro.dataframe import dataframe as adf
 from astro.sql.table import Metadata, Table
 from tests.operators import utils as test_utils
 
@@ -49,9 +49,7 @@ def test_postgres_to_dataframe_partial_output(output_table, dag):
 
     with dag:
         pg_output = sample_pg(
-            input_table=Table(
-                name="actor", conn_id="postgres_conn_pagila", metadata=Metadata()
-            ),
+            input_table=Table(name="actor", conn_id="postgres_conn_pagila"),
             output_table=output_table,
         )
         validate(df=pg_output)

@@ -10,7 +10,7 @@ from airflow.exceptions import AirflowException
 from airflow.models.dag import DagContext
 from airflow.models.xcom_arg import XComArg
 
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.operators.transform import TransformOperator
 from astro.sql.table import Metadata, Table
 
 
@@ -218,7 +218,7 @@ def find_templated_fields(file_string):
     return [y[2:-2] for y in re.findall(r"\{\{[^}]*\}\}", file_string)]
 
 
-class ParsedSqlOperator(SqlDecoratedOperator):
+class ParsedSqlOperator(TransformOperator):
     template_fields = ("parameters",)
 
     def __init__(

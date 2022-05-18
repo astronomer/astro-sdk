@@ -1,16 +1,14 @@
 import inspect
-from typing import Dict, Optional
+from typing import Callable, Dict, Iterable, Mapping, Optional, Union
 
-from airflow.decorators.base import DecoratedOperator
+from airflow.decorators.base import DecoratedOperator, task_decorator_factory
 from sqlalchemy.sql.functions import Function
 
 from astro.databases import create_database
-from astro.sql.table import Table as OldTable
-from astro.sql.table import TempTable
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Table
 from astro.utils.dataframe_function_handler import DataframeFunctionHandler
-from astro.utils.sql_refactor import SQLHandler
-from astro.utils.table_handler_new import TableHandler
+from astro.utils.sql_handler import SQLHandler
+from astro.utils.table_handler import TableHandler
 
 
 class TransformOperator(
@@ -53,42 +51,7 @@ class TransformOperator(
             **kwargs,
         )
 
-    @staticmethod
-    def convert_old_table_to_new(table: OldTable) -> Table:
-        """
-        This function is only temporary until other functions use the new table format.
-
-        Converts a TempTable or a Table object into the new Table format.
-        :param table: old table
-        """
-        if isinstance(table, TempTable):
-            table = table.to_table("")
-        if isinstance(table, OldTable):
-            table = Table(
-                conn_id=table.conn_id,
-                name=table.table_name,
-                metadata=Metadata(
-                    schema=table.schema,
-                    warehouse=table.warehouse,
-                    database=table.database,
-                ),
-            )
-        return table  # type: ignore
-
-    def handle_table_conversions(self):
-        """This is a temporary holdover until all other functions use the new table format"""
-        self.op_args = tuple(
-            self.convert_old_table_to_new(t) if isinstance(t, OldTable) else t
-            for t in self.op_args  # type: ignore
-        )  # type: ignore
-        self.op_kwargs = {
-            k: self.convert_old_table_to_new(t) if isinstance(t, OldTable) else t
-            for k, t in self.op_kwargs.items()
-        }
-
     def execute(self, context: Dict):
-        self.handle_table_conversions()
-
         self._set_variables_from_first_table()
         self.database_impl = create_database(self.conn_id)
 
@@ -169,3 +132,66 @@ class TransformOperator(
             self.parameters = {
                 k: self.render_template(v, context) for k, v in self.parameters.items()  # type: ignore
             }
+
+
+def _transform_task(
+    python_callable: Optional[Callable] = None,
+    multiple_outputs: Optional[bool] = None,
+    **kwargs,
+):
+    """
+    Python operator decorator. Wraps a function into an Airflow operator.
+    Accepts kwargs for operator kwarg. Can be reused in a single DAG.
+
+    :param python_callable: Function to decorate
+    :param multiple_outputs: if set, function return value will be
+        unrolled to multiple XCom values. List/Tuples will unroll to xcom values
+        with index as key. Dict will unroll to xcom values with keys as XCom keys.
+        Defaults to False.
+    :type multiple_outputs: bool
+    """
+
+    return task_decorator_factory(
+        python_callable=python_callable,
+        multiple_outputs=multiple_outputs,
+        decorated_operator_class=TransformOperator,  # type: ignore
+        **kwargs,
+    )
+
+
+def transform_decorator(
+    python_callable: Optional[Callable] = None,
+    multiple_outputs: Optional[bool] = None,
+    conn_id: str = "",
+    autocommit: bool = False,
+    parameters: Optional[Union[Mapping, Iterable]] = None,
+    database: Optional[str] = None,
+    schema: Optional[str] = None,
+    warehouse: Optional[str] = None,
+    raw_sql: bool = False,
+    handler: Optional[Callable] = None,
+    **kwargs,
+):
+    """
+    :param python_callable: A reference to an object that is callable
+    :param multiple_outputs: if set, function return value will be
+        unrolled to multiple XCom values. Dict will unroll to xcom values with keys as keys.
+        Defaults to False.
+    :param conn_id: The reference to a specific Database for input and output table.
+    :param autocommit: if True, each command is automatically committed. (default value: False)
+    :param parameters: The parameters to render the SQL query with.
+    :param database: name of database which overwrite defined one in connection
+    """
+    return _transform_task(
+        python_callable=python_callable,
+        multiple_outputs=multiple_outputs,
+        conn_id=conn_id,
+        autocommit=autocommit,
+        parameters=parameters,
+        database=database,
+        schema=schema,
+        warehouse=warehouse,
+        raw_sql=raw_sql,
+        handler=handler,
+        **kwargs,
+    )

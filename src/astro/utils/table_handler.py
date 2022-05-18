@@ -1,11 +1,25 @@
 import inspect
-from typing import Optional
+from abc import ABC
+from typing import Callable, Optional, Tuple
 
-from astro.settings import SCHEMA
-from astro.sql.table import Table
+from astro.databases import create_database
+from astro.sql.table import Metadata, Table
 
 
-class TableHandler:
+class TableHandler(ABC):
+    """This class contains any functions involving modifying or reading from a Table object"""
+
+    op_args: Tuple
+    op_kwargs: dict
+    python_callable: Callable
+    parameters: dict
+    output_table: Optional[Table]
+    warehouse: str = ""
+    schema: str = ""
+    database: str = ""
+    conn_id: str = ""
+    role: str = ""
+
     def _set_variables_from_first_table(self):
         """
         When we create our SQL operation, we run with the assumption that the first table given is the "main table".
@@ -50,6 +64,13 @@ class TableHandler:
                 first_table = params_of_table_type[0]
 
         if first_table:
+            database = create_database(first_table.conn_id)
+            if (
+                first_table.metadata
+                and first_table.metadata.is_empty()
+                and database.default_metadata
+            ):
+                first_table.metadata = database.default_metadata
             self.conn_id = first_table.conn_id or self.conn_id
             self.database = first_table.metadata.database or self.database
             self.schema = first_table.metadata.schema or self.schema
@@ -57,11 +78,17 @@ class TableHandler:
             self.role = first_table.metadata.role or self.role
 
     def populate_output_table(self):
+        """
+        When returning an output_table, we want to fill in as much metadata as possible to ensure that the next
+        task can pick up the same table. In this function we ensure that the output_table has all of the same
+        metadata we used to create the table in the first place.
+        :return:
+        """
+        old_meta: Metadata = self.output_table.metadata
+        meta = Metadata(
+            database=old_meta.database or self.database,
+            warehouse=old_meta.warehouse or self.warehouse,
+            schema=old_meta.schema or self.schema,
+        )
         self.output_table.conn_id = self.output_table.conn_id or self.conn_id
-        self.output_table.metadata.database = (
-            self.output_table.metadata.database or self.database
-        )
-        self.output_table.warehouse = (
-            self.output_table.metadata.warehouse or self.warehouse
-        )
-        self.output_table.metadata.schema = self.output_table.metadata.schema or SCHEMA
+        self.output_table.metadata = meta
