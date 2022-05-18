@@ -113,6 +113,11 @@ class SnowflakeDatabase(BaseDatabase):
         }
 
     def schema_exists(self, schema):
+        """
+        Checks if a schema exists in the database
+
+        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        """
         created_schemas = [
             x["SCHEMA_NAME"]
             for x in self.hook.run(

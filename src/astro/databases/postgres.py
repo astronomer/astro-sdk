@@ -30,6 +30,11 @@ class PostgresDatabase(BaseDatabase):
         return Metadata(database=schema)
 
     def schema_exists(self, schema):
+        """
+        Checks if a schema exists in the database
+
+        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        """
         created_schemas = self.hook.run(
             "SELECT schema_name FROM information_schema.schemata;",
             handler=lambda x: [y[0] for y in x.fetchall()],

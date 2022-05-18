@@ -119,6 +119,12 @@ class SqlDecoratedOperator(
             return self.output_table
 
     def create_output_table(self, output_table_name: str) -> Table:
+        """
+        If the user has not supplied an output table, this function creates one from scratch, otherwise populates
+        the output table with necessary metadata.
+        :param output_table_name:
+        :return:
+        """
         if not self.output_table:
             self.output_table = Table(name=output_table_name)
         self.populate_output_table()

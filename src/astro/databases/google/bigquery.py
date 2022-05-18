@@ -37,6 +37,11 @@ class BigqueryDatabase(BaseDatabase):
         return Metadata(schema=settings.SCHEMA, database=self.hook.project_id)
 
     def schema_exists(self, schema):
+        """
+        Checks if a schema exists in the database
+
+        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        """
         return False
 
     def load_pandas_dataframe_to_table(

@@ -64,9 +64,15 @@ class TableHandler(ABC):
             self.database = first_table.metadata.database or self.database
             self.schema = first_table.metadata.schema or self.schema
             self.warehouse = first_table.metadata.warehouse or self.warehouse
-            # self.role = first_table.role or self.role
+            self.role = first_table.metadata.role or self.role
 
     def populate_output_table(self):
+        """
+        When returning an output_table, we want to fill in as much metadata as possible to ensure that the next
+        task can pick up the same table. In this function we ensure that the output_table has all of the same
+        metadata we used to create the table in the first place.
+        :return:
+        """
         old_meta: Metadata = self.output_table.metadata
         meta = Metadata(
             database=old_meta.database or self.database,

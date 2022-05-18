@@ -43,6 +43,12 @@ class SQLHandler(BaseOperator):
         super().__init__(**kwargs)
 
     def handle_schema(self):
+        """
+        In this function we ensure that both the temporary schema and the explicitly stated schema exist.
+        We also ensure that if there is a table conflict, the conflicting table is dropped so the new data
+        can be added.
+        :return:
+        """
         # Create DEFAULT SCHEMA if not created.
         self.database_impl.create_schema_if_needed(SCHEMA)
         if not self.raw_sql:
@@ -73,6 +79,13 @@ class SQLHandler(BaseOperator):
         return self._output_table_name
 
     def template(self, context: Dict):
+        """
+        This function handles all jinja templating to ensure that the SQL statement is ready for
+        processing by SQLAlchemy. We use the database object here as different databases will have
+        different templating rules.
+        :param context:
+        :return:
+        """
 
         # update table name in context based on database
         context = self.database_impl.add_templates_to_context(self.parameters, context)

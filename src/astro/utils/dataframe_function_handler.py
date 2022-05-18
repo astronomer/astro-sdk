@@ -45,6 +45,8 @@ class DataframeFunctionHandler(ABC):
         self.op_kwargs = final_kwargs
 
     def load_op_arg_table_into_dataframe(self):
+        """For dataframe based functions, takes any Table objects from the op_args
+        and converts them into local dataframes that can be handled in the python context"""
         full_spec = inspect.getfullargspec(self.python_callable)
         op_args = list(self.op_args)
         ret_args = []
@@ -60,6 +62,8 @@ class DataframeFunctionHandler(ABC):
         self.op_args = tuple(ret_args)
 
     def load_op_kwarg_table_into_dataframe(self):
+        """For dataframe based functions, takes any Table objects from the op_kwargs
+        and converts them into local dataframes that can be handled in the python context"""
         param_types = inspect.signature(self.python_callable).parameters
         self.op_kwargs = {
             k: self._get_dataframe(v)
@@ -69,6 +73,11 @@ class DataframeFunctionHandler(ABC):
         }
 
     def _get_dataframe(self, table: Table):
+        """
+        grabs a SQL table and converts it into a dataframe
+        :param table:
+        :return:
+        """
         database = create_database(self.conn_id)
         df = database.export_table_to_pandas_dataframe(source_table=table)
         if self.identifiers_as_lower:
