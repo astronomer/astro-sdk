@@ -3,9 +3,11 @@
     {
       "name": "postgres",
       "params": {
-        "database": "postgres",
-        "conn_id": "postgres_conn",
-        "schema": "postgres"
+        "metadata" : {
+          "database": "postgres",
+          "schema": "postgres"
+        },
+        "conn_id": "postgres_conn"
       }
     }
   ],

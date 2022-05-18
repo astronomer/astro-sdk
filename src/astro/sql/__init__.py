@@ -16,8 +16,7 @@ from astro.sql.operators.sql_decorator import (  # noqa: F401
 )
 from astro.sql.operators.truncate import TruncateOperator
 from astro.sql.parsers.sql_directory_parser import render  # noqa: F401
-from astro.sql.table import Table as OldTable
-from astro.sql.tables import Table
+from astro.sql.table import Table
 
 
 def transform(
@@ -68,8 +67,8 @@ def run_raw_sql(
 
 
 def append(
-    append_table: OldTable,
-    main_table: OldTable,
+    append_table: Table,
+    main_table: Table,
     columns: Optional[List[str]] = None,
     casted_columns: Optional[dict] = None,
     **kwargs,
@@ -88,8 +87,8 @@ def append(
 
 
 def merge(
-    target_table: OldTable,
-    merge_table: OldTable,
+    target_table: Table,
+    merge_table: Table,
     merge_keys: Union[List, dict],
     target_columns: List[str],
     merge_columns: List[str],

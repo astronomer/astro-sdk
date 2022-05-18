@@ -15,8 +15,7 @@ from airflow.utils.session import create_session, provide_session
 from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
 from astro.settings import SCHEMA
-from astro.sql.table import Table, TempTable, create_unique_table_name
-from astro.sql.tables import Table as NewTable
+from astro.sql.table import Metadata, Table, create_unique_table_name
 from astro.utils.database import get_database_name
 from astro.utils.dependencies import BigQueryHook, gcs, s3
 from astro.utils.load import load_dataframe_into_sql_table
@@ -76,6 +75,7 @@ def populate_table(path: str, table: Table, hook: BaseHook) -> None:
 
 @pytest.fixture
 def test_table(request, sql_server):  # noqa: C901
+    # FIXME: Delete this fixture by the end of the refactoring! Use database_table_fixture instead
     tables = []
     tables_params = [{"is_temp": True}]
 
@@ -89,74 +89,67 @@ def test_table(request, sql_server):  # noqa: C901
     database = get_database_name(hook)
 
     for table_param in tables_params:
-        is_tmp_table = table_param.get("is_temp", True)
         load_table = table_param.get("load_table", False)
         override_table_options = table_param.get("param", {})
-
-        if is_tmp_table and load_table:
-            raise ValueError(
-                "Temp Table cannot be populated with data. Use 'is_temp=False' instead."
-            )
 
         if database == Database.SNOWFLAKE:
             default_table_options = {
                 "conn_id": hook.snowflake_conn_id,
-                "database": hook.database,
-                "warehouse": hook.warehouse,
-                "schema": hook.schema,
+                "metadata": Metadata(
+                    database=hook.database,
+                    warehouse=hook.warehouse,
+                    schema=hook.schema,
+                ),
             }
         elif database == Database.POSTGRES:
             default_table_options = {
                 "conn_id": hook.postgres_conn_id,
-                "database": hook.schema,
             }
         elif database == Database.SQLITE:
-            default_table_options = {
-                "conn_id": hook.sqlite_conn_id,
-                "database": "sqlite",
-            }
+            default_table_options = {"conn_id": hook.sqlite_conn_id}
         elif database == Database.BIGQUERY:
-            default_table_options = {"conn_id": hook.gcp_conn_id, "schema": SCHEMA}
+            default_table_options = {
+                "conn_id": hook.gcp_conn_id,
+                "metadata": Metadata(schema=SCHEMA),
+            }
         else:
             raise ValueError("Unsupported Database")
 
         default_table_options.update(override_table_options)
-        tables.append(
-            TempTable(**default_table_options)
-            if is_tmp_table
-            else Table(**default_table_options)
-        )
+        tables.append(Table(**default_table_options))
         if load_table:
             populate_table(path=table_param.get("path"), table=tables[-1], hook=hook)
 
     yield tables if len(tables) > 1 else tables[0]
 
     for table in tables:
-        if table.qualified_name():
-            hook.run(f"DROP TABLE IF EXISTS {table.qualified_name()}")
-
+        db = create_database(table.conn_id)
+        qualified_name = db.get_table_qualified_name(table)
+        if qualified_name:
+            hook.run(f"DROP TABLE IF EXISTS {qualified_name}")
         if database == Database.SQLITE:
             hook.run("DROP INDEX IF EXISTS unique_index")
         elif database in (Database.POSTGRES, Database.POSTGRESQL):
             # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
             # Example: tables which are not fixtures and constraints.
             # This is an aggressive approach towards tearing down:
-            hook.run(f"DROP SCHEMA IF EXISTS {table.schema} CASCADE;")
+            hook.run(f"DROP SCHEMA IF EXISTS {table.metadata.schema} CASCADE;")
 
 
 @pytest.fixture
 def output_table(request):
     table_type = request.param
     if table_type == "None":
-        return TempTable()
+        return Table()
     elif table_type == "partial":
-        return Table("my_table")
+        return Table(name="my_table")
     elif table_type == "full":
-        return Table("my_table", database="pagila", conn_id="postgres_conn")
+        return Table(name="my_table", conn_id="postgres_conn_pagila")
 
 
 @pytest.fixture
 def sql_server(request):
+    # FIXME: delete this fixture by the end of the refactoring! Use database_table_fixture instead
     sql_name = request.param
     hook_parameters = test_utils.SQL_SERVER_HOOK_PARAMETERS.get(sql_name)
     hook_class = test_utils.SQL_SERVER_HOOK_CLASS.get(sql_name)
@@ -219,7 +212,7 @@ def database_table_fixture(request):
     database = create_database(conn_id)
 
     table = params.get(
-        "table", NewTable(conn_id=conn_id, metadata=database.default_metadata)
+        "table", Table(conn_id=conn_id, metadata=database.default_metadata)
     )
     database.drop_table(table)
     if file:

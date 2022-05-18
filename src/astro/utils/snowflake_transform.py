@@ -9,20 +9,21 @@ def _handle_table(t: Table):
     :param t:
     :return:
     """
-
-    snow_schema = t.schema or SCHEMA
-    return t.database + "." + snow_schema + "." + t.table_name
+    schema = getattr(t.metadata, "schema", "") or SCHEMA
+    table_name = [getattr(t.metadata, "database", ""), schema, t.name]
+    table_name = [x for x in table_name if x]
+    return ".".join(table_name)
 
 
 def process_params(parameters):
     return {
-        k: (_handle_table(v) if type(v) == Table else v) for k, v in parameters.items()
+        k: (_handle_table(v) if type(v) is Table else v) for k, v in parameters.items()
     }
 
 
 def add_templates_to_context(parameters, context):
     for k, v in parameters.items():
-        if type(v) == Table:
+        if type(v) is Table:
             context[k] = "IDENTIFIER(:" + k + ")"
         else:
             context[k] = ":" + k

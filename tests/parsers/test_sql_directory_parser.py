@@ -14,7 +14,7 @@ from airflow.utils.session import create_session
 
 import astro.sql as aql
 from astro.dataframe import dataframe as adf
-from astro.sql.table import Table
+from astro.sql.table import Metadata, Table
 from tests.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
@@ -67,8 +67,8 @@ class TestSQLParsing(unittest.TestCase):
         with self.dag:
             aql.render(
                 dir_path + "/missing_table_dag",
-                agg_orders=Table("foo"),
-                customers_table=Table("customers_table"),
+                agg_orders=Table(name="foo"),
+                customers_table=Table(name="customers_table"),
             )
 
     def test_parse_missing_table_with_input_and_upstream(self):
@@ -78,7 +78,7 @@ class TestSQLParsing(unittest.TestCase):
             aql.render(
                 "missing_table_dag",
                 agg_orders=agg_orders,
-                customers_table=Table("customers_table"),
+                customers_table=Table(name="customers_table"),
             )
 
     def test_parse_frontmatter(self):
@@ -90,14 +90,13 @@ class TestSQLParsing(unittest.TestCase):
         assert customers_table_task.operator.schema == "bar"
 
         customer_output_table = customers_table_task.operator.output_table
-        assert customer_output_table.table_name == "my_table"
-        assert customer_output_table.schema == "my_schema"
+        assert customer_output_table.name == "my_table"
+        assert customer_output_table.metadata.schema == "my_schema"
 
         new_customers_table = rendered_tasks.get("get_new_customers")
         new_customer_output_table = new_customers_table.operator.output_table
-        assert new_customer_output_table.table_name == ""
-        assert new_customer_output_table.schema is None
-        assert new_customer_output_table.database == "my_db"
+        assert new_customer_output_table.metadata.schema is None
+        assert new_customer_output_table.metadata.database == "my_db"
         assert new_customer_output_table.conn_id == "my_conn_id"
 
         expected_sql = "SELECT * FROM {{customers_table}} WHERE member_since > DATEADD(day, -7, '{{ execution_date }}')"
@@ -120,11 +119,13 @@ class TestSQLParsing(unittest.TestCase):
             input_table = aql.load_file(
                 path=str(cwd) + "/../data/homes.csv",
                 output_table=Table(
-                    test_utils.get_table_name("snowflake_render_test"),
+                    name=test_utils.get_table_name("snowflake_render_test"),
                     conn_id="snowflake_conn",
-                    schema=os.getenv("SNOWFLAKE_SCHEMA"),
-                    database=os.getenv("SNOWFLAKE_DATABASE"),
-                    warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                    metadata=Metadata(
+                        schema=os.getenv("SNOWFLAKE_SCHEMA"),
+                        database=os.getenv("SNOWFLAKE_DATABASE"),
+                        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                    ),
                 ),
             )
             models = aql.render(

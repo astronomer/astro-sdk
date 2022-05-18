@@ -6,7 +6,8 @@ from airflow.exceptions import BackfillUnfinished
 
 from astro import sql as aql
 from astro.dataframe import dataframe as adf
-from astro.sql.table import TempTable
+from astro.settings import SCHEMA
+from astro.sql.table import Metadata, Table
 from tests.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
@@ -66,22 +67,37 @@ def append_params(request):
     ],
     indirect=True,
 )
+@pytest.mark.parametrize(
+    "test_table",
+    [
+        [
+            {
+                "is_temp": False,
+                "param": {
+                    "metadata": Metadata(schema=SCHEMA),
+                },
+                "path": str(CWD) + "/../data/homes_main.csv",
+                "load_table": True,
+            },
+            {
+                "is_temp": False,
+                "param": {"metadata": Metadata(schema=SCHEMA)},
+                "path": str(CWD) + "/../data/homes_append.csv",
+                "load_table": True,
+            },
+        ],
+    ],
+    indirect=True,
+    ids=["table"],
+)
 def test_append(sql_server, sample_dag, test_table, append_params):
     app_param, validate_append = append_params
 
     with sample_dag:
-        load_main = aql.load_file(
-            path=str(CWD) + "/../data/homes_main.csv",
-            output_table=test_table,
-        )
-        load_append = aql.load_file(
-            path=str(CWD) + "/../data/homes_append.csv",
-            output_table=test_table,
-        )
         appended_table = aql.append(
             **app_param,
-            main_table=load_main,
-            append_table=load_append,
+            main_table=test_table[0],
+            append_table=test_table[1],
         )
         validate_append(appended_table)
     test_utils.run_dag(sample_dag)
@@ -95,8 +111,8 @@ def test_append(sql_server, sample_dag, test_table, append_params):
     indirect=True,
 )
 def test_append_on_tables_on_different_db(sample_dag, sql_server):
-    test_table_1 = TempTable(conn_id="postgres_conn")
-    test_table_2 = TempTable(conn_id="sqlite_conn")
+    test_table_1 = Table(conn_id="postgres_conn")
+    test_table_2 = Table(conn_id="sqlite_conn")
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
             load_main = aql.load_file(
