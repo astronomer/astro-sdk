@@ -156,9 +156,7 @@ def output_table(request):
     elif table_type == "partial":
         return Table(name="my_table")
     elif table_type == "full":
-        return Table(
-            name="my_table", conn_id="postgres_conn", metadata=Metadata(schema=SCHEMA)
-        )
+        return Table(name="my_table", conn_id="postgres_conn_pagila")
 
 
 @pytest.fixture
