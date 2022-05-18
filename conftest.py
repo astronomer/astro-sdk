@@ -218,9 +218,9 @@ def database_table_fixture(request):
     conn_id = database_name_to_conn_id[database_name]
     database = create_database(conn_id)
 
-    table = params.get(
-        "table", NewTable(conn_id=conn_id, metadata=database.default_metadata)
-    )
+    metadata = database.default_metadata
+    metadata.schema = metadata.schema or SCHEMA
+    table = params.get("table", NewTable(conn_id=conn_id, metadata=metadata))
     database.drop_table(table)
     if file:
         database.load_file_to_table(file, table)

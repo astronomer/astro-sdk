@@ -10,19 +10,19 @@ from astro.sql.tables import Metadata, Table
 
 
 class SQLHandler(BaseOperator):
-    output_table = None
+    output_table: Optional[Table] = None
     database_impl: BaseDatabase = None  # type: ignore
 
     def __init__(
         self,
-        conn_id: Optional[str] = None,
+        conn_id: str = "",
         autocommit: bool = False,
         parameters: Optional[dict] = None,
         handler: Optional[Function] = None,
-        database: Optional[str] = None,
-        schema: Optional[str] = None,
-        warehouse: Optional[str] = None,
-        role: Optional[str] = None,
+        database: str = "",
+        schema: str = "",
+        warehouse: str = "",
+        role: str = "",
         raw_sql: bool = True,
         sql="",
         **kwargs,

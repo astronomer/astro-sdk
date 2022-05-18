@@ -1,9 +1,10 @@
 import random
 import string
-from dataclasses import dataclass, fields
-from typing import List, Optional, Union
+from dataclasses import dataclass, field, fields
+from typing import List, Union
 
-from sqlalchemy import Column, MetaData
+from sqlalchemy import Column
+from sqlalchemy import MetaData as SqlAlcMetaData
 
 MAX_TABLE_NAME_LENGTH = 62
 
@@ -43,17 +44,11 @@ class Table:
     # Some ideas: TableRef, TableMetadata, TableData, TableDataset
     conn_id: str = ""
     name: str = ""
-    metadata: Optional[Metadata] = None
-    columns: Optional[List[Column]] = None
+    metadata: Metadata = Metadata()
+    columns: List[Column] = field(default_factory=list)
     temp: bool = False
 
     def __post_init__(self):
-        if self.columns is None:
-            self.columns = []
-
-        if self.metadata is None:
-            self.metadata = Metadata()
-
         if not self.name:
             self.name = self._create_unique_table_name()
             self.temp = True
@@ -71,10 +66,10 @@ class Table:
         return unique_id
 
     @property
-    def sqlalchemy_metadata(self) -> MetaData:
+    def sqlalchemy_metadata(self) -> SqlAlcMetaData:
         """Return Sqlalchemy metadata for the given table."""
         if self.metadata and self.metadata.schema:
-            alchemy_metadata = MetaData(schema=self.metadata.schema)
+            alchemy_metadata = SqlAlcMetaData(schema=self.metadata.schema)
         else:
-            alchemy_metadata = MetaData()
+            alchemy_metadata = SqlAlcMetaData()
         return alchemy_metadata

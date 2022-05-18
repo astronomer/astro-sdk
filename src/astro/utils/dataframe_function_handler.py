@@ -11,12 +11,12 @@ from astro.sql.tables import Table
 
 class DataframeFunctionHandler(ABC):
     database_impl: BaseDatabase
-    output_table: Table
+    output_table: Optional[Table]
     op_args: Tuple
     op_kwargs: Dict
     python_callable: Callable
-    identifiers_as_lower: Optional[bool]
-    conn_id: Optional[str]
+    identifiers_as_lower: bool = False
+    conn_id: str = ""
 
     def load_op_arg_dataframes_into_sql(self):
         """Identifies dataframes in op_args and loads them to the table"""

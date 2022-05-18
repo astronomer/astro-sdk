@@ -1,7 +1,9 @@
 """Postgres database implementation."""
+import pandas as pd
 import sqlalchemy
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
+from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 from astro.databases.base import BaseDatabase
 from astro.sql.tables import Metadata, Table
 
@@ -45,4 +47,30 @@ class PostgresDatabase(BaseDatabase):
             inspector.dialect.has_table(
                 self.connection, table.name, table.metadata.schema
             )
+        )
+
+    def load_pandas_dataframe_to_table(
+        self,
+        source_dataframe: pd.DataFrame,
+        target_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+    ) -> None:
+        """
+        Create a table with the dataframe's contents.
+        If the table already exists, append or replace the content, depending on the value of `if_exists`.
+
+        :param source_dataframe: Local or remote filepath
+        :param target_table: Table in which the file will be loaded
+        :param if_exists: Strategy to be used in case the target table already exists.
+        :param chunk_size: Specify the number of rows in each batch to be written at a time.
+        """
+        source_dataframe.to_sql(
+            schema=target_table.metadata.schema,
+            name=target_table.name,
+            con=self.sqlalchemy_engine,
+            if_exists=if_exists,
+            chunksize=chunk_size,
+            method="multi",
+            index=False,
         )

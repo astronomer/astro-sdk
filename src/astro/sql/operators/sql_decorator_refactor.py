@@ -60,7 +60,7 @@ class SqlDecoratedOperator(
         :param table: old table
         """
         if isinstance(table, TempTable):
-            table = table.to_table(None)
+            table = table.to_table("")
         if isinstance(table, OldTable):
             table = Table(
                 conn_id=table.conn_id,
@@ -71,7 +71,7 @@ class SqlDecoratedOperator(
                     database=table.database,
                 ),
             )
-        return table
+        return table  # type: ignore
 
     def handle_table_conversions(self):
         """

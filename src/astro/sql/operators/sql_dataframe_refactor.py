@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict
 
 from airflow.decorators.base import DecoratedOperator
 
@@ -15,12 +15,12 @@ from astro.utils.table_handler_new import TableHandler
 class SqlDataframeOperator(DataframeFunctionHandler, DecoratedOperator, TableHandler):
     def __init__(
         self,
-        conn_id: Optional[str] = None,
-        database: Optional[str] = None,
-        schema: Optional[str] = None,
-        warehouse: Optional[str] = None,
-        role: Optional[str] = None,
-        identifiers_as_lower: Optional[bool] = True,
+        conn_id: str = "",
+        database: str = "",
+        schema: str = "",
+        warehouse: str = "",
+        role: str = "",
+        identifiers_as_lower: bool = True,
         **kwargs,
     ):
         """
@@ -41,11 +41,11 @@ class SqlDataframeOperator(DataframeFunctionHandler, DecoratedOperator, TableHan
         self.role = role
         self.parameters = {}
         self.kwargs = kwargs or {}
+        self.write_to_table = False
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
         if self.op_kwargs.get("output_table"):
-            self.output_table: Optional[NewTable] = self.op_kwargs.pop("output_table")
-        else:
-            self.output_table = None
+            self.output_table: NewTable = self.op_kwargs.pop("output_table")
+            self.write_to_table = True
         self.op_args = self.kwargs.get("op_args")  # type: ignore
         self.identifiers_as_lower = identifiers_as_lower
 
@@ -98,7 +98,7 @@ class SqlDataframeOperator(DataframeFunctionHandler, DecoratedOperator, TableHan
         self.load_op_kwarg_table_into_dataframe()
 
         pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
-        if self.output_table:
+        if self.write_to_table:
             self.output_table = self.convert_old_table_to_new(self.output_table)
             self.populate_output_table()
             self.conn_id = self.conn_id or self.output_table.conn_id
