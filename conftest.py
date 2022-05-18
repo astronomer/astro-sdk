@@ -111,7 +111,7 @@ def test_table(request, sql_server):  # noqa: C901
         elif database == Database.POSTGRES:
             default_table_options = {
                 "conn_id": hook.postgres_conn_id,
-                "metadata": Metadata(schema=hook.schema),
+                # "metadata": Metadata(schema=hook.schema),
             }
         elif database == Database.SQLITE:
             default_table_options = {"conn_id": hook.sqlite_conn_id}
@@ -152,14 +152,11 @@ def test_table(request, sql_server):  # noqa: C901
 def output_table(request):
     table_type = request.param
     if table_type == "None":
-        return Table()
+        return Table(metadata=Metadata())
     elif table_type == "partial":
-        return Table(name="my_table")
+        return Table(name="my_table", metadata=Metadata())
     elif table_type == "full":
-        return Table(
-            name="my_table",
-            conn_id="postgres_conn",
-        )
+        return Table(name="my_table", conn_id="postgres_conn", metadata=Metadata())
 
 
 @pytest.fixture
