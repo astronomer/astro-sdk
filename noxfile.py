@@ -25,6 +25,9 @@ def test(session: nox.Session) -> None:
     """Run unit tests."""
     session.install("-e", ".[all]")
     session.install("-e", ".[tests]")
+    # Log all the installed dependencies
+    session.log("Installed Dependencies:")
+    session.run("pip3 freeze")
     session.run("airflow", "db", "init")
     session.run("pytest", *session.posargs)
 
