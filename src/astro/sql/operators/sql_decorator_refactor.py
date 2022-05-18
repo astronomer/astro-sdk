@@ -16,6 +16,8 @@ from astro.utils.table_handler_new import TableHandler
 class SqlDecoratedOperator(
     SQLHandler, DataframeFunctionHandler, DecoratedOperator, TableHandler
 ):
+    """Handles all decorator classes that can return a SQL function"""
+
     # todo: Add docstrings
     def __init__(
         self,
@@ -108,6 +110,8 @@ class SqlDecoratedOperator(
             )
             if self.handler:
                 return self.handler(result)
+            else:
+                return None
         else:
             self.database_impl.create_table_from_select_statement(
                 statement=self.sql,

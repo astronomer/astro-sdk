@@ -6,6 +6,8 @@ from astro.sql.tables import Metadata, Table
 
 
 class TableHandler(ABC):
+    """This class contains any functions involving modifying or reading from a Table object"""
+
     op_args: Tuple
     op_kwargs: dict
     python_callable: Callable

@@ -13,6 +13,8 @@ from astro.utils.table_handler_new import TableHandler
 
 
 class SqlDataframeOperator(DataframeFunctionHandler, DecoratedOperator, TableHandler):
+    """Helper class for `astro.df` decorator"""
+
     def __init__(
         self,
         identifiers_as_lower: bool = True,

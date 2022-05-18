@@ -10,6 +10,8 @@ from astro.sql.tables import Table
 
 
 class DataframeFunctionHandler(ABC):
+    """Contains functions for converting to dataframe or converting from dataframe"""
+
     database_impl: BaseDatabase
     output_table: Optional[Table]
     op_args: Tuple

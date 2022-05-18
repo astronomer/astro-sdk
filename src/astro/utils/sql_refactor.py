@@ -10,6 +10,8 @@ from astro.sql.tables import Metadata, Table
 
 
 class SQLHandler(BaseOperator):
+    """Contains helper functions for creating and running SQL queries"""
+
     output_table: Optional[Table] = None
     database_impl: BaseDatabase = None  # type: ignore
 
@@ -67,7 +69,7 @@ class SQLHandler(BaseOperator):
         else:
             # If there's no SQL to run we raise an error
             if self.sql == "" or not self.sql:
-                return AirflowException("There's no SQL to run")
+                raise AirflowException("There's no SQL to run")
 
     @property
     def output_table_name(self):
