@@ -19,7 +19,7 @@ class Metadata:
     """
 
     # This property is used by several databases, including: Postgres, Snowflake and BigQuery ("namespace")
-    schema: Union[str, None] = None
+    schema: Union[str, None] = ""
     # All the properties below are Snowflake-specific:
     account: Union[str, None] = None
     database: Union[str, None] = None
