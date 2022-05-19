@@ -74,7 +74,7 @@ class TransformOperator(
             if self.handler:
                 return self.handler(result)
             else:
-                return result
+                return None
         else:
             self.database_impl.create_table_from_select_statement(
                 statement=self.sql,
