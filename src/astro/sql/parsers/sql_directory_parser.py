@@ -10,7 +10,7 @@ from airflow.exceptions import AirflowException
 from airflow.models.dag import DagContext
 from airflow.models.xcom_arg import XComArg
 
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.operators.sql_decorator_legacy import SqlDecoratedOperator
 from astro.sql.table import Metadata, Table
 
 
