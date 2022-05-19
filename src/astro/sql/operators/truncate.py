@@ -26,10 +26,5 @@ class TruncateOperator(BaseOperator):
     def execute(self, context: Dict) -> None:  # skipcq: PYL-W0613
         """Method run when the Airflow runner calls the operator."""
         database = create_database(self.table.conn_id)
-        if (
-            self.table.metadata
-            and self.table.metadata.is_empty()
-            and database.default_metadata
-        ):
-            self.table.metadata = database.default_metadata
+        self.table = database.populate_table_metadata(self.table)
         database.drop_table(self.table)

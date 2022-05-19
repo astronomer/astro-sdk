@@ -7,7 +7,6 @@ from airflow.models import DagRun, TaskInstance
 from sqlalchemy import Column, MetaData
 
 from astro.constants import UNIQUE_TABLE_NAME_LENGTH
-from astro.settings import SCHEMA
 
 MAX_TABLE_NAME_LENGTH = 45
 
@@ -57,7 +56,7 @@ class Table:
 
         if not self.name:
             self.name = self._create_unique_table_name()
-            self.metadata.schema = self.metadata.schema or SCHEMA
+            # self.metadata.schema = self.metadata.schema or SCHEMA
             self.temp = True
 
     def _create_unique_table_name(self) -> str:

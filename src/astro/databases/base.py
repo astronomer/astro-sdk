@@ -13,6 +13,7 @@ from astro.constants import (
 )
 from astro.exceptions import NonExistentTableException
 from astro.files import File
+from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
 
 
@@ -114,6 +115,24 @@ class BaseDatabase(ABC):
     @property
     def default_metadata(self) -> Metadata:
         raise NotImplementedError
+
+    def populate_table_metadata(self, table: Table):
+        # default = self.default_metadata
+        # table_meta = table.metadata
+        # table.metadata = Metadata(
+        #     schema=table_meta.schema or default.schema,
+        #     role=table_meta.role or default.role,
+        #     warehouse=table_meta.warehouse or default.warehouse,
+        #     database=table_meta.database or default.database,
+        #     account=table_meta.account or default.account,
+        #     region=table_meta.region or default.region
+        # )
+
+        if table.metadata and table.metadata.is_empty() and self.default_metadata:
+            table.metadata = self.default_metadata
+        if not table.metadata.schema:
+            table.metadata.schema = SCHEMA
+        return table
 
     # ---------------------------------------------------------
     # Table creation & deletion methods
