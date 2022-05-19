@@ -4,7 +4,7 @@ from sqlalchemy import MetaData, case, func, or_, select
 from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import Database
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.operators.sql_decorator_legacy import SqlDecoratedOperator
 from astro.sql.table import Table
 from astro.utils.database import create_database_from_conn_id
 from astro.utils.schema_util import (

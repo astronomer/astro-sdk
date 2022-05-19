@@ -3,7 +3,7 @@ from typing import Dict, List, Union
 from airflow.exceptions import AirflowException
 
 from astro.constants import Database
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.operators.sql_decorator_legacy import SqlDecoratedOperator
 from astro.sql.table import Table
 from astro.utils.bigquery_merge_func import bigquery_merge_func
 from astro.utils.database import create_database_from_conn_id

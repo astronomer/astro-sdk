@@ -7,7 +7,7 @@ from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.sql.selectable import Select
 
 from astro.databases import create_database
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.operators.sql_decorator_legacy import SqlDecoratedOperator
 from astro.sql.table import Table
 from astro.utils.task_id_helper import get_unique_task_id
 
