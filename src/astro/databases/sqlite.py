@@ -18,17 +18,17 @@ class SqliteDatabase(BaseDatabase):
         super().__init__(conn_id)
 
     @property
-    def hook(self):
+    def hook(self) -> SqliteHook:
         """Retrieve Airflow hook to interface with the Sqlite database."""
         return SqliteHook(sqlite_conn_id=self.conn_id)
 
     @property
     def sqlalchemy_engine(self) -> Engine:
         """Return SQAlchemy engine."""
-        uri = self.hook.get_uri()
-        if "////" not in uri:
-            uri = uri.replace("///", "////")
-        return create_engine(uri)
+        # Airflow uses sqlite3 library and not SqlAlchemy for SqliteHook
+        # and it only uses the hostname directly.
+        airflow_conn = self.hook.get_connection(self.conn_id)
+        return create_engine(f"sqlite:///{airflow_conn.host}")
 
     @property
     def default_metadata(self) -> Metadata:
