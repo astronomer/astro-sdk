@@ -5,6 +5,7 @@ from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
 from astro.constants import DEFAULT_CHUNK_SIZE
+from astro.databases import create_database
 from astro.files import get_files
 from astro.sql.table import Table, create_table_name
 from astro.utils import get_hook
@@ -100,6 +101,8 @@ class AgnosticLoadFile(BaseOperator):
         # TODO: Move this function to the SQLDecorator, so it can be reused across operators
         if not self.output_table.name:
             self.output_table.name = create_table_name(context=context)
+        db = create_database(self.output_table.conn_id)
+        self.output_table = db.populate_table_metadata(self.output_table)
 
 
 def load_file(

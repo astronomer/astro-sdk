@@ -51,6 +51,9 @@ class SqliteDatabase(BaseDatabase):
         """
         return str(table.name)
 
+    def populate_table_metadata(self, table: Table):
+        return table
+
     def create_schema_if_needed(self, schema):
         """
         Since SQLite does not have schemas, we do not need to set a schema here

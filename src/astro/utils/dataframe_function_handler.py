@@ -30,6 +30,9 @@ class DataframeFunctionHandler(ABC):
                     source_dataframe=arg, target_table=df_table
                 )
                 final_args.append(df_table)
+            elif isinstance(arg, Table):
+                arg = self.database_impl.populate_table_metadata(arg)
+                final_args.append(arg)
             else:
                 final_args.append(arg)
             self.op_args = tuple(final_args)
@@ -44,6 +47,9 @@ class DataframeFunctionHandler(ABC):
                     source_dataframe=value, target_table=df_table
                 )
                 final_kwargs[key] = df_table
+            elif isinstance(value, Table):
+                value = self.database_impl.populate_table_metadata(value)
+                final_kwargs[key] = value
             else:
                 final_kwargs[key] = value
         self.op_kwargs = final_kwargs
