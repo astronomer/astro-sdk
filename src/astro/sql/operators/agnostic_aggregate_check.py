@@ -2,6 +2,7 @@ from typing import Optional
 
 from airflow.utils.context import Context
 
+from astro.databases import create_database
 from astro.sql.operators.sql_decorator_legacy import SqlDecoratedOperator
 from astro.sql.table import Table
 from astro.utils.task_id_helper import get_unique_task_id
@@ -70,6 +71,8 @@ class AgnosticAggregateCheck(SqlDecoratedOperator):
         )
 
     def execute(self, context: Context) -> Table:
+        db = create_database(self.conn_id)  # type: ignore
+        self.table = db.populate_table_metadata(self.table)  # type: ignore
         self.conn_id = self.table.conn_id
         self.database = self.table.metadata.database
         self.sql = self.check

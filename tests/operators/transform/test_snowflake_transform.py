@@ -99,8 +99,10 @@ def run_role_query(dag, table, role):
     test_utils.run_dag(dag)
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize("sql_server", ["snowflake"], indirect=True)
 def test_roles_failing(sql_server, sample_dag, test_table):
+    # TODO: Do we actually want users to have the ability to this?
     test_table.metadata.role = "foo"
     with pytest.raises(Exception):
         run_role_query(sample_dag, test_table, role="foo")
