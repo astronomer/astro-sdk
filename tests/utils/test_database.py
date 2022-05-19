@@ -7,6 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.engine.base import Engine
 
 from astro.constants import Database
+from astro.sqlite_utils import create_sqlalchemy_engine_with_sqlite
 from astro.utils.database import (
     create_database_from_conn_id,
     get_database_name,
@@ -59,7 +60,7 @@ def describe_get_database_name():
         hook = SqliteHook()
         db = get_database_name(hook)
         assert db == Database.SQLITE
-        engine = hook.get_sqlalchemy_engine()
+        engine = create_sqlalchemy_engine_with_sqlite(hook)
         db = get_database_name(engine)
         assert db == Database.SQLITE
 
@@ -74,10 +75,9 @@ def describe_get_database_name():
 def describe_get_sqlalchemy_engine():
     def with_sqlite():
         hook = SqliteHook(sqlite_conn_id="sqlite_conn")
-        engine = get_sqlalchemy_engine(hook)
+        engine = create_sqlalchemy_engine_with_sqlite(hook)
         assert isinstance(engine, Engine)
-        url = urlparse(str(engine.url))
-        assert url.path == "////tmp/sqlite.db"
+        assert engine.url.database == BaseHook.get_connection("sqlite_conn").host
 
     def with_sqlite_default_conn():
         hook = SqliteHook()

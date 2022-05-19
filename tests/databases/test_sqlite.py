@@ -1,11 +1,11 @@
 """Tests specific to the Sqlite Database implementation."""
 import os
 import pathlib
-from urllib.parse import urlparse
 
 import pandas as pd
 import pytest
 import sqlalchemy
+from airflow.hooks.base import BaseHook
 
 from astro.constants import Database
 from astro.databases import create_database
@@ -33,20 +33,19 @@ def test_create_database(conn_id):
 
 
 @pytest.mark.parametrize(
-    "conn_id,expected_uri",
+    "conn_id,expected_db_path",
     [
-        (DEFAULT_CONN_ID, "//tmp/sqlite_default.db"),
-        (CUSTOM_CONN_ID, "////tmp/sqlite.db"),
+        (DEFAULT_CONN_ID, BaseHook.get_connection(DEFAULT_CONN_ID).host),
+        (CUSTOM_CONN_ID, "/tmp/sqlite.db"),
     ],
     ids=SUPPORTED_CONN_IDS,
 )
-def test_sqlite_sqlalchemy_engine(conn_id, expected_uri):
-    """Confirm that the SQLALchemy is created successfully."""
+def test_sqlite_sqlalchemy_engine(conn_id, expected_db_path):
+    """Confirm that the SQLAlchemy is created successfully and verify DB path."""
     database = SqliteDatabase(conn_id)
     engine = database.sqlalchemy_engine
     assert isinstance(engine, sqlalchemy.engine.base.Engine)
-    url = urlparse(str(engine.url))
-    assert url.path == expected_uri
+    assert engine.url.database == expected_db_path
 
 
 @pytest.mark.integration
