@@ -4,7 +4,7 @@ import pandas as pd
 import sqlalchemy
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
+from astro.constants import DEFAULT_CHUNK_SIZE, DEFAULT_SCHEMA, LoadExistStrategy
 from astro.databases.base import BaseDatabase
 from astro.sql.table import Metadata, Table
 
@@ -28,7 +28,7 @@ class PostgresDatabase(BaseDatabase):
     @property
     def default_metadata(self) -> Metadata:
         schema = self.hook.get_connection(self.conn_id).schema
-        return Metadata(database=schema)
+        return Metadata(database=schema, schema=DEFAULT_SCHEMA)
 
     def schema_exists(self, schema):
         """
@@ -56,6 +56,11 @@ class PostgresDatabase(BaseDatabase):
             )
         )
 
+    def get_sqlalchemy_engine(self, table: Table):
+        hook = self.hook
+        hook.schema = table.metadata.database
+        return hook.get_sqlalchemy_engine()
+
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,
@@ -72,14 +77,11 @@ class PostgresDatabase(BaseDatabase):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
-        hook = self.hook
-        hook.schema = target_table.metadata.database
-        eng = hook.get_sqlalchemy_engine()
         self.create_schema_if_needed(target_table.metadata.schema)
         source_dataframe.to_sql(
             schema=target_table.metadata.schema,
             name=target_table.name,
-            con=eng,
+            con=self.get_sqlalchemy_engine(table=target_table),
             if_exists=if_exists,
             chunksize=chunk_size,
             method="multi",

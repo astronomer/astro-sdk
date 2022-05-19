@@ -51,6 +51,14 @@ class BaseDatabase(ABC):
         """Return Sqlalchemy engine."""
         return self.hook.get_sqlalchemy_engine()
 
+    def get_sqlalchemy_engine(self, table: Table):
+        return self.hook.get_sqlalchemy_engine()
+
+    def get_connection(self, table) -> sqlalchemy.engine.base.Connection:
+        """Return a Sqlalchemy connection object for the given database."""
+        eng = self.get_sqlalchemy_engine(table)
+        return eng.connect()
+
     def run_sql(self, sql_statement: str, parameters: Optional[dict] = None):
         """
         Return the results to running a SQL statement.
@@ -78,7 +86,11 @@ class BaseDatabase(ABC):
         """
         table_qualified_name = self.get_table_qualified_name(table)
         inspector = sqlalchemy.inspect(self.sqlalchemy_engine)
-        return bool(inspector.dialect.has_table(self.connection, table_qualified_name))
+        return bool(
+            inspector.dialect.has_table(
+                self.get_connection(table), table_qualified_name
+            )
+        )
 
     # ---------------------------------------------------------
     # Table metadata
@@ -227,7 +239,7 @@ class BaseDatabase(ABC):
             return pd.read_sql(
                 # We are avoiding SQL injection by confirming the table exists before this statement
                 f"SELECT * FROM {table_qualified_name}",  # skipcq BAN-B608
-                con=self.sqlalchemy_engine,
+                con=self.get_sqlalchemy_engine(table=source_table),
             )
         raise NonExistentTableException(
             "The table %s does not exist" % table_qualified_name
