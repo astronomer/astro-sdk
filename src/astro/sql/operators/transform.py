@@ -34,13 +34,13 @@ class TransformOperator(
         self.kwargs = kwargs or {}
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
         self.output_table: Optional[Table] = self.op_kwargs.pop("output_table", None)
-        self.handler = self.op_kwargs.pop("handler", None)
+        self.handler = self.op_kwargs.pop("handler", handler)
         self.sql = sql
 
         super().__init__(
             sql=sql,
             autocommit=autocommit,
-            handler=handler,
+            handler=self.handler,
             parameters=parameters,
             conn_id=self.op_kwargs.pop("conn_id", conn_id),
             database=self.op_kwargs.pop("database", database),
@@ -74,7 +74,7 @@ class TransformOperator(
             if self.handler:
                 return self.handler(result)
             else:
-                return None
+                return result
         else:
             self.database_impl.create_table_from_select_statement(
                 statement=self.sql,
