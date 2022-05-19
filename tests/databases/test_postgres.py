@@ -12,7 +12,8 @@ from astro.databases import create_database
 from astro.databases.postgres import PostgresDatabase
 from astro.exceptions import NonExistentTableException
 from astro.files import File
-from astro.sql.tables import Metadata, Table
+from astro.settings import SCHEMA
+from astro.sql.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
 from tests.operators import utils as test_utils
 
@@ -21,7 +22,6 @@ CUSTOM_CONN_ID = "postgres_conn"
 SUPPORTED_CONN_IDS = [DEFAULT_CONN_ID, CUSTOM_CONN_ID]
 CWD = pathlib.Path(__file__).parent
 
-SCHEMA = "public"
 TEST_TABLE = Table()
 
 
@@ -73,6 +73,7 @@ def test_table_exists_raises_exception():
         {
             "database": Database.POSTGRES,
             "table": Table(
+                metadata=Metadata(schema=SCHEMA),
                 columns=[
                     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
                     sqlalchemy.Column(
@@ -101,13 +102,13 @@ def test_postgres_create_table_with_columns(database_table_fixture):
     assert len(rows) == 2
     assert rows[0][0:4] == (
         "postgres",
-        "public",
+        SCHEMA,
         f"{table.name}",
         "id",
     )
     assert rows[1][0:4] == (
         "postgres",
-        "public",
+        SCHEMA,
         f"{table.name}",
         "name",
     )

@@ -3,7 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
 from astro.databases.base import BaseDatabase
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = SqliteHook.default_conn_name
 

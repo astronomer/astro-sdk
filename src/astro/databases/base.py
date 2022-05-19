@@ -13,7 +13,7 @@ from astro.constants import (
 )
 from astro.exceptions import NonExistentTableException
 from astro.files import File
-from astro.sql.tables import Metadata, Table
+from astro.sql.table import Metadata, Table
 
 
 class BaseDatabase(ABC):
@@ -229,7 +229,6 @@ class BaseDatabase(ABC):
                 f"SELECT * FROM {table_qualified_name}",  # skipcq BAN-B608
                 con=self.sqlalchemy_engine,
             )
-
         raise NonExistentTableException(
             "The table %s does not exist" % table_qualified_name
         )

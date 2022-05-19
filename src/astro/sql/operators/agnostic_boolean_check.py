@@ -1,11 +1,12 @@
 from distutils import log as logger
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from airflow.hooks.base import BaseHook
 from sqlalchemy import FLOAT, and_, cast, column, func, select, text
 from sqlalchemy.sql.elements import TextClause
 from sqlalchemy.sql.selectable import Select
 
+from astro.databases import create_database
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.table import Table
 from astro.utils.task_id_helper import get_unique_task_id
@@ -68,18 +69,21 @@ class AgnosticBooleanCheck(SqlDecoratedOperator):
 
     def execute(self, context: Dict):
         self.conn_id = self.table.conn_id
-        self.database = self.table.database
-        self.schema = self.table.schema
-        self.warehouse = self.table.warehouse
+        self.database = self.table.metadata.database
+        self.schema = self.table.metadata.schema
+        self.warehouse = self.table.metadata.warehouse
 
         self.conn = BaseHook.get_connection(self.conn_id)
-        self.parameters = {"table": self.table}
+        self.parameters: Dict[str, Any] = {"table": self.table}
         self.sql = self.prep_boolean_checks_query(self.table, self.checks, context)
 
         results = super().execute(context)
         failed_checks_names, failed_checks_index = self.get_failed_checks(results)
         if len(failed_checks_index) > 0:
-            self.parameters = {"table": self.table, "limit": self.max_rows_returned}
+            self.parameters = {
+                "table": self.table,
+                "limit": self.max_rows_returned,
+            }
             self.sql = self.prep_results(failed_checks_index)
             failed_rows = super().execute(context)
             logger.error("Failed rows %s", failed_rows)
@@ -115,24 +119,29 @@ class AgnosticBooleanCheck(SqlDecoratedOperator):
                 AgnosticBooleanCheck.get_expression(prepared_exp, check.name)
             )
 
+        database = create_database(table.conn_id)
+        table_name = database.get_table_qualified_name(table)
+
         # ATM we are using SQLAlchemy 1.3.24 and, therefore, the package sqlalchemy-stubs to allow type checks.
         # SQLAlchemy `select_from` supports an argument of type `text`, but `sqlalchemy-stubs` does not recognise this.
-        # An attempt to solve this issue was to replace text(table.qualified_name()) by an SQLAlchemy table, but this
+        # An attempt to solve this issue was to replace text(table_qualified_name) by an SQLAlchemy table, but this
         # broken this feature (by introducing table names with double quotes).
         # Since we'll soon upgrade to SQLAlchemy 1.4.x, and the type validation changes significantly, it felt the best
         # for now was to ignore this particular type check issue.
         # More information on this topic: https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html
         temp_table = (
             select(sqla_checks_object)
-            .select_from(text(table.qualified_name()))  # type: ignore
+            .select_from(text(table_name))  # type: ignore
             .alias("check_table")
         )
         return select([check.get_result() for check in checks]).select_from(temp_table)
 
     def prep_results(self, results):
+        database = create_database(self.table.conn_id)
+        table_name = database.get_table_qualified_name(self.table)
         return (
             select(["*"])
-            .select_from(text(self.table.qualified_name()))
+            .select_from(text(table_name))
             .where(and_(*[text(self.checks[index].expression) for index in results]))
             .limit(self.max_rows_returned)
         )

@@ -11,7 +11,8 @@ def schema_exists(hook, schema, conn_type):
             handler=lambda x: [y[0] for y in x.fetchall()],
         )
         return schema.upper() in [c.upper() for c in created_schemas]
-    elif conn_type == "snowflake":
+
+    if conn_type == "snowflake":
         created_schemas = [
             x["SCHEMA_NAME"]
             for x in hook.run("SELECT SCHEMA_NAME from information_schema.schemata;")
@@ -32,7 +33,8 @@ def create_schema_query(conn_type, hook, schema_id, user):
             )
             .as_string(hook.get_conn())
         )
-    elif conn_type in ["snowflake", "google_cloud_platform", "bigquery", "sqlite"]:
+
+    if conn_type in ["snowflake", "google_cloud_platform", "bigquery", "sqlite"]:
         return f"CREATE SCHEMA IF NOT EXISTS {schema_id}"
 
 
@@ -55,4 +57,4 @@ def get_error_string_for_multiple_dbs(tables: List[Table]):
     :param tables: list of table
     :return: String: error string
     """
-    return f'Tables should belong to same db {", ".join([f"{table.table_name}: {table.conn_id}" for table in tables])}'
+    return f'Tables should belong to same db {", ".join([f"{table.name}: {table.conn_id}" for table in tables])}'

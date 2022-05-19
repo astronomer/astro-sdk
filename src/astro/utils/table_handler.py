@@ -51,13 +51,17 @@ class TableHandler:
 
         if first_table:
             self.conn_id = first_table.conn_id or self.conn_id
-            self.database = first_table.database or self.database
-            self.schema = first_table.schema or self.schema
-            self.warehouse = first_table.warehouse or self.warehouse
-            self.role = first_table.role or self.role
+            self.database = first_table.metadata.database or self.database
+            self.schema = first_table.metadata.schema or self.schema
+            self.warehouse = first_table.metadata.warehouse or self.warehouse
+            self.role = first_table.metadata.role or self.role
 
     def populate_output_table(self):
         self.output_table.conn_id = self.output_table.conn_id or self.conn_id
-        self.output_table.database = self.output_table.database or self.database
-        self.output_table.warehouse = self.output_table.warehouse or self.warehouse
-        self.output_table.schema = self.output_table.schema or SCHEMA
+        self.output_table.metadata.database = (
+            self.output_table.metadata.database or self.database
+        )
+        self.output_table.warehouse = (
+            self.output_table.metadata.warehouse or self.warehouse
+        )
+        self.output_table.metadata.schema = self.output_table.metadata.schema or SCHEMA

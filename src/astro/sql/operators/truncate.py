@@ -4,7 +4,7 @@ from airflow.decorators.base import get_unique_task_id
 from airflow.models import BaseOperator
 
 from astro.databases import create_database
-from astro.sql.tables import Table
+from astro.sql.table import Table
 
 
 class TruncateOperator(BaseOperator):

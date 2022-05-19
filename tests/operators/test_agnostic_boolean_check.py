@@ -15,10 +15,9 @@ from airflow.utils import timezone
 # Import Operator
 import astro.sql as aql
 from astro.constants import SUPPORTED_DATABASES
-from astro.settings import SCHEMA
 from astro.sql.operators.agnostic_boolean_check import Check
 from astro.sql.table import Table
-from tests.operators.utils import get_table_name, run_dag
+from tests.operators.utils import run_dag
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -46,55 +45,25 @@ def drop_table_snowflake(
     snowflake_conn.close()
 
 
-@pytest.fixture(scope="module")
-def table(request):
-    boolean_check_table = Table(
-        get_table_name("boolean_check_test"),
-        database="pagila",
-        conn_id="postgres_conn",
-        schema="airflow_test_dag",
-    )
-    boolean_check_table_bigquery = Table(
-        get_table_name("boolean_check_test"),
-        conn_id="bigquery",
-        schema=SCHEMA,
-    )
-    boolean_check_table_sqlite = Table(
-        get_table_name("boolean_check_test"), conn_id="sqlite_conn"
-    )
-    boolean_check_table_snowflake = Table(
-        table_name=get_table_name("boolean_check_test"),
-        database=os.getenv("SNOWFLAKE_DATABASE"),  # type: ignore
-        schema=os.getenv("SNOWFLAKE_SCHEMA"),  # type: ignore
-        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),  # type: ignore
-        conn_id="snowflake_conn",
-    )
-    path = str(CWD) + "/../data/homes_append.csv"
-    tables = {
-        "postgres": boolean_check_table,
-        "bigquery": boolean_check_table_bigquery,
-        "sqlite": boolean_check_table_sqlite,
-        "snowflake": boolean_check_table_snowflake,
-    }
-
-    aql.load_file(
-        path=path,
-        output_table=tables[request.param],
-    ).operator.execute({"run_id": "foo"})
-
-    yield tables[request.param]
-
-    tables[request.param].drop()
-
-
-@pytest.mark.parametrize("table", SUPPORTED_DATABASES, indirect=True)
-def test_happyflow_success(sample_dag, table):
+@pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
+@pytest.mark.parametrize(
+    "test_table",
+    [
+        {
+            "path": str(CWD) + "/../data/homes_append.csv",
+            "load_table": True,
+        }
+    ],
+    indirect=True,
+    ids=["table"],
+)
+def test_happyflow_success(sample_dag, test_table):
     @aql.transform
     def get_table(input_table: Table):
         return "SELECT * FROM {{input_table}}"
 
     with sample_dag:
-        temp_table = get_table(table)
+        temp_table = get_table(test_table)
         aql.boolean_check(
             table=temp_table,
             checks=[Check("test_1", "rooms > 3")],
@@ -103,15 +72,26 @@ def test_happyflow_success(sample_dag, table):
     run_dag(sample_dag)
 
 
-@pytest.mark.parametrize("table", SUPPORTED_DATABASES, indirect=True)
-def test_happyflow_fail(sample_dag, table, caplog):
+@pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
+@pytest.mark.parametrize(
+    "test_table",
+    [
+        {
+            "path": str(CWD) + "/../data/homes_append.csv",
+            "load_table": True,
+        }
+    ],
+    indirect=True,
+    ids=["table"],
+)
+def test_happyflow_fail(sample_dag, test_table, caplog):
     @aql.transform
     def get_table(input_table: Table):
         return "SELECT * FROM {{input_table}}"
 
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
-            temp_table = get_table(table)
+            temp_table = get_table(test_table)
             aql.boolean_check(
                 table=temp_table,
                 checks=[
@@ -126,7 +106,7 @@ def test_happyflow_fail(sample_dag, table, caplog):
 
 
 @pytest.mark.parametrize(
-    "table",
+    "sql_server",
     [
         "postgres",
         pytest.param(
@@ -145,13 +125,24 @@ def test_happyflow_fail(sample_dag, table, caplog):
     ],
     indirect=True,
 )
-def test_happyflow_success_with_templated_query(sample_dag, table):
+@pytest.mark.parametrize(
+    "test_table",
+    [
+        {
+            "path": str(CWD) + "/../data/homes_append.csv",
+            "load_table": True,
+        }
+    ],
+    indirect=True,
+    ids=["table"],
+)
+def test_happyflow_success_with_templated_query(sample_dag, test_table):
     @aql.transform
     def get_table(input_table: Table):
         return "SELECT * FROM {{input_table}}"
 
     with sample_dag:
-        temp_table = get_table(table)
+        temp_table = get_table(test_table)
         aql.boolean_check(
             table=temp_table,
             checks=[Check("test_1", "{{table}}.rooms > 3")],

@@ -4,7 +4,7 @@ from datetime import datetime
 from airflow.models import DAG, Param
 
 from astro.sql import load_file, render
-from astro.sql.table import Table
+from astro.sql.table import Metadata, Table
 
 SNOWFLAKE_CONN_ID = "snowflake_conn"
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -40,9 +40,11 @@ with dag:
         path=FILE_PATH + "homes.csv",
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            metadata=Metadata(
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            ),
         ),
     )
 
@@ -50,9 +52,11 @@ with dag:
         path=FILE_PATH + "homes2.csv",
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            metadata=Metadata(
+                database=os.getenv("SNOWFLAKE_DATABASE"),
+                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+                schema=os.getenv("SNOWFLAKE_SCHEMA"),
+            ),
         ),
     )
 

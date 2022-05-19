@@ -1,16 +1,15 @@
-from typing import Union
-
 import pandas as pd
 from airflow.hooks.base import BaseHook
 
-from astro.sql.table import Table, TempTable, create_unique_table_name
+from astro.databases import create_database
+from astro.sql.table import Metadata, Table
 from astro.utils.database import get_sqlalchemy_engine, run_sql
 from astro.utils.load import load_dataframe_into_sql_table
 
 
 def delete_dataframe_rows_from_table(
     pandas_dataframe: pd.DataFrame,
-    target_table: Union[Table, TempTable],
+    target_table: Table,
     hook: BaseHook,
 ):
     """
@@ -24,22 +23,26 @@ def delete_dataframe_rows_from_table(
     :type hook: Airflow Hook to the target database
     """
     # First we create a temporary table using the dataframe values
-    tmp_table = TempTable(
+    named_table = Table(
         conn_id=target_table.conn_id,
-        database=target_table.database,
-        warehouse=target_table.warehouse,
-        role=target_table.role,
+        metadata=Metadata(
+            database=target_table.metadata.database,
+            warehouse=target_table.metadata.warehouse,
+            role=target_table.metadata.role,
+        ),
     )
-    tmp_table_name = create_unique_table_name()
-    named_table = tmp_table.to_table(tmp_table_name)
     load_dataframe_into_sql_table(pandas_dataframe, named_table, hook)
+
+    database = create_database(target_table.conn_id)
+    target_table_name = database.get_table_qualified_name(target_table)
+    named_table_name = database.get_table_qualified_name(named_table)
 
     # Then we remove the (dataframe) temporary table values from the target table
     engine = get_sqlalchemy_engine(hook)
     run_sql(
         engine,
-        f"DELETE FROM {target_table.qualified_name()} WHERE Id IN (SELECT Id FROM {named_table.qualified_name()})",
+        f"DELETE FROM {target_table_name} WHERE Id IN (SELECT Id FROM {named_table_name})",
     )
 
     # Finally, we delete the temporary table which had the dataframe values
-    run_sql(engine, f"DROP TABLE {named_table.qualified_name()}")
+    run_sql(engine, f"DROP TABLE {named_table_name}")
