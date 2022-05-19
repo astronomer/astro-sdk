@@ -88,7 +88,7 @@ provider_info = "astro.__init__:get_provider_info"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = ["--durations=30 --durations-min=1.0"]
+addopts = ["--durations=30", "--durations-min=1.0"]
 env_files = [".env"]
 testpaths = ["tests"]
 markers = [
