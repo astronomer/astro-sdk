@@ -30,6 +30,12 @@ class SqliteDatabase(BaseDatabase):
         airflow_conn = self.hook.get_connection(self.conn_id)
         return create_engine(f"sqlite:///{airflow_conn.host}")
 
+    def get_sqlalchemy_engine(self, table: Table):
+        # Airflow uses sqlite3 library and not SqlAlchemy for SqliteHook
+        # and it only uses the hostname directly.
+        airflow_conn = self.hook.get_connection(self.conn_id)
+        return create_engine(f"sqlite:///{airflow_conn.host}")
+
     @property
     def default_metadata(self) -> Metadata:
         return Metadata()
