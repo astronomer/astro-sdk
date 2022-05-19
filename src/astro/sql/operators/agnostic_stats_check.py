@@ -4,6 +4,7 @@ from sqlalchemy import MetaData, case, func, or_, select
 from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import Database
+from astro.databases import create_database
 from astro.sql.operators.sql_decorator_legacy import SqlDecoratedOperator
 from astro.sql.table import Table
 from astro.utils.database import create_database_from_conn_id
@@ -218,6 +219,8 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
         )
 
     def execute(self, context: Dict):
+        db = create_database(self.conn_id)  # type: ignore
+        self.table = db.populate_table_metadata(self.table)  # type: ignore
         database = create_database_from_conn_id(self.conn_id)
         check_handler = ChecksHandler(self.checks)
 

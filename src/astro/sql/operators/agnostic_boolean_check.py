@@ -70,6 +70,8 @@ class AgnosticBooleanCheck(SqlDecoratedOperator):
         )
 
     def execute(self, context: Dict):
+        db = create_database(self.conn_id)  # type: ignore
+        self.table = db.populate_table_metadata(self.table)  # type: ignore
         self.conn_id = self.table.conn_id
         self.database = self.table.metadata.database
         self.schema = self.table.metadata.schema

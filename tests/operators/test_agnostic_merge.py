@@ -95,7 +95,8 @@ def add_constraint(table: Table, columns):
             "CREATE UNIQUE INDEX unique_index ON {{table}}" + f"({','.join(columns)})"
         )
     elif database == Database.BIGQUERY:
-        return ""
+        # bigquery does not have constraints, so we offer a useless statement
+        return "SELECT 1 + 1"
 
     return (
         "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE"
