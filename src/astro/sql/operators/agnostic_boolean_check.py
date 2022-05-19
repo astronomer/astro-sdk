@@ -1,4 +1,4 @@
-from distutils import log as logger
+import logging
 from typing import Dict, List, Optional
 
 from airflow.hooks.base import BaseHook
@@ -9,6 +9,8 @@ from sqlalchemy.sql.selectable import Select
 from astro.sql.operators.sql_decorator import SqlDecoratedOperator
 from astro.sql.table import Table
 from astro.utils.task_id_helper import get_unique_task_id
+
+log = logging.getLogger(__name__)
 
 
 class Check:
@@ -82,7 +84,7 @@ class AgnosticBooleanCheck(SqlDecoratedOperator):
             self.parameters = {"table": self.table, "limit": self.max_rows_returned}
             self.sql = self.prep_results(failed_checks_index)
             failed_rows = super().execute(context)
-            logger.error("Failed rows %s", failed_rows)
+            log.error("Failed rows %s", failed_rows)
             raise ValueError(
                 "Some of the check(s) have failed %s", ",".join(failed_checks_names)
             )
