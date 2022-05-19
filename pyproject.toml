@@ -3,7 +3,7 @@ requires = ["flit_core ~=3.2"]
 build-backend = "flit_core.buildapi"
 
 [project]
-name = "astro-projects"
+name = "astro-sdk-python"
 dynamic = ["version", "description"]
 
 authors = [

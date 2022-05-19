@@ -5,10 +5,10 @@
   workflows made easy<br><br>
 </h3>
 
-[![Python versions](https://img.shields.io/pypi/pyversions/astro-projects.svg)](https://pypi.org/pypi/astro-projects)
-[![License](https://img.shields.io/pypi/l/astro-projects.svg)](https://pypi.org/pypi/astro-projects)
-[![Development Status](https://img.shields.io/pypi/status/astro-projects.svg)](https://pypi.org/pypi/astro-projects)
-[![PyPI downloads](https://img.shields.io/pypi/dm/astro-projects.svg)](https://pypistats.org/packages/astro-projects)
+[![Python versions](https://img.shields.io/pypi/pyversions/astro-sdk-python.svg)](https://pypi.org/pypi/astro-sdk-python)
+[![License](https://img.shields.io/pypi/l/astro-sdk-python.svg)](https://pypi.org/pypi/astro-sdk-python)
+[![Development Status](https://img.shields.io/pypi/status/astro-sdk-python.svg)](https://pypi.org/pypi/astro-sdk-python)
+[![PyPI downloads](https://img.shields.io/pypi/dm/astro-sdk-python.svg)](https://pypistats.org/packages/astro-sdk-python)
 [![Contributors](https://img.shields.io/github/contributors/astro-projects/astro)](https://github.com/astro-projects/astro)
 [![Commit activity](https://img.shields.io/github/commit-activity/m/astro-projects/astro)](https://github.com/astro-projects/astro)
 [![CI](https://github.com/astro-projects/astro/actions/workflows/ci.yaml/badge.svg)](https://github.com/astro-projects/astro)
@@ -23,19 +23,19 @@ The interfaces may change. We welcome alpha users and brave souls to test it - a
 
 ## Install
 
-**Astro** is available at [PyPI](https://pypi.org/project/astro-projects/). Use the standard Python
+**Astro** is available at [PyPI](https://pypi.org/project/astro-sdk-python/). Use the standard Python
 [installation tools](https://packaging.python.org/en/latest/tutorials/installing-packages/).
 
 To install a cloud-agnostic version of **Astro**, run:
 
 ```
-pip install astro-projects
+pip install astro-sdk-python
 ```
 
 If using cloud providers, install using the optional dependencies of interest:
 
 ```commandline
-pip install astro-projects[amazon,google,snowflake,postgres]
+pip install astro-sdk-python[amazon,google,snowflake,postgres]
 ```
 
 ## Quick-start
