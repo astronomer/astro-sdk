@@ -8,6 +8,7 @@ from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from astro.constants import Database
 from astro.settings import SCHEMA
 from astro.sql.table import Table, TempTable, create_table_name
+from astro.sqlite_utils import create_sqlalchemy_engine_with_sqlite
 from astro.utils import get_hook
 from astro.utils.database import get_database_from_conn_id
 from astro.utils.dependencies import (
@@ -150,7 +151,7 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             )
         elif database == Database.SQLITE:
             hook = SqliteHook(sqlite_conn_id=table.conn_id, database=table.database)
-            engine = hook.get_sqlalchemy_engine()
+            engine = create_sqlalchemy_engine_with_sqlite(hook)
             df = pd.read_sql_table(table.table_name, engine)
         elif database == Database.BIGQUERY:
             hook = BigQueryHook(gcp_conn_id=table.conn_id)

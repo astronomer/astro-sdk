@@ -9,6 +9,7 @@ from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 
 from astro.constants import Database
 from astro.sql.table import Table
+from astro.sqlite_utils import create_sqlalchemy_engine_with_sqlite
 from astro.utils.cloud_storage_creds import gcs_client, s3fs_creds
 from astro.utils.database import get_database_from_conn_id
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
@@ -130,9 +131,14 @@ class SaveFile(BaseOperator):
                 f"Support types: {list(hook_class.keys())}"
             )
 
+        if database == Database.SQLITE:
+            con_engine = create_sqlalchemy_engine_with_sqlite(input_hook)
+        else:
+            con_engine = input_hook.get_sqlalchemy_engine()
+
         return pd.read_sql(
             f"SELECT * FROM {input_table.qualified_name()}",
-            con=input_hook.get_sqlalchemy_engine(),
+            con=con_engine,
         )
 
     def agnostic_write_file(self, df: pd.DataFrame, output_file_path: str) -> None:

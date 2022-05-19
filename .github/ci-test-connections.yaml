@@ -31,7 +31,7 @@ connections:
     schema: null
   - conn_id: sqlite_conn
     conn_type: sqlite
-    host: ////tmp/sqlite.db
+    host: /tmp/sqlite.db
     schema:
     login:
     password:
