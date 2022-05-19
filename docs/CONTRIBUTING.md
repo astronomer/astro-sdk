@@ -30,7 +30,7 @@ report a bug, open an issue! We'd love all and any contributions. If you have qu
 We'd also love PRs. If you're thinking of a large PR, we advise opening up an issue first to talk about it,
 though! Look at the links below if you're not sure how to open a PR.
 
-If you have other questions, use [Github Discussions](https://github.com/astro-projects/astro/discussions).
+If you have other questions, use [Github Discussions](https://github.com/astronomer/astro-sdk/discussions).
 
 
 # Creating a local development
@@ -43,7 +43,7 @@ Follow the steps described in [development](DEVELOPMENT.md).
 1. Update the local sources to address the issue you are working on.
 
    * Create a local branch for your development. Make sure to use latest
-     [astro-projects/astro/main](https://github.com/astro-projects/astro) as base for the branch. This allows you to easily compare
+     [astro-projects/astro/main](https://github.com/astronomer/astro-sdk) as base for the branch. This allows you to easily compare
      changes, have several changes that you work on at the same time and many more.
 
    * Add necessary code and (unit) tests.

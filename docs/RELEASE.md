@@ -16,7 +16,7 @@ strictly for bug fixes, and they can easily upgrade to it.
 
 When looking through the branches on the main repo, you will notice a series of `release` branches labeled
 `release-<major version>.<minor version>`. So if we are currently working on the 0.6 release, the branch should be labeled
-`release-0.6`. Before creating a minor release please check the [milestones](https://github.com/astro-projects/astro/milestones)
+`release-0.6`. Before creating a minor release please check the [milestones](https://github.com/astronomer/astro-sdk/milestones)
 page to ensure that all relevant bug fixes have been PRed and merged.
 
 Once you merge all expected fixes, the next step is to ensure that all fixes have been cherry-picked to the release

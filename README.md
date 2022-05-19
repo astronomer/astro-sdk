@@ -9,9 +9,9 @@
 [![License](https://img.shields.io/pypi/l/astro-sdk-python.svg)](https://pypi.org/pypi/astro-sdk-python)
 [![Development Status](https://img.shields.io/pypi/status/astro-sdk-python.svg)](https://pypi.org/pypi/astro-sdk-python)
 [![PyPI downloads](https://img.shields.io/pypi/dm/astro-sdk-python.svg)](https://pypistats.org/packages/astro-sdk-python)
-[![Contributors](https://img.shields.io/github/contributors/astro-projects/astro)](https://github.com/astro-projects/astro)
-[![Commit activity](https://img.shields.io/github/commit-activity/m/astro-projects/astro)](https://github.com/astro-projects/astro)
-[![CI](https://github.com/astro-projects/astro/actions/workflows/ci.yaml/badge.svg)](https://github.com/astro-projects/astro)
+[![Contributors](https://img.shields.io/github/contributors/astro-projects/astro)](https://github.com/astronomer/astro-sdk)
+[![Commit activity](https://img.shields.io/github/commit-activity/m/astro-projects/astro)](https://github.com/astronomer/astro-sdk)
+[![CI](https://github.com/astronomer/astro-sdk/actions/workflows/ci.yaml/badge.svg)](https://github.com/astronomer/astro-sdk)
 [![codecov](https://codecov.io/gh/astro-projects/astro/branch/main/graph/badge.svg?token=MI4SSE50Q6)](https://codecov.io/gh/astro-projects/astro)
 
 **astro** allows rapid and clean development of {Extract, Load, Transform} workflows using Python.

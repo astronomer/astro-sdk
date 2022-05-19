@@ -27,7 +27,7 @@ with DAG(
 ) as dag:
 
     imdb_movies = aql.load_file(
-        path="https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/imdb.csv",
+        path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv",
         task_id="load_csv",
         output_table=Table(name="imdb_movies", conn_id="sqlite_default"),
     )
