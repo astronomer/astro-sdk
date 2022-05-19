@@ -1,7 +1,7 @@
 from typing import Dict, Optional
 
 from airflow.exceptions import AirflowException
-from airflow.operators.dummy import BaseOperator
+from airflow.models import BaseOperator
 from sqlalchemy.sql.functions import Function
 
 from astro.databases.base import BaseDatabase
