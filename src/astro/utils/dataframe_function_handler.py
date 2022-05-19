@@ -25,10 +25,11 @@ class DataframeFunctionHandler(ABC):
         final_args = []
         for arg in self.op_args:
             if isinstance(arg, pd.DataFrame):
+                df_table = self.output_table.create_new_table()
                 self.database_impl.load_pandas_dataframe_to_table(
-                    source_dataframe=arg, target_table=self.output_table
+                    source_dataframe=arg, target_table=df_table
                 )
-                final_args.append(self.output_table)
+                final_args.append(df_table)
             else:
                 final_args.append(arg)
             self.op_args = tuple(final_args)
@@ -38,10 +39,11 @@ class DataframeFunctionHandler(ABC):
         final_kwargs = {}
         for key, value in self.op_kwargs.items():
             if isinstance(value, pd.DataFrame):
+                df_table = self.output_table.create_new_table()
                 self.database_impl.load_pandas_dataframe_to_table(
-                    source_dataframe=value, target_table=self.output_table
+                    source_dataframe=value, target_table=df_table
                 )
-                final_kwargs[key] = self.output_table
+                final_kwargs[key] = df_table
             else:
                 final_kwargs[key] = value
         self.op_kwargs = final_kwargs

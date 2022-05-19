@@ -70,6 +70,13 @@ class Table:
         )
         return unique_id
 
+    def create_new_table(self):
+        return Table(
+            name=self._create_unique_table_name(),
+            conn_id=self.conn_id,
+            metadata=self.metadata,
+        )
+
     @property
     def sqlalchemy_metadata(self) -> MetaData:
         """Return Sqlalchemy metadata for the given table."""
