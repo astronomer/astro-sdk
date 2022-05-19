@@ -18,17 +18,17 @@ class SqliteDatabase(BaseDatabase):
         super().__init__(conn_id)
 
     @property
-    def hook(self) -> SqliteHook:
+    def hook(self):
         """Retrieve Airflow hook to interface with the Sqlite database."""
         return SqliteHook(sqlite_conn_id=self.conn_id)
 
     @property
     def sqlalchemy_engine(self) -> Engine:
         """Return SQAlchemy engine."""
-        # Airflow uses sqlite3 library and not SqlAlchemy for SqliteHook
-        # and it only uses the hostname directly.
-        airflow_conn = self.hook.get_connection(self.conn_id)
-        return create_engine(f"sqlite:///{airflow_conn.host}")
+        uri = self.hook.get_uri()
+        if "////" not in uri:
+            uri = uri.replace("///", "////")
+        return create_engine(uri)
 
     @property
     def default_metadata(self) -> Metadata:
@@ -44,3 +44,18 @@ class SqliteDatabase(BaseDatabase):
         :param table: The table we want to retrieve the qualified name for.
         """
         return str(table.name)
+
+    def create_schema_if_needed(self, schema):
+        """
+        Since SQLite does not have schemas, we do not need to set a schema here
+        :param schema:
+        :return:
+        """
+
+    def schema_exists(self, schema):
+        """
+
+        :param schema:
+        :return:
+        """
+        return False
