@@ -12,7 +12,9 @@ from astro.utils.dependencies import (
 
 
 def get_hook(
-    conn_id, database, role=None, schema=None, warehouse=None
+    conn_id,
+    database,
+    schema=None,
 ) -> Union[BigQueryHook, PostgresHook, SqliteHook, SnowflakeHook, Type[MissingPackage]]:
     """
     Retrieve the relevant Airflow hook depending on the given arguments.
@@ -24,9 +26,7 @@ def get_hook(
         "snowflake": {
             "snowflake_conn_id": conn_id,
             "database": database,
-            "role": role,
             "schema": schema,
-            "warehouse": warehouse,
         },
         "google_cloud_platform": {"use_legacy_sql": False, "gcp_conn_id": conn_id},
         "bigquery": {"use_legacy_sql": False, "gcp_conn_id": conn_id},

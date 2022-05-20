@@ -67,15 +67,10 @@ class TableHandler:
             self.conn_id = first_table.conn_id or self.conn_id
             self.database = first_table.metadata.database or self.database
             self.schema = first_table.metadata.schema or self.schema
-            self.warehouse = first_table.metadata.warehouse or self.warehouse
-            self.role = first_table.metadata.role or self.role
 
     def populate_output_table(self):
         self.output_table.conn_id = self.output_table.conn_id or self.conn_id
         self.output_table.metadata.database = (
             self.output_table.metadata.database or self.database
-        )
-        self.output_table.warehouse = (
-            self.output_table.metadata.warehouse or self.warehouse
         )
         self.output_table.metadata.schema = self.output_table.metadata.schema or SCHEMA

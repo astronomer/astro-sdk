@@ -16,21 +16,17 @@ def transform(
     python_callable: Optional[Callable] = None,
     multiple_outputs: Optional[bool] = None,
     conn_id: str = "",
-    autocommit: bool = False,
     parameters: Optional[Union[Mapping, Iterable]] = None,
     database: Optional[str] = None,
     schema: Optional[str] = None,
-    warehouse: Optional[str] = None,
 ):
     return transform_decorator(
         python_callable=python_callable,
         multiple_outputs=multiple_outputs,
         conn_id=conn_id,
-        autocommit=autocommit,
         parameters=parameters,
         database=database,
         schema=schema,
-        warehouse=warehouse,
     )
 
 
@@ -38,22 +34,18 @@ def run_raw_sql(
     python_callable: Optional[Callable] = None,
     multiple_outputs: Optional[bool] = None,
     conn_id: str = "",
-    autocommit: bool = False,
     parameters: Optional[Union[Mapping, Iterable]] = None,
     database: Optional[str] = None,
     schema: Optional[str] = None,
-    warehouse: Optional[str] = None,
     handler: Optional[Callable] = None,
 ):
     return transform_decorator(
         python_callable=python_callable,
         multiple_outputs=multiple_outputs,
         conn_id=conn_id,
-        autocommit=autocommit,
         parameters=parameters,
         database=database,
         schema=schema,
-        warehouse=warehouse,
         handler=handler,
         raw_sql=True,
     )

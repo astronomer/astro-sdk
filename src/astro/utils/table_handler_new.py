@@ -3,7 +3,7 @@ from abc import ABC
 from typing import Callable, Optional, Tuple
 
 from astro.databases import create_database
-from astro.sql.table import Metadata, Table
+from astro.sql.table import Table
 
 
 class TableHandler(ABC):
@@ -14,11 +14,9 @@ class TableHandler(ABC):
     python_callable: Callable
     parameters: dict
     output_table: Optional[Table]
-    warehouse: str = ""
     schema: str = ""
     database: str = ""
     conn_id: str = ""
-    role: str = ""
 
     def _set_variables_from_first_table(self):
         """
@@ -74,8 +72,6 @@ class TableHandler(ABC):
             self.conn_id = first_table.conn_id or self.conn_id
             self.database = first_table.metadata.database or self.database
             self.schema = first_table.metadata.schema or self.schema
-            self.warehouse = first_table.metadata.warehouse or self.warehouse
-            self.role = first_table.metadata.role or self.role
 
     def populate_output_table(self):
         """
@@ -84,11 +80,6 @@ class TableHandler(ABC):
         metadata we used to create the table in the first place.
         :return:
         """
-        old_meta: Metadata = self.output_table.metadata
-        meta = Metadata(
-            database=old_meta.database or self.database,
-            warehouse=old_meta.warehouse or self.warehouse,
-            schema=old_meta.schema or self.schema,
-        )
         self.output_table.conn_id = self.output_table.conn_id or self.conn_id
-        self.output_table.metadata = meta
+        database = create_database(self.output_table.conn_id)
+        self.output_table = database.populate_table_metadata(self.output_table)

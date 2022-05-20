@@ -20,13 +20,7 @@ class Metadata:
 
     # This property is used by several databases, including: Postgres, Snowflake and BigQuery ("namespace")
     schema: Union[str, None] = None
-    # All the properties below are Snowflake-specific:
-    account: Union[str, None] = None
     database: Union[str, None] = None
-    host: Union[str, None] = None
-    region: Union[str, None] = None
-    role: Union[str, None] = None
-    warehouse: Union[str, None] = None
 
     def is_empty(self):
         """Check if all the fields are None."""

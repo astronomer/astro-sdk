@@ -18,18 +18,14 @@ class SQLHandler(BaseOperator):
     def __init__(
         self,
         conn_id: str = "",
-        autocommit: bool = False,
         parameters: Optional[dict] = None,
         handler: Optional[Function] = None,
         database: str = "",
         schema: str = "",
-        warehouse: str = "",
-        role: str = "",
         raw_sql: bool = True,
         sql="",
         **kwargs,
     ):
-        self.autocommit = autocommit
         self.parameters: dict = parameters or {}
         self.handler = handler
         self.kwargs = kwargs or {}
@@ -37,8 +33,6 @@ class SQLHandler(BaseOperator):
         self.conn_id = conn_id
         self.database = database
         self.schema = schema
-        self.warehouse = warehouse
-        self.role = role
         self.raw_sql = raw_sql
         self._output_table_name = None
         self._full_output_table_name = None

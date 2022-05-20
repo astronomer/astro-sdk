@@ -19,8 +19,6 @@ class SqlDataframeOperator(DecoratedOperator, DataframeFunctionHandler, TableHan
         conn_id: Optional[str] = None,
         database: Optional[str] = None,
         schema: Optional[str] = None,
-        warehouse: Optional[str] = None,
-        role: Optional[str] = None,
         identifiers_as_lower: Optional[bool] = True,
         **kwargs,
     ):
@@ -38,8 +36,6 @@ class SqlDataframeOperator(DecoratedOperator, DataframeFunctionHandler, TableHan
         self.conn_id = conn_id
         self.database = database
         self.schema = schema
-        self.warehouse = warehouse
-        self.role = role
         self.parameters = None
         self.kwargs = kwargs or {}
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
@@ -93,7 +89,6 @@ class SqlDataframeOperator(DecoratedOperator, DataframeFunctionHandler, TableHan
                 conn_id=self.output_table.conn_id,
                 database=self.output_table.metadata.database,
                 schema=self.output_table.metadata.schema,
-                warehouse=self.output_table.metadata.warehouse,
             )
             load_dataframe_into_sql_table(pandas_dataframe, self.output_table, hook)
             return self.output_table
@@ -108,7 +103,6 @@ class SqlDataframeOperator(DecoratedOperator, DataframeFunctionHandler, TableHan
         """
         return SnowflakeHook(
             snowflake_conn_id=table.conn_id,
-            warehouse=table.metadata.warehouse,
             database=table.metadata.database,
             role=self.role,
             schema=table.metadata.schema,

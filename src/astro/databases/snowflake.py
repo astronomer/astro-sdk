@@ -31,13 +31,8 @@ class SnowflakeDatabase(BaseDatabase):
     def default_metadata(self) -> Metadata:
         connection = self.hook.get_conn()
         return Metadata(
-            host=connection.account,
             schema=connection.schema,
-            warehouse=connection.warehouse,
             database=connection.database,
-            account=connection.account,
-            role=connection.role,
-            region=connection.region,
         )
 
     def load_pandas_dataframe_to_table(
