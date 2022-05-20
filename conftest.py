@@ -18,11 +18,9 @@ from astro.files import File
 from astro.sql.table import Table, create_unique_table_name
 from astro.utils.dependencies import gcs, s3
 from astro.utils.load import load_dataframe_into_sql_table
-from tests.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
-OUTPUT_TABLE_NAME = test_utils.get_table_name("integration_test_table")
 UNIQUE_HASH_SIZE = 16
 CWD = pathlib.Path(__file__).parent
 
@@ -133,9 +131,7 @@ def sql_server(request):
     }
     conn_id = database_name_to_conn_id[sql_name]
     database = create_database(conn_id)
-    t = Table(
-        name=OUTPUT_TABLE_NAME, conn_id=conn_id, metadata=database.default_metadata
-    )
+    t = Table(conn_id=conn_id, metadata=database.default_metadata)
     database.drop_table(t)
     yield sql_name, database.hook
     database.drop_table(t)

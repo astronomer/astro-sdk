@@ -35,7 +35,7 @@ class PostgresDatabase(BaseDatabase):
         database = self.hook.get_connection(self.conn_id).schema
         return Metadata(database=database, schema=SCHEMA)
 
-    def schema_exists(self, schema):
+    def schema_exists(self, schema: str) -> bool:
         """
         Checks if a schema exists in the database
 
