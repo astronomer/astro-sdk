@@ -44,7 +44,6 @@ def type_check(session: nox.Session) -> None:
 @nox.parametrize(
     "extras",
     [
-        ("postgres-only", {"include": ["postgres"], "exclude": ["amazon"]}),
         ("postgres-amazon", {"include": ["postgres", "amazon"]}),
         ("snowflake-amazon", {"include": ["snowflake", "amazon"]}),
         ("sqlite", {"include": ["sqlite"]}),

@@ -60,22 +60,6 @@ def compare(a, b):
 
 
 @task_group
-def run_validation(input_table: Table):
-    agg_validated_table = aql.aggregate_check(
-        input_table,
-        check="select count(*) FROM {{table}}",
-        equal_to=47,
-    )
-    aql.save_file(
-        input_data=agg_validated_table.output,
-        output_file_path="/tmp/out_agg.csv",
-        overwrite=True,
-    )
-
-    # TODO add boolean and stats checks here
-
-
-@task_group
 def run_dataframe_funcs(input_table: Table):
     table_counts = count_dataframes(df1=input_table, df2=input_table)
 
@@ -156,5 +140,9 @@ def test_full_dag(sql_server, sample_dag, test_table):
         run_dataframe_funcs(tranformed_table)
         run_append(output_table)
         run_merge(output_table, merge_keys(sql_server))
-        run_validation(tranformed_table)
+        aql.save_file(
+            input_data=tranformed_table,
+            output_file_path="/tmp/out_agg.csv",
+            overwrite=True,
+        )
     test_utils.run_dag(sample_dag)
