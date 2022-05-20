@@ -57,11 +57,6 @@ class PostgresDatabase(BaseDatabase):
             )
         )
 
-    def get_sqlalchemy_engine(self, table: Table):
-        hook = self.hook
-        # hook.schema = table.metadata.database
-        return hook.get_sqlalchemy_engine()
-
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,
@@ -82,7 +77,7 @@ class PostgresDatabase(BaseDatabase):
         source_dataframe.to_sql(
             schema=target_table.metadata.schema,
             name=target_table.name,
-            con=self.get_sqlalchemy_engine(table=target_table),
+            con=self.sqlalchemy_engine,
             if_exists=if_exists,
             chunksize=chunk_size,
             method="multi",

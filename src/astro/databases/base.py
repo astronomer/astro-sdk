@@ -52,14 +52,6 @@ class BaseDatabase(ABC):
         """Return Sqlalchemy engine."""
         return self.hook.get_sqlalchemy_engine()
 
-    def get_sqlalchemy_engine(self, table: Table):
-        return self.hook.get_sqlalchemy_engine()
-
-    def get_connection(self, table) -> sqlalchemy.engine.base.Connection:
-        """Return a Sqlalchemy connection object for the given database."""
-        eng = self.get_sqlalchemy_engine(table)
-        return eng.connect()
-
     def run_sql(self, sql_statement: str, parameters: Optional[dict] = None):
         """
         Return the results to running a SQL statement.
@@ -87,11 +79,7 @@ class BaseDatabase(ABC):
         """
         table_qualified_name = self.get_table_qualified_name(table)
         inspector = sqlalchemy.inspect(self.sqlalchemy_engine)
-        return bool(
-            inspector.dialect.has_table(
-                self.get_connection(table), table_qualified_name
-            )
-        )
+        return bool(inspector.dialect.has_table(self.connection, table_qualified_name))
 
     # ---------------------------------------------------------
     # Table metadata
@@ -117,17 +105,6 @@ class BaseDatabase(ABC):
         raise NotImplementedError
 
     def populate_table_metadata(self, table: Table):
-        # default = self.default_metadata
-        # table_meta = table.metadata
-        # table.metadata = Metadata(
-        #     schema=table_meta.schema or default.schema,
-        #     role=table_meta.role or default.role,
-        #     warehouse=table_meta.warehouse or default.warehouse,
-        #     database=table_meta.database or default.database,
-        #     account=table_meta.account or default.account,
-        #     region=table_meta.region or default.region
-        # )
-
         if table.metadata and table.metadata.is_empty() and self.default_metadata:
             table.metadata = self.default_metadata
         if not table.metadata.schema:
@@ -258,7 +235,7 @@ class BaseDatabase(ABC):
             return pd.read_sql(
                 # We are avoiding SQL injection by confirming the table exists before this statement
                 f"SELECT * FROM {table_qualified_name}",  # skipcq BAN-B608
-                con=self.get_sqlalchemy_engine(table=source_table),
+                con=self.sqlalchemy_engine,
             )
         raise NonExistentTableException(
             "The table %s does not exist" % table_qualified_name
