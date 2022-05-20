@@ -18,8 +18,6 @@ def test__set_variables_from_first_table_with_same_db_tables_in_op_args():
             metadata=Metadata(
                 database="database_1",
                 schema="scheme_1",
-                warehouse="warehouse_1",
-                role="role_1",
             ),
         ),
         Table(
@@ -27,8 +25,6 @@ def test__set_variables_from_first_table_with_same_db_tables_in_op_args():
             metadata=Metadata(
                 database="database_1",
                 schema="scheme_1",
-                warehouse="warehouse_1",
-                role="role_1",
             ),
         ),
     )
@@ -36,8 +32,6 @@ def test__set_variables_from_first_table_with_same_db_tables_in_op_args():
     assert handler.conn_id == "conn_1"
     assert handler.database == "database_1"
     assert handler.schema == "scheme_1"
-    assert handler.warehouse == "warehouse_1"
-    assert handler.role == "role_1"
 
 
 def test__set_variables_from_first_table_with_different_db_tables_in_op_args():
@@ -56,8 +50,6 @@ def test__set_variables_from_first_table_with_different_db_tables_in_op_args():
             metadata=Metadata(
                 database="database_1",
                 schema="scheme_1",
-                warehouse="warehouse_1",
-                role="role_1",
             ),
         ),
         Table(
@@ -65,8 +57,6 @@ def test__set_variables_from_first_table_with_different_db_tables_in_op_args():
             metadata=Metadata(
                 database="database_2",
                 schema="scheme_2",
-                warehouse="warehouse_2",
-                role="role_2",
             ),
         ),
     )
@@ -86,8 +76,6 @@ def test__set_variables_from_first_table_with_same_db_tables_in_python_callable(
         metadata=Metadata(
             database="database_1",
             schema="scheme_1",
-            warehouse="warehouse_1",
-            role="role_1",
         ),
     )
     table_2 = Table(
@@ -95,8 +83,6 @@ def test__set_variables_from_first_table_with_same_db_tables_in_python_callable(
         metadata=Metadata(
             database="database_1",
             schema="scheme_1",
-            warehouse="warehouse_1",
-            role="role_1",
         ),
     )
 
@@ -116,8 +102,6 @@ def test__set_variables_from_first_table_with_same_db_tables_in_python_callable(
     assert handler.conn_id == "conn_1"
     assert handler.database == "database_1"
     assert handler.schema == "scheme_1"
-    assert handler.warehouse == "warehouse_1"
-    assert handler.role == "role_1"
 
 
 def test__set_variables_from_first_table_with_different_db_tables_in_python_callable():
@@ -127,8 +111,6 @@ def test__set_variables_from_first_table_with_different_db_tables_in_python_call
         metadata=Metadata(
             database="database_1",
             schema="scheme_1",
-            warehouse="warehouse_1",
-            role="role_1",
         ),
     )
     table_2 = Table(
@@ -136,8 +118,6 @@ def test__set_variables_from_first_table_with_different_db_tables_in_python_call
         metadata=Metadata(
             database="database_2",
             schema="scheme_2",
-            warehouse="warehouse_2",
-            role="role_2",
         ),
     )
 
@@ -177,8 +157,6 @@ def test__set_variables_from_first_table_with_same_db_tables_in_parameters():
             metadata=Metadata(
                 database="database_1",
                 schema="scheme_1",
-                warehouse="warehouse_1",
-                role="role_1",
             ),
         ),
         "param_3": Table(
@@ -186,8 +164,6 @@ def test__set_variables_from_first_table_with_same_db_tables_in_parameters():
             metadata=Metadata(
                 database="database_1",
                 schema="scheme_1",
-                warehouse="warehouse_1",
-                role="role_1",
             ),
         ),
     }
@@ -197,8 +173,6 @@ def test__set_variables_from_first_table_with_same_db_tables_in_parameters():
     assert handler.conn_id == "conn_1"
     assert handler.database == "database_1"
     assert handler.schema == "scheme_1"
-    assert handler.warehouse == "warehouse_1"
-    assert handler.role == "role_1"
 
 
 def test__set_variables_from_first_table_with_different_db_tables_in_parameters():
@@ -217,8 +191,6 @@ def test__set_variables_from_first_table_with_different_db_tables_in_parameters(
             metadata=Metadata(
                 database="database_1",
                 schema="scheme_1",
-                warehouse="warehouse_1",
-                role="role_1",
             ),
         ),
         "param_3": Table(
@@ -226,8 +198,6 @@ def test__set_variables_from_first_table_with_different_db_tables_in_parameters(
             metadata=Metadata(
                 database="database_2",
                 schema="scheme_2",
-                warehouse="warehouse_2",
-                role="role_2",
             ),
         ),
     }

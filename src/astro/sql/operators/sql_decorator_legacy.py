@@ -74,9 +74,7 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
         return get_hook(
             conn_id=self.conn_id,
             database=self.database,
-            role=self.role,
             schema=self.schema,
-            warehouse=self.warehouse,
         )
 
     def execute(self, context: Dict):
@@ -306,14 +304,12 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                     metadata=Metadata(
                         database=self.database,
                         schema=self.schema,
-                        warehouse=self.warehouse,
                     ),
                 )
                 hook = get_hook(
                     conn_id=self.conn_id,
                     database=self.database,
                     schema=self.schema,
-                    warehouse=self.warehouse,
                 )
                 load_dataframe_into_sql_table(pandas_dataframe, output_table, hook)
                 final_args.append(output_table)
@@ -333,14 +329,12 @@ class SqlDecoratedOperator(DecoratedOperator, TableHandler):
                     metadata=Metadata(
                         database=self.database,
                         schema=self.schema,
-                        warehouse=self.warehouse,
                     ),
                 )
                 hook = get_hook(
                     conn_id=self.conn_id,
                     database=self.database,
                     schema=self.schema,
-                    warehouse=self.warehouse,
                 )
                 load_dataframe_into_sql_table(pandas_dataframe, output_table, hook)
                 final_kwargs[key] = output_table

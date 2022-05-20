@@ -64,9 +64,6 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
         self.database = (
             self.main_table.metadata.database or self.append_table.metadata.database
         )
-        self.warehouse = (
-            self.main_table.metadata.warehouse or self.append_table.metadata.warehouse
-        )
         self.schema = (
             self.append_table.metadata.schema or self.append_table.metadata.schema
         )
