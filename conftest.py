@@ -104,6 +104,7 @@ def test_table(request, sql_server):  # noqa: C901
         elif database == Database.POSTGRES:
             default_table_options = {
                 "conn_id": hook.postgres_conn_id,
+                "metadata": Metadata(schema=SCHEMA),
             }
         elif database == Database.SQLITE:
             default_table_options = {"conn_id": hook.sqlite_conn_id}
