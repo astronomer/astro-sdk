@@ -16,9 +16,9 @@ cwd = pathlib.Path(__file__).parent
     "sql_server",
     [
         "snowflake",
-        # "postgres",
-        # "bigquery",
-        # "sqlite",
+        "postgres",
+        "bigquery",
+        "sqlite",
     ],
     indirect=True,
 )
