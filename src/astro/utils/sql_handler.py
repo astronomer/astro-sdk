@@ -5,8 +5,7 @@ from airflow.models import BaseOperator
 from sqlalchemy.sql.functions import Function
 
 from astro.databases.base import BaseDatabase
-from astro.settings import SCHEMA
-from astro.sql.table import Metadata, Table
+from astro.sql.table import Table
 
 
 class SQLHandler(BaseOperator):
@@ -46,20 +45,13 @@ class SQLHandler(BaseOperator):
         :return:
         """
         # Create DEFAULT SCHEMA if not created.
-        self.database_impl.create_schema_if_needed(SCHEMA)
         if not self.raw_sql:
             # Create a table name for the temp table
-            self.database_impl.create_schema_if_needed(self.schema)
-            self.database_impl.drop_table(
-                Table(
-                    name=self.output_table_name,
-                    conn_id=self.conn_id,
-                    metadata=Metadata(
-                        schema=self.schema,
-                        database=self.database,
-                    ),
-                )
+            self.database_impl.drop_table(self.output_table)
+            self.database_impl.create_schema_if_needed(
+                self.output_table.metadata.schema
             )
+
         else:
             # If there's no SQL to run we raise an error
             if self.sql == "" or not self.sql:
