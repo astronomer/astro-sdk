@@ -1,12 +1,12 @@
 """
-Unittest module to test Agnostic Load File function.
+Unittest module to test Load File function.
 
 Requires the unittest, pytest, and requests-mock Python libraries.
 
 Run test:
     AWS_ACCESS_KEY_ID=AKIAZG42HVH6Z3B6ELRB \
     AWS_SECRET_ACCESS_KEY=SgwfrcO2NdKpeKhUG77K%2F6B2HuRJJopbHPV84NbY \
-    python3 -m unittest tests.operators.test_agnostic_load_file.TestAgnosticLoadFile.test_aql_local_file_to_postgres
+    python3 -m unittest tests.operators.test_load_file.TestLoadFile.test_aql_local_file_to_postgres
 
 """
 import logging
@@ -23,7 +23,7 @@ from pandas.testing import assert_frame_equal
 from astro.constants import Database, FileType
 from astro.databases import create_database
 from astro.files import File
-from astro.sql.operators.agnostic_load_file import load_file
+from astro.sql.operators.load_file import load_file
 from astro.sql.table import Metadata, Table
 from astro.utils.dependencies import gcs, s3
 from tests.operators import utils as test_utils

@@ -110,8 +110,8 @@ files = [
     "src/astro/sql/__init__.py",
     "src/astro/__init__.py",
     "src/astro/dataframe/__init__.py",
-    "src/astro/sql/operators/agnostic_load_file.py",
-    "src/astro/sql/operators/agnostic_save_file.py",
+    "src/astro/sql/operators/load_file.py",
+    "src/astro/sql/operators/save_file.py",
     "src/astro/sql/operators/agnostic_sql_append.py",
     "src/astro/sql/operators/agnostic_sql_merge.py"
 ]

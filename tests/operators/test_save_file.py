@@ -1,5 +1,5 @@
 """
-Unittest module to test Agnostic Load File function.
+Unittest module to test Load File function.
 
 Requires the unittest, pytest, and requests-mock Python libraries.
 
@@ -28,7 +28,7 @@ from astro.files import File
 from astro.settings import SCHEMA
 
 # Import Operator
-from astro.sql.operators.agnostic_save_file import save_file
+from astro.sql.operators.save_file import save_file
 from astro.sql.table import Metadata
 from astro.utils.dependencies import gcs
 from tests.operators import utils as test_utils
