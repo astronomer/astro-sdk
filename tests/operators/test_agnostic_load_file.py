@@ -50,7 +50,7 @@ def test_load_file_with_http_path_file(sample_dag, test_table, sql_server):
     with sample_dag:
         load_file(
             input_file=File(
-                "https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/homes_main.csv"
+                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/homes_main.csv"
             ),
             output_table=test_table,
         )
