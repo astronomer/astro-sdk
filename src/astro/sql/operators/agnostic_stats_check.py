@@ -221,7 +221,7 @@ class AgnosticStatsCheck(SqlDecoratedOperator):
     def execute(self, context: Dict):
         self.conn_id = self.main_table.conn_id  # type: ignore
         db = create_database(self.conn_id)  # type: ignore
-        self.table = db.populate_table_metadata(self.table)  # type: ignore
+        self.main_table = db.populate_table_metadata(self.main_table)  # type: ignore
         database = create_database_from_conn_id(self.conn_id)
         check_handler = ChecksHandler(self.checks)
 
