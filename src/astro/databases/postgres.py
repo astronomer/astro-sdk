@@ -58,7 +58,7 @@ class PostgresDatabase(BaseDatabase):
 
     def get_sqlalchemy_engine(self, table: Table):
         hook = self.hook
-        hook.schema = table.metadata.database
+        # hook.schema = table.metadata.database
         return hook.get_sqlalchemy_engine()
 
     def load_pandas_dataframe_to_table(
