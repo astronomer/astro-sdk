@@ -146,7 +146,6 @@ A summary of the currently available operations in **astro**. More details are a
   * update: replace existing rows with new ones
 * `save_file`: export SQL table rows into a destination file
 * `dataframe`: export given SQL table into in-memory Pandas data-frame
-* `render`: given a directory containing SQL statements, dynamically create transform tasks within a DAG
 
 ## Documentation
 
