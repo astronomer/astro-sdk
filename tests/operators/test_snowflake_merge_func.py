@@ -51,7 +51,6 @@ class TestSnowflakeMerge(unittest.TestCase):
             metadata=Metadata(
                 database=os.getenv("SNOWFLAKE_DATABASE"),
                 schema=os.getenv("SNOWFLAKE_SCHEMA"),
-                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
             ),
             conn_id="snowflake_conn",
         )
@@ -61,7 +60,6 @@ class TestSnowflakeMerge(unittest.TestCase):
             metadata=Metadata(
                 database=os.getenv("SNOWFLAKE_DATABASE"),
                 schema=os.getenv("SNOWFLAKE_SCHEMA"),
-                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
             ),
             conn_id="snowflake_conn",
         )
