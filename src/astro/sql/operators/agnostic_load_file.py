@@ -17,10 +17,10 @@ class AgnosticLoadFile(BaseOperator):
     """Load S3/local table to postgres/snowflake database
 
     :param input_file: File path and conn_id for object stores
-    :param output_table_name: Name of table to create
-    :param file_conn_id: Airflow connection id of input file (optional)
-    :param output_conn_id: Database connection id
+    :param output_table: Table to create
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
+    :param chunk_size: Specify the number of records in each batch to be written at a time.
+    :param if_exists: Overwrite file if exists. Default False.
     """
 
     template_fields = ("output_table", "input_file")
@@ -61,7 +61,7 @@ class AgnosticLoadFile(BaseOperator):
         """Loads csv/parquet table from local/S3/GCS with Pandas.
         Infers SQL database type based on connection then loads table to db.
         """
-        self.log.info(f"Loading {self.input_file.path} into {self.output_table}...")
+        self.log.info("Loading %s into %s ...", self.input_file.path, self.output_table)
         if_exists = self.if_exists
         for file in get_files(
             input_file.path, input_file.conn_id, normalize_config=self.normalize_config

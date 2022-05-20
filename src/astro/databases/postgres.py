@@ -113,7 +113,7 @@ class PostgresDatabase(BaseDatabase):
 
         :param table: Details of the table we want to check that exists
         """
-        schema = getattr(table.metadata, "schema", None)
-        schema = schema.lower() if schema else None
+        _schema = table.metadata.schema
+        schema = _schema.lower() if _schema else _schema
         inspector = sqlalchemy.inspect(self.sqlalchemy_engine)
         return bool(inspector.dialect.has_table(self.connection, table.name, schema))
