@@ -20,18 +20,18 @@ astro.sql.operators.agnostic\_boolean\_check module
    :undoc-members:
    :show-inheritance:
 
-astro.sql.operators.agnostic\_load\_file module
------------------------------------------------
+astro.sql.operators.load\_file module
+-------------------------------------
 
-.. automodule:: astro.sql.operators.agnostic_load_file
+.. automodule:: astro.sql.operators.load_file
    :members:
    :undoc-members:
    :show-inheritance:
 
-astro.sql.operators.agnostic\_save\_file module
------------------------------------------------
+astro.sql.operators.save\_file module
+-------------------------------------
 
-.. automodule:: astro.sql.operators.agnostic_save_file
+.. automodule:: astro.sql.operators.save_file
    :members:
    :undoc-members:
    :show-inheritance:

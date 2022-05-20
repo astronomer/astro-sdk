@@ -13,7 +13,7 @@ from astro.utils.load import populate_normalize_config
 from astro.utils.task_id_helper import get_task_id
 
 
-class AgnosticLoadFile(BaseOperator):
+class LoadFile(BaseOperator):
     """Load S3/local table to postgres/snowflake database
 
     :param input_file: File path and conn_id for object stores
@@ -87,7 +87,7 @@ def load_file(
     ndjson_normalize_sep: str = "_",
     **kwargs,
 ) -> XComArg:
-    """Convert AgnosticLoadFile into a function that Returns an XComArg object
+    """Convert LoadFile into a function that Returns an XComArg object
     :param input_file: File path and conn_id for object stores
     :param output_table: Table to create
     :param task_id: task id, optional
@@ -102,7 +102,7 @@ def load_file(
     # contain chars like - ?, * etc. Which are not acceptable as task id.
     task_id = task_id if task_id is not None else get_task_id("load_file", "")
 
-    return AgnosticLoadFile(
+    return LoadFile(
         task_id=task_id,
         input_file=input_file,
         output_table=output_table,
