@@ -15,10 +15,8 @@ class SaveFile(BaseOperator):
     """Write SQL table to csv/parquet on local/S3/GCS.
 
     :param input_data: Table to convert to file
-    :param output_file_path: Path and name of table to create.
-    :param output_conn_id: File system connection id (if S3 or GCS).
-    :param overwrite: Overwrite file if exists. Default False.
-    :param output_file_format: file formats, valid values csv/parquet. Default: 'csv'.
+    :param output_file: File object containing the path to the file and connection id.
+    :param if_exists: Overwrite file if exists. Default False.
     """
 
     template_fields = ("input_data", "output_file")
@@ -27,14 +25,12 @@ class SaveFile(BaseOperator):
         self,
         input_data: Union[Table, pd.DataFrame],
         output_file: File,
-        output_conn_id: Optional[str] = None,
         if_exists: ExportExistsStrategy = "exception",
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
         self.output_file = output_file
         self.input_data = input_data
-        self.output_conn_id = output_conn_id
         self.if_exists = if_exists
         self.kwargs = kwargs
 
@@ -44,10 +40,10 @@ class SaveFile(BaseOperator):
         Infers SQL database type based on connection.
         """
         # Infer db type from `input_conn_id`.
-        if type(self.input_data) is Table:
+        if isinstance(self.input_data, Table):
             database = create_database(self.input_data.conn_id)
             df = database.export_table_to_pandas_dataframe(self.input_data)
-        elif type(self.input_data) is pd.DataFrame:
+        elif isinstance(self.input_data, pd.DataFrame):
             df = self.input_data
         else:
             raise ValueError(
