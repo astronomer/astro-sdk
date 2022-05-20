@@ -65,7 +65,7 @@ class TestMissingPackages(unittest.TestCase):
                 str(error.value)
                 == "Error loading the package apache-airflow-providers-google,"
                 " please make sure all the dependencies are installed. try - pip install"
-                " astro-projects[google]"
+                " astro-sdk-python[google]"
             )
 
     def test_missing_postgres_package(self):
@@ -79,7 +79,7 @@ class TestMissingPackages(unittest.TestCase):
                 str(error.value)
                 == "Error loading the package apache-airflow-providers-postgres,"
                 " please make sure all the dependencies are installed. try - pip install"
-                " astro-projects[postgres]"
+                " astro-sdk-python[postgres]"
             )
 
     def test_missing_snowflake_package(self):
@@ -93,5 +93,5 @@ class TestMissingPackages(unittest.TestCase):
                 str(error.value)
                 == "Error loading the package apache-airflow-providers-snowflake,"
                 " please make sure all the dependencies are installed. try - pip install"
-                " astro-projects[snowflake]"
+                " astro-sdk-python[snowflake]"
             )

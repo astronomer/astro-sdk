@@ -9,7 +9,7 @@ else:
 
 
 DEFAULT_CHUNK_SIZE = 1000000
-PYPI_PROJECT_NAME = "astro-projects"
+PYPI_PROJECT_NAME = "astro-sdk-python"
 DEFAULT_SCHEMA = "tmp_astro"
 
 LOAD_DATAFRAME_BYTES_LIMIT = 512000  # takes < 3 seconds

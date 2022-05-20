@@ -79,16 +79,16 @@ To start using `astro`:
 1. Install `astro` by running the following command:
 
     ```shell script
-    pip install astro-projects
+    pip install astro-sdk-python
     ```
 
-    Alternatively, you can add `astro-projects` to your `requirements.txt` file.
+    Alternatively, you can add `astro-sdk-python` to your `requirements.txt` file.
 
 
 2. Installing `astro` with extras(i.e., gcp, snowflake, postgres)
 
     ```shell script
-    pip install astro-projects[google,snowflake,postgres]
+    pip install astro-sdk-python[google,snowflake,postgres]
     ```
 
 3. Set the following environment variable so that `astro` can pass table objects between tasks:
