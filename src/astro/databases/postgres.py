@@ -4,8 +4,9 @@ import pandas as pd
 import sqlalchemy
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
-from astro.constants import DEFAULT_CHUNK_SIZE, DEFAULT_SCHEMA, LoadExistStrategy
+from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 from astro.databases.base import BaseDatabase
+from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = PostgresHook.default_conn_name
@@ -27,8 +28,8 @@ class PostgresDatabase(BaseDatabase):
 
     @property
     def default_metadata(self) -> Metadata:
-        schema = self.hook.get_connection(self.conn_id).schema
-        return Metadata(database=schema, schema=DEFAULT_SCHEMA)
+        database = self.hook.get_connection(self.conn_id).schema
+        return Metadata(database=database, schema=SCHEMA)
 
     def schema_exists(self, schema):
         """
