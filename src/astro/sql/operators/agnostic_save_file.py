@@ -86,7 +86,6 @@ class SaveFile(BaseOperator):
                 "snowflake_conn_id": input_table.conn_id,
                 "database": input_table.metadata.database,
                 "schema": input_table.metadata.schema,
-                "warehouse": input_table.metadata.warehouse,
             },
             Database.BIGQUERY: {
                 "use_legacy_sql": False,
