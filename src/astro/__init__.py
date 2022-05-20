@@ -12,7 +12,7 @@ from astro.dataframe import dataframe  # noqa: F401
 def get_provider_info() -> dict:
     return {
         # Required.
-        "package-name": "astro-projects",
+        "package-name": "astro-sdk-python",
         "name": "Astro SQL Provider",
         "description": __doc__,
         "versions": [__version__],
