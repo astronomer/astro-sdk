@@ -156,7 +156,7 @@ def sql_server(request):
     if hook_parameters is None or hook_class is None:
         raise ValueError(f"Unsupported SQL server {sql_name}")
     hook = hook_class(**hook_parameters)
-    schema = hook_parameters.get("schema", SCHEMA)
+    schema = hook_parameters.get("metadata", Metadata()).schema or SCHEMA
     if not isinstance(hook, BigQueryHook):
         hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
     yield (sql_name, hook)
