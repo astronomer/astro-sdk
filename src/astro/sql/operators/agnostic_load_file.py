@@ -103,6 +103,7 @@ class AgnosticLoadFile(BaseOperator):
             self.output_table.name = create_table_name(context=context)
         db = create_database(self.output_table.conn_id)
         self.output_table = db.populate_table_metadata(self.output_table)
+        db.create_schema_if_needed(self.output_table.metadata.schema)
 
 
 def load_file(
