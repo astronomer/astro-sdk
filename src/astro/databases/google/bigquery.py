@@ -34,6 +34,10 @@ class BigqueryDatabase(BaseDatabase):
 
     @property
     def default_metadata(self) -> Metadata:
+        """
+        Fill in default metadata values for table objects addressing bigquery databases
+        :return:
+        """
         return Metadata(schema=settings.SCHEMA, database=self.hook.project_id)
 
     def schema_exists(self, schema):

@@ -28,6 +28,10 @@ class PostgresDatabase(BaseDatabase):
 
     @property
     def default_metadata(self) -> Metadata:
+        """
+        Fill in default metadata values for table objects addressing postgres databases
+        :return:
+        """
         database = self.hook.get_connection(self.conn_id).schema
         return Metadata(database=database, schema=SCHEMA)
 

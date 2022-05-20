@@ -29,6 +29,10 @@ class SnowflakeDatabase(BaseDatabase):
 
     @property
     def default_metadata(self) -> Metadata:
+        """
+        Fill in default metadata values for table objects addressing snowflake databases
+        :return:
+        """
         connection = self.hook.get_conn()
         return Metadata(
             schema=connection.schema,

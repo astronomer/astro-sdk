@@ -52,17 +52,23 @@ class SqliteDatabase(BaseDatabase):
         return str(table.name)
 
     def populate_table_metadata(self, table: Table):
+        """
+        Since SQLite does not have a concept of tables or schemas, we just return the table as is
+        :param table:
+        :return:
+        """
         return table
 
-    def create_schema_if_needed(self, schema):
+    def create_schema_if_needed(self, schema: str) -> None:
         """
         Since SQLite does not have schemas, we do not need to set a schema here
         :param schema:
         :return:
         """
 
-    def schema_exists(self, schema):
+    def schema_exists(self, schema: str) -> bool:
         """
+        Check if a schema exists. We return false for sqlite since sqlite does not have schemas
 
         :param schema:
         :return:

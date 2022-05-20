@@ -62,6 +62,10 @@ class Table:
         return unique_id
 
     def create_new_table(self):
+        """
+        Create a new table with a unique name but all of the same metadata
+        :return:
+        """
         return Table(
             name=self._create_unique_table_name(),
             conn_id=self.conn_id,
