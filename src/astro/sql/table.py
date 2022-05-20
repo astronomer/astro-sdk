@@ -1,14 +1,14 @@
 import random
 import string
 from dataclasses import dataclass, field, fields
-from typing import List, Optional, Union
+from typing import List, Union
 
 from airflow.models import DagRun, TaskInstance
 from sqlalchemy import Column, MetaData
 
 from astro.constants import UNIQUE_TABLE_NAME_LENGTH
 
-MAX_TABLE_NAME_LENGTH = 45
+MAX_TABLE_NAME_LENGTH = 62
 
 
 @dataclass
@@ -45,18 +45,14 @@ class Table:
     # SQL table itself
     # Some ideas: TableRef, TableMetadata, TableData, TableDataset
     conn_id: str = ""
-    name: str = ""
+    name: Union[str, property] = ""
+    _name: str = field(init=False, repr=False, default="")
     metadata: Metadata = field(default_factory=Metadata)
-    columns: Optional[List[Column]] = None
+    columns: List[Column] = field(default_factory=list)
     temp: bool = False
 
     def __post_init__(self):
-        if self.columns is None:
-            self.columns = []
-
-        if not self.name:
-            self.name = self._create_unique_table_name()
-            # self.metadata.schema = self.metadata.schema or SCHEMA
+        if not self._name:
             self.temp = True
 
     def _create_unique_table_name(self) -> str:
@@ -86,6 +82,18 @@ class Table:
         else:
             alchemy_metadata = MetaData()
         return alchemy_metadata
+
+    @property  # type: ignore
+    def name(self) -> str:
+        if self.temp and not self._name:
+            self._name = self._create_unique_table_name()
+        return self._name
+
+    @name.setter
+    def name(self, value: Union[str, property]) -> None:
+        if not isinstance(value, property):
+            self._name = value
+            self.temp = False
 
 
 # TODO: deprecate by the end of the refactoring

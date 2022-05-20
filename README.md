@@ -18,8 +18,8 @@
 It helps DAG authors to achieve more with less code.
 It is powered by [Apache Airflow](https://airflow.apache.org) and maintained by [Astronomer](https://astronomer.io).
 
-> :warning: **Disclaimer** This project's development status is alpha. In other words, it is not production-ready yet.
-The interfaces may change. We welcome alpha users and brave souls to test it - any feedback is welcome.
+> :warning: **Disclaimer** This project is in a **preview** release state. In other words, it is not production-ready yet.
+The interfaces may change. We welcome users to try out the interfaces and provide us with feedback.
 
 ## Install
 
@@ -146,7 +146,6 @@ A summary of the currently available operations in **astro**. More details are a
   * update: replace existing rows with new ones
 * `save_file`: export SQL table rows into a destination file
 * `dataframe`: export given SQL table into in-memory Pandas data-frame
-* `render`: given a directory containing SQL statements, dynamically create transform tasks within a DAG
 
 ## Documentation
 
