@@ -105,7 +105,15 @@ def test_table(request, sql_server):  # noqa: C901
     yield tables if len(tables) > 1 else tables[0]
 
     for table in tables:
+        hook = database.hook
         database.drop_table(table)
+        if database == Database.SQLITE:
+            hook.run("DROP INDEX IF EXISTS unique_index")
+        elif database in (Database.POSTGRES, Database.POSTGRESQL):
+            # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
+            # Example: tables which are not fixtures and constraints.
+            # This is an aggressive approach towards tearing down:
+            hook.run(f"DROP SCHEMA IF EXISTS {table.metadata.schema} CASCADE")
 
 
 @pytest.fixture
@@ -187,6 +195,7 @@ def database_table_fixture(request):
     table = params.get(
         "table", Table(conn_id=conn_id, metadata=database.default_metadata)
     )
+    database.create_schema_if_needed(table.metadata.schema)
     database.drop_table(table)
     if file:
         database.load_file_to_table(file, table)

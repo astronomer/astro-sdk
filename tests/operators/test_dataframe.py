@@ -53,35 +53,6 @@ def test_dataframe_from_sql_basic(sample_dag, sql_server, test_table):
         == 5
     )
 
-
-@pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
-@pytest.mark.parametrize(
-    "test_table",
-    [
-        {
-            "path": str(CWD) + "/../data/homes2.csv",
-            "load_table": True,
-            "is_temp": False,
-            "param": {
-                "metadata": Metadata(),
-                "name": test_utils.get_table_name("test_stats_check_2"),
-            },
-        }
-    ],
-    indirect=True,
-)
-def test_dataframe_from_sql_partial_table(sample_dag, sql_server, test_table):
-    """Test basic operation of dataframe operator."""
-
-    @df
-    def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
-        return df.sell.count()
-
-    with sample_dag:
-        f = my_df_func(df=test_table, output_table=test_table.create_new_table())
-
-    test_utils.run_dag(sample_dag)
-
     assert (
         XCom.get_one(execution_date=DEFAULT_DATE, key=f.key, task_id=f.operator.task_id)
         == 5
