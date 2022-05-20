@@ -33,7 +33,7 @@ with DAG(
     t1 = aql.load_file(
         task_id="load_from_github_to_bq",
         input_file=File(
-            path="https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/imdb.csv"
+            path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv"
         ),
         output_table=Table(
             name="imdb_movies", conn_id="bigquery", metadata=Metadata(schema="astro")
