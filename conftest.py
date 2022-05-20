@@ -14,9 +14,10 @@ from airflow.utils.session import create_session, provide_session
 
 from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
-from astro.files import File
-from astro.sql.table import Table, create_unique_table_name
-from astro.utils.dependencies import gcs, s3
+from astro.settings import SCHEMA
+from astro.sql.table import Metadata, Table, create_unique_table_name
+from astro.utils.database import get_database_name
+from astro.utils.dependencies import BigQueryHook, gcs, s3
 from astro.utils.load import load_dataframe_into_sql_table
 from tests.operators import utils as test_utils
 
@@ -85,29 +86,54 @@ def test_table(request, sql_server):  # noqa: C901
             tables_params = [request.param]
 
     sql_name, hook = sql_server
-
-    database_name_to_conn_id = {
-        Database.SQLITE.value: "sqlite_default",
-        Database.BIGQUERY.value: "google_cloud_default",
-        Database.POSTGRES.value: "postgres_conn",
-        Database.SNOWFLAKE.value: "snowflake_conn",
-    }
-    conn_id = database_name_to_conn_id[sql_name]
-    database = create_database(conn_id)
+    database = get_database_name(hook)
 
     for table_param in tables_params:
         load_table = table_param.get("load_table", False)
-        t = Table(conn_id=conn_id, metadata=database.default_metadata)
+        override_table_options = table_param.get("param", {})
+
+        if database == Database.SNOWFLAKE:
+            default_table_options = {
+                "conn_id": hook.snowflake_conn_id,
+                "metadata": Metadata(
+                    database=hook.database,
+                    schema=hook.schema,
+                ),
+            }
+        elif database == Database.POSTGRES:
+            default_table_options = {
+                "conn_id": hook.postgres_conn_id,
+                "metadata": Metadata(schema=SCHEMA),
+            }
+        elif database == Database.SQLITE:
+            default_table_options = {"conn_id": hook.sqlite_conn_id}
+        elif database == Database.BIGQUERY:
+            default_table_options = {
+                "conn_id": hook.gcp_conn_id,
+                "metadata": Metadata(schema=SCHEMA),
+            }
+        else:
+            raise ValueError("Unsupported Database")
+
+        default_table_options.update(override_table_options)
+        tables.append(Table(**default_table_options))
         if load_table:
-            database.load_file_to_table(
-                source_file=File(table_param.get("path")), target_table=t
-            )
-        tables.append(t)
+            populate_table(path=table_param.get("path"), table=tables[-1], hook=hook)
 
     yield tables if len(tables) > 1 else tables[0]
 
     for table in tables:
-        database.drop_table(table)
+        db = create_database(table.conn_id)
+        qualified_name = db.get_table_qualified_name(table)
+        if qualified_name:
+            hook.run(f"DROP TABLE IF EXISTS {qualified_name}")
+        if database == Database.SQLITE:
+            hook.run("DROP INDEX IF EXISTS unique_index")
+        elif database in (Database.POSTGRES, Database.POSTGRESQL):
+            # There are some tests (e.g. test_agnostic_merge.py) which create stuff which are not being deleted
+            # Example: tables which are not fixtures and constraints.
+            # This is an aggressive approach towards tearing down:
+            hook.run(f"DROP SCHEMA IF EXISTS {table.metadata.schema} CASCADE;")
 
 
 @pytest.fixture
@@ -125,20 +151,17 @@ def output_table(request):
 def sql_server(request):
     # FIXME: delete this fixture by the end of the refactoring! Use database_table_fixture instead
     sql_name = request.param
-    database_name_to_conn_id = {
-        Database.SQLITE.value: "sqlite_default",
-        Database.BIGQUERY.value: "google_cloud_default",
-        Database.POSTGRES.value: "postgres_conn",
-        Database.SNOWFLAKE.value: "snowflake_conn",
-    }
-    conn_id = database_name_to_conn_id[sql_name]
-    database = create_database(conn_id)
-    t = Table(
-        name=OUTPUT_TABLE_NAME, conn_id=conn_id, metadata=database.default_metadata
-    )
-    database.drop_table(t)
-    yield sql_name, database.hook
-    database.drop_table(t)
+    hook_parameters = test_utils.SQL_SERVER_HOOK_PARAMETERS.get(sql_name)
+    hook_class = test_utils.SQL_SERVER_HOOK_CLASS.get(sql_name)
+    if hook_parameters is None or hook_class is None:
+        raise ValueError(f"Unsupported SQL server {sql_name}")
+    hook = hook_class(**hook_parameters)
+    schema = hook_parameters.get("schema", SCHEMA)
+    if not isinstance(hook, BigQueryHook):
+        hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
+    yield (sql_name, hook)
+    if not isinstance(hook, BigQueryHook):
+        hook.run(f"DROP TABLE IF EXISTS {schema}.{OUTPUT_TABLE_NAME}")
 
 
 @pytest.fixture
