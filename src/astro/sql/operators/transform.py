@@ -8,12 +8,10 @@ from astro.databases import create_database
 from astro.sql.table import Table
 from astro.utils.dataframe_function_handler import DataframeFunctionHandler
 from astro.utils.sql_handler import SQLHandler
-from astro.utils.table_handler_new import TableHandler
+from astro.utils.table_handler_new import find_first_table
 
 
-class TransformOperator(
-    SQLHandler, DataframeFunctionHandler, DecoratedOperator, TableHandler
-):
+class TransformOperator(SQLHandler, DataframeFunctionHandler, DecoratedOperator):
     """Handles all decorator classes that can return a SQL function"""
 
     # todo: Add docstrings
@@ -46,7 +44,19 @@ class TransformOperator(
         )
 
     def execute(self, context: Dict):
-        self._set_variables_from_first_table()
+        first_table = find_first_table(
+            op_args=self.op_args,
+            op_kwargs=self.op_kwargs,
+            python_callable=self.python_callable,
+            parameters=self.parameters,
+        )
+        if first_table:
+            self.conn_id = self.conn_id or first_table.conn_id
+            self.database = self.database or first_table.metadata.database
+            self.schema = self.schema or first_table.metadata.schema
+        else:
+            if not self.conn_id:
+                raise ValueError("You need to provide a table or a connection id")
         self.database_impl = create_database(self.conn_id)
 
         # Find and load dataframes from op_arg and op_kwarg into Table
@@ -86,7 +96,10 @@ class TransformOperator(
         """
         if not self.output_table:
             self.output_table = Table(name=output_table_name)
-        self.populate_output_table()
+        self.output_table.conn_id = self.output_table.conn_id or self.conn_id
+        self.output_table = self.database_impl.populate_table_metadata(
+            self.output_table
+        )
         self.log.info("Returning table %s", self.output_table)
         return self.output_table
 
