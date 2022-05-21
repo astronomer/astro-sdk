@@ -77,27 +77,6 @@ class SnowflakeDatabase(BaseDatabase):
             quote_identifiers=False,
         )
 
-    def get_sqlalchemy_table_identifier(
-        self, table: Table, jinja_table_identifier: str
-    ) -> str:
-        """
-        During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
-        convert a Jinja table identifier to a safe SQLAlchemy-compatible table identifier.
-
-        In  the case of Snowflake, the query:
-            SELECT * FROM {{input_table}};
-        Should become:
-            SELECT * FROM IDENTIFIER(:input_table);
-
-        More information can be found at:
-        https://docs.snowflake.com/en/sql-reference/identifier-literal.html
-
-        :param table: The table object we want to generate a safe table identifier for
-        :param jinja_table_identifier: The name used within the Jinja template to represent this table
-        :return: a table identifier which is safe and SQLAlchemy-compatible
-        """
-        return f"IDENTIFIER(:{jinja_table_identifier})"
-
     def get_sqlalchemy_template_table_identifier_and_parameter(
         self, table: Table, jinja_table_identifier: str
     ) -> Tuple[str, str]:
@@ -113,6 +92,15 @@ class SnowflakeDatabase(BaseDatabase):
             "SELECT * FROM IDENTIFIER(:input_table);"
             parameters = {"input_table": "some_schema.user_defined_table"}
 
+        Example of usage:
+            jinja_table_identifier, jinja_table_parameter_value = \
+                get_sqlalchemy_template_table_identifier_and_parameter(
+                    Table(name="user_defined_table", metadata=Metadata(schema="some_schema"),
+                    "input_table"
+                )
+            assert jinja_table_identifier == "IDENTIFIER(:input_table)"
+            assert jinja_table_parameter_value == "some_schema.user_defined_table"
+
         Since the table value is templated, there is a safety concern (e.g. SQL injection).
         We recommend looking into the documentation of the database and seeing what are the best practices.
         This is the Snowflake documentation:
@@ -120,7 +108,7 @@ class SnowflakeDatabase(BaseDatabase):
 
         :param table: The table object we want to generate a safe table identifier for
         :param jinja_table_identifier: The name used within the Jinja template to represent this table
-        :return: value to replace the table identifier in the query
+        :return: value to replace the table identifier in the query and the value that should be used to replace it
         """
         return f"IDENTIFIER(:{jinja_table_identifier})", self.get_table_qualified_name(
             table

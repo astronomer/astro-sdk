@@ -8,63 +8,6 @@ from sqlalchemy.sql.functions import Function
 
 from astro.databases import create_database
 from astro.sql.table import Table
-from astro.utils.sql_handler import handle_schema
-from astro.utils.table_handler_new import find_first_table
-
-
-def load_op_arg_dataframes_into_sql(
-    conn_id: str, op_args: Tuple, target_table: Table
-) -> Tuple:
-    """
-    Identifies dataframes in op_args and loads them to the table
-
-    :param conn_id:
-    :param op_args:
-    :param target_table:
-    :return:
-    """
-    final_args = []
-    database = create_database(conn_id=conn_id)
-    for arg in op_args:
-        if isinstance(arg, pd.DataFrame):
-            database.load_pandas_dataframe_to_table(
-                source_dataframe=arg, target_table=target_table
-            )
-            final_args.append(target_table)
-        elif isinstance(arg, Table):
-            arg = database.populate_table_metadata(arg)
-            final_args.append(arg)
-        else:
-            final_args.append(arg)
-    return tuple(final_args)
-
-
-def load_op_kwarg_dataframes_into_sql(
-    conn_id: str, op_kwargs: Dict, target_table: Table
-) -> Dict:
-    """
-    Identifies dataframes in op_kwargs and loads them to the table
-
-    :param conn_id:
-    :param op_kwargs:
-    :param target_table:
-    :return:
-    """
-    final_kwargs = {}
-    database = create_database(conn_id=conn_id)
-    for key, value in op_kwargs.items():
-        if isinstance(value, pd.DataFrame):
-            df_table = target_table.create_similar_table()
-            database.load_pandas_dataframe_to_table(
-                source_dataframe=value, target_table=df_table
-            )
-            final_kwargs[key] = df_table
-        elif isinstance(value, Table):
-            value = database.populate_table_metadata(value)
-            final_kwargs[key] = value
-        else:
-            final_kwargs[key] = value
-    return final_kwargs
 
 
 class TransformOperator(DecoratedOperator):
@@ -142,7 +85,10 @@ class TransformOperator(DecoratedOperator):
             else:
                 return None
         else:
-            handle_schema(conn_id=self.conn_id, output_table=self.output_table)
+            self.database_impl.create_schema_if_needed(
+                self.output_table.metadata.schema
+            )
+            self.database_impl.drop_table(self.output_table)
             self.database_impl.create_table_from_select_statement(
                 statement=self.sql,
                 target_table=self.output_table,
@@ -298,3 +244,154 @@ def transform_decorator(
         handler=handler,
         **kwargs,
     )
+
+
+def load_op_arg_dataframes_into_sql(
+    conn_id: str, op_args: Tuple, target_table: Table
+) -> Tuple:
+    """
+    Identifies dataframes in op_args and loads them to the table
+
+    :param conn_id:
+    :param op_args:
+    :param target_table:
+    :return:
+    """
+    final_args = []
+    database = create_database(conn_id=conn_id)
+    for arg in op_args:
+        if isinstance(arg, pd.DataFrame):
+            database.load_pandas_dataframe_to_table(
+                source_dataframe=arg, target_table=target_table
+            )
+            final_args.append(target_table)
+        elif isinstance(arg, Table):
+            arg = database.populate_table_metadata(arg)
+            final_args.append(arg)
+        else:
+            final_args.append(arg)
+    return tuple(final_args)
+
+
+def load_op_kwarg_dataframes_into_sql(
+    conn_id: str, op_kwargs: Dict, target_table: Table
+) -> Dict:
+    """
+    Identifies dataframes in op_kwargs and loads them to the table
+
+    :param conn_id:
+    :param op_kwargs:
+    :param target_table:
+    :return:
+    """
+    final_kwargs = {}
+    database = create_database(conn_id=conn_id)
+    for key, value in op_kwargs.items():
+        if isinstance(value, pd.DataFrame):
+            df_table = target_table.create_similar_table()
+            database.load_pandas_dataframe_to_table(
+                source_dataframe=value, target_table=df_table
+            )
+            final_kwargs[key] = df_table
+        elif isinstance(value, Table):
+            value = database.populate_table_metadata(value)
+            final_kwargs[key] = value
+        else:
+            final_kwargs[key] = value
+    return final_kwargs
+
+
+def _pull_first_table_from_parameters(parameters: Dict) -> Optional[Table]:
+    """
+    When trying to "magically" determine the context of a decorator, we will try to find the first table.
+    This function attempts this by checking parameters
+
+    :param parameters:
+    :return:
+    """
+    first_table = None
+    params_of_table_type = [
+        param for param in parameters.values() if isinstance(param, Table)
+    ]
+    if (
+        len(params_of_table_type) == 1
+        or len({param.conn_id for param in params_of_table_type}) == 1
+    ):
+        first_table = params_of_table_type[0]
+    return first_table
+
+
+def _pull_first_table_from_op_kwargs(
+    op_kwargs: Dict, python_callable: Callable
+) -> Optional[Table]:
+    """
+    When trying to "magically" determine the context of a decorator, we will try to find the first table.
+    This function attempts this by checking op_kwargs
+
+    :param op_kwargs:
+    :param python_callable:
+    :return:
+    """
+    first_table = None
+    kwargs_of_table_type = [
+        op_kwargs[kwarg.name]
+        for kwarg in inspect.signature(python_callable).parameters.values()
+        if isinstance(op_kwargs[kwarg.name], Table)
+    ]
+    if (
+        len(kwargs_of_table_type) == 1
+        or len({kwarg.conn_id for kwarg in kwargs_of_table_type}) == 1
+    ):
+        first_table = kwargs_of_table_type[0]
+    return first_table
+
+
+def _pull_first_table_from_op_args(op_args: Tuple) -> Optional[Table]:
+    """
+    When trying to "magically" determine the context of a decorator, we will try to find the first table.
+    This function attempts this by checking op_args
+
+    :param op_args:
+    :return:
+    """
+    first_table = None
+    args_of_table_type = [arg for arg in op_args if isinstance(arg, Table)]
+    # Check to see if all tables belong to same conn_id. Otherwise, we this can go wrong for cases
+    # 1. When we have tables from different DBs.
+    # 2. When we have tables from different conn_id, since they can be configured with different
+    # database/schema etc.
+    if (
+        len(args_of_table_type) == 1
+        or len({arg.conn_id for arg in args_of_table_type}) == 1
+    ):
+        first_table = args_of_table_type[0]
+    return first_table
+
+
+def find_first_table(
+    op_args: Tuple, op_kwargs: Dict, python_callable: Callable, parameters: Dict
+) -> Optional[Table]:
+    """
+    When we create our SQL operation, we run with the assumption that the first table given is the "main table".
+    This means that a user doesn't need to define default conn_id, database, etc. in the function unless they want
+    to create default values.
+
+    :param op_args:
+    :param op_kwargs:
+    :param python_callable:
+    :param parameters:
+    :return:
+    """
+    first_table: Optional[Table] = None
+    if op_args:
+        first_table = _pull_first_table_from_op_args(op_args=op_args)
+
+    if not first_table and op_kwargs and python_callable:
+        first_table = _pull_first_table_from_op_kwargs(
+            op_kwargs=op_kwargs, python_callable=python_callable
+        )
+
+    # If there is no first table via op_ags or kwargs, we check the parameters
+    if not first_table and parameters:
+        first_table = _pull_first_table_from_parameters(parameters=parameters)
+    return first_table
