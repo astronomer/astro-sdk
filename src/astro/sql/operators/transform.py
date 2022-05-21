@@ -344,7 +344,7 @@ def _pull_first_table_from_op_kwargs(
     return first_table
 
 
-def _pull_first_table_from_op_args(op_args: Tuple) -> Optional[Table]:
+def _find_first_table_from_op_args(op_args: Tuple) -> Optional[Table]:
     """
     When trying to "magically" determine the context of a decorator, we will try to find the first table.
     This function attempts this by checking op_args
