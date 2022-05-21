@@ -332,4 +332,6 @@ class BaseDatabase(ABC):
         :param jinja_table_identifier: The name used within the Jinja template to represent this table
         :return:
         """
-        return self.get_table_qualified_name(table), table
+        return self.get_table_qualified_name(table), self.get_table_qualified_name(
+            table
+        )
