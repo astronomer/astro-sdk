@@ -1,6 +1,7 @@
 """Google BigQuery table implementation."""
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+from google.api_core.exceptions import NotFound as GoogleNotFound
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
@@ -42,11 +43,15 @@ class BigqueryDatabase(BaseDatabase):
 
     def schema_exists(self, schema):
         """
-        Checks if a schema exists in the database
+        Checks if a dataset exists in the BigQuery
 
-        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        :param schema: Bigquery namespace
         """
-        return False
+        try:
+            self.hook.get_dataset(dataset_id=schema)
+        except GoogleNotFound:
+            return False
+        return True
 
     def load_pandas_dataframe_to_table(
         self,
