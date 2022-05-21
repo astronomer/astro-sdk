@@ -100,7 +100,6 @@ class TransformOperator(DecoratedOperator):
         If the user has not supplied an output table, this function creates one from scratch, otherwise populates
         the output table with necessary metadata.
 
-        :param output_table_name:
         :return:
         """
         self.output_table.conn_id = self.output_table.conn_id or self.conn_id
