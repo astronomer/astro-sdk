@@ -4,7 +4,14 @@ from typing import Callable, Dict, Optional, Tuple
 from astro.sql.table import Table
 
 
-def _pull_first_table_from_parameters(parameters) -> Optional[Table]:
+def _pull_first_table_from_parameters(parameters: Dict) -> Optional[Table]:
+    """
+    When trying to "magically" determine the context of a decorator, we will try to find the first table.
+    This function attempts this by checking parameters
+
+    :param parameters:
+    :return:
+    """
     first_table = None
     params_of_table_type = [
         param for param in parameters.values() if isinstance(param, Table)
@@ -17,7 +24,17 @@ def _pull_first_table_from_parameters(parameters) -> Optional[Table]:
     return first_table
 
 
-def _pull_first_table_from_op_kwargs(op_kwargs, python_callable) -> Optional[Table]:
+def _pull_first_table_from_op_kwargs(
+    op_kwargs: Dict, python_callable: Callable
+) -> Optional[Table]:
+    """
+    When trying to "magically" determine the context of a decorator, we will try to find the first table.
+    This function attempts this by checking op_kwargs
+
+    :param op_kwargs:
+    :param python_callable:
+    :return:
+    """
     first_table = None
     kwargs_of_table_type = [
         op_kwargs[kwarg.name]
@@ -32,7 +49,14 @@ def _pull_first_table_from_op_kwargs(op_kwargs, python_callable) -> Optional[Tab
     return first_table
 
 
-def _pull_first_table_from_op_args(op_args) -> Optional[Table]:
+def _pull_first_table_from_op_args(op_args: Tuple) -> Optional[Table]:
+    """
+    When trying to "magically" determine the context of a decorator, we will try to find the first table.
+    This function attempts this by checking op_args
+
+    :param op_args:
+    :return:
+    """
     first_table = None
     args_of_table_type = [arg for arg in op_args if isinstance(arg, Table)]
     # Check to see if all tables belong to same conn_id. Otherwise, we this can go wrong for cases
@@ -54,6 +78,12 @@ def find_first_table(
     When we create our SQL operation, we run with the assumption that the first table given is the "main table".
     This means that a user doesn't need to define default conn_id, database, etc. in the function unless they want
     to create default values.
+
+    :param op_args:
+    :param op_kwargs:
+    :param python_callable:
+    :param parameters:
+    :return:
     """
     first_table: Optional[Table] = None
     if op_args:

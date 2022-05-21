@@ -1,4 +1,5 @@
 import inspect
+from typing import Callable, Dict, Tuple
 
 import pandas as pd
 
@@ -6,8 +7,17 @@ from astro.databases import create_database
 from astro.sql.table import Table
 
 
-def load_op_arg_dataframes_into_sql(conn_id, op_args, target_table):
-    """Identifies dataframes in op_args and loads them to the table"""
+def load_op_arg_dataframes_into_sql(
+    conn_id: str, op_args: Tuple, target_table: Table
+) -> Tuple:
+    """
+    Identifies dataframes in op_args and loads them to the table
+
+    :param conn_id:
+    :param op_args:
+    :param target_table:
+    :return:
+    """
     final_args = []
     database = create_database(conn_id=conn_id)
     for arg in op_args:
@@ -24,8 +34,17 @@ def load_op_arg_dataframes_into_sql(conn_id, op_args, target_table):
     return tuple(final_args)
 
 
-def load_op_kwarg_dataframes_into_sql(conn_id, op_kwargs, target_table):
-    """Identifies dataframes in op_kwargs and loads them to the table"""
+def load_op_kwarg_dataframes_into_sql(
+    conn_id: str, op_kwargs: Dict, target_table: Table
+) -> Dict:
+    """
+    Identifies dataframes in op_kwargs and loads them to the table
+
+    :param conn_id:
+    :param op_kwargs:
+    :param target_table:
+    :return:
+    """
     final_kwargs = {}
     database = create_database(conn_id=conn_id)
     for key, value in op_kwargs.items():
@@ -43,13 +62,15 @@ def load_op_kwarg_dataframes_into_sql(conn_id, op_kwargs, target_table):
     return final_kwargs
 
 
-def load_op_arg_table_into_dataframe(op_args, python_callable):
+def load_op_arg_table_into_dataframe(
+    op_args: Tuple, python_callable: Callable
+) -> Tuple:
     """For dataframe based functions, takes any Table objects from the op_args
     and converts them into local dataframes that can be handled in the python context"""
     full_spec = inspect.getfullargspec(python_callable)
-    op_args = list(op_args)
+    op_args_list = list(op_args)
     ret_args = []
-    for arg in op_args:
+    for arg in op_args_list:
         current_arg = full_spec.args.pop(0)
         if full_spec.annotations[current_arg] == pd.DataFrame and type(arg) is Table:
             ret_args.append(_get_dataframe(arg))
@@ -58,13 +79,15 @@ def load_op_arg_table_into_dataframe(op_args, python_callable):
     return tuple(ret_args)
 
 
-def load_op_kwarg_table_into_dataframe(op_kwargs, python_callable):
+def load_op_kwarg_table_into_dataframe(
+    op_kwargs: Dict, python_callable: Callable
+) -> Dict:
     """For dataframe based functions, takes any Table objects from the op_kwargs
     and converts them into local dataframes that can be handled in the python context"""
     param_types = inspect.signature(python_callable).parameters
     return {
         k: _get_dataframe(v)
-        if param_types.get(k).annotation is pd.DataFrame and type(v) is Table
+        if param_types.get(k).annotation is pd.DataFrame and type(v) is Table  # type: ignore
         else v
         for k, v in op_kwargs.items()
     }
