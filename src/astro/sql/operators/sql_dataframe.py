@@ -32,6 +32,8 @@ def load_op_arg_table_into_dataframe(
     full_spec = inspect.getfullargspec(python_callable)
     op_args_list = list(op_args)
     ret_args = []
+    # We check if the type annotation is of type dataframe to determine that the user actually WANTS
+    # this table to be converted into a dataframe, rather that passed in as a table
     for arg in op_args_list:
         current_arg = full_spec.args.pop(0)
         if full_spec.annotations[current_arg] == pd.DataFrame and isinstance(
@@ -49,6 +51,8 @@ def load_op_kwarg_table_into_dataframe(
     """For dataframe based functions, takes any Table objects from the op_kwargs
     and converts them into local dataframes that can be handled in the python context"""
     param_types = inspect.signature(python_callable).parameters
+    # We check if the type annotation is of type dataframe to determine that the user actually WANTS
+    # this table to be converted into a dataframe, rather that passed in as a table
     return {
         k: _get_dataframe(v)
         if param_types.get(k).annotation is pd.DataFrame and isinstance(v, Table)  # type: ignore
