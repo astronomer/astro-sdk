@@ -7,13 +7,13 @@ from airflow.decorators.base import DecoratedOperator
 from astro.settings import SCHEMA
 from astro.sql.table import Table
 from astro.utils import get_hook
-from astro.utils.dataframe_function_handler import DataframeFunctionHandler
+from astro.utils.dataframe_function_handler import _get_dataframe
 from astro.utils.dependencies import SnowflakeHook
 from astro.utils.load import load_dataframe_into_sql_table
 from astro.utils.table_handler import TableHandler
 
 
-class SqlDataframeOperator(DecoratedOperator, DataframeFunctionHandler, TableHandler):
+class SqlDataframeOperator(DecoratedOperator, TableHandler):
     def __init__(
         self,
         conn_id: Optional[str] = None,
@@ -60,7 +60,9 @@ class SqlDataframeOperator(DecoratedOperator, DataframeFunctionHandler, TableHan
                 full_spec.annotations[current_arg] == pd.DataFrame
                 and type(arg) == Table
             ):
-                ret_args.append(self._get_dataframe(arg))
+                ret_args.append(
+                    _get_dataframe(arg, identifiers_as_lower=self.identifiers_as_lower)
+                )
             else:
                 ret_args.append(arg)
         self.op_args = tuple(ret_args)
@@ -68,7 +70,7 @@ class SqlDataframeOperator(DecoratedOperator, DataframeFunctionHandler, TableHan
     def handle_op_kwargs(self):
         param_types = inspect.signature(self.python_callable).parameters
         self.op_kwargs = {
-            k: self._get_dataframe(v)
+            k: _get_dataframe(v, identifiers_as_lower=self.identifiers_as_lower)
             if param_types.get(k).annotation == pd.DataFrame and type(v) == Table
             else v
             for k, v in self.op_kwargs.items()
@@ -104,7 +106,6 @@ class SqlDataframeOperator(DecoratedOperator, DataframeFunctionHandler, TableHan
         return SnowflakeHook(
             snowflake_conn_id=table.conn_id,
             database=table.metadata.database,
-            role=self.role,
             schema=table.metadata.schema,
             authenticator=None,
             session_parameters=None,

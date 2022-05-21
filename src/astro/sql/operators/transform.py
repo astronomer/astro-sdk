@@ -7,7 +7,6 @@ from sqlalchemy.sql.functions import Function
 from astro.databases import create_database
 from astro.sql.table import Table
 from astro.utils.dataframe_function_handler import (
-    DataframeFunctionHandler,
     load_op_arg_dataframes_into_sql,
     load_op_kwarg_dataframes_into_sql,
 )
@@ -15,7 +14,7 @@ from astro.utils.sql_handler import SQLHandler
 from astro.utils.table_handler_new import find_first_table
 
 
-class TransformOperator(SQLHandler, DataframeFunctionHandler, DecoratedOperator):
+class TransformOperator(SQLHandler, DecoratedOperator):
     """Handles all decorator classes that can return a SQL function"""
 
     # todo: Add docstrings
@@ -49,13 +48,13 @@ class TransformOperator(SQLHandler, DataframeFunctionHandler, DecoratedOperator)
 
     def execute(self, context: Dict):
         first_table = find_first_table(
-            op_args=self.op_args,
+            op_args=self.op_args,  # type: ignore
             op_kwargs=self.op_kwargs,
             python_callable=self.python_callable,
             parameters=self.parameters or {},  # type: ignore
         )
         if first_table:
-            self.conn_id = self.conn_id or first_table.conn_id
+            self.conn_id = self.conn_id or first_table.conn_id  # type: ignore
             self.database = self.database or first_table.metadata.database  # type: ignore
             self.schema = self.schema or first_table.metadata.schema  # type: ignore
         else:
@@ -67,7 +66,7 @@ class TransformOperator(SQLHandler, DataframeFunctionHandler, DecoratedOperator)
         self.output_table = self.create_output_table(self.output_table_name)
         self.op_args = load_op_arg_dataframes_into_sql(
             conn_id=self.conn_id,
-            op_args=self.op_args,
+            op_args=self.op_args,  # type: ignore
             target_table=self.output_table.create_new_table(),
         )
         self.op_kwargs = load_op_kwarg_dataframes_into_sql(
