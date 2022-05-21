@@ -32,7 +32,7 @@ class TransformOperator(DecoratedOperator):
     ):
         self.kwargs = kwargs or {}
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
-        self.output_table: Optional[Table] = self.op_kwargs.pop("output_table", None)
+        self.output_table: Table = self.op_kwargs.pop("output_table", Table())
         self.handler = self.op_kwargs.pop("handler", handler)
         self.conn_id = self.op_kwargs.pop("conn_id", conn_id)
         self.sql = sql
@@ -61,7 +61,7 @@ class TransformOperator(DecoratedOperator):
         self.database_impl = create_database(self.conn_id)
 
         # Find and load dataframes from op_arg and op_kwarg into Table
-        self.output_table = self.create_output_table_if_needed()
+        self.create_output_table_if_needed()
         self.op_args = load_op_arg_dataframes_into_sql(
             conn_id=self.conn_id,
             op_args=self.op_args,  # type: ignore
@@ -107,8 +107,6 @@ class TransformOperator(DecoratedOperator):
         :param output_table_name:
         :return:
         """
-        if not self.output_table:
-            self.output_table = Table()
         self.output_table.conn_id = self.output_table.conn_id or self.conn_id
         self.output_table = self.database_impl.populate_table_metadata(
             self.output_table
