@@ -61,7 +61,7 @@ class TransformOperator(DecoratedOperator):
         self.database_impl = create_database(self.conn_id)
 
         # Find and load dataframes from op_arg and op_kwarg into Table
-        self.output_table = self.create_output_table()
+        self.output_table = self.create_output_table_if_needed()
         self.op_args = load_op_arg_dataframes_into_sql(
             conn_id=self.conn_id,
             op_args=self.op_args,  # type: ignore
@@ -100,7 +100,7 @@ class TransformOperator(DecoratedOperator):
             )
             return self.output_table
 
-    def create_output_table(self) -> Table:
+    def create_output_table_if_needed(self):
         """
         If the user has not supplied an output table, this function creates one from scratch, otherwise populates
         the output table with necessary metadata.
@@ -114,7 +114,6 @@ class TransformOperator(DecoratedOperator):
             self.output_table
         )
         self.log.info("Returning table %s", self.output_table)
-        return self.output_table
 
     def read_sql_from_function(self) -> None:
         """
@@ -163,7 +162,7 @@ class TransformOperator(DecoratedOperator):
         """
 
         # update table name in context based on database
-        context = self.database_impl.add_templates_to_context(self.parameters, context)
+        context = self.database_impl.add_templates_to_context(self.parameters, context)  # type: ignore
 
         # render templating in sql query
         if context:
