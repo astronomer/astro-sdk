@@ -1,16 +1,60 @@
 import inspect
-from typing import Dict, Optional
+from typing import Callable, Dict, Optional, Tuple
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 
+from astro.databases import create_database
 from astro.settings import SCHEMA
 from astro.sql.table import Table
 from astro.utils import get_hook
-from astro.utils.dataframe_function_handler import _get_dataframe
 from astro.utils.dependencies import SnowflakeHook
 from astro.utils.load import load_dataframe_into_sql_table
 from astro.utils.table_handler import TableHandler
+
+
+def _get_dataframe(table: Table, identifiers_as_lower: bool = False) -> pd.DataFrame:
+    """
+    grabs a SQL table and converts it into a dataframe
+    :param table:
+    :return:
+    """
+    database = create_database(table.conn_id)
+    df = database.export_table_to_pandas_dataframe(source_table=table)
+    if identifiers_as_lower:
+        df.columns = [col_label.lower() for col_label in df.columns]
+    return df
+
+
+def load_op_arg_table_into_dataframe(
+    op_args: Tuple, python_callable: Callable
+) -> Tuple:
+    """For dataframe based functions, takes any Table objects from the op_args
+    and converts them into local dataframes that can be handled in the python context"""
+    full_spec = inspect.getfullargspec(python_callable)
+    op_args_list = list(op_args)
+    ret_args = []
+    for arg in op_args_list:
+        current_arg = full_spec.args.pop(0)
+        if full_spec.annotations[current_arg] == pd.DataFrame and type(arg) is Table:
+            ret_args.append(_get_dataframe(arg))
+        else:
+            ret_args.append(arg)
+    return tuple(ret_args)
+
+
+def load_op_kwarg_table_into_dataframe(
+    op_kwargs: Dict, python_callable: Callable
+) -> Dict:
+    """For dataframe based functions, takes any Table objects from the op_kwargs
+    and converts them into local dataframes that can be handled in the python context"""
+    param_types = inspect.signature(python_callable).parameters
+    return {
+        k: _get_dataframe(v)
+        if param_types.get(k).annotation is pd.DataFrame and type(v) is Table  # type: ignore
+        else v
+        for k, v in op_kwargs.items()
+    }
 
 
 class SqlDataframeOperator(DecoratedOperator, TableHandler):
