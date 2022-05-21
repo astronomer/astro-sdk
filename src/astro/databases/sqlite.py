@@ -1,3 +1,5 @@
+from typing import Optional
+
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
@@ -56,7 +58,7 @@ class SqliteDatabase(BaseDatabase):
         """
         return table
 
-    def create_schema_if_needed(self, schema: str) -> None:
+    def create_schema_if_needed(self, schema: Optional[str]) -> None:
         """
         Since SQLite does not have schemas, we do not need to set a schema here.
 

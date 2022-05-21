@@ -382,7 +382,7 @@ def find_first_table(
     """
     first_table: Optional[Table] = None
     if op_args:
-        first_table = _pull_first_table_from_op_args(op_args=op_args)
+        first_table = _find_first_table_from_op_args(op_args=op_args)
 
     if not first_table and op_kwargs and python_callable:
         first_table = _pull_first_table_from_op_kwargs(

@@ -279,7 +279,7 @@ class BaseDatabase(ABC):
     # Schema Management
     # ---------------------------------------------------------
 
-    def create_schema_if_needed(self, schema: str) -> None:
+    def create_schema_if_needed(self, schema: Optional[str]) -> None:
         """
         This function checks if the expected schema exists in the database. If the schema does not exist,
         it will attempt to create it.

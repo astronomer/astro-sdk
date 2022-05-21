@@ -13,7 +13,7 @@ from astro.utils.dependencies import (
 
 def get_hook(
     conn_id: str,
-    database: str,
+    database: Optional[str],
     schema: Optional[str] = None,
 ) -> Union[BigQueryHook, PostgresHook, SqliteHook, SnowflakeHook, Type[MissingPackage]]:
     """
