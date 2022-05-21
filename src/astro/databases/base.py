@@ -288,11 +288,9 @@ class BaseDatabase(ABC):
 
         :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
         """
-        if not schema:
-            return
         # We check if the schema exists first because snowflake will fail on a create schema query even if it
         # doesn't actually create a schema.
-        if not self.schema_exists(schema):
+        if schema and not self.schema_exists(schema):
             statement = self._create_schema_statement.format(schema)
             self.run_sql(statement)
 
