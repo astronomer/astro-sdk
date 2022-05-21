@@ -104,9 +104,22 @@ class BaseDatabase(ABC):
 
     @property
     def default_metadata(self) -> Metadata:
+        """
+        Extract the metadata available within the Airflow connection associated with
+        self.conn_id.
+
+        :return: a Metadata instance
+        """
         raise NotImplementedError
 
     def populate_table_metadata(self, table: Table):
+        """
+        Given a table, check if the table has metadata.
+        If the metadata is missing, and the database has metadata, assign it to the table.
+        If the table schema was not defined by the end, retrieve the user-defined schema.
+
+        :param table: Table to potentially have their metadata changed
+        """
         if table.metadata and table.metadata.is_empty() and self.default_metadata:
             table.metadata = self.default_metadata
         if not table.metadata.schema:
@@ -292,32 +305,28 @@ class BaseDatabase(ABC):
     # Context & Template Rendering methods (Transformations)
     # ---------------------------------------------------------
 
-    def add_templates_to_context(
-        self, parameters: Dict, context: Dict
-    ) -> Dict:  # skipcq
+    def get_sqlalchemy_table_identifier(
+        self, table: Table, jinja_table_identifier: str
+    ) -> str:
         """
-        When running functions through the `aql.transform` and `aql.render` functions, we need to add
-        the parameters given to the SQL statement to the Airflow context dictionary. This is how we can
-        then use jinja to render those parameters into the SQL function when users use the {{}} syntax
-        (e.g. "SELECT * FROM {{input_table}}").
+        During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
+        convert a Jinja table identifier to a safe SQLAlchemy-compatible table identifier.
 
-        With this system we should handle Table objects differently from other variables. Since we will later
-        pass the parameter dictionary into SQLAlchemy, the safest (From a security standpoint) default is to use
-        a `:variable` syntax. This syntax will ensure that SQLAlchemy treats the value as an unsafe template. With
-        Table objects, however, we have to give a raw value or the query will not work. Because of this we recommend
-        looking into the documentation of your database and seeing what best practices exist (e.g. Identifier wrappers
-        in snowflake).
+        For example, the query:
+            SELECT * FROM {{input_table}};
+        Can become (depending on the database):
+            SELECT * FROM some_schema.user_defined_table;
 
-        :param parameters: A Dict of SQL key-value parameters
-        :param context: Airflow Context dictionary
-        :return: Dictionary with values with Table type replaced with the table name
+        Since the table value is templated, there is a safety concern (e.g. SQL injection).
+        We recommend looking into the documentation of the database and seeing what are the best practices.
+        For example, Snowflake:
+        https://docs.snowflake.com/en/sql-reference/identifier-literal.html
+
+        :param table: The table object we want to generate a safe table identifier for
+        :param jinja_table_identifier: The name used within the Jinja template to represent this table
+        :return: a table identifier which is safe and SQLAlchemy-compatible
         """
-        for k, v in parameters.items():
-            if isinstance(v, Table):
-                context[k] = self.get_table_qualified_name(v)
-            else:
-                context[k] = ":" + k
-        return context
+        return self.get_table_qualified_name(table)
 
     def process_sql_parameters(self, parameters: Dict):
         """

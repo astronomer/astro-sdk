@@ -88,7 +88,7 @@ class TransformOperator(DecoratedOperator):
         self.handler = self.op_kwargs.pop("handler", handler)
         self.conn_id = self.op_kwargs.pop("conn_id", conn_id)
         self.sql = sql
-        self.parameters = parameters
+        self.parameters = parameters or {}
         self.database = (self.op_kwargs.pop("database", database),)
         self.schema = (self.op_kwargs.pop("schema", schema),)
         self.raw_sql = raw_sql
@@ -207,14 +207,30 @@ class TransformOperator(DecoratedOperator):
         This function handles all jinja templating to ensure that the SQL statement is ready for
         processing by SQLAlchemy. We use the database object here as different databases will have
         different templating rules.
+
+        When running functions through the `aql.transform` and `aql.render` functions, we need to add
+        the parameters given to the SQL statement to the Airflow context dictionary. This is how we can
+        then use jinja to render those parameters into the SQL function when users use the {{}} syntax
+        (e.g. "SELECT * FROM {{input_table}}").
+
+        With this system we should handle Table objects differently from other variables. Since we will later
+        pass the parameter dictionary into SQLAlchemy, the safest (From a security standpoint) default is to use
+        a `:variable` syntax. This syntax will ensure that SQLAlchemy treats the value as an unsafe template. With
+        Table objects, however, we have to give a raw value or the query will not work. Because of this we recommend
+        looking into the documentation of your database and seeing what best practices exist (e.g. Identifier wrappers
+        in snowflake).
+
         :param context:
         :return:
         """
+        # convert Jinja templating to SQLAlchemy SQL templating, safely converting table identifiers
+        for k, v in self.parameters.items():
+            if isinstance(v, Table):
+                context[k] = self.database_impl.get_sqlalchemy_table_identifier(v, k)
+            else:
+                context[k] = ":" + k
 
-        # update table name in context based on database
-        context = self.database_impl.add_templates_to_context(self.parameters, context)  # type: ignore
-
-        # render templating in sql query
+        # Render templating in sql query
         if context:
             self.sql = self.render_template(self.sql, context)
 
