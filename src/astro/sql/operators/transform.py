@@ -13,7 +13,6 @@ from astro.sql.table import Table
 class TransformOperator(DecoratedOperator):
     """Handles all decorator classes that can return a SQL function"""
 
-    # todo: Add docstrings
     def __init__(
         self,
         conn_id: Optional[str] = None,
@@ -21,8 +20,8 @@ class TransformOperator(DecoratedOperator):
         handler: Optional[Function] = None,
         database: Optional[str] = None,
         schema: Optional[str] = None,
-        raw_sql=False,
-        sql="",
+        raw_sql: bool = False,
+        sql: str = "",
         **kwargs,
     ):
         self.kwargs = kwargs or {}
