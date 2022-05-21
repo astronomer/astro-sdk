@@ -1,4 +1,6 @@
 """Snowflake database implementation."""
+from typing import Tuple
+
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from pandas.io.sql import SQLDatabase
@@ -27,15 +29,13 @@ class SnowflakeDatabase(BaseDatabase):
 
     @property
     def default_metadata(self) -> Metadata:
+        """
+        Fill in default metadata values for table objects addressing snowflake databases
+        """
         connection = self.hook.get_conn()
         return Metadata(
-            host=connection.account,
             schema=connection.schema,
-            warehouse=connection.warehouse,
             database=connection.database,
-            account=connection.account,
-            role=connection.role,
-            region=connection.region,
         )
 
     def load_pandas_dataframe_to_table(
@@ -75,3 +75,55 @@ class SnowflakeDatabase(BaseDatabase):
             chunk_size=chunk_size,
             quote_identifiers=False,
         )
+
+    def get_sqlalchemy_template_table_identifier_and_parameter(
+        self, table: Table, jinja_table_identifier: str
+    ) -> Tuple[str, str]:
+        """
+        During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
+        convert a Jinja table identifier to a safe SQLAlchemy-compatible table identifier.
+
+        For Snowflake, the query:
+            sql_statement = "SELECT * FROM {{input_table}};"
+            parameters = {"input_table": Table(name="user_defined_table", metadata=Metadata(schema="some_schema"))}
+
+        Will become
+            "SELECT * FROM IDENTIFIER(:input_table);"
+            parameters = {"input_table": "some_schema.user_defined_table"}
+
+        Example of usage:
+            jinja_table_identifier, jinja_table_parameter_value = \
+                get_sqlalchemy_template_table_identifier_and_parameter(
+                    Table(name="user_defined_table", metadata=Metadata(schema="some_schema"),
+                    "input_table"
+                )
+            assert jinja_table_identifier == "IDENTIFIER(:input_table)"
+            assert jinja_table_parameter_value == "some_schema.user_defined_table"
+
+        Since the table value is templated, there is a safety concern (e.g. SQL injection).
+        We recommend looking into the documentation of the database and seeing what are the best practices.
+        This is the Snowflake documentation:
+        https://docs.snowflake.com/en/sql-reference/identifier-literal.html
+
+        :param table: The table object we want to generate a safe table identifier for
+        :param jinja_table_identifier: The name used within the Jinja template to represent this table
+        :return: value to replace the table identifier in the query and the value that should be used to replace it
+        """
+        return f"IDENTIFIER(:{jinja_table_identifier})", self.get_table_qualified_name(
+            table
+        )
+
+    def schema_exists(self, schema) -> bool:
+        """
+        Checks if a schema exists in the database
+
+        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        """
+        created_schemas = [
+            x["SCHEMA_NAME"]
+            for x in self.hook.run(
+                "SELECT SCHEMA_NAME from information_schema.schemata WHERE LOWER(SCHEMA_NAME) = %(schema_name)s;",
+                parameters={"schema_name": schema.lower()},
+            )
+        ]
+        return len(created_schemas) == 1

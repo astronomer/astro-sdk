@@ -12,7 +12,6 @@ def dataframe(
     conn_id: str = "",
     database: Optional[str] = None,
     schema: Optional[str] = None,
-    warehouse: Optional[str] = None,
     task_id: Optional[str] = None,
     identifiers_as_lower: Optional[bool] = True,
 ) -> Callable[..., pd.DataFrame]:
@@ -24,7 +23,6 @@ def dataframe(
         "conn_id": conn_id,
         "database": database,
         "schema": schema,
-        "warehouse": warehouse,
         "identifiers_as_lower": identifiers_as_lower,
     }
     if task_id:

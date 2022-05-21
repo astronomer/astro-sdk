@@ -124,6 +124,8 @@ def describe_load_file_into_sql_table():
     )
     def with_supported_postgres(test_table, sql_server):
         database, hook = sql_server
+        db = create_database(test_table.conn_id)
+        db.create_schema_if_needed(test_table.metadata.schema)
         create_table(database, hook, test_table)
 
         filepath = pathlib.Path(CWD.parent, "data/sample.ndjson")
@@ -131,10 +133,12 @@ def describe_load_file_into_sql_table():
         load_file_into_sql_table(
             filepath=filepath,
             filetype=FileType.NDJSON,
-            table_name=test_table.name,
+            table_name=db.get_table_qualified_name(test_table),
             engine=engine,
         )
-        computed = hook.get_pandas_df(f"SELECT * FROM {test_table.name}")
+        computed = hook.get_pandas_df(
+            f"SELECT * FROM {db.get_table_qualified_name(test_table)}"
+        )
         computed = computed.rename(columns=str.lower)
         assert_frame_equal(computed, EXPECTED_DATA)
 
@@ -150,6 +154,8 @@ def describe_load_dataframe_into_sql_table():
     )
     def with_postgres_and_new_schema(session, test_table, sql_server):
         database, hook = sql_server
+        db = create_database(test_table.conn_id)
+        db.create_schema_if_needed(test_table.metadata.schema)
         create_table(database, hook, test_table)
         dataframe = pd.DataFrame([{"id": 27, "name": "Jim Morrison"}])
         test_table.metadata.schema = SCHEMA
@@ -176,6 +182,8 @@ def describe_load_dataframe_into_sql_table():
     )
     def with_database(session, test_table, sql_server):
         database, hook = sql_server
+        db = create_database(test_table.conn_id)
+        db.create_schema_if_needed(test_table.metadata.schema)
         create_table(database, hook, test_table)
         dataframe = pd.DataFrame([{"id": 27, "name": "Jim Morrison"}])
         load_dataframe_into_sql_table(dataframe, test_table, hook)

@@ -4,7 +4,7 @@ import pytest
 
 from astro.databases import create_database
 from astro.settings import SCHEMA
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.operators.sql_decorator_legacy import SqlDecoratedOperator
 from astro.sql.table import Metadata
 from tests.operators import utils as test_utils
 

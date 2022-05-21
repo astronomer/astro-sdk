@@ -186,7 +186,6 @@ def load_file_into_sql_table(
     database_name = get_database_name(engine)
     if database_name not in [Database.POSTGRES, Database.POSTGRESQL]:
         raise ValueError(f"Function not available for {database_name.value}")
-    csv_sep = ","
     with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
         csv_filepath = tmp_file.name
         # At the moment we are using dataframes to convert among filetypes
@@ -201,10 +200,9 @@ def load_file_into_sql_table(
         # The COPY statement only works if we run it from within the server,
         # unless we use psql '\copy' or psycopg `cursor.copy_from`
         with psycopg_conn.cursor() as cursor:
-            cursor.copy_from(
+            cursor.copy_expert(
                 file=tmp_file,
-                table=table_name,
-                sep=csv_sep,
+                sql=f"COPY {table_name} FROM STDIN WITH CSV",
                 size=get_size(csv_filepath),
             )
             psycopg_conn.commit()

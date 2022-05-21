@@ -6,7 +6,7 @@ from sqlalchemy.sql.elements import Cast, ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import Database
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.operators.sql_decorator_legacy import SqlDecoratedOperator
 from astro.sql.table import Table
 from astro.utils.database import get_database_name
 from astro.utils.schema_util import (
@@ -63,9 +63,6 @@ class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
         self.conn_id = self.main_table.conn_id or self.append_table.conn_id
         self.database = (
             self.main_table.metadata.database or self.append_table.metadata.database
-        )
-        self.warehouse = (
-            self.main_table.metadata.warehouse or self.append_table.metadata.warehouse
         )
         self.schema = (
             self.append_table.metadata.schema or self.append_table.metadata.schema

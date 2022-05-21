@@ -22,7 +22,6 @@ SQL_SERVER_HOOK_PARAMETERS = {
         "metadata": Metadata(
             schema=os.getenv("SNOWFLAKE_SCHEMA"),
             database=os.getenv("SNOWFLAKE_DATABASE"),
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
         ),
     },
     "postgres": {"postgres_conn_id": "postgres_conn"},

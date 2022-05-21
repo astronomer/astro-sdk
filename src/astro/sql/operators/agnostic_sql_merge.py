@@ -3,7 +3,7 @@ from typing import Dict, List, Union
 from airflow.exceptions import AirflowException
 
 from astro.constants import Database
-from astro.sql.operators.sql_decorator import SqlDecoratedOperator
+from astro.sql.operators.sql_decorator_legacy import SqlDecoratedOperator
 from astro.sql.table import Table
 from astro.utils.bigquery_merge_func import bigquery_merge_func
 from astro.utils.database import create_database_from_conn_id
@@ -54,7 +54,6 @@ class SqlMergeOperator(SqlDecoratedOperator):
         self.database = self.target_table.metadata.database
         self.conn_id = self.target_table.conn_id
         self.schema = self.target_table.metadata.schema
-        self.warehouse = self.target_table.metadata.warehouse
         if not tables_from_same_db([self.target_table, self.merge_table]):
             raise ValueError(
                 get_error_string_for_multiple_dbs([self.target_table, self.merge_table])
@@ -98,6 +97,6 @@ class SqlMergeOperator(SqlDecoratedOperator):
                 conflict_strategy=self.conflict_strategy,
             )
         else:
-            raise AirflowException("Please pass a postgres conn id")
+            raise AirflowException("Please pass a supported conn id")
         super().execute(context)
         return self.target_table
