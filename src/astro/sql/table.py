@@ -20,13 +20,7 @@ class Metadata:
 
     # This property is used by several databases, including: Postgres, Snowflake and BigQuery ("namespace")
     schema: Union[str, None] = None
-    # All the properties below are Snowflake-specific:
-    account: Union[str, None] = None
     database: Union[str, None] = None
-    host: Union[str, None] = None
-    region: Union[str, None] = None
-    role: Union[str, None] = None
-    warehouse: Union[str, None] = None
 
     def is_empty(self):
         """Check if all the fields are None."""
@@ -66,6 +60,17 @@ class Table:
             for _ in range(MAX_TABLE_NAME_LENGTH - schema_length)
         )
         return unique_id
+
+    # Due to some weird issue in python typing, I can not actually record that this function returns a table
+    def create_similar_table(self):
+        """
+        Create a new table with a unique name but all of the same metadata
+        """
+        return Table(
+            name=self._create_unique_table_name(),
+            conn_id=self.conn_id,
+            metadata=self.metadata,
+        )
 
     @property
     def sqlalchemy_metadata(self) -> MetaData:

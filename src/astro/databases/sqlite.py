@@ -1,3 +1,5 @@
+from typing import Optional
+
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
@@ -37,10 +39,38 @@ class SqliteDatabase(BaseDatabase):
     # ---------------------------------------------------------
     # Table metadata
     # ---------------------------------------------------------
-    def get_table_qualified_name(self, table: Table) -> str:
+    @staticmethod
+    def get_table_qualified_name(table: Table) -> str:
         """
         Return the table qualified name.
 
         :param table: The table we want to retrieve the qualified name for.
         """
         return str(table.name)
+
+    def populate_table_metadata(self, table: Table) -> Table:
+        """
+        Since SQLite does not have a concept of databases or schemas, we just return the table as is,
+        without any modifications.
+
+        :param table:
+        :return:
+        """
+        return table
+
+    def create_schema_if_needed(self, schema: Optional[str]) -> None:
+        """
+        Since SQLite does not have schemas, we do not need to set a schema here.
+
+        :param schema:
+        :return:
+        """
+
+    def schema_exists(self, schema: str) -> bool:
+        """
+        Check if a schema exists. We return false for sqlite since sqlite does not have schemas
+
+        :param schema:
+        :return:
+        """
+        return False

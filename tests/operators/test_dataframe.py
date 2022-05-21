@@ -162,12 +162,12 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(sample_dag, sql_server, test_
     )
 
 
-@pytest.mark.parametrize("sql_server", [Database.SNOWFLAKE.value], indirect=True)
+@pytest.mark.parametrize("sql_server", [Database.POSTGRES.value], indirect=True)
 @pytest.mark.parametrize(
     "test_table",
     [
         {
-            "path": str(CWD) + "/../data/homes2.csv",
+            "path": str(CWD) + "/../data/homes_upper.csv",
             "load_table": True,
             "is_temp": False,
             "param": {
@@ -183,7 +183,7 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(sample_dag, sql_server, test_
     [True, False],
     ids=["identifiers_as_lower=True", "identifiers_as_lower=False"],
 )
-def test_snow_dataframe_with_lower_and_upper_case(
+def test_dataframe_with_lower_and_upper_case(
     sample_dag, sql_server, test_table, identifiers_as_lower
 ):
     """

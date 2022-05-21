@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Optional
+from typing import Optional, Tuple
 
 import pandas as pd
 import sqlalchemy
@@ -13,6 +13,7 @@ from astro.constants import (
 )
 from astro.exceptions import NonExistentTableException
 from astro.files import File
+from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
 
 
@@ -83,7 +84,8 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
     # Table metadata
     # ---------------------------------------------------------
-    def get_table_qualified_name(self, table: Table) -> str:  # skipcq: PYL-R0201
+    @staticmethod
+    def get_table_qualified_name(table: Table) -> str:  # skipcq: PYL-R0201
         """
         Return table qualified name. This is Database-specific.
         For instance, in Sqlite this is the table name. In Snowflake, however, it is the database, schema and table
@@ -101,7 +103,29 @@ class BaseDatabase(ABC):
 
     @property
     def default_metadata(self) -> Metadata:
+        """
+        Extract the metadata available within the Airflow connection associated with
+        self.conn_id.
+
+        :return: a Metadata instance
+        """
         raise NotImplementedError
+
+    def populate_table_metadata(self, table: Table) -> Table:
+        """
+        Given a table, check if the table has metadata.
+        If the metadata is missing, and the database has metadata, assign it to the table.
+        If the table schema was not defined by the end, retrieve the user-defined schema.
+        This method performs the changes in-place and also returns the table.
+
+        :param table: Table to potentially have their metadata changed
+        :return table: Return the modified table
+        """
+        if table.metadata and table.metadata.is_empty() and self.default_metadata:
+            table.metadata = self.default_metadata
+        if not table.metadata.schema:
+            table.metadata.schema = SCHEMA
+        return table
 
     # ---------------------------------------------------------
     # Table creation & deletion methods
@@ -202,7 +226,7 @@ class BaseDatabase(ABC):
         source_table: Table,
         target_table: Table,
         if_conflicts: AppendConflictStrategy = "exception",
-    ):
+    ) -> None:
         """
         Append the source table rows into a destination table.
         The argument `if_conflicts` allows the user to define how to handle conflicts.
@@ -250,3 +274,61 @@ class BaseDatabase(ABC):
 
         df = self.export_table_to_pandas_dataframe(source_table)
         target_file.create_from_dataframe(df)
+
+    # ---------------------------------------------------------
+    # Schema Management
+    # ---------------------------------------------------------
+
+    def create_schema_if_needed(self, schema: Optional[str]) -> None:
+        """
+        This function checks if the expected schema exists in the database. If the schema does not exist,
+        it will attempt to create it.
+
+        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        """
+        # We check if the schema exists first because snowflake will fail on a create schema query even if it
+        # doesn't actually create a schema.
+        if schema and not self.schema_exists(schema):
+            statement = self._create_schema_statement.format(schema)
+            self.run_sql(statement)
+
+    def schema_exists(self, schema: str) -> bool:
+        """
+        Checks if a schema exists in the database
+
+        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        """
+        raise NotImplementedError
+
+    # ---------------------------------------------------------
+    # Context & Template Rendering methods (Transformations)
+    # ---------------------------------------------------------
+
+    def get_sqlalchemy_template_table_identifier_and_parameter(
+        self, table: Table, jinja_table_identifier: str
+    ) -> Tuple[str, str]:
+        """
+        During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
+        convert a Jinja table identifier to a safe SQLAlchemy-compatible table identifier.
+
+        For example, the query:
+            sql_statement = "SELECT * FROM {{input_table}};"
+            parameters = {"input_table": Table(name="user_defined_table", metadata=Metadata(schema="some_schema"))}
+
+        Can become (depending on the database):
+            "SELECT * FROM some_schema.user_defined_table;"
+            parameters = {"input_table": "user_defined_table"}
+
+        Since the table value is templated, there is a safety concern (e.g. SQL injection).
+        We recommend looking into the documentation of the database and seeing what are the best practices.
+        For example, Snowflake:
+        https://docs.snowflake.com/en/sql-reference/identifier-literal.html
+
+        :param table: The table object we want to generate a safe table identifier for
+        :param jinja_table_identifier: The name used within the Jinja template to represent this table
+        :return: value to replace the table identifier in the query and the value that should be used to replace it
+        """
+        return (
+            self.get_table_qualified_name(table),
+            self.get_table_qualified_name(table),
+        )

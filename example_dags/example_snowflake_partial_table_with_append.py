@@ -4,7 +4,7 @@ from datetime import datetime
 import pandas as pd
 from airflow.decorators import dag
 
-from astro import dataframe
+from astro.dataframe import dataframe
 from astro.sql import append, load_file, run_raw_sql, transform, truncate
 from astro.sql.table import Metadata, Table
 
@@ -81,7 +81,6 @@ def example_snowflake_partial_table_with_append():
             conn_id=SNOWFLAKE_CONN_ID,
             metadata=Metadata(
                 database=os.getenv("SNOWFLAKE_DATABASE"),
-                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
                 schema=os.getenv("SNOWFLAKE_SCHEMA"),
             ),
         ),
@@ -94,7 +93,6 @@ def example_snowflake_partial_table_with_append():
             conn_id=SNOWFLAKE_CONN_ID,
             metadata=Metadata(
                 database=os.getenv("SNOWFLAKE_DATABASE"),
-                warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
                 schema=os.getenv("SNOWFLAKE_SCHEMA"),
             ),
         ),

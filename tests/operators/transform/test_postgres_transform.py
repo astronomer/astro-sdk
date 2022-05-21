@@ -50,7 +50,9 @@ def test_postgres_to_dataframe_partial_output(output_table, dag):
     with dag:
         pg_output = sample_pg(
             input_table=Table(
-                name="actor", conn_id="postgres_conn_pagila", metadata=Metadata()
+                name="actor",
+                conn_id="postgres_conn_pagila",
+                metadata=Metadata(schema="public"),
             ),
             output_table=output_table,
         )
@@ -74,7 +76,9 @@ def test_with_invalid_dag_name(sample_dag):
     with sample_dag:
         pg_table = pg_query(
             input_table=Table(
-                name="actor", conn_id="postgres_conn_pagila", metadata=Metadata()
+                name="actor",
+                conn_id="postgres_conn_pagila",
+                metadata=Metadata(schema="public"),
             )
         )
         validate(pg_table)
@@ -114,7 +118,9 @@ def test_postgres(sample_dag, pg_query_result):
     with sample_dag:
         pg_table = pg_query(
             input_table=Table(
-                name="actor", conn_id="postgres_conn_pagila", metadata=Metadata()
+                name="actor",
+                conn_id="postgres_conn_pagila",
+                metadata=Metadata(schema="public"),
             )
         )
         validate(pg_table)
@@ -145,7 +151,9 @@ def test_postgres_join(sample_dag, test_table, sql_server):
             actor=Table(
                 name="actor", conn_id="postgres_conn_pagila", metadata=Metadata()
             ),
-            film_actor_join=Table(name="film_actor", metadata=Metadata()),
+            film_actor_join=Table(
+                name="film_actor", metadata=Metadata(schema="public")
+            ),
             unsafe_parameter="G%%",
             output_table=test_table,
         )

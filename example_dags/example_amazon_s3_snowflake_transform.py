@@ -28,7 +28,7 @@ def clean_data(input_table: Table):
 @df(identifiers_as_lower=False)
 def aggregate_data(df: pd.DataFrame):
     adoption_reporting_dataframe = df.pivot_table(
-        index="DATE", values="NAME", columns=["TYPE"], aggfunc="count"
+        index="date", values="name", columns=["type"], aggfunc="count"
     ).reset_index()
 
     return adoption_reporting_dataframe
