@@ -16,8 +16,6 @@ from astro.utils.table_handler import TableHandler
 def _get_dataframe(table: Table, identifiers_as_lower: bool = False) -> pd.DataFrame:
     """
     Exports records from a SQL table and converts it into a pandas dataframe
-    :param table:
-    :return:
     """
     database = create_database(table.conn_id)
     df = database.export_table_to_pandas_dataframe(source_table=table)
