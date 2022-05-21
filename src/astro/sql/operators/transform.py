@@ -223,7 +223,7 @@ class TransformOperator(DecoratedOperator):
         :return:
         """
         # convert Jinja templating to SQLAlchemy SQL templating, safely converting table identifiers
-        for k, v in self.parameters:
+        for k, v in self.parameters.items():
             if isinstance(v, Table):
                 (
                     jinja_table_identifier,
@@ -235,8 +235,6 @@ class TransformOperator(DecoratedOperator):
                 self.parameters[k] = jinja_table_parameter_value
             else:
                 context[k] = ":" + k
-
-        self.parameters = self.database_impl.process_sql_parameters(self.parameters)
 
         # Render templating in sql query
         if context:
