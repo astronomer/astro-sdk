@@ -9,6 +9,43 @@ from astro.databases.base import BaseDatabase
 from astro.sql.table import Table
 
 
+def load_op_arg_dataframes_into_sql(conn_id, op_args, target_table):
+    """Identifies dataframes in op_args and loads them to the table"""
+    final_args = []
+    database = create_database(conn_id=conn_id)
+    for arg in op_args:
+        if isinstance(arg, pd.DataFrame):
+            database.load_pandas_dataframe_to_table(
+                source_dataframe=arg, target_table=target_table
+            )
+            final_args.append(target_table)
+        elif isinstance(arg, Table):
+            arg = database.populate_table_metadata(arg)
+            final_args.append(arg)
+        else:
+            final_args.append(arg)
+        return tuple(final_args)
+
+
+def load_op_kwarg_dataframes_into_sql(conn_id, op_kwargs, target_table):
+    """Identifies dataframes in op_kwargs and loads them to the table"""
+    final_kwargs = {}
+    database = create_database(conn_id=conn_id)
+    for key, value in op_kwargs.items():
+        if isinstance(value, pd.DataFrame):
+            df_table = target_table.create_new_table()
+            database.load_pandas_dataframe_to_table(
+                source_dataframe=value, target_table=df_table
+            )
+            final_kwargs[key] = df_table
+        elif isinstance(value, Table):
+            value = database.populate_table_metadata(value)
+            final_kwargs[key] = value
+        else:
+            final_kwargs[key] = value
+    return final_kwargs
+
+
 class DataframeFunctionHandler(ABC):
     """Contains functions for converting to dataframe or converting from dataframe"""
 
@@ -19,40 +56,6 @@ class DataframeFunctionHandler(ABC):
     python_callable: Callable
     identifiers_as_lower: bool = False
     conn_id: str = ""
-
-    def load_op_arg_dataframes_into_sql(self):
-        """Identifies dataframes in op_args and loads them to the table"""
-        final_args = []
-        for arg in self.op_args:
-            if isinstance(arg, pd.DataFrame):
-                df_table = self.output_table.create_new_table()
-                self.database_impl.load_pandas_dataframe_to_table(
-                    source_dataframe=arg, target_table=df_table
-                )
-                final_args.append(df_table)
-            elif isinstance(arg, Table):
-                arg = self.database_impl.populate_table_metadata(arg)
-                final_args.append(arg)
-            else:
-                final_args.append(arg)
-            self.op_args = tuple(final_args)
-
-    def load_op_kwarg_dataframes_into_sql(self):
-        """Identifies dataframes in op_kwargs and loads them to the table"""
-        final_kwargs = {}
-        for key, value in self.op_kwargs.items():
-            if isinstance(value, pd.DataFrame):
-                df_table = self.output_table.create_new_table()
-                self.database_impl.load_pandas_dataframe_to_table(
-                    source_dataframe=value, target_table=df_table
-                )
-                final_kwargs[key] = df_table
-            elif isinstance(value, Table):
-                value = self.database_impl.populate_table_metadata(value)
-                final_kwargs[key] = value
-            else:
-                final_kwargs[key] = value
-        self.op_kwargs = final_kwargs
 
     def load_op_arg_table_into_dataframe(self):
         """For dataframe based functions, takes any Table objects from the op_args

@@ -1,5 +1,5 @@
 import inspect
-from typing import Optional
+from typing import Callable, Dict, Optional, Tuple
 
 from astro.sql.table import Table
 
@@ -48,7 +48,7 @@ def _pull_first_table_from_op_args(op_args) -> Optional[Table]:
 
 
 def find_first_table(
-    op_args, op_kwargs, python_callable, parameters
+    op_args: Tuple, op_kwargs: Dict, python_callable: Callable, parameters: Dict
 ) -> Optional[Table]:
     """
     When we create our SQL operation, we run with the assumption that the first table given is the "main table".

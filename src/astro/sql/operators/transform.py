@@ -6,7 +6,11 @@ from sqlalchemy.sql.functions import Function
 
 from astro.databases import create_database
 from astro.sql.table import Table
-from astro.utils.dataframe_function_handler import DataframeFunctionHandler
+from astro.utils.dataframe_function_handler import (
+    DataframeFunctionHandler,
+    load_op_arg_dataframes_into_sql,
+    load_op_kwarg_dataframes_into_sql,
+)
 from astro.utils.sql_handler import SQLHandler
 from astro.utils.table_handler_new import find_first_table
 
@@ -48,21 +52,29 @@ class TransformOperator(SQLHandler, DataframeFunctionHandler, DecoratedOperator)
             op_args=self.op_args,
             op_kwargs=self.op_kwargs,
             python_callable=self.python_callable,
-            parameters=self.parameters,
+            parameters=self.parameters or {},  # type: ignore
         )
         if first_table:
             self.conn_id = self.conn_id or first_table.conn_id
-            self.database = self.database or first_table.metadata.database
-            self.schema = self.schema or first_table.metadata.schema
+            self.database = self.database or first_table.metadata.database  # type: ignore
+            self.schema = self.schema or first_table.metadata.schema  # type: ignore
         else:
             if not self.conn_id:
                 raise ValueError("You need to provide a table or a connection id")
         self.database_impl = create_database(self.conn_id)
 
         # Find and load dataframes from op_arg and op_kwarg into Table
-        self.create_output_table(self.output_table_name)
-        self.load_op_arg_dataframes_into_sql()
-        self.load_op_kwarg_dataframes_into_sql()
+        self.output_table = self.create_output_table(self.output_table_name)
+        self.op_args = load_op_arg_dataframes_into_sql(
+            conn_id=self.conn_id,
+            op_args=self.op_args,
+            target_table=self.output_table.create_new_table(),
+        )
+        self.op_kwargs = load_op_kwarg_dataframes_into_sql(
+            conn_id=self.conn_id,
+            op_kwargs=self.op_kwargs,
+            target_table=self.output_table.create_new_table(),
+        )
 
         # Get SQL from function and render templates in the SQL String
         self.read_sql_from_function()
