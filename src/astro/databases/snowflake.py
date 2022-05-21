@@ -1,5 +1,5 @@
 """Snowflake database implementation."""
-from typing import Dict
+from typing import Tuple
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -98,12 +98,33 @@ class SnowflakeDatabase(BaseDatabase):
         """
         return f"IDENTIFIER(:{jinja_table_identifier})"
 
-    def process_sql_parameters(self, parameters: Dict) -> Dict:
-        """Used in conjunction with add_templates_to_context to pass the name of the table"""
-        return {
-            k: (self.get_table_qualified_name(v) if isinstance(v, Table) else v)
-            for k, v in parameters.items()
-        }
+    def get_sqlalchemy_template_table_identifier_and_parameter(
+        self, table: Table, jinja_table_identifier: str
+    ) -> Tuple[str, str]:
+        """
+        During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
+        convert a Jinja table identifier to a safe SQLAlchemy-compatible table identifier.
+
+        For Snowflake, the query:
+            sql_statement = "SELECT * FROM {{input_table}};"
+            parameters = {"input_table": Table(name="user_defined_table", metadata=Metadata(schema="some_schema"))}
+
+        Will become
+            "SELECT * FROM IDENTIFIER(:input_table);"
+            parameters = {"input_table": "some_schema.user_defined_table"}
+
+        Since the table value is templated, there is a safety concern (e.g. SQL injection).
+        We recommend looking into the documentation of the database and seeing what are the best practices.
+        This is the Snowflake documentation:
+        https://docs.snowflake.com/en/sql-reference/identifier-literal.html
+
+        :param table: The table object we want to generate a safe table identifier for
+        :param jinja_table_identifier: The name used within the Jinja template to represent this table
+        :return: value to replace the table identifier in the query
+        """
+        return f"IDENTIFIER(:{jinja_table_identifier})", self.get_table_qualified_name(
+            table
+        )
 
     def schema_exists(self, schema) -> bool:
         """

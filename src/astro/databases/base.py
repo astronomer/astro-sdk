@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Dict, Optional
+from typing import Optional, Tuple
 
 import pandas as pd
 import sqlalchemy
@@ -308,17 +308,20 @@ class BaseDatabase(ABC):
     # Context & Template Rendering methods (Transformations)
     # ---------------------------------------------------------
 
-    def get_sqlalchemy_table_identifier(
+    def get_sqlalchemy_template_table_identifier_and_parameter(
         self, table: Table, jinja_table_identifier: str
-    ) -> str:
+    ) -> Tuple[str, str]:
         """
         During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
         convert a Jinja table identifier to a safe SQLAlchemy-compatible table identifier.
 
         For example, the query:
-            SELECT * FROM {{input_table}};
+            sql_statement = "SELECT * FROM {{input_table}};"
+            parameters = {"input_table": Table(name="user_defined_table", metadata=Metadata(schema="some_schema"))}
+
         Can become (depending on the database):
-            SELECT * FROM some_schema.user_defined_table;
+            "SELECT * FROM some_schema.user_defined_table;"
+            parameters = {"input_table": "user_defined_table"}
 
         Since the table value is templated, there is a safety concern (e.g. SQL injection).
         We recommend looking into the documentation of the database and seeing what are the best practices.
@@ -327,13 +330,6 @@ class BaseDatabase(ABC):
 
         :param table: The table object we want to generate a safe table identifier for
         :param jinja_table_identifier: The name used within the Jinja template to represent this table
-        :return: a table identifier which is safe and SQLAlchemy-compatible
+        :return:
         """
-        return self.get_table_qualified_name(table)
-
-    def process_sql_parameters(self, parameters: Dict):
-        """
-        Used for DB-specific processing on parameters. It is used in Snowflake in conjunction with
-        add_templates_to_context to pass the name of the table
-        """
-        return parameters
+        return self.get_table_qualified_name(table), table

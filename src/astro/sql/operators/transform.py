@@ -128,9 +128,7 @@ class TransformOperator(DecoratedOperator):
         # Get SQL from function and render templates in the SQL String
         self.read_sql_from_function()
         self.move_function_params_into_sql_params(context)
-        self.template(context)
-        self.parameters = self.database_impl.process_sql_parameters(self.parameters)  # type: ignore
-
+        self.translate_jinja_to_sqlalchemy_template(context)
         # if there is no SQL to run we raise an error
         if self.sql == "" or not self.sql:
             raise AirflowException("There's no SQL to run")
@@ -156,6 +154,7 @@ class TransformOperator(DecoratedOperator):
         """
         If the user has not supplied an output table, this function creates one from scratch, otherwise populates
         the output table with necessary metadata.
+
         :param output_table_name:
         :return:
         """
@@ -202,7 +201,7 @@ class TransformOperator(DecoratedOperator):
                 k: self.render_template(v, context) for k, v in self.parameters.items()  # type: ignore
             }
 
-    def template(self, context: Dict):
+    def translate_jinja_to_sqlalchemy_template(self, context: Dict) -> None:
         """
         This function handles all jinja templating to ensure that the SQL statement is ready for
         processing by SQLAlchemy. We use the database object here as different databases will have
@@ -224,11 +223,20 @@ class TransformOperator(DecoratedOperator):
         :return:
         """
         # convert Jinja templating to SQLAlchemy SQL templating, safely converting table identifiers
-        for k, v in self.parameters.items():
+        for k, v in self.parameters:
             if isinstance(v, Table):
-                context[k] = self.database_impl.get_sqlalchemy_table_identifier(v, k)
+                (
+                    jinja_table_identifier,
+                    jinja_table_parameter_value,
+                ) = self.database_impl.get_sqlalchemy_template_table_identifier_and_parameter(
+                    v, k
+                )
+                context[k] = jinja_table_identifier
+                self.parameters[k] = jinja_table_parameter_value
             else:
                 context[k] = ":" + k
+
+        self.parameters = self.database_impl.process_sql_parameters(self.parameters)
 
         # Render templating in sql query
         if context:
