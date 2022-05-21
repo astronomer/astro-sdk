@@ -1,11 +1,8 @@
 import inspect
-from abc import ABC
-from typing import Callable, Dict, Optional, Tuple
 
 import pandas as pd
 
 from astro.databases import create_database
-from astro.databases.base import BaseDatabase
 from astro.sql.table import Table
 
 
@@ -58,14 +55,14 @@ def load_op_arg_table_into_dataframe(op_args, python_callable):
             ret_args.append(_get_dataframe(arg))
         else:
             ret_args.append(arg)
-    op_args = tuple(ret_args)
+    return tuple(ret_args)
 
 
 def load_op_kwarg_table_into_dataframe(op_kwargs, python_callable):
     """For dataframe based functions, takes any Table objects from the op_kwargs
     and converts them into local dataframes that can be handled in the python context"""
     param_types = inspect.signature(python_callable).parameters
-    op_kwargs = {
+    return {
         k: _get_dataframe(v)
         if param_types.get(k).annotation is pd.DataFrame and type(v) is Table
         else v
@@ -84,15 +81,3 @@ def _get_dataframe(table: Table, identifiers_as_lower: bool = False) -> pd.DataF
     if identifiers_as_lower:
         df.columns = [col_label.lower() for col_label in df.columns]
     return df
-
-
-class DataframeFunctionHandler(ABC):
-    """Contains functions for converting to dataframe or converting from dataframe"""
-
-    database_impl: BaseDatabase
-    output_table: Optional[Table]
-    op_args: Tuple
-    op_kwargs: Dict
-    python_callable: Callable
-    identifiers_as_lower: bool = False
-    conn_id: str = ""

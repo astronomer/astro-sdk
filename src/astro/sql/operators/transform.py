@@ -2,6 +2,7 @@ import inspect
 from typing import Callable, Dict, Iterable, Mapping, Optional, Union
 
 from airflow.decorators.base import DecoratedOperator, task_decorator_factory
+from airflow.exceptions import AirflowException
 from sqlalchemy.sql.functions import Function
 
 from astro.databases import create_database
@@ -10,11 +11,11 @@ from astro.utils.dataframe_function_handler import (
     load_op_arg_dataframes_into_sql,
     load_op_kwarg_dataframes_into_sql,
 )
-from astro.utils.sql_handler import SQLHandler
+from astro.utils.sql_handler import handle_schema
 from astro.utils.table_handler_new import find_first_table
 
 
-class TransformOperator(SQLHandler, DecoratedOperator):
+class TransformOperator(DecoratedOperator):
     """Handles all decorator classes that can return a SQL function"""
 
     # todo: Add docstrings
@@ -33,16 +34,13 @@ class TransformOperator(SQLHandler, DecoratedOperator):
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
         self.output_table: Optional[Table] = self.op_kwargs.pop("output_table", None)
         self.handler = self.op_kwargs.pop("handler", handler)
+        self.conn_id = self.op_kwargs.pop("conn_id", conn_id)
         self.sql = sql
-
+        self.parameters = parameters
+        self.database = (self.op_kwargs.pop("database", database),)
+        self.schema = (self.op_kwargs.pop("schema", schema),)
+        self.raw_sql = raw_sql
         super().__init__(
-            sql=sql,
-            handler=self.handler,
-            parameters=parameters,
-            conn_id=self.op_kwargs.pop("conn_id", conn_id),
-            database=self.op_kwargs.pop("database", database),
-            schema=self.op_kwargs.pop("schema", schema),
-            raw_sql=raw_sql,
             **kwargs,
         )
 
@@ -63,7 +61,7 @@ class TransformOperator(SQLHandler, DecoratedOperator):
         self.database_impl = create_database(self.conn_id)
 
         # Find and load dataframes from op_arg and op_kwarg into Table
-        self.output_table = self.create_output_table(self.output_table_name)
+        self.output_table = self.create_output_table()
         self.op_args = load_op_arg_dataframes_into_sql(
             conn_id=self.conn_id,
             op_args=self.op_args,  # type: ignore
@@ -80,7 +78,10 @@ class TransformOperator(SQLHandler, DecoratedOperator):
         self.move_function_params_into_sql_params(context)
         self.template(context)
         self.parameters = self.database_impl.process_sql_parameters(self.parameters)  # type: ignore
-        self.handle_schema()
+
+        # if there is no SQL to run we raise an error
+        if self.sql == "" or not self.sql:
+            raise AirflowException("There's no SQL to run")
 
         if self.raw_sql:
             result = self.database_impl.run_sql(
@@ -91,6 +92,7 @@ class TransformOperator(SQLHandler, DecoratedOperator):
             else:
                 return None
         else:
+            handle_schema(conn_id=self.conn_id, output_table=self.output_table)
             self.database_impl.create_table_from_select_statement(
                 statement=self.sql,
                 target_table=self.output_table,
@@ -98,7 +100,7 @@ class TransformOperator(SQLHandler, DecoratedOperator):
             )
             return self.output_table
 
-    def create_output_table(self, output_table_name: str) -> Table:
+    def create_output_table(self) -> Table:
         """
         If the user has not supplied an output table, this function creates one from scratch, otherwise populates
         the output table with necessary metadata.
@@ -106,7 +108,7 @@ class TransformOperator(SQLHandler, DecoratedOperator):
         :return:
         """
         if not self.output_table:
-            self.output_table = Table(name=output_table_name)
+            self.output_table = Table()
         self.output_table.conn_id = self.output_table.conn_id or self.conn_id
         self.output_table = self.database_impl.populate_table_metadata(
             self.output_table
@@ -150,6 +152,22 @@ class TransformOperator(SQLHandler, DecoratedOperator):
             self.parameters = {
                 k: self.render_template(v, context) for k, v in self.parameters.items()  # type: ignore
             }
+
+    def template(self, context: Dict):
+        """
+        This function handles all jinja templating to ensure that the SQL statement is ready for
+        processing by SQLAlchemy. We use the database object here as different databases will have
+        different templating rules.
+        :param context:
+        :return:
+        """
+
+        # update table name in context based on database
+        context = self.database_impl.add_templates_to_context(self.parameters, context)
+
+        # render templating in sql query
+        if context:
+            self.sql = self.render_template(self.sql, context)
 
 
 def _transform_task(
