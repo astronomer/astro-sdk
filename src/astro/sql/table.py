@@ -61,7 +61,8 @@ class Table:
         )
         return unique_id
 
-    def create_similar_table(self) -> Table:
+    # Due to some weird issue in python typing, I can not actually record that this function returns a table
+    def create_similar_table(self):
         """
         Create a new table with a unique name but all of the same metadata
         """

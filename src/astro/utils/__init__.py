@@ -1,4 +1,4 @@
-from typing import Type, Union
+from typing import Optional, Type, Union
 
 from airflow.hooks.base import BaseHook
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
@@ -12,9 +12,9 @@ from astro.utils.dependencies import (
 
 
 def get_hook(
-    conn_id,
-    database,
-    schema=None,
+    conn_id: str,
+    database: str,
+    schema: Optional[str] = None,
 ) -> Union[BigQueryHook, PostgresHook, SqliteHook, SnowflakeHook, Type[MissingPackage]]:
     """
     Retrieve the relevant Airflow hook depending on the given arguments.
