@@ -97,7 +97,7 @@ def test_table(request, sql_server):  # noqa: C901
                 "conn_id": hook.snowflake_conn_id,
                 "metadata": Metadata(
                     database=hook.database,
-                    schema=hook.schema,
+                    schema=os.getenv("SNOWFLAKE_SCHEMA") or SCHEMA,
                 ),
             }
         elif database == Database.POSTGRES:
