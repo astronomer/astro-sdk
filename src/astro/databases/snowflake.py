@@ -87,7 +87,7 @@ class SnowflakeDatabase(BaseDatabase):
         In  the case of Snowflake, the query:
             SELECT * FROM {{input_table}};
         Should become:
-            SELECT * FROM IDENTIFIER(:" input_table ");
+            SELECT * FROM IDENTIFIER(:input_table);
 
         More information can be found at:
         https://docs.snowflake.com/en/sql-reference/identifier-literal.html
@@ -105,7 +105,7 @@ class SnowflakeDatabase(BaseDatabase):
             for k, v in parameters.items()
         }
 
-    def schema_exists(self, schema):
+    def schema_exists(self, schema) -> bool:
         """
         Checks if a schema exists in the database
 

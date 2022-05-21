@@ -86,7 +86,8 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
     # Table metadata
     # ---------------------------------------------------------
-    def get_table_qualified_name(self, table: Table) -> str:  # skipcq: PYL-R0201
+    @staticmethod
+    def get_table_qualified_name(table: Table) -> str:  # skipcq: PYL-R0201
         """
         Return table qualified name. This is Database-specific.
         For instance, in Sqlite this is the table name. In Snowflake, however, it is the database, schema and table
@@ -112,13 +113,15 @@ class BaseDatabase(ABC):
         """
         raise NotImplementedError
 
-    def populate_table_metadata(self, table: Table):
+    def populate_table_metadata(self, table: Table) -> Table:
         """
         Given a table, check if the table has metadata.
         If the metadata is missing, and the database has metadata, assign it to the table.
         If the table schema was not defined by the end, retrieve the user-defined schema.
+        This method performs the changes in-place and also returns the table.
 
         :param table: Table to potentially have their metadata changed
+        :return table: Return the modified table
         """
         if table.metadata and table.metadata.is_empty() and self.default_metadata:
             table.metadata = self.default_metadata
@@ -225,7 +228,7 @@ class BaseDatabase(ABC):
         source_table: Table,
         target_table: Table,
         if_conflicts: AppendConflictStrategy = "exception",
-    ):
+    ) -> None:
         """
         Append the source table rows into a destination table.
         The argument `if_conflicts` allows the user to define how to handle conflicts.
@@ -278,7 +281,7 @@ class BaseDatabase(ABC):
     # Schema Management
     # ---------------------------------------------------------
 
-    def create_schema_if_needed(self, schema):
+    def create_schema_if_needed(self, schema) -> None:
         """
         This function checks if the expected schema exists in the database. If the schema does not exist,
         it will attempt to create it.
@@ -293,7 +296,7 @@ class BaseDatabase(ABC):
             statement = self._create_schema_statement.format(schema)
             self.run_sql(statement)
 
-    def schema_exists(self, schema):
+    def schema_exists(self, schema) -> bool:
         """
         Checks if a schema exists in the database
 

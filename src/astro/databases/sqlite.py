@@ -30,12 +30,6 @@ class SqliteDatabase(BaseDatabase):
         airflow_conn = self.hook.get_connection(self.conn_id)
         return create_engine(f"sqlite:///{airflow_conn.host}")
 
-    def get_sqlalchemy_engine(self, table: Table):
-        # Airflow uses sqlite3 library and not SqlAlchemy for SqliteHook
-        # and it only uses the hostname directly.
-        airflow_conn = self.hook.get_connection(self.conn_id)
-        return create_engine(f"sqlite:///{airflow_conn.host}")
-
     @property
     def default_metadata(self) -> Metadata:
         return Metadata()
@@ -43,7 +37,8 @@ class SqliteDatabase(BaseDatabase):
     # ---------------------------------------------------------
     # Table metadata
     # ---------------------------------------------------------
-    def get_table_qualified_name(self, table: Table) -> str:
+    @staticmethod
+    def get_table_qualified_name(table: Table) -> str:
         """
         Return the table qualified name.
 
@@ -51,9 +46,11 @@ class SqliteDatabase(BaseDatabase):
         """
         return str(table.name)
 
-    def populate_table_metadata(self, table: Table):
+    def populate_table_metadata(self, table: Table) -> Table:
         """
-        Since SQLite does not have a concept of tables or schemas, we just return the table as is
+        Since SQLite does not have a concept of databases or schemas, we just return the table as is,
+        without any modifications.
+
         :param table:
         :return:
         """
@@ -61,7 +58,8 @@ class SqliteDatabase(BaseDatabase):
 
     def create_schema_if_needed(self, schema: str) -> None:
         """
-        Since SQLite does not have schemas, we do not need to set a schema here
+        Since SQLite does not have schemas, we do not need to set a schema here.
+
         :param schema:
         :return:
         """
