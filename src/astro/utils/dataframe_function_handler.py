@@ -49,7 +49,7 @@ def load_op_kwarg_dataframes_into_sql(
     database = create_database(conn_id=conn_id)
     for key, value in op_kwargs.items():
         if isinstance(value, pd.DataFrame):
-            df_table = target_table.create_new_table()
+            df_table = target_table.create_similar_table()
             database.load_pandas_dataframe_to_table(
                 source_dataframe=value, target_table=df_table
             )

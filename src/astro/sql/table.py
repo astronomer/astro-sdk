@@ -61,7 +61,7 @@ class Table:
         )
         return unique_id
 
-    def create_new_table(self):
+    def create_similar_table(self):
         """
         Create a new table with a unique name but all of the same metadata
         :return:

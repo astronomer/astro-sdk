@@ -65,12 +65,12 @@ class TransformOperator(DecoratedOperator):
         self.op_args = load_op_arg_dataframes_into_sql(
             conn_id=self.conn_id,
             op_args=self.op_args,  # type: ignore
-            target_table=self.output_table.create_new_table(),
+            target_table=self.output_table.create_similar_table(),
         )
         self.op_kwargs = load_op_kwarg_dataframes_into_sql(
             conn_id=self.conn_id,
             op_kwargs=self.op_kwargs,
-            target_table=self.output_table.create_new_table(),
+            target_table=self.output_table.create_similar_table(),
         )
 
         # Get SQL from function and render templates in the SQL String

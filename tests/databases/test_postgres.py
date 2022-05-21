@@ -310,7 +310,7 @@ def test_create_table_from_select_statement(database_table_fixture):
     statement = "SELECT * FROM {} WHERE id = 1;".format(
         database.get_table_qualified_name(original_table)
     )
-    target_table = original_table.create_new_table()
+    target_table = original_table.create_similar_table()
     database.create_table_from_select_statement(statement, target_table)
 
     df = database.hook.get_pandas_df(
