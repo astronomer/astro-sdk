@@ -64,7 +64,6 @@ class Table:
     def create_similar_table(self):
         """
         Create a new table with a unique name but all of the same metadata
-        :return:
         """
         return Table(
             name=self._create_unique_table_name(),
