@@ -24,7 +24,7 @@ def load_op_arg_dataframes_into_sql(conn_id, op_args, target_table):
             final_args.append(arg)
         else:
             final_args.append(arg)
-        return tuple(final_args)
+    return tuple(final_args)
 
 
 def load_op_kwarg_dataframes_into_sql(conn_id, op_kwargs, target_table):
