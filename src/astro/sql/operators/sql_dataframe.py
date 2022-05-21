@@ -34,7 +34,9 @@ def load_op_arg_table_into_dataframe(
     ret_args = []
     for arg in op_args_list:
         current_arg = full_spec.args.pop(0)
-        if full_spec.annotations[current_arg] == pd.DataFrame and type(arg) is Table:
+        if full_spec.annotations[current_arg] == pd.DataFrame and isinstance(
+            arg, Table
+        ):
             ret_args.append(_get_dataframe(arg))
         else:
             ret_args.append(arg)
@@ -49,7 +51,7 @@ def load_op_kwarg_table_into_dataframe(
     param_types = inspect.signature(python_callable).parameters
     return {
         k: _get_dataframe(v)
-        if param_types.get(k).annotation is pd.DataFrame and type(v) is Table  # type: ignore
+        if param_types.get(k).annotation is pd.DataFrame and isinstance(v, Table)  # type: ignore
         else v
         for k, v in op_kwargs.items()
     }
