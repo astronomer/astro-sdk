@@ -33,8 +33,6 @@ class BaseDatabase(ABC):
     _create_schema_statement: str = "CREATE SCHEMA IF NOT EXISTS {}"
     _drop_table_statement: str = "DROP TABLE IF EXISTS {}"
     _create_table_statement: str = "CREATE TABLE IF NOT EXISTS {} AS {}"
-    schema: str = ""
-    database: str = ""
 
     def __init__(self, conn_id: str):
         self.conn_id = conn_id
@@ -281,7 +279,7 @@ class BaseDatabase(ABC):
     # Schema Management
     # ---------------------------------------------------------
 
-    def create_schema_if_needed(self, schema) -> None:
+    def create_schema_if_needed(self, schema: str) -> None:
         """
         This function checks if the expected schema exists in the database. If the schema does not exist,
         it will attempt to create it.
@@ -294,7 +292,7 @@ class BaseDatabase(ABC):
             statement = self._create_schema_statement.format(schema)
             self.run_sql(statement)
 
-    def schema_exists(self, schema) -> bool:
+    def schema_exists(self, schema: str) -> bool:
         """
         Checks if a schema exists in the database
 
@@ -328,7 +326,7 @@ class BaseDatabase(ABC):
 
         :param table: The table object we want to generate a safe table identifier for
         :param jinja_table_identifier: The name used within the Jinja template to represent this table
-        :return:
+        :return: value to replace the table identifier in the query and the value that should be used to replace it
         """
         return (
             self.get_table_qualified_name(table),
