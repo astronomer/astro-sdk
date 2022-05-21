@@ -62,3 +62,5 @@ ExportExistsStrategy = Literal["replace", "exception"]
 
 # TODO: check how snowflake names these
 AppendConflictStrategy = Literal["append", "replace", "exception"]
+
+DBMergeConflictStrategy = Literal["ignore", "update"]

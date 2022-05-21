@@ -1,11 +1,12 @@
 """Postgres database implementation."""
-from typing import List
+from typing import List, Optional
 
 import pandas as pd
 import sqlalchemy
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+from psycopg2 import sql as postgres_sql
 
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
+from astro.constants import DEFAULT_CHUNK_SIZE, DBMergeConflictStrategy, LoadExistStrategy
 from astro.databases.base import BaseDatabase
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
@@ -110,3 +111,68 @@ class PostgresDatabase(BaseDatabase):
 
         inspector = sqlalchemy.inspect(self.sqlalchemy_engine)
         return bool(inspector.dialect.has_table(self.connection, table.name, schema))
+
+    def merge_table(
+        self,
+        source_table: Table,
+        target_table: Table,
+        conflict_strategy: DBMergeConflictStrategy = "ignore",
+        merge_cols: Optional[List[str]] = None,
+        source_tables_cols: Optional[List[str]] = None,
+        target_tables_cols: Optional[List[str]] = None,
+    ) -> None:
+        """Merge two tables based on merge keys
+
+        :param source_table: Contains the rows to be appended to the target_table
+        :param target_table: Contains the destination table in which the rows will be appended
+        :param conflict_strategy: Action that needs to be taken in case there is a conflict
+        :param merge_cols: List of cols that are checked for uniqueness while merging,
+         they will be the unique post merge
+        :param source_tables_cols: List of columns name in source table that will be used in merging
+        :param target_tables_cols: List of columns name in target table that will be used in merging
+        """
+        source_tables_cols = source_tables_cols or []
+        target_tables_cols = target_tables_cols or []
+        merge_cols = merge_cols or []
+
+        if len(source_tables_cols) != len(target_tables_cols):
+            raise ValueError(
+                "Params 'source_tables_cols' and  'target_tables_cols' should contain same number of cols."
+            )
+
+        def identifier_args(table):
+            schema = table.metadata.schema
+            return (schema, table.name) if schema else (table.name,)
+
+        statement = "INSERT INTO {main_table} ({target_columns}) SELECT {append_columns} FROM {append_table}"
+
+        if len(merge_cols) > 0:
+            if conflict_strategy == "ignore":
+                statement += " ON CONFLICT ({merge_keys}) DO NOTHING"
+            elif conflict_strategy == "update":
+                statement += (
+                    " ON CONFLICT ({merge_keys}) DO UPDATE SET {update_statements}"
+                )
+
+        source_tables_cols = [postgres_sql.Identifier(c) for c in source_tables_cols]
+        target_tables_cols = [postgres_sql.Identifier(c) for c in target_tables_cols]
+        column_pairs = list(zip(source_tables_cols, target_tables_cols))
+        update_statements = [
+            postgres_sql.SQL("{x}=EXCLUDED.{y}").format(x=x, y=y)
+            for x, y in column_pairs
+        ]
+
+        query = postgres_sql.SQL(statement).format(
+            target_columns=postgres_sql.SQL(",").join(target_tables_cols),
+            main_table=postgres_sql.Identifier(*identifier_args(target_table)),
+            append_columns=postgres_sql.SQL(",").join(source_tables_cols),
+            append_table=postgres_sql.Identifier(*identifier_args(source_table)),
+            update_statements=postgres_sql.SQL(",").join(update_statements),
+            merge_keys=postgres_sql.SQL(",").join(
+                [postgres_sql.Identifier(x) for x in merge_cols]
+            ),
+        )
+
+        hook = PostgresHook(postgres_conn_id=target_table.conn_id)
+        sql = query.as_string(hook.get_conn())
+        self.run_sql(sql_statement=sql)

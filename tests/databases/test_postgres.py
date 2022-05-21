@@ -319,3 +319,137 @@ def test_create_table_from_select_statement(database_table_fixture):
     expected = pd.DataFrame([{"id": 1, "name": "First"}])
     test_utils.assert_dataframes_are_equal(df, expected)
     database.drop_table(target_table)
+
+
+@pytest.mark.parametrize(
+    "parameters",
+    [
+        {
+            "merge_cols": ["sell"],
+            "source_tables_cols": ["sell", "list"],
+            "target_tables_cols": ["sell", "list"],
+            "conflict_strategy": "update",
+            "expected_df": pd.DataFrame(
+                [
+                    {"sell": 142, "list": 160},
+                    {"sell": 162, "list": 330},
+                    {"sell": 175, "list": 600},
+                ]
+            ),
+        },
+        {
+            "merge_cols": ["sell"],
+            "source_tables_cols": ["sell", "list"],
+            "target_tables_cols": ["sell", "list"],
+            "conflict_strategy": "ignore",
+            "expected_df": pd.DataFrame(
+                [
+                    {"sell": 142, "list": 160},
+                    {"sell": 162, "list": 330},
+                    {"sell": 175, "list": 540},
+                ]
+            ),
+        },
+        # {
+        #     'merge_cols': ['sell'],
+        #     'source_tables_cols': ['sell'],
+        #     'target_tables_cols': ['sell'],
+        #     'conflict_strategy': 'ignore',
+        #     'expected_df': pd.DataFrame([
+        #                         {'sell': 142, 'list': 160},
+        #                         {'sell': 162, 'list': None},
+        #                         {'sell': 175, 'list': 540}
+        #                     ])
+        # }
+    ],
+)
+def test_merge_table(parameters):
+    target_df = pd.DataFrame([{"sell": 142, "list": 160}, {"sell": 175, "list": 540}])
+    source_df = pd.DataFrame([{"sell": 162, "list": 330}, {"sell": 175, "list": 600}])
+
+    target_table = Table(conn_id="postgres_conn")
+    source_table = Table(conn_id="postgres_conn")
+
+    merge_cols = parameters["merge_cols"]
+
+    db = create_database(conn_id=target_table.conn_id)
+    db.load_pandas_dataframe_to_table(
+        source_dataframe=target_df, target_table=target_table
+    )
+    db.load_pandas_dataframe_to_table(
+        source_dataframe=source_df, target_table=source_table
+    )
+
+    db.run_sql(
+        sql_statement=f"ALTER TABLE {db.get_table_qualified_name(target_table)} "
+        f"ADD CONSTRAINT con_{target_table.name} UNIQUE ({','.join(merge_cols)})"
+    )
+
+    db.merge_table(
+        target_table=target_table,
+        source_table=source_table,
+        merge_cols=merge_cols,
+        conflict_strategy=parameters["conflict_strategy"],
+        source_tables_cols=parameters["source_tables_cols"],
+        target_tables_cols=parameters["target_tables_cols"],
+    )
+    df = db.hook.get_pandas_df(
+        f"SELECT * FROM {db.get_table_qualified_name(target_table)}"
+    )
+    df = df.sort_values(by=["list"], ascending=True)
+    parameters["expected_df"] = parameters["expected_df"].sort_values(
+        by=["list"], ascending=True
+    )
+
+    assert df["list"].to_list() == parameters["expected_df"]["list"].to_list()
+    assert df["sell"].to_list() == parameters["expected_df"]["sell"].to_list()
+
+
+@pytest.mark.parametrize(
+    "parameters",
+    [
+        {
+            "source_tables_cols": ["sell", "list"],
+            "target_tables_cols": ["sell", "list"],
+            "expected_df": pd.DataFrame(
+                [
+                    {"sell": 142, "list": 160},
+                    {"sell": 162, "list": 330},
+                    {"sell": 175, "list": 600},
+                    {"sell": 175, "list": 540},
+                ]
+            ),
+        }
+    ],
+)
+def test_append_table(parameters):
+    target_df = pd.DataFrame([{"sell": 142, "list": 160}, {"sell": 175, "list": 540}])
+    source_df = pd.DataFrame([{"sell": 162, "list": 330}, {"sell": 175, "list": 600}])
+
+    target_table = Table(conn_id="postgres_conn")
+    source_table = Table(conn_id="postgres_conn")
+
+    db = create_database(conn_id=target_table.conn_id)
+    db.load_pandas_dataframe_to_table(
+        source_dataframe=target_df, target_table=target_table
+    )
+    db.load_pandas_dataframe_to_table(
+        source_dataframe=source_df, target_table=source_table
+    )
+
+    db.append_table(
+        target_table=target_table,
+        source_table=source_table,
+        source_tables_cols=parameters["source_tables_cols"],
+        target_tables_cols=parameters["target_tables_cols"],
+    )
+    df = db.hook.get_pandas_df(
+        f"SELECT * FROM {db.get_table_qualified_name(target_table)}"
+    )
+    df = df.sort_values(by=["list"], ascending=True)
+    parameters["expected_df"] = parameters["expected_df"].sort_values(
+        by=["list"], ascending=True
+    )
+
+    assert df["list"].to_list() == parameters["expected_df"]["list"].to_list()
+    assert df["sell"].to_list() == parameters["expected_df"]["sell"].to_list()
