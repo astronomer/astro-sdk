@@ -358,6 +358,9 @@ def test_save_file(sample_dag, sql_server, file_type, table_fixture):
     ids=["table"],
 )
 def test_populate_table_metadata(sample_dag, sql_server, table_fixture):
+    """
+    Test default populating of table fields in save_file op.
+    """
     table_fixture.metadata.schema = None
 
     @adf

@@ -513,7 +513,7 @@ def test_aql_multilevel_nested_ndjson_file_default_params(
 
 def test_populate_table_metadata(sample_dag):
     """
-    Test default populating of table fields.
+    Test default populating of table fields in load_fil op.
     """
 
     @adf
