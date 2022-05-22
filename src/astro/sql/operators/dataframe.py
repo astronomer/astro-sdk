@@ -1,12 +1,12 @@
 import inspect
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, Optional, Tuple, Union
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 
 from astro.databases import create_database
 from astro.sql.table import Table
-from astro.utils.first_table import find_first_table
+from astro.utils.table import find_first_table
 
 
 def _get_dataframe(table: Table, identifiers_as_lower: bool = False) -> pd.DataFrame:
@@ -59,7 +59,7 @@ def load_op_kwarg_table_into_dataframe(
     }
 
 
-class SqlDataframeOperator(DecoratedOperator):
+class DataframeOperator(DecoratedOperator):
     def __init__(
         self,
         conn_id: Optional[str] = None,
@@ -77,6 +77,7 @@ class SqlDataframeOperator(DecoratedOperator):
         :param database: Database for input table
         :param schema:  schema for input table
         :param warehouse: (Snowflake) Which warehouse to use for the input table
+        :param identifiers_as_lower: determines whether to force all columns to lowercase in the resulting dataframe
         :param kwargs:
         """
         self.conn_id: str = conn_id or ""
@@ -96,7 +97,7 @@ class SqlDataframeOperator(DecoratedOperator):
             **kwargs,
         )
 
-    def execute(self, context: Dict):  # skipcq: PYL-W0613
+    def execute(self, context: Dict) -> Union[Table, pd.DataFrame]:
         first_table = find_first_table(
             op_args=self.op_args,  # type: ignore
             op_kwargs=self.op_kwargs,
@@ -117,7 +118,7 @@ class SqlDataframeOperator(DecoratedOperator):
         pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
         if self.output_table:
             self.output_table.conn_id = self.output_table.conn_id or self.conn_id
-            db = create_database(self.output_table.conn_id or self.conn_id)
+            db = create_database(self.output_table.conn_id)
             self.output_table = db.populate_table_metadata(self.output_table)
             db.load_pandas_dataframe_to_table(
                 source_dataframe=pandas_dataframe,

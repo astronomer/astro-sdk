@@ -8,7 +8,7 @@ from sqlalchemy.sql.functions import Function
 
 from astro.databases import create_database
 from astro.sql.table import Table
-from astro.utils.first_table import find_first_table
+from astro.utils.table import find_first_table
 
 
 class TransformOperator(DecoratedOperator):
