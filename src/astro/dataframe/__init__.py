@@ -3,7 +3,7 @@ from typing import Callable, Optional
 import pandas as pd
 from airflow.decorators.base import task_decorator_factory
 
-from astro.sql.operators.sql_dataframe import SqlDataframeOperator
+from astro.sql.operators.dataframe import SqlDataframeOperator
 
 
 def dataframe(
