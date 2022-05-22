@@ -34,6 +34,7 @@ class SqliteDatabase(BaseDatabase):
 
     @property
     def default_metadata(self) -> Metadata:
+        """Since Sqlite does not use Metadata, we return an empty Metadata instances."""
         return Metadata()
 
     # ---------------------------------------------------------
@@ -52,25 +53,16 @@ class SqliteDatabase(BaseDatabase):
         """
         Since SQLite does not have a concept of databases or schemas, we just return the table as is,
         without any modifications.
-
-        :param table:
-        :return:
         """
         return table
 
     def create_schema_if_needed(self, schema: Optional[str]) -> None:
         """
         Since SQLite does not have schemas, we do not need to set a schema here.
-
-        :param schema:
-        :return:
         """
 
     def schema_exists(self, schema: str) -> bool:
         """
         Check if a schema exists. We return false for sqlite since sqlite does not have schemas
-
-        :param schema:
-        :return:
         """
         return False

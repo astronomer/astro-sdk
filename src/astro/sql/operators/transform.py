@@ -95,12 +95,10 @@ class TransformOperator(DecoratedOperator):
             )
             return self.output_table
 
-    def create_output_table_if_needed(self):
+    def create_output_table_if_needed(self) -> None:
         """
         If the user has not supplied an output table, this function creates one from scratch, otherwise populates
         the output table with necessary metadata.
-
-        :return:
         """
         self.output_table.conn_id = self.output_table.conn_id or self.conn_id
         self.output_table = self.database_impl.populate_table_metadata(
@@ -162,9 +160,6 @@ class TransformOperator(DecoratedOperator):
         Table objects, however, we have to give a raw value or the query will not work. Because of this we recommend
         looking into the documentation of your database and seeing what best practices exist (e.g. Identifier wrappers
         in snowflake).
-
-        :param context:
-        :return:
         """
         # convert Jinja templating to SQLAlchemy SQL templating, safely converting table identifiers
         for k, v in self.parameters.items():
@@ -248,12 +243,12 @@ def load_op_arg_dataframes_into_sql(
     conn_id: str, op_args: Tuple, target_table: Table
 ) -> Tuple:
     """
-    Identifies dataframes in op_args and loads them to the table
+    Identify dataframes in op_args and load them to the table.
 
-    :param conn_id:
-    :param op_args:
-    :param target_table:
-    :return:
+    :param conn_id: Connection identifier to be used to load content to the target_table
+    :param op_args: user-defined decorator's kwargs
+    :param target_table: Table where the dataframe content will be written to
+    :return: New op_args, in which dataframes are replaced by tables
     """
     final_args = []
     database = create_database(conn_id=conn_id)
@@ -275,12 +270,12 @@ def load_op_kwarg_dataframes_into_sql(
     conn_id: str, op_kwargs: Dict, target_table: Table
 ) -> Dict:
     """
-    Identifies dataframes in op_kwargs and loads them to the table
+    Identify dataframes in op_kwargs and load them to a table.
 
-    :param conn_id:
-    :param op_kwargs:
-    :param target_table:
-    :return:
+    :param conn_id: Connection identifier to be used to load content to the target_table
+    :param op_kwargs: user-defined decorator's kwargs
+    :param target_table: Table where the dataframe content will be written to
+    :return: New op_kwargs, in which dataframes are replaced by tables
     """
     final_kwargs = {}
     database = create_database(conn_id=conn_id)
@@ -304,8 +299,8 @@ def _pull_first_table_from_parameters(parameters: Dict) -> Optional[Table]:
     When trying to "magically" determine the context of a decorator, we will try to find the first table.
     This function attempts this by checking parameters
 
-    :param parameters:
-    :return:
+    :param parameters: a user-defined dictionary of parameters
+    :return: the first parameter of type Table, if any. Return None otherwise.
     """
     first_table = None
     params_of_table_type = [
@@ -326,9 +321,8 @@ def _pull_first_table_from_op_kwargs(
     When trying to "magically" determine the context of a decorator, we will try to find the first table.
     This function attempts this by checking op_kwargs
 
-    :param op_kwargs:
-    :param python_callable:
-    :return:
+    :param op_kwargs: user-defined operator's kwargs
+    :return: the first kwarg declared in the decorated method which is an instance of Table. Return None if non-existent
     """
     first_table = None
     kwargs_of_table_type = [
@@ -349,8 +343,8 @@ def _find_first_table_from_op_args(op_args: Tuple) -> Optional[Table]:
     When trying to "magically" determine the context of a decorator, we will try to find the first table.
     This function attempts this by checking op_args
 
-    :param op_args:
-    :return:
+    :param op_args: user-defined operator's args
+    :return: the first arg which is an instance of Table. If there are no instances, return None.
     """
     first_table = None
     args_of_table_type = [arg for arg in op_args if isinstance(arg, Table)]
@@ -374,11 +368,8 @@ def find_first_table(
     This means that a user doesn't need to define default conn_id, database, etc. in the function unless they want
     to create default values.
 
-    :param op_args:
-    :param op_kwargs:
-    :param python_callable:
-    :param parameters:
-    :return:
+    :param parameters: user-defined parameters to be injected into SQL statement
+    :return: the first table declared as decorator arg or kwarg
     """
     first_table: Optional[Table] = None
     if op_args:
