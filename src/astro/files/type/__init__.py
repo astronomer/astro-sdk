@@ -51,8 +51,8 @@ def get_filetype(filepath: Union[str, pathlib.PosixPath]) -> FileTypeConstants:
 
     if extension == "":
         raise ValueError(
-            f"Missing file extension, cannot determine filetype from path '{filepath}'."
-            f" If this path contains pattern pass 'filetype' param."
+            f"Missing file extension, cannot automatically determine filetype from path '{filepath}'."
+            f" Please pass the 'filetype' param with the explicit filetype (e.g. csv, ndjson, etc.)."
         )
 
     try:
