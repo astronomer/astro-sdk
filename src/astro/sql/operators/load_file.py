@@ -20,6 +20,9 @@ class LoadFile(BaseOperator):
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
     :param chunk_size: Specify the number of records in each batch to be written at a time.
     :param if_exists: Overwrite file if exists. Default False.
+
+    :return: If ``output_table`` is passed this operator returns a Table object. If not
+        passed, returns a dataframe.
     """
 
     template_fields = ("output_table", "input_file")
@@ -42,7 +45,7 @@ class LoadFile(BaseOperator):
         self.ndjson_normalize_sep = ndjson_normalize_sep
         self.normalize_config: Dict[str, str] = {}
 
-    def execute(self, context: Any) -> Union[Table, pd.DataFrame]::
+    def execute(self, context: Any) -> Union[Table, pd.DataFrame]:
         """
         Load an existing dataset from a supported file into a SQL table.
         """
@@ -56,7 +59,7 @@ class LoadFile(BaseOperator):
         self.log.info("Loading %s into %s ...", self.input_file.path, self.output_table)
         if self.output_table:
             self.load_data_to_table(input_file=input_file)
-            self.log.info(f"Completed loading the data into {self.output_table}.")
+            self.log.info("Completed loading the data into %s.", self.output_table)
             return self.output_table
         else:
             output_df = self.load_data_to_dataframe(input_file)
