@@ -112,8 +112,9 @@ class SnowflakeDatabase(BaseDatabase):
         :param jinja_table_identifier: The name used within the Jinja template to represent this table
         :return: value to replace the table identifier in the query and the value that should be used to replace it
         """
-        return f"IDENTIFIER(:{jinja_table_identifier})", self.get_table_qualified_name(
-            table
+        return (
+            f"IDENTIFIER(:{jinja_table_identifier})",
+            SnowflakeDatabase.get_table_qualified_name(table),
         )
 
     def schema_exists(self, schema) -> bool:
