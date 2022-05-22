@@ -1,5 +1,6 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
+import pandas as pd
 from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
@@ -26,7 +27,7 @@ class LoadFile(BaseOperator):
     def __init__(
         self,
         input_file: File,
-        output_table: Table,
+        output_table: Optional[Table] = None,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         if_exists: LoadExistStrategy = "replace",
         ndjson_normalize_sep: str = "_",
@@ -48,19 +49,30 @@ class LoadFile(BaseOperator):
         if self.input_file.conn_id:
             BaseHook.get_connection(self.input_file.conn_id)
 
+        return self.load_data(input_file=self.input_file)
+
+    def load_data(self, input_file: File) -> Union[Table, pd.DataFrame]:
+
+        self.log.info("Loading %s into %s ...", self.input_file.path, self.output_table)
+        if self.output_table:
+            self.load_data_to_table(input_file=input_file)
+            self.log.info(f"Completed loading the data into {self.output_table}.")
+            return self.output_table
+        else:
+            output_df = self.load_data_to_dataframe(input_file)
+            self.log.info("Completed loading the data into dataframe.")
+            return output_df
+
+    def load_data_to_table(self, input_file):
+        """Loads csv/parquet table from local/S3/GCS with Pandas.
+        Infers SQL database type based on connection then loads table to db.
+        """
         database = create_database(self.output_table.conn_id)
         self.output_table = database.populate_table_metadata(self.output_table)
         self.normalize_config = LoadFile._populate_normalize_config(
             ndjson_normalize_sep=self.ndjson_normalize_sep,
             database=database,
         )
-        return self.load_data(database=database, input_file=self.input_file)
-
-    def load_data(self, input_file: File, database: BaseDatabase) -> Table:
-        """Loads csv/parquet table from local/S3/GCS with Pandas.
-        Infers SQL database type based on connection then loads table to db.
-        """
-        self.log.info("Loading %s into %s ...", self.input_file.path, self.output_table)
         if_exists = self.if_exists
         for file in get_files(
             input_file.path, input_file.conn_id, normalize_config=self.normalize_config
@@ -73,9 +85,18 @@ class LoadFile(BaseOperator):
             )
             if_exists = "append"
 
-        self.log.info(f"Completed loading the data into {self.output_table}.")
+    def load_data_to_dataframe(self, input_file):
+        """Loads csv/parquet file from local/S3/GCS with Pandas.
+        returns dataframe as no SQL table was specified
+        """
+        df = None
+        for file in get_files(input_file.path, input_file.conn_id):
+            if isinstance(df, pd.DataFrame):
+                df = pd.concat([df, file.export_to_dataframe()])
+            else:
+                df = file.export_to_dataframe()
 
-        return self.output_table
+        return df
 
     @staticmethod
     def _populate_normalize_config(
@@ -122,7 +143,7 @@ class LoadFile(BaseOperator):
 
 def load_file(
     input_file: File,
-    output_table: Table,
+    output_table: Optional[Table] = None,
     task_id: Optional[str] = None,
     if_exists: LoadExistStrategy = "replace",
     ndjson_normalize_sep: str = "_",

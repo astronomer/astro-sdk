@@ -150,7 +150,6 @@ def test_aql_local_file_with_no_table_name(sample_dag, test_table, sql_server):
 
 
 def test_unique_task_id_for_same_path(sample_dag):
-
     tasks = []
 
     with sample_dag:
@@ -252,6 +251,33 @@ def test_aql_load_file_local_file_pattern(sample_dag, test_table, sql_server):
     qualified_name = database.get_table_qualified_name(test_table)
     df = pd.read_sql(f"SELECT * FROM {qualified_name}", con=sql_hook.get_conn())
     assert test_df_rows * 2 == df.shape[0]
+
+
+def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
+    filename = str(CWD.parent) + "/data/homes_pattern_1.csv"
+    filename_2 = str(CWD.parent) + "/data/homes_pattern_2.csv"
+
+    test_df = pd.read_csv(filename)
+    test_df_2 = pd.read_csv(filename_2)
+    test_df = pd.concat([test_df, test_df_2])
+
+    from airflow.decorators import task
+
+    @task
+    def validate(input):
+        assert isinstance(input, pd.DataFrame)
+        assert test_df.equals(input)
+        print(input)
+
+    with sample_dag:
+        loaded_df = load_file(
+            input_file=File(
+                path=str(CWD.parent) + "/data/homes_pattern_*", filetype=FileType.CSV
+            ),
+        )
+        validate(loaded_df)
+
+    test_utils.run_dag(sample_dag)
 
 
 @pytest.mark.integration
