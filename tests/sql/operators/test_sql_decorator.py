@@ -6,7 +6,7 @@ from astro.databases import create_database
 from astro.settings import SCHEMA
 from astro.sql.operators.sql_decorator_legacy import SqlDecoratedOperator
 from astro.sql.table import Metadata
-from tests.operators import utils as test_utils
+from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
 TEST_SCHEMA = test_utils.get_table_name("test")
@@ -26,7 +26,7 @@ TEST_SCHEMA = test_utils.get_table_name("test")
     "test_table",
     [
         {
-            "path": str(CWD) + "/../data/homes2.csv",
+            "path": str(CWD) + "/../../data/homes2.csv",
             "load_table": True,
             "is_temp": False,
             "param": {
@@ -74,7 +74,7 @@ def test_sql_decorator_basic_functionality(sample_dag, sql_server, test_table):
     "test_table",
     [
         {
-            "path": str(CWD) + "/../data/sample.csv",
+            "path": str(CWD) + "/../../data/sample.csv",
             "load_table": True,
             "is_temp": False,
             "param": {
@@ -124,7 +124,7 @@ def test_sql_decorator_does_not_create_schema_when_the_schema_exists(
     "test_table",
     [
         {
-            "path": str(CWD) + "/../data/sample.csv",
+            "path": str(CWD) + "/../../data/sample.csv",
             "load_table": True,
             "is_temp": False,
             "param": {

@@ -18,7 +18,7 @@ from astro.utils.snowflake_merge_func import (
     is_valid_snow_identifier,
     snowflake_merge_func,
 )
-from tests.operators import utils as test_utils
+from tests.sql.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)

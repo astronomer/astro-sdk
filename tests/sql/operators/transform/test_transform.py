@@ -7,9 +7,8 @@ from airflow.decorators import task
 from astro import sql as aql
 from astro.dataframe import dataframe as adf
 from astro.files import File
-from astro.sql.operators.sql_decorator_legacy import transform_decorator as transform
 from astro.sql.table import Table
-from tests.operators import utils as test_utils
+from tests.sql.operators import utils as test_utils
 
 cwd = pathlib.Path(__file__).parent
 
@@ -31,7 +30,7 @@ def test_dataframe_transform(sql_server, sample_dag, test_table):
     def get_dataframe():
         return pd.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
 
-    @transform
+    @aql.transform
     def sample_pg(input_table: Table):
         return "SELECT * FROM {{input_table}}"
 
@@ -61,7 +60,7 @@ def test_dataframe_transform(sql_server, sample_dag, test_table):
     indirect=True,
 )
 def test_transform(sql_server, sample_dag, test_table):
-    @transform
+    @aql.transform
     def sample_function(input_table: Table):
         return "SELECT * FROM {{input_table}} LIMIT 10"
 
@@ -95,7 +94,7 @@ def test_transform(sql_server, sample_dag, test_table):
     indirect=True,
 )
 def test_raw_sql(sql_server, sample_dag, test_table):
-    @transform(raw_sql=True)
+    @aql.run_raw_sql
     def raw_sql_query(my_input_table: Table, created_table: Table, num_rows: int):
         return "SELECT * FROM {{my_input_table}} LIMIT {{num_rows}}"
 

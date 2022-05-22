@@ -10,12 +10,14 @@ import astro.sql as aql
 from astro.constants import Database
 from astro.files import File
 from astro.sql.table import Table
-from tests.operators import utils as test_utils
+from tests.sql.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 CWD = pathlib.Path(__file__).parent
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
-DEFAULT_FILEPATH = str(pathlib.Path(CWD.parent.parent, "data/sample.csv").absolute())
+DEFAULT_FILEPATH = str(
+    pathlib.Path(CWD.parent.parent, "/../data/sample.csv").absolute()
+)
 
 
 @pytest.mark.integration

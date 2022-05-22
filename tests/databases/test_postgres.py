@@ -15,7 +15,7 @@ from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
-from tests.operators import utils as test_utils
+from tests.sql.operators import utils as test_utils
 
 DEFAULT_CONN_ID = "postgres_default"
 CUSTOM_CONN_ID = "postgres_conn"
