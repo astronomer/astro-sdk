@@ -42,7 +42,7 @@ class LoadFile(BaseOperator):
         self.ndjson_normalize_sep = ndjson_normalize_sep
         self.normalize_config: Dict[str, str] = {}
 
-    def execute(self, context: Any) -> Table:
+    def execute(self, context: Any) -> Union[Table, pd.DataFrame]::
         """
         Load an existing dataset from a supported file into a SQL table.
         """
