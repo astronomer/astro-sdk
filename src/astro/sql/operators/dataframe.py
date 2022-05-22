@@ -79,6 +79,9 @@ class DataframeOperator(DecoratedOperator):
         :param warehouse: (Snowflake) Which warehouse to use for the input table
         :param identifiers_as_lower: determines whether to force all columns to lowercase in the resulting dataframe
         :param kwargs:
+
+        :return: If ``raw_sql`` is true, we return the result of the handler function, otherwise we will return the
+        generated output_table.
         """
         self.conn_id: str = conn_id or ""
         self.database = database
