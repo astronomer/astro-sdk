@@ -1,8 +1,7 @@
-from __future__ import annotations
-
 import random
 import string
 from dataclasses import dataclass, field, fields
+from typing import List, Optional
 
 from airflow.models import DagRun, TaskInstance
 from sqlalchemy import Column, MetaData
@@ -21,8 +20,8 @@ class Metadata:
     """
 
     # This property is used by several databases, including: Postgres, Snowflake and BigQuery ("namespace")
-    schema: str | None = None
-    database: str | None = None
+    schema: Optional[str] = None
+    database: Optional[str] = None
 
     def is_empty(self):
         """Check if all the fields are None."""
@@ -44,10 +43,10 @@ class Table:
     # SQL table itself
     # Some ideas: TableRef, TableMetadata, TableData, TableDataset
     conn_id: str = ""
-    name: str | property = ""
+    name: str = ""
     _name: str = field(init=False, repr=False, default="")
     metadata: Metadata = field(default_factory=Metadata)
-    columns: list[Column] = field(default_factory=list)
+    columns: List[Column] = field(default_factory=list)
     temp: bool = False
 
     def __post_init__(self):
@@ -71,7 +70,7 @@ class Table:
 
         return unique_id
 
-    def create_similar_table(self) -> Table:
+    def create_similar_table(self) -> "Table":
         """
         Create a new table with a unique name but with the same metadata.
         """
@@ -100,7 +99,7 @@ class Table:
         return self._name
 
     @name.setter
-    def name(self, value: str | property) -> None:
+    def name(self, value: str) -> None:
         """
         Set the table name. Once this happens, the table is no longer considered temporary.
         """
