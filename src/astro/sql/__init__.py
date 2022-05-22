@@ -4,11 +4,9 @@ from astro.sql.operators.agnostic_sql_append import SqlAppendOperator
 from astro.sql.operators.agnostic_sql_merge import SqlMergeOperator
 from astro.sql.operators.load_file import load_file  # noqa: F401
 from astro.sql.operators.save_file import save_file  # noqa: F401
+from astro.sql.operators.transform import transform_decorator  # noqa: F401
 from astro.sql.operators.truncate import TruncateOperator
 from astro.sql.table import Table
-from astro.sql.operators.transform import (  # noqa: F401
-    transform_decorator
-)
 
 
 def transform(

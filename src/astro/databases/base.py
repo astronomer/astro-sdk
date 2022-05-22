@@ -1,5 +1,4 @@
 from abc import ABC
-
 from typing import List, Optional, Tuple
 
 import pandas as pd
@@ -87,7 +86,7 @@ class BaseDatabase(ABC):
 
         :param table: Details of the table we want to check that exists
         """
-        table_qualified_name = self.get_table_qualified_name(table)
+        table_qualified_name = BaseDatabase.get_table_qualified_name(table)
         inspector = sqlalchemy.inspect(self.sqlalchemy_engine)
         return bool(inspector.dialect.has_table(self.connection, table_qualified_name))
 
@@ -256,7 +255,7 @@ class BaseDatabase(ABC):
 
         :param source_table: An existing table in the database
         """
-        table_qualified_name = self.get_table_qualified_name(source_table)
+        table_qualified_name = BaseDatabase.get_table_qualified_name(source_table)
         if self.table_exists(source_table):
             return pd.read_sql(
                 # We are avoiding SQL injection by confirming the table exists before this statement
