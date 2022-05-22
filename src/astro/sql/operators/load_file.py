@@ -49,6 +49,7 @@ class LoadFile(BaseOperator):
             BaseHook.get_connection(self.input_file.conn_id)
 
         database = create_database(self.output_table.conn_id)
+        self.output_table = database.populate_table_metadata(self.output_table)
         self.normalize_config = LoadFile._populate_normalize_config(
             ndjson_normalize_sep=self.ndjson_normalize_sep,
             database=database,
