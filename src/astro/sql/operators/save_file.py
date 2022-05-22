@@ -42,6 +42,7 @@ class SaveFile(BaseOperator):
         # Infer db type from `input_conn_id`.
         if isinstance(self.input_data, Table):
             database = create_database(self.input_data.conn_id)
+            self.input_data = database.populate_table_metadata(self.input_data)
             df = database.export_table_to_pandas_dataframe(self.input_data)
         elif isinstance(self.input_data, pd.DataFrame):
             df = self.input_data
