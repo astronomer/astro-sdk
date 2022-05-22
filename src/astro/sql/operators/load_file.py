@@ -8,8 +8,6 @@ from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 from astro.databases import BaseDatabase, create_database
 from astro.files import File, get_files
 from astro.sql.table import Table
-from astro.utils.load import populate_normalize_config
-
 from astro.utils.task_id_helper import get_task_id
 
 
@@ -51,7 +49,7 @@ class LoadFile(BaseOperator):
             BaseHook.get_connection(self.input_file.conn_id)
 
         database = create_database(self.output_table.conn_id)
-        self.normalize_config = populate_normalize_config(
+        self.normalize_config = AgnosticLoadFile._populate_normalize_config(
             ndjson_normalize_sep=self.ndjson_normalize_sep,
             database=database,
         )
@@ -77,6 +75,48 @@ class LoadFile(BaseOperator):
         self.log.info(f"Completed loading the data into {self.output_table}.")
 
         return self.output_table
+
+    @staticmethod
+    def _populate_normalize_config(
+        database: BaseDatabase,
+        ndjson_normalize_sep: str = "_",
+    ) -> Dict[str, str]:
+        """
+        Validate pandas json_normalize() parameter for databases, since default params result in
+        invalid column name. Default parameter result in the columns name containing '.' char.
+
+        :param ndjson_normalize_sep: separator used to normalize nested ndjson.
+            https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html
+        :param database: supported database
+        """
+
+        def replace_illegal_columns_chars(char: str, database: BaseDatabase) -> str:
+            index = (
+                database.illegal_column_name_chars.index(char)
+                if char in database.illegal_column_name_chars
+                else None
+            )
+            if index is not None:
+                return str(database.illegal_column_name_chars_replacement[index])
+            else:
+                return str(char)
+
+        normalize_config: Dict[str, Any] = {
+            "meta_prefix": ndjson_normalize_sep,
+            "record_prefix": ndjson_normalize_sep,
+            "sep": ndjson_normalize_sep,
+        }
+        normalize_config["meta_prefix"] = replace_illegal_columns_chars(
+            normalize_config["meta_prefix"], database
+        )
+        normalize_config["record_prefix"] = replace_illegal_columns_chars(
+            normalize_config["record_prefix"], database
+        )
+        normalize_config["sep"] = replace_illegal_columns_chars(
+            normalize_config["sep"], database
+        )
+
+        return normalize_config
 
 
 def load_file(
