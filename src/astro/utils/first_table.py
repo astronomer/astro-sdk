@@ -94,4 +94,3 @@ def find_first_table(
     if not first_table and parameters:
         first_table = _pull_first_table_from_parameters(parameters=parameters)
     return first_table
-
