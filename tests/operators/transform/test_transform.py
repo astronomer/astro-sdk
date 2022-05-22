@@ -6,6 +6,7 @@ from airflow.decorators import task
 
 from astro import sql as aql
 from astro.dataframe import dataframe as adf
+from astro.files import File
 from astro.sql.table import Table
 from tests.operators import utils as test_utils
 
@@ -69,7 +70,7 @@ def test_transform(sql_server, sample_dag, test_table):
 
     with sample_dag:
         homes_file = aql.load_file(
-            path=str(cwd) + "/../../data/homes.csv",
+            input_file=File(path=str(cwd) + "/../../data/homes.csv"),
             output_table=test_table,
         )
         first_model = sample_function(
@@ -103,7 +104,7 @@ def test_raw_sql(sql_server, sample_dag, test_table):
 
     with sample_dag:
         homes_file = aql.load_file(
-            path=str(cwd) + "/../../data/homes.csv",
+            input_file=File(path=str(cwd) + "/../../data/homes.csv"),
             output_table=test_table,
         )
         raw_sql_result = (

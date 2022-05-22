@@ -6,6 +6,7 @@ from airflow.exceptions import BackfillUnfinished
 
 from astro import sql as aql
 from astro.dataframe import dataframe as adf
+from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
 from tests.operators import utils as test_utils
@@ -116,11 +117,11 @@ def test_append_on_tables_on_different_db(sample_dag, sql_server):
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
             load_main = aql.load_file(
-                path=str(CWD) + "/../data/homes_main.csv",
+                input_file=File(path=str(CWD) + "/../data/homes_main.csv"),
                 output_table=test_table_1,
             )
             load_append = aql.load_file(
-                path=str(CWD) + "/../data/homes_append.csv",
+                input_file=File(path=str(CWD) + "/../data/homes_append.csv"),
                 output_table=test_table_2,
             )
             aql.append(

@@ -9,10 +9,10 @@
 [![License](https://img.shields.io/pypi/l/astro-sdk-python.svg)](https://pypi.org/pypi/astro-sdk-python)
 [![Development Status](https://img.shields.io/pypi/status/astro-sdk-python.svg)](https://pypi.org/pypi/astro-sdk-python)
 [![PyPI downloads](https://img.shields.io/pypi/dm/astro-sdk-python.svg)](https://pypistats.org/packages/astro-sdk-python)
-[![Contributors](https://img.shields.io/github/contributors/astro-projects/astro)](https://github.com/astronomer/astro-sdk)
-[![Commit activity](https://img.shields.io/github/commit-activity/m/astro-projects/astro)](https://github.com/astronomer/astro-sdk)
+[![Contributors](https://img.shields.io/github/contributors/astronomer/astro-sdk)](https://github.com/astronomer/astro-sdk)
+[![Commit activity](https://img.shields.io/github/commit-activity/m/astronomer/astro-sdk)](https://github.com/astronomer/astro-sdk)
 [![CI](https://github.com/astronomer/astro-sdk/actions/workflows/ci.yaml/badge.svg)](https://github.com/astronomer/astro-sdk)
-[![codecov](https://codecov.io/gh/astro-projects/astro/branch/main/graph/badge.svg?token=MI4SSE50Q6)](https://codecov.io/gh/astro-projects/astro)
+[![codecov](https://codecov.io/gh/astronomer/astro-sdk/branch/main/graph/badge.svg?token=MI4SSE50Q6)](https://codecov.io/gh/astronomer/astro-sdk)
 
 **astro** allows rapid and clean development of {Extract, Load, Transform} workflows using Python.
 It helps DAG authors to achieve more with less code.
@@ -67,7 +67,7 @@ with DAG(
     catchup=False,
 ) as dag:
     imdb_movies = aql.load_file(
-        path="https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/imdb.csv",
+        path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv",
         task_id="load_csv",
         output_table=Table(
             table_name="imdb_movies", database="sqlite", conn_id="sqlite_default"

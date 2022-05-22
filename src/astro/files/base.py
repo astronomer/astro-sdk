@@ -13,6 +13,8 @@ class File:
     Intended to be used within library.
     """
 
+    template_fields = ("location",)
+
     def __init__(
         self,
         path: str,
@@ -25,7 +27,7 @@ class File:
         :param path: Path to a file in the filesystem/Object stores
         :param conn_id: Airflow connection ID
         :param filetype: constant to provide an explicit file type
-        :param normalize_config: normalize_config: parameters in dict format of pandas json_normalize() function.
+        :param normalize_config: parameters in dict format of pandas json_normalize() function.
         """
         self.location = create_file_location(path, conn_id)
         self.type = create_file_type(
@@ -33,8 +35,12 @@ class File:
         )
 
     @property
-    def path(self):
+    def path(self) -> str:
         return self.location.path
+
+    @property
+    def conn_id(self) -> Optional[str]:
+        return self.location.conn_id
 
     @property
     def size(self) -> int:
@@ -42,7 +48,6 @@ class File:
         Return the size in bytes of the given file.
 
         :return: File size in bytes
-        :rtype: int
         """
         size: int = self.location.size
         return size
@@ -52,7 +57,6 @@ class File:
         Return a FileType given the filepath. Uses a naive strategy, using the file extension.
 
         :return: True or False
-        :rtype: bool
         """
         result: bool = self.type.name == FileType.PARQUET
         return result
@@ -80,8 +84,13 @@ class File:
         file_exists: bool = self.location.exists()
         return file_exists
 
+    def __repr__(self):
+        return (
+            f'{self.__class__.__name__}(location="{self.location}",type="{self.type}")'
+        )
+
     def __str__(self):
-        return self.path
+        return self.location.path
 
 
 def get_files(
@@ -96,10 +105,10 @@ def get_files(
     2. s3/gcs location - prefix
 
     :param path_pattern: path/pattern to a file in the filesystem/Object stores,
-    supports glob and prefix pattern for object stores
+        supports glob and prefix pattern for object stores
     :param conn_id: Airflow connection ID
     :param filetype: constant to provide an explicit file type
-    :param normalize_config: normalize_config: parameters in dict format of pandas json_normalize() function.
+    :param normalize_config: parameters in dict format of pandas json_normalize() function.
     """
     location = create_file_location(path_pattern, conn_id)
     return [

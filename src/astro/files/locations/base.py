@@ -13,6 +13,8 @@ from astro.constants import FileLocation
 class BaseFileLocation(ABC):
     """Base Location abstract class"""
 
+    template_fields = ("path", "conn_id")
+
     def __init__(self, path: str, conn_id: Optional[str] = None):
         """
         Manages and provide interface for the operation for all the supported locations.
@@ -20,11 +22,8 @@ class BaseFileLocation(ABC):
         :param path: Path to a file in the filesystem/Object stores
         :param conn_id: Airflow connection ID
         """
-        if BaseFileLocation.is_valid_path(path):
-            self.path = path
-            self.conn_id = conn_id
-        else:
-            raise ValueError(f"Invalid path: '{path}'")
+        self.path = path
+        self.conn_id = conn_id
 
     @property
     @abstractmethod
@@ -117,3 +116,10 @@ class BaseFileLocation(ABC):
                 return True
         except OSError:
             return False
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(path="{self.path}",conn_id="{self.conn_id}")'
+
+    def __str__(self):
+        """String representation of location"""
+        return self.path

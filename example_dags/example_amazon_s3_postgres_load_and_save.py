@@ -5,6 +5,7 @@ from airflow.utils import timezone
 
 # Import Operator
 import astro.sql as aql
+from astro.files import File
 from astro.sql.table import Table
 
 default_args = {
@@ -23,15 +24,14 @@ s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
 )
 def example_amazon_s3_postgres_load_and_save():
     t1 = aql.load_file(
-        path=f"{s3_bucket}/homes.csv",
-        file_conn_id="",
+        input_file=File(path=f"{s3_bucket}/homes.csv"),
         output_table=Table(name="expected_table_from_s3", conn_id="postgres_conn"),
     )
 
     aql.save_file(
         input_data=t1,
-        output_file_path=f"{s3_bucket}/homes.csv",
-        overwrite=True,
+        output_file=File(path=f"{s3_bucket}/homes.csv"),
+        if_exists="replace",
     )
 
 

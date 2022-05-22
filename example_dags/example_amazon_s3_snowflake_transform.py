@@ -9,6 +9,7 @@ from airflow.decorators import dag
 
 from astro import dataframe as df
 from astro import sql as aql
+from astro.files import File
 from astro.sql.table import Metadata, Table
 
 
@@ -67,13 +68,11 @@ def example_amazon_s3_snowflake_transform():
     )
 
     temp_table_1 = aql.load_file(
-        path=f"{s3_bucket}/ADOPTION_CENTER_1.csv",
-        file_conn_id="",
+        input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_1.csv"),
         output_table=input_table_1,
     )
     temp_table_2 = aql.load_file(
-        path=f"{s3_bucket}/ADOPTION_CENTER_2.csv",
-        file_conn_id="",
+        input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_2.csv"),
         output_table=input_table_2,
     )
 

@@ -61,9 +61,12 @@ class SnowflakeDatabase(BaseDatabase):
         if target_table.metadata:
             schema = getattr(target_table.metadata, "schema", None)
 
+        # within prep_table() we use pandas drop() function which is used when we pass 'if_exists=replace'.
+        # There is an issue where has_table() works with uppercase table names but the function meta.reflect() don't.
+        # To prevent the issue we are passing table name in lowercase.
         db.prep_table(
             source_dataframe,
-            target_table.name,
+            target_table.name.lower(),
             schema=schema,
             if_exists=if_exists,
             index=False,
@@ -109,8 +112,9 @@ class SnowflakeDatabase(BaseDatabase):
         :param jinja_table_identifier: The name used within the Jinja template to represent this table
         :return: value to replace the table identifier in the query and the value that should be used to replace it
         """
-        return f"IDENTIFIER(:{jinja_table_identifier})", self.get_table_qualified_name(
-            table
+        return (
+            f"IDENTIFIER(:{jinja_table_identifier})",
+            SnowflakeDatabase.get_table_qualified_name(table),
         )
 
     def schema_exists(self, schema) -> bool:

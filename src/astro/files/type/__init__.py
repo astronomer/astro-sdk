@@ -44,7 +44,16 @@ def get_filetype(filepath: Union[str, pathlib.PosixPath]) -> FileTypeConstants:
     if isinstance(filepath, pathlib.PosixPath):
         extension = filepath.suffix[1:]
     else:
-        extension = filepath.split(".")[-1]
+        extension = ""
+        tokenized_path = filepath.split(".")
+        if len(tokenized_path) > 1:
+            extension = tokenized_path[-1]
+
+    if extension == "":
+        raise ValueError(
+            f"Missing file extension, cannot automatically determine filetype from path '{filepath}'."
+            f" Please pass the 'filetype' param with the explicit filetype (e.g. csv, ndjson, etc.)."
+        )
 
     try:
         return FileTypeConstants(extension)

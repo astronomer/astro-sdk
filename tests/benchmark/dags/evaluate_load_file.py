@@ -6,6 +6,7 @@ from pathlib import Path
 from airflow import DAG
 
 from astro import sql as aql
+from astro.files import File
 from astro.sql.table import Metadata, Table
 
 START_DATE = datetime(2000, 1, 1)
@@ -47,7 +48,7 @@ def create_dag(database_name, table_args, dataset):
         metadata = Metadata(table_args.pop("metadata"))
         table_metadata = Table(name=table_name, metadata=metadata, **table_args)
         table_xcom = aql.load_file(  # noqa: F841
-            path=dataset_path,
+            input_file=File(path=dataset_path),
             task_id="load_csv",
             output_table=table_metadata,
             chunksize=chunk_size,

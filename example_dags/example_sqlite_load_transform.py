@@ -3,6 +3,7 @@ from datetime import datetime
 from airflow import DAG
 
 from astro import sql as aql
+from astro.files import File
 from astro.sql.table import Table
 
 START_DATE = datetime(2000, 1, 1)
@@ -27,7 +28,9 @@ with DAG(
 ) as dag:
 
     imdb_movies = aql.load_file(
-        path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv",
+        input_file=File(
+            path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv"
+        ),
         task_id="load_csv",
         output_table=Table(name="imdb_movies", conn_id="sqlite_default"),
     )

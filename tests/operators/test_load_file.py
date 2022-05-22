@@ -1,12 +1,12 @@
 """
-Unittest module to test Agnostic Load File function.
+Unittest module to test Load File function.
 
 Requires the unittest, pytest, and requests-mock Python libraries.
 
 Run test:
     AWS_ACCESS_KEY_ID=AKIAZG42HVH6Z3B6ELRB \
     AWS_SECRET_ACCESS_KEY=SgwfrcO2NdKpeKhUG77K%2F6B2HuRJJopbHPV84NbY \
-    python3 -m unittest tests.operators.test_agnostic_load_file.TestAgnosticLoadFile.test_aql_local_file_to_postgres
+    python3 -m unittest tests.operators.test_load_file.TestLoadFile.test_aql_local_file_to_postgres
 
 """
 import logging
@@ -20,9 +20,12 @@ from airflow.exceptions import BackfillUnfinished
 from airflow.utils import timezone
 from pandas.testing import assert_frame_equal
 
-from astro.constants import Database
+from astro.constants import Database, FileType
 from astro.databases import create_database
-from astro.sql.operators.agnostic_load_file import load_file
+from astro.dataframe import dataframe as adf
+from astro.files import File
+from astro.settings import SCHEMA
+from astro.sql.operators.load_file import load_file
 from astro.sql.table import Metadata, Table
 from astro.utils.dependencies import gcs, s3
 from tests.operators import utils as test_utils
@@ -40,16 +43,17 @@ CWD = pathlib.Path(__file__).parent
 )
 @pytest.mark.parametrize(
     "test_table",
-    [{"is_temp": True}, {"is_temp": False}],
+    [{}],
     indirect=True,
-    ids=["temp_table", "named_table"],
+    ids=["table"],
 )
 def test_load_file_with_http_path_file(sample_dag, test_table, sql_server):
     sql_name, hook = sql_server
     with sample_dag:
         load_file(
-            path="https://raw.githubusercontent.com/astro-projects/astro/main/tests/data/homes_main.csv",
-            file_conn_id="",
+            input_file=File(
+                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/homes_main.csv"
+            ),
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
@@ -70,9 +74,9 @@ def test_load_file_with_http_path_file(sample_dag, test_table, sql_server):
 )
 @pytest.mark.parametrize(
     "test_table",
-    [{"is_temp": True}, {"is_temp": False}],
+    [{}],
     indirect=True,
-    ids=["temp_table", "named_table"],
+    ids=["table"],
 )
 def test_aql_load_remote_file_to_dbs(
     sample_dag, test_table, sql_server, remote_files_fixture
@@ -81,7 +85,7 @@ def test_aql_load_remote_file_to_dbs(
     file_uri = remote_files_fixture[0]
 
     with sample_dag:
-        load_file(path=file_uri, output_table=test_table)
+        load_file(input_file=File(file_uri), output_table=test_table)
     test_utils.run_dag(sample_dag)
 
     df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
@@ -102,17 +106,17 @@ def test_aql_load_remote_file_to_dbs(
 )
 @pytest.mark.parametrize(
     "test_table",
-    [{"is_temp": True}, {"is_temp": False}],
+    [{}],
     indirect=True,
-    ids=["temp_table", "named_table"],
+    ids=["table"],
 )
 def test_aql_replace_existing_table(sample_dag, test_table, sql_server):
     sql_name, hook = sql_server
     data_path_1 = str(CWD) + "/../data/homes.csv"
     data_path_2 = str(CWD) + "/../data/homes2.csv"
     with sample_dag:
-        task_1 = load_file(path=data_path_1, output_table=test_table)
-        task_2 = load_file(path=data_path_2, output_table=test_table)
+        task_1 = load_file(input_file=File(data_path_1), output_table=test_table)
+        task_2 = load_file(input_file=File(data_path_2), output_table=test_table)
         task_1 >> task_2
     test_utils.run_dag(sample_dag)
 
@@ -128,15 +132,15 @@ def test_aql_replace_existing_table(sample_dag, test_table, sql_server):
 )
 @pytest.mark.parametrize(
     "test_table",
-    [{"is_temp": True}, {"is_temp": False}],
+    [{}],
     indirect=True,
-    ids=["temp_table", "named_table"],
+    ids=["table"],
 )
 def test_aql_local_file_with_no_table_name(sample_dag, test_table, sql_server):
     sql_name, hook = sql_server
     data_path = str(CWD) + "/../data/homes.csv"
     with sample_dag:
-        load_file(path=data_path, output_table=test_table)
+        load_file(input_file=File(data_path), output_table=test_table)
     test_utils.run_dag(sample_dag)
 
     df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
@@ -146,16 +150,15 @@ def test_aql_local_file_with_no_table_name(sample_dag, test_table, sql_server):
 
 
 def test_unique_task_id_for_same_path(sample_dag):
-    OUTPUT_TABLE_NAME = "expected_table_from_csv_1"
-
     tasks = []
 
     with sample_dag:
         for index in range(4):
             params = {
-                "path": str(CWD) + "/../data/homes.csv",
-                "file_conn_id": "",
-                "output_table": Table(name=OUTPUT_TABLE_NAME, conn_id="postgres_conn"),
+                "input_file": File(path=str(CWD) + "/../data/homes.csv"),
+                "output_table": Table(
+                    conn_id="postgres_conn", metadata=Metadata(database="pagila")
+                ),
             }
             if index == 3:
                 params["task_id"] = "task_id"
@@ -187,8 +190,7 @@ def test_load_file_templated_filename(sample_dag, sql_server, test_table):
     database_name, sql_hook = sql_server
     with sample_dag:
         load_file(
-            path=str(CWD) + "/../data/{{ var.value.foo }}/example.csv",
-            file_conn_id="",
+            input_file=File(path=str(CWD) + "/../data/{{ var.value.foo }}/example.csv"),
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
@@ -216,7 +218,7 @@ def test_aql_load_file_pattern(
 
     with sample_dag:
         load_file(
-            path=remote_object_uri[0:-5],
+            input_file=File(path=remote_object_uri[0:-5], filetype=FileType.CSV),
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
@@ -237,8 +239,9 @@ def test_aql_load_file_local_file_pattern(sample_dag, test_table, sql_server):
 
     with sample_dag:
         load_file(
-            path=str(CWD.parent) + "/data/homes_pattern_*",
-            file_conn_id="",
+            input_file=File(
+                path=str(CWD.parent) + "/data/homes_pattern_*", filetype=FileType.CSV
+            ),
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
@@ -248,6 +251,34 @@ def test_aql_load_file_local_file_pattern(sample_dag, test_table, sql_server):
     qualified_name = database.get_table_qualified_name(test_table)
     df = pd.read_sql(f"SELECT * FROM {qualified_name}", con=sql_hook.get_conn())
     assert test_df_rows * 2 == df.shape[0]
+
+
+def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
+    filename = str(CWD.parent) + "/data/homes_pattern_1.csv"
+    filename_2 = str(CWD.parent) + "/data/homes_pattern_2.csv"
+
+    test_df = pd.read_csv(filename)
+    test_df_2 = pd.read_csv(filename_2)
+    test_df = pd.concat([test_df, test_df_2])
+
+    from airflow.decorators import task
+
+    @task
+    def validate(input):
+        assert isinstance(input, pd.DataFrame)
+        assert test_df.shape == input.shape
+        assert test_df.sort_values("sell").equals(input.sort_values("sell"))
+        print(input)
+
+    with sample_dag:
+        loaded_df = load_file(
+            input_file=File(
+                path=str(CWD.parent) + "/data/homes_pattern_*", filetype=FileType.CSV
+            ),
+        )
+        validate(loaded_df)
+
+    test_utils.run_dag(sample_dag)
 
 
 @pytest.mark.integration
@@ -269,8 +300,7 @@ def test_load_file_using_file_connection(
         file_conn_id = gcs.GCSHook.default_conn_name
     with sample_dag:
         load_file(
-            path=file_uri,
-            file_conn_id=file_conn_id,
+            input_file=File(path=file_uri, conn_id=file_conn_id),
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
@@ -287,13 +317,12 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(
 ):
     database_name = "postgres"
     file_conn_id = "fake_conn"
-    file_uri = "s3://fake-bucket/fake-object"
+    file_uri = "s3://fake-bucket/fake-object.csv"
 
     sql_server_params = test_utils.get_default_parameters(database_name)
 
     task_params = {
-        "path": file_uri,
-        "file_conn_id": file_conn_id,
+        "input_file": File(path=file_uri, conn_id=file_conn_id),
         "output_table": Table(name=OUTPUT_TABLE_NAME, **sql_server_params),
     }
     with pytest.raises(BackfillUnfinished):
@@ -314,8 +343,9 @@ def test_load_file(sample_dag, sql_server, file_type, test_table):
 
     with sample_dag:
         load_file(
-            path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}")),
-            file_conn_id="",
+            input_file=File(
+                path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}"))
+            ),
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
@@ -358,8 +388,9 @@ def test_load_file_with_named_schema(sample_dag, sql_server, file_type, test_tab
 
     with sample_dag:
         load_file(
-            path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}")),
-            file_conn_id="",
+            input_file=File(
+                path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}"))
+            ),
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
@@ -403,8 +434,9 @@ def test_load_file_chunks(sample_dag, sql_server, test_table):
     with mock.patch(chunk_function) as mock_chunk_function:
         with sample_dag:
             load_file(
-                path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}")),
-                file_conn_id="",
+                input_file=File(
+                    path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}"))
+                ),
                 output_table=test_table,
             )
         test_utils.run_dag(sample_dag)
@@ -423,7 +455,9 @@ def test_aql_nested_ndjson_file_with_default_sep_param(
     _, hook = sql_server
     with sample_dag:
         load_file(
-            path=str(CWD) + "/../data/github_single_level_nested.ndjson",
+            input_file=File(
+                path=str(CWD) + "/../data/github_single_level_nested.ndjson"
+            ),
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
@@ -443,7 +477,9 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_sep_params(
     _, hook = sql_server
     with sample_dag:
         load_file(
-            path=str(CWD) + "/../data/github_single_level_nested.ndjson",
+            input_file=File(
+                path=str(CWD) + "/../data/github_single_level_nested.ndjson"
+            ),
             output_table=test_table,
             ndjson_normalize_sep="___",
         )
@@ -466,7 +502,9 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_illegal_sep_params(
     _, hook = sql_server
     with sample_dag:
         load_file(
-            path=str(CWD) + "/../data/github_single_level_nested.ndjson",
+            input_file=File(
+                path=str(CWD) + "/../data/github_single_level_nested.ndjson"
+            ),
             output_table=test_table,
             ndjson_normalize_sep=".",
         )
@@ -490,9 +528,29 @@ def test_aql_multilevel_nested_ndjson_file_default_params(
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
             load_file(
-                path=str(CWD) + "/../data/github_multi_level_nested.ndjson",
+                input_file=File(
+                    path=str(CWD) + "/../data/github_multi_level_nested.ndjson"
+                ),
                 output_table=test_table,
             )
         test_utils.run_dag(sample_dag)
     expected_error = "can't adapt type 'dict"
     assert expected_error in caplog.text
+
+
+def test_populate_table_metadata(sample_dag):
+    """
+    Test default populating of table fields in load_fil op.
+    """
+
+    @adf
+    def validate(table: Table):
+        assert table.metadata.schema == SCHEMA
+
+    with sample_dag:
+        output_table = load_file(
+            input_file=File(path=str(pathlib.Path(CWD.parent, "data/sample.csv"))),
+            output_table=Table(conn_id="postgres_conn_pagila"),
+        )
+        validate(output_table)
+    test_utils.run_dag(sample_dag)

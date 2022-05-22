@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 import pandas as pd
 import sqlalchemy
@@ -33,6 +33,15 @@ class BaseDatabase(ABC):
     _create_schema_statement: str = "CREATE SCHEMA IF NOT EXISTS {}"
     _drop_table_statement: str = "DROP TABLE IF EXISTS {}"
     _create_table_statement: str = "CREATE TABLE IF NOT EXISTS {} AS {}"
+
+    # Used to normalize the ndjson when appending fields in nested fields.
+    # Example -
+    #   ndjson - {'a': {'b': 'val'}}
+    #   the col names generated is 'a.b'. char '.' maybe an illegal char in some db's col name.
+    # Contains the illegal char and there replacement, where the value in
+    # illegal_column_name_chars[0] will be replaced by value in illegal_column_name_chars_replacement[0]
+    illegal_column_name_chars: List[str] = []
+    illegal_column_name_chars_replacement: List[str] = []
 
     def __init__(self, conn_id: str):
         self.conn_id = conn_id
