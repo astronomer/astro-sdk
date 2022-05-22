@@ -3,7 +3,7 @@ import tempfile
 
 import pandas as pd
 
-from astro.files.type import ParquetFileType
+from astro.files.types import ParquetFileType
 
 sample_file = pathlib.Path(
     pathlib.Path(__file__).parent.parent.parent, "data/sample.parquet"

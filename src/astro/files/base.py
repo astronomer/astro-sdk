@@ -5,7 +5,7 @@ import smart_open
 
 from astro.constants import FileType
 from astro.files.locations import create_file_location
-from astro.files.type import create_file_type
+from astro.files.types import create_file_type
 
 
 class File:
