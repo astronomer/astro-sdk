@@ -116,6 +116,7 @@ class SqlDataframeOperator(DecoratedOperator):
 
         pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
         if self.output_table:
+            self.output_table.conn_id = self.output_table.conn_id or self.conn_id
             db = create_database(self.output_table.conn_id or self.conn_id)
             self.output_table = db.populate_table_metadata(self.output_table)
             db.load_pandas_dataframe_to_table(
