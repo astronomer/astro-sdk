@@ -114,6 +114,10 @@ class PostgresDatabase(BaseDatabase):
         :param table: Details of the table we want to check that exists
         """
         _schema = table.metadata.schema
+        # when creating schemas they are created in a lowercase even when we have a schema in uppercase.
+        # while checking for schema there in no lowercase applied in 'has_table()' which leads to table not found.
+        # Added 'schema.lower()' to make sure we search for schema in lowercase to match the creation lowercase.
         schema = _schema.lower() if _schema else _schema
+
         inspector = sqlalchemy.inspect(self.sqlalchemy_engine)
         return bool(inspector.dialect.has_table(self.connection, table.name, schema))
