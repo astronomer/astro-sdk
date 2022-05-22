@@ -29,7 +29,7 @@ from astro.settings import SCHEMA
 
 # Import Operator
 from astro.sql.operators.save_file import save_file
-from astro.sql.table import Metadata
+from astro.sql.table import Metadata, Table
 from astro.utils.dependencies import gcs
 from tests.operators import utils as test_utils
 
@@ -340,3 +340,36 @@ def test_save_file(sample_dag, sql_server, file_type, table_fixture):
             ]
         )
         assert df.rename(columns=str.lower).equals(expected)
+
+
+@pytest.mark.parametrize("sql_server", [Database.POSTGRES.value], indirect=True)
+@pytest.mark.parametrize(
+    "table_fixture",
+    [
+        {
+            "path": str(CWD) + "/../data/sample.csv",
+            "load_table": True,
+            "param": {
+                "metadata": Metadata(schema=SCHEMA),
+            },
+        }
+    ],
+    indirect=True,
+    ids=["table"],
+)
+def test_populate_table_metadata(sample_dag, sql_server, table_fixture):
+    table_fixture.metadata.schema = None
+
+    @adf
+    def validate(table: Table):
+        assert table.metadata.schema == SCHEMA
+
+    with sample_dag:
+        aql.save_file(
+            input_data=table_fixture,
+            output_file=File(path="/tmp/saved_df.csv"),
+            if_exists="replace",
+        )
+        validate(table_fixture)
+
+    test_utils.run_dag(sample_dag)
