@@ -21,7 +21,7 @@ def _get_dataframe(table: Table, identifiers_as_lower: bool = False) -> pd.DataF
 
 
 def load_op_arg_table_into_dataframe(
-    op_args: Tuple, python_callable: Callable
+    op_args: Tuple, python_callable: Callable, identifiers_as_lower: bool
 ) -> Tuple:
     """For dataframe based functions, takes any Table objects from the op_args
     and converts them into local dataframes that can be handled in the python context"""
@@ -35,14 +35,16 @@ def load_op_arg_table_into_dataframe(
         if full_spec.annotations[current_arg] == pd.DataFrame and isinstance(
             arg, Table
         ):
-            ret_args.append(_get_dataframe(arg))
+            ret_args.append(
+                _get_dataframe(arg, identifiers_as_lower=identifiers_as_lower)
+            )
         else:
             ret_args.append(arg)
     return tuple(ret_args)
 
 
 def load_op_kwarg_table_into_dataframe(
-    op_kwargs: Dict, python_callable: Callable
+    op_kwargs: Dict, python_callable: Callable, identifiers_as_lower
 ) -> Dict:
     """For dataframe based functions, takes any Table objects from the op_kwargs
     and converts them into local dataframes that can be handled in the python context"""
@@ -50,7 +52,7 @@ def load_op_kwarg_table_into_dataframe(
     # We check if the type annotation is of type dataframe to determine that the user actually WANTS
     # this table to be converted into a dataframe, rather that passed in as a table
     return {
-        k: _get_dataframe(v)
+        k: _get_dataframe(v, identifiers_as_lower=identifiers_as_lower)
         if param_types.get(k).annotation is pd.DataFrame and isinstance(v, Table)  # type: ignore
         else v
         for k, v in op_kwargs.items()
@@ -63,7 +65,7 @@ class SqlDataframeOperator(DecoratedOperator):
         conn_id: Optional[str] = None,
         database: Optional[str] = None,
         schema: Optional[str] = None,
-        identifiers_as_lower: Optional[bool] = True,
+        identifiers_as_lower: bool = True,
         **kwargs,
     ):
         """
@@ -106,10 +108,10 @@ class SqlDataframeOperator(DecoratedOperator):
             self.database = self.database or first_table.metadata.database  # type: ignore
             self.schema = self.schema or first_table.metadata.schema  # type: ignore
         self.op_args = load_op_arg_table_into_dataframe(
-            self.op_args, self.python_callable
+            self.op_args, self.python_callable, self.identifiers_as_lower
         )
         self.op_kwargs = load_op_kwarg_table_into_dataframe(
-            self.op_kwargs, self.python_callable
+            self.op_kwargs, self.python_callable, self.identifiers_as_lower
         )
 
         pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
