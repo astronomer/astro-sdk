@@ -264,7 +264,7 @@ def load_op_arg_dataframes_into_sql(
             )
             final_args.append(target_table)
         elif isinstance(arg, Table):
-            arg = database.populate_table_metadata(arg)
+            # arg = database.populate_table_metadata(arg)
             final_args.append(arg)
         else:
             final_args.append(arg)
@@ -292,7 +292,7 @@ def load_op_kwarg_dataframes_into_sql(
             )
             final_kwargs[key] = df_table
         elif isinstance(value, Table):
-            value = database.populate_table_metadata(value)
+            # value = database.populate_table_metadata(value)
             final_kwargs[key] = value
         else:
             final_kwargs[key] = value
