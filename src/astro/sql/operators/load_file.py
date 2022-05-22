@@ -34,7 +34,7 @@ class LoadFile(BaseOperator):
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
-        self.output_table: Table = output_table
+        self.output_table = output_table
         self.input_file = input_file
         self.chunk_size = chunk_size
         self.kwargs = kwargs
