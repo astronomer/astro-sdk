@@ -22,7 +22,9 @@ from pandas.testing import assert_frame_equal
 
 from astro.constants import Database, FileType
 from astro.databases import create_database
+from astro.dataframe import dataframe as adf
 from astro.files import File
+from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
 from astro.sql.table import Metadata, Table
 from astro.utils.dependencies import gcs, s3
@@ -507,3 +509,21 @@ def test_aql_multilevel_nested_ndjson_file_default_params(
         test_utils.run_dag(sample_dag)
     expected_error = "can't adapt type 'dict"
     assert expected_error in caplog.text
+
+
+def test_populate_table_metadata(sample_dag):
+    """
+    Test default populating of table fields.
+    """
+
+    @adf
+    def validate(table: Table):
+        assert table.metadata.schema == SCHEMA
+
+    with sample_dag:
+        output_table = load_file(
+            input_file=File(path=str(pathlib.Path(CWD.parent, "data/sample.csv"))),
+            output_table=Table(conn_id="postgres_conn_pagila"),
+        )
+        validate(output_table)
+    test_utils.run_dag(sample_dag)
