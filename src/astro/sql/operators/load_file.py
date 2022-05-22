@@ -47,9 +47,11 @@ class LoadFile(BaseOperator):
 
     def execute(self, context: Any) -> Union[Table, pd.DataFrame]:
         """
-        Load an existing dataset from a supported file into a SQL table.
+        Load an existing dataset from a supported file into a SQL table or a Dataframe.
         """
         if self.input_file.conn_id:
+            # Verify a Connection with self.input_file.conn_id actually exists in Airflow
+            # Raises a AirflowNotFoundException exception otherwise
             BaseHook.get_connection(self.input_file.conn_id)
 
         return self.load_data(input_file=self.input_file)
@@ -58,21 +60,18 @@ class LoadFile(BaseOperator):
 
         self.log.info("Loading %s into %s ...", self.input_file.path, self.output_table)
         if self.output_table:
-            self.load_data_to_table(input_file=input_file)
-            self.log.info("Completed loading the data into %s.", self.output_table)
-            return self.output_table
+            return self.load_data_to_table(input_file)
         else:
-            output_df = self.load_data_to_dataframe(input_file)
-            self.log.info("Completed loading the data into dataframe.")
-            return output_df
+            return self.load_data_to_dataframe(input_file)
 
-    def load_data_to_table(self, input_file):
-        """Loads csv/parquet table from local/S3/GCS with Pandas.
+    def load_data_to_table(self, input_file: File) -> Table:
+        """
+        Loads csv/parquet table from local/S3/GCS with Pandas.
         Infers SQL database type based on connection then loads table to db.
         """
         database = create_database(self.output_table.conn_id)
         self.output_table = database.populate_table_metadata(self.output_table)
-        self.normalize_config = LoadFile._populate_normalize_config(
+        self.normalize_config = self._populate_normalize_config(
             ndjson_normalize_sep=self.ndjson_normalize_sep,
             database=database,
         )
@@ -87,10 +86,13 @@ class LoadFile(BaseOperator):
                 chunk_size=self.chunk_size,
             )
             if_exists = "append"
+        self.log.info("Completed loading the data into %s.", self.output_table)
+        return self.output_table
 
-    def load_data_to_dataframe(self, input_file):
-        """Loads csv/parquet file from local/S3/GCS with Pandas.
-        returns dataframe as no SQL table was specified
+    def load_data_to_dataframe(self, input_file: File) -> pd.DataFrame:
+        """
+        Loads csv/parquet file from local/S3/GCS with Pandas. Returns dataframe as no
+        SQL table was specified
         """
         df = None
         for file in get_files(input_file.path, input_file.conn_id):
@@ -98,7 +100,7 @@ class LoadFile(BaseOperator):
                 df = pd.concat([df, file.export_to_dataframe()])
             else:
                 df = file.export_to_dataframe()
-
+        self.log.info("Completed loading the data into dataframe.")
         return df
 
     @staticmethod

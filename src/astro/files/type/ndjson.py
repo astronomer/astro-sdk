@@ -1,6 +1,6 @@
 import io
 import json
-from typing import Union
+from typing import Optional
 
 import pandas as pd
 
@@ -33,7 +33,7 @@ class NDJSONFileType(FileType):
 
     @staticmethod
     def flatten(
-        normalize_config: Union[None, dict], stream: io.TextIOWrapper
+        normalize_config: Optional[dict], stream: io.TextIOWrapper
     ) -> pd.DataFrame:
         """
         Flatten the nested ndjson/json.

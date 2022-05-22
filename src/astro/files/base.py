@@ -27,7 +27,7 @@ class File:
         :param path: Path to a file in the filesystem/Object stores
         :param conn_id: Airflow connection ID
         :param filetype: constant to provide an explicit file type
-        :param normalize_config: normalize_config: parameters in dict format of pandas json_normalize() function.
+        :param normalize_config: parameters in dict format of pandas json_normalize() function.
         """
         self.location = create_file_location(path, conn_id)
         self.type = create_file_type(
@@ -108,7 +108,7 @@ def get_files(
         supports glob and prefix pattern for object stores
     :param conn_id: Airflow connection ID
     :param filetype: constant to provide an explicit file type
-    :param normalize_config: normalize_config: parameters in dict format of pandas json_normalize() function.
+    :param normalize_config: parameters in dict format of pandas json_normalize() function.
     """
     location = create_file_location(path_pattern, conn_id)
     return [
