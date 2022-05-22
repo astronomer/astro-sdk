@@ -6,7 +6,7 @@ Requires the unittest, pytest, and requests-mock Python libraries.
 Run test:
     AWS_ACCESS_KEY_ID=KEY \
     AWS_SECRET_ACCESS_KEY=SECRET \
-    python3 -m unittest tests.operators.test_save_file.TestSaveFile.test_save_postgres_table_to_local
+    python3 -m unittest tests.operators.test_export_file.TestSaveFile.test_save_postgres_table_to_local
 
 """
 import logging
@@ -28,14 +28,14 @@ from astro.files import File
 from astro.settings import SCHEMA
 
 # Import Operator
-from astro.sql.operators.save_file import save_file
+from astro.sql.operators.export_file import export_file
 from astro.sql.table import Metadata, Table
 from astro.utils.dependencies import gcs
 from tests.sql.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
-INPUT_TABLE_NAME = test_utils.get_table_name("save_file_test_table")
+INPUT_TABLE_NAME = test_utils.get_table_name("export_file_test_table")
 CWD = pathlib.Path(__file__).parent
 
 
@@ -58,7 +58,7 @@ def test_save_dataframe_to_local(sample_dag):
 
     with sample_dag:
         df = make_df()
-        aql.save_file(
+        aql.export_file(
             input_data=df,
             output_file=File(path="/tmp/saved_df.csv"),
             if_exists="replace",
@@ -73,8 +73,10 @@ def test_save_dataframe_to_local(sample_dag):
 def test_save_temp_table_to_local(sample_dag, sql_server, test_table):
     data_path = str(CWD) + "/../../data/homes.csv"
     with sample_dag:
-        table = aql.load_file(input_file=File(path=data_path), output_table=test_table)
-        aql.save_file(
+        table = aql.load_file(
+            input_file=File(path=data_path), output_table=test_table
+        )
+        aql.export_file(
             input_data=table,
             output_file=File(path="/tmp/saved_df.csv"),
             if_exists="replace",
@@ -110,7 +112,7 @@ def test_save_all_db_tables_to_S3(sample_dag, test_table, sql_server):
     OUTPUT_FILE_PATH = f"s3://tmp9/{file_name}"
 
     with sample_dag:
-        save_file(
+        export_file(
             input_data=test_table,
             output_file=File(path=OUTPUT_FILE_PATH, conn_id="aws_default"),
             if_exists="replace",
@@ -156,7 +158,7 @@ def test_save_all_db_tables_to_GCS(sample_dag, test_table, sql_server):
     OUTPUT_FILE_PATH = f"gs://{bucket}/test/{file_name}"
 
     with sample_dag:
-        save_file(
+        export_file(
             input_data=test_table,
             output_file=File(path=OUTPUT_FILE_PATH, conn_id="google_cloud_default"),
             if_exists="replace",
@@ -196,7 +198,7 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
     with tempfile.NamedTemporaryFile(suffix=".csv") as temp_file:
         with pytest.raises(BackfillUnfinished):
             with sample_dag:
-                save_file(
+                export_file(
                     input_data=test_table,
                     output_file=File(path=temp_file.name),
                     if_exists="exception",
@@ -234,7 +236,7 @@ def test_save_table_remote_file_exists_overwrite_false(
 
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
-            save_file(
+            export_file(
                 input_data=test_table,
                 output_file=File(path=remote_files_fixture[0], conn_id="aws_default"),
                 if_exists="exception",
@@ -276,14 +278,14 @@ def test_unique_task_id_for_same_path(sample_dag, sql_server, test_table):
 
             if i == 3:
                 params["task_id"] = "task_id"
-            task = save_file(**params)
+            task = export_file(**params)
             tasks.append(task)
     test_utils.run_dag(sample_dag)
 
     assert tasks[0].operator.task_id != tasks[1].operator.task_id
-    assert tasks[0].operator.task_id == f"save_file_{file_name.replace('.','_')}"
-    assert tasks[1].operator.task_id == f"save_file_{file_name.replace('.','_')}__1"
-    assert tasks[2].operator.task_id == f"save_file_{file_name.replace('.','_')}__2"
+    assert tasks[0].operator.task_id == f"export_file_{file_name.replace('.','_')}"
+    assert tasks[1].operator.task_id == f"export_file_{file_name.replace('.','_')}__1"
+    assert tasks[2].operator.task_id == f"export_file_{file_name.replace('.','_')}__2"
     assert tasks[3].operator.task_id == "task_id"
 
     os.remove(OUTPUT_FILE_PATH)
@@ -306,12 +308,13 @@ def test_unique_task_id_for_same_path(sample_dag, sql_server, test_table):
     indirect=True,
     ids=["test-table"],
 )
-def test_save_file(sample_dag, sql_server, file_type, test_table):
+
+def test_export_file(sample_dag, sql_server, file_type, test_table):
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         filepath = Path(tmp_dir, f"sample.{file_type}")
         with sample_dag:
-            save_file(
+            export_file(
                 input_data=test_table,
                 output_file=File(path=str(filepath)),
                 if_exists="exception",
@@ -347,7 +350,7 @@ def test_save_file(sample_dag, sql_server, file_type, test_table):
 )
 def test_populate_table_metadata(sample_dag, sql_server, test_table):
     """
-    Test default populating of table fields in save_file op.
+    Test default populating of table fields in export_file op.
     """
     test_table.metadata.schema = None
 
@@ -356,7 +359,7 @@ def test_populate_table_metadata(sample_dag, sql_server, test_table):
         assert table.metadata.schema == SCHEMA
 
     with sample_dag:
-        aql.save_file(
+        aql.export_file(
             input_data=test_table,
             output_file=File(path="/tmp/saved_df.csv"),
             if_exists="replace",

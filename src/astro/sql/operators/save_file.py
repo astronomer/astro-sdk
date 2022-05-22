@@ -11,7 +11,7 @@ from astro.sql.table import Table
 from astro.utils.task_id_helper import get_task_id
 
 
-class SaveFile(BaseOperator):
+class ExportFile(BaseOperator):
     """Write SQL table to csv/parquet on local/S3/GCS.
 
     :param input_data: Table to convert to file
@@ -58,7 +58,7 @@ class SaveFile(BaseOperator):
             raise FileExistsError(f"{self.output_file.path} file already exists.")
 
 
-def save_file(
+def export_file(
     input_data: Union[Table, pd.DataFrame],
     output_file: File,
     if_exists: ExportExistsStrategy = "exception",
@@ -76,10 +76,10 @@ def save_file(
     """
 
     task_id = (
-        task_id if task_id is not None else get_task_id("save_file", output_file.path)
+        task_id if task_id is not None else get_task_id("export_file", output_file.path)
     )
 
-    return SaveFile(
+    return ExportFile(
         task_id=task_id,
         output_file=output_file,
         input_data=input_data,

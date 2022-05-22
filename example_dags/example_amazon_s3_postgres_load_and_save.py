@@ -28,7 +28,7 @@ def example_amazon_s3_postgres_load_and_save():
         output_table=Table(name="expected_table_from_s3", conn_id="postgres_conn"),
     )
 
-    aql.save_file(
+    aql.export_file(
         input_data=t1,
         output_file=File(path=f"{s3_bucket}/homes.csv"),
         if_exists="replace",

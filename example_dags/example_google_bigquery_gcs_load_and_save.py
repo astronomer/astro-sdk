@@ -52,7 +52,7 @@ with DAG(
 
     t2 = extract_top_5_movies(input_df=t1)
 
-    aql.save_file(
+    aql.export_file(
         task_id="save_to_gcs",
         input_data=t2,
         output_file=File(
