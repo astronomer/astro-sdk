@@ -5,7 +5,7 @@ import smart_open
 
 from astro.constants import FileType
 from astro.files.locations import create_file_location
-from astro.files.type import create_file_type
+from astro.files.types import create_file_type
 
 
 class File:
@@ -35,12 +35,16 @@ class File:
         )
 
     @property
-    def path(self) -> str:
-        return self.location.path
+    def path(self) -> Optional[str]:
+        if self.location.path:
+            return str(self.location.path)
+        return None
 
     @property
     def conn_id(self) -> Optional[str]:
-        return self.location.conn_id
+        if self.location.conn_id:
+            return str(self.location.conn_id)
+        return None
 
     @property
     def size(self) -> int:
