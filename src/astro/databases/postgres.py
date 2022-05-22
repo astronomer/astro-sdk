@@ -65,10 +65,13 @@ class PostgresDatabase(BaseDatabase):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
-        self.create_schema_if_needed(target_table.metadata.schema)
+        schema = None
+        if target_table.metadata and target_table.metadata.schema:
+            self.create_schema_if_needed(target_table.metadata.schema)
+            schema = target_table.metadata.schema.lower()
         source_dataframe.to_sql(
             target_table.name,
-            schema=target_table.metadata.schema.lower(),  # type: ignore
+            schema=schema,  # type: ignore
             con=self.sqlalchemy_engine,
             if_exists=if_exists,
             chunksize=chunk_size,
