@@ -173,13 +173,11 @@ def run_merge(output_specs: List[Table], merge_parameters, mode, sql_type):
     [
         [
             {
-                "is_temp": False,
                 "param": {"metadata": Metadata(schema=SCHEMA)},
                 "path": str(CWD) + "/../data/homes_merge_1.csv",
                 "load_table": True,
             },
             {
-                "is_temp": False,
                 "param": {"metadata": Metadata(schema=SCHEMA)},
                 "path": str(CWD) + "/../data/homes_merge_2.csv",
                 "load_table": True,

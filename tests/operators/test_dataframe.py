@@ -27,7 +27,6 @@ CWD = pathlib.Path(__file__).parent
         {
             "path": str(CWD) + "/../data/homes2.csv",
             "load_table": True,
-            "is_temp": False,
             "param": {
                 "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_2"),
@@ -61,7 +60,6 @@ def test_dataframe_from_sql_basic(sample_dag, sql_server, test_table):
         {
             "path": str(CWD) + "/../data/homes2.csv",
             "load_table": True,
-            "is_temp": False,
             "param": {
                 "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_2"),
@@ -93,7 +91,6 @@ def test_dataframe_from_sql_custom_task_id(sample_dag, sql_server, test_table):
         {
             "path": str(CWD) + "/../data/homes2.csv",
             "load_table": True,
-            "is_temp": False,
             "param": {
                 "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_2"),
@@ -131,7 +128,6 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, sql_server, test_table):
         {
             "path": str(CWD) + "/../data/homes2.csv",
             "load_table": True,
-            "is_temp": False,
             "param": {
                 "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_2"),
@@ -169,7 +165,6 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(sample_dag, sql_server, test_
         {
             "path": str(CWD) + "/../data/homes_upper.csv",
             "load_table": True,
-            "is_temp": False,
             "param": {
                 "metadata": Metadata(schema=SCHEMA),
                 "name": test_utils.get_table_name("test_stats_check_2"),

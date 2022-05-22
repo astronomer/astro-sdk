@@ -70,12 +70,6 @@ def test_save_dataframe_to_local(sample_dag):
 
 
 @pytest.mark.parametrize("sql_server", [Database.SQLITE.value], indirect=True)
-@pytest.mark.parametrize(
-    "table_fixture",
-    [{}],
-    indirect=True,
-    ids=["table"],
-)
 def test_save_temp_table_to_local(sample_dag, sql_server, table_fixture):
     data_path = str(CWD) + "/../data/homes.csv"
     with sample_dag:

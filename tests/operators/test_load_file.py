@@ -41,12 +41,6 @@ CWD = pathlib.Path(__file__).parent
 @pytest.mark.parametrize(
     "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
 )
-@pytest.mark.parametrize(
-    "test_table",
-    [{}],
-    indirect=True,
-    ids=["table"],
-)
 def test_load_file_with_http_path_file(sample_dag, test_table, sql_server):
     sql_name, hook = sql_server
     with sample_dag:
@@ -71,12 +65,6 @@ def test_load_file_with_http_path_file(sample_dag, test_table, sql_server):
 )
 @pytest.mark.parametrize(
     "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
-)
-@pytest.mark.parametrize(
-    "test_table",
-    [{}],
-    indirect=True,
-    ids=["table"],
 )
 def test_aql_load_remote_file_to_dbs(
     sample_dag, test_table, sql_server, remote_files_fixture
@@ -104,12 +92,6 @@ def test_aql_load_remote_file_to_dbs(
 @pytest.mark.parametrize(
     "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
 )
-@pytest.mark.parametrize(
-    "test_table",
-    [{}],
-    indirect=True,
-    ids=["table"],
-)
 def test_aql_replace_existing_table(sample_dag, test_table, sql_server):
     sql_name, hook = sql_server
     data_path_1 = str(CWD) + "/../data/homes.csv"
@@ -129,12 +111,6 @@ def test_aql_replace_existing_table(sample_dag, test_table, sql_server):
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "sql_server", ["snowflake", "postgres", "bigquery", "sqlite"], indirect=True
-)
-@pytest.mark.parametrize(
-    "test_table",
-    [{}],
-    indirect=True,
-    ids=["table"],
 )
 def test_aql_local_file_with_no_table_name(sample_dag, test_table, sql_server):
     sql_name, hook = sql_server
@@ -379,7 +355,7 @@ def test_load_file(sample_dag, sql_server, file_type, test_table):
 )
 @pytest.mark.parametrize(
     "test_table",
-    [{"is_temp": False, "param": {"metadata": Metadata(schema="custom_schema")}}],
+    [{"param": {"metadata": Metadata(schema="custom_schema")}}],
     indirect=True,
 )
 @pytest.mark.parametrize("file_type", ["csv"])
