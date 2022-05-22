@@ -69,6 +69,10 @@ class LoadFile(BaseOperator):
         Loads csv/parquet table from local/S3/GCS with Pandas.
         Infers SQL database type based on connection then loads table to db.
         """
+        if not isinstance(self.output_table, Table):
+            raise ValueError(
+                "Please pass a valid Table instance in 'output_table' parameter"
+            )
         database = create_database(self.output_table.conn_id)
         self.output_table = database.populate_table_metadata(self.output_table)
         self.normalize_config = self._populate_normalize_config(
