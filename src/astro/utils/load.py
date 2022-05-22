@@ -4,7 +4,7 @@ Functions for loading data from a source location to a destination location.
 import io
 import json
 import tempfile
-from typing import Any, Dict, Optional, Union
+from typing import Optional, Union
 
 import pandas as pd
 import pyarrow as pa
@@ -21,7 +21,6 @@ from astro.constants import (
     Database,
     FileType,
 )
-from astro.databases import BaseDatabase
 from astro.sql.table import Table
 from astro.utils.database import get_database_name, get_sqlalchemy_engine
 from astro.utils.dependencies import pandas_tools
@@ -96,48 +95,6 @@ def flatten_ndjson(
             )
         rows = stream.readlines(DEFAULT_CHUNK_SIZE)
     return df
-
-
-def populate_normalize_config(
-    database: BaseDatabase,
-    ndjson_normalize_sep: str = "_",
-) -> Dict[str, str]:
-    """
-    Validate pandas json_normalize() parameter for databases, since default params result in
-    invalid column name. Default parameter result in the columns name containing '.' char.
-
-    :param ndjson_normalize_sep: separator used to normalize nested ndjson.
-        https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html
-    :param database: supported database
-    """
-
-    def replace_illegal_columns_chars(char: str, database: BaseDatabase) -> str:
-        index = (
-            database.illegal_column_name_chars.index(char)
-            if char in database.illegal_column_name_chars
-            else None
-        )
-        if index is not None:
-            return str(database.illegal_column_name_chars_replacement[index])
-        else:
-            return str(char)
-
-    normalize_config: Dict[str, Any] = {
-        "meta_prefix": ndjson_normalize_sep,
-        "record_prefix": ndjson_normalize_sep,
-        "sep": ndjson_normalize_sep,
-    }
-    normalize_config["meta_prefix"] = replace_illegal_columns_chars(
-        normalize_config["meta_prefix"], database
-    )
-    normalize_config["record_prefix"] = replace_illegal_columns_chars(
-        normalize_config["record_prefix"], database
-    )
-    normalize_config["sep"] = replace_illegal_columns_chars(
-        normalize_config["sep"], database
-    )
-
-    return normalize_config
 
 
 def load_file_rows_into_dataframe(
