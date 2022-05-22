@@ -61,6 +61,9 @@ class SnowflakeDatabase(BaseDatabase):
         if target_table.metadata:
             schema = getattr(target_table.metadata, "schema", None)
 
+        # within prep_table we use pandas drop() function which is used when we pass 'if_exists=replace'.
+        # There is an issue where has_table() works with uppercase table names but the function meta.reflect() don't.
+        # To prevent the issue we are passing table name in lowercase.
         db.prep_table(
             source_dataframe,
             target_table.name.lower(),
