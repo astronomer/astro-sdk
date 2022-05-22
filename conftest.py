@@ -159,7 +159,6 @@ def table_fixture(request, sql_server):  # noqa: C901
                 "conn_id": hook.snowflake_conn_id,
                 "metadata": Metadata(
                     database=hook.database,
-                    warehouse=hook.warehouse,
                     schema=hook.schema,
                 ),
             }
