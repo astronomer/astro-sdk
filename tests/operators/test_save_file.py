@@ -70,12 +70,10 @@ def test_save_dataframe_to_local(sample_dag):
 
 
 @pytest.mark.parametrize("sql_server", [Database.SQLITE.value], indirect=True)
-def test_save_temp_table_to_local(sample_dag, sql_server, table_fixture):
+def test_save_temp_table_to_local(sample_dag, sql_server, test_table):
     data_path = str(CWD) + "/../data/homes.csv"
     with sample_dag:
-        table = aql.load_file(
-            input_file=File(path=data_path), output_table=table_fixture
-        )
+        table = aql.load_file(input_file=File(path=data_path), output_table=test_table)
         aql.save_file(
             input_data=table,
             output_file=File(path="/tmp/saved_df.csv"),
@@ -90,7 +88,7 @@ def test_save_temp_table_to_local(sample_dag, sql_server, table_fixture):
 
 @pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
 @pytest.mark.parametrize(
-    "table_fixture",
+    "test_table",
     [
         {
             "path": str(CWD) + "/../data/homes.csv",
@@ -104,7 +102,7 @@ def test_save_temp_table_to_local(sample_dag, sql_server, table_fixture):
     indirect=True,
     ids=["temp_table"],
 )
-def test_save_all_db_tables_to_S3(sample_dag, table_fixture, sql_server):
+def test_save_all_db_tables_to_S3(sample_dag, test_table, sql_server):
 
     _creds = s3fs_creds()
     sql_name, hook = sql_server
@@ -114,13 +112,13 @@ def test_save_all_db_tables_to_S3(sample_dag, table_fixture, sql_server):
 
     with sample_dag:
         save_file(
-            input_data=table_fixture,
+            input_data=test_table,
             output_file=File(path=OUTPUT_FILE_PATH, conn_id="aws_default"),
             if_exists="replace",
         )
     test_utils.run_dag(sample_dag)
 
-    df = test_utils.get_dataframe_from_table(sql_name, table_fixture, hook)
+    df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
 
     # # Read output CSV
     df_file = pd.read_csv(OUTPUT_FILE_PATH, storage_options=s3fs_creds())
@@ -138,7 +136,7 @@ def test_save_all_db_tables_to_S3(sample_dag, table_fixture, sql_server):
 
 @pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
 @pytest.mark.parametrize(
-    "table_fixture",
+    "test_table",
     [
         {
             "path": str(CWD) + "/../data/homes2.csv",
@@ -152,7 +150,7 @@ def test_save_all_db_tables_to_S3(sample_dag, table_fixture, sql_server):
     indirect=True,
     ids=["temp_table"],
 )
-def test_save_all_db_tables_to_GCS(sample_dag, table_fixture, sql_server):
+def test_save_all_db_tables_to_GCS(sample_dag, test_table, sql_server):
 
     sql_name, hook = sql_server
     file_name = f"{test_utils.get_table_name('test_save')}.csv"
@@ -162,13 +160,13 @@ def test_save_all_db_tables_to_GCS(sample_dag, table_fixture, sql_server):
 
     with sample_dag:
         save_file(
-            input_data=table_fixture,
+            input_data=test_table,
             output_file=File(path=OUTPUT_FILE_PATH, conn_id="google_cloud_default"),
             if_exists="replace",
         )
     test_utils.run_dag(sample_dag)
 
-    df = test_utils.get_dataframe_from_table(sql_name, table_fixture, hook)
+    df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
 
     if sql_name != "snowflake":
         assert (df["sell"].sort_values() == [129, 138, 142, 175, 232]).all()
@@ -181,7 +179,7 @@ def test_save_all_db_tables_to_GCS(sample_dag, table_fixture, sql_server):
 
 @pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
 @pytest.mark.parametrize(
-    "table_fixture",
+    "test_table",
     [
         {
             "path": str(CWD) + "/../data/homes.csv",
@@ -197,13 +195,13 @@ def test_save_all_db_tables_to_GCS(sample_dag, table_fixture, sql_server):
     ids=["table"],
 )
 def test_save_all_db_tables_to_local_file_exists_overwrite_false(
-    sample_dag, table_fixture, sql_server, caplog
+    sample_dag, test_table, sql_server, caplog
 ):
     with tempfile.NamedTemporaryFile(suffix=".csv") as temp_file:
         with pytest.raises(BackfillUnfinished):
             with sample_dag:
                 save_file(
-                    input_data=table_fixture,
+                    input_data=test_table,
                     output_file=File(path=temp_file.name),
                     if_exists="exception",
                 )
@@ -214,7 +212,7 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
 
 @pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
 @pytest.mark.parametrize(
-    "table_fixture",
+    "test_table",
     [
         {
             "path": str(CWD) + "/../data/homes.csv",
@@ -235,13 +233,13 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
     ids=["google", "amazon"],
 )
 def test_save_table_remote_file_exists_overwrite_false(
-    sample_dag, table_fixture, sql_server, remote_files_fixture, caplog
+    sample_dag, test_table, sql_server, remote_files_fixture, caplog
 ):
 
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
             save_file(
-                input_data=table_fixture,
+                input_data=test_table,
                 output_file=File(path=remote_files_fixture[0], conn_id="aws_default"),
                 if_exists="exception",
             )
@@ -253,7 +251,7 @@ def test_save_table_remote_file_exists_overwrite_false(
 
 @pytest.mark.parametrize("sql_server", [Database.SQLITE.value], indirect=True)
 @pytest.mark.parametrize(
-    "table_fixture",
+    "test_table",
     [
         {
             "path": str(CWD) + "/../data/homes2.csv",
@@ -267,7 +265,7 @@ def test_save_table_remote_file_exists_overwrite_false(
     indirect=True,
     ids=["temp_table"],
 )
-def test_unique_task_id_for_same_path(sample_dag, sql_server, table_fixture):
+def test_unique_task_id_for_same_path(sample_dag, sql_server, test_table):
     file_name = f"{test_utils.get_table_name('output')}.csv"
     OUTPUT_FILE_PATH = str(CWD) + f"/../data/{file_name}"
 
@@ -275,7 +273,7 @@ def test_unique_task_id_for_same_path(sample_dag, sql_server, table_fixture):
     with sample_dag:
         for i in range(4):
             params = {
-                "input_data": table_fixture,
+                "input_data": test_table,
                 "output_file": File(path=OUTPUT_FILE_PATH),
                 "if_exists": "replace",
             }
@@ -298,7 +296,7 @@ def test_unique_task_id_for_same_path(sample_dag, sql_server, table_fixture):
 @pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
 @pytest.mark.parametrize("file_type", SUPPORTED_FILE_TYPES)
 @pytest.mark.parametrize(
-    "table_fixture",
+    "test_table",
     [
         {
             "path": str(CWD) + "/../data/sample.csv",
@@ -312,13 +310,13 @@ def test_unique_task_id_for_same_path(sample_dag, sql_server, table_fixture):
     indirect=True,
     ids=["test-table"],
 )
-def test_save_file(sample_dag, sql_server, file_type, table_fixture):
+def test_save_file(sample_dag, sql_server, file_type, test_table):
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         filepath = Path(tmp_dir, f"sample.{file_type}")
         with sample_dag:
             save_file(
-                input_data=table_fixture,
+                input_data=test_table,
                 output_file=File(path=str(filepath)),
                 if_exists="exception",
             )
@@ -338,7 +336,7 @@ def test_save_file(sample_dag, sql_server, file_type, table_fixture):
 
 @pytest.mark.parametrize("sql_server", [Database.POSTGRES.value], indirect=True)
 @pytest.mark.parametrize(
-    "table_fixture",
+    "test_table",
     [
         {
             "path": str(CWD) + "/../data/sample.csv",
@@ -351,11 +349,11 @@ def test_save_file(sample_dag, sql_server, file_type, table_fixture):
     indirect=True,
     ids=["table"],
 )
-def test_populate_table_metadata(sample_dag, sql_server, table_fixture):
+def test_populate_table_metadata(sample_dag, sql_server, test_table):
     """
     Test default populating of table fields in save_file op.
     """
-    table_fixture.metadata.schema = None
+    test_table.metadata.schema = None
 
     @adf
     def validate(table: Table):
@@ -363,10 +361,10 @@ def test_populate_table_metadata(sample_dag, sql_server, table_fixture):
 
     with sample_dag:
         aql.save_file(
-            input_data=table_fixture,
+            input_data=test_table,
             output_file=File(path="/tmp/saved_df.csv"),
             if_exists="replace",
         )
-        validate(table_fixture)
+        validate(test_table)
 
     test_utils.run_dag(sample_dag)
