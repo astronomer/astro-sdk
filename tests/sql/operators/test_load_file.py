@@ -234,7 +234,7 @@ def test_aql_load_file_pattern(
 @pytest.mark.integration
 @pytest.mark.parametrize("sql_server", ["postgres"], indirect=True)
 def test_aql_load_file_local_file_pattern(sample_dag, test_table, sql_server):
-    filename = str(CWD.parent) + "../data/homes_pattern_1.csv"
+    filename = str(CWD.parent) + "/../data/homes_pattern_1.csv"
     database_name, sql_hook = sql_server
 
     test_df_rows = pd.read_csv(filename).shape[0]
