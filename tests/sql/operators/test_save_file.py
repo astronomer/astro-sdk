@@ -71,7 +71,7 @@ def test_save_dataframe_to_local(sample_dag):
 
 @pytest.mark.parametrize("sql_server", [Database.SQLITE.value], indirect=True)
 def test_save_temp_table_to_local(sample_dag, sql_server, test_table):
-    data_path = str(CWD) + "/../data/homes.csv"
+    data_path = str(CWD) + "/../../data/homes.csv"
     with sample_dag:
         table = aql.load_file(input_file=File(path=data_path), output_table=test_table)
         aql.save_file(
