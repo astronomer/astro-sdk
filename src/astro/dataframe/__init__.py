@@ -3,7 +3,7 @@ from typing import Callable, Optional
 import pandas as pd
 from airflow.decorators.base import task_decorator_factory
 
-from astro.sql.operators.sql_dataframe import SqlDataframeOperator
+from astro.sql.operators.dataframe import DataframeOperator
 
 
 def dataframe(
@@ -30,7 +30,7 @@ def dataframe(
     decorated_function: Callable[..., pd.DataFrame] = task_decorator_factory(
         python_callable=python_callable,
         multiple_outputs=multiple_outputs,
-        decorated_operator_class=SqlDataframeOperator,  # type: ignore
+        decorated_operator_class=DataframeOperator,  # type: ignore
         **param_map,
     )
     return decorated_function
