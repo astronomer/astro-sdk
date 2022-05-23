@@ -73,7 +73,6 @@ def append_params(request):
     [
         [
             {
-                "is_temp": False,
                 "param": {
                     "metadata": Metadata(schema=SCHEMA),
                 },
@@ -81,7 +80,6 @@ def append_params(request):
                 "load_table": True,
             },
             {
-                "is_temp": False,
                 "param": {"metadata": Metadata(schema=SCHEMA)},
                 "path": str(CWD) + "/../../data/homes_append.csv",
                 "load_table": True,
