@@ -256,8 +256,8 @@ def test_aql_load_file_local_file_pattern(sample_dag, test_table, sql_server):
 
 
 def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
-    filename = str(CWD.parent) + "/data/homes_pattern_1.csv"
-    filename_2 = str(CWD.parent) + "/data/homes_pattern_2.csv"
+    filename = str(CWD.parent) + "/../data/homes_pattern_1.csv"
+    filename_2 = str(CWD.parent) + "/../data/homes_pattern_2.csv"
 
     test_df = pd.read_csv(filename)
     test_df_2 = pd.read_csv(filename_2)
@@ -275,7 +275,7 @@ def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
     with sample_dag:
         loaded_df = load_file(
             input_file=File(
-                path=str(CWD.parent) + "/data/homes_pattern_*", filetype=FileType.CSV
+                path=str(CWD.parent) + "/../data/homes_pattern_*", filetype=FileType.CSV
             ),
         )
         validate(loaded_df)
