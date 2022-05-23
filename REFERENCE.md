@@ -53,7 +53,7 @@ To start using `astro-sdk-python`:
     Alternatively, you can add `astro-sdk-python` to your `requirements.txt` file.
 
 
-2. Installing `astro` with extras(i.e., gcp, snowflake, postgres)
+2. Installing `astro-sdk-python` with extras(i.e., gcp, snowflake, postgres)
 
     ```shell script
     pip install astro-sdk-python[google,snowflake,postgres]
@@ -111,8 +111,8 @@ In the following example DAG, we set an `output_table` to a nameless `TempTable`
 
 
 ```python
-from astro import sql as aql
-from astro.sql.table import Table, TempTable
+from astro-sdk-python import sql as aql
+from astro-sdk-python.sql.table import Table, TempTable
 
 
 @aql.transform
@@ -211,9 +211,9 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from pandas import DataFrame
 
-from astro import sql as aql
-from astro import dataframe as df
-from astro.sql.table import Table
+from astro-sdk-python import sql as aql
+from astro-sdk-python import dataframe as df
+from astro-sdk-python.sql.table import Table
 
 default_args = {
     "owner": "airflow",
