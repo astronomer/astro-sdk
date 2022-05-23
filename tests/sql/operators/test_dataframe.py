@@ -167,7 +167,7 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(sample_dag, sql_server, test_
     "test_table",
     [
         {
-            "path": str(CWD) + "/../data/homes_upper.csv",
+            "path": str(CWD) + "/../../data/homes_upper.csv",
             "load_table": True,
             "is_temp": False,
             "param": {
