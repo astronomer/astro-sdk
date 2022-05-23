@@ -346,7 +346,7 @@ def test_load_file(sample_dag, sql_server, file_type, test_table):
     with sample_dag:
         load_file(
             input_file=File(
-                path=str(pathlib.Path(CWD.parent, f"/../data/sample.{file_type}"))
+                path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))
             ),
             output_table=test_table,
         )
@@ -391,7 +391,7 @@ def test_load_file_with_named_schema(sample_dag, sql_server, file_type, test_tab
     with sample_dag:
         load_file(
             input_file=File(
-                path=str(pathlib.Path(CWD.parent, f"/../data/sample.{file_type}"))
+                path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))
             ),
             output_table=test_table,
         )
@@ -437,7 +437,7 @@ def test_load_file_chunks(sample_dag, sql_server, test_table):
         with sample_dag:
             load_file(
                 input_file=File(
-                    path=str(pathlib.Path(CWD.parent, f"/../data/sample.{file_type}"))
+                    path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))
                 ),
                 output_table=test_table,
             )
@@ -551,7 +551,7 @@ def test_populate_table_metadata(sample_dag):
 
     with sample_dag:
         output_table = load_file(
-            input_file=File(path=str(pathlib.Path(CWD.parent, "data/sample.csv"))),
+            input_file=File(path=str(pathlib.Path(CWD.parent, "../data/sample.csv"))),
             output_table=Table(conn_id="postgres_conn_pagila"),
         )
         validate(output_table)

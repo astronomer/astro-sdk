@@ -347,7 +347,7 @@ def test_save_file(sample_dag, sql_server, file_type, table_fixture):
     "table_fixture",
     [
         {
-            "path": str(CWD) + "/../data/sample.csv",
+            "path": str(CWD) + "/../../data/sample.csv",
             "load_table": True,
             "param": {
                 "metadata": Metadata(schema=SCHEMA),
