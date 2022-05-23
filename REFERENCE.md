@@ -1,9 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 <p align="center">
   <a href="https://www.airflow.apache.org">
     <img alt="Airflow" src="https://cwiki.apache.org/confluence/download/attachments/145723561/airflow_transparent.png?api=v2" width="60" />
