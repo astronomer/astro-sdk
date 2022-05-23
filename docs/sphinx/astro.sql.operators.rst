@@ -31,7 +31,7 @@ astro.sql.operators.load\_file module
 astro.sql.operators.save\_file module
 -------------------------------------
 
-.. automodule:: astro.sql.operators.save_file
+.. automodule:: astro.sql.operators.export_file
    :members:
    :undoc-members:
    :show-inheritance:

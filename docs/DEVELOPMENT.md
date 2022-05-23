@@ -105,7 +105,7 @@ src/astro/sql/operators/__init__.py                       0      0      0      0
 src/astro/sql/operators/agnostic_aggregate_check.py      46     32     16      0    26%   61-89, 100-138, 162
 src/astro/sql/operators/agnostic_boolean_check.py        66     45     16      0    30%   19-21, 24, 27, 51-65, 80-95, 98-105, 109, 115-128, 131, 149
 src/astro/sql/operators/agnostic_load_file.py            56     35     10      0    35%   61-67, 76-101, 106-110, 118-140, 166-167
-src/astro/sql/operators/agnostic_save_file.py            65     43     14      0    30%   64-70, 79-95, 98-109, 112-152, 162-182, 188-190, 220-224
+src/astro/sql/operators/export_file.py                   65     43     14      0    30%   64-70, 79-95, 98-109, 112-152, 162-182, 188-190, 220-224
 src/astro/sql/operators/agnostic_sql_append.py           50     36     20      0    23%   45-56, 67-85, 90-117
 src/astro/sql/operators/agnostic_sql_merge.py            43     28     12      0    31%   48-59, 69-118
 src/astro/sql/operators/agnostic_sql_truncate.py         20     11      2      0    50%   32-40, 55-60

@@ -87,7 +87,7 @@ If you're interested in running each test case more times, this is an example of
 ./run.sh 5
 ```
 
-It is also possible to specify the chunk size, if the `load_file` or `save_file` operators are being used, by setting an integer value in the environment variable `ASTRO_CHUNKSIZE`.
+It is also possible to specify the chunk size, if the `load_file` or `export_file` operators are being used, by setting an integer value in the environment variable `ASTRO_CHUNKSIZE`.
 
 The command outputs something similar to:
 ```

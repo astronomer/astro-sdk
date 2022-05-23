@@ -142,7 +142,7 @@ def test_full_dag(sql_server, sample_dag, test_table):
         run_dataframe_funcs(tranformed_table)
         run_append(output_table)
         run_merge(output_table, merge_keys(sql_server))
-        aql.save_file(
+        aql.export_file(
             input_data=tranformed_table,
             output_file_path="/tmp/out_agg.csv",
             overwrite=True,
