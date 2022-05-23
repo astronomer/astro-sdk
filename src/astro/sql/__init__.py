@@ -88,7 +88,8 @@ def merge(
     same length as merge_columns
     :param merge_columns:
     :param conn_id: connection ID for SQL instance
-    :param conflict_strategy: Do we ignore new values on conflict or overwrite? Two strategies are "ignore" and "update"
+    :param conflict_strategy: Do we ignore new values on conflict or overwrite? Three strategies are "ignore",
+            "exception", and "update"
     :param database:
     :param schema: Snowflake, specific. Specify Snowflake schema
     :param kwargs:

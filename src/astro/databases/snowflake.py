@@ -1,14 +1,19 @@
 """Snowflake database implementation."""
-from typing import Tuple
+from typing import List, Optional, Tuple
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from pandas.io.sql import SQLDatabase
 
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    DBMergeConflictStrategy,
+    LoadExistStrategy,
+)
 from astro.databases.base import BaseDatabase
 from astro.sql.table import Metadata, Table
 from astro.utils.dependencies import pandas_tools
+from astro.utils.snowflake_merge_func import snowflake_merge_func
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
 
@@ -131,3 +136,51 @@ class SnowflakeDatabase(BaseDatabase):
             )
         ]
         return len(created_schemas) == 1
+
+    def append_table(
+        self,
+        source_table: Table,
+        target_table: Table,
+        source_tables_cols: Optional[List[str]] = None,
+        target_tables_cols: Optional[List[str]] = None,
+    ) -> None:
+        """
+        Append the source table rows into a destination table
+        The argument `conflict_strategy` allows the user to define how to handle conflicts
+
+        :param source_table: Contains the rows to be appended to the target_table
+        :param target_table: Contains the destination table in which the rows will be appended
+        :param conflict_strategy: Action that needs to be taken in case there is a conflict
+        :param source_tables_cols: List of columns name in source table that will be used in appending
+        :param target_tables_cols: List of columns name in target table that will be used in appending
+        """
+
+    def merge_table(
+        self,
+        source_table: Table,
+        target_table: Table,
+        conflict_strategy: DBMergeConflictStrategy = "ignore",
+        merge_cols: Optional[List[str]] = None,
+        source_tables_cols: Optional[List[str]] = None,
+        target_tables_cols: Optional[List[str]] = None,
+    ) -> None:
+        """Merge two tables based on merge keys
+
+        :param source_table: Contains the rows to be appended to the target_table
+        :param target_table: Contains the destination table in which the rows will be appended
+        :param conflict_strategy: Action that needs to be taken in case there is a conflict
+        :param merge_cols: List of cols that are checked for uniqueness while merging,
+        they will be the unique post merge
+        :param source_tables_cols: List of columns name in source table that will be used in merging
+        :param target_tables_cols: List of columns name in target table that will be used in merging
+        """
+        self.run_sql(
+            snowflake_merge_func(
+                merge_table=source_table,
+                target_table=target_table,
+                target_columns=target_tables_cols,
+                merge_columns=source_tables_cols,
+                merge_keys=merge_cols,
+                conflict_strategy=conflict_strategy,
+            )
+        )

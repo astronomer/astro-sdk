@@ -3,17 +3,16 @@ from typing import Dict, List, Union
 from airflow.exceptions import AirflowException
 
 from astro.constants import Database
+from astro.databases import create_database
 from astro.sql.operators.sql_decorator_legacy import SqlDecoratedOperator
 from astro.sql.table import Table
 from astro.utils.bigquery_merge_func import bigquery_merge_func
 from astro.utils.database import create_database_from_conn_id
-from astro.utils.postgres_merge_func import postgres_merge_func
 from astro.utils.schema_util import (
     get_error_string_for_multiple_dbs,
     tables_from_same_db,
 )
 from astro.utils.snowflake_merge_func import snowflake_merge_func
-from astro.utils.sqlite_merge_func import sqlite_merge_func
 from astro.utils.task_id_helper import get_unique_task_id
 
 
@@ -52,6 +51,7 @@ class SqlMergeOperator(SqlDecoratedOperator):
 
     def execute(self, context: dict) -> Table:
         self.database = self.target_table.metadata.database
+        db = create_database(self.target_table.conn_id)
         self.conn_id = self.target_table.conn_id
         self.schema = self.target_table.metadata.schema
         if not tables_from_same_db([self.target_table, self.merge_table]):
@@ -61,23 +61,25 @@ class SqlMergeOperator(SqlDecoratedOperator):
 
         database = create_database_from_conn_id(self.conn_id)
         if database in (Database.POSTGRES, Database.POSTGRESQL):
-            self.sql = postgres_merge_func(
+            db.merge_table(
                 target_table=self.target_table,
-                merge_table=self.merge_table,
-                merge_keys=self.merge_keys,
-                target_columns=self.target_columns,
-                merge_columns=self.merge_columns,
+                source_table=self.merge_table,
+                target_tables_cols=self.target_columns,
+                source_tables_cols=self.merge_columns,
+                merge_cols=self.merge_keys,
                 conflict_strategy=self.conflict_strategy,
             )
+            return self.target_table
         elif database == Database.SQLITE:
-            self.sql = sqlite_merge_func(
+            db.merge_table(
                 target_table=self.target_table,
-                merge_table=self.merge_table,
-                merge_keys=self.merge_keys,
-                target_columns=self.target_columns,
-                merge_columns=self.merge_columns,
+                source_table=self.merge_table,
+                target_tables_cols=self.target_columns,
+                source_tables_cols=self.merge_columns,
+                merge_cols=self.merge_keys,
                 conflict_strategy=self.conflict_strategy,
             )
+            return self.target_table
         elif database == Database.SNOWFLAKE:
             self.sql, self.parameters = snowflake_merge_func(
                 target_table=self.target_table,

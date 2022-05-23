@@ -10,8 +10,7 @@ from airflow.utils import timezone
 from astro import sql as aql
 from astro.constants import Database
 from astro.dataframe import dataframe as adf
-from astro.settings import SCHEMA
-from astro.sql.table import Metadata, Table
+from astro.sql.table import Table
 from astro.utils.database import create_database_from_conn_id
 from tests.operators import utils as test_utils
 
@@ -39,6 +38,8 @@ def merge_keys(sql_server, mode):
     if mode == "multi":
         keys = ["list", "sell"]
     if mode == "update":
+        keys = ["list", "sell"]
+    if mode == "different_name":
         keys = ["list", "sell"]
 
     if sql_name == "snowflake":
@@ -70,16 +71,26 @@ def merge_parameters(request, sql_server):
             },
             mode,
         )
-    # elif mode == "update":
-    return (
-        {
-            "merge_keys": merge_keys(sql_server, mode),
-            "target_columns": ["list", "sell", "taxes"],
-            "merge_columns": ["list", "sell", "age"],
-            "conflict_strategy": "update",
-        },
-        mode,
-    )
+    elif mode == "update":
+        return (
+            {
+                "merge_keys": merge_keys(sql_server, mode),
+                "target_columns": ["list", "sell", "taxes"],
+                "merge_columns": ["list", "sell", "taxes"],
+                "conflict_strategy": "update",
+            },
+            mode,
+        )
+    elif mode == "different_name":
+        return (
+            {
+                "merge_keys": merge_keys(sql_server, mode),
+                "target_columns": ["list", "sell", "taxes"],
+                "merge_columns": ["list", "sell", "age"],
+                "conflict_strategy": "update",
+            },
+            mode,
+        )
 
 
 @aql.transform
@@ -131,6 +142,9 @@ def validate_results(df: pd.DataFrame, mode, sql_type):
         assert set_compare(df.list.to_list(), [160, 180, 132, 140, 240])
         assert set_compare(df.sell.to_list()[:-1], [142, 175, 129, 138])
     elif mode == "update":
+        assert df.taxes.to_list() == [1, 2, 3167, 4033, 3]
+        assert set_compare(df.age.to_list()[:-1], [60.0, 12.0, 41.0, 22.0])
+    elif mode == "different_name":
         assert df.taxes.to_list() == [1, 1, 1, 1, 1]
         assert set_compare(df.age.to_list()[:-1], [60.0, 12.0, 41.0, 22.0])
 
@@ -162,9 +176,10 @@ def run_merge(output_specs: List[Table], merge_parameters, mode, sql_type):
     "merge_parameters",
     [
         # "None",
-        "single",
-        "multi",
-        "update",
+        # "single",
+        # "multi",
+        # "update",
+        "different_name"
     ],
     indirect=True,
 )
@@ -174,13 +189,13 @@ def run_merge(output_specs: List[Table], merge_parameters, mode, sql_type):
         [
             {
                 "is_temp": False,
-                "param": {"metadata": Metadata(schema=SCHEMA)},
+                "param": {},
                 "path": str(CWD) + "/../data/homes_merge_1.csv",
                 "load_table": True,
             },
             {
                 "is_temp": False,
-                "param": {"metadata": Metadata(schema=SCHEMA)},
+                "param": {},
                 "path": str(CWD) + "/../data/homes_merge_2.csv",
                 "load_table": True,
             },

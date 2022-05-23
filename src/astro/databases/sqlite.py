@@ -1,9 +1,10 @@
-from typing import Optional
+from typing import List, Optional
 
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
+from astro.constants import DBMergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.sql.table import Metadata, Table
 
@@ -66,3 +67,67 @@ class SqliteDatabase(BaseDatabase):
         Check if a schema exists. We return false for sqlite since sqlite does not have schemas
         """
         return False
+
+    def append_table(
+        self,
+        source_table: Table,
+        target_table: Table,
+        source_tables_cols: Optional[List[str]] = None,
+        target_tables_cols: Optional[List[str]] = None,
+    ) -> None:
+        """
+        Append the source table rows into a destination table
+        The argument `conflict_strategy` allows the user to define how to handle conflicts
+
+        :param source_table: Contains the rows to be appended to the target_table
+        :param target_table: Contains the destination table in which the rows will be appended
+        :param conflict_strategy: Action that needs to be taken in case there is a conflict
+        :param source_tables_cols: List of columns name in source table that will be used in appending
+        :param target_tables_cols: List of columns name in target table that will be used in appending
+        """
+        return self.merge_table(
+            source_table=source_table,
+            target_table=target_table,
+            source_tables_cols=source_tables_cols,
+            target_tables_cols=target_tables_cols,
+        )
+
+    def merge_table(
+        self,
+        source_table: Table,
+        target_table: Table,
+        conflict_strategy: DBMergeConflictStrategy = "ignore",
+        merge_cols: Optional[List[str]] = None,
+        source_tables_cols: Optional[List[str]] = None,
+        target_tables_cols: Optional[List[str]] = None,
+    ) -> None:
+        """Merge two tables based on merge keys
+
+        :param source_table: Contains the rows to be appended to the target_table
+        :param target_table: Contains the destination table in which the rows will be appended
+        :param conflict_strategy: Action that needs to be taken in case there is a conflict
+        :param merge_cols: List of cols that are checked for uniqueness while merging,
+        they will be the unique post merge
+        :param source_tables_cols: List of columns name in source table that will be used in merging
+        :param target_tables_cols: List of columns name in target table that will be used in merging
+        """
+        statement = "INSERT INTO {main_table} ({target_columns}) SELECT {append_columns} FROM {append_table} Where true"
+        if conflict_strategy == "ignore":
+            statement += " ON CONFLICT ({merge_keys}) DO NOTHING"
+        elif conflict_strategy == "update":
+            statement += " ON CONFLICT ({merge_keys}) DO UPDATE SET {update_statements}"
+
+        append_column_names = list(source_tables_cols)  # type: ignore
+        target_column_names = list(target_tables_cols)  # type: ignore
+        column_pairs = list(zip(target_column_names, target_column_names))
+        update_statements = [f"{x}=EXCLUDED.{y}" for x, y in column_pairs]
+
+        query = statement.format(
+            target_columns=",".join(target_column_names),
+            main_table=target_table.name,
+            append_columns=",".join(append_column_names),
+            append_table=source_table.name,
+            update_statements=",".join(update_statements),
+            merge_keys=",".join(list(merge_cols)),  # type: ignore
+        )
+        self.run_sql(sql_statement=query)

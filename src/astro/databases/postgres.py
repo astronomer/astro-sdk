@@ -6,7 +6,11 @@ import sqlalchemy
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from psycopg2 import sql as postgres_sql
 
-from astro.constants import DEFAULT_CHUNK_SIZE, DBMergeConflictStrategy, LoadExistStrategy
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    DBMergeConflictStrategy,
+    LoadExistStrategy,
+)
 from astro.databases.base import BaseDatabase
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
@@ -156,7 +160,7 @@ class PostgresDatabase(BaseDatabase):
 
         source_tables_cols = [postgres_sql.Identifier(c) for c in source_tables_cols]
         target_tables_cols = [postgres_sql.Identifier(c) for c in target_tables_cols]
-        column_pairs = list(zip(source_tables_cols, target_tables_cols))
+        column_pairs = list(zip(target_tables_cols, target_tables_cols))
         update_statements = [
             postgres_sql.SQL("{x}=EXCLUDED.{y}").format(x=x, y=y)
             for x, y in column_pairs
