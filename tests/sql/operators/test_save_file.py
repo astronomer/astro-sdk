@@ -103,7 +103,6 @@ def test_save_temp_table_to_local(sample_dag, sql_server, test_table):
     ids=["temp_table"],
 )
 def test_save_all_db_tables_to_S3(sample_dag, test_table, sql_server):
-
     _creds = s3fs_creds()
     sql_name, hook = sql_server
     file_name = f"{test_utils.get_table_name('test_save')}.csv"
@@ -119,7 +118,6 @@ def test_save_all_db_tables_to_S3(sample_dag, test_table, sql_server):
     test_utils.run_dag(sample_dag)
 
     df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
-
     # # Read output CSV
     df_file = pd.read_csv(OUTPUT_FILE_PATH, storage_options=s3fs_creds())
 
@@ -151,7 +149,6 @@ def test_save_all_db_tables_to_S3(sample_dag, test_table, sql_server):
     ids=["temp_table"],
 )
 def test_save_all_db_tables_to_GCS(sample_dag, test_table, sql_server):
-
     sql_name, hook = sql_server
     file_name = f"{test_utils.get_table_name('test_save')}.csv"
     bucket = "dag-authoring"
@@ -165,7 +162,6 @@ def test_save_all_db_tables_to_GCS(sample_dag, test_table, sql_server):
             if_exists="replace",
         )
     test_utils.run_dag(sample_dag)
-
     df = test_utils.get_dataframe_from_table(sql_name, test_table, hook)
 
     if sql_name != "snowflake":
@@ -354,7 +350,6 @@ def test_populate_table_metadata(sample_dag, sql_server, test_table):
     Test default populating of table fields in save_file op.
     """
     test_table.metadata.schema = None
-
     @adf
     def validate(table: Table):
         assert table.metadata.schema == SCHEMA
