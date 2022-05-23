@@ -73,9 +73,7 @@ def test_save_dataframe_to_local(sample_dag):
 def test_save_temp_table_to_local(sample_dag, sql_server, test_table):
     data_path = str(CWD) + "/../../data/homes.csv"
     with sample_dag:
-        table = aql.load_file(
-            input_file=File(path=data_path), output_table=test_table
-        )
+        table = aql.load_file(input_file=File(path=data_path), output_table=test_table)
         aql.export_file(
             input_data=table,
             output_file=File(path="/tmp/saved_df.csv"),
@@ -308,7 +306,6 @@ def test_unique_task_id_for_same_path(sample_dag, sql_server, test_table):
     indirect=True,
     ids=["test-table"],
 )
-
 def test_export_file(sample_dag, sql_server, file_type, test_table):
 
     with tempfile.TemporaryDirectory() as tmp_dir:
