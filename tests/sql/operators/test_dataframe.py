@@ -11,7 +11,7 @@ from astro import dataframe as df
 from astro.constants import SUPPORTED_DATABASES, Database
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
-from tests.operators import utils as test_utils
+from tests.sql.operators import utils as test_utils
 
 # Import Operator
 
@@ -25,7 +25,7 @@ CWD = pathlib.Path(__file__).parent
     "test_table",
     [
         {
-            "path": str(CWD) + "/../data/homes2.csv",
+            "path": str(CWD) + "/../../data/homes2.csv",
             "load_table": True,
             "is_temp": False,
             "param": {
@@ -59,7 +59,7 @@ def test_dataframe_from_sql_basic(sample_dag, sql_server, test_table):
     "test_table",
     [
         {
-            "path": str(CWD) + "/../data/homes2.csv",
+            "path": str(CWD) + "/../../data/homes2.csv",
             "load_table": True,
             "is_temp": False,
             "param": {
@@ -91,7 +91,7 @@ def test_dataframe_from_sql_custom_task_id(sample_dag, sql_server, test_table):
     "test_table",
     [
         {
-            "path": str(CWD) + "/../data/homes2.csv",
+            "path": str(CWD) + "/../../data/homes2.csv",
             "load_table": True,
             "is_temp": False,
             "param": {
@@ -129,7 +129,7 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, sql_server, test_table):
     "test_table",
     [
         {
-            "path": str(CWD) + "/../data/homes2.csv",
+            "path": str(CWD) + "/../../data/homes2.csv",
             "load_table": True,
             "is_temp": False,
             "param": {
@@ -167,7 +167,7 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(sample_dag, sql_server, test_
     "test_table",
     [
         {
-            "path": str(CWD) + "/../data/homes_upper.csv",
+            "path": str(CWD) + "/../../data/homes_upper.csv",
             "load_table": True,
             "is_temp": False,
             "param": {

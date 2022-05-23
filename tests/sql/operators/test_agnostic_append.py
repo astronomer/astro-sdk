@@ -9,7 +9,7 @@ from astro.dataframe import dataframe as adf
 from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
-from tests.operators import utils as test_utils
+from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
 
@@ -77,13 +77,13 @@ def append_params(request):
                 "param": {
                     "metadata": Metadata(schema=SCHEMA),
                 },
-                "path": str(CWD) + "/../data/homes_main.csv",
+                "path": str(CWD) + "/../../data/homes_main.csv",
                 "load_table": True,
             },
             {
                 "is_temp": False,
                 "param": {"metadata": Metadata(schema=SCHEMA)},
-                "path": str(CWD) + "/../data/homes_append.csv",
+                "path": str(CWD) + "/../../data/homes_append.csv",
                 "load_table": True,
             },
         ],
@@ -117,11 +117,11 @@ def test_append_on_tables_on_different_db(sample_dag, sql_server):
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
             load_main = aql.load_file(
-                input_file=File(path=str(CWD) + "/../data/homes_main.csv"),
+                input_file=File(path=str(CWD) + "/../../data/homes_main.csv"),
                 output_table=test_table_1,
             )
             load_append = aql.load_file(
-                input_file=File(path=str(CWD) + "/../data/homes_append.csv"),
+                input_file=File(path=str(CWD) + "/../../data/homes_append.csv"),
                 output_table=test_table_2,
             )
             aql.append(
