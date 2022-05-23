@@ -4,7 +4,7 @@ import tempfile
 
 import pandas as pd
 
-from astro.files.type import NDJSONFileType
+from astro.files.types import NDJSONFileType
 
 sample_file = pathlib.Path(
     pathlib.Path(__file__).parent.parent.parent, "data/sample.ndjson"
