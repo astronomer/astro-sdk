@@ -144,7 +144,7 @@ A summary of the currently available operations in **astro**. More details are a
 * `merge`: insert rows from the source SQL table into the destination SQL table, depending on conflicts:
   * ignore: do not add rows that already exist
   * update: replace existing rows with new ones
-* `save_file`: export SQL table rows into a destination file
+* `export_file`: export SQL table rows into a destination file
 * `dataframe`: export given SQL table into in-memory Pandas data-frame
 
 ## Documentation
