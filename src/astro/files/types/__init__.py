@@ -2,11 +2,11 @@ import pathlib
 from typing import Dict, Optional, Type, Union
 
 from astro.constants import FileType as FileTypeConstants
-from astro.files.type.base import FileType
-from astro.files.type.csv import CSVFileType
-from astro.files.type.json import JSONFileType
-from astro.files.type.ndjson import NDJSONFileType
-from astro.files.type.parquet import ParquetFileType
+from astro.files.types.base import FileType
+from astro.files.types.csv import CSVFileType
+from astro.files.types.json import JSONFileType
+from astro.files.types.ndjson import NDJSONFileType
+from astro.files.types.parquet import ParquetFileType
 
 
 def create_file_type(

@@ -3,7 +3,7 @@ import tempfile
 
 import pandas as pd
 
-from astro.files.type import CSVFileType
+from astro.files.types import CSVFileType
 
 sample_file = pathlib.Path(
     pathlib.Path(__file__).parent.parent.parent, "data/sample.csv"
