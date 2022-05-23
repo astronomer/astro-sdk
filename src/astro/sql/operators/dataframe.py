@@ -1,16 +1,12 @@
 import inspect
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, Optional, Tuple, Union
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 
 from astro.databases import create_database
-from astro.settings import SCHEMA
 from astro.sql.table import Table
-from astro.utils import get_hook
-from astro.utils.dependencies import SnowflakeHook
-from astro.utils.load import load_dataframe_into_sql_table
-from astro.utils.table_handler import TableHandler
+from astro.utils.table import find_first_table
 
 
 def _get_dataframe(table: Table, identifiers_as_lower: bool = False) -> pd.DataFrame:
@@ -25,7 +21,7 @@ def _get_dataframe(table: Table, identifiers_as_lower: bool = False) -> pd.DataF
 
 
 def load_op_arg_table_into_dataframe(
-    op_args: Tuple, python_callable: Callable
+    op_args: Tuple, python_callable: Callable, identifiers_as_lower: bool
 ) -> Tuple:
     """For dataframe based functions, takes any Table objects from the op_args
     and converts them into local dataframes that can be handled in the python context"""
@@ -39,14 +35,16 @@ def load_op_arg_table_into_dataframe(
         if full_spec.annotations[current_arg] == pd.DataFrame and isinstance(
             arg, Table
         ):
-            ret_args.append(_get_dataframe(arg))
+            ret_args.append(
+                _get_dataframe(arg, identifiers_as_lower=identifiers_as_lower)
+            )
         else:
             ret_args.append(arg)
     return tuple(ret_args)
 
 
 def load_op_kwarg_table_into_dataframe(
-    op_kwargs: Dict, python_callable: Callable
+    op_kwargs: Dict, python_callable: Callable, identifiers_as_lower
 ) -> Dict:
     """For dataframe based functions, takes any Table objects from the op_kwargs
     and converts them into local dataframes that can be handled in the python context"""
@@ -54,20 +52,20 @@ def load_op_kwarg_table_into_dataframe(
     # We check if the type annotation is of type dataframe to determine that the user actually WANTS
     # this table to be converted into a dataframe, rather that passed in as a table
     return {
-        k: _get_dataframe(v)
+        k: _get_dataframe(v, identifiers_as_lower=identifiers_as_lower)
         if param_types.get(k).annotation is pd.DataFrame and isinstance(v, Table)  # type: ignore
         else v
         for k, v in op_kwargs.items()
     }
 
 
-class SqlDataframeOperator(DecoratedOperator, TableHandler):
+class DataframeOperator(DecoratedOperator):
     def __init__(
         self,
         conn_id: Optional[str] = None,
         database: Optional[str] = None,
         schema: Optional[str] = None,
-        identifiers_as_lower: Optional[bool] = True,
+        identifiers_as_lower: bool = True,
         **kwargs,
     ):
         """
@@ -79,9 +77,13 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
         :param database: Database for input table
         :param schema:  schema for input table
         :param warehouse: (Snowflake) Which warehouse to use for the input table
+        :param identifiers_as_lower: determines whether to force all columns to lowercase in the resulting dataframe
         :param kwargs:
+
+        :return: If ``raw_sql`` is true, we return the result of the handler function, otherwise we will return the
+        generated output_table.
         """
-        self.conn_id = conn_id
+        self.conn_id: str = conn_id or ""
         self.database = database
         self.schema = schema
         self.parameters = None
@@ -91,70 +93,41 @@ class SqlDataframeOperator(DecoratedOperator, TableHandler):
             self.output_table: Optional[Table] = self.op_kwargs.pop("output_table")
         else:
             self.output_table = None
-        self.op_args = self.kwargs.get("op_args")  # type: ignore
+        self.op_args = self.kwargs.get("op_args", ())  # type: ignore
         self.identifiers_as_lower = identifiers_as_lower
 
         super().__init__(
             **kwargs,
         )
 
-    def handle_op_args(self):
-        full_spec = inspect.getfullargspec(self.python_callable)
-        op_args = list(self.op_args)
-        ret_args = []
-        for arg in op_args:
-            current_arg = full_spec.args.pop(0)
-            if (
-                full_spec.annotations[current_arg] == pd.DataFrame
-                and type(arg) == Table
-            ):
-                ret_args.append(
-                    _get_dataframe(arg, identifiers_as_lower=self.identifiers_as_lower)
-                )
-            else:
-                ret_args.append(arg)
-        self.op_args = tuple(ret_args)
-
-    def handle_op_kwargs(self):
-        param_types = inspect.signature(self.python_callable).parameters
-        self.op_kwargs = {
-            k: _get_dataframe(v, identifiers_as_lower=self.identifiers_as_lower)
-            if param_types.get(k).annotation == pd.DataFrame and type(v) == Table
-            else v
-            for k, v in self.op_kwargs.items()
-        }
-
-    def execute(self, context: Dict):  # skipcq: PYL-W0613
-        self._set_variables_from_first_table()
-        self.handle_op_args()
-        self.handle_op_kwargs()
+    def execute(self, context: Dict) -> Union[Table, pd.DataFrame]:
+        first_table = find_first_table(
+            op_args=self.op_args,  # type: ignore
+            op_kwargs=self.op_kwargs,
+            python_callable=self.python_callable,
+            parameters=self.parameters or {},  # type: ignore
+        )
+        if first_table:
+            self.conn_id = self.conn_id or first_table.conn_id  # type: ignore
+            self.database = self.database or first_table.metadata.database  # type: ignore
+            self.schema = self.schema or first_table.metadata.schema  # type: ignore
+        self.op_args = load_op_arg_table_into_dataframe(
+            self.op_args, self.python_callable, self.identifiers_as_lower
+        )
+        self.op_kwargs = load_op_kwarg_table_into_dataframe(
+            self.op_kwargs, self.python_callable, self.identifiers_as_lower
+        )
 
         pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
         if self.output_table:
-            self.populate_output_table()
-            self.output_table.metadata.schema = (  # type: ignore
-                self.output_table.metadata.schema or SCHEMA
+            self.output_table.conn_id = self.output_table.conn_id or self.conn_id
+            db = create_database(self.output_table.conn_id)
+            self.output_table = db.populate_table_metadata(self.output_table)
+            db.load_pandas_dataframe_to_table(
+                source_dataframe=pandas_dataframe,
+                target_table=self.output_table,
+                if_exists="replace",
             )
-            hook = get_hook(
-                conn_id=self.output_table.conn_id,
-                database=self.output_table.metadata.database,
-                schema=self.output_table.metadata.schema,
-            )
-            load_dataframe_into_sql_table(pandas_dataframe, self.output_table, hook)
             return self.output_table
         else:
             return pandas_dataframe
-
-    def get_snow_hook(self, table: Table) -> SnowflakeHook:
-        """
-        Create and return SnowflakeHook.
-        :return: a SnowflakeHook instance.
-        :rtype: SnowflakeHook
-        """
-        return SnowflakeHook(
-            snowflake_conn_id=table.conn_id,
-            database=table.metadata.database,
-            schema=table.metadata.schema,
-            authenticator=None,
-            session_parameters=None,
-        )
