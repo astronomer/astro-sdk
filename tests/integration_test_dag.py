@@ -11,7 +11,7 @@ from astro.databases.sqlite import SqliteDatabase
 from astro.dataframe import dataframe as adf
 from astro.files import File
 from astro.sql.table import Table
-from tests.operators import utils as test_utils
+from tests.sql.operators import utils as test_utils
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("integration_test_table")
 

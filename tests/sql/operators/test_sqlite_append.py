@@ -30,7 +30,7 @@ import astro.sql as aql
 from astro.databases import create_database
 from astro.files import File
 from astro.sql.table import Table
-from tests.operators import utils as test_utils
+from tests.sql.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -120,11 +120,11 @@ class TestSQLiteAppend(unittest.TestCase):
 
         with self.dag:
             load_main = aql.load_file(
-                input_file=File(path=str(cwd) + "/../data/homes_main.csv"),
+                input_file=File(path=str(cwd) + "/../../data/homes_main.csv"),
                 output_table=self.main_table,
             )
             load_append = aql.load_file(
-                input_file=File(path=str(cwd) + "/../data/homes_append.csv"),
+                input_file=File(path=str(cwd) + "/../../data/homes_append.csv"),
                 output_table=self.append_table,
             )
             aql.append(
@@ -157,11 +157,11 @@ class TestSQLiteAppend(unittest.TestCase):
 
         with self.dag:
             load_main = aql.load_file(
-                input_file=File(path=str(cwd) + "/../data/homes_main.csv"),
+                input_file=File(path=str(cwd) + "/../../data/homes_main.csv"),
                 output_table=self.main_table,
             )
             load_append = aql.load_file(
-                input_file=File(path=str(cwd) + "/../data/homes_append.csv"),
+                input_file=File(path=str(cwd) + "/../../data/homes_append.csv"),
                 output_table=self.append_table,
             )
             aql.append(
@@ -193,11 +193,11 @@ class TestSQLiteAppend(unittest.TestCase):
 
         with self.dag:
             load_main = aql.load_file(
-                input_file=File(path=str(cwd) + "/../data/homes_main.csv"),
+                input_file=File(path=str(cwd) + "/../../data/homes_main.csv"),
                 output_table=self.main_table,
             )
             load_append = aql.load_file(
-                input_file=File(path=str(cwd) + "/../data/homes_append.csv"),
+                input_file=File(path=str(cwd) + "/../../data/homes_append.csv"),
                 output_table=self.append_table,
             )
             aql.append(
@@ -230,11 +230,11 @@ class TestSQLiteAppend(unittest.TestCase):
 
         with self.dag:
             load_main = aql.load_file(
-                input_file=File(path=str(cwd) + "/../data/homes_main.csv"),
+                input_file=File(path=str(cwd) + "/../../data/homes_main.csv"),
                 output_table=self.main_table,
             )
             load_append = aql.load_file(
-                input_file=File(path=str(cwd) + "/../data/homes_append.csv"),
+                input_file=File(path=str(cwd) + "/../../data/homes_append.csv"),
                 output_table=self.append_table,
             )
             aql.append(

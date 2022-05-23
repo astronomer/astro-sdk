@@ -19,7 +19,7 @@ from astro.sql.table import Metadata, Table, create_unique_table_name
 from astro.utils.database import get_database_name
 from astro.utils.dependencies import BigQueryHook, gcs, s3
 from astro.utils.load import load_dataframe_into_sql_table
-from tests.operators import utils as test_utils
+from tests.sql.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 

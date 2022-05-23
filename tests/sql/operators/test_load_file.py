@@ -28,7 +28,7 @@ from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
 from astro.sql.table import Metadata, Table
 from astro.utils.dependencies import gcs, s3
-from tests.operators import utils as test_utils
+from tests.sql.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -94,8 +94,8 @@ def test_aql_load_remote_file_to_dbs(
 )
 def test_aql_replace_existing_table(sample_dag, test_table, sql_server):
     sql_name, hook = sql_server
-    data_path_1 = str(CWD) + "/../data/homes.csv"
-    data_path_2 = str(CWD) + "/../data/homes2.csv"
+    data_path_1 = str(CWD) + "/../../data/homes.csv"
+    data_path_2 = str(CWD) + "/../../data/homes2.csv"
     with sample_dag:
         task_1 = load_file(input_file=File(data_path_1), output_table=test_table)
         task_2 = load_file(input_file=File(data_path_2), output_table=test_table)
@@ -114,7 +114,7 @@ def test_aql_replace_existing_table(sample_dag, test_table, sql_server):
 )
 def test_aql_local_file_with_no_table_name(sample_dag, test_table, sql_server):
     sql_name, hook = sql_server
-    data_path = str(CWD) + "/../data/homes.csv"
+    data_path = str(CWD) + "/../../data/homes.csv"
     with sample_dag:
         load_file(input_file=File(data_path), output_table=test_table)
     test_utils.run_dag(sample_dag)
@@ -131,7 +131,7 @@ def test_unique_task_id_for_same_path(sample_dag):
     with sample_dag:
         for index in range(4):
             params = {
-                "input_file": File(path=str(CWD) + "/../data/homes.csv"),
+                "input_file": File(path=str(CWD) + "/../../data/homes.csv"),
                 "output_table": Table(
                     conn_id="postgres_conn", metadata=Metadata(database="pagila")
                 ),
@@ -166,7 +166,9 @@ def test_load_file_templated_filename(sample_dag, sql_server, test_table):
     database_name, sql_hook = sql_server
     with sample_dag:
         load_file(
-            input_file=File(path=str(CWD) + "/../data/{{ var.value.foo }}/example.csv"),
+            input_file=File(
+                path=str(CWD) + "/../../data/{{ var.value.foo }}/example.csv"
+            ),
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
@@ -189,7 +191,7 @@ def test_aql_load_file_pattern(
     remote_files_fixture, sample_dag, test_table, sql_server
 ):
     remote_object_uri = remote_files_fixture[0]
-    filename = pathlib.Path(CWD.parent, "data/sample.csv")
+    filename = pathlib.Path(CWD.parent, "../data/sample.csv")
     sql_name, hook = sql_server
 
     with sample_dag:
@@ -208,7 +210,7 @@ def test_aql_load_file_pattern(
 @pytest.mark.integration
 @pytest.mark.parametrize("sql_server", ["postgres"], indirect=True)
 def test_aql_load_file_local_file_pattern(sample_dag, test_table, sql_server):
-    filename = str(CWD.parent) + "/data/homes_pattern_1.csv"
+    filename = str(CWD.parent) + "/../data/homes_pattern_1.csv"
     database_name, sql_hook = sql_server
 
     test_df_rows = pd.read_csv(filename).shape[0]
@@ -216,7 +218,7 @@ def test_aql_load_file_local_file_pattern(sample_dag, test_table, sql_server):
     with sample_dag:
         load_file(
             input_file=File(
-                path=str(CWD.parent) + "/data/homes_pattern_*", filetype=FileType.CSV
+                path=str(CWD.parent) + "/../data/homes_pattern_*", filetype=FileType.CSV
             ),
             output_table=test_table,
         )
@@ -230,8 +232,8 @@ def test_aql_load_file_local_file_pattern(sample_dag, test_table, sql_server):
 
 
 def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
-    filename = str(CWD.parent) + "/data/homes_pattern_1.csv"
-    filename_2 = str(CWD.parent) + "/data/homes_pattern_2.csv"
+    filename = str(CWD.parent) + "/../data/homes_pattern_1.csv"
+    filename_2 = str(CWD.parent) + "/../data/homes_pattern_2.csv"
 
     test_df = pd.read_csv(filename)
     test_df_2 = pd.read_csv(filename_2)
@@ -249,7 +251,7 @@ def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
     with sample_dag:
         loaded_df = load_file(
             input_file=File(
-                path=str(CWD.parent) + "/data/homes_pattern_*", filetype=FileType.CSV
+                path=str(CWD.parent) + "/../data/homes_pattern_*", filetype=FileType.CSV
             ),
         )
         validate(loaded_df)
@@ -320,7 +322,7 @@ def test_load_file(sample_dag, sql_server, file_type, test_table):
     with sample_dag:
         load_file(
             input_file=File(
-                path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}"))
+                path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))
             ),
             output_table=test_table,
         )
@@ -365,7 +367,7 @@ def test_load_file_with_named_schema(sample_dag, sql_server, file_type, test_tab
     with sample_dag:
         load_file(
             input_file=File(
-                path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}"))
+                path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))
             ),
             output_table=test_table,
         )
@@ -411,7 +413,7 @@ def test_load_file_chunks(sample_dag, sql_server, test_table):
         with sample_dag:
             load_file(
                 input_file=File(
-                    path=str(pathlib.Path(CWD.parent, f"data/sample.{file_type}"))
+                    path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))
                 ),
                 output_table=test_table,
             )
@@ -432,7 +434,7 @@ def test_aql_nested_ndjson_file_with_default_sep_param(
     with sample_dag:
         load_file(
             input_file=File(
-                path=str(CWD) + "/../data/github_single_level_nested.ndjson"
+                path=str(CWD) + "/../../data/github_single_level_nested.ndjson"
             ),
             output_table=test_table,
         )
@@ -454,7 +456,7 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_sep_params(
     with sample_dag:
         load_file(
             input_file=File(
-                path=str(CWD) + "/../data/github_single_level_nested.ndjson"
+                path=str(CWD) + "/../../data/github_single_level_nested.ndjson"
             ),
             output_table=test_table,
             ndjson_normalize_sep="___",
@@ -479,7 +481,7 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_illegal_sep_params(
     with sample_dag:
         load_file(
             input_file=File(
-                path=str(CWD) + "/../data/github_single_level_nested.ndjson"
+                path=str(CWD) + "/../../data/github_single_level_nested.ndjson"
             ),
             output_table=test_table,
             ndjson_normalize_sep=".",
@@ -505,7 +507,7 @@ def test_aql_multilevel_nested_ndjson_file_default_params(
         with sample_dag:
             load_file(
                 input_file=File(
-                    path=str(CWD) + "/../data/github_multi_level_nested.ndjson"
+                    path=str(CWD) + "/../../data/github_multi_level_nested.ndjson"
                 ),
                 output_table=test_table,
             )
@@ -525,7 +527,7 @@ def test_populate_table_metadata(sample_dag):
 
     with sample_dag:
         output_table = load_file(
-            input_file=File(path=str(pathlib.Path(CWD.parent, "data/sample.csv"))),
+            input_file=File(path=str(pathlib.Path(CWD.parent, "../data/sample.csv"))),
             output_table=Table(conn_id="postgres_conn_pagila"),
         )
         validate(output_table)

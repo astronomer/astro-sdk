@@ -31,7 +31,7 @@ from astro.settings import SCHEMA
 from astro.sql.operators.save_file import save_file
 from astro.sql.table import Metadata, Table
 from astro.utils.dependencies import gcs
-from tests.operators import utils as test_utils
+from tests.sql.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -91,7 +91,7 @@ def test_save_temp_table_to_local(sample_dag, sql_server, test_table):
     "test_table",
     [
         {
-            "path": str(CWD) + "/../data/homes.csv",
+            "path": str(CWD) + "/../../data/homes.csv",
             "load_table": True,
             "param": {
                 "metadata": Metadata(schema=SCHEMA),
@@ -139,7 +139,7 @@ def test_save_all_db_tables_to_S3(sample_dag, test_table, sql_server):
     "test_table",
     [
         {
-            "path": str(CWD) + "/../data/homes2.csv",
+            "path": str(CWD) + "/../../data/homes2.csv",
             "load_table": True,
             "param": {
                 "metadata": Metadata(schema=SCHEMA),
@@ -182,7 +182,7 @@ def test_save_all_db_tables_to_GCS(sample_dag, test_table, sql_server):
     "test_table",
     [
         {
-            "path": str(CWD) + "/../data/homes.csv",
+            "path": str(CWD) + "/../../data/homes.csv",
             "load_table": True,
             "is_temp": False,
             "param": {
@@ -215,7 +215,7 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
     "test_table",
     [
         {
-            "path": str(CWD) + "/../data/homes.csv",
+            "path": str(CWD) + "/../../data/homes.csv",
             "load_table": True,
             "param": {
                 "metadata": Metadata(schema=SCHEMA),
@@ -254,7 +254,7 @@ def test_save_table_remote_file_exists_overwrite_false(
     "test_table",
     [
         {
-            "path": str(CWD) + "/../data/homes2.csv",
+            "path": str(CWD) + "/../../data/homes2.csv",
             "load_table": True,
             "param": {
                 "metadata": Metadata(schema=SCHEMA),
@@ -267,7 +267,7 @@ def test_save_table_remote_file_exists_overwrite_false(
 )
 def test_unique_task_id_for_same_path(sample_dag, sql_server, test_table):
     file_name = f"{test_utils.get_table_name('output')}.csv"
-    OUTPUT_FILE_PATH = str(CWD) + f"/../data/{file_name}"
+    OUTPUT_FILE_PATH = str(CWD) + f"/../../data/{file_name}"
 
     tasks = []
     with sample_dag:
@@ -299,7 +299,7 @@ def test_unique_task_id_for_same_path(sample_dag, sql_server, test_table):
     "test_table",
     [
         {
-            "path": str(CWD) + "/../data/sample.csv",
+            "path": str(CWD) + "/../../data/sample.csv",
             "load_table": True,
             "param": {
                 "metadata": Metadata(schema=SCHEMA),
@@ -339,7 +339,7 @@ def test_save_file(sample_dag, sql_server, file_type, test_table):
     "test_table",
     [
         {
-            "path": str(CWD) + "/../data/sample.csv",
+            "path": str(CWD) + "/../../data/sample.csv",
             "load_table": True,
             "param": {
                 "metadata": Metadata(schema=SCHEMA),
