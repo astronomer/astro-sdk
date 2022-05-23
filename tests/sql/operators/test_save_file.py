@@ -350,6 +350,7 @@ def test_populate_table_metadata(sample_dag, sql_server, test_table):
     Test default populating of table fields in save_file op.
     """
     test_table.metadata.schema = None
+
     @adf
     def validate(table: Table):
         assert table.metadata.schema == SCHEMA
