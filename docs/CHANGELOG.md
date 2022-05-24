@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.9.0b
+## 0.9.0b1
 
 Enhancements:
 * Introduction of the user-facing `Table`, `Metadata` and `File` classes
