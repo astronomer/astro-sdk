@@ -5,7 +5,6 @@ import pytest
 from airflow.exceptions import BackfillUnfinished
 
 from astro import sql as aql
-from astro.dataframe import dataframe as adf
 from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
@@ -14,21 +13,21 @@ from tests.sql.operators import utils as test_utils
 CWD = pathlib.Path(__file__).parent
 
 
-@adf
+@aql.dataframe
 def validate_basic(df: pd.DataFrame):
     assert len(df) == 6
     assert not df["sell"].hasnans
     assert df["rooms"].hasnans
 
 
-@adf
+@aql.dataframe
 def validate_append_all(df: pd.DataFrame):
     assert len(df) == 6
     assert not df["sell"].hasnans
     assert not df["rooms"].hasnans
 
 
-@adf
+@aql.dataframe
 def validate_caste_only(df: pd.DataFrame):
     assert len(df) == 6
     assert not df["age"].hasnans

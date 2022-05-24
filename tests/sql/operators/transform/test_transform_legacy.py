@@ -5,7 +5,6 @@ import pytest
 from airflow.decorators import task
 
 from astro import sql as aql
-from astro.dataframe import dataframe as adf
 from astro.files import File
 from astro.sql.operators.sql_decorator_legacy import transform_decorator as transform
 from astro.sql.table import Table
@@ -27,7 +26,7 @@ cwd = pathlib.Path(__file__).parent
 def test_dataframe_transform(sql_server, sample_dag, test_table):
     print("test_dataframe_to_database")
 
-    @adf
+    @aql.dataframe
     def get_dataframe():
         return pd.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
 
@@ -35,7 +34,7 @@ def test_dataframe_transform(sql_server, sample_dag, test_table):
     def sample_pg(input_table: Table):
         return "SELECT * FROM {{input_table}}"
 
-    @adf
+    @aql.dataframe
     def validate_dataframe(df: pd.DataFrame):
         df.columns = df.columns.str.lower()
         df = df.sort_values(by=df.columns.tolist()).reset_index(drop=True)
@@ -65,7 +64,7 @@ def test_transform(sql_server, sample_dag, test_table):
     def sample_function(input_table: Table):
         return "SELECT * FROM {{input_table}} LIMIT 10"
 
-    @adf
+    @aql.dataframe
     def validate_table(df: pd.DataFrame):
         assert len(df) == 10
 

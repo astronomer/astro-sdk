@@ -7,7 +7,6 @@ from airflow.models.xcom import XCom
 from airflow.utils import timezone
 
 import astro.sql as aql
-from astro import dataframe as df
 from astro.constants import SUPPORTED_DATABASES, Database
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
@@ -38,7 +37,7 @@ CWD = pathlib.Path(__file__).parent
 def test_dataframe_from_sql_basic(sample_dag, sql_server, test_table):
     """Test basic operation of dataframe operator."""
 
-    @df
+    @aql.dataframe
     def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
         return df.sell.count()
 
@@ -71,7 +70,7 @@ def test_dataframe_from_sql_basic(sample_dag, sql_server, test_table):
 def test_dataframe_from_sql_custom_task_id(sample_dag, sql_server, test_table):
     """Test custom and taskId increment when same task is added multiple times."""
 
-    @df(task_id="foo")
+    @aql.dataframe(task_id="foo")
     def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
         return df.sell.count()
 
@@ -102,7 +101,7 @@ def test_dataframe_from_sql_custom_task_id(sample_dag, sql_server, test_table):
 def test_dataframe_from_sql_basic_op_arg(sample_dag, sql_server, test_table):
     """Test basic operation of dataframe operator with op_args."""
 
-    @df(
+    @aql.dataframe(
         conn_id=test_table.conn_id,
         database=getattr(test_table.metadata, "database", None),
     )
@@ -139,7 +138,7 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, sql_server, test_table):
 def test_dataframe_from_sql_basic_op_arg_and_kwarg(sample_dag, sql_server, test_table):
     """Test dataframe creation from table object in args and kwargs."""
 
-    @df(
+    @aql.dataframe(
         conn_id=test_table.conn_id,
         database=getattr(test_table.metadata, "database", None),
     )
@@ -187,7 +186,7 @@ def test_dataframe_with_lower_and_upper_case(
     since snowflake return all col name in caps.
     """
 
-    @df(identifiers_as_lower=identifiers_as_lower)
+    @aql.dataframe(identifiers_as_lower=identifiers_as_lower)
     def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
         return df.columns
 
@@ -204,11 +203,11 @@ def test_dataframe_with_lower_and_upper_case(
 def test_postgres_dataframe_without_table_arg(sample_dag):
     """Test dataframe operator without table argument"""
 
-    @df
+    @aql.dataframe
     def validate_result(df: pandas.DataFrame):  # skipcq: PY-D0003
         assert df.iloc[0].to_dict()["colors"] == "red"
 
-    @df
+    @aql.dataframe
     def sample_df():  # skipcq: PY-D0003
         return pandas.DataFrame(
             {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}

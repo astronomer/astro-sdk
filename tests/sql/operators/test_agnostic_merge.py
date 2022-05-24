@@ -9,7 +9,6 @@ from airflow.utils import timezone
 
 from astro import sql as aql
 from astro.constants import Database
-from astro.dataframe import dataframe as adf
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
 from astro.utils.database import create_database_from_conn_id
@@ -104,7 +103,7 @@ def add_constraint(table: Table, columns):
     )
 
 
-@adf
+@aql.dataframe
 def validate_results(df: pd.DataFrame, mode, sql_type):
     # make columns lower and reverse due to snowflake defaulting to uppercase
     # Also reverse because BQ and snowflake seem to reverse row order

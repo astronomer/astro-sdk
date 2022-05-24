@@ -20,9 +20,9 @@ from airflow.exceptions import BackfillUnfinished
 from airflow.utils import timezone
 from pandas.testing import assert_frame_equal
 
+from astro import sql as aql
 from astro.constants import Database, FileType
 from astro.databases import create_database
-from astro.dataframe import dataframe as adf
 from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
@@ -521,7 +521,7 @@ def test_populate_table_metadata(sample_dag):
     Test default populating of table fields in load_fil op.
     """
 
-    @adf
+    @aql.dataframe
     def validate(table: Table):
         assert table.metadata.schema == SCHEMA
 
