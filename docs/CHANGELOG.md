@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.8.4
+
+Enhancements:
+* Add support for Airflow 2.3 [#329](https://github.com/astronomer/astro-sdk/pull/367).
+
+Breaking change:
+* We have renamed the artifacts we released to `astro-sdk-python` from `astro-projects`.
+`0.8.4` is the last version for which we have published both `astro-sdk-python` and `astro-projects`.
+
+## 0.8.3
+
+Bug fix:
+* Do not attempt to create a schema if it already exists [#329](https://github.com/astronomer/astro-sdk/issues/329).
+
 ## 0.8.2
 
 Bug fix:
