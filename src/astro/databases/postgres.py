@@ -133,14 +133,14 @@ class PostgresDatabase(BaseDatabase):
         target_table: Table,
         source_to_target_columns_map: Dict[str, str],
         target_conflict_columns: Optional[List[str]] = None,
-        conflict_strategy: AppendConflictStrategy = "exception",
+        if_conflict: AppendConflictStrategy = "exception",
     ) -> None:
         """Combine two tables based on target_conflict_columns
 
         :param source_table: Contains the table to be added to the target_table
         :param target_table: Contains the destination table in which the rows will be added
         :param target_conflict_columns: List of cols where we expect to have a conflict while combining
-        :param conflict_strategy: Action that needs to be taken in case there is a
+        :param if_conflict: Action that needs to be taken in case there is a
         conflict due to col constraint
         :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names,
         """
@@ -154,12 +154,12 @@ class PostgresDatabase(BaseDatabase):
             schema = table.metadata.schema
             return (schema, table.name) if schema else (table.name,)
 
-        if conflict_strategy != "exception" and len(target_conflict_columns) > 0:
-            if conflict_strategy == "ignore":
+        if if_conflict != "exception" and len(target_conflict_columns) > 0:
+            if if_conflict == "ignore":
                 self._combine_table_statement += (
                     self._combine_table_conflict_ignore_statement
                 )
-            elif conflict_strategy == "update":
+            elif if_conflict == "update":
                 self._combine_table_statement += (
                     self._combine_table_conflict_update_statement
                 )

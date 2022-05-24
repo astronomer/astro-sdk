@@ -327,7 +327,7 @@ def test_create_table_from_select_statement(database_table_fixture):
         {
             "target_conflict_columns": ["sell"],
             "source_to_target_columns_map": {"sell": "sell", "list": "list"},
-            "conflict_strategy": "update",
+            "if_conflict": "update",
             "expected_df": pd.DataFrame(
                 [
                     {"sell": 142, "list": 160},
@@ -339,7 +339,7 @@ def test_create_table_from_select_statement(database_table_fixture):
         {
             "target_conflict_columns": ["sell"],
             "source_to_target_columns_map": {"sell": "sell", "list": "list"},
-            "conflict_strategy": "ignore",
+            "if_conflict": "ignore",
             "expected_df": pd.DataFrame(
                 [
                     {"sell": 142, "list": 160},
@@ -376,7 +376,7 @@ def test_merge_table(parameters):
         target_table=target_table,
         source_table=source_table,
         target_conflict_columns=target_conflict_columns,
-        conflict_strategy=parameters["conflict_strategy"],
+        conflict_strategy=parameters["if_conflict"],
         source_to_target_columns_map=parameters["source_to_target_columns_map"],
     )
     df = db.hook.get_pandas_df(
