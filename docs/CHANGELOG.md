@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.9.0b
+
+Enhancements:
+* Introduction of the user-facing `Table`, `Metadata` and `File` classes
+
+Breaking changes:
+* The operator `save_file` became `export_file`
+* The tasks `load_file`, `save_file` and `run_raw_sql` should be used with use `Table`, `Metadata` and `File` instances
+* The decorators `dataframe`, `run_raw_sql` and `transform` should be used with `Table` and `Metadata` instances
+* The operators `aggregate_check`, `boolean_check`, `render` and `stats_check` were temporarily removed
+* The class `TempTable` was removed. It is possible to declare temporary tables by using `Table(temp=True)`. They are all prefixed with `_tmp_`
+* The only mandatory property of a `Table` instance is `conn_id`. If no metadata is given, the library will try to extract schema and other information from the connection object. If it is missing, it will default to the `AIRFLOW__ASTRO__SQL_SCHEMA` environment variable.
+
+Internals:
+* Major refactor introducing `Database`, `File`, `FileType` and `FileLocation` concepts.
+
 ## 0.8.4
 
 Enhancements:
