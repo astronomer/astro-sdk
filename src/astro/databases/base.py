@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 
 import pandas as pd
 import sqlalchemy
@@ -7,7 +7,6 @@ from airflow.hooks.base import BaseHook
 
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
-    DBMergeConflictStrategy,
     ExportExistsStrategy,
     LoadExistStrategy,
     AppendConflictStrategy
@@ -231,49 +230,22 @@ class BaseDatabase(ABC):
             index=False,
         )
 
-    def append_table(
+    def combine_tables(
         self,
         source_table: Table,
         target_table: Table,
+        source_to_target_columns_map: Dict[str, str],
+        target_conflict_columns: Optional[List[str]] = None,
         conflict_strategy: AppendConflictStrategy = "exception",
-        source_tables_cols: Optional[List[str]] = None,
-        target_tables_cols: Optional[List[str]] = None,
     ) -> None:
-        """
-        Append the source table rows into a destination table
-        The argument `conflict_strategy` allows the user to define how to handle conflicts
+        """Combine two tables based on target_conflict_columns
 
-        :param source_table: Contains the rows to be appended to the target_table
-        :param target_table: Contains the destination table in which the rows will be appended
-        :param conflict_strategy: Action that needs to be taken in case there is a conflict
-        :param source_tables_cols: List of columns name in source table that will be used in appending
-        :param target_tables_cols: List of columns name in target table that will be used in appending
-        """
-        return self.merge_table(
-            source_table=source_table,
-            target_table=target_table,
-            source_tables_cols=source_tables_cols,
-            target_tables_cols=target_tables_cols,
-        )
-
-    def merge_table(
-        self,
-        source_table: Table,
-        target_table: Table,
-        conflict_strategy: DBMergeConflictStrategy = "ignore",
-        merge_cols: Optional[List[str]] = None,
-        source_tables_cols: Optional[List[str]] = None,
-        target_tables_cols: Optional[List[str]] = None,
-    ) -> None:
-        """Merge two tables based on merge keys
-
-        :param source_table: Contains the rows to be appended to the target_table
-        :param target_table: Contains the destination table in which the rows will be appended
-        :param conflict_strategy: Action that needs to be taken in case there is a conflict
-        :param merge_cols: List of cols that are checked for uniqueness while merging,
-        they will be the unique post merge
-        :param source_tables_cols: List of columns name in source table that will be used in merging
-        :param target_tables_cols: List of columns name in target table that will be used in merging
+        :param source_table: Contains the table to be added to the target_table
+        :param target_table: Contains the destination table in which the rows will be added
+        :param target_conflict_columns: List of cols where we expect to have a conflict while combining
+        :param conflict_strategy: Action that needs to be taken in case there is a
+        conflict due to col constraint
+        :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names,
         """
         raise NotImplementedError
 

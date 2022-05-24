@@ -325,9 +325,8 @@ def test_create_table_from_select_statement(database_table_fixture):
     "parameters",
     [
         {
-            "merge_cols": ["sell"],
-            "source_tables_cols": ["sell", "list"],
-            "target_tables_cols": ["sell", "list"],
+            "target_conflict_columns": ["sell"],
+            "source_to_target_columns_map": {"sell": "sell", "list": "list"},
             "conflict_strategy": "update",
             "expected_df": pd.DataFrame(
                 [
@@ -338,9 +337,8 @@ def test_create_table_from_select_statement(database_table_fixture):
             ),
         },
         {
-            "merge_cols": ["sell"],
-            "source_tables_cols": ["sell", "list"],
-            "target_tables_cols": ["sell", "list"],
+            "target_conflict_columns": ["sell"],
+            "source_to_target_columns_map": {"sell": "sell", "list": "list"},
             "conflict_strategy": "ignore",
             "expected_df": pd.DataFrame(
                 [
@@ -350,17 +348,6 @@ def test_create_table_from_select_statement(database_table_fixture):
                 ]
             ),
         },
-        # {
-        #     'merge_cols': ['sell'],
-        #     'source_tables_cols': ['sell'],
-        #     'target_tables_cols': ['sell'],
-        #     'conflict_strategy': 'ignore',
-        #     'expected_df': pd.DataFrame([
-        #                         {'sell': 142, 'list': 160},
-        #                         {'sell': 162, 'list': None},
-        #                         {'sell': 175, 'list': 540}
-        #                     ])
-        # }
     ],
 )
 def test_merge_table(parameters):
@@ -370,7 +357,7 @@ def test_merge_table(parameters):
     target_table = Table(conn_id="postgres_conn")
     source_table = Table(conn_id="postgres_conn")
 
-    merge_cols = parameters["merge_cols"]
+    target_conflict_columns = parameters["target_conflict_columns"]
 
     db = create_database(conn_id=target_table.conn_id)
     db.load_pandas_dataframe_to_table(
@@ -382,16 +369,15 @@ def test_merge_table(parameters):
 
     db.run_sql(
         sql_statement=f"ALTER TABLE {db.get_table_qualified_name(target_table)} "
-        f"ADD CONSTRAINT con_{target_table.name} UNIQUE ({','.join(merge_cols)})"
+        f"ADD CONSTRAINT con_{target_table.name} UNIQUE ({','.join(target_conflict_columns)})"
     )
 
-    db.merge_table(
+    db.combine_tables(
         target_table=target_table,
         source_table=source_table,
-        merge_cols=merge_cols,
+        target_conflict_columns=target_conflict_columns,
         conflict_strategy=parameters["conflict_strategy"],
-        source_tables_cols=parameters["source_tables_cols"],
-        target_tables_cols=parameters["target_tables_cols"],
+        source_to_target_columns_map=parameters["source_to_target_columns_map"],
     )
     df = db.hook.get_pandas_df(
         f"SELECT * FROM {db.get_table_qualified_name(target_table)}"
@@ -409,8 +395,7 @@ def test_merge_table(parameters):
     "parameters",
     [
         {
-            "source_tables_cols": ["sell", "list"],
-            "target_tables_cols": ["sell", "list"],
+            "source_to_target_columns_map": {"sell": "sell", "list": "list"},
             "expected_df": pd.DataFrame(
                 [
                     {"sell": 142, "list": 160},
@@ -437,11 +422,10 @@ def test_append_table(parameters):
         source_dataframe=source_df, target_table=source_table
     )
 
-    db.append_table(
+    db.combine_tables(
         target_table=target_table,
         source_table=source_table,
-        source_tables_cols=parameters["source_tables_cols"],
-        target_tables_cols=parameters["target_tables_cols"],
+        source_to_target_columns_map=parameters["source_to_target_columns_map"],
     )
     df = db.hook.get_pandas_df(
         f"SELECT * FROM {db.get_table_qualified_name(target_table)}"

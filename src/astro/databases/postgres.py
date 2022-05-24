@@ -1,5 +1,5 @@
 """Postgres database implementation."""
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import pandas as pd
 import sqlalchemy
@@ -8,10 +8,10 @@ from psycopg2 import sql as postgres_sql
 
 
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
-from astro.databases.base import BaseDatabase
 from astro.settings import SCHEMA
 
-from astro.constants import DBMergeConflictStrategy
+from astro.constants import AppendConflictStrategy
+
 from astro.databases.base import BaseDatabase
 
 from astro.sql.table import Metadata, Table
@@ -27,6 +27,17 @@ class PostgresDatabase(BaseDatabase):
 
     illegal_column_name_chars: List[str] = ["."]
     illegal_column_name_chars_replacement: List[str] = ["_"]
+
+    _combine_table_statement: str = (
+        "INSERT INTO {main_table} ({target_columns})"
+        " SELECT {append_columns} FROM {append_table}"
+    )
+    _combine_table_conflict_ignore_statement: str = (
+        " ON CONFLICT ({merge_keys}) DO NOTHING"
+    )
+    _combine_table_conflict_update_statement: str = (
+        " ON CONFLICT ({merge_keys}) DO UPDATE SET {update_statements}"
+    )
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
         super().__init__(conn_id)
@@ -117,46 +128,41 @@ class PostgresDatabase(BaseDatabase):
         inspector = sqlalchemy.inspect(self.sqlalchemy_engine)
         return bool(inspector.dialect.has_table(self.connection, table.name, schema))
 
-    def merge_table(
+    def combine_tables(
         self,
         source_table: Table,
         target_table: Table,
-        conflict_strategy: DBMergeConflictStrategy = "ignore",
-        merge_cols: Optional[List[str]] = None,
-        source_tables_cols: Optional[List[str]] = None,
-        target_tables_cols: Optional[List[str]] = None,
+        source_to_target_columns_map: Dict[str, str],
+        target_conflict_columns: Optional[List[str]] = None,
+        conflict_strategy: AppendConflictStrategy = "exception",
     ) -> None:
-        """Merge two tables based on merge keys
+        """Combine two tables based on target_conflict_columns
 
-        :param source_table: Contains the rows to be appended to the target_table
-        :param target_table: Contains the destination table in which the rows will be appended
-        :param conflict_strategy: Action that needs to be taken in case there is a conflict
-        :param merge_cols: List of cols that are checked for uniqueness while merging,
-         they will be the unique post merge
-        :param source_tables_cols: List of columns name in source table that will be used in merging
-        :param target_tables_cols: List of columns name in target table that will be used in merging
+        :param source_table: Contains the table to be added to the target_table
+        :param target_table: Contains the destination table in which the rows will be added
+        :param target_conflict_columns: List of cols where we expect to have a conflict while combining
+        :param conflict_strategy: Action that needs to be taken in case there is a
+        conflict due to col constraint
+        :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names,
         """
-        source_tables_cols = source_tables_cols or []
-        target_tables_cols = target_tables_cols or []
-        merge_cols = merge_cols or []
+        target_conflict_columns = target_conflict_columns or []
+        source_to_target_columns_map = source_to_target_columns_map or {}
 
-        if len(source_tables_cols) != len(target_tables_cols):
-            raise ValueError(
-                "Params 'source_tables_cols' and  'target_tables_cols' should contain same number of cols."
-            )
+        source_tables_cols: List[str] = list(source_to_target_columns_map.keys())
+        target_tables_cols: List[str] = list(source_to_target_columns_map.values())
 
         def identifier_args(table):
             schema = table.metadata.schema
             return (schema, table.name) if schema else (table.name,)
 
-        statement = "INSERT INTO {main_table} ({target_columns}) SELECT {append_columns} FROM {append_table}"
-
-        if len(merge_cols) > 0:
+        if conflict_strategy != "exception" and len(target_conflict_columns) > 0:
             if conflict_strategy == "ignore":
-                statement += " ON CONFLICT ({merge_keys}) DO NOTHING"
+                self._combine_table_statement += (
+                    self._combine_table_conflict_ignore_statement
+                )
             elif conflict_strategy == "update":
-                statement += (
-                    " ON CONFLICT ({merge_keys}) DO UPDATE SET {update_statements}"
+                self._combine_table_statement += (
+                    self._combine_table_conflict_update_statement
                 )
 
         source_tables_cols = [postgres_sql.Identifier(c) for c in source_tables_cols]
@@ -167,17 +173,16 @@ class PostgresDatabase(BaseDatabase):
             for x, y in column_pairs
         ]
 
-        query = postgres_sql.SQL(statement).format(
+        query = postgres_sql.SQL(self._combine_table_statement).format(
             target_columns=postgres_sql.SQL(",").join(target_tables_cols),
             main_table=postgres_sql.Identifier(*identifier_args(target_table)),
             append_columns=postgres_sql.SQL(",").join(source_tables_cols),
             append_table=postgres_sql.Identifier(*identifier_args(source_table)),
             update_statements=postgres_sql.SQL(",").join(update_statements),
             merge_keys=postgres_sql.SQL(",").join(
-                [postgres_sql.Identifier(x) for x in merge_cols]
+                [postgres_sql.Identifier(x) for x in target_conflict_columns]
             ),
         )
 
-        hook = PostgresHook(postgres_conn_id=target_table.conn_id)
-        sql = query.as_string(hook.get_conn())
+        sql = query.as_string(self.hook.get_conn())
         self.run_sql(sql_statement=sql)
