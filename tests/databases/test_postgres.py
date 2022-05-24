@@ -376,7 +376,7 @@ def test_merge_table(parameters):
         target_table=target_table,
         source_table=source_table,
         target_conflict_columns=target_conflict_columns,
-        conflict_strategy=parameters["if_conflict"],
+        if_conflict=parameters["if_conflict"],
         source_to_target_columns_map=parameters["source_to_target_columns_map"],
     )
     df = db.hook.get_pandas_df(
