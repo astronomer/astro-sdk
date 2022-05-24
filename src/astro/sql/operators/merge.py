@@ -17,7 +17,7 @@ from astro.utils.sqlite_merge_func import sqlite_merge_func
 from astro.utils.task_id_helper import get_unique_task_id
 
 
-class SqlMergeOperator(SqlDecoratedOperator):
+class MergeOperator(SqlDecoratedOperator):
     template_fields = ("target_table", "merge_table")
 
     def __init__(

@@ -17,7 +17,7 @@ from astro.utils.table_handler import TableHandler
 from astro.utils.task_id_helper import get_unique_task_id
 
 
-class SqlAppendOperator(SqlDecoratedOperator, TableHandler):
+class AppendOperator(SqlDecoratedOperator, TableHandler):
     template_fields = ("main_table", "append_table")
 
     def __init__(
