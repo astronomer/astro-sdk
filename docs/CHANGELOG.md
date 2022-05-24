@@ -10,7 +10,7 @@ Breaking changes:
 * The tasks `load_file`, `save_file` and `run_raw_sql` should be used with use `Table`, `Metadata` and `File` instances
 * The decorators `dataframe`, `run_raw_sql` and `transform` should be used with `Table` and `Metadata` instances
 * The operators `aggregate_check`, `boolean_check`, `render` and `stats_check` were temporarily removed
-* The class `TempTable` was removed. It is possible to declare temporary tables by using `Table(temp=True)`. They are all prefixed with `_tmp_`
+* The class `TempTable` was removed. It is possible to declare temporary tables by using `Table(temp=True)`. All the temporary tables names are prefixed with `_tmp_`. If the user decides to name a `Table`, it is no longer temporary, unless the user enforces it to be.
 * The only mandatory property of a `Table` instance is `conn_id`. If no metadata is given, the library will try to extract schema and other information from the connection object. If it is missing, it will default to the `AIRFLOW__ASTRO__SQL_SCHEMA` environment variable.
 
 Internals:
