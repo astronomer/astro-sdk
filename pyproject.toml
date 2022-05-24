@@ -111,8 +111,8 @@ files = [
     "src/astro/__init__.py",
     "src/astro/sql/operators/load_file.py",
     "src/astro/sql/operators/export_file.py",
-    "src/astro/sql/operators/agnostic_sql_append.py",
-    "src/astro/sql/operators/agnostic_sql_merge.py"
+    "src/astro/sql/operators/append.py",
+    "src/astro/sql/operators/merge.py"
 ]
 follow_imports = "skip"
 namespace_packages = true

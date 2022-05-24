@@ -3,11 +3,11 @@ from typing import Callable, Iterable, List, Mapping, Optional, Union
 import pandas as pd
 from airflow.decorators.base import task_decorator_factory
 
-from astro.sql.operators.agnostic_sql_append import SqlAppendOperator
-from astro.sql.operators.agnostic_sql_merge import SqlMergeOperator
+from astro.sql.operators.append import AppendOperator
 from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.export_file import export_file  # noqa: F401
 from astro.sql.operators.load_file import load_file  # noqa: F401
+from astro.sql.operators.merge import MergeOperator
 from astro.sql.operators.transform import transform_decorator  # noqa: F401
 from astro.sql.operators.truncate import TruncateOperator
 from astro.sql.table import Table
@@ -63,7 +63,7 @@ def append(
         columns = []
     if casted_columns is None:
         casted_columns = {}
-    return SqlAppendOperator(
+    return AppendOperator(
         main_table=main_table,
         append_table=append_table,
         columns=columns,
@@ -100,7 +100,7 @@ def merge(
     :rtype: None
     """
 
-    return SqlMergeOperator(
+    return MergeOperator(
         target_table=target_table,
         merge_table=merge_table,
         merge_keys=merge_keys,
