@@ -6,14 +6,13 @@ import sqlalchemy
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from psycopg2 import sql as postgres_sql
 
-
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
-from astro.settings import SCHEMA
-
-from astro.constants import AppendConflictStrategy
-
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    AppendConflictStrategy,
+    LoadExistStrategy,
+)
 from astro.databases.base import BaseDatabase
-
+from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = PostgresHook.default_conn_name

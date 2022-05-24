@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import List, Optional, Tuple, Dict
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 import sqlalchemy
@@ -7,9 +7,9 @@ from airflow.hooks.base import BaseHook
 
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
+    AppendConflictStrategy,
     ExportExistsStrategy,
     LoadExistStrategy,
-    AppendConflictStrategy
 )
 from astro.exceptions import NonExistentTableException
 from astro.files import File
