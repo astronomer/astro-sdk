@@ -7,7 +7,7 @@ Enhancements:
 
 Breaking changes:
 * The operator `save_file` became `export_file`
-* The tasks `load_file`, `save_file` and `run_raw_sql` should be used with use `Table`, `Metadata` and `File` instances
+* The tasks `load_file`, `export_file` (previously `save_file`) and `run_raw_sql` should be used with use `Table`, `Metadata` and `File` instances
 * The decorators `dataframe`, `run_raw_sql` and `transform` should be used with `Table` and `Metadata` instances
 * The operators `aggregate_check`, `boolean_check`, `render` and `stats_check` were temporarily removed
 * The class `TempTable` was removed. It is possible to declare temporary tables by using `Table(temp=True)`. All the temporary tables names are prefixed with `_tmp_`. If the user decides to name a `Table`, it is no longer temporary, unless the user enforces it to be.
