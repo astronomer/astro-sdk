@@ -19,7 +19,7 @@ Internals:
 ## 0.8.4
 
 Enhancements:
-* Add support for Airflow 2.3 [#329](https://github.com/astronomer/astro-sdk/pull/367).
+* Add support for Airflow 2.3 [#367](https://github.com/astronomer/astro-sdk/pull/367).
 
 Breaking change:
 * We have renamed the artifacts we released to `astro-sdk-python` from `astro-projects`.
