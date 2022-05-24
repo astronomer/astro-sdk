@@ -7,7 +7,6 @@ import pandas as pd
 # Uses data from https://www.kaggle.com/c/shelter-animal-outcomes
 from airflow.decorators import dag
 
-from astro import dataframe as df
 from astro import sql as aql
 from astro.files import File
 from astro.sql.table import Metadata, Table
@@ -26,7 +25,7 @@ def clean_data(input_table: Table):
     """
 
 
-@df(identifiers_as_lower=False)
+@aql.dataframe(identifiers_as_lower=False)
 def aggregate_data(df: pd.DataFrame):
     adoption_reporting_dataframe = df.pivot_table(
         index="date", values="name", columns=["type"], aggfunc="count"

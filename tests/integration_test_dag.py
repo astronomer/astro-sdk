@@ -8,7 +8,6 @@ from airflow.utils import timezone
 from astro import sql as aql
 from astro.databases import create_database
 from astro.databases.sqlite import SqliteDatabase
-from astro.dataframe import dataframe as adf
 from astro.files import File
 from astro.sql.table import Table
 from tests.sql.operators import utils as test_utils
@@ -45,12 +44,12 @@ def apply_transform(input_table: Table):
     return "SELECT * FROM {{input_table}}"
 
 
-@adf
+@aql.dataframe
 def do_a_dataframe_thing(df: pd.DataFrame):
     return df
 
 
-@adf
+@aql.dataframe
 def count_dataframes(df1: pd.DataFrame, df2: pd.DataFrame):
     return len(df1) + len(df2)
 

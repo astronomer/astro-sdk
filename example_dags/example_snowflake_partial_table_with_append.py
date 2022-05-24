@@ -4,9 +4,8 @@ from datetime import datetime
 import pandas as pd
 from airflow.decorators import dag
 
-from astro import dataframe
 from astro.files import File
-from astro.sql import append, load_file, run_raw_sql, transform, truncate
+from astro.sql import append, dataframe, load_file, run_raw_sql, transform, truncate
 from astro.sql.table import Metadata, Table
 
 """

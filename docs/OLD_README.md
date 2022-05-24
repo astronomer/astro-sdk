@@ -304,10 +304,10 @@ You can even pass the resulting tables into a python function that uses the `ast
 automatically convert your table into a dataframe. We'll discuss how to do this more in "Using Astro as a Python Engineer".
 
 ```python
-from astro.dataframe import dataframe as df
+from astro import sql as aql
 
 
-@df
+@aql.dataframe
 def aggregate_data(agg_df: pd.DataFrame):
     customers_and_orders_dataframe = agg_df.pivot_table(
         index="DATE", values="NAME", columns=["TYPE"], aggfunc="count"
@@ -477,7 +477,6 @@ from airflow.models import DAG
 from pandas import DataFrame
 
 from astro import sql as aql
-from astro import dataframe as df
 from astro.sql.table import Table
 
 default_args = {
@@ -516,7 +515,7 @@ def join_orders_and_customers(orders_table: Table, customer_table: Table):
         FROM {{orders_table}} c LEFT OUTER JOIN {{customer_table}} p ON c.customer_id = p.customer_id"""
 
 
-@df
+@aql.dataframe
 def perform_dataframe_transformation(df: DataFrame):
     """Train model with Python. You can import any python library you like and treat this as you would a normal
     dataframe
@@ -525,7 +524,7 @@ def perform_dataframe_transformation(df: DataFrame):
     return recent_purchases_dataframe
 
 
-@df
+@aql.dataframe
 def dataframe_action_to_sql(df: DataFrame):
     """
     This function gives us an example of a dataframe function that we intend to put back into SQL. The only thing
@@ -635,13 +634,12 @@ If after running the function, you wish to return the value into your database, 
 
 ## dataframe
 ```python
-from astro import dataframe as df
 from astro import sql as aql
 from astro.sql.table import Table
 import pandas as pd
 
 
-@df
+@aql.dataframe
 def get_dataframe():
     return pd.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
 
@@ -658,33 +656,4 @@ with self.dag:
         )
     )
     pg_df = sample_pg(my_df)
-```
-
-## ML Operations
-
-We currently offer two ML based functions: `train` and `predict`. Currently these functions do the
-exact same thing as `dataframe`, but eventually we hope to add valuable ML functionality (e.g. hyperparam for train and
-model serving options in predict).
-
-For now please feel free to use these endpoints as convenience functions, knowing that there will long term be added
-functionality.
-
-## train
-```python
-from astro.ml import train
-
-
-@train
-def my_df_func():
-    return pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
-```
-
-## predict
-```python
-from astro.ml import predict
-
-
-@predict
-def my_df_func():
-    return pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
 ```

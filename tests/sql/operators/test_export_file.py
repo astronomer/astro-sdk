@@ -21,7 +21,6 @@ import pytest
 from airflow.exceptions import BackfillUnfinished
 from airflow.utils import timezone
 
-import astro.dataframe as adf
 import astro.sql as aql
 from astro.constants import SUPPORTED_DATABASES, SUPPORTED_FILE_TYPES, Database
 from astro.files import File
@@ -52,7 +51,7 @@ def s3fs_creds():
 
 
 def test_save_dataframe_to_local(sample_dag):
-    @adf
+    @aql.dataframe
     def make_df():
         return pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
 
@@ -351,7 +350,7 @@ def test_populate_table_metadata(sample_dag, sql_server, test_table):
     """
     test_table.metadata.schema = None
 
-    @adf
+    @aql.dataframe
     def validate(table: Table):
         assert table.metadata.schema == SCHEMA
 
