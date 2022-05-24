@@ -7,7 +7,6 @@ from sqlalchemy import text
 from sqlalchemy.engine.base import Engine
 
 from astro.constants import Database
-from astro.sqlite_utils import create_sqlalchemy_engine_with_sqlite
 from astro.utils.database import (
     create_database_from_conn_id,
     get_database_name,
@@ -15,6 +14,7 @@ from astro.utils.database import (
     run_sql,
 )
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
+from astro.utils.sqlite_utils import create_sqlalchemy_engine_with_sqlite
 
 
 def describe_create_database():

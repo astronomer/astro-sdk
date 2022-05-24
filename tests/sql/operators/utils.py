@@ -85,18 +85,6 @@ def drop_table_snowflake(
     snowflake_conn.close()
 
 
-def drop_table_postgres(
-    table_name: str, conn_id: str = "postgres_conn", schema: str = "postgres"
-):
-    hook = PostgresHook(postgres_conn_id=conn_id, schema=schema)
-    postgres_conn = hook.get_conn()
-    cursor = postgres_conn.cursor()
-    cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
-    postgres_conn.commit()
-    cursor.close()
-    postgres_conn.close()
-
-
 def run_dag(dag):
     dag.clear(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE, dag_run_state=State.NONE)
 
