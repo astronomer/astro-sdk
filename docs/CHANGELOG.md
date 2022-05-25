@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.8.5b1
+## 0.8.5
 
 Bug fix:
 * Solve SnowflakeMissingPackage issue reported by Steven
