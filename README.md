@@ -135,7 +135,7 @@ it depends on Apache Airflow >= 2.1.0.
 
 ## Available operations
 
-A summary of the currently available operations in **astro**. More details are available in the [reference guide](docs/OLD_README.md).
+A summary of the currently available operations in **astro**. More details are available in the [reference guide](REFERENCE.md).
 * `load_file`: load a given file into a SQL table
 * `transform`: applies a SQL select statement to a source table and saves the result to a destination table
 * `truncate`: remove all records from a SQL table
