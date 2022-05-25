@@ -38,7 +38,7 @@ If using cloud providers, install using the optional dependencies of interest:
 pip install astro-sdk-python[amazon,google,snowflake,postgres]
 ```
 
- ## Quick-start
+## Quick-start
 
 After installing Astro, copy the following example dag `calculate_popular_movies.py` to a local directory named `dags`:
 
