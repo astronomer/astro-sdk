@@ -13,7 +13,7 @@
 
 # :mega: Disclaimer :mega:
 ```
-This project is in a previous release. Interfaces may change with feedback from early users.
+This project is in a preview release. Interfaces may change with feedback from early users.
 Though the code undergoes automated testing, it is not yet ready for production.
 ```
 # Overview
