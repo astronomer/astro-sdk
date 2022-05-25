@@ -58,6 +58,7 @@ repos:
           - flake8-colors
           - flake8-assertive
           - flake8-typing-imports
+          - flake8-logging-format
 
   - repo: https://github.com/timothycrosley/isort
     rev: 5.10.1
