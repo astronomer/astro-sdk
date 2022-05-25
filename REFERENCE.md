@@ -29,9 +29,9 @@ With the `astro-sdk-python` library, we want to redefine the DAG writing experie
 data engineers to write DAGs based around _data_ instead of _task dependencies_.
 With this in mind, we built a library focused on data movement and simplifying data transformations between different environments. Our first two integrations are SQL and pandas, but we are planning many more in the coming months.
 
-With our SQL and dataframe modules, you should have the ability to treat SQL tables as if they're python objects. You can manipulate them,
+With our SQL module, you should have the ability to treat SQL tables as if they're python objects. You can manipulate them,
 join them, templatize them, and ultimately turn them into dataframes if you want to run python functions against them. We hope that this
-library creates a cleaner Airflow ELT experience, as well as an easier onboarding for those who want to focus on data transformations
+library creates a cleaner Airflow ELT experience, as well as an easier on-boarding for those who want to focus on data transformations
 instead of DAGs.
 
 Please feel free to raise issues and propose improvements. Community contributions are highly welcome!
@@ -75,11 +75,17 @@ Before we can complete any transformations, we need to define a way to get our t
 
 To instantiate a table or bring in a table from a database into the `astro-sdk-python` ecosystem, you can pass a `Table` object into the class. This `Table` object will contain all of the metadata that's necessary for handling table creation between tasks. After you define a Table's metadata in the beginning of your pipeline, `astro-sdk-python` can automatically pass that metadata along to downstream tasks.
 
+If the user does not define the metadata properties within table, the `astro-sdk-python` attempts to retrieve them from the connection associated with `conn_id`. If the database supports schemas and the connection doesn't specify a schema, the SDK will retrieve the schema from the `AIRFLOW__ASTRO__SQL_SCHEMA` environment variable.
+
 In the following example, we define our table in the DAG instantiation. In each subsequent task, we pass in only an input `Table` argument because `astro-sdk-python` automatically passes in the additional context from our original `input_table` parameter.
 
 ```python
+from datetime import datetime
+
+from airflow.models import DAG
+
 from astro import sql as aql
-from astro.sql.table import Table
+from astro.sql.table import Metadata, Table
 
 
 @aql.transform
@@ -92,9 +98,18 @@ def my_second_sql_transformation(input_table_2: Table):
     return "SELECT * FROM {{input_table_2}}"
 
 
+dag = DAG(
+    dag_id="astro_sdk_example_1",
+    start_date=datetime(2019, 1, 1),
+    schedule_interval=None,
+)
+
+
 with dag:
     my_table = my_first_sql_transformation(
-        input_table=Table(table_name="foo", database="bar", conn_id="postgres_conn")
+        input_table=Table(
+            name="foo", conn_id="postgres_conn", metadata=Metadata(schema="postgres")
+        )
     )
     my_second_sql_transformation(my_table)
 ```
@@ -103,12 +118,20 @@ with dag:
 
 Following the traditional dev ops concept of [pets vs. cattle](http://cloudscaling.com/blog/cloud-computing/the-history-of-pets-vs-cattle/), you can decide whether the result of a function is a "pet" (e.g. a named table that you would want to reference later), or a "cattle" that can be deleted at any time for garbage collection.
 
-If you want to ensure that the output of your task is a cattle, you can declare `Table(temp=True,...)`. This places the output into your temp schema,
-which can be later bulk deleted. By default, all `aql.transform` functions will output to temporary tables unless a `Table` object is used in the `output_table`
-argument.
+If you want to ensure that the output of your task is a cattle, you can declare `Table(temp=True,...)` or `Table()`. If a table name is not given, the SDK generates a table name, prefixed with `_tmp_` and assumes the table is temporary.
+By default, all `aql.transform` functions will output to temporary tables unless the user sets the argument `output_table` with a named `Table` instance.
 
-In the following example DAG, we set an `output_table` to a nameless `Table(temp=True,...)` meaning that any output from this DAG will be deleted once the DAG completes. If we wanted to keep our output, we would simply update the parameter to a named `Table` instead.
+At the moment the `astro-sdk-python` does not expose a tool to clean up temporary tables. This can be achieved by the user running a function similar to:
 
+```python
+def cleanup(hook):
+    eng = hook.get_sqlalchemy_engine()
+    for table_name in eng.table_names():
+        if table_name.startswith("_tmp_"):
+            hook.run(f"DROP TABLE IF EXISTS {table_name}")
+```
+
+In the following example DAG, we set an `output_table` to a nameless `Table()` meaning that the `astro-sdk-python` will give it a name and consider it temporary.
 
 ```python
 from astro import sql as aql
@@ -127,16 +150,16 @@ def my_second_sql_transformation(input_table_2: Table):
 
 with dag:
     my_table = my_first_sql_transformation(
-        input_table=Table(table_name="foo", database="bar", conn_id="postgres_conn"),
-        output_table=Table(temp=True,database="bar", conn_id="postgres_conn"),
+        input_table=Table(name="foo", conn_id="postgres_conn"),
+        output_table=Table(),
     )
     my_second_sql_transformation(my_table)
 ```
 
 ## Loading Data
 
-To create an ELT pipeline, users can first load CSV or parquet data from either local, S3, or GCS into a SQL database with the `load_sql` function.
-To interact with S3, you must set an S3 Airflow connection in the `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`  environment variables.
+To create an ELT pipeline, users can first load CSV or parquet data from either local, S3, or GCS into a SQL database with the `load_file` function.
+The credentials to Google Cloud Storage and Amazon S3 should be set using Airflow Connections.
 
 In the following example, we load data from S3 by specifying the path and connection ID for our S3 database in `aql.load_file`:
 
@@ -145,9 +168,8 @@ from astro import sql as aql
 from astro.sql.table import Table
 
 raw_orders = aql.load_file(
-    path="s3://my/s3/path.csv",
-    file_conn_id="my_s3_conn",
-    output_table=Table(table_name="my_table", conn_id="postgres_conn"),
+    input_file=File(path="s3://my/s3/path.csv", conn_id="my_s3_conn"),
+    output_table=Table(name="my_table", conn_id="postgres_conn"),
 )
 ```
 
@@ -203,7 +225,7 @@ def drop_table(table_to_drop):
 
 ## Putting it All Together
 
-The following is a full example DAG of a SQL + Python workflow using `astro`. We pull data from S3, run SQL transformations to merge our pulled data with existing data, and move the result of that merge into a dataframe so that we can complete complex work on it using Python / ML.
+The following is a full example DAG of a SQL + Python workflow using the `astro-sdk-python`. We pull data from S3, run SQL transformations to merge our pulled data with existing data, and move the result of that merge into a dataframe so that we can complete complex work on it using Python / ML.
 
 ```python
 from datetime import datetime, timedelta
@@ -211,8 +233,8 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from pandas import DataFrame
 
+from astro.file import File
 from astro import sql as aql
-from astro import dataframe as df
 from astro.sql.table import Table
 
 default_args = {
@@ -236,7 +258,7 @@ def aggregate_orders(orders_table: Table):
         WHERE purchase_date >= DATEADD(day, -7, '{{ execution_date }}')"""
 
 
-@aql.transform(conn_id="postgres_conn", database="pagila")
+@aql.transform(conn_id="postgres_conn")
 def get_customers(customer_table: Table = Table("customer")):
     """Basic clean-up of an existing table."""
     return """SELECT customer_id, source, region, member_since
@@ -251,7 +273,7 @@ def join_orders_and_customers(orders_table: Table, customer_table: Table):
         FROM {{orders_table}} c LEFT OUTER JOIN {{customer_table}} p ON c.customer_id = p.customer_id"""
 
 
-@df
+@aql.dataframe
 def perform_dataframe_transformation(df: DataFrame):
     """Train model with Python. You can import any python library you like and treat this as you would a normal
     dataframe
@@ -260,7 +282,7 @@ def perform_dataframe_transformation(df: DataFrame):
     return recent_purchases_dataframe
 
 
-@df
+@aql.dataframe
 def dataframe_action_to_sql(df: DataFrame):
     """
     This function gives us an example of a dataframe function that we intend to put back into SQL. The only thing
@@ -287,9 +309,8 @@ with dag:
     """
 
     raw_orders = aql.load_file(
-        path="s3://my/s3/path.csv",
-        file_conn_id="my_s3_conn",
-        output_table=Table(table_name="foo", conn_id="my_postgres_conn"),
+        File("s3://my/s3/path.csv", "my_s3_conn"),
+        Table(name="foo", conn_id="my_postgres_conn"),
     )
     agg_orders = aggregate_orders(raw_orders)
     customers = get_customers()
@@ -297,7 +318,7 @@ with dag:
     simple_df = perform_dataframe_transformation(df=features)
     # By defining the output_table in the invocation, we are telling astro where to put the result dataframe
     dataframe_action_to_sql(
-        simple_df, output_table=Table(table_name="result", conn_id="my_postgres_conn")
+        simple_df, output_table=Table(table="result", conn_id="my_postgres_conn")
     )
 ```
 
@@ -314,10 +335,10 @@ The `aql.append` function merges tables assuming that there are no conflicts. Yo
 
 ```python
 foo = aql.append(
-    append_table=APPEND_TABLE,
+    append_table=Table("some_table", "snowflake_default"),
+    main_table=Table("main_table", "snowflake_default"),
     columns=["Bedrooms", "Bathrooms"],
     casted_columns={"Age": "INTEGER"},
-    main_table=MAIN_TABLE,
 )
 ```
 
@@ -332,8 +353,8 @@ Note that the `merge_keys` parameter is a list in Postgres, but a map in Snowfla
 Postgres:
 ```python
 a = aql.merge(
-    target_table=MAIN_TABLE,
-    merge_table=MERGE_TABLE,
+    target_table=Table("target_table", "postgres_default"),
+    merge_table=Table("merge_table", "postgres_default"),
     merge_keys=["list", "sell"],
     target_columns=["list", "sell", "taxes"],
     merge_columns=["list", "sell", "age"],
@@ -343,8 +364,8 @@ a = aql.merge(
 Snowflake:
 ```python
 a = aql.merge(
-    target_table=MAIN_TABLE,
-    merge_table=MERGE_TABLE,
+    target_table=Table("target_table", "snowflake_default"),
+    merge_table=Table("merge_table", "snowflake_default"),
     merge_keys={"list": "list", "sell": "sell"},
     target_columns=["list", "sell"],
     merge_columns=["list", "sell"],
@@ -356,7 +377,7 @@ a = aql.merge(
 
 ```python
 a = aql.truncate(
-    table=TRUNCATE_TABLE,
+    table=Table("name", "sqlite_default"),
 )
 ```
 
@@ -370,13 +391,12 @@ If after running the function, you wish to return the value into your database, 
 
 ## dataframe
 ```python
-from astro import dataframe as df
 from astro import sql as aql
-from astro.sql.table import Table
+from astro.sql.table import Metadata, Table
 import pandas as pd
 
 
-@df
+@aql.dataframe
 def get_dataframe():
     return pd.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
 
@@ -386,13 +406,13 @@ def sample_pg(input_table: Table):
     return "SELECT * FROM {{input_table}}"
 
 
-with self.dag:
+with dag:
     my_df = get_dataframe(
         output_table=Table(
-            table_name="my_df_table", conn_id="postgres_conn", database="pagila"
+            name="my_df_table",
+            conn_id="postgres_conn",
+            metadata=Metadata(database="pagila"),
         )
     )
     pg_df = sample_pg(my_df)
 ```
-
-
