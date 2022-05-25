@@ -46,7 +46,9 @@ After installing Astro, copy the following example dag `calculate_popular_movies
 from datetime import datetime
 from airflow import DAG
 from astro import sql as aql
+from astro.files import File
 from astro.sql.table import Table
+
 @aql.transform()
 def top_five_animations(input_table: Table):
     return """
@@ -56,6 +58,7 @@ def top_five_animations(input_table: Table):
         ORDER BY Rating desc
         LIMIT 5;
     """
+
 with DAG(
     "calculate_popular_movies",
     schedule_interval=None,
@@ -63,16 +66,15 @@ with DAG(
     catchup=False,
 ) as dag:
     imdb_movies = aql.load_file(
-        path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv",
-        task_id="load_csv",
+        File("https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv"),
         output_table=Table(
-            table_name="imdb_movies", database="sqlite", conn_id="sqlite_default"
+            name="imdb_movies", conn_id="sqlite_default"
         ),
     )
     top_five_animations(
         input_table=imdb_movies,
         output_table=Table(
-            table_name="top_animation", database="sqlite", conn_id="sqlite_default"
+            name="top_animation"
         ),
     )
 ```
