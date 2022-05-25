@@ -211,9 +211,9 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from pandas import DataFrame
 
-from astro-sdk-python import sql as aql
-from astro-sdk-python import dataframe as df
-from astro-sdk-python.sql.table import Table
+from astro import sql as aql
+from astro import dataframe as df
+from astro.sql.table import Table
 
 default_args = {
     "owner": "airflow",
