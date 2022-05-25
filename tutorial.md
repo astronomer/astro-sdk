@@ -78,6 +78,7 @@ If you're using MacOS, set this environment variable [(background)](https://gith
 ```shell
 export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 ```
+
 * Check out your Airflow UI at `http://localhost:8080/`
 
 ## Setup Airflow connections
@@ -115,7 +116,7 @@ Click on the blue "+" icon to *Add a new record*
 * Password:
 * Account:
 * Database:
-* Region: (something like us-east-1)
+* Region: (something like us-east-1 or us-central1.gcp)
 * Role:
 * Warehouse:
 
