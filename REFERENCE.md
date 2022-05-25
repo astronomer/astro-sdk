@@ -78,8 +78,8 @@ To instantiate a table or bring in a table from a database into the `astro-sdk-p
 In the following example, we define our table in the DAG instantiation. In each subsequent task, we pass in only an input `Table` argument because `astro-sdk-python` automatically passes in the additional context from our original `input_table` parameter.
 
 ```python
-from astro-sdk-python import sql as aql
-from astro-sdk-python.sql.table import Table
+from astro import sql as aql
+from astro.sql.table import Table
 
 
 @aql.transform
@@ -103,16 +103,16 @@ with dag:
 
 Following the traditional dev ops concept of [pets vs. cattle](http://cloudscaling.com/blog/cloud-computing/the-history-of-pets-vs-cattle/), you can decide whether the result of a function is a "pet" (e.g. a named table that you would want to reference later), or a "cattle" that can be deleted at any time for garbage collection.
 
-If you want to ensure that the output of your task is a cattle, you can declare it as a nameless `TempTable`. This places the output into your temp schema,
-which can be later bulk deleted. By default, all `aql.transform` functions will output to TempTables unless a `Table` object is used in the `output_table`
+If you want to ensure that the output of your task is a cattle, you can declare `Table(temp=True,...)`. This places the output into your temp schema,
+which can be later bulk deleted. By default, all `aql.transform` functions will output to temporary tables unless a `Table` object is used in the `output_table`
 argument.
 
-In the following example DAG, we set an `output_table` to a nameless `TempTable` meaning that any output from this DAG will be deleted once the DAG completes. If we wanted to keep our output, we would simply update the parameter to instantiate a `Table` instead.
+In the following example DAG, we set an `output_table` to a nameless `Table(temp=True,...)` meaning that any output from this DAG will be deleted once the DAG completes. If we wanted to keep our output, we would simply update the parameter to a named `Table` instead.
 
 
 ```python
-from astro-sdk-python import sql as aql
-from astro-sdk-python.sql.table import Table, TempTable
+from astro import sql as aql
+from astro.sql.table import Table, TempTable
 
 
 @aql.transform
@@ -128,7 +128,7 @@ def my_second_sql_transformation(input_table_2: Table):
 with dag:
     my_table = my_first_sql_transformation(
         input_table=Table(table_name="foo", database="bar", conn_id="postgres_conn"),
-        output_table=TempTable(database="bar", conn_id="postgres_conn"),
+        output_table=Table(temp=True,database="bar", conn_id="postgres_conn"),
     )
     my_second_sql_transformation(my_table)
 ```
@@ -141,8 +141,8 @@ To interact with S3, you must set an S3 Airflow connection in the `AWS_ACCESS_KE
 In the following example, we load data from S3 by specifying the path and connection ID for our S3 database in `aql.load_file`:
 
 ```python
-from astro-sdk-python import sql as aql
-from astro-sdk-python.sql.table import Table
+from astro import sql as aql
+from astro.sql.table import Table
 
 raw_orders = aql.load_file(
     path="s3://my/s3/path.csv",
