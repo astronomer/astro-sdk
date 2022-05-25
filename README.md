@@ -157,9 +157,9 @@ A summary of the currently available operations in **Astro SDK Python**. More de
 ## Documentation
 
 The documentation is a work in progress--we aim to follow the [Diátaxis](https://diataxis.fr/) system:
-* **[Tutorial](https://github.com/astronomer/astro-sdk/blob/main/TUTORIAL.md)**: a hands-on introduction to **Astro SDK Python**
+* **[Tutorial](TUTORIAL.md)**: a hands-on introduction to **Astro SDK Python**
 * **How-to guides**: simple step-by-step user guides to accomplish specific tasks
-* **[Reference guide](docs/OLD_README.md)**: commands, modules, classes and methods
+* **[Reference guide](REFERENCE.md)**: commands, modules, classes and methods
 * **Explanation**: Clarification and discussion of key decisions when designing the project.
 
 ## Changelog
