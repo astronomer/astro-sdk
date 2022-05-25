@@ -38,6 +38,80 @@ If using cloud providers, install using the optional dependencies of interest:
 pip install astro-sdk-python[amazon,google,snowflake,postgres]
 ```
 
+ ## Quick-start
+
+After installing Astro, copy the following example dag `calculate_popular_movies.py` to a local directory named `dags`:
+
+```Python
+from datetime import datetime
+from airflow import DAG
+from astro import sql as aql
+from astro.sql.table import Table
+@aql.transform()
+def top_five_animations(input_table: Table):
+    return """
+        SELECT Title, Rating
+        FROM {{input_table}}
+        WHERE Genre1=='Animation'
+        ORDER BY Rating desc
+        LIMIT 5;
+    """
+with DAG(
+    "calculate_popular_movies",
+    schedule_interval=None,
+    start_date=datetime(2000, 1, 1),
+    catchup=False,
+) as dag:
+    imdb_movies = aql.load_file(
+        path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv",
+        task_id="load_csv",
+        output_table=Table(
+            table_name="imdb_movies", database="sqlite", conn_id="sqlite_default"
+        ),
+    )
+    top_five_animations(
+        input_table=imdb_movies,
+        output_table=Table(
+            table_name="top_animation", database="sqlite", conn_id="sqlite_default"
+        ),
+    )
+```
+
+Set up a local instance of Airflow by running:
+
+```shell
+export AIRFLOW_HOME=`pwd`
+export AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
+airflow db init
+```
+
+Create an SQLite database for the example to run with and run the DAG:
+
+```shell
+# The sqlite_default connection has different host for MAC vs. Linux
+export SQL_TABLE_NAME=`airflow connections get sqlite_default -o yaml | grep host | awk '{print $2}'`
+sqlite3 "$SQL_TABLE_NAME" "VACUUM;"
+airflow dags test calculate_popular_movies `date -Iseconds`
+```
+
+Check the top five animations calculated by your first Astro DAG by running:
+
+```shell
+sqlite3 "$SQL_TABLE_NAME" "select * from top_animation;" ".exit"
+```
+
+You should see the following output:
+
+```console
+$ sqlite3 "$SQL_TABLE_NAME" "select * from top_animation;" ".exit"
+Toy Story 3 (2010)|8.3
+Inside Out (2015)|8.2
+How to Train Your Dragon (2010)|8.1
+Zootopia (2016)|8.1
+How to Train Your Dragon 2 (2014)|7.9
+```
+
+
 ## Requirements
 
 **Astro SDK Python** depends on Apache Airflow >= 2.1.0.
@@ -46,16 +120,16 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
 | Databases       |
 |-----------------|
-| Google BigQuery | 
-| Postgres        | 
+| Google BigQuery |
+| Postgres        |
 | Snowflake       |
-| SQLite          | 
+| SQLite          |
 
 | File types |
 |------------|
-| CSV        | 
-| JSON       | 
-| NDJSON     | 
+| CSV        |
+| JSON       |
+| NDJSON     |
 | Parquet    |
 
 | File stores |
