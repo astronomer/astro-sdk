@@ -21,33 +21,8 @@ def dev(session: nox.Session) -> None:
 
 
 @nox.session(python=["3.7", "3.8", "3.9"])
-def unit_test(session: nox.Session) -> None:
-    """Run unit tests."""
-    session.install("-e", ".[all]")
-    session.install("-e", ".[tests]")
-    # Log all the installed dependencies
-    session.log("Installed Dependencies:")
-    session.run("pip3", "freeze")
-    session.run("airflow", "db", "init")
-    session.run("pytest", "-k", "not integration", *session.posargs)
-
-
-@nox.session(python=["3.7", "3.8", "3.9"])
 @nox.parametrize("airflow", ["2.2.5", "2.3"])
-def integration_test(session: nox.Session, airflow) -> None:
-    """Run integration tests."""
-    session.install(f"apache-airflow=={airflow}")
-    session.install("-e", ".[all]")
-    session.install("-e", ".[tests]")
-    # Log all the installed dependencies
-    session.log("Installed Dependencies:")
-    session.run("pip3", "freeze")
-    session.run("airflow", "db", "init")
-    session.run("pytest", "-k", "integration", *session.posargs)
-
-
-@nox.session(python=["3.7", "3.8", "3.9"])
-def test(session: nox.Session) -> None:
+def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
     session.install("-e", ".[all]")
     session.install("-e", ".[tests]")
