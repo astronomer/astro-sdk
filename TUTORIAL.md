@@ -136,14 +136,14 @@ Click on the blue "+" icon to *Add a new record*
 * Connection Id: `snowflake_default`
 * Connection Type: `Snowflake`
 * Host: `https://<account>.<region>.snowflakecomputing.com/`. This is the URL where you can log into your Snowflake account
-* Schema:
+* Schema: `ASTRO_SDK_SCHEMA`
 * Login:
 * Password:
 * Account:
-* Database:
-* Region: (something like us-east-1 or us-central1.gcp)
+* Database: `ASTRO_SDK_DB`
+* Region: (something like `us-east-1` or `us-central1.gcp`)
 * Role:
-* Warehouse:
+* Warehouse: `ASTRO_SDK_DW`
 
 
 ***
@@ -183,19 +183,17 @@ Here's the code for the simple ETL workflow:
 from datetime import datetime
 
 from airflow.models import DAG
-from astro.sql.table import Table, Metadata
-from astro.files import File
-from astro import sql as aql
 from pandas import DataFrame
+
+from astro import sql as aql
+from astro.files import File
+from astro.sql.table import Table
 
 S3_FILE_PATH = "s3://<aws-bucket-name>"
 S3_CONN_ID = "aws_default"
 SNOWFLAKE_CONN_ID = "snowflake_default"
 SNOWFLAKE_ORDERS = "orders_table"
 SNOWFLAKE_FILTERED_ORDERS = "filtered_table"
-SNOWFLAKE_DATABASE = "ASTRO_SDK_DB"
-SNOWFLAKE_SCHEMA = "ASTRO_SDK_SCHEMA"
-SNOWFLAKE_WAREHOUSE = "ASTRO_SDK_DW"
 SNOWFLAKE_JOINED = "joined_table"
 SNOWFLAKE_CUSTOMERS = "customers_table"
 SNOWFLAKE_REPORTING = "reporting_table"
@@ -234,17 +232,13 @@ with dag:
         input_file=File(
             path=S3_FILE_PATH + "/orders_data_header.csv", conn_id=S3_CONN_ID
         ),
-        output_table=Table(
-            metadata=Metadata(database=SNOWFLAKE_DATABASE, schema=SNOWFLAKE_SCHEMA),
-            conn_id=SNOWFLAKE_CONN_ID,
-        ),
+        output_table=Table(conn_id=SNOWFLAKE_CONN_ID),
     )
 
     # create a Table object for customer data in our Snowflake database
     customers_table = Table(
         name=SNOWFLAKE_CUSTOMERS,
         conn_id=SNOWFLAKE_CONN_ID,
-        metadata=Metadata(database=SNOWFLAKE_DATABASE, schema=SNOWFLAKE_SCHEMA),
     )
 
     # filter the orders data and then join with the customer table
@@ -257,7 +251,6 @@ with dag:
         target_table=Table(
             name=SNOWFLAKE_REPORTING,
             conn_id=SNOWFLAKE_CONN_ID,
-            metadata=Metadata(database=SNOWFLAKE_DATABASE, schema=SNOWFLAKE_SCHEMA),
         ),
         merge_table=joined_data,
         merge_columns=["customer_id", "customer_name"],
@@ -294,10 +287,7 @@ To extract from S3 into a Table object, we need only specify the location on S3 
 orders_data = aql.load_file(
     # data file needs to have a header row
     input_file=File(path=S3_FILE_PATH + "/orders_data_header.csv", conn_id=S3_CONN_ID),
-    output_table=Table(
-        metadata=Metadata(database=SNOWFLAKE_DATABASE, schema=SNOWFLAKE_SCHEMA),
-        conn_id=SNOWFLAKE_CONN_ID,
-    ),
+    output_table=Table(conn_id=SNOWFLAKE_CONN_ID),
 )
 ```
 ## Transform
@@ -319,9 +309,8 @@ def join_orders_customers(filtered_orders_table: Table, customers_table: Table):
 
 # create a Table object for customer data in our Snowflake database
 customers_table = Table(
-    table_name=SNOWFLAKE_CUSTOMERS,
+    table=SNOWFLAKE_CUSTOMERS,
     conn_id=SNOWFLAKE_CONN_ID,
-    database=SNOWFLAKE_DATABASE,
 )
 
 # filter the orders data and then join with the customer table
@@ -340,7 +329,6 @@ reporting_table = aql.merge(
     target_table=Table(
         name=SNOWFLAKE_REPORTING,
         conn_id=SNOWFLAKE_CONN_ID,
-        metadata=Metadata(database=SNOWFLAKE_DATABASE, schema=SNOWFLAKE_SCHEMA),
     ),
     merge_table=joined_data,
     merge_columns=["customer_id", "customer_name"],
