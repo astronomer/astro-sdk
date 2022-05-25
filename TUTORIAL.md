@@ -184,7 +184,6 @@ from datetime import datetime
 
 from airflow.models import DAG
 from astro.sql.table import Table, Metadata
-from astro.sql import dataframe as df
 from astro.files import File
 from astro import sql as aql
 from pandas import DataFrame
@@ -214,7 +213,7 @@ def join_orders_customers(filtered_orders_table: Table, customers_table: Table):
     ON f.customer_id = c.customer_id"""
 
 
-@df
+@aql.dataframe
 def transform_dataframe(df: DataFrame):
     purchase_dates = df.loc[:, "purchase_date"]
     print("purchase dates:", purchase_dates)
@@ -356,7 +355,7 @@ reporting_table = aql.merge(
 As an illustration of the `@df` decorator, we show a simple dataframe operation:
 
 ```python
-@df
+@aql.dataframe
 def transform_dataframe(df: DataFrame):
     purchase_dates = df.loc[:, "purchase_date"]
     print("purchase dates:", purchase_dates)
