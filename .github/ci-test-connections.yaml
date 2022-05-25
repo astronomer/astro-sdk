@@ -18,7 +18,7 @@ connections:
       account: "gp21411"
       region: "us-east-1"
       role: "AIRFLOW_TEST_USER"
-      warehouse: DEMO
+      warehouse: ROBOTS
       database: SANDBOX
   - conn_id: bigquery
     conn_type: bigquery
