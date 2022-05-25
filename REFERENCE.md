@@ -114,7 +114,7 @@ with dag:
     my_second_sql_transformation(my_table)
 ```
 
-### The TempTable Class
+### Temporary Tables
 
 Following the traditional dev ops concept of [pets vs. cattle](http://cloudscaling.com/blog/cloud-computing/the-history-of-pets-vs-cattle/), you can decide whether the result of a function is a "pet" (e.g. a named table that you would want to reference later), or a "cattle" that can be deleted at any time for garbage collection.
 
