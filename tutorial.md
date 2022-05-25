@@ -59,7 +59,7 @@ create database ASTRO_SDK_DB;
 create schema ASTRO_SDK_SCHEMA;
 ```
 Then, in the classic Snowflake console in the upper right, select the role, warehouse, database and schema to look like this:
-![classic-console](https://user-images.githubusercontent.com/4237498/169624797-447f1f70-39f1-4470-a37c-9925039d5d8a.png)
+![classic-console](https://user-images.githubusercontent.com/4237498/170368272-d870af01-cd82-4776-9514-1b13dc22f946.png)
 
 Note that you can set the warehouse, database, and schema names to something else, but you'll just need to be consistent with whatever names you choose throughout the remainder of this tutorial.
 
@@ -90,7 +90,8 @@ export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 
 * In your Astronomer Airflow UI select Admin-->Connectors
 
-  ![connectors](http://localhost:8888/files/Screen%20Shot%202022-05-17%20at%204.05.00%20PM.png?_xsrf=2%7C7f8215bb%7C78c6f1df99528f5087b9d85f0eb5de75%7C1650662527)
+![connections](https://user-images.githubusercontent.com/4237498/170368443-5adc7742-26c8-4a50-83da-769fc9159ffc.png)
+
 
 ### Connect S3 to Airflow
 
@@ -257,16 +258,15 @@ with dag:
 # Run it!
     
 In your Airflow UI's home page, you should see a DAG called astro_orders. Toggle the DAG to unpause it:
-    
-![toggle](http://localhost:8888/files/Screen%20Shot%202022-05-18%20at%203.43.49%20PM.png?_xsrf=2%7C7f8215bb%7C78c6f1df99528f5087b9d85f0eb5de75%7C1650662527)
-    
-Then, trigger it to run it:
-    
-![astro-simple.py](http://localhost:8888/files/Screen%20Shot%202022-05-18%20at%203.39.49%20PM.png?_xsrf=2%7C7f8215bb%7C78c6f1df99528f5087b9d85f0eb5de75%7C1650662527)
-    
-Click on the astro_orders DAG name to see the tree view of its execution:
+![toggle](https://user-images.githubusercontent.com/4237498/170368509-4d1e23d3-4b82-469c-bdf9-dd7adf26b210.png)
 
-![tree-view](http://localhost:8888/files/Screen%20Shot%202022-05-18%20at%204.29.08%20PM.png?_xsrf=2%7C7f8215bb%7C78c6f1df99528f5087b9d85f0eb5de75%7C1650662527)
+
+Then, trigger it to run it:
+![trigger](https://user-images.githubusercontent.com/4237498/170368772-3e2b6ef6-b12e-43fe-a734-d91574671d96.png)
+
+    
+Click on the astro_orders DAG name to see the grid view of its execution:
+![gridview](https://user-images.githubusercontent.com/4237498/170368608-62e86ef3-b931-4819-8944-0222c803189a.png)
     
 ***
 # Walk through the code
@@ -341,8 +341,9 @@ def transform_dataframe(df: DataFrame):
     
     
 After all that, you'll find the meager output of this example in the logs of the final task:
-    
-![log](http://localhost:8888/files/Screen%20Shot%202022-05-19%20at%2010.16.06%20AM.png?_xsrf=2%7C7f8215bb%7C78c6f1df99528f5087b9d85f0eb5de75%7C1650662527)    
+![log](https://user-images.githubusercontent.com/4237498/170368926-92fc0291-8fa6-477d-80ca-b31266b591e0.png)
+
+   
     
 To view this log output, in the tree view of the DAG, click on the green box next to `transform_dataframe` and then on "Log" button.
 
