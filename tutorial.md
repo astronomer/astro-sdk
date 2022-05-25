@@ -346,5 +346,5 @@ After all that, you'll find the meager output of this example in the logs of the
 
    
     
-To view this log output, in the tree view of the DAG, click on the green box next to `transform_dataframe` and then on "Log" button.
+To view this log output, in the grid view of the DAG, click on the green box next to `transform_dataframe` and then on "Log" button.
 
