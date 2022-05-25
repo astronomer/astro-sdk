@@ -18,41 +18,44 @@ class MissingPackage(type):
         )
 
 
-class GoogleMissingPackage(metaclass=MissingPackage):
-    """Class used to represent missing dependencies related to Google services."""
+class BaseMissingPackage:
+    """
+    Base class with constructor for all MissingPackage classes.
+    """
 
     def __init__(self, *args, **kwargs):  # skipcq: PTC-W0049
         pass
+
+
+class GoogleMissingPackage(BaseMissingPackage, metaclass=MissingPackage):
+    """Class used to represent missing dependencies related to Google services."""
 
     package_name = "apache-airflow-providers-google"
     related_extras = "google"
 
 
-class AmazonMissingPackage(metaclass=MissingPackage):
+class AmazonMissingPackage(BaseMissingPackage, metaclass=MissingPackage):
     """Class used to represent missing dependencies related to Amazon services."""
-
-    def __init__(self, *args, **kwargs):  # skipcq: PTC-W0049
-        pass
 
     package_name = "apache-airflow-providers-amazon"
     related_extras = "amazon"
 
 
-class SnowflakeMissingPackage(metaclass=MissingPackage):
+class SnowflakeMissingPackage(BaseMissingPackage, metaclass=MissingPackage):
     """Class used to represent missing dependencies related to Snowflake."""
 
     package_name = "apache-airflow-providers-snowflake"
     related_extras = "snowflake"
 
 
-class SnowflakePandasMissingPackage(metaclass=MissingPackage):
+class SnowflakePandasMissingPackage(BaseMissingPackage, metaclass=MissingPackage):
     """Class used to represent missing dependencies related to Snowflake & Pandas."""
 
     package_name = "snowflake-connector-python[pandas]"
     related_extras = "snowflake"
 
 
-class PostgresMissingPackage(metaclass=MissingPackage):
+class PostgresMissingPackage(BaseMissingPackage, metaclass=MissingPackage):
     """Class used to represent missing dependencies related to Postgres."""
 
     package_name = "apache-airflow-providers-postgres"
