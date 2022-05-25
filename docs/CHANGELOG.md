@@ -1,9 +1,16 @@
 # Changelog
 
+## 0.8.5b1
+
+Bug fix:
+* Solve SnowflakeMissingPackage issue reported by Steven
+
+
 ## 0.8.4
 
 Enhancements:
 * Add support for Airflow 2.3 [#329](https://github.com/astronomer/astro-sdk/pull/367).
+
 
 ## 0.8.3
 
