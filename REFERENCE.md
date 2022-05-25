@@ -69,7 +69,7 @@ To start using `astro-sdk-python`:
 
 ## Setting Input and Output Tables
 
-Before we can complete any transformations, we need to define a way to get our tables in and out of Airflow. We can do this by defining either `Table` or `TempTable` objects in the `input_table` and `output_table` parameters of our table instantiations.
+Before we can complete any transformations, we need to define a way to get our tables in and out of Airflow. We can do this by defining a `Table` object in the `input_table` and `output_table` parameters of our table instantiations.
 
 ### The Table class
 
@@ -135,7 +135,7 @@ In the following example DAG, we set an `output_table` to a nameless `Table()` m
 
 ```python
 from astro import sql as aql
-from astro.sql.table import Table, TempTable
+from astro.sql.table import Table
 
 
 @aql.transform
