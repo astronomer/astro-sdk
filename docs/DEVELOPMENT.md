@@ -1,6 +1,5 @@
 <!--
-I imagine this file along with INSTALLATION.md will go into documentation
-at some point.
+I imagine this file will go into documentation at some point.
 -->
 
 # Developing the package
