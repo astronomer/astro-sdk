@@ -125,7 +125,6 @@ def run_merge(output_specs: Table, merge_keys):
         "snowflake",
         "postgres",
         "bigquery",
-        # pytest.param("bigquery", marks=pytest.mark.xfail(reason="some bug")),
         "sqlite",
     ],
     indirect=True,
@@ -143,7 +142,7 @@ def test_full_dag(sql_server, sample_dag, test_table):
         run_merge(output_table, merge_keys(sql_server))
         aql.export_file(
             input_data=tranformed_table,
-            output_file_path="/tmp/out_agg.csv",
-            overwrite=True,
+            output_file=File(path="/tmp/out_agg.csv"),
+            if_exists="replace",
         )
     test_utils.run_dag(sample_dag)
