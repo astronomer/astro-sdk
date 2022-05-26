@@ -196,7 +196,7 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.2.5')" -- "tests/test_example_dags.py" "integration_test_dag.py"
+      - run: nox -s "test-3.8(airflow='2.2.5')" -- "tests/test_example_dags.py" "tests/integration_test_dag.py"
     env:
       AWS_BUCKET: tmp9
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
