@@ -27,6 +27,13 @@ OUTPUT_TABLE_NAME = test_utils.get_table_name("integration_test_table")
 UNIQUE_HASH_SIZE = 16
 CWD = pathlib.Path(__file__).parent
 
+DATABASE_NAME_TO_CONN_ID = {
+    Database.SQLITE: "sqlite_default",
+    Database.BIGQUERY: "google_cloud_default",
+    Database.POSTGRES: "postgres_conn",
+    Database.SNOWFLAKE: "snowflake_conn",
+}
+
 
 @provide_session
 def get_session(session=None):
@@ -189,7 +196,7 @@ def database_table_fixture(request):
         {
             "database": Database.SQLITE,  # mandatory, may be any supported database
             "table": astro.sql.tables.Table(),  # optional, will create a table unless it is passed
-            "filepath": ""  # optional, filepath to be used to load data to the table.
+            "file": ""  # optional, File() instance to be used to load data to the table.
         }
     This fixture yields the following during setup:
         (database, table)
@@ -197,19 +204,13 @@ def database_table_fixture(request):
         (astro.databases.sqlite.SqliteDatabase(), Table())
 
     If the table exists, it is deleted during the tests setup and tear down.
-    The table will only be created during setup if request.param contains the `filepath` parameter.
+    The table will only be created during setup if request.param contains the `file` parameter.
     """
     params = request.param
     file = params.get("file", None)
 
     database_name = params["database"]
-    database_name_to_conn_id = {
-        Database.SQLITE: "sqlite_default",
-        Database.BIGQUERY: "google_cloud_default",
-        Database.POSTGRES: "postgres_conn",
-        Database.SNOWFLAKE: "snowflake_conn",
-    }
-    conn_id = database_name_to_conn_id[database_name]
+    conn_id = DATABASE_NAME_TO_CONN_ID[database_name]
     database = create_database(conn_id)
 
     table = params.get(
@@ -221,6 +222,41 @@ def database_table_fixture(request):
     yield database, table
 
     database.drop_table(table)
+
+
+@pytest.fixture
+def tables_fixture(request, database_table_fixture):
+    """
+    Given request.param in the format:
+    {
+        "items": [
+            {
+                "table": Table(),  # optional
+                "file": File()  # optional
+            }
+        ]
+    }
+    If the table key is missing, the fixture creates a table using the database.conn_id.
+
+    For each table in the list, if the table exists, it is deleted during the tests setup and tear down.
+    The table will only be created during setup if the item contains the "file" to be loaded to the table.
+    """
+    database, _ = database_table_fixture
+    items = request.param.get("items", [])
+    tables_list = []
+    for item in items:
+        table = item.get("table", Table(conn_id=database.conn_id))
+        database.populate_table_metadata(table)
+        file = item.get("file", None)
+        database.drop_table(table)
+        if file:
+            database.load_file_to_table(file, table)
+        tables_list.append(table)
+
+    yield tables_list
+
+    for table in tables_list:
+        database.drop_table(table)
 
 
 @pytest.fixture
