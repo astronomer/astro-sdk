@@ -36,7 +36,7 @@ DATABASE_NAME_TO_CONN_ID = {
 
 
 @provide_session
-def get_session(session=None):
+def get_session(session=None):  # skipcq:  PYL-W0621
     create_default_connections(session)
     return session
 
@@ -67,9 +67,9 @@ def create_database_connections():
 def sample_dag():
     dag_id = create_unique_table_name(UNIQUE_HASH_SIZE)
     yield DAG(dag_id, default_args={"owner": "airflow", "start_date": DEFAULT_DATE})
-    with create_session() as session:
-        session.query(DagRun).delete()
-        session.query(TI).delete()
+    with create_session() as session_:
+        session_.query(DagRun).delete()
+        session_.query(TI).delete()
 
 
 def populate_table(path: str, table: Table, hook: BaseHook) -> None:
