@@ -14,7 +14,7 @@
 [![CI](https://github.com/astronomer/astro-sdk/actions/workflows/ci.yaml/badge.svg)](https://github.com/astronomer/astro-sdk)
 [![codecov](https://codecov.io/gh/astronomer/astro-sdk/branch/main/graph/badge.svg?token=MI4SSE50Q6)](https://codecov.io/gh/astronomer/astro-sdk)
 
-**astro** allows rapid and clean development of {Extract, Load, Transform} workflows using Python.
+**Astro SDK Python** allows rapid and clean development of {Extract, Load, Transform} workflows using Python.
 It helps DAG authors to achieve more with less code.
 It is powered by [Apache Airflow](https://airflow.apache.org) and maintained by [Astronomer](https://astronomer.io).
 
@@ -23,10 +23,10 @@ The interfaces may change. We welcome users to try out the interfaces and provid
 
 ## Install
 
-**Astro** is available at [PyPI](https://pypi.org/project/astro-sdk-python/). Use the standard Python
+**Astro SDK Python** is available at [PyPI](https://pypi.org/project/astro-sdk-python/). Use the standard Python
 [installation tools](https://packaging.python.org/en/latest/tutorials/installing-packages/).
 
-To install a cloud-agnostic version of **Astro**, run:
+To install a cloud-agnostic version of **Astro SDK Python**, run:
 
 ```
 pip install astro-sdk-python
@@ -38,6 +38,7 @@ If using cloud providers, install using the optional dependencies of interest:
 pip install astro-sdk-python[amazon,google,snowflake,postgres]
 ```
 
+
 ## Quick-start
 
 After installing Astro, copy the following example dag `calculate_popular_movies.py` to a local directory named `dags`:
@@ -46,8 +47,8 @@ After installing Astro, copy the following example dag `calculate_popular_movies
 from datetime import datetime
 from airflow import DAG
 from astro import sql as aql
+from astro.files import File
 from astro.sql.table import Table
-
 
 @aql.transform()
 def top_five_animations(input_table: Table):
@@ -59,7 +60,6 @@ def top_five_animations(input_table: Table):
         LIMIT 5;
     """
 
-
 with DAG(
     "calculate_popular_movies",
     schedule_interval=None,
@@ -67,17 +67,15 @@ with DAG(
     catchup=False,
 ) as dag:
     imdb_movies = aql.load_file(
-        path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv",
-        task_id="load_csv",
+        File("https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv"),
         output_table=Table(
-            table_name="imdb_movies", database="sqlite", conn_id="sqlite_default"
+            name="imdb_movies", conn_id="sqlite_default"
         ),
     )
-
     top_five_animations(
         input_table=imdb_movies,
         output_table=Table(
-            table_name="top_animation", database="sqlite", conn_id="sqlite_default"
+            name="top_animation"
         ),
     )
 ```
@@ -87,7 +85,6 @@ Set up a local instance of Airflow by running:
 ```shell
 export AIRFLOW_HOME=`pwd`
 export AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
-
 airflow db init
 ```
 
@@ -96,7 +93,6 @@ Create an SQLite database for the example to run with and run the DAG:
 ```shell
 # The sqlite_default connection has different host for MAC vs. Linux
 export SQL_TABLE_NAME=`airflow connections get sqlite_default -o yaml | grep host | awk '{print $2}'`
-
 sqlite3 "$SQL_TABLE_NAME" "VACUUM;"
 airflow dags test calculate_popular_movies `date -Iseconds`
 ```
@@ -118,24 +114,36 @@ Zootopia (2016)|8.1
 How to Train Your Dragon 2 (2014)|7.9
 ```
 
+
 ## Requirements
 
-Because **astro** relies on the [Task Flow API](https://airflow.apache.org/docs/apache-airflow/stable/concepts/taskflow.html) and
-it depends on Apache Airflow >= 2.1.0.
+**Astro SDK Python** depends on Apache Airflow >= 2.1.0.
 
 ## Supported technologies
 
-| Databases       | File types | File locations |
-|-----------------|------------|----------------|
-| Google BigQuery | CSV        | Amazon S3      |
-| Postgres        | JSON       | Filesystem     |
-| Snowflake       | NDJSON     | Google GCS     |
-| SQLite          | Parquet    |                |
+| Databases       |
+|-----------------|
+| Google BigQuery |
+| Postgres        |
+| Snowflake       |
+| SQLite          |
 
+| File types |
+|------------|
+| CSV        |
+| JSON       |
+| NDJSON     |
+| Parquet    |
+
+| File stores |
+|------------ |
+| Amazon S3   |
+| Filesystem  |
+| Google GCS  |
 
 ## Available operations
 
-A summary of the currently available operations in **astro**. More details are available in the [reference guide](REFERENCE.md).
+A summary of the currently available operations in **Astro SDK Python**. More details are available in the [reference guide](REFERENCE.md).
 * `load_file`: load a given file into a SQL table
 * `transform`: applies a SQL select statement to a source table and saves the result to a destination table
 * `truncate`: remove all records from a SQL table
@@ -149,10 +157,10 @@ A summary of the currently available operations in **astro**. More details are a
 
 ## Documentation
 
-The documentation is a work in progress, and we aim to follow the [Diátaxis](https://diataxis.fr/) system:
-* **Tutorial**: a hands-on introduction to **astro**
+The documentation is a work in progress--we aim to follow the [Diátaxis](https://diataxis.fr/) system:
+* **[Tutorial](TUTORIAL.md)**: a hands-on introduction to **Astro SDK Python**
 * **How-to guides**: simple step-by-step user guides to accomplish specific tasks
-* **[Reference guide](docs/OLD_README.md)**: commands, modules, classes and methods
+* **[Reference guide](REFERENCE.md)**: commands, modules, classes and methods
 * **Explanation**: Clarification and discussion of key decisions when designing the project.
 
 ## Changelog
