@@ -68,6 +68,8 @@ class TransformOperator(DecoratedOperator):
             target_table=self.output_table.create_similar_table(),
         )
 
+        self.output_table = self.render_template(self.output_table, context)
+
         # Get SQL from function and render templates in the SQL String
         self.read_sql_from_function()
         self.move_function_params_into_sql_params(context)
@@ -165,6 +167,7 @@ class TransformOperator(DecoratedOperator):
         # convert Jinja templating to SQLAlchemy SQL templating, safely converting table identifiers
         for k, v in self.parameters.items():
             if isinstance(v, Table):
+                v = self.render_template(v, context)
                 (
                     jinja_table_identifier,
                     jinja_table_parameter_value,
