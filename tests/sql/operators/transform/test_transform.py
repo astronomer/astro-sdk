@@ -139,7 +139,7 @@ def test_transform_with_templated_table_name(database_table_fixture, sample_dag)
     database, imdb_table = database_table_fixture
 
     @aql.transform
-    def top_five_animations(input_table: Table) -> Table:
+    def top_five_animations(input_table: Table) -> str:
         return """
             SELECT Title, Rating
             FROM {{ input_table }}
