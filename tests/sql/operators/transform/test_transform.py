@@ -5,6 +5,7 @@ import pytest
 from airflow.decorators import task
 
 from astro import sql as aql
+from astro.constants import Database
 from astro.files import File
 from astro.sql.table import Table
 from tests.sql.operators import utils as test_utils
@@ -116,3 +117,45 @@ def test_raw_sql(sql_server, sample_dag, test_table):
         )
         validate_raw_sql(raw_sql_result)
     test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SQLITE,
+            "file": File(
+                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv"
+            ),
+            "table": Table(name="imdb", conn_id="sqlite_default"),
+        }
+    ],
+    indirect=True,
+    ids=["sqlite"],
+)
+def test_transform_with_templated_table_name(database_table_fixture, sample_dag):
+    """Test table creation via select statement when the output table uses an Airflow template in its name"""
+    database, imdb_table = database_table_fixture
+
+    @aql.transform
+    def top_five_animations(input_table: Table) -> str:
+        return """
+            SELECT Title, Rating
+            FROM {{ input_table }}
+            WHERE Genre1=='Animation'
+            ORDER BY Rating desc
+            LIMIT 5;
+        """
+
+    with sample_dag:
+
+        target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="sqlite_default")
+
+        top_five_animations(input_table=imdb_table, output_table=target_table)
+    test_utils.run_dag(sample_dag)
+
+    expected_target_table = target_table.create_similar_table()
+    expected_target_table.name = "test_is_True"
+    database.drop_table(expected_target_table)
+    assert not database.table_exists(expected_target_table)

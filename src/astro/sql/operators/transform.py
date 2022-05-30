@@ -68,6 +68,10 @@ class TransformOperator(DecoratedOperator):
             target_table=self.output_table.create_similar_table(),
         )
 
+        # The transform decorator doesn't explicitly pass output_table as a
+        # parameter. Hence, it's not covered in templated fields of class Table.
+        self.output_table = self.render_template(self.output_table, context)
+
         # Get SQL from function and render templates in the SQL String
         self.read_sql_from_function()
         self.move_function_params_into_sql_params(context)
