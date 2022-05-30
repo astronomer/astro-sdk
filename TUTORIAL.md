@@ -82,14 +82,14 @@ need to be consistent with whatever names you choose throughout the remainder of
   pip install 'astro-sdk-python>=0.9'
   ```
 
-  You can also install dependencies for specific providers by specifying "extras",
-  example, the following command install all the dependencies for Amazon & Snowflake:
+  You can also install dependencies for specific providers by specifying "extras".
+  The following command will install all the dependencies for Amazon & Snowflake:
 
   ```shell
   pip install 'astro-sdk-python[amazon,snowflake]>=0.9'
   ```
 
-  Or you can also those providers separately using the following command. (We recommend using "extras")
+  Or, you can install those providers separately using the following command, though we recommend using "extras":
 
   ```shell
   pip install apache-airflow-providers-amazon
@@ -142,7 +142,7 @@ Click on the blue "+" icon to *Add a new record*
 * Account:
 * Database: `ASTRO_SDK_DB`
 * Region: (something like `us-east-1` or `us-central1.gcp`)
-* Role:
+* Role: `ACCOUNTADMIN`
 * Warehouse: `ASTRO_SDK_DW`
 
 
