@@ -169,7 +169,6 @@ class TransformOperator(DecoratedOperator):
         # convert Jinja templating to SQLAlchemy SQL templating, safely converting table identifiers
         for k, v in self.parameters.items():
             if isinstance(v, Table):
-                # v = self.render_template(v, context)
                 (
                     jinja_table_identifier,
                     jinja_table_parameter_value,
