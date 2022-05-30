@@ -68,6 +68,8 @@ class TransformOperator(DecoratedOperator):
             target_table=self.output_table.create_similar_table(),
         )
 
+        # The transform decorator doesn't explicitly pass output_table as a
+        # parameter. Hence, it's not covered in templated fields of class Table.
         self.output_table = self.render_template(self.output_table, context)
 
         # Get SQL from function and render templates in the SQL String
@@ -167,7 +169,7 @@ class TransformOperator(DecoratedOperator):
         # convert Jinja templating to SQLAlchemy SQL templating, safely converting table identifiers
         for k, v in self.parameters.items():
             if isinstance(v, Table):
-                v = self.render_template(v, context)
+                # v = self.render_template(v, context)
                 (
                     jinja_table_identifier,
                     jinja_table_parameter_value,
