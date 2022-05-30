@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.1
+
+Bug fix:
+* Table unable to have Airflow templated names [#413](https://github.com/astronomer/astro-sdk/issues/413)
+
+
 ## 0.9.0
 
 Enhancements:
