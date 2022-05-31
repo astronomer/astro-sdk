@@ -246,7 +246,7 @@ def tables_fixture(request, database_table_fixture):
     tables_list = []
     for item in items:
         table = item.get("table", Table(conn_id=database.conn_id))
-        database.populate_table_metadata(table)
+        table = database.populate_table_metadata(table)
         file = item.get("file", None)
         database.drop_table(table)
         if file:
