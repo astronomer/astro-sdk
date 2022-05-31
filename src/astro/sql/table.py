@@ -23,9 +23,6 @@ class Metadata:
     schema: Optional[str] = None
     database: Optional[str] = None
 
-    def __repr__(self):
-        return f'{self.__class__.__name__}(schema="{self.schema}", database="{self.database}")'
-
     def is_empty(self):
         """Check if all the fields are None."""
         values = [getattr(self, field.name) for field in fields(self)]
@@ -57,16 +54,6 @@ class Table:
     def __post_init__(self):
         if not self._name:
             self.temp = True
-
-    def __repr__(self):
-        return (
-            f"{self.__class__.__name__}("
-            f'conn_id="{self.conn_id}", '
-            f'name="{self.name}", '
-            f"temp={self.temp}, "
-            f"metadata={self.metadata}, "
-            f"columns={self.columns})"
-        )
 
     def _create_unique_table_name(self, prefix: str = "") -> str:
         """
