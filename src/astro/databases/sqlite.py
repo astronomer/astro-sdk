@@ -58,6 +58,7 @@ class SqliteDatabase(BaseDatabase):
         Since SQLite does not have a concept of databases or schemas, we just return the table as is,
         without any modifications.
         """
+        table.conn_id = self.conn_id
         return table
 
     def create_schema_if_needed(self, schema: Optional[str]) -> None:

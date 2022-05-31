@@ -6,6 +6,7 @@ from airflow.decorators import task, task_group
 from airflow.utils import timezone
 
 from astro import sql as aql
+from astro.constants import Database
 from astro.databases import create_database
 from astro.databases.sqlite import SqliteDatabase
 from astro.files import File
@@ -25,14 +26,13 @@ default_args = {
 }
 
 
-def merge_keys(sql_server):
+def merge_keys(sql_name):
     """
     To match with their respective API's, we have a slightly different "merge_keys" value
     when a user is using snowflake.
-    :param sql_server:
+    :param sql_name:
     :return:
     """
-    sql_name, _ = sql_server
 
     if sql_name == "snowflake":
         return {"list": "list", "sell": "sell"}
@@ -120,18 +120,19 @@ def run_merge(output_specs: Table, merge_keys):
 
 
 @pytest.mark.parametrize(
-    "sql_server",
+    "database_table_fixture",
     [
-        "snowflake",
-        "postgres",
-        "bigquery",
-        "sqlite",
+        {"database": Database.SNOWFLAKE},
+        {"database": Database.BIGQUERY},
+        {"database": Database.POSTGRES},
+        {"database": Database.SQLITE},
     ],
     indirect=True,
+    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
-def test_full_dag(sql_server, sample_dag, test_table):
+def test_full_dag(database_table_fixture, sample_dag):
+    database, output_table = database_table_fixture
     with sample_dag:
-        output_table = test_table
         loaded_table = aql.load_file(
             input_file=File(path=str(CWD) + "/data/homes.csv"),
             output_table=output_table,
@@ -139,7 +140,7 @@ def test_full_dag(sql_server, sample_dag, test_table):
         tranformed_table = apply_transform(loaded_table)
         run_dataframe_funcs(tranformed_table)
         run_append(output_table)
-        run_merge(output_table, merge_keys(sql_server))
+        run_merge(output_table, merge_keys(database.sql_type))
         aql.export_file(
             input_data=tranformed_table,
             output_file=File(path="/tmp/out_agg.csv"),
