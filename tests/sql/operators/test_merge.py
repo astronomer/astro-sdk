@@ -28,7 +28,7 @@ def merge_keys(sql_name, mode):
     """
     To match with their respective API's, we have a slightly different "merge_keys" value
     when a user is using snowflake.
-    :param sql_server:
+    :param sql_name:
     :return:
     """
     keys = []
