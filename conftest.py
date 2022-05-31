@@ -253,7 +253,7 @@ def tables_fixture(request, database_table_fixture):
             database.load_file_to_table(file, table)
         tables_list.append(table)
 
-    yield tables_list
+    yield tables_list if len(tables_list) > 1 else tables_list[0]
 
     for table in tables_list:
         database.drop_table(table)

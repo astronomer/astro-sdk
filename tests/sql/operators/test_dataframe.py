@@ -7,7 +7,8 @@ from airflow.models.xcom import XCom
 from airflow.utils import timezone
 
 import astro.sql as aql
-from astro.constants import SUPPORTED_DATABASES, Database
+from astro.constants import Database
+from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
 from tests.sql.operators import utils as test_utils
@@ -19,23 +20,34 @@ DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 CWD = pathlib.Path(__file__).parent
 
 
-@pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
 @pytest.mark.parametrize(
-    "test_table",
+    "database_table_fixture",
+    [
+        {"database": Database.SNOWFLAKE},
+        {"database": Database.BIGQUERY},
+        {"database": Database.POSTGRES},
+        {"database": Database.SQLITE},
+    ],
+    indirect=True,
+    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+)
+@pytest.mark.parametrize(
+    "tables_fixture",
     [
         {
-            "path": str(CWD) + "/../../data/homes2.csv",
-            "load_table": True,
-            "param": {
-                "metadata": Metadata(schema=SCHEMA),
-                "name": test_utils.get_table_name("test_stats_check_2"),
-            },
+            "items": [
+                {
+                    "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+                },
+            ],
         }
     ],
     indirect=True,
 )
-def test_dataframe_from_sql_basic(sample_dag, sql_server, test_table):
+def test_dataframe_from_sql_basic(sample_dag, database_table_fixture, tables_fixture):
     """Test basic operation of dataframe operator."""
+
+    test_table = tables_fixture
 
     @aql.dataframe
     def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
@@ -52,23 +64,36 @@ def test_dataframe_from_sql_basic(sample_dag, sql_server, test_table):
     )
 
 
-@pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
 @pytest.mark.parametrize(
-    "test_table",
+    "database_table_fixture",
+    [
+        {"database": Database.SNOWFLAKE},
+        {"database": Database.BIGQUERY},
+        {"database": Database.POSTGRES},
+        {"database": Database.SQLITE},
+    ],
+    indirect=True,
+    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+)
+@pytest.mark.parametrize(
+    "tables_fixture",
     [
         {
-            "path": str(CWD) + "/../../data/homes2.csv",
-            "load_table": True,
-            "param": {
-                "metadata": Metadata(schema=SCHEMA),
-                "name": test_utils.get_table_name("test_stats_check_2"),
-            },
+            "items": [
+                {
+                    "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+                },
+            ],
         }
     ],
     indirect=True,
 )
-def test_dataframe_from_sql_custom_task_id(sample_dag, sql_server, test_table):
+def test_dataframe_from_sql_custom_task_id(
+    sample_dag, database_table_fixture, tables_fixture
+):
     """Test custom and taskId increment when same task is added multiple times."""
+
+    test_table = tables_fixture
 
     @aql.dataframe(task_id="foo")
     def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
@@ -83,23 +108,36 @@ def test_dataframe_from_sql_custom_task_id(sample_dag, sql_server, test_table):
     assert task_ids == ["foo", "foo__1", "foo__2", "foo__3", "foo__4"]
 
 
-@pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
 @pytest.mark.parametrize(
-    "test_table",
+    "database_table_fixture",
+    [
+        {"database": Database.SNOWFLAKE},
+        {"database": Database.BIGQUERY},
+        {"database": Database.POSTGRES},
+        {"database": Database.SQLITE},
+    ],
+    indirect=True,
+    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+)
+@pytest.mark.parametrize(
+    "tables_fixture",
     [
         {
-            "path": str(CWD) + "/../../data/homes2.csv",
-            "load_table": True,
-            "param": {
-                "metadata": Metadata(schema=SCHEMA),
-                "name": test_utils.get_table_name("test_stats_check_2"),
-            },
+            "items": [
+                {
+                    "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+                },
+            ],
         }
     ],
     indirect=True,
 )
-def test_dataframe_from_sql_basic_op_arg(sample_dag, sql_server, test_table):
+def test_dataframe_from_sql_basic_op_arg(
+    sample_dag, database_table_fixture, tables_fixture
+):
     """Test basic operation of dataframe operator with op_args."""
+
+    test_table = tables_fixture
 
     @aql.dataframe(
         conn_id=test_table.conn_id,
@@ -120,23 +158,35 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, sql_server, test_table):
     )
 
 
-@pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
 @pytest.mark.parametrize(
-    "test_table",
+    "database_table_fixture",
+    [
+        {"database": Database.SNOWFLAKE},
+        {"database": Database.BIGQUERY},
+        {"database": Database.POSTGRES},
+        {"database": Database.SQLITE},
+    ],
+    indirect=True,
+    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+)
+@pytest.mark.parametrize(
+    "tables_fixture",
     [
         {
-            "path": str(CWD) + "/../../data/homes2.csv",
-            "load_table": True,
-            "param": {
-                "metadata": Metadata(schema=SCHEMA),
-                "name": test_utils.get_table_name("test_stats_check_2"),
-            },
+            "items": [
+                {
+                    "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+                },
+            ],
         }
     ],
     indirect=True,
 )
-def test_dataframe_from_sql_basic_op_arg_and_kwarg(sample_dag, sql_server, test_table):
+def test_dataframe_from_sql_basic_op_arg_and_kwarg(
+    sample_dag, database_table_fixture, tables_fixture
+):
     """Test dataframe creation from table object in args and kwargs."""
+    test_table = tables_fixture
 
     @aql.dataframe(
         conn_id=test_table.conn_id,
