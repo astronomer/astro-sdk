@@ -20,6 +20,10 @@ class SqliteDatabase(BaseDatabase):
         super().__init__(conn_id)
 
     @property
+    def sql_type(self):
+        return "sqlite"
+
+    @property
     def hook(self) -> SqliteHook:
         """Retrieve Airflow hook to interface with the Sqlite database."""
         return SqliteHook(sqlite_conn_id=self.conn_id)

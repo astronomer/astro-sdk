@@ -28,6 +28,10 @@ class BigqueryDatabase(BaseDatabase):
         super().__init__(conn_id)
 
     @property
+    def sql_type(self):
+        return "bigquery"
+
+    @property
     def hook(self):
         """Retrieve Airflow hook to interface with the BigQuery database."""
         return BigQueryHook(gcp_conn_id=self.conn_id, use_legacy_sql=False)

@@ -28,6 +28,10 @@ class SnowflakeDatabase(BaseDatabase):
         return SnowflakeHook(snowflake_conn_id=self.conn_id)
 
     @property
+    def sql_type(self):
+        return "snowflake"
+
+    @property
     def default_metadata(self) -> Metadata:
         """
         Fill in default metadata values for table objects addressing snowflake databases
