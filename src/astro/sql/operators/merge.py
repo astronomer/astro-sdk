@@ -98,5 +98,6 @@ class MergeOperator(SqlDecoratedOperator):
             )
         else:
             raise AirflowException("Please pass a supported conn id")
+
         super().execute(context)
         return self.target_table

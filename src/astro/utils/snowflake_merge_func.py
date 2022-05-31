@@ -17,13 +17,19 @@ def snowflake_merge_func(
 ):
     statement = "merge into {{main_table}} using {{merge_table}} on " "{merge_clauses}"
 
+    if isinstance(merge_keys, dict):
+        merge_keys_keys = merge_keys.keys()
+        merge_keys_values = merge_keys.values()
+    else:
+        merge_keys_keys = merge_keys_values = merge_keys
+
     merge_target_dict = {
         "merge_clause_target_" + str(i): target_table.name + "." + x
-        for i, x in enumerate(merge_keys.keys())
+        for i, x in enumerate(merge_keys_keys)
     }
     merge_append_dict = {
         "merge_clause_append_" + str(i): merge_table.name + "." + x
-        for i, x in enumerate(merge_keys.values())
+        for i, x in enumerate(merge_keys_values)
     }
 
     statement = fill_in_merge_clauses(merge_append_dict, merge_target_dict, statement)
