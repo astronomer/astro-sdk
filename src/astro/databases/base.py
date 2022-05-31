@@ -46,6 +46,9 @@ class BaseDatabase(ABC):
     def __init__(self, conn_id: str):
         self.conn_id = conn_id
 
+    def __repr__(self):
+        return f'{self.__class__.__name__}(conn_id="{self.conn_id})'
+
     @property
     def hook(self) -> BaseHook:
         """Return an instance of the database-specific Airflow hook."""
