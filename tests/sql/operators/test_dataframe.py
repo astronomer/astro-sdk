@@ -22,31 +22,30 @@ CWD = pathlib.Path(__file__).parent
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SNOWFLAKE},
-        {"database": Database.BIGQUERY},
-        {"database": Database.POSTGRES},
-        {"database": Database.SQLITE},
+        {
+            "database": Database.SNOWFLAKE,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.BIGQUERY,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.POSTGRES,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.SQLITE,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
-@pytest.mark.parametrize(
-    "tables_fixture",
-    [
-        {
-            "items": [
-                {
-                    "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-                },
-            ],
-        }
-    ],
-    indirect=True,
-)
-def test_dataframe_from_sql_basic(sample_dag, database_table_fixture, tables_fixture):
+def test_dataframe_from_sql_basic(sample_dag, database_table_fixture):
     """Test basic operation of dataframe operator."""
 
-    test_table = tables_fixture
+    _, test_table = database_table_fixture
 
     @aql.dataframe
     def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
@@ -66,33 +65,30 @@ def test_dataframe_from_sql_basic(sample_dag, database_table_fixture, tables_fix
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SNOWFLAKE},
-        {"database": Database.BIGQUERY},
-        {"database": Database.POSTGRES},
-        {"database": Database.SQLITE},
+        {
+            "database": Database.SNOWFLAKE,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.BIGQUERY,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.POSTGRES,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.SQLITE,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
-@pytest.mark.parametrize(
-    "tables_fixture",
-    [
-        {
-            "items": [
-                {
-                    "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-                },
-            ],
-        }
-    ],
-    indirect=True,
-)
-def test_dataframe_from_sql_custom_task_id(
-    sample_dag, database_table_fixture, tables_fixture
-):
+def test_dataframe_from_sql_custom_task_id(sample_dag, database_table_fixture):
     """Test custom and taskId increment when same task is added multiple times."""
 
-    test_table = tables_fixture
+    _, test_table = database_table_fixture
 
     @aql.dataframe(task_id="foo")
     def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
@@ -110,33 +106,30 @@ def test_dataframe_from_sql_custom_task_id(
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SNOWFLAKE},
-        {"database": Database.BIGQUERY},
-        {"database": Database.POSTGRES},
-        {"database": Database.SQLITE},
+        {
+            "database": Database.SNOWFLAKE,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.BIGQUERY,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.POSTGRES,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.SQLITE,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
-@pytest.mark.parametrize(
-    "tables_fixture",
-    [
-        {
-            "items": [
-                {
-                    "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-                },
-            ],
-        }
-    ],
-    indirect=True,
-)
-def test_dataframe_from_sql_basic_op_arg(
-    sample_dag, database_table_fixture, tables_fixture
-):
+def test_dataframe_from_sql_basic_op_arg(sample_dag, database_table_fixture):
     """Test basic operation of dataframe operator with op_args."""
 
-    test_table = tables_fixture
+    _, test_table = database_table_fixture
 
     @aql.dataframe(
         conn_id=test_table.conn_id,
@@ -160,32 +153,32 @@ def test_dataframe_from_sql_basic_op_arg(
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SNOWFLAKE},
-        {"database": Database.BIGQUERY},
-        {"database": Database.POSTGRES},
-        {"database": Database.SQLITE},
+        {
+            "database": Database.SNOWFLAKE,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.BIGQUERY,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.POSTGRES,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.SQLITE,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
-@pytest.mark.parametrize(
-    "tables_fixture",
-    [
-        {
-            "items": [
-                {
-                    "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-                },
-            ],
-        }
-    ],
-    indirect=True,
-)
 def test_dataframe_from_sql_basic_op_arg_and_kwarg(
-    sample_dag, database_table_fixture, tables_fixture
+    sample_dag,
+    database_table_fixture,
 ):
     """Test dataframe creation from table object in args and kwargs."""
-    test_table = tables_fixture
+    test_table = database_table_fixture[1]
 
     @aql.dataframe(
         conn_id=test_table.conn_id,

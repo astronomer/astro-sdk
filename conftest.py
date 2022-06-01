@@ -243,7 +243,7 @@ def database_table_fixture(request):
 
 
 @pytest.fixture
-def tables_fixture(request, database_table_fixture):
+def multiple_tables_fixture(request, database_table_fixture):
     """
     Given request.param in the format:
     {

@@ -165,7 +165,7 @@ def run_merge(
     ids=["snowflake", "bigquery"],
 )
 @pytest.mark.parametrize(
-    "tables_fixture",
+    "multiple_tables_fixture",
     [
         {
             "items": [
@@ -185,9 +185,11 @@ def run_merge(
     indirect=True,
     ids=["two_tables_same_schema"],
 )
-def test_merge(database_table_fixture, tables_fixture, sample_dag, merge_parameters):
+def test_merge(
+    database_table_fixture, multiple_tables_fixture, sample_dag, merge_parameters
+):
     database, _ = database_table_fixture
-    target_table, merge_table = tables_fixture
+    target_table, merge_table = multiple_tables_fixture
     merge_params, mode = merge_parameters
     with sample_dag:
         run_merge(
@@ -208,7 +210,7 @@ def test_merge(database_table_fixture, tables_fixture, sample_dag, merge_paramet
     ids=["snowflake", "bigquery"],
 )
 @pytest.mark.parametrize(
-    "tables_fixture",
+    "multiple_tables_fixture",
     [
         {
             "items": [
@@ -224,12 +226,14 @@ def test_merge(database_table_fixture, tables_fixture, sample_dag, merge_paramet
     indirect=True,
     ids=["two_tables_same_schema"],
 )
-def test_merge_with_the_same_schema(database_table_fixture, tables_fixture, sample_dag):
+def test_merge_with_the_same_schema(
+    database_table_fixture, multiple_tables_fixture, sample_dag
+):
     """
     Validate that the output of merge is what we expect.
     """
     database, _ = database_table_fixture
-    first_table, second_table = tables_fixture
+    first_table, second_table = multiple_tables_fixture
 
     with sample_dag:
         aql.merge(
@@ -264,7 +268,7 @@ def test_merge_with_the_same_schema(database_table_fixture, tables_fixture, samp
     ids=["bigquery"],
 )
 @pytest.mark.parametrize(
-    "tables_fixture",
+    "multiple_tables_fixture",
     [
         {
             "items": [
@@ -293,13 +297,13 @@ def test_merge_with_the_same_schema(database_table_fixture, tables_fixture, samp
     ids=["two_tables"],
 )
 def test_merge_with_different_schemas(
-    database_table_fixture, tables_fixture, sample_dag
+    database_table_fixture, multiple_tables_fixture, sample_dag
 ):
     """
     Validate that the output of merge is what we expect.
     """
     database, _ = database_table_fixture
-    first_table, second_table = tables_fixture
+    first_table, second_table = multiple_tables_fixture
 
     with sample_dag:
         aql.merge(

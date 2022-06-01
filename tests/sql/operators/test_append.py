@@ -69,7 +69,7 @@ def append_params(request):
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
 @pytest.mark.parametrize(
-    "tables_fixture",
+    "multiple_tables_fixture",
     [
         {
             "items": [
@@ -84,9 +84,11 @@ def append_params(request):
     ],
     indirect=True,
 )
-def test_append(database_table_fixture, sample_dag, tables_fixture, append_params):
+def test_append(
+    database_table_fixture, sample_dag, multiple_tables_fixture, append_params
+):
     app_param, validate_append = append_params
-    main_table, append_table = tables_fixture
+    main_table, append_table = multiple_tables_fixture
     with sample_dag:
         appended_table = aql.append(
             **app_param,
