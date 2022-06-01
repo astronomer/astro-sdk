@@ -322,6 +322,30 @@ def test_create_table_from_select_statement(database_table_fixture):
 
 
 @pytest.mark.parametrize(
+    "sql_server",
+    ["postgres"],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    "test_table",
+    [
+        [
+            {
+                "param": {"metadata": Metadata(schema=SCHEMA)},
+                "path": str(CWD) + "/../data/simple_merge_1.csv",
+                "load_table": True,
+            },
+            {
+                "param": {"metadata": Metadata(schema=SCHEMA)},
+                "path": str(CWD) + "/../data/simple_merge_2.csv",
+                "load_table": True,
+            },
+        ],
+    ],
+    indirect=True,
+    ids=["table"],
+)
+@pytest.mark.parametrize(
     "parameters",
     [
         {
@@ -350,37 +374,24 @@ def test_create_table_from_select_statement(database_table_fixture):
         },
     ],
 )
-def test_merge_table(parameters):
-    target_df = pd.DataFrame([{"sell": 142, "list": 160}, {"sell": 175, "list": 540}])
-    source_df = pd.DataFrame([{"sell": 162, "list": 330}, {"sell": 175, "list": 600}])
-
-    target_table = Table(conn_id="postgres_conn")
-    source_table = Table(conn_id="postgres_conn")
-
+def test_merge_table(parameters, test_table):
     target_conflict_columns = parameters["target_conflict_columns"]
-
-    db = create_database(conn_id=target_table.conn_id)
-    db.load_pandas_dataframe_to_table(
-        source_dataframe=target_df, target_table=target_table
-    )
-    db.load_pandas_dataframe_to_table(
-        source_dataframe=source_df, target_table=source_table
-    )
+    db = create_database(conn_id=test_table[0].conn_id)
 
     db.run_sql(
-        sql_statement=f"ALTER TABLE {db.get_table_qualified_name(target_table)} "
-        f"ADD CONSTRAINT con_{target_table.name} UNIQUE ({','.join(target_conflict_columns)})"
+        sql_statement=f"ALTER TABLE {db.get_table_qualified_name(test_table[0])} "
+        f"ADD CONSTRAINT con_{test_table[0].name} UNIQUE ({','.join(target_conflict_columns)})"
     )
 
     db.combine_tables(
-        target_table=target_table,
-        source_table=source_table,
+        target_table=test_table[0],
+        source_table=test_table[1],
         target_conflict_columns=target_conflict_columns,
         if_conflict=parameters["if_conflict"],
         source_to_target_columns_map=parameters["source_to_target_columns_map"],
     )
     df = db.hook.get_pandas_df(
-        f"SELECT * FROM {db.get_table_qualified_name(target_table)}"
+        f"SELECT * FROM {db.get_table_qualified_name(test_table[0])}"
     )
     df = df.sort_values(by=["list"], ascending=True)
     parameters["expected_df"] = parameters["expected_df"].sort_values(
@@ -391,6 +402,30 @@ def test_merge_table(parameters):
     assert df["sell"].to_list() == parameters["expected_df"]["sell"].to_list()
 
 
+@pytest.mark.parametrize(
+    "sql_server",
+    ["postgres"],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    "test_table",
+    [
+        [
+            {
+                "param": {"metadata": Metadata(schema=SCHEMA)},
+                "path": str(CWD) + "/../data/simple_merge_1.csv",
+                "load_table": True,
+            },
+            {
+                "param": {"metadata": Metadata(schema=SCHEMA)},
+                "path": str(CWD) + "/../data/simple_merge_2.csv",
+                "load_table": True,
+            },
+        ],
+    ],
+    indirect=True,
+    ids=["table"],
+)
 @pytest.mark.parametrize(
     "parameters",
     [
@@ -407,28 +442,15 @@ def test_merge_table(parameters):
         }
     ],
 )
-def test_append_table(parameters):
-    target_df = pd.DataFrame([{"sell": 142, "list": 160}, {"sell": 175, "list": 540}])
-    source_df = pd.DataFrame([{"sell": 162, "list": 330}, {"sell": 175, "list": 600}])
-
-    target_table = Table(conn_id="postgres_conn")
-    source_table = Table(conn_id="postgres_conn")
-
-    db = create_database(conn_id=target_table.conn_id)
-    db.load_pandas_dataframe_to_table(
-        source_dataframe=target_df, target_table=target_table
-    )
-    db.load_pandas_dataframe_to_table(
-        source_dataframe=source_df, target_table=source_table
-    )
-
+def test_append_table(parameters, test_table):
+    db = create_database(conn_id=test_table[0].conn_id)
     db.combine_tables(
-        target_table=target_table,
-        source_table=source_table,
+        target_table=test_table[0],
+        source_table=test_table[1],
         source_to_target_columns_map=parameters["source_to_target_columns_map"],
     )
     df = db.hook.get_pandas_df(
-        f"SELECT * FROM {db.get_table_qualified_name(target_table)}"
+        f"SELECT * FROM {db.get_table_qualified_name(test_table[0])}"
     )
     df = df.sort_values(by=["list"], ascending=True)
     parameters["expected_df"] = parameters["expected_df"].sort_values(
