@@ -438,7 +438,7 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
 @pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
-def test_load_file(sample_dag, database_table_fixture, file_type, test_table):
+def test_load_file(sample_dag, database_table_fixture, file_type):
     db, test_table = database_table_fixture
 
     with sample_dag:
