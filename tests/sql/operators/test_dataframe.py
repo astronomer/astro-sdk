@@ -206,19 +206,16 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(
     )
 
 
-@pytest.mark.parametrize("database_table_fixture", [Database.POSTGRES], indirect=True)
 @pytest.mark.parametrize(
-    "tables_fixture",
+    "database_table_fixture",
     [
         {
-            "items": [
-                {
-                    "file": File(path=str(CWD) + "/../../data/homes_upper.csv"),
-                },
-            ],
-        }
+            "database": Database.POSTGRES,
+            "file": File(path=str(CWD) + "/../../data/homes_upper.csv"),
+        },
     ],
     indirect=True,
+    ids=["postgresql"],
 )
 @pytest.mark.parametrize(
     "identifiers_as_lower",
@@ -226,14 +223,14 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(
     ids=["identifiers_as_lower=True", "identifiers_as_lower=False"],
 )
 def test_dataframe_with_lower_and_upper_case(
-    sample_dag, database_table_fixture, tables_fixture, identifiers_as_lower
+    sample_dag, database_table_fixture, identifiers_as_lower
 ):
     """
     Test dataframe operator 'identifiers_as_lower' param which converts
     all col names in lower case, which is useful to maintain consistency,
     since snowflake return all col name in caps.
     """
-    test_table = tables_fixture
+    _, test_table = database_table_fixture
 
     @aql.dataframe(identifiers_as_lower=identifiers_as_lower)
     def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003

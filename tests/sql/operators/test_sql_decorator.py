@@ -3,7 +3,6 @@ import pathlib
 import pytest
 
 from astro.constants import Database
-from astro.databases import create_database
 from astro.files import File
 from astro.sql.operators.sql_decorator_legacy import SqlDecoratedOperator
 from tests.sql.operators import utils as test_utils
@@ -15,33 +14,29 @@ TEST_SCHEMA = test_utils.get_table_name("test")
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SNOWFLAKE},
-        {"database": Database.BIGQUERY},
-        {"database": Database.POSTGRES},
-        {"database": Database.SQLITE},
+        {
+            "database": Database.SNOWFLAKE,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.BIGQUERY,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.POSTGRES,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.SQLITE,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
-@pytest.mark.parametrize(
-    "tables_fixture",
-    [
-        {
-            "items": [
-                {
-                    "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-                },
-            ],
-        }
-    ],
-    indirect=True,
-)
-def test_sql_decorator_basic_functionality(
-    sample_dag, database_table_fixture, tables_fixture
-):
+def test_sql_decorator_basic_functionality(sample_dag, database_table_fixture):
     """Test basic sql execution of SqlDecoratedOperator."""
-    test_table = tables_fixture
-    database = create_database(test_table.conn_id)
+    database, test_table = database_table_fixture
     qualified_name = database.get_table_qualified_name(test_table)
 
     def handler_func(result):
@@ -70,35 +65,29 @@ def test_sql_decorator_basic_functionality(
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SNOWFLAKE},
-        {"database": Database.BIGQUERY},
-        {"database": Database.POSTGRES},
+        {
+            "database": Database.SNOWFLAKE,
+            "file": File(path=str(CWD) + "/../../data/sample.csv"),
+        },
+        {
+            "database": Database.BIGQUERY,
+            "file": File(path=str(CWD) + "/../../data/sample.csv"),
+        },
+        {
+            "database": Database.POSTGRES,
+            "file": File(path=str(CWD) + "/../../data/sample.csv"),
+        },
     ],
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql"],
 )
-@pytest.mark.parametrize(
-    "tables_fixture",
-    [
-        {
-            "items": [
-                {
-                    "file": File(path=str(CWD) + "/../../data/sample.csv"),
-                },
-            ],
-        }
-    ],
-    indirect=True,
-)
 def test_sql_decorator_does_not_create_schema_when_the_schema_exists(
     sample_dag,
     database_table_fixture,
-    tables_fixture,
 ):
     """Test basic sql execution of SqlDecoratedOperator."""
-    database, _ = database_table_fixture
+    database, test_table = database_table_fixture
     hook = database.hook
-    test_table = tables_fixture
     qualified_name = database.get_table_qualified_name(test_table)
 
     sql_statement = f"SELECT * FROM {qualified_name} WHERE id=4"
@@ -126,33 +115,26 @@ def test_sql_decorator_does_not_create_schema_when_the_schema_exists(
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.BIGQUERY},
-        {"database": Database.POSTGRES},
+        {
+            "database": Database.BIGQUERY,
+            "file": File(path=str(CWD) + "/../../data/sample.csv"),
+        },
+        {
+            "database": Database.POSTGRES,
+            "file": File(path=str(CWD) + "/../../data/sample.csv"),
+        },
     ],
     indirect=True,
     ids=["bigquery", "postgresql"],
 )
-@pytest.mark.parametrize(
-    "tables_fixture",
-    [
-        {
-            "items": [
-                {
-                    "file": File(path=str(CWD) + "/../../data/sample.csv"),
-                },
-            ],
-        }
-    ],
-    indirect=True,
-)
 @pytest.mark.parametrize("schemas_fixture", [TEST_SCHEMA], indirect=True)
 def test_sql_decorator_creates_schema_when_it_does_not_exist(
-    sample_dag, schemas_fixture, database_table_fixture, tables_fixture
+    sample_dag,
+    schemas_fixture,
+    database_table_fixture,
 ):
     """Test basic sql execution of SqlDecoratedOperator."""
-    test_table = tables_fixture
-
-    database, _ = database_table_fixture
+    database, test_table = database_table_fixture
     qualified_name = database.get_table_qualified_name(test_table)
 
     sql_statement = f"SELECT * FROM {qualified_name} WHERE id=4"

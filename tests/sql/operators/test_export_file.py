@@ -91,34 +91,33 @@ def test_save_temp_table_to_local(sample_dag, database_table_fixture):
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SNOWFLAKE},
-        {"database": Database.BIGQUERY},
-        {"database": Database.POSTGRES},
-        {"database": Database.SQLITE},
+        {
+            "database": Database.SNOWFLAKE,
+            "file": File(path=str(CWD) + "/../../data/homes.csv"),
+        },
+        {
+            "database": Database.BIGQUERY,
+            "file": File(path=str(CWD) + "/../../data/homes.csv"),
+        },
+        {
+            "database": Database.POSTGRES,
+            "file": File(path=str(CWD) + "/../../data/homes.csv"),
+        },
+        {
+            "database": Database.SQLITE,
+            "file": File(path=str(CWD) + "/../../data/homes.csv"),
+        },
     ],
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
-@pytest.mark.parametrize(
-    "tables_fixture",
-    [
-        {
-            "items": [
-                {
-                    "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-                },
-            ],
-        }
-    ],
-    indirect=True,
-)
-def test_save_all_db_tables_to_S3(sample_dag, tables_fixture, database_table_fixture):
+def test_save_all_db_tables_to_S3(sample_dag, database_table_fixture):
     _creds = s3fs_creds()
     file_name = f"{test_utils.get_table_name('test_save')}.csv"
 
     OUTPUT_FILE_PATH = f"s3://tmp9/{file_name}"
 
-    test_table = tables_fixture
+    db, test_table = database_table_fixture
     with sample_dag:
         export_file(
             input_data=test_table,
@@ -127,16 +126,12 @@ def test_save_all_db_tables_to_S3(sample_dag, tables_fixture, database_table_fix
         )
     test_utils.run_dag(sample_dag)
 
-    db, _ = database_table_fixture
     df = db.export_table_to_pandas_dataframe(test_table)
     # # Read output CSV
     df_file = pd.read_csv(OUTPUT_FILE_PATH, storage_options=s3fs_creds())
 
     assert len(df_file) == 47
-    if db.sql_name != "snowflake":
-        assert (df["sell"] == df_file["sell"]).all()
-    else:
-        assert (df["SELL"] == df_file["sell"]).all()
+    assert (df["sell"] == df_file["sell"]).all()
 
     # Delete object from S3
     s3 = boto3.Session(_creds["key"], _creds["secret"]).resource("s3")
@@ -146,30 +141,28 @@ def test_save_all_db_tables_to_S3(sample_dag, tables_fixture, database_table_fix
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SNOWFLAKE},
-        {"database": Database.BIGQUERY},
-        {"database": Database.POSTGRES},
-        {"database": Database.SQLITE},
+        {
+            "database": Database.SNOWFLAKE,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.BIGQUERY,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.POSTGRES,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.SQLITE,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
-@pytest.mark.parametrize(
-    "tables_fixture",
-    [
-        {
-            "items": [
-                {
-                    "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-                },
-            ],
-        }
-    ],
-    indirect=True,
-)
-def test_save_all_db_tables_to_GCS(sample_dag, tables_fixture, database_table_fixture):
-    database, _ = database_table_fixture
-    test_table = tables_fixture
+def test_save_all_db_tables_to_GCS(sample_dag, database_table_fixture):
+    database, test_table = database_table_fixture
     file_name = f"{test_utils.get_table_name('test_save')}.csv"
     bucket = "dag-authoring"
 
@@ -184,10 +177,7 @@ def test_save_all_db_tables_to_GCS(sample_dag, tables_fixture, database_table_fi
     test_utils.run_dag(sample_dag)
     df = database.export_table_to_pandas_dataframe(source_table=test_table)
 
-    if database.sql_name != "snowflake":
-        assert (df["sell"].sort_values() == [129, 138, 142, 175, 232]).all()
-    else:
-        assert (df["SELL"].sort_values() == [129, 138, 142, 175, 232]).all()
+    assert (df["sell"].sort_values() == [129, 138, 142, 175, 232]).all()
 
     hook = gcs.GCSHook(gcp_conn_id="google_cloud_default")
     hook.delete(bucket, f"test/{file_name}")
@@ -196,31 +186,30 @@ def test_save_all_db_tables_to_GCS(sample_dag, tables_fixture, database_table_fi
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SNOWFLAKE},
-        {"database": Database.BIGQUERY},
-        {"database": Database.POSTGRES},
-        {"database": Database.SQLITE},
+        {
+            "database": Database.SNOWFLAKE,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.BIGQUERY,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.POSTGRES,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.SQLITE,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
-@pytest.mark.parametrize(
-    "tables_fixture",
-    [
-        {
-            "items": [
-                {
-                    "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-                },
-            ],
-        }
-    ],
-    indirect=True,
-)
 def test_save_all_db_tables_to_local_file_exists_overwrite_false(
-    sample_dag, tables_fixture, database_table_fixture, caplog
+    sample_dag, database_table_fixture, caplog
 ):
-    test_table = tables_fixture
+    _, test_table = database_table_fixture
     with tempfile.NamedTemporaryFile(suffix=".csv") as temp_file:
         with pytest.raises(BackfillUnfinished):
             with sample_dag:
@@ -237,26 +226,25 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SNOWFLAKE},
-        {"database": Database.BIGQUERY},
-        {"database": Database.POSTGRES},
-        {"database": Database.SQLITE},
+        {
+            "database": Database.SNOWFLAKE,
+            "file": File(path=str(CWD) + "/../../data/homes.csv"),
+        },
+        {
+            "database": Database.BIGQUERY,
+            "file": File(path=str(CWD) + "/../../data/homes.csv"),
+        },
+        {
+            "database": Database.POSTGRES,
+            "file": File(path=str(CWD) + "/../../data/homes.csv"),
+        },
+        {
+            "database": Database.SQLITE,
+            "file": File(path=str(CWD) + "/../../data/homes.csv"),
+        },
     ],
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
-)
-@pytest.mark.parametrize(
-    "tables_fixture",
-    [
-        {
-            "items": [
-                {
-                    "file": File(path=str(CWD) + "/../../data/homes.csv"),
-                },
-            ],
-        }
-    ],
-    indirect=True,
 )
 @pytest.mark.parametrize(
     "remote_files_fixture",
@@ -265,10 +253,9 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
     ids=["google", "amazon"],
 )
 def test_save_table_remote_file_exists_overwrite_false(
-    sample_dag, tables_fixture, database_table_fixture, remote_files_fixture, caplog
+    sample_dag, database_table_fixture, remote_files_fixture, caplog
 ):
-
-    test_table = tables_fixture
+    _, test_table = database_table_fixture
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
             export_file(
@@ -282,26 +269,21 @@ def test_save_table_remote_file_exists_overwrite_false(
     assert expected_error in caplog.text
 
 
-@pytest.mark.parametrize("database_table_fixture", [Database.SQLITE], indirect=True)
 @pytest.mark.parametrize(
-    "tables_fixture",
+    "database_table_fixture",
     [
         {
-            "items": [
-                {
-                    "file": File(path=str(CWD) + "/../../data/homes.csv"),
-                },
-            ],
-        }
+            "database": Database.SQLITE,
+            "file": File(path=str(CWD) + "/../../data/homes.csv"),
+        },
     ],
     indirect=True,
 )
 def test_unique_task_id_for_same_path(
     sample_dag,
-    tables_fixture,
     database_table_fixture,
 ):
-    test_table = tables_fixture
+    _, test_table = database_table_fixture
     file_name = f"{test_utils.get_table_name('output')}.csv"
     OUTPUT_FILE_PATH = str(CWD) + f"/../../data/{file_name}"
 
@@ -321,9 +303,9 @@ def test_unique_task_id_for_same_path(
     test_utils.run_dag(sample_dag)
 
     assert tasks[0].operator.task_id != tasks[1].operator.task_id
-    assert tasks[0].operator.task_id == f"export_file_{file_name.replace('.','_')}"
-    assert tasks[1].operator.task_id == f"export_file_{file_name.replace('.','_')}__1"
-    assert tasks[2].operator.task_id == f"export_file_{file_name.replace('.','_')}__2"
+    assert tasks[0].operator.task_id == f"export_file_{file_name.replace('.', '_')}"
+    assert tasks[1].operator.task_id == f"export_file_{file_name.replace('.', '_')}__1"
+    assert tasks[2].operator.task_id == f"export_file_{file_name.replace('.', '_')}__2"
     assert tasks[3].operator.task_id == "task_id"
 
     os.remove(OUTPUT_FILE_PATH)
@@ -332,30 +314,29 @@ def test_unique_task_id_for_same_path(
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SNOWFLAKE},
-        {"database": Database.BIGQUERY},
-        {"database": Database.POSTGRES},
-        {"database": Database.SQLITE},
+        {
+            "database": Database.SNOWFLAKE,
+            "file": File(path=str(CWD) + "/../../data/sample.csv"),
+        },
+        {
+            "database": Database.BIGQUERY,
+            "file": File(path=str(CWD) + "/../../data/sample.csv"),
+        },
+        {
+            "database": Database.POSTGRES,
+            "file": File(path=str(CWD) + "/../../data/sample.csv"),
+        },
+        {
+            "database": Database.SQLITE,
+            "file": File(path=str(CWD) + "/../../data/sample.csv"),
+        },
     ],
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
 @pytest.mark.parametrize("file_type", SUPPORTED_FILE_TYPES)
-@pytest.mark.parametrize(
-    "tables_fixture",
-    [
-        {
-            "items": [
-                {
-                    "file": File(path=str(CWD) + "/../../data/homes.csv"),
-                },
-            ],
-        }
-    ],
-    indirect=True,
-)
-def test_export_file(sample_dag, tables_fixture, database_table_fixture, file_type):
-    test_table = tables_fixture
+def test_export_file(sample_dag, database_table_fixture, file_type):
+    _, test_table = database_table_fixture
     with tempfile.TemporaryDirectory() as tmp_dir:
         filepath = Path(tmp_dir, f"sample.{file_type}")
         with sample_dag:
@@ -381,29 +362,19 @@ def test_export_file(sample_dag, tables_fixture, database_table_fixture, file_ty
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.POSTGRES},
+        {
+            "database": Database.POSTGRES,
+            "file": File(path=str(CWD) + "/../../data/sample.csv"),
+        },
     ],
     indirect=True,
     ids=["postgresql"],
 )
-@pytest.mark.parametrize(
-    "tables_fixture",
-    [
-        {
-            "items": [
-                {
-                    "file": File(path=str(CWD) + "/../../data/sample.csv"),
-                },
-            ],
-        }
-    ],
-    indirect=True,
-)
-def test_populate_table_metadata(sample_dag, database_table_fixture, tables_fixture):
+def test_populate_table_metadata(sample_dag, database_table_fixture):
     """
     Test default populating of table fields in export_file op.
     """
-    test_table = tables_fixture
+    _, test_table = database_table_fixture
     test_table.metadata.schema = None
 
     @aql.dataframe
