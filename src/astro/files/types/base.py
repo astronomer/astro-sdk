@@ -40,4 +40,4 @@ class FileType(ABC):
         return self.name.value
 
     def __repr__(self):
-        return f'{self.__class__.__name__}(path="{self.path}",conn_id="{self.normalize_config}")'
+        return f'{self.__class__.__name__}(path="{self.path}")'
