@@ -38,3 +38,6 @@ class FileType(ABC):
     def __str__(self):
         """String representation of type"""
         return self.name.value
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(path="{self.path}")'
