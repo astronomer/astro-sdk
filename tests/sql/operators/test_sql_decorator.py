@@ -29,7 +29,7 @@ TEST_SCHEMA = test_utils.get_table_name("test")
         {
             "items": [
                 {
-                    "file": File(path=str(CWD) + "/../../data/sample.csv"),
+                    "file": File(path=str(CWD) + "/../../data/homes2.csv"),
                 },
             ],
         }

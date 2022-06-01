@@ -9,8 +9,7 @@ from airflow.utils import timezone
 import astro.sql as aql
 from astro.constants import Database
 from astro.files import File
-from astro.settings import SCHEMA
-from astro.sql.table import Metadata, Table
+from astro.sql.table import Table
 from tests.sql.operators import utils as test_utils
 
 # Import Operator
@@ -207,17 +206,16 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(
     )
 
 
-@pytest.mark.parametrize("sql_server", [Database.POSTGRES.value], indirect=True)
+@pytest.mark.parametrize("database_table_fixture", [Database.POSTGRES], indirect=True)
 @pytest.mark.parametrize(
-    "test_table",
+    "tables_fixture",
     [
         {
-            "path": str(CWD) + "/../../data/homes_upper.csv",
-            "load_table": True,
-            "param": {
-                "metadata": Metadata(schema=SCHEMA),
-                "name": test_utils.get_table_name("test_stats_check_2"),
-            },
+            "items": [
+                {
+                    "file": File(path=str(CWD) + "/../../data/homes_upper.csv"),
+                },
+            ],
         }
     ],
     indirect=True,
@@ -228,13 +226,14 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(
     ids=["identifiers_as_lower=True", "identifiers_as_lower=False"],
 )
 def test_dataframe_with_lower_and_upper_case(
-    sample_dag, sql_server, test_table, identifiers_as_lower
+    sample_dag, database_table_fixture, tables_fixture, identifiers_as_lower
 ):
     """
     Test dataframe operator 'identifiers_as_lower' param which converts
     all col names in lower case, which is useful to maintain consistency,
     since snowflake return all col name in caps.
     """
+    test_table = tables_fixture
 
     @aql.dataframe(identifiers_as_lower=identifiers_as_lower)
     def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
