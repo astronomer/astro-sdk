@@ -27,7 +27,7 @@ cwd = pathlib.Path(__file__).parent
 def test_dataframe_transform(database_table_fixture, sample_dag):
     print("test_dataframe_to_database")
 
-    database, test_table = database_table_fixture
+    _, test_table = database_table_fixture
 
     @aql.dataframe
     def get_dataframe():
@@ -64,7 +64,7 @@ def test_dataframe_transform(database_table_fixture, sample_dag):
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
 def test_transform(database_table_fixture, sample_dag):
-    database, test_table = database_table_fixture
+    _, test_table = database_table_fixture
 
     @aql.transform
     def sample_function(input_table: Table):
@@ -101,7 +101,7 @@ def test_transform(database_table_fixture, sample_dag):
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
 def test_raw_sql(database_table_fixture, sample_dag):
-    database, test_table = database_table_fixture
+    _, test_table = database_table_fixture
 
     @aql.run_raw_sql
     def raw_sql_query(my_input_table: Table, created_table: Table, num_rows: int):
