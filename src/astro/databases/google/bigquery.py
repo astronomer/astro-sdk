@@ -1,5 +1,5 @@
 """Google BigQuery table implementation."""
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
@@ -87,7 +87,7 @@ class BigqueryDatabase(BaseDatabase):
         source_table: Table,
         target_table: Table,
         source_to_target_columns_map: Dict[str, str],
-        target_conflict_columns: List[str],
+        target_conflict_columns: Optional[List[str]] = None,
         if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """
@@ -100,6 +100,8 @@ class BigqueryDatabase(BaseDatabase):
         :param target_conflict_columns: List of cols where we expect to have a conflict while combining
         :param if_conflicts: The strategy to be applied if there are conflicts.
         """
+        if not target_conflict_columns:
+            raise ValueError("target_conflict_columns is a required value")
 
         source_columns = list(source_to_target_columns_map.keys())
         target_columns = list(source_to_target_columns_map.values())

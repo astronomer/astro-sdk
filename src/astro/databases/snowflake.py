@@ -1,5 +1,5 @@
 """Snowflake database implementation."""
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -152,7 +152,7 @@ class SnowflakeDatabase(BaseDatabase):
         source_table: Table,
         target_table: Table,
         source_to_target_columns_map: Dict[str, str],
-        target_conflict_columns: List[str],
+        target_conflict_columns: Optional[List[str]] = None,
         if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """
@@ -169,7 +169,6 @@ class SnowflakeDatabase(BaseDatabase):
             source_table=source_table,
             target_table=target_table,
             source_to_target_columns_map=source_to_target_columns_map,
-            target_conflict_columns=target_conflict_columns,
             if_conflicts=if_conflicts,
         )
         self.run_sql(sql_statement=statement, parameters=params)
@@ -179,7 +178,6 @@ class SnowflakeDatabase(BaseDatabase):
         source_table: Table,
         target_table: Table,
         source_to_target_columns_map: Dict[str, str],
-        target_conflict_columns: List[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ):
         """Build the SQL statement for Merge operation"""
@@ -238,7 +236,7 @@ class SnowflakeDatabase(BaseDatabase):
             merge_statement = ",".join(
                 [
                     f"{target_table_name}.{t}={source_table_name}.{s}"
-                    for t, s in zip(target_cols, source_cols)
+                    for s, t in source_to_target_columns_map.items()
                 ]
             )
             statement = statement.replace("{merge_vals}", merge_statement)
@@ -247,11 +245,11 @@ class SnowflakeDatabase(BaseDatabase):
         )
         statement = statement.replace(
             "{target_columns}",
-            ",".join(f"{target_table_name}.{t}" for t in target_conflict_columns),
+            ",".join(f"{target_table_name}.{t}" for t in target_cols),
         )
         statement = statement.replace(
             "{append_columns}",
-            ",".join(f"{source_table_name}.{s}" for s in target_conflict_columns),
+            ",".join(f"{source_table_name}.{s}" for s in source_cols),
         )
         params = {
             **merge_target_dict,

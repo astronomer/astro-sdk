@@ -40,18 +40,12 @@ class TestSnowflakeMerge(unittest.TestCase):
             self.source_table
         )
 
-    def tearDown(self):
-        # self.snowflake_db.drop_table(self.source_table)
-        # self.snowflake_db.drop_table(self.target_table)
-        ...
-
     def test_merge_func(self):
         sql, parameters = self.snowflake_db._build_merge_sql(
             if_conflicts="update",
             source_table=self.source_table,
             target_table=self.target_table,
             source_to_target_columns_map={"sell": "sell"},
-            target_conflict_columns=["sell"],
         )
 
         assert (
@@ -72,8 +66,11 @@ class TestSnowflakeMerge(unittest.TestCase):
         sql, parameters = self.snowflake_db._build_merge_sql(
             source_table=self.source_table,
             target_table=self.target_table,
-            source_to_target_columns_map={"sell": "sell", "bar": "foo"},
-            target_conflict_columns=["sell"],
+            source_to_target_columns_map={
+                "list": "list",
+                "sell": "sell",
+                "age": "taxes",
+            },
             if_conflicts="update",
         )
 
@@ -81,15 +78,22 @@ class TestSnowflakeMerge(unittest.TestCase):
             sql
             == "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
             "on Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0) AND "
-            "Identifier(:merge_clause_target_1)=Identifier(:merge_clause_source_1) "
-            f"when matched then UPDATE SET {self.target_table_name}.sell={self.source_table_name}.sell "
-            f"when not matched then insert({self.target_table_name}.sell) values ({self.source_table_name}.sell)"
+            "Identifier(:merge_clause_target_1)=Identifier(:merge_clause_source_1) AND "
+            "Identifier(:merge_clause_target_2)=Identifier(:merge_clause_source_2) "
+            f"when matched then UPDATE SET {self.target_table_name}.list={self.source_table_name}.list,"
+            f"{self.target_table_name}.sell={self.source_table_name}.sell,"
+            f"{self.target_table_name}.taxes={self.source_table_name}.age "
+            f"when not matched then "
+            f"insert({self.target_table_name}.list,{self.target_table_name}.sell,{self.target_table_name}.taxes) "
+            f"values ({self.source_table_name}.list,{self.source_table_name}.sell,{self.source_table_name}.age)"
         )
         assert parameters == {
-            "merge_clause_source_0": f"{self.source_table_name}.sell",
-            "merge_clause_source_1": f"{self.source_table_name}.bar",
-            "merge_clause_target_0": f"{self.target_table_name}.sell",
-            "merge_clause_target_1": f"{self.target_table_name}.foo",
+            "merge_clause_source_0": f"{self.source_table_name}.list",
+            "merge_clause_source_1": f"{self.source_table_name}.sell",
+            "merge_clause_source_2": f"{self.source_table_name}.age",
+            "merge_clause_target_0": f"{self.target_table_name}.list",
+            "merge_clause_target_1": f"{self.target_table_name}.sell",
+            "merge_clause_target_2": f"{self.target_table_name}.taxes",
             "target_table": self.target_table_full_name,
             "source_table": self.source_table_full_name,
         }
@@ -99,7 +103,6 @@ class TestSnowflakeMerge(unittest.TestCase):
             source_table=self.source_table,
             target_table=self.target_table,
             source_to_target_columns_map={"sell": "sell"},
-            target_conflict_columns=["sell"],
             if_conflicts="ignore",
         )
 

@@ -74,10 +74,11 @@ def append(
 
 
 def merge(
+    *,
     target_table: Table,
     source_table: Table,
-    target_conflict_columns: List[str],
     source_to_target_columns_map: Dict[str, str],
+    target_conflict_columns: Optional[List[str]] = None,
     if_conflicts: MergeConflictStrategy,
     **kwargs,
 ):
