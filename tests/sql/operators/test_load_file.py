@@ -367,7 +367,7 @@ def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
     ids=["google", "amazon"],
 )
 def test_load_file_using_file_connection(
-    sample_dag, remote_files_fixture, database_table_fixture, test_table
+    sample_dag, remote_files_fixture, database_table_fixture
 ):
     db, test_table = database_table_fixture
     file_uri = remote_files_fixture[0]
@@ -534,7 +534,7 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
 
     chunk_function = {
         "bigquery": "pandas.DataFrame.to_gbq",
-        "postgres": "pandas.DataFrame.to_sql",
+        "postgresql": "pandas.DataFrame.to_sql",
         "snowflake": "snowflake.connector.pandas_tools.write_pandas",
     }[db.sql_type]
 
@@ -607,7 +607,7 @@ def test_aql_nested_ndjson_file_with_default_sep_param(
     ids=["bigquery"],
 )
 def test_aql_nested_ndjson_file_to_bigquery_explicit_sep_params(
-    sample_dag, database_table_fixture, test_table
+    sample_dag, database_table_fixture
 ):
     """Test the flattening of single level nested ndjson, with explicit separator '___'."""
     db, test_table = database_table_fixture
