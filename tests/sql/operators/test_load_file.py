@@ -186,7 +186,7 @@ def test_aql_local_file_with_no_table_name(sample_dag, database_table_fixture):
         load_file(input_file=File(data_path), output_table=test_table)
     test_utils.run_dag(sample_dag)
 
-    df = db.export_table_to_pandas_dataframe()
+    df = db.export_table_to_pandas_dataframe(test_table)
     data_df = pd.read_csv(data_path)
 
     assert df.shape == data_df.shape
@@ -472,11 +472,9 @@ def test_load_file(sample_dag, database_table_fixture, file_type):
     [
         {
             "database": Database.BIGQUERY,
-            "table": Table(metadata=Metadata(schema="custom_schema")),
         },
         {
             "database": Database.POSTGRES,
-            "table": Table(metadata=Metadata(schema="custom_schema")),
         },
     ],
     indirect=True,
@@ -488,6 +486,7 @@ def test_load_file(sample_dag, database_table_fixture, file_type):
 @pytest.mark.parametrize("file_type", ["csv"])
 def test_load_file_with_named_schema(sample_dag, database_table_fixture, file_type):
     db, test_table = database_table_fixture
+    test_table.metadata.schema = "custom_schema"
 
     with sample_dag:
         load_file(
@@ -529,7 +528,7 @@ def test_load_file_with_named_schema(sample_dag, database_table_fixture, file_ty
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql"],
 )
-def test_load_file_chunks(sample_dag, database_table_fixture, test_table):
+def test_load_file_chunks(sample_dag, database_table_fixture):
     file_type = "csv"
     db, test_table = database_table_fixture
 
@@ -579,7 +578,7 @@ def test_load_file_chunks(sample_dag, database_table_fixture, test_table):
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
 def test_aql_nested_ndjson_file_with_default_sep_param(
-    sample_dag, database_table_fixture, test_table
+    sample_dag, database_table_fixture
 ):
     """Test the flattening of single level nested ndjson, with default separator '_'."""
     db, test_table = database_table_fixture
