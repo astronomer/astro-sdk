@@ -111,9 +111,7 @@ def validate_results(df: pd.DataFrame, mode):
 
 
 @task_group
-def run_merge(
-    target_table: Table, source_table: Table, merge_parameters, mode, sql_type
-):
+def run_merge(target_table: Table, source_table: Table, merge_parameters, mode):
     con1 = add_constraint(target_table, merge_parameters["target_conflict_columns"])
 
     merged_table = aql.merge(
@@ -173,7 +171,6 @@ def test_merge(
         run_merge(
             target_table=target_table,
             source_table=merge_table,
-            database=database,
             merge_parameters=merge_params,
             mode=mode,
         )
