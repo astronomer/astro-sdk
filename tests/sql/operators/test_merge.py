@@ -33,9 +33,6 @@ def merge_keys(sql_server, mode):
     if mode == "update":
         keys = ["list", "sell"]
 
-    if sql_name == "snowflake":
-        return {k: k for k in keys}
-
     return keys
 
 
@@ -137,9 +134,9 @@ def run_merge(output_specs: List[Table], merge_parameters, mode, sql_type):
 @pytest.mark.parametrize(
     "sql_server",
     [
-        # "bigquery",
-        # "snowflake",
-        # "postgres",
+        "bigquery",
+        "snowflake",
+        "postgres",
         "sqlite",
     ],
     indirect=True,

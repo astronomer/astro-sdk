@@ -73,7 +73,7 @@ class SqliteDatabase(BaseDatabase):
         source_table: Table,
         target_table: Table,
         source_to_target_columns_map: Dict[str, str],
-        target_conflict_columns: Optional[List[str]],
+        target_conflict_columns: List[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """
