@@ -75,6 +75,8 @@ def add_constraint(table: Table):
     db = create_database(table.conn_id)
     if isinstance(db, SqliteDatabase):
         return "CREATE UNIQUE INDEX unique_index ON {{table}}(list,sell)"
+    # The only constraint that BigQuery supports is NOT NULL
+    # Hence, skipping the constraint for Bigquery.
     if isinstance(db, BigqueryDatabase):
         return "RETURN"
     return "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (list,sell)"
