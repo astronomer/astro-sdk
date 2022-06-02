@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 import sqlalchemy
@@ -10,6 +10,7 @@ from astro.constants import (
     AppendConflictStrategy,
     ExportExistsStrategy,
     LoadExistStrategy,
+    MergeConflictStrategy,
 )
 from astro.exceptions import NonExistentTableException
 from astro.files import File
@@ -45,6 +46,9 @@ class BaseDatabase(ABC):
 
     def __init__(self, conn_id: str):
         self.conn_id = conn_id
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}(conn_id="{self.conn_id})'
 
     @property
     def sql_type(self):
@@ -238,6 +242,7 @@ class BaseDatabase(ABC):
         self,
         source_table: Table,
         target_table: Table,
+        source_to_target_columns_map: Dict[str, str],
         if_conflicts: AppendConflictStrategy = "exception",
     ) -> None:
         """
@@ -246,6 +251,27 @@ class BaseDatabase(ABC):
 
         :param source_table: Contains the rows to be appended to the target_table
         :param target_table: Contains the destination table in which the rows will be appended
+        :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names
+        :param if_conflicts: The strategy to be applied if there are conflicts.
+        """
+        raise NotImplementedError
+
+    def merge_table(
+        self,
+        source_table: Table,
+        target_table: Table,
+        source_to_target_columns_map: Dict[str, str],
+        target_conflict_columns: List[str],
+        if_conflicts: MergeConflictStrategy = "exception",
+    ) -> None:
+        """
+        Merge the source table rows into a destination table.
+        The argument `if_conflicts` allows the user to define how to handle conflicts.
+
+        :param source_table: Contains the rows to be merged to the target_table
+        :param target_table: Contains the destination table in which the rows will be merged
+        :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names
+        :param target_conflict_columns: List of cols where we expect to have a conflict while combining
         :param if_conflicts: The strategy to be applied if there are conflicts.
         """
         raise NotImplementedError
