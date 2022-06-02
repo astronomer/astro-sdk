@@ -1,5 +1,5 @@
 """Snowflake database implementation."""
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -152,7 +152,7 @@ class SnowflakeDatabase(BaseDatabase):
         source_table: Table,
         target_table: Table,
         source_to_target_columns_map: Dict[str, str],
-        target_conflict_columns: Optional[List[str]] = None,
+        target_conflict_columns: List[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """
@@ -169,6 +169,7 @@ class SnowflakeDatabase(BaseDatabase):
             source_table=source_table,
             target_table=target_table,
             source_to_target_columns_map=source_to_target_columns_map,
+            target_conflict_columns=target_conflict_columns,
             if_conflicts=if_conflicts,
         )
         self.run_sql(sql_statement=statement, parameters=params)
@@ -178,6 +179,7 @@ class SnowflakeDatabase(BaseDatabase):
         source_table: Table,
         target_table: Table,
         source_to_target_columns_map: Dict[str, str],
+        target_conflict_columns: List[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ):
         """Build the SQL statement for Merge operation"""
@@ -209,11 +211,11 @@ class SnowflakeDatabase(BaseDatabase):
 
         merge_target_dict = {
             f"merge_clause_target_{i}": f"{target_table_name}.{x}"
-            for i, x in enumerate(target_cols)
+            for i, x in enumerate(target_conflict_columns)
         }
         merge_source_dict = {
             f"merge_clause_source_{i}": f"{source_table_name}.{x}"
-            for i, x in enumerate(source_cols)
+            for i, x in enumerate(target_conflict_columns)
         }
         statement = statement.replace(
             "{merge_clauses}",

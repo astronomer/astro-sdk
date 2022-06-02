@@ -46,6 +46,7 @@ class TestSnowflakeMerge(unittest.TestCase):
             source_table=self.source_table,
             target_table=self.target_table,
             source_to_target_columns_map={"sell": "sell"},
+            target_conflict_columns=["sell"],
         )
 
         assert (
@@ -71,6 +72,7 @@ class TestSnowflakeMerge(unittest.TestCase):
                 "sell": "sell",
                 "age": "taxes",
             },
+            target_conflict_columns=["list", "sell"],
             if_conflicts="update",
         )
 
@@ -78,8 +80,7 @@ class TestSnowflakeMerge(unittest.TestCase):
             sql
             == "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
             "on Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0) AND "
-            "Identifier(:merge_clause_target_1)=Identifier(:merge_clause_source_1) AND "
-            "Identifier(:merge_clause_target_2)=Identifier(:merge_clause_source_2) "
+            "Identifier(:merge_clause_target_1)=Identifier(:merge_clause_source_1) "
             f"when matched then UPDATE SET {self.target_table_name}.list={self.source_table_name}.list,"
             f"{self.target_table_name}.sell={self.source_table_name}.sell,"
             f"{self.target_table_name}.taxes={self.source_table_name}.age "
@@ -90,10 +91,8 @@ class TestSnowflakeMerge(unittest.TestCase):
         assert parameters == {
             "merge_clause_source_0": f"{self.source_table_name}.list",
             "merge_clause_source_1": f"{self.source_table_name}.sell",
-            "merge_clause_source_2": f"{self.source_table_name}.age",
             "merge_clause_target_0": f"{self.target_table_name}.list",
             "merge_clause_target_1": f"{self.target_table_name}.sell",
-            "merge_clause_target_2": f"{self.target_table_name}.taxes",
             "target_table": self.target_table_full_name,
             "source_table": self.source_table_full_name,
         }
@@ -103,6 +102,7 @@ class TestSnowflakeMerge(unittest.TestCase):
             source_table=self.source_table,
             target_table=self.target_table,
             source_to_target_columns_map={"sell": "sell"},
+            target_conflict_columns=["sell"],
             if_conflicts="ignore",
         )
 

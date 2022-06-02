@@ -78,7 +78,7 @@ def merge(
     target_table: Table,
     source_table: Table,
     source_to_target_columns_map: Dict[str, str],
-    target_conflict_columns: Optional[List[str]] = None,
+    target_conflict_columns: List[str],
     if_conflicts: MergeConflictStrategy,
     **kwargs,
 ):

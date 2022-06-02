@@ -73,7 +73,7 @@ class SqliteDatabase(BaseDatabase):
         source_table: Table,
         target_table: Table,
         source_to_target_columns_map: Dict[str, str],
-        target_conflict_columns: Optional[List[str]] = None,
+        target_conflict_columns: List[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """
@@ -86,9 +86,6 @@ class SqliteDatabase(BaseDatabase):
         :param target_conflict_columns: List of cols where we expect to have a conflict while combining
         :param if_conflicts: The strategy to be applied if there are conflicts.
         """
-        if not target_conflict_columns:
-            raise ValueError("target_conflict_columns is a required value")
-
         statement = "INSERT INTO {main_table} ({target_columns}) SELECT {append_columns} FROM {source_table} Where true"
         if if_conflicts == "ignore":
             statement += " ON CONFLICT ({merge_keys}) DO NOTHING"
