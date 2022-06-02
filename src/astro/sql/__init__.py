@@ -1,8 +1,9 @@
-from typing import Callable, Iterable, List, Mapping, Optional, Union
+from typing import Callable, Dict, Iterable, List, Mapping, Optional, Union
 
 import pandas as pd
 from airflow.decorators.base import task_decorator_factory
 
+from astro.constants import MergeConflictStrategy
 from astro.sql.operators.append import AppendOperator
 from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.export_file import export_file  # noqa: F401
@@ -74,39 +75,28 @@ def append(
 
 def merge(
     target_table: Table,
-    merge_table: Table,
-    merge_keys: Union[List, dict],
-    target_columns: List[str],
-    merge_columns: List[str],
-    conflict_strategy: str,
+    source_table: Table,
+    target_conflict_columns: List[str],
+    source_to_target_columns_map: Dict[str, str],
+    if_conflicts: MergeConflictStrategy,
     **kwargs,
 ):
-    """`
-    Merge two sql tables
+    """
+    Merge the source table rows into a destination table.
 
-    :param target_table: The primary table that we are merging into
-    :param merge_table: The table that will be inserted
-    :param merge_keys: A key dictionary of what fields we want to compare when determining conflicts.
-        ``{"foo": "bar"}`` would be equivalent to ``main_table.foo=merge_table.bar``
-    :param target_columns: The columns that will be merged into (order matters and needs to be
-    same length as merge_columns
-    :param merge_columns:
-    :param conn_id: connection ID for SQL instance
-    :param conflict_strategy: Do we ignore new values on conflict or overwrite? Two strategies are "ignore" and "update"
-    :param database:
-    :param schema: Snowflake, specific. Specify Snowflake schema
-    :param kwargs:
-    :return: None
-    :rtype: None
+    :param source_table: Contains the rows to be merged to the target_table (templated)
+    :param target_table: Contains the destination table in which the rows will be merged (templated)
+    :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names
+    :param target_conflict_columns: List of cols where we expect to have a conflict while combining
+    :param if_conflicts: The strategy to be applied if there are conflicts.
     """
 
     return MergeOperator(
         target_table=target_table,
-        merge_table=merge_table,
-        merge_keys=merge_keys,
-        target_columns=target_columns,
-        merge_columns=merge_columns,
-        conflict_strategy=conflict_strategy,
+        source_table=source_table,
+        source_to_target_columns_map=source_to_target_columns_map,
+        target_conflict_columns=target_conflict_columns,
+        if_conflicts=if_conflicts,
     ).output
 
 
