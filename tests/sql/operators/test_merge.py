@@ -5,7 +5,6 @@ from typing import List
 import pandas as pd
 import pytest
 from airflow.decorators import task_group
-from airflow.utils import timezone
 
 from astro import sql as aql
 from astro.constants import Database
@@ -15,14 +14,7 @@ from astro.sql.table import Metadata, Table
 from astro.utils.database import create_database_from_conn_id
 from tests.sql.operators import utils as test_utils
 
-DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 CWD = pathlib.Path(__file__).parent
-
-default_args = {
-    "owner": "airflow",
-    "retries": 1,
-    "retry_delay": 0,
-}
 
 
 def merge_keys(sql_server, mode):
@@ -41,9 +33,6 @@ def merge_keys(sql_server, mode):
     if mode == "update":
         keys = ["list", "sell"]
 
-    if sql_name == "snowflake":
-        return {k: k for k in keys}
-
     return keys
 
 
@@ -53,38 +42,34 @@ def merge_parameters(request, sql_server):
     if mode == "single":
         return (
             {
-                "merge_keys": merge_keys(sql_server, mode),
-                "merge_columns": ["list"],
-                "target_columns": ["list"],
-                "conflict_strategy": "ignore",
+                "target_conflict_columns": merge_keys(sql_server, mode),
+                "source_to_target_columns_map": {"list": "list"},
+                "if_conflicts": "ignore",
             },
             mode,
         )
     elif mode == "multi":
         return (
             {
-                "merge_keys": merge_keys(sql_server, mode),
-                "merge_columns": ["list", "sell"],
-                "target_columns": ["list", "sell"],
-                "conflict_strategy": "ignore",
+                "target_conflict_columns": merge_keys(sql_server, mode),
+                "source_to_target_columns_map": {"list": "list", "sell": "sell"},
+                "if_conflicts": "ignore",
             },
             mode,
         )
     # elif mode == "update":
     return (
         {
-            "merge_keys": merge_keys(sql_server, mode),
-            "target_columns": ["list", "sell", "taxes"],
-            "merge_columns": ["list", "sell", "age"],
-            "conflict_strategy": "update",
+            "target_conflict_columns": merge_keys(sql_server, mode),
+            "source_to_target_columns_map": {
+                "list": "list",
+                "sell": "sell",
+                "age": "taxes",
+            },
+            "if_conflicts": "update",
         },
         mode,
     )
-
-
-@aql.transform
-def do_a_thing(input_table: Table):
-    return "SELECT * FROM {{input_table}}"
 
 
 @aql.run_raw_sql
@@ -121,12 +106,10 @@ def validate_results(df: pd.DataFrame, mode, sql_type):
     if mode == "single":
         assert set_compare(df.age.to_list()[:-1], [60.0, 12.0, 41.0, 22.0])
         assert set_compare(df.taxes.to_list()[:-1], [3167.0, 4033.0, 1471.0, 3204.0])
-        assert set_compare(df.taxes.to_list()[:-1], [3167.0, 4033.0, 1471.0, 3204.0])
         assert set_compare(df.list.to_list(), [160, 180, 132, 140, 240])
         assert set_compare(df.sell.to_list()[:-1], [142, 175, 129, 138])
     elif mode == "multi":
         assert set_compare(df.age.to_list()[:-1], [60.0, 12.0, 41.0, 22.0])
-        assert set_compare(df.taxes.to_list()[:-1], [3167.0, 4033.0, 1471.0, 3204.0])
         assert set_compare(df.taxes.to_list()[:-1], [3167.0, 4033.0, 1471.0, 3204.0])
         assert set_compare(df.list.to_list(), [160, 180, 132, 140, 240])
         assert set_compare(df.sell.to_list()[:-1], [142, 175, 129, 138])
@@ -137,11 +120,11 @@ def validate_results(df: pd.DataFrame, mode, sql_type):
 
 @task_group
 def run_merge(output_specs: List[Table], merge_parameters, mode, sql_type):
-    con1 = add_constraint(output_specs[0], merge_parameters["merge_keys"])
+    con1 = add_constraint(output_specs[0], merge_parameters["target_conflict_columns"])
 
     merged_table = aql.merge(
         target_table=output_specs[0],
-        merge_table=output_specs[1],
+        source_table=output_specs[1],
         **merge_parameters,
     )
     con1 >> merged_table
@@ -229,11 +212,10 @@ def test_merge_with_the_same_schema(database_table_fixture, tables_fixture, samp
     with sample_dag:
         aql.merge(
             target_table=first_table,
-            merge_table=second_table,
-            merge_keys=["id"],
-            target_columns=["id", "name"],
-            merge_columns=["id", "name"],
-            conflict_strategy="update",
+            source_table=second_table,
+            target_conflict_columns=["id"],
+            source_to_target_columns_map={"id": "id", "name": "name"},
+            if_conflicts="update",
         )
 
     test_utils.run_dag(sample_dag)
@@ -299,11 +281,10 @@ def test_merge_with_different_schemas(
     with sample_dag:
         aql.merge(
             target_table=first_table,
-            merge_table=second_table,
-            merge_keys=["id"],
-            target_columns=["id", "name"],
-            merge_columns=["id", "name"],
-            conflict_strategy="update",
+            source_table=second_table,
+            target_conflict_columns=["id"],
+            source_to_target_columns_map={"id": "id", "name": "name"},
+            if_conflicts="update",
         )
 
     test_utils.run_dag(sample_dag)

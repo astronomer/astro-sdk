@@ -25,20 +25,6 @@ default_args = {
 }
 
 
-def merge_keys(sql_server):
-    """
-    To match with their respective API's, we have a slightly different "merge_keys" value
-    when a user is using snowflake.
-    :param sql_server:
-    :return:
-    """
-    sql_name, _ = sql_server
-
-    if sql_name == "snowflake":
-        return {"list": "list", "sell": "sell"}
-    return ["list", "sell"]
-
-
 @aql.transform
 def apply_transform(input_table: Table):
     return "SELECT * FROM {{input_table}}"
@@ -96,7 +82,7 @@ def run_append(output_specs: Table):
 
 
 @task_group
-def run_merge(output_specs: Table, merge_keys):
+def run_merge(output_specs: Table):
     main_table = aql.load_file(
         input_file=File(path=str(CWD) + "/data/homes_merge_1.csv"),
         output_table=output_specs,
@@ -110,11 +96,10 @@ def run_merge(output_specs: Table, merge_keys):
 
     merged_table = aql.merge(
         target_table=main_table,
-        merge_table=merge_table,
-        merge_keys=merge_keys,
-        target_columns=["list", "sell"],
-        merge_columns=["list", "sell"],
-        conflict_strategy="ignore",
+        source_table=merge_table,
+        target_conflict_columns=["list", "sell"],
+        source_to_target_columns_map={"list": "list", "sell": "sell"},
+        if_conflicts="ignore",
     )
     con1 >> merged_table
 
@@ -139,7 +124,7 @@ def test_full_dag(sql_server, sample_dag, test_table):
         tranformed_table = apply_transform(loaded_table)
         run_dataframe_funcs(tranformed_table)
         run_append(output_table)
-        run_merge(output_table, merge_keys(sql_server))
+        run_merge(output_table)
         aql.export_file(
             input_data=tranformed_table,
             output_file=File(path="/tmp/out_agg.csv"),

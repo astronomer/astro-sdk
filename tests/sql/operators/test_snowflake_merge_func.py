@@ -1,155 +1,122 @@
-"""
-Unittest module to test Operators.
-
-Requires the unittest, pytest, and requests-mock Python libraries.
-
-"""
-
 import logging
 import os
-import pathlib
 import unittest
 
-from airflow.utils import timezone
-
 # Import Operator
+from astro.databases import create_database
+from astro.databases.snowflake import SnowflakeDatabase, is_valid_snow_identifier
 from astro.sql.table import Metadata, Table
-from astro.utils.snowflake_merge_func import (
-    is_valid_snow_identifier,
-    snowflake_merge_func,
-)
 from tests.sql.operators import utils as test_utils
 
 log = logging.getLogger(__name__)
-DEFAULT_DATE = timezone.datetime(2016, 1, 1)
-
-
-# Mock the `conn_sample` Airflow connection
-def drop_table(table_name, postgres_conn):
-    cursor = postgres_conn.cursor()
-    cursor.execute(f"DROP TABLE IF EXISTS {table_name} CASCADE;")
-    postgres_conn.commit()
-    cursor.close()
-    postgres_conn.close()
 
 
 class TestSnowflakeMerge(unittest.TestCase):
-    """
-    Test Sample Operator.
-    """
-
-    cwd = pathlib.Path(__file__).parent
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-
     def setUp(self):
-        self.main_table_name = test_utils.get_table_name("merge_test_1")
-        self.main_table = Table(
-            name=self.main_table_name,
+        self.target_table_name = test_utils.get_table_name("merge_test_1")
+        self.target_table = Table(
+            name=self.target_table_name,
             metadata=Metadata(
                 database=os.getenv("SNOWFLAKE_DATABASE"),
                 schema=os.getenv("SNOWFLAKE_SCHEMA"),
             ),
             conn_id="snowflake_conn",
         )
-        self.merge_table_name = test_utils.get_table_name("merge_test_2")
-        self.merge_table = Table(
-            name=self.merge_table_name,
+        self.source_table_name = test_utils.get_table_name("merge_test_2")
+        self.source_table = Table(
+            name=self.source_table_name,
             metadata=Metadata(
                 database=os.getenv("SNOWFLAKE_DATABASE"),
                 schema=os.getenv("SNOWFLAKE_SCHEMA"),
             ),
             conn_id="snowflake_conn",
         )
-        super().setUp()
+        self.snowflake_db: SnowflakeDatabase = create_database(conn_id="snowflake_conn")
 
-    def tearDown(self):
-        test_utils.drop_table_snowflake(
-            table_name=self.main_table_name,
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-            conn_id="snowflake_conn",
+        self.target_table_full_name = self.snowflake_db.get_table_qualified_name(
+            self.target_table
         )
-        test_utils.drop_table_snowflake(
-            table_name=self.merge_table_name,
-            schema=os.getenv("SNOWFLAKE_SCHEMA"),
-            database=os.getenv("SNOWFLAKE_DATABASE"),
-            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-            conn_id="snowflake_conn",
+        self.source_table_full_name = self.snowflake_db.get_table_qualified_name(
+            self.source_table
         )
 
     def test_merge_func(self):
-        sql, parameters = snowflake_merge_func(
-            target_table=self.main_table,
-            merge_table=self.merge_table,
-            merge_keys={"sell": "sell"},
-            target_columns=["sell"],
-            merge_columns=["sell"],
-            conflict_strategy="update",
+        sql, parameters = self.snowflake_db._build_merge_sql(
+            if_conflicts="update",
+            source_table=self.source_table,
+            target_table=self.target_table,
+            source_to_target_columns_map={"sell": "sell"},
+            target_conflict_columns=["sell"],
         )
 
         assert (
-            sql == "merge into {{main_table}} using {{merge_table}} "
-            "on Identifier({{merge_clause_target_0}})=Identifier({{merge_clause_append_0}}) "
-            f"when matched then UPDATE SET {self.main_table_name}.sell={self.merge_table_name}.sell "
-            f"when not matched then insert({self.main_table_name}.sell) values ({self.merge_table_name}.sell)"
+            sql
+            == "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
+            "on Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0) "
+            f"when matched then UPDATE SET {self.target_table_name}.sell={self.source_table_name}.sell "
+            f"when not matched then insert({self.target_table_name}.sell) values ({self.source_table_name}.sell)"
         )
         assert parameters == {
-            "merge_clause_target_0": f"{self.main_table_name}.sell",
-            "merge_clause_append_0": f"{self.merge_table_name}.sell",
-            "main_table": self.main_table,
-            "merge_table": self.merge_table,
+            "merge_clause_target_0": f"{self.target_table_name}.sell",
+            "merge_clause_source_0": f"{self.source_table_name}.sell",
+            "target_table": self.target_table_full_name,
+            "source_table": self.source_table_full_name,
         }
 
     def test_merge_func_multiple_clause(self):
-        sql, parameters = snowflake_merge_func(
-            target_table=self.main_table,
-            merge_table=self.merge_table,
-            merge_keys={"sell": "sell", "foo": "bar"},
-            target_columns=["sell"],
-            merge_columns=["sell"],
-            conflict_strategy="update",
+        sql, parameters = self.snowflake_db._build_merge_sql(
+            source_table=self.source_table,
+            target_table=self.target_table,
+            source_to_target_columns_map={
+                "list": "list",
+                "sell": "sell",
+                "age": "taxes",
+            },
+            target_conflict_columns=["list", "sell"],
+            if_conflicts="update",
         )
 
         assert (
-            sql == "merge into {{main_table}} using {{merge_table}} "
-            "on Identifier({{merge_clause_target_0}})=Identifier({{merge_clause_append_0}}) AND "
-            "Identifier({{merge_clause_target_1}})=Identifier({{merge_clause_append_1}}) "
-            f"when matched then UPDATE SET {self.main_table_name}.sell={self.merge_table_name}.sell "
-            f"when not matched then insert({self.main_table_name}.sell) values ({self.merge_table_name}.sell)"
+            sql
+            == "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
+            "on Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0) AND "
+            "Identifier(:merge_clause_target_1)=Identifier(:merge_clause_source_1) "
+            f"when matched then UPDATE SET {self.target_table_name}.list={self.source_table_name}.list,"
+            f"{self.target_table_name}.sell={self.source_table_name}.sell,"
+            f"{self.target_table_name}.taxes={self.source_table_name}.age "
+            f"when not matched then "
+            f"insert({self.target_table_name}.list,{self.target_table_name}.sell,{self.target_table_name}.taxes) "
+            f"values ({self.source_table_name}.list,{self.source_table_name}.sell,{self.source_table_name}.age)"
         )
         assert parameters == {
-            "merge_clause_append_0": f"{self.merge_table_name}.sell",
-            "merge_clause_append_1": f"{self.merge_table_name}.bar",
-            "merge_clause_target_0": f"{self.main_table_name}.sell",
-            "merge_clause_target_1": f"{self.main_table_name}.foo",
-            "main_table": self.main_table,
-            "merge_table": self.merge_table,
+            "merge_clause_source_0": f"{self.source_table_name}.list",
+            "merge_clause_source_1": f"{self.source_table_name}.sell",
+            "merge_clause_target_0": f"{self.target_table_name}.list",
+            "merge_clause_target_1": f"{self.target_table_name}.sell",
+            "target_table": self.target_table_full_name,
+            "source_table": self.source_table_full_name,
         }
 
     def test_merge_fun_ignore(self):
-        sql, parameters = snowflake_merge_func(
-            target_table=self.main_table,
-            merge_table=self.merge_table,
-            merge_keys={"sell": "sell"},
-            target_columns=["sell"],
-            merge_columns=["sell"],
-            conflict_strategy="ignore",
+        sql, parameters = self.snowflake_db._build_merge_sql(
+            source_table=self.source_table,
+            target_table=self.target_table,
+            source_to_target_columns_map={"sell": "sell"},
+            target_conflict_columns=["sell"],
+            if_conflicts="ignore",
         )
 
         assert (
-            sql == "merge into {{main_table}} using {{merge_table}} "
-            "on Identifier({{merge_clause_target_0}})=Identifier({{merge_clause_append_0}}) "
-            f"when not matched then insert({self.main_table_name}.sell) values ({self.merge_table_name}.sell)"
+            sql
+            == "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
+            "on Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0) "
+            f"when not matched then insert({self.target_table_name}.sell) values ({self.source_table_name}.sell)"
         )
         assert parameters == {
-            "merge_clause_target_0": f"{self.main_table_name}.sell",
-            "merge_clause_append_0": f"{self.merge_table_name}.sell",
-            "main_table": self.main_table,
-            "merge_table": self.merge_table,
+            "merge_clause_target_0": f"{self.target_table_name}.sell",
+            "merge_clause_source_0": f"{self.source_table_name}.sell",
+            "target_table": self.target_table_full_name,
+            "source_table": self.source_table_full_name,
         }
 
     def test_is_valid_snow_identifier(self):
