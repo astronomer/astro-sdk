@@ -45,13 +45,14 @@ def create_dag(database_name, table_args, dataset):
 
     with DAG(dag_name, schedule_interval=None, start_date=START_DATE) as dag:
         chunk_size = int(os.environ["ASTRO_CHUNKSIZE"])
-        metadata = Metadata(table_args.pop("metadata"))
+
+        metadata = Metadata(**table_args.pop("metadata"))
         table_metadata = Table(name=table_name, metadata=metadata, **table_args)
         table_xcom = aql.load_file(  # noqa: F841
             input_file=File(path=dataset_path),
             task_id="load_csv",
             output_table=table_metadata,
-            chunksize=chunk_size,
+            chunk_size=chunk_size,
         )
 
         # Todo: Check is broken so the following code is commented out, uncomment when fixed
@@ -70,5 +71,7 @@ for database in config["databases"]:
     database_name = database["name"]
     table_args = database["params"]
     for dataset in config["datasets"]:
-        dag = create_dag(database_name, table_args, dataset)
+        table_args_copy = table_args.copy()
+
+        dag = create_dag(database_name, table_args_copy, dataset)
         globals()[dag.dag_id] = dag
