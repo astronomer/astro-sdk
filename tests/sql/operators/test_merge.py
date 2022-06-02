@@ -172,7 +172,7 @@ def test_merge(
     with sample_dag:
         run_merge(
             target_table=target_table,
-            merge_table=merge_table,
+            source_table=merge_table,
             database=database,
             merge_parameters=merge_params,
             mode=mode,

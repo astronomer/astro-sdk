@@ -540,7 +540,7 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
 
     chunk_size_argument = {
         "bigquery": "chunksize",
-        "postgres": "chunksize",
+        "postgresql": "chunksize",
         "snowflake": "chunk_size",
     }[db.sql_type]
 
@@ -639,7 +639,7 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_sep_params(
     ],
 )
 def test_aql_nested_ndjson_file_to_bigquery_explicit_illegal_sep_params(
-    sample_dag, database_table_fixture, test_table
+    sample_dag, database_table_fixture
 ):
     """Test the flattening of single level nested ndjson, with explicit separator illegal '.',
     since '.' is not acceptable in col names in bigquery.
