@@ -1,5 +1,5 @@
 """Google BigQuery table implementation."""
-from typing import List
+from typing import Dict, List
 
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
 from astro import settings
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
+from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.sql.table import Metadata, Table
 
@@ -81,3 +81,44 @@ class BigqueryDatabase(BaseDatabase):
             chunksize=chunk_size,
             project_id=self.hook.project_id,
         )
+
+    def merge_table(
+        self,
+        source_table: Table,
+        target_table: Table,
+        source_to_target_columns_map: Dict[str, str],
+        target_conflict_columns: List[str],
+        if_conflicts: MergeConflictStrategy = "exception",
+    ) -> None:
+        """
+        Merge the source table rows into a destination table.
+        The argument `if_conflicts` allows the user to define how to handle conflicts.
+
+        :param source_table: Contains the rows to be merged to the target_table
+        :param target_table: Contains the destination table in which the rows will be merged
+        :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names
+        :param target_conflict_columns: List of cols where we expect to have a conflict while combining
+        :param if_conflicts: The strategy to be applied if there are conflicts.
+        """
+
+        source_columns = list(source_to_target_columns_map.keys())
+        target_columns = list(source_to_target_columns_map.values())
+
+        target_table_name = self.get_table_qualified_name(target_table)
+        source_table_name = self.get_table_qualified_name(source_table)
+
+        statement = f"MERGE {target_table_name} T USING {source_table_name} S\
+            ON {' AND '.join(['T.' + col + '= S.' + col for col in target_conflict_columns])}\
+            WHEN NOT MATCHED BY TARGET THEN INSERT ({','.join(target_columns)}) VALUES ({','.join(source_columns)})"
+
+        if if_conflicts == "update":
+            update_statement = "UPDATE SET {}".format(
+                ", ".join(
+                    [
+                        f"T.{target_columns[idx]}=S.{source_columns[idx]}"
+                        for idx in range(len(target_columns))
+                    ]
+                )
+            )
+            statement += f" WHEN MATCHED THEN {update_statement}"
+        self.run_sql(sql_statement=statement)

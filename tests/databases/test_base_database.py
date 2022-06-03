@@ -40,4 +40,4 @@ def test_subclass_missing_append_table_raises_exception():
     source_table = Table()
     target_table = Table()
     with pytest.raises(NotImplementedError):
-        db.append_table(source_table, target_table)
+        db.append_table(source_table, target_table, source_to_target_columns_map={})

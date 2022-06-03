@@ -204,7 +204,12 @@ def test_export_table_to_file_file_already_exists_raises_exception(
         {
             "database": Database.SNOWFLAKE,
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
-            "table": Table(metadata=Metadata(schema=SCHEMA, database="snowflake")),
+            "table": Table(
+                metadata=Metadata(
+                    schema=os.getenv("SNOWFLAKE_SCHEMA", SCHEMA),
+                    database=os.getenv("SNOWFLAKE_DATABASE", "snowflake"),
+                )
+            ),
         },
     ],
     indirect=True,
