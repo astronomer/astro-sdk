@@ -8,7 +8,6 @@ from airflow.utils import timezone
 from airflow.utils.session import create_session
 
 import astro.sql as aql
-from astro import dataframe as adf
 from astro.sql.table import Metadata, Table
 from tests.sql.operators import utils as test_utils
 
@@ -35,7 +34,7 @@ def cleanup():
         session.query(TI).delete()
 
 
-@adf
+@aql.dataframe
 def validate(df: pd.DataFrame):
     assert len(df) == 12
     assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
@@ -137,7 +136,7 @@ def test_postgres_join(sample_dag, test_table, sql_server):
             "WHERE last_name LIKE {{unsafe_parameter}} GROUP BY {{actor}}.actor_id"
         )
 
-    @adf
+    @aql.dataframe
     def validate(df: pd.DataFrame):
         assert df.iloc[0].to_dict() == {
             "actor_id": 191,
@@ -161,7 +160,7 @@ def test_postgres_join(sample_dag, test_table, sql_server):
 
 
 def test_postgres_set_op_kwargs(sample_dag):
-    @adf
+    @aql.dataframe
     def validate_result(df: pd.DataFrame):
         assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
 

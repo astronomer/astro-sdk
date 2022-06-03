@@ -93,7 +93,7 @@ class LoadFile(BaseOperator):
         self.log.info("Completed loading the data into %s.", self.output_table)
         return self.output_table
 
-    def load_data_to_dataframe(self, input_file: File) -> pd.DataFrame:
+    def load_data_to_dataframe(self, input_file: File) -> Optional[pd.DataFrame]:
         """
         Loads csv/parquet file from local/S3/GCS with Pandas. Returns dataframe as no
         SQL table was specified

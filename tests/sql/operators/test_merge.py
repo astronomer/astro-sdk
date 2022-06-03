@@ -9,7 +9,7 @@ from airflow.utils import timezone
 
 from astro import sql as aql
 from astro.constants import Database
-from astro.dataframe import dataframe as adf
+from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
 from astro.utils.database import create_database_from_conn_id
@@ -104,7 +104,7 @@ def add_constraint(table: Table, columns):
     )
 
 
-@adf
+@aql.dataframe
 def validate_results(df: pd.DataFrame, mode, sql_type):
     # make columns lower and reverse due to snowflake defaulting to uppercase
     # Also reverse because BQ and snowflake seem to reverse row order
@@ -193,3 +193,129 @@ def test_merge(sql_server, sample_dag, test_table, merge_parameters):
     with sample_dag:
         run_merge(test_table, merge_params, mode, sql_type)
     test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [{"database": Database.SNOWFLAKE}, {"database": Database.BIGQUERY}],
+    indirect=True,
+    ids=["snowflake", "bigquery"],
+)
+@pytest.mark.parametrize(
+    "tables_fixture",
+    [
+        {
+            "items": [
+                {"file": File(str(pathlib.Path(CWD.parent.parent, "data/sample.csv")))},
+                {
+                    "file": File(
+                        str(pathlib.Path(CWD.parent.parent, "data/sample_part2.csv"))
+                    )
+                },
+            ]
+        }
+    ],
+    indirect=True,
+    ids=["two_tables_same_schema"],
+)
+def test_merge_with_the_same_schema(database_table_fixture, tables_fixture, sample_dag):
+    """
+    Validate that the output of merge is what we expect.
+    """
+    database, _ = database_table_fixture
+    first_table, second_table = tables_fixture
+
+    with sample_dag:
+        aql.merge(
+            target_table=first_table,
+            merge_table=second_table,
+            merge_keys=["id"],
+            target_columns=["id", "name"],
+            merge_columns=["id", "name"],
+            conflict_strategy="update",
+        )
+
+    test_utils.run_dag(sample_dag)
+    computed = database.export_table_to_pandas_dataframe(first_table)
+    computed = computed.sort_values(by="id", ignore_index=True)
+    expected = pd.DataFrame(
+        [
+            {"id": 1, "name": "First"},
+            {"id": 2, "name": "Second"},
+            {"id": 3, "name": "Third with unicode पांचाल"},
+            {"id": 4, "name": "Czwarte imię"},
+        ]
+    )
+
+    test_utils.assert_dataframes_are_equal(computed, expected)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [{"database": Database.BIGQUERY}],
+    indirect=True,
+    ids=["bigquery"],
+)
+@pytest.mark.parametrize(
+    "tables_fixture",
+    [
+        {
+            "items": [
+                {
+                    "table": Table(
+                        conn_id="bigquery",
+                        metadata=Metadata(schema="first_table_schema"),
+                    ),
+                    "file": File(
+                        str(pathlib.Path(CWD.parent.parent, "data/sample.csv"))
+                    ),
+                },
+                {
+                    "table": Table(
+                        conn_id="bigquery",
+                        metadata=Metadata(schema="second_table_schema"),
+                    ),
+                    "file": File(
+                        str(pathlib.Path(CWD.parent.parent, "data/sample_part2.csv"))
+                    ),
+                },
+            ]
+        }
+    ],
+    indirect=True,
+    ids=["two_tables"],
+)
+def test_merge_with_different_schemas(
+    database_table_fixture, tables_fixture, sample_dag
+):
+    """
+    Validate that the output of merge is what we expect.
+    """
+    database, _ = database_table_fixture
+    first_table, second_table = tables_fixture
+
+    with sample_dag:
+        aql.merge(
+            target_table=first_table,
+            merge_table=second_table,
+            merge_keys=["id"],
+            target_columns=["id", "name"],
+            merge_columns=["id", "name"],
+            conflict_strategy="update",
+        )
+
+    test_utils.run_dag(sample_dag)
+    computed = database.export_table_to_pandas_dataframe(first_table)
+    computed = computed.sort_values(by="id", ignore_index=True)
+    expected = pd.DataFrame(
+        [
+            {"id": 1, "name": "First"},
+            {"id": 2, "name": "Second"},
+            {"id": 3, "name": "Third with unicode पांचाल"},
+            {"id": 4, "name": "Czwarte imię"},
+        ]
+    )
+
+    test_utils.assert_dataframes_are_equal(computed, expected)

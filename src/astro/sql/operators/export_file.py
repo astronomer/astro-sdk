@@ -48,8 +48,7 @@ class ExportFile(BaseOperator):
             df = self.input_data
         else:
             raise ValueError(
-                "Expected input_table to be Table or dataframe. Got %s",
-                type(self.input_data),
+                f"Expected input_table to be Table or dataframe. Got {type(self.input_data)}"
             )
         # Write file if overwrite == True or if file doesn't exist.
         if self.if_exists == "replace" or not self.output_file.exists():

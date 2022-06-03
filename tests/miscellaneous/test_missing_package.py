@@ -51,9 +51,6 @@ class TestMissingPackages(unittest.TestCase):
         sys.modules.pop("astro.utils.dependencies", None)
         super().setUpClass()
 
-    def setUp(self):
-        super().setUp()
-
     def test_missing_bigquery_package(self):
         with unittest.mock.patch("builtins.__import__", import_mock):
             from astro.utils.dependencies import BigQueryHook

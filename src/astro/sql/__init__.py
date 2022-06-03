@@ -1,9 +1,13 @@
 from typing import Callable, Iterable, List, Mapping, Optional, Union
 
-from astro.sql.operators.agnostic_sql_append import SqlAppendOperator
-from astro.sql.operators.agnostic_sql_merge import SqlMergeOperator
+import pandas as pd
+from airflow.decorators.base import task_decorator_factory
+
+from astro.sql.operators.append import AppendOperator
+from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.export_file import export_file  # noqa: F401
 from astro.sql.operators.load_file import load_file  # noqa: F401
+from astro.sql.operators.merge import MergeOperator
 from astro.sql.operators.transform import transform_decorator  # noqa: F401
 from astro.sql.operators.truncate import TruncateOperator
 from astro.sql.table import Table
@@ -59,7 +63,7 @@ def append(
         columns = []
     if casted_columns is None:
         casted_columns = {}
-    return SqlAppendOperator(
+    return AppendOperator(
         main_table=main_table,
         append_table=append_table,
         columns=columns,
@@ -96,7 +100,7 @@ def merge(
     :rtype: None
     """
 
-    return SqlMergeOperator(
+    return MergeOperator(
         target_table=target_table,
         merge_table=merge_table,
         merge_keys=merge_keys,
@@ -116,3 +120,33 @@ def truncate(
     """
 
     return TruncateOperator(table=table, **kwargs)
+
+
+def dataframe(
+    python_callable: Optional[Callable] = None,
+    multiple_outputs: Optional[bool] = None,
+    conn_id: str = "",
+    database: Optional[str] = None,
+    schema: Optional[str] = None,
+    task_id: Optional[str] = None,
+    identifiers_as_lower: Optional[bool] = True,
+) -> Callable[..., pd.DataFrame]:
+    """
+    This function allows a user to run python functions in Airflow but with the huge benefit that SQL files
+    will automatically be turned into dataframes and resulting dataframes can automatically used in astro.sql functions
+    """
+    param_map = {
+        "conn_id": conn_id,
+        "database": database,
+        "schema": schema,
+        "identifiers_as_lower": identifiers_as_lower,
+    }
+    if task_id:
+        param_map["task_id"] = task_id
+    decorated_function: Callable[..., pd.DataFrame] = task_decorator_factory(
+        python_callable=python_callable,
+        multiple_outputs=multiple_outputs,
+        decorated_operator_class=DataframeOperator,  # type: ignore
+        **param_map,
+    )
+    return decorated_function

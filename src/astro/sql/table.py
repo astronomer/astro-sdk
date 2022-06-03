@@ -39,6 +39,8 @@ class Table:
     Temporary tables are prefixed with the prefix TEMP_PREFIX.
     """
 
+    template_fields = ("name",)
+
     # TODO: discuss alternative names to this class, since it contains metadata as opposed to be the
     # SQL table itself
     # Some ideas: TableRef, TableMetadata, TableData, TableDataset

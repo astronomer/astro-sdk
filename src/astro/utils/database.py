@@ -6,8 +6,8 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine, ResultProxy
 
 from astro.constants import CONN_TYPE_TO_DATABASE, Database
-from astro.sqlite_utils import create_sqlalchemy_engine_with_sqlite
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
+from astro.utils.sqlite_utils import create_sqlalchemy_engine_with_sqlite
 
 
 def create_database_from_conn_id(conn_id: str) -> Database:

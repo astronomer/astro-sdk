@@ -1,5 +1,41 @@
 # Changelog
 
+## 0.9.1
+
+Bug fix:
+* Table unable to have Airflow templated names [#413](https://github.com/astronomer/astro-sdk/issues/413)
+
+
+## 0.9.0
+
+Enhancements:
+* Introduction of the user-facing `Table`, `Metadata` and `File` classes
+
+Breaking changes:
+* The operator `save_file` became `export_file`
+* The tasks `load_file`, `export_file` (previously `save_file`) and `run_raw_sql` should be used with use `Table`, `Metadata` and `File` instances
+* The decorators `dataframe`, `run_raw_sql` and `transform` should be used with `Table` and `Metadata` instances
+* The operators `aggregate_check`, `boolean_check`, `render` and `stats_check` were temporarily removed
+* The class `TempTable` was removed. It is possible to declare temporary tables by using `Table(temp=True)`. All the temporary tables names are prefixed with `_tmp_`. If the user decides to name a `Table`, it is no longer temporary, unless the user enforces it to be.
+* The only mandatory property of a `Table` instance is `conn_id`. If no metadata is given, the library will try to extract schema and other information from the connection object. If it is missing, it will default to the `AIRFLOW__ASTRO__SQL_SCHEMA` environment variable.
+
+Internals:
+* Major refactor introducing `Database`, `File`, `FileType` and `FileLocation` concepts.
+
+## 0.8.4
+
+Enhancements:
+* Add support for Airflow 2.3 [#367](https://github.com/astronomer/astro-sdk/pull/367).
+
+Breaking change:
+* We have renamed the artifacts we released to `astro-sdk-python` from `astro-projects`.
+`0.8.4` is the last version for which we have published both `astro-sdk-python` and `astro-projects`.
+
+## 0.8.3
+
+Bug fix:
+* Do not attempt to create a schema if it already exists [#329](https://github.com/astronomer/astro-sdk/issues/329).
+
 ## 0.8.2
 
 Bug fix:

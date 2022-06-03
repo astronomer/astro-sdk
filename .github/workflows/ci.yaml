@@ -97,7 +97,7 @@ jobs:
       AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
       AIRFLOW_VAR_FOO: templated_file_name
       FORCE_COLOR: "true"
-  Run-Unit-tests:
+  Run-Unit-tests-Airflow-2-3:
     strategy:
       fail-fast: false
       matrix:
@@ -128,12 +128,12 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+          key: ${{ runner.os }}-2.3-${{ hashFiles('pyproject.toml') }}
       - run: cat .github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s test -- --splits 12 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-3.8(airflow='2.3')" -- --splits 12 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
@@ -162,9 +162,67 @@ jobs:
       AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
       AIRFLOW_VAR_FOO: templated_file_name
 
+  Run-Unit-tests-Airflow-2-2-5:
+    runs-on: ubuntu-latest
+    needs:
+      - Run-Unit-tests-Airflow-2-3
+    services:
+      postgres:
+        # Docker Hub image
+        image: dimberman/pagila-test
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-2.2.5-${{ hashFiles('pyproject.toml') }}
+      - run: cat .github/ci-test-connections.yaml > test-connections.yaml
+      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
+      - run: pip3 install nox
+      - run: nox -s "test-3.8(airflow='2.2.5')" -- "tests/test_example_dags.py"
+    env:
+      AWS_BUCKET: tmp9
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
+      GOOGLE_BUCKET: dag-authoring
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AIRFLOW__ASTRO__SQL_SCHEMA: astroflow_ci
+      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_SCHEMA: ASTROFLOW_CI
+      SNOWFLAKE_DATABASE: SANDBOX
+      SNOWFLAKE_WAREHOUSE: DEMO
+      SNOWFLAKE_HOST: https://gp21411.us-east-1.snowflakecomputing.com
+      SNOWFLAKE_ACCOUNT: gp21411
+      SNOWFLAKE_REGION: us-east-1
+      SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
+      AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
+      AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
+      AIRFLOW_VAR_FOO: templated_file_name
+
   Code-Coverage:
     needs:
-      - Run-Unit-tests
+      - Run-Unit-tests-Airflow-2-3
       - Run-Optional-Packages-tests
     runs-on: ubuntu-latest
     steps:

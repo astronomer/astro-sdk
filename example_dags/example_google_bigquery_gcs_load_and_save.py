@@ -19,7 +19,6 @@ from airflow.models.dag import DAG
 from airflow.utils import timezone
 
 import astro.sql as aql
-from astro import dataframe
 from astro.files import File
 from astro.sql.table import Metadata, Table
 
@@ -41,7 +40,7 @@ with DAG(
     )
 
     # Setting "identifiers_as_lower" to True will lowercase all column names
-    @dataframe(identifiers_as_lower=False)
+    @aql.dataframe(identifiers_as_lower=False)
     def extract_top_5_movies(input_df: pd.DataFrame):
         print(f"Total Number of records: {len(input_df)}")
         top_5_movies = input_df.sort_values(by="Rating", ascending=False)[
