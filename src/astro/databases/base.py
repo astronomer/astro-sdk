@@ -377,7 +377,7 @@ class BaseDatabase(ABC):
         :param source_columns: List of columns in source table
         """
         sel = select(source_columns).select_from(source_table)
-        return insert(target_table).from_select(target_columns, sel)
+        return insert(target_table).from_select(target_columns, sel), {}
 
     def combine_tables(
         self,
@@ -397,7 +397,7 @@ class BaseDatabase(ABC):
         :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names,
         """
         target_table_sqla = self.get_sqla_table(target_table)
-        source_table_sqla = self.get_sqla_table(target_table)
+        source_table_sqla = self.get_sqla_table(source_table)
         if (
             source_to_target_columns_map is None
             or len(source_to_target_columns_map) == 0
@@ -409,7 +409,7 @@ class BaseDatabase(ABC):
             source_cols = [column(c) for c in source_to_target_columns_map.keys()]
 
         if if_conflict == "exception":
-            self._append_table(
+            sql, params = self._append_table(
                 target_table=target_table_sqla,
                 source_table=source_table_sqla,
                 target_columns=target_cols,
@@ -421,11 +421,13 @@ class BaseDatabase(ABC):
                     "With if_conflict values update, ignore, target_conflict_columns is mandatory param"
                 )
 
-            self._merge_table(
+            sql, params = self._merge_table(
                 source_table=source_table,
                 target_table=target_table,
                 if_conflicts=if_conflict,
-                target_columns=target_cols,
-                source_columns=source_cols,
+                target_columns=[col.name for col in target_cols],
+                source_columns=[col.name for col in source_cols],
                 target_conflict_columns=target_conflict_columns,
             )
+
+        self.run_sql(sql_statement=sql, parameters=params)

@@ -1,5 +1,5 @@
 """Postgres database implementation."""
-from typing import Dict, List, Optional
+from typing import List
 
 import pandas as pd
 import sqlalchemy
@@ -127,45 +127,42 @@ class PostgresDatabase(BaseDatabase):
         inspector = sqlalchemy.inspect(self.sqlalchemy_engine)
         return bool(inspector.dialect.has_table(self.connection, table.name, schema))
 
-    def combine_tables(
+    def _merge_table(
         self,
         source_table: Table,
         target_table: Table,
-        source_to_target_columns_map: Dict[str, str],
-        target_conflict_columns: Optional[List[str]] = None,
-        if_conflict: AppendConflictStrategy = "exception",
-    ) -> None:
+        if_conflicts: AppendConflictStrategy,
+        target_conflict_columns: List[str],
+        target_columns: List[str],
+        source_columns: List[str],
+    ):
         """Combine two tables based on target_conflict_columns
 
         :param source_table: Contains the table to be added to the target_table
         :param target_table: Contains the destination table in which the rows will be added
         :param target_conflict_columns: List of cols where we expect to have a conflict while combining
-        :param if_conflict: Action that needs to be taken in case there is a
+        :param if_conflicts: Action that needs to be taken in case there is a
         conflict due to col constraint
-        :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names,
+        :param target_columns: Dict of target_table columns names to source_table columns names,
+        :param source_columns: Dict of target_table columns names to source_table columns names,
         """
-        target_conflict_columns = target_conflict_columns or []
-        source_to_target_columns_map = source_to_target_columns_map or {}
-
-        source_tables_cols: List[str] = list(source_to_target_columns_map.keys())
-        target_tables_cols: List[str] = list(source_to_target_columns_map.values())
 
         def identifier_args(table):
             schema = table.metadata.schema
             return (schema, table.name) if schema else (table.name,)
 
-        if if_conflict != "exception" and len(target_conflict_columns) > 0:
-            if if_conflict == "ignore":
+        if if_conflicts != "exception" and len(target_conflict_columns) > 0:
+            if if_conflicts == "ignore":
                 self._combine_table_statement += (
                     self._combine_table_conflict_ignore_statement
                 )
-            elif if_conflict == "update":
+            elif if_conflicts == "update":
                 self._combine_table_statement += (
                     self._combine_table_conflict_update_statement
                 )
 
-        source_tables_cols = [postgres_sql.Identifier(c) for c in source_tables_cols]
-        target_tables_cols = [postgres_sql.Identifier(c) for c in target_tables_cols]
+        source_tables_cols = [postgres_sql.Identifier(c) for c in source_columns]
+        target_tables_cols = [postgres_sql.Identifier(c) for c in target_columns]
         column_pairs = list(zip(source_tables_cols, target_tables_cols))
         update_statements = [
             postgres_sql.SQL("{x}=EXCLUDED.{y}").format(x=x, y=y)
@@ -183,5 +180,4 @@ class PostgresDatabase(BaseDatabase):
             ),
         )
 
-        sql = query.as_string(self.hook.get_conn())
-        self.run_sql(sql_statement=sql)
+        return query.as_string(self.hook.get_conn()), {}
