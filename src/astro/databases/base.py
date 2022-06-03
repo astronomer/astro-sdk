@@ -1,9 +1,12 @@
 from abc import ABC
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 import sqlalchemy
 from airflow.hooks.base import BaseHook
+from sqlalchemy import MetaData, column, insert, select
+from sqlalchemy.sql.elements import ColumnClause
+from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
@@ -230,22 +233,6 @@ class BaseDatabase(ABC):
             index=False,
         )
 
-    def append_table(
-        self,
-        source_table: Table,
-        target_table: Table,
-        if_conflicts: AppendConflictStrategy = "exception",
-    ) -> None:
-        """
-        Append the source table rows into a destination table.
-        The argument `if_conflicts` allows the user to define how to handle conflicts.
-
-        :param source_table: Contains the rows to be appended to the target_table
-        :param target_table: Contains the destination table in which the rows will be appended
-        :param if_conflicts: The strategy to be applied if there are conflicts.
-        """
-        raise NotImplementedError
-
     # ---------------------------------------------------------
     # Extract methods
     # ---------------------------------------------------------
@@ -341,3 +328,104 @@ class BaseDatabase(ABC):
             self.get_table_qualified_name(table),
             self.get_table_qualified_name(table),
         )
+
+    def get_sqla_table(self, table: Table):
+        """
+        Return SQLAlchemy table instance
+
+        :param table: Astro Table to be converted to SQLA table instance
+        """
+        metadata = MetaData(schema=table.metadata.schema)
+        return SqlaTable(table.name, metadata, autoload_with=self.sqlalchemy_engine)
+
+    def merge_table(
+        self,
+        source_table: Table,
+        target_table: Table,
+        if_conflicts: AppendConflictStrategy,
+        target_conflict_columns: List[str],
+        target_columns: List[str],
+        source_columns: List[str],
+    ):
+        """
+        Append the source table rows into a destination table.
+        The argument `if_conflicts` allows the user to define how to handle conflicts.
+
+        :param source_table: Contains the table to be added to the target_table
+        :param target_table: Contains the destination table in which the rows will be added
+        :param target_conflict_columns: List of cols where we expect to have a conflict while combining
+        :param if_conflicts: Action that needs to be taken in case there is a
+        conflict due to col constraint
+        :param target_columns: Dict of target_table columns names to source_table columns names,
+        :param source_columns: Dict of target_table columns names to source_table columns names,
+        """
+        raise NotImplementedError
+
+    def append_table(
+        self,
+        target_table: SqlaTable,
+        source_table: SqlaTable,
+        target_columns: List[ColumnClause],
+        source_columns: List[ColumnClause],
+    ):
+        """
+        Append source table to target table
+
+        :param target_table: Contains the destination table in which the rows will be added
+        :param source_table: Contains the table to be added to the target_table
+        :param target_columns: List of columns in target table
+        :param source_columns: List of columns in source table
+        """
+        sel = select(source_columns).select_from(source_table)
+        return insert(target_table).from_select(target_columns, sel)
+
+    def combine_tables(
+        self,
+        source_table: Table,
+        target_table: Table,
+        source_to_target_columns_map: Optional[Dict[str, str]] = None,
+        target_conflict_columns: Optional[List[str]] = None,
+        if_conflict: AppendConflictStrategy = "exception",
+    ) -> None:
+        """Combine two tables based on target_conflict_columns
+
+        :param source_table: Contains the table to be added to the target_table
+        :param target_table: Contains the destination table in which the rows will be added
+        :param target_conflict_columns: List of cols where we expect to have a conflict while combining
+        :param if_conflict: Action that needs to be taken in case there is a
+        conflict due to col constraint
+        :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names,
+        """
+        target_table_sqla = self.get_sqla_table(target_table)
+        source_table_sqla = self.get_sqla_table(target_table)
+        if (
+            source_to_target_columns_map is None
+            or len(source_to_target_columns_map) == 0
+        ):
+            source_cols = [column(c) for c in target_table_sqla.c.keys()]
+            target_cols = source_cols
+        else:
+            target_cols = [column(c) for c in source_to_target_columns_map.values()]
+            source_cols = [column(c) for c in source_to_target_columns_map.keys()]
+
+        if if_conflict == "exception":
+            self.append_table(
+                target_table=target_table_sqla,
+                source_table=source_table_sqla,
+                target_columns=target_cols,
+                source_columns=source_cols,
+            )
+        else:
+            if target_conflict_columns is None:
+                raise ValueError(
+                    "With if_conflict values update, ignore, target_conflict_columns is mandatory param"
+                )
+
+            self.merge_table(
+                source_table=source_table,
+                target_table=target_table,
+                if_conflicts=if_conflict,
+                target_columns=target_cols,
+                source_columns=source_cols,
+                target_conflict_columns=target_conflict_columns,
+            )

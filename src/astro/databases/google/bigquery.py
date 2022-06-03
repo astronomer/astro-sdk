@@ -8,7 +8,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
 from astro import settings
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    AppendConflictStrategy,
+    LoadExistStrategy,
+)
 from astro.databases.base import BaseDatabase
 from astro.sql.table import Metadata, Table
 
@@ -81,3 +85,34 @@ class BigqueryDatabase(BaseDatabase):
             chunksize=chunk_size,
             project_id=self.hook.project_id,
         )
+
+    def merge_table(
+        self,
+        source_table: Table,
+        target_table: Table,
+        if_conflicts: AppendConflictStrategy,
+        target_conflict_columns: List[str],
+        target_columns: List[str],
+        source_columns: List[str],
+    ):
+        target_table_name = self.get_table_qualified_name(target_table)
+        source_table_name = self.get_table_qualified_name(source_table)
+
+        statement = (
+            f"MERGE {target_table_name} T USING {source_table_name} S\
+                    ON {' AND '.join(['T.' + col + '= S.' + col for col in target_conflict_columns])}\
+                    WHEN NOT MATCHED BY TARGET THEN INSERT ({','.join(target_columns)})"
+            f" VALUES ({','.join(source_columns)})"
+        )
+
+        if if_conflicts == "update":
+            update_statement = "UPDATE SET {}".format(
+                ", ".join(
+                    [
+                        f"T.{target_columns[idx]}=S.{source_columns[idx]}"
+                        for idx in range(len(target_columns))
+                    ]
+                )
+            )
+            statement += f" WHEN MATCHED THEN {update_statement}"
+        return statement, {}
