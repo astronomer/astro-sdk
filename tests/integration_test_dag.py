@@ -89,7 +89,7 @@ def run_append(output_specs: List):
 
 
 @task_group
-def run_merge(output_specs: List, merge_keys):
+def run_merge(output_specs: List):
     main_table = aql.load_file(
         input_file=File(path=str(CWD) + "/data/homes_merge_1.csv"),
         output_table=output_specs[0],
