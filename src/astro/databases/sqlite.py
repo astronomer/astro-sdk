@@ -68,7 +68,7 @@ class SqliteDatabase(BaseDatabase):
         """
         return False
 
-    def merge_table(
+    def _merge_table(
         self,
         source_table: Table,
         target_table: Table,

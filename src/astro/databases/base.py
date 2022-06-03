@@ -338,7 +338,7 @@ class BaseDatabase(ABC):
         metadata = MetaData(schema=table.metadata.schema)
         return SqlaTable(table.name, metadata, autoload_with=self.sqlalchemy_engine)
 
-    def merge_table(
+    def _merge_table(
         self,
         source_table: Table,
         target_table: Table,
@@ -361,7 +361,7 @@ class BaseDatabase(ABC):
         """
         raise NotImplementedError
 
-    def append_table(
+    def _append_table(
         self,
         target_table: SqlaTable,
         source_table: SqlaTable,
@@ -409,7 +409,7 @@ class BaseDatabase(ABC):
             source_cols = [column(c) for c in source_to_target_columns_map.keys()]
 
         if if_conflict == "exception":
-            self.append_table(
+            self._append_table(
                 target_table=target_table_sqla,
                 source_table=source_table_sqla,
                 target_columns=target_cols,
@@ -421,7 +421,7 @@ class BaseDatabase(ABC):
                     "With if_conflict values update, ignore, target_conflict_columns is mandatory param"
                 )
 
-            self.merge_table(
+            self._merge_table(
                 source_table=source_table,
                 target_table=target_table,
                 if_conflicts=if_conflict,

@@ -140,7 +140,7 @@ class SnowflakeDatabase(BaseDatabase):
     def _wrap_identifier(self, inp):
         return "Identifier({{" + inp + "}})"
 
-    def merge_table(
+    def _merge_table(
         self,
         source_table: Table,
         target_table: Table,

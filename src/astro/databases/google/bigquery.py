@@ -86,7 +86,7 @@ class BigqueryDatabase(BaseDatabase):
             project_id=self.hook.project_id,
         )
 
-    def merge_table(
+    def _merge_table(
         self,
         source_table: Table,
         target_table: Table,
