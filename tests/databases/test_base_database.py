@@ -91,7 +91,9 @@ def test_subclass_missing_append_table_raises_exception():
         }
     ],
 )
-def test_append_table(parameters, test_table):
+def test_append_table(parameters, test_table, sql_server):
+    sql_name, hook = sql_server
+    lst, sell = get_col_names(sql_name)
     db = create_database(conn_id=test_table[0].conn_id)
     db.combine_tables(
         target_table=test_table[0],
@@ -101,13 +103,13 @@ def test_append_table(parameters, test_table):
     df = db.hook.get_pandas_df(
         f"SELECT * FROM {db.get_table_qualified_name(test_table[0])}"
     )
-    df = df.sort_values(by=["list"], ascending=True)
+    df = df.sort_values(by=[lst], ascending=True)
     parameters["expected_df"] = parameters["expected_df"].sort_values(
         by=["list"], ascending=True
     )
 
-    assert df["list"].to_list() == parameters["expected_df"]["list"].to_list()
-    assert df["sell"].to_list() == parameters["expected_df"]["sell"].to_list()
+    assert df[lst].to_list() == parameters["expected_df"]["list"].to_list()
+    assert df[sell].to_list() == parameters["expected_df"]["sell"].to_list()
 
 
 @pytest.mark.parametrize(
@@ -165,19 +167,11 @@ def test_append_table(parameters, test_table):
 )
 def test_merge_table(parameters, test_table, sql_server):
     sql_name, hook = sql_server
+    lst, sell = get_col_names(sql_name)
     target_conflict_columns = parameters["target_conflict_columns"]
     db = create_database(conn_id=test_table[0].conn_id)
 
-    if sql_name == "postgres":
-        db.run_sql(
-            sql_statement=f"ALTER TABLE {db.get_table_qualified_name(test_table[0])} "
-            f"ADD CONSTRAINT con_{test_table[0].name} UNIQUE ({','.join(target_conflict_columns)})"
-        )
-    if sql_name == "sqlite":
-        db.run_sql(
-            f"CREATE UNIQUE INDEX unique_index ON {test_table[0].name}"
-            + f"({','.join(target_conflict_columns)})"
-        )
+    add_constraint(db, sql_name, test_table, target_conflict_columns)
 
     db.combine_tables(
         target_table=test_table[0],
@@ -189,10 +183,33 @@ def test_merge_table(parameters, test_table, sql_server):
     df = db.hook.get_pandas_df(
         f"SELECT * FROM {db.get_table_qualified_name(test_table[0])}"
     )
-    df = df.sort_values(by=["list"], ascending=True)
+    df = df.sort_values(by=[lst], ascending=True)
+
     parameters["expected_df"] = parameters["expected_df"].sort_values(
         by=["list"], ascending=True
     )
 
-    assert df["list"].to_list() == parameters["expected_df"]["list"].to_list()
-    assert df["sell"].to_list() == parameters["expected_df"]["sell"].to_list()
+    assert df[lst].to_list() == parameters["expected_df"]["list"].to_list()
+    assert df[sell].to_list() == parameters["expected_df"]["sell"].to_list()
+
+
+def add_constraint(db, sql_name, test_table, target_conflict_columns):
+    if sql_name == "postgres":
+        db.run_sql(
+            sql_statement=f"ALTER TABLE {db.get_table_qualified_name(test_table[0])} "
+            f"ADD CONSTRAINT con_{test_table[0].name} UNIQUE ({','.join(target_conflict_columns)})"
+        )
+    if sql_name == "sqlite":
+        db.run_sql(
+            f"CREATE UNIQUE INDEX unique_index ON {test_table[0].name}"
+            + f"({','.join(target_conflict_columns)})"
+        )
+
+
+def get_col_names(sql_name):
+    lst = "list"
+    sell = "sell"
+    if sql_name == "snowflake":
+        lst = lst.upper()
+        sell = sell.upper()
+    return lst, sell

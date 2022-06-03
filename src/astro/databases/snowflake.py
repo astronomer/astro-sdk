@@ -4,6 +4,7 @@ from typing import List, Tuple
 import pandas as pd
 from airflow.exceptions import AirflowException
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+from jinja2 import Template
 from pandas.io.sql import SQLDatabase
 
 from astro.constants import (
@@ -138,7 +139,7 @@ class SnowflakeDatabase(BaseDatabase):
         return len(created_schemas) == 1
 
     def _wrap_identifier(self, inp):
-        return "Identifier({{" + inp + "}})"
+        return "Identifier('{{" + inp + "}}')"
 
     def _merge_table(
         self,
@@ -150,7 +151,8 @@ class SnowflakeDatabase(BaseDatabase):
         source_columns: List[str],
     ):
         statement = (
-            "merge into {{main_table}} using {{merge_table}} on " "{merge_clauses}"
+            "merge into Identifier('{{main_table}}') using Identifier('{{merge_table}}') on "
+            "{merge_clauses}"
         )
 
         if isinstance(target_conflict_columns, dict):
@@ -204,10 +206,14 @@ class SnowflakeDatabase(BaseDatabase):
         params = {}
         params.update(merge_target_dict)
         params.update(merge_append_dict)
-        params["main_table"] = target_table
-        params["merge_table"] = source_table
+        params["main_table"] = self.get_table_qualified_name(target_table)
+        params["merge_table"] = self.get_table_qualified_name(source_table)
 
-        return statement, params
+        # resolving jinja template
+        t = Template(statement)
+        statement = t.render(**params)
+
+        return statement, {}
 
     def fill_in_append_statements(
         self,
