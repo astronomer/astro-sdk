@@ -34,8 +34,8 @@ class BaseSQLOperator(DecoratedOperator):
         self.conn_id = self.op_kwargs.pop("conn_id", conn_id)
         self.sql = sql
         self.parameters = parameters or {}
-        self.database = (self.op_kwargs.pop("database", database),)
-        self.schema = (self.op_kwargs.pop("schema", schema),)
+        self.database = self.op_kwargs.pop("database", database)
+        self.schema = self.op_kwargs.pop("schema", schema)
         self.op_args: Dict[str, Union[Table, pd.DataFrame]] = {}
         super().__init__(
             **kwargs,
