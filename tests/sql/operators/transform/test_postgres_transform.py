@@ -8,6 +8,7 @@ from airflow.utils import timezone
 from airflow.utils.session import create_session
 
 import astro.sql as aql
+from astro.constants import Database
 from astro.sql.table import Metadata, Table
 from tests.sql.operators import utils as test_utils
 
@@ -126,8 +127,17 @@ def test_postgres(sample_dag, pg_query_result):
     test_utils.run_dag(sample_dag)
 
 
-@pytest.mark.parametrize("sql_server", ["postgres"], indirect=True)
-def test_postgres_join(sample_dag, test_table, sql_server):
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.POSTGRES},
+    ],
+    indirect=True,
+    ids=["postgresql"],
+)
+def test_postgres_join(sample_dag, database_table_fixture):
+    _, test_table = database_table_fixture
+
     @aql.transform(conn_id="postgres_conn_pagila")
     def sample_pg(actor: Table, film_actor_join: Table, unsafe_parameter):
         return (

@@ -117,7 +117,7 @@ def run_merge(output_specs: Table):
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
 def test_full_dag(database_table_fixture, sample_dag):
-    database, output_table = database_table_fixture
+    _, output_table = database_table_fixture
     with sample_dag:
         loaded_table = aql.load_file(
             input_file=File(path=str(CWD) + "/data/homes.csv"),
