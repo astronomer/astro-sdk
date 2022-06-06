@@ -5,6 +5,7 @@ import pytest
 from airflow.decorators import task
 
 from astro import sql as aql
+from astro.constants import Database
 from astro.files import File
 from astro.sql.operators.sql_decorator_legacy import transform_decorator as transform
 from astro.sql.table import Table
@@ -14,16 +15,18 @@ cwd = pathlib.Path(__file__).parent
 
 
 @pytest.mark.parametrize(
-    "sql_server",
+    "database_table_fixture",
     [
-        "snowflake",
-        "postgres",
-        "bigquery",
-        "sqlite",
+        {"database": Database.SNOWFLAKE},
+        {"database": Database.BIGQUERY},
+        {"database": Database.POSTGRES},
+        {"database": Database.SQLITE},
     ],
     indirect=True,
+    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
-def test_dataframe_transform(sql_server, sample_dag, test_table):
+def test_dataframe_transform(database_table_fixture, sample_dag):
+    _, test_table = database_table_fixture
     print("test_dataframe_to_database")
 
     @aql.dataframe
@@ -50,16 +53,19 @@ def test_dataframe_transform(sql_server, sample_dag, test_table):
 
 
 @pytest.mark.parametrize(
-    "sql_server",
+    "database_table_fixture",
     [
-        "snowflake",
-        "postgres",
-        "bigquery",
-        "sqlite",
+        {"database": Database.SNOWFLAKE},
+        {"database": Database.BIGQUERY},
+        {"database": Database.POSTGRES},
+        {"database": Database.SQLITE},
     ],
     indirect=True,
+    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
-def test_transform(sql_server, sample_dag, test_table):
+def test_transform(database_table_fixture, sample_dag):
+    _, test_table = database_table_fixture
+
     @transform
     def sample_function(input_table: Table):
         return "SELECT * FROM {{input_table}} LIMIT 10"
@@ -84,16 +90,19 @@ def test_transform(sql_server, sample_dag, test_table):
 
 
 @pytest.mark.parametrize(
-    "sql_server",
+    "database_table_fixture",
     [
-        "snowflake",
-        "postgres",
-        "bigquery",
-        "sqlite",
+        {"database": Database.SNOWFLAKE},
+        {"database": Database.BIGQUERY},
+        {"database": Database.POSTGRES},
+        {"database": Database.SQLITE},
     ],
     indirect=True,
+    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
-def test_raw_sql(sql_server, sample_dag, test_table):
+def test_raw_sql(database_table_fixture, sample_dag):
+    _, test_table = database_table_fixture
+
     @transform(raw_sql=True)
     def raw_sql_query(my_input_table: Table, created_table: Table, num_rows: int):
         return "SELECT * FROM {{my_input_table}} LIMIT {{num_rows}}"

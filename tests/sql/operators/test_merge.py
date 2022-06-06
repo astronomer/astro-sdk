@@ -164,7 +164,6 @@ def run_merge(target_table: Table, source_table: Table, merge_parameters, mode):
 def test_merge(
     database_table_fixture, multiple_tables_fixture, sample_dag, merge_parameters
 ):
-    database, _ = database_table_fixture
     target_table, merge_table = multiple_tables_fixture
     merge_params, mode = merge_parameters
     with sample_dag:

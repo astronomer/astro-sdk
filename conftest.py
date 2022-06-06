@@ -234,6 +234,10 @@ def database_table_fixture(request):
     table = params.get(
         "table", Table(conn_id=conn_id, metadata=database.default_metadata)
     )
+    table.conn_id = table.conn_id or conn_id
+    if table.metadata.is_empty():
+        table.metadata = database.default_metadata
+
     database.drop_table(table)
     if file:
         database.load_file_to_table(file, table)

@@ -4,18 +4,16 @@ from filecmp import cmp
 
 import pandas as pd
 import pytest
+import sqlalchemy.types as types
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from pandas.testing import assert_frame_equal
+from sqlalchemy import Column
 
-from astro.constants import (
-    SUPPORTED_DATABASES,
-    SUPPORTED_FILE_TYPES,
-    Database,
-    FileType,
-)
+from astro.constants import SUPPORTED_FILE_TYPES, Database, FileType
 from astro.databases import create_database
+from astro.databases.base import BaseDatabase
 from astro.settings import SCHEMA
-from astro.sql.table import create_unique_table_name
+from astro.sql.table import Table, create_unique_table_name
 from astro.utils.database import get_sqlalchemy_engine
 from astro.utils.load import (
     copy_remote_file_to_local,
@@ -36,15 +34,18 @@ EXPECTED_DATA = pd.DataFrame(
 )
 
 
-def create_table(database, hook, table):
-    db = create_database(table.conn_id)
-    qualified_name = db.get_table_qualified_name(table)
-
-    hook.run(f"DROP TABLE IF EXISTS {qualified_name}")
-    if database == Database.BIGQUERY.value:
-        hook.run(f"CREATE TABLE {qualified_name} (ID int, Name string);")
+def create_table(database: BaseDatabase, table: Table):
+    if database.sql_type == Database.BIGQUERY.value:
+        table.columns = [
+            Column(name="id", type_=types.Integer),
+            Column(name="Name", type_=types.String),
+        ]
     else:
-        hook.run(f"CREATE TABLE {qualified_name} (ID int, Name varchar(255));")
+        table.columns = [
+            Column(name="id", type_=types.Integer),
+            Column(name="Name", type_=types.String(255)),
+        ]
+    database.create_table(table)
 
 
 def describe_load_file_into_dataframe():
@@ -115,54 +116,46 @@ def describe_load_file_into_sql_table():
         assert exc_info.value.args[0] == expected_msg
 
     @pytest.mark.integration
-    @pytest.mark.parametrize("sql_server", ["postgres"], indirect=True)
     @pytest.mark.parametrize(
-        "test_table",
-        [{"param": {"name": table_name}}],
-        ids=["named_table"],
+        "database_table_fixture",
+        [{"database": Database.POSTGRES, "table": Table(name=table_name)}],
         indirect=True,
+        ids=["postgres"],
     )
-    def with_supported_postgres(test_table, sql_server):
-        database, hook = sql_server
-        db = create_database(test_table.conn_id)
+    def with_supported_postgres(database_table_fixture):
+        db, test_table = database_table_fixture
+        db: BaseDatabase = db
         db.create_schema_if_needed(test_table.metadata.schema)
-        create_table(database, hook, test_table)
+        create_table(db, test_table)
 
         filepath = pathlib.Path(CWD.parent, "data/sample.ndjson")
-        engine = get_sqlalchemy_engine(hook)
         load_file_into_sql_table(
             filepath=filepath,
             filetype=FileType.NDJSON,
             table_name=db.get_table_qualified_name(test_table),
-            engine=engine,
+            engine=db.sqlalchemy_engine,
         )
-        computed = hook.get_pandas_df(
-            f"SELECT * FROM {db.get_table_qualified_name(test_table)}"
-        )
+        computed = db.export_table_to_pandas_dataframe(test_table)
         computed = computed.rename(columns=str.lower)
         assert_frame_equal(computed, EXPECTED_DATA)
 
 
 def describe_load_dataframe_into_sql_table():
     @pytest.mark.integration
-    @pytest.mark.parametrize("sql_server", ["postgres"], indirect=True)
     @pytest.mark.parametrize(
-        "test_table",
-        [{"param": {"name": table_name}}],
-        ids=["named_table"],
+        "database_table_fixture",
+        [{"database": Database.POSTGRES, "table": Table(name=table_name)}],
         indirect=True,
+        ids=["postgres"],
     )
-    def with_postgres_and_new_schema(session, test_table, sql_server):
-        database, hook = sql_server
-        db = create_database(test_table.conn_id)
+    def with_postgres_and_new_schema(session, database_table_fixture):
+        db, test_table = database_table_fixture
         db.create_schema_if_needed(test_table.metadata.schema)
-        create_table(database, hook, test_table)
+        create_table(db, test_table)
         dataframe = pd.DataFrame([{"id": 27, "name": "Jim Morrison"}])
         test_table.metadata.schema = SCHEMA
-        load_dataframe_into_sql_table(dataframe, test_table, hook)
-        db = create_database(test_table.conn_id)
-        qualified_name = db.get_table_qualified_name(test_table)
-        computed = hook.get_pandas_df(f"SELECT * FROM {qualified_name}")
+        load_dataframe_into_sql_table(dataframe, test_table, db.hook)
+        computed = db.export_table_to_pandas_dataframe(test_table)
         computed = computed.rename(columns=str.lower)
         expected = pd.DataFrame(
             [
@@ -170,26 +163,27 @@ def describe_load_dataframe_into_sql_table():
             ]
         )
         assert_frame_equal(computed, expected)
-        hook.run(f"DROP TABLE IF EXISTS {qualified_name}")
 
     @pytest.mark.integration
-    @pytest.mark.parametrize("sql_server", SUPPORTED_DATABASES, indirect=True)
     @pytest.mark.parametrize(
-        "test_table",
-        [{"param": {"name": table_name}}],
-        ids=["named_table"],
+        "database_table_fixture",
+        [
+            {"database": Database.SNOWFLAKE, "table": Table(name=table_name)},
+            {"database": Database.BIGQUERY, "table": Table(name=table_name)},
+            {"database": Database.POSTGRES, "table": Table(name=table_name)},
+            {"database": Database.SQLITE, "table": Table(name=table_name)},
+        ],
         indirect=True,
+        ids=["snowflake", "bigquery", "postgresql", "sqlite"],
     )
-    def with_database(session, test_table, sql_server):
-        database, hook = sql_server
-        db = create_database(test_table.conn_id)
+    def with_database(session, database_table_fixture):
+        db, test_table = database_table_fixture
         db.create_schema_if_needed(test_table.metadata.schema)
-        create_table(database, hook, test_table)
+        create_table(db, test_table)
         dataframe = pd.DataFrame([{"id": 27, "name": "Jim Morrison"}])
-        load_dataframe_into_sql_table(dataframe, test_table, hook)
+        load_dataframe_into_sql_table(dataframe, test_table, db.hook)
         db = create_database(test_table.conn_id)
-        qualified_name = db.get_table_qualified_name(test_table)
-        computed = hook.get_pandas_df(f"SELECT * FROM {qualified_name}")
+        computed = db.export_table_to_pandas_dataframe(test_table)
         expected = pd.DataFrame(
             [
                 {"id": 27, "name": "Jim Morrison"},
