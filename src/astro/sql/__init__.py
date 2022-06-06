@@ -1,7 +1,7 @@
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Union
 
 import pandas as pd
-from airflow.decorators.base import task_decorator_factory
+from airflow.decorators.base import TaskDecorator, task_decorator_factory
 
 from astro.constants import MergeConflictStrategy
 from astro.sql.operators.append import AppendOperator
@@ -9,7 +9,8 @@ from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.export_file import export_file  # noqa: F401
 from astro.sql.operators.load_file import load_file  # noqa: F401
 from astro.sql.operators.merge import MergeOperator
-from astro.sql.operators.transform import transform_decorator  # noqa: F401
+from astro.sql.operators.raw_sql import RawSQLOperator
+from astro.sql.operators.transform import TransformOperator  # noqa: F401
 from astro.sql.operators.truncate import TruncateOperator
 from astro.sql.table import Table
 
@@ -21,14 +22,24 @@ def transform(
     parameters: Optional[Union[Mapping, Iterable]] = None,
     database: Optional[str] = None,
     schema: Optional[str] = None,
-):
-    return transform_decorator(
+    handler: Optional[Callable] = None,
+    **kwargs,
+) -> TaskDecorator:
+
+    kwargs.update(
+        {
+            "conn_id": conn_id,
+            "parameters": parameters,
+            "database": database,
+            "schema": schema,
+            "handler": handler,
+        }
+    )
+    return task_decorator_factory(
         python_callable=python_callable,
         multiple_outputs=multiple_outputs,
-        conn_id=conn_id,
-        parameters=parameters,
-        database=database,
-        schema=schema,
+        decorated_operator_class=TransformOperator,
+        **kwargs,
     )
 
 
@@ -40,16 +51,23 @@ def run_raw_sql(
     database: Optional[str] = None,
     schema: Optional[str] = None,
     handler: Optional[Callable] = None,
-):
-    return transform_decorator(
+    **kwargs,
+) -> TaskDecorator:
+
+    kwargs.update(
+        {
+            "conn_id": conn_id,
+            "parameters": parameters,
+            "database": database,
+            "schema": schema,
+            "handler": handler,
+        }
+    )
+    return task_decorator_factory(
         python_callable=python_callable,
         multiple_outputs=multiple_outputs,
-        conn_id=conn_id,
-        parameters=parameters,
-        database=database,
-        schema=schema,
-        handler=handler,
-        raw_sql=True,
+        decorated_operator_class=RawSQLOperator,
+        **kwargs,
     )
 
 
