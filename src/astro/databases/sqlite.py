@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from sqlalchemy import create_engine
@@ -67,6 +67,12 @@ class SqliteDatabase(BaseDatabase):
         Check if a schema exists. We return false for sqlite since sqlite does not have schemas
         """
         return False
+
+    def setup_merge(self, parameters: Tuple) -> str:
+        """
+        Handles database-specific logic to handle index for Sqlite.
+        """
+        return "CREATE UNIQUE INDEX unique_index ON {{table}}" + str(parameters)
 
     def merge_table(
         self,

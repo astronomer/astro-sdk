@@ -1,5 +1,5 @@
 """Google BigQuery table implementation."""
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
@@ -58,6 +58,14 @@ class BigqueryDatabase(BaseDatabase):
         except GoogleNotFound:
             return False
         return True
+
+    def setup_merge(self, parameters: Tuple) -> str:
+        """
+        Handles database-specific logic to handle constraints
+        for BigQuery. The only constraint that BigQuery supports
+        is NOT NULL.
+        """
+        return "RETURN"
 
     def load_pandas_dataframe_to_table(
         self,
