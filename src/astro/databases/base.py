@@ -65,14 +65,6 @@ class BaseDatabase(ABC):
         """Return Sqlalchemy engine."""
         return self.hook.get_sqlalchemy_engine()
 
-    def setup_merge(self, parameters: Tuple) -> str:
-        """
-        Handles database-specific logic to handle constraints, keeping
-        it agnostic to database.
-        """
-        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE " + str(parameters)
-        return sql.replace("'", "")
-
     def run_sql(self, sql_statement: str, parameters: Optional[dict] = None):
         """
         Return the results to running a SQL statement.
@@ -105,6 +97,15 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
     # Table metadata
     # ---------------------------------------------------------
+    @staticmethod
+    def setup_merge(parameters: Tuple) -> str:
+        """
+        Handles database-specific logic to handle constraints, keeping
+        it agnostic to database.
+        """
+        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE " + str(parameters)
+        return sql.replace("'", "")
+
     @staticmethod
     def get_table_qualified_name(table: Table) -> str:  # skipcq: PYL-R0201
         """

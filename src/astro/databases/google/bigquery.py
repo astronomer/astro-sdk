@@ -59,7 +59,8 @@ class BigqueryDatabase(BaseDatabase):
             return False
         return True
 
-    def setup_merge(self, parameters: Tuple) -> str:
+    @staticmethod
+    def setup_merge(parameters: Tuple) -> str:
         """
         Handles database-specific logic to handle constraints
         for BigQuery. The only constraint that BigQuery supports
