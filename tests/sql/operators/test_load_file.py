@@ -150,17 +150,6 @@ def test_unique_task_id_for_same_path(sample_dag):
     assert tasks[3].operator.task_id == "task_id"
 
 
-@mock.patch.dict(
-    os.environ,
-    {"AWS_ACCESS_KEY_ID": "abcd", "AWS_SECRET_ACCESS_KEY": "@#$%@$#ASDH@Ksd23%SD546"},
-)
-def test_aws_decode():
-    from astro.utils.cloud_storage_creds import parse_s3_env_var
-
-    k, v = parse_s3_env_var()
-    assert v == "@#$%@$#ASDH@Ksd23%SD546"
-
-
 @pytest.mark.parametrize("sql_server", ["sqlite"], indirect=True)
 def test_load_file_templated_filename(sample_dag, sql_server, test_table):
     database_name, sql_hook = sql_server
