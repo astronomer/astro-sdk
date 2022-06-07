@@ -1,8 +1,10 @@
 from typing import Dict, List, Optional, Tuple
 
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
+from sqlalchemy import MetaData as SqlaMetaData
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
+from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import MergeConflictStrategy
 from astro.databases.base import BaseDatabase
@@ -114,3 +116,13 @@ class SqliteDatabase(BaseDatabase):
             merge_keys=",".join(list(target_conflict_columns)),
         )
         self.run_sql(sql_statement=query)
+
+    def get_sqla_table(self, table: Table) -> SqlaTable:
+        """
+        Return SQLAlchemy table instance
+
+        :param table: Astro Table to be converted to SQLAlchemy table instance
+        """
+        return SqlaTable(
+            table.name, SqlaMetaData(), autoload_with=self.sqlalchemy_engine
+        )

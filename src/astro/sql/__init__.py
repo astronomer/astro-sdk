@@ -72,21 +72,23 @@ def run_raw_sql(
 
 
 def append(
-    append_table: Table,
-    main_table: Table,
-    columns: Optional[List[str]] = None,
-    casted_columns: Optional[dict] = None,
+    *,
+    source_table: Table,
+    target_table: Table,
+    source_to_target_columns_map: Optional[Dict[str, str]] = None,
     **kwargs,
 ):
-    if columns is None:
-        columns = []
-    if casted_columns is None:
-        casted_columns = {}
+    """
+    Append the source table rows into a destination table.
+
+    :param source_table: Contains the rows to be appended to the target_table (templated)
+    :param target_table: Contains the destination table in which the rows will be appended (templated)
+    :param source_to_target_columns_map: Dict of source_table columns names to target_table columns names
+    """
     return AppendOperator(
-        main_table=main_table,
-        append_table=append_table,
-        columns=columns,
-        casted_columns=casted_columns,
+        target_table=target_table,
+        source_table=source_table,
+        source_to_target_columns_map=source_to_target_columns_map,
         **kwargs,
     ).output
 
@@ -116,6 +118,7 @@ def merge(
         source_to_target_columns_map=source_to_target_columns_map,
         target_conflict_columns=target_conflict_columns,
         if_conflicts=if_conflicts,
+        **kwargs,
     ).output
 
 
