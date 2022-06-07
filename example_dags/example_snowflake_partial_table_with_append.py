@@ -5,7 +5,15 @@ import pandas as pd
 from airflow.decorators import dag
 
 from astro.files import File
-from astro.sql import append, dataframe, load_file, run_raw_sql, transform, truncate
+from astro.sql import (
+    append,
+    cleanup,
+    dataframe,
+    load_file,
+    run_raw_sql,
+    transform,
+    truncate,
+)
 from astro.sql.table import Metadata, Table
 
 """
@@ -137,6 +145,9 @@ def example_snowflake_partial_table_with_append():
         table=Table(name="homes_reporting", conn_id=SNOWFLAKE_CONN_ID)
     )
     truncate_results.set_upstream(record_results)
+    cleanup(
+        tables_to_cleanup=[homes_data2, homes_data1, extracted_data, transformed_data]
+    )
 
 
 example_snowflake_partial_table_dag = example_snowflake_partial_table_with_append()
