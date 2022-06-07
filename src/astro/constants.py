@@ -12,9 +12,6 @@ DEFAULT_CHUNK_SIZE = 1000000
 PYPI_PROJECT_NAME = "astro-sdk-python"
 DEFAULT_SCHEMA = "tmp_astro"
 
-LOAD_DATAFRAME_BYTES_LIMIT = 512000  # takes < 3 seconds
-LOAD_COLUMN_AUTO_DETECT_ROWS = 1000
-
 
 class FileLocation(Enum):
     LOCAL = "local"
@@ -56,7 +53,6 @@ CONN_TYPE_TO_DATABASE = {
 }
 
 LoadExistStrategy = Literal["replace", "append"]
-
 
 ExportExistsStrategy = Literal["replace", "exception"]
 

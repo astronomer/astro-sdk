@@ -1,15 +1,11 @@
-from urllib.parse import urlparse
-
 import pytest
+import sqlalchemy
 from airflow.hooks.base import BaseHook
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
-from sqlalchemy import text
-from sqlalchemy.engine.base import Engine
 
 from astro.constants import Database
-from astro.utils.database import get_database_name, get_sqlalchemy_engine, run_sql
+from astro.utils.database import get_database_name
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
-from astro.utils.sqlite_utils import create_sqlalchemy_engine_with_sqlite
 
 
 def describe_get_database_name():
@@ -53,57 +49,9 @@ def describe_get_database_name():
         assert exc_info.value.args[0] == expected_msg
 
 
-def describe_get_sqlalchemy_engine():
-    def with_sqlite():
-        hook = SqliteHook(sqlite_conn_id="sqlite_conn")
-        engine = create_sqlalchemy_engine_with_sqlite(hook)
-        assert isinstance(engine, Engine)
-        assert engine.url.database == BaseHook.get_connection("sqlite_conn").host
-
-    def with_sqlite_default_conn():
-        hook = SqliteHook()
-        engine = get_sqlalchemy_engine(hook)
-        assert isinstance(engine, Engine)
-        url = urlparse(str(engine.url))
-        assert url.path == "//tmp/sqlite_default.db"
-
-    def with_postgres():
-        hook = PostgresHook(postgres_conn_id="postgres_conn")
-        engine = get_sqlalchemy_engine(hook)
-        assert isinstance(engine, Engine)
-
-    def with_snowflake():
-        hook = SnowflakeHook(snowflake_conn_id="snowflake_conn")
-        engine = get_sqlalchemy_engine(hook)
-        assert isinstance(engine, Engine)
-
-    def with_google_bigquery_hook():
-        hook = BigQueryHook()
-        engine = get_sqlalchemy_engine(hook)
-        assert isinstance(engine, Engine)
-
-
-def describe_run_sql():
-    def with_str():
-        hook = PostgresHook(postgres_conn_id="postgres_conn")
-        engine = get_sqlalchemy_engine(hook)
-        statement = "SELECT nspname FROM pg_catalog.pg_namespace;"
-        result = run_sql(engine, statement)
-        schemas = [item[0] for item in result]
-        assert "public" in schemas
-
-    def with_str_and_parameter():
-        hook = PostgresHook(postgres_conn_id="postgres_conn")
-        engine = get_sqlalchemy_engine(hook)
-        statement = "SELECT nspname FROM pg_catalog.pg_namespace WHERE nspname=:value;"
-        result = run_sql(engine, statement, {"value": "public"})
-        schemas = result.first()
-        assert "public" == schemas[0]
-
-    def with_text():
-        hook = PostgresHook(postgres_conn_id="postgres_conn")
-        engine = get_sqlalchemy_engine(hook)
-        statement = text("SELECT nspname FROM pg_catalog.pg_namespace;")
-        result = run_sql(engine, statement)
-        schemas = [item[0] for item in result]
-        assert "public" in schemas
+def create_sqlalchemy_engine_with_sqlite(hook: SqliteHook) -> sqlalchemy.engine.Engine:
+    # Airflow uses sqlite3 library and not SqlAlchemy for SqliteHook
+    # and it only uses the hostname directly.
+    airflow_conn = hook.get_connection(getattr(hook, hook.conn_name_attr))
+    engine = sqlalchemy.create_engine(f"sqlite:///{airflow_conn.host}")
+    return engine
