@@ -98,6 +98,15 @@ class BaseDatabase(ABC):
     # Table metadata
     # ---------------------------------------------------------
     @staticmethod
+    def get_merge_initialization_query(parameters: Tuple) -> str:
+        """
+        Handles database-specific logic to handle constraints, keeping
+        it agnostic to database.
+        """
+        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE " + str(parameters)
+        return sql.replace("'", "")
+
+    @staticmethod
     def get_table_qualified_name(table: Table) -> str:  # skipcq: PYL-R0201
         """
         Return table qualified name. This is Database-specific.
