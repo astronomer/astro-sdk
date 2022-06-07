@@ -5,26 +5,9 @@ from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from sqlalchemy import text
 from sqlalchemy.engine import Engine, ResultProxy
 
-from astro.constants import CONN_TYPE_TO_DATABASE, Database
+from astro.constants import Database
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
 from astro.utils.sqlite_utils import create_sqlalchemy_engine_with_sqlite
-
-
-def create_database_from_conn_id(conn_id: str) -> Database:
-    """
-    Given a conn_id, identify the database name.
-
-    :param conn_id: Airflow connection ID
-    :type conn_id: str
-    :return: the database this interface relates to (e.g. Database.SQLITE)
-    :rtype: astro.constants.Database enum item
-    """
-    conn_type = BaseHook.get_connection(conn_id).conn_type
-    try:
-        database_name = CONN_TYPE_TO_DATABASE[conn_type]
-    except KeyError:
-        raise ValueError(f"Unsupported database <{conn_type}>")
-    return database_name
 
 
 def get_database_name(interface: Union[Engine, BaseHook, SqliteHook]) -> Database:

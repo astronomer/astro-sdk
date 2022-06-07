@@ -73,7 +73,7 @@ class SqliteDatabase(BaseDatabase):
         """
         Handles database-specific logic to handle index for Sqlite.
         """
-        return "CREATE UNIQUE INDEX unique_index ON {{table}}" + str(parameters)
+        return "SELECT ''"
 
     def merge_table(
         self,
@@ -95,7 +95,7 @@ class SqliteDatabase(BaseDatabase):
         """
         statement = "INSERT INTO {main_table} ({target_columns}) SELECT {append_columns} FROM {source_table} Where true"
         if if_conflicts == "ignore":
-            statement += " ON CONFLICT ({merge_keys}) DO NOTHING"
+            statement += " ON CONFLICT DO NOTHING"
         elif if_conflicts == "update":
             statement += " ON CONFLICT ({merge_keys}) DO UPDATE SET {update_statements}"
 

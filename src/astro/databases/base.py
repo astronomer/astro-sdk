@@ -103,8 +103,9 @@ class BaseDatabase(ABC):
         Handles database-specific logic to handle constraints, keeping
         it agnostic to database.
         """
-        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE " + str(parameters)
-        return sql.replace("'", "")
+        constraints = ",".join(parameters)
+        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (%s)" % constraints
+        return sql
 
     @staticmethod
     def get_table_qualified_name(table: Table) -> str:  # skipcq: PYL-R0201
