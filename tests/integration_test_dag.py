@@ -60,7 +60,7 @@ def run_dataframe_funcs(input_table: Table):
 def add_constraint(table: Table):
     db = create_database(table.conn_id)
     constraints = ("list", "sell")
-    return db.setup_merge(parameters=constraints)
+    return db.get_merge_initialization_query(parameters=constraints)
 
 
 @task_group

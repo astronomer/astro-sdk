@@ -69,7 +69,7 @@ class SqliteDatabase(BaseDatabase):
         return False
 
     @staticmethod
-    def setup_merge(parameters: Tuple) -> str:
+    def get_merge_initialization_query(parameters: Tuple) -> str:
         """
         Handles database-specific logic to handle index for Sqlite.
         """
