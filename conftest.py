@@ -2,10 +2,8 @@ import os
 import pathlib
 import uuid
 
-import pandas as pd
 import pytest
 import yaml
-from airflow.hooks.base import BaseHook
 from airflow.models import DAG, Connection, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.utils import timezone
@@ -14,11 +12,11 @@ from airflow.utils.session import create_session, provide_session
 
 from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
+from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table, create_unique_table_name
 from astro.utils.database import get_database_name
 from astro.utils.dependencies import BigQueryHook, gcs, s3
-from astro.utils.load import load_dataframe_into_sql_table
 from tests.sql.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -72,14 +70,6 @@ def sample_dag():
         session_.query(TI).delete()
 
 
-def populate_table(path: str, table: Table, hook: BaseHook) -> None:
-    """
-    Populate a csv file into a sql table
-    """
-    df = pd.read_csv(path)
-    load_dataframe_into_sql_table(pandas_dataframe=df, output_table=table, hook=hook)
-
-
 @pytest.fixture
 def test_table(request, sql_server):  # noqa: C901
     # FIXME: Delete this fixture by the end of the refactoring! Use database_table_fixture instead
@@ -125,7 +115,11 @@ def test_table(request, sql_server):  # noqa: C901
         default_table_options.update(override_table_options)
         tables.append(Table(**default_table_options))
         if load_table:
-            populate_table(path=table_param.get("path"), table=tables[-1], hook=hook)
+            table = tables[-1]
+            db = create_database(table.conn_id)
+            db.load_file_to_table(
+                source_file=File(path=table_param.get("path")), target_table=table
+            )
 
     yield tables if len(tables) > 1 else tables[0]
 
@@ -216,6 +210,7 @@ def database_table_fixture(request):
     table = params.get(
         "table", Table(conn_id=conn_id, metadata=database.default_metadata)
     )
+    database.create_schema_if_needed(table.metadata.schema)
     database.drop_table(table)
     if file:
         database.load_file_to_table(file, table)

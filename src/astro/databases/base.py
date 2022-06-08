@@ -236,6 +236,7 @@ class BaseDatabase(ABC):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
+        self.create_schema_if_needed(target_table.metadata.schema)
         source_dataframe.to_sql(
             self.get_table_qualified_name(target_table),
             con=self.sqlalchemy_engine,

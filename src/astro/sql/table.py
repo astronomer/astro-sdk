@@ -3,7 +3,6 @@ import string
 from dataclasses import dataclass, field, fields
 from typing import List, Optional
 
-from airflow.models import DagRun, TaskInstance
 from sqlalchemy import Column, MetaData
 
 from astro.constants import UNIQUE_TABLE_NAME_LENGTH
@@ -108,18 +107,6 @@ class Table:
         if not isinstance(value, property):
             self._name = value
             self.temp = False
-
-
-# TODO: deprecate by the end of the refactoring
-def create_table_name(context) -> str:
-    ti: TaskInstance = context["ti"]
-    dag_run: DagRun = ti.get_dagrun()
-    table_name = f"{dag_run.dag_id}_{ti.task_id}_{dag_run.id}".replace(
-        "-", "_"
-    ).replace(".", "__")[:MAX_TABLE_NAME_LENGTH]
-    if not table_name.isidentifier():
-        table_name = f'"{table_name}"'
-    return table_name
 
 
 # TODO: deprecate by the end of the refactoring

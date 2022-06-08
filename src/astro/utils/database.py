@@ -2,12 +2,10 @@ from typing import Union
 
 from airflow.hooks.base import BaseHook
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
-from sqlalchemy import text
-from sqlalchemy.engine import Engine, ResultProxy
+from sqlalchemy.engine import Engine
 
 from astro.constants import Database
 from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook
-from astro.utils.sqlite_utils import create_sqlalchemy_engine_with_sqlite
 
 
 def get_database_name(interface: Union[Engine, BaseHook, SqliteHook]) -> Database:
@@ -33,47 +31,3 @@ def get_database_name(interface: Union[Engine, BaseHook, SqliteHook]) -> Databas
     else:  # SqlAlchemy engine
         database_name = getattr(Database, interface.name.upper())
     return database_name
-
-
-def get_sqlalchemy_engine(hook: Union[BaseHook, SqliteHook]) -> Engine:
-    """
-    Given a hook, return a SQLAlchemy engine for the target database.
-
-    :param hook: Airflow Hook used to access a SQL-like database
-    :type hook: (BigQueryHook, PostgresHook, SnowflakeHook, SqliteHook)
-    :return: SQLAlchemy engine
-    :rtype: sqlalchemy.Engine
-    """
-    database = get_database_name(hook)
-    engine = None
-    if database == Database.SQLITE:
-        engine = create_sqlalchemy_engine_with_sqlite(hook)
-    if engine is None:
-        engine = hook.get_sqlalchemy_engine()
-    return engine
-
-
-def run_sql(
-    engine: Engine,
-    sql_statement: Union[str, text],
-    parameters: Union[None, dict] = None,
-) -> ResultProxy:
-    """
-    Run a SQL statement using the given engine.
-
-    :param engine: SQLAlchemy engine
-    :type engine: sqlalchemy.Engine
-    :param sql_statement: SQL statement to be run on the engine
-    :type sql_statement: (sqlalchemy.text or str)
-    :param parameters: (optional) Parameters to be passed to the SQL statement
-    :type parameters: dict
-    :return: Result of running the statement
-    :rtype: sqlalchemy.engine.ResultProxy
-    """
-    if parameters is None:
-        parameters = {}
-    connection = engine.connect()
-    if isinstance(sql_statement, str):
-        return connection.execute(text(sql_statement), parameters)
-
-    return connection.execute(sql_statement, parameters)
