@@ -10,8 +10,7 @@ from astro import sql as aql
 from astro.constants import Database
 from astro.databases import create_database
 from astro.files import File
-from astro.settings import SCHEMA
-from astro.sql.table import Metadata, Table
+from astro.sql.table import Table
 from tests.sql.operators import utils as test_utils
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("integration_test_table")
