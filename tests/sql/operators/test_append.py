@@ -85,8 +85,8 @@ def test_append(
     with sample_dag:
         appended_table = aql.append(
             **app_param,
-            main_table=main_table,
-            append_table=append_table,
+            target_table=main_table,
+            source_table=append_table,
         )
         validate_append(appended_table)
     test_utils.run_dag(sample_dag)
