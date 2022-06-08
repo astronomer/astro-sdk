@@ -2,8 +2,6 @@
 
 __version__ = "0.9.1"
 
-import logging
-
 # The following line is an import work-around to avoid raising a circular dependency issue related to `create_database`
 # Without this, if we run the following imports, in this specific order:
 #   from astro.databases import create_database
@@ -37,9 +35,9 @@ def get_provider_info() -> dict:
 
 
 try:
-    ENABLE_XCOM_PICKLING = os.environ["AIRFLOW__CORE__ENABLE_XCOM_PICKLING"] == "True"
-    logging.info(ENABLE_XCOM_PICKLING)
-    logging.info(os.environ["AIRFLOW__CORE__ENABLE_XCOM_PICKLING"])
+    ENABLE_XCOM_PICKLING = (
+        os.environ["AIRFLOW__CORE__ENABLE_XCOM_PICKLING"].lower() == "true"
+    )
     if not ENABLE_XCOM_PICKLING:
         raise ValueError
 except (ValueError, KeyError):
