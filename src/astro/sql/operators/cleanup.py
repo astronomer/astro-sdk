@@ -14,7 +14,7 @@ class CleanupOperator(BaseOperator):
     :param task_id: Optional custom task id
     """
 
-    template_fields = ("target_table", "source_table")
+    template_fields = ("tables_to_cleanup",)
 
     def __init__(
         self,
