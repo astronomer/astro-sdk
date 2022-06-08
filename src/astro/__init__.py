@@ -12,6 +12,8 @@ __version__ = "0.9.1"
 # Although astro.database does not depend on astro.sql, it depends on astro.sql.table - and, unless astro.sql was
 # imported beforehand, it will also load astro.sql. In astro.sql we import lots of operators which depend on
 # astro.database, and this is what leads to the circular dependency.
+import os
+
 import astro.sql  # noqa: F401
 
 
@@ -30,3 +32,14 @@ def get_provider_info() -> dict:
         "hook-class-names": [],
         "extra-links": [],
     }
+
+
+try:
+    ENABLE_XCOM_PICKLING = os.environ["AIRFLOW__CORE__ENABLE_XCOM_PICKLING"] == "True"
+    if not ENABLE_XCOM_PICKLING:
+        raise ValueError
+except (ValueError, KeyError):
+    raise OSError(
+        "AIRFLOW__CORE__ENABLE_XCOM_PICKLING environment variable needs "
+        "to be set to True before importing astro-sdk-python"
+    )
