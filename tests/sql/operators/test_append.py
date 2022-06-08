@@ -112,7 +112,7 @@ def test_append_on_tables_on_different_db(sample_dag, database_table_fixture):
                 output_table=test_table_2,
             )
             aql.append(
-                main_table=load_main,
-                append_table=load_append,
+                target_table=load_main,
+                source_table=load_append,
             )
         test_utils.run_dag(sample_dag)
