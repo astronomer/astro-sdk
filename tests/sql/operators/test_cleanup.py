@@ -6,6 +6,7 @@ import pytest
 import astro.sql as aql
 from astro.constants import Database
 from astro.files import File
+from astro.sql.table import Table
 
 CWD = pathlib.Path(__file__).parent
 
@@ -42,6 +43,44 @@ def test_cleanup_one_table(database_table_fixture):
     a = aql.cleanup([test_table])
     a.execute({})
     assert not db.table_exists(test_table)
+
+
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    SUPPORTED_DATABASES,
+    indirect=True,
+    ids=["sqlite", "postgres", "bigquery", "snowflake"],
+)
+@pytest.mark.parametrize(
+    "tables_fixture",
+    [
+        {
+            "items": [
+                {
+                    "table": Table(name="non_temp_table"),
+                    "file": File(DEFAULT_FILEPATH),
+                },
+                {
+                    "table": Table(),
+                    "file": File(DEFAULT_FILEPATH),
+                },
+            ]
+        }
+    ],
+    indirect=True,
+    ids=["named_table"],
+)
+def test_cleanup_non_temp_table(database_table_fixture, tables_fixture):
+    db, _ = database_table_fixture
+    test_table, test_temp_table = tables_fixture
+    assert db.table_exists(test_table)
+    assert db.table_exists(test_temp_table)
+    test_table.conn_id = db.conn_id
+    test_temp_table.conn_id = db.conn_id
+    a = aql.cleanup([test_table, test_temp_table])
+    a.execute({})
+    assert db.table_exists(test_table)
+    assert not db.table_exists(test_temp_table)
 
 
 @pytest.mark.integration
