@@ -75,9 +75,9 @@ def run_append(output_specs: List):
     )
 
     aql.append(
-        columns=["sell", "living"],
-        main_table=load_main,
-        append_table=load_append,
+        source_to_target_columns_map={"sell": "sell", "living": "living"},
+        target_table=load_main,
+        source_table=load_append,
     )
 
 

@@ -1,13 +1,12 @@
 from typing import Any, Dict, Optional, Union
 
 import pandas as pd
-from airflow.hooks.base import BaseHook
 from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 from astro.databases import BaseDatabase, create_database
-from astro.files import File, get_files
+from astro.files import File, check_if_connection_exists, get_files
 from astro.sql.table import Table
 from astro.utils.task_id_helper import get_task_id
 
@@ -45,14 +44,12 @@ class LoadFile(BaseOperator):
         self.ndjson_normalize_sep = ndjson_normalize_sep
         self.normalize_config: Dict[str, str] = {}
 
-    def execute(self, context: Any) -> Union[Table, pd.DataFrame]:
+    def execute(self, context: Any) -> Union[Table, pd.DataFrame]:  # skipcq: PYL-W0613
         """
         Load an existing dataset from a supported file into a SQL table or a Dataframe.
         """
         if self.input_file.conn_id:
-            # Verify a Connection with self.input_file.conn_id actually exists in Airflow
-            # Raises a AirflowNotFoundException exception otherwise
-            BaseHook.get_connection(self.input_file.conn_id)
+            check_if_connection_exists(self.input_file.conn_id)
 
         return self.load_data(input_file=self.input_file)
 

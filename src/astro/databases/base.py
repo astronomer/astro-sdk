@@ -4,10 +4,11 @@ from typing import Dict, List, Optional, Tuple
 import pandas as pd
 import sqlalchemy
 from airflow.hooks.base import BaseHook
+from sqlalchemy import column, insert, select
+from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
-    AppendConflictStrategy,
     ExportExistsStrategy,
     LoadExistStrategy,
     MergeConflictStrategy,
@@ -107,8 +108,9 @@ class BaseDatabase(ABC):
         Handles database-specific logic to handle constraints, keeping
         it agnostic to database.
         """
-        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE " + str(parameters)
-        return sql.replace("'", "")
+        constraints = ",".join(parameters)
+        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (%s)" % constraints
+        return sql
 
     @staticmethod
     def get_table_qualified_name(table: Table) -> str:  # skipcq: PYL-R0201
@@ -238,6 +240,7 @@ class BaseDatabase(ABC):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
+        self.create_schema_if_needed(target_table.metadata.schema)
         source_dataframe.to_sql(
             self.get_table_qualified_name(target_table),
             con=self.sqlalchemy_engine,
@@ -252,7 +255,6 @@ class BaseDatabase(ABC):
         source_table: Table,
         target_table: Table,
         source_to_target_columns_map: Dict[str, str],
-        if_conflicts: AppendConflictStrategy = "exception",
     ) -> None:
         """
         Append the source table rows into a destination table.
@@ -260,10 +262,25 @@ class BaseDatabase(ABC):
 
         :param source_table: Contains the rows to be appended to the target_table
         :param target_table: Contains the destination table in which the rows will be appended
-        :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names
-        :param if_conflicts: The strategy to be applied if there are conflicts.
+        :param source_to_target_columns_map: Dict of source_table columns names to target_table columns names
         """
-        raise NotImplementedError
+        target_table_sqla = self.get_sqla_table(target_table)
+        source_table_sqla = self.get_sqla_table(source_table)
+        if not source_to_target_columns_map:
+            source_columns = target_columns = [
+                column(col) for col in target_table_sqla.c.keys()
+            ]
+        else:
+            target_columns = [
+                column(col) for col in source_to_target_columns_map.values()
+            ]
+            source_columns = [
+                column(col) for col in source_to_target_columns_map.keys()
+            ]
+
+        sel = select(source_columns).select_from(source_table_sqla)
+        sql = insert(target_table_sqla).from_select(target_columns, sel)
+        self.run_sql(sql_statement=sql)
 
     def merge_table(
         self,
@@ -284,6 +301,16 @@ class BaseDatabase(ABC):
         :param if_conflicts: The strategy to be applied if there are conflicts.
         """
         raise NotImplementedError
+
+    def get_sqla_table(self, table: Table) -> SqlaTable:
+        """
+        Return SQLAlchemy table instance
+
+        :param table: Astro Table to be converted to SQLAlchemy table instance
+        """
+        return SqlaTable(
+            table.name, table.sqlalchemy_metadata, autoload_with=self.sqlalchemy_engine
+        )
 
     # ---------------------------------------------------------
     # Extract methods

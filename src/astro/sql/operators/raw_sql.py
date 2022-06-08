@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Any, Dict
 
 from astro.sql.operators.base import BaseSQLOperator
 
@@ -12,7 +12,7 @@ class RawSQLOperator(BaseSQLOperator):
     and on the SQL statement/function declared by the user.
     """
 
-    def execute(self, context: Dict):
+    def execute(self, context: Dict) -> Any:
         super().execute(context)
 
         result = self.database_impl.run_sql(

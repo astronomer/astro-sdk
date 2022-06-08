@@ -39,22 +39,15 @@ def append_params(request):
     mode = request.param
     if mode == "basic":
         return {
-            "columns": ["sell", "living"],
+            "source_to_target_columns_map": {"sell": "sell", "living": "living"},
         }, validate_basic
     if mode == "all_fields":
         return {}, validate_append_all
-    if mode == "with_caste":
-        return {
-            "columns": ["sell", "living"],
-            "casted_columns": {"age": "INTEGER"},
-        }, validate_basic
-    if mode == "caste_only":
-        return {"casted_columns": {"age": "INTEGER"}}, validate_caste_only
 
 
 @pytest.mark.parametrize(
     "append_params",
-    ["basic", "all_fields", "with_caste"],
+    ["basic", "all_fields"],
     indirect=True,
 )
 @pytest.mark.parametrize(

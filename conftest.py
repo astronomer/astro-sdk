@@ -2,10 +2,8 @@ import os
 import pathlib
 import uuid
 
-import pandas as pd
 import pytest
 import yaml
-from airflow.hooks.base import BaseHook
 from airflow.models import DAG, Connection, DagRun
 from airflow.models import TaskInstance as TI
 from airflow.utils import timezone
@@ -16,7 +14,6 @@ from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
 from astro.sql.table import Table, create_unique_table_name
 from astro.utils.dependencies import gcs, s3
-from astro.utils.load import load_dataframe_into_sql_table
 from tests.sql.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -68,14 +65,6 @@ def sample_dag():
     with create_session() as session_:
         session_.query(DagRun).delete()
         session_.query(TI).delete()
-
-
-def populate_table(path: str, table: Table, hook: BaseHook) -> None:
-    """
-    Populate a csv file into a sql table
-    """
-    df = pd.read_csv(path)
-    load_dataframe_into_sql_table(pandas_dataframe=df, output_table=table, hook=hook)
 
 
 @pytest.fixture
@@ -137,6 +126,7 @@ def database_table_fixture(request):
     table.conn_id = table.conn_id or conn_id
     if table.metadata.is_empty():
         table.metadata = database.default_metadata
+    database.create_schema_if_needed(table.metadata.schema)
 
     database.drop_table(table)
     if file:

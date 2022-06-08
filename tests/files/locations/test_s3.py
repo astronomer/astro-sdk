@@ -1,8 +1,10 @@
+import os
 from unittest.mock import patch
 
 from botocore.client import BaseClient
 
 from astro.files.locations import create_file_location
+from astro.files.locations.amazon.s3 import S3Location
 
 
 def test_get_transport_params_with_s3():  # skipcq: PYL-W0612
@@ -29,3 +31,13 @@ def test_size():
     """Test get_size() of for local file."""
     location = create_file_location("s3://tmp/house2.csv")
     assert location.size == -1
+
+
+@patch.dict(
+    os.environ,
+    {"AWS_ACCESS_KEY_ID": "abcd", "AWS_SECRET_ACCESS_KEY": "@#$%@$#ASDH@Ksd23%SD546"},
+)
+def test_parse_s3_env_var():
+    key, secret = S3Location._parse_s3_env_var()
+    assert key == "abcd"
+    assert secret == "@#$%@$#ASDH@Ksd23%SD546"

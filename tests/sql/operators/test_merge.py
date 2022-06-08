@@ -7,9 +7,9 @@ from airflow.decorators import task_group
 
 from astro import sql as aql
 from astro.constants import Database
+from astro.databases import create_database
 from astro.files import File
 from astro.sql.table import Metadata, Table
-from astro.utils.database import create_database_from_conn_id
 from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
@@ -72,19 +72,8 @@ def merge_parameters(request, database_table_fixture):
 
 @aql.run_raw_sql
 def add_constraint(table: Table, columns):
-    database = create_database_from_conn_id(table.conn_id)
-    if database == Database.SQLITE:
-        return (
-            "CREATE UNIQUE INDEX unique_index ON {{table}}" + f"({','.join(columns)})"
-        )
-    elif database == Database.BIGQUERY:
-        # bigquery does not have constraints, so we offer a useless statement
-        return "SELECT 1 + 1"
-
-    return (
-        "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE"
-        + f" ({','.join(columns)})"
-    )
+    db = create_database(table.conn_id)
+    return db.get_merge_initialization_query(parameters=columns)
 
 
 @aql.dataframe
