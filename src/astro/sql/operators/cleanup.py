@@ -9,13 +9,9 @@ from astro.sql.table import Table
 
 class CleanupOperator(BaseOperator):
     """
-    Merge the source table rows into a destination table.
-
-    :param source_table: Contains the rows to be merged to the target_table (templated)
-    :param target_table: Contains the destination table in which the rows will be merged (templated)
-    :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names
-    :param target_conflict_columns: List of cols where we expect to have a conflict while combining
-    :param if_conflicts: The strategy to be applied if there are conflicts.
+    Clean up temporary tables at the end of a DAG run
+    :param tables_to_cleanup: List of tbles to drop at the end of the DAG run
+    :param task_id: Optional custom task id
     """
 
     template_fields = ("target_table", "source_table")
@@ -34,7 +30,7 @@ class CleanupOperator(BaseOperator):
 
     def execute(self, context: dict):
         for table in self.tables_to_cleanup:
-            if not isinstance(table, Table):
+            if not isinstance(table, Table) or not table.temp:
                 continue
             db = create_database(table.conn_id)
             db.drop_table(table)
