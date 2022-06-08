@@ -7,18 +7,31 @@ from airflow.hooks.base import BaseHook
 from airflow.utils.db import provide_session
 from sqlalchemy.sql.functions import Function
 
-from astro.constants import Database
+from astro.constants import CONN_TYPE_TO_DATABASE, Database
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table, create_unique_table_name
 from astro.utils import get_hook, postgres_transform, snowflake_transform
-from astro.utils.database import (
-    create_database_from_conn_id,
-    get_sqlalchemy_engine,
-    run_sql,
-)
+from astro.utils.database import get_sqlalchemy_engine, run_sql
 from astro.utils.load import load_dataframe_into_sql_table
 from astro.utils.schema_util import create_schema_query, schema_exists
 from astro.utils.table_handler import TableHandler
+
+
+def create_database_from_conn_id(conn_id: str) -> Database:
+    """
+    Given a conn_id, identify the database name.
+
+    :param conn_id: Airflow connection ID
+    :type conn_id: str
+    :return: the database this interface relates to (e.g. Database.SQLITE)
+    :rtype: astro.constants.Database enum item
+    """
+    conn_type = BaseHook.get_connection(conn_id).conn_type
+    try:
+        database_name = CONN_TYPE_TO_DATABASE[conn_type]
+    except KeyError:
+        raise ValueError(f"Unsupported database <{conn_type}>")
+    return database_name
 
 
 class SqlDecoratedOperator(DecoratedOperator, TableHandler):

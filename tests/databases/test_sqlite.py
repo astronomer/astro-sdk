@@ -35,7 +35,10 @@ def test_create_database(conn_id):
 @pytest.mark.parametrize(
     "conn_id,expected_db_path",
     [
-        (DEFAULT_CONN_ID, BaseHook.get_connection(DEFAULT_CONN_ID).host),
+        (
+            DEFAULT_CONN_ID,
+            BaseHook.get_connection(DEFAULT_CONN_ID).host,
+        ),  # Linux and MacOS have different hosts
         (CUSTOM_CONN_ID, "/tmp/sqlite.db"),
     ],
     ids=SUPPORTED_CONN_IDS,
