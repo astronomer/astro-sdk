@@ -120,7 +120,7 @@ def test_full_dag(database_table_fixture, sample_dag):
     with sample_dag:
         loaded_table = aql.load_file(
             input_file=File(path=str(CWD) + "/data/homes.csv"),
-            output_table=output_table[0],
+            output_table=output_table,
         )
         tranformed_table = apply_transform(loaded_table)
         run_dataframe_funcs(tranformed_table)
