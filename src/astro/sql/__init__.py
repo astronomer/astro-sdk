@@ -1,7 +1,12 @@
 from typing import Callable, Dict, Iterable, List, Mapping, Optional, Union
 
 import pandas as pd
-from airflow.decorators.base import TaskDecorator, task_decorator_factory
+
+try:
+    from airflow.decorators.base import TaskDecorator, task_decorator_factory
+except ImportError:
+    from airflow.decorators.base import task_decorator_factory
+    from airflow.decorators import _TaskDecorator as TaskDecorator
 
 from astro.constants import MergeConflictStrategy
 from astro.sql.operators.append import AppendOperator
