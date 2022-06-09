@@ -1,5 +1,4 @@
 import pathlib
-from typing import List
 
 import pandas as pd
 import pytest
@@ -82,14 +81,14 @@ def run_append(output_table: Table):
 
 
 @task_group
-def run_merge(output_specs: List):
+def run_merge(output_table: Table):
     main_table = aql.load_file(
         input_file=File(path=str(CWD) + "/data/homes_merge_1.csv"),
-        output_table=output_specs[0],
+        output_table=output_table,
     )
     merge_table = aql.load_file(
         input_file=File(path=str(CWD) + "/data/homes_merge_2.csv"),
-        output_table=output_specs[1],
+        output_table=output_table.create_similar_table(),
     )
 
     con1 = add_constraint(main_table)
