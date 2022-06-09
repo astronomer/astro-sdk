@@ -52,6 +52,10 @@ class BaseDatabase(ABC):
         return f'{self.__class__.__name__}(conn_id="{self.conn_id})'
 
     @property
+    def sql_type(self):
+        raise NotImplementedError
+
+    @property
     def hook(self) -> BaseHook:
         """Return an instance of the database-specific Airflow hook."""
         raise NotImplementedError

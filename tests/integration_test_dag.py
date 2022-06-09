@@ -1,5 +1,4 @@
 import pathlib
-from typing import List
 
 import pandas as pd
 import pytest
@@ -7,10 +6,10 @@ from airflow.decorators import task, task_group
 from airflow.utils import timezone
 
 from astro import sql as aql
+from astro.constants import Database
 from astro.databases import create_database
 from astro.files import File
-from astro.settings import SCHEMA
-from astro.sql.table import Metadata, Table
+from astro.sql.table import Table
 from tests.sql.operators import utils as test_utils
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("integration_test_table")
@@ -64,14 +63,14 @@ def add_constraint(table: Table):
 
 
 @task_group
-def run_append(output_specs: List):
+def run_append(output_table: Table):
     load_main = aql.load_file(
         input_file=File(path=str(CWD) + "/data/homes_main.csv"),
-        output_table=output_specs[0],
+        output_table=output_table,
     )
     load_append = aql.load_file(
         input_file=File(path=str(CWD) + "/data/homes_append.csv"),
-        output_table=output_specs[1],
+        output_table=output_table.create_similar_table(),
     )
 
     aql.append(
@@ -82,14 +81,14 @@ def run_append(output_specs: List):
 
 
 @task_group
-def run_merge(output_specs: List):
+def run_merge(output_table: Table):
     main_table = aql.load_file(
         input_file=File(path=str(CWD) + "/data/homes_merge_1.csv"),
-        output_table=output_specs[0],
+        output_table=output_table,
     )
     merge_table = aql.load_file(
         input_file=File(path=str(CWD) + "/data/homes_merge_2.csv"),
-        output_table=output_specs[1],
+        output_table=output_table.create_similar_table(),
     )
 
     con1 = add_constraint(main_table)
@@ -105,34 +104,22 @@ def run_merge(output_specs: List):
 
 
 @pytest.mark.parametrize(
-    "sql_server",
+    "database_table_fixture",
     [
-        "snowflake",
-        "postgres",
-        "bigquery",
-        "sqlite",
+        {"database": Database.SNOWFLAKE},
+        {"database": Database.BIGQUERY},
+        {"database": Database.POSTGRES},
+        {"database": Database.SQLITE},
     ],
     indirect=True,
+    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
-@pytest.mark.parametrize(
-    "test_table",
-    [
-        [
-            {"param": {"metadata": Metadata(schema=SCHEMA)}},
-            {
-                "param": {"metadata": Metadata(schema=SCHEMA)},
-            },
-        ],
-    ],
-    indirect=True,
-    ids=["table"],
-)
-def test_full_dag(sql_server, sample_dag, test_table):
+def test_full_dag(database_table_fixture, sample_dag):
+    _, output_table = database_table_fixture
     with sample_dag:
-        output_table = test_table
         loaded_table = aql.load_file(
             input_file=File(path=str(CWD) + "/data/homes.csv"),
-            output_table=output_table[0],
+            output_table=output_table,
         )
         tranformed_table = apply_transform(loaded_table)
         run_dataframe_funcs(tranformed_table)
