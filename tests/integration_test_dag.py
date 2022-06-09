@@ -64,14 +64,14 @@ def add_constraint(table: Table):
 
 
 @task_group
-def run_append(output_specs: List):
+def run_append(output_table: Table):
     load_main = aql.load_file(
         input_file=File(path=str(CWD) + "/data/homes_main.csv"),
-        output_table=output_specs[0],
+        output_table=output_table,
     )
     load_append = aql.load_file(
         input_file=File(path=str(CWD) + "/data/homes_append.csv"),
-        output_table=output_specs[1],
+        output_table=output_table.create_similar_table(),
     )
 
     aql.append(
