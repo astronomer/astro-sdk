@@ -32,8 +32,6 @@ class CleanupOperator(BaseOperator):
             if isinstance(task, BaseSQLOperator) or isinstance(task, DataframeOperator):
                 task_output = task.output.resolve(context)
                 if isinstance(task_output, Table) and task_output.temp:
-                    print(
-                        f"the output of task {task.task_id} is {task.output.resolve(context)}"
-                    )
+                    print(f"the output of task {task.task_id} is {task_output}")
                     db = create_database(task_output.conn_id)
                     db.drop_table(task_output)

@@ -1,6 +1,7 @@
 import logging
 import pathlib
 
+import pandas as pd
 import pytest
 from airflow.decorators import task
 from airflow.utils import timezone
@@ -29,6 +30,11 @@ def select_all(input_table: Table):
     return "SELECT * FROM {{input_table}}"
 
 
+@aql.dataframe
+def ensure_table_exists(df: pd.DataFrame):
+    assert len(df) == 5
+
+
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
@@ -41,9 +47,13 @@ def select_all(input_table: Table):
 )
 def test_cleanup_dag(sample_astro_dag, database_table_fixture):
     db, test_table = database_table_fixture
+    temp_table = test_table.create_similar_table()
+    temp_table.temp = True
     with sample_astro_dag:
         for i in range(3):
             add_one(i)
-        select_all(test_table)
+        table = select_all(test_table, output_table=temp_table)
+        ensure_table_exists(table)
 
     test_utils.run_dag(sample_astro_dag)
+    assert not db.table_exists(temp_table)
