@@ -23,6 +23,10 @@ class SqliteDatabase(BaseDatabase):
         super().__init__(conn_id)
 
     @property
+    def sql_type(self):
+        return "sqlite"
+
+    @property
     def hook(self) -> SqliteHook:
         """Retrieve Airflow hook to interface with the Sqlite database."""
         return SqliteHook(sqlite_conn_id=self.conn_id)
@@ -57,6 +61,7 @@ class SqliteDatabase(BaseDatabase):
         Since SQLite does not have a concept of databases or schemas, we just return the table as is,
         without any modifications.
         """
+        table.conn_id = table.conn_id or self.conn_id
         return table
 
     def create_schema_if_needed(self, schema: Optional[str]) -> None:

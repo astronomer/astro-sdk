@@ -1,6 +1,5 @@
 import math
 import pathlib
-from typing import List
 
 import pandas as pd
 import pytest
@@ -10,21 +9,19 @@ from astro import sql as aql
 from astro.constants import Database
 from astro.databases import create_database
 from astro.files import File
-from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
 from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
 
 
-def merge_keys(sql_server, mode):
+def merge_keys(sql_name, mode):
     """
     To match with their respective API's, we have a slightly different "merge_keys" value
     when a user is using snowflake.
-    :param sql_server:
+    :param sql_name:
     :return:
     """
-    sql_name, _ = sql_server
     keys = []
     if mode == "single":
         keys = ["list"]
@@ -37,12 +34,13 @@ def merge_keys(sql_server, mode):
 
 
 @pytest.fixture
-def merge_parameters(request, sql_server):
+def merge_parameters(request, database_table_fixture):
+    database, _ = database_table_fixture
     mode = request.param
     if mode == "single":
         return (
             {
-                "target_conflict_columns": merge_keys(sql_server, mode),
+                "target_conflict_columns": merge_keys(database.sql_type, mode),
                 "source_to_target_columns_map": {"list": "list"},
                 "if_conflicts": "ignore",
             },
@@ -51,7 +49,7 @@ def merge_parameters(request, sql_server):
     elif mode == "multi":
         return (
             {
-                "target_conflict_columns": merge_keys(sql_server, mode),
+                "target_conflict_columns": merge_keys(database.sql_type, mode),
                 "source_to_target_columns_map": {"list": "list", "sell": "sell"},
                 "if_conflicts": "ignore",
             },
@@ -60,7 +58,7 @@ def merge_parameters(request, sql_server):
     # elif mode == "update":
     return (
         {
-            "target_conflict_columns": merge_keys(sql_server, mode),
+            "target_conflict_columns": merge_keys(database.sql_type, mode),
             "source_to_target_columns_map": {
                 "list": "list",
                 "sell": "sell",
@@ -79,13 +77,7 @@ def add_constraint(table: Table, columns):
 
 
 @aql.dataframe
-def validate_results(df: pd.DataFrame, mode, sql_type):
-    # make columns lower and reverse due to snowflake defaulting to uppercase
-    # Also reverse because BQ and snowflake seem to reverse row order
-    if sql_type in ["snowflake", "bigquery"]:
-        df.columns = df.columns.str.lower()
-        df = df.iloc[::-1]
-
+def validate_results(df: pd.DataFrame, mode):
     def set_compare(l1, l2):
         l1 = list(filter(lambda val: not math.isnan(val), l1))
         return set(l1) == set(l2)
@@ -108,28 +100,19 @@ def validate_results(df: pd.DataFrame, mode, sql_type):
 
 
 @task_group
-def run_merge(output_specs: List[Table], merge_parameters, mode, sql_type):
-    con1 = add_constraint(output_specs[0], merge_parameters["target_conflict_columns"])
+def run_merge(target_table: Table, source_table: Table, merge_parameters, mode):
+    con1 = add_constraint(target_table, merge_parameters["target_conflict_columns"])
 
     merged_table = aql.merge(
-        target_table=output_specs[0],
-        source_table=output_specs[1],
+        target_table=target_table,
+        source_table=source_table,
         **merge_parameters,
     )
     con1 >> merged_table
-    validate_results(df=merged_table, mode=mode, sql_type=sql_type)
+    validate_results(df=merged_table, mode=mode)
 
 
-@pytest.mark.parametrize(
-    "sql_server",
-    [
-        "bigquery",
-        "snowflake",
-        "postgres",
-        "sqlite",
-    ],
-    indirect=True,
-)
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "merge_parameters",
     [
@@ -141,29 +124,44 @@ def run_merge(output_specs: List[Table], merge_parameters, mode, sql_type):
     indirect=True,
 )
 @pytest.mark.parametrize(
-    "test_table",
+    "database_table_fixture",
+    [{"database": Database.SNOWFLAKE}, {"database": Database.BIGQUERY}],
+    indirect=True,
+    ids=["snowflake", "bigquery"],
+)
+@pytest.mark.parametrize(
+    "multiple_tables_fixture",
     [
-        [
-            {
-                "param": {"metadata": Metadata(schema=SCHEMA)},
-                "path": str(CWD) + "/../../data/homes_merge_1.csv",
-                "load_table": True,
-            },
-            {
-                "param": {"metadata": Metadata(schema=SCHEMA)},
-                "path": str(CWD) + "/../../data/homes_merge_2.csv",
-                "load_table": True,
-            },
-        ],
+        {
+            "items": [
+                {
+                    "file": File(
+                        str(pathlib.Path(CWD.parent.parent, "data/homes_merge_1.csv"))
+                    )
+                },
+                {
+                    "file": File(
+                        str(pathlib.Path(CWD.parent.parent, "data/homes_merge_2.csv"))
+                    )
+                },
+            ]
+        }
     ],
     indirect=True,
-    ids=["table"],
+    ids=["two_tables_same_schema"],
 )
-def test_merge(sql_server, sample_dag, test_table, merge_parameters):
-    sql_type, _ = sql_server
+def test_merge(
+    database_table_fixture, multiple_tables_fixture, sample_dag, merge_parameters
+):
+    target_table, merge_table = multiple_tables_fixture
     merge_params, mode = merge_parameters
     with sample_dag:
-        run_merge(test_table, merge_params, mode, sql_type)
+        run_merge(
+            target_table=target_table,
+            source_table=merge_table,
+            merge_parameters=merge_params,
+            mode=mode,
+        )
     test_utils.run_dag(sample_dag)
 
 
@@ -175,7 +173,7 @@ def test_merge(sql_server, sample_dag, test_table, merge_parameters):
     ids=["snowflake", "bigquery"],
 )
 @pytest.mark.parametrize(
-    "tables_fixture",
+    "multiple_tables_fixture",
     [
         {
             "items": [
@@ -191,12 +189,14 @@ def test_merge(sql_server, sample_dag, test_table, merge_parameters):
     indirect=True,
     ids=["two_tables_same_schema"],
 )
-def test_merge_with_the_same_schema(database_table_fixture, tables_fixture, sample_dag):
+def test_merge_with_the_same_schema(
+    database_table_fixture, multiple_tables_fixture, sample_dag
+):
     """
     Validate that the output of merge is what we expect.
     """
     database, _ = database_table_fixture
-    first_table, second_table = tables_fixture
+    first_table, second_table = multiple_tables_fixture
 
     with sample_dag:
         aql.merge(
@@ -230,7 +230,7 @@ def test_merge_with_the_same_schema(database_table_fixture, tables_fixture, samp
     ids=["bigquery"],
 )
 @pytest.mark.parametrize(
-    "tables_fixture",
+    "multiple_tables_fixture",
     [
         {
             "items": [
@@ -259,13 +259,13 @@ def test_merge_with_the_same_schema(database_table_fixture, tables_fixture, samp
     ids=["two_tables"],
 )
 def test_merge_with_different_schemas(
-    database_table_fixture, tables_fixture, sample_dag
+    database_table_fixture, multiple_tables_fixture, sample_dag
 ):
     """
     Validate that the output of merge is what we expect.
     """
     database, _ = database_table_fixture
-    first_table, second_table = tables_fixture
+    first_table, second_table = multiple_tables_fixture
 
     with sample_dag:
         aql.merge(

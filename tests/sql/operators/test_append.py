@@ -5,9 +5,9 @@ import pytest
 from airflow.exceptions import BackfillUnfinished
 
 from astro import sql as aql
+from astro.constants import Database
 from astro.files import File
-from astro.settings import SCHEMA
-from astro.sql.table import Metadata, Table
+from astro.sql.table import Table
 from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
@@ -51,57 +51,54 @@ def append_params(request):
     indirect=True,
 )
 @pytest.mark.parametrize(
-    "sql_server",
+    "database_table_fixture",
     [
-        "bigquery",
-        "snowflake",
-        "postgres",
-        "sqlite",
+        {"database": Database.SNOWFLAKE},
+        {"database": Database.BIGQUERY},
+        {"database": Database.POSTGRES},
+        {"database": Database.SQLITE},
     ],
     indirect=True,
+    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
 @pytest.mark.parametrize(
-    "test_table",
+    "multiple_tables_fixture",
     [
-        [
-            {
-                "param": {
-                    "metadata": Metadata(schema=SCHEMA),
+        {
+            "items": [
+                {
+                    "file": File(path=str(CWD) + "/../../data/homes_main.csv"),
                 },
-                "path": str(CWD) + "/../../data/homes_main.csv",
-                "load_table": True,
-            },
-            {
-                "param": {"metadata": Metadata(schema=SCHEMA)},
-                "path": str(CWD) + "/../../data/homes_append.csv",
-                "load_table": True,
-            },
-        ],
+                {
+                    "file": File(path=str(CWD) + "/../../data/homes_append.csv"),
+                },
+            ],
+        }
     ],
     indirect=True,
-    ids=["table"],
 )
-def test_append(sql_server, sample_dag, test_table, append_params):
+def test_append(
+    database_table_fixture, sample_dag, multiple_tables_fixture, append_params
+):
     app_param, validate_append = append_params
-
+    main_table, append_table = multiple_tables_fixture
     with sample_dag:
         appended_table = aql.append(
             **app_param,
-            target_table=test_table[0],
-            source_table=test_table[1],
+            target_table=main_table,
+            source_table=append_table,
         )
         validate_append(appended_table)
     test_utils.run_dag(sample_dag)
 
 
 @pytest.mark.parametrize(
-    "sql_server",
-    [
-        "postgres",
-    ],
+    "database_table_fixture",
+    [{"database": Database.POSTGRES}],
     indirect=True,
+    ids=["postgresql"],
 )
-def test_append_on_tables_on_different_db(sample_dag, sql_server):
+def test_append_on_tables_on_different_db(sample_dag, database_table_fixture):
     test_table_1 = Table(conn_id="postgres_conn")
     test_table_2 = Table(conn_id="sqlite_conn")
     with pytest.raises(BackfillUnfinished):
