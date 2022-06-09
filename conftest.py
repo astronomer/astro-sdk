@@ -68,6 +68,19 @@ def sample_dag():
 
 
 @pytest.fixture
+def sample_astro_dag():
+    from astro.dag import DAG as AstroDAG
+
+    dag_id = create_unique_table_name(UNIQUE_HASH_SIZE)
+    yield AstroDAG(
+        dag_id, default_args={"owner": "airflow", "start_date": DEFAULT_DATE}
+    )
+    with create_session() as session_:
+        session_.query(DagRun).delete()
+        session_.query(TI).delete()
+
+
+@pytest.fixture
 def output_table(request):
     table_type = request.param
     if table_type == "None":
