@@ -208,25 +208,9 @@ def remote_files_fixture(request):
     unique_value = uuid.uuid4()
     for item_count in range(file_count):
         object_prefix = f"test/{unique_value}{item_count}.{file_extension}"
-        if provider == "google":
-            bucket_name = os.getenv("GOOGLE_BUCKET", "dag-authoring")
-            object_path = f"gs://{bucket_name}/{object_prefix}"
-            hook = gcs.GCSHook()
-            if file_create:
-                hook.upload(bucket_name, object_prefix, source_path)
-            else:
-                # if an object doesn't exist, GCSHook.delete fails:
-                hook.exists(  # skipcq: PYL-W0106
-                    bucket_name, object_prefix
-                ) and hook.delete(bucket_name, object_prefix)
-        else:
-            bucket_name = os.getenv("AWS_BUCKET", "tmp9")
-            object_path = f"s3://{bucket_name}/{object_prefix}"
-            hook = s3.S3Hook()
-            if file_create:
-                hook.load_file(source_path, object_prefix, bucket_name)
-            else:
-                hook.delete_objects(bucket_name, object_prefix)
+        bucket_name, hook, object_path = _upload_or_delete_remote_file(
+            file_create, object_prefix, provider, source_path
+        )
         object_path_list.append(object_path)
         object_prefix_list.append(object_prefix)
 
@@ -241,6 +225,33 @@ def remote_files_fixture(request):
     else:
         for object_prefix in object_prefix_list:
             hook.delete_objects(bucket_name, object_prefix)
+
+
+def _upload_or_delete_remote_file(file_create, object_prefix, provider, source_path):
+    """
+    Upload a local file to remote bucket if file_create is True.
+    And deletes a file if it already exists and file_create is False.
+    """
+    if provider == "google":
+        bucket_name = os.getenv("GOOGLE_BUCKET", "dag-authoring")
+        object_path = f"gs://{bucket_name}/{object_prefix}"
+        hook = gcs.GCSHook()
+        if file_create:
+            hook.upload(bucket_name, object_prefix, source_path)
+        else:
+            # if an object doesn't exist, GCSHook.delete fails:
+            hook.exists(  # skipcq: PYL-W0106
+                bucket_name, object_prefix
+            ) and hook.delete(bucket_name, object_prefix)
+    else:
+        bucket_name = os.getenv("AWS_BUCKET", "tmp9")
+        object_path = f"s3://{bucket_name}/{object_prefix}"
+        hook = s3.S3Hook()
+        if file_create:
+            hook.load_file(source_path, object_prefix, bucket_name)
+        else:
+            hook.delete_objects(bucket_name, object_prefix)
+    return bucket_name, hook, object_path
 
 
 def method_map_fixture(method, base_path, classes, get):
