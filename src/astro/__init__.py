@@ -36,11 +36,7 @@ def get_provider_info() -> dict:
     }
 
 
-try:
-    ENABLE_XCOM_PICKLING = conf.getboolean(section="core", key="enable_xcom_pickling")
-    if not ENABLE_XCOM_PICKLING:
-        raise ValueError
-except (ValueError, KeyError):
+if not conf.getboolean(section="core", key="enable_xcom_pickling"):
     raise OSError(
         "AIRFLOW__CORE__ENABLE_XCOM_PICKLING environment variable needs to be set to True or enable_xcom_pickling=true "
         "in airflow.cfg before importing astro-sdk-python."
