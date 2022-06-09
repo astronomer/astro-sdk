@@ -60,4 +60,3 @@ with DAG(
         ),
         if_exists="replace",
     )
-    aql.cleanup(t2)
