@@ -2,6 +2,7 @@
 
 __version__ = "0.9.1"
 
+
 # The following line is an import work-around to avoid raising a circular dependency issue related to `create_database`
 # Without this, if we run the following imports, in this specific order:
 #   from astro.databases import create_database
@@ -12,6 +13,9 @@ __version__ = "0.9.1"
 # Although astro.database does not depend on astro.sql, it depends on astro.sql.table - and, unless astro.sql was
 # imported beforehand, it will also load astro.sql. In astro.sql we import lots of operators which depend on
 # astro.database, and this is what leads to the circular dependency.
+
+from airflow.configuration import conf
+
 import astro.sql  # noqa: F401
 
 
@@ -30,3 +34,10 @@ def get_provider_info() -> dict:
         "hook-class-names": [],
         "extra-links": [],
     }
+
+
+if not conf.getboolean(section="core", key="enable_xcom_pickling"):
+    raise OSError(
+        "AIRFLOW__CORE__ENABLE_XCOM_PICKLING environment variable needs to be set to True or enable_xcom_pickling=true "
+        "in airflow.cfg before importing astro-sdk-python."
+    )
