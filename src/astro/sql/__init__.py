@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Union
+from typing import Any, Callable, Iterable, List, Mapping, Optional, Union
 
 import pandas as pd
 
@@ -9,11 +9,11 @@ except ImportError:
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
 from astro.constants import MergeConflictStrategy
-from astro.sql.operators.append import AppendOperator
+from astro.sql.operators.append import APPEND_COLUMN_TYPE, AppendOperator
 from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.export_file import export_file  # noqa: F401
 from astro.sql.operators.load_file import load_file  # noqa: F401
-from astro.sql.operators.merge import MergeOperator
+from astro.sql.operators.merge import MERGE_COLUMN_TYPE, MergeOperator
 from astro.sql.operators.raw_sql import RawSQLOperator
 from astro.sql.operators.transform import TransformOperator  # noqa: F401
 from astro.sql.operators.truncate import TruncateOperator
@@ -80,7 +80,7 @@ def append(
     *,
     source_table: Table,
     target_table: Table,
-    source_to_target_columns_map: Optional[Dict[str, str]] = None,
+    columns: APPEND_COLUMN_TYPE = None,
     **kwargs: Any,
 ):
     """
@@ -88,12 +88,15 @@ def append(
 
     :param source_table: Contains the rows to be appended to the target_table (templated)
     :param target_table: Contains the destination table in which the rows will be appended (templated)
-    :param source_to_target_columns_map: Dict of source_table columns names to target_table columns names
+    :param columns: List/Tuple of columns if name of source and target tables are same.
+        If the column names in source and target tables are different pass a dictionary
+        of source_table columns names to target_table columns names.
+        Examples: ``["sell", "list"]`` or ``{"s_sell": "t_sell", "s_list": "t_list"}``
     """
     return AppendOperator(
         target_table=target_table,
         source_table=source_table,
-        source_to_target_columns_map=source_to_target_columns_map,
+        columns=columns,
         **kwargs,
     ).output
 
@@ -102,7 +105,7 @@ def merge(
     *,
     target_table: Table,
     source_table: Table,
-    source_to_target_columns_map: Dict[str, str],
+    columns: MERGE_COLUMN_TYPE,
     target_conflict_columns: List[str],
     if_conflicts: MergeConflictStrategy,
     **kwargs: Any,
@@ -112,7 +115,10 @@ def merge(
 
     :param source_table: Contains the rows to be merged to the target_table (templated)
     :param target_table: Contains the destination table in which the rows will be merged (templated)
-    :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names
+    :param columns: List/Tuple of columns if name of source and target tables are same.
+        If the column names in source and target tables are different pass a dictionary
+        of source_table columns names to target_table columns names.
+        Examples: ``["sell", "list"]`` or ``{"s_sell": "t_sell", "s_list": "t_list"}``
     :param target_conflict_columns: List of cols where we expect to have a conflict while combining
     :param if_conflicts: The strategy to be applied if there are conflicts.
     """
@@ -120,7 +126,7 @@ def merge(
     return MergeOperator(
         target_table=target_table,
         source_table=source_table,
-        source_to_target_columns_map=source_to_target_columns_map,
+        columns=columns,
         target_conflict_columns=target_conflict_columns,
         if_conflicts=if_conflicts,
         **kwargs,
