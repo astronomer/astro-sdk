@@ -25,7 +25,7 @@ def subtract(after_dict, before_dict):
     return {key: after_dict[key] - before_dict.get(key, 0) for key in after_dict}
 
 
-def profile(func, *args, **kwargs):
+def profile(func, *args, **kwargs):  # noqa: C901
     def wrapper(*args, **kwargs):
         process = psutil.Process(os.getpid())
         # metrics before
