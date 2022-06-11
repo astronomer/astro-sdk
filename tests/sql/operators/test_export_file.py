@@ -9,7 +9,6 @@ Run test:
     python3 -m unittest tests.operators.test_export_file.TestSaveFile.test_save_postgres_table_to_local
 
 """
-import logging
 import os
 import pathlib
 import tempfile
@@ -19,7 +18,6 @@ import boto3
 import pandas as pd
 import pytest
 from airflow.exceptions import BackfillUnfinished
-from airflow.utils import timezone
 
 import astro.sql as aql
 from astro.constants import SUPPORTED_FILE_TYPES, Database
@@ -32,9 +30,6 @@ from astro.sql.table import Table
 from astro.utils.dependencies import gcs
 from tests.sql.operators import utils as test_utils
 
-log = logging.getLogger(__name__)
-DEFAULT_DATE = timezone.datetime(2016, 1, 1)
-INPUT_TABLE_NAME = test_utils.get_table_name("export_file_test_table")
 CWD = pathlib.Path(__file__).parent
 
 

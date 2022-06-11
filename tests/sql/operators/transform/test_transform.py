@@ -25,8 +25,6 @@ cwd = pathlib.Path(__file__).parent
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
 def test_dataframe_transform(database_table_fixture, sample_dag):
-    print("test_dataframe_to_database")
-
     _, test_table = database_table_fixture
 
     @aql.dataframe

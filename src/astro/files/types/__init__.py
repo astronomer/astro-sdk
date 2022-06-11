@@ -13,7 +13,7 @@ def create_file_type(
     path: str,
     filetype: Union[FileTypeConstants, None] = None,
     normalize_config: Optional[dict] = None,
-):
+) -> FileType:
     """Factory method to create FileType super objects based on the file extension in path or filetype specified."""
     filetype_to_class: Dict[FileTypeConstants, Type[FileType]] = {
         FileTypeConstants.CSV: CSVFileType,

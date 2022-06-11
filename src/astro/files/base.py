@@ -84,12 +84,12 @@ class File:
         file_exists: bool = self.location.exists()
         return file_exists
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f'{self.__class__.__name__}(location="{self.location}",type="{self.type}")'
         )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.location.path
 
 

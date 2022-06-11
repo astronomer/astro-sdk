@@ -15,32 +15,13 @@ from tests.sql.operators import utils as test_utils
 CWD = pathlib.Path(__file__).parent
 
 
-def merge_keys(sql_name, mode):
-    """
-    To match with their respective API's, we have a slightly different "merge_keys" value
-    when a user is using snowflake.
-    :param sql_name:
-    :return:
-    """
-    keys = []
-    if mode == "single":
-        keys = ["list"]
-    if mode == "multi":
-        keys = ["list", "sell"]
-    if mode == "update":
-        keys = ["list", "sell"]
-
-    return keys
-
-
 @pytest.fixture
-def merge_parameters(request, database_table_fixture):
-    database, _ = database_table_fixture
+def merge_parameters(request):
     mode = request.param
     if mode == "single":
         return (
             {
-                "target_conflict_columns": merge_keys(database.sql_type, mode),
+                "target_conflict_columns": ["list"],
                 "source_to_target_columns_map": {"list": "list"},
                 "if_conflicts": "ignore",
             },
@@ -49,7 +30,7 @@ def merge_parameters(request, database_table_fixture):
     elif mode == "multi":
         return (
             {
-                "target_conflict_columns": merge_keys(database.sql_type, mode),
+                "target_conflict_columns": ["list", "sell"],
                 "source_to_target_columns_map": {"list": "list", "sell": "sell"},
                 "if_conflicts": "ignore",
             },
@@ -58,7 +39,7 @@ def merge_parameters(request, database_table_fixture):
     # elif mode == "update":
     return (
         {
-            "target_conflict_columns": merge_keys(database.sql_type, mode),
+            "target_conflict_columns": ["list", "sell"],
             "source_to_target_columns_map": {
                 "list": "list",
                 "sell": "sell",

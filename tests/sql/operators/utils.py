@@ -1,18 +1,14 @@
 import copy
 import os
 import time
-from typing import Optional
 
 import pandas as pd
 from airflow.executors.debug_executor import DebugExecutor
-from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from airflow.utils import timezone
 from airflow.utils.state import State
 from pandas.testing import assert_frame_equal
 
-from astro.databases import create_database
-from astro.sql.table import Metadata, Table
-from astro.utils.dependencies import BigQueryHook, PostgresHook, SnowflakeHook, bigquery
+from astro.sql.table import Metadata
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
@@ -35,13 +31,6 @@ SQL_SERVER_CONNECTION_KEY = {
     "sqlite": "sqlite_conn_id",
 }
 
-SQL_SERVER_HOOK_CLASS = {
-    "snowflake": SnowflakeHook,
-    "postgres": PostgresHook,
-    "bigquery": BigQueryHook,
-    "sqlite": SqliteHook,
-}
-
 
 def get_default_parameters(database_name):
     # While hooks expect specific attributes for connection (e.g. `snowflake_conn_id`)
@@ -52,37 +41,9 @@ def get_default_parameters(database_name):
     return sql_server_params
 
 
-def create_and_run_task(dag, decorator_func, op_args, op_kwargs):
-    with dag:
-        function = decorator_func(*op_args, **op_kwargs)
-    run_dag(dag)
-    return function
-
-
 def get_table_name(prefix):
     """get unique table name"""
     return prefix + "_" + str(int(time.time()))
-
-
-def drop_table_snowflake(
-    table_name: str,
-    conn_id: str = "snowflake_conn",
-    schema: Optional[str] = os.getenv("SNOWFLAKE_SCHEMA"),
-    database: Optional[str] = os.getenv("SNOWFLAKE_DATABASE"),
-    warehouse: Optional[str] = os.getenv("SNOWFLAKE_WAREHOUSE"),
-):
-    hook = SnowflakeHook(
-        snowflake_conn_id=conn_id,
-        schema=schema,
-        database=database,
-        warehouse=warehouse,
-    )
-    snowflake_conn = hook.get_conn()
-    cursor = snowflake_conn.cursor()
-    cursor.execute(f"DROP TABLE IF EXISTS {schema}.{table_name} CASCADE;")
-    snowflake_conn.commit()
-    cursor.close()
-    snowflake_conn.close()
 
 
 def run_dag(dag):
@@ -94,24 +55,6 @@ def run_dag(dag):
         end_date=DEFAULT_DATE,
         run_at_least_once=True,
     )
-
-
-def get_dataframe_from_table(sql_name: str, test_table: Table, hook):
-    database = create_database(test_table.conn_id)
-    qualified_name = database.get_table_qualified_name(test_table)
-
-    if sql_name == "bigquery":
-        client = bigquery.Client()
-        query_job = client.query(
-            f"SELECT * FROM astronomer-dag-authoring.{qualified_name}"
-        )
-        df = query_job.to_dataframe()
-    else:
-        df = pd.read_sql(
-            f"SELECT * FROM {qualified_name}",
-            con=hook.get_conn(),
-        )
-    return df
 
 
 def load_to_dataframe(filepath, file_type):

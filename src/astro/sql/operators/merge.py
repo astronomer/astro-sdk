@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.baseoperator import BaseOperator
@@ -30,7 +30,7 @@ class MergeOperator(BaseOperator):
         if_conflicts: MergeConflictStrategy,
         target_conflict_columns: List[str],
         task_id: str = "",
-        **kwargs,
+        **kwargs: Any,
     ):
         self.target_table = target_table
         self.source_table = source_table

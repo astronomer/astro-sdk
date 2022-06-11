@@ -44,7 +44,7 @@ def load_op_arg_table_into_dataframe(
 
 
 def load_op_kwarg_table_into_dataframe(
-    op_kwargs: Dict, python_callable: Callable, identifiers_as_lower
+    op_kwargs: Dict, python_callable: Callable, identifiers_as_lower: bool
 ) -> Dict:
     """For dataframe based functions, takes any Table objects from the op_kwargs
     and converts them into local dataframes that can be handled in the python context"""

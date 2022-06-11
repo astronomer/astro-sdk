@@ -77,7 +77,10 @@ except ModuleNotFoundError:
     pandas_tools = SnowflakePandasMissingPackage
 
 try:
-    from airflow.providers.amazon.aws.hooks import base_aws, s3  # skipcq: PYL-C0412
+    from airflow.providers.amazon.aws.hooks import (  # type: ignore[attr-defined] # skipcq: PYL-C0412
+        base_aws,
+        s3,
+    )
     from boto3 import Session as BotoSession
 except ModuleNotFoundError:
     s3 = AmazonMissingPackage
@@ -87,7 +90,9 @@ else:
     AwsBaseHook = base_aws.AwsBaseHook  # type: ignore
 
 try:
-    from airflow.providers.google.cloud.hooks import gcs  # skipcq: PYL-C0412
+    from airflow.providers.google.cloud.hooks import (  # type: ignore[attr-defined] # skipcq: PYL-C0412
+        gcs,
+    )
     from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
     from google.cloud import bigquery
     from google.cloud.storage import Client as GCSClient

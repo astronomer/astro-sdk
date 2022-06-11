@@ -9,15 +9,12 @@ Run test:
     python3 -m unittest tests.operators.test_load_file.TestLoadFile.test_aql_local_file_to_postgres
 
 """
-import logging
-import os
 import pathlib
 from unittest import mock
 
 import pandas as pd
 import pytest
 from airflow.exceptions import BackfillUnfinished
-from airflow.utils import timezone
 from pandas.testing import assert_frame_equal
 
 from astro import sql as aql
@@ -29,10 +26,7 @@ from astro.sql.table import Metadata, Table
 from astro.utils.dependencies import gcs, s3
 from tests.sql.operators import utils as test_utils
 
-log = logging.getLogger(__name__)
-DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 OUTPUT_TABLE_NAME = test_utils.get_table_name("load_file_test_table")
-OUTPUT_SCHEMA = os.getenv("SNOWFLAKE_SCHEMA")
 CWD = pathlib.Path(__file__).parent
 
 

@@ -153,7 +153,7 @@ def load_file(
     task_id: Optional[str] = None,
     if_exists: LoadExistStrategy = "replace",
     ndjson_normalize_sep: str = "_",
-    **kwargs,
+    **kwargs: Any,
 ) -> XComArg:
     """Convert LoadFile into a function that Returns an XComArg object
     :param input_file: File path and conn_id for object stores

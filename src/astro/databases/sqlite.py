@@ -23,7 +23,7 @@ class SqliteDatabase(BaseDatabase):
         super().__init__(conn_id)
 
     @property
-    def sql_type(self):
+    def sql_type(self) -> str:
         return "sqlite"
 
     @property
