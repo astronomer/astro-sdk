@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.2
+
+Bug fix:
+* Change `export_file` to return `File` object [#454](https://github.com/astronomer/astro-sdk/issues/454)
+
+
 ## 0.9.1
 
 Bug fix:
