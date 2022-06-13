@@ -11,15 +11,15 @@ Within `gs://astro-sdk/benchmark/`, there are two paths:
 * `original`: files with original size
 * `trimmed`: files trimmed to meet the desired sizes (for example, 10 GB)
 
-|            | size   | format | rows      | columns | path to trimmed file(s)                     | description                 |
-|------------|--------|--------|-----------|---------|---------------------------------------------|-----------------------------|
-| ten_kb     | 10 KB  | csv    | 158       | 8       | covid_overview/covid_overview_10kb.csv      | UK Covid overview sample    |
-| hundred_kb | 100 KB | csv    | 748       | 9       | tate_britain/artist_data_100kb.csv          | Tate Gallery artist sample  |
-| ten_mb     | 10 MB  | csv    | 600,000   | 3       | imdb/title_ratings_10mb.csv                 | IMDB title ratings sample   |
-| hundred_mb | 100 MB | csv    | 139,519   | 199     | github/github_timeline_100mb.csv            | Github timeline sample      |
-| one_gb     | 1 GB   | ndjson | 940,000   | 17 (*)  | stackoverflow/stackoverflow_posts_1g.ndjson | Stack Overflow posts sample |
-| five_gb    | 5 GB   | ndjson | 7,530,243 | 7 (*)   | pypi/*                                      | PyPI downloads sample       |
-| ten_gb     | 10 GB  | ndjson | 1,263,685 | 9 (*)   | github/github-archive/*                     | Github timeline sample      |
+|            | size   | format  | rows      | columns | path to trimmed file(s)                     | description                 |
+|------------|--------|---------|-----------|---------|---------------------------------------------|-----------------------------|
+| ten_kb     | 10 KB  | parquet | 160       | 8       | covid_overview/covid_overview_10kb.parquet  | UK Covid overview sample    |
+| hundred_kb | 100 KB | csv     | 748       | 9       | tate_britain/artist_data_100kb.csv          | Tate Gallery artist sample  |
+| ten_mb     | 10 MB  | csv     | 600,000   | 3       | imdb/title_ratings_10mb.csv                 | IMDB title ratings sample   |
+| hundred_mb | 100 MB | csv     | 139,519   | 199     | github/github_timeline_100mb.csv            | Github timeline sample      |
+| one_gb     | 1 GB   | ndjson  | 940,000   | 17 (*)  | stackoverflow/stackoverflow_posts_1g.ndjson | Stack Overflow posts sample |
+| five_gb    | 5 GB   | ndjson  | 7,530,243 | 7 (*)   | pypi/*                                      | PyPI downloads sample       |
+| ten_gb     | 10 GB  | ndjson  | 1,263,685 | 9 (*)   | github/github-archive/*                     | Github timeline sample      |
 (*) Nested JSON, this number represents just the root-level properties
 
 
@@ -30,8 +30,15 @@ Subset of the data available in the government website
 * Source: https://coronavirus.data.gov.uk/api/v2/data?areaType=overview&metric=covidOccupiedMVBeds&metric=cumCasesByPublishDate&metric=newOnsDeathsByRegistrationDate&metric=hospitalCases&format=csv
 * Download date: 8 February 2022
 * Original size: 45 KB
-* Dataset URI: `gs://astro-sdk/benchmark/trimmed/covid_overview/*`
+* Dataset URI: `gs://astro-sdk/benchmark/trimmed/covid_overview/covid_overview_10kb.parquet`
 * Processing details: [download_datasets.sh](tests/benchmark/download_datasets.sh)
+
+```commandline
+$ sed -n '1,160 p' covid_overview.csv > covid_overview_160rows.csv
+$python -c 'import pandas; df = pandas.read_csv("covid_overview_160rows.csv").to_parquet("covid_overview_10kb.parquet")'
+```
+
+
 
 ### Tate Britain
 Subset of artists of pieces exposed at the Tate Britain museum
@@ -64,7 +71,7 @@ Subset of the archives of Stack Overflow:
 * Original (file) size: 1.1 GB
 * License: CC BY-SA 3.0
 * More information: https://www.kaggle.com/datasets/stackoverflow/stackoverflow
-* Dataset URI: `gs://astro-sdk/benchmark/trimmed/stackoverflow/*`
+* Dataset URI: `gs://astro-sdk/benchmark/trimmed/stackoverflow/stackoverflow_posts.parquet`
 * Processing details:
 ```commandline
 $ sudo apt install --assume-yes p7zip-full
@@ -74,6 +81,7 @@ $ cat Posts.xml | xq . > Posts.json
 $ jq -c '.posts.row | .[] ' Posts.json > stackoverflow_posts.ndjson
 $ sed -n '1,940000 p' stackoverflow_posts.ndjson > stackoverflow_posts_1g.ndjson
 ```
+
 
 ### PyPI
 
