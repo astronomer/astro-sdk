@@ -89,6 +89,33 @@ def test_save_temp_table_to_local(sample_dag, database_table_fixture):
 
 
 @pytest.mark.parametrize(
+    "database_table_fixture", [{"database": Database.SQLITE}], indirect=True
+)
+def test_save_returns_output_file(sample_dag, database_table_fixture):
+    _, test_table = database_table_fixture
+
+    @aql.dataframe
+    def validate(df: pd.DataFrame):
+        assert not df.empty
+
+    data_path = str(CWD) + "/../../data/homes.csv"
+    with sample_dag:
+        table = aql.load_file(input_file=File(path=data_path), output_table=test_table)
+        file = aql.export_file(
+            input_data=table,
+            output_file=File(path="/tmp/saved_df.csv"),
+            if_exists="replace",
+        )
+        res_df = aql.load_file(input_file=file)
+        validate(res_df)
+    test_utils.run_dag(sample_dag)
+
+    output_df = pd.read_csv("/tmp/saved_df.csv")
+    input_df = pd.read_csv(data_path)
+    assert input_df.equals(output_df)
+
+
+@pytest.mark.parametrize(
     "database_table_fixture",
     [
         {

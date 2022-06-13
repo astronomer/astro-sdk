@@ -34,7 +34,7 @@ class ExportFile(BaseOperator):
         self.if_exists = if_exists
         self.kwargs = kwargs
 
-    def execute(self, context: dict) -> None:
+    def execute(self, context: dict) -> File:
         """Write SQL table to csv/parquet on local/S3/GCS.
 
         Infers SQL database type based on connection.
@@ -53,6 +53,7 @@ class ExportFile(BaseOperator):
         # Write file if overwrite == True or if file doesn't exist.
         if self.if_exists == "replace" or not self.output_file.exists():
             self.output_file.create_from_dataframe(df)
+            return self.output_file
         else:
             raise FileExistsError(f"{self.output_file.path} file already exists.")
 
@@ -66,7 +67,20 @@ def export_file(
 ) -> XComArg:
     """Convert SaveFile into a function. Returns XComArg.
 
-    Returns an XComArg object.
+    Returns an XComArg object of type File which matches the output_file parameter.
+
+    This will allow users to perform further actions with the exported file.
+
+    e.g.
+
+        with sample_dag:
+        table = aql.load_file(input_file=File(path=data_path), output_table=test_table)
+        exported_file = aql.export_file(
+            input_data=table,
+            output_file=File(path="/tmp/saved_df.csv"),
+            if_exists="replace",
+        )
+        res_df = aql.load_file(input_file=exported_file)
 
     :param output_file: Path and conn_id
     :param input_data: Input table / dataframe
