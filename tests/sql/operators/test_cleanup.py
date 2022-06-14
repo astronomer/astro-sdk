@@ -158,7 +158,7 @@ def test_cleanup_multiple_table(database_table_fixture, multiple_tables_fixture)
 
 @pytest.mark.parametrize(
     "database_table_fixture",
-    SQLITE_ONLY,
+    SUPPORTED_DATABASES,
     indirect=True,
     ids=["sqlite", "postgres", "bigquery", "snowflake"],
 )
