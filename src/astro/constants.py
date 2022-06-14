@@ -10,7 +10,6 @@ else:
 
 DEFAULT_CHUNK_SIZE = 1000000
 PYPI_PROJECT_NAME = "astro-sdk-python"
-DEFAULT_SCHEMA = "tmp_astro"
 
 
 class FileLocation(Enum):
@@ -38,19 +37,7 @@ class Database(Enum):
 
 SUPPORTED_FILE_LOCATIONS = [const.value for const in FileLocation]
 SUPPORTED_FILE_TYPES = [const.value for const in FileType]
-SUPPORTED_DATABASES = list({const.value for const in Database})
-
-UNIQUE_TABLE_NAME_LENGTH = 63
-
-CONN_TYPE_TO_DATABASE = {
-    "postgres": Database.POSTGRES,
-    "postgresql": Database.POSTGRES,
-    "sqlite": Database.SQLITE,
-    "bigquery": Database.BIGQUERY,
-    "gcpbigquery": Database.BIGQUERY,
-    "google_cloud_platform": Database.BIGQUERY,
-    "snowflake": Database.SNOWFLAKE,
-}
+SUPPORTED_DATABASES = [const.value for const in Database]
 
 LoadExistStrategy = Literal["replace", "append"]
 

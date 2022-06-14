@@ -1,4 +1,3 @@
-import logging
 import pathlib
 
 import pandas
@@ -14,7 +13,6 @@ from tests.sql.operators import utils as test_utils
 
 # Import Operator
 
-log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 CWD = pathlib.Path(__file__).parent
 

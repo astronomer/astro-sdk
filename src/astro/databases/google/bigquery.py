@@ -32,7 +32,7 @@ class BigqueryDatabase(BaseDatabase):
         return "bigquery"
 
     @property
-    def hook(self):
+    def hook(self) -> BigQueryHook:
         """Retrieve Airflow hook to interface with the BigQuery database."""
         return BigQueryHook(gcp_conn_id=self.conn_id, use_legacy_sql=False)
 

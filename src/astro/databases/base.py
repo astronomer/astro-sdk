@@ -1,10 +1,12 @@
 from abc import ABC
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 import sqlalchemy
-from airflow.hooks.base import BaseHook
+from airflow.hooks.dbapi import DbApiHook
 from sqlalchemy import column, insert, select
+from sqlalchemy.sql import ClauseElement
+from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import (
@@ -56,7 +58,7 @@ class BaseDatabase(ABC):
         raise NotImplementedError
 
     @property
-    def hook(self) -> BaseHook:
+    def hook(self) -> DbApiHook:
         """Return an instance of the database-specific Airflow hook."""
         raise NotImplementedError
 
@@ -68,9 +70,13 @@ class BaseDatabase(ABC):
     @property
     def sqlalchemy_engine(self) -> sqlalchemy.engine.base.Engine:
         """Return Sqlalchemy engine."""
-        return self.hook.get_sqlalchemy_engine()
+        return self.hook.get_sqlalchemy_engine()  # type: ignore[no-any-return]
 
-    def run_sql(self, sql_statement: str, parameters: Optional[dict] = None):
+    def run_sql(
+        self,
+        sql_statement: Union[str, ClauseElement],
+        parameters: Optional[dict] = None,
+    ):
         """
         Return the results to running a SQL statement.
 
@@ -266,10 +272,13 @@ class BaseDatabase(ABC):
         """
         target_table_sqla = self.get_sqla_table(target_table)
         source_table_sqla = self.get_sqla_table(source_table)
+
+        target_columns: List[ColumnClause]
+        source_columns: List[ColumnClause]
+
         if not source_to_target_columns_map:
-            source_columns = target_columns = [
-                column(col) for col in target_table_sqla.c.keys()
-            ]
+            target_columns = [column(col) for col in target_table_sqla.c.keys()]
+            source_columns = target_columns
         else:
             target_columns = [
                 column(col) for col in source_to_target_columns_map.values()
@@ -279,7 +288,9 @@ class BaseDatabase(ABC):
             ]
 
         sel = select(source_columns).select_from(source_table_sqla)
-        sql = insert(target_table_sqla).from_select(target_columns, sel)
+        # TODO: We should fix the following Type Error
+        # incompatible type List[ColumnClause[<nothing>]]; expected List[Column[Any]]
+        sql = insert(target_table_sqla).from_select(target_columns, sel)  # type: ignore[arg-type]
         self.run_sql(sql_statement=sql)
 
     def merge_table(
@@ -342,7 +353,8 @@ class BaseDatabase(ABC):
         Copy the content of a table to a target file of supported type, in a supported location.
 
         :param source_table: An existing table in the database
-        :param target_file: The path to the file to which we aim to dump the content of the database.
+        :param target_file: The path to the file to which we aim to dump the content of the database
+        :param if_exists: Overwrite file if exists. Default False
         """
         if if_exists == "exception" and target_file.exists():
             raise FileExistsError(f"The file {target_file} already exists.")

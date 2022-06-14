@@ -1,5 +1,5 @@
 import inspect
-from typing import Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
@@ -25,7 +25,7 @@ class BaseSQLOperator(DecoratedOperator):
         database: Optional[str] = None,
         schema: Optional[str] = None,
         sql: str = "",
-        **kwargs,
+        **kwargs: Any,
     ):
         self.kwargs = kwargs or {}
         self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
@@ -95,7 +95,7 @@ class BaseSQLOperator(DecoratedOperator):
 
     def read_sql_from_function(self) -> None:
         """
-        This function runs the provided python function and stores the resultingq
+        This function runs the provided python function and stores the resulting
         SQL query in the `sql` attribute. We can also store parameters if the user
         provides a dictionary.
         """

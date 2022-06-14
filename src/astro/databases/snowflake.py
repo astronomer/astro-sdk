@@ -23,12 +23,12 @@ class SnowflakeDatabase(BaseDatabase):
         super().__init__(conn_id)
 
     @property
-    def hook(self):
+    def hook(self) -> SnowflakeHook:
         """Retrieve Airflow hook to interface with the snowflake database."""
         return SnowflakeHook(snowflake_conn_id=self.conn_id)
 
     @property
-    def sql_type(self):
+    def sql_type(self) -> str:
         return "snowflake"
 
     @property
@@ -136,7 +136,7 @@ class SnowflakeDatabase(BaseDatabase):
             SnowflakeDatabase.get_table_qualified_name(table),
         )
 
-    def schema_exists(self, schema) -> bool:
+    def schema_exists(self, schema: str) -> bool:
         """
         Checks if a schema exists in the database
 
@@ -266,11 +266,11 @@ class SnowflakeDatabase(BaseDatabase):
         return statement, params
 
 
-def wrap_identifier(inp):
+def wrap_identifier(inp: str) -> str:
     return f"Identifier(:{inp})"
 
 
-def is_valid_snow_identifier(name):
+def is_valid_snow_identifier(name: str) -> bool:
     """
     Because Snowflake does not allow using `Identifier` for inserts or updates, we need to make reasonable attempts to
     ensure that no one can perform a SQL injection using this method. The following method ensures that a string
@@ -289,7 +289,7 @@ def is_valid_snow_identifier(name):
 
 
 # test code to check for validate snowflake identifier
-def ensure_internal_quotes_closed(name):
+def ensure_internal_quotes_closed(name: str) -> bool:
     last_quoted = False
     for c in name[1:-1]:
         if last_quoted:
@@ -306,7 +306,7 @@ def ensure_internal_quotes_closed(name):
     return True
 
 
-def ensure_only_valid_characters(name):
+def ensure_only_valid_characters(name: str) -> bool:
     if not (name[0].isalpha()) and name[0] != "_":
         return False
     for c in name[1:]:

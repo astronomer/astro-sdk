@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 
 from airflow.models.baseoperator import BaseOperator
 
@@ -24,7 +24,7 @@ class AppendOperator(BaseOperator):
         target_table: Table,
         source_to_target_columns_map: Optional[Dict[str, str]] = None,
         task_id: str = "",
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         self.source_table = source_table
         self.target_table = target_table

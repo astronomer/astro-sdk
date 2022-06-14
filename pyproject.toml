@@ -103,19 +103,8 @@ color_output = true
 #disallow_any_generics = true
 #disallow_incomplete_defs = true
 #disallow_untyped_defs = true
-#explicit_package_bases = true
-# TODO: Once we complete #281 we can replace the files parameter by the mypy_path
-files = [
-    "src/astro/settings.py",
-    "src/astro/sql/__init__.py",
-    "src/astro/__init__.py",
-    "src/astro/sql/operators/load_file.py",
-    "src/astro/sql/operators/export_file.py",
-    "src/astro/sql/operators/append.py",
-    "src/astro/sql/operators/merge.py"
-]
+files = ["src/astro"]
 follow_imports = "skip"
-namespace_packages = true
 no_implicit_optional = true
 pretty = true
 strict_equality = true

@@ -5,8 +5,6 @@ from typing import List, Optional
 
 from sqlalchemy import Column, MetaData
 
-from astro.constants import UNIQUE_TABLE_NAME_LENGTH
-
 MAX_TABLE_NAME_LENGTH = 62
 TEMP_PREFIX = "_tmp_"
 
@@ -22,7 +20,7 @@ class Metadata:
     schema: Optional[str] = None
     database: Optional[str] = None
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         """Check if all the fields are None."""
         values = [getattr(self, field.name) for field in fields(self)]
         return values.count(None) == len(values)
@@ -50,7 +48,7 @@ class Table:
     columns: List[Column] = field(default_factory=list)
     temp: bool = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self._name:
             self.temp = True
 
@@ -107,17 +105,3 @@ class Table:
         if not isinstance(value, property):
             self._name = value
             self.temp = False
-
-
-# TODO: deprecate by the end of the refactoring
-def create_unique_table_name(length: int = UNIQUE_TABLE_NAME_LENGTH) -> str:
-    """
-    Create a unique table name of the requested size, which is compatible with all supported databases.
-
-    :return: Unique table name
-    :rtype: str
-    """
-    unique_id = random.choice(string.ascii_lowercase) + "".join(
-        random.choice(string.ascii_lowercase + string.digits) for _ in range(length - 1)
-    )
-    return unique_id

@@ -1,5 +1,3 @@
-import logging
-
 import pandas as pd
 import pytest
 from airflow.models import DAG, DagRun
@@ -12,19 +10,12 @@ from astro.constants import Database
 from astro.sql.table import Metadata, Table
 from tests.sql.operators import utils as test_utils
 
-log = logging.getLogger(__name__)
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 
 @pytest.fixture
 def dag():
-    return DAG(
-        "test_dag",
-        default_args={
-            "owner": "airflow",
-            "start_date": DEFAULT_DATE,
-        },
-    )
+    return DAG("test_dag", start_date=DEFAULT_DATE)
 
 
 @pytest.fixture(autouse=True)

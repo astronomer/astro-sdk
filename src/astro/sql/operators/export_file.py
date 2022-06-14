@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 import pandas as pd
 from airflow.models import BaseOperator
@@ -63,9 +63,9 @@ def export_file(
     output_file: File,
     if_exists: ExportExistsStrategy = "exception",
     task_id: Optional[str] = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> XComArg:
-    """Convert SaveFile into a function. Returns XComArg.
+    """Convert ExportFile into a function. Returns XComArg.
 
     Returns an XComArg object of type File which matches the output_file parameter.
 
@@ -97,4 +97,5 @@ def export_file(
         output_file=output_file,
         input_data=input_data,
         if_exists=if_exists,
+        **kwargs,
     ).output

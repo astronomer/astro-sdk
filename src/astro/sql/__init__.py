@@ -1,4 +1,4 @@
-from typing import Callable, Dict, Iterable, List, Mapping, Optional, Union
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Union
 
 import pandas as pd
 
@@ -28,7 +28,7 @@ def transform(
     database: Optional[str] = None,
     schema: Optional[str] = None,
     handler: Optional[Callable] = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> TaskDecorator:
 
     kwargs.update(
@@ -56,7 +56,7 @@ def run_raw_sql(
     database: Optional[str] = None,
     schema: Optional[str] = None,
     handler: Optional[Callable] = None,
-    **kwargs,
+    **kwargs: Any,
 ) -> TaskDecorator:
 
     kwargs.update(
@@ -81,7 +81,7 @@ def append(
     source_table: Table,
     target_table: Table,
     source_to_target_columns_map: Optional[Dict[str, str]] = None,
-    **kwargs,
+    **kwargs: Any,
 ):
     """
     Append the source table rows into a destination table.
@@ -105,7 +105,7 @@ def merge(
     source_to_target_columns_map: Dict[str, str],
     target_conflict_columns: List[str],
     if_conflicts: MergeConflictStrategy,
-    **kwargs,
+    **kwargs: Any,
 ):
     """
     Merge the source table rows into a destination table.
@@ -129,7 +129,7 @@ def merge(
 
 def truncate(
     table: Table,
-    **kwargs,
+    **kwargs: Any,
 ) -> TruncateOperator:
     """`
     :param table: Table to be truncated

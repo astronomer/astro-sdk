@@ -1,10 +1,8 @@
 """Tests to cover the truncate decorator"""
 
-import logging
 import pathlib
 
 import pytest
-from airflow.utils import timezone
 
 import astro.sql as aql
 from astro.constants import Database
@@ -12,9 +10,7 @@ from astro.files import File
 from astro.sql.table import Table
 from tests.sql.operators import utils as test_utils
 
-log = logging.getLogger(__name__)
 CWD = pathlib.Path(__file__).parent
-DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 DEFAULT_FILEPATH = str(pathlib.Path(CWD.parent.parent, "data/sample.csv").absolute())
 
 

@@ -27,11 +27,11 @@ class PostgresDatabase(BaseDatabase):
         super().__init__(conn_id)
 
     @property
-    def sql_type(self):
+    def sql_type(self) -> str:
         return "postgresql"
 
     @property
-    def hook(self):
+    def hook(self) -> PostgresHook:
         """Retrieve Airflow hook to interface with the Postgres database."""
         return PostgresHook(postgres_conn_id=self.conn_id)
 
