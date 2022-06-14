@@ -61,7 +61,7 @@ def test_cleanup_one_table(database_table_fixture):
     ids=["sqlite", "postgres", "bigquery", "snowflake"],
 )
 @pytest.mark.parametrize(
-    "tables_fixture",
+    "multiple_tables_fixture",
     [
         {
             "items": [
@@ -162,7 +162,7 @@ def test_cleanup_multiple_table(database_table_fixture, tables_fixture):
     # ids=["sqlite", "postgres", "bigquery", "snowflake"],
 )
 @pytest.mark.parametrize(
-    "tables_fixture",
+    "multiple_tables_fixture",
     [
         {
             "items": [

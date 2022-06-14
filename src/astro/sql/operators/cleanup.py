@@ -13,8 +13,10 @@ from astro.sql.table import Table
 
 def get_expected_task_outputs(tasks, context):
     return [
-        task
+        task.output.resolve(context)
         for task in tasks
+        # for the moment, these are the only two classes that create temporary tables.
+        # Users can extend BaseSQLOperator if they want their classes caught by this
         if isinstance(task, BaseSQLOperator) or isinstance(task, DataframeOperator)
     ]
 
@@ -55,7 +57,7 @@ class CleanupOperator(BaseOperator):
             # tables not provided, attempt to either immediately run or wait for all other tasks to finish
             if not self.run_sync_mode:
                 self.wait_for_dag_to_finish(context)
-            self.tables_to_cleanup = self.get_all_task_outputs(context)
+            self.tables_to_cleanup = self.get_all_task_outputs(context=context)
         temp_tables = filter_for_temp_tables(self.tables_to_cleanup)
         for table in temp_tables:
             self.drop_table(table)
