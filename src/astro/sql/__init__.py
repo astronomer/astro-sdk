@@ -77,7 +77,7 @@ def run_raw_sql(
     )
 
 
-def cleanup(tables_to_cleanup: List[Table] = [], **kwargs):
+def cleanup(tables_to_cleanup: List[Table] = None, **kwargs):  # type: ignore
     return CleanupOperator(tables_to_cleanup=tables_to_cleanup, **kwargs)
 
 

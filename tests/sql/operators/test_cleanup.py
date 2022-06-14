@@ -159,7 +159,7 @@ def test_cleanup_multiple_table(database_table_fixture, tables_fixture):
     "database_table_fixture",
     SQLITE_ONLY,
     indirect=True,
-    # ids=["sqlite", "postgres", "bigquery", "snowflake"],
+    ids=["sqlite", "postgres", "bigquery", "snowflake"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
@@ -205,13 +205,3 @@ def test_is_dag_running():
     assert not cleanup_op._is_dag_running(task_instances=task_instances)
     task_instances[0].state = State.RUNNING
     assert cleanup_op._is_dag_running(task_instances=task_instances)
-
-
-# def test_filter_for_temp_tables():
-#     cleanup_op = CleanupOperator(task_id="cleanup")
-#     task_instances = []
-#     for i in range(4):
-#         op = BashOperator(task_id=f"foo_task_{i}", bash_command="")
-#         ti = TaskInstance(task=op, state=State.SUCCESS)
-#         task_instances.append(ti)
-#     non_temp_task = Tr

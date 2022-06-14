@@ -17,7 +17,7 @@ def get_expected_task_outputs(tasks, context):
         for task in tasks
         # for the moment, these are the only two classes that create temporary tables.
         # Users can extend BaseSQLOperator if they want their classes caught by this
-        if isinstance(task, BaseSQLOperator) or isinstance(task, DataframeOperator)
+        if isinstance(task, (DataframeOperator, BaseSQLOperator))
     ]
 
 
@@ -41,12 +41,12 @@ class CleanupOperator(BaseOperator):
     def __init__(
         self,
         *,
-        tables_to_cleanup: List[Table] = [],
+        tables_to_cleanup: List[Table] = None,  # type: ignore
         task_id: str = "",
         run_sync_mode: bool = False,
         **kwargs,
     ):
-        self.tables_to_cleanup = tables_to_cleanup
+        self.tables_to_cleanup = tables_to_cleanup or []
         self.run_sync_mode = run_sync_mode
         task_id = task_id or get_unique_task_id("_cleanup")
 
