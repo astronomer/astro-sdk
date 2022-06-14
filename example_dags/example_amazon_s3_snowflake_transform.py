@@ -89,7 +89,16 @@ def example_amazon_s3_snowflake_transform():
             conn_id="snowflake_conn",
         ),
     )
-    aql.cleanup()
+    aql.cleanup(
+        [
+            input_table_1,
+            input_table_2,
+            temp_table_1,
+            temp_table_2,
+            cleaned_data,
+            aggregate_data,
+        ]
+    )
 
 
 dag = example_amazon_s3_snowflake_transform()

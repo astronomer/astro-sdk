@@ -39,7 +39,8 @@ class CleanupOperator(BaseOperator):
     """
     Clean up temporary tables at the end of a DAG run.
 
-    By default if no tables are
+    By default if no tables are placed, the task will wait for all other tasks to run before deleting all temporary
+    tables (WARNING: DO NOT RUN THIS MODE IF USING THE SEQUENTIAL EXECUTOR. IT WILL CAUSE A BLOCK).
     :param tables_to_cleanup: List of tbles to drop at the end of the DAG run
     :param task_id: Optional custom task id
     :param run_sync_mode: Whether to wait for the DAG to finish or not. Set to False if you want to immediately
