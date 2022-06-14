@@ -11,14 +11,24 @@ from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.table import Table
 
 
-def get_expected_task_outputs(tasks, context):
-    return [
-        task.output.resolve(context)
-        for task in tasks
-        # for the moment, these are the only two classes that create temporary tables.
-        # Users can extend BaseSQLOperator if they want their classes caught by this
-        if isinstance(task, (DataframeOperator, BaseSQLOperator))
-    ]
+def resolve_tables_from_tasks(tasks, context):
+    """
+    For the moment, these are the only two classes that create temporary tables.
+    This function allows us to only resolve xcom for those objects (to reduce how much data is brought into the worker).
+
+    We also process these values one at a time so the system can garbage collect non-table objects (otherwise we might
+    run into a situation where we pull in a bunch of dataframes and overwhelm the worker).
+    :param tasks:
+    :param context:
+    :return:
+    """
+    res = []
+    for task in tasks:
+        if isinstance(task, (DataframeOperator, BaseSQLOperator)):
+            t = task.output.resolve(context)
+            if isinstance(t, Table):
+                res.append(t)
+    return res
 
 
 def filter_for_temp_tables(task_outputs: List[Any]):
@@ -121,5 +131,5 @@ class CleanupOperator(BaseOperator):
         """
         self.log.info("No tables provided, will delete all temporary tables")
         tasks = [t for t in self.dag.tasks if t.task_id != self.task_id]
-        task_outputs = get_expected_task_outputs(tasks=tasks, context=context)
+        task_outputs = resolve_tables_from_tasks(tasks=tasks, context=context)
         return task_outputs
