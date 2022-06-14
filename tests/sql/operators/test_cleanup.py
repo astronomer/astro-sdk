@@ -11,6 +11,7 @@ from astro.constants import Database
 from astro.files import File
 from astro.sql.operators.cleanup import CleanupOperator
 from astro.sql.table import Table
+from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
 
@@ -79,9 +80,9 @@ def test_cleanup_one_table(database_table_fixture):
     indirect=True,
     ids=["named_table"],
 )
-def test_cleanup_non_temp_table(database_table_fixture, tables_fixture):
+def test_cleanup_non_temp_table(database_table_fixture, multiple_tables_fixture):
     db, _ = database_table_fixture
-    test_table, test_temp_table = tables_fixture
+    test_table, test_temp_table = multiple_tables_fixture
     assert db.table_exists(test_table)
     assert db.table_exists(test_temp_table)
     test_table.conn_id = db.conn_id
@@ -120,7 +121,7 @@ def test_cleanup_non_table(database_table_fixture):
     ids=["sqlite", "postgres", "bigquery", "snowflake"],
 )
 @pytest.mark.parametrize(
-    "tables_fixture",
+    "multiple_tables_fixture",
     [
         {
             "items": [
@@ -136,9 +137,9 @@ def test_cleanup_non_table(database_table_fixture):
     indirect=True,
     ids=["two_tables"],
 )
-def test_cleanup_multiple_table(database_table_fixture, tables_fixture):
+def test_cleanup_multiple_table(database_table_fixture, multiple_tables_fixture):
     db, _ = database_table_fixture
-    test_table_1, test_table_2 = tables_fixture
+    test_table_1, test_table_2 = multiple_tables_fixture
     assert db.table_exists(test_table_1)
     assert db.table_exists(test_table_2)
 
@@ -178,14 +179,14 @@ def test_cleanup_multiple_table(database_table_fixture, tables_fixture):
     indirect=True,
     ids=["two_tables"],
 )
-def test_cleanup_default_all_tables(sample_dag, database_table_fixture, tables_fixture):
-    from tests.sql.operators import utils as test_utils
-
+def test_cleanup_default_all_tables(
+    sample_dag, database_table_fixture, multiple_tables_fixture
+):
     @aql.transform
     def foo(input_table: Table):
         return "SELECT * FROM {{input_table}}"
 
-    table_1, table_2 = tables_fixture
+    table_1, table_2 = multiple_tables_fixture
     with sample_dag:
         foo(table_1)
         foo(table_2)
