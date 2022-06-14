@@ -145,9 +145,7 @@ def example_snowflake_partial_table_with_append():
         table=Table(name="homes_reporting", conn_id=SNOWFLAKE_CONN_ID)
     )
     truncate_results.set_upstream(record_results)
-    cleanup(
-        tables_to_cleanup=[homes_data2, homes_data1, extracted_data, transformed_data]
-    )
+    cleanup()
 
 
 example_snowflake_partial_table_dag = example_snowflake_partial_table_with_append()

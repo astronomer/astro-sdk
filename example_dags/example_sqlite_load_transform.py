@@ -42,4 +42,4 @@ with DAG(
             conn_id="sqlite_default",
         ),
     )
-    aql.cleanup(tables_to_cleanup=[imdb_movies, top_five_animations])
+    aql.cleanup()

@@ -130,4 +130,5 @@ def test_full_dag(database_table_fixture, sample_dag):
             output_file=File(path="/tmp/out_agg.csv"),
             if_exists="replace",
         )
+        aql.cleanup()
     test_utils.run_dag(sample_dag)
