@@ -6,9 +6,12 @@ import sys
 import time
 
 import airflow
+import pandas as pd
 import psutil
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.utils import timezone
+
+from astro.databases import create_database
 
 
 def elapsed_since(start):
@@ -23,6 +26,80 @@ def get_disk_usage():
 
 def subtract(after_dict, before_dict):
     return {key: after_dict[key] - before_dict.get(key, 0) for key in after_dict}
+
+
+def prep_insert_statement(
+    df: pd.DataFrame, table_name="load_files_to_database", schema="Benchmark"
+) -> str:
+    """Prepare the insert statement for data received
+
+    :param df: dataframe to be inserted to db. Note - We assume there is only one row in this dataframe
+    :param table_name: pre-existing database table name.
+     Note - we assume this table exists and is created based on the profiling data that needs to be saved.
+     table name: load_files_to_database
+     table project: astronomer-dag-authoring
+     table schema:
+        duration, FLOAT
+        disk_usage, FLOAT
+        dag_id, STRING
+        execution_date, DATETIME
+        revision, STRING
+        chunk_size, INTEGER
+        memory_full_info__rss, FLOAT
+        memory_full_info__vms, FLOAT
+        memory_full_info__pfaults, FLOAT
+        memory_full_info__pageins, FLOAT
+        memory_full_info__uss, FLOAT
+        cpu_time__user, FLOAT
+        cpu_time__system, FLOAT
+        cpu_time__children_user, FLOAT
+        cpu_time__children_system, FLOAT
+
+    :param schema: schema of pre-existing table
+    """
+    wrapper_for_cols = {
+        "dag_id": ["'", "'"],
+        "execution_date": ["DATETIME(TIMESTAMP '", "')"],
+        "revision": ["'", "'"],
+    }
+    cols = list(df.columns)
+    vals = []
+    for col in cols:
+        if col in wrapper_for_cols:
+            wrapper = wrapper_for_cols[col]
+            vals.append(wrapper[0] + str(df[col][0]) + wrapper[1])
+        else:
+            vals.append(str(df[col][0]))
+
+    return (
+        f"INSERT {schema}.{table_name} ({', '.join(cols)}) VALUES ({', '.join(vals)})"
+    )
+
+
+def prep_profile_data(profile_data: dict) -> pd.DataFrame:
+    """Normalize profile data as the data is not suitable for publishing in db table
+
+    :param profile_data: profiling data collected
+    """
+    normalize_delimiter = "__"
+    normalize_config = {
+        "meta_prefix": normalize_delimiter,
+        "record_prefix": normalize_delimiter,
+        "sep": normalize_delimiter,
+    }
+    return pd.json_normalize(profile_data, **normalize_config)
+
+
+def save_profiling_data(profile_data: dict, conn_id: str = "bigquery"):
+    """save profiling data to bigquery table
+
+    :param profile_data: profiling data collected
+    :param conn_id: Airflow's connection id to be used to publish the profiling data
+    """
+    db = create_database(conn_id)
+    df = prep_profile_data(profile_data)
+    sql = prep_insert_statement(df)
+    db.run_sql(sql)
 
 
 def profile(func, *args, **kwargs):  # noqa: C901
@@ -60,6 +137,8 @@ def profile(func, *args, **kwargs):  # noqa: C901
 
         profile = {**profile, **kwargs}
         print(json.dumps(profile, default=str))
+        if os.getenv("ASTRO_PUBLISH_BENCHMARK_DATA"):
+            save_profiling_data(profile)
         return result
 
     if inspect.isfunction(func):
