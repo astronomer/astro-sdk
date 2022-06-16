@@ -7,7 +7,7 @@ set -e
 
 repeat=${1:-1}  # how many times we want to repeat each DAG run (default: 1)
 
-benchmark_dir=`dirname "$0"`
+benchmark_dir="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 config_path="${benchmark_dir}/config.json"
 runner_path="${benchmark_dir}/run.py"
 astro_dir="${benchmark_dir}/../../src"
