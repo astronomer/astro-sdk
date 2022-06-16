@@ -31,7 +31,7 @@ def resolve_tables_from_tasks(tasks, context):
     return res
 
 
-def filter_for_temp_tables(task_outputs: List[Any]):
+def filter_for_temp_tables(task_outputs: List[Any]) -> List[Table]:
     return [t for t in task_outputs if isinstance(t, Table) and t.temp]
 
 
