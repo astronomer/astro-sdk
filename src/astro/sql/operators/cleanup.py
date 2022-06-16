@@ -1,8 +1,9 @@
 import time
-from typing import Any, List
+from typing import Any, List, Optional
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.baseoperator import BaseOperator
+from airflow.utils.context import Context
 from airflow.utils.state import State
 
 from astro.databases import create_database
@@ -11,7 +12,9 @@ from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.table import Table
 
 
-def resolve_tables_from_tasks(tasks, context):
+def resolve_tables_from_tasks(
+    tasks: List[BaseOperator], context: Context
+) -> List[Table]:
     """
     For the moment, these are the only two classes that create temporary tables.
     This function allows us to only resolve xcom for those objects (to reduce how much data is brought into the worker).
@@ -63,10 +66,15 @@ class CleanupOperator(BaseOperator):
 
         super().__init__(task_id=task_id, **kwargs)
 
-    def execute(self, context: dict):
+    def execute(self, context: Context):
         if not self.tables_to_cleanup:
             # tables not provided, attempt to either immediately run or wait for all other tasks to finish
             if not self.run_sync_mode:
+                self.log.warning(
+                    "Warning: You are currently running the 'waiting mode', where the task will wait"
+                    "for all other tasks to complete. Please note that for asynchronous executors (e.g. "
+                    "sequentialexecutor and debugexecutor, this mode will cause locks."
+                )
                 self.wait_for_dag_to_finish(context)
             self.tables_to_cleanup = self.get_all_task_outputs(context=context)
         temp_tables = filter_for_temp_tables(self.tables_to_cleanup)
@@ -101,7 +109,7 @@ class CleanupOperator(BaseOperator):
         else:
             return False
 
-    def wait_for_dag_to_finish(self, context):
+    def wait_for_dag_to_finish(self, context: Context):
         """
         In the event that we are not given any tables, we will want to wait for all other tasks to finish before
         we delete temporary tables. This prevents a scenario where either a) we delete temporary tables that
@@ -121,7 +129,7 @@ class CleanupOperator(BaseOperator):
             if dag_is_running:
                 time.sleep(5)
 
-    def get_all_task_outputs(self, context):
+    def get_all_task_outputs(self, context: Context) -> List[Table]:
         """
         In the scenario where we are not given a list of tasks to follow, we will want to gather all temporary tables
         To prevent scenarios where we grab objects that are not tables, we try to only follow up on SQL operators or
