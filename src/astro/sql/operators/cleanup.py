@@ -52,7 +52,7 @@ class CleanupOperator(BaseOperator):
     def __init__(
         self,
         *,
-        tables_to_cleanup: List[Table] = None,  # type: ignore
+        tables_to_cleanup: Optional[List[Table]] = None,
         task_id: str = "",
         run_sync_mode: bool = False,
         **kwargs,
