@@ -6,7 +6,7 @@ from pathlib import Path
 from airflow import DAG
 
 from astro import sql as aql
-from astro.constants import DEFAULT_CHUNK_SIZE
+from astro.constants import DEFAULT_CHUNK_SIZE, FileType
 from astro.files import File
 from astro.sql.table import Metadata, Table
 
@@ -40,6 +40,7 @@ def create_dag(database_name, table_args, dataset):
     dataset_name = dataset["name"]
     dataset_path = dataset["path"]
     dataset_conn_id = dataset.get("conn_id")
+    dataset_filetype = dataset.get("file_type")
     # dataset_rows = dataset["rows"]
 
     dag_name = f"load_file_{dataset_name}_into_{database_name}"
@@ -47,10 +48,15 @@ def create_dag(database_name, table_args, dataset):
 
     with DAG(dag_name, schedule_interval=None, start_date=START_DATE) as dag:
         chunk_size = int(os.getenv("ASTRO_CHUNK_SIZE", DEFAULT_CHUNK_SIZE))
+
         metadata = Metadata(**table_args.pop("metadata"))
         table_metadata = Table(name=table_name, metadata=metadata, **table_args)
         table_xcom = aql.load_file(  # noqa: F841
-            input_file=File(path=dataset_path, conn_id=dataset_conn_id),
+            input_file=File(
+                path=dataset_path,
+                conn_id=dataset_conn_id,
+                filetype=FileType(dataset_filetype),
+            ),
             task_id="load_csv",
             output_table=table_metadata,
             chunk_size=chunk_size,
