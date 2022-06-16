@@ -33,7 +33,7 @@ def example_amazon_s3_postgres_load_and_save():
         output_file=File(path=f"{s3_bucket}/homes.csv"),
         if_exists="replace",
     )
-    aql.cleanup([t1])
+    aql.cleanup()
 
 
 example_amazon_s3_postgres_load_and_save_dag = (

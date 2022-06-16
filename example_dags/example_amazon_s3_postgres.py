@@ -44,4 +44,4 @@ with dag:
     )
     sample_table = sample_create_table(my_homes_table)
     my_df_func(sample_table)
-    aql.cleanup(tables_to_cleanup=[my_homes_table, sample_table])
+    aql.cleanup()

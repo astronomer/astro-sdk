@@ -3,6 +3,7 @@ import os
 import time
 
 import pandas as pd
+from airflow.exceptions import BackfillUnfinished
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.utils import timezone
 from airflow.utils.state import State
@@ -46,15 +47,36 @@ def get_table_name(prefix):
     return prefix + "_" + str(int(time.time()))
 
 
-def run_dag(dag):
-    dag.clear(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE, dag_run_state=State.NONE)
+def run_dag(dag, account_for_cleanup_failure=False):
+    """
 
-    dag.run(
-        executor=DebugExecutor(),
-        start_date=DEFAULT_DATE,
-        end_date=DEFAULT_DATE,
-        run_at_least_once=True,
-    )
+    :param dag:
+    :param account_for_cleanup_failure: Since our cleanup task fails on purpose when running in 'single thread mode'
+    we account for this by running the backfill one more time if the cleanup task is the ONLY failed task. Otherwise
+    we just passthrough the exception.
+    :return:
+    """
+    dag.clear(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE, dag_run_state=State.NONE)
+    try:
+        dag.run(
+            executor=DebugExecutor(),
+            start_date=DEFAULT_DATE,
+            end_date=DEFAULT_DATE,
+            run_at_least_once=True,
+        )
+    except BackfillUnfinished as b:
+        if not account_for_cleanup_failure:
+            raise b
+        failed_tasks = b.ti_status.failed
+        if len(failed_tasks) != 1 or failed_tasks[0].task_id != "cleanup":
+            raise b
+        dag.run(
+            executor=DebugExecutor(),
+            start_date=DEFAULT_DATE,
+            end_date=DEFAULT_DATE,
+            run_at_least_once=True,
+            rerun_failed_tasks=True,
+        )
 
 
 def load_to_dataframe(filepath, file_type):

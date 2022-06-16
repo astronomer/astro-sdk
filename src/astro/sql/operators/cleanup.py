@@ -1,7 +1,9 @@
+import os
 import time
 from typing import Any, List, Optional
 
 from airflow.decorators.base import get_unique_task_id
+from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.utils.context import Context
 from airflow.utils.state import State
@@ -58,10 +60,16 @@ class CleanupOperator(BaseOperator):
         tables_to_cleanup: Optional[List[Table]] = None,
         task_id: str = "",
         run_sync_mode: bool = False,
+        single_worker_mode: bool = False,
         **kwargs,
     ):
         self.tables_to_cleanup = tables_to_cleanup or []
-        self.run_sync_mode = run_sync_mode
+        self.run_immediately = run_sync_mode
+        self.single_worker_mode = single_worker_mode or os.getenv(
+            "AIRFLOW__ASTRO__SINGLE_WORKER_MODE"
+        )
+        if single_worker_mode:
+            kwargs["retries"] = kwargs.get("retries", 100)
         task_id = task_id or get_unique_task_id("_cleanup")
 
         super().__init__(task_id=task_id, **kwargs)
@@ -69,12 +77,7 @@ class CleanupOperator(BaseOperator):
     def execute(self, context: Context):
         if not self.tables_to_cleanup:
             # tables not provided, attempt to either immediately run or wait for all other tasks to finish
-            if not self.run_sync_mode:
-                self.log.warning(
-                    "Warning: You are currently running the 'waiting mode', where the task will wait"
-                    "for all other tasks to complete. Please note that for asynchronous executors (e.g. "
-                    "sequentialexecutor and debugexecutor, this mode will cause locks."
-                )
+            if not self.run_immediately:
                 self.wait_for_dag_to_finish(context)
             self.tables_to_cleanup = self.get_all_task_outputs(context=context)
         temp_tables = filter_for_temp_tables(self.tables_to_cleanup)
@@ -127,7 +130,24 @@ class CleanupOperator(BaseOperator):
         while dag_is_running:
             dag_is_running = self._is_dag_running(current_dagrun.get_task_instances())
             if dag_is_running:
-                time.sleep(5)
+                if self.single_worker_mode:
+                    self.log.warning(
+                        "You are currently running the 'single worker mode', where the task will fail and retry to"
+                        "unblock the single worker thread. This mode should only be used for SequentialExecutor as it"
+                        "creates the appearance of a failed task."
+                    )
+                    raise AirflowException(
+                        "You are currently running the 'single worker mode', where the task will fail and retry to"
+                        "unblock the single worker thread. This mode should only be used for SequentialExecutor as it"
+                        "creates the appearance of a failed task. The task should requeue and retry soon."
+                    )
+                else:
+                    self.log.warning(
+                        "You are currently running the 'waiting mode', where the task will wait"
+                        "for all other tasks to complete. Please note that for asynchronous executors (e.g. "
+                        "sequentialexecutor and debugexecutor, this mode will cause locks."
+                    )
+                    time.sleep(5)
 
     def get_all_task_outputs(self, context: Context) -> List[Table]:
         """
