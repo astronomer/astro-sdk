@@ -3,23 +3,30 @@
     {
       "name": "postgres",
       "params": {
-        "database": "postgres",
-        "conn_id": "postgres_conn",
-        "schema": "postgres"
+        "metadata" : {
+          "database": "postgres",
+          "schema": "postgres"
+        },
+        "conn_id": "postgres_conn"
       }
     },
     {
       "name": "snowflake",
       "params": {
-        "database": "DWH_LEGACY",
-        "conn_id": "snowflake_conn",
-        "schema": "SANDBOX_AIRFLOW_TEST"
+        "metadata" : {
+          "database": "DWH_LEGACY",
+          "schema": "SANDBOX_AIRFLOW_TEST"
+        },
+        "conn_id": "snowflake_conn"
+
       }
     },
     {
       "name": "bigquery",
       "params": {
-        "database": "bigquery",
+        "metadata" : {
+          "database": "bigquery"
+        },
         "conn_id": "bigquery"
       }
     }
