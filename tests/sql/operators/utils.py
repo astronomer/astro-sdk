@@ -68,7 +68,8 @@ def run_dag(dag, account_for_cleanup_failure=False):
         if not account_for_cleanup_failure:
             raise b
         failed_tasks = b.ti_status.failed
-        if len(failed_tasks) != 1 or list(failed_tasks)[0].task_id != "cleanup":
+
+        if len(failed_tasks) != 1 or list(failed_tasks)[0].task_id != "_cleanup":
             raise b
         dag.run(
             executor=DebugExecutor(),
