@@ -1,0 +1,21 @@
+{
+  "databases": [
+    {
+      "name": "bigquery",
+      "params": {
+        "metadata" : {
+          "database": "bigquery"
+        },
+        "conn_id": "bigquery"
+      }
+    }
+  ],
+  "datasets": [
+    {
+        "name": "few_kb",
+        "size": "45K",
+        "path":"gs://astro-sdk/benchmark/original/covid_overview/covid_overview.csv",
+        "rows": 732
+    }
+  ]
+}

@@ -13,7 +13,7 @@
   ],
   "datasets": [
     {
-      "conn_id": "bigquery",
+      "conn_id": "google_cloud_default",
       "file_type": "parquet",
       "name": "ten_kb",
       "path": "gs://astro-sdk/benchmark/trimmed/covid_overview/covid_overview_10kb.parquet",
@@ -21,7 +21,7 @@
       "size": "10 KB"
     },
     {
-      "conn_id": "bigquery",
+      "conn_id": "google_cloud_default",
       "file_type": "csv",
       "name": "hundred_kb",
       "path": "gs://astro-sdk/benchmark/trimmed/tate_britain/artist_data_100kb.csv",
@@ -29,7 +29,7 @@
       "size": "100 KB"
     },
     {
-      "conn_id": "bigquery",
+      "conn_id": "google_cloud_default",
       "file_type": "csv",
       "name": "ten_mb",
       "path": "gs://astro-sdk/benchmark/trimmed/imdb/title_ratings_10mb.csv",
@@ -45,7 +45,7 @@
       "size": "1G"
     },
     {
-      "conn_id": "bigquery",
+      "conn_id": "google_cloud_default",
       "file_type": "ndjson",
       "name": "five_gb",
       "path": "gs://astro-sdk/benchmark/trimmed/pypi/",
@@ -53,18 +53,12 @@
       "size": "5G"
     },
     {
-      "conn_id": "bigquery",
+      "conn_id": "google_cloud_default",
       "file_type": "ndjson",
       "name": "ten_gb",
       "path": "gs://astro-sdk/benchmark/trimmed/github/github-archive/",
       "rows": 385817,
       "size": "10G"
-    },
-    {
-      "name": "few_kb",
-      "path": "../data/covid_overview.csv",
-      "rows": 732,
-      "size": "45K"
     }
   ]
 }

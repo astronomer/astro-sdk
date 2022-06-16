@@ -1,0 +1,54 @@
+all: clean setup_gke container run_job teardown_gke
+.PHONY: all
+
+GCP_PROJECT ?= astronomer-dag-authoring
+GIT_HASH = $(shell git log -1 --format=%h)
+APP = benchmark
+CONTAINER_REGISTRY=gcr.io/$(GCP_PROJECT)/$(APP):$(GIT_HASH)
+
+clean:
+	@echo "Deleting unnecessary files"
+	@find . | grep -E "(/__pycache__$|\.pyc$|\.pyo$\)" | xargs rm -rf
+	@rm -f unittests.cfg
+	@rm -f unittests.db
+	@rm -f webserver_config.py
+
+# Takes approximately 7min
+setup_gke:
+	@cd infrastructure/terraform && \
+		terraform init && \
+		terraform apply
+
+container:
+	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
+	@gcloud auth configure-docker
+	@mkdir -p astro-sdk
+	@cp ../../pyproject.toml astro-sdk/
+	@cp ../../README.md astro-sdk/
+	@cp ../../test-connections.yaml astro-sdk/
+	@cp -r ../../src astro-sdk/
+	@docker build --build-arg=GIT_HASH=`git rev-parse --short HEAD` --tag=$(CONTAINER_REGISTRY)  .
+	@docker push $(CONTAINER_REGISTRY)
+	@rm -rf astro-sdk
+
+local:
+	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
+	@gcloud auth configure-docker
+	@mkdir -p astro-sdk
+	@cp ../../pyproject.toml astro-sdk/
+	@cp ../../README.md astro-sdk/
+	@cp ../../test-connections.yaml astro-sdk/
+	@cp -r ../../src astro-sdk/
+	@ls astro-sdk
+	@docker build -t benchmark . --build-arg=GIT_HASH=`git rev-parse --short HEAD`
+	@docker run benchmark
+	@rm -rf astro-sdk
+
+run_job:
+	@kubectl apply -f infrastructure/kubernetes/job.yaml
+
+# Takes approximately 2min
+teardown_gke:
+	@cd infrastructure/terraform && \
+		terraform init && \
+		terraform apply -destroy
