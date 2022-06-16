@@ -5,6 +5,8 @@ import time
 import pandas as pd
 from airflow.exceptions import BackfillUnfinished
 from airflow.executors.debug_executor import DebugExecutor
+from airflow.models.dag import DAG
+from airflow.models.taskinstance import TaskInstance
 from airflow.utils import timezone
 from airflow.utils.state import State
 from pandas.testing import assert_frame_equal
@@ -47,7 +49,7 @@ def get_table_name(prefix):
     return prefix + "_" + str(int(time.time()))
 
 
-def run_dag(dag, account_for_cleanup_failure=False):
+def run_dag(dag: DAG, account_for_cleanup_failure=False):
     """
 
     :param dag:
@@ -71,13 +73,11 @@ def run_dag(dag, account_for_cleanup_failure=False):
 
         if len(failed_tasks) != 1 or list(failed_tasks)[0].task_id != "_cleanup":
             raise b
-        dag.run(
-            executor=DebugExecutor(),
-            start_date=DEFAULT_DATE,
-            end_date=DEFAULT_DATE,
-            run_at_least_once=True,
-            rerun_failed_tasks=True,
-        )
+        ti_key = list(failed_tasks)[0]
+
+        # Cleanup now that everything is done
+        ti = TaskInstance(task=dag.get_task("_cleanup"), run_id=ti_key.run_id)
+        ti = ti.task.execute({"ti": ti, "dag_run": ti.get_dagrun()})
 
 
 def load_to_dataframe(filepath, file_type):

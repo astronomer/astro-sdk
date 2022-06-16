@@ -68,8 +68,8 @@ class CleanupOperator(BaseOperator):
         self.single_worker_mode = single_worker_mode or os.getenv(
             "AIRFLOW__ASTRO__SINGLE_WORKER_MODE"
         )
-        if single_worker_mode:
-            kwargs["retries"] = kwargs.get("retries", 100)
+        # if single_worker_mode:
+        #     kwargs["retries"] = kwargs.get("retries", 100)
         task_id = task_id or get_unique_task_id("_cleanup")
 
         super().__init__(task_id=task_id, **kwargs)
