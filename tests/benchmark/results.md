@@ -6,6 +6,11 @@ Details about the dataset used can be found at [dataset.md](datasets.md)
 ## Performance evaluation of loading datasets from GCS with Astro Python SDK 0.9.2 into BigQuery
 The configuration used for this benchmarking can be found here [config.json](config.json)
 
+The benchmark ran with chunk size size 1,000,000 and following VM details:
+- VM Image: Debian GNU/Linux 11 (bullseye)
+- CPU:2 vCPU
+- Memory: 4 GB memory
+
 | database   | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   | memory_pss   | memory_shared   |
 |:-----------|:-----------|:-------------|:-------------|:----------------|:------------------|:-------------|:----------------|
 | bigquery   | five_gb    | 13.06min     | 50.92MB      | 1.43min         | 9.06s             | 61.54MB      | 12.24MB         |
