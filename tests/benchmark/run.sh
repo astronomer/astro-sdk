@@ -11,10 +11,16 @@ benchmark_dir="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 config_path="${benchmark_dir}/config.json"
 runner_path="${benchmark_dir}/run.py"
 astro_dir="${benchmark_dir}/../../src"
-airflow_home="${benchmark_dir}"
+airflow_home="${AIRFLOW_HOME:-$benchmark_dir}"
 airflow_db=$airflow_home/*.db
-connections_file="${benchmark_dir}/../../test-connections.yaml"
-git_revision=`git rev-parse --short HEAD`
+
+if test -f "${benchmark_dir}/test-connections.yaml"; then
+  connections_file="${benchmark_dir}/test-connections.yaml"
+else
+  connections_file="${benchmark_dir}/../../test-connections.yaml"
+fi
+
+git_revision="${GIT_REVISION:=`git rev-parse --short HEAD`}"
 
 results_file=/tmp/results-`date -u +%FT%T`.ndjson
 
@@ -66,7 +72,7 @@ echo - Output: $(get_abs_filename $results_file)
       jq -r '.datasets[] | [.name] | @tsv' $config_path | while IFS=$'\t' read -r dataset; do
         for chunk_size in "${chunk_sizes_array[@]}"; do
       echo "$i $dataset $database $chunk_size"
-       ASTRO_CHUNKSIZE=$chunk_size python -W ignore $runner_path --dataset="$dataset" --database="$database" --revision $git_revision --chunk-size=$chunk_size 1>> $results_file &
+       ASTRO_CHUNKSIZE=$chunk_size python3 -W ignore $runner_path --dataset="$dataset" --database="$database" --revision $git_revision --chunk-size=$chunk_size 1>> $results_file &
        if command -v peekprof &> /dev/null; then
              # https://github.com/exapsy/peekprof
          peekprof -html "/tmp/$dataset-$database-$chunk_size.html" -refresh 1000ms -pid $! > /tmp/$dataset-$database-$chunk_size.csv
