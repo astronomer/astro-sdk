@@ -50,7 +50,7 @@ class CleanupOperator(BaseOperator):
     :param tables_to_cleanup: List of tbles to drop at the end of the DAG run
     :param task_id: Optional custom task id
     :param run_sync_mode: Whether to wait for the DAG to finish or not. Set to False if you want to immediately
-    clean all DAGs. Not that if you supply anything int `tables_to_cleanup` this argument is ignored.
+    clean all DAGs. Note that if you supply anything to `tables_to_cleanup` this argument is ignored.
     """
 
     template_fields = ("tables_to_cleanup",)
