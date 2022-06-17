@@ -5,6 +5,7 @@ from typing import Any, List, Optional
 from airflow.decorators.base import get_unique_task_id
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
+from airflow.models.taskinstance import TaskInstance
 from airflow.utils.context import Context
 from airflow.utils.state import State
 
@@ -24,8 +25,8 @@ def resolve_tables_from_tasks(
 
     We also process these values one at a time so the system can garbage collect non-table objects (otherwise we might
     run into a situation where we pull in a bunch of dataframes and overwhelm the worker).
-    :param tasks:
-    :param context:
+    :param tasks: A list of operators from airflow that we can resolve
+    :param context: Context of the DAGRun so we can resolve against the XCOM table
     :return:
     """
     res = []
@@ -85,18 +86,18 @@ class CleanupOperator(BaseOperator):
         for table in temp_tables:
             self.drop_table(table)
 
-    def drop_table(self, table):
+    def drop_table(self, table: Table):
         db = create_database(table.conn_id)
         self.log.info("Dropping table %s", table.name)
         db.drop_table(table)
 
-    def _is_dag_running(self, task_instances):
+    def _is_dag_running(self, task_instances: List[TaskInstance]) -> bool:
         """
         Given a list of task instances, determine whether the DAG (minus the current cleanup task) is still
         running.
 
         :param task_instances:
-        :return:
+        :return: boolean to show if all tasks besides this one have completed
         """
         running_tasks = [
             (ti.task_id, ti.state)
@@ -123,7 +124,6 @@ class CleanupOperator(BaseOperator):
         Eventually this function should be made into an asynchronous function s.t. this operator does not take up a
         worker slot.
         :param context:
-        :return:
         """
 
         dag_is_running = True
@@ -157,7 +157,6 @@ class CleanupOperator(BaseOperator):
         the dataframe operator, as these are the operators that return temporary tables.
 
         :param context:
-        :return:
         """
         self.log.info("No tables provided, will delete all temporary tables")
         tasks = [t for t in self.dag.tasks if t.task_id != self.task_id]
