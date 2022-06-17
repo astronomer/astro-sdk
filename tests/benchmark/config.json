@@ -61,10 +61,10 @@
       "file_type": "ndjson"
     },
     {
-        "name": "few_kb",
-        "size": "45K",
-        "path": "../data/covid_overview.csv",
-        "rows": 732
+      "name": "few_kb",
+      "size": "45K",
+      "path": "../data/covid_overview.csv",
+      "rows": 732
     }
   ]
 }
