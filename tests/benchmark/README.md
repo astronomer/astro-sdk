@@ -105,6 +105,9 @@ This is an example of the content of `/tmp/results-2022-02-10T14:36:09.ndjson`:
 {"duration": "1.2min", "rss": "157.17MB", "vms": "1.02GB", "shared": "41.9MB", "dag_id": "load_file_few_mb_into_postgres", "execution_date": "2022-02-12 00:34:03.794995+00:00", "revision": "e1fb164"}
 ```
 
+### Publishing Benchmark results
+
+To publish the results to bigquery table, we need to create an environment variable `ASTRO_PUBLISH_BENCHMARK_DATA` and set it to `True`. Once this is done the benchmarking data can be seen in bigquery table `astronomer-dag-authoring.Benchmark.load_files_to_database`.
 
 ## Analyze the results
 
