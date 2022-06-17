@@ -43,9 +43,9 @@ SUPPORTED_DATABASES_WITH_FILE = [
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
-    SUPPORTED_DATABASES_WITH_FILE,
+    SQLITE_ONLY,
     indirect=True,
-    ids=["sqlite", "postgres", "bigquery", "snowflake"],
+    ids=["sqlite"],
 )
 def test_cleanup_one_table(database_table_fixture):
     db, test_table = database_table_fixture
@@ -57,9 +57,9 @@ def test_cleanup_one_table(database_table_fixture):
 
 @pytest.mark.parametrize(
     "database_table_fixture",
-    SUPPORTED_DATABASES,
+    SQLITE_ONLY,
     indirect=True,
-    ids=["sqlite", "postgres", "bigquery", "snowflake"],
+    ids=["sqlite"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
@@ -96,9 +96,9 @@ def test_cleanup_non_temp_table(database_table_fixture, multiple_tables_fixture)
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
-    SUPPORTED_DATABASES_WITH_FILE,
+    SQLITE_ONLY,
     indirect=True,
-    ids=["sqlite", "postgres", "bigquery", "snowflake"],
+    ids=["sqlite"],
 )
 def test_cleanup_non_table(database_table_fixture):
     db, test_table = database_table_fixture
@@ -116,9 +116,9 @@ def test_cleanup_non_table(database_table_fixture):
 
 @pytest.mark.parametrize(
     "database_table_fixture",
-    SUPPORTED_DATABASES,
+    SQLITE_ONLY,
     indirect=True,
-    ids=["sqlite", "postgres", "bigquery", "snowflake"],
+    ids=["sqlite"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
@@ -158,9 +158,9 @@ def test_cleanup_multiple_table(database_table_fixture, multiple_tables_fixture)
 
 @pytest.mark.parametrize(
     "database_table_fixture",
-    SUPPORTED_DATABASES,
+    SQLITE_ONLY,
     indirect=True,
-    ids=["sqlite", "postgres", "bigquery", "snowflake"],
+    ids=["sqlite"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
