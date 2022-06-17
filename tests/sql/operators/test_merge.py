@@ -1,5 +1,7 @@
 import math
+import os
 import pathlib
+from unittest import mock
 
 import pandas as pd
 import pytest
@@ -9,6 +11,7 @@ from astro import sql as aql
 from astro.constants import Database
 from astro.databases import create_database
 from astro.files import File
+from astro.sql import MergeOperator
 from astro.sql.table import Metadata, Table
 from tests.sql.operators import utils as test_utils
 
@@ -22,7 +25,7 @@ def merge_parameters(request):
         return (
             {
                 "target_conflict_columns": ["list"],
-                "source_to_target_columns_map": {"list": "list"},
+                "columns": {"list": "list"},
                 "if_conflicts": "ignore",
             },
             mode,
@@ -31,7 +34,7 @@ def merge_parameters(request):
         return (
             {
                 "target_conflict_columns": ["list", "sell"],
-                "source_to_target_columns_map": {"list": "list", "sell": "sell"},
+                "columns": {"list": "list", "sell": "sell"},
                 "if_conflicts": "ignore",
             },
             mode,
@@ -40,7 +43,7 @@ def merge_parameters(request):
     return (
         {
             "target_conflict_columns": ["list", "sell"],
-            "source_to_target_columns_map": {
+            "columns": {
                 "list": "list",
                 "sell": "sell",
                 "age": "taxes",
@@ -184,7 +187,7 @@ def test_merge_with_the_same_schema(
             target_table=first_table,
             source_table=second_table,
             target_conflict_columns=["id"],
-            source_to_target_columns_map={"id": "id", "name": "name"},
+            columns={"id": "id", "name": "name"},
             if_conflicts="update",
         )
 
@@ -253,7 +256,7 @@ def test_merge_with_different_schemas(
             target_table=first_table,
             source_table=second_table,
             target_conflict_columns=["id"],
-            source_to_target_columns_map={"id": "id", "name": "name"},
+            columns={"id": "id", "name": "name"},
             if_conflicts="update",
         )
 
@@ -270,3 +273,71 @@ def test_merge_with_different_schemas(
     )
 
     test_utils.assert_dataframes_are_equal(computed, expected)
+
+
+@pytest.mark.parametrize(
+    "test_columns,expected_columns",
+    [
+        (["sell", "list"], {"sell": "sell", "list": "list"}),
+        (("sell", "list"), {"sell": "sell", "list": "list"}),
+        (
+            {"s_sell": "t_sell", "s_list": "t_list"},
+            {"s_sell": "t_sell", "s_list": "t_list"},
+        ),
+    ],
+)
+def test_columns_params(test_columns, expected_columns):
+    """
+    Test that the columns param in MergeOperator takes list/tuple/dict and converts them to dict
+    before sending over to db.merge_table()
+    """
+    source_table = Table(
+        name="source_table", conn_id="test1", metadata=Metadata(schema="test")
+    )
+    target_table = Table(
+        name="target_table", conn_id="test2", metadata=Metadata(schema="test")
+    )
+    merge_task = MergeOperator(
+        source_table=source_table,
+        target_table=target_table,
+        if_conflicts="ignore",
+        target_conflict_columns=["list"],
+        columns=test_columns,
+    )
+    assert merge_task.columns == expected_columns
+    with mock.patch(
+        "astro.databases.sqlite.SqliteDatabase.merge_table"
+    ) as mock_merge, mock.patch.dict(
+        os.environ,
+        {"AIRFLOW_CONN_TEST1": "sqlite://", "AIRFLOW_CONN_TEST2": "sqlite://"},
+    ):
+        merge_task.execute({})
+        mock_merge.assert_called_once_with(
+            source_table=source_table,
+            target_table=target_table,
+            if_conflicts="ignore",
+            target_conflict_columns=["list"],
+            source_to_target_columns_map=expected_columns,
+        )
+
+
+def test_invalid_columns_param():
+    """Test that an error is raised when an invalid columns type is passed"""
+    source_table = Table(
+        name="source_table", conn_id="test1", metadata=Metadata(schema="test")
+    )
+    target_table = Table(
+        name="target_table", conn_id="test2", metadata=Metadata(schema="test")
+    )
+    with pytest.raises(ValueError) as exec_info:
+        MergeOperator(
+            source_table=source_table,
+            target_table=target_table,
+            if_conflicts="ignore",
+            target_conflict_columns=["list"],
+            columns={"set_item_1", "set_item_2", "set_item_3"},
+        )
+    assert (
+        exec_info.value.args[0]
+        == "columns is not a valid type. Valid types: [tuple, list, dict], Passed: <class 'set'>"
+    )
