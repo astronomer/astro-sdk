@@ -1,64 +1,64 @@
 {
   "databases": [
     {
-    "name": "bigquery",
-    "params": {
-      "metadata" : {
-        "database": "astronomer-dag-authoring",
-        "schema": "tmp_astro"
-      },
-      "conn_id": "bigquery"
+      "name": "bigquery",
+      "params": {
+        "conn_id": "bigquery",
+        "metadata": {
+          "database": "astronomer-dag-authoring",
+          "schema": "tmp_astro"
+        }
+      }
     }
-  }
   ],
   "datasets": [
     {
+      "conn_id": "bigquery",
+      "file_type": "parquet",
       "name": "ten_kb",
-      "size": "10 KB",
       "path": "gs://astro-sdk/benchmark/trimmed/covid_overview/covid_overview_10kb.parquet",
       "rows": 385817,
-      "conn_id": "bigquery",
-      "file_type": "parquet"
+      "size": "10 KB"
     },
     {
+      "conn_id": "bigquery",
+      "file_type": "csv",
       "name": "hundred_kb",
-      "size": "100 KB",
       "path": "gs://astro-sdk/benchmark/trimmed/tate_britain/artist_data_100kb.csv",
       "rows": 385817,
-      "conn_id": "bigquery",
-      "file_type": "csv"
+      "size": "100 KB"
     },
     {
+      "conn_id": "bigquery",
+      "file_type": "csv",
       "name": "ten_mb",
-      "size": "9.9M",
       "path": "gs://astro-sdk/benchmark/trimmed/imdb/title_ratings_10mb.csv",
       "rows": 385817,
-      "conn_id": "bigquery",
-      "file_type": "csv"
+      "size": "9.9M"
     },
     {
+      "conn_id": "bigquery",
+      "file_type": "ndjson",
       "name": "one_gb",
-      "size": "1G",
       "path": "gs://astro-sdk/benchmark/trimmed/stackoverflow/stackoverflow_posts_1g.ndjson",
       "rows": 385817,
-      "conn_id": "bigquery",
-      "file_type": "ndjson"
+      "size": "1G"
     },
     {
+      "conn_id": "bigquery",
+      "file_type": "ndjson",
       "name": "five_gb",
-      "size": "5G",
       "path": "gs://astro-sdk/benchmark/trimmed/pypi/",
       "rows": 385817,
-      "conn_id": "bigquery",
-      "file_type": "ndjson"
+      "size": "5G"
     },
     {
+      "conn_id": "bigquery",
+      "file_type": "ndjson",
       "name": "ten_gb",
-      "size": "10G",
       "path": "gs://astro-sdk/benchmark/trimmed/github/github-archive/",
       "rows": 385817,
-      "conn_id": "bigquery",
-      "file_type": "ndjson"
+      "size": "10G"
     },
     {
       "name": "few_kb",
