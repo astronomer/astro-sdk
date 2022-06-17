@@ -1,37 +1,38 @@
+  GNU nano 5.4                                                                                       download_datasets.sh
 #!/usr/bin/env bash
 
 #set -x
 #set -v
 set -e
 
-tate_artist_path=/tmp/artist_data.csv
-imdb_title_ratings_path=/tmp/title_ratings.csv
-github_timeline_path=/tmp/github_timeline.csv
-gcs_github_timeline_dir=gs://$GCS_BUCKET/github_timeline
-covid_overview_path=/tmp/covid_overview.csv
+ten_kb=/tmp/covid_overview_10kb.parquet
+gcs_ten_kb=gs://astro-sdk/benchmark/trimmed/covid_overview/covid_overview_10kb.parquet
+echo $'\nDownloading the 10 kb covid_overview dataset to' $covid_overview...
+gsutil cp $gcs_ten_kb $ten_kb
 
-echo $'\nDownloading the Tate Gallery artist dataset to' $tate_artist_path...
-curl https://raw.githubusercontent.com/tategallery/collection/master/artist_data.csv --output  $tate_artist_path
+hundred_kb=/tmp/artist_data_100kb.csv
+gcs_hundred_kb=gs://astro-sdk/benchmark/trimmed/tate_britain/artist_data_100kb.csv
+echo $'\nDownloading the 100 kb artist_data dataset to' $hundred_kb...
+gsutil cp $gcs_hundred_kb $hundred_kb
 
-echo $'\nDownloading and extracting the IMDB title.ratings dataset to' $imdb_title_ratings_path...
-curl https://datasets.imdbws.com/title.ratings.tsv.gz --output /tmp/title_ratings.tsv.gz
-gzip -d /tmp/title_ratings.tsv.gz -f
-tr '\t' ',' < /tmp/title_ratings.tsv > $imdb_title_ratings_path
-rm /tmp/title_ratings.tsv
+ten_mb=/tmp/title_ratings_10mb.csv
+gcs_ten_mb=gs://astro-sdk/benchmark/trimmed/imdb/title_ratings_10mb.csv
+echo $'\nDownloading the 10 mb imdb dataset to' $ten_mb...
+gsutil cp $gcs_ten_mb $ten_mb
 
+one_gb=/tmp/stackoverflow_posts_1g.ndjson
+gcs_one_gb=gs://astro-sdk/benchmark/trimmed/stackoverflow/stackoverflow_posts_1g.ndjson
+echo $'\nDownloading the 1 Gb stackoverflow dataset to' $one_gb...
+gsutil cp $gcs_one_gb $one_gb
 
-echo $'\nDownloading the UK COVID overview dataset to' $covid_overview_path...
-curl 'https://coronavirus.data.gov.uk/api/v2/data?areaType=overview&metric=covidOccupiedMVBeds&metric=cumCasesByPublishDate&metric=newOnsDeathsByRegistrationDate&metric=hospitalCases&format=csv' --output /tmp/covid_overview.csv
+five_gb=/tmp/pypi/
+gcs_five_gb=gs://astro-sdk/benchmark/trimmed/pypi/
+mkdir $five_gb
+echo $'\nDownloading the 5 Gb pypi dataset to' $five_gb...
+gsutil -m cp -r $gcs_five_gb $five_gb
 
-# The following dataset assume the user has:
-# 1. a Google Cloud Platform account
-# 2. the GCP SDK
-
-echo $'\nDownloading the Github timeline dataset to' $github_timeline_path...
-if [ ! -n "$(gsutil ls $gcs_github_timeline_dir)" ]; then
-  bq extract \
-    --destination_format CSV \
-    bigquery-public-data:samples.github_timeline \
-    $gcs_github_timeline_dir/github_timeline_*.csv
-fi
-gsutil cp $gcs_github_timeline_dir/github_timeline_000000000007.csv /tmp/github_timeline.csv
+ten_gb=/tmp/github-archive/
+gcs_ten_gb=gs://astro-sdk/benchmark/trimmed/github/github-archive/
+mkdir $ten_gb
+echo $'\nDownloading the 10 Gb github archive dataset to' $ten_gb...
+gsutil -m cp -r $gcs_ten_gb $ten_gb
