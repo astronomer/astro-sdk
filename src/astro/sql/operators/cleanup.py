@@ -11,6 +11,7 @@ from airflow.utils.state import State
 from astro.databases import create_database
 from astro.sql.operators.base import BaseSQLOperator
 from astro.sql.operators.dataframe import DataframeOperator
+from astro.sql.operators.load_file import LoadFile
 from astro.sql.table import Table
 
 
@@ -29,7 +30,7 @@ def resolve_tables_from_tasks(
     """
     res = []
     for task in tasks:
-        if isinstance(task, (DataframeOperator, BaseSQLOperator)):
+        if isinstance(task, (DataframeOperator, BaseSQLOperator, LoadFile)):
             t = task.output.resolve(context)
             if isinstance(t, Table):
                 res.append(t)
@@ -60,26 +61,26 @@ class CleanupOperator(BaseOperator):
         tables_to_cleanup: Optional[List[Table]] = None,
         task_id: str = "",
         run_sync_mode: bool = False,
-        single_worker_mode: bool = False,
         **kwargs,
     ):
         self.tables_to_cleanup = tables_to_cleanup or []
         self.run_immediately = run_sync_mode
-        self.single_worker_mode = single_worker_mode or os.getenv(
-            "AIRFLOW__ASTRO__SINGLE_WORKER_MODE"
-        )
-        # if single_worker_mode:
-        #     kwargs["retries"] = kwargs.get("retries", 100)
+        self.single_worker_mode = os.getenv("AIRFLOW__ASTRO__SINGLE_WORKER_MODE")
         task_id = task_id or get_unique_task_id("_cleanup")
 
         super().__init__(task_id=task_id, **kwargs)
 
     def execute(self, context: Context):
+        self.log.info("Execute Cleanup")
         if not self.tables_to_cleanup:
             # tables not provided, attempt to either immediately run or wait for all other tasks to finish
             if not self.run_immediately:
                 self.wait_for_dag_to_finish(context)
             self.tables_to_cleanup = self.get_all_task_outputs(context=context)
+        self.log.info(
+            "Tables found for cleanup: %s",
+            ",".join([t.name for t in self.tables_to_cleanup]),
+        )
         temp_tables = filter_for_temp_tables(self.tables_to_cleanup)
         for table in temp_tables:
             self.drop_table(table)

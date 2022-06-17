@@ -102,6 +102,6 @@ class Table:
         """
         Set the table name. Once this happens, the table is no longer considered temporary.
         """
-        if not isinstance(value, property):
+        if not isinstance(value, property) and value != self._name:
             self._name = value
             self.temp = False
