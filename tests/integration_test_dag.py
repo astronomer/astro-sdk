@@ -74,7 +74,7 @@ def run_append(output_table: Table):
     )
 
     aql.append(
-        source_to_target_columns_map={"sell": "sell", "living": "living"},
+        columns={"sell": "sell", "living": "living"},
         target_table=load_main,
         source_table=load_append,
     )
@@ -97,7 +97,7 @@ def run_merge(output_table: Table):
         target_table=main_table,
         source_table=merge_table,
         target_conflict_columns=["list", "sell"],
-        source_to_target_columns_map={"list": "list", "sell": "sell"},
+        columns={"list": "list", "sell": "sell"},
         if_conflicts="ignore",
     )
     con1 >> merged_table

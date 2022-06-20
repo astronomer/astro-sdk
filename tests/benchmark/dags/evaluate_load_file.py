@@ -4,9 +4,11 @@ from datetime import datetime
 from pathlib import Path
 
 from airflow import DAG
+from airflow.decorators import task
 
 from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
+from astro.databases import create_database
 from astro.files import File
 from astro.sql.table import Metadata, Table
 
@@ -44,13 +46,19 @@ def create_dag(database_name, table_args, dataset):
     # dataset_rows = dataset["rows"]
 
     dag_name = f"load_file_{dataset_name}_into_{database_name}"
-    table_name = Path(dataset_path).stem
 
     with DAG(dag_name, schedule_interval=None, start_date=START_DATE) as dag:
         chunk_size = int(os.getenv("ASTRO_CHUNK_SIZE", DEFAULT_CHUNK_SIZE))
 
         metadata = Metadata(**table_args.pop("metadata"))
-        table_metadata = Table(name=table_name, metadata=metadata, **table_args)
+        table_metadata = Table(metadata=metadata, **table_args)
+
+        @task(trigger_rule="all_done")
+        def delete_table(table_metadata):
+            print("table_metadata : ", table_metadata)
+            db = create_database(table_metadata.conn_id)
+            db.drop_table(table_metadata)
+
         table_xcom = aql.load_file(  # noqa: F841
             input_file=File(
                 path=dataset_path,
@@ -61,6 +69,7 @@ def create_dag(database_name, table_args, dataset):
             output_table=table_metadata,
             chunk_size=chunk_size,
         )
+        delete_table(table_metadata)
 
         # Todo: Check is broken so the following code is commented out, uncomment when fixed
         # aggregate_check(

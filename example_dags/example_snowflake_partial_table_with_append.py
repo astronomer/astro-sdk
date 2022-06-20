@@ -121,12 +121,7 @@ def example_snowflake_partial_table_with_append():
     record_results = append(
         source_table=filtered_data,
         target_table=Table(name="homes_reporting", conn_id=SNOWFLAKE_CONN_ID),
-        source_to_target_columns_map={
-            "sell": "sell",
-            "list": "list",
-            "variable": "variable",
-            "value": "value",
-        },
+        columns=["sell", "list", "variable", "value"],
     )
     record_results.set_upstream(create_results_table)
 
