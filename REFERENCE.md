@@ -335,10 +335,9 @@ The `aql.append` function merges tables assuming that there are no conflicts. Yo
 
 ```python
 foo = aql.append(
-    append_table=Table("some_table", "snowflake_default"),
-    main_table=Table("main_table", "snowflake_default"),
+    source_table=Table("some_table", "snowflake_default"),
+    target_table=Table("target_table", "snowflake_default"),
     columns=["Bedrooms", "Bathrooms"],
-    casted_columns={"Age": "INTEGER"},
 )
 ```
 
@@ -354,22 +353,20 @@ Postgres:
 ```python
 a = aql.merge(
     target_table=Table("target_table", "postgres_default"),
-    merge_table=Table("merge_table", "postgres_default"),
-    merge_keys=["list", "sell"],
-    target_columns=["list", "sell", "taxes"],
-    merge_columns=["list", "sell", "age"],
-    conflict_strategy="update",
+    source_table=Table("source_table", "postgres_default"),
+    target_conflict_columns=["list", "sell"],
+    columns={"list": "list", "sell": "sell", "age": "taxes"},
+    if_conflicts="update",
 )
 ```
 Snowflake:
 ```python
 a = aql.merge(
     target_table=Table("target_table", "snowflake_default"),
-    merge_table=Table("merge_table", "snowflake_default"),
-    merge_keys={"list": "list", "sell": "sell"},
-    target_columns=["list", "sell"],
-    merge_columns=["list", "sell"],
-    conflict_strategy="ignore",
+    source_table=Table("source_table", "snowflake_default"),
+    target_conflict_columns={"list": "list", "sell": "sell"},
+    columns=["list", "sell"],
+    if_conflicts="ignore",
 )
 ```
 
