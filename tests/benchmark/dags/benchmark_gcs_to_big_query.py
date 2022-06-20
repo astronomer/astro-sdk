@@ -17,8 +17,8 @@ DATASET_NAME = os.environ.get("GCP_DATASET_NAME", "gcs_to_bq_benchmarking_datase
 TABLE_NAME = os.environ.get("GCP_TABLE_NAME", "gcs_to_bq_table")
 GCP_CONN_ID = os.getenv("GCP_CONN_ID", "google_cloud_default")
 EXECUTION_TIMEOUT_STR = os.getenv("EXECUTION_TIMEOUT_STR", default="4")
-RETRIES_STR = os.getenv("DEFAULT_TASK_RETRIES", 2)
-DEFAULT_RETRY_DELAY_SECONDS_STR = os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60)
+RETRIES_STR = os.getenv("DEFAULT_TASK_RETRIES", default="2")
+DEFAULT_RETRY_DELAY_SECONDS_STR = os.getenv("DEFAULT_RETRY_DELAY_SECONDS", default="60")
 EXECUTION_TIMEOUT = int(EXECUTION_TIMEOUT_STR)
 
 default_args = {
@@ -114,10 +114,3 @@ delete_test_dataset = BigQueryDeleteDatasetOperator(
     delete_contents=True,
     dag=dag,
 )
-
-create_test_dataset >> load_ten_kb
-load_ten_kb >> load_hundred_kb
-load_hundred_kb >> load_ten_mb
-load_ten_mb >> load_one_gb
-load_one_gb >> load_five_gb
-load_five_gb >> delete_test_dataset
