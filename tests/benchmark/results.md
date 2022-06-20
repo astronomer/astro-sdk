@@ -35,3 +35,22 @@ For Machine types: n2-standard-4
 | bigquery   | ten_gb     | 29.22min     | 43.85MB      | 2.68min         | 13.29s            | 82.42MB      | 11.23MB         |
 | bigquery   | ten_kb     | 9.57s        | 30.13MB      | 3.69s           | 220.0ms           | 24.97MB      | 15.76MB         |
 | bigquery   | ten_mb     | 34.96s       | 34.5MB       | 3.9s            | 410.0ms           | 35.58MB      | 11.55MB         |
+
+#### Baseline using `bq load`
+|Dataset                                    |Size |Duration(h-m-s)|
+|-------------------------------------------|-----|---------------|
+|covid_overview/covid_overview_10kb.csv     |10 KB|0:00:02        |
+|tate_britain/artist_data_100kb.csv         |100KB|0:00:02        |
+|imdb/title_ratings_10mb.csv                |10MB |0:00:05        |
+|stackoverflow/stackoverflow_posts_1g.ndjson|1GB  |0:00:50        |
+|trimmed/pypi/*                             |5GB  |0:00:41        |
+|github/github-archive/*                    |10GB |0:01:09        |
+
+#### Baseline using `GCSToBigQueryOperator` using [benchmark_gcs_to_bigquery.py](tests/benchmark/dags/benchmark_gcs_to_big_query.py)
+|Dataset                                    |Size | Duration(seconds)  |
+|-------------------------------------------|-----|--------------------|
+|covid_overview/covid_overview_10kb.csv     |10 KB| 5.129522           |
+|tate_britain/artist_data_100kb.csv         |100KB| 3.319834           |
+|imdb/title_ratings_10mb.csv                |10MB | 5.558414           |
+|stackoverflow/stackoverflow_posts_1g.ndjson|1GB  | 85.409014          |
+|trimmed/pypi/*                             |5GB  | 48.973093          |
