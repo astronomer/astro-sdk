@@ -16,12 +16,15 @@ from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
 DATASET_NAME = os.environ.get("GCP_DATASET_NAME", "gcs_to_bq_benchmarking_dataset")
 TABLE_NAME = os.environ.get("GCP_TABLE_NAME", "gcs_to_bq_table")
 GCP_CONN_ID = os.getenv("GCP_CONN_ID", "google_cloud_default")
-EXECUTION_TIMEOUT = int(os.getenv("EXECUTION_TIMEOUT", 6))
+EXECUTION_TIMEOUT_STR = os.getenv("EXECUTION_TIMEOUT_STR", default="4")
+RETRIES_STR = os.getenv("DEFAULT_TASK_RETRIES", 2)
+DEFAULT_RETRY_DELAY_SECONDS_STR = os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60)
+EXECUTION_TIMEOUT = int(EXECUTION_TIMEOUT_STR)
 
 default_args = {
     "execution_timeout": timedelta(hours=EXECUTION_TIMEOUT),
-    "retries": int(os.getenv("DEFAULT_TASK_RETRIES", 2)),
-    "retry_delay": timedelta(seconds=int(os.getenv("DEFAULT_RETRY_DELAY_SECONDS", 60))),
+    "retries": int(RETRIES_STR),
+    "retry_delay": timedelta(seconds=int(DEFAULT_RETRY_DELAY_SECONDS_STR)),
 }
 
 dag = models.DAG(
@@ -112,12 +115,9 @@ delete_test_dataset = BigQueryDeleteDatasetOperator(
     dag=dag,
 )
 
-(
-    create_test_dataset
-    >> load_ten_kb
-    >> load_hundred_kb
-    >> load_ten_mb
-    >> load_one_gb
-    >> load_five_gb
-    >> delete_test_dataset
-)
+create_test_dataset >> load_ten_kb
+load_ten_kb >> load_hundred_kb
+load_hundred_kb >> load_ten_mb
+load_ten_mb >> load_one_gb
+load_one_gb >> load_five_gb
+load_five_gb >> delete_test_dataset
