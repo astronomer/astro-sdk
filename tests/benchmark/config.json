@@ -62,9 +62,9 @@
     },
     {
       "name": "few_kb",
-      "size": "45K",
       "path": "../data/covid_overview.csv",
-      "rows": 732
+      "rows": 732,
+      "size": "45K"
     }
   ]
 }
