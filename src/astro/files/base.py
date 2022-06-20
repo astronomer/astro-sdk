@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Union, cast
 
 import pandas as pd
 import smart_open
@@ -34,13 +34,15 @@ class File:
             path=path, filetype=filetype, normalize_config=normalize_config
         )
 
+    # To Do: path property can resolve into lists of path(list[str]) or single path(str).
+    # Right now code is assuming value of string which is wrong need to make changes all across code.
     @property
     def path(self) -> Any:
         return self.location.path
 
     @property
-    def conn_id(self) -> Any:
-        return self.location.conn_id
+    def conn_id(self) -> Optional[str]:
+        return cast(Optional[str], self.location.conn_id)
 
     @property
     def size(self) -> int:
@@ -89,6 +91,8 @@ class File:
             f'{self.__class__.__name__}(location="{self.location}",type="{self.type}")'
         )
 
+    # To Do: path property can resolve into lists of path(list[str]) or single path(str).
+    # Right now code is assuming value of string which is wrong need to make changes all across code.
     def __str__(self) -> Any:
         return self.location.path
 
