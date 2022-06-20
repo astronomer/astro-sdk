@@ -212,6 +212,23 @@ Please note that this is NOT an f string. F-strings in SQL formatting risk secur
 
 For security, users MUST explicitly identify tables in the function parameters by typing a value as a `Table`. Only then will the SQL decorator treat the value as a table.
 
+## Saving Data
+
+Save your `Table` of data to file storage using the `aql.export_file`, which returns a pointer to `File` object.
+
+```python
+with sample_dag:
+    table = aql.load_file(
+        input_file=File(path=data_path, conn_id=from_conn_id),
+        output_table=Table(conn_id=to_conn_id),
+    )
+    exported_file = aql.export_file(
+        input_data=table,
+        output_file=File(path="/tmp/saved_df.csv", conn_id=export_conn_id),
+        if_exists="replace",
+    )
+    res_df = aql.load_file(input_file=exported_file)
+```
 
 ### Raw SQL
 
