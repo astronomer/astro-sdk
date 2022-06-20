@@ -691,3 +691,27 @@ def test_populate_table_metadata(sample_dag):
         )
         validate(output_table)
     test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.parametrize(
+    "invalid_path",
+    [
+        "/tmp/cklcdklscdksl.csv",
+        "/tmp/cklcdklscdksl/*.csv",
+    ],
+)
+def test_load_file_should_fail_loudly(sample_dag, invalid_path, caplog):
+    """
+    load_file() operator is expected to fail for files which don't exist and 'if_file_doesnt_exist' is having exception
+    strategy selected.
+    """
+
+    with pytest.raises(BackfillUnfinished):
+        with sample_dag:
+            _ = load_file(
+                input_file=File(path=invalid_path),
+                output_table=Table(conn_id="postgres_conn_pagila"),
+            )
+        test_utils.run_dag(sample_dag)
+    expected_error = f"File(s) not found for path/pattern '{invalid_path}'"
+    assert expected_error in caplog.text

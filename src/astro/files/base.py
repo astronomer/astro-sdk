@@ -1,9 +1,9 @@
-from typing import List, Optional, Union
+from typing import Any, List, Optional, Union
 
 import pandas as pd
 import smart_open
 
-from astro.constants import FileType
+from astro.constants import FileNotFoundStrategy, FileType
 from astro.files.locations import create_file_location
 from astro.files.types import create_file_type
 
@@ -35,11 +35,11 @@ class File:
         )
 
     @property
-    def path(self) -> str:
+    def path(self) -> Any:
         return self.location.path
 
     @property
-    def conn_id(self) -> Optional[str]:
+    def conn_id(self) -> Any:
         return self.location.conn_id
 
     @property
@@ -89,7 +89,7 @@ class File:
             f'{self.__class__.__name__}(location="{self.location}",type="{self.type}")'
         )
 
-    def __str__(self) -> str:
+    def __str__(self) -> Any:
         return self.location.path
 
 
@@ -98,6 +98,7 @@ def get_files(
     conn_id: Optional[str] = None,
     filetype: Union[FileType, None] = None,
     normalize_config: Optional[dict] = None,
+    if_file_doesnt_exist: FileNotFoundStrategy = "exception",
 ) -> List[File]:
     """get file objects by resolving path_pattern from local/object stores
     path_pattern can be
@@ -108,10 +109,11 @@ def get_files(
         supports glob and prefix pattern for object stores
     :param conn_id: Airflow connection ID
     :param filetype: constant to provide an explicit file type
-    :param normalize_config: parameters in dict format of pandas json_normalize() function.
+    :param normalize_config: parameters in dict format of pandas json_normalize() function
+    :param if_file_doesnt_exist: determines the strategy in case the file path/pattern doesn't result in existing files
     """
     location = create_file_location(path_pattern, conn_id)
-    return [
+    files = [
         File(
             path=path,
             conn_id=conn_id,
@@ -120,3 +122,7 @@ def get_files(
         )
         for path in location.paths
     ]
+    if len(files) == 0 and if_file_doesnt_exist == "exception":
+        raise ValueError(f"File(s) not found for path/pattern '{path_pattern}'")
+
+    return files

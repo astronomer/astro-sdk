@@ -226,3 +226,19 @@ def test_get_files(file_type, file_location, locations_method_map_fixture):
         for file in files:
             assert file.location.location_type.value == file_location
             assert file.type.name.value == file_type
+
+
+@pytest.mark.parametrize(
+    "invalid_path",
+    [
+        "/tmp/cklcdklscdksl.csv",
+        "/tmp/cklcdklscdksl/*.csv",
+    ],
+)
+def test_get_files_raise_exception(invalid_path, caplog):
+    """get_files expected to fail with default 'if_file_doesnt_exist' exception strategy"""
+
+    with pytest.raises(ValueError) as e:
+        _ = get_files(path_pattern=invalid_path)
+    expected_error = f"File(s) not found for path/pattern '{invalid_path}'"
+    assert expected_error in str(e.value)
