@@ -3,58 +3,57 @@
     {
       "name": "postgres",
       "params": {
-        "metadata" : {
+        "conn_id": "postgres_conn",
+        "metadata": {
           "database": "postgres",
           "schema": "postgres"
-        },
-        "conn_id": "postgres_conn"
+        }
       }
     },
     {
       "name": "snowflake",
       "params": {
-        "metadata" : {
+        "conn_id": "snowflake_conn",
+        "metadata": {
           "database": "DWH_LEGACY",
           "schema": "SANDBOX_AIRFLOW_TEST"
-        },
-        "conn_id": "snowflake_conn"
-
+        }
       }
     },
     {
       "name": "bigquery",
       "params": {
-        "metadata" : {
+        "conn_id": "bigquery",
+        "metadata": {
           "database": "bigquery"
-        },
-        "conn_id": "bigquery"
+        }
       }
     }
   ],
   "datasets": [
     {
-        "name": "few_kb",
-        "size": "45K",
-        "path":"/tmp/covid_overview.csv",
-        "rows": 732
+      "name": "few_kb",
+      "path": "/tmp/covid_overview.csv",
+      "rows": 732,
+      "size": "45K"
     },
     {
-        "name": "many_kb",
-        "size": "472K",
-        "path": "/tmp/artist_data.csv",
-        "rows": 3532
+      "name": "many_kb",
+      "path": "/tmp/artist_data.csv",
+      "rows": 3532,
+      "size": "472K"
     },
     {
-        "name": "few_mb",
-        "size": "20M",
-        "path": "/tmp/title_ratings.csv",
-        "rows": 1213991
+      "name": "few_mb",
+      "path": "/tmp/title_ratings.csv",
+      "rows": 1213991,
+      "size": "20M"
     },
     {
-        "name": "many_mb",
-        "size": "279M",
-        "path": "/tmp/github_timeline.csv",
-        "rows": 385817
+      "name": "many_mb",
+      "path": "/tmp/github_timeline.csv",
+      "rows": 385817,
+      "size": "279M"
     }
   ]
 }
