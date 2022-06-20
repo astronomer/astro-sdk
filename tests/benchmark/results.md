@@ -36,7 +36,9 @@ For Machine types: n2-standard-4
 | bigquery   | ten_kb     | 9.57s        | 30.13MB      | 3.69s           | 220.0ms           | 24.97MB      | 15.76MB         |
 | bigquery   | ten_mb     | 34.96s       | 34.5MB       | 3.9s            | 410.0ms           | 35.58MB      | 11.55MB         |
 
-## Baseline using `bq load`
+
+#### Baseline using `bq load`
+
 |Dataset                                    |Size |Duration(h-m-s)|
 |-------------------------------------------|-----|---------------|
 |covid_overview/covid_overview_10kb.csv     |10 KB|0:00:02        |
@@ -46,7 +48,9 @@ For Machine types: n2-standard-4
 |trimmed/pypi/*                             |5GB  |0:00:41        |
 |github/github-archive/*                    |10GB |0:01:09        |
 
-## Baseline using `GCSToBigQueryOperator` using [benchmark_gcs_to_bigquery.py](tests/benchmark/dags/benchmark_gcs_to_big_query.py)
+
+#### Baseline using `GCSToBigQueryOperator` using [benchmark_gcs_to_bigquery.py](tests/benchmark/dags/benchmark_gcs_to_big_query.py)
+
 |Dataset                                    |Size | Duration(seconds)  |
 |-------------------------------------------|-----|--------------------|
 |covid_overview/covid_overview_10kb.csv     |10 KB| 5.129522           |
