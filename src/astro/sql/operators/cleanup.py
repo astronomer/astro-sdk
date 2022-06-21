@@ -16,28 +16,6 @@ from astro.sql.operators.load_file import LoadFile
 from astro.sql.table import Table
 
 
-def resolve_tables_from_tasks(
-    tasks: List[BaseOperator], context: Context
-) -> List[Table]:
-    """
-    For the moment, these are the only two classes that create temporary tables.
-    This function allows us to only resolve xcom for those objects (to reduce how much data is brought into the worker).
-
-    We also process these values one at a time so the system can garbage collect non-table objects (otherwise we might
-    run into a situation where we pull in a bunch of dataframes and overwhelm the worker).
-    :param tasks: A list of operators from airflow that we can resolve
-    :param context: Context of the DAGRun so we can resolve against the XCOM table
-    :return:
-    """
-    res = []
-    for task in tasks:
-        if isinstance(task, (DataframeOperator, BaseSQLOperator, LoadFile)):
-            t = task.output.resolve(context)
-            if isinstance(t, Table):
-                res.append(t)
-    return res
-
-
 def filter_for_temp_tables(task_outputs: List[Any]) -> List[Table]:
     return [t for t in task_outputs if isinstance(t, Table) and t.temp]
 
@@ -160,5 +138,34 @@ class CleanupOperator(BaseOperator):
         """
         self.log.info("No tables provided, will delete all temporary tables")
         tasks = [t for t in self.dag.tasks if t.task_id != self.task_id]
-        task_outputs = resolve_tables_from_tasks(tasks=tasks, context=context)
+        task_outputs = self.resolve_tables_from_tasks(tasks=tasks, context=context)
         return task_outputs
+
+    def resolve_tables_from_tasks(
+        self, tasks: List[BaseOperator], context: Context
+    ) -> List[Table]:
+        """
+        For the moment, these are the only two classes that create temporary tables.
+        This function allows us to only resolve xcom for those objects
+        (to reduce how much data is brought into the worker).
+
+        We also process these values one at a time so the system can garbage collect non-table objects
+        (otherwise we might run into a situation where we pull in a bunch of dataframes and overwhelm the worker).
+        :param tasks: A list of operators from airflow that we can resolve
+        :param context: Context of the DAGRun so we can resolve against the XCOM table
+        :return:
+        """
+        res = []
+        for task in tasks:
+            if isinstance(task, (DataframeOperator, BaseSQLOperator, LoadFile)):
+                try:
+                    t = task.output.resolve(context)
+                    if isinstance(t, Table):
+                        res.append(t)
+                except AirflowException:
+                    self.log.info(
+                        "xcom output for %s not found. Will not clean up this task",
+                        task.task_id,
+                    )
+
+        return res

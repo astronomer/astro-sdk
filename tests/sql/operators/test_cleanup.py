@@ -17,9 +17,7 @@ CWD = pathlib.Path(__file__).parent
 
 DEFAULT_FILEPATH = str(pathlib.Path(CWD.parent.parent, "data/sample.csv").absolute())
 SQLITE_ONLY = [
-    {
-        "database": Database.SQLITE,
-    },
+    {"database": Database.SQLITE, "file": File(DEFAULT_FILEPATH)},
 ]
 SUPPORTED_DATABASES = [
     {
