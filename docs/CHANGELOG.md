@@ -1,4 +1,21 @@
 # Changelog
+## 0.10.0
+
+Feature:
+* Allow list and tuples as columns names in Append & Merge Operators [#343](https://github.com/astronomer/astro-sdk/issues/343), [#435](https://github.com/astronomer/astro-sdk/issues/335)
+
+Breaking Change:
+* `aql.merge` interface changed. Argument `merge_table` changed to `target_table`, `target_columns` and `merge_column` combined to `column` argument, `merge_keys` is changed to `target_conflict_columns`, `conflict_strategy` is changed to `if_conflicts`. More details can be found at [422](https://github.com/astronomer/astro-sdk/pull/422), [#466](https://github.com/astronomer/astro-sdk/issues/466)
+
+Enhancement:
+* Document (new) load_file benchmark datasets [#449](https://github.com/astronomer/astro-sdk/pull/449)
+* Made improvement to benchmark scripts and configurations [#458](https://github.com/astronomer/astro-sdk/pull/458), [#434](https://github.com/astronomer/astro-sdk/issues/434), [#461](https://github.com/astronomer/astro-sdk/pull/461), [#460](https://github.com/astronomer/astro-sdk/issues/460), [#437](https://github.com/astronomer/astro-sdk/issues/437), [#462](https://github.com/astronomer/astro-sdk/issues/462)
+* Performance evaluation for loading datasets with Astro Python SDK 0.9.2 into BigQuery [#437](https://github.com/astronomer/astro-sdk/issues/437)
+
+## 0.9.2
+
+Bug fix:
+* Change export_file to return File object [#454](https://github.com/astronomer/astro-sdk/issues/454).
 
 ## 0.9.1
 
