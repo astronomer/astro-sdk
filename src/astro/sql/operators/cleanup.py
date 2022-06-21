@@ -56,11 +56,11 @@ class CleanupOperator(BaseOperator):
             if not self.run_immediately:
                 self.wait_for_dag_to_finish(context)
             self.tables_to_cleanup = self.get_all_task_outputs(context=context)
+        temp_tables = filter_for_temp_tables(self.tables_to_cleanup)
         self.log.info(
             "Tables found for cleanup: %s",
-            ",".join([t.name for t in self.tables_to_cleanup]),
+            ",".join([t.name for t in temp_tables]),
         )
-        temp_tables = filter_for_temp_tables(self.tables_to_cleanup)
         for table in temp_tables:
             self.drop_table(table)
 
@@ -111,18 +111,18 @@ class CleanupOperator(BaseOperator):
             if dag_is_running:
                 if self.single_worker_mode:
                     self.log.warning(
-                        "You are currently running the 'single worker mode', where the task will fail and retry to"
-                        "unblock the single worker thread. This mode should only be used for SequentialExecutor as it"
+                        "You are currently running the 'single worker mode', where the task will fail and retry to "
+                        "unblock the single worker thread. This mode should only be used for SequentialExecutor as it "
                         "creates the appearance of a failed task."
                     )
                     raise AirflowException(
-                        "You are currently running the 'single worker mode', where the task will fail and retry to"
-                        "unblock the single worker thread. This mode should only be used for SequentialExecutor as it"
+                        "You are currently running the 'single worker mode', where the task will fail and retry to "
+                        "unblock the single worker thread. This mode should only be used for SequentialExecutor as it "
                         "creates the appearance of a failed task. The task should requeue and retry soon."
                     )
                 else:
                     self.log.warning(
-                        "You are currently running the 'waiting mode', where the task will wait"
+                        "You are currently running the 'waiting mode', where the task will wait "
                         "for all other tasks to complete. Please note that for asynchronous executors (e.g. "
                         "sequentialexecutor and debugexecutor, this mode will cause locks."
                     )
