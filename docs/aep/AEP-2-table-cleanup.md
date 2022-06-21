@@ -16,7 +16,7 @@ Authors:
 
 ## Motivation
 
-When running `aql.transform` or `aql.load_file` jobs, users will develop temporary tables in their databases every time they run a DAG. These extra tables are currently handled by placing all tables into a “temporary schema”. The thought behind these schemas is that a DBA can easily delete the schema if it starts to get full. This answer is insufficient so a better solution for table cleanup should be enacted.
+When running `aql.transform` or `aql.load_file` jobs, the Astro SDK implicitly creates temporary tables in the database every time the DAG runs. These extra tables are currently handled by placing all tables into a “temporary schema”. The thought behind these schemas is that a DBA can easily delete the schema if it starts to get full. This answer is insufficient so a better solution for table cleanup should be enacted.
 
 Temporary schemas are unfortunately an unideal solution to this problem. Users would need to define the same named schema across all of their databases, and there’s no guarantee that a user would even have access to more than one schema in a certain database (e.g. if you only have write access to a sandbox in your snowflake instance, you wouldn’t want to necessarily delete your sandbox.
 ## Proposal
