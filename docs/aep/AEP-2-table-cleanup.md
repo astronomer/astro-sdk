@@ -130,7 +130,7 @@ Pros:
 * Allows using tasks trigger rules which gives control of running cleanup even when certain task fails
 
 Cons:
-* If users add new tasks to the DAG, they need to remember to add it to the list
+* If users add new tasks to the DAG, they need to remember to add it to the cleanup list
 * It might find all tables and delete them before they necessarily SHOULD be deleted if the downstream tasks are not added to the dependencies list
 
 ### Option 4: a function with no parameters
@@ -160,7 +160,8 @@ Cons:
 
 ### Option 5: A listener
 
-We looked into using the new airflow listener feature for this feature, but unfortunately found it was not compatible. Even if it was, it would require
+We looked into using the new airflow listener feature for this feature, but unfortunately found it was not compatible. This incompatibility is because currently listeners only work at the
+task level and not at the DAG level. Even if listeners were compatible, it would require
 asking users to install a custom plugin to their airflow instance which would add startup overhead.
 
 ### Option 6: An asynchronous task

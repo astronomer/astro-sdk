@@ -46,20 +46,38 @@ Example of content:
     {
       "name": "postgres",
       "params": {
-        "database": "postgres",
-        "conn_id": "postgres_conn",
-        "schema": "postgres"
+        "conn_id": "postgres",
+        "metadata": {
+          "database": "astronomer-dag-authoring",
+          "schema": "postgres"
+        }
       }
     }
   ],
   "datasets": [
     {
-        "name": "few_kb",
-        "path":"/tmp/covid_overview.csv"
+      "conn_id": "postgres",
+      "file_type": "parquet",
+      "name": "ten_kb",
+      "path": "/tmp/covid_overview_10kb.parquet",
+      "rows": 385817,
+      "size": "10 KB"
     },
     {
-        "name": "many_mb",
-        "path": "/tmp/github_timeline.csv"
+      "conn_id": "postgres",
+      "file_type": "csv",
+      "name": "hundred_kb",
+      "path": "tmp/artist_data_100kb.csv",
+      "rows": 385817,
+      "size": "100 KB"
+    },
+    {
+      "conn_id": "postgres",
+      "file_type": "csv",
+      "name": "ten_mb",
+      "path": "tmp/title_ratings_10mb.csv",
+      "rows": 385817,
+      "size": "9.9M"
     }
   ]
 }
@@ -68,11 +86,24 @@ Example of content:
 The `datasets` section should match the datasets of choice. It has two mandatory properties:
 * `name`: the label used to refer to this dataset
 * `path`: the local, GCS, or S3 path to the dataset
+* `file_type`: the type of file or extension of file
 
 The `databases` section must match existing connections or connections declared in the file `test-connections.yml`, available at the `astro` root directory. It must contain:
 * `name`: the label used to refer to this database
 * `params`: a dictionary containing the configuration to the database. The properties `database` and `conn_id` are required.
 
+## Resource configuration for the benchmark
+For all the benchmarking, it recommended to choose following configuration of worker node. The current benchmarking results
+are run on following three types of worker node configuration on cloud:
+1. `Large` worker node
+    - 4 vCPUs, 16 GB RAM
+    - For example, in GCP n2-standard-4 machines or on AWS EC2 t2.xlarge machines etc
+2. `Medium` worker node
+    - 2 vCPU, 8 GB RAM
+    - For example, in GCP n1-standard-2 machines or on AWS EC2 t2.large machines etc.
+3. `Small` worker node
+    - 1 vCPU, 4 GB
+    - For example, in GCP n1-standard-1 machines or on AWS EC2 t2.medium machines etc.
 
 ## Execute the benchmark
 
