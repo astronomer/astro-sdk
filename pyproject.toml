@@ -77,7 +77,8 @@ all = [
     "s3fs"
 ]
 doc = [
-    "sphinx==4.4.0"
+    "sphinx==4.4.0",
+    "sphinx-autoapi"
 ]
 
 [project.urls]
