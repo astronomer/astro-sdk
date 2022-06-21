@@ -6,12 +6,7 @@ import pytest
 from botocore.client import BaseClient
 from google.cloud.storage import Client
 
-from astro.constants import (
-    SUPPORTED_FILE_LOCATIONS,
-    SUPPORTED_FILE_TYPES,
-    FileLocation,
-    FileType,
-)
+from astro.constants import SUPPORTED_FILE_TYPES, FileType
 from astro.files import File, get_files
 
 sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent, "data/sample.csv")
@@ -206,26 +201,6 @@ def test_read_with_explicit_valid_type(
             )
         assert path == args[0]
         mocked_read.assert_called()
-
-
-@pytest.mark.parametrize(
-    "locations_method_map_fixture", [{"method": "paths"}], indirect=True
-)
-@pytest.mark.parametrize("file_location", SUPPORTED_FILE_LOCATIONS)
-@pytest.mark.parametrize("file_type", SUPPORTED_FILE_TYPES)
-def test_get_files(file_type, file_location, locations_method_map_fixture):
-    """Test get_files to resolve the patterns within paths"""
-    path = f"{file_location}://tmp/sample.{file_type}"
-    if file_location == FileLocation.LOCAL.value:
-        path = f"/tmp/sample.{file_type}"
-
-    patch_module = locations_method_map_fixture[FileLocation(file_location)]
-
-    with patch(patch_module):
-        files = get_files(path)
-        for file in files:
-            assert file.location.location_type.value == file_location
-            assert file.type.name.value == file_type
 
 
 @pytest.mark.parametrize(
