@@ -94,6 +94,18 @@ def build(session: nox.Session) -> None:
     session.run("python", "-m", "build", *session.posargs)
 
 
+@nox.session(python="3.9")
+def build_docs(session: nox.Session) -> None:
+    """Build release artifacts."""
+    session.install("sphinx")
+    session.run(
+        "sphinx-build",
+        "-W",
+        "docs",
+        "docs/_build",
+    )
+
+
 @nox.session()
 def release(session: nox.Session) -> None:
     """Publish a release."""
