@@ -155,9 +155,9 @@ We'll create some auxiliary tables in Snowflake and populate with a small amount
 
 ```sql
 
-CREATE OR REPLACE TABLE customers_table (customer_id CHAR(10), customer_name VARCHAR(100), type VARCHAR(10) )
+CREATE OR REPLACE TABLE customers_table (customer_id CHAR(10), customer_name VARCHAR(100), type VARCHAR(10) );
 
-INSERT INTO customers_table (CUSTOMER_ID, CUSTOMER_NAME,TYPE) VALUES ('CUST1','NAME1','TYPE1'),('CUST2','NAME2','TYPE1'),('CUST3','NAME3','TYPE2')
+INSERT INTO customers_table (CUSTOMER_ID, CUSTOMER_NAME,TYPE) VALUES ('CUST1','NAME1','TYPE1'),('CUST2','NAME2','TYPE1'),('CUST3','NAME3','TYPE2');
 ```
 
 * Create and populate a reporting table into which we'll merge our transformed data:
@@ -165,12 +165,12 @@ INSERT INTO customers_table (CUSTOMER_ID, CUSTOMER_NAME,TYPE) VALUES ('CUST1','N
 ```sql
 
 CREATE OR REPLACE TABLE reporting_table (
-    CUSTOMER_ID CHAR(10), CUSTOMER_NAME VARCHAR(100), ORDER_ID CHAR(10), PURCHASE_DATE DATE, AMOUNT FLOAT, TYPE CHAR(10));
+    CUSTOMER_ID CHAR(30), CUSTOMER_NAME VARCHAR(100), ORDER_ID CHAR(10), PURCHASE_DATE DATE, AMOUNT FLOAT, TYPE CHAR(10));
 
 INSERT INTO reporting_table (CUSTOMER_ID, CUSTOMER_NAME, ORDER_ID, PURCHASE_DATE, AMOUNT, TYPE) VALUES
 ('INCORRECT_CUSTOMER_ID','INCORRECT_CUSTOMER_NAME','ORDER2','2/2/2022',200,'TYPE1'),
 ('CUST3','NAME3','ORDER3','3/3/2023',300,'TYPE2'),
-('CUST4','NAME4','ORDER4','4/4/2022',400,'TYPE2')
+('CUST4','NAME4','ORDER4','4/4/2022',400,'TYPE2');
 ```
 ***
 # Simple ETL workflow
@@ -252,11 +252,10 @@ with dag:
             name=SNOWFLAKE_REPORTING,
             conn_id=SNOWFLAKE_CONN_ID,
         ),
-        merge_table=joined_data,
-        merge_columns=["customer_id", "customer_name"],
-        target_columns=["customer_id", "customer_name"],
-        merge_keys={"order_id": "order_id"},
-        conflict_strategy="update",
+        source_table=joined_data,
+        target_conflict_columns=["order_id"],
+        columns=["customer_id", "customer_name"],
+        if_conflicts="update",
     )
 
     purchase_dates = transform_dataframe(reporting_table)
@@ -330,11 +329,10 @@ reporting_table = aql.merge(
         name=SNOWFLAKE_REPORTING,
         conn_id=SNOWFLAKE_CONN_ID,
     ),
-    merge_table=joined_data,
-    merge_columns=["customer_id", "customer_name"],
-    target_columns=["customer_id", "customer_name"],
-    merge_keys={"order_id": "order_id"},
-    conflict_strategy="update",
+    source_table=joined_data,
+    target_conflict_columns=["order_id"],
+    columns=["customer_id", "customer_name"],
+    if_conflicts="update",
 )
 ```
 
