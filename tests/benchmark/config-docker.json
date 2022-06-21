@@ -3,19 +3,21 @@
     {
       "name": "bigquery",
       "params": {
-        "metadata" : {
+        "conn_id": "bigquery",
+        "metadata": {
           "database": "bigquery"
-        },
-        "conn_id": "bigquery"
+        }
       }
     }
   ],
   "datasets": [
     {
-        "name": "few_kb",
-        "size": "45K",
-        "path":"gs://astro-sdk/benchmark/original/covid_overview/covid_overview.csv",
-        "rows": 732
+      "conn_id": "google_cloud_default",
+      "file_type": "csv",
+      "name": "few_kb",
+      "path": "gs://astro-sdk/benchmark/original/covid_overview/covid_overview.csv",
+      "rows": 732,
+      "size": "45K"
     }
   ]
 }

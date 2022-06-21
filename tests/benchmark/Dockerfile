@@ -9,6 +9,7 @@ LABEL git_hash=${GIT_HASH}
 ENV SDK_DEPENDENCIES=/tmp/
 ENV AIRFLOW_HOME=/opt/app/
 ENV GIT_REVISION=${GIT_HASH}
+ENV ASTRO_PUBLISH_BENCHMARK_DATA=True
 
 # Debian Bullseye is shipped with Python 3.9
 # Upgrade built-in pip
