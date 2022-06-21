@@ -49,7 +49,7 @@ class Table:
     temp: bool = False
 
     def __post_init__(self) -> None:
-        if not self._name:
+        if not self._name or self._name.startswith("_tmp"):
             self.temp = True
 
     def _create_unique_table_name(self, prefix: str = "") -> str:
@@ -102,6 +102,6 @@ class Table:
         """
         Set the table name. Once this happens, the table is no longer considered temporary.
         """
-        if not isinstance(value, property):
+        if not isinstance(value, property) and value != self._name:
             self._name = value
             self.temp = False

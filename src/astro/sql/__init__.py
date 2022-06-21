@@ -10,6 +10,7 @@ except ImportError:
 
 from astro.constants import MergeConflictStrategy
 from astro.sql.operators.append import APPEND_COLUMN_TYPE, AppendOperator
+from astro.sql.operators.cleanup import CleanupOperator
 from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.export_file import export_file  # noqa: F401
 from astro.sql.operators.load_file import load_file  # noqa: F401
@@ -74,6 +75,10 @@ def run_raw_sql(
         decorated_operator_class=RawSQLOperator,
         **kwargs,
     )
+
+
+def cleanup(tables_to_cleanup: Optional[List[Table]] = None, **kwargs):
+    return CleanupOperator(tables_to_cleanup=tables_to_cleanup, **kwargs)
 
 
 def append(

@@ -89,6 +89,7 @@ def example_amazon_s3_snowflake_transform():
             conn_id="snowflake_conn",
         ),
     )
+    aql.cleanup()
 
 
 dag = example_amazon_s3_snowflake_transform()

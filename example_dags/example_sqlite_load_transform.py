@@ -42,3 +42,4 @@ with DAG(
             conn_id="sqlite_default",
         ),
     )
+    aql.cleanup()
