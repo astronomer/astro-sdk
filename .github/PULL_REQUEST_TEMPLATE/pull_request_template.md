@@ -3,7 +3,7 @@
 <!-- Please describe the current behavior that you are modifying. -->
 
 
-<!-- 
+<!--
 Issues are required for both bug fixes and features.
 Reference it using one of the following:
 
@@ -20,9 +20,6 @@ related: #ISSUE
 -
 
 ## Does this introduce a breaking change?
-
-- [ ] Yes
-- [ ] No
 
 <!-- If this introduces a breaking change, please describe the impact and migration path for existing applications below. -->
 
