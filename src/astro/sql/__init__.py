@@ -227,6 +227,8 @@ def dataframe(
     identifiers_as_lower: Optional[bool] = True,
 ) -> Callable[..., pd.DataFrame]:
     """
+    This decorator will allow users to write python functions while treating SQL tables as dataframes
+
     This decorator allows a user to run python functions in Airflow but with the huge benefit that SQL tables
     will automatically be turned into dataframes and resulting dataframes can automatically used in astro.sql functions
     """
