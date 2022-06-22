@@ -3,8 +3,13 @@
 <!-- Please describe the current behavior that you are modifying. -->
 
 
-<!-- Issues are required for both bug fixes and features. -->
-Issue URL:
+<!-- 
+Issues are required for both bug fixes and features.
+Reference it using one of the following:
+
+closes: #ISSUE
+related: #ISSUE
+-->
 
 
 ## What is the new behavior?
