@@ -1,7 +1,7 @@
 {% if obj.display %}
 .. py:{{ obj.type }}:: {{ obj.short_name }}{% if obj.args %}({{ obj.args }}){% endif %}
 {% for (args, return_annotation) in obj.overloads %}
-   {{ " " * (obj.type | length) }}   {{ obj.short_name }}{% if args %}({{ args }}){% endif %}
+{{ " " * (obj.type | length) }}   {{ obj.short_name }}{% if args %}({{ args }}){% endif %}
 {% endfor %}
 
 
@@ -13,10 +13,10 @@
 
    {% if "show-inheritance-diagram" in autoapi_options and obj.bases != ["object"] %}
    .. autoapi-inheritance-diagram:: {{ obj.obj["full_name"] }}
-      :parts: 1
-      {% if "private-members" in autoapi_options %}
-      :private-bases:
-      {% endif %}
+   :parts: 1
+   {% if "private-members" in autoapi_options %}
+   :private-bases:
+   {% endif %}
 
    {% endif %}
    {% endif %}
@@ -47,4 +47,4 @@
    {% for method in visible_methods %}
    {{ method.render()|indent(3) }}
    {% endfor %}
-{% endif %}
+   {% endif %}

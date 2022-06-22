@@ -14,7 +14,7 @@
 
 {% endif %}
 
-{% block subpackages %}
+{% block suAttributesbpackages %}
 {% set visible_subpackages = obj.subpackages|selectattr("display")|list %}
 {% if visible_subpackages %}
 Subpackages
@@ -58,24 +58,11 @@ Submodules
 {{ obj.type|title }} Contents
 {{ "-" * obj.type|length }}---------
 
+
 {% set visible_classes = visible_children|selectattr("type", "equalto", "class")|list %}
 {% set visible_functions = visible_children|selectattr("type", "equalto", "function")|list %}
 {% set visible_attributes = visible_children|selectattr("type", "equalto", "data")|list %}
 {% if "show-module-summary" in autoapi_options and (visible_classes or visible_functions) %}
-{% block classes scoped %}
-{% if visible_classes %}
-Classes
-~~~~~~~
-
-.. autoapisummary::
-
-{% for klass in visible_classes %}
-   {{ klass.id }}
-{% endfor %}
-
-
-{% endif %}
-{% endblock %}
 
 {% block functions scoped %}
 {% if visible_functions %}
@@ -93,12 +80,25 @@ Functions
 {% endblock %}
 
 {% block attributes scoped %}
+{% block classes scoped %}
+{% if visible_classes %}
+Classes
+~~~~~~~
+
+.. autoapisummary::
+{% for klass in visible_classes %}
+   {{ klass.id }}
+{% endfor %}
+
+
+{% endif %}
+{% endblock %}
 {% if visible_attributes %}
 Attributes
 ~~~~~~~~~~
 
 .. autoapisummary::
-
+{% set module_attrs = (visible_functions + visible_attributes)|list %}
 {% for attribute in visible_attributes %}
    {{ attribute.id }}
 {% endfor %}
@@ -107,7 +107,13 @@ Attributes
 {% endif %}
 {% endblock %}
 {% endif %}
-{% for obj_item in visible_children %}
+{% for obj_item in visible_functions %}
+{{ obj_item.render()|indent(0) }}
+{% endfor %}
+{% for obj_item in visible_attributes %}
+{{ obj_item.render()|indent(0) }}
+{% endfor %}
+{% for obj_item in visible_classes %}
 {{ obj_item.render()|indent(0) }}
 {% endfor %}
 {% endif %}
