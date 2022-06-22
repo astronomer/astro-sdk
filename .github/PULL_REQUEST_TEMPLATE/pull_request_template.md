@@ -21,11 +21,7 @@ related: #ISSUE
 
 ## Does this introduce a breaking change?
 
-<!-- If this introduces a breaking change, please describe the impact and migration path for existing applications below. -->
-
 
 ### Checklist
-- [ ] Code passes all static checks
 - [ ] Created tests which fail without the change (if possible)
-- [ ] All tests passing
 - [ ] Extended the README / documentation, if necessary
