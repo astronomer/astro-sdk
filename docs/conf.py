@@ -36,7 +36,7 @@ autoapi_template_dir = "_autoapi_template"
 autoapi_dirs = ["../src"]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ["docs/_autoapi_templates"]
+templates_path = ["_autoapi_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
