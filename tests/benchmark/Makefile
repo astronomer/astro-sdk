@@ -52,8 +52,8 @@ local: check_google_credentials
 	@sudo chmod a+rwx -R /tmp/docker/
 	@docker run -it \
    		-v /tmp/docker:/tmp:rw 	\
-   		-v ${GOOGLE_APPLICATION_CREDENTIALS}:/gcp.json:ro \
-		-e GOOGLE_APPLICATION_CREDENTIALS=$(GOOGLE_APPLICATION_CREDENTIALS) \
+   		-v ${GOOGLE_APPLICATION_CREDENTIALS}:/tmp/gcp.json:ro \
+		-e GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp.json \
    		benchmark
 	@rm -rf astro-sdk
 
