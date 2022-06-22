@@ -37,11 +37,9 @@ def transform(
 
     Use this function as a decorator like so:
 
-    ```python
-    @transform
-    def my_sql_statement(table1: Table, table2: Table) -> Table:
-        return "SELECT * FROM {{table1}} JOIN {{table2}}"
-    ```
+      @transform
+      def my_sql_statement(table1: Table, table2: Table) -> Table:
+          return "SELECT * FROM {{table1}} JOIN {{table2}}"
 
     In this example, by identifying the parameters as `Table` objects, astro knows to automatically convert those
     objects into tables (if they are, for example, a dataframe). Any type besides table will lead astro to assume
@@ -92,11 +90,9 @@ def run_raw_sql(
 
     Use this function as a decorator like so:
 
-    ```python
-    @transform
-    def my_sql_statement(table1: Table) -> Table:
-        return "DROP TABLE {{table1}}"
-    ```
+      @transform
+      def my_sql_statement(table1: Table) -> Table:
+          return "DROP TABLE {{table1}}"
 
     In this example, by identifying parameters as `Table` objects, astro knows to automatically convert those
     objects into tables (if they are, for example, a dataframe). Any type besides table will lead astro to assume
@@ -135,6 +131,18 @@ def run_raw_sql(
 
 
 def cleanup(tables_to_cleanup: Optional[List[Table]] = None, **kwargs):
+    """
+    Clean up temporary tables once either the DAG or upstream tasks are done
+
+    The cleanup operator allows for two possible scenarios: Either a user wants to clean up a specific set of tables
+    during the DAG run, or the user wants to ensure that all temporary tables are deleted once the DAG run is finished.
+    The idea here is to ensure that even if a user doesn't have access to a "temp" schema, that astro does not leave
+    hanging tables once execution is done.
+
+    :param tables_to_cleanup: A list of tables to cleanup, defaults to waiting for all upstream tasks to finish
+    :param kwargs:
+    :return:
+    """
     return CleanupOperator(tables_to_cleanup=tables_to_cleanup, **kwargs)
 
 
