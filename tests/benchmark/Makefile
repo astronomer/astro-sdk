@@ -6,6 +6,13 @@ GIT_HASH = $(shell git log -1 --format=%h)
 APP = benchmark
 CONTAINER_REGISTRY=gcr.io/$(GCP_PROJECT)/$(APP):$(GIT_HASH)
 
+
+check_google_credentials:
+ifndef GOOGLE_APPLICATION_CREDENTIALS
+	@echo "The GOOGLE_APPLICATION_CREDENTIALS environment variable is missing."
+	exit 1
+endif
+
 clean:
 	@echo "Deleting unnecessary files"
 	@find . | grep -E "(/__pycache__$|\.pyc$|\.pyo$\)" | xargs rm -rf
@@ -31,7 +38,7 @@ container:
 	@docker push $(CONTAINER_REGISTRY)
 	@rm -rf astro-sdk
 
-local:
+local: check_google_credentials
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
 	@gcloud auth configure-docker
 	@mkdir -p astro-sdk
@@ -41,8 +48,15 @@ local:
 	@cp -r ../../src astro-sdk/
 	@ls astro-sdk
 	@docker build -t benchmark . --build-arg=GIT_HASH=`git rev-parse --short HEAD`
-	@docker run benchmark
+	@mkdir -p /tmp/docker
+	@sudo chmod a+rwx -R /tmp/docker/
+	@docker run -it \
+   		-v /tmp/docker:/tmp:rw 	\
+   		-v ${GOOGLE_APPLICATION_CREDENTIALS}:/gcp.json:ro \
+		-e GOOGLE_APPLICATION_CREDENTIALS=$(GOOGLE_APPLICATION_CREDENTIALS) \
+   		benchmark
 	@rm -rf astro-sdk
+
 
 run_job:
 	@kubectl apply -f infrastructure/kubernetes/job.yaml
