@@ -98,12 +98,14 @@ def build(session: nox.Session) -> None:
 def build_docs(session: nox.Session) -> None:
     """Build release artifacts."""
     session.install("sphinx")
-    session.run(
-        "sphinx-build",
-        "-W",
-        "docs",
-        "docs/_build",
-    )
+    session.install("sphinx-view")
+    session.install("sphinx-autoapi")
+    # session.run(
+    #     "sphinx-build",
+    #     "-W",
+    #     "docs",
+    #     "docs/_build",
+    # )
 
 
 @nox.session()
