@@ -34,11 +34,9 @@ class File:
             path=path, filetype=filetype, normalize_config=normalize_config
         )
 
-    # ToDo: path property can resolve into lists of path(list[str]) or single path(str).
-    # Right now code is assuming value of string which is wrong need to make changes all across code.
     @property
-    def path(self) -> Any:
-        return self.location.path
+    def path(self) -> Union[List[str], str]:
+        return cast(list, self.location.path)
 
     @property
     def conn_id(self) -> Optional[str]:
