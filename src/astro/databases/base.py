@@ -230,6 +230,15 @@ class BaseDatabase(ABC):
             chunk_size,
         )
 
+    def check_optimised_path_and_transfer(
+        self, source_file: File, target_table: Table
+    ) -> bool:
+        """
+        Checks if optimised path for transfer between File location to database exists
+        and if it does, it transfers it and returns true else false.
+        """
+        pass
+
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,

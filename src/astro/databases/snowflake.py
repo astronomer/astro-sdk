@@ -6,8 +6,14 @@ from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from pandas.io.sql import SQLDatabase
 from snowflake.connector import pandas_tools
 
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    FileLocation,
+    LoadExistStrategy,
+    MergeConflictStrategy,
+)
 from astro.databases.base import BaseDatabase
+from astro.files import File
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
@@ -20,6 +26,7 @@ class SnowflakeDatabase(BaseDatabase):
     """
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
+        self.native_support: Tuple = (FileLocation.GS, FileLocation.S3)
         super().__init__(conn_id)
 
     @property
@@ -56,6 +63,23 @@ class SnowflakeDatabase(BaseDatabase):
         ]
         qualified_name = ".".join(name for name in qualified_name_lists if name)
         return qualified_name
+
+    def check_optimised_path_and_transfer(
+        self, source_file: File, target_table: Table
+    ) -> bool:
+        """
+        Checks if optimised path for transfer between File location to database exists
+        and if it does, it transfers it and returns true else false.
+        """
+        if FileLocation(source_file) in self.native_support:
+            # TODO:
+            """
+            1. snowflake_hook = self.hook()
+            2. create schema and table if not exists using pandas
+            3. read file and use COPY INTO
+            4. return True
+            """
+        return False
 
     def load_pandas_dataframe_to_table(
         self,
