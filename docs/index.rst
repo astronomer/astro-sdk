@@ -7,13 +7,9 @@ Welcome to astro-sdk's documentation!
 =====================================
 
 .. toctree::
+   CONTRIBUTING.md
    :maxdepth: 2
    :caption: Contents:
-
-.. mdinclude:: CONTRIBUTING.md
-.. mdinclude:: DEVELOPMENT.md
-
-
 
 
 Indices and tables
