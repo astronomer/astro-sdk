@@ -82,13 +82,19 @@ class LoadFile(BaseOperator):
             input_file.conn_id,
             normalize_config=self.normalize_config,
         ):
-            database.load_pandas_dataframe_to_table(
-                source_dataframe=file.export_to_dataframe(),
+            if not database.check_optimised_path_and_transfer(
+                source_file=file,
                 target_table=self.output_table,
-                if_exists=if_exists,
-                chunk_size=self.chunk_size,
-            )
-            if_exists = "append"
+            ):
+                return self.output_table
+            else:
+                database.load_pandas_dataframe_to_table(
+                    source_dataframe=file.export_to_dataframe(),
+                    target_table=self.output_table,
+                    if_exists=if_exists,
+                    chunk_size=self.chunk_size,
+                )
+                if_exists = "append"
         self.log.info("Completed loading the data into %s.", self.output_table)
         return self.output_table
 
