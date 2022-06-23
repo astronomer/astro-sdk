@@ -17,6 +17,29 @@ resource "google_project_service" "container_registry" {
   service = "containerregistry.googleapis.com"
 }
 
+resource "google_service_account" "benchmark" {
+  account_id   = "astro-sdk-gke-benchmark"
+  display_name = "Service Account for GKE benchmark node pool"
+}
+
+resource "google_project_iam_member" "benchmark_gcs" {
+  project = var.project
+  role    = "roles/BasicGCSRole"
+  member  = "serviceAccount:${google_service_account.benchmark.email}"
+}
+
+resource "google_project_iam_member" "benchmark_bq" {
+  project = var.project
+  role    = "roles/bigquery.dataEditor"
+  member  = "serviceAccount:${google_service_account.benchmark.email}"
+}
+
+resource "google_project_iam_member" "benchmark_gcr" {
+  project = var.project
+  role    = "roles/containerregistry.ServiceAgent"
+  member  = "serviceAccount:${google_service_account.benchmark.email}"
+}
+
 # Takes approximately 6m14 (2022/06)
 resource "google_container_cluster" "astro_sdk" {
   name     = "astro-sdk"
@@ -47,5 +70,15 @@ resource "google_container_node_pool" "benchmark" {
   node_config {
     preemptible  = true
     machine_type = var.gke_node_pool_machine_type
-  }
+  
+    # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
+    # https://developers.google.com/identity/protocols/oauth2/scopes
+    service_account = google_service_account.benchmark.email
+    oauth_scopes    = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
 }
+
+
+}
+
