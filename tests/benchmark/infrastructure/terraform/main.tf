@@ -24,7 +24,7 @@ resource "google_service_account" "benchmark" {
 
 resource "google_project_iam_member" "benchmark_gcs" {
   project = var.project
-  role    = "roles/BasicGCSRole"
+  role    = "roles/storage.objectViewer"
   member  = "serviceAccount:${google_service_account.benchmark.email}"
 }
 
