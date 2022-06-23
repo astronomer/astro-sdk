@@ -1,10 +1,15 @@
+import os
 import pathlib
+from unittest import mock
 
 import pandas
 import pytest
+from airflow import DAG, AirflowException
+from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstance
 from airflow.operators.bash import BashOperator
 from airflow.utils.state import State
+from airflow.utils.timezone import datetime
 
 import astro.sql as aql
 from astro.constants import Database
@@ -204,3 +209,64 @@ def test_is_dag_running():
     assert not cleanup_op._is_dag_running(task_instances=task_instances)
     task_instances[0].state = State.RUNNING
     assert cleanup_op._is_dag_running(task_instances=task_instances)
+
+
+@pytest.mark.parametrize(
+    "executor,raise_error",
+    [
+        ("CeleryExecutor", False),
+        ("DebugExecutor", True),
+        ("SequentialExecutor", True),
+    ],
+)
+@mock.patch("astro.sql.operators.cleanup.CleanupOperator.get_all_task_outputs")
+def test_error_raised_with_blocking_op_executors(
+    mock_get_all_task_outputs, executor, raise_error
+):
+    """
+    Test that when SequentialExecutor or DebugExecutor is used an error is raised
+    if the other tasks are still running when cleanup is ran.
+
+    This is because Cleanup will block the entire thread and will cause deadlock until
+    execution_timeout of a task is reached
+    """
+    mock_get_all_task_outputs.return_value = []
+
+    dag = DAG(
+        "test_error_raised_with_blocking_op_executors", start_date=datetime(2022, 1, 1)
+    )
+    cleanup_task = CleanupOperator(dag=dag)
+    dr = DagRun(dag_id=dag.dag_id)
+    with mock.patch(
+        "astro.sql.operators.cleanup.CleanupOperator._is_dag_running"
+    ) as mock_is_dag_running, mock.patch.dict(
+        os.environ,
+        {"AIRFLOW__CORE__EXECUTOR": executor},
+    ):
+        mock_is_dag_running.side_effect = [True, False]
+        if raise_error:
+            with pytest.raises(AirflowException) as exec_info:
+                cleanup_task.execute({"dag_run": dr})
+            assert exec_info.value.args[0] == (
+                "You are currently running the 'single worker mode', where the task "
+                "will fail and retry to unblock the single worker thread. This mode "
+                "should only be used for SequentialExecutor as it "
+                "creates the appearance of a failed task. The task should requeue and retry soon."
+            )
+        else:
+            cleanup_task.execute({"dag_run": dr})
+
+
+@pytest.mark.parametrize(
+    "run_type,expected_val",
+    [
+        ("backfill", True),
+        ("scheduled", False),
+        ("manual", False),
+    ],
+)
+def test_single_worker_mode(run_type, expected_val):
+    """Test that if we run Backfill Job it should be marked as single worker node"""
+    dr = DagRun(dag_id="test_single_worker_mode", run_type=run_type)
+    with mock.patch.dict(os.environ, {"AIRFLOW__CORE__EXECUTOR": "CeleryExecutor"}):
+        assert CleanupOperator._is_single_worker_mode(dr) == expected_val

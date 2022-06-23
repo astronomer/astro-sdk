@@ -52,7 +52,7 @@ def get_table_name(prefix):
 def run_dag(dag: DAG, account_for_cleanup_failure=False):
     """
 
-    :param dag:
+    :param dag: DAG
     :param account_for_cleanup_failure: Since our cleanup task fails on purpose when running in 'single thread mode'
     we account for this by running the backfill one more time if the cleanup task is the ONLY failed task. Otherwise
     we just passthrough the exception.
