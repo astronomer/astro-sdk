@@ -129,22 +129,26 @@ class CleanupOperator(BaseOperator):
                 )
                 time.sleep(5)
 
-    @staticmethod
-    def _is_single_worker_mode(current_dagrun: DagRun) -> bool:
+    @classmethod
+    def _is_single_worker_mode(cls, current_dagrun: DagRun) -> bool:
         # This is imported in the function as this import is expensive and is only needed for
         # this function to find the executor
         from airflow.configuration import conf
-        from airflow.utils.types import DagRunType
 
-        # Backfill Job always runs with a DebugExecutor
-        return (
-            conf.get("core", "EXECUTOR")
-            in [
-                "SequentialExecutor",
-                "DebugExecutor",
-            ]
-            or current_dagrun.run_type == DagRunType.BACKFILL_JOB
-        )
+        job_id = current_dagrun.creating_job_id
+        executor: str = conf.get("core", "EXECUTOR")
+        if job_id:
+            executor = cls._get_executor_from_job_id(job_id) or executor
+        return executor in ["SequentialExecutor", "DebugExecutor"]
+
+    @staticmethod
+    def _get_executor_from_job_id(job_id: int) -> Optional[str]:
+        from airflow.jobs.base_job import BaseJob
+        from airflow.utils.session import create_session
+
+        with create_session() as session:
+            job = session.get(BaseJob, job_id)
+        return job.executor_class if job else None
 
     def get_all_task_outputs(self, context: Context) -> List[Table]:
         """
