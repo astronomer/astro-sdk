@@ -71,7 +71,8 @@ def export_file(
 
     This will allow users to perform further actions with the exported file.
 
-    e.g.
+    e.g.:
+
     .. code-block:: python
 
       with sample_dag:
@@ -82,6 +83,7 @@ def export_file(
               if_exists="replace",
           )
           res_df = aql.load_file(input_file=exported_file)
+
 
     :param output_file: Path and conn_id
     :param input_data: Input table / dataframe
