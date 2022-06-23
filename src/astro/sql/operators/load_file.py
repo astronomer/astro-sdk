@@ -4,7 +4,7 @@ import pandas as pd
 from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
-from astro.constants import DEFAULT_CHUNK_SIZE, FileNotFoundStrategy, LoadExistStrategy
+from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 from astro.databases import BaseDatabase, create_database
 from astro.files import File, check_if_connection_exists, get_files
 from astro.sql.table import Table
@@ -22,7 +22,6 @@ class LoadFile(BaseOperator):
 
     :return: If ``output_table`` is passed this operator returns a Table object. If not
         passed, returns a dataframe.
-    :param if_file_doesnt_exist: determines the strategy in case the file path/pattern doesn't result in existing files
     """
 
     template_fields = ("output_table", "input_file")
@@ -34,7 +33,6 @@ class LoadFile(BaseOperator):
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         if_exists: LoadExistStrategy = "replace",
         ndjson_normalize_sep: str = "_",
-        if_file_doesnt_exist: FileNotFoundStrategy = "exception",
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -45,7 +43,6 @@ class LoadFile(BaseOperator):
         self.if_exists = if_exists
         self.ndjson_normalize_sep = ndjson_normalize_sep
         self.normalize_config: Dict[str, str] = {}
-        self.if_file_doesnt_exist = if_file_doesnt_exist
 
     def execute(self, context: Any) -> Union[Table, pd.DataFrame]:  # skipcq: PYL-W0613
         """
@@ -84,7 +81,6 @@ class LoadFile(BaseOperator):
             input_file.path,
             input_file.conn_id,
             normalize_config=self.normalize_config,
-            if_file_doesnt_exist=self.if_file_doesnt_exist,
         ):
             database.load_pandas_dataframe_to_table(
                 source_dataframe=file.export_to_dataframe(),
@@ -105,7 +101,6 @@ class LoadFile(BaseOperator):
         for file in get_files(
             input_file.path,
             input_file.conn_id,
-            if_file_doesnt_exist=self.if_file_doesnt_exist,
         ):
             if isinstance(df, pd.DataFrame):
                 df = pd.concat([df, file.export_to_dataframe()])
@@ -163,10 +158,10 @@ def load_file(
     task_id: Optional[str] = None,
     if_exists: LoadExistStrategy = "replace",
     ndjson_normalize_sep: str = "_",
-    if_file_doesnt_exist: FileNotFoundStrategy = "exception",
     **kwargs: Any,
 ) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.
+
     :param input_file: File path and conn_id for object stores
     :param output_table: Table to create
     :param task_id: task id, optional
@@ -175,7 +170,6 @@ def load_file(
         ex - {"a": {"b":"c"}} will result in
             column - "a_b"
             where ndjson_normalize_sep = "_"
-    :param if_file_doesnt_exist: determines the strategy in case the file path/pattern doesn't result in existing files
     """
 
     # Note - using path for task id is causing issues as it's a pattern and
@@ -188,6 +182,5 @@ def load_file(
         output_table=output_table,
         if_exists=if_exists,
         ndjson_normalize_sep=ndjson_normalize_sep,
-        if_file_doesnt_exist=if_file_doesnt_exist,
         **kwargs,
     ).output

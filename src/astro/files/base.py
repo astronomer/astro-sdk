@@ -1,9 +1,9 @@
-from typing import Any, List, Optional, Union, cast
+from typing import List, Optional, Union
 
 import pandas as pd
 import smart_open
 
-from astro.constants import FileNotFoundStrategy, FileType
+from astro.constants import FileType
 from astro.files.locations import create_file_location
 from astro.files.types import create_file_type
 
@@ -35,12 +35,12 @@ class File:
         )
 
     @property
-    def path(self) -> Union[List[str], str]:
-        return cast(list, self.location.path)
+    def path(self) -> str:
+        return self.location.path
 
     @property
     def conn_id(self) -> Optional[str]:
-        return cast(str, self.location.conn_id)
+        return self.location.conn_id
 
     @property
     def size(self) -> int:
@@ -89,9 +89,7 @@ class File:
             f'{self.__class__.__name__}(location="{self.location}",type="{self.type}")'
         )
 
-    # To Do: path property can resolve into lists of path(list[str]) or single path(str).
-    # Right now code is assuming value of string which is wrong need to make changes all across code.
-    def __str__(self) -> Any:
+    def __str__(self) -> str:
         return self.location.path
 
 
@@ -100,7 +98,6 @@ def get_files(
     conn_id: Optional[str] = None,
     filetype: Union[FileType, None] = None,
     normalize_config: Optional[dict] = None,
-    if_file_doesnt_exist: FileNotFoundStrategy = "exception",
 ) -> List[File]:
     """get file objects by resolving path_pattern from local/object stores
     path_pattern can be
@@ -112,7 +109,6 @@ def get_files(
     :param conn_id: Airflow connection ID
     :param filetype: constant to provide an explicit file type
     :param normalize_config: parameters in dict format of pandas json_normalize() function
-    :param if_file_doesnt_exist: determines the strategy in case the file path/pattern doesn't result in existing files
     """
     location = create_file_location(path_pattern, conn_id)
     files = [
@@ -124,7 +120,7 @@ def get_files(
         )
         for path in location.paths
     ]
-    if len(files) == 0 and if_file_doesnt_exist == "exception":
+    if len(files) == 0:
         raise ValueError(f"File(s) not found for path/pattern '{path_pattern}'")
 
     return files
