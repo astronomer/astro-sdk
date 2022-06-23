@@ -100,12 +100,12 @@ def build_docs(session: nox.Session) -> None:
     session.install("sphinx")
     session.install("sphinx-view")
     session.install("sphinx-autoapi")
-    # session.run(
-    #     "sphinx-build",
-    #     "-W",
-    #     "docs",
-    #     "docs/_build",
-    # )
+    session.run(
+        "sphinx-build",
+        "-W",
+        "docs",
+        "docs/_build",
+    )
 
 
 @nox.session()
