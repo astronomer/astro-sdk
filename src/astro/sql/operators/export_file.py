@@ -72,15 +72,16 @@ def export_file(
     This will allow users to perform further actions with the exported file.
 
     e.g.
+    .. code-block:: python
 
-        with sample_dag:
-        table = aql.load_file(input_file=File(path=data_path), output_table=test_table)
-        exported_file = aql.export_file(
-            input_data=table,
-            output_file=File(path="/tmp/saved_df.csv"),
-            if_exists="replace",
-        )
-        res_df = aql.load_file(input_file=exported_file)
+      with sample_dag:
+          table = aql.load_file(input_file=File(path=data_path), output_table=test_table)
+          exported_file = aql.export_file(
+              input_data=table,
+              output_file=File(path="/tmp/saved_df.csv"),
+              if_exists="replace",
+          )
+          res_df = aql.load_file(input_file=exported_file)
 
     :param output_file: Path and conn_id
     :param input_data: Input table / dataframe
