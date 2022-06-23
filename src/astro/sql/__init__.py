@@ -37,6 +37,8 @@ def transform(
 
     Use this function as a decorator like so:
 
+    .. code-block:: python
+
       @transform
       def my_sql_statement(table1: Table, table2: Table) -> Table:
           return "SELECT * FROM {{table1}} JOIN {{table2}}"
@@ -90,16 +92,19 @@ def run_raw_sql(
 
     Use this function as a decorator like so:
 
+
+    .. code-block:: python
+
       @transform
       def my_sql_statement(table1: Table) -> Table:
           return "DROP TABLE {{table1}}"
 
-    In this example, by identifying parameters as `Table` objects, astro knows to automatically convert those
+    In this example, by identifying parameters as ``Table`` objects, astro knows to automatically convert those
     objects into tables (if they are, for example, a dataframe). Any type besides table will lead astro to assume
     you do not want the parameter converted.
 
-    Please note that the `run_raw_sql function will not create a temporary table. It will either return the result of a
-    provided `handler` function or it will not return anything at all.
+    Please note that the ``run_raw_sql`` function will not create a temporary table. It will either return the
+    result of a provided ``handler`` function or it will not return anything at all.
 
 
     :param python_callable:

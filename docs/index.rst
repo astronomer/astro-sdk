@@ -10,6 +10,10 @@ Welcome to astro-sdk's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+.. mdinclude:: CONTRIBUTING.md
+.. mdinclude:: DEVELOPMENT.md
+
+
 
 
 Indices and tables
