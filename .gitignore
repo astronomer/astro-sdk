@@ -1,4 +1,5 @@
 .git
+docs/_build
 coverage.xml
 .env
 .coverage

@@ -31,6 +31,31 @@ def transform(
     handler: Optional[Callable] = None,
     **kwargs: Any,
 ) -> TaskDecorator:
+    """
+    Given a python function that returns a SQL statement and (optional) tables, execute the SQL statement and output
+    the result into a SQL table.
+
+    Use this function as a decorator like so:
+
+      @transform
+      def my_sql_statement(table1: Table, table2: Table) -> Table:
+          return "SELECT * FROM {{table1}} JOIN {{table2}}"
+
+    In this example, by identifying the parameters as `Table` objects, astro knows to automatically convert those
+    objects into tables (if they are, for example, a dataframe). Any type besides table will lead astro to assume
+    you do not want the parameter converted.
+
+    :param python_callable:
+    :param multiple_outputs:
+    :param conn_id:
+    :param parameters:
+    :param database:
+    :param schema:
+    :param handler:
+    :param kwargs:
+    :return: Transform functions return a `Table` object that can be passed to future tasks. This table will be
+    either an auto-generated temporary table, or will overwrite a table given in the `output_table` parameter.
+    """
 
     kwargs.update(
         {
@@ -59,6 +84,34 @@ def run_raw_sql(
     handler: Optional[Callable] = None,
     **kwargs: Any,
 ) -> TaskDecorator:
+    """
+    Given a python function that returns a SQL statement and (optional) tables, execute the SQL statement and output
+    the result into a SQL table.
+
+    Use this function as a decorator like so:
+
+      @transform
+      def my_sql_statement(table1: Table) -> Table:
+          return "DROP TABLE {{table1}}"
+
+    In this example, by identifying parameters as `Table` objects, astro knows to automatically convert those
+    objects into tables (if they are, for example, a dataframe). Any type besides table will lead astro to assume
+    you do not want the parameter converted.
+
+    Please note that the `run_raw_sql function will not create a temporary table. It will either return the result of a
+    provided `handler` function or it will not return anything at all.
+
+
+    :param python_callable:
+    :param multiple_outputs:
+    :param conn_id:
+    :param parameters:
+    :param database:
+    :param schema:
+    :param handler:
+    :param kwargs:
+    :return:
+    """
 
     kwargs.update(
         {
@@ -78,6 +131,18 @@ def run_raw_sql(
 
 
 def cleanup(tables_to_cleanup: Optional[List[Table]] = None, **kwargs):
+    """
+    Clean up temporary tables once either the DAG or upstream tasks are done
+
+    The cleanup operator allows for two possible scenarios: Either a user wants to clean up a specific set of tables
+    during the DAG run, or the user wants to ensure that all temporary tables are deleted once the DAG run is finished.
+    The idea here is to ensure that even if a user doesn't have access to a "temp" schema, that astro does not leave
+    hanging tables once execution is done.
+
+    :param tables_to_cleanup: A list of tables to cleanup, defaults to waiting for all upstream tasks to finish
+    :param kwargs:
+    :return:
+    """
     return CleanupOperator(tables_to_cleanup=tables_to_cleanup, **kwargs)
 
 
@@ -142,7 +207,9 @@ def truncate(
     table: Table,
     **kwargs: Any,
 ) -> TruncateOperator:
-    """`
+    """
+    Truncate a table.
+
     :param table: Table to be truncated
     :param kwargs:
     """
@@ -160,7 +227,9 @@ def dataframe(
     identifiers_as_lower: Optional[bool] = True,
 ) -> Callable[..., pd.DataFrame]:
     """
-    This function allows a user to run python functions in Airflow but with the huge benefit that SQL files
+    This decorator will allow users to write python functions while treating SQL tables as dataframes
+
+    This decorator allows a user to run python functions in Airflow but with the huge benefit that SQL tables
     will automatically be turned into dataframes and resulting dataframes can automatically used in astro.sql functions
     """
     param_map = {

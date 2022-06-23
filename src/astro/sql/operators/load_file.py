@@ -12,7 +12,7 @@ from astro.utils.task_id_helper import get_task_id
 
 
 class LoadFile(BaseOperator):
-    """Load S3/local table to postgres/snowflake database
+    """Load S3/local file into either a database or a pandas dataframe
 
     :param input_file: File path and conn_id for object stores
     :param output_table: Table to create
@@ -155,7 +155,7 @@ def load_file(
     ndjson_normalize_sep: str = "_",
     **kwargs: Any,
 ) -> XComArg:
-    """Convert LoadFile into a function that Returns an XComArg object
+    """Load a file or bucket into either a SQL table or a pandas dataframe.
     :param input_file: File path and conn_id for object stores
     :param output_table: Table to create
     :param task_id: task id, optional
