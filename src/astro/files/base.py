@@ -108,10 +108,10 @@ def get_files(
         supports glob and prefix pattern for object stores
     :param conn_id: Airflow connection ID
     :param filetype: constant to provide an explicit file type
-    :param normalize_config: parameters in dict format of pandas json_normalize() function.
+    :param normalize_config: parameters in dict format of pandas json_normalize() function
     """
     location = create_file_location(path_pattern, conn_id)
-    return [
+    files = [
         File(
             path=path,
             conn_id=conn_id,
@@ -120,3 +120,7 @@ def get_files(
         )
         for path in location.paths
     ]
+    if len(files) == 0:
+        raise ValueError(f"File(s) not found for path/pattern '{path_pattern}'")
+
+    return files
