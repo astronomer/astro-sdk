@@ -4,7 +4,7 @@ all: clean setup_gke container run_job teardown_gke
 GCP_PROJECT ?= astronomer-dag-authoring
 GIT_HASH = $(shell git log -1 --format=%h)
 APP = benchmark
-CONTAINER_REGISTRY=gcr.io/$(GCP_PROJECT)/$(APP):$(GIT_HASH)
+CONTAINER_REGISTRY=gcr.io/$(GCP_PROJECT)/$(APP)
 
 
 check_google_credentials:
@@ -34,7 +34,7 @@ container:
 	@cp ../../README.md astro-sdk/
 	@cp ../../test-connections.yaml astro-sdk/
 	@cp -r ../../src astro-sdk/
-	@docker build --build-arg=GIT_HASH=`git rev-parse --short HEAD` --tag=$(CONTAINER_REGISTRY)  .
+	@docker build --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):latest  .
 	@docker push $(CONTAINER_REGISTRY)
 	@rm -rf astro-sdk
 
