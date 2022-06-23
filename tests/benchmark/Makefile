@@ -59,7 +59,9 @@ local: check_google_credentials
 
 
 run_job:
-	@kubectl apply -f infrastructure/kubernetes/job.yaml
+	@gcloud container clusters get-credentials astro-sdk --zone us-central1-a --project ${GCP_PROJECT}
+	@kubectl apply -f infrastructure/kubernetes/namespace.yaml
+	@kubectl create -f infrastructure/kubernetes/job.yaml
 
 # Takes approximately 2min
 teardown_gke:
