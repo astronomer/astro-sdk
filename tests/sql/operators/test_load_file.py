@@ -715,3 +715,36 @@ def test_load_file_should_fail_loudly(sample_dag, invalid_path, caplog):
         test_utils.run_dag(sample_dag)
     expected_error = f"File(s) not found for path/pattern '{invalid_path}'"
     assert expected_error in caplog.text
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "remote_files_fixture",
+    [{"provider": "google"}],
+    indirect=True,
+    ids=["google_gcs"],
+)
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+        }
+    ],
+    indirect=True,
+    ids=["bigquery"],
+)
+def test_aql_load_file_optimized_gs_to_bigquery_paths(
+    sample_dag, database_table_fixture, remote_files_fixture
+):
+    db, test_table = database_table_fixture
+    file_uri = remote_files_fixture[0]
+
+    test_table.conn_id = "gcp_conn"
+
+    with sample_dag:
+        load_file(
+            input_file=File(file_uri),
+            output_table=test_table,
+        )
+    test_utils.run_dag(sample_dag)

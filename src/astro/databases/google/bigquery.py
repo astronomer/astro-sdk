@@ -2,14 +2,23 @@
 from typing import Dict, List, Tuple
 
 import pandas as pd
+from airflow.hooks.base import BaseHook
+from airflow.models import connection
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from google.api_core.exceptions import NotFound as GoogleNotFound
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
 from astro import settings
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    FileLocation,
+    FileType,
+    LoadExistStrategy,
+    MergeConflictStrategy,
+)
 from astro.databases.base import BaseDatabase
+from astro.files import File
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = BigQueryHook.default_conn_name
@@ -20,6 +29,8 @@ class BigqueryDatabase(BaseDatabase):
     Handle interactions with Bigquery databases. If this class is successful, we should not have any Bigquery-specific
     logic in other parts of our code-base.
     """
+
+    OPTIMIZED_PATHS = {FileLocation.GS: "gs_to_bigquery"}
 
     illegal_column_name_chars: List[str] = ["."]
     illegal_column_name_chars_replacement: List[str] = ["_"]
@@ -135,3 +146,96 @@ class BigqueryDatabase(BaseDatabase):
             )
             statement += f" WHEN MATCHED THEN {update_statement}"
         self.run_sql(sql_statement=statement)
+
+    def check_optimised_path_and_transfer(
+        self,
+        source_file: File,
+        target_table: Table,
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        if_exists: LoadExistStrategy = "replace",
+        **kwargs,
+    ) -> bool:
+        """
+        Checks if optimised path for transfer between File location to database exists
+        and if it does, it transfers it and returns true else false.
+        """
+        method_name = self.OPTIMIZED_PATHS.get(source_file.location.location_type)
+        if method_name:
+            transfer_method = self.__getattribute__(method_name)
+            transfer_method(
+                source_file=source_file,
+                target_table=target_table,
+                chunk_size=chunk_size,
+                if_exists=if_exists,
+                **kwargs,
+            )
+            return True
+
+        return False
+
+    def get_project_id_from_conn(self, conn: connection) -> str:
+        """
+        Get project id from conn
+        :param conn: Airflow's connection
+        """
+        if conn.extra and conn.extra.get("project"):
+            return str(conn.extra.get("project"))
+        elif conn.host:
+            return str(conn.host)
+        raise ValueError(f"conn_id {conn.conn_id} has no project id.")
+
+    def gs_to_bigquery(
+        self,
+        source_file: File,
+        target_table: Table,
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        if_exists: LoadExistStrategy = "replace",
+        **kwargs,
+    ) -> None:
+        """
+        Transfer data from gcs to bigquery
+        :param source_file: Source file that is used as source of data
+        :param target_table: Table that will be created on the bigquery
+        :param chunk_size: Specify the number of records in each batch to be written at a time
+        :param if_exists: Overwrite table if exists. Default 'replace'
+        """
+        bq_hook = BigQueryHook(
+            gcp_conn_id=target_table.conn_id,
+        )
+
+        if if_exists == "replace":
+            self.drop_table(target_table)
+
+        file_type_to_bq_source_format = {
+            FileType.CSV: "CSV",
+            FileType.NDJSON: "NEWLINE_DELIMITED_JSON",
+            FileType.PARQUET: "PARQUET",
+        }
+
+        conn = BaseHook.get_connection(target_table.conn_id)
+
+        load_job_config = {
+            "sourceUris": [source_file.path],
+            "destinationTable": {
+                "projectId": self.get_project_id_from_conn(conn),
+                "datasetId": target_table.metadata.schema,
+                "tableId": target_table.name,
+            },
+            "createDisposition": "CREATE_IF_NEEDED",
+            "writeDisposition": "WRITE_APPEND",
+            "sourceFormat": file_type_to_bq_source_format[source_file.type.name],
+            "autodetect": True,
+        }
+
+        # Since bigquery has other options besides used here, we need to expose them to end user.
+        load_job_config.update(kwargs)
+
+        job_config = {
+            "jobType": "LOAD",
+            "load": load_job_config,
+            "labels": {"target_table": target_table.name},
+        }
+
+        bq_hook.insert_job(
+            configuration=job_config,
+        )

@@ -419,3 +419,17 @@ class BaseDatabase(ABC):
             self.get_table_qualified_name(table),
             self.get_table_qualified_name(table),
         )
+
+    def check_optimised_path_and_transfer(
+        self,
+        source_file: File,
+        target_table: Table,
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        if_exists: LoadExistStrategy = "replace",
+        **kwargs,
+    ) -> bool:
+        """
+        Checks if optimised path for transfer between File location to database exists
+        and if it does, it transfers it and returns true else false.
+        """
+        pass
