@@ -3,7 +3,7 @@ all: clean setup_gke container run_job teardown_gke
 
 GCP_PROJECT ?= astronomer-dag-authoring
 GIT_HASH = $(shell git log -1 --format=%h)
-APP = benchmark
+APP ?= benchmark
 CONTAINER_REGISTRY=gcr.io/$(GCP_PROJECT)/$(APP)
 
 
@@ -45,11 +45,12 @@ local: check_google_credentials
 	@cp ../../pyproject.toml astro-sdk/
 	@cp ../../README.md astro-sdk/
 	@cp ../../test-connections.yaml astro-sdk/
+	@mkdir -p /tmp/astro-sdk
 	@cp -r ../../src astro-sdk/
 	@ls astro-sdk
 	@docker build -t benchmark . --build-arg=GIT_HASH=`git rev-parse --short HEAD`
 	@mkdir -p /tmp/docker
-	@sudo chmod a+rwx -R /tmp/docker/
+	@sudo chmod a+rwx /tmp/docker/
 	@docker run -it \
    		-v /tmp/docker:/tmp:rw 	\
    		-v ${GOOGLE_APPLICATION_CREDENTIALS}:/tmp/gcp.json:ro \
@@ -58,7 +59,7 @@ local: check_google_credentials
 	@rm -rf astro-sdk
 
 
-run_job:
+run_job: check_google_credentials
 	@gcloud container clusters get-credentials astro-sdk --zone us-central1-a --project ${GCP_PROJECT}
 	@kubectl apply -f infrastructure/kubernetes/namespace.yaml
 	@kubectl create -f infrastructure/kubernetes/job.yaml
