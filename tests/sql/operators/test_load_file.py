@@ -15,6 +15,8 @@ from unittest import mock
 import pandas as pd
 import pytest
 from airflow.exceptions import BackfillUnfinished
+from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+from airflow.providers.google.cloud.hooks.gcs import GCSHook
 from pandas.testing import assert_frame_equal
 
 from astro import sql as aql
@@ -23,7 +25,6 @@ from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
 from astro.sql.table import Metadata, Table
-from astro.utils.dependencies import gcs, s3
 from tests.sql.operators import utils as test_utils
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("load_file_test_table")
@@ -355,9 +356,9 @@ def test_load_file_using_file_connection(
     db, test_table = database_table_fixture
     file_uri = remote_files_fixture[0]
     if file_uri.startswith("s3"):
-        file_conn_id = s3.S3Hook.default_conn_name
+        file_conn_id = S3Hook.default_conn_name
     else:
-        file_conn_id = gcs.GCSHook.default_conn_name
+        file_conn_id = GCSHook.default_conn_name
     with sample_dag:
         load_file(
             input_file=File(path=file_uri, conn_id=file_conn_id),
