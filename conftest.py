@@ -15,7 +15,6 @@ from airflow.utils.session import create_session, provide_session
 from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
 from astro.sql.table import MAX_TABLE_NAME_LENGTH, Table
-from astro.utils.dependencies import gcs, s3
 from tests.sql.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -248,9 +247,11 @@ def _upload_or_delete_remote_file(file_create, object_prefix, provider, source_p
     And deletes a file if it already exists and file_create is False.
     """
     if provider == "google":
+        from airflow.providers.google.cloud.hooks.gcs import GCSHook
+
         bucket_name = os.getenv("GOOGLE_BUCKET", "dag-authoring")
         object_path = f"gs://{bucket_name}/{object_prefix}"
-        hook = gcs.GCSHook()
+        hook = GCSHook()
         if file_create:
             hook.upload(bucket_name, object_prefix, source_path)
         else:
@@ -259,9 +260,11 @@ def _upload_or_delete_remote_file(file_create, object_prefix, provider, source_p
                 bucket_name, object_prefix
             ) and hook.delete(bucket_name, object_prefix)
     else:
+        from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+
         bucket_name = os.getenv("AWS_BUCKET", "tmp9")
         object_path = f"s3://{bucket_name}/{object_prefix}"
-        hook = s3.S3Hook()
+        hook = S3Hook()
         if file_create:
             hook.load_file(source_path, object_prefix, bucket_name)
         else:
