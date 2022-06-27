@@ -4,8 +4,8 @@ Unittest module to test Load File function.
 Requires the unittest, pytest, and requests-mock Python libraries.
 
 Run test:
-    AWS_ACCESS_KEY_ID=AKIAZG42HVH6Z3B6ELRB \
-    AWS_SECRET_ACCESS_KEY=SgwfrcO2NdKpeKhUG77K%2F6B2HuRJJopbHPV84NbY \
+    AWS_ACCESS_KEY_ID=<id> \
+    AWS_SECRET_ACCESS_KEY=<key> \
     python3 -m unittest tests.operators.test_load_file.TestLoadFile.test_aql_local_file_to_postgres
 
 """
