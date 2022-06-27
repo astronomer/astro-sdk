@@ -7,6 +7,7 @@ Welcome to astro-sdk's documentation!
 =====================================
 
 .. toctree::
+   CHANGELOG.md
    CONTRIBUTING.md
    :maxdepth: 2
    :caption: Contents:
