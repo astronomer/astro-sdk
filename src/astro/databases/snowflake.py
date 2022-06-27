@@ -4,11 +4,11 @@ from typing import Dict, List, Tuple
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from pandas.io.sql import SQLDatabase
+from snowflake.connector import pandas_tools
 
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.sql.table import Metadata, Table
-from astro.utils.dependencies import pandas_tools
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
 

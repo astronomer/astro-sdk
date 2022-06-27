@@ -1,9 +1,10 @@
 from typing import Dict, List
 from urllib.parse import urlparse, urlunparse
 
+from airflow.providers.google.cloud.hooks.gcs import GCSHook
+
 from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
-from astro.utils.dependencies import gcs
 
 
 class GCSLocation(BaseFileLocation):
@@ -14,7 +15,7 @@ class GCSLocation(BaseFileLocation):
     @property
     def transport_params(self) -> Dict:
         """get GCS credentials for storage"""
-        hook = gcs.GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else gcs.GCSHook()
+        hook = GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else GCSHook()
         client = hook.get_conn()
         return {"client": client}
 
@@ -24,7 +25,7 @@ class GCSLocation(BaseFileLocation):
         url = urlparse(self.path)
         bucket_name = url.netloc
         prefix = url.path[1:]
-        hook = gcs.GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else gcs.GCSHook()
+        hook = GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else GCSHook()
         prefixes = hook.list(bucket_name=bucket_name, prefix=prefix)
         paths = [
             urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in prefixes
