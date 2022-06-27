@@ -74,7 +74,14 @@ echo - Output: $(get_abs_filename $results_file)
           echo "$i $dataset $database $chunk_size"
           ASTRO_CHUNKSIZE=$chunk_size python3 -W ignore $runner_path --dataset="$dataset" --database="$database" --revision $git_revision --chunk-size=$chunk_size 1>> $results_file
           cat $results_file
-          gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+	  
+          if [[ -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
+	    echo "$GOOGLE_APPLICATION_CREDENTIALS is not defined"
+	  else
+	    echo "$GOOGLE_APPLICATION_CREDENTIALS is defined"
+            gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+	  fi
+
           gsutil cp $results_file gs://${GCP_BUCKET}/benchmark/results/
           if command -v peekprof &> /dev/null; then
              # https://github.com/exapsy/peekprof
