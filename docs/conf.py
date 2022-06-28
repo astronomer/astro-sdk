@@ -23,7 +23,6 @@ author = "Astronomer inc."
 # The full version, including alpha/beta/rc tags
 release = "0.10.0"
 
-
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -31,9 +30,11 @@ release = "0.10.0"
 # ones.
 extensions = ["sphinx.ext.autodoc", "autoapi.extension", "myst_parser"]
 autodoc_typehints = "description"
+
 autoapi_type = "python"
 autoapi_template_dir = "_autoapi_template"
 autoapi_dirs = ["../src"]
+autoapi_options = ["show-module-summary"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_autoapi_templates"]
@@ -42,7 +43,6 @@ templates_path = ["_autoapi_templates"]
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
-
 
 # -- Options for HTML output -------------------------------------------------
 

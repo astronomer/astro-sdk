@@ -15,4 +15,4 @@
    {{ obj.docstring|indent(3) }}
    {% else %}
    {% endif %}
-{% endif %}
+   {% endif %}

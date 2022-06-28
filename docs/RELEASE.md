@@ -47,13 +47,13 @@ pulled directly from main, there is nothing for you to cherry-pick. Simply follo
 
 # Handling Major releases
 
-### When should I create a major release?
+## When should I create a major release?
 
 A major release should be carefully considered, and we should make all attempts to not break functionality when possible.
 However, there is a reality that we sometimes need to remove features to keep the project forward facing. Please take care to give users
 ample time with deprecation warnings and migration steps before removing a feature.
 
-### Creating a major release
+## Creating a major release
 
 The instructions for creating a major release are identical for those of [creating a minor release](#creating-a-minor-release).
 
