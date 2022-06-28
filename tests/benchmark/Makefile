@@ -31,18 +31,10 @@ container:
 	@gcloud auth configure-docker
 	@docker build --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):latest  ../../
 	@docker push $(CONTAINER_REGISTRY)
-	@rm -rf astro-sdk
 
 local: check_google_credentials
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
 	@gcloud auth configure-docker
-	@mkdir -p astro-sdk
-	@cp ../../pyproject.toml astro-sdk/
-	@cp ../../README.md astro-sdk/
-	@cp ../../test-connections.yaml astro-sdk/
-	@mkdir -p /tmp/astro-sdk
-	@cp -r ../../src astro-sdk/
-	@ls astro-sdk
 	@docker build -t benchmark . --build-arg=GIT_HASH=`git rev-parse --short HEAD`
 	@mkdir -p /tmp/docker
 	@sudo chmod a+rwx /tmp/docker/
