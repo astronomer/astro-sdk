@@ -25,11 +25,6 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
 # Install Astro SDK dependencies
 
 COPY . .
+# We need to update pip as only newer versions of pip allow installing in edit mode for pyproject.toml projects. For more info: https://peps.python.org/pep-0660/
 RUN pip install --upgrade pip
 RUN pip install -e .[all]
-##RUN pip uninstall astro-sdk-python -y
-##RUN rm -rf $SDK_DEPENDENCIES/*
-#
-RUN echo $GOOGLE_APPLICATION_CREDENTIALS
-# Create the Airflow home directory and use it as the working dir
-# Assert the Astro SDK is available in the PYTHONPATH
