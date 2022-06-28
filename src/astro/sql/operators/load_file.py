@@ -82,9 +82,12 @@ class LoadFile(BaseOperator):
             input_file.conn_id,
             normalize_config=self.normalize_config,
         ):
-            if not database.check_optimised_path_and_transfer(
+            if database.check_optimised_path_and_transfer(
                 source_file=file,
                 target_table=self.output_table,
+                chunk_size=self.chunk_size,
+                if_exists=self.if_exists,
+                **self.kwargs,
             ):
                 return self.output_table
             else:
