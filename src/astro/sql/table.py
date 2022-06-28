@@ -46,6 +46,7 @@ class Table:
     _name: str = field(init=False, repr=False, default="")
     metadata: Metadata = field(default_factory=Metadata)
     columns: List[Column] = field(default_factory=list)
+    optional_args: dict = field(default_factory=dict)
     temp: bool = False
 
     def __post_init__(self) -> None:
