@@ -292,13 +292,15 @@ class SnowflakeDatabase(BaseDatabase):
         )
 
         create_table_from_infer_schema_query = (
-            f"CREATE OR REPLACE TABLE "
-            f"{self.get_table_qualified_name(target_table)} USING TEMPLATE "
-            f"(SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) FROM TABLE "
-            f"(INFER_SCHEMA "
-            f"(LOCATION=>'@{stage_name}/{os.path.basename(source_file.path) or ''}',"
-            f" FILE_FORMAT=>'parquet_format')));"
+            "CREATE OR REPLACE TABLE %s USING TEMPLATE (SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) FROM TABLE ("
+            "INFER_SCHEMA (LOCATION=>'@%s/%s', FILE_FORMAT=>'parquet_format')));"
+            % (
+                self.get_table_qualified_name(target_table),
+                stage_name,
+                os.path.basename(source_file.path) or "",
+            )
         )
+
         execution_info = snowflake_hook.run(
             create_table_from_infer_schema_query, autocommit=True
         )
