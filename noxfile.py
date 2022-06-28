@@ -102,6 +102,7 @@ def build_docs(session: nox.Session) -> None:
     session.install("sphinx-autoapi")
     session.install("sphinx-rtd-theme")
     session.install("myst-parser")
+    # session.install("-e", ".[google]")
 
     session.chdir("./docs")
     session.run("make", "html")
