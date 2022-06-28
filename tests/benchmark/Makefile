@@ -29,12 +29,7 @@ setup_gke:
 container:
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
 	@gcloud auth configure-docker
-	@mkdir -p astro-sdk
-	@cp ../../pyproject.toml astro-sdk/
-	@cp ../../README.md astro-sdk/
-	@cp ../../test-connections.yaml astro-sdk/
-	@cp -r ../../src astro-sdk/
-	@docker build --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):latest  .
+	@docker build --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):latest  ../../
 	@docker push $(CONTAINER_REGISTRY)
 	@rm -rf astro-sdk
 
