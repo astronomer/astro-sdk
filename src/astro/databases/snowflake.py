@@ -55,10 +55,10 @@ class SnowflakeDatabase(BaseDatabase):
         """
         Fill in default metadata values for table objects addressing snowflake databases
         """
-        connection = self.hook.get_conn()
+        snowflake_connection = self.hook.get_conn()
         return Metadata(
-            schema=connection.schema,
-            database=connection.database,
+            schema=snowflake_connection.schema,
+            database=snowflake_connection.database,
         )
 
     @staticmethod
@@ -104,7 +104,8 @@ class SnowflakeDatabase(BaseDatabase):
                 raise exec_err
         return False
 
-    def get_gcs_project_id_from_conn(self, conn: connection) -> str:
+    @staticmethod
+    def get_gcs_project_id_from_conn(conn: connection) -> str:
         """
         Get GCS project id from conn
         :param conn: Airflow's connection
@@ -244,7 +245,8 @@ class SnowflakeDatabase(BaseDatabase):
         logging.info(execution_info)
         return stage_name
 
-    def drop_stage(self, stage_name: str, snowflake_hook: SnowflakeHook) -> None:
+    @staticmethod
+    def drop_stage(stage_name: str, snowflake_hook: SnowflakeHook) -> None:
         """
         Runs the snowflake query to drop stage if exists
         @param stage_name: Stage name
