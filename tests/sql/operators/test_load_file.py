@@ -146,7 +146,7 @@ def test_aql_replace_existing_table(sample_dag, database_table_fixture):
     with sample_dag:
         task_1 = load_file(input_file=File(data_path_1), output_table=test_table)
         task_2 = load_file(input_file=File(data_path_2), output_table=test_table)
-        task_1 >> task_2
+        task_1 >> task_2  # skipcq: PYL-W0104
     test_utils.run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)

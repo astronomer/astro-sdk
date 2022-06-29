@@ -432,4 +432,4 @@ class BaseDatabase(ABC):
         Checks if optimised path for transfer between File location to database exists
         and if it does, it transfers it and returns true else false.
         """
-        pass
+        return False

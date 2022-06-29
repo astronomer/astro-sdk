@@ -189,7 +189,7 @@ class BigqueryDatabase(BaseDatabase):
         self,
         source_file: File,
         target_table: Table,
-        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        chunk_size: int = DEFAULT_CHUNK_SIZE,  # skipcq: PYL-W0613
         if_exists: LoadExistStrategy = "replace",
         **kwargs,
     ) -> None:
