@@ -173,7 +173,8 @@ class BigqueryDatabase(BaseDatabase):
 
         return False
 
-    def get_project_id_from_conn(self, conn: connection) -> str:
+    @staticmethod
+    def get_project_id_from_conn(conn: connection) -> str:
         """
         Get project id from conn
         :param conn: Airflow's connection
@@ -235,7 +236,6 @@ class BigqueryDatabase(BaseDatabase):
             "load": load_job_config,
             "labels": {"target_table": target_table.name},
         }
-
         bq_hook.insert_job(
             configuration=job_config,
         )
