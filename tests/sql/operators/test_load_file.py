@@ -717,7 +717,6 @@ def test_load_file_should_fail_loudly(sample_dag, invalid_path, caplog):
     assert expected_error in caplog.text
 
 
-@pytest.mark.integration
 @pytest.mark.parametrize(
     "remote_files_fixture",
     [{"provider": "google"}],
@@ -740,11 +739,23 @@ def test_aql_load_file_optimized_gs_to_bigquery_paths(
     db, test_table = database_table_fixture
     file_uri = remote_files_fixture[0]
 
-    test_table.conn_id = "gcp_conn"
+    # (source, destination) - where source is file source path and destination is database.
+    optimised_path_to_method = {
+        (
+            "gs",
+            "bigquery",
+        ): "astro.databases.google.bigquery.BigqueryDatabase.gs_to_bigquery"
+    }
 
-    with sample_dag:
-        load_file(
-            input_file=File(file_uri),
-            output_table=test_table,
-        )
-    test_utils.run_dag(sample_dag)
+    source = file_uri.split(":")[0]
+    destination = db.sql_type
+    mock_path = optimised_path_to_method[(source, destination)]
+
+    with mock.patch(mock_path) as gs_to_bigquery:
+        with sample_dag:
+            load_file(
+                input_file=File(file_uri),
+                output_table=test_table,
+            )
+        test_utils.run_dag(sample_dag)
+        assert gs_to_bigquery.called
