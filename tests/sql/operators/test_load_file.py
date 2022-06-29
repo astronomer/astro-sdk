@@ -733,13 +733,17 @@ def test_load_file_should_fail_loudly(sample_dag, invalid_path, caplog):
     indirect=True,
     ids=["bigquery"],
 )
-def test_aql_load_file_optimized_gs_to_bigquery_paths(
+def test_aql_load_file_optimized_path_method_called(
     sample_dag, database_table_fixture, remote_files_fixture
 ):
+    """
+    Verify the correct method is getting called for specific source and destination.
+    """
     db, test_table = database_table_fixture
     file_uri = remote_files_fixture[0]
 
-    # (source, destination) - where source is file source path and destination is database.
+    # (source, destination) : method_path - where source is file source path and destination is database
+    # and method_path is the path to method
     optimised_path_to_method = {
         (
             "gs",
@@ -759,3 +763,50 @@ def test_aql_load_file_optimized_gs_to_bigquery_paths(
             )
         test_utils.run_dag(sample_dag)
         assert gs_to_bigquery.called
+
+
+@pytest.mark.parametrize(
+    "remote_files_fixture",
+    [{"provider": "google"}],
+    indirect=True,
+    ids=["google_gcs"],
+)
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+        }
+    ],
+    indirect=True,
+    ids=["bigquery"],
+)
+def test_aql_load_file_optimized_path_method_is_not_called(
+    sample_dag, database_table_fixture, remote_files_fixture
+):
+    """
+    Verify that the optimised path method is skipped in case optimise_load is set to False.
+    """
+    db, test_table = database_table_fixture
+    file_uri = remote_files_fixture[0]
+
+    # (source, destination) : method_path - where source is file source path and destination is database
+    # and method_path is the path to method
+    optimised_path_to_method = {
+        (
+            "gs",
+            "bigquery",
+        ): "astro.databases.google.bigquery.BigqueryDatabase.gs_to_bigquery"
+    }
+
+    source = file_uri.split(":")[0]
+    destination = db.sql_type
+    mock_path = optimised_path_to_method[(source, destination)]
+
+    with mock.patch(mock_path) as gs_to_bigquery:
+        with sample_dag:
+            load_file(
+                input_file=File(file_uri), output_table=test_table, optimise_load=False
+            )
+        test_utils.run_dag(sample_dag)
+        assert not gs_to_bigquery.called
