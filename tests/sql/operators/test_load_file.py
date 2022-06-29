@@ -98,7 +98,9 @@ def test_aql_load_remote_file_to_dbs(
     file_uri = remote_files_fixture[0]
 
     with sample_dag:
-        load_file(input_file=File(file_uri), output_table=test_table)
+        load_file(
+            input_file=File(file_uri), output_table=test_table, optimise_load=False
+        )
     test_utils.run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)

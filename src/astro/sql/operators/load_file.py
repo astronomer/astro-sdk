@@ -19,6 +19,7 @@ class LoadFile(BaseOperator):
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
     :param chunk_size: Specify the number of records in each batch to be written at a time.
     :param if_exists: Overwrite file if exists. Default False.
+    :param optimise_load: variable to control use of optimised path for datatransfer.
 
     :return: If ``output_table`` is passed this operator returns a Table object. If not
         passed, returns a dataframe.
@@ -33,6 +34,7 @@ class LoadFile(BaseOperator):
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         if_exists: LoadExistStrategy = "replace",
         ndjson_normalize_sep: str = "_",
+        optimise_load: bool = True,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -43,6 +45,7 @@ class LoadFile(BaseOperator):
         self.if_exists = if_exists
         self.ndjson_normalize_sep = ndjson_normalize_sep
         self.normalize_config: Dict[str, str] = {}
+        self.optimise_load = optimise_load
 
     def execute(self, context: Any) -> Union[Table, pd.DataFrame]:  # skipcq: PYL-W0613
         """
@@ -82,7 +85,7 @@ class LoadFile(BaseOperator):
             input_file.conn_id,
             normalize_config=self.normalize_config,
         ):
-            if database.check_optimised_path_and_transfer(
+            if self.optimise_load and database.check_optimised_path_and_transfer(
                 source_file=file,
                 target_table=self.output_table,
                 chunk_size=self.chunk_size,
@@ -167,6 +170,7 @@ def load_file(
     task_id: Optional[str] = None,
     if_exists: LoadExistStrategy = "replace",
     ndjson_normalize_sep: str = "_",
+    optimise_load: bool = True,
     **kwargs: Any,
 ) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.
@@ -179,6 +183,7 @@ def load_file(
         ex - {"a": {"b":"c"}} will result in
             column - "a_b"
             where ndjson_normalize_sep = "_"
+    :param optimise_load: variable to control use of optimised path for datatransfer.
     """
 
     # Note - using path for task id is causing issues as it's a pattern and
@@ -191,5 +196,6 @@ def load_file(
         output_table=output_table,
         if_exists=if_exists,
         ndjson_normalize_sep=ndjson_normalize_sep,
+        optimise_load=optimise_load,
         **kwargs,
     ).output
