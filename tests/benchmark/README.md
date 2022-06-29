@@ -172,7 +172,7 @@ If the Kubernetes cluster is already set and the container image already was upd
 make run_job
 ```
 
-The command: 
+The command:
 ```
 teardown_gke
 ```

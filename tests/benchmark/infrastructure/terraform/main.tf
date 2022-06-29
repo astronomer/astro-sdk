@@ -70,7 +70,7 @@ resource "google_container_node_pool" "benchmark" {
   node_config {
     preemptible  = true
     machine_type = var.gke_node_pool_machine_type
-  
+
     # Google recommends custom service accounts that have cloud-platform scope and permissions granted via IAM Roles.
     # https://developers.google.com/identity/protocols/oauth2/scopes
     service_account = google_service_account.benchmark.email
@@ -81,4 +81,3 @@ resource "google_container_node_pool" "benchmark" {
 
 
 }
-
