@@ -160,7 +160,6 @@ class BigqueryDatabase(BaseDatabase):
         self,
         source_file: File,
         target_table: Table,
-        chunk_size: int = DEFAULT_CHUNK_SIZE,
         if_exists: LoadExistStrategy = "replace",
         **kwargs,
     ) -> bool:
@@ -174,7 +173,6 @@ class BigqueryDatabase(BaseDatabase):
             transfer_method(
                 source_file=source_file,
                 target_table=target_table,
-                chunk_size=chunk_size,
                 if_exists=if_exists,
                 **kwargs,
             )
@@ -199,7 +197,6 @@ class BigqueryDatabase(BaseDatabase):
         self,
         source_file: File,
         target_table: Table,
-        chunk_size: int = DEFAULT_CHUNK_SIZE,  # skipcq: PYL-W0613
         if_exists: LoadExistStrategy = "replace",
         **kwargs,
     ) -> None:
@@ -207,7 +204,6 @@ class BigqueryDatabase(BaseDatabase):
         Transfer data from gcs to bigquery
         :param source_file: Source file that is used as source of data
         :param target_table: Table that will be created on the bigquery
-        :param chunk_size: Specify the number of records in each batch to be written at a time
         :param if_exists: Overwrite table if exists. Default 'replace'
         """
         bq_hook = BigQueryHook(

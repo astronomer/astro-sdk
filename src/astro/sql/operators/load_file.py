@@ -91,7 +91,6 @@ class LoadFile(BaseOperator):
                 database.optimised_transfer(
                     source_file=file,
                     target_table=self.output_table,
-                    chunk_size=self.chunk_size,
                     if_exists=self.if_exists,
                     **self.kwargs,
                 )

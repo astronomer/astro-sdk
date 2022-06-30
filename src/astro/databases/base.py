@@ -433,7 +433,6 @@ class BaseDatabase(ABC):
         self,
         source_file: File,
         target_table: Table,
-        chunk_size: int = DEFAULT_CHUNK_SIZE,
         if_exists: LoadExistStrategy = "replace",
         **kwargs,
     ) -> bool:
