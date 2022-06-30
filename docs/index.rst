@@ -13,14 +13,9 @@ Welcome to astro-sdk's documentation!
    :caption: Contents:
 
 
-Indices and tables
-==================
-Indices and tables
+Indices and Tables
 ==================
 
     * :ref:`genindex`
     * :ref:`modindex`
     * :ref:`search`
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
