@@ -29,13 +29,13 @@ setup_gke:
 container:
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
 	@gcloud auth configure-docker
-	@docker build --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):latest  ../../
+	@docker build --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):latest -f ./Dockerfile.benchmark  ../../
 	@docker push $(CONTAINER_REGISTRY)
 
 local: check_google_credentials
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
 	@gcloud auth configure-docker
-	@docker build -t benchmark . --build-arg=GIT_HASH=`git rev-parse --short HEAD`
+	@docker build -t benchmark -f ./Dockerfile.benchmark  ../../ --build-arg=GIT_HASH=`git rev-parse --short HEAD`
 	@mkdir -p /tmp/docker
 	@sudo chmod a+rwx /tmp/docker/
 	@docker run -it \
