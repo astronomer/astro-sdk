@@ -45,7 +45,7 @@ COPY . .
 COPY tests/benchmark/dags $AIRFLOW_HOME/dags
 COPY tests/benchmark/run.sh $AIRFLOW_HOME/
 COPY tests/benchmark/run.py $AIRFLOW_HOME/
-COPY tests/benchmark/config-docker.json $AIRFLOW_HOME/config.json
+COPY tests/benchmark/config.json $AIRFLOW_HOME/config.json
 
 # Debian Bullseye is shipped with Python 3.9
 # Upgrade built-in pip

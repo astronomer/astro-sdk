@@ -36,22 +36,6 @@
       "size": "9.9M"
     },
     {
-      "conn_id": "bigquery",
-      "file_type": "ndjson",
-      "name": "one_gb",
-      "path": "gs://astro-sdk/benchmark/trimmed/stackoverflow/stackoverflow_posts_1g.ndjson",
-      "rows": 385817,
-      "size": "1G"
-    },
-    {
-      "conn_id": "bigquery",
-      "file_type": "ndjson",
-      "name": "five_gb",
-      "path": "gs://astro-sdk/benchmark/trimmed/pypi/",
-      "rows": 385817,
-      "size": "5G"
-    },
-    {
       "file_type": "csv",
       "name": "few_kb",
       "path": "gs://astro-sdk/benchmark/original/covid_overview/covid_overview.csv",
