@@ -17,7 +17,7 @@ ENV GCP_BUCKET=dag-authoring
 RUN apt-get update
 RUN apt-get install -y python3-pip
 RUN apt install -y jq
-RUN apt install vim
+RUN apt install -y vim
 
 # Install the Google SDK
 RUN apt install -y curl
