@@ -202,6 +202,7 @@ class BigqueryDatabase(BaseDatabase):
     ) -> None:
         """
         Transfer data from gcs to bigquery
+
         :param source_file: Source file that is used as source of data
         :param target_table: Table that will be created on the bigquery
         :param if_exists: Overwrite table if exists. Default 'replace'
