@@ -420,7 +420,16 @@ class BaseDatabase(ABC):
             self.get_table_qualified_name(table),
         )
 
-    def check_optimised_path_and_transfer(
+    def check_optimised_path(self, source_file: File, target_table: Table) -> bool:
+        """
+        Check if there is an optimised path for source to destination.
+
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table that needs to be populated with file data
+        """
+        return False
+
+    def optimised_transfer(
         self,
         source_file: File,
         target_table: Table,

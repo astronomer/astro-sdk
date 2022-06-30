@@ -85,14 +85,16 @@ class LoadFile(BaseOperator):
             input_file.conn_id,
             normalize_config=self.normalize_config,
         ):
-            if self.optimise_load and database.check_optimised_path_and_transfer(
-                source_file=file,
-                target_table=self.output_table,
-                chunk_size=self.chunk_size,
-                if_exists=self.if_exists,
-                **self.kwargs,
+            if database.check_optimised_path(
+                source_file=file, target_table=self.output_table
             ):
-                return self.output_table
+                database.optimised_transfer(
+                    source_file=file,
+                    target_table=self.output_table,
+                    chunk_size=self.chunk_size,
+                    if_exists=self.if_exists,
+                    **self.kwargs,
+                )
             else:
                 database.load_pandas_dataframe_to_table(
                     source_dataframe=file.export_to_dataframe(),

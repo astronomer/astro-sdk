@@ -147,7 +147,16 @@ class BigqueryDatabase(BaseDatabase):
             statement += f" WHEN MATCHED THEN {update_statement}"
         self.run_sql(sql_statement=statement)
 
-    def check_optimised_path_and_transfer(
+    def check_optimised_path(self, source_file: File, target_table: Table) -> bool:
+        """
+        Check if there is an optimised path for source to destination.
+
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table that needs to be populated with file data
+        """
+        return bool(self.OPTIMIZED_PATHS.get(source_file.location.location_type))
+
+    def optimised_transfer(
         self,
         source_file: File,
         target_table: Table,
