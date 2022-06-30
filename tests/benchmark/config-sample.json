@@ -32,28 +32,52 @@
   ],
   "datasets": [
     {
+      "conn_id": "bigquery",
+      "file_type": "parquet",
+      "name": "ten_kb",
+      "path": "gs://astro-sdk/benchmark/trimmed/covid_overview/covid_overview_10kb.parquet",
+      "rows": 385817,
+      "size": "10 KB"
+    },
+    {
+      "conn_id": "bigquery",
+      "file_type": "csv",
+      "name": "hundred_kb",
+      "path": "gs://astro-sdk/benchmark/trimmed/tate_britain/artist_data_100kb.csv",
+      "rows": 385817,
+      "size": "100 KB"
+    },
+    {
+      "conn_id": "bigquery",
+      "file_type": "csv",
+      "name": "ten_mb",
+      "path": "gs://astro-sdk/benchmark/trimmed/imdb/title_ratings_10mb.csv",
+      "rows": 385817,
+      "size": "9.9M"
+    },
+    {
+      "conn_id": "bigquery",
+      "file_type": "csv",
       "name": "few_kb",
-      "path": "/tmp/covid_overview.csv",
+      "path": "gs://astro-sdk/benchmark/original/covid_overview/covid_overview.csv",
       "rows": 732,
       "size": "45K"
     },
     {
-      "name": "many_kb",
-      "path": "/tmp/artist_data.csv",
-      "rows": 3532,
-      "size": "472K"
-    },
-    {
-      "name": "few_mb",
-      "path": "/tmp/title_ratings.csv",
-      "rows": 1213991,
-      "size": "20M"
-    },
-    {
-      "name": "many_mb",
-      "path": "/tmp/github_timeline.csv",
+      "conn_id": "bigquery",
+      "file_type": "ndjson",
+      "name": "one_gb",
+      "path": "gs://astro-sdk/benchmark/trimmed/stackoverflow/stackoverflow_posts_1g.ndjson",
       "rows": 385817,
-      "size": "279M"
+      "size": "1G"
+    },
+    {
+      "conn_id": "bigquery",
+      "file_type": "ndjson",
+      "name": "five_gb",
+      "path": "gs://astro-sdk/benchmark/trimmed/pypi/",
+      "rows": 385817,
+      "size": "5G"
     }
   ]
 }

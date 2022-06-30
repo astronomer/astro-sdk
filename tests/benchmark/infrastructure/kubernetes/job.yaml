@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  generateName: benchmark-
+  namespace: benchmark
+spec:
+  template:
+    metadata:
+      name: benchmark
+    spec:
+      containers:
+      - name: benchmark
+        image: gcr.io/astronomer-dag-authoring/benchmark
+        command: ["./run.sh"]
+        resources:
+          requests:
+            memory: 6Gi
+          limits:
+            memory: 10Gi
+      # Do not restart containers after they exit
+      restartPolicy: Never
+  # of retries before marking as failed.
+  backoffLimit: 1

@@ -2,6 +2,7 @@
 
 This section contains tooling, which helps evaluate how long **astro** tasks take and how much computation resources they consume, given one or multiple datasets.
 
+## How to run
 
 ## Requirements
 
@@ -14,23 +15,7 @@ We selected a subset of datasets as a starting point. These datasets can be avai
 * GCP GCS
 * AWS S3
 
-To download the sample datasets locally, run:
-
-```
-GCS_BUCKET=<YOUR_GCS_BUCKEt> ./download_datasets.sh
-```
-
-The GCS bucket `<YOUR_GCS_BUCKEt>` is only required to download the `github_timeline`, and you should have write permissions in this bucket.
-
-Summary of the sample datasets:
-
-
-|         | size   | rows      | columns | file                     |                            |
-|---------|--------|-----------|---------|--------------------------|----------------------------|
-| few_kb  | 45 KB  | 732       | 8       | /tmp/covid_overview.csv  | UK Covid overview sample   |
-| many_kb | 472 KB | 3532      | 9       | /tmp/artist_data.csv     | Tate Gallery artist sample |
-| few_mb  | 20 MB  | 1,213,991 | 3       | /tmp/title_ratings.csv   | IMDB title ratings sample  |
-| many_mb | 279 MB | 385,817   | 199     | /tmp/github_timeline.csv | Github timeline sample     |
+Read more about them on the [datasets.md](./datasets.md) document.
 
 
 ### Configuration
@@ -107,6 +92,10 @@ are run on following three types of worker node configuration on cloud:
 
 ## Execute the benchmark
 
+There are three possible ways of running the benchmark.
+
+### Locally, outside of a container
+
 The following command will run one DAG for each combination of database x dataset (in the case of the example, four combinations):
 ```
 ./run.sh
@@ -127,7 +116,7 @@ Benchmark test started
 - Output: /tmp/results-2022-02-10T14:36:09.ndjson
 ```
 
-The benchmark results are stored in `/tmp`, and the name is generated based on when the analysis started. In this case, the name is:
+The benchmark results are stored in `/tmp`, and the object name is generated based on when the analysis started. In this case, the name is: ` /tmp/results-2022-02-10T14:36:09.ndjson`
 
 This is an example of the content of `/tmp/results-2022-02-10T14:36:09.ndjson`:
 ```
@@ -135,6 +124,60 @@ This is an example of the content of `/tmp/results-2022-02-10T14:36:09.ndjson`:
 {"duration": "2.28s", "rss": "138.56MB", "vms": "1.0GB", "shared": "41.55MB", "dag_id": "load_file_many_kb_into_postgres", "execution_date": "2022-02-12 00:33:59.808866+00:00", "revision": "e1fb164"}
 {"duration": "1.2min", "rss": "157.17MB", "vms": "1.02GB", "shared": "41.9MB", "dag_id": "load_file_few_mb_into_postgres", "execution_date": "2022-02-12 00:34:03.794995+00:00", "revision": "e1fb164"}
 ```
+
+### Locally, using a container
+
+Build a docker container and attempt to run it, using the `config-docker.json` file.
+
+Requirements:
+* A GCP account
+* Environment variable `GOOGLE_APPLICATION_CREDENTIALS`, which should reference a local file with a [GCP service account credentails](https://cloud.google.com/docs/authentication/production).
+* Datasets available in a GCS bucket
+
+The environment variable is necessary so the container can access data in GCS and export the results to BigQuery.
+
+```
+make local
+```
+
+The result will be made available in GCS and Bigquery
+
+### Remotely, using a container and a Kubernetes cluster
+
+
+Set the environment variable `GOOGLE_APPLICATION_CREDENTIALS`, which should reference a local file with a [GCP service account credentails](https://cloud.google.com/docs/authentication/production).
+
+Requirements:
+* A GCP account
+* Google SDK installed, including both `gcloud` and `kubectl` commands.
+* Terraform (version specified in the document [versions.tf](./infrastructure/terraform/versions.tf)
+* Environment variable `GOOGLE_APPLICATION_CREDENTIALS`, which should reference a local file with a [GCP service account credentails](https://cloud.google.com/docs/authentication/production).
+
+If the Kubernetes does not exist yet, create it and run all the commands using:
+```
+make
+```
+
+This will create a GKE (Google managed Kubernetes cluster) instance named `astro-sdk` and will create a job in the `benchmark` namespace.
+
+To only rebuild the container and store it in the Google Container Registry, run:
+```
+make container
+```
+
+This command creates a container within the Google project (retrieved from the `$GCP_PROJECT` environment variable) and, by default, it names the image `benchmark`.
+
+If the Kubernetes cluster is already set and the container image already was updated, the job can be triggered using:
+```
+make run_job
+```
+
+The command:
+```
+teardown_gke
+```
+
+Can be used to destroy all.
 
 ### Publishing Benchmark results
 
