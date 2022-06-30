@@ -52,6 +52,7 @@
       "size": "5G"
     },
     {
+      "file_type": "csv",
       "name": "few_kb",
       "path": "gs://astro-sdk/benchmark/original/covid_overview/covid_overview.csv",
       "rows": 732,
