@@ -19,7 +19,7 @@ class LoadFile(BaseOperator):
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
     :param chunk_size: Specify the number of records in each batch to be written at a time.
     :param if_exists: Overwrite file if exists. Default False.
-    :param optimise_load: variable to control use of optimised path for datatransfer.
+    :param optimise_load: Use native support for data transfer if available on the destination.
 
     :return: If ``output_table`` is passed this operator returns a Table object. If not
         passed, returns a dataframe.
@@ -85,7 +85,7 @@ class LoadFile(BaseOperator):
             input_file.conn_id,
             normalize_config=self.normalize_config,
         ):
-            if database.check_optimised_path(
+            if self.optimise_load and database.check_optimised_path(
                 source_file=file, target_table=self.output_table
             ):
                 database.optimised_transfer(
@@ -184,7 +184,7 @@ def load_file(
         ex - {"a": {"b":"c"}} will result in
             column - "a_b"
             where ndjson_normalize_sep = "_"
-    :param optimise_load: variable to control use of optimised path for datatransfer.
+    :param optimise_load: Use native support for data transfer if available on the destination.
     """
 
     # Note - using path for task id is causing issues as it's a pattern and
