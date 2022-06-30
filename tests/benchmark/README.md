@@ -165,7 +165,7 @@ To only rebuild the container and store it in the Google Container Registry, run
 make container
 ```
 
-This command creates a container within the Google project (retrieved from the `§GCP_PROJECT` environment variable) and, by default, it names the image `benchmark`.
+This command creates a container within the Google project (retrieved from the `$GCP_PROJECT` environment variable) and, by default, it names the image `benchmark`.
 
 If the Kubernetes cluster is already set and the container image already was updated, the job can be triggered using:
 ```
