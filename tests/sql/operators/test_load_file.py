@@ -719,6 +719,24 @@ def test_load_file_should_fail_loudly(sample_dag, invalid_path, caplog):
     assert expected_error in caplog.text
 
 
+def is_dict_subset(superset: dict, subset: dict) -> bool:
+    """
+    Compare superset and subset to check if the latter is a subset of former.
+    Note: dict1 <= dict2 was not working on multilevel nested dicts.
+    """
+    for key, val in subset.items():
+        print(key, val)
+        if isinstance(val, dict):
+            if key not in superset:
+                return False
+            result = is_dict_subset(superset[key], subset[key])
+            if not result:
+                return False
+        elif superset[key] != val:
+            return False
+    return True
+
+
 @pytest.mark.parametrize(
     "remote_files_fixture",
     [{"provider": "google"}],
@@ -727,11 +745,7 @@ def test_load_file_should_fail_loudly(sample_dag, invalid_path, caplog):
 )
 @pytest.mark.parametrize(
     "database_table_fixture",
-    [
-        {
-            "database": Database.BIGQUERY,
-        }
-    ],
+    [{"database": Database.BIGQUERY, "table": Table(conn_id="bigquery")}],
     indirect=True,
     ids=["bigquery"],
 )
@@ -744,27 +758,43 @@ def test_aql_load_file_optimized_path_method_called(
     db, test_table = database_table_fixture
     file_uri = remote_files_fixture[0]
 
-    # (source, destination) : method_path - where source is file source path and destination is database
+    # (source, destination) : {
+    #   method_path: where source is file source path and destination is database
     # and method_path is the path to method
+    #   expected_kwargs: subset of all the kwargs that are passed to method mentioned in the method_path
+    #   expected_args:  List of all the args that are passed to method mentioned in the method_path
+    # }
     optimised_path_to_method = {
-        (
-            "gs",
-            "bigquery",
-        ): "astro.databases.google.bigquery.BigqueryDatabase.gs_to_bigquery"
+        ("gs", "bigquery",): {
+            "method_path": "airflow.providers.google.cloud.hooks.bigquery.BigQueryHook.insert_job",
+            "expected_kwargs": {
+                "configuration": {
+                    "load": {
+                        "sourceUris": [file_uri],
+                        "destinationTable": {"tableId": test_table.name},
+                    }
+                }
+            },
+            "expected_args": (),
+        }
     }
 
     source = file_uri.split(":")[0]
     destination = db.sql_type
-    mock_path = optimised_path_to_method[(source, destination)]
+    mock_path = optimised_path_to_method[(source, destination)]["method_path"]
+    expected_kwargs = optimised_path_to_method[(source, destination)]["expected_kwargs"]
+    expected_args = optimised_path_to_method[(source, destination)]["expected_args"]
 
-    with mock.patch(mock_path) as gs_to_bigquery:
+    with mock.patch(mock_path) as method:
         with sample_dag:
             load_file(
                 input_file=File(file_uri),
                 output_table=test_table,
             )
         test_utils.run_dag(sample_dag)
-        assert gs_to_bigquery.called
+        assert method.called
+        assert is_dict_subset(superset=method.call_args.kwargs, subset=expected_kwargs)
+        assert method.call_args.args == expected_args
 
 
 @pytest.mark.parametrize(
@@ -792,20 +822,23 @@ def test_aql_load_file_optimized_path_method_is_not_called(
     db, test_table = database_table_fixture
     file_uri = remote_files_fixture[0]
 
-    # (source, destination) : method_path - where source is file source path and destination is database
+    # (source, destination) : {
+    #   method_path: where source is file source path and destination is database
     # and method_path is the path to method
+    #   expected_kwargs: subset of all the kwargs that are passed to method mentioned in the method_path
+    #   expected_args:  List of all the args that are passed to method mentioned in the method_path
+    # }
     optimised_path_to_method = {
-        (
-            "gs",
-            "bigquery",
-        ): "astro.databases.google.bigquery.BigqueryDatabase.gs_to_bigquery"
+        ("gs", "bigquery",): {
+            "method_path": "airflow.providers.google.cloud.hooks.bigquery.BigQueryHook.insert_job",
+        }
     }
 
     source = file_uri.split(":")[0]
     destination = db.sql_type
-    mock_path = optimised_path_to_method[(source, destination)]
+    mock_path = optimised_path_to_method[(source, destination)]["method_path"]
 
-    with mock.patch(mock_path) as gs_to_bigquery:
+    with mock.patch(mock_path) as method:
         with sample_dag:
             load_file(
                 input_file=File(file_uri),
@@ -813,4 +846,4 @@ def test_aql_load_file_optimized_path_method_is_not_called(
                 use_native_support=False,
             )
         test_utils.run_dag(sample_dag)
-        assert not gs_to_bigquery.called
+        assert not method.called
