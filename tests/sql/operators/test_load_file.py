@@ -786,12 +786,10 @@ def test_aql_load_file_optimized_path_method_called(
     expected_args = optimised_path_to_method[(source, destination)]["expected_args"]
 
     with mock.patch(mock_path) as method:
-        with sample_dag:
-            load_file(
-                input_file=File(file_uri),
-                output_table=test_table,
-            )
-        test_utils.run_dag(sample_dag)
+        load_file(
+            input_file=File(file_uri),
+            output_table=test_table,
+        ).operator.execute({})
         assert method.called
         assert is_dict_subset(superset=method.call_args.kwargs, subset=expected_kwargs)
         assert method.call_args.args == expected_args
@@ -839,11 +837,9 @@ def test_aql_load_file_optimized_path_method_is_not_called(
     mock_path = optimised_path_to_method[(source, destination)]["method_path"]
 
     with mock.patch(mock_path) as method:
-        with sample_dag:
-            load_file(
-                input_file=File(file_uri),
-                output_table=test_table,
-                use_native_support=False,
-            )
-        test_utils.run_dag(sample_dag)
+        load_file(
+            input_file=File(file_uri),
+            output_table=test_table,
+            use_native_support=False,
+        ).operator.execute({})
         assert not method.called
