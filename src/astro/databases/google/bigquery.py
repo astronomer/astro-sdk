@@ -186,6 +186,7 @@ class BigqueryDatabase(BaseDatabase):
     def get_project_id_from_conn(conn: connection) -> str:
         """
         Get project id from conn
+
         :param conn: Airflow's connection
         """
         if conn.extra and conn.extra.get("project"):
