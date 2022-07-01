@@ -234,6 +234,7 @@ class BigqueryDatabase(BaseDatabase):
         }
 
         # Since bigquery has other options besides used here, we need to expose them to end user.
+        # https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#JobConfigurationLoad
         load_job_config.update(kwargs)
 
         job_config = {
