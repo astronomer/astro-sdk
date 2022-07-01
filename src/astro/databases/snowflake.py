@@ -141,12 +141,12 @@ class SnowflakeDatabase(BaseDatabase):
         If table and schema exists, create stage based on integration passed by user.
         Generate query and run COPY INTO command and return True else returns False
 
-        @param source_file: Source file
-        @param target_table: Output target table on snowflake
-        @param chunk_size: Chunk size for the file
-        @param if_exists: Update strategy for file
-        @param kwargs:
-        @return:bool
+        :param source_file: Source file
+        :param target_table: Output target table on snowflake
+        :param chunk_size: Chunk size for the file
+        :param if_exists: Update strategy for file
+        :param kwargs:
+        :return: bool
         """
         # Fetch snowflake integration passed by the user as part of output table.
         self.integration = target_table.optional_args.get("integration", None)
