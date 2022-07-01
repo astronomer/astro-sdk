@@ -254,6 +254,7 @@ class BaseDatabase(ABC):
         :param if_exists: Update strategy for file
         :param kwargs:
         """
+        # This method can be overridden by each class separately.
         return
 
     def load_pandas_dataframe_to_table(
