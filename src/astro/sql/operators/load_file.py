@@ -101,7 +101,7 @@ class LoadFile(BaseOperator):
                     if_exists=if_exists,
                     chunk_size=self.chunk_size,
                 )
-                if_exists = "append"
+            if_exists = "append"
         self.log.info("Completed loading the data into %s.", self.output_table)
         return self.output_table
 
