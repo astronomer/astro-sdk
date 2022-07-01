@@ -76,17 +76,30 @@ class SnowflakeDatabase(BaseDatabase):
         qualified_name = ".".join(name for name in qualified_name_lists if name)
         return qualified_name
 
-    def check_optimised_path_and_transfer(
+    def check_optimised_path(self, source_file: File, target_table: Table) -> bool:
+        """
+        Check if there is an optimised path for source to destination.
+
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table that needs to be populated with file data
+        """
+        return bool(self.native_support.get(source_file.location.location_type))
+
+    def optimised_transfer(
         self,
         source_file: File,
         target_table: Table,
-        chunk_size: int = DEFAULT_CHUNK_SIZE,
         if_exists: LoadExistStrategy = "replace",
         **kwargs,
-    ) -> bool:
+    ) -> None:
         """
         Checks if optimised path for transfer between File location to database exists
         and if it does, it transfers it and returns true else false.
+
+        :param source_file: Source file
+        :param target_table: Output target table on snowflake
+        :param if_exists: Update strategy for file
+        :param kwargs:
         """
         method_name = self.native_support.get(source_file.location.location_type)
         if method_name:
@@ -95,23 +108,23 @@ class SnowflakeDatabase(BaseDatabase):
                 if transfer_method(
                     source_file=source_file,
                     target_table=target_table,
-                    chunk_size=chunk_size,
                     if_exists=if_exists,
                     **kwargs,
                 ):
-                    return True
+                    return
             except Exception as exec_err:
                 raise exec_err
-        return False
+        return
 
     @staticmethod
     def get_gcs_project_id_from_conn(conn: connection) -> str:
         """
         Get GCS project id from conn
+
         :param conn: Airflow's connection
         """
-        if conn.extra and conn.extra.get("project"):
-            return str(conn.extra.get("project"))
+        if conn.extra and conn.extra_dejson.get("project"):
+            return str(conn.extra_dejson["project"])
         elif conn.host:
             return str(conn.host)
         raise ValueError(f"conn_id {conn.conn_id} has no project id.")
@@ -127,6 +140,7 @@ class SnowflakeDatabase(BaseDatabase):
         Checks if the table and schema exists on Snowflake.
         If table and schema exists, create stage based on integration passed by user.
         Generate query and run COPY INTO command and return True else returns False
+
         @param source_file: Source file
         @param target_table: Output target table on snowflake
         @param chunk_size: Chunk size for the file
@@ -181,6 +195,7 @@ class SnowflakeDatabase(BaseDatabase):
     def create_stage(self, source_file: File, snowflake_hook: SnowflakeHook) -> str:
         """
         Creates a stage name based on source_file path and storage integration provided.
+
         @param source_file: Source file
         @param snowflake_hook: Snowflake hook
         @return: Stage name created
