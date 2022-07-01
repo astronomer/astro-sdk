@@ -435,9 +435,9 @@ class BaseDatabase(ABC):
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
         **kwargs,
-    ) -> bool:
+    ):
         """
         Checks if optimised path for transfer between File location to database exists
         and if it does, it transfers it and returns true else false.
         """
-        return False
+        pass

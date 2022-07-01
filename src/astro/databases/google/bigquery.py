@@ -162,7 +162,7 @@ class BigqueryDatabase(BaseDatabase):
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
         **kwargs,
-    ) -> bool:
+    ):
         """
         Checks if optimised path for transfer between File location to database exists
         and if it does, it transfers it and returns true else false.
@@ -176,9 +176,6 @@ class BigqueryDatabase(BaseDatabase):
                 if_exists=if_exists,
                 **kwargs,
             )
-            return True
-
-        return False
 
     @staticmethod
     def get_project_id_from_conn(conn: connection) -> str:
