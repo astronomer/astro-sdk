@@ -214,8 +214,7 @@ class BigqueryDatabase(BaseDatabase):
             gcp_conn_id=target_table.conn_id,
         )
 
-        if if_exists == "replace":
-            self.drop_table(target_table)
+        write_disposition_val = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
 
         conn = self.hook.get_connection(target_table.conn_id)
 
@@ -227,7 +226,7 @@ class BigqueryDatabase(BaseDatabase):
                 "tableId": target_table.name,
             },
             "createDisposition": "CREATE_IF_NEEDED",
-            "writeDisposition": "WRITE_APPEND",
+            "writeDisposition": write_disposition_val[if_exists],
             "sourceFormat": self.OPTIMIZED_PATHS_SUPPORTED_FILE_TYPES[
                 source_file.type.name
             ],
