@@ -147,7 +147,6 @@ class SnowflakeDatabase(BaseDatabase):
         :param if_exists: Update strategy for file
         :param kwargs:
         :return: bool
-        :return: bool
         """
         # Fetch snowflake integration passed by the user as part of output table.
         self.integration = target_table.optional_args.get("integration", None)
@@ -197,9 +196,9 @@ class SnowflakeDatabase(BaseDatabase):
         """
         Creates a stage name based on source_file path and storage integration provided.
 
-        @param source_file: Source file
-        @param snowflake_hook: Snowflake hook
-        @return: Stage name created
+        :param source_file: Source file
+        :param snowflake_hook: Snowflake hook
+        :return: Stage name created
         """
         # Here,
         # To copy dataset from gcs_path = gs://sample-bucket/workspace/sample.csv" to snowflake table
