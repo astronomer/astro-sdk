@@ -190,10 +190,8 @@ class BigqueryDatabase(BaseDatabase):
 
         :param conn: Airflow's connection
         """
-        if conn.extra and conn.extra_dejson.get("project"):
+        if conn.extra_dejson and conn.extra_dejson.get("project"):
             return str(conn.extra_dejson["project"])
-        elif conn.host:
-            return str(conn.host)
         raise ValueError(f"conn_id {conn.conn_id} has no project id.")
 
     def gs_to_bigquery(
