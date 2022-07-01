@@ -147,6 +147,7 @@ class SnowflakeDatabase(BaseDatabase):
         :param if_exists: Update strategy for file
         :param kwargs:
         :return: bool
+        :return: bool
         """
         # Fetch snowflake integration passed by the user as part of output table.
         self.integration = target_table.optional_args.get("integration", None)
