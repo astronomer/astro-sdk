@@ -95,8 +95,8 @@ class LoadFile(BaseOperator):
                     **self.kwargs,
                 )
             else:
-                database.load_pandas_dataframe_to_table(
-                    source_dataframe=file.export_to_dataframe(),
+                database.load_file_to_table(
+                    source_file=file,
                     target_table=self.output_table,
                     if_exists=if_exists,
                     chunk_size=self.chunk_size,
