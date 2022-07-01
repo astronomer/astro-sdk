@@ -31,6 +31,11 @@ class BigqueryDatabase(BaseDatabase):
     """
 
     OPTIMIZED_PATHS = {FileLocation.GS: "gs_to_bigquery"}
+    OPTIMIZED_PATHS_SUPPORTED_FILE_TYPES = {
+        FileType.CSV: "CSV",
+        FileType.NDJSON: "NEWLINE_DELIMITED_JSON",
+        FileType.PARQUET: "PARQUET",
+    }
 
     illegal_column_name_chars: List[str] = ["."]
     illegal_column_name_chars_replacement: List[str] = ["_"]
@@ -168,7 +173,8 @@ class BigqueryDatabase(BaseDatabase):
         and if it does, it transfers it and returns true else false.
         """
         method_name = self.OPTIMIZED_PATHS.get(source_file.location.location_type)
-        if method_name:
+        file_type = self.OPTIMIZED_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
+        if method_name and file_type:
             transfer_method = self.__getattribute__(method_name)
             transfer_method(
                 source_file=source_file,
@@ -211,12 +217,6 @@ class BigqueryDatabase(BaseDatabase):
         if if_exists == "replace":
             self.drop_table(target_table)
 
-        file_type_to_bq_source_format = {
-            FileType.CSV: "CSV",
-            FileType.NDJSON: "NEWLINE_DELIMITED_JSON",
-            FileType.PARQUET: "PARQUET",
-        }
-
         conn = BaseHook.get_connection(target_table.conn_id)
 
         load_job_config = {
@@ -228,7 +228,9 @@ class BigqueryDatabase(BaseDatabase):
             },
             "createDisposition": "CREATE_IF_NEEDED",
             "writeDisposition": "WRITE_APPEND",
-            "sourceFormat": file_type_to_bq_source_format[source_file.type.name],
+            "sourceFormat": self.OPTIMIZED_PATHS_SUPPORTED_FILE_TYPES[
+                source_file.type.name
+            ],
             "autodetect": True,
         }
 
