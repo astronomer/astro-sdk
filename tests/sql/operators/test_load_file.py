@@ -764,16 +764,13 @@ def test_aql_load_file_optimized_path_method_called(
     #   expected_kwargs: subset of all the kwargs that are passed to method mentioned in the method_path
     #   expected_args:  List of all the args that are passed to method mentioned in the method_path
     # }
+    file = File(file_uri)
     optimised_path_to_method = {
         ("gs", "bigquery",): {
-            "method_path": "airflow.providers.google.cloud.hooks.bigquery.BigQueryHook.insert_job",
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.gs_to_bigquery",
             "expected_kwargs": {
-                "configuration": {
-                    "load": {
-                        "sourceUris": [file_uri],
-                        "destinationTable": {"tableId": test_table.name},
-                    }
-                }
+                "source_file": file,
+                "target_table": test_table,
             },
             "expected_args": (),
         }
@@ -787,7 +784,7 @@ def test_aql_load_file_optimized_path_method_called(
 
     with mock.patch(mock_path) as method:
         load_file(
-            input_file=File(file_uri),
+            input_file=file,
             output_table=test_table,
         ).operator.execute({})
         assert method.called
@@ -828,7 +825,7 @@ def test_aql_load_file_optimized_path_method_is_not_called(
     # }
     optimised_path_to_method = {
         ("gs", "bigquery",): {
-            "method_path": "airflow.providers.google.cloud.hooks.bigquery.BigQueryHook.insert_job",
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.gs_to_bigquery",
         }
     }
 
