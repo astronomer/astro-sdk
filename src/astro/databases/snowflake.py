@@ -7,10 +7,10 @@ from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
 import pandas as pd
-from airflow.models import connection
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from pandas.io.sql import SQLDatabase
 from snowflake.connector import pandas_tools
+from snowflake.connector.errors import ProgrammingError
 
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
@@ -38,7 +38,14 @@ class SnowflakeDatabase(BaseDatabase):
             FileLocation.GS: "gs_to_snowflake",
             FileLocation.S3: "s3_to_snowflake",
         }
-        self.integration: Optional[str] = None
+        self.optimized_path_supported_file_types = {
+            FileType.CSV: "CSV",
+            FileType.NDJSON: "NEWLINE_DELIMITED_JSON",
+            FileType.PARQUET: "PARQUET",
+        }
+        # More about storage integration:
+        # https://docs.snowflake.com/en/sql-reference/sql/create-storage-integration.html
+        self.storage_integration: Optional[str] = None
         super().__init__(conn_id)
 
     @property
@@ -83,7 +90,9 @@ class SnowflakeDatabase(BaseDatabase):
         :param source_file: File from which we need to transfer data
         :param target_table: Table that needs to be populated with file data
         """
-        return bool(self.native_support.get(source_file.location.location_type))
+        file_type = self.optimized_path_supported_file_types.get(source_file.type.name)
+        location_type = self.native_support.get(source_file.location.location_type)
+        return bool(file_type and location_type)
 
     def optimised_transfer(
         self,
@@ -101,33 +110,27 @@ class SnowflakeDatabase(BaseDatabase):
         :param if_exists: Update strategy for file
         :param kwargs:
         """
+        # Fetch snowflake integration passed by the user as part of output table.
+        self.storage_integration = target_table.optional_args.get(
+            "storage_integration", None
+        )
+        if self.storage_integration is None:
+            raise Exception(
+                "To load dataset to snowflake using optimisation, specify the correct storage integration with correct"
+                " permission to the input file. Pass storage_integration={valid storage integration name} as "
+                "optional_args to output_table. "
+                "Read more: https://docs.snowflake.com/en/sql-reference/sql/create-storage-integration.html "
+                "Else disable optimisation by passing use_native_support=False in load_file."
+            )
         method_name = self.native_support.get(source_file.location.location_type)
         if method_name:
             transfer_method = self.__getattribute__(method_name)
-            try:
-                if transfer_method(
-                    source_file=source_file,
-                    target_table=target_table,
-                    if_exists=if_exists,
-                    **kwargs,
-                ):
-                    return
-            except Exception as exec_err:
-                raise exec_err
-        return
-
-    @staticmethod
-    def get_gcs_project_id_from_conn(conn: connection) -> str:
-        """
-        Get GCS project id from conn
-
-        :param conn: Airflow's connection
-        """
-        if conn.extra and conn.extra_dejson.get("project"):
-            return str(conn.extra_dejson["project"])
-        elif conn.host:
-            return str(conn.host)
-        raise ValueError(f"conn_id {conn.conn_id} has no project id.")
+            transfer_method(
+                source_file=source_file,
+                target_table=target_table,
+                if_exists=if_exists,
+                **kwargs,
+            )
 
     def gs_to_snowflake(
         self,
@@ -135,7 +138,7 @@ class SnowflakeDatabase(BaseDatabase):
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
         **kwargs,
-    ) -> bool:
+    ) -> None:
         """
         Checks if the table and schema exists on Snowflake.
         If table and schema exists, create stage based on integration passed by user.
@@ -146,18 +149,8 @@ class SnowflakeDatabase(BaseDatabase):
         :param chunk_size: Chunk size for the file
         :param if_exists: Update strategy for file
         :param kwargs:
-        :return: bool
+        :return: None
         """
-        # Fetch snowflake integration passed by the user as part of output table.
-        self.integration = target_table.optional_args.get("integration", None)
-        if self.integration is None:
-            logging.info(
-                "Snowflake integration is not as optional_args in Table creation"
-            )
-            return False
-
-        snowflake_hook = SnowflakeHook(snowflake_conn_id=self.conn_id)
-
         if if_exists == "replace":
             self.drop_table(target_table)
             if get_filetype(
@@ -166,39 +159,33 @@ class SnowflakeDatabase(BaseDatabase):
                 self.create_table_from_parquet(
                     source_file=source_file,
                     target_table=target_table,
-                    snowflake_hook=snowflake_hook,
                 )
             else:
-                return False
+                return
 
         # check if snowflake table exists
         if self.table_exists(table=target_table):
             logging.info("Table exists.")
-            stage_name = self.create_stage(
-                source_file=source_file, snowflake_hook=snowflake_hook
-            )
+            stage_name = self.create_stage(source_file=source_file)
             sql_parts = self.create_copy_into_sql_parts(
                 source_file=source_file, target_table=target_table, stage=stage_name
             )
             copy_query = "\n".join(sql_parts)
 
             logging.info("Executing COPY command...")
-            execution_info = snowflake_hook.run(
+            execution_info = self.hook.run(
                 copy_query, autocommit=kwargs.get("autocommit", True)
             )
             logging.info("COPY command completed")
             logging.info(execution_info)
-            self.drop_stage(stage_name=stage_name, snowflake_hook=snowflake_hook)
-            return True
-        return False
+            self.drop_stage(stage_name=stage_name)
 
-    def create_stage(self, source_file: File, snowflake_hook: SnowflakeHook) -> str:
+    def create_stage(self, source_file: File) -> str:
         """
         Creates a stage name based on source_file path and storage integration provided.
 
-        :param source_file: Source file
-        :param snowflake_hook: Snowflake hook
-        :return: Stage name created
+        @param source_file: Source file
+        @return: Stage name created
         """
         # Here,
         # To copy dataset from gcs_path = gs://sample-bucket/workspace/sample.csv" to snowflake table
@@ -218,18 +205,14 @@ class SnowflakeDatabase(BaseDatabase):
             FileType.NDJSON: "JSON",
         }
         snowflake_query_file_storage_mapping = {"gs": "gcs", "s3": "s3"}
-        stage_name = (
-            "stage_"
-            + random.choice(string.ascii_lowercase)
-            + "".join(
-                random.choice(string.ascii_lowercase + string.digits) for _ in range(7)
-            )
-        )
+        stage_name = generate_stage_name()
 
         parsed_url = urlparse(source_file.path, allow_fragments=False)
         bucket_type = snowflake_query_file_storage_mapping.get(
-            parsed_url.scheme.lower(), "gcs"
+            parsed_url.scheme.lower(), None
         )
+        if bucket_type is None:
+            raise Exception("Unsupported type of file location.")
 
         location_url = (
             bucket_type + "://" + parsed_url.netloc + os.path.dirname(parsed_url.path)
@@ -237,39 +220,39 @@ class SnowflakeDatabase(BaseDatabase):
         if get_filetype(source_file.path) == FileType.CSV:
             # match_by_column_name option is not supported for file format CSV
             create_stage_sql = (
-                "CREATE OR REPLACE STAGE {} URL='{}' FILE_FORMAT=(TYPE={}, TRIM_SPACE=TRUE) "
-                "storage_integration = {};".format(
-                    stage_name,
-                    location_url,
-                    FILE_FORMAT_MAPPING.get(get_filetype(source_file.path)),
-                    self.integration,
-                )
+                f"CREATE OR REPLACE STAGE {stage_name} URL='{location_url}' "
+                f"FILE_FORMAT=(TYPE={FILE_FORMAT_MAPPING.get(get_filetype(source_file.path))}, "
+                f"TRIM_SPACE=TRUE) storage_integration = {self.storage_integration};"
             )
         else:
             # match_by_column_name option is required for PARQUET and NDJSON formats
             create_stage_sql = (
-                "CREATE OR REPLACE STAGE {} URL='{}' FILE_FORMAT=(TYPE={}, TRIM_SPACE=TRUE) "
-                "COPY_OPTIONS=(MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE) storage_integration = {};".format(
-                    stage_name,
-                    location_url,
-                    FILE_FORMAT_MAPPING.get(get_filetype(source_file.path)),
-                    self.integration,
-                )
+                f"CREATE OR REPLACE STAGE {stage_name} URL='{location_url}' "
+                f"FILE_FORMAT=(TYPE={FILE_FORMAT_MAPPING.get(get_filetype(source_file.path))}, TRIM_SPACE=TRUE) "
+                f"COPY_OPTIONS=(MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE) storage_integration "
+                f"= {self.storage_integration};"
             )
-        execution_info = snowflake_hook.run(create_stage_sql, autocommit=True)
-        logging.info(execution_info)
+        try:
+            execution_info = self.hook.run(create_stage_sql, autocommit=True)
+            logging.info(execution_info)
+        except ProgrammingError:
+            raise Exception(
+                "To load dataset to snowflake using optimisation, specify the correct storage "
+                "integration with correct permission to the file location. Pass "
+                "storage_integration={valid storage integration name} as optional_args to output_table. "
+                "Read more: https://docs.snowflake.com/en/sql-reference/sql/create-storage-integration.html"
+                " Else disable optimisation by passing use_native_support=False in load_file."
+            )
         return stage_name
 
-    @staticmethod
-    def drop_stage(stage_name: str, snowflake_hook: SnowflakeHook) -> None:
+    def drop_stage(self, stage_name: str) -> None:
         """
         Runs the snowflake query to drop stage if exists
         @param stage_name: Stage name
-        @param snowflake_hook: Snowflake hook
         @return:
         """
         drop_stage_query = f"DROP STAGE IF EXISTS {stage_name};"
-        execution_info = snowflake_hook.run(drop_stage_query, autocommit=True)
+        execution_info = self.hook.run(drop_stage_query, autocommit=True)
         logging.info(execution_info)
 
     def create_copy_into_sql_parts(
@@ -285,12 +268,9 @@ class SnowflakeDatabase(BaseDatabase):
         ]
         return sql_parts
 
-    def create_table_from_parquet(
-        self, source_file: File, target_table: Table, snowflake_hook: SnowflakeHook
-    ) -> None:
+    def create_table_from_parquet(self, source_file: File, target_table: Table) -> None:
         """
         Creates table on snowflake using infer_schema for PARQUET table
-        @param snowflake_hook: Snowflake hook
         @param source_file: Source file
         @param target_table: Output Table
         @return:
@@ -299,12 +279,10 @@ class SnowflakeDatabase(BaseDatabase):
         file_format_query = (
             "CREATE OR REPLACE FILE FORMAT parquet_format type = parquet;"
         )
-        execution_info = snowflake_hook.run(file_format_query, autocommit=True)
+        execution_info = self.hook.run(file_format_query, autocommit=True)
         logging.info(execution_info)
 
-        stage_name = self.create_stage(
-            source_file=source_file, snowflake_hook=snowflake_hook
-        )
+        stage_name = self.create_stage(source_file=source_file)
 
         create_table_from_infer_schema_query = (
             "CREATE OR REPLACE TABLE %s USING TEMPLATE (SELECT ARRAY_AGG(OBJECT_CONSTRUCT(*)) FROM TABLE ("
@@ -316,12 +294,12 @@ class SnowflakeDatabase(BaseDatabase):
             )
         )
 
-        execution_info = snowflake_hook.run(
+        execution_info = self.hook.run(
             create_table_from_infer_schema_query, autocommit=True
         )
         logging.info(execution_info)
 
-        self.drop_stage(stage_name=stage_name, snowflake_hook=snowflake_hook)
+        self.drop_stage(stage_name=stage_name)
 
     def load_pandas_dataframe_to_table(
         self,
@@ -530,6 +508,21 @@ class SnowflakeDatabase(BaseDatabase):
             "target_table": target_table_param,
         }
         return statement, params
+
+
+def generate_stage_name() -> str:
+    """
+    Generate the stage name.
+
+    @return: stage name
+    """
+    return (
+        "stage_"
+        + random.choice(string.ascii_lowercase)
+        + "".join(
+            random.choice(string.ascii_lowercase + string.digits) for _ in range(7)
+        )
+    )
 
 
 def wrap_identifier(inp: str) -> str:
