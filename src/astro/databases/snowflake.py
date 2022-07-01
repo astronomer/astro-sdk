@@ -34,10 +34,7 @@ class SnowflakeDatabase(BaseDatabase):
     """
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
-        self.native_support: Dict[Any, str] = {
-            FileLocation.GS: "gs_to_snowflake",
-            FileLocation.S3: "s3_to_snowflake",
-        }
+        self.native_support: Dict[Any, str] = {FileLocation.GS: "gs_to_snowflake"}
         self.optimized_path_supported_file_types = {
             FileType.CSV: "CSV",
             FileType.NDJSON: "NEWLINE_DELIMITED_JSON",
