@@ -230,19 +230,31 @@ class BaseDatabase(ABC):
             chunk_size,
         )
 
-    def check_optimised_path_and_transfer(
+    def check_optimised_path(self, source_file: File, target_table: Table) -> bool:
+        """
+        Check if there is an optimised path for source to destination.
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table that needs to be populated with file data
+        """
+        return False
+
+    def optimised_transfer(
         self,
         source_file: File,
         target_table: Table,
-        chunk_size: int = DEFAULT_CHUNK_SIZE,
         if_exists: LoadExistStrategy = "replace",
         **kwargs,
-    ) -> bool:
+    ) -> None:
         """
         Checks if optimised path for transfer between File location to database exists
-        and if it does, it transfers it and returns true else false.
+        and if it does, it transfers it.
+
+        :param source_file: Source file
+        :param target_table: Output target table on snowflake
+        :param if_exists: Update strategy for file
+        :param kwargs:
         """
-        return False
+        return
 
     def load_pandas_dataframe_to_table(
         self,
