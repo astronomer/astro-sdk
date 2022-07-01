@@ -167,9 +167,7 @@ def load_file(
     :param task_id: task id, optional
     :param if_exists: default override an existing Table. Options: fail, replace, append
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
-        ex - {"a": {"b":"c"}} will result in
-            column - "a_b"
-            where ndjson_normalize_sep = "_"
+        ex - ``{"a": {"b":"c"}}`` will result in: ``column - "a_b"`` where ``ndjson_normalize_sep = "_"``
     """
 
     # Note - using path for task id is causing issues as it's a pattern and

@@ -55,8 +55,9 @@ def transform(
     :param schema:
     :param handler:
     :param kwargs:
-    :return: Transform functions return a `Table` object that can be passed to future tasks. This table will be
-    either an auto-generated temporary table, or will overwrite a table given in the `output_table` parameter.
+    :return: Transform functions return a ``Table`` object that can be passed to future tasks.
+        This table will be either an auto-generated temporary table,
+        or will overwrite a table given in the `output_table` parameter.
     """
 
     kwargs.update(

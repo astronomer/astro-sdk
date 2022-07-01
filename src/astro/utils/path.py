@@ -24,7 +24,8 @@ def get_dict_with_module_names_to_dot_notations(
     (ignoring __init__.py & base.py) and create a dictionary which has module names
     as keys and the values are the dot notation import paths.
 
-    An example:
+    An example: ::
+
          ├── package
              ├── module.py
              ├── subpackage
@@ -32,12 +33,17 @@ def get_dict_with_module_names_to_dot_notations(
                 └── subpackage_module.py
 
     Running:
+
+    .. code-block:: python
+
         from pathlib import Path
         from astro.utils.path import get_dict_with_module_names_to_dot_notations
+
         values = get_dict_with_module_names_to_dot_notations(Path("package"))
         print(values)
 
-    Prints:
+    Prints: ::
+
         {
             "module": "package.module",
             "subpackage_module": "package.subpackage.subpackage_module"
@@ -61,6 +67,7 @@ def get_class_name(module_ref: Any, suffix: str = "Location") -> str:
     expected class names -
         1. TESTAbc
         2. TestAbc
+
     :param module_ref: Module from which to get class location type implementation
     :param suffix: suffix for class name
     """
