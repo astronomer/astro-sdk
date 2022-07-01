@@ -2,7 +2,6 @@
 from typing import Dict, List, Tuple
 
 import pandas as pd
-from airflow.hooks.base import BaseHook
 from airflow.models import connection
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from google.api_core.exceptions import NotFound as GoogleNotFound
@@ -218,7 +217,7 @@ class BigqueryDatabase(BaseDatabase):
         if if_exists == "replace":
             self.drop_table(target_table)
 
-        conn = BaseHook.get_connection(target_table.conn_id)
+        conn = self.hook.get_connection(target_table.conn_id)
 
         load_job_config = {
             "sourceUris": [source_file.path],
