@@ -242,7 +242,7 @@ class BaseDatabase(ABC):
         Checks if optimised path for transfer between File location to database exists
         and if it does, it transfers it and returns true else false.
         """
-        raise NotImplementedError()
+        return False
 
     def load_pandas_dataframe_to_table(
         self,
