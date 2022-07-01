@@ -159,7 +159,9 @@ class BigqueryDatabase(BaseDatabase):
         :param source_file: File from which we need to transfer data
         :param target_table: Table that needs to be populated with file data
         """
-        return bool(self.OPTIMIZED_PATHS.get(source_file.location.location_type))
+        file_type = self.OPTIMIZED_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
+        location_type = self.OPTIMIZED_PATHS.get(source_file.location.location_type)
+        return bool(location_type and file_type)
 
     def optimised_transfer(
         self,
@@ -173,8 +175,7 @@ class BigqueryDatabase(BaseDatabase):
         and if it does, it transfers it and returns true else false.
         """
         method_name = self.OPTIMIZED_PATHS.get(source_file.location.location_type)
-        file_type = self.OPTIMIZED_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
-        if method_name and file_type:
+        if method_name:
             transfer_method = self.__getattribute__(method_name)
             transfer_method(
                 source_file=source_file,
