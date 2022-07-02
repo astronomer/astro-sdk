@@ -11,6 +11,8 @@ else:
 DEFAULT_CHUNK_SIZE = 1000000
 PYPI_PROJECT_NAME = "astro-sdk-python"
 
+LOAD_COLUMN_AUTO_DETECT_ROWS = 1
+
 
 class FileLocation(Enum):
     LOCAL = "local"
