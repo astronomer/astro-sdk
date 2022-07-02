@@ -14,6 +14,7 @@ from snowflake.connector.errors import ProgrammingError
 
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
+    LOAD_COLUMN_AUTO_DETECT_ROWS,
     FileLocation,
     FileType,
     LoadExistStrategy,
@@ -148,17 +149,13 @@ class SnowflakeDatabase(BaseDatabase):
         :param kwargs:
         :return: None
         """
-        if if_exists == "replace":
+
+        # Create new table from file if snowflake table does not exists
+        if if_exists == "replace" and not self.table_exists(table=target_table):
             self.drop_table(target_table)
-            if get_filetype(
-                source_file.path
-            ) == FileType.PARQUET and not self.table_exists(table=target_table):
-                self.create_table_from_parquet(
-                    source_file=source_file,
-                    target_table=target_table,
-                )
-            else:
-                return
+            self.create_emtpy_table(
+                source_file=source_file, target_table=target_table, if_exists=if_exists
+            )
 
         # check if snowflake table exists
         if self.table_exists(table=target_table):
@@ -219,7 +216,7 @@ class SnowflakeDatabase(BaseDatabase):
             create_stage_sql = (
                 f"CREATE OR REPLACE STAGE {stage_name} URL='{location_url}' "
                 f"FILE_FORMAT=(TYPE={FILE_FORMAT_MAPPING.get(get_filetype(source_file.path))}, "
-                f"TRIM_SPACE=TRUE) storage_integration = {self.storage_integration};"
+                f"TRIM_SPACE=TRUE) COPY_OPTIONS=(ON_ERROR=CONTINUE) storage_integration = {self.storage_integration};"
             )
         else:
             # match_by_column_name option is required for PARQUET and NDJSON formats
@@ -265,9 +262,49 @@ class SnowflakeDatabase(BaseDatabase):
         ]
         return sql_parts
 
-    def create_table_from_parquet(self, source_file: File, target_table: Table) -> None:
+    def create_emtpy_table(
+        self,
+        source_file: File,
+        target_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+    ) -> None:
         """
-        Creates table on snowflake using infer_schema for PARQUET table
+        Creates empty table on snowflake for different supported file types
+
+        @param if_exists: Strategy to be used in case the target table already exists.
+        @param source_file: Source file
+        @param target_table: Output Table
+        @return:
+        """
+        file_type = get_filetype(source_file.path)
+        if file_type == FileType.PARQUET:
+            # Use snowflake INFER_SCHEMA to detect schema and create table.
+            # Read more: https://docs.snowflake.com/en/sql-reference/functions/infer_schema.html
+            self.create_empty_table_from_parquet(
+                source_file=source_file,
+                target_table=target_table,
+            )
+        elif file_type == FileType.CSV:
+            # Use pandas to infer schema and create table based on chunk size.
+            self.create_empty_table_from_csv(
+                source_file=source_file, target_table=target_table, if_exists=if_exists
+            )
+        elif file_type == FileType.NDJSON:
+            # Use pandas to infer schema and create table based on chunk size.
+            self.create_empty_table_from_ndjson(
+                source_file=source_file, target_table=target_table, if_exists=if_exists
+            )
+        else:
+            raise ValueError(
+                f"Unable to load file '{source_file.path}' of type '{file_type}'"
+            )
+
+    def create_empty_table_from_parquet(
+        self, source_file: File, target_table: Table
+    ) -> None:
+        """
+        Creates empty table on snowflake using infer_schema for PARQUET file type
+
         @param source_file: Source file
         @param target_table: Output Table
         @return:
@@ -297,6 +334,68 @@ class SnowflakeDatabase(BaseDatabase):
         logging.info(execution_info)
 
         self.drop_stage(stage_name=stage_name)
+
+    def create_empty_table_from_csv(
+        self, source_file: File, target_table: Table, if_exists: LoadExistStrategy
+    ) -> None:
+        """
+        Creates empty table on snowflake using pandas for CSV file type
+
+        @param if_exists: Strategy to be used in case the target table already exists.
+        @param source_file: Source file
+        @param target_table: Output Table
+        @return:
+        """
+        df = source_file.export_to_dataframe(chunksize=LOAD_COLUMN_AUTO_DETECT_ROWS)
+        source_dataframe: pd.DataFrame = None
+        for chunked_df in df:
+            source_dataframe = chunked_df
+            break
+
+        # Make columns uppercase to prevent weird errors in snowflake
+        source_dataframe.columns = source_dataframe.columns.str.upper()
+        schema = None
+        if target_table.metadata:
+            schema = getattr(target_table.metadata, "schema", None)
+
+        source_dataframe.head(0).to_sql(
+            target_table.name,
+            schema=schema,  # type: ignore
+            con=self.sqlalchemy_engine,
+            if_exists=if_exists,
+            method="multi",
+            index=False,
+        )
+
+    def create_empty_table_from_ndjson(
+        self, source_file: File, target_table: Table, if_exists: LoadExistStrategy
+    ) -> None:
+        """
+        Creates empty table on snowflake using pandas for NDJSON file type
+
+        @param if_exists: Strategy to be used in case the target table already exists.
+        @param source_file: Source file
+        @param target_table: Output Table
+        @return:
+        """
+        source_dataframe = source_file.export_to_dataframe(
+            chunksize=LOAD_COLUMN_AUTO_DETECT_ROWS
+        )
+
+        # Make columns uppercase to prevent weird errors in snowflake
+        source_dataframe.columns = source_dataframe.columns.str.upper()
+        schema = None
+        if target_table.metadata:
+            schema = getattr(target_table.metadata, "schema", None)
+
+        source_dataframe.head(0).to_sql(
+            target_table.name,
+            schema=schema,  # type: ignore
+            con=self.sqlalchemy_engine,
+            if_exists=if_exists,
+            method="multi",
+            index=False,
+        )
 
     def load_pandas_dataframe_to_table(
         self,
