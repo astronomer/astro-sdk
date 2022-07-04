@@ -372,4 +372,3 @@ by the end of the DAG run, using:
 # both `orders_data` and `joined_data`
 aql.cleanup()
 ```
-
