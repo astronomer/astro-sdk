@@ -76,7 +76,7 @@ need to be consistent with whatever names you choose throughout the remainder of
 
 ## Install Astro-SDK on your local machine
 
-* Run the following command to install the Python SDK, with the extra packages necessary to interface with AWS and Snowflake.
+* Run the following command to install the Python SDK, with the extra packages necessary to access AWS and Snowflake.
 
 
   ```shell
