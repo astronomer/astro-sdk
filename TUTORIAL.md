@@ -226,7 +226,8 @@ dag = DAG(
 )
 
 with dag:
-    # Extract a file with a header from S3 into a Table object
+    # Extract a file with a header from S3 into a temporary Table, referenced by the
+    # variable `orders_data`
     orders_data = aql.load_file(
         # data file needs to have a header row
         input_file=File(
@@ -235,16 +236,17 @@ with dag:
         output_table=Table(conn_id=SNOWFLAKE_CONN_ID),
     )
 
-    # create a Table object for customer data in our Snowflake database
+    # Create a Table object for customer data in our Snowflake database
     customers_table = Table(
         name=SNOWFLAKE_CUSTOMERS,
         conn_id=SNOWFLAKE_CONN_ID,
     )
 
-    # filter the orders data and then join with the customer table
+    # Filter the orders data and then join with the customer table,
+    # saving the output into a temporary table referenced by the Table instance `joined_data`
     joined_data = join_orders_customers(filter_orders(orders_data), customers_table)
 
-    # merge the joined data into our reporting table, based on the order_id .
+    # Merge the joined data into our reporting table, based on the order_id .
     # If there's a conflict in the customer_id or customer_name then use the ones from
     # the joined data
     reporting_table = aql.merge(
@@ -259,6 +261,10 @@ with dag:
     )
 
     purchase_dates = transform_dataframe(reporting_table)
+
+    # Delete temporary and unnamed tables created by `load_file` and `transform`, in this example
+    # both `orders_data` and `joined_data`
+    aql.cleanup()
 ```
 ***
 # Run it!
@@ -279,16 +285,22 @@ Click on the astro_orders DAG name to see the grid view of its execution:
 
 ## Extract
 
-To extract from S3 into a Table object, we need only specify the location on S3 of the data and a connection for Snowflake that the Python SDK can use for internal purposes:
+To extract from S3 into a SQL Table, we need only specify the location on S3 of the data and a connection for Snowflake that the Python SDK can use for internal purposes:
 
 ```python
-# Extract a file with a header from S3 into a Table object
+# Extract a file with a header from S3 into a temporary Table, referenced by the
+# variable `orders_data`
 orders_data = aql.load_file(
     # data file needs to have a header row
     input_file=File(path=S3_FILE_PATH + "/orders_data_header.csv", conn_id=S3_CONN_ID),
     output_table=Table(conn_id=SNOWFLAKE_CONN_ID),
 )
 ```
+
+In this example, we do not want to persist the content of `orders_data` after the DAG is completed.
+When we create a `Table` object without a name, that table is considered a temporary table.
+The Astro SDK will delete all temporary tables if the user adds the task `aql.cleanup` to the DAG.
+
 ## Transform
 
 We can execute a filter and join in a single line of code to fill in a value for `joined_data`:
@@ -306,22 +318,28 @@ def join_orders_customers(filtered_orders_table: Table, customers_table: Table):
     ON f.customer_id = c.customer_id"""
 
 
-# create a Table object for customer data in our Snowflake database
+# Create a Table object for customer data in our Snowflake database
 customers_table = Table(
-    table=SNOWFLAKE_CUSTOMERS,
+    name=SNOWFLAKE_CUSTOMERS,
     conn_id=SNOWFLAKE_CONN_ID,
 )
 
-# filter the orders data and then join with the customer table
+
+# Filter the orders data and then join with the customer table,
+# saving the output into a temporary table referenced by the Table instance `joined_data`
 joined_data = join_orders_customers(filter_orders(orders_data), customers_table)
 ```
 
+Since the table `customers_table` is named, it is not considered temporary and will not be deleted
+by the end of the DAG run. However, The table `joined_data`, however, was not named in this DAG
+and therefore it will be deleted by the `aql.cleanup` step.
+
 ## Merge
 
-As our penultimate step, we call a database-agnostic merge function:
+As our penultimate transformation, we call a database-agnostic merge function:
 
 ```python
-# merge the joined data into our reporting table, based on the order_id .
+# Merge the joined data into our reporting table, based on the order_id .
 # If there's a conflict in the customer_id or customer_name then use the ones from
 # the joined data
 reporting_table = aql.merge(
@@ -336,9 +354,10 @@ reporting_table = aql.merge(
 )
 ```
 
+
 ## Dataframe transformation
 
-As an illustration of the `@df` decorator, we show a simple dataframe operation:
+As an illustration of the `@aql.dataframe` decorator, we show a simple dataframe operation:
 
 ```python
 @aql.dataframe
@@ -354,3 +373,16 @@ After all that, you'll find the meager output of this example in the logs of the
 
 To view this log output, in the tree view of the DAG, click on the green box next to
 `transform_dataframe` and then on "Log" button.
+
+
+## Clean up temporaty tables
+
+Finally, if there were unnamed tables in the DAG, the user should consider cleaning them up
+by the end of the DAG run, using:
+
+```python
+# Delete temporary and unnamed tables created by `load_file` and `transform`, in this example
+# both `orders_data` and `joined_data`
+aql.cleanup()
+```
+
