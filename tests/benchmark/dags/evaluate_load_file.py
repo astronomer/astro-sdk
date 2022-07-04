@@ -65,7 +65,7 @@ def create_dag(database_name, table_args, dataset):
                 conn_id=dataset_conn_id,
                 filetype=FileType(dataset_filetype),
             ),
-            task_id="load_csv",
+            task_id="load",
             output_table=table_metadata,
             chunk_size=chunk_size,
         )
