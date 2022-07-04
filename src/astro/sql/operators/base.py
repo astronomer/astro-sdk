@@ -59,7 +59,7 @@ class BaseSQLOperator(DecoratedOperator):
 
         # Find and load dataframes from op_arg and op_kwarg into Table
         self.create_output_table_if_needed()
-        self.op_args = load_op_arg_dataframes_into_sql(
+        self.op_args = load_op_arg_dataframes_into_sql(  # type: ignore
             conn_id=self.conn_id,
             op_args=self.op_args,  # type: ignore
             target_table=self.output_table.create_similar_table(),
