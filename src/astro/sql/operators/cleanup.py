@@ -1,4 +1,5 @@
 import time
+from datetime import timedelta
 from typing import Any, List, Optional
 
 from airflow.decorators.base import get_unique_task_id
@@ -27,11 +28,18 @@ class CleanupOperator(BaseOperator):
     that starts with ``_tmp``.
 
     By default if no tables are placed, the task will wait for all other tasks to run before deleting
-    all temporary tables (WARNING: DO NOT RUN THIS MODE IF USING THE SEQUENTIAL EXECUTOR.
-    IT WILL CAUSE A BLOCK).
+    all temporary tables.
+
+    If using a synchronous executor (e.g. SequentialExecutor and DebugExecutor), this task will initially
+    fail on purpose, so the executor is unblocked and can run other tasks. Users may have to define
+    custom values for `retries` and `retry_delay` if they intend to use one of these executors.
 
     :param tables_to_cleanup: List of tables to drop at the end of the DAG run
     :param task_id: Optional custom task id
+    :param retries: The number of retries that should be performed before failing the task.
+        Very relevant if using a synchronous executor. The default is 3.
+    :param retry_delay: Delay between running retries. Very relevant if using a synchronous executor.
+        The default is 10s.
     :param run_sync_mode: Whether to wait for the DAG to finish or not. Set to False if you want
         to immediately clean all DAGs. Note that if you supply anything to `tables_to_cleanup`
          this argument is ignored.
@@ -44,14 +52,17 @@ class CleanupOperator(BaseOperator):
         *,
         tables_to_cleanup: Optional[List[Table]] = None,
         task_id: str = "",
+        retries: int = 3,
+        retry_delay: timedelta = timedelta(seconds=10),
         run_sync_mode: bool = False,
         **kwargs,
     ):
         self.tables_to_cleanup = tables_to_cleanup or []
         self.run_immediately = run_sync_mode
         task_id = task_id or get_unique_task_id("_cleanup")
+        
 
-        super().__init__(task_id=task_id, **kwargs)
+        super().__init__(task_id=task_id, retries=retries, retry_delay=retry_delay, **kwargs)
 
     def execute(self, context: Context) -> None:
         self.log.info("Execute Cleanup")
@@ -117,10 +128,10 @@ class CleanupOperator(BaseOperator):
             if dag_is_running:
                 if single_worker_mode:
                     raise AirflowException(
-                        "You are currently running the 'single worker mode', where the task "
-                        "will fail and retry to unblock the single worker thread. This mode "
-                        "should only be used for SequentialExecutor as it "
-                        "creates the appearance of a failed task. The task should requeue and retry soon."
+                        "When using a synchronous executor (e.g. SequentialExecutor and DebugExecutor), "
+                        "the first run of this task will fail on purpose, "
+                        "so the single worker thread is unblocked to execute other tasks. "
+                        "The task is set up for retry and eventually works."
                     )
                 self.log.warning(
                     "You are currently running the 'waiting mode', where the task will wait "
