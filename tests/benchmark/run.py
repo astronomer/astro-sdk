@@ -46,7 +46,7 @@ def get_load_task_duration(dag, session=None):
         .filter(
             TaskInstance.dag_id == dag.dag_id,
             TaskInstance.task_id == "load",
-            TaskInstance.execution_date >= dag.latest_execution_date,
+            TaskInstance.execution_date == dag.latest_execution_date,
         )
         .first()
     )
