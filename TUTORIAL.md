@@ -76,24 +76,11 @@ need to be consistent with whatever names you choose throughout the remainder of
 
 ## Install Astro-SDK on your local machine
 
-* Run the following command to install the Python SDK.
+* Run the following command to install the Python SDK, with the extra packages necessary to interface with AWS and Snowflake.
+
 
   ```shell
-  pip install 'astro-sdk-python>=0.9'
-  ```
-
-  You can also install dependencies for specific providers by specifying "extras".
-  The following command will install all the dependencies for Amazon & Snowflake:
-
-  ```shell
-  pip install 'astro-sdk-python[amazon,snowflake]>=0.9'
-  ```
-
-  Or, you can install those providers separately using the following command, though we recommend using "extras":
-
-  ```shell
-  pip install apache-airflow-providers-amazon
-  pip install apache-airflow-providers-snowflake
+  pip install 'astro-sdk-python[amazon,snowflake]>=0.11'
   ```
 
 * Create the following environment variables
