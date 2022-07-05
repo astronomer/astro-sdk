@@ -12,7 +12,7 @@
   ],
   "datasets": [
     {
-      "conn_id": "bigquery",
+      "conn_id": "postgres_conn_benchmark",
       "file_type": "csv",
       "name": "few_kb",
       "path": "gs://astro-sdk/benchmark/original/covid_overview/covid_overview.csv",
@@ -20,7 +20,7 @@
       "size": "45K"
     },
     {
-      "conn_id": "bigquery",
+      "conn_id": "postgres_conn_benchmark",
       "file_type": "parquet",
       "name": "ten_kb",
       "path": "gs://astro-sdk/benchmark/trimmed/covid_overview/covid_overview_10kb.parquet",
@@ -28,7 +28,7 @@
       "size": "10 KB"
     },
     {
-      "conn_id": "bigquery",
+      "conn_id": "postgres_conn_benchmark",
       "file_type": "csv",
       "name": "hundred_kb",
       "path": "gs://astro-sdk/benchmark/trimmed/tate_britain/artist_data_100kb.csv",
@@ -36,36 +36,12 @@
       "size": "100 KB"
     },
     {
-      "conn_id": "bigquery",
+      "conn_id": "postgres_conn_benchmark",
       "file_type": "csv",
       "name": "ten_mb",
       "path": "gs://astro-sdk/benchmark/trimmed/imdb/title_ratings_10mb.csv",
       "rows": 385817,
       "size": "9.9M"
-    },
-    {
-      "conn_id": "bigquery",
-      "file_type": "ndjson",
-      "name": "one_gb",
-      "path": "gs://astro-sdk/benchmark/trimmed/stackoverflow/stackoverflow_posts_1g.ndjson",
-      "rows": 385817,
-      "size": "1G"
-    },
-    {
-      "conn_id": "bigquery",
-      "file_type": "ndjson",
-      "name": "five_gb",
-      "path": "gs://astro-sdk/benchmark/trimmed/pypi/",
-      "rows": 385817,
-      "size": "5G"
-    },
-    {
-      "conn_id": "bigquery",
-      "file_type": "ndjson",
-      "name": "ten_gb",
-      "path": "gs://astro-sdk/benchmark/trimmed/github/github-archive/",
-      "rows": 385817,
-      "size": "10G"
     }
   ]
 }
