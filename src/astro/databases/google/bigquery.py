@@ -2,7 +2,6 @@
 from typing import Dict, List, Tuple
 
 import pandas as pd
-from airflow.models import connection
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from google.api_core.exceptions import NotFound as GoogleNotFound
 from sqlalchemy import create_engine
@@ -187,17 +186,6 @@ class BigqueryDatabase(BaseDatabase):
                 f"No transfer performed since there is no optimised path "
                 f"for {source_file.location.location_type} to bigquery."
             )
-
-    @staticmethod
-    def get_project_id_from_conn(conn: connection) -> str:
-        """
-        Get project id from conn
-
-        :param conn: Airflow's connection
-        """
-        if conn.extra_dejson and conn.extra_dejson.get("project"):
-            return str(conn.extra_dejson["project"])
-        raise ValueError(f"conn_id {conn.conn_id} has no project id.")
 
     def gs_to_bigquery(
         self,
