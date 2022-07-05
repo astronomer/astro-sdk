@@ -87,7 +87,7 @@ need to be consistent with whatever names you choose throughout the remainder of
 
   ```shell
   export AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
-  export AIRFLOW__ASTRO__SQL_SCHEMA=<snowflake_schema>
+  export AIRFLOW__ASTRO_PYTHON_SDK__SQL_SCHEMA=<snowflake_schema>
   ```
 
 If you're using macOS, set this environment variable too [(background)](https://github.com/apache/airflow/issues/12808):
