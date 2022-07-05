@@ -6,7 +6,7 @@ from airflow.models.xcom_arg import XComArg
 
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 from astro.databases import BaseDatabase, create_database
-from astro.files import File, check_if_connection_exists, get_files
+from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.table import Table
 from astro.utils.task_id_helper import get_task_id
 
@@ -19,7 +19,7 @@ class LoadFile(BaseOperator):
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
     :param chunk_size: Specify the number of records in each batch to be written at a time.
     :param if_exists: Overwrite file if exists. Default False.
-    :param optimise_load: Use native support for data transfer if available on the destination.
+    :param use_native_support: Use native support for data transfer if available on the destination.
 
     :return: If ``output_table`` is passed this operator returns a Table object. If not
         passed, returns a dataframe.
@@ -79,29 +79,18 @@ class LoadFile(BaseOperator):
             ndjson_normalize_sep=self.ndjson_normalize_sep,
             database=database,
         )
-        if_exists = self.if_exists
-        for file in get_files(
+        files = resolve_file_path_pattern(
             input_file.path,
             input_file.conn_id,
             normalize_config=self.normalize_config,
-        ):
-            if self.use_native_support and database.check_optimised_path(
-                source_file=file, target_table=self.output_table
-            ):
-                database.optimised_transfer(
-                    source_file=file,
-                    target_table=self.output_table,
-                    if_exists=self.if_exists,
-                    **self.kwargs,
-                )
-            else:
-                database.load_file_to_table(
-                    source_file=file,
-                    target_table=self.output_table,
-                    if_exists=if_exists,
-                    chunk_size=self.chunk_size,
-                )
-            if_exists = "append"
+        )
+        database.load_multiple_file_to_table(
+            input_files=files,
+            output_table=self.output_table,
+            if_exists=self.if_exists,
+            chunk_size=self.chunk_size,
+            use_native_support=self.use_native_support,
+        )
         self.log.info("Completed loading the data into %s.", self.output_table)
         return self.output_table
 
@@ -111,7 +100,7 @@ class LoadFile(BaseOperator):
         SQL table was specified
         """
         df = None
-        for file in get_files(
+        for file in resolve_file_path_pattern(
             input_file.path,
             input_file.conn_id,
         ):

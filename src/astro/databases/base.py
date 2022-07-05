@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 import sqlalchemy
@@ -212,6 +212,8 @@ class BaseDatabase(ABC):
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
+        use_native_support: bool = True,
+        **kwargs: Any,
     ) -> None:
         """
         Load the content of the source file to the target database table.
@@ -220,15 +222,56 @@ class BaseDatabase(ABC):
         :param source_file: Local or remote filepath (e.g. a File("/tmp/sample_data.csv"))
         :param target_table: Table in which the file will be loaded
         :param if_exists: Strategy to be used in case the target table already exists
-        :param chunk_size: Specify the number of rows in each batch to be written at a time.
+        :param chunk_size: Specify the number of rows in each batch to be written at a time
+        :param use_native_support: Use native support for data transfer if available on the destination
         """
-        dataframe = source_file.export_to_dataframe()
-        self.load_pandas_dataframe_to_table(
-            dataframe,
-            target_table,
-            if_exists,
-            chunk_size,
-        )
+        if use_native_support and self.check_optimised_path(
+            source_file=source_file, target_table=target_table
+        ):
+            self.optimised_transfer(
+                source_file=source_file,
+                target_table=target_table,
+                if_exists=if_exists,
+                **kwargs,
+            )
+        else:
+            dataframe = source_file.export_to_dataframe()
+            self.load_pandas_dataframe_to_table(
+                dataframe,
+                target_table,
+                if_exists,
+                chunk_size,
+            )
+
+    def load_multiple_file_to_table(
+        self,
+        input_files: List[File],
+        output_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        use_native_support: bool = True,
+    ):
+        """
+        Load content of multiple files in output_table.
+        Multiple files are sourced from the file path, which can also be path pattern.
+
+        :param input_files: Files path and conn_id for object stores
+        :param output_table: Table to create
+        :param if_exists: Overwrite file if exists.
+        :param chunk_size: Specify the number of records in each batch to be written at a time
+        :param use_native_support: Use native support for data transfer if available on the destination.
+        """
+        for file in input_files:
+            self.load_file_to_table(
+                source_file=file,
+                target_table=output_table,
+                if_exists=if_exists,
+                chunk_size=chunk_size,
+                use_native_support=use_native_support,
+            )
+            # Since data from any file post the first one, needs to go to same table
+            # we append data to previously created table.
+            if_exists = "append"
 
     def load_pandas_dataframe_to_table(
         self,

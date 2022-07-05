@@ -96,7 +96,7 @@ class File:
         return self.location == other.location and self.type == other.type
 
 
-def get_files(
+def resolve_file_path_pattern(
     path_pattern: str,
     conn_id: Optional[str] = None,
     filetype: Union[FileType, None] = None,
