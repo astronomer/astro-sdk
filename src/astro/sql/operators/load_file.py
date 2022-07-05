@@ -84,7 +84,7 @@ class LoadFile(BaseOperator):
             input_file.conn_id,
             normalize_config=self.normalize_config,
         )
-        database.load_multiple_file_to_table(
+        database.load_multiple_files_to_table(
             input_files=files,
             output_table=self.output_table,
             if_exists=self.if_exists,

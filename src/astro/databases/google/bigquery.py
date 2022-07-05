@@ -182,6 +182,11 @@ class BigqueryDatabase(BaseDatabase):
                 if_exists=if_exists,
                 **kwargs,
             )
+        else:
+            raise ValueError(
+                f"No transfer performed since there is no optimised path "
+                f"for {source_file.location.location_type} to bigquery."
+            )
 
     @staticmethod
     def get_project_id_from_conn(conn: connection) -> str:
@@ -208,18 +213,18 @@ class BigqueryDatabase(BaseDatabase):
         :param target_table: Table that will be created on the bigquery
         :param if_exists: Overwrite table if exists. Default 'replace'
         """
-        bq_hook = BigQueryHook(
-            gcp_conn_id=target_table.conn_id,
-        )
 
         write_disposition_val = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
 
-        conn = self.hook.get_connection(target_table.conn_id)
+        try:
+            project_id = getattr(self.hook, "project_id")
+        except AttributeError:
+            raise ValueError(f"conn_id {target_table.conn_id} has no project id.")
 
         load_job_config = {
             "sourceUris": [source_file.path],
             "destinationTable": {
-                "projectId": self.get_project_id_from_conn(conn),
+                "projectId": project_id,
                 "datasetId": target_table.metadata.schema,
                 "tableId": target_table.name,
             },
@@ -240,6 +245,6 @@ class BigqueryDatabase(BaseDatabase):
             "load": load_job_config,
             "labels": {"target_table": target_table.name},
         }
-        bq_hook.insert_job(
+        self.hook.insert_job(
             configuration=job_config,
         )
