@@ -1,11 +1,20 @@
 {
   "databases": [
     {
-      "name": "postgres_conn_benchmark",
+      "name": "postgres",
       "params": {
         "conn_id": "postgres_conn_benchmark",
         "metadata": {
           "database": "postgres"
+        }
+      }
+    },
+    {
+      "name": "bigquery",
+      "params": {
+        "conn_id": "bigquery",
+        "metadata": {
+          "database": "bigquery"
         }
       }
     }

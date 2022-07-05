@@ -210,13 +210,15 @@ This is an example running the benchmark for the astro `78805a` revision and chu
 
 ### Database: postgres
 
-| database   | dataset   | total_time   | memory_rss   | memory_shared   | memory_pss   | cpu_time_user   | cpu_time_system   |
-|:-----------|:----------|:-------------|:-------------|:----------------|:-------------|:----------------|:------------------|
-| postgres   | few_kb    | 1.73s        | 125.62MB     | 41.89MB         | 122.95MB     | 1.95s           | 1.4s              |
-| postgres   | many_kb   | 2.24s        | 138.5MB      | 41.78MB         | 135.95MB     | 2.4s            | 1.38s             |
-| postgres   | few_mb    | 1.23min      | 156.85MB     | 41.96MB         | 154.15MB     | 1.09min         | 1.74s             |
-| postgres   | many_mb   | 23.94min     | 1.23GB       | 41.95MB         | 1.23GB       | 22.15min        | 31.5s             |
-
+| database                | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
+|:------------------------|:-----------|:-------------|:-------------|:----------------|:------------------|
+| postgres_conn_benchmark | few_kb     | 494.42ms     | 36.06MB      | 570.0ms         | 50.0ms            |
+| postgres_conn_benchmark | ten_kb     | 689.05ms     | 42.96MB      | 540.0ms         | 40.0ms            |
+| postgres_conn_benchmark | hundred_kb | 580.7ms      | 36.43MB      | 570.0ms         | 50.0ms            |
+| postgres_conn_benchmark | ten_mb     | 44.67s       | 1.38GB       | 31.03s          | 4.03s             |
+| postgres_conn_benchmark | one_gb     | 5.56min      | 62.5MB       | 14.07s          | 1.14s             |
+| postgres_conn_benchmark | five_gb    | 24.44min     | 78.15MB      | 1.34min         | 5.73s             |
+| postgres_conn_benchmark | ten_gb     | 45.64min     | 61.71MB      | 2.37min         | 11.48s            |
 
 ### Database: snowflake
 
