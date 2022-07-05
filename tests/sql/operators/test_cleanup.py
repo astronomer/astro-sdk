@@ -247,10 +247,10 @@ def test_error_raised_with_blocking_op_executors(
         with pytest.raises(AirflowException) as exec_info:
             cleanup_task.execute({"dag_run": dr})
         assert exec_info.value.args[0] == (
-            "You are currently running the 'single worker mode', where the task "
-            "will fail and retry to unblock the single worker thread. This mode "
-            "should only be used for SequentialExecutor as it "
-            "creates the appearance of a failed task. The task should requeue and retry soon."
+            "When using a synchronous executor (e.g. SequentialExecutor and DebugExecutor), "
+            "the first run of this task will fail on purpose, "
+            "so the single worker thread is unblocked to execute other tasks. "
+            "The task is set up for retry and eventually works."
         )
     else:
         cleanup_task.execute({"dag_run": dr})
