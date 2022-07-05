@@ -5,13 +5,20 @@
       "params": {
         "conn_id": "bigquery",
         "metadata": {
-          "database": "astronomer-dag-authoring",
-          "schema": "tmp_astro"
+          "database": "bigquery"
         }
       }
     }
   ],
   "datasets": [
+    {
+      "conn_id": "bigquery",
+      "file_type": "csv",
+      "name": "few_kb",
+      "path": "gs://astro-sdk/benchmark/original/covid_overview/covid_overview.csv",
+      "rows": 732,
+      "size": "45K"
+    },
     {
       "conn_id": "bigquery",
       "file_type": "parquet",
@@ -59,12 +66,6 @@
       "path": "gs://astro-sdk/benchmark/trimmed/github/github-archive/",
       "rows": 385817,
       "size": "10G"
-    },
-    {
-      "name": "few_kb",
-      "path": "../data/covid_overview.csv",
-      "rows": 732,
-      "size": "45K"
     }
   ]
 }

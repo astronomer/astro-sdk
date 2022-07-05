@@ -18,6 +18,7 @@ import boto3
 import pandas as pd
 import pytest
 from airflow.exceptions import BackfillUnfinished
+from airflow.providers.google.cloud.hooks.gcs import GCSHook
 
 import astro.sql as aql
 from astro.constants import SUPPORTED_FILE_TYPES, Database
@@ -27,7 +28,6 @@ from astro.settings import SCHEMA
 # Import Operator
 from astro.sql.operators.export_file import export_file
 from astro.sql.table import Table
-from astro.utils.dependencies import gcs
 from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
@@ -201,7 +201,7 @@ def test_save_all_db_tables_to_GCS(sample_dag, database_table_fixture):
 
     assert (df["sell"].sort_values() == [129, 138, 142, 175, 232]).all()
 
-    hook = gcs.GCSHook(gcp_conn_id="google_cloud_default")
+    hook = GCSHook(gcp_conn_id="google_cloud_default")
     hook.delete(bucket, f"test/{file_name}")
 
 

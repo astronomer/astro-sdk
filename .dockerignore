@@ -1,0 +1,4 @@
+docs
+example_dags
+.nox
+*.idea*

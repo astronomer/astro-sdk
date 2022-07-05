@@ -1,4 +1,20 @@
 # Changelog
+
+## 0.11.0
+
+Feature:
+* Added Cleanup operator to clean temporary tables [#187](https://github.com/astronomer/astro-sdk/issues/187) [#436](https://github.com/astronomer/astro-sdk/issues/436)
+
+Internals:
+* Added a Pull Request template [#205](https://github.com/astronomer/astro-sdk/issues/205)
+* Added sphinx documentation for readthedocs [#276](https://github.com/astronomer/astro-sdk/issues/276) [#472](https://github.com/astronomer/astro-sdk/issues/472)
+
+Enhancement:
+* Fail LoadFile operator when input_file does not exist [#467](https://github.com/astronomer/astro-sdk/issues/467)
+* Create scripts to launch benchmark testing to Google cloud [#432](https://github.com/astronomer/astro-sdk/pull/496)
+* Bump Google Provider for google extra [#294](https://github.com/astronomer/astro-sdk/pull/294)
+
+
 ## 0.10.0
 
 Feature:

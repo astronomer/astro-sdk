@@ -3,19 +3,17 @@ import inspect
 import json
 import os
 import sys
-import time
 
 import airflow
 import pandas as pd
 import psutil
 from airflow.executors.debug_executor import DebugExecutor
+from airflow.models import TaskInstance
 from airflow.utils import timezone
+from airflow.utils.session import provide_session
 
 from astro.databases import create_database
-
-
-def elapsed_since(start):
-    return time.time() - start
+from astro.sql.table import Metadata, Table
 
 
 def get_disk_usage():
@@ -28,78 +26,31 @@ def subtract(after_dict, before_dict):
     return {key: after_dict[key] - before_dict.get(key, 0) for key in after_dict}
 
 
-def prep_insert_statement(
-    df: pd.DataFrame, table_name="load_files_to_database", schema="Benchmark"
-) -> str:
-    """Prepare the insert statement for data received
-
-    :param df: dataframe to be inserted to db. Note - We assume there is only one row in this dataframe
-    :param table_name: pre-existing database table name.
-     Note - we assume this table exists and is created based on the profiling data that needs to be saved.
-     table name: load_files_to_database
-     table project: astronomer-dag-authoring
-     table schema:
-        duration, FLOAT
-        disk_usage, FLOAT
-        dag_id, STRING
-        execution_date, DATETIME
-        revision, STRING
-        chunk_size, INTEGER
-        memory_full_info__rss, FLOAT
-        memory_full_info__vms, FLOAT
-        memory_full_info__pfaults, FLOAT
-        memory_full_info__pageins, FLOAT
-        memory_full_info__uss, FLOAT
-        cpu_time__user, FLOAT
-        cpu_time__system, FLOAT
-        cpu_time__children_user, FLOAT
-        cpu_time__children_system, FLOAT
-
-    :param schema: schema of pre-existing table
-    """
-    wrapper_for_cols = {
-        "dag_id": ["'", "'"],
-        "execution_date": ["DATETIME(TIMESTAMP '", "')"],
-        "revision": ["'", "'"],
-    }
-    cols = list(df.columns)
-    vals = []
-    for col in cols:
-        if col in wrapper_for_cols:
-            wrapper = wrapper_for_cols[col]
-            vals.append(wrapper[0] + str(df[col][0]) + wrapper[1])
-        else:
-            vals.append(str(df[col][0]))
-
-    return (
-        f"INSERT {schema}.{table_name} ({', '.join(cols)}) VALUES ({', '.join(vals)})"
-    )
-
-
-def prep_profile_data(profile_data: dict) -> pd.DataFrame:
-    """Normalize profile data as the data is not suitable for publishing in db table
-
-    :param profile_data: profiling data collected
-    """
-    normalize_delimiter = "__"
-    normalize_config = {
-        "meta_prefix": normalize_delimiter,
-        "record_prefix": normalize_delimiter,
-        "sep": normalize_delimiter,
-    }
-    return pd.json_normalize(profile_data, **normalize_config)
-
-
-def save_profiling_data(profile_data: dict, conn_id: str = "bigquery"):
-    """save profiling data to bigquery table
+def export_profile_data_to_bq(profile_data: dict, conn_id: str = "bigquery"):
+    """Save profile data to bigquery table
 
     :param profile_data: profiling data collected
     :param conn_id: Airflow's connection id to be used to publish the profiling data
     """
     db = create_database(conn_id)
-    df = prep_profile_data(profile_data)
-    sql = prep_insert_statement(df)
-    db.run_sql(sql)
+    del profile_data["io_counters"]
+    df = pd.json_normalize(profile_data, sep="_")
+    table = Table(name="load_files_to_database", metadata=Metadata(schema="benchmark"))
+    db.load_pandas_dataframe_to_table(df, table, if_exists="append")
+
+
+@provide_session
+def get_load_task_duration(dag, session=None):
+    ti: TaskInstance = (
+        session.query(TaskInstance)
+        .filter(
+            TaskInstance.dag_id == dag.dag_id,
+            TaskInstance.task_id == "load",
+            TaskInstance.execution_date == dag.latest_execution_date,
+        )
+        .first()
+    )
+    return ti.duration
 
 
 def profile(func, *args, **kwargs):  # noqa: C901
@@ -111,13 +62,11 @@ def profile(func, *args, **kwargs):  # noqa: C901
         disk_usage_before = get_disk_usage()
         if sys.platform == "linux":
             io_counters_before = process.io_counters()._asdict()
-        start = time.time()
 
         # run decorated function
-        result = func(*args, **kwargs)
+        dag = func(*args, **kwargs)
 
         # metrics after
-        elapsed_time = elapsed_since(start)
         memory_full_info_after = process.memory_full_info()._asdict()
         cpu_time_after = process.cpu_times()._asdict()
         disk_usage_after = get_disk_usage()
@@ -125,7 +74,7 @@ def profile(func, *args, **kwargs):  # noqa: C901
             io_counters_after = process.io_counters()._asdict()
 
         profile = {
-            "duration": elapsed_time,
+            "duration": get_load_task_duration(dag=dag),
             "memory_full_info": subtract(
                 memory_full_info_after, memory_full_info_before
             ),
@@ -138,8 +87,7 @@ def profile(func, *args, **kwargs):  # noqa: C901
         profile = {**profile, **kwargs}
         print(json.dumps(profile, default=str))
         if os.getenv("ASTRO_PUBLISH_BENCHMARK_DATA"):
-            save_profiling_data(profile)
-        return result
+            export_profile_data_to_bq(profile)
 
     if inspect.isfunction(func):
         return wrapper
@@ -162,6 +110,7 @@ def run_dag(dag_id, execution_date, **kwargs):
         # been doing this prior to 2.2 so we keep compatibility.
         run_at_least_once=True,
     )
+    return dag
 
 
 def build_dag_id(dataset, database):
