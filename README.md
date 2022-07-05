@@ -158,9 +158,9 @@ A summary of the currently available operations in **Astro SDK Python**. More de
 ## Documentation
 
 The documentation is a work in progress--we aim to follow the [Diátaxis](https://diataxis.fr/) system:
-* **[Tutorial](TUTORIAL.md)**: a hands-on introduction to **Astro SDK Python**
+* **[Tutorial](docs/TUTORIAL.md)**: a hands-on introduction to **Astro SDK Python**
 * **How-to guides**: simple step-by-step user guides to accomplish specific tasks
-* **[Reference guide](REFERENCE.md)**: commands, modules, classes and methods
+* **[Reference guide](https://astro-sdk.readthedocs.io/)**: commands, modules, classes and methods
 * **Explanation**: Clarification and discussion of key decisions when designing the project.
 
 ## Changelog

@@ -42,7 +42,7 @@ class CleanupOperator(BaseOperator):
         The default is 10s.
     :param run_sync_mode: Whether to wait for the DAG to finish or not. Set to False if you want
         to immediately clean all DAGs. Note that if you supply anything to `tables_to_cleanup`
-         this argument is ignored.
+        this argument is ignored.
     """
 
     template_fields = ("tables_to_cleanup",)

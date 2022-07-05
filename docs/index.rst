@@ -9,12 +9,15 @@ Welcome to astro-sdk's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   :glob:
 
+   aep/*
+   autoapi/*
+   *
 
-
-Indices and tables
+Indices and Tables
 ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+ * :ref:`genindex`
+ * :ref:`modindex`
+ * :ref:`search`

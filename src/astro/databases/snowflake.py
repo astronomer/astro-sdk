@@ -113,7 +113,8 @@ class SnowflakeDatabase(BaseDatabase):
             "SELECT * FROM IDENTIFIER(:input_table);"
             parameters = {"input_table": "some_schema.user_defined_table"}
 
-        Example of usage:
+        Example of usage: ::
+
             jinja_table_identifier, jinja_table_parameter_value = \
                 get_sqlalchemy_template_table_identifier_and_parameter(
                     Table(name="user_defined_table", metadata=Metadata(schema="some_schema"),
