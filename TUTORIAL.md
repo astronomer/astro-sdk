@@ -362,13 +362,33 @@ To view this log output, in the tree view of the DAG, click on the green box nex
 `transform_dataframe` and then on "Log" button.
 
 
-## Clean up temporaty tables
+## Clean up temporary tables
 
-Finally, if there were unnamed tables in the DAG, the user should consider cleaning them up
-by the end of the DAG run, using:
+Finally, if there were temporary tables (`table.temp=True` or an unnamed tables) in the DAG,
+the user should consider cleaning them up by the end of the DAG run.
+
+It is possible to achieve this using one of the following approaches:
+
+(1) Clean all temporary tables by the end of the DAG run
 
 ```python
-# Delete temporary and unnamed tables created by `load_file` and `transform`, in this example
-# both `orders_data` and `joined_data`
+# Delete all temporary
 aql.cleanup()
 ```
+
+(2) Specify a subset of temporary tables to be deleted
+
+The user may also opt for explicitly setting a subset of tables to be deleted,
+by using one of the following
+
+```python
+aql.cleanup([orders_data, joined_data])
+```
+
+or
+```python
+[orders_data, joined_data] >> aql.cleanup()
+```
+
+In all scenarios, even if the user gives a non-temporary table, only temporary
+tables will actually be deleted.
