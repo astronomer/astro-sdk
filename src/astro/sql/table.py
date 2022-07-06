@@ -92,6 +92,7 @@ class Table:
     def name(self) -> str:
         """
         Return either the user-defined name or auto-generate one.
+        :sphinx-autoapi-skip:
         """
         if self.temp and not self._name:
             self._name = self._create_unique_table_name(TEMP_PREFIX)

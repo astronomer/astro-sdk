@@ -2,7 +2,7 @@
 
 ## Updating the changelog
 
-The first step to creating a release is identifying what changed from the previous release and adding a description to the [CHANGELOG.md](docs/CHANGELOG.md)
+The first step to creating a release is identifying what changed from the previous release and adding a description to the [CHANGELOG.md](./CHANGELOG.md)
 
 ## Handling patch releases
 
@@ -27,7 +27,7 @@ branch from main (please use `git cherry-pick -x <commit id>` to retain
 git commit hashes and messages). Depending on the fix there might be some git conflicts to resolve. If you run into conflicts, please
 resolve said conflicts, run `git add .`, and then `git cherry-pick --continue` to continue the merge.
 
-After cherry-picking all needed fixes, follow the instructions to [create a release from the release branch](#creating-a-release-from-the-release-branch)
+After cherry-picking all needed fixes, follow the instructions to [create a release from the release branch](#Creating a release from the release branch)
 
 ## Handling minor releases
 ### When should I create a minor release?
@@ -43,25 +43,25 @@ major release.
 
 To create a minor release, first create a new release branch based on main under the new minor release number.
 If we are currently releasing from `release-0.6` then you should create the branch `release-0.7`. Since this branch is
-pulled directly from main, there is nothing for you to cherry-pick. Simply follow the following instructions to [create a release from the release branch](#creating-a-release-from-the-release-branch)
+pulled directly from main, there is nothing for you to cherry-pick. Simply follow the following instructions to [create a release from the release branch](#Creating a release from the release branch)
 
 # Handling Major releases
 
-### When should I create a major release?
+## When should I create a major release?
 
 A major release should be carefully considered, and we should make all attempts to not break functionality when possible.
 However, there is a reality that we sometimes need to remove features to keep the project forward facing. Please take care to give users
 ample time with deprecation warnings and migration steps before removing a feature.
 
-### Creating a major release
+## Creating a major release
 
-The instructions for creating a major release are identical for those of [creating a minor release](#creating-a-minor-release).
+The instructions for creating a major release are identical for those of [creating a minor release](#Creating a minor release).
 
 # Creating a release from the release branch
 
 Once your release branch is ready to go there are a few simple steps to actually release the project to PyPI.
 
-The first step is to go to [the base level \_\_init\_\_.py](src/astro/__init__.py#L19) and change the `__version__` variable to the new version. You can then
+The first step is to go to [the base level \_\_init\_\_.py](../src/astro/__init__.py) and change the `__version__` variable to the new version. You can then
 push this change to main or create a PR depending on your level of permission within the project.
 
 The second step is to [create a release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository)

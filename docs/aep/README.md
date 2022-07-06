@@ -29,7 +29,7 @@ Examples of life cycles:
 
 Most proposals start with an idea. If you have an idea of how Astro could improve, create a [Github Issue](https://github.com/astronomer/astro-sdk/issues/new) and, label it with `enhancement`.
 
-We encourage you to start a Draft document in the [aep](.) folder an make a pull request, so others can discuss it. Please, follow the [AEP template](./AEP-template.md).
+We encourage you to start a Draft document in this folder and make a pull request, so others can discuss it. Please, follow the [AEP template](./AEP-template.md).
 
 
 ### Proposed

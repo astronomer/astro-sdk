@@ -1,10 +1,10 @@
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+from airflow.decorators.base import get_unique_task_id
 from airflow.models.baseoperator import BaseOperator
 
 from astro.databases import create_database
 from astro.sql.table import Table
-from astro.utils.task_id_helper import get_unique_task_id
 
 APPEND_COLUMN_TYPE = Optional[Union[List[str], Tuple[str], Dict[str, str]]]
 

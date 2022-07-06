@@ -1,16 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
-
-- [Contributions](#contributions)
-- [Security](#security)
-- [Issues, PRs & Discussions](#issues-prs--discussions)
-- [Creating a local development](#creating-a-local-development)
-- [Prepare PR](#prepare-pr)
-- [Pull Request Guidelines](#pull-request-guidelines)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 # Contributions
 
 Hi there! We're thrilled that you'd like to contribute to this project. Your help is essential for keeping it great.

@@ -1,7 +1,3 @@
-<!--
-I imagine this file will go into documentation at some point.
--->
-
 # Developing the package
 
 Prerequisites
