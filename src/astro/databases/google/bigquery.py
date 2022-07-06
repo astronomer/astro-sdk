@@ -28,8 +28,8 @@ class BigqueryDatabase(BaseDatabase):
     logic in other parts of our code-base.
     """
 
-    OPTIMIZED_PATHS = {FileLocation.GS: "gs_to_bigquery"}
-    OPTIMIZED_PATHS_SUPPORTED_FILE_TYPES = {
+    NATIVE_PATHS = {FileLocation.GS: "gs_to_bigquery"}
+    NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
         FileType.CSV: "CSV",
         FileType.NDJSON: "NEWLINE_DELIMITED_JSON",
         FileType.PARQUET: "PARQUET",
@@ -150,18 +150,18 @@ class BigqueryDatabase(BaseDatabase):
             statement += f" WHEN MATCHED THEN {update_statement}"
         self.run_sql(sql_statement=statement)
 
-    def check_optimised_path(self, source_file: File, target_table: Table) -> bool:
+    def check_native_path(self, source_file: File, target_table: Table) -> bool:
         """
         Check if there is an optimised path for source to destination.
 
         :param source_file: File from which we need to transfer data
         :param target_table: Table that needs to be populated with file data
         """
-        file_type = self.OPTIMIZED_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
-        location_type = self.OPTIMIZED_PATHS.get(source_file.location.location_type)
+        file_type = self.NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
+        location_type = self.NATIVE_PATHS.get(source_file.location.location_type)
         return bool(location_type and file_type)
 
-    def optimised_transfer(
+    def load_file_to_table_natively(
         self,
         source_file: File,
         target_table: Table,
@@ -172,7 +172,7 @@ class BigqueryDatabase(BaseDatabase):
         Checks if optimised path for transfer between File location to database exists
         and if it does, it transfers it and returns true else false.
         """
-        method_name = self.OPTIMIZED_PATHS.get(source_file.location.location_type)
+        method_name = self.NATIVE_PATHS.get(source_file.location.location_type)
         if method_name:
             transfer_method = self.__getattribute__(method_name)
             transfer_method(
@@ -218,7 +218,7 @@ class BigqueryDatabase(BaseDatabase):
             },
             "createDisposition": "CREATE_IF_NEEDED",
             "writeDisposition": write_disposition_val[if_exists],
-            "sourceFormat": self.OPTIMIZED_PATHS_SUPPORTED_FILE_TYPES[
+            "sourceFormat": self.NATIVE_PATHS_SUPPORTED_FILE_TYPES[
                 source_file.type.name
             ],
             "autodetect": True,

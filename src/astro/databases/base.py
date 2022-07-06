@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 import sqlalchemy
@@ -206,44 +206,8 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
     # Table load methods
     # ---------------------------------------------------------
+
     def load_file_to_table(
-        self,
-        source_file: File,
-        target_table: Table,
-        if_exists: LoadExistStrategy = "replace",
-        chunk_size: int = DEFAULT_CHUNK_SIZE,
-        use_native_support: bool = True,
-        **kwargs: Any,
-    ) -> None:
-        """
-        Load the content of the source file to the target database table.
-        If the table already exists, append or replace the content, depending on the value of `if_exists`.
-
-        :param source_file: Local or remote filepath (e.g. a File("/tmp/sample_data.csv"))
-        :param target_table: Table in which the file will be loaded
-        :param if_exists: Strategy to be used in case the target table already exists
-        :param chunk_size: Specify the number of rows in each batch to be written at a time
-        :param use_native_support: Use native support for data transfer if available on the destination
-        """
-        if use_native_support and self.check_optimised_path(
-            source_file=source_file, target_table=target_table
-        ):
-            self.optimised_transfer(
-                source_file=source_file,
-                target_table=target_table,
-                if_exists=if_exists,
-                **kwargs,
-            )
-        else:
-            dataframe = source_file.export_to_dataframe()
-            self.load_pandas_dataframe_to_table(
-                dataframe,
-                target_table,
-                if_exists,
-                chunk_size,
-            )
-
-    def load_multiple_files_to_table(
         self,
         input_file: File,
         output_table: Table,
@@ -251,6 +215,7 @@ class BaseDatabase(ABC):
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         use_native_support: bool = True,
+        **kwargs,
     ):
         """
         Load content of multiple files in output_table.
@@ -269,13 +234,23 @@ class BaseDatabase(ABC):
             normalize_config=normalize_config,
         )
         for file in input_files:
-            self.load_file_to_table(
-                source_file=file,
-                target_table=output_table,
-                if_exists=if_exists,
-                chunk_size=chunk_size,
-                use_native_support=use_native_support,
-            )
+            if use_native_support and self.check_native_path(
+                source_file=file, target_table=output_table
+            ):
+                self.load_file_to_table_natively(
+                    source_file=file,
+                    target_table=output_table,
+                    if_exists=if_exists,
+                    **kwargs,
+                )
+            else:
+                dataframe = file.export_to_dataframe()
+                self.load_pandas_dataframe_to_table(
+                    dataframe,
+                    output_table,
+                    if_exists,
+                    chunk_size,
+                )
             # Since data from any file post the first one, needs to go to same table
             # we append data to previously created table.
             if_exists = "append"
@@ -470,7 +445,7 @@ class BaseDatabase(ABC):
             self.get_table_qualified_name(table),
         )
 
-    def check_optimised_path(self, source_file: File, target_table: Table) -> bool:
+    def check_native_path(self, source_file: File, target_table: Table) -> bool:
         """
         Check if there is an optimised path for source to destination.
 
@@ -479,7 +454,7 @@ class BaseDatabase(ABC):
         """
         return False
 
-    def optimised_transfer(
+    def load_file_to_table_natively(
         self,
         source_file: File,
         target_table: Table,

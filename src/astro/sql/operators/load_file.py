@@ -79,7 +79,7 @@ class LoadFile(BaseOperator):
             ndjson_normalize_sep=self.ndjson_normalize_sep,
             database=database,
         )
-        database.load_multiple_files_to_table(
+        database.load_file_to_table(
             input_file=input_file,
             normalize_config=normalize_config,
             output_table=self.output_table,
