@@ -24,13 +24,19 @@ resource "google_service_account" "benchmark" {
 
 resource "google_project_iam_member" "benchmark_gcs" {
   project = var.project
-  role    = "roles/storage.objectViewer"
+  role    = "roles/storage.objectAdmin"
   member  = "serviceAccount:${google_service_account.benchmark.email}"
 }
 
-resource "google_project_iam_member" "benchmark_bq" {
+resource "google_project_iam_member" "benchmark_bq_data_editor" {
   project = var.project
   role    = "roles/bigquery.dataEditor"
+  member  = "serviceAccount:${google_service_account.benchmark.email}"
+}
+
+resource "google_project_iam_member" "benchmark_bq_job_user" {
+  project = var.project
+  role    = "roles/bigquery.jobUser"
   member  = "serviceAccount:${google_service_account.benchmark.email}"
 }
 
