@@ -446,8 +446,8 @@ class BaseDatabase(ABC):
         )
 
     def check_native_path(
-        self, source_file: File, target_table: Table
-    ) -> bool:  # skipcq: PYL-R0201, PYL-W0613
+        self, source_file: File, target_table: Table  # skipcq: PYL-R0201, PYL-W0613
+    ) -> bool:
         """
         Check if there is an optimised path for source to destination.
 
