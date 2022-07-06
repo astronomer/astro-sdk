@@ -16,7 +16,7 @@ from astro.constants import (
     MergeConflictStrategy,
 )
 from astro.exceptions import NonExistentTableException
-from astro.files import File
+from astro.files import File, resolve_file_path_pattern
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
 
@@ -245,8 +245,9 @@ class BaseDatabase(ABC):
 
     def load_multiple_files_to_table(
         self,
-        input_files: List[File],
+        input_file: File,
         output_table: Table,
+        normalize_config: Dict,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         use_native_support: bool = True,
@@ -255,12 +256,18 @@ class BaseDatabase(ABC):
         Load content of multiple files in output_table.
         Multiple files are sourced from the file path, which can also be path pattern.
 
-        :param input_files: Files path and conn_id for object stores
+        :param input_file: File path and conn_id for object stores
         :param output_table: Table to create
-        :param if_exists: Overwrite file if exists.
+        :param if_exists: Overwrite file if exists
         :param chunk_size: Specify the number of records in each batch to be written at a time
-        :param use_native_support: Use native support for data transfer if available on the destination.
+        :param use_native_support: Use native support for data transfer if available on the destination
+        :param normalize_config: pandas json_normalize params config.
         """
+        input_files = resolve_file_path_pattern(
+            input_file.path,
+            input_file.conn_id,
+            normalize_config=normalize_config,
+        )
         for file in input_files:
             self.load_file_to_table(
                 source_file=file,

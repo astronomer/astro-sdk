@@ -75,17 +75,13 @@ class LoadFile(BaseOperator):
             )
         database = create_database(self.output_table.conn_id)
         self.output_table = database.populate_table_metadata(self.output_table)
-        self.normalize_config = self._populate_normalize_config(
+        normalize_config = self._populate_normalize_config(
             ndjson_normalize_sep=self.ndjson_normalize_sep,
             database=database,
         )
-        files = resolve_file_path_pattern(
-            input_file.path,
-            input_file.conn_id,
-            normalize_config=self.normalize_config,
-        )
         database.load_multiple_files_to_table(
-            input_files=files,
+            input_file=input_file,
+            normalize_config=normalize_config,
             output_table=self.output_table,
             if_exists=self.if_exists,
             chunk_size=self.chunk_size,
