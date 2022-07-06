@@ -3,7 +3,6 @@
 import argparse
 import json
 import sys
-from json.decoder import JSONDecodeError
 
 import pandas as pd
 
@@ -47,10 +46,7 @@ def analyse_results(results_filepath):
     data = []
     with open(results_filepath) as fp:
         for line in fp.readlines():
-            try:
-                data.append(json.loads(line.strip()))
-            except JSONDecodeError as j:
-                print(j)
+            data.append(json.loads(line.strip()))
 
     df = pd.json_normalize(data, sep="_")
 
