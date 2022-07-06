@@ -75,7 +75,7 @@ Before we can complete any transformations, we need to define a way to get our t
 
 To instantiate a table or bring in a table from a database into the `astro-sdk-python` ecosystem, you can pass a `Table` object into the class. This `Table` object will contain all of the metadata that's necessary for handling table creation between tasks. After you define a Table's metadata in the beginning of your pipeline, `astro-sdk-python` can automatically pass that metadata along to downstream tasks.
 
-If the user does not define the metadata properties within table, the `astro-sdk-python` attempts to retrieve them from the connection associated with `conn_id`. If the database supports schemas and the connection doesn't specify a schema, the SDK will retrieve the schema from the `AIRFLOW__ASTRO_PYTHON_SDK__SQL_SCHEMA` environment variable.
+If the user does not define the metadata properties within table, the `astro-sdk-python` attempts to retrieve them from the connection associated with `conn_id`. If the database supports schemas and the connection doesn't specify a schema, the SDK will retrieve the schema from the `AIRFLOW__ASTRO_SDK__SQL_SCHEMA` environment variable.
 
 In the following example, we define our table in the DAG instantiation. In each subsequent task, we pass in only an input `Table` argument because `astro-sdk-python` automatically passes in the additional context from our original `input_table` parameter.
 
