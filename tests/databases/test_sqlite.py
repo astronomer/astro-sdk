@@ -158,7 +158,7 @@ def test_load_file_to_table(database_table_fixture):
     """Load a file to a SQL table"""
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
-    database.load_file_to_table(File(filepath), target_table)
+    database.load_file_to_table(File(filepath), target_table, {})
 
     df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
     assert len(df) == 3
