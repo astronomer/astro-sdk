@@ -1,16 +1,105 @@
 """Snowflake database implementation."""
-from typing import Dict, List, Tuple
+import logging
+import random
+import string
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from pandas.io.sql import SQLDatabase
 from snowflake.connector import pandas_tools
+from snowflake.connector.errors import ProgrammingError
 
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    FileType,
+    LoadExistStrategy,
+    MergeConflictStrategy,
+)
 from astro.databases.base import BaseDatabase
+from astro.files import File
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
+
+
+@dataclass
+class SnowflakeStage:
+    """
+    Dataclass which abstracts properties of a Snowflake Stage.
+    Snowflake Stages are used to loading tables and unloading data from tables into files. More information:
+    https://docs.snowflake.com/en/sql-reference/sql/create-stage.html
+    """
+
+    _name: str = ""
+    url: str = ""
+    metadata: Metadata = field(default_factory=Metadata)
+
+    @staticmethod
+    def _create_unique_name() -> str:
+        """
+        Generate a valid Snowflake stage name.
+
+        @return: unique stage name
+        """
+        return (
+            "stage_"
+            + random.choice(string.ascii_lowercase)
+            + "".join(
+                random.choice(string.ascii_lowercase + string.digits) for _ in range(7)
+            )
+        )
+
+    def set_url_from_file(self, file_: File) -> None:
+        """
+        Given a file to be loaded/unloaded to from Snowflake, identifies its folder and
+        sets as self.url.
+
+        It is also responsbile for adjusting any path specific requirements for Snowflake.
+
+        @param file_: File to be loaded/unloaded to from Snowflake
+        """
+        # the stage URL needs to be the folder where the files are
+        # https://docs.snowflake.com/en/sql-reference/sql/create-stage.html#external-stage-parameters-externalstageparams
+        url = file_.path[: file_.path.rfind("/") + 1]
+        self.url = url.replace("gs://", "gcs://")
+
+    @property
+    def name(self) -> str:
+        """
+        Return either the user-defined name or auto-generate one.
+
+        @return: stage name
+        """
+        if not self._name:
+            self._name = self._create_unique_name()
+        return self._name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        """
+        Set the stage name.
+
+        @param value: Stage name.
+        """
+        if not isinstance(value, property) and value != self._name:
+            self._name = value
+
+    @property
+    def qualified_name(self) -> str:
+        """
+        Return stage qualified name. In Snowflake, it is the database, schema and table
+
+        @return: Snowflake stage qualified name (e.g. database.schema.table)
+        """
+        qualified_name_lists = [
+            self.metadata.database,
+            self.metadata.schema,
+            self.name,
+        ]
+        qualified_name = ".".join(name for name in qualified_name_lists if name)
+        return qualified_name
 
 
 class SnowflakeDatabase(BaseDatabase):
@@ -20,6 +109,7 @@ class SnowflakeDatabase(BaseDatabase):
     """
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
+        self.storage_integration: Optional[str] = None
         super().__init__(conn_id)
 
     @property
@@ -56,6 +146,80 @@ class SnowflakeDatabase(BaseDatabase):
         ]
         qualified_name = ".".join(name for name in qualified_name_lists if name)
         return qualified_name
+
+    # ---------------------------------------------------------
+    # Snowflake stage methods
+    # ---------------------------------------------------------
+
+    def create_stage(
+        self, file_: File, storage_integration: str, metadata: Optional[Metadata] = None
+    ) -> SnowflakeStage:
+        """
+        Creates a new named external stage to use for loading data from files into Snowflake
+        tables and unloading data from tables into files. More information:
+        https://docs.snowflake.com/en/sql-reference/sql/create-stage.html
+
+        @param file_: File to be copied from/to using stage
+        @param storage_integration: Previously created Snowflake storage integration
+        @return: Stage created
+        """
+        if metadata is None:
+            metadata = self.default_metadata
+        stage = SnowflakeStage(metadata=metadata)
+        stage.set_url_from_file(file_)
+
+        ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP = {
+            FileType.CSV: "CSV",
+            FileType.NDJSON: "JSON",
+            FileType.PARQUET: "PARQUET",
+        }
+        COPY_OPTIONS = {
+            FileType.CSV: "ON_ERROR=CONTINUE",
+            FileType.NDJSON: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
+            FileType.PARQUET: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
+        }
+
+        file_format = ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP[file_.type.name]
+        copy_options = COPY_OPTIONS[file_.type.name]
+
+        sql_statement = (
+            f"CREATE OR REPLACE STAGE {stage.qualified_name} URL='{stage.url}' "
+            f"FILE_FORMAT=(TYPE={file_format}, TRIM_SPACE=TRUE) "
+            f"COPY_OPTIONS=({copy_options}) storage_integration = {storage_integration};"
+        )
+
+        self.run_sql(sql_statement)
+
+        return stage
+
+    def stage_exists(self, stage: SnowflakeStage) -> bool:
+        """
+        Checks if a Snowflake stage exists.
+
+        @param: SnowflakeStage instance
+        @return: True/False
+        """
+        sql_statement = f"DESCRIBE STAGE {stage.qualified_name}"
+        try:
+            self.hook.run(sql_statement)
+        except ProgrammingError:
+            msg = f"Stage '{stage.qualified_name}' does not exist or not authorized."
+            logging.error(msg)
+            return False
+        return True
+
+    def drop_stage(self, stage: SnowflakeStage) -> None:
+        """
+        Runs the snowflake query to drop stage if it exists.
+
+        @param stage: Stage to be dropped
+        """
+        sql_statement = f"DROP STAGE IF EXISTS {stage.qualified_name};"
+        self.hook.run(sql_statement, autocommit=True)
+
+    # ---------------------------------------------------------
+    # Table load methods
+    # ---------------------------------------------------------
 
     def load_pandas_dataframe_to_table(
         self,

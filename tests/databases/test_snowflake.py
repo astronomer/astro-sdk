@@ -7,9 +7,9 @@ import pytest
 import sqlalchemy
 from sqlalchemy.exc import ProgrammingError
 
-from astro.constants import Database
+from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
-from astro.databases.snowflake import SnowflakeDatabase
+from astro.databases.snowflake import SnowflakeDatabase, SnowflakeStage
 from astro.exceptions import NonExistentTableException
 from astro.files import File
 from astro.settings import SCHEMA
@@ -338,3 +338,47 @@ def test_create_table_from_select_statement(database_table_fixture):
     expected = pd.DataFrame([{"id": 1, "name": "First"}])
     test_utils.assert_dataframes_are_equal(df, expected)
     database.drop_table(target_table)
+
+
+@pytest.mark.parametrize(
+    "remote_files_fixture",
+    [
+        {"provider": "google", "filetype": FileType.CSV},
+    ],
+    indirect=True,
+    ids=["google_csv"],
+)
+def test_stage_exists_false(remote_files_fixture):
+    file_fixture = File(remote_files_fixture[0])
+    database = SnowflakeDatabase(conn_id=CUSTOM_CONN_ID)
+    stage = SnowflakeStage(
+        metadata=database.default_metadata,
+    )
+    stage.name = "inexistent-stage"
+    stage.set_url_from_file(file_fixture)
+    assert not database.stage_exists(stage)
+
+
+@pytest.mark.parametrize(
+    "remote_files_fixture",
+    [
+        {"provider": "google", "filetype": FileType.CSV},
+        {"provider": "google", "filetype": FileType.NDJSON},
+        {"provider": "google", "filetype": FileType.PARQUET},
+    ],
+    indirect=True,
+    ids=["google_csv", "google_ndjson", "google_parquet"],
+)
+def test_create_stage(remote_files_fixture):
+    file_fixture = File(remote_files_fixture[0])
+    if file_fixture.location.location_type == FileLocation.GS:
+        storage_integration = "gcs_int_python_sdk"
+    else:
+        storage_integration = "aws_int_python_sdk"
+
+    database = SnowflakeDatabase(conn_id=CUSTOM_CONN_ID)
+    stage = database.create_stage(
+        file_=file_fixture, storage_integration=storage_integration
+    )
+    assert database.stage_exists(stage)
+    database.drop_stage(stage)
