@@ -78,7 +78,9 @@ def is_dict_subset(superset: dict, subset: dict) -> bool:
     indirect=True,
     ids=["bigquery"],
 )
-def test_optimized_transfer(sample_dag, database_table_fixture, remote_files_fixture):
+def test_load_file_to_table_natively(
+    sample_dag, database_table_fixture, remote_files_fixture
+):
     """
     Verify the correct method is getting called for specific source and destination.
     """
@@ -115,11 +117,11 @@ def test_optimized_transfer(sample_dag, database_table_fixture, remote_files_fix
 
     with mock.patch(mock_path) as method:
         database = create_database(test_table.conn_id)
-        database.optimised_transfer(
+        database.load_file_to_table_natively(
             source_file=file,
             target_table=test_table,
         )
-        assert database.check_optimised_path(source_file=file, target_table=test_table)
+        assert database.check_native_path(source_file=file, target_table=test_table)
         assert method.called
         assert is_dict_subset(superset=method.call_args.kwargs, subset=expected_kwargs)
         assert method.call_args.args == expected_args
