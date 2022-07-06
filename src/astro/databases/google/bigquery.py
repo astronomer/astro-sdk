@@ -205,7 +205,7 @@ class BigqueryDatabase(BaseDatabase):
         write_disposition_val = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
 
         try:
-            project_id = getattr(self.hook, "project_id")
+            project_id = self.hook.project_id
         except AttributeError:
             raise ValueError(f"conn_id {target_table.conn_id} has no project id.")
 
