@@ -7,7 +7,7 @@ from botocore.client import BaseClient
 from google.cloud.storage import Client
 
 from astro.constants import SUPPORTED_FILE_TYPES, FileType
-from astro.files import File, get_files
+from astro.files import File, resolve_file_path_pattern
 
 sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent, "data/sample.csv")
 sample_filepaths_per_filetype = [
@@ -210,10 +210,10 @@ def test_read_with_explicit_valid_type(
         "/tmp/cklcdklscdksl/*.csv",
     ],
 )
-def test_get_files_raise_exception(invalid_path, caplog):
-    """get_files expected to fail with default 'if_file_doesnt_exist' exception strategy"""
+def test_resolve_file_path_pattern_raise_exception(invalid_path, caplog):
+    """resolve_file_path_pattern expected to fail with default 'if_file_doesnt_exist' exception strategy"""
 
     with pytest.raises(ValueError) as e:
-        _ = get_files(path_pattern=invalid_path)
+        _ = resolve_file_path_pattern(path_pattern=invalid_path)
     expected_error = f"File(s) not found for path/pattern '{invalid_path}'"
     assert expected_error in str(e.value)

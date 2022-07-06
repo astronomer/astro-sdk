@@ -36,11 +36,11 @@ class File:
 
     @property
     def path(self) -> str:
-        return self.location.path
+        return self.location.path  # type: ignore
 
     @property
     def conn_id(self) -> Optional[str]:
-        return self.location.conn_id
+        return self.location.conn_id  # type: ignore
 
     @property
     def size(self) -> int:
@@ -90,10 +90,13 @@ class File:
         )
 
     def __str__(self) -> str:
-        return self.location.path
+        return self.location.path  # type: ignore
+
+    def __eq__(self, other):
+        return self.location == other.location and self.type == other.type
 
 
-def get_files(
+def resolve_file_path_pattern(
     path_pattern: str,
     conn_id: Optional[str] = None,
     filetype: Union[FileType, None] = None,

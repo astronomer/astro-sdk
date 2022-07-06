@@ -99,7 +99,9 @@ def test_aql_load_remote_file_to_dbs(
     file_uri = remote_files_fixture[0]
 
     with sample_dag:
-        load_file(input_file=File(file_uri), output_table=test_table)
+        load_file(
+            input_file=File(file_uri), output_table=test_table, use_native_support=False
+        )
     test_utils.run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
@@ -145,7 +147,7 @@ def test_aql_replace_existing_table(sample_dag, database_table_fixture):
     with sample_dag:
         task_1 = load_file(input_file=File(data_path_1), output_table=test_table)
         task_2 = load_file(input_file=File(data_path_2), output_table=test_table)
-        task_1 >> task_2
+        task_1 >> task_2  # skipcq: PYL-W0104
     test_utils.run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
@@ -716,3 +718,126 @@ def test_load_file_should_fail_loudly(sample_dag, invalid_path, caplog):
         test_utils.run_dag(sample_dag)
     expected_error = f"File(s) not found for path/pattern '{invalid_path}'"
     assert expected_error in caplog.text
+
+
+def is_dict_subset(superset: dict, subset: dict) -> bool:
+    """
+    Compare superset and subset to check if the latter is a subset of former.
+    Note: dict1 <= dict2 was not working on multilevel nested dicts.
+    """
+    for key, val in subset.items():
+        print(key, val)
+        if isinstance(val, dict):
+            if key not in superset:
+                return False
+            result = is_dict_subset(superset[key], subset[key])
+            if not result:
+                return False
+        elif superset[key] != val:
+            return False
+    return True
+
+
+@pytest.mark.parametrize(
+    "remote_files_fixture",
+    [{"provider": "google"}],
+    indirect=True,
+    ids=["google_gcs"],
+)
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [{"database": Database.BIGQUERY, "table": Table(conn_id="bigquery")}],
+    indirect=True,
+    ids=["bigquery"],
+)
+def test_aql_load_file_optimized_path_method_called(
+    sample_dag, database_table_fixture, remote_files_fixture
+):
+    """
+    Verify the correct method is getting called for specific source and destination.
+    """
+    db, test_table = database_table_fixture
+    file_uri = remote_files_fixture[0]
+
+    # (source, destination) : {
+    #   method_path: where source is file source path and destination is database
+    # and method_path is the path to method
+    #   expected_kwargs: subset of all the kwargs that are passed to method mentioned in the method_path
+    #   expected_args:  List of all the args that are passed to method mentioned in the method_path
+    # }
+    file = File(file_uri)
+    optimised_path_to_method = {
+        ("gs", "bigquery",): {
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.gs_to_bigquery",
+            "expected_kwargs": {
+                "source_file": file,
+                "target_table": test_table,
+            },
+            "expected_args": (),
+        }
+    }
+
+    source = file_uri.split(":")[0]
+    destination = db.sql_type
+    mock_path = optimised_path_to_method[(source, destination)]["method_path"]
+    expected_kwargs = optimised_path_to_method[(source, destination)]["expected_kwargs"]
+    expected_args = optimised_path_to_method[(source, destination)]["expected_args"]
+
+    with mock.patch(mock_path) as method:
+        load_file(
+            input_file=file,
+            output_table=test_table,
+        ).operator.execute({})
+        assert method.called
+        assert is_dict_subset(superset=method.call_args.kwargs, subset=expected_kwargs)
+        assert method.call_args.args == expected_args
+
+
+@pytest.mark.parametrize(
+    "remote_files_fixture",
+    [{"provider": "google"}],
+    indirect=True,
+    ids=["google_gcs"],
+)
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+        }
+    ],
+    indirect=True,
+    ids=["bigquery"],
+)
+def test_aql_load_file_optimized_path_method_is_not_called(
+    sample_dag, database_table_fixture, remote_files_fixture
+):
+    """
+    Verify that the optimised path method is skipped in case use_native_support is set to False.
+    """
+    db, test_table = database_table_fixture
+    file_uri = remote_files_fixture[0]
+
+    # (source, destination) : {
+    #   method_path: where source is file source path and destination is database
+    # and method_path is the path to method
+    #   expected_kwargs: subset of all the kwargs that are passed to method mentioned in the method_path
+    #   expected_args:  List of all the args that are passed to method mentioned in the method_path
+    # }
+    optimised_path_to_method = {
+        ("gs", "bigquery",): {
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.gs_to_bigquery",
+        }
+    }
+
+    source = file_uri.split(":")[0]
+    destination = db.sql_type
+    mock_path = optimised_path_to_method[(source, destination)]["method_path"]
+
+    with mock.patch(mock_path) as method:
+        load_file(
+            input_file=File(file_uri),
+            output_table=test_table,
+            use_native_support=False,
+        ).operator.execute({})
+        assert not method.called

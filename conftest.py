@@ -144,7 +144,7 @@ def database_table_fixture(request):
 
     database.drop_table(table)
     if file:
-        database.load_file_to_table(file, table)
+        database.load_file_to_table(file, table, {})
     yield database, table
 
     database.drop_table(table)
@@ -176,7 +176,7 @@ def multiple_tables_fixture(request, database_table_fixture):
         file = item.get("file", None)
         database.drop_table(table)
         if file:
-            database.load_file_to_table(file, table)
+            database.load_file_to_table(file, table, {})
         tables_list.append(table)
 
     yield tables_list if len(tables_list) > 1 else tables_list[0]

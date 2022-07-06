@@ -41,3 +41,6 @@ class FileType(ABC):
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}(path="{self.path}")'
+
+    def __eq__(self, other):
+        return self.name == other.name

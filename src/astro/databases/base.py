@@ -16,7 +16,7 @@ from astro.constants import (
     MergeConflictStrategy,
 )
 from astro.exceptions import NonExistentTableException
-from astro.files import File
+from astro.files import File, resolve_file_path_pattern
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
 
@@ -206,29 +206,54 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
     # Table load methods
     # ---------------------------------------------------------
+
     def load_file_to_table(
         self,
-        source_file: File,
-        target_table: Table,
+        input_file: File,
+        output_table: Table,
+        normalize_config: Dict,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
-    ) -> None:
+        use_native_support: bool = True,
+        **kwargs,
+    ):
         """
-        Load the content of the source file to the target database table.
-        If the table already exists, append or replace the content, depending on the value of `if_exists`.
+        Load content of multiple files in output_table.
+        Multiple files are sourced from the file path, which can also be path pattern.
 
-        :param source_file: Local or remote filepath (e.g. a File("/tmp/sample_data.csv"))
-        :param target_table: Table in which the file will be loaded
-        :param if_exists: Strategy to be used in case the target table already exists
-        :param chunk_size: Specify the number of rows in each batch to be written at a time.
+        :param input_file: File path and conn_id for object stores
+        :param output_table: Table to create
+        :param if_exists: Overwrite file if exists
+        :param chunk_size: Specify the number of records in each batch to be written at a time
+        :param use_native_support: Use native support for data transfer if available on the destination
+        :param normalize_config: pandas json_normalize params config.
         """
-        dataframe = source_file.export_to_dataframe()
-        self.load_pandas_dataframe_to_table(
-            dataframe,
-            target_table,
-            if_exists,
-            chunk_size,
+        input_files = resolve_file_path_pattern(
+            input_file.path,
+            input_file.conn_id,
+            normalize_config=normalize_config,
         )
+        for file in input_files:
+            if use_native_support and self.check_native_path(
+                source_file=file, target_table=output_table
+            ):
+                self.load_file_to_table_natively(
+                    source_file=file,
+                    target_table=output_table,
+                    if_exists=if_exists,
+                    **kwargs,
+                )
+            else:
+                dataframe = file.export_to_dataframe()
+                self.load_pandas_dataframe_to_table(
+                    dataframe,
+                    output_table,
+                    if_exists,
+                    chunk_size,
+                )
+            # Since data from any file post the first one, needs to go to same table
+            # we append data to previously created table.
+            if_exists = "append"
 
     def load_pandas_dataframe_to_table(
         self,
@@ -419,3 +444,27 @@ class BaseDatabase(ABC):
             self.get_table_qualified_name(table),
             self.get_table_qualified_name(table),
         )
+
+    def check_native_path(  # skipcq: PYL-R0201
+        self, source_file: File, target_table: Table  # skipcq: PYL-W0613
+    ) -> bool:
+        """
+        Check if there is an optimised path for source to destination.
+
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table that needs to be populated with file data
+        """
+        return False
+
+    def load_file_to_table_natively(
+        self,
+        source_file: File,
+        target_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+        **kwargs,
+    ):
+        """
+        Checks if optimised path for transfer between File location to database exists
+        and if it does, it transfers it and returns true else false.
+        """
+        raise NotImplementedError

@@ -8,8 +8,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
 from astro import settings
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    FileLocation,
+    FileType,
+    LoadExistStrategy,
+    MergeConflictStrategy,
+)
 from astro.databases.base import BaseDatabase
+from astro.files import File
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = BigQueryHook.default_conn_name
@@ -20,6 +27,13 @@ class BigqueryDatabase(BaseDatabase):
     Handle interactions with Bigquery databases. If this class is successful, we should not have any Bigquery-specific
     logic in other parts of our code-base.
     """
+
+    NATIVE_PATHS = {FileLocation.GS: "gs_to_bigquery"}
+    NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
+        FileType.CSV: "CSV",
+        FileType.NDJSON: "NEWLINE_DELIMITED_JSON",
+        FileType.PARQUET: "PARQUET",
+    }
 
     illegal_column_name_chars: List[str] = ["."]
     illegal_column_name_chars_replacement: List[str] = ["_"]
@@ -135,3 +149,90 @@ class BigqueryDatabase(BaseDatabase):
             )
             statement += f" WHEN MATCHED THEN {update_statement}"
         self.run_sql(sql_statement=statement)
+
+    def check_native_path(self, source_file: File, target_table: Table) -> bool:
+        """
+        Check if there is an optimised path for source to destination.
+
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table that needs to be populated with file data
+        """
+        file_type = self.NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
+        location_type = self.NATIVE_PATHS.get(source_file.location.location_type)
+        return bool(location_type and file_type)
+
+    def load_file_to_table_natively(
+        self,
+        source_file: File,
+        target_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+        **kwargs,
+    ):
+        """
+        Checks if optimised path for transfer between File location to database exists
+        and if it does, it transfers it and returns true else false.
+        """
+        method_name = self.NATIVE_PATHS.get(source_file.location.location_type)
+        if method_name:
+            transfer_method = self.__getattribute__(method_name)
+            transfer_method(
+                source_file=source_file,
+                target_table=target_table,
+                if_exists=if_exists,
+                **kwargs,
+            )
+        else:
+            raise ValueError(
+                f"No transfer performed since there is no optimised path "
+                f"for {source_file.location.location_type} to bigquery."
+            )
+
+    def gs_to_bigquery(
+        self,
+        source_file: File,
+        target_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+        **kwargs,
+    ) -> None:
+        """
+        Transfer data from gcs to bigquery
+
+        :param source_file: Source file that is used as source of data
+        :param target_table: Table that will be created on the bigquery
+        :param if_exists: Overwrite table if exists. Default 'replace'
+        """
+
+        write_disposition_val = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
+
+        try:
+            project_id = self.hook.project_id
+        except AttributeError:
+            raise ValueError(f"conn_id {target_table.conn_id} has no project id.")
+
+        load_job_config = {
+            "sourceUris": [source_file.path],
+            "destinationTable": {
+                "projectId": project_id,
+                "datasetId": target_table.metadata.schema,
+                "tableId": target_table.name,
+            },
+            "createDisposition": "CREATE_IF_NEEDED",
+            "writeDisposition": write_disposition_val[if_exists],
+            "sourceFormat": self.NATIVE_PATHS_SUPPORTED_FILE_TYPES[
+                source_file.type.name
+            ],
+            "autodetect": True,
+        }
+
+        # Since bigquery has other options besides used here, we need to expose them to end user.
+        # https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#JobConfigurationLoad
+        load_job_config.update(kwargs)
+
+        job_config = {
+            "jobType": "LOAD",
+            "load": load_job_config,
+            "labels": {"target_table": target_table.name},
+        }
+        self.hook.insert_job(
+            configuration=job_config,
+        )

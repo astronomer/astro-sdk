@@ -31,8 +31,9 @@ connections:
   - conn_id: bigquery
     conn_type: bigquery
     description: null
-    extra: null
-    host: "astronomer-dag-authoring"
+    extra:
+      project: "astronomer-dag-authoring"
+    host: null
     login: null
     password: null
     port: null
