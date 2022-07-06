@@ -55,7 +55,6 @@ def create_dag(database_name, table_args, dataset):
 
         @task(trigger_rule="all_done")
         def delete_table(table_metadata):
-            print("table_metadata : ", table_metadata)
             db = create_database(table_metadata.conn_id)
             db.drop_table(table_metadata)
 
