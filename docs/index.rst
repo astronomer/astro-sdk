@@ -8,12 +8,34 @@ Welcome to astro-sdk's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Getting Started With Astro SDK:
    :glob:
 
-   aep/*
+   getting-started/*
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Developing Astro SDK
+   :glob:
+
+   development/*
+
+   Astro Enhancement Proposals <aep/index>
+
+.. toctree::
+   :maxdepth: 1
+   :caption: API Reference
+   :glob:
+
    autoapi/*
-   *
+
+.. toctree::
+   :maxdepth: 1
+   :caption: CHANGELOG
+   :glob:
+
+   CHANGELOG.md
+
 
 Indices and Tables
 ==================
