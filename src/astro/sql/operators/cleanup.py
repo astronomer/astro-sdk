@@ -11,7 +11,7 @@ from airflow.utils.context import Context
 from airflow.utils.state import State
 
 from astro.databases import create_database
-from astro.sql.operators.base import BaseSQLDecoratorOperator
+from astro.sql.operators.base_decorator import BaseSQLDecoratorOperator
 from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.load_file import LoadFile
 from astro.sql.table import Table

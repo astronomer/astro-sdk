@@ -1,6 +1,6 @@
 from typing import Dict
 
-from astro.sql.operators.base import BaseSQLDecoratorOperator
+from astro.sql.operators.base_decorator import BaseSQLDecoratorOperator
 
 
 class TransformOperator(BaseSQLDecoratorOperator):
