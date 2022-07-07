@@ -53,7 +53,7 @@ def create_dag(database_name, table_args, dataset):
         else:
             table = Table(**table_args)
 
-        aql.load_file(  # noqa: F841
+        my_table = aql.load_file(  # noqa: F841
             input_file=File(
                 path=dataset_path,
                 conn_id=dataset_conn_id,
@@ -63,7 +63,7 @@ def create_dag(database_name, table_args, dataset):
             output_table=table,
             chunk_size=chunk_size,
         )
-        aql.truncate(table)
+        aql.truncate(my_table)
 
         # Todo: Check is broken so the following code is commented out, uncomment when fixed
         # aggregate_check(
