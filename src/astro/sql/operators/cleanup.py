@@ -11,7 +11,7 @@ from airflow.utils.context import Context
 from airflow.utils.state import State
 
 from astro.databases import create_database
-from astro.sql.operators.base import BaseSQLOperator
+from astro.sql.operators.base import BaseSQLDecoratorOperator
 from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.load_file import LoadFile
 from astro.sql.table import Table
@@ -191,7 +191,9 @@ class CleanupOperator(BaseOperator):
         """
         res = []
         for task in tasks:
-            if isinstance(task, (DataframeOperator, BaseSQLOperator, LoadFile)):
+            if isinstance(
+                task, (DataframeOperator, BaseSQLDecoratorOperator, LoadFile)
+            ):
                 try:
                     t = task.output.resolve(context)
                     if isinstance(t, Table):

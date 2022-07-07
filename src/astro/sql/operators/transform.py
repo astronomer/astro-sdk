@@ -1,9 +1,9 @@
 from typing import Dict
 
-from astro.sql.operators.base import BaseSQLOperator
+from astro.sql.operators.base import BaseSQLDecoratorOperator
 
 
-class TransformOperator(BaseSQLOperator):
+class TransformOperator(BaseSQLDecoratorOperator):
     """
     Given a SQL statement and (optional) tables, execute the SQL statement and output
     the result into a SQL table.

@@ -1,9 +1,9 @@
 from typing import Any, Dict
 
-from astro.sql.operators.base import BaseSQLOperator
+from astro.sql.operators.base import BaseSQLDecoratorOperator
 
 
-class RawSQLOperator(BaseSQLOperator):
+class RawSQLOperator(BaseSQLDecoratorOperator):
     """
     Given a SQL statement, (optional) tables and a (optional) function, execute the SQL statement
     and apply the function to the results, returning the result of the function.
