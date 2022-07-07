@@ -4,7 +4,7 @@
    contain the root ``toctree`` directive.
 
 Astro Enhancement Proposals
-==========================
+===========================
 
 .. toctree::
     :maxdepth: 2
