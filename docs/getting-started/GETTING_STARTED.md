@@ -69,7 +69,7 @@ create schema ASTRO_SDK_SCHEMA;
 Then, in the classic Snowflake console in the upper right, select the role, warehouse, database and schema
 to look like this:
 
-![classic-console](images/snowflake-classic-console.png)
+![classic-console](../images/snowflake-classic-console.png)
 
 Note that you can set the warehouse, database, and schema names to something else, but you'll just
 need to be consistent with whatever names you choose throughout the remainder of this tutorial.
@@ -103,7 +103,7 @@ at [`http://localhost:8080/`](http://localhost:8080/).
 
 * In your Astronomer Airflow UI select Admin-->Connectors
 
-![connections](images/airflow-webserver-connection.png)
+![connections](../images/airflow-webserver-connection.png)
 
 
 ### Connect S3 to Airflow
@@ -257,15 +257,15 @@ with dag:
 # Run it!
 
 In your Airflow UI's home page, you should see a DAG called astro_orders. Toggle the DAG to unpause it:
-![toggle](images/unpause-dag.png)
+![toggle](../images/unpause-dag.png)
 
 
 Then, trigger it to run it:
-![trigger](images/trigger-dag.png)
+![trigger](../images/trigger-dag.png)
 
 
 Click on the astro_orders DAG name to see the grid view of its execution:
-![gridview](images/select-dag-grid-view.png)
+![gridview](../images/select-dag-grid-view.png)
 
 ***
 # Walk through the code
@@ -356,7 +356,7 @@ def transform_dataframe(df: DataFrame):
 
 
 After all that, you'll find the meager output of this example in the logs of the final task:
-![log](images/task-logs.png)
+![log](../images/task-logs.png)
 
 To view this log output, in the tree view of the DAG, click on the green box next to
 `transform_dataframe` and then on "Log" button.
