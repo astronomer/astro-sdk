@@ -84,3 +84,15 @@ The benchmark was run as a Kubernetes job in GKE:
 | snowflake  | one_gb     | 4.96min      | 57.3MB       | 14.21s          | 1.16s             |
 | snowflake  | five_gb    | 24.46min     | 97.85MB      | 1.43min         | 5.94s             |
 | snowflake  | ten_gb     | 50.85min     | 104.53MB     | 2.7min          | 12.11s            |
+
+### Database: postgres
+
+| database                | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
+|:------------------------|:-----------|:-------------|:-------------|:----------------|:------------------|
+| postgres_conn_benchmark | few_kb     | 494.42ms     | 36.06MB      | 570.0ms         | 50.0ms            |
+| postgres_conn_benchmark | ten_kb     | 689.05ms     | 42.96MB      | 540.0ms         | 40.0ms            |
+| postgres_conn_benchmark | hundred_kb | 580.7ms      | 36.43MB      | 570.0ms         | 50.0ms            |
+| postgres_conn_benchmark | ten_mb     | 44.67s       | 1.38GB       | 31.03s          | 4.03s             |
+| postgres_conn_benchmark | one_gb     | 5.56min      | 62.5MB       | 14.07s          | 1.14s             |
+| postgres_conn_benchmark | five_gb    | 24.44min     | 78.15MB      | 1.34min         | 5.73s             |
+| postgres_conn_benchmark | ten_gb     | 45.64min     | 61.71MB      | 2.37min         | 11.48s            |
