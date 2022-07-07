@@ -1,30 +1,19 @@
 {
   "databases": [
     {
-      "name": "bigquery",
+      "name": "snowflake",
       "params": {
-        "conn_id": "bigquery",
-        "metadata": {
-          "database": "bigquery"
-        }
+        "conn_id": "snowflake_conn"
       }
     }
   ],
   "datasets": [
     {
       "conn_id": "bigquery",
-      "file_type": "csv",
-      "name": "few_kb",
-      "path": "gs://astro-sdk/benchmark/original/covid_overview/covid_overview.csv",
-      "rows": 732,
-      "size": "45K"
-    },
-    {
-      "conn_id": "bigquery",
       "file_type": "parquet",
       "name": "ten_kb",
       "path": "gs://astro-sdk/benchmark/trimmed/covid_overview/covid_overview_10kb.parquet",
-      "rows": 385817,
+      "rows": 160,
       "size": "10 KB"
     },
     {
@@ -32,7 +21,7 @@
       "file_type": "csv",
       "name": "hundred_kb",
       "path": "gs://astro-sdk/benchmark/trimmed/tate_britain/artist_data_100kb.csv",
-      "rows": 385817,
+      "rows": 748,
       "size": "100 KB"
     },
     {
@@ -40,15 +29,15 @@
       "file_type": "csv",
       "name": "ten_mb",
       "path": "gs://astro-sdk/benchmark/trimmed/imdb/title_ratings_10mb.csv",
-      "rows": 385817,
-      "size": "9.9M"
+      "rows": 600000,
+      "size": "10M"
     },
     {
       "conn_id": "bigquery",
       "file_type": "ndjson",
       "name": "one_gb",
       "path": "gs://astro-sdk/benchmark/trimmed/stackoverflow/stackoverflow_posts_1g.ndjson",
-      "rows": 385817,
+      "rows": 940000,
       "size": "1G"
     },
     {
@@ -56,7 +45,7 @@
       "file_type": "ndjson",
       "name": "five_gb",
       "path": "gs://astro-sdk/benchmark/trimmed/pypi/",
-      "rows": 385817,
+      "rows": 7530243,
       "size": "5G"
     },
     {
@@ -64,7 +53,7 @@
       "file_type": "ndjson",
       "name": "ten_gb",
       "path": "gs://astro-sdk/benchmark/trimmed/github/github-archive/",
-      "rows": 385817,
+      "rows": 1263685,
       "size": "10G"
     }
   ]
