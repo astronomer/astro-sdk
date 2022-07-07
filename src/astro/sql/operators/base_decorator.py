@@ -12,7 +12,7 @@ from astro.sql.table import Table
 from astro.utils.table import find_first_table
 
 
-class BaseSQLOperator(DecoratedOperator):
+class BaseSQLDecoratedOperator(DecoratedOperator):
     """Handles all decorator classes that can return a SQL function"""
 
     database_impl: BaseDatabase
