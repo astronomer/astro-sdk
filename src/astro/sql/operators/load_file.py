@@ -6,7 +6,7 @@ from airflow.models.xcom_arg import XComArg
 
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 from astro.databases import BaseDatabase, create_database
-from astro.files import File, check_if_connection_exists, get_files
+from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.table import Table
 from astro.utils.task_id_helper import get_task_id
 
@@ -19,6 +19,7 @@ class LoadFile(BaseOperator):
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
     :param chunk_size: Specify the number of records in each batch to be written at a time.
     :param if_exists: Overwrite file if exists. Default False.
+    :param use_native_support: Use native support for data transfer if available on the destination.
 
     :return: If ``output_table`` is passed this operator returns a Table object. If not
         passed, returns a dataframe.
@@ -33,6 +34,7 @@ class LoadFile(BaseOperator):
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         if_exists: LoadExistStrategy = "replace",
         ndjson_normalize_sep: str = "_",
+        use_native_support: bool = True,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -43,6 +45,7 @@ class LoadFile(BaseOperator):
         self.if_exists = if_exists
         self.ndjson_normalize_sep = ndjson_normalize_sep
         self.normalize_config: Dict[str, str] = {}
+        self.use_native_support = use_native_support
 
     def execute(self, context: Any) -> Union[Table, pd.DataFrame]:  # skipcq: PYL-W0613
         """
@@ -72,23 +75,18 @@ class LoadFile(BaseOperator):
             )
         database = create_database(self.output_table.conn_id)
         self.output_table = database.populate_table_metadata(self.output_table)
-        self.normalize_config = self._populate_normalize_config(
+        normalize_config = self._populate_normalize_config(
             ndjson_normalize_sep=self.ndjson_normalize_sep,
             database=database,
         )
-        if_exists = self.if_exists
-        for file in get_files(
-            input_file.path,
-            input_file.conn_id,
-            normalize_config=self.normalize_config,
-        ):
-            database.load_pandas_dataframe_to_table(
-                source_dataframe=file.export_to_dataframe(),
-                target_table=self.output_table,
-                if_exists=if_exists,
-                chunk_size=self.chunk_size,
-            )
-            if_exists = "append"
+        database.load_file_to_table(
+            input_file=input_file,
+            normalize_config=normalize_config,
+            output_table=self.output_table,
+            if_exists=self.if_exists,
+            chunk_size=self.chunk_size,
+            use_native_support=self.use_native_support,
+        )
         self.log.info("Completed loading the data into %s.", self.output_table)
         return self.output_table
 
@@ -98,7 +96,7 @@ class LoadFile(BaseOperator):
         SQL table was specified
         """
         df = None
-        for file in get_files(
+        for file in resolve_file_path_pattern(
             input_file.path,
             input_file.conn_id,
         ):
@@ -158,6 +156,7 @@ def load_file(
     task_id: Optional[str] = None,
     if_exists: LoadExistStrategy = "replace",
     ndjson_normalize_sep: str = "_",
+    use_native_support: bool = True,
     **kwargs: Any,
 ) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.
@@ -168,6 +167,7 @@ def load_file(
     :param if_exists: default override an existing Table. Options: fail, replace, append
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
         ex - ``{"a": {"b":"c"}}`` will result in: ``column - "a_b"`` where ``ndjson_normalize_sep = "_"``
+    :param use_native_support: Use native support for data transfer if available on the destination.
     """
 
     # Note - using path for task id is causing issues as it's a pattern and
@@ -180,5 +180,6 @@ def load_file(
         output_table=output_table,
         if_exists=if_exists,
         ndjson_normalize_sep=ndjson_normalize_sep,
+        use_native_support=use_native_support,
         **kwargs,
     ).output

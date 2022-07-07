@@ -2,6 +2,9 @@
 
 This section contains tooling, which helps evaluate how long **astro** tasks take and how much computation resources they consume, given one or multiple datasets.
 
+For current benchmark results, please, access (benchmark results)[./results.md].
+
+
 ## How to run
 
 ## Requirements
@@ -127,7 +130,7 @@ This is an example of the content of `/tmp/results-2022-02-10T14:36:09.ndjson`:
 
 ### Locally, using a container
 
-Build a docker container and attempt to run it, using the `config-docker.json` file.
+Build a docker container and attempt to run it, using the `config.json` file.
 
 Requirements:
 * A GCP account
@@ -195,18 +198,11 @@ If there are multiple runs, it calculates the mean/average per (database/dataset
 
 It exports the results in markdown tables, using stdout.
 
-This is an example running the benchmark for the astro `78805a` revision and chunk size size `1,000,000`:
+This is an example running the benchmark for the astro-sdk-python `78805a` revision (before the 0.7.0 release) and
+chunk size size `1,000,000`:
 * Ubuntu 20.04.3 LTS
 * CPU: 8-Core 11th Gen Intel Core i7-11800H
 * Memory: 64 GiB
-
-### Database: bigquery
-
-| database   | dataset   | total_time   | memory_rss   | memory_shared   | memory_pss   | cpu_time_user   | cpu_time_system   |
-|:-----------|:----------|:-------------|:-------------|:----------------|:-------------|:----------------|:------------------|
-| bigquery   | few_kb    | 11.28s       | 120.73MB     | 40.91MB         | 118.02MB     | 3.5s            | 1.63s             |
-| bigquery   | many_kb   | 18.57s       | 122.39MB     | 40.68MB         | 119.74MB     | 3.55s           | 1.58s             |
-| bigquery   | few_mb    | 42.99min     | 140.99MB     | 40.94MB         | 138.21MB     | 20.07s          | 2.27s             |
 
 ### Database: postgres
 
@@ -220,11 +216,4 @@ This is an example running the benchmark for the astro `78805a` revision and chu
 | postgres_conn_benchmark | five_gb    | 24.44min     | 78.15MB      | 1.34min         | 5.73s             |
 | postgres_conn_benchmark | ten_gb     | 45.64min     | 61.71MB      | 2.37min         | 11.48s            |
 
-### Database: snowflake
-
-| database   | dataset   | total_time   | memory_rss   | memory_shared   | memory_pss   | cpu_time_user   | cpu_time_system   |
-|:-----------|:----------|:-------------|:-------------|:----------------|:-------------|:----------------|:------------------|
-| snowflake  | few_kb    | 14.28s       | 136.06MB     | 50.39MB         | 132.96MB     | 3.12s           | 1.48s             |
-| snowflake  | many_kb   | 12.42s       | 138.83MB     | 50.22MB         | 135.85MB     | 3.17s           | 1.48s             |
-|
-| snowflake  | few_mb    | 7.21min      | 264.67MB     | 50.2MB          | 261.61MB     | 25.95s          | 3.27s             |
+The latest results can be found at (results.md)[./results.md].

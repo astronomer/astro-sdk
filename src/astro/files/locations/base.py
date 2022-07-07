@@ -123,3 +123,6 @@ class BaseFileLocation(ABC):
     def __str__(self):
         """String representation of location"""
         return self.path
+
+    def __eq__(self, other):
+        return self.path == other.path and self.conn_id == other.conn_id
