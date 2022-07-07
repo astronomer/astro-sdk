@@ -204,16 +204,4 @@ chunk size size `1,000,000`:
 * CPU: 8-Core 11th Gen Intel Core i7-11800H
 * Memory: 64 GiB
 
-### Database: postgres
-
-| database                | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
-|:------------------------|:-----------|:-------------|:-------------|:----------------|:------------------|
-| postgres_conn_benchmark | few_kb     | 494.42ms     | 36.06MB      | 570.0ms         | 50.0ms            |
-| postgres_conn_benchmark | ten_kb     | 689.05ms     | 42.96MB      | 540.0ms         | 40.0ms            |
-| postgres_conn_benchmark | hundred_kb | 580.7ms      | 36.43MB      | 570.0ms         | 50.0ms            |
-| postgres_conn_benchmark | ten_mb     | 44.67s       | 1.38GB       | 31.03s          | 4.03s             |
-| postgres_conn_benchmark | one_gb     | 5.56min      | 62.5MB       | 14.07s          | 1.14s             |
-| postgres_conn_benchmark | five_gb    | 24.44min     | 78.15MB      | 1.34min         | 5.73s             |
-| postgres_conn_benchmark | ten_gb     | 45.64min     | 61.71MB      | 2.37min         | 11.48s            |
-
 The latest results can be found at (results.md)[./results.md].
