@@ -204,11 +204,4 @@ chunk size size `1,000,000`:
 * CPU: 8-Core 11th Gen Intel Core i7-11800H
 * Memory: 64 GiB
 
-### Database: postgres
-
-| database   | dataset   | total_time   | memory_rss   | memory_shared   | memory_pss   | cpu_time_user   | cpu_time_system   |
-|:-----------|:----------|:-------------|:-------------|:----------------|:-------------|:----------------|:------------------|
-| postgres   | few_kb    | 1.73s        | 125.62MB     | 41.89MB         | 122.95MB     | 1.95s           | 1.4s              |
-| postgres   | many_kb   | 2.24s        | 138.5MB      | 41.78MB         | 135.95MB     | 2.4s            | 1.38s             |
-
 The latest results can be found at (results.md)[./results.md].

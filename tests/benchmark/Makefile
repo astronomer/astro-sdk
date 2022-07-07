@@ -49,6 +49,8 @@ local: check_google_credentials
 run_job: check_google_credentials
 	@gcloud container clusters get-credentials astro-sdk --zone us-central1-a --project ${GCP_PROJECT}
 	@kubectl apply -f infrastructure/kubernetes/namespace.yaml
+	@kubectl apply -f infrastructure/kubernetes/postgres.yaml
+	@kubectl apply -f infrastructure/kubernetes/postgres_svc.yaml
 	@kubectl create -f infrastructure/kubernetes/job.yaml
 
 # Takes approximately 2min
