@@ -2,7 +2,7 @@
 
 ## Updating the changelog
 
-The first step to creating a release is identifying what changed from the previous release and adding a description to the [CHANGELOG.md](./CHANGELOG.md)
+The first step to creating a release is identifying what changed from the previous release and adding a description to the [CHANGELOG.md](../CHANGELOG.md)
 
 ## Handling patch releases
 
