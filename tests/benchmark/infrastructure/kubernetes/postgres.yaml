@@ -32,16 +32,3 @@ spec:
         - hostPath:
             path: "/home/docker/pgdata"
           name: mendix-pgdata
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: postgres
-  namespace: benchmark
-spec:
-  selector:
-    service: postgres
-  ports:
-    - protocol: TCP
-      port: 5432
-      targetPort: 5432
