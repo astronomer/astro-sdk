@@ -1,10 +1,17 @@
+import os
 from typing import Any, Dict, Optional, Union
 
 import pandas as pd
+from airflow.configuration import conf
+from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    LOAD_DATAFRAME_ERROR_MESSAGE,
+    LoadExistStrategy,
+)
 from astro.databases import BaseDatabase, create_database
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.table import Table
@@ -62,6 +69,12 @@ class LoadFile(BaseOperator):
         if self.output_table:
             return self.load_data_to_table(input_file)
         else:
+            if conf.get(
+                "core", "xcom_backend"
+            ) == "airflow.models.xcom.BaseXCom" and not os.getenv(
+                "ASTRO__DATAFRAME__ALLOW_UNSAFE_STORAGE", False
+            ):
+                raise AirflowException(LOAD_DATAFRAME_ERROR_MESSAGE)
             return self.load_data_to_dataframe(input_file)
 
     def load_data_to_table(self, input_file: File) -> Table:
