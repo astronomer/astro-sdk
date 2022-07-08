@@ -841,3 +841,35 @@ def test_aql_load_file_optimized_path_method_is_not_called(
             use_native_support=False,
         ).operator.execute({})
         assert not method.called
+
+
+@pytest.mark.parametrize(
+    "remote_files_fixture",
+    [{"provider": "amazon"}],
+    indirect=True,
+    ids=["amazon_S3"],
+)
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+        }
+    ],
+    indirect=True,
+    ids=["Bigquery"],
+)
+def test_aql_load_file_optimized_path_method_is_not_called_1(
+    sample_dag, database_table_fixture, remote_files_fixture
+):
+    """
+    Verify that the optimised path method is skipped in case use_native_support is set to False.
+    """
+    db, test_table = database_table_fixture
+    file_uri = remote_files_fixture[0]
+
+    load_file(
+        input_file=File(file_uri),
+        output_table=test_table,
+        use_native_support=True,
+    ).operator.execute({})

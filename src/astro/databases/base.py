@@ -37,7 +37,7 @@ class BaseDatabase(ABC):
     _create_schema_statement: str = "CREATE SCHEMA IF NOT EXISTS {}"
     _drop_table_statement: str = "DROP TABLE IF EXISTS {}"
     _create_table_statement: str = "CREATE TABLE IF NOT EXISTS {} AS {}"
-
+    _truncate_table_statement: str = "TRUNCATE TABLE {}"
     # Used to normalize the ndjson when appending fields in nested fields.
     # Example -
     #   ndjson - {'a': {'b': 'val'}}
@@ -199,6 +199,17 @@ class BaseDatabase(ABC):
         :param table: The table to be deleted.
         """
         statement = self._drop_table_statement.format(
+            self.get_table_qualified_name(table)
+        )
+        self.run_sql(statement)
+
+    def truncate_table(self, table: Table) -> None:
+        """
+        Delete a SQL table, if it exists.
+
+        :param table: The table to be deleted.
+        """
+        statement = self._truncate_table_statement.format(
             self.get_table_qualified_name(table)
         )
         self.run_sql(statement)
