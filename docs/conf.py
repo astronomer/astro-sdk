@@ -15,13 +15,14 @@
 # sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
+from astro import __version__
 
 project = "astro-sdk"
 copyright = "2022, Astronomer inc."  # noqa
 author = "Astronomer inc."
 
 # The full version, including alpha/beta/rc tags
-release = "0.10.0"
+release = __version__
 
 # -- General configuration ---------------------------------------------------
 

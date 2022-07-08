@@ -28,7 +28,6 @@ def transform(
     parameters: Optional[Union[Mapping, Iterable]] = None,
     database: Optional[str] = None,
     schema: Optional[str] = None,
-    handler: Optional[Callable] = None,
     **kwargs: Any,
 ) -> TaskDecorator:
     """
@@ -47,13 +46,26 @@ def transform(
     objects into tables (if they are, for example, a dataframe). Any type besides table will lead astro to assume
     you do not want the parameter converted.
 
+    You can also pass parameters into the query like so
+
+     .. code-block:: python
+
+      @transform
+      def my_sql_statement(table1: Table, table2: Table, execution_date) -> Table:
+          return "SELECT * FROM {{table1}} JOIN {{table2}} WHERE date > {{exec_date}}", {
+              "exec_date": execution_date
+          }
+
     :param python_callable:
     :param multiple_outputs:
-    :param conn_id:
-    :param parameters:
-    :param database:
-    :param schema:
-    :param handler:
+    :param conn_id: Connection ID for the database you want to connect to. If you do not pass in a value for this object
+    we can infer the connection ID from the first table passed into the python_callable function.
+    (required if there are no table arguments)
+    :param parameters: parameters to pass into the SQL query
+    :param database: Database within the SQL instance you want to access. If left blank we will default to the
+    table.metatadata.database in the first Table passed to the function (required if there are no table arguments)
+    :param schema: Schema within the SQL instance you want to access. If left blank we will default to the
+    table.metatadata.schema in the first Table passed to the function (required if there are no table arguments)
     :param kwargs:
     :return: Transform functions return a ``Table`` object that can be passed to future tasks.
         This table will be either an auto-generated temporary table,
@@ -66,7 +78,7 @@ def transform(
             "parameters": parameters,
             "database": database,
             "schema": schema,
-            "handler": handler,
+            "handler": None,
         }
     )
     return task_decorator_factory(
@@ -110,13 +122,18 @@ def run_raw_sql(
 
     :param python_callable:
     :param multiple_outputs:
-    :param conn_id:
-    :param parameters:
-    :param database:
-    :param schema:
-    :param handler:
+    :param conn_id: Connection ID for the database you want to connect to. If you do not pass in a value for this object
+    we can infer the connection ID from the first table passed into the python_callable function.
+    (required if there are no table arguments)
+    :param parameters: parameters to pass into the SQL query
+    :param database: Database within the SQL instance you want to access. If left blank we will default to the
+    table.metatadata.database in the first Table passed to the function (required if there are no table arguments)
+    :param schema: Schema within the SQL instance you want to access. If left blank we will default to the
+    table.metatadata.schema in the first Table passed to the function (required if there are no table arguments)
+    :param handler: Handler function to process the result of the SQL query. For more information please consult
+    https://docs.sqlalchemy.org/en/14/core/connections.html#sqlalchemy.engine.Result
     :param kwargs:
-    :return:
+    :return: By default returns None unless there is a handler function, in which case returns the result of the handler
     """
 
     kwargs.update(
