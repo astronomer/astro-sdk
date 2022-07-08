@@ -69,10 +69,10 @@ class LoadFile(BaseOperator):
         if self.output_table:
             return self.load_data_to_table(input_file)
         else:
-            if conf.get(
-                "core", "xcom_backend"
-            ) == "airflow.models.xcom.BaseXCom" and not os.getenv(
-                "ASTRO__DATAFRAME__ALLOW_UNSAFE_STORAGE", False
+            if (
+                conf.get("core", "xcom_backend") == "airflow.models.xcom.BaseXCom"
+                and os.getenv("ASTRO__DATAFRAME__ALLOW_UNSAFE_STORAGE", "False")
+                != "True"
             ):
                 raise AirflowException(LOAD_DATAFRAME_ERROR_MESSAGE)
             return self.load_data_to_dataframe(input_file)
