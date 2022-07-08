@@ -9,12 +9,13 @@ Run test:
     python3 -m unittest tests.operators.test_load_file.TestLoadFile.test_aql_local_file_to_postgres
 
 """
+import os
 import pathlib
 from unittest import mock
 
 import pandas as pd
 import pytest
-from airflow.exceptions import BackfillUnfinished
+from airflow.exceptions import AirflowException, BackfillUnfinished
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
 from pandas.testing import assert_frame_equal
@@ -64,6 +65,19 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
 
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (3, 9)
+
+
+@pytest.mark.integration
+@mock.patch.dict(os.environ, {"ASTRO__DATAFRAME__ALLOW_UNSAFE_STORAGE": "False"})
+def test_unsafe_loading_of_dataframe(sample_dag):
+    with pytest.raises(AirflowException):
+        with sample_dag:
+            load_file(
+                input_file=File(
+                    "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/homes_main.csv"
+                ),
+            )
+        test_utils.run_dag(sample_dag)
 
 
 @pytest.mark.integration

@@ -134,10 +134,10 @@ class DataframeOperator(DecoratedOperator):
             )
             return self.output_table
         else:
-            if conf.get(
-                "core", "xcom_backend"
-            ) == "airflow.models.xcom.BaseXCom" and not os.getenv(
-                "ASTRO__DATAFRAME__ALLOW_UNSAFE_STORAGE", False
+            if (
+                conf.get("core", "xcom_backend") == "airflow.models.xcom.BaseXCom"
+                and os.getenv("ASTRO__DATAFRAME__ALLOW_UNSAFE_STORAGE", "False")
+                != "True"
             ):
                 raise AirflowException(LOAD_DATAFRAME_ERROR_MESSAGE)
             return pandas_dataframe
