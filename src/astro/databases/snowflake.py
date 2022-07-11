@@ -41,7 +41,7 @@ class SnowflakeStage:
         """
         Generate a valid Snowflake stage name.
 
-        @return: unique stage name
+        :return: unique stage name
         """
         return (
             "stage_"
@@ -58,7 +58,7 @@ class SnowflakeStage:
 
         It is also responsbile for adjusting any path specific requirements for Snowflake.
 
-        @param file_: File to be loaded/unloaded to from Snowflake
+        :param file_: File to be loaded/unloaded to from Snowflake
         """
         # the stage URL needs to be the folder where the files are
         # https://docs.snowflake.com/en/sql-reference/sql/create-stage.html#external-stage-parameters-externalstageparams
@@ -70,7 +70,7 @@ class SnowflakeStage:
         """
         Return either the user-defined name or auto-generate one.
 
-        @return: stage name
+        :return: stage name
         """
         if not self._name:
             self._name = self._create_unique_name()
@@ -81,7 +81,7 @@ class SnowflakeStage:
         """
         Set the stage name.
 
-        @param value: Stage name.
+        :param value: Stage name.
         """
         if not isinstance(value, property) and value != self._name:
             self._name = value
@@ -91,7 +91,7 @@ class SnowflakeStage:
         """
         Return stage qualified name. In Snowflake, it is the database, schema and table
 
-        @return: Snowflake stage qualified name (e.g. database.schema.table)
+        :return: Snowflake stage qualified name (e.g. database.schema.table)
         """
         qualified_name_lists = [
             self.metadata.database,
@@ -159,9 +159,9 @@ class SnowflakeDatabase(BaseDatabase):
         tables and unloading data from tables into files. More information:
         https://docs.snowflake.com/en/sql-reference/sql/create-stage.html
 
-        @param file_: File to be copied from/to using stage
-        @param storage_integration: Previously created Snowflake storage integration
-        @return: Stage created
+        :param file_: File to be copied from/to using stage
+        :param storage_integration: Previously created Snowflake storage integration
+        :return: Stage created
         """
         if metadata is None:
             metadata = self.default_metadata
@@ -196,8 +196,8 @@ class SnowflakeDatabase(BaseDatabase):
         """
         Checks if a Snowflake stage exists.
 
-        @param: SnowflakeStage instance
-        @return: True/False
+        :param: SnowflakeStage instance
+        :return: True/False
         """
         sql_statement = f"DESCRIBE STAGE {stage.qualified_name}"
         try:
@@ -212,7 +212,7 @@ class SnowflakeDatabase(BaseDatabase):
         """
         Runs the snowflake query to drop stage if it exists.
 
-        @param stage: Stage to be dropped
+        :param stage: Stage to be dropped
         """
         sql_statement = f"DROP STAGE IF EXISTS {stage.qualified_name};"
         self.hook.run(sql_statement, autocommit=True)
