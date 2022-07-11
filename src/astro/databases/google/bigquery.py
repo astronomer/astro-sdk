@@ -26,6 +26,11 @@ from astro.files import File
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = BigQueryHook.default_conn_name
+NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
+    FileType.CSV: "CSV",
+    FileType.NDJSON: "NEWLINE_DELIMITED_JSON",
+    FileType.PARQUET: "PARQUET",
+}
 
 
 class BigqueryDatabase(BaseDatabase):
@@ -37,11 +42,6 @@ class BigqueryDatabase(BaseDatabase):
     NATIVE_PATHS = {
         FileLocation.GS: "gs_to_bigquery",
         FileLocation.S3: "s3_to_bigquery",
-    }
-    NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
-        FileType.CSV: "CSV",
-        FileType.NDJSON: "NEWLINE_DELIMITED_JSON",
-        FileType.PARQUET: "PARQUET",
     }
 
     illegal_column_name_chars: List[str] = ["."]
@@ -166,7 +166,7 @@ class BigqueryDatabase(BaseDatabase):
         :param source_file: File from which we need to transfer data
         :param target_table: Table that needs to be populated with file data
         """
-        file_type = self.NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
+        file_type = NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
         location_type = self.NATIVE_PATHS.get(source_file.location.location_type)
         return bool(location_type and file_type)
 
@@ -196,17 +196,6 @@ class BigqueryDatabase(BaseDatabase):
                 f"for {source_file.location.location_type} to bigquery."
             )
 
-    def get_project_id(self, target_table) -> str:
-        """
-        Get project id from the hook.
-
-        :param target_table: table object that the hook is derived from.
-        """
-        try:
-            return str(self.hook.project_id)
-        except AttributeError:
-            raise ValueError(f"conn_id {target_table.conn_id} has no project id.")
-
     def gs_to_bigquery(
         self,
         source_file: File,
@@ -233,9 +222,7 @@ class BigqueryDatabase(BaseDatabase):
             },
             "createDisposition": "CREATE_IF_NEEDED",
             "writeDisposition": write_disposition_val[if_exists],
-            "sourceFormat": self.NATIVE_PATHS_SUPPORTED_FILE_TYPES[
-                source_file.type.name
-            ],
+            "sourceFormat": NATIVE_PATHS_SUPPORTED_FILE_TYPES[source_file.type.name],
             "autodetect": True,
         }
 
@@ -252,22 +239,102 @@ class BigqueryDatabase(BaseDatabase):
             configuration=job_config,
         )
 
-    def _s3_create_transfer_config(self, client, project_id, target_table, source_file):
+    def s3_to_bigquery(
+        self,
+        source_file: File,
+        target_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+        **kwargs,
+    ):
+        """
+        Transfer data from S3 to Bigquery via invoking datatransfer job
+
+        :param source_file: Source file that is used as source of data
+        :param target_table: Table that will be created on the bigquery
+        :param if_exists: Overwrite table if exists. Default 'replace'
+        :return:
+        """
+        project_id = self.get_project_id(target_table)
+
+        if if_exists == "replace":
+            # We need to create an empty table as datatransfer job can only append to an existing table,
+            # so we need to create a table.
+            self.create_empty_table(source_file, target_table)
+
+        transfer = S3ToBigqueryDataTransfer(
+            target_table=target_table, source_file=source_file, project_id=project_id
+        )
+        transfer.run()
+
+
+class S3ToBigqueryDataTransfer:
+    """
+    Create and run Datatransfer job from S3 to Bigquery
+    """
+
+    def __init__(
+        self,
+        target_table: Table,
+        source_file: File,
+        project_id: str,
+        poll_duration: int = 1,
+    ):
+        """
+        :param source_file: Source file that is used as source of data
+        :param target_table: Table that will be created on the bigquery
+        :param project_id: Bigquery project id
+        :param poll_duration: sleep duration between two consecutive job status checks. Unit - seconds. Default 1 sec.
+        """
+        self.client = bigquery_datatransfer.DataTransferServiceClient()
+        self.target_table = target_table
+        self.source_file = source_file
+
+        conn = BaseHook.get_connection(source_file.conn_id)
+        self.s3_login = conn.login
+        self.s3_password = conn.password
+        self.s3_file_type = NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
+
+        self.project_id = project_id
+        self.poll_duration = poll_duration
+
+    def run(self):
+        """
+        Algo to run S3 to Bigquery datatransfer
+        """
+        transfer_id = self.create_transfer_config()
+        try:
+            # Manually run a transfer job using previously created transfer config
+            run_id = self.run_transfer_now(transfer_id)
+
+            # Poll Bigquery for status of transfer job
+            run_info = self.get_transfer_info(run_id)
+
+            # Note - Super set of states that indicate the job is running.
+            # This needs to be a super set as this if we miss on any running state, code will go into infinite loop.
+            running_states = [TransferState.PENDING, TransferState.RUNNING]
+
+            while run_info.state in running_states:
+                run_info = self.get_transfer_info(run_id)
+                time.sleep(self.poll_duration)
+
+            if run_info.state != TransferState.SUCCEEDED:
+                raise ValueError(run_info.error_status)
+        finally:
+            # delete transfer config created.
+            self.delete_transfer_config(transfer_id)
+
+    def create_transfer_config(self):
         """
         Create bigquery transfer config on cloud
         """
-
-        conn = BaseHook.get_connection(source_file.conn_id)
         params = Struct()
         params.update(
             {
-                "destination_table_name_template": target_table.name,
-                "data_path": source_file.path,
-                "access_key_id": conn.login,
-                "secret_access_key": conn.password,
-                "file_format": self.NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(
-                    source_file.type.name
-                ),
+                "destination_table_name_template": self.target_table.name,
+                "data_path": self.source_file.path,
+                "access_key_id": self.s3_login,
+                "secret_access_key": self.s3_password,
+                "file_format": self.s3_file_type,
             }
         )
         transfer_config = bigquery_datatransfer.TransferConfig(
@@ -277,91 +344,34 @@ class BigqueryDatabase(BaseDatabase):
             params=params,
             schedule_options={"disable_auto_scheduling": True},
             disabled=False,
-            destination_dataset_id=target_table.metadata.schema,
+            destination_dataset_id=self.target_table.metadata.schema,
         )
-        parent = client.common_project_path(project_id)
+        parent = self.client.common_project_path(self.project_id)
         req = bigquery_datatransfer.CreateTransferConfigRequest(
             parent=parent, transfer_config=transfer_config
         )
-        response = client.create_transfer_config(req)
+        response = self.client.create_transfer_config(req)
         return response.name
 
-    def _s3_delete_transfer_config(self, client, id):
+    def delete_transfer_config(self, run_id):
         """
         Delete transfer config created on Google cloud
         """
-        req = bigquery_datatransfer.DeleteTransferConfigRequest(name=id)
-        client.delete_transfer_config(req)
+        req = bigquery_datatransfer.DeleteTransferConfigRequest(name=run_id)
+        self.client.delete_transfer_config(req)
 
-    def _s3_run_transfer_now(self, client, id):
+    def run_transfer_now(self, run_id):
         """
         Run transfer job on Google cloud
         """
         start_time = timestamp_pb2.Timestamp(seconds=int(time.time() + 10))
         run_req = bigquery_datatransfer.StartManualTransferRunsRequest(
-            parent=id, requested_run_time=start_time
+            parent=run_id, requested_run_time=start_time
         )
-        run = client.start_manual_transfer_runs(run_req)
+        run = self.client.start_manual_transfer_runs(run_req)
         return run.runs[0].name
 
-    def _s3_get_transfer_info(self, client, id):
+    def get_transfer_info(self, run_id):
         """Get transfer job info"""
-        req = bigquery_datatransfer.GetTransferRunRequest(name=id)
-        return client.get_transfer_run(req)
-
-    def _s3_create_empty_table(self, source_file, target_table, if_exists):
-        df = source_file.export_to_dataframe(chunksize=1000)
-        df = df.read()
-        self.load_pandas_dataframe_to_table(
-            source_dataframe=df,
-            target_table=target_table,
-            if_exists=if_exists,
-            chunk_size=1000,
-        )
-        self.truncate_table(target_table)
-
-    def s3_to_bigquery(
-        self,
-        source_file: File,
-        target_table: Table,
-        if_exists: LoadExistStrategy = "replace",
-        **kwargs,
-    ):
-        def main():
-            """
-            Algo to run S3 to Bigquery datatransfer job.
-            :param client:
-            :param project_id:
-            :return:
-            """
-
-            if if_exists == "replace":
-                # this is needed as data transfer can only append to an existing table.
-                self._s3_create_empty_table(source_file, target_table, if_exists)
-
-            # create a transfer config.
-            transfer_id = self._s3_create_transfer_config(
-                client, project_id, target_table, source_file
-            )
-            try:
-                # manually run transfer config
-                run_id = self._s3_run_transfer_now(client, transfer_id)
-
-                # poll on transfer run
-                run_info = self._s3_get_transfer_info(client, run_id)
-                running_states = [TransferState.PENDING, TransferState.RUNNING]
-                poll_duration = 1  # unit sec
-                while run_info.state in running_states:
-                    run_info = self._s3_get_transfer_info(client, run_id)
-                    time.sleep(poll_duration)
-
-                if run_info.state != TransferState.SUCCEEDED:
-                    # logging.error(run_info.error_status)
-                    raise ValueError(run_info.error_status)
-            finally:
-                # delete transfer config created in any case.
-                self._s3_delete_transfer_config(client, transfer_id)
-
-        project_id = self.get_project_id(target_table)
-        client = bigquery_datatransfer.DataTransferServiceClient()
-        main()
+        req = bigquery_datatransfer.GetTransferRunRequest(name=run_id)
+        return self.client.get_transfer_run(req)
