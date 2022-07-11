@@ -356,6 +356,8 @@ class S3ToBigqueryDataTransfer:
     def delete_transfer_config(self, run_id):
         """
         Delete transfer config created on Google cloud
+
+        :param run_id: job run id
         """
         req = bigquery_datatransfer.DeleteTransferConfigRequest(name=run_id)
         self.client.delete_transfer_config(req)
@@ -363,6 +365,8 @@ class S3ToBigqueryDataTransfer:
     def run_transfer_now(self, run_id):
         """
         Run transfer job on Google cloud
+
+        :param run_id: job run id
         """
         start_time = timestamp_pb2.Timestamp(seconds=int(time.time() + 10))
         run_req = bigquery_datatransfer.StartManualTransferRunsRequest(
@@ -372,6 +376,9 @@ class S3ToBigqueryDataTransfer:
         return run.runs[0].name
 
     def get_transfer_info(self, run_id):
-        """Get transfer job info"""
+        """Get transfer job info
+
+        :param run_id: job run id
+        """
         req = bigquery_datatransfer.GetTransferRunRequest(name=run_id)
         return self.client.get_transfer_run(req)
