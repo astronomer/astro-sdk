@@ -29,19 +29,21 @@ DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
 class SnowflakeStage:
     """
     Dataclass which abstracts properties of a Snowflake Stage.
+
     Snowflake Stages are used to loading tables and unloading data from tables into files. More information:
     https://docs.snowflake.com/en/sql-reference/sql/create-stage.html
 
     Example:
 
-    snowflake_stage = SnowflakeStage(
-        name="stage_name",
-        url="gcs://bucket/prefix",
-        metadata=Metadata(
-            database="SNOWFLAKE_DATABASE",
-            schema="SNOWFLAKE_SCHEMA"
+    .. highlight:: python
+    .. code-block:: python
+
+        snowflake_stage = SnowflakeStage(
+            name="stage_name",
+            url="gcs://bucket/prefix",
+            metadata=Metadata(database="SNOWFLAKE_DATABASE", schema="SNOWFLAKE_SCHEMA"),
         )
-    )
+
     """
 
     name: str = ""
@@ -81,9 +83,10 @@ class SnowflakeStage:
     @property  # type: ignore
     def name(self) -> str:
         """
-        Return either the user-defined name or auto-generate one.
+        Return either the user-defined name or auto-generated one.
 
         :return: stage name
+        :sphinx-autoapi-skip:
         """
         if not self._name:
             self._name = self._create_unique_name()
@@ -178,8 +181,8 @@ class SnowflakeDatabase(BaseDatabase):
         At the moment, the following ways of authenticating to the backend are supported:
         * Google Cloud Storage (GCS): using storage_integration, previously created
         * Amazon (S3): one of the following:
-            - using storage_integration or
-            - retrieving the AWS_KEY_ID and AWS_SECRET_KEY from the Airflow file connection
+        (i) using storage_integration or
+        (ii) retrieving the AWS_KEY_ID and AWS_SECRET_KEY from the Airflow file connection
 
         :param file_: File to be copied from/to using stage
         :param storage_integration: Previously created Snowflake storage integration
