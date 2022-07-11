@@ -12,7 +12,11 @@ from astro.databases import create_database
 from astro.databases.snowflake import SnowflakeDatabase, SnowflakeStage
 from astro.exceptions import NonExistentTableException
 from astro.files import File
-from astro.settings import SCHEMA
+from astro.settings import (
+    SCHEMA,
+    SNOWFLAKE_STORAGE_INTEGRATION_AMAZON,
+    SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE,
+)
 from astro.sql.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
 from tests.sql.operators import utils as test_utils
@@ -352,9 +356,9 @@ def test_stage_exists_false(remote_files_fixture):
     file_fixture = File(remote_files_fixture[0])
     database = SnowflakeDatabase(conn_id=CUSTOM_CONN_ID)
     stage = SnowflakeStage(
+        name="inexistent-stage",
         metadata=database.default_metadata,
     )
-    stage.name = "inexistent-stage"
     stage.set_url_from_file(file_fixture)
     assert not database.stage_exists(stage)
 
@@ -365,16 +369,17 @@ def test_stage_exists_false(remote_files_fixture):
         {"provider": "google", "filetype": FileType.CSV},
         {"provider": "google", "filetype": FileType.NDJSON},
         {"provider": "google", "filetype": FileType.PARQUET},
+        {"provider": "amazon", "filetype": FileType.CSV},
     ],
     indirect=True,
-    ids=["google_csv", "google_ndjson", "google_parquet"],
+    ids=["google_csv", "google_ndjson", "google_parquet", "amazon_csv"],
 )
 def test_create_stage(remote_files_fixture):
     file_fixture = File(remote_files_fixture[0])
     if file_fixture.location.location_type == FileLocation.GS:
-        storage_integration = "gcs_int_python_sdk"
+        storage_integration = SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE
     else:
-        storage_integration = "aws_int_python_sdk"
+        storage_integration = SNOWFLAKE_STORAGE_INTEGRATION_AMAZON
 
     database = SnowflakeDatabase(conn_id=CUSTOM_CONN_ID)
     stage = database.create_stage(

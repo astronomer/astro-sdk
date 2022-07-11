@@ -13,6 +13,7 @@ from snowflake.connector.errors import ProgrammingError
 
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
+    FileLocation,
     FileType,
     LoadExistStrategy,
     MergeConflictStrategy,
@@ -30,9 +31,21 @@ class SnowflakeStage:
     Dataclass which abstracts properties of a Snowflake Stage.
     Snowflake Stages are used to loading tables and unloading data from tables into files. More information:
     https://docs.snowflake.com/en/sql-reference/sql/create-stage.html
+
+    Example:
+
+    snowflake_stage = SnowflakeStage(
+        name="stage_name",
+        url="gcs://bucket/prefix",
+        metadata=Metadata(
+            database="SNOWFLAKE_DATABASE",
+            schema="SNOWFLAKE_SCHEMA"
+        )
+    )
     """
 
-    _name: str = ""
+    name: str = ""
+    _name: str = field(init=False, repr=False, default="")
     url: str = ""
     metadata: Metadata = field(default_factory=Metadata)
 
@@ -65,7 +78,7 @@ class SnowflakeStage:
         url = file_.path[: file_.path.rfind("/") + 1]
         self.url = url.replace("gs://", "gcs://")
 
-    @property
+    @property  # type: ignore
     def name(self) -> str:
         """
         Return either the user-defined name or auto-generate one.
@@ -152,19 +165,50 @@ class SnowflakeDatabase(BaseDatabase):
     # ---------------------------------------------------------
 
     def create_stage(
-        self, file_: File, storage_integration: str, metadata: Optional[Metadata] = None
+        self,
+        file_: File,
+        storage_integration: Optional[str] = None,
+        metadata: Optional[Metadata] = None,
     ) -> SnowflakeStage:
         """
         Creates a new named external stage to use for loading data from files into Snowflake
         tables and unloading data from tables into files. More information:
         https://docs.snowflake.com/en/sql-reference/sql/create-stage.html
 
+        At the moment, the following ways of authenticating to the backend are supported:
+        * Google Cloud Storage (GCS): using storage_integration, previously created
+        * Amazon (S3): one of the following:
+            - using storage_integration or
+            - retrieving the AWS_KEY_ID and AWS_SECRET_KEY from the Airflow file connection
+
         :param file_: File to be copied from/to using stage
         :param storage_integration: Previously created Snowflake storage integration
+        :param metadata: Contains Snowflake database and schema information
         :return: Stage created
         """
+        if file_.location.location_type == FileLocation.GS:
+            if storage_integration:
+                auth = f"storage_integration = {storage_integration};"
+            else:
+                raise ValueError(
+                    "In order to create an stage for GCS, `storage_integration` is required."
+                )
+        elif file_.location.location_type == FileLocation.S3:
+            aws = file_.location.hook.get_credentials()
+            if storage_integration:
+                auth = f"storage_integration = {storage_integration};"
+            elif aws.access_key and aws.secret_key:
+                auth = f"credentials=(aws_key_id='{aws.access_key}' aws_secret_key='{aws.secret_key}');"
+            else:
+                raise ValueError(
+                    "In order to create an stage for S3, one of the following is required: "
+                    "* `storage_integration`"
+                    "* AWS_KEY_ID and SECRET_KEY_ID"
+                )
+
         if metadata is None:
             metadata = self.default_metadata
+
         stage = SnowflakeStage(metadata=metadata)
         stage.set_url_from_file(file_)
 
@@ -182,10 +226,13 @@ class SnowflakeDatabase(BaseDatabase):
         file_format = ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP[file_.type.name]
         copy_options = COPY_OPTIONS[file_.type.name]
 
-        sql_statement = (
-            f"CREATE OR REPLACE STAGE {stage.qualified_name} URL='{stage.url}' "
-            f"FILE_FORMAT=(TYPE={file_format}, TRIM_SPACE=TRUE) "
-            f"COPY_OPTIONS=({copy_options}) storage_integration = {storage_integration};"
+        sql_statement = "".join(
+            [
+                f"CREATE OR REPLACE STAGE {stage.qualified_name} URL='{stage.url}' ",
+                f"FILE_FORMAT=(TYPE={file_format}, TRIM_SPACE=TRUE) ",
+                f"COPY_OPTIONS=({copy_options}) ",
+                auth,
+            ]
         )
 
         self.run_sql(sql_statement)

@@ -26,6 +26,10 @@ class BaseFileLocation(ABC):
         self.conn_id = conn_id
 
     @property
+    def hook(self):
+        raise NotImplementedError
+
+    @property
     @abstractmethod
     def location_type(self):
         """Property to identify location type"""

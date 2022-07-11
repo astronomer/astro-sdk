@@ -13,10 +13,13 @@ class GCSLocation(BaseFileLocation):
     location_type = FileLocation.GS
 
     @property
+    def hook(self) -> GCSHook:
+        return GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else GCSHook()
+
+    @property
     def transport_params(self) -> Dict:
         """get GCS credentials for storage"""
-        hook = GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else GCSHook()
-        client = hook.get_conn()
+        client = self.hook.get_conn()
         return {"client": client}
 
     @property
@@ -25,8 +28,7 @@ class GCSLocation(BaseFileLocation):
         url = urlparse(self.path)
         bucket_name = url.netloc
         prefix = url.path[1:]
-        hook = GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else GCSHook()
-        prefixes = hook.list(bucket_name=bucket_name, prefix=prefix)
+        prefixes = self.hook.list(bucket_name=bucket_name, prefix=prefix)
         paths = [
             urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in prefixes
         ]
