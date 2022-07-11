@@ -186,25 +186,23 @@ class SnowflakeDatabase(BaseDatabase):
         :param metadata: Contains Snowflake database and schema information
         :return: Stage created
         """
-        if file_.location.location_type == FileLocation.GS:
-            if storage_integration:
-                auth = f"storage_integration = {storage_integration};"
-            else:
+        if storage_integration:
+            auth = f"storage_integration = {storage_integration};"
+        else:
+            if file_.location.location_type == FileLocation.GS:
                 raise ValueError(
                     "In order to create an stage for GCS, `storage_integration` is required."
                 )
-        elif file_.location.location_type == FileLocation.S3:
-            aws = file_.location.hook.get_credentials()
-            if storage_integration:
-                auth = f"storage_integration = {storage_integration};"
-            elif aws.access_key and aws.secret_key:
-                auth = f"credentials=(aws_key_id='{aws.access_key}' aws_secret_key='{aws.secret_key}');"
-            else:
-                raise ValueError(
-                    "In order to create an stage for S3, one of the following is required: "
-                    "* `storage_integration`"
-                    "* AWS_KEY_ID and SECRET_KEY_ID"
-                )
+            elif file_.location.location_type == FileLocation.S3:
+                aws = file_.location.hook.get_credentials()
+                if aws.access_key and aws.secret_key:
+                    auth = f"credentials=(aws_key_id='{aws.access_key}' aws_secret_key='{aws.secret_key}');"
+                else:
+                    raise ValueError(
+                        "In order to create an stage for S3, one of the following is required: "
+                        "* `storage_integration`"
+                        "* AWS_KEY_ID and SECRET_KEY_ID"
+                    )
 
         if metadata is None:
             metadata = self.default_metadata
