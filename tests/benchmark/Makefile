@@ -43,7 +43,6 @@ local: check_google_credentials
    		-v ${GOOGLE_APPLICATION_CREDENTIALS}:/tmp/gcp.json:ro \
 		-e GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp.json \
    		benchmark
-	@rm -rf astro-sdk
 
 
 run_job: check_google_credentials

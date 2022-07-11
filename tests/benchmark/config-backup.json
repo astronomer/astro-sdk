@@ -8,6 +8,21 @@
           "database": "postgres"
         }
       }
+    },
+    {
+      "name": "bigquery",
+      "params": {
+        "conn_id": "bigquery",
+        "metadata": {
+          "database": "bigquery"
+        }
+      }
+    },
+    {
+      "name": "snowflake",
+      "params": {
+        "conn_id": "snowflake_conn"
+      }
     }
   ],
   "datasets": [

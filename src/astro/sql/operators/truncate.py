@@ -17,7 +17,7 @@ class TruncateOperator(BaseOperator):
         **kwargs,
     ):
         self.table = table
-        task_id = task_id or get_unique_task_id(table.name + "_truncate")
+        task_id = task_id or get_unique_task_id("_truncate")
         super().__init__(
             task_id=task_id,
             **kwargs,

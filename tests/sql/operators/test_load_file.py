@@ -36,21 +36,21 @@ CWD = pathlib.Path(__file__).parent
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {
-            "database": Database.SNOWFLAKE,
-        },
-        {
-            "database": Database.BIGQUERY,
-        },
+        # {
+        #     "database": Database.SNOWFLAKE,
+        # },
+        # {
+        #     "database": Database.BIGQUERY,
+        # },
         {
             "database": Database.POSTGRES,
         },
-        {
-            "database": Database.SQLITE,
-        },
+        # {
+        #     "database": Database.SQLITE,
+        # },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+    # ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
 def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture

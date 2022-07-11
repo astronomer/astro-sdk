@@ -71,6 +71,17 @@ class File:
         ) as stream:
             self.type.create_from_dataframe(stream=stream, df=df)
 
+    def copy_to_local(self, local_path: str, **kwargs):
+        """Read file from all supported location and convert them into dataframes"""
+        mode = "rb" if self.is_binary() else "r"
+        with smart_open.open(
+            self.path, mode=mode, transport_params=self.location.transport_params
+        ) as stream:
+            with open(f"/tmp/foo.{self.type.name}") as file:
+                file.write(stream)
+
+            return f"/tmp/foo.{self.type.name}"
+
     def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes"""
         mode = "rb" if self.is_binary() else "r"
