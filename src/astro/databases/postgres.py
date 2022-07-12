@@ -1,4 +1,7 @@
 """Postgres database implementation."""
+import io
+import tempfile
+from contextlib import closing
 from typing import Dict, List
 
 import pandas as pd
@@ -9,8 +12,10 @@ from psycopg2 import sql as postgres_sql
 
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
+from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
+from astro.utils.load import copy_remote_file_to_local
 
 DEFAULT_CONN_ID = PostgresHook.default_conn_name
 
@@ -55,6 +60,43 @@ class PostgresDatabase(BaseDatabase):
         )
         return len(schema_result) > 0
 
+    def check_native_path(  # skipcq: PYL-R0201
+        self, source_file: File, target_table: Table  # skipcq: PYL-W0613
+    ) -> bool:
+        """
+        Check if there is an optimised path for source to destination.
+
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table that needs to be populated with file data
+        """
+        return True
+
+    def load_file_to_table_natively(
+        self,
+        source_file: File,
+        target_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+        **kwargs,
+    ):
+        """
+        Checks if optimised path for transfer between File location to database exists
+        and if it does, it transfers it and returns true else false.
+        """
+        with tempfile.NamedTemporaryFile() as dest:
+            temp_file_name = dest.name + "." + str(source_file.type.name)
+            copy_remote_file_to_local(
+                source_filepath=source_file.path, target_filepath=temp_file_name
+            )
+            df = File(
+                path=temp_file_name, filetype=source_file.type.name
+            ).export_to_dataframe()
+            return self.load_pandas_dataframe_to_table(
+                source_dataframe=df,
+                target_table=target_table,
+                if_exists=if_exists,
+                chunk_size=kwargs.get("chunksize", DEFAULT_CHUNK_SIZE),
+            )
+
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,
@@ -89,10 +131,18 @@ class PostgresDatabase(BaseDatabase):
             index=False,
         )
 
+        output = io.StringIO()
+        source_dataframe.to_csv(output, sep=",", header=True, index=False)
+        output.seek(0)
         table = self.get_table_qualified_name(target_table)
-        self.hook.copy_expert(
-            f"COPY {table} FROM STDIN DELIMITER ',' CSV HEADER;", "/tmp/foo2.csv"
-        )
+        con = self.hook.get_conn()
+        with closing(con) as conn:
+            with closing(conn.cursor()) as cur:
+                cur.copy_expert(
+                    f"COPY {table} FROM STDIN DELIMITER ',' CSV HEADER;", output
+                )
+                conn.commit()
+
         # with cursor.copy_from(path, )
         # with cursor.copy(postgres_sql.SQL("COPY {}  FROM STDIN").format(postgres_sql.Identifier(target_table.name))) as copy:
         #     for row in source_dataframe.rows:
