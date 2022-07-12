@@ -6,7 +6,6 @@ from typing import Dict, List
 import pandas as pd
 import sqlalchemy
 from airflow.providers.postgres.hooks.postgres import PostgresHook
-from pandas.io.sql import SQLDatabase
 from psycopg2 import sql as postgres_sql
 
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
@@ -73,22 +72,17 @@ class PostgresDatabase(BaseDatabase):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
-        schema = None
         if target_table.metadata and target_table.metadata.schema:
             self.create_schema_if_needed(target_table.metadata.schema)
-            schema = target_table.metadata.schema.lower()
-        db = SQLDatabase(engine=self.sqlalchemy_engine)
-        # within prep_table() we use pandas drop() function which is used when we pass 'if_exists=replace'.
-        # There is an issue where has_table() works with uppercase table names but the function meta.reflect() don't.
-        # To prevent the issue we are passing table name in lowercase.
-        db.prep_table(
-            source_dataframe,
-            target_table.name.lower(),
-            schema=schema,
+
+        # create an empty table
+        source_dataframe.head(0).to_sql(
+            target_table.name,
+            schema=target_table.metadata.schema,
+            con=self.hook.get_sqlalchemy_engine(),
             if_exists=if_exists,
             index=False,
         )
-
         output = io.StringIO()
         source_dataframe.to_csv(output, sep=",", header=True, index=False)
         output.seek(0)
