@@ -26,3 +26,4 @@ docs/sphinx/_build/*
 */.DS_Store
 **/.terraform/*
 **/.terraform.lock.hcl
+docs/autoapi/
