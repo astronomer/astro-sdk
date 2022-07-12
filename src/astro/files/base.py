@@ -73,7 +73,12 @@ class File:
             self.type.create_from_dataframe(stream=stream, df=df)
 
     def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
-        """Read file from all supported location and convert them into dataframes"""
+        """Read file from all supported location and convert them into dataframes.
+
+        Due to noted issues with using smart_open with pandas (like
+        https://github.com/RaRe-Technologies/smart_open/issues/524), we create a BytesIO or StringIO buffer
+        before exporting to a dataframe. We've found a sizable speed improvement with this optimization.
+        """
 
         mode = "rb" if self.is_binary() else "r"
         remote_obj_buffer = io.BytesIO() if self.is_binary() else io.StringIO()
