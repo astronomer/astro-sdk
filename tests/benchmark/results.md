@@ -49,7 +49,7 @@ For Machine types: n2-standard-4
 |github/github-archive/*                    |10GB |0:01:09        |
 
 
-#### Baseline using `GCSToBigQueryOperator` using [benchmark_gcs_to_bigquery.py](tests/benchmark/dags/benchmark_gcs_to_big_query.py)
+#### Baseline using `GCSToBigQueryOperator` using [benchmark_gcs_to_bigquery.py](dags/benchmark_gcs_to_big_query.py)
 
 |Dataset                                    |Size | Duration(seconds)  |
 |-------------------------------------------|-----|--------------------|
