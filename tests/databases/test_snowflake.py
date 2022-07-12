@@ -1,18 +1,23 @@
 """Tests specific to the Sqlite Database implementation."""
 import os
 import pathlib
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
 import sqlalchemy
 from sqlalchemy.exc import ProgrammingError
 
-from astro.constants import Database
+from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
-from astro.databases.snowflake import SnowflakeDatabase
+from astro.databases.snowflake import SnowflakeDatabase, SnowflakeStage
 from astro.exceptions import NonExistentTableException
 from astro.files import File
-from astro.settings import SCHEMA
+from astro.settings import (
+    SCHEMA,
+    SNOWFLAKE_STORAGE_INTEGRATION_AMAZON,
+    SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE,
+)
 from astro.sql.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
 from tests.sql.operators import utils as test_utils
@@ -338,3 +343,85 @@ def test_create_table_from_select_statement(database_table_fixture):
     expected = pd.DataFrame([{"id": 1, "name": "First"}])
     test_utils.assert_dataframes_are_equal(df, expected)
     database.drop_table(target_table)
+
+
+def test_stage_set_name_after():
+    stage = SnowflakeStage()
+    stage.name = "abc"
+    assert stage.name == "abc"
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "remote_files_fixture",
+    [
+        {"provider": "google", "filetype": FileType.CSV},
+    ],
+    indirect=True,
+    ids=["google_csv"],
+)
+def test_stage_exists_false(remote_files_fixture):
+    file_fixture = File(remote_files_fixture[0])
+    database = SnowflakeDatabase(conn_id=CUSTOM_CONN_ID)
+    stage = SnowflakeStage(
+        name="inexistent-stage",
+        metadata=database.default_metadata,
+    )
+    stage.set_url_from_file(file_fixture)
+    assert not database.stage_exists(stage)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "remote_files_fixture",
+    [
+        {"provider": "google", "filetype": FileType.CSV},
+        {"provider": "google", "filetype": FileType.NDJSON},
+        {"provider": "google", "filetype": FileType.PARQUET},
+        {"provider": "amazon", "filetype": FileType.CSV},
+    ],
+    indirect=True,
+    ids=["google_csv", "google_ndjson", "google_parquet", "amazon_csv"],
+)
+def test_create_stage_succeeds(remote_files_fixture):
+    file_fixture = File(remote_files_fixture[0])
+    if file_fixture.location.location_type == FileLocation.GS:
+        storage_integration = SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE
+    else:
+        storage_integration = SNOWFLAKE_STORAGE_INTEGRATION_AMAZON
+
+    database = SnowflakeDatabase(conn_id=CUSTOM_CONN_ID)
+    stage = database.create_stage(
+        file=file_fixture, storage_integration=storage_integration
+    )
+    assert database.stage_exists(stage)
+    database.drop_stage(stage)
+
+
+def test_create_stage_google_fails_due_to_no_storage_integration():
+    database = SnowflakeDatabase(conn_id="fake-conn")
+    with pytest.raises(ValueError) as exc_info:
+        database.create_stage(file=File("gs://some-bucket/some-file.csv"))
+    expected_msg = (
+        "In order to create an stage for GCS, `storage_integration` is required."
+    )
+    assert exc_info.match(expected_msg)
+
+
+class MockCredentials:
+    access_key = None
+    secret_key = None
+
+
+@patch(
+    "astro.files.locations.amazon.s3.S3Hook.get_credentials",
+    return_value=MockCredentials(),
+)
+def test_create_stage_amazon_fails_due_to_no_credentials(get_credentials):
+    database = SnowflakeDatabase(conn_id="fake-conn")
+    with pytest.raises(ValueError) as exc_info:
+        database.create_stage(file=File("s3://some-bucket/some-file.csv"))
+    expected_msg = (
+        "In order to create an stage for S3, one of the following is required"
+    )
+    assert exc_info.match(expected_msg)

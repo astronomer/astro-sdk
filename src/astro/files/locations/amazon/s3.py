@@ -13,6 +13,10 @@ class S3Location(BaseFileLocation):
 
     location_type = FileLocation.S3
 
+    @property
+    def hook(self) -> S3Hook:
+        return S3Hook(aws_conn_id=self.conn_id) if self.conn_id else S3Hook()
+
     @staticmethod
     def _parse_s3_env_var() -> Tuple[str, str]:
         """Return S3 ID/KEY pair from environment vars"""
@@ -23,8 +27,7 @@ class S3Location(BaseFileLocation):
         """Structure s3fs credentials from Airflow connection.
         s3fs enables pandas to write to s3
         """
-        hook = S3Hook(aws_conn_id=self.conn_id) if self.conn_id else S3Hook()
-        session = hook.get_session()
+        session = self.hook.get_session()
         return {"client": session.client("s3")}
 
     @property
@@ -33,8 +36,7 @@ class S3Location(BaseFileLocation):
         url = urlparse(self.path)
         bucket_name = url.netloc
         prefix = url.path[1:]
-        hook = S3Hook(aws_conn_id=self.conn_id) if self.conn_id else S3Hook()
-        prefixes = hook.list_keys(bucket_name=bucket_name, prefix=prefix)
+        prefixes = self.hook.list_keys(bucket_name=bucket_name, prefix=prefix)
         paths = [
             urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in prefixes
         ]
