@@ -859,6 +859,9 @@ def test_aql_load_file_optimized_path_method_is_not_called_1(
     """
     db, test_table = database_table_fixture
 
+    # We are using a preexisting file for integration test, since the dynamically populating
+    # file on S3 results in file not found, since that file is not propagated to all the servers/clusters,
+    # and we might hit a server where the file in not yet populated, resulting in file not found issue.
     load_file(
         input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_1"),
         output_table=test_table,
@@ -869,3 +872,6 @@ def test_aql_load_file_optimized_path_method_is_not_called_1(
             "skip_leading_rows": "1",
         },
     ).operator.execute({})
+
+    df = db.export_table_to_pandas_dataframe(test_table)
+    assert df.shape == (3, 9)
