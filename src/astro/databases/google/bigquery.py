@@ -5,9 +5,16 @@ from typing import Dict, List, Optional, Tuple
 import pandas as pd
 from airflow.hooks.base import BaseHook
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
+from airflow.providers.google.cloud.hooks.bigquery_dts import (
+    BiqQueryDataTransferServiceHook,
+)
 from google.api_core.exceptions import NotFound as GoogleNotFound
 from google.cloud import bigquery_datatransfer
-from google.cloud.bigquery_datatransfer_v1.types import TransferState
+from google.cloud.bigquery_datatransfer_v1.types import (
+    TransferConfig,
+    TransferRun,
+    TransferState,
+)
 from google.protobuf import timestamp_pb2  # type: ignore
 from google.protobuf.struct_pb2 import Struct  # type: ignore
 from sqlalchemy import create_engine
@@ -307,7 +314,7 @@ class S3ToBigqueryDataTransfer:
         :param poll_duration: sleep duration between two consecutive job status checks. Unit - seconds. Default 1 sec.
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
         """
-        self.client = bigquery_datatransfer.DataTransferServiceClient()
+        self.client = BiqQueryDataTransferServiceHook(gcp_conn_id=target_table.conn_id)
         self.target_table = target_table
         self.source_file = source_file
 
@@ -325,32 +332,57 @@ class S3ToBigqueryDataTransfer:
         """
         Algo to run S3 to Bigquery datatransfer
         """
-        transfer_id = self.create_transfer_config()
+        transfer_config_id = self.create_transfer_config()
         try:
             # Manually run a transfer job using previously created transfer config
-            run_id = self.run_transfer_now(transfer_id)
+            run_id = self.run_transfer_now(transfer_config_id)
 
             # Poll Bigquery for status of transfer job
-            run_info = self.get_transfer_info(run_id)
+            run_info = self.get_transfer_info(
+                run_id=run_id, transfer_config_id=transfer_config_id
+            )
 
             # Note - Super set of states that indicate the job is running.
             # This needs to be a super set as this if we miss on any running state, code will go into infinite loop.
             running_states = [TransferState.PENDING, TransferState.RUNNING]
 
             while run_info.state in running_states:
-                run_info = self.get_transfer_info(run_id)
+                run_info = self.get_transfer_info(
+                    run_id=run_id, transfer_config_id=transfer_config_id
+                )
                 time.sleep(self.poll_duration)
 
             if run_info.state != TransferState.SUCCEEDED:
                 raise ValueError(run_info.error_status)
         finally:
             # delete transfer config created.
-            self.delete_transfer_config(transfer_id)
+            self.delete_transfer_config(transfer_config_id)
+
+    @staticmethod
+    def get_transfer_config_id(config: TransferConfig) -> str:
+        """
+        Extract transfer_config_id from TransferConfig object
+        """
+        # ToDo: Look for a native way to extract 'transfer_config_id'
+        # name - "projects/103191871648/locations/us/transferConfigs/6302bf19-0000-26cf-a568-94eb2c0a61ee'.
+        # We need extract transferConfigs which is at the end of string.
+        tokens = config.name.split("transferConfigs/")
+        return str(tokens[-1])
+
+    @staticmethod
+    def get_run_id(config: TransferRun) -> str:
+        """
+        Extract run_id from TransferRun object
+        """
+        # ToDo: Look for a native way to extract 'run_id'
+        # config.runs[0].name - "projects/103191871648/locations/us/
+        # transferConfigs/62d38894-0000-239c-a4d8-089e08325b54/runs/62d6a4df-0000-2fad-8752-d4f547e68ef4'.
+        # We need extract transferConfigs which is at the end of string.
+        tokens = config.runs[0].name.split("runs/")
+        return str(tokens[-1])
 
     def create_transfer_config(self):
-        """
-        Create bigquery transfer config on cloud
-        """
+        """Create bigquery transfer config on cloud"""
         s3_params = {
             "destination_table_name_template": self.target_table.name,
             "data_path": self.source_file.path,
@@ -374,40 +406,28 @@ class S3ToBigqueryDataTransfer:
             disabled=False,
             destination_dataset_id=self.target_table.metadata.schema,
         )
-        parent = self.client.common_project_path(self.project_id)
-        req = bigquery_datatransfer.CreateTransferConfigRequest(
-            parent=parent, transfer_config=transfer_config
+        response = self.client.create_transfer_config(
+            transfer_config=transfer_config, project_id=self.project_id
         )
-        response = self.client.create_transfer_config(req)
-        return response.name
+        return self.get_transfer_config_id(response)
 
-    def delete_transfer_config(self, run_id):
-        """
-        Delete transfer config created on Google cloud
+    def delete_transfer_config(self, transfer_config_id: str):
+        """Delete transfer config created on Google cloud"""
+        self.client.delete_transfer_config(transfer_config_id=transfer_config_id)
 
-        :param run_id: job run id
-        """
-        req = bigquery_datatransfer.DeleteTransferConfigRequest(name=run_id)
-        self.client.delete_transfer_config(req)
-
-    def run_transfer_now(self, run_id):
-        """
-        Run transfer job on Google cloud
-
-        :param run_id: job run id
-        """
+    def run_transfer_now(self, transfer_config_id: str):
+        """Run transfer job on Google cloud"""
         start_time = timestamp_pb2.Timestamp(seconds=int(time.time() + 10))
-        run_req = bigquery_datatransfer.StartManualTransferRunsRequest(
-            parent=run_id, requested_run_time=start_time
+        run_info = self.client.start_manual_transfer_runs(
+            transfer_config_id=transfer_config_id,
+            project_id=self.project_id,
+            requested_run_time=start_time,
         )
-        run = self.client.start_manual_transfer_runs(run_req)
-        return run.runs[0].name
+        return self.get_run_id(run_info)
 
     @retry(stop=stop_after_attempt(3))
-    def get_transfer_info(self, run_id):
-        """Get transfer job info
-
-        :param run_id: job run id
-        """
-        req = bigquery_datatransfer.GetTransferRunRequest(name=run_id)
-        return self.client.get_transfer_run(req)
+    def get_transfer_info(self, run_id: str, transfer_config_id: str):
+        """Get transfer job info"""
+        return self.client.get_transfer_run(
+            run_id=run_id, transfer_config_id=transfer_config_id
+        )
