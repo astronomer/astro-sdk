@@ -205,7 +205,7 @@ class BaseDatabase(ABC):
 
     def truncate_table(self, table: Table) -> None:
         """
-        Delete a SQL table, if it exists.
+        Remove all rows from a given table.
 
         :param table: The table to be deleted.
         """
