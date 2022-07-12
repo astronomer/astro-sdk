@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 from pathlib import Path
 
+# import pandas
 from airflow import DAG
 
 from astro import sql as aql
@@ -10,7 +11,53 @@ from astro.constants import DEFAULT_CHUNK_SIZE, FileType
 from astro.files import File
 from astro.sql.table import Metadata, Table
 
+# from astro.utils.load import copy_remote_file_to_local
+
 START_DATE = datetime(2000, 1, 1)
+
+# import tempfile
+# import time
+#
+#
+# def pull_local_df(file: File):
+#     t_start = time.process_time()
+#     df = file.export_to_dataframe()
+#     print(df)
+#     t_stop = time.process_time()
+#     print("time: ", t_stop - t_start)
+#
+#
+# def pull_local(file: File):
+#     t_start = time.process_time()
+#     with tempfile.NamedTemporaryFile() as dest:
+#         copy_remote_file_to_local(
+#             source_filepath=file.path, target_filepath=dest.name + ".ndjson"
+#         )
+#         df = File(
+#             path=dest.name + ".ndjson", filetype=FileType.NDJSON
+#         ).export_to_dataframe()
+#         print(df)
+#     t_stop = time.process_time()
+#     print("time: ", t_stop - t_start)
+#     return df
+#
+#
+# def time_save_file(df):
+#     t_start = time.process_time()
+#     df.to_csv("/tmp/baz.csv")
+#     t_stop = time.process_time()
+#     print("time: ", t_stop - t_start)
+#
+#
+# file = File(
+#     path="gs://astro-sdk/benchmark/trimmed/stackoverflow/stackoverflow_posts_1g.ndjson",
+#     conn_id="bigquery",
+#     filetype=FileType("ndjson"),
+# )
+#
+# pull_local_df(file)
+#
+# pull_local(file)
 
 
 def load_config():
