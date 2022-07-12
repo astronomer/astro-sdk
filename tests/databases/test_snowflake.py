@@ -392,7 +392,7 @@ def test_create_stage_succeeds(remote_files_fixture):
 
     database = SnowflakeDatabase(conn_id=CUSTOM_CONN_ID)
     stage = database.create_stage(
-        file_=file_fixture, storage_integration=storage_integration
+        file=file_fixture, storage_integration=storage_integration
     )
     assert database.stage_exists(stage)
     database.drop_stage(stage)
@@ -401,7 +401,7 @@ def test_create_stage_succeeds(remote_files_fixture):
 def test_create_stage_google_fails_due_to_no_storage_integration():
     database = SnowflakeDatabase(conn_id="fake-conn")
     with pytest.raises(ValueError) as exc_info:
-        database.create_stage(file_=File("gs://some-bucket/some-file.csv"))
+        database.create_stage(file=File("gs://some-bucket/some-file.csv"))
     expected_msg = (
         "In order to create an stage for GCS, `storage_integration` is required."
     )
@@ -420,7 +420,7 @@ class MockCredentials:
 def test_create_stage_amazon_fails_due_to_no_credentials(get_credentials):
     database = SnowflakeDatabase(conn_id="fake-conn")
     with pytest.raises(ValueError) as exc_info:
-        database.create_stage(file_=File("s3://some-bucket/some-file.csv"))
+        database.create_stage(file=File("s3://some-bucket/some-file.csv"))
     expected_msg = (
         "In order to create an stage for S3, one of the following is required"
     )

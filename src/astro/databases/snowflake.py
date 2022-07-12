@@ -24,18 +24,28 @@ from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
 
+ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP = {
+    FileType.CSV: "CSV",
+    FileType.NDJSON: "JSON",
+    FileType.PARQUET: "PARQUET",
+}
+
+COPY_OPTIONS = {
+    FileType.CSV: "ON_ERROR=CONTINUE",
+    FileType.NDJSON: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
+    FileType.PARQUET: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
+}
+
 
 @dataclass
 class SnowflakeStage:
     """
     Dataclass which abstracts properties of a Snowflake Stage.
 
-    Snowflake Stages are used to loading tables and unloading data from tables into files. More information:
-    https://docs.snowflake.com/en/sql-reference/sql/create-stage.html
+    Snowflake Stages are used to loading tables and unloading data from tables into files.
 
     Example:
 
-    .. highlight:: python
     .. code-block:: python
 
         snowflake_stage = SnowflakeStage(
@@ -44,6 +54,9 @@ class SnowflakeStage:
             metadata=Metadata(database="SNOWFLAKE_DATABASE", schema="SNOWFLAKE_SCHEMA"),
         )
 
+    .. seealso::
+            `Snowflake official documentation on stage creation
+            <https://docs.snowflake.com/en/sql-reference/sql/create-stage.html>`_
     """
 
     name: str = ""
@@ -66,18 +79,18 @@ class SnowflakeStage:
             )
         )
 
-    def set_url_from_file(self, file_: File) -> None:
+    def set_url_from_file(self, file: File) -> None:
         """
         Given a file to be loaded/unloaded to from Snowflake, identifies its folder and
         sets as self.url.
 
         It is also responsbile for adjusting any path specific requirements for Snowflake.
 
-        :param file_: File to be loaded/unloaded to from Snowflake
+        :param file: File to be loaded/unloaded to from Snowflake
         """
         # the stage URL needs to be the folder where the files are
         # https://docs.snowflake.com/en/sql-reference/sql/create-stage.html#external-stage-parameters-externalstageparams
-        url = file_.path[: file_.path.rfind("/") + 1]
+        url = file.path[: file.path.rfind("/") + 1]
         self.url = url.replace("gs://", "gcs://")
 
     @property  # type: ignore
@@ -167,37 +180,28 @@ class SnowflakeDatabase(BaseDatabase):
     # Snowflake stage methods
     # ---------------------------------------------------------
 
-    def create_stage(
-        self,
-        file_: File,
-        storage_integration: Optional[str] = None,
-        metadata: Optional[Metadata] = None,
-    ) -> SnowflakeStage:
+    @staticmethod
+    def _create_stage_auth_sub_statement(
+        file: File, storage_integration: Optional[str] = None
+    ) -> str:
         """
-        Creates a new named external stage to use for loading data from files into Snowflake
-        tables and unloading data from tables into files. More information:
-        https://docs.snowflake.com/en/sql-reference/sql/create-stage.html
+        Create authentication-related line for the Snowflake CREATE STAGE.
+        Raise an exception if it is not defined.
 
-        At the moment, the following ways of authenticating to the backend are supported:
-        * Google Cloud Storage (GCS): using storage_integration, previously created
-        * Amazon (S3): one of the following:
-        (i) using storage_integration or
-        (ii) retrieving the AWS_KEY_ID and AWS_SECRET_KEY from the Airflow file connection
-
-        :param file_: File to be copied from/to using stage
+        :param file: File to be copied from/to using stage
         :param storage_integration: Previously created Snowflake storage integration
-        :param metadata: Contains Snowflake database and schema information
-        :return: Stage created
+        :return: String containing line to be used for authentication on the remote storage
         """
+
         if storage_integration is not None:
             auth = f"storage_integration = {storage_integration};"
         else:
-            if file_.location.location_type == FileLocation.GS:  # to cover util 204
+            if file.location.location_type == FileLocation.GS:
                 raise ValueError(
                     "In order to create an stage for GCS, `storage_integration` is required."
                 )
-            elif file_.location.location_type == FileLocation.S3:
-                aws = file_.location.hook.get_credentials()
+            elif file.location.location_type == FileLocation.S3:
+                aws = file.location.hook.get_credentials()
                 if aws.access_key and aws.secret_key:
                     auth = f"credentials=(aws_key_id='{aws.access_key}' aws_secret_key='{aws.secret_key}');"
                 else:
@@ -206,29 +210,48 @@ class SnowflakeDatabase(BaseDatabase):
                         "* `storage_integration`"
                         "* AWS_KEY_ID and SECRET_KEY_ID"
                     )
+        return auth
+
+    def create_stage(
+        self,
+        file: File,
+        storage_integration: Optional[str] = None,
+        metadata: Optional[Metadata] = None,
+    ) -> SnowflakeStage:
+        """
+        Creates a new named external stage to use for loading data from files into Snowflake
+        tables and unloading data from tables into files.
+
+        At the moment, the following ways of authenticating to the backend are supported:
+        * Google Cloud Storage (GCS): using storage_integration, previously created
+        * Amazon (S3): one of the following:
+        (i) using storage_integration or
+        (ii) retrieving the AWS_KEY_ID and AWS_SECRET_KEY from the Airflow file connection
+
+        :param file: File to be copied from/to using stage
+        :param storage_integration: Previously created Snowflake storage integration
+        :param metadata: Contains Snowflake database and schema information
+        :return: Stage created
+
+        .. seealso::
+            `Snowflake official documentation on stage creation
+            <https://docs.snowflake.com/en/sql-reference/sql/create-stage.html>`_
+        """
+        auth = self._create_stage_auth_sub_statement(
+            file=file, storage_integration=storage_integration
+        )
 
         metadata = metadata or self.default_metadata
         stage = SnowflakeStage(metadata=metadata)
-        stage.set_url_from_file(file_)
+        stage.set_url_from_file(file)
 
-        ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP = {
-            FileType.CSV: "CSV",
-            FileType.NDJSON: "JSON",
-            FileType.PARQUET: "PARQUET",
-        }
-        COPY_OPTIONS = {
-            FileType.CSV: "ON_ERROR=CONTINUE",
-            FileType.NDJSON: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
-            FileType.PARQUET: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
-        }
-
-        file_format = ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP[file_.type.name]
-        copy_options = COPY_OPTIONS[file_.type.name]
+        fileformat = ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP[file.type.name]
+        copy_options = COPY_OPTIONS[file.type.name]
 
         sql_statement = "".join(
             [
                 f"CREATE OR REPLACE STAGE {stage.qualified_name} URL='{stage.url}' ",
-                f"FILE_FORMAT=(TYPE={file_format}, TRIM_SPACE=TRUE) ",
+                f"FILE_FORMAT=(TYPE={fileformat}, TRIM_SPACE=TRUE) ",
                 f"COPY_OPTIONS=({copy_options}) ",
                 auth,
             ]
@@ -249,8 +272,9 @@ class SnowflakeDatabase(BaseDatabase):
         try:
             self.hook.run(sql_statement)
         except ProgrammingError:
-            msg = f""
-            logging.error("Stage '%s' does not exist or not authorized.", stage.qualified_name)
+            logging.error(
+                "Stage '%s' does not exist or not authorized.", stage.qualified_name
+            )
             return False
         return True
 
@@ -335,12 +359,15 @@ class SnowflakeDatabase(BaseDatabase):
 
         Since the table value is templated, there is a safety concern (e.g. SQL injection).
         We recommend looking into the documentation of the database and seeing what are the best practices.
-        This is the Snowflake documentation:
-        https://docs.snowflake.com/en/sql-reference/identifier-literal.html
+
 
         :param table: The table object we want to generate a safe table identifier for
         :param jinja_table_identifier: The name used within the Jinja template to represent this table
         :return: value to replace the table identifier in the query and the value that should be used to replace it
+
+        .. seealso::
+            `Snowflake official documentation on literals
+            <https://docs.snowflake.com/en/sql-reference/identifier-literal.html>`_
         """
         return (
             f"IDENTIFIER(:{jinja_table_identifier})",
@@ -483,9 +510,15 @@ def wrap_identifier(inp: str) -> str:
 
 def is_valid_snow_identifier(name: str) -> bool:
     """
-    Because Snowflake does not allow using `Identifier` for inserts or updates, we need to make reasonable attempts to
-    ensure that no one can perform a SQL injection using this method. The following method ensures that a string
-    follows the expected identifier syntax https://docs.snowflake.com/en/sql-reference/identifiers-syntax.html
+    Because Snowflake does not allow using `Identifier` for inserts or updates,
+    we need to make reasonable attempts to ensure that no one can perform a SQL
+    injection using this method.
+    The following method ensures that a string follows the expected identifier syntax.
+
+    .. seealso::
+        `Snowflake official documentation on indentifiers syntax
+        <https://docs.snowflake.com/en/sql-reference/identifiers-syntax.html>`_
+
     """
     if not 1 <= len(name) <= 255:
         return False
