@@ -3,7 +3,6 @@ import time
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
-from airflow.hooks.base import BaseHook
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.google.cloud.hooks.bigquery_dts import (
     BiqQueryDataTransferServiceHook,
@@ -48,8 +47,8 @@ class BigqueryDatabase(BaseDatabase):
     """
 
     NATIVE_PATHS = {
-        FileLocation.GS: "gs_to_bigquery",
-        FileLocation.S3: "s3_to_bigquery",
+        FileLocation.GS: "load_gs_file_to_bigquery",
+        FileLocation.S3: "load_s3_file_to_bigquery",
     }
 
     illegal_column_name_chars: List[str] = ["."]
@@ -211,7 +210,7 @@ class BigqueryDatabase(BaseDatabase):
                 f"for {source_file.location.location_type} to bigquery."
             )
 
-    def gs_to_bigquery(
+    def load_gs_file_to_bigquery(
         self,
         source_file: File,
         target_table: Table,
@@ -258,7 +257,7 @@ class BigqueryDatabase(BaseDatabase):
             configuration=job_config,
         )
 
-    def s3_to_bigquery(
+    def load_s3_file_to_bigquery(
         self,
         source_file: File,
         target_table: Table,
@@ -267,7 +266,11 @@ class BigqueryDatabase(BaseDatabase):
         **kwargs,
     ):
         """
-        Transfer data from S3 to Bigquery via invoking datatransfer job
+         Load content of multiple files in S3 to output_table in Bigquery by using a datatransfer job
+        Note - To use this function we need
+            1. Enable API on Bigquery
+            2. Enable Data transfer service on Bigquery, which is a chargeable service
+        for more information refer - https://cloud.google.com/bigquery-transfer/docs/enable-transfer-service
 
         :param source_file: Source file that is used as source of data
         :param target_table: Table that will be created on the bigquery
@@ -292,10 +295,27 @@ class BigqueryDatabase(BaseDatabase):
         )
         transfer.run()
 
+    def get_project_id(self, target_table) -> str:
+        """
+        Get project id from the hook.
+
+        :param target_table: table object that the hook is derived from.
+        """
+        try:
+            return str(self.hook.project_id)
+        except AttributeError:
+            raise ValueError(f"conn_id {target_table.conn_id} has no project id")
+
 
 class S3ToBigqueryDataTransfer:
     """
     Create and run Datatransfer job from S3 to Bigquery
+
+    :param source_file: Source file that is used as source of data
+    :param target_table: Table that will be created on the bigquery
+    :param project_id: Bigquery project id
+    :param poll_duration: sleep duration between two consecutive job status checks. Unit - seconds. Default 1 sec.
+    :param native_support_kwargs: kwargs to be used by method involved in native support flow
     """
 
     def __init__(
@@ -307,20 +327,13 @@ class S3ToBigqueryDataTransfer:
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
-        """
-        :param source_file: Source file that is used as source of data
-        :param target_table: Table that will be created on the bigquery
-        :param project_id: Bigquery project id
-        :param poll_duration: sleep duration between two consecutive job status checks. Unit - seconds. Default 1 sec.
-        :param native_support_kwargs: kwargs to be used by method involved in native support flow
-        """
         self.client = BiqQueryDataTransferServiceHook(gcp_conn_id=target_table.conn_id)
         self.target_table = target_table
         self.source_file = source_file
 
-        conn = BaseHook.get_connection(source_file.conn_id)
-        self.s3_login = conn.login
-        self.s3_password = conn.password
+        aws = source_file.location.hook.get_credentials()
+        self.s3_access_key = aws.access_key
+        self.s3_secret_key = aws.secret_key
         self.s3_file_type = NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
 
         self.project_id = project_id
@@ -386,13 +399,11 @@ class S3ToBigqueryDataTransfer:
         s3_params = {
             "destination_table_name_template": self.target_table.name,
             "data_path": self.source_file.path,
-            "access_key_id": self.s3_login,
-            "secret_access_key": self.s3_password,
+            "access_key_id": self.s3_access_key,
+            "secret_access_key": self.s3_secret_key,
             "file_format": self.s3_file_type,
         }
         s3_params.update(self.native_support_kwargs)
-
-        s3_params.update(self.kwargs)
 
         params = Struct()
         params.update(s3_params)

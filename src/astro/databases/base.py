@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Tuple, Union
 import pandas as pd
 import sqlalchemy
 from airflow.hooks.dbapi import DbApiHook
+from pandas.io.sql import get_schema
 from sqlalchemy import column, insert, select
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
@@ -37,7 +38,6 @@ class BaseDatabase(ABC):
     _create_schema_statement: str = "CREATE SCHEMA IF NOT EXISTS {}"
     _drop_table_statement: str = "DROP TABLE IF EXISTS {}"
     _create_table_statement: str = "CREATE TABLE IF NOT EXISTS {} AS {}"
-    _truncate_table_statement: str = "TRUNCATE TABLE {}"
     # Used to normalize the ndjson when appending fields in nested fields.
     # Example -
     #   ndjson - {'a': {'b': 'val'}}
@@ -199,17 +199,6 @@ class BaseDatabase(ABC):
         :param table: The table to be deleted.
         """
         statement = self._drop_table_statement.format(
-            self.get_table_qualified_name(table)
-        )
-        self.run_sql(statement)
-
-    def truncate_table(self, table: Table) -> None:
-        """
-        Remove all rows from a given table.
-
-        :param table: Table from which all rows will be deleted.
-        """
-        statement = self._truncate_table_statement.format(
             self.get_table_qualified_name(table)
         )
         self.run_sql(statement)
@@ -503,22 +492,7 @@ class BaseDatabase(ABC):
         # When we pass chunksize we get reference to data and not the data.
         # We need to use read() to get the 1st chunk.
         df = df.read()
-
-        self.load_pandas_dataframe_to_table(
-            source_dataframe=df,
-            target_table=target_table,
-            if_exists="replace",
-            chunk_size=chunksize,
+        schema_statement = get_schema(
+            df, self.get_table_qualified_name(target_table), con=self.sqlalchemy_engine
         )
-        self.truncate_table(target_table)
-
-    def get_project_id(self, target_table) -> str:
-        """
-        Get project id from the hook.
-
-        :param target_table: table object that the hook is derived from.
-        """
-        try:
-            return str(self.hook.project_id)
-        except AttributeError:
-            raise ValueError(f"conn_id {target_table.conn_id} has no project id")
+        self.run_sql(schema_statement)
