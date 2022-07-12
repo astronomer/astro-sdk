@@ -31,6 +31,7 @@ release = "0.10.0"
 extensions = ["sphinx.ext.autodoc", "autoapi.extension", "myst_parser"]
 autodoc_typehints = "description"
 
+autoapi_keep_files = True
 autoapi_type = "python"
 autoapi_template_dir = "_autoapi_template"
 autoapi_dirs = ["../src"]
