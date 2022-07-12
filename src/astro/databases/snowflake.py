@@ -189,10 +189,10 @@ class SnowflakeDatabase(BaseDatabase):
         :param metadata: Contains Snowflake database and schema information
         :return: Stage created
         """
-        if storage_integration:
+        if storage_integration is not None:
             auth = f"storage_integration = {storage_integration};"
         else:
-            if file_.location.location_type == FileLocation.GS:
+            if file_.location.location_type == FileLocation.GS:  # to cover util 204
                 raise ValueError(
                     "In order to create an stage for GCS, `storage_integration` is required."
                 )
@@ -207,9 +207,7 @@ class SnowflakeDatabase(BaseDatabase):
                         "* AWS_KEY_ID and SECRET_KEY_ID"
                     )
 
-        if metadata is None:
-            metadata = self.default_metadata
-
+        metadata = metadata or self.default_metadata
         stage = SnowflakeStage(metadata=metadata)
         stage.set_url_from_file(file_)
 

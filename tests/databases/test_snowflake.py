@@ -1,6 +1,7 @@
 """Tests specific to the Sqlite Database implementation."""
 import os
 import pathlib
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
@@ -344,6 +345,13 @@ def test_create_table_from_select_statement(database_table_fixture):
     database.drop_table(target_table)
 
 
+def test_stage_set_name_after():
+    stage = SnowflakeStage()
+    stage.name = "abc"
+    assert stage.name == "abc"
+
+
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "remote_files_fixture",
     [
@@ -363,6 +371,7 @@ def test_stage_exists_false(remote_files_fixture):
     assert not database.stage_exists(stage)
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "remote_files_fixture",
     [
@@ -374,7 +383,7 @@ def test_stage_exists_false(remote_files_fixture):
     indirect=True,
     ids=["google_csv", "google_ndjson", "google_parquet", "amazon_csv"],
 )
-def test_create_stage(remote_files_fixture):
+def test_create_stage_succeeds(remote_files_fixture):
     file_fixture = File(remote_files_fixture[0])
     if file_fixture.location.location_type == FileLocation.GS:
         storage_integration = SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE
@@ -387,3 +396,32 @@ def test_create_stage(remote_files_fixture):
     )
     assert database.stage_exists(stage)
     database.drop_stage(stage)
+
+
+def test_create_stage_google_fails_due_to_no_storage_integration():
+    database = SnowflakeDatabase(conn_id="fake-conn")
+    with pytest.raises(ValueError) as exc_info:
+        database.create_stage(file_=File("gs://some-bucket/some-file.csv"))
+    expected_msg = (
+        "In order to create an stage for GCS, `storage_integration` is required."
+    )
+    assert exc_info.match(expected_msg)
+
+
+class MockCredentials:
+    access_key = None
+    secret_key = None
+
+
+@patch(
+    "astro.files.locations.amazon.s3.S3Hook.get_credentials",
+    return_value=MockCredentials(),
+)
+def test_create_stage_amazon_fails_due_to_no_credentials(get_credentials):
+    database = SnowflakeDatabase(conn_id="fake-conn")
+    with pytest.raises(ValueError) as exc_info:
+        database.create_stage(file_=File("s3://some-bucket/some-file.csv"))
+    expected_msg = (
+        "In order to create an stage for S3, one of the following is required"
+    )
+    assert exc_info.match(expected_msg)
