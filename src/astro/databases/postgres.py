@@ -1,9 +1,12 @@
 """Postgres database implementation."""
+import io
+from contextlib import closing
 from typing import Dict, List
 
 import pandas as pd
 import sqlalchemy
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+from pandas.io.sql import SQLDatabase
 from psycopg2 import sql as postgres_sql
 
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
@@ -74,15 +77,29 @@ class PostgresDatabase(BaseDatabase):
         if target_table.metadata and target_table.metadata.schema:
             self.create_schema_if_needed(target_table.metadata.schema)
             schema = target_table.metadata.schema.lower()
-        source_dataframe.to_sql(
-            target_table.name,
-            schema=schema,  # type: ignore
-            con=self.sqlalchemy_engine,
+        db = SQLDatabase(engine=self.sqlalchemy_engine)
+        # within prep_table() we use pandas drop() function which is used when we pass 'if_exists=replace'.
+        # There is an issue where has_table() works with uppercase table names but the function meta.reflect() don't.
+        # To prevent the issue we are passing table name in lowercase.
+        db.prep_table(
+            source_dataframe,
+            target_table.name.lower(),
+            schema=schema,
             if_exists=if_exists,
-            chunksize=chunk_size,
-            method="multi",
             index=False,
         )
+
+        output = io.StringIO()
+        source_dataframe.to_csv(output, sep=",", header=True, index=False)
+        output.seek(0)
+        table = self.get_table_qualified_name(target_table)
+        con = self.hook.get_conn()
+        with closing(con) as conn:
+            with closing(conn.cursor()) as cur:
+                cur.copy_expert(
+                    f"COPY {table} FROM STDIN DELIMITER ',' CSV HEADER;", output
+                )
+                conn.commit()
 
     @staticmethod
     def get_table_qualified_name(table: Table) -> str:  # skipcq: PYL-R0201

@@ -73,11 +73,16 @@ class File:
 
     def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes"""
+        import io
+
         mode = "rb" if self.is_binary() else "r"
+        io_obj = io.BytesIO() if self.is_binary() else io.StringIO()
         with smart_open.open(
             self.path, mode=mode, transport_params=self.location.transport_params
         ) as stream:
-            return self.type.export_to_dataframe(stream, **kwargs)
+            io_obj.write(stream.read())
+        io_obj.seek(0)
+        return self.type.export_to_dataframe(io_obj, **kwargs)
 
     def exists(self) -> bool:
         """Check if the file exists or not"""
