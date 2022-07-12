@@ -249,8 +249,8 @@ class SnowflakeDatabase(BaseDatabase):
         try:
             self.hook.run(sql_statement)
         except ProgrammingError:
-            msg = f"Stage '{stage.qualified_name}' does not exist or not authorized."
-            logging.error(msg)
+            msg = f""
+            logging.error("Stage '%s' does not exist or not authorized.", stage.qualified_name)
             return False
         return True
 
