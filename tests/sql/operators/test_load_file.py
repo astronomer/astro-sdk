@@ -841,6 +841,7 @@ def test_aql_load_file_optimized_path_method_is_not_called(
         assert not method.called
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
@@ -863,7 +864,7 @@ def test_aql_load_file_optimized_path_method_is_not_called_1(
     # file on S3 results in file not found, since that file is not propagated to all the servers/clusters,
     # and we might hit a server where the file in not yet populated, resulting in file not found issue.
     load_file(
-        input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_1"),
+        input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
         output_table=test_table,
         use_native_support=True,
         native_support_kwargs={
