@@ -226,6 +226,7 @@ class BaseDatabase(ABC):
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         use_native_support: bool = True,
+        native_support_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         """
@@ -237,7 +238,8 @@ class BaseDatabase(ABC):
         :param if_exists: Overwrite file if exists
         :param chunk_size: Specify the number of records in each batch to be written at a time
         :param use_native_support: Use native support for data transfer if available on the destination
-        :param normalize_config: pandas json_normalize params config.
+        :param normalize_config: pandas json_normalize params config
+        :param native_support_kwargs: kwargs to be used by method involved in native support flow
         """
         input_files = resolve_file_path_pattern(
             input_file.path,
@@ -252,6 +254,7 @@ class BaseDatabase(ABC):
                     source_file=file,
                     target_table=output_table,
                     if_exists=if_exists,
+                    native_support_kwargs=native_support_kwargs,
                     **kwargs,
                 )
             else:
@@ -472,11 +475,17 @@ class BaseDatabase(ABC):
         source_file: File,
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
+        native_support_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         """
         Checks if optimised path for transfer between File location to database exists
-        and if it does, it transfers it and returns true else false.
+        and if it does, it transfers it and returns true else false
+
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table that needs to be populated with file data
+        :param if_exists: Overwrite file if exists. Default False
+        :param native_support_kwargs: kwargs to be used by method involved in native support flow
         """
         raise NotImplementedError
 
@@ -494,6 +503,7 @@ class BaseDatabase(ABC):
         # When we pass chunksize we get reference to data and not the data.
         # We need to use read() to get the 1st chunk.
         df = df.read()
+
         self.load_pandas_dataframe_to_table(
             source_dataframe=df,
             target_table=target_table,

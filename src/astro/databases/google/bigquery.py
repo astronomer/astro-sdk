@@ -1,6 +1,6 @@
 """Google BigQuery table implementation."""
 import time
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 from airflow.hooks.base import BaseHook
@@ -12,6 +12,7 @@ from google.protobuf import timestamp_pb2  # type: ignore
 from google.protobuf.struct_pb2 import Struct  # type: ignore
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
+from tenacity import retry, stop_after_attempt
 
 from astro import settings
 from astro.constants import (
@@ -175,11 +176,17 @@ class BigqueryDatabase(BaseDatabase):
         source_file: File,
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
+        native_support_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         """
         Checks if optimised path for transfer between File location to database exists
         and if it does, it transfers it and returns true else false.
+
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table that needs to be populated with file data
+        :param if_exists: Overwrite file if exists. Default False
+        :param native_support_kwargs: kwargs to be used by method involved in native support flow
         """
         method_name = self.NATIVE_PATHS.get(source_file.location.location_type)
         if method_name:
@@ -188,6 +195,7 @@ class BigqueryDatabase(BaseDatabase):
                 source_file=source_file,
                 target_table=target_table,
                 if_exists=if_exists,
+                native_support_kwargs=native_support_kwargs,
                 **kwargs,
             )
         else:
@@ -201,6 +209,7 @@ class BigqueryDatabase(BaseDatabase):
         source_file: File,
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
+        native_support_kwargs: Optional[Dict] = None,
         **kwargs,
     ) -> None:
         """
@@ -209,7 +218,9 @@ class BigqueryDatabase(BaseDatabase):
         :param source_file: Source file that is used as source of data
         :param target_table: Table that will be created on the bigquery
         :param if_exists: Overwrite table if exists. Default 'replace'
+        :param native_support_kwargs: kwargs to be used by method involved in native support flow
         """
+        native_support_kwargs = native_support_kwargs or {}
 
         write_disposition_val = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
 
@@ -225,6 +236,7 @@ class BigqueryDatabase(BaseDatabase):
             "sourceFormat": NATIVE_PATHS_SUPPORTED_FILE_TYPES[source_file.type.name],
             "autodetect": True,
         }
+        native_support_kwargs.update(native_support_kwargs)
 
         # Since bigquery has other options besides used here, we need to expose them to end user.
         # https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#JobConfigurationLoad
@@ -244,6 +256,7 @@ class BigqueryDatabase(BaseDatabase):
         source_file: File,
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
+        native_support_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         """
@@ -252,8 +265,10 @@ class BigqueryDatabase(BaseDatabase):
         :param source_file: Source file that is used as source of data
         :param target_table: Table that will be created on the bigquery
         :param if_exists: Overwrite table if exists. Default 'replace'
-        :return:
+        :param native_support_kwargs: kwargs to be used by method involved in native support flow
         """
+        native_support_kwargs = native_support_kwargs or {}
+
         project_id = self.get_project_id(target_table)
 
         if if_exists == "replace":
@@ -262,7 +277,11 @@ class BigqueryDatabase(BaseDatabase):
             self.create_empty_table(source_file, target_table)
 
         transfer = S3ToBigqueryDataTransfer(
-            target_table=target_table, source_file=source_file, project_id=project_id
+            target_table=target_table,
+            source_file=source_file,
+            project_id=project_id,
+            native_support_kwargs=native_support_kwargs,
+            **kwargs,
         )
         transfer.run()
 
@@ -278,12 +297,15 @@ class S3ToBigqueryDataTransfer:
         source_file: File,
         project_id: str,
         poll_duration: int = 1,
+        native_support_kwargs: Optional[Dict] = None,
+        **kwargs,
     ):
         """
         :param source_file: Source file that is used as source of data
         :param target_table: Table that will be created on the bigquery
         :param project_id: Bigquery project id
         :param poll_duration: sleep duration between two consecutive job status checks. Unit - seconds. Default 1 sec.
+        :param native_support_kwargs: kwargs to be used by method involved in native support flow
         """
         self.client = bigquery_datatransfer.DataTransferServiceClient()
         self.target_table = target_table
@@ -296,6 +318,8 @@ class S3ToBigqueryDataTransfer:
 
         self.project_id = project_id
         self.poll_duration = poll_duration
+        self.native_support_kwargs = native_support_kwargs
+        self.kwargs = kwargs
 
     def run(self):
         """
@@ -327,16 +351,20 @@ class S3ToBigqueryDataTransfer:
         """
         Create bigquery transfer config on cloud
         """
+        s3_params = {
+            "destination_table_name_template": self.target_table.name,
+            "data_path": self.source_file.path,
+            "access_key_id": self.s3_login,
+            "secret_access_key": self.s3_password,
+            "file_format": self.s3_file_type,
+        }
+        s3_params.update(self.native_support_kwargs)
+
+        s3_params.update(self.kwargs)
+
         params = Struct()
-        params.update(
-            {
-                "destination_table_name_template": self.target_table.name,
-                "data_path": self.source_file.path,
-                "access_key_id": self.s3_login,
-                "secret_access_key": self.s3_password,
-                "file_format": self.s3_file_type,
-            }
-        )
+        params.update(s3_params)
+
         transfer_config = bigquery_datatransfer.TransferConfig(
             name="s3_to_bigquery",
             display_name="s3_to_bigquery",
@@ -375,6 +403,7 @@ class S3ToBigqueryDataTransfer:
         run = self.client.start_manual_transfer_runs(run_req)
         return run.runs[0].name
 
+    @retry(stop=stop_after_attempt(3))
     def get_transfer_info(self, run_id):
         """Get transfer job info
 
