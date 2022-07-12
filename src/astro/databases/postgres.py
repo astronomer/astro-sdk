@@ -83,15 +83,16 @@ class PostgresDatabase(BaseDatabase):
             if_exists=if_exists,
             index=False,
         )
-        output = io.StringIO()
-        source_dataframe.to_csv(output, sep=",", header=True, index=False)
-        output.seek(0)
-        table = self.get_table_qualified_name(target_table)
-        con = self.hook.get_conn()
-        with closing(con) as conn:
+        output_buffer = io.StringIO()
+        source_dataframe.to_csv(output_buffer, sep=",", header=True, index=False)
+        output_buffer.seek(0)
+        table_name = self.get_table_qualified_name(target_table)
+        postgres_conn = self.hook.get_conn()
+        with closing(postgres_conn) as conn:
             with closing(conn.cursor()) as cur:
                 cur.copy_expert(
-                    f"COPY {table} FROM STDIN DELIMITER ',' CSV HEADER;", output
+                    f"COPY {table_name} FROM STDIN DELIMITER ',' CSV HEADER;",
+                    output_buffer,
                 )
                 conn.commit()
 
