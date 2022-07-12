@@ -207,7 +207,7 @@ class BaseDatabase(ABC):
         """
         Remove all rows from a given table.
 
-        :param table: The table to be deleted.
+        :param table: Table from which all rows will be deleted.
         """
         statement = self._truncate_table_statement.format(
             self.get_table_qualified_name(table)
