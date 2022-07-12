@@ -485,7 +485,7 @@ class BaseDatabase(ABC):
         :param source_file: File from which we need to transfer data
         :param target_table: Table that needs to be populated with file data
         :param if_exists: Overwrite file if exists. Default False
-        :param native_support_kwargs: kwargs to be used by method involved in native support flow
+        :param native_support_kwargs: kwargs to be used by native loading command
         """
         raise NotImplementedError
 
