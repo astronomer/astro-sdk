@@ -52,5 +52,3 @@ connections:
     conn_type: aws
     description: null
     extra: null
-    login: $AWS_ACCESS_KEY_ID
-    password: $AWS_SECRET_ACCESS_KEY
