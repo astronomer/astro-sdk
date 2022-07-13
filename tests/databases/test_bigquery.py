@@ -6,6 +6,12 @@ from urllib.parse import urlparse
 import pandas as pd
 import pytest
 import sqlalchemy
+from databases.google.bigquery import S3ToBigqueryDataTransfer
+from google.cloud.bigquery_datatransfer_v1.types import (
+    StartManualTransferRunsResponse,
+    TransferConfig,
+    TransferRun,
+)
 
 from astro.constants import Database
 from astro.databases import create_database
@@ -355,3 +361,26 @@ def test_create_table_from_select_statement(database_table_fixture):
     expected = pd.DataFrame([{"id": 1, "name": "First"}])
     test_utils.assert_dataframes_are_equal(df, expected)
     database.drop_table(target_table)
+
+
+def test_get_transfer_config_id():
+    config = TransferConfig()
+    config.name = "projects/103191871648/locations/us/transferConfigs/6302bf19-0000-26cf-a568-94eb2c0a61ee"
+    assert (
+        S3ToBigqueryDataTransfer.get_transfer_config_id(config)
+        == "6302bf19-0000-26cf-a568-94eb2c0a61ee"
+    )
+
+
+def test_get_run_id():
+    config = StartManualTransferRunsResponse()
+    run = TransferRun()
+    run.name = (
+        "projects/103191871648/locations/us/transferConfigs/"
+        "62d38894-0000-239c-a4d8-089e08325b54/runs/62d6a4df-0000-2fad-8752-d4f547e68ef4"
+    )
+    config.runs.append(run)
+    assert (
+        S3ToBigqueryDataTransfer.get_run_id(config)
+        == "62d6a4df-0000-2fad-8752-d4f547e68ef4"
+    )

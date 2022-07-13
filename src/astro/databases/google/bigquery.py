@@ -10,8 +10,8 @@ from airflow.providers.google.cloud.hooks.bigquery_dts import (
 from google.api_core.exceptions import NotFound as GoogleNotFound
 from google.cloud import bigquery_datatransfer
 from google.cloud.bigquery_datatransfer_v1.types import (
+    StartManualTransferRunsResponse,
     TransferConfig,
-    TransferRun,
     TransferState,
 )
 from google.protobuf import timestamp_pb2  # type: ignore
@@ -377,19 +377,19 @@ class S3ToBigqueryDataTransfer:
         Extract transfer_config_id from TransferConfig object
         """
         # ToDo: Look for a native way to extract 'transfer_config_id'
-        # name - "projects/103191871648/locations/us/transferConfigs/6302bf19-0000-26cf-a568-94eb2c0a61ee'.
+        # name - 'projects/103191871648/locations/us/transferConfigs/6302bf19-0000-26cf-a568-94eb2c0a61ee'
         # We need extract transferConfigs which is at the end of string.
         tokens = config.name.split("transferConfigs/")
         return str(tokens[-1])
 
     @staticmethod
-    def get_run_id(config: TransferRun) -> str:
+    def get_run_id(config: StartManualTransferRunsResponse) -> str:
         """
-        Extract run_id from TransferRun object
+        Extract run_id from StartManualTransferRunsResponse object
         """
         # ToDo: Look for a native way to extract 'run_id'
         # config.runs[0].name - "projects/103191871648/locations/us/
-        # transferConfigs/62d38894-0000-239c-a4d8-089e08325b54/runs/62d6a4df-0000-2fad-8752-d4f547e68ef4'.
+        # transferConfigs/62d38894-0000-239c-a4d8-089e08325b54/runs/62d6a4df-0000-2fad-8752-d4f547e68ef4'
         # We need extract transferConfigs which is at the end of string.
         tokens = config.runs[0].name.split("runs/")
         return str(tokens[-1])
