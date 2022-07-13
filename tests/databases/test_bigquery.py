@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 import pandas as pd
 import pytest
 import sqlalchemy
-from databases.google.bigquery import S3ToBigqueryDataTransfer
 from google.cloud.bigquery_datatransfer_v1.types import (
     StartManualTransferRunsResponse,
     TransferConfig,
@@ -15,7 +14,7 @@ from google.cloud.bigquery_datatransfer_v1.types import (
 
 from astro.constants import Database
 from astro.databases import create_database
-from astro.databases.google.bigquery import BigqueryDatabase
+from astro.databases.google.bigquery import BigqueryDatabase, S3ToBigqueryDataTransfer
 from astro.exceptions import NonExistentTableException
 from astro.files import File
 from astro.settings import SCHEMA
