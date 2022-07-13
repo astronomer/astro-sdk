@@ -15,13 +15,14 @@ from unittest import mock
 
 import pandas as pd
 import pytest
-from airflow.exceptions import AirflowException, BackfillUnfinished
+from airflow.exceptions import BackfillUnfinished
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
 from pandas.testing import assert_frame_equal
 
 from astro import sql as aql
 from astro.constants import Database, FileType
+from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
@@ -72,14 +73,12 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
     os.environ, {"AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE": "False"}
 )
 def test_unsafe_loading_of_dataframe(sample_dag):
-    with pytest.raises(AirflowException):
-        with sample_dag:
-            load_file(
-                input_file=File(
-                    "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/homes_main.csv"
-                ),
-            )
-        test_utils.run_dag(sample_dag)
+    with pytest.raises(IllegalLoadToDatabaseException):
+        load_file(
+            input_file=File(
+                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/homes_main.csv"
+            ),
+        ).operator.execute({})
 
 
 @pytest.mark.integration
