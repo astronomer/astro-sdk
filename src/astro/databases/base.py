@@ -1,6 +1,7 @@
 from abc import ABC
 from typing import Dict, List, Optional, Tuple, Union
 
+import pandas
 import pandas as pd
 import sqlalchemy
 from airflow.hooks.dbapi import DbApiHook
@@ -479,19 +480,16 @@ class BaseDatabase(ABC):
         raise NotImplementedError
 
     def create_empty_table(
-        self, source_file: File, target_table: Table, chunksize: int = 1000
+        self, source_file: File, target_table: Table, nrows: int = 1000
     ):
         """
         Infer schema from source file and create and empty table in database
 
         :param source_file: File from which we need to transfer data
         :param target_table: Table that needs to be populated with file data
-        :param chunksize: No. of rows to use to infer schema
+        :param nrows: No. of rows to use to infer schema
         """
-        df = source_file.export_to_dataframe(chunksize=chunksize)
-        # When we pass chunksize we get reference to data and not the data.
-        # We need to use read() to get the 1st chunk.
-        df = df.read()
+        df = source_file.export_to_dataframe(nrows=nrows)
         schema_statement = get_schema(
             df, self.get_table_qualified_name(target_table), con=self.sqlalchemy_engine
         )
