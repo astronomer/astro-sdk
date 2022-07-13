@@ -91,13 +91,12 @@ class PostgresDatabase(BaseDatabase):
         output_buffer.seek(0)
         table_name = self.get_table_qualified_name(target_table)
         postgres_conn = self.hook.get_conn()
-        with closing(postgres_conn) as conn:
-            with closing(conn.cursor()) as cur:
-                cur.copy_expert(
-                    f"COPY {table_name} FROM STDIN DELIMITER ',' CSV HEADER;",
-                    output_buffer,
-                )
-                conn.commit()
+        with closing(postgres_conn) as conn, closing(conn.cursor()) as cur:
+            cur.copy_expert(
+                f"COPY {table_name} FROM STDIN DELIMITER ',' CSV HEADER;",
+                output_buffer,
+            )
+            conn.commit()
 
     @staticmethod
     def get_table_qualified_name(table: Table) -> str:  # skipcq: PYL-R0201
