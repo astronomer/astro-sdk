@@ -266,10 +266,10 @@ class BigqueryDatabase(BaseDatabase):
         **kwargs,
     ):
         """
-         Load content of multiple files in S3 to output_table in Bigquery by using a datatransfer job
+        Load content of multiple files in S3 to output_table in Bigquery by using a datatransfer job
         Note - To use this function we need
-            1. Enable API on Bigquery
-            2. Enable Data transfer service on Bigquery, which is a chargeable service
+        1. Enable API on Bigquery
+        2. Enable Data transfer service on Bigquery, which is a chargeable service
         for more information refer - https://cloud.google.com/bigquery-transfer/docs/enable-transfer-service
 
         :param source_file: Source file that is used as source of data
@@ -342,9 +342,7 @@ class S3ToBigqueryDataTransfer:
         self.kwargs = kwargs
 
     def run(self):
-        """
-        Algo to run S3 to Bigquery datatransfer
-        """
+        """Algo to run S3 to Bigquery datatransfer"""
         transfer_config_id = self.create_transfer_config()
         try:
             # Manually run a transfer job using previously created transfer config
@@ -373,9 +371,7 @@ class S3ToBigqueryDataTransfer:
 
     @staticmethod
     def get_transfer_config_id(config: TransferConfig) -> str:
-        """
-        Extract transfer_config_id from TransferConfig object
-        """
+        """Extract transfer_config_id from TransferConfig object"""
         # ToDo: Look for a native way to extract 'transfer_config_id'
         # name - 'projects/103191871648/locations/us/transferConfigs/6302bf19-0000-26cf-a568-94eb2c0a61ee'
         # We need extract transferConfigs which is at the end of string.
@@ -384,9 +380,7 @@ class S3ToBigqueryDataTransfer:
 
     @staticmethod
     def get_run_id(config: StartManualTransferRunsResponse) -> str:
-        """
-        Extract run_id from StartManualTransferRunsResponse object
-        """
+        """Extract run_id from StartManualTransferRunsResponse object"""
         # ToDo: Look for a native way to extract 'run_id'
         # config.runs[0].name - "projects/103191871648/locations/us/
         # transferConfigs/62d38894-0000-239c-a4d8-089e08325b54/runs/62d6a4df-0000-2fad-8752-d4f547e68ef4'
