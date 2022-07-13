@@ -878,9 +878,7 @@ def test_aql_load_file_optimized_path_method_is_not_called(
     indirect=True,
     ids=["Bigquery"],
 )
-def test_aql_load_file_s3_native_path(
-    sample_dag, database_table_fixture
-):
+def test_aql_load_file_s3_native_path(sample_dag, database_table_fixture):
     """
     Verify that the optimised path method is skipped in case use_native_support is set to False.
     """
@@ -925,8 +923,10 @@ def test_loading_local_file_to_bigquery(database_table_fixture):
         input_file=File(path),
         output_table=test_table,
         use_native_support=True,
+        native_support_kwargs={
+            "skip_leading_rows": "1",
+        },
     ).operator.execute({})
 
     bigquery_df = db.export_table_to_pandas_dataframe(test_table)
     assert bigquery_df.shape == (3, 9)
-
