@@ -15,7 +15,15 @@
 # sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
-from astro import __version__
+
+# We don't want to download the astro package every time we build docs, so this allows us to get the version number
+# without installing astro
+__version__ = None
+with open("../src/astro/__init__.py") as f:
+    while not __version__:
+        current_line = f.readline()
+        if "__version__" in current_line:
+            __version__ = current_line.split(" ")[-1]
 
 project = "astro-sdk"
 copyright = "2022, Astronomer inc."  # noqa
