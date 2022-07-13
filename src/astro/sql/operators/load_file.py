@@ -1,4 +1,3 @@
-import os
 from typing import Any, Dict, Optional, Union
 
 import pandas as pd
@@ -69,12 +68,10 @@ class LoadFile(BaseOperator):
         if self.output_table:
             return self.load_data_to_table(input_file)
         else:
-            if (
-                conf.get("core", "xcom_backend") == "airflow.models.xcom.BaseXCom"
-                and os.getenv(
-                    "AIRFLOW__ASTRO_SDK__DATAFRAME__ALLOW_UNSAFE_STORAGE", "False"
-                ).lower()
-                != "true"
+            if conf.get(
+                "core", "xcom_backend"
+            ) == "airflow.models.xcom.BaseXCom" and not conf.getboolean(
+                "astro_sdk", "dataframe_allow_unsafe_storage"
             ):
                 raise AirflowException(LOAD_DATAFRAME_ERROR_MESSAGE)
             return self.load_data_to_dataframe(input_file)

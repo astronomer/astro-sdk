@@ -69,7 +69,7 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
 
 @pytest.mark.integration
 @mock.patch.dict(
-    os.environ, {"AIRFLOW__ASTRO_SDK__DATAFRAME__ALLOW_UNSAFE_STORAGE": "False"}
+    os.environ, {"AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE": "False"}
 )
 def test_unsafe_loading_of_dataframe(sample_dag):
     with pytest.raises(AirflowException):

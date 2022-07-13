@@ -1,5 +1,4 @@
 import inspect
-import os
 from typing import Callable, Dict, Optional, Tuple, Union
 
 import pandas as pd
@@ -134,12 +133,10 @@ class DataframeOperator(DecoratedOperator):
             )
             return self.output_table
         else:
-            if (
-                conf.get("core", "xcom_backend") == "airflow.models.xcom.BaseXCom"
-                and os.getenv(
-                    "AIRFLOW__ASTRO_SDK__DATAFRAME__ALLOW_UNSAFE_STORAGE", "False"
-                ).lower()
-                != "true"
+            if conf.get(
+                "core", "xcom_backend"
+            ) == "airflow.models.xcom.BaseXCom" and not conf.getboolean(
+                "astro_sdk", "dataframe_allow_unsafe_storage"
             ):
                 raise AirflowException(LOAD_DATAFRAME_ERROR_MESSAGE)
             return pandas_dataframe
