@@ -11,7 +11,5 @@ SNOWFLAKE_STORAGE_INTEGRATION_AMAZON = conf.get(
 )
 
 SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE = conf.get(
-    section="astro_sdk",
-    key="snowflake_storage_integration_google",
-    fallback="gcs_int_python_sdk",
+    section="astro_sdk", key="snowflake_storage_integration_google", fallback=None
 )
