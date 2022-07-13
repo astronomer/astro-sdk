@@ -740,9 +740,9 @@ def is_dict_subset(superset: dict, subset: dict) -> bool:
 
 @pytest.mark.parametrize(
     "remote_files_fixture",
-    [{"provider": "google"}],
+    [{"provider": "google"}, {"provider": "amazon"}],
     indirect=True,
-    ids=["google_gcs"],
+    ids=["google_gcs", "amazon_s3"],
 )
 @pytest.mark.parametrize(
     "database_table_fixture",
@@ -768,13 +768,21 @@ def test_aql_load_file_optimized_path_method_called(
     file = File(file_uri)
     optimised_path_to_method = {
         ("gs", "bigquery",): {
-            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.gs_to_bigquery",
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_gs_file_to_bigquery",
             "expected_kwargs": {
                 "source_file": file,
                 "target_table": test_table,
             },
             "expected_args": (),
-        }
+        },
+        ("s3", "bigquery",): {
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_s3_file_to_bigquery",
+            "expected_kwargs": {
+                "source_file": file,
+                "target_table": test_table,
+            },
+            "expected_args": (),
+        },
     }
 
     source = file_uri.split(":")[0]
@@ -795,9 +803,9 @@ def test_aql_load_file_optimized_path_method_called(
 
 @pytest.mark.parametrize(
     "remote_files_fixture",
-    [{"provider": "google"}],
+    [{"provider": "google"}, {"provider": "amazon"}],
     indirect=True,
-    ids=["google_gcs"],
+    ids=["google_gcs", "amazon_s3"],
 )
 @pytest.mark.parametrize(
     "database_table_fixture",
@@ -826,8 +834,11 @@ def test_aql_load_file_optimized_path_method_is_not_called(
     # }
     optimised_path_to_method = {
         ("gs", "bigquery",): {
-            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.gs_to_bigquery",
-        }
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_gs_file_to_bigquery",
+        },
+        ("s3", "bigquery",): {
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_s3_file_to_bigquery",
+        },
     }
 
     source = file_uri.split(":")[0]

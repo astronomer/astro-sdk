@@ -1,3 +1,4 @@
+import pathlib
 from unittest import mock
 
 import pytest
@@ -8,6 +9,8 @@ from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.sql.table import Table
+
+CWD = pathlib.Path(__file__).parent
 
 
 class DatabaseSubclass(BaseDatabase):
@@ -135,7 +138,7 @@ def test_load_file_to_table_natively(
 )
 def test_create_empty_table(database_table_fixture):
     db, test_table = database_table_fixture
-    file = File(path="../data/homes_main.csv")
+    file = File(path=str(CWD) + "/../data/homes_main.csv")
 
     database = create_database(test_table.conn_id)
     database.create_empty_table(source_file=file, target_table=test_table)

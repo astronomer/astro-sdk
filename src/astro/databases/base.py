@@ -1,7 +1,6 @@
 from abc import ABC
 from typing import Dict, List, Optional, Tuple, Union
 
-import pandas
 import pandas as pd
 import sqlalchemy
 from airflow.hooks.dbapi import DbApiHook
