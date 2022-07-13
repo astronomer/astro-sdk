@@ -1,3 +1,4 @@
+import pathlib
 from unittest import mock
 
 import pytest
@@ -8,6 +9,8 @@ from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.sql.table import Table
+
+CWD = pathlib.Path(__file__).parent
 
 
 class DatabaseSubclass(BaseDatabase):
@@ -125,3 +128,32 @@ def test_load_file_to_table_natively(
         assert method.called
         assert is_dict_subset(superset=method.call_args.kwargs, subset=expected_kwargs)
         assert method.call_args.args == expected_args
+
+
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [{"database": Database.BIGQUERY, "table": Table(conn_id="bigquery")}],
+    indirect=True,
+    ids=["bigquery"],
+)
+def test_create_empty_table(database_table_fixture):
+    db, test_table = database_table_fixture
+    file = File(path=str(CWD) + "/../data/homes_main.csv")
+
+    database = create_database(test_table.conn_id)
+    database.create_empty_table(source_file=file, target_table=test_table)
+
+    df = db.export_table_to_pandas_dataframe(test_table)
+    cols = list(df.columns)
+    cols.sort()
+    assert cols == [
+        "acres",
+        "age",
+        "baths",
+        "beds",
+        "list",
+        "living",
+        "rooms",
+        "sell",
+        "taxes",
+    ]
