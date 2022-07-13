@@ -8,7 +8,7 @@ from airflow.providers.google.cloud.hooks.bigquery_dts import (
     BiqQueryDataTransferServiceHook,
 )
 from google.api_core.exceptions import NotFound as GoogleNotFound
-from google.cloud import bigquery_datatransfer
+from google.cloud import bigquery, bigquery_datatransfer
 from google.cloud.bigquery_datatransfer_v1.types import (
     StartManualTransferRunsResponse,
     TransferConfig,
@@ -16,8 +16,6 @@ from google.cloud.bigquery_datatransfer_v1.types import (
 )
 from google.protobuf import timestamp_pb2  # type: ignore
 from google.protobuf.struct_pb2 import Struct  # type: ignore
-from google.cloud import bigquery
-
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from tenacity import retry, stop_after_attempt
@@ -323,13 +321,17 @@ class BigqueryDatabase(BaseDatabase):
         **kwargs,
     ) -> None:
         """Transfer data from local to bigquery"""
+        native_support_kwargs = native_support_kwargs or {}
+
         write_disposition_val = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
         client = self.hook.get_client()
         config = {
-            "source_format": self.NATIVE_PATHS_SUPPORTED_FILE_TYPES[source_file.type.name]
+            "source_format": self.NATIVE_PATHS_SUPPORTED_FILE_TYPES[
+                source_file.type.name
+            ],
             "create_disposition": "CREATE_IF_NEEDED",
             "write_disposition": write_disposition_val[if_exists],
-            "autodetect": True
+            "autodetect": True,
         }
         config.update(native_support_kwargs)
         job_config = bigquery.LoadJobConfig(config)
@@ -341,6 +343,7 @@ class BigqueryDatabase(BaseDatabase):
                 destination=self.get_table_qualified_name(target_table),
             )
         job.result()
+
 
 class S3ToBigqueryDataTransfer:
     """
