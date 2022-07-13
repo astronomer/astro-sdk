@@ -1,11 +1,13 @@
 from typing import Any, Dict, Optional, Union
 
 import pandas as pd
+from airflow.configuration import conf
 from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 from astro.databases import BaseDatabase, create_database
+from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.table import Table
 from astro.utils.task_id_helper import get_task_id
@@ -20,6 +22,7 @@ class LoadFile(BaseOperator):
     :param chunk_size: Specify the number of records in each batch to be written at a time.
     :param if_exists: Overwrite file if exists. Default False.
     :param use_native_support: Use native support for data transfer if available on the destination.
+    :param native_support_kwargs: kwargs to be used by method involved in native support flow
 
     :return: If ``output_table`` is passed this operator returns a Table object. If not
         passed, returns a dataframe.
@@ -35,6 +38,7 @@ class LoadFile(BaseOperator):
         if_exists: LoadExistStrategy = "replace",
         ndjson_normalize_sep: str = "_",
         use_native_support: bool = True,
+        native_support_kwargs: Optional[Dict] = None,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -46,6 +50,7 @@ class LoadFile(BaseOperator):
         self.ndjson_normalize_sep = ndjson_normalize_sep
         self.normalize_config: Dict[str, str] = {}
         self.use_native_support = use_native_support
+        self.native_support_kwargs: Dict[str, Any] = native_support_kwargs or {}
 
     def execute(self, context: Any) -> Union[Table, pd.DataFrame]:  # skipcq: PYL-W0613
         """
@@ -62,6 +67,12 @@ class LoadFile(BaseOperator):
         if self.output_table:
             return self.load_data_to_table(input_file)
         else:
+            if conf.get(
+                "core", "xcom_backend"
+            ) == "airflow.models.xcom.BaseXCom" and not conf.getboolean(
+                "astro_sdk", "dataframe_allow_unsafe_storage"
+            ):
+                raise IllegalLoadToDatabaseException()
             return self.load_data_to_dataframe(input_file)
 
     def load_data_to_table(self, input_file: File) -> Table:
@@ -86,6 +97,7 @@ class LoadFile(BaseOperator):
             if_exists=self.if_exists,
             chunk_size=self.chunk_size,
             use_native_support=self.use_native_support,
+            native_support_kwargs=self.native_support_kwargs,
         )
         self.log.info("Completed loading the data into %s.", self.output_table)
         return self.output_table
@@ -157,6 +169,7 @@ def load_file(
     if_exists: LoadExistStrategy = "replace",
     ndjson_normalize_sep: str = "_",
     use_native_support: bool = True,
+    native_support_kwargs: Optional[Dict] = None,
     **kwargs: Any,
 ) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.
@@ -168,6 +181,7 @@ def load_file(
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
         ex - ``{"a": {"b":"c"}}`` will result in: ``column - "a_b"`` where ``ndjson_normalize_sep = "_"``
     :param use_native_support: Use native support for data transfer if available on the destination.
+    :param native_support_kwargs: kwargs to be used by method involved in native support flow
     """
 
     # Note - using path for task id is causing issues as it's a pattern and
@@ -181,5 +195,6 @@ def load_file(
         if_exists=if_exists,
         ndjson_normalize_sep=ndjson_normalize_sep,
         use_native_support=use_native_support,
+        native_support_kwargs=native_support_kwargs,
         **kwargs,
     ).output

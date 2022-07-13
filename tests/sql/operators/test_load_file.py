@@ -9,6 +9,7 @@ Run test:
     python3 -m unittest tests.operators.test_load_file.TestLoadFile.test_aql_local_file_to_postgres
 
 """
+import os
 import pathlib
 from unittest import mock
 
@@ -21,6 +22,7 @@ from pandas.testing import assert_frame_equal
 
 from astro import sql as aql
 from astro.constants import Database, FileType
+from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
@@ -64,6 +66,19 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
 
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (3, 9)
+
+
+@pytest.mark.integration
+@mock.patch.dict(
+    os.environ, {"AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE": "False"}
+)
+def test_unsafe_loading_of_dataframe(sample_dag):
+    with pytest.raises(IllegalLoadToDatabaseException):
+        load_file(
+            input_file=File(
+                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/homes_main.csv"
+            ),
+        ).operator.execute({})
 
 
 @pytest.mark.integration
@@ -703,9 +718,9 @@ def is_dict_subset(superset: dict, subset: dict) -> bool:
 
 @pytest.mark.parametrize(
     "remote_files_fixture",
-    [{"provider": "google"}],
+    [{"provider": "google"}, {"provider": "amazon"}],
     indirect=True,
-    ids=["google_gcs"],
+    ids=["google_gcs", "amazon_s3"],
 )
 @pytest.mark.parametrize(
     "database_table_fixture",
@@ -731,13 +746,21 @@ def test_aql_load_file_optimized_path_method_called(
     file = File(file_uri)
     optimised_path_to_method = {
         ("gs", "bigquery",): {
-            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.gs_to_bigquery",
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_gs_file_to_bigquery",
             "expected_kwargs": {
                 "source_file": file,
                 "target_table": test_table,
             },
             "expected_args": (),
-        }
+        },
+        ("s3", "bigquery",): {
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_s3_file_to_bigquery",
+            "expected_kwargs": {
+                "source_file": file,
+                "target_table": test_table,
+            },
+            "expected_args": (),
+        },
     }
 
     source = file_uri.split(":")[0]
@@ -758,9 +781,9 @@ def test_aql_load_file_optimized_path_method_called(
 
 @pytest.mark.parametrize(
     "remote_files_fixture",
-    [{"provider": "google"}],
+    [{"provider": "google"}, {"provider": "amazon"}],
     indirect=True,
-    ids=["google_gcs"],
+    ids=["google_gcs", "amazon_s3"],
 )
 @pytest.mark.parametrize(
     "database_table_fixture",
@@ -789,8 +812,11 @@ def test_aql_load_file_optimized_path_method_is_not_called(
     # }
     optimised_path_to_method = {
         ("gs", "bigquery",): {
-            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.gs_to_bigquery",
-        }
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_gs_file_to_bigquery",
+        },
+        ("s3", "bigquery",): {
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_s3_file_to_bigquery",
+        },
     }
 
     source = file_uri.split(":")[0]
@@ -799,8 +825,43 @@ def test_aql_load_file_optimized_path_method_is_not_called(
 
     with mock.patch(mock_path) as method:
         load_file(
-            input_file=File(file_uri),
-            output_table=test_table,
-            use_native_support=False,
+            input_file=File(file_uri), output_table=test_table, use_native_support=False
         ).operator.execute({})
         assert not method.called
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+        }
+    ],
+    indirect=True,
+    ids=["Bigquery"],
+)
+def test_aql_load_file_optimized_path_method_is_not_called_1(
+    sample_dag, database_table_fixture
+):
+    """
+    Verify that the optimised path method is skipped in case use_native_support is set to False.
+    """
+    db, test_table = database_table_fixture
+
+    # We are using a preexisting file for integration test, since the dynamically populating
+    # file on S3 results in file not found, since that file is not propagated to all the servers/clusters,
+    # and we might hit a server where the file in not yet populated, resulting in file not found issue.
+    load_file(
+        input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
+        output_table=test_table,
+        use_native_support=True,
+        native_support_kwargs={
+            "ignore_unknown_values": True,
+            "allow_jagged_rows": True,
+            "skip_leading_rows": "1",
+        },
+    ).operator.execute({})
+
+    df = db.export_table_to_pandas_dataframe(test_table)
+    assert df.shape == (3, 9)

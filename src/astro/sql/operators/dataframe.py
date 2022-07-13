@@ -2,9 +2,11 @@ import inspect
 from typing import Callable, Dict, Optional, Tuple, Union
 
 import pandas as pd
+from airflow.configuration import conf
 from airflow.decorators.base import DecoratedOperator
 
 from astro.databases import create_database
+from astro.exceptions import IllegalLoadToDatabaseException
 from astro.sql.table import Table
 from astro.utils.table import find_first_table
 
@@ -130,4 +132,10 @@ class DataframeOperator(DecoratedOperator):
             )
             return self.output_table
         else:
+            if conf.get(
+                "core", "xcom_backend"
+            ) == "airflow.models.xcom.BaseXCom" and not conf.getboolean(
+                "astro_sdk", "dataframe_allow_unsafe_storage"
+            ):
+                raise IllegalLoadToDatabaseException()
             return pandas_dataframe
