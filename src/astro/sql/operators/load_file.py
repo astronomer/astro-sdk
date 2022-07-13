@@ -2,16 +2,12 @@ from typing import Any, Dict, Optional, Union
 
 import pandas as pd
 from airflow.configuration import conf
-from airflow.exceptions import AirflowException
 from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
-from astro.constants import (
-    DEFAULT_CHUNK_SIZE,
-    LOAD_DATAFRAME_ERROR_MESSAGE,
-    LoadExistStrategy,
-)
+from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 from astro.databases import BaseDatabase, create_database
+from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.table import Table
 from astro.utils.task_id_helper import get_task_id
@@ -73,7 +69,7 @@ class LoadFile(BaseOperator):
             ) == "airflow.models.xcom.BaseXCom" and not conf.getboolean(
                 "astro_sdk", "dataframe_allow_unsafe_storage"
             ):
-                raise AirflowException(LOAD_DATAFRAME_ERROR_MESSAGE)
+                raise IllegalLoadToDatabaseException()
             return self.load_data_to_dataframe(input_file)
 
     def load_data_to_table(self, input_file: File) -> Table:

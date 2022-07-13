@@ -44,12 +44,3 @@ ExportExistsStrategy = Literal["replace", "exception"]
 
 # TODO: check how snowflake names these
 MergeConflictStrategy = Literal["ignore", "update", "exception"]
-
-LOAD_DATAFRAME_ERROR_MESSAGE = (
-    "Failing this task because you do not have a custom xcom backend set up. If you use "
-    "the default XCOM backend to store large dataframes, this can significantly degrade "
-    "Airflow DB performance. Please set up a custom XCOM backend (info here "
-    "https://www.astronomer.io/guides/custom-xcom-backends) or set the environment "
-    "variable AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE to true if you wish to proceed while "
-    "knowing the risks. "
-)
