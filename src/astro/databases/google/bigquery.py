@@ -16,6 +16,8 @@ from google.cloud.bigquery_datatransfer_v1.types import (
 )
 from google.protobuf import timestamp_pb2  # type: ignore
 from google.protobuf.struct_pb2 import Struct  # type: ignore
+from google.cloud import bigquery
+
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from tenacity import retry, stop_after_attempt
@@ -49,6 +51,12 @@ class BigqueryDatabase(BaseDatabase):
     NATIVE_PATHS = {
         FileLocation.GS: "load_gs_file_to_bigquery",
         FileLocation.S3: "load_s3_file_to_bigquery",
+        FileLocation.LOCAL: "load_local_file_to_bigquery",
+    }
+    NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
+        FileType.CSV: "CSV",
+        FileType.NDJSON: "NEWLINE_DELIMITED_JSON",
+        FileType.PARQUET: "PARQUET",
     }
 
     illegal_column_name_chars: List[str] = ["."]
@@ -306,6 +314,33 @@ class BigqueryDatabase(BaseDatabase):
         except AttributeError:
             raise ValueError(f"conn_id {target_table.conn_id} has no project id")
 
+    def load_local_file_to_bigquery(
+        self,
+        source_file: File,
+        target_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+        native_support_kwargs: Optional[Dict] = None,
+        **kwargs,
+    ) -> None:
+        """Transfer data from local to bigquery"""
+        write_disposition_val = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
+        client = self.hook.get_client()
+        config = {
+            "source_format": self.NATIVE_PATHS_SUPPORTED_FILE_TYPES[source_file.type.name]
+            "create_disposition": "CREATE_IF_NEEDED",
+            "write_disposition": write_disposition_val[if_exists],
+            "autodetect": True
+        }
+        config.update(native_support_kwargs)
+        job_config = bigquery.LoadJobConfig(config)
+
+        with open(source_file.path, "rb") as source_file:
+            job = client.load_table_from_file(
+                source_file,
+                job_config=job_config,
+                destination=self.get_table_qualified_name(target_table),
+            )
+        job.result()
 
 class S3ToBigqueryDataTransfer:
     """

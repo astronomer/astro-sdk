@@ -878,7 +878,7 @@ def test_aql_load_file_optimized_path_method_is_not_called(
     indirect=True,
     ids=["Bigquery"],
 )
-def test_aql_load_file_optimized_path_method_is_not_called_1(
+def test_aql_load_file_s3_native_path(
     sample_dag, database_table_fixture
 ):
     """
@@ -902,3 +902,31 @@ def test_aql_load_file_optimized_path_method_is_not_called_1(
 
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (3, 9)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+        }
+    ],
+    indirect=True,
+    ids=["Bigquery"],
+)
+def test_loading_local_file_to_bigquery(database_table_fixture):
+    """
+    Verify that the optimised path method is skipped in case use_native_support is set to False.
+    """
+    path = str(CWD) + "/../../data/homes_main.csv"
+    db, test_table = database_table_fixture
+    load_file(
+        input_file=File(path),
+        output_table=test_table,
+        use_native_support=True,
+    ).operator.execute({})
+
+    bigquery_df = db.export_table_to_pandas_dataframe(test_table)
+    assert bigquery_df.shape == (3, 9)
+
