@@ -507,12 +507,9 @@ def test_load_file_with_named_schema(sample_dag, database_table_fixture, file_ty
         {
             "database": Database.BIGQUERY,
         },
-        {
-            "database": Database.POSTGRES,
-        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql"],
+    ids=["snowflake", "bigquery"],
 )
 def test_load_file_chunks(sample_dag, database_table_fixture):
     file_type = "csv"
@@ -520,13 +517,11 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
 
     chunk_function = {
         "bigquery": "pandas.DataFrame.to_gbq",
-        "postgresql": "pandas.DataFrame.to_sql",
         "snowflake": "snowflake.connector.pandas_tools.write_pandas",
     }[db.sql_type]
 
     chunk_size_argument = {
         "bigquery": "chunksize",
-        "postgresql": "chunksize",
         "snowflake": "chunk_size",
     }[db.sql_type]
 

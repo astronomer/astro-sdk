@@ -6,6 +6,7 @@ from typing import Dict, List
 import pandas as pd
 import sqlalchemy
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+from pandas.io.sql import SQLDatabase
 from psycopg2 import sql as postgres_sql
 
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
@@ -76,13 +77,15 @@ class PostgresDatabase(BaseDatabase):
             self.create_schema_if_needed(target_table.metadata.schema)
 
         # create an empty table
-        source_dataframe.head(0).to_sql(
-            target_table.name,
+        db = SQLDatabase(engine=self.sqlalchemy_engine)
+        db.prep_table(
+            source_dataframe,
+            target_table.name.lower(),
             schema=target_table.metadata.schema,
-            con=self.hook.get_sqlalchemy_engine(),
             if_exists=if_exists,
             index=False,
         )
+
         output_buffer = io.StringIO()
         source_dataframe.to_csv(output_buffer, sep=",", header=True, index=False)
         output_buffer.seek(0)
