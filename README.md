@@ -175,9 +175,9 @@ To learn more about our release philosophy and steps, check [here](docs/RELEASE.
 
 All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
 
-Read the [Contribution Guideline](docs/CONTRIBUTING.md) for a detailed overview on how to contribute.
+Read the [Contribution Guideline](docs/development/CONTRIBUTING.md) for a detailed overview on how to contribute.
 
-As contributors and maintainers to this project, you should abide by the [Contributor Code of Conduct](docs/CODE_OF_CONDUCT.md).
+As contributors and maintainers to this project, you should abide by the [Contributor Code of Conduct](docs/development/CODE_OF_CONDUCT.md).
 
 ## License
 
