@@ -26,18 +26,20 @@ Within `gs://astro-sdk/benchmark/`, there are two paths:
 ## Origin of these datasets
 
 ### UK COVID overview
+<!-- markdown-link-check-disable -->
+
 Subset of the data available in the government website
 * Source: https://coronavirus.data.gov.uk/api/v2/data?areaType=overview&metric=covidOccupiedMVBeds&metric=cumCasesByPublishDate&metric=newOnsDeathsByRegistrationDate&metric=hospitalCases&format=csv
 * Download date: 8 February 2022
 * Original size: 45 KB
 * Dataset URI: `gs://astro-sdk/benchmark/trimmed/covid_overview/covid_overview_10kb.parquet`
-* Processing details: [download_datasets.sh](tests/benchmark/download_datasets.sh)
+* Processing details: [download_datasets.sh](download_datasets.sh)
+<!-- markdown-link-check-enable -->
 
 ```commandline
 $ sed -n '1,160 p' covid_overview.csv > covid_overview_160rows.csv
 $python -c 'import pandas; df = pandas.read_csv("covid_overview_160rows.csv").to_parquet("covid_overview_10kb.parquet")'
 ```
-
 
 
 ### Tate Britain
@@ -46,7 +48,7 @@ Subset of artists of pieces exposed at the Tate Britain museum
 * Download date: 1 February 2022
 * Original size: 45 KB
 * Dataset URI: `gs://astro-sdk/benchmark/trimmed/tate/*`
-* Processing details: [download_datasets.sh](tests/benchmark/download_datasets.sh)
+* Processing details: [download_datasets.sh](download_datasets.sh)
 
 ### IMDB
 Subset of the Internet Movies Database:
@@ -54,7 +56,7 @@ Subset of the Internet Movies Database:
 * Download date: 11 February 2022
 * Original size: 20 MB
 * Dataset URI: `gs://astro-sdk/benchmark/trimmed/imdb/*`
-* Processing details: [download_datasets.sh](tests/benchmark/download_datasets.sh)
+* Processing details: [download_datasets.sh](download_datasets.sh)
 
 ### Github timeline
 Subset of the Github git repository records
@@ -62,7 +64,7 @@ Subset of the Github git repository records
 * Download date: 11 February 2022
 * Original size: 20 MB
 * Dataset URI: `gs://astro-sdk/benchmark/trimmed/github/github_timeline_100mb.csv`
-* Processing details: [download_datasets.sh](tests/benchmark/download_datasets.sh)
+* Processing details: [download_datasets.sh](download_datasets.sh)
 
 ### Stack Overflow
 Subset of the archives of Stack Overflow:
