@@ -555,6 +555,7 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
                     path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))
                 ),
                 output_table=test_table,
+                use_native_support=False,
             )
         test_utils.run_dag(sample_dag)
 
