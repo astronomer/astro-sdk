@@ -289,14 +289,16 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     ids=["snowflake"],
 )
 @pytest.mark.parametrize(
-    "files_fixture",
+    "remote_files_fixture",
     [{"provider": "google", "file_create": False}],
     indirect=True,
     ids=["google"],
 )
-def test_export_table_to_file_in_the_cloud(database_table_fixture, files_fixture):
+def test_export_table_to_file_in_the_cloud(
+    database_table_fixture, remote_files_fixture
+):
     """Test export_table_to_file_file() where end file location is in cloud object stores"""
-    object_path = files_fixture[0]
+    object_path = remote_files_fixture[0]
     database, populated_table = database_table_fixture
 
     database.export_table_to_file(
@@ -359,15 +361,15 @@ def test_stage_set_name_after():
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    "files_fixture",
+    "remote_files_fixture",
     [
         {"provider": "google", "filetype": FileType.CSV},
     ],
     indirect=True,
     ids=["google_csv"],
 )
-def test_stage_exists_false(files_fixture):
-    file_fixture = File(files_fixture[0])
+def test_stage_exists_false(remote_files_fixture):
+    file_fixture = File(remote_files_fixture[0])
     database = SnowflakeDatabase(conn_id=CUSTOM_CONN_ID)
     stage = SnowflakeStage(
         name="inexistent-stage",
@@ -379,7 +381,7 @@ def test_stage_exists_false(files_fixture):
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    "files_fixture",
+    "remote_files_fixture",
     [
         {"provider": "google", "filetype": FileType.CSV},
         {"provider": "google", "filetype": FileType.NDJSON},
@@ -389,8 +391,8 @@ def test_stage_exists_false(files_fixture):
     indirect=True,
     ids=["google_csv", "google_ndjson", "google_parquet", "amazon_csv"],
 )
-def test_create_stage_succeeds_with_storage_integration(remote_files_fixture):
-    file_fixture = File(remote_files_fixture[0])
+def test_create_stage_succeeds_with_storage_integration(remote_remote_files_fixture):
+    file_fixture = File(remote_remote_files_fixture[0])
 
     if file_fixture.location.location_type == FileLocation.GS:
         storage_integration = SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE
@@ -407,15 +409,15 @@ def test_create_stage_succeeds_with_storage_integration(remote_files_fixture):
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    "remote_files_fixture",
+    "remote_remote_files_fixture",
     [
         {"provider": "amazon", "filetype": FileType.CSV},
     ],
     indirect=True,
     ids=["amazon_csv"],
 )
-def test_create_stage_succeeds_without_storage_integration(remote_files_fixture):
-    file_fixture = File(remote_files_fixture[0])
+def test_create_stage_succeeds_without_storage_integration(remote_remote_files_fixture):
+    file_fixture = File(remote_remote_files_fixture[0])
     database = SnowflakeDatabase(conn_id=CUSTOM_CONN_ID)
     stage = database.create_stage(file=file_fixture, storage_integration=None)
     assert database.stage_exists(stage)

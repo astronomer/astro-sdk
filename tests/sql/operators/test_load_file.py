@@ -83,7 +83,7 @@ def test_unsafe_loading_of_dataframe(sample_dag):
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    "files_fixture",
+    "remote_files_fixture",
     [{"provider": "google"}, {"provider": "amazon"}],
     indirect=True,
     ids=["google_gcs", "amazon_s3"],
@@ -107,9 +107,11 @@ def test_unsafe_loading_of_dataframe(sample_dag):
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
-def test_aql_load_remote_file_to_dbs(sample_dag, database_table_fixture, files_fixture):
+def test_aql_load_remote_file_to_dbs(
+    sample_dag, database_table_fixture, remote_files_fixture
+):
     db, test_table = database_table_fixture
-    file_uri = files_fixture[0]
+    file_uri = remote_files_fixture[0]
 
     with sample_dag:
         load_file(
@@ -254,7 +256,7 @@ def test_load_file_templated_filename(sample_dag, database_table_fixture):
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    "files_fixture",
+    "remote_files_fixture",
     [{"provider": "google", "file_count": 2}, {"provider": "amazon", "file_count": 2}],
     ids=["google", "amazon"],
     indirect=True,
@@ -269,8 +271,10 @@ def test_load_file_templated_filename(sample_dag, database_table_fixture):
     indirect=True,
     ids=["sqlite"],
 )
-def test_aql_load_file_pattern(files_fixture, sample_dag, database_table_fixture):
-    remote_object_uri = files_fixture[0]
+def test_aql_load_file_pattern(
+    remote_files_fixture, sample_dag, database_table_fixture
+):
+    remote_object_uri = remote_files_fixture[0]
     filename = pathlib.Path(CWD.parent, "../data/sample.csv")
     db, test_table = database_table_fixture
 
@@ -358,16 +362,16 @@ def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
     ids=["sqlite"],
 )
 @pytest.mark.parametrize(
-    "files_fixture",
+    "remote_files_fixture",
     [{"provider": "google"}, {"provider": "amazon"}],
     indirect=True,
     ids=["google", "amazon"],
 )
 def test_load_file_using_file_connection(
-    sample_dag, files_fixture, database_table_fixture
+    sample_dag, remote_files_fixture, database_table_fixture
 ):
     db, test_table = database_table_fixture
-    file_uri = files_fixture[0]
+    file_uri = remote_files_fixture[0]
     if file_uri.startswith("s3"):
         file_conn_id = S3Hook.default_conn_name
     else:
@@ -750,7 +754,7 @@ def is_dict_subset(superset: dict, subset: dict) -> bool:
 
 
 @pytest.mark.parametrize(
-    "files_fixture",
+    "remote_files_fixture",
     [{"provider": "google"}, {"provider": "amazon"}, {"provider": "local"}],
     indirect=True,
     ids=["google_gcs", "amazon_s3", "local"],
@@ -762,13 +766,13 @@ def is_dict_subset(superset: dict, subset: dict) -> bool:
     ids=["bigquery"],
 )
 def test_aql_load_file_optimized_path_method_called(
-    sample_dag, database_table_fixture, files_fixture
+    sample_dag, database_table_fixture, remote_files_fixture
 ):
     """
     Verify the correct method is getting called for specific source and destination.
     """
     db, test_table = database_table_fixture
-    file_uri = files_fixture[0]
+    file_uri = remote_files_fixture[0]
 
     # (source, destination) : {
     #   method_path: where source is file source path and destination is database
@@ -825,7 +829,7 @@ def test_aql_load_file_optimized_path_method_called(
 
 
 @pytest.mark.parametrize(
-    "files_fixture",
+    "remote_files_fixture",
     [{"provider": "google"}, {"provider": "amazon"}, {"provider": "local"}],
     indirect=True,
     ids=["google_gcs", "amazon_s3", "local"],
@@ -841,13 +845,13 @@ def test_aql_load_file_optimized_path_method_called(
     ids=["bigquery"],
 )
 def test_aql_load_file_optimized_path_method_is_not_called(
-    sample_dag, database_table_fixture, files_fixture
+    sample_dag, database_table_fixture, remote_files_fixture
 ):
     """
     Verify that the optimised path method is skipped in case use_native_support is set to False.
     """
     db, test_table = database_table_fixture
-    file_uri = files_fixture[0]
+    file_uri = remote_files_fixture[0]
 
     # (source, destination) : {
     #   method_path: where source is file source path and destination is database
