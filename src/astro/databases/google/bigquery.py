@@ -332,9 +332,11 @@ class BigqueryDatabase(BaseDatabase):
             "autodetect": True,
         }
         config.update(native_support_kwargs)
-        job_config = bigquery.LoadJobConfig(config)
+        job_config = bigquery.LoadJobConfig(**config)
 
-        with open(source_file.path, mode=source_file.type.open_mode) as file:
+        # We are passing mode='rb' even for text files since Bigquery
+        # complain and ask to open file in 'rb' mode
+        with open(source_file.path, mode="rb") as file:
             job = client.load_table_from_file(
                 file,
                 job_config=job_config,
