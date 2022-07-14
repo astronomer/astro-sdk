@@ -30,6 +30,14 @@ CWD = pathlib.Path(__file__).parent
 TEST_TABLE = Table()
 
 
+SNOWFLAKE_STORAGE_INTEGRATION_AMAZON = (
+    SNOWFLAKE_STORAGE_INTEGRATION_AMAZON or "aws_int_python_sdk"
+)
+SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE = (
+    SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE or "gcs_int_python_sdk"
+)
+
+
 @pytest.mark.parametrize("conn_id", SUPPORTED_CONN_IDS)
 def test_create_database(conn_id):
     """Test creation of database"""
@@ -381,8 +389,9 @@ def test_stage_exists_false(files_fixture):
     indirect=True,
     ids=["google_csv", "google_ndjson", "google_parquet", "amazon_csv"],
 )
-def test_create_stage_succeeds(files_fixture):
-    file_fixture = File(files_fixture[0])
+def test_create_stage_succeeds_with_storage_integration(remote_files_fixture):
+    file_fixture = File(remote_files_fixture[0])
+
     if file_fixture.location.location_type == FileLocation.GS:
         storage_integration = SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE
     else:
@@ -392,6 +401,23 @@ def test_create_stage_succeeds(files_fixture):
     stage = database.create_stage(
         file=file_fixture, storage_integration=storage_integration
     )
+    assert database.stage_exists(stage)
+    database.drop_stage(stage)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "remote_files_fixture",
+    [
+        {"provider": "amazon", "filetype": FileType.CSV},
+    ],
+    indirect=True,
+    ids=["amazon_csv"],
+)
+def test_create_stage_succeeds_without_storage_integration(remote_files_fixture):
+    file_fixture = File(remote_files_fixture[0])
+    database = SnowflakeDatabase(conn_id=CUSTOM_CONN_ID)
+    stage = database.create_stage(file=file_fixture, storage_integration=None)
     assert database.stage_exists(stage)
     database.drop_stage(stage)
 
