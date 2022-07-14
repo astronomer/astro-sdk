@@ -186,7 +186,7 @@ def multiple_tables_fixture(request, database_table_fixture):
 
 
 @pytest.fixture
-def remote_files_fixture(request):
+def files_fixture(request):
     """
     Return a list of remote object filenames.
     By default, this fixture also creates objects using sample.<filetype>, unless
