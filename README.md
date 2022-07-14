@@ -143,7 +143,7 @@ How to Train Your Dragon 2 (2014)|7.9
 
 ## Available operations
 
-A summary of the currently available operations in **Astro SDK Python**. More details are available in the [reference guide](REFERENCE.md).
+A summary of the currently available operations in **Astro SDK Python**.
 * `load_file`: load a given file into a SQL table
 * `transform`: applies a SQL select statement to a source table and saves the result to a destination table
 * `truncate`: remove all records from a SQL table
@@ -169,15 +169,15 @@ We follow Semantic Versioning for releases. Check the [changelog](docs/CHANGELOG
 
 ## Release Managements
 
-To learn more about our release philosophy and steps, check [here](docs/RELEASE.md)
+To learn more about our release philosophy and steps, check [here](docs/development/RELEASE.md)
 
 ## Contribution Guidelines
 
 All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
 
-Read the [Contribution Guideline](docs/CONTRIBUTING.md) for a detailed overview on how to contribute.
+Read the [Contribution Guideline](docs/development/CONTRIBUTING.md) for a detailed overview on how to contribute.
 
-As contributors and maintainers to this project, you should abide by the [Contributor Code of Conduct](docs/CODE_OF_CONDUCT.md).
+As contributors and maintainers to this project, you should abide by the [Contributor Code of Conduct](docs/development/CODE_OF_CONDUCT.md).
 
 ## License
 

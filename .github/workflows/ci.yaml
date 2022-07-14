@@ -19,6 +19,14 @@ jobs:
           key: ${{ hashFiles('pyproject.toml') }}
       - uses: pre-commit/action@v2.0.3
 
+  Markdown-link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          config-file: '.github/workflows/mlc_config.json'
+
   Type-Check:
     runs-on: ubuntu-latest
     env:

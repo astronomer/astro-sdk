@@ -64,8 +64,11 @@ Once your release branch is ready to go there are a few simple steps to actually
 The first step is to go to [the base level \_\_init\_\_.py](../../src/astro/__init__.py) and change the `__version__` variable to the new version. You can then
 push this change to main or create a PR depending on your level of permission within the project.
 
+<!-- markdown-link-check-disable -->
+<!-- The following GitHub link for some reason give 403 in CI, hence ignore it in markdown-link -->
 The second step is to [create a release](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository)
 in GitHub. Please take extra care to ensure that you a) create a tag with the new release version (e.g. `0.7.0`) and that you
 target the release branch (e.g. `release-0.7`). Failure to do these steps properly could result in a release we will later need to yank.
+<!-- markdown-link-check-enable -->
 
 Once you've created your release, that's it! The rest of the steps should be handled by the CI system.
