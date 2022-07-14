@@ -96,9 +96,9 @@ markers = [
     "integration"
 ]
 
+
 [tool.flit.module]
 name = "astro"  # Or "astro.sql" if you just want this directory, not the entire 'astro'.
-
 
 [tool.mypy]
 color_output = true
