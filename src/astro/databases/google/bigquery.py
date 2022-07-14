@@ -336,7 +336,7 @@ class BigqueryDatabase(BaseDatabase):
         config.update(native_support_kwargs)
         job_config = bigquery.LoadJobConfig(config)
 
-        with open(source_file.path, "rb") as file:
+        with open(source_file.path, mode=source_file.type.open_mode) as file:
             job = client.load_table_from_file(
                 file,
                 job_config=job_config,

@@ -9,6 +9,8 @@ from astro.files.types.base import FileType
 class ParquetFileType(FileType):
     """Concrete implementation to handle Parquet file type"""
 
+    open_mode = "rb"
+
     def export_to_dataframe(self, stream, **kwargs):
         """read parquet file from one of the supported locations and return dataframe
 
