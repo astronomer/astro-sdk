@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Tuple, Union
 import pandas as pd
 import sqlalchemy
 from airflow.hooks.dbapi import DbApiHook
+from pandas.io.sql import get_schema
 from sqlalchemy import column, insert, select
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
@@ -37,7 +38,6 @@ class BaseDatabase(ABC):
     _create_schema_statement: str = "CREATE SCHEMA IF NOT EXISTS {}"
     _drop_table_statement: str = "DROP TABLE IF EXISTS {}"
     _create_table_statement: str = "CREATE TABLE IF NOT EXISTS {} AS {}"
-
     # Used to normalize the ndjson when appending fields in nested fields.
     # Example -
     #   ndjson - {'a': {'b': 'val'}}
@@ -215,6 +215,7 @@ class BaseDatabase(ABC):
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         use_native_support: bool = True,
+        native_support_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         """
@@ -226,7 +227,8 @@ class BaseDatabase(ABC):
         :param if_exists: Overwrite file if exists
         :param chunk_size: Specify the number of records in each batch to be written at a time
         :param use_native_support: Use native support for data transfer if available on the destination
-        :param normalize_config: pandas json_normalize params config.
+        :param normalize_config: pandas json_normalize params config
+        :param native_support_kwargs: kwargs to be used by method involved in native support flow
         """
         input_files = resolve_file_path_pattern(
             input_file.path,
@@ -241,6 +243,7 @@ class BaseDatabase(ABC):
                     source_file=file,
                     target_table=output_table,
                     if_exists=if_exists,
+                    native_support_kwargs=native_support_kwargs,
                     **kwargs,
                 )
             else:
@@ -461,10 +464,32 @@ class BaseDatabase(ABC):
         source_file: File,
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
+        native_support_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         """
         Checks if optimised path for transfer between File location to database exists
-        and if it does, it transfers it and returns true else false.
+        and if it does, it transfers it and returns true else false
+
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table that needs to be populated with file data
+        :param if_exists: Overwrite file if exists. Default False
+        :param native_support_kwargs: kwargs to be used by native loading command
         """
         raise NotImplementedError
+
+    def create_empty_table(
+        self, source_file: File, target_table: Table, nrows: int = 1000
+    ):
+        """
+        Infer schema from source file and create and empty table in database
+
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table that needs to be populated with file data
+        :param nrows: No. of rows to use to infer schema
+        """
+        df = source_file.export_to_dataframe(nrows=nrows)
+        schema_statement = get_schema(
+            df, self.get_table_qualified_name(target_table), con=self.sqlalchemy_engine
+        )
+        self.run_sql(schema_statement)
