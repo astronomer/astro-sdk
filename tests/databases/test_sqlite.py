@@ -123,6 +123,52 @@ def test_sqlite_create_table_with_columns(database_table_fixture):
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
+    [{"database": Database.SQLITE, "table": Table()}],
+    indirect=True,
+    ids=["sqlite"],
+)
+def test_sqlite_create_table_autodetection_with_file(database_table_fixture):
+    """Create a table using specific columns and types"""
+    database, table = database_table_fixture
+
+    statement = f"PRAGMA table_info({table.name});"
+    response = database.run_sql(statement)
+    assert response.first() is None
+
+    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
+    database.create_table(table, File(filepath))
+    response = database.run_sql(statement)
+    rows = response.fetchall()
+    assert len(rows) == 2
+    assert rows[0] == (0, "id", "BIGINT", 0, None, 0)
+    assert rows[1] == (1, "name", "TEXT", 0, None, 0)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [{"database": Database.SQLITE, "table": Table()}],
+    indirect=True,
+    ids=["sqlite"],
+)
+def test_sqlite_create_table_autodetection_without_file(database_table_fixture):
+    """Create a table using specific columns and types"""
+    database, table = database_table_fixture
+
+    statement = f"PRAGMA table_info({table.name});"
+    response = database.run_sql(statement)
+    assert response.first() is None
+
+    with pytest.raises(ValueError) as exc_info:
+        database.create_table(table)
+    assert exc_info.match(
+        "File is required for creating table using schema autodetection"
+    )
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
     [
         {"database": Database.SQLITE},
     ],

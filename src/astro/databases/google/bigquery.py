@@ -166,7 +166,9 @@ class BigqueryDatabase(BaseDatabase):
             statement += f" WHEN MATCHED THEN {update_statement}"
         self.run_sql(sql_statement=statement)
 
-    def check_native_path(self, source_file: File, target_table: Table) -> bool:
+    def is_native_load_file_available(
+        self, source_file: File, target_table: Table
+    ) -> bool:
         """
         Check if there is an optimised path for source to destination.
 
@@ -261,7 +263,6 @@ class BigqueryDatabase(BaseDatabase):
         self,
         source_file: File,
         target_table: Table,
-        if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
@@ -280,11 +281,6 @@ class BigqueryDatabase(BaseDatabase):
         native_support_kwargs = native_support_kwargs or {}
 
         project_id = self.get_project_id(target_table)
-
-        if if_exists == "replace":
-            # We need to create an empty table as datatransfer job can only append to an existing table,
-            # so we need to create a table.
-            self.create_empty_table(source_file, target_table)
 
         transfer = S3ToBigqueryDataTransfer(
             target_table=target_table,
