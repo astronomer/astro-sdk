@@ -38,6 +38,7 @@ NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
     FileType.NDJSON: "NEWLINE_DELIMITED_JSON",
     FileType.PARQUET: "PARQUET",
 }
+BIGQUERY_WRITE_DISPOSITION = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
 
 
 class BigqueryDatabase(BaseDatabase):
@@ -229,8 +230,6 @@ class BigqueryDatabase(BaseDatabase):
         """
         native_support_kwargs = native_support_kwargs or {}
 
-        write_disposition_val = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
-
         load_job_config = {
             "sourceUris": [source_file.path],
             "destinationTable": {
@@ -239,7 +238,7 @@ class BigqueryDatabase(BaseDatabase):
                 "tableId": target_table.name,
             },
             "createDisposition": "CREATE_IF_NEEDED",
-            "writeDisposition": write_disposition_val[if_exists],
+            "writeDisposition": BIGQUERY_WRITE_DISPOSITION[if_exists],
             "sourceFormat": NATIVE_PATHS_SUPPORTED_FILE_TYPES[source_file.type.name],
             "autodetect": True,
         }
@@ -325,12 +324,11 @@ class BigqueryDatabase(BaseDatabase):
             FileType.PARQUET: "PARQUET",
         }
 
-        write_disposition_val = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
         client = self.hook.get_client()
         config = {
             "source_format": file_types_to_bigquery_format[source_file.type.name],
             "create_disposition": "CREATE_IF_NEEDED",
-            "write_disposition": write_disposition_val[if_exists],
+            "write_disposition": BIGQUERY_WRITE_DISPOSITION[if_exists],
             "autodetect": True,
         }
         config.update(native_support_kwargs)
