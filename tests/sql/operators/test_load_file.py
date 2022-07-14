@@ -68,7 +68,6 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
     assert df.shape == (3, 9)
 
 
-@pytest.mark.integration
 @mock.patch.dict(
     os.environ, {"AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE": "False"}
 )
