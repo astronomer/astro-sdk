@@ -269,25 +269,25 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
 @pytest.mark.parametrize(
-    "remote_files_fixture",
+    "files_fixture",
     [{"provider": "google"}, {"provider": "amazon"}],
     indirect=True,
     ids=["google", "amazon"],
 )
 def test_save_table_remote_file_exists_overwrite_false(
-    sample_dag, database_table_fixture, remote_files_fixture, caplog
+    sample_dag, database_table_fixture, files_fixture, caplog
 ):
     _, test_table = database_table_fixture
     with pytest.raises(BackfillUnfinished):
         with sample_dag:
             export_file(
                 input_data=test_table,
-                output_file=File(path=remote_files_fixture[0], conn_id="aws_default"),
+                output_file=File(path=files_fixture[0], conn_id="aws_default"),
                 if_exists="exception",
             )
         test_utils.run_dag(sample_dag)
 
-    expected_error = f"{remote_files_fixture[0]} file already exists."
+    expected_error = f"{files_fixture[0]} file already exists."
     assert expected_error in caplog.text
 
 

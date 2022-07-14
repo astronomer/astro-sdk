@@ -298,16 +298,14 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     ids=["bigquery"],
 )
 @pytest.mark.parametrize(
-    "remote_files_fixture",
+    "files_fixture",
     [{"provider": "google", "file_create": False}],
     indirect=True,
     ids=["google"],
 )
-def test_export_table_to_file_in_the_cloud(
-    database_table_fixture, remote_files_fixture
-):
+def test_export_table_to_file_in_the_cloud(database_table_fixture, files_fixture):
     """Test export_table_to_file_file() where end file location is in cloud object stores"""
-    object_path = remote_files_fixture[0]
+    object_path = files_fixture[0]
     database, populated_table = database_table_fixture
 
     database.export_table_to_file(

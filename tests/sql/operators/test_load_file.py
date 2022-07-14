@@ -83,7 +83,7 @@ def test_unsafe_loading_of_dataframe(sample_dag):
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    "remote_files_fixture",
+    "files_fixture",
     [{"provider": "google"}, {"provider": "amazon"}],
     indirect=True,
     ids=["google_gcs", "amazon_s3"],
@@ -107,11 +107,9 @@ def test_unsafe_loading_of_dataframe(sample_dag):
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
-def test_aql_load_remote_file_to_dbs(
-    sample_dag, database_table_fixture, remote_files_fixture
-):
+def test_aql_load_remote_file_to_dbs(sample_dag, database_table_fixture, files_fixture):
     db, test_table = database_table_fixture
-    file_uri = remote_files_fixture[0]
+    file_uri = files_fixture[0]
 
     with sample_dag:
         load_file(
@@ -256,7 +254,7 @@ def test_load_file_templated_filename(sample_dag, database_table_fixture):
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    "remote_files_fixture",
+    "files_fixture",
     [{"provider": "google", "file_count": 2}, {"provider": "amazon", "file_count": 2}],
     ids=["google", "amazon"],
     indirect=True,
@@ -271,10 +269,8 @@ def test_load_file_templated_filename(sample_dag, database_table_fixture):
     indirect=True,
     ids=["sqlite"],
 )
-def test_aql_load_file_pattern(
-    remote_files_fixture, sample_dag, database_table_fixture
-):
-    remote_object_uri = remote_files_fixture[0]
+def test_aql_load_file_pattern(files_fixture, sample_dag, database_table_fixture):
+    remote_object_uri = files_fixture[0]
     filename = pathlib.Path(CWD.parent, "../data/sample.csv")
     db, test_table = database_table_fixture
 
@@ -362,16 +358,16 @@ def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
     ids=["sqlite"],
 )
 @pytest.mark.parametrize(
-    "remote_files_fixture",
+    "files_fixture",
     [{"provider": "google"}, {"provider": "amazon"}],
     indirect=True,
     ids=["google", "amazon"],
 )
 def test_load_file_using_file_connection(
-    sample_dag, remote_files_fixture, database_table_fixture
+    sample_dag, files_fixture, database_table_fixture
 ):
     db, test_table = database_table_fixture
-    file_uri = remote_files_fixture[0]
+    file_uri = files_fixture[0]
     if file_uri.startswith("s3"):
         file_conn_id = S3Hook.default_conn_name
     else:
@@ -754,10 +750,10 @@ def is_dict_subset(superset: dict, subset: dict) -> bool:
 
 
 @pytest.mark.parametrize(
-    "remote_files_fixture",
-    [{"provider": "google"}, {"provider": "amazon"}],
+    "files_fixture",
+    [{"provider": "google"}, {"provider": "amazon"}, {"provider": "local"}],
     indirect=True,
-    ids=["google_gcs", "amazon_s3"],
+    ids=["google_gcs", "amazon_s3", "local"],
 )
 @pytest.mark.parametrize(
     "database_table_fixture",
@@ -766,13 +762,13 @@ def is_dict_subset(superset: dict, subset: dict) -> bool:
     ids=["bigquery"],
 )
 def test_aql_load_file_optimized_path_method_called(
-    sample_dag, database_table_fixture, remote_files_fixture
+    sample_dag, database_table_fixture, files_fixture
 ):
     """
     Verify the correct method is getting called for specific source and destination.
     """
     db, test_table = database_table_fixture
-    file_uri = remote_files_fixture[0]
+    file_uri = files_fixture[0]
 
     # (source, destination) : {
     #   method_path: where source is file source path and destination is database
@@ -798,9 +794,21 @@ def test_aql_load_file_optimized_path_method_called(
             },
             "expected_args": (),
         },
+        ("local", "bigquery",): {
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_local_file_to_bigquery",
+            "expected_kwargs": {
+                "source_file": file,
+                "target_table": test_table,
+            },
+            "expected_args": (),
+        },
     }
 
-    source = file_uri.split(":")[0]
+    if file_uri.find(":") >= 0:
+        source = file_uri.split(":")[0]
+    else:
+        source = "local"
+
     destination = db.sql_type
     mock_path = optimised_path_to_method[(source, destination)]["method_path"]
     expected_kwargs = optimised_path_to_method[(source, destination)]["expected_kwargs"]
@@ -817,10 +825,10 @@ def test_aql_load_file_optimized_path_method_called(
 
 
 @pytest.mark.parametrize(
-    "remote_files_fixture",
-    [{"provider": "google"}, {"provider": "amazon"}],
+    "files_fixture",
+    [{"provider": "google"}, {"provider": "amazon"}, {"provider": "local"}],
     indirect=True,
-    ids=["google_gcs", "amazon_s3"],
+    ids=["google_gcs", "amazon_s3", "local"],
 )
 @pytest.mark.parametrize(
     "database_table_fixture",
@@ -833,13 +841,13 @@ def test_aql_load_file_optimized_path_method_called(
     ids=["bigquery"],
 )
 def test_aql_load_file_optimized_path_method_is_not_called(
-    sample_dag, database_table_fixture, remote_files_fixture
+    sample_dag, database_table_fixture, files_fixture
 ):
     """
     Verify that the optimised path method is skipped in case use_native_support is set to False.
     """
     db, test_table = database_table_fixture
-    file_uri = remote_files_fixture[0]
+    file_uri = files_fixture[0]
 
     # (source, destination) : {
     #   method_path: where source is file source path and destination is database
@@ -854,9 +862,14 @@ def test_aql_load_file_optimized_path_method_is_not_called(
         ("s3", "bigquery",): {
             "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_s3_file_to_bigquery",
         },
+        ("local", "bigquery"): {
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_local_file_to_bigquery",
+        },
     }
-
-    source = file_uri.split(":")[0]
+    if file_uri.find(":") >= 0:
+        source = file_uri.split(":")[0]
+    else:
+        source = "local"
     destination = db.sql_type
     mock_path = optimised_path_to_method[(source, destination)]["method_path"]
 

@@ -70,7 +70,7 @@ def is_dict_subset(superset: dict, subset: dict) -> bool:
 
 
 @pytest.mark.parametrize(
-    "remote_files_fixture",
+    "files_fixture",
     [{"provider": "google"}],
     indirect=True,
     ids=["google_gcs"],
@@ -81,14 +81,12 @@ def is_dict_subset(superset: dict, subset: dict) -> bool:
     indirect=True,
     ids=["bigquery"],
 )
-def test_load_file_to_table_natively(
-    sample_dag, database_table_fixture, remote_files_fixture
-):
+def test_load_file_to_table_natively(sample_dag, database_table_fixture, files_fixture):
     """
     Verify the correct method is getting called for specific source and destination.
     """
     db, test_table = database_table_fixture
-    file_uri = remote_files_fixture[0]
+    file_uri = files_fixture[0]
 
     # (source, destination) : {
     #   method_path: where source is file source path and destination is database
