@@ -51,11 +51,6 @@ class BigqueryDatabase(BaseDatabase):
         FileLocation.S3: "load_s3_file_to_bigquery",
         FileLocation.LOCAL: "load_local_file_to_bigquery",
     }
-    NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
-        FileType.CSV: "CSV",
-        FileType.NDJSON: "NEWLINE_DELIMITED_JSON",
-        FileType.PARQUET: "PARQUET",
-    }
 
     illegal_column_name_chars: List[str] = ["."]
     illegal_column_name_chars_replacement: List[str] = ["_"]
@@ -322,13 +317,18 @@ class BigqueryDatabase(BaseDatabase):
     ) -> None:
         """Transfer data from local to bigquery"""
         native_support_kwargs = native_support_kwargs or {}
+        # We need to maintain file_type to biqquery_format and not use NATIVE_PATHS_SUPPORTED_FILE_TYPES
+        # because the load_table_from_file expects 'JSON' value for ndjson file.
+        file_types_to_bigquery_format = {
+            FileType.CSV: "CSV",
+            FileType.NDJSON: "JSON",
+            FileType.PARQUET: "PARQUET",
+        }
 
         write_disposition_val = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
         client = self.hook.get_client()
         config = {
-            "source_format": self.NATIVE_PATHS_SUPPORTED_FILE_TYPES[
-                source_file.type.name
-            ],
+            "source_format": file_types_to_bigquery_format[source_file.type.name],
             "create_disposition": "CREATE_IF_NEEDED",
             "write_disposition": write_disposition_val[if_exists],
             "autodetect": True,
