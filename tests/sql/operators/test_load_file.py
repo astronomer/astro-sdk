@@ -442,12 +442,15 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(
 def test_load_file(sample_dag, database_table_fixture, file_type):
     db, test_table = database_table_fixture
 
+    # Using the use_native_support=False here since the dataset
+    # used requires other optional params by local to Bigquery native path.
     with sample_dag:
         load_file(
             input_file=File(
                 path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))
             ),
             output_table=test_table,
+            use_native_support=False,
         )
     test_utils.run_dag(sample_dag)
 
@@ -584,11 +587,14 @@ def test_aql_nested_ndjson_file_with_default_sep_param(
     """Test the flattening of single level nested ndjson, with default separator '_'."""
     db, test_table = database_table_fixture
     with sample_dag:
+        # Using the use_native_support=False here since the dataset
+        # used requires other optional params by local to Bigquery native path.
         load_file(
             input_file=File(
                 path=str(CWD) + "/../../data/github_single_level_nested.ndjson"
             ),
             output_table=test_table,
+            use_native_support=False,
         )
     test_utils.run_dag(sample_dag)
 
@@ -613,11 +619,14 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_sep_params(
     """Test the flattening of single level nested ndjson, with explicit separator '___'."""
     db, test_table = database_table_fixture
     with sample_dag:
+        # Using the use_native_support=False here since the dataset
+        # used requires other optional params by local to Bigquery native path.
         load_file(
             input_file=File(
                 path=str(CWD) + "/../../data/github_single_level_nested.ndjson"
             ),
             output_table=test_table,
+            use_native_support=False,
             ndjson_normalize_sep="___",
         )
     test_utils.run_dag(sample_dag)
@@ -647,12 +656,15 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_illegal_sep_params(
     """
     db, test_table = database_table_fixture
     with sample_dag:
+        # Using the use_native_support=False here since the dataset
+        # used requires other optional params by local to Bigquery native path.
         load_file(
             input_file=File(
                 path=str(CWD) + "/../../data/github_single_level_nested.ndjson"
             ),
             output_table=test_table,
             ndjson_normalize_sep=".",
+            use_native_support=False,
         )
     test_utils.run_dag(sample_dag)
 
