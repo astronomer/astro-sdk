@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
+from settings import SNOWFLAKE_SCHEMA
 from snowflake.connector import pandas_tools
 from snowflake.connector.errors import (
     DatabaseError,
@@ -172,6 +173,7 @@ class SnowflakeDatabase(BaseDatabase):
         ForbiddenError,
         RequestTimeoutError,
     )
+    DEFAULT_SCHEMA = SNOWFLAKE_SCHEMA
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
         super().__init__(conn_id)
