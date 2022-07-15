@@ -21,7 +21,6 @@ class LocalLocation(BaseFileLocation):
         if path_object.is_dir():
             paths = [str(filepath) for filepath in path_object.rglob("*")]
         else:
-
             paths = glob.glob(url.path)
         return paths
 

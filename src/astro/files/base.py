@@ -5,6 +5,7 @@ import smart_open
 
 from astro.constants import FileType
 from astro.files.locations import create_file_location
+from astro.files.locations.base import BaseFileLocation
 from astro.files.types import create_file_type
 
 
@@ -29,14 +30,14 @@ class File:
         :param filetype: constant to provide an explicit file type
         :param normalize_config: parameters in dict format of pandas json_normalize() function.
         """
-        self.location = create_file_location(path, conn_id)
+        self.location: BaseFileLocation = create_file_location(path, conn_id)
         self.type = create_file_type(
             path=path, filetype=filetype, normalize_config=normalize_config
         )
 
     @property
     def path(self) -> str:
-        return self.location.path  # type: ignore
+        return self.location.path
 
     @property
     def conn_id(self) -> Optional[str]:
