@@ -334,9 +334,14 @@ class BigqueryDatabase(BaseDatabase):
         config.update(native_support_kwargs)
         job_config = bigquery.LoadJobConfig(**config)
 
+        # Deepsource pointed out - OWASP Top 10 2021 Category A01 - Broken Access Control
+        # and Category A05 - Security Misconfiguration. Which are not applicable in this
+        # case since user is always using there credentials, so they can't impersonate
+        # other user roles.
+
         # We are passing mode='rb' even for text files since Bigquery
         # complain and ask to open file in 'rb' mode
-        with open(source_file.path, mode="rb") as file:
+        with open(source_file.path, mode="rb") as file:  # skipcq: PTC-W6004
             job = client.load_table_from_file(
                 file,
                 job_config=job_config,
