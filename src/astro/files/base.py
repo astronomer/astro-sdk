@@ -41,7 +41,7 @@ class File:
 
     @property
     def conn_id(self) -> Optional[str]:
-        return self.location.conn_id  # type: ignore
+        return self.location.conn_id
 
     @property
     def size(self) -> int:

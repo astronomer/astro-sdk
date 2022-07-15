@@ -23,7 +23,7 @@ class BaseFileLocation(ABC):
         :param conn_id: Airflow connection ID
         """
         self.path: str = path
-        self.conn_id = conn_id
+        self.conn_id: Optional[str] = conn_id
 
     @property
     def hook(self):
