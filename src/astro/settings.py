@@ -1,7 +1,11 @@
 from airflow.configuration import conf
+from constants import DEFAULT_SCHEMA
 
-DEFAULT_SCHEMA = "tmp_astro"
 SCHEMA = conf.get("astro_sdk", "sql_schema", fallback=DEFAULT_SCHEMA)
+POSTGRES_SCHEMA = conf.get("astro_sdk", "postgres_sql_schema", fallback=SCHEMA)
+BIGQUERY_SCHEMA = conf.get("astro_sdk", "bigquery_sql_schema", fallback=SCHEMA)
+SNOWFLAKE_SCHEMA = conf.get("astro_sdk", "snowflake_sql_schema", fallback=SCHEMA)
+
 
 ALLOW_UNSAFE_DF_STORAGE = conf.getboolean(
     "astro_sdk", "dataframe_allow_unsafe_storage", fallback=False

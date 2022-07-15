@@ -7,6 +7,7 @@ if sys.version_info >= (3, 8):
 else:
     from typing_extensions import Literal
 
+DEFAULT_SCHEMA = "tmp_astro"
 DEFAULT_CHUNK_SIZE = 1000000
 PYPI_PROJECT_NAME = "astro-sdk-python"
 
