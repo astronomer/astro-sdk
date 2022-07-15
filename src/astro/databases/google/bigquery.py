@@ -8,7 +8,7 @@ from airflow.providers.google.cloud.hooks.bigquery_dts import (
     BiqQueryDataTransferServiceHook,
 )
 from google.api_core.exceptions import NotFound as GoogleNotFound
-from google.cloud import bigquery, bigquery_datatransfer
+from google.cloud import bigquery, bigquery_datatransfer  # type: ignore
 from google.cloud.bigquery_datatransfer_v1.types import (
     StartManualTransferRunsResponse,
     TransferConfig,
