@@ -62,7 +62,11 @@ class CleanupOperator(BaseOperator):
         task_id = task_id or get_unique_task_id("_cleanup")
 
         super().__init__(
-            task_id=task_id, retries=retries, retry_delay=retry_delay, **kwargs
+            task_id=task_id,
+            retries=retries,
+            retry_delay=retry_delay,
+            trigger_rule="all_done",
+            **kwargs,
         )
 
     def execute(self, context: Context) -> None:
