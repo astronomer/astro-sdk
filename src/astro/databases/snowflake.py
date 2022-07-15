@@ -320,9 +320,11 @@ class SnowflakeDatabase(BaseDatabase):
                 nrows=settings.LOAD_TABLE_AUTODETECT_ROWS_COUNT
             )
 
+        # Snowflake doesn't handle well mixed capitalisation of column name chars
+        # we are handling this more gracefully in a separate PR
         if dataframe is not None:
             dataframe.columns.str.upper()
-        # Make columns uppercase to prevent weird errors in snowflake
+
         super().create_table_using_schema_autodetection(table, dataframe=dataframe)
 
     def is_native_load_file_available(
@@ -358,6 +360,7 @@ class SnowflakeDatabase(BaseDatabase):
         Requirements:
         - The user must have permissions to create a STAGE in Snowflake.
         - If loading from GCP Cloud Storage, `native_support_kwargs` must define `storage_integration`
+<<<<<<< HEAD
         - If loading from AWS S3, the credentials for creating the stage may be
         retrieved from the Airflow connection or from the `storage_integration`
         attribute within `native_support_kwargs`.
@@ -367,13 +370,11 @@ class SnowflakeDatabase(BaseDatabase):
         :param if_exists: Strategy used to load (currently supported: "append" or "replace")
         :param native_support_kwargs: may be used for the stage creation, as described above.
 
-
         .. seealso::
             `Snowflake official documentation on COPY INTO
             <https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html>`_
             `Snowflake official documentation on CREATE STAGE
             <https://docs.snowflake.com/en/sql-reference/sql/create-stage.html>`_
-
         """
         native_support_kwargs = native_support_kwargs or {}
         storage_integration = native_support_kwargs.get("storage_integration")
