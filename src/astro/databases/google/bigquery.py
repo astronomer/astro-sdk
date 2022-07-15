@@ -37,7 +37,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from tenacity import retry, stop_after_attempt
 
-from astro import settings
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
     FileLocation,
@@ -47,6 +46,7 @@ from astro.constants import (
 )
 from astro.databases.base import BaseDatabase
 from astro.files import File
+from astro.settings import BIGQUERY_SCHEMA
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = BigQueryHook.default_conn_name
@@ -64,6 +64,7 @@ class BigqueryDatabase(BaseDatabase):
     logic in other parts of our code-base.
     """
 
+    DEFAULT_SCHEMA = BIGQUERY_SCHEMA
     NATIVE_PATHS = {
         FileLocation.GS: "load_gs_file_to_table",
         FileLocation.S3: "load_s3_file_to_table",
@@ -117,7 +118,7 @@ class BigqueryDatabase(BaseDatabase):
 
         :return:
         """
-        return Metadata(schema=settings.SCHEMA, database=self.hook.project_id)
+        return Metadata(schema=self.DEFAULT_SCHEMA, database=self.hook.project_id)
 
     def schema_exists(self, schema: str) -> bool:
         """

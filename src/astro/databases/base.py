@@ -49,6 +49,7 @@ class BaseDatabase(ABC):
     illegal_column_name_chars: List[str] = []
     illegal_column_name_chars_replacement: List[str] = []
     NATIVE_LOAD_EXCEPTIONS: Any = (ValueError, AttributeError)
+    DEFAULT_SCHEMA = SCHEMA
 
     def __init__(self, conn_id: str):
         self.conn_id = conn_id
@@ -161,7 +162,7 @@ class BaseDatabase(ABC):
         if table.metadata and table.metadata.is_empty() and self.default_metadata:
             table.metadata = self.default_metadata
         if not table.metadata.schema:
-            table.metadata.schema = SCHEMA
+            table.metadata.schema = self.DEFAULT_SCHEMA
         return table
 
     # ---------------------------------------------------------
