@@ -9,7 +9,6 @@ from typing import Any, Dict, List, Optional, Tuple
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from pandas.io.sql import SQLDatabase
-from settings import SNOWFLAKE_SCHEMA
 from snowflake.connector import pandas_tools
 from snowflake.connector.errors import (
     DatabaseError,
@@ -35,6 +34,7 @@ from astro.constants import (
 )
 from astro.databases.base import BaseDatabase
 from astro.files import File
+from astro.settings import SNOWFLAKE_SCHEMA
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
