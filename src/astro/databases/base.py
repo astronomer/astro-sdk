@@ -1,7 +1,6 @@
 from abc import ABC
 from typing import Dict, List, Optional, Tuple, Union
 
-import pandas
 import pandas as pd
 import sqlalchemy
 from airflow.hooks.dbapi import DbApiHook
@@ -181,7 +180,7 @@ class BaseDatabase(ABC):
         self,
         table: Table,
         file: Optional[File] = None,
-        dataframe: Optional[pandas.DataFrame] = None,
+        dataframe: Optional[pd.DataFrame] = None,
     ) -> None:
         """
         Create a SQL table, automatically inferring the schema using the given file.
@@ -213,7 +212,7 @@ class BaseDatabase(ABC):
         self,
         table: Table,
         file: Optional[File] = None,
-        dataframe: Optional[pandas.DataFrame] = None,
+        dataframe: Optional[pd.DataFrame] = None,
     ) -> None:
         """
         Create a table either using its explicitly defined columns or inferring

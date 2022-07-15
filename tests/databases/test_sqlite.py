@@ -162,7 +162,7 @@ def test_sqlite_create_table_autodetection_without_file(database_table_fixture):
     with pytest.raises(ValueError) as exc_info:
         database.create_table(table)
     assert exc_info.match(
-        "File is required for creating table using schema autodetection"
+        "File or Dataframe is required for creating table using schema autodetection"
     )
 
 
