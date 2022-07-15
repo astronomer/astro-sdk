@@ -1,5 +1,6 @@
 from airflow.configuration import conf
-from constants import DEFAULT_SCHEMA
+
+from astro.constants import DEFAULT_SCHEMA
 
 SCHEMA = conf.get("astro_sdk", "sql_schema", fallback=DEFAULT_SCHEMA)
 POSTGRES_SCHEMA = conf.get("astro_sdk", "postgres_sql_schema", fallback=SCHEMA)
