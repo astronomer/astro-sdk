@@ -73,6 +73,10 @@ class PostgresDatabase(BaseDatabase):
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
 
+        self.create_schema_if_needed(target_table.metadata.schema)
+        if not self.table_exists(table=target_table) or if_exists == "replace":
+            self.create_table(table=target_table, dataframe=source_dataframe)
+
         output_buffer = io.StringIO()
         source_dataframe.to_csv(output_buffer, sep=",", header=True, index=False)
         output_buffer.seek(0)
