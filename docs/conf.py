@@ -16,12 +16,21 @@
 
 # -- Project information -----------------------------------------------------
 
+# We don't want to download the astro package every time we build docs, so this allows us to get the version number
+# without installing astro
+__version__ = None
+with open("../src/astro/__init__.py") as f:
+    while not __version__:
+        current_line = f.readline()
+        if "__version__" in current_line:
+            __version__ = current_line.split(" ")[-1]
+
 project = "astro-sdk"
 copyright = "2022, Astronomer inc."  # noqa
 author = "Astronomer inc."
 
 # The full version, including alpha/beta/rc tags
-release = "0.10.0"
+release = __version__
 
 # -- General configuration ---------------------------------------------------
 

@@ -43,6 +43,14 @@ def test_subclass_missing_load_pandas_dataframe_to_table_raises_exception():
         db.load_pandas_dataframe_to_table(df, table)
 
 
+def test_create_table_using_columns_raises_exception():
+    db = DatabaseSubclass(conn_id="fake_conn_id")
+    table = Table()
+    with pytest.raises(ValueError) as exc_info:
+        db.create_table_using_columns(table)
+    assert exc_info.match("To use this method, table.columns must be defined")
+
+
 def test_subclass_missing_append_table_raises_exception():
     db = DatabaseSubclass(conn_id="fake_conn_id")
     source_table = Table()
@@ -124,36 +132,9 @@ def test_load_file_to_table_natively(
             source_file=file,
             target_table=test_table,
         )
-        assert database.check_native_path(source_file=file, target_table=test_table)
+        assert database.is_native_load_file_available(
+            source_file=file, target_table=test_table
+        )
         assert method.called
         assert is_dict_subset(superset=method.call_args.kwargs, subset=expected_kwargs)
         assert method.call_args.args == expected_args
-
-
-@pytest.mark.parametrize(
-    "database_table_fixture",
-    [{"database": Database.BIGQUERY, "table": Table(conn_id="bigquery")}],
-    indirect=True,
-    ids=["bigquery"],
-)
-def test_create_empty_table(database_table_fixture):
-    db, test_table = database_table_fixture
-    file = File(path=str(CWD) + "/../data/homes_main.csv")
-
-    database = create_database(test_table.conn_id)
-    database.create_empty_table(source_file=file, target_table=test_table)
-
-    df = db.export_table_to_pandas_dataframe(test_table)
-    cols = list(df.columns)
-    cols.sort()
-    assert cols == [
-        "acres",
-        "age",
-        "baths",
-        "beds",
-        "list",
-        "living",
-        "rooms",
-        "sell",
-        "taxes",
-    ]

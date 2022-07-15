@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Tuple, Union
 import pandas as pd
 import sqlalchemy
 from airflow.hooks.dbapi import DbApiHook
-from pandas.io.sql import get_schema
+from pandas.io.sql import SQLDatabase
 from sqlalchemy import column, insert, select
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
@@ -18,7 +18,7 @@ from astro.constants import (
 )
 from astro.exceptions import NonExistentTableException
 from astro.files import File, resolve_file_path_pattern
-from astro.settings import SCHEMA
+from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.sql.table import Metadata, Table
 
 
@@ -164,15 +164,55 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
     # Table creation & deletion methods
     # ---------------------------------------------------------
-    def create_table(self, table: Table) -> None:
+    def create_table_using_columns(self, table: Table) -> None:
         """
-        Create a SQL table. For this method to work, the table instance must contain columns.
+        Create a SQL table using the table columns.
 
         :param table: The table to be created.
         """
+        if not table.columns:
+            raise ValueError("To use this method, table.columns must be defined")
         metadata = table.sqlalchemy_metadata
         sqlalchemy_table = sqlalchemy.Table(table.name, metadata, *table.columns)
         metadata.create_all(self.sqlalchemy_engine, tables=[sqlalchemy_table])
+
+    def create_table_using_schema_autodetection(
+        self, table: Table, file: Optional[File] = None
+    ) -> None:
+        """
+        Create a SQL table, automatically inferring the schema using the given file.
+
+        :param table: The table to be created.
+        :param file: File used to infer the new table columns.
+        """
+        if file is None:
+            raise ValueError(
+                "File is required for creating table using schema autodetection"
+            )
+        source_dataframe = file.export_to_dataframe(
+            nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT
+        )
+        db = SQLDatabase(engine=self.sqlalchemy_engine)
+        db.prep_table(
+            source_dataframe,
+            table.name.lower(),
+            schema=table.metadata.schema,
+            if_exists="replace",
+            index=False,
+        )
+
+    def create_table(self, table: Table, file: Optional[File] = None) -> None:
+        """
+        Create a table either using its explicitly defined columns or inferring
+        it's columns from a given file.
+
+        :param table: The table to be created
+        :param file: (optional) File used to infer the table columns.
+        """
+        if table.columns:
+            self.create_table_using_columns(table)
+        else:
+            self.create_table_using_schema_autodetection(table, file)
 
     def create_table_from_select_statement(
         self,
@@ -235,8 +275,17 @@ class BaseDatabase(ABC):
             input_file.conn_id,
             normalize_config=normalize_config,
         )
+        self.create_schema_if_needed(output_table.metadata.schema)
+        if if_exists == "replace" or not self.table_exists(output_table):
+            self.drop_table(output_table)
+            self.create_table(output_table, input_files[0])
+            if_exists = "append"
+
+        # TODO: many native transfers support the input_file.path - it may be better
+        # to use the native support to loading multiple files as opposed to iterating
+        # here
         for file in input_files:
-            if use_native_support and self.check_native_path(
+            if use_native_support and self.is_native_load_file_available(
                 source_file=file, target_table=output_table
             ):
                 self.load_file_to_table_natively(
@@ -251,12 +300,9 @@ class BaseDatabase(ABC):
                 self.load_pandas_dataframe_to_table(
                     dataframe,
                     output_table,
-                    if_exists,
-                    chunk_size,
+                    chunk_size=chunk_size,
+                    if_exists=if_exists,
                 )
-            # Since data from any file post the first one, needs to go to same table
-            # we append data to previously created table.
-            if_exists = "append"
 
     def load_pandas_dataframe_to_table(
         self,
@@ -274,7 +320,6 @@ class BaseDatabase(ABC):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
-        self.create_schema_if_needed(target_table.metadata.schema)
         source_dataframe.to_sql(
             self.get_table_qualified_name(target_table),
             con=self.sqlalchemy_engine,
@@ -448,7 +493,7 @@ class BaseDatabase(ABC):
             self.get_table_qualified_name(table),
         )
 
-    def check_native_path(  # skipcq: PYL-R0201
+    def is_native_load_file_available(  # skipcq: PYL-R0201
         self, source_file: File, target_table: Table  # skipcq: PYL-W0613
     ) -> bool:
         """
@@ -477,19 +522,3 @@ class BaseDatabase(ABC):
         :param native_support_kwargs: kwargs to be used by native loading command
         """
         raise NotImplementedError
-
-    def create_empty_table(
-        self, source_file: File, target_table: Table, nrows: int = 1000
-    ):
-        """
-        Infer schema from source file and create and empty table in database
-
-        :param source_file: File from which we need to transfer data
-        :param target_table: Table that needs to be populated with file data
-        :param nrows: No. of rows to use to infer schema
-        """
-        df = source_file.export_to_dataframe(nrows=nrows)
-        schema_statement = get_schema(
-            df, self.get_table_qualified_name(target_table), con=self.sqlalchemy_engine
-        )
-        self.run_sql(schema_statement)

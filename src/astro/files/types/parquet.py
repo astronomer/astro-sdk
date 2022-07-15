@@ -14,7 +14,10 @@ class ParquetFileType(FileType):
 
         :param stream: file stream object
         """
-        return pd.read_parquet(stream, **kwargs)
+        kwargs_copy = dict(kwargs)
+        # Pandas `read_parquet` does not support the `nrows` parameter
+        kwargs_copy.pop("nrows", None)
+        return pd.read_parquet(stream, **kwargs_copy)
 
     def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
         """Write parquet file to one of the supported locations

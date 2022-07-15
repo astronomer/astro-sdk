@@ -14,7 +14,10 @@ class JSONFileType(FileType):
 
         :param stream: file stream object
         """
-        return pd.read_json(stream, **kwargs)
+        kwargs_copy = dict(kwargs)
+        # Pandas `read_json` does not support the `nrows` parameter unless we're using NDJSON
+        kwargs_copy.pop("nrows", None)
+        return pd.read_json(stream, **kwargs_copy)
 
     def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
         """Write json file to one of the supported locations
