@@ -451,3 +451,40 @@ def test_create_stage_amazon_fails_due_to_no_credentials(get_credentials):
         "In order to create an stage for S3, one of the following is required"
     )
     assert exc_info.match(expected_msg)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.SNOWFLAKE},
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+@pytest.mark.parametrize(
+    "remote_files_fixture",
+    [
+        {"provider": "amazon", "filetype": FileType.CSV},
+    ],
+    indirect=True,
+    ids=["amazon_csv"],
+)
+def test_load_file_to_table_natively(remote_files_fixture, database_table_fixture):
+    """Load a file to a Snowflake table using the native optimisation."""
+    filepath = remote_files_fixture[0]
+    database, target_table = database_table_fixture
+    database.load_file_to_table(
+        File(filepath), target_table, {}, use_native_support=True
+    )
+
+    df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
+    assert len(df) == 3
+    expected = pd.DataFrame(
+        [
+            {"id": 1, "name": "First"},
+            {"id": 2, "name": "Second"},
+            {"id": 3, "name": "Third with unicode पांचाल"},
+        ]
+    )
+    test_utils.assert_dataframes_are_equal(df, expected)
