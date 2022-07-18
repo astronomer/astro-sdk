@@ -188,10 +188,18 @@ To publish the results to bigquery table, we need to create an environment varia
 
 ## Analyze the results
 
+[analyse.py](tests/benchmark/analyse.py) takes local file path or GCS file path for ndjson file.
+
 After running the benchmark, it is possible to run an analysis script using:
 
+Sample Local file path for ndjson file:
 ```
 ./analyse.py --results-filepath=/tmp/some-results.ndjson
+```
+
+Sample GCS file path for ndjson file:
+```
+./analyse.py --results-filepath=gs://bucket/result/some-results.ndjson
 ```
 
 If there are multiple runs, it calculates the mean/average per (database/dataset) combination.
