@@ -308,10 +308,12 @@ class SnowflakeDatabase(BaseDatabase):
         Requirements:
         - The user must have permissions to create a STAGE in Snowflake.
         - If loading from GCP Cloud Storage, `native_support_kwargs` must define `storage_integration`
-        - If loading from AWS S3, the credentials for creating the stage may be retrieved from the Airflow connection or from the `storage_integration` attribute within `native_support_kwargs`.
+        - If loading from AWS S3, the credentials for creating the stage may be
+        retrieved from the Airflow connection or from the `storage_integration`
+        attribute within `native_support_kwargs`.
 
         :param source_file: File from which we need to transfer data
-        :param target_table: Table to which the content of the file will be loaded to 
+        :param target_table: Table to which the content of the file will be loaded to
         :param if_exists: Strategy used to load (currently supported: "append" or "replace")
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
 
