@@ -299,7 +299,7 @@ class SnowflakeDatabase(BaseDatabase):
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
-    ):
+    ) -> None:
         """
         Load the content of a file to an existing Snowflake table natively by:
         - Creating a Snowflake external stage
@@ -308,18 +308,20 @@ class SnowflakeDatabase(BaseDatabase):
         Requirements:
         - The user must have permissions to create a STAGE in Snowflake.
         - If loading from GCP Cloud Storage, `native_support_kwargs` must define `storage_integration`
-        - If loading from AWS S3, the credentials for creating the stage may be retrieved from
-          the Airflow connection or from the `storage_integration` attribute within `native_support_kwargs`.
+        - If loading from AWS S3, the credentials for creating the stage may be retrieved from the Airflow connection or from the `storage_integration` attribute within `native_support_kwargs`.
 
-        :param source_file:
-        :param target_table:
-        :param if_exists
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table to which the content of the file will be loaded to 
+        :param if_exists: Strategy used to load (currently supported: "append" or "replace")
+        :param native_support_kwargs: kwargs to be used by method involved in native support flow
+
 
         .. seealso::
             `Snowflake official documentation on COPY INTO
             <https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html>`_
             `Snowflake official documentation on CREATE STAGE
             <https://docs.snowflake.com/en/sql-reference/sql/create-stage.html>`_
+
         """
         native_support_kwargs = native_support_kwargs or {}
         storage_integration = native_support_kwargs.get("storage_integration")
