@@ -2,9 +2,13 @@
 
 import argparse
 import json
+import os
 import sys
+from pathlib import Path
+from urllib.parse import urlparse
 
 import pandas as pd
+from google.cloud import storage
 
 SUMMARY_FIELDS = [
     "database",
@@ -42,10 +46,54 @@ def format_time(time):
         return str(round(time / 3600, 2)) + "hrs"
 
 
+def check_gcs_path(results_filepath):
+    url_obj = urlparse(results_filepath)
+
+    if url_obj.scheme == "gs":
+        return True
+    return False
+
+
+def download_files_from_gcs(results_filepath):
+    """Downloads folder from the GCS bucket."""
+
+    gs_url = urlparse(results_filepath)
+    bucket_name = gs_url.netloc
+    source_blob_name = gs_url.path
+
+    local_destination_file_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
+        source_blob_name[1:],
+    )
+    if os.path.exists(os.path.dirname(local_destination_file_path)):
+        os.remove(local_destination_file_path)
+    else:
+        os.mkdir(os.path.dirname(local_destination_file_path))
+    local_file = Path(local_destination_file_path)
+    local_file.touch(exist_ok=True)
+
+    storage_client = storage.Client()
+
+    bucket = storage_client.bucket(bucket_name)
+
+    blob = bucket.blob(source_blob_name[1:])
+
+    blob.download_to_filename(local_destination_file_path)
+
+    print(
+        "Downloaded storage object {} from bucket {} to local file {}.".format(
+            source_blob_name, bucket_name, local_destination_file_path
+        )
+    )
+
+    return local_destination_file_path
+
+
 def analyse_results(results_filepath):
     data = []
     with open(results_filepath) as fp:
         for line in fp.readlines():
+            print(line)
             data.append(json.loads(line.strip()))
 
     df = pd.json_normalize(data, sep="_")
@@ -97,8 +145,12 @@ if __name__ == "__main__":
         "--results-filepath",
         "-r",
         type=str,
-        help="NDJSON containing the results for a benchmark run",
+        help="NDJSON local path(/path/to/file.ndjson) or Google "
+        "cloud storage path (gs://buckey/sample.ndjson) containing the results for a benchmark run",
     )
     args = parser.parse_args()
-    print(f"Running the analysis on {args.results_filepath}...")
-    analyse_results(args.results_filepath)
+    results_filepath = args.results_filepath
+    print(f"Running the analysis on {results_filepath}...")
+    if check_gcs_path(results_filepath):
+        results_filepath = download_files_from_gcs(results_filepath)
+    analyse_results(results_filepath)
