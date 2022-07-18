@@ -143,8 +143,8 @@ if __name__ == "__main__":
         "--results-filepath",
         "-r",
         type=str,
-        help="NDJSON local path or Google "
-        "cloud storage path containing the results for a benchmark run",
+        help="NDJSON local path (/path/to/file.ndjson) or Google "
+        "cloud storage path (gs://bucket/sample.ndjson) containing the results for a benchmark run",
     )
     args = parser.parse_args()
     results_filepath = args.results_filepath
