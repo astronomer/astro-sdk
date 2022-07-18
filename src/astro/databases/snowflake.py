@@ -360,7 +360,6 @@ class SnowflakeDatabase(BaseDatabase):
         Requirements:
         - The user must have permissions to create a STAGE in Snowflake.
         - If loading from GCP Cloud Storage, `native_support_kwargs` must define `storage_integration`
-<<<<<<< HEAD
         - If loading from AWS S3, the credentials for creating the stage may be
         retrieved from the Airflow connection or from the `storage_integration`
         attribute within `native_support_kwargs`.
@@ -375,6 +374,7 @@ class SnowflakeDatabase(BaseDatabase):
             <https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html>`_
             `Snowflake official documentation on CREATE STAGE
             <https://docs.snowflake.com/en/sql-reference/sql/create-stage.html>`_
+
         """
         native_support_kwargs = native_support_kwargs or {}
         storage_integration = native_support_kwargs.get("storage_integration")
