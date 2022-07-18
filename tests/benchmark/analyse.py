@@ -93,7 +93,6 @@ def analyse_results(results_filepath):
     data = []
     with open(results_filepath) as fp:
         for line in fp.readlines():
-            print(line)
             data.append(json.loads(line.strip()))
 
     df = pd.json_normalize(data, sep="_")
