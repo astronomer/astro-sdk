@@ -12,12 +12,12 @@ from astro.constants import MergeConflictStrategy
 from astro.sql.operators.append import APPEND_COLUMN_TYPE, AppendOperator
 from astro.sql.operators.cleanup import CleanupOperator
 from astro.sql.operators.dataframe import DataframeOperator
+from astro.sql.operators.drop import DropTableOperator
 from astro.sql.operators.export_file import export_file  # noqa: F401
 from astro.sql.operators.load_file import load_file  # noqa: F401
 from astro.sql.operators.merge import MERGE_COLUMN_TYPE, MergeOperator
 from astro.sql.operators.raw_sql import RawSQLOperator
 from astro.sql.operators.transform import TransformOperator  # noqa: F401
-from astro.sql.operators.truncate import TruncateOperator
 from astro.sql.table import Table
 
 
@@ -224,18 +224,18 @@ def merge(
     ).output
 
 
-def truncate(
+def drop_table(
     table: Table,
     **kwargs: Any,
-) -> TruncateOperator:
+):
     """
-    Truncate a table.
+    Drops a table.
 
-    :param table: Table to be truncated
+    :param table: Table to be dropped
     :param kwargs:
     """
 
-    return TruncateOperator(table=table, **kwargs)
+    return DropTableOperator(table=table, **kwargs).output
 
 
 def dataframe(
