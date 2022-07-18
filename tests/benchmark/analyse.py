@@ -81,9 +81,8 @@ def download_files_from_gcs(results_filepath):
     blob.download_to_filename(local_destination_file_path)
 
     print(
-        "Downloaded storage object {} from bucket {} to local file {}.".format(
-            source_blob_name, bucket_name, local_destination_file_path
-        )
+        f"Downloaded storage object {source_blob_name}  from bucket {bucket_name} to local"
+        f" file {local_destination_file_path}."
     )
 
     return local_destination_file_path
