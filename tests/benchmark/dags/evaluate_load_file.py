@@ -47,6 +47,7 @@ def create_dag(database_name, table_args, dataset):
 
     with DAG(dag_name, schedule_interval=None, start_date=START_DATE) as dag:
         chunk_size = int(os.getenv("ASTRO_CHUNK_SIZE", str(DEFAULT_CHUNK_SIZE)))
+        use_native_support = bool(int(os.getenv("ASTRO_ENABLE_NATIVE_LOAD", "1")))
         table_metadata = table_args.pop("metadata", {})
         if table_metadata:
             table = Table(metadata=Metadata(**table_metadata), **table_args)
@@ -62,6 +63,7 @@ def create_dag(database_name, table_args, dataset):
             task_id="load",
             output_table=table,
             chunk_size=chunk_size,
+            use_native_support=use_native_support,
         )
         aql.cleanup([my_table])
 

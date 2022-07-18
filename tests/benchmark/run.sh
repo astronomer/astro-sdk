@@ -76,7 +76,7 @@ echo - Output: $(get_abs_filename $results_file)
           cat $results_file
 
           if [[ -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
-        echo "$GOOGLE_APPLICATION_CREDENTIALS is not defined"
+        echo "GOOGLE_APPLICATION_CREDENTIALS env var is not defined"
       else
         echo "$GOOGLE_APPLICATION_CREDENTIALS is defined"
             gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
