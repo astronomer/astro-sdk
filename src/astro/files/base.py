@@ -1,3 +1,4 @@
+import io
 from typing import List, Optional, Union
 
 import pandas as pd
@@ -71,13 +72,38 @@ class File:
         ) as stream:
             self.type.create_from_dataframe(stream=stream, df=df)
 
-    def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
-        """Read file from all supported location and convert them into dataframes"""
+    def _convert_remote_file_to_byte_stream(self) -> io.IOBase:
+        """
+        Read file from all supported location and convert them into a buffer that can be streamed into other data
+        structures.
+
+        Due to noted issues with using smart_open with pandas (like
+        https://github.com/RaRe-Technologies/smart_open/issues/524), we create a BytesIO or StringIO buffer
+        before exporting to a dataframe. We've found a sizable speed improvement with this optimizat
+
+        Returns: an io object that can be streamed into a dataframe (or other object)
+
+        """
         mode = "rb" if self.is_binary() else "r"
+        remote_obj_buffer = io.BytesIO() if self.is_binary() else io.StringIO()
         with smart_open.open(
             self.path, mode=mode, transport_params=self.location.transport_params
         ) as stream:
-            return self.type.export_to_dataframe(stream, **kwargs)
+            remote_obj_buffer.write(stream.read())
+        remote_obj_buffer.seek(0)
+        return remote_obj_buffer
+
+    def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
+        """Read file from all supported location and convert them into dataframes.
+
+        Due to noted issues with using smart_open with pandas (like
+        https://github.com/RaRe-Technologies/smart_open/issues/524), we create a BytesIO or StringIO buffer
+        before exporting to a dataframe. We've found a sizable speed improvement with this optimization.
+        """
+
+        return self.type.export_to_dataframe(
+            self._convert_remote_file_to_byte_stream(), **kwargs
+        )
 
     def exists(self) -> bool:
         """Check if the file exists or not"""

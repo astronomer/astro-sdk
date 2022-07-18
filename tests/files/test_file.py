@@ -1,5 +1,5 @@
 import pathlib
-from unittest.mock import patch
+from unittest.mock import mock_open, patch
 
 import pandas as pd
 import pytest
@@ -137,12 +137,15 @@ def test_create_from_dataframe(
     ids=["local", "s3", "gcs"],
 )
 @pytest.mark.parametrize("filetype", SUPPORTED_FILE_TYPES)
-@patch("astro.files.base.smart_open.open")
-def test_export_to_dataframe(
-    mocked_smart_open, filetype, locations, type_method_map_fixture
-):
+def test_export_to_dataframe(filetype, locations, type_method_map_fixture):
     """Test export_to_dataframe() for all locations and filetypes"""
-    with patch(type_method_map_fixture[FileType(filetype)]) as mocked_read:
+    if filetype == "parquet":
+        data = str.encode("data")
+    else:
+        data = "data"
+    with patch(type_method_map_fixture[FileType(filetype)]) as mocked_read, patch(
+        "astro.files.base.smart_open.open", mock_open(read_data=data)
+    ) as mocked_smart_open:
 
         path = locations["path"] + "." + filetype
 
@@ -180,12 +183,15 @@ def test_export_to_dataframe(
     ids=["local", "s3", "gcs"],
 )
 @pytest.mark.parametrize("filetype", SUPPORTED_FILE_TYPES)
-@patch("astro.files.base.smart_open.open")
-def test_read_with_explicit_valid_type(
-    mocked_smart_open, filetype, locations, type_method_map_fixture
-):
+def test_read_with_explicit_valid_type(filetype, locations, type_method_map_fixture):
     """Test export_to_dataframe() for all locations and filetypes, where the file type is explicitly specified"""
-    with patch(type_method_map_fixture[FileType(filetype)]) as mocked_read:
+    if filetype == "parquet":
+        data = str.encode("data")
+    else:
+        data = "data"
+    with patch(type_method_map_fixture[FileType(filetype)]) as mocked_read, patch(
+        "astro.files.base.smart_open.open", mock_open(read_data=data)
+    ) as mocked_smart_open:
 
         path = locations["path"]
 
