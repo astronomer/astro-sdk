@@ -265,7 +265,7 @@ class BaseDatabase(ABC):
         self,
         input_file: File,
         output_table: Table,
-        normalize_config: Dict,
+        normalize_config: Optional[Dict] = None,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         use_native_support: bool = True,
@@ -284,6 +284,7 @@ class BaseDatabase(ABC):
         :param normalize_config: pandas json_normalize params config
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
         """
+        normalize_config = normalize_config or {}
         input_files = resolve_file_path_pattern(
             input_file.path,
             input_file.conn_id,
