@@ -214,7 +214,7 @@ class BigqueryDatabase(BaseDatabase):
                 f"for {source_file.location.location_type} to bigquery."
             )
 
-    def load_gs_file_to_bigquery(
+    def load_gs_file_to_table(
         self,
         source_file: File,
         target_table: Table,
@@ -259,7 +259,7 @@ class BigqueryDatabase(BaseDatabase):
             configuration=job_config,
         )
 
-    def load_s3_file_to_bigquery(
+    def load_s3_file_to_table(
         self,
         source_file: File,
         target_table: Table,
@@ -302,7 +302,7 @@ class BigqueryDatabase(BaseDatabase):
         except AttributeError:
             raise ValueError(f"conn_id {target_table.conn_id} has no project id")
 
-    def load_local_file_to_bigquery(
+    def load_local_file_to_table(
         self,
         source_file: File,
         target_table: Table,
