@@ -217,8 +217,8 @@ class BaseDatabase(ABC):
         if table.columns:
             self.create_table_using_columns(table)
         else:
-            # self.create_table_using_schema_autodetection(table, file)
-            self.create_empty_table(source_file=file, target_table=table)
+            self.create_table_using_schema_autodetection(table, file)
+            # self.create_empty_table(source_file=file, target_table=table)
 
     def create_empty_table(
         self, source_file: File, target_table: Table, nrows: int = 1000

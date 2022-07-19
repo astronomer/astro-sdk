@@ -376,7 +376,7 @@ class S3ToBigqueryDataTransfer:
                 )
                 time.sleep(self.poll_duration)
 
-            print("run_info.state")
+            print("run_info : ", run_info)
             if run_info.state != TransferState.SUCCEEDED:
                 raise ValueError(run_info.error_status)
         finally:
