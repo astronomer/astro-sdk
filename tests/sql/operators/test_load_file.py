@@ -796,7 +796,7 @@ def test_aql_load_file_optimized_path_method_called(
     file = File(file_uri)
     optimised_path_to_method = {
         ("gs", "bigquery",): {
-            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_gs_file_to_bigquery",
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_gs_file_to_table",
             "expected_kwargs": {
                 "source_file": file,
                 "target_table": test_table,
@@ -804,7 +804,7 @@ def test_aql_load_file_optimized_path_method_called(
             "expected_args": (),
         },
         ("s3", "bigquery",): {
-            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_s3_file_to_bigquery",
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_s3_file_to_table",
             "expected_kwargs": {
                 "source_file": file,
                 "target_table": test_table,
@@ -812,7 +812,7 @@ def test_aql_load_file_optimized_path_method_called(
             "expected_args": (),
         },
         ("local", "bigquery",): {
-            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_local_file_to_bigquery",
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_local_file_to_table",
             "expected_kwargs": {
                 "source_file": file,
                 "target_table": test_table,
@@ -874,13 +874,13 @@ def test_aql_load_file_optimized_path_method_is_not_called(
     # }
     optimised_path_to_method = {
         ("gs", "bigquery",): {
-            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_gs_file_to_bigquery",
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_gs_file_to_table",
         },
         ("s3", "bigquery",): {
-            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_s3_file_to_bigquery",
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_s3_file_to_table",
         },
         ("local", "bigquery"): {
-            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_local_file_to_bigquery",
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_local_file_to_table",
         },
     }
     if file_uri.find(":") >= 0:
