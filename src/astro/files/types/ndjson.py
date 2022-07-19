@@ -52,7 +52,7 @@ class NDJSONFileType(FileType):
         result_df = None
         rows = stream.readlines(DEFAULT_CHUNK_SIZE)
         row_count = 0
-        while len(rows) > 0:
+        while len(rows) > 0 and (nrows and row_count < nrows):
             # Remove extra rows
             if nrows and nrows < row_count + len(rows):
                 diff = (row_count + len(rows)) - nrows
@@ -67,7 +67,6 @@ class NDJSONFileType(FileType):
                 result_df = pd.concat([result_df, df])
 
             row_count = result_df.shape[0]
-
-            if nrows and row_count < nrows:
-                rows = stream.readlines(DEFAULT_CHUNK_SIZE)
+            rows = stream.readlines(DEFAULT_CHUNK_SIZE)
+            
         return result_df
