@@ -48,9 +48,9 @@ class BigqueryDatabase(BaseDatabase):
     """
 
     NATIVE_PATHS = {
-        FileLocation.GS: "load_gs_file_to_bigquery",
-        FileLocation.S3: "load_s3_file_to_bigquery",
-        FileLocation.LOCAL: "load_local_file_to_bigquery",
+        FileLocation.GS: "load_gs_file_to_table",
+        FileLocation.S3: "load_s3_file_to_table",
+        FileLocation.LOCAL: "load_local_file_to_table",
     }
 
     illegal_column_name_chars: List[str] = ["."]
