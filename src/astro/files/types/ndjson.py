@@ -19,6 +19,7 @@ class NDJSONFileType(FileType):
         """
         return self.flatten(self.normalize_config, stream, **kwargs)
 
+
     def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
         """Write ndjson file to one of the supported locations
 
@@ -30,6 +31,10 @@ class NDJSONFileType(FileType):
     @property
     def name(self):
         return FileTypeConstants.NDJSON
+
+    @staticmethod
+    def get_top_n_rows(self, df, n: int):
+        return df[n:]
 
     @staticmethod
     def flatten(
@@ -46,22 +51,26 @@ class NDJSONFileType(FileType):
         :return: return dataframe containing the loaded data
         :rtype: `pandas.DataFrame`
         """
-        # DEFAULT_CHUNK_SIZE = kwargs.get("nrows", None) or DEFAULT_CHUNK_SIZE
         normalize_config = normalize_config or {}
-        print("flatten 1 nrows: ", DEFAULT_CHUNK_SIZE)
-        df = None
-        rows = stream.read(DEFAULT_CHUNK_SIZE)
-        print("flatten 2")
-        print("length : ", len(rows))
+        nrows = kwargs.get("nrows", None)
+        result_df = None
+        rows = stream.readlines(DEFAULT_CHUNK_SIZE)
+        row_count = 0
         while len(rows) > 0:
-            if df is None:
-                print("rows : ", rows)
-                df = pd.DataFrame(
-                    pd.json_normalize(
-                        [json.loads(row) for row in rows], **normalize_config
-                    )
-                )
-            print("flatten 3")
-            # rows = stream.read(DEFAULT_CHUNK_SIZE)
-            print("flatten 4")
-        return df
+            # Remove extra rows
+            if nrows and nrows < row_count + len(rows):
+                diff = (row_count + len(rows)) - nrows
+                rows = rows[: diff + 1]
+
+            df = pd.DataFrame(
+                pd.json_normalize([json.loads(row) for row in rows], **normalize_config)
+            )
+            if result_df is None:
+                result_df = df
+            else:
+                result_df = pd.concat([result_df, df])
+
+            row_count = result_df.shape[0]
+
+            rows = stream.readlines(DEFAULT_CHUNK_SIZE)
+        return result_df
