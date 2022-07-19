@@ -393,6 +393,7 @@ def test_stage_exists_false(remote_files_fixture):
 )
 def test_create_stage_succeeds_with_storage_integration(remote_files_fixture):
     file_fixture = File(remote_files_fixture[0])
+
     if file_fixture.location.location_type == FileLocation.GS:
         storage_integration = SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE
     else:
