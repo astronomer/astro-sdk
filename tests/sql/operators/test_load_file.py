@@ -525,12 +525,9 @@ def test_load_file_with_named_schema(sample_dag, database_table_fixture, file_ty
         {
             "database": Database.BIGQUERY,
         },
-        {
-            "database": Database.POSTGRES,
-        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql"],
+    ids=["snowflake", "bigquery"],
 )
 def test_load_file_chunks(sample_dag, database_table_fixture):
     file_type = "csv"
@@ -538,13 +535,11 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
 
     chunk_function = {
         "bigquery": "pandas.DataFrame.to_gbq",
-        "postgresql": "pandas.DataFrame.to_sql",
         "snowflake": "snowflake.connector.pandas_tools.write_pandas",
     }[db.sql_type]
 
     chunk_size_argument = {
         "bigquery": "chunksize",
-        "postgresql": "chunksize",
         "snowflake": "chunk_size",
     }[db.sql_type]
 
@@ -672,38 +667,6 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_illegal_sep_params(
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (1, 36)
     assert "payload_size" in df.columns
-
-
-@pytest.mark.parametrize(
-    "database_table_fixture",
-    [
-        {
-            "database": Database.POSTGRES,
-        },
-    ],
-    indirect=True,
-    ids=["postgresql"],
-)
-def test_aql_multilevel_nested_ndjson_file_default_params(
-    sample_dag, database_table_fixture, caplog
-):
-    """
-    Test the flattening of multilevel level nested ndjson, with default '_'.
-    Expected to fail since we do not support flattening of multilevel ndjson.
-    """
-    _, test_table = database_table_fixture
-
-    with pytest.raises(BackfillUnfinished):
-        with sample_dag:
-            load_file(
-                input_file=File(
-                    path=str(CWD) + "/../../data/github_multi_level_nested.ndjson"
-                ),
-                output_table=test_table,
-            )
-        test_utils.run_dag(sample_dag)
-    expected_error = "can't adapt type 'dict"
-    assert expected_error in caplog.text
 
 
 def test_populate_table_metadata(sample_dag):
