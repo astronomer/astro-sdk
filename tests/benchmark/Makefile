@@ -49,7 +49,7 @@ local: check_google_credentials
    		benchmark
 	@rm -rf astro-sdk
 
-run_job: 
+run_job:
 	@gcloud container clusters get-credentials astro-sdk --zone us-central1-a --project ${GCP_PROJECT}
 	@kubectl apply -f infrastructure/kubernetes/namespace.yaml
 	@kubectl apply -f infrastructure/kubernetes/postgres.yaml
