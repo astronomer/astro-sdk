@@ -17,7 +17,7 @@ class NDJSONFileType(FileType):
 
         :param stream: file stream object
         """
-        return NDJSONFileType.flatten(self.normalize_config, stream)
+        return NDJSONFileType.flatten(self.normalize_config, stream, **kwargs)
 
     def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
         """Write ndjson file to one of the supported locations
@@ -32,8 +32,12 @@ class NDJSONFileType(FileType):
         return FileTypeConstants.NDJSON
 
     @staticmethod
+    def get_top_n_rows(self, df, n: int):
+        return df[n:]
+
+    @staticmethod
     def flatten(
-        normalize_config: Optional[dict], stream: io.TextIOWrapper
+        normalize_config: Optional[dict], stream: io.TextIOWrapper, **kwargs
     ) -> pd.DataFrame:
         """
         Flatten the nested ndjson/json.
@@ -47,15 +51,26 @@ class NDJSONFileType(FileType):
         :rtype: `pandas.DataFrame`
         """
         normalize_config = normalize_config or {}
+        nrows = kwargs.get("nrows", None)
 
-        df = None
+        result_df = None
         rows = stream.readlines(DEFAULT_CHUNK_SIZE)
+        row_count = 0
         while len(rows) > 0:
-            if df is None:
-                df = pd.DataFrame(
-                    pd.json_normalize(
-                        [json.loads(row) for row in rows], **normalize_config
-                    )
-                )
+            # Remove extra rows
+            if nrows and nrows < row_count + len(rows):
+                diff = (row_count + len(rows)) - nrows
+                rows = rows[: diff + 1]
+
+            df = pd.DataFrame(
+                pd.json_normalize([json.loads(row) for row in rows], **normalize_config)
+            )
+            if result_df is None:
+                result_df = df
+            else:
+                result_df = pd.concat([result_df, df])
+
+            row_count = result_df.shape[0]
+
             rows = stream.readlines(DEFAULT_CHUNK_SIZE)
-        return df
+        return result_df
