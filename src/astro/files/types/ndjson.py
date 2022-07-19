@@ -19,7 +19,6 @@ class NDJSONFileType(FileType):
         """
         return self.flatten(self.normalize_config, stream, **kwargs)
 
-
     def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
         """Write ndjson file to one of the supported locations
 
@@ -48,6 +47,7 @@ class NDJSONFileType(FileType):
         :rtype: `pandas.DataFrame`
         """
         normalize_config = normalize_config or {}
+
         nrows = kwargs.get("nrows", None)
         result_df = None
         rows = stream.readlines(DEFAULT_CHUNK_SIZE)
