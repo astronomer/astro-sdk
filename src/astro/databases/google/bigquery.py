@@ -196,7 +196,6 @@ class BigqueryDatabase(BaseDatabase):
         :param target_table: Table that needs to be populated with file data
         :param if_exists: Overwrite file if exists. Default False
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
-        @return: returns True when successful else False
         """
         method_name = self.NATIVE_PATHS.get(source_file.location.location_type)
         if method_name:
@@ -231,7 +230,6 @@ class BigqueryDatabase(BaseDatabase):
         :param target_table: Table that will be created on the bigquery
         :param if_exists: Overwrite table if exists. Default 'replace'
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
-        @return: returns True when successful else False
         """
         native_support_kwargs = native_support_kwargs or {}
 
@@ -287,7 +285,6 @@ class BigqueryDatabase(BaseDatabase):
         :param target_table: Table that will be created on the bigquery
         :param if_exists: Overwrite table if exists. Default 'replace'
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
-        @return: returns True when successful else False
         """
         native_support_kwargs = native_support_kwargs or {}
 
