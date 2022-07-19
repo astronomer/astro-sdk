@@ -236,7 +236,7 @@ def remote_files_fixture(request):
             hook.exists(  # skipcq: PYL-W0106
                 bucket_name, object_prefix
             ) and hook.delete(bucket_name, object_prefix)
-    else:
+    elif provider == "amazon":
         for object_prefix in object_prefix_list:
             hook.delete_objects(bucket_name, object_prefix)
 
@@ -259,7 +259,7 @@ def _upload_or_delete_remote_file(file_create, object_prefix, provider, source_p
             hook.exists(  # skipcq: PYL-W0106
                 bucket_name, object_prefix
             ) and hook.delete(bucket_name, object_prefix)
-    else:
+    elif provider == "amazon":
         from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
         bucket_name = os.getenv("AWS_BUCKET", "tmp9")
@@ -269,6 +269,10 @@ def _upload_or_delete_remote_file(file_create, object_prefix, provider, source_p
             hook.load_file(source_path, object_prefix, bucket_name)
         else:
             hook.delete_objects(bucket_name, object_prefix)
+    elif provider == "local":
+        bucket_name = None
+        hook = None
+        object_path = str(source_path)
     return bucket_name, hook, object_path
 
 

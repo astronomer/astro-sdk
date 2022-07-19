@@ -50,7 +50,7 @@ tests = [
 google = [
     "apache-airflow-providers-google>=6.4.0",
     "sqlalchemy-bigquery>=1.3.0",
-    "smart-open[gcs]>=5.2.1",
+    "smart-open[gcs]>=5.2.1"
 ]
 snowflake = [
     "apache-airflow-providers-snowflake",
@@ -96,9 +96,9 @@ markers = [
     "integration"
 ]
 
+
 [tool.flit.module]
 name = "astro"  # Or "astro.sql" if you just want this directory, not the entire 'astro'.
-
 
 [tool.mypy]
 color_output = true
