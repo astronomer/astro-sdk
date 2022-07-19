@@ -46,7 +46,7 @@ def create_dag(database_name, table_args, dataset):
     dag_name = f"load_file_{dataset_name}_into_{database_name}"
 
     with DAG(dag_name, schedule_interval=None, start_date=START_DATE) as dag:
-        chunk_size = int(os.getenv("ASTRO_CHUNK_SIZE", DEFAULT_CHUNK_SIZE))
+        chunk_size = int(os.getenv("ASTRO_CHUNK_SIZE", str(DEFAULT_CHUNK_SIZE)))
         table_metadata = table_args.pop("metadata", {})
         if table_metadata:
             table = Table(metadata=Metadata(**table_metadata), **table_args)
@@ -63,7 +63,7 @@ def create_dag(database_name, table_args, dataset):
             output_table=table,
             chunk_size=chunk_size,
         )
-        aql.truncate(my_table)
+        aql.cleanup([my_table])
 
         # Todo: Check is broken so the following code is commented out, uncomment when fixed
         # aggregate_check(

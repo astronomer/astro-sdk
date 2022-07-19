@@ -1,4 +1,6 @@
 """Postgres database implementation."""
+import io
+from contextlib import closing
 from typing import Dict, List
 
 import pandas as pd
@@ -70,19 +72,22 @@ class PostgresDatabase(BaseDatabase):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
-        schema = None
-        if target_table.metadata and target_table.metadata.schema:
-            self.create_schema_if_needed(target_table.metadata.schema)
-            schema = target_table.metadata.schema.lower()
-        source_dataframe.to_sql(
-            target_table.name,
-            schema=schema,  # type: ignore
-            con=self.sqlalchemy_engine,
-            if_exists=if_exists,
-            chunksize=chunk_size,
-            method="multi",
-            index=False,
-        )
+
+        self.create_schema_if_needed(target_table.metadata.schema)
+        if not self.table_exists(table=target_table) or if_exists == "replace":
+            self.create_table(table=target_table, dataframe=source_dataframe)
+
+        output_buffer = io.StringIO()
+        source_dataframe.to_csv(output_buffer, sep=",", header=True, index=False)
+        output_buffer.seek(0)
+        table_name = self.get_table_qualified_name(target_table)
+        postgres_conn = self.hook.get_conn()
+        with closing(postgres_conn) as conn, closing(conn.cursor()) as cur:
+            cur.copy_expert(
+                f"COPY {table_name} FROM STDIN DELIMITER ',' CSV HEADER;",
+                output_buffer,
+            )
+            conn.commit()
 
     @staticmethod
     def get_table_qualified_name(table: Table) -> str:  # skipcq: PYL-R0201
