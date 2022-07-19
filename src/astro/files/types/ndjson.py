@@ -17,7 +17,7 @@ class NDJSONFileType(FileType):
 
         :param stream: file stream object
         """
-        return NDJSONFileType.flatten(self.normalize_config, stream)
+        return self.flatten(self.normalize_config, stream, **kwargs)
 
     def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
         """Write ndjson file to one of the supported locations
@@ -33,7 +33,7 @@ class NDJSONFileType(FileType):
 
     @staticmethod
     def flatten(
-        normalize_config: Optional[dict], stream: io.TextIOWrapper
+        normalize_config: Optional[dict], stream: io.TextIOWrapper, **kwargs
     ) -> pd.DataFrame:
         """
         Flatten the nested ndjson/json.
@@ -46,16 +46,22 @@ class NDJSONFileType(FileType):
         :return: return dataframe containing the loaded data
         :rtype: `pandas.DataFrame`
         """
+        # DEFAULT_CHUNK_SIZE = kwargs.get("nrows", None) or DEFAULT_CHUNK_SIZE
         normalize_config = normalize_config or {}
-
+        print("flatten 1 nrows: ", DEFAULT_CHUNK_SIZE)
         df = None
-        rows = stream.readlines(DEFAULT_CHUNK_SIZE)
+        rows = stream.read(DEFAULT_CHUNK_SIZE)
+        print("flatten 2")
+        print("length : ", len(rows))
         while len(rows) > 0:
             if df is None:
+                print("rows : ", rows)
                 df = pd.DataFrame(
                     pd.json_normalize(
                         [json.loads(row) for row in rows], **normalize_config
                     )
                 )
-            rows = stream.readlines(DEFAULT_CHUNK_SIZE)
+            print("flatten 3")
+            # rows = stream.read(DEFAULT_CHUNK_SIZE)
+            print("flatten 4")
         return df

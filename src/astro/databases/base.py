@@ -185,14 +185,18 @@ class BaseDatabase(ABC):
         :param table: The table to be created.
         :param file: File used to infer the new table columns.
         """
+        print("create_table_using_schema_autodetection 1")
         if file is None:
             raise ValueError(
                 "File is required for creating table using schema autodetection"
             )
+        print("create_table_using_schema_autodetection 2")
         source_dataframe = file.export_to_dataframe(
             nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT
         )
+        print("create_table_using_schema_autodetection 3")
         db = SQLDatabase(engine=self.sqlalchemy_engine)
+        print("create_table_using_schema_autodetection 4")
         db.prep_table(
             source_dataframe,
             table.name.lower(),
@@ -200,6 +204,7 @@ class BaseDatabase(ABC):
             if_exists="replace",
             index=False,
         )
+        print("create_table_using_schema_autodetection 5")
 
     def create_table(self, table: Table, file: Optional[File] = None) -> None:
         """
@@ -212,7 +217,27 @@ class BaseDatabase(ABC):
         if table.columns:
             self.create_table_using_columns(table)
         else:
-            self.create_table_using_schema_autodetection(table, file)
+            # self.create_table_using_schema_autodetection(table, file)
+            self.create_empty_table(source_file=file, target_table=table)
+
+    def create_empty_table(
+        self, source_file: File, target_table: Table, nrows: int = 1000
+    ):
+        """
+        Infer schema from source file and create and empty table in database
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table that needs to be populated with file data
+        :param nrows: No. of rows to use to infer schema
+        """
+        print("create_empty_table 1")
+        # df = source_file.export_to_dataframe(nrows=10)
+        print("create_empty_table 2")
+        # schema_statement = get_schema(
+        #     df, self.get_table_qualified_name(target_table), con=self.sqlalchemy_engine
+        # )
+        # print("create_empty_table 3")
+        # self.run_sql(schema_statement)
+        # print("create_empty_table 4")
 
     def create_table_from_select_statement(
         self,
@@ -275,16 +300,24 @@ class BaseDatabase(ABC):
             input_file.conn_id,
             normalize_config=normalize_config,
         )
+
+        print("input_files : ", input_files)
+
         self.create_schema_if_needed(output_table.metadata.schema)
         if if_exists == "replace" or not self.table_exists(output_table):
+            print("drop_table")
             self.drop_table(output_table)
+            print("create_table")
             self.create_table(output_table, input_files[0])
             if_exists = "append"
+
+        print("create_table : ", input_files)
 
         # TODO: many native transfers support the input_file.path - it may be better
         # to use the native support to loading multiple files as opposed to iterating
         # here
         for file in input_files:
+            print("Processing : ", file)
             if use_native_support and self.is_native_load_file_available(
                 source_file=file, target_table=output_table
             ):

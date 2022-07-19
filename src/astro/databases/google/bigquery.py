@@ -175,8 +175,10 @@ class BigqueryDatabase(BaseDatabase):
         :param source_file: File from which we need to transfer data
         :param target_table: Table that needs to be populated with file data
         """
+        print("is_native_load_file_available start")
         file_type = NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
         location_type = self.NATIVE_PATHS.get(source_file.location.location_type)
+        print("is_native_load_file_available end: ", bool(location_type and file_type))
         return bool(location_type and file_type)
 
     def load_file_to_table_natively(
@@ -196,9 +198,11 @@ class BigqueryDatabase(BaseDatabase):
         :param if_exists: Overwrite file if exists. Default False
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
         """
+        print("load_file_to_table_natively")
         method_name = self.NATIVE_PATHS.get(source_file.location.location_type)
         if method_name:
             transfer_method = self.__getattribute__(method_name)
+            print("transfer_method : ", transfer_method)
             transfer_method(
                 source_file=source_file,
                 target_table=target_table,
@@ -278,6 +282,8 @@ class BigqueryDatabase(BaseDatabase):
         :param if_exists: Overwrite table if exists. Default 'replace'
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
         """
+
+        print("load_s3_file_to_bigquery")
         native_support_kwargs = native_support_kwargs or {}
 
         project_id = self.get_project_id(target_table)
@@ -323,6 +329,7 @@ class S3ToBigqueryDataTransfer:
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
+        print("S3ToBigqueryDataTransfer")
         self.client = BiqQueryDataTransferServiceHook(gcp_conn_id=target_table.conn_id)
         self.target_table = target_table
         self.source_file = source_file
@@ -330,7 +337,14 @@ class S3ToBigqueryDataTransfer:
         aws = source_file.location.hook.get_credentials()
         self.s3_access_key = aws.access_key
         self.s3_secret_key = aws.secret_key
-        self.s3_file_type = NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
+        self.NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
+            FileType.CSV: "CSV",
+            FileType.NDJSON: "JSON",
+            FileType.PARQUET: "PARQUET",
+        }
+        self.s3_file_type = self.NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(
+            source_file.type.name
+        )
 
         self.project_id = project_id
         self.poll_duration = poll_duration
@@ -339,12 +353,15 @@ class S3ToBigqueryDataTransfer:
 
     def run(self):
         """Algo to run S3 to Bigquery datatransfer"""
+        print("create_transfer_config")
         transfer_config_id = self.create_transfer_config()
         try:
             # Manually run a transfer job using previously created transfer config
+            print("run_transfer_now")
             run_id = self.run_transfer_now(transfer_config_id)
 
             # Poll Bigquery for status of transfer job
+            print("get_transfer_info")
             run_info = self.get_transfer_info(
                 run_id=run_id, transfer_config_id=transfer_config_id
             )
@@ -359,6 +376,7 @@ class S3ToBigqueryDataTransfer:
                 )
                 time.sleep(self.poll_duration)
 
+            print("run_info.state")
             if run_info.state != TransferState.SUCCEEDED:
                 raise ValueError(run_info.error_status)
         finally:
