@@ -1,5 +1,4 @@
 .git
-docs/_build
 coverage.xml
 .env
 .coverage
@@ -14,16 +13,29 @@ airflow_settings.yaml
 .idea%
 /build/
 /dist/
+
+# Benchmark
 airflow.db
 airflow.cfg
 unittests.db
 unittests.cfg
 tests/benchmark/logs/*
 tests/benchmark/webserver_config.py
+
+# VIM
 *.sw[a-z]
-docs/sphinx/_build/*
+
+# MacOS
 .DS_Store
 */.DS_Store
+
+# Terraform
 **/.terraform/*
 **/.terraform.lock.hcl
+
+# Sphinx-related
+docs/_build
+docs/sphinx/_build/*
+docs/logs/
+docs/webserver_config.py
 docs/autoapi/
