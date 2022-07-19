@@ -13,11 +13,11 @@
   "datasets": [
     {
       "conn_id": "bigquery",
-      "file_type": "ndjson",
-      "name": "five_gb",
-      "path": "s3://astro-sdk-test/benchmark/trimmed/pypi/pypi-downloads-2021-03-28-000000000000.ndjson",
+      "file_type": "csv",
+      "name": "one_gb",
+      "path": "s3://astro-sdk-test/benchmark/trimmed/test/Data8317.csv",
       "rows": 7530243,
-      "size": "5G"
+      "size": "1G"
     }
   ]
 }

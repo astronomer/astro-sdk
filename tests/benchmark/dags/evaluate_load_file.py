@@ -62,6 +62,11 @@ def create_dag(database_name, table_args, dataset):
             task_id="load",
             output_table=table,
             chunk_size=chunk_size,
+            native_support_kwargs={
+                "ignore_unknown_values": True,
+                "skip_leading_rows": "1",
+                "max_bad_records": "10000000",
+            },
         )
         aql.truncate(my_table)
 
