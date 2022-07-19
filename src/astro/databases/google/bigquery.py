@@ -1,4 +1,5 @@
 """Google BigQuery table implementation."""
+import logging
 import time
 from typing import Dict, List, Optional, Tuple
 
@@ -188,7 +189,7 @@ class BigqueryDatabase(BaseDatabase):
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
-    ):
+    ) -> bool:
         """
         Checks if optimised path for transfer between File location to database exists
         and if it does, it transfers it and returns true else false.
@@ -197,22 +198,25 @@ class BigqueryDatabase(BaseDatabase):
         :param target_table: Table that needs to be populated with file data
         :param if_exists: Overwrite file if exists. Default False
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
+        @return: returns True when successful else False
         """
         method_name = self.NATIVE_PATHS.get(source_file.location.location_type)
         if method_name:
             transfer_method = self.__getattribute__(method_name)
-            transfer_method(
+            if transfer_method(
                 source_file=source_file,
                 target_table=target_table,
                 if_exists=if_exists,
                 native_support_kwargs=native_support_kwargs,
                 **kwargs,
-            )
+            ):
+                return True
         else:
-            raise ValueError(
+            logging.warning(
                 f"No transfer performed since there is no optimised path "
                 f"for {source_file.location.location_type} to bigquery."
             )
+        return False
 
     def load_gs_file_to_table(
         self,
@@ -221,7 +225,7 @@ class BigqueryDatabase(BaseDatabase):
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
-    ) -> None:
+    ) -> bool:
         """
         Transfer data from gcs to bigquery
 
@@ -229,6 +233,7 @@ class BigqueryDatabase(BaseDatabase):
         :param target_table: Table that will be created on the bigquery
         :param if_exists: Overwrite table if exists. Default 'replace'
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
+        @return: returns True when successful else False
         """
         native_support_kwargs = native_support_kwargs or {}
 
@@ -255,9 +260,14 @@ class BigqueryDatabase(BaseDatabase):
             "load": load_job_config,
             "labels": {"target_table": target_table.name},
         }
-        self.hook.insert_job(
-            configuration=job_config,
-        )
+        try:
+            self.hook.insert_job(
+                configuration=job_config,
+            )
+        except Exception as exe:
+            logging.error(exe)
+            return False
+        return True
 
     def load_s3_file_to_table(
         self,
@@ -265,7 +275,7 @@ class BigqueryDatabase(BaseDatabase):
         target_table: Table,
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
-    ):
+    ) -> bool:
         """
         Load content of multiple files in S3 to output_table in Bigquery by using a datatransfer job
         Note - To use this function we need
@@ -277,11 +287,11 @@ class BigqueryDatabase(BaseDatabase):
         :param target_table: Table that will be created on the bigquery
         :param if_exists: Overwrite table if exists. Default 'replace'
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
+        @return: returns True when successful else False
         """
         native_support_kwargs = native_support_kwargs or {}
 
         project_id = self.get_project_id(target_table)
-
         transfer = S3ToBigqueryDataTransfer(
             target_table=target_table,
             source_file=source_file,
@@ -289,7 +299,12 @@ class BigqueryDatabase(BaseDatabase):
             native_support_kwargs=native_support_kwargs,
             **kwargs,
         )
-        transfer.run()
+        try:
+            transfer.run()
+        except Exception as exe:
+            logging.error(exe)
+            return False
+        return True
 
     def get_project_id(self, target_table) -> str:
         """
