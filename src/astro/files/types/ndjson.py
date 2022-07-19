@@ -32,10 +32,6 @@ class NDJSONFileType(FileType):
         return FileTypeConstants.NDJSON
 
     @staticmethod
-    def get_top_n_rows(self, df, n: int):
-        return df[n:]
-
-    @staticmethod
     def flatten(
         normalize_config: Optional[dict], stream: io.TextIOWrapper, **kwargs
     ) -> pd.DataFrame:
