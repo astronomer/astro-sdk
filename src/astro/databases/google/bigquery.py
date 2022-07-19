@@ -262,7 +262,8 @@ class BigqueryDatabase(BaseDatabase):
             self.hook.insert_job(
                 configuration=job_config,
             )
-        except Exception as exe:
+        # Ignoring deepsource error as it needs to catch every other exception
+        except Exception as exe:  # skipcq: PYL-W0703
             logging.error(exe)
             return False
         return True
@@ -298,7 +299,8 @@ class BigqueryDatabase(BaseDatabase):
         )
         try:
             transfer.run()
-        except Exception as exe:
+        # Ignoring deepsource error as it needs to catch every other exception
+        except Exception as exe:  # skipcq: PYL-W0703
             logging.error(exe)
             return False
         return True
