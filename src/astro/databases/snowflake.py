@@ -37,6 +37,9 @@ COPY_OPTIONS = {
     FileType.PARQUET: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
 }
 
+NATIVE_LOAD_SUPPORTED_FILE_TYPES = (FileType.CSV, FileType.NDJSON, FileType.PARQUET)
+NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS = (FileLocation.GS, FileLocation.S3)
+
 
 @dataclass
 class SnowflakeStage:
@@ -291,6 +294,23 @@ class SnowflakeDatabase(BaseDatabase):
     # ---------------------------------------------------------
     # Table load methods
     # ---------------------------------------------------------
+
+    def is_native_load_file_available(
+        self, source_file: File, target_table: Table
+    ) -> bool:
+        """
+        Check if there is an optimised path for source to destination.
+
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table that needs to be populated with file data
+        """
+        is_file_type_supported = (
+            source_file.type.name in NATIVE_LOAD_SUPPORTED_FILE_TYPES
+        )
+        is_file_location_supported = (
+            source_file.location.location_type in NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS
+        )
+        return is_file_type_supported and is_file_location_supported
 
     def load_file_to_table_natively(
         self,
