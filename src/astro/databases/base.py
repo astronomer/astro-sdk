@@ -177,21 +177,28 @@ class BaseDatabase(ABC):
         metadata.create_all(self.sqlalchemy_engine, tables=[sqlalchemy_table])
 
     def create_table_using_schema_autodetection(
-        self, table: Table, file: Optional[File] = None
+        self,
+        table: Table,
+        file: Optional[File] = None,
+        dataframe: Optional[pd.DataFrame] = None,
     ) -> None:
         """
         Create a SQL table, automatically inferring the schema using the given file.
 
         :param table: The table to be created.
         :param file: File used to infer the new table columns.
+        :param dataframe: Dataframe used to infer the new table columns if there is no file
         """
         if file is None:
-            raise ValueError(
-                "File is required for creating table using schema autodetection"
+            if dataframe is None:
+                raise ValueError(
+                    "File or Dataframe is required for creating table using schema autodetection"
+                )
+            source_dataframe = dataframe
+        else:
+            source_dataframe = file.export_to_dataframe(
+                nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT
             )
-        source_dataframe = file.export_to_dataframe(
-            nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT
-        )
         db = SQLDatabase(engine=self.sqlalchemy_engine)
         db.prep_table(
             source_dataframe,
@@ -201,18 +208,25 @@ class BaseDatabase(ABC):
             index=False,
         )
 
-    def create_table(self, table: Table, file: Optional[File] = None) -> None:
+    def create_table(
+        self,
+        table: Table,
+        file: Optional[File] = None,
+        dataframe: Optional[pd.DataFrame] = None,
+    ) -> None:
         """
         Create a table either using its explicitly defined columns or inferring
         it's columns from a given file.
 
         :param table: The table to be created
         :param file: (optional) File used to infer the table columns.
+        :param dataframe: (optional) Dataframe used to infer the new table columns if there is no file
+
         """
         if table.columns:
             self.create_table_using_columns(table)
         else:
-            self.create_table_using_schema_autodetection(table, file)
+            self.create_table_using_schema_autodetection(table, file, dataframe)
 
     def create_table_from_select_statement(
         self,
@@ -251,7 +265,7 @@ class BaseDatabase(ABC):
         self,
         input_file: File,
         output_table: Table,
-        normalize_config: Dict,
+        normalize_config: Optional[Dict] = None,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         use_native_support: bool = True,
@@ -270,6 +284,7 @@ class BaseDatabase(ABC):
         :param normalize_config: pandas json_normalize params config
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
         """
+        normalize_config = normalize_config or {}
         input_files = resolve_file_path_pattern(
             input_file.path,
             input_file.conn_id,
@@ -301,7 +316,7 @@ class BaseDatabase(ABC):
                     dataframe,
                     output_table,
                     chunk_size=chunk_size,
-                    if_exists=if_exists,
+                    if_exists="append",  # We've already created a new table in this case
                 )
 
     def load_pandas_dataframe_to_table(
