@@ -157,15 +157,14 @@ class BigqueryDatabase(BaseDatabase):
             ON {' AND '.join(['T.' + col + '= S.' + col for col in target_conflict_columns])}\
             WHEN NOT MATCHED BY TARGET THEN INSERT ({','.join(target_columns)}) VALUES ({','.join(source_columns)})"
 
+        update_statement_map = ", ".join(
+            [
+                f"T.{target_columns[idx]}=S.{source_columns[idx]}"
+                for idx in range(len(target_columns))
+            ]
+        )
         if if_conflicts == "update":
-            update_statement = "UPDATE SET {}".format(
-                ", ".join(
-                    [
-                        f"T.{target_columns[idx]}=S.{source_columns[idx]}"
-                        for idx in range(len(target_columns))
-                    ]
-                )
-            )
+            update_statement = f"UPDATE SET {update_statement_map}"
             statement += f" WHEN MATCHED THEN {update_statement}"
         self.run_sql(sql_statement=statement)
 
