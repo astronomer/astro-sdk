@@ -162,7 +162,7 @@ class BigqueryDatabase(BaseDatabase):
             ]
         )
         if if_conflicts == "update":
-            update_statement = f"UPDATE SET {update_statement_map}"
+            update_statement = f"UPDATE SET {update_statement_map}"  # skipcq: BAN-B608
             statement += f" WHEN MATCHED THEN {update_statement}"
         self.run_sql(sql_statement=statement)
 
