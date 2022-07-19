@@ -68,5 +68,6 @@ class NDJSONFileType(FileType):
 
             row_count = result_df.shape[0]
 
-            rows = stream.readlines(DEFAULT_CHUNK_SIZE)
+            if nrows and row_count < nrows:
+                rows = stream.readlines(DEFAULT_CHUNK_SIZE)
         return result_df
