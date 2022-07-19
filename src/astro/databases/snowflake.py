@@ -335,7 +335,7 @@ class SnowflakeDatabase(BaseDatabase):
         :param source_file: File from which we need to transfer data
         :param target_table: Table to which the content of the file will be loaded to
         :param if_exists: Strategy used to load (currently supported: "append" or "replace")
-        :param native_support_kwargs: kwargs to be used by method involved in native support flow
+        :param native_support_kwargs: may be used for the stage creation, as described above.
 
 
         .. seealso::
