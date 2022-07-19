@@ -53,6 +53,11 @@ Follow the steps described in [development](DEVELOPMENT.md).
    PR guidelines described below.
    Create Pull Request!
 
+5. PRs from contributors who do not have "write" access to this repo will not run all the
+   tests until a committer (who has "write" access to this repo) adds a "safe to test" label on this PR.
+   This is so that we can avoid security risks mentioned in
+   [this blog post](https://github.blog/2020-08-03-github-actions-improvements-for-fork-and-pull-request-workflows/).
+
 
 # Pull Request Guidelines
 
