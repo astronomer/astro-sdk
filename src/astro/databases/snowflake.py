@@ -12,6 +12,7 @@ from pandas.io.sql import SQLDatabase
 from snowflake.connector import pandas_tools
 from snowflake.connector.errors import ProgrammingError
 
+from astro import settings
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
     FileLocation,
@@ -35,6 +36,11 @@ COPY_OPTIONS = {
     FileType.CSV: "ON_ERROR=CONTINUE",
     FileType.NDJSON: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
     FileType.PARQUET: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
+}
+
+DEFAULT_STORAGE_INTEGRATION = {
+    FileLocation.S3: settings.SNOWFLAKE_STORAGE_INTEGRATION_AMAZON,
+    FileLocation.GS: settings.SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE,
 }
 
 NATIVE_LOAD_SUPPORTED_FILE_TYPES = (FileType.CSV, FileType.NDJSON, FileType.PARQUET)
@@ -142,7 +148,6 @@ class SnowflakeDatabase(BaseDatabase):
     """
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
-        self.storage_integration: Optional[str] = None
         super().__init__(conn_id)
 
     @property
@@ -196,7 +201,9 @@ class SnowflakeDatabase(BaseDatabase):
         :param storage_integration: Previously created Snowflake storage integration
         :return: String containing line to be used for authentication on the remote storage
         """
-
+        storage_integration = storage_integration or DEFAULT_STORAGE_INTEGRATION.get(
+            file.location.location_type
+        )
         if storage_integration is not None:
             auth = f"storage_integration = {storage_integration};"
         else:
