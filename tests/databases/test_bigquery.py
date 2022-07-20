@@ -203,6 +203,26 @@ def test_load_file_to_table(database_table_fixture):
     test_utils.assert_dataframes_are_equal(df, expected)
 
 
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
+    ],
+    indirect=True,
+    ids=["bigquery"],
+)
+def test_load_file_to_table_natively_for_not_optimised_path(database_table_fixture):
+    """Test loading on files to bigquery natively for non optimized path."""
+    database, target_table = database_table_fixture
+    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
+    response = database.load_file_to_table_natively(File(filepath), target_table)
+    assert response is False
+
+
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
