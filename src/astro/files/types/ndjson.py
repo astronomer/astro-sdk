@@ -48,9 +48,10 @@ class NDJSONFileType(FileType):
         """
         normalize_config = normalize_config or {}
         nrows = kwargs.get("nrows", float("inf"))
+        chunksize = kwargs.get("chunksize", DEFAULT_CHUNK_SIZE)
 
         result_df = None
-        rows = stream.readlines(DEFAULT_CHUNK_SIZE)
+        rows = stream.readlines(chunksize)
         row_count = 0
         while len(rows) > 0 and (nrows and row_count < nrows):
             # Remove extra rows

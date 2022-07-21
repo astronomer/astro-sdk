@@ -59,5 +59,5 @@ def test_ndjson_file_nrows():
 
     # Case 3 : when the user don't pass nrows
     with open(sample_file) as stream:
-        df = file.export_to_dataframe(stream)
+        df = file.export_to_dataframe(stream, chunksize=10)
         assert df.shape[0] == 3
