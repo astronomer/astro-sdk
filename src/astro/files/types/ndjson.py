@@ -47,7 +47,7 @@ class NDJSONFileType(FileType):
         :rtype: `pandas.DataFrame`
         """
         normalize_config = normalize_config or {}
-        nrows = kwargs.get("nrows", None)
+        nrows = kwargs.get("nrows", float("inf"))
 
         result_df = None
         rows = stream.readlines(DEFAULT_CHUNK_SIZE)
@@ -68,5 +68,5 @@ class NDJSONFileType(FileType):
 
             row_count = result_df.shape[0]
             rows = stream.readlines(DEFAULT_CHUNK_SIZE)
-            
+
         return result_df
