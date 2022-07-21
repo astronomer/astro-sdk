@@ -13,9 +13,9 @@
   "datasets": [
     {
       "conn_id": "bigquery",
-      "file_type": "csv",
-      "name": "one_gb",
-      "path": "s3://astro-sdk-test/benchmark/trimmed/test/Data8317.csv",
+      "file_type": "ndjson",
+      "name": "five_gb",
+      "path": "s3://astro-sdk-test/benchmark/trimmed/test/sample.ndjson",
       "rows": 7530243,
       "size": "1G"
     }
