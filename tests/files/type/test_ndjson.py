@@ -39,3 +39,25 @@ def test_write_ndjson_file():
                 assert len(json.loads(line).keys()) == 2
                 count = count + 1
         assert count == 3
+
+
+def test_ndjson_file_nrows():
+    sample_file = pathlib.Path(
+        pathlib.Path(__file__).parent.parent.parent, "data/sample.ndjson"
+    )
+
+    file = NDJSONFileType(sample_file)
+    # Case 1 : when the file have sufficient rows
+    with open(sample_file) as stream:
+        df = file.export_to_dataframe(stream, nrows=2)
+        assert df.shape[0] == 2
+
+    # Case 2 : when the file don't have sufficient rows
+    with open(sample_file) as stream:
+        df = file.export_to_dataframe(stream, nrows=5)
+        assert df.shape[0] == 3
+
+    # Case 3 : when the user don't pass nrows
+    with open(sample_file) as stream:
+        df = file.export_to_dataframe(stream, chunksize=10)
+        assert df.shape[0] == 3
