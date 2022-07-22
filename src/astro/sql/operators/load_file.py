@@ -23,6 +23,7 @@ class LoadFile(BaseOperator):
     :param if_exists: Overwrite file if exists. Default False.
     :param use_native_support: Use native support for data transfer if available on the destination.
     :param native_support_kwargs: kwargs to be used by method involved in native support flow
+    :param fallback: Use fallback=True to fall back to default transfer in case optimised transfer fails.
 
     :return: If ``output_table`` is passed this operator returns a Table object. If not
         passed, returns a dataframe.
@@ -39,6 +40,7 @@ class LoadFile(BaseOperator):
         ndjson_normalize_sep: str = "_",
         use_native_support: bool = True,
         native_support_kwargs: Optional[Dict] = None,
+        fallback: Optional[bool] = True,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -51,6 +53,7 @@ class LoadFile(BaseOperator):
         self.normalize_config: Dict[str, str] = {}
         self.use_native_support = use_native_support
         self.native_support_kwargs: Dict[str, Any] = native_support_kwargs or {}
+        self.fallback = fallback
 
     def execute(self, context: Any) -> Union[Table, pd.DataFrame]:  # skipcq: PYL-W0613
         """
@@ -98,6 +101,7 @@ class LoadFile(BaseOperator):
             chunk_size=self.chunk_size,
             use_native_support=self.use_native_support,
             native_support_kwargs=self.native_support_kwargs,
+            fallback=self.fallback,
         )
         self.log.info("Completed loading the data into %s.", self.output_table)
         return self.output_table
@@ -170,6 +174,7 @@ def load_file(
     ndjson_normalize_sep: str = "_",
     use_native_support: bool = True,
     native_support_kwargs: Optional[Dict] = None,
+    fallback: Optional[bool] = True,
     **kwargs: Any,
 ) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.
@@ -182,6 +187,7 @@ def load_file(
         ex - ``{"a": {"b":"c"}}`` will result in: ``column - "a_b"`` where ``ndjson_normalize_sep = "_"``
     :param use_native_support: Use native support for data transfer if available on the destination.
     :param native_support_kwargs: kwargs to be used by method involved in native support flow
+    :param fallback: Use fallback=True to fall back to default transfer in case optimised transfer fails.
     """
 
     # Note - using path for task id is causing issues as it's a pattern and
@@ -196,5 +202,6 @@ def load_file(
         ndjson_normalize_sep=ndjson_normalize_sep,
         use_native_support=use_native_support,
         native_support_kwargs=native_support_kwargs,
+        fallback=fallback,
         **kwargs,
     ).output
