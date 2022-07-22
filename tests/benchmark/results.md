@@ -59,6 +59,16 @@ For Machine types: n2-standard-4
 |stackoverflow/stackoverflow_posts_1g.ndjson|1GB  | 85.409014          |
 |trimmed/pypi/*                             |5GB  | 48.973093          |
 
+#### Results post optimization to load files from GCS to Bigquery using BigqueryHook
+
+|Dataset                                    |Size | Duration(seconds)  |
+|-------------------------------------------|-----|--------------------|
+|covid_overview/covid_overview_10kb.csv     |10 KB| 13.57           |
+|tate_britain/artist_data_100kb.csv         |100KB| 16.10          |
+|imdb/title_ratings_10mb.csv                |10MB | 19.40         |
+|stackoverflow/stackoverflow_posts_1g.ndjson|1GB  | 30.26          |
+|trimmed/pypi/*                             |5GB  | 59.90          |
+
 
 ## Performance evaluation of loading datasets from GCS with Astro Python SDK 0.11.0 into Snowflake
 
