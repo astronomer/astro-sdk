@@ -270,6 +270,7 @@ class BaseDatabase(ABC):
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         use_native_support: bool = True,
         native_support_kwargs: Optional[Dict] = None,
+        fallback: Optional[bool] = True,
         **kwargs,
     ):
         """
@@ -283,6 +284,7 @@ class BaseDatabase(ABC):
         :param use_native_support: Use native support for data transfer if available on the destination
         :param normalize_config: pandas json_normalize params config
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
+        :param fallback: Use fallback=True to fall back to default transfer in case optimised transfer fails.
         """
         normalize_config = normalize_config or {}
         input_files = resolve_file_path_pattern(
@@ -303,13 +305,22 @@ class BaseDatabase(ABC):
             if use_native_support and self.is_native_load_file_available(
                 source_file=file, target_table=output_table
             ):
-                self.load_file_to_table_natively(
+                if self.load_file_to_table_natively(
                     source_file=file,
                     target_table=output_table,
                     if_exists=if_exists,
                     native_support_kwargs=native_support_kwargs,
                     **kwargs,
-                )
+                ):
+                    return
+                if fallback:
+                    dataframe = file.export_to_dataframe()
+                    self.load_pandas_dataframe_to_table(
+                        dataframe,
+                        output_table,
+                        chunk_size=chunk_size,
+                        if_exists=if_exists,
+                    )
             else:
                 dataframe = file.export_to_dataframe()
                 self.load_pandas_dataframe_to_table(

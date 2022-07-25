@@ -1,4 +1,5 @@
 """Google BigQuery table implementation."""
+import logging
 import time
 from typing import Dict, List, Optional, Tuple
 
@@ -156,15 +157,14 @@ class BigqueryDatabase(BaseDatabase):
             ON {' AND '.join(['T.' + col + '= S.' + col for col in target_conflict_columns])}\
             WHEN NOT MATCHED BY TARGET THEN INSERT ({','.join(target_columns)}) VALUES ({','.join(source_columns)})"
 
+        update_statement_map = ", ".join(
+            [
+                f"T.{target_columns[idx]}=S.{source_columns[idx]}"
+                for idx in range(len(target_columns))
+            ]
+        )
         if if_conflicts == "update":
-            update_statement = "UPDATE SET {}".format(
-                ", ".join(
-                    [
-                        f"T.{target_columns[idx]}=S.{source_columns[idx]}"
-                        for idx in range(len(target_columns))
-                    ]
-                )
-            )
+            update_statement = f"UPDATE SET {update_statement_map}"  # skipcq: BAN-B608
             statement += f" WHEN MATCHED THEN {update_statement}"
         self.run_sql(sql_statement=statement)
 
@@ -188,7 +188,7 @@ class BigqueryDatabase(BaseDatabase):
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
-    ):
+    ) -> bool:
         """
         Checks if optimised path for transfer between File location to database exists
         and if it does, it transfers it and returns true else false.
@@ -201,18 +201,20 @@ class BigqueryDatabase(BaseDatabase):
         method_name = self.NATIVE_PATHS.get(source_file.location.location_type)
         if method_name:
             transfer_method = self.__getattribute__(method_name)
-            transfer_method(
+            if transfer_method(
                 source_file=source_file,
                 target_table=target_table,
                 if_exists=if_exists,
                 native_support_kwargs=native_support_kwargs,
                 **kwargs,
-            )
+            ):
+                return True
         else:
-            raise ValueError(
+            logging.warning(
                 f"No transfer performed since there is no optimised path "
                 f"for {source_file.location.location_type} to bigquery."
             )
+        return False
 
     def load_gs_file_to_table(
         self,
@@ -221,7 +223,7 @@ class BigqueryDatabase(BaseDatabase):
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
-    ) -> None:
+    ) -> bool:
         """
         Transfer data from gcs to bigquery
 
@@ -255,9 +257,15 @@ class BigqueryDatabase(BaseDatabase):
             "load": load_job_config,
             "labels": {"target_table": target_table.name},
         }
-        self.hook.insert_job(
-            configuration=job_config,
-        )
+        try:
+            self.hook.insert_job(
+                configuration=job_config,
+            )
+        # Ignoring deepsource error as it needs to catch every other exception
+        except Exception as exe:  # skipcq: PYL-W0703
+            logging.error(exe)
+            return False
+        return True
 
     def load_s3_file_to_table(
         self,
@@ -265,7 +273,7 @@ class BigqueryDatabase(BaseDatabase):
         target_table: Table,
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
-    ):
+    ) -> bool:
         """
         Load content of multiple files in S3 to output_table in Bigquery by using a datatransfer job
         Note - To use this function we need
@@ -281,7 +289,6 @@ class BigqueryDatabase(BaseDatabase):
         native_support_kwargs = native_support_kwargs or {}
 
         project_id = self.get_project_id(target_table)
-
         transfer = S3ToBigqueryDataTransfer(
             target_table=target_table,
             source_file=source_file,
@@ -289,7 +296,13 @@ class BigqueryDatabase(BaseDatabase):
             native_support_kwargs=native_support_kwargs,
             **kwargs,
         )
-        transfer.run()
+        try:
+            transfer.run()
+        # Ignoring deepsource error as it needs to catch every other exception
+        except Exception as exe:  # skipcq: PYL-W0703
+            logging.error(exe)
+            return False
+        return True
 
     def get_project_id(self, target_table) -> str:
         """
