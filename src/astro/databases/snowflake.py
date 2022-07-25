@@ -20,6 +20,7 @@ from astro.constants import (
 )
 from astro.databases.base import BaseDatabase
 from astro.files import File
+from astro.settings import SNOWFLAKE_SCHEMA
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
@@ -136,6 +137,8 @@ class SnowflakeDatabase(BaseDatabase):
     Handle interactions with snowflake databases. If this class is successful, we should not have any snowflake-specific
     logic in other parts of our code-base.
     """
+
+    DEFAULT_SCHEMA = SNOWFLAKE_SCHEMA
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
         self.storage_integration: Optional[str] = None
