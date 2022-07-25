@@ -261,3 +261,49 @@ def test_postgres_dataframe_without_table_arg(sample_dag):
         )
         validate_result(pg_df)
     test_utils.run_dag(sample_dag)
+
+
+def test_columns_names_capitalization(sample_dag):
+    """Test dataframe operator with columns_names_capitalization param"""
+
+    @aql.dataframe(columns_names_capitalization="lower")
+    def sample_df_1():  # skipcq: PY-D0003
+        return pandas.DataFrame(
+            {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
+        )
+
+    @aql.dataframe(columns_names_capitalization="upper")
+    def sample_df_2():  # skipcq: PY-D0003
+        return pandas.DataFrame(
+            {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
+        )
+
+    @aql.dataframe(columns_names_capitalization="original")
+    def sample_df_3():  # skipcq: PY-D0003
+        return pandas.DataFrame(
+            {"numbers": [1, 2, 3], "COLORS": ["red", "white", "blue"]}
+        )
+
+    with sample_dag:
+        res_1 = sample_df_1()
+        res_2 = sample_df_2()
+        res_3 = sample_df_3()
+    test_utils.run_dag(sample_dag)
+
+    columns = XCom.get_one(
+        execution_date=DEFAULT_DATE, key=res_1.key, task_id=res_1.operator.task_id
+    )
+    assert all(x.islower() for x in columns)
+
+    columns = XCom.get_one(
+        execution_date=DEFAULT_DATE, key=res_2.key, task_id=res_2.operator.task_id
+    )
+    assert all(x.isupper() for x in columns)
+
+    columns = XCom.get_one(
+        execution_date=DEFAULT_DATE, key=res_3.key, task_id=res_3.operator.task_id
+    )
+    cols = list(columns.columns)
+    cols.sort()
+    assert cols[1].islower()
+    assert cols[0].isupper()

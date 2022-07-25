@@ -5,25 +5,33 @@ import pandas as pd
 from airflow.configuration import conf
 from airflow.decorators.base import DecoratedOperator
 
+from astro.constants import ColumnCapitalization
 from astro.databases import create_database
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.sql.table import Table
+from astro.utils.dataframe import convert_dataframe_col_case
 from astro.utils.table import find_first_table
 
 
-def _get_dataframe(table: Table, identifiers_as_lower: bool = False) -> pd.DataFrame:
+def _get_dataframe(
+    table: Table, columns_names_capitalization: ColumnCapitalization = "lower"
+) -> pd.DataFrame:
     """
     Exports records from a SQL table and converts it into a pandas dataframe
     """
     database = create_database(table.conn_id)
     df = database.export_table_to_pandas_dataframe(source_table=table)
-    if identifiers_as_lower:
-        df.columns = [col_label.lower() for col_label in df.columns]
+    df = convert_dataframe_col_case(
+        df=df, columns_names_capitalization=columns_names_capitalization
+    )
+
     return df
 
 
 def load_op_arg_table_into_dataframe(
-    op_args: Tuple, python_callable: Callable, identifiers_as_lower: bool
+    op_args: Tuple,
+    python_callable: Callable,
+    columns_names_capitalization: ColumnCapitalization,
 ) -> Tuple:
     """For dataframe based functions, takes any Table objects from the op_args
     and converts them into local dataframes that can be handled in the python context"""
@@ -38,7 +46,9 @@ def load_op_arg_table_into_dataframe(
             arg, Table
         ):
             ret_args.append(
-                _get_dataframe(arg, identifiers_as_lower=identifiers_as_lower)
+                _get_dataframe(
+                    arg, columns_names_capitalization=columns_names_capitalization
+                )
             )
         else:
             ret_args.append(arg)
@@ -46,7 +56,9 @@ def load_op_arg_table_into_dataframe(
 
 
 def load_op_kwarg_table_into_dataframe(
-    op_kwargs: Dict, python_callable: Callable, identifiers_as_lower: bool
+    op_kwargs: Dict,
+    python_callable: Callable,
+    columns_names_capitalization: ColumnCapitalization,
 ) -> Dict:
     """For dataframe based functions, takes any Table objects from the op_kwargs
     and converts them into local dataframes that can be handled in the python context"""
@@ -54,7 +66,7 @@ def load_op_kwarg_table_into_dataframe(
     # We check if the type annotation is of type dataframe to determine that the user actually WANTS
     # this table to be converted into a dataframe, rather that passed in as a table
     return {
-        k: _get_dataframe(v, identifiers_as_lower=identifiers_as_lower)
+        k: _get_dataframe(v, columns_names_capitalization=columns_names_capitalization)
         if param_types.get(k).annotation is pd.DataFrame and isinstance(v, Table)  # type: ignore
         else v
         for k, v in op_kwargs.items()
@@ -67,7 +79,7 @@ class DataframeOperator(DecoratedOperator):
         conn_id: Optional[str] = None,
         database: Optional[str] = None,
         schema: Optional[str] = None,
-        identifiers_as_lower: bool = True,
+        columns_names_capitalization: ColumnCapitalization = "lower",
         **kwargs,
     ):
         """
@@ -79,7 +91,8 @@ class DataframeOperator(DecoratedOperator):
         :param database: Database for input table
         :param schema:  schema for input table
         :param warehouse: (Snowflake) Which warehouse to use for the input table
-        :param identifiers_as_lower: determines whether to force all columns to lowercase in the resulting dataframe
+        :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
+            in the resulting dataframe
         :param kwargs:
 
         :return: If ``raw_sql`` is true, we return the result of the handler function, otherwise we will return the
@@ -96,7 +109,7 @@ class DataframeOperator(DecoratedOperator):
         else:
             self.output_table = None
         self.op_args = self.kwargs.get("op_args", ())  # type: ignore
-        self.identifiers_as_lower = identifiers_as_lower
+        self.columns_names_capitalization = columns_names_capitalization
 
         super().__init__(
             **kwargs,
@@ -114,13 +127,17 @@ class DataframeOperator(DecoratedOperator):
             self.database = self.database or first_table.metadata.database  # type: ignore
             self.schema = self.schema or first_table.metadata.schema  # type: ignore
         self.op_args = load_op_arg_table_into_dataframe(
-            self.op_args, self.python_callable, self.identifiers_as_lower
+            self.op_args, self.python_callable, self.columns_names_capitalization
         )
         self.op_kwargs = load_op_kwarg_table_into_dataframe(
-            self.op_kwargs, self.python_callable, self.identifiers_as_lower
+            self.op_kwargs, self.python_callable, self.columns_names_capitalization
         )
 
         pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
+        pandas_dataframe = convert_dataframe_col_case(
+            df=pandas_dataframe,
+            columns_names_capitalization=self.columns_names_capitalization,
+        )
         if self.output_table:
             self.output_table.conn_id = self.output_table.conn_id or self.conn_id
             db = create_database(self.output_table.conn_id)
