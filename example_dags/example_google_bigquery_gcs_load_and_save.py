@@ -40,7 +40,7 @@ with DAG(
     )
 
     # Setting "identifiers_as_lower" to True will lowercase all column names
-    @aql.dataframe(identifiers_as_lower=False)
+    @aql.dataframe(columns_names_capitalization="original")
     def extract_top_5_movies(input_df: pd.DataFrame):
         print(f"Total Number of records: {len(input_df)}")
         top_5_movies = input_df.sort_values(by="Rating", ascending=False)[
