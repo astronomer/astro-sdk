@@ -1,8 +1,10 @@
-"""Tests to cover the truncate decorator"""
+"""Tests to cover the drop table function"""
 
 import pathlib
 
+import pandas
 import pytest
+from airflow.decorators import task
 
 import astro.sql as aql
 from astro.constants import Database
@@ -38,18 +40,31 @@ DEFAULT_FILEPATH = str(pathlib.Path(CWD.parent.parent, "data/sample.csv").absolu
     indirect=True,
     ids=["sqlite", "postgres", "bigquery", "snowflake"],
 )
-def test_truncate_with_table_metadata(database_table_fixture, sample_dag):
-    """Test truncate operator for all databases."""
+def test_drop_table_with_table_metadata(database_table_fixture, sample_dag):
+    """Test drop table operator for all databases."""
     database, test_table = database_table_fixture
     assert database.table_exists(test_table)
+    tmp_table = test_table.create_similar_table()
+
+    @aql.dataframe
+    def do_nothing(df: pandas.DataFrame):
+        return df
+
+    @task
+    def validate_table_exists(table: Table):
+        assert database.table_exists(table)
+        assert table.name == tmp_table.name
+        return table
 
     with sample_dag:
-        aql.truncate(
-            table=test_table,
+        transformed_operator = do_nothing(test_table, output_table=tmp_table)
+        validated_table = validate_table_exists(transformed_operator)
+        aql.drop_table(
+            table=validated_table,
         )
     test_utils.run_dag(sample_dag)
 
-    assert not database.table_exists(test_table)
+    assert not database.table_exists(tmp_table)
 
 
 @pytest.mark.integration
@@ -65,13 +80,13 @@ def test_truncate_with_table_metadata(database_table_fixture, sample_dag):
     indirect=True,
     ids=["postgres"],
 )
-def test_truncate_without_table_metadata(database_table_fixture, sample_dag):
-    """Test truncate operator for all databases."""
+def test_drop_table_without_table_metadata(database_table_fixture, sample_dag):
+    """Test drop table operator for all databases."""
     database, test_table = database_table_fixture
     assert database.table_exists(test_table)
 
     with sample_dag:
-        aql.truncate(
+        aql.drop_table(
             table=test_table,
         )
     test_utils.run_dag(sample_dag)
