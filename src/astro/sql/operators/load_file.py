@@ -5,11 +5,12 @@ from airflow.configuration import conf
 from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
+from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import BaseDatabase, create_database
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.table import Table
+from astro.utils.dataframe import convert_dataframe_col_case
 from astro.utils.task_id_helper import get_task_id
 
 
@@ -23,6 +24,8 @@ class LoadFile(BaseOperator):
     :param if_exists: Overwrite file if exists. Default False.
     :param use_native_support: Use native support for data transfer if available on the destination.
     :param native_support_kwargs: kwargs to be used by method involved in native support flow
+    :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
+            in the resulting dataframe
 
     :return: If ``output_table`` is passed this operator returns a Table object. If not
         passed, returns a dataframe.
@@ -39,6 +42,7 @@ class LoadFile(BaseOperator):
         ndjson_normalize_sep: str = "_",
         use_native_support: bool = True,
         native_support_kwargs: Optional[Dict] = None,
+        columns_names_capitalization: ColumnCapitalization = "lower",
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -51,6 +55,7 @@ class LoadFile(BaseOperator):
         self.normalize_config: Dict[str, str] = {}
         self.use_native_support = use_native_support
         self.native_support_kwargs: Dict[str, Any] = native_support_kwargs or {}
+        self.columns_names_capitalization = columns_names_capitalization
 
     def execute(self, context: Any) -> Union[Table, pd.DataFrame]:  # skipcq: PYL-W0613
         """
@@ -116,6 +121,11 @@ class LoadFile(BaseOperator):
                 df = pd.concat([df, file.export_to_dataframe()])
             else:
                 df = file.export_to_dataframe()
+
+            df = convert_dataframe_col_case(
+                df=df, columns_names_capitalization=self.columns_names_capitalization
+            )
+
         self.log.info("Completed loading the data into dataframe.")
         return df
 
@@ -170,6 +180,7 @@ def load_file(
     ndjson_normalize_sep: str = "_",
     use_native_support: bool = True,
     native_support_kwargs: Optional[Dict] = None,
+    columns_names_capitalization: ColumnCapitalization = "lower",
     **kwargs: Any,
 ) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.
@@ -182,6 +193,8 @@ def load_file(
         ex - ``{"a": {"b":"c"}}`` will result in: ``column - "a_b"`` where ``ndjson_normalize_sep = "_"``
     :param use_native_support: Use native support for data transfer if available on the destination.
     :param native_support_kwargs: kwargs to be used by method involved in native support flow
+    :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
+        in the resulting dataframe
     """
 
     # Note - using path for task id is causing issues as it's a pattern and
@@ -196,5 +209,6 @@ def load_file(
         ndjson_normalize_sep=ndjson_normalize_sep,
         use_native_support=use_native_support,
         native_support_kwargs=native_support_kwargs,
+        columns_names_capitalization=columns_names_capitalization,
         **kwargs,
     ).output
