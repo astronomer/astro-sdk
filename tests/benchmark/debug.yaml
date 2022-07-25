@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: troubleshoot
+  namespace: benchmark
+spec:
+  containers:
+  - name: troubleshoot-benchmark
+    image: gcr.io/astronomer-dag-authoring/benchmark
+    # Just spin & wait forever
+    command: [ "/bin/bash", "-c", "--" ]
+    args: [ "while true; do sleep 30; done;" ]

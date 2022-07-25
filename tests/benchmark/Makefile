@@ -19,6 +19,10 @@ clean:
 	@rm -f unittests.cfg
 	@rm -f unittests.db
 	@rm -f webserver_config.py
+	@rm -f ../../unittests.cfg
+	@rm -f ../../unittests.db
+	@rm -f ../../airflow.cfg
+	@rm -f ../../airflow.db
 
 # Takes approximately 7min
 setup_gke:
@@ -45,8 +49,7 @@ local: check_google_credentials
    		benchmark
 	@rm -rf astro-sdk
 
-
-run_job: check_google_credentials
+run_job:
 	@gcloud container clusters get-credentials astro-sdk --zone us-central1-a --project ${GCP_PROJECT}
 	@kubectl apply -f infrastructure/kubernetes/namespace.yaml
 	@kubectl apply -f infrastructure/kubernetes/postgres.yaml

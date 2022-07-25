@@ -11,6 +11,7 @@ ENV AIRFLOW_HOME=/opt/app/
 ENV PYTHONPATH=/opt/app/
 ENV ASTRO_PUBLISH_BENCHMARK_DATA=True
 ENV GCP_BUCKET=dag-authoring
+ENV AIRFLOW__ASTRO_SDK__SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE=gcs_int_python_sdk
 
 # Debian Bullseye is shipped with Python 3.9
 # Upgrade built-in pip

@@ -1,6 +1,12 @@
 {
   "databases": [
     {
+      "name": "snowflake",
+      "params": {
+        "conn_id": "snowflake_conn"
+      }
+    },
+    {
       "name": "postgres",
       "params": {
         "conn_id": "postgres_conn_benchmark",
@@ -16,12 +22,6 @@
         "metadata": {
           "database": "bigquery"
         }
-      }
-    },
-    {
-      "name": "snowflake",
-      "params": {
-        "conn_id": "snowflake_conn"
       }
     }
   ],
