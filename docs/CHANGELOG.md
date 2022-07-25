@@ -1,5 +1,30 @@
 # Changelog
 
+
+## 1.0.0b1
+
+Feature:
+* Get configs via Airflow Configuration manager [#503](https://github.com/astronomer/astro-sdk/issues/503)
+* Optimize loading file directly from GCS to Bigquery via load_file operator [#429](https://github.com/astronomer/astro-sdk/issues/429)
+* Optimize loading file directly from S3 to Bigquery via load_file operator [#429](https://github.com/astronomer/astro-sdk/issues/429)
+* Optimize loading file directly from local to bigquery via load_file operator [#429](https://github.com/astronomer/astro-sdk/issues/429)
+* Optimize performance loading file to postgres via load_file operator [#428](https://github.com/astronomer/astro-sdk/issues/428)
+* Optimize loading file directly from GCS to snowflake via load_file operator [#430](https://github.com/astronomer/astro-sdk/issues/430)
+* Optimize loading file directly from S3 to snowflake via load_file operator [#430](https://github.com/astronomer/astro-sdk/issues/430)
+
+Internals:
+* Fix sphinx docs sidebar [#472](https://github.com/astronomer/astro-sdk/issues/472)
+* Add CI job to check for dead links
+
+Enhancement:
+* Add benchmark result for load_file to snowflake using Astro Python SDK [#438](https://github.com/astronomer/astro-sdk/issues/438)
+* Add postgres benchmarking result [#431](https://github.com/astronomer/astro-sdk/issues/431)
+* Fix issue in default schema selection [#503](https://github.com/astronomer/astro-sdk/issues/503)
+* Fix missing airflow's task terminal states to CleanUp Operator [#525](https://github.com/astronomer/astro-sdk/issues/525)
+* Allow running tests on PRs from forks + label [#179](https://github.com/astronomer/astro-sdk/issues/179)
+* Add benchmarking result from GCS to Bigquery after optimization [#429](https://github.com/astronomer/astro-sdk/issues/429)
+
+
 ## 0.11.0
 
 Feature:
