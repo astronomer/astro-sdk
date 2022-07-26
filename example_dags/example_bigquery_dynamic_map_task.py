@@ -15,20 +15,20 @@ def summarize_campaign(capaign_id: str):
 with DAG(
     dag_id="example_dynamic_map_task",
     schedule_interval=None,
-    start_date=datetime(2021, 1, 1),
+    start_date=datetime(2022, 1, 1),
     catchup=False,
 ) as dag:
-    input_table_2 = Table(
-        name="dummy_table",
+    bq_table = Table(
+        name="active_campaigns",
         metadata=Metadata(
-            schema="pankaj_upsert_dataset",
+            schema="dag_authoring",
         ),
         conn_id="google_cloud_default",
     )
 
-    @aql.run_raw_sql(conn_id="google_cloud_default")
+    @aql.transform()
     def get_campaigns(table: Table):
-        return """select * from {{table}}"""
+        return """select campaign_id from {{table}}"""
 
 
-    summarize_campaign.expand(capaign_id=get_campaigns(table=input_table_2))
+    summarize_campaign.expand(capaign_id=get_campaigns(table=bq_table))
