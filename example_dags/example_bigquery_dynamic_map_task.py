@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from pandas import DataFrame
 
 from airflow import DAG
 from airflow.decorators import task
@@ -22,8 +23,12 @@ def summarize_campaign(capaign_id: str):
     print(capaign_id)
 
 
-def handle_result(result):
-    return result.fetchall()
+@aql.dataframe(identifiers_as_lower=False)
+def my_df_func(input_df: DataFrame):
+    res = []
+    for row in input_df.iterrows():
+        res.append(row[0])
+    return res
 
 
 with DAG(
@@ -50,3 +55,4 @@ with DAG(
 
     summarize_campaign.expand(capaign_id=get_campaigns(bq_table))
     aql.cleanup()
+
