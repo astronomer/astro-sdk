@@ -36,6 +36,7 @@ jobs:
     env:
       MYPY_FORCE_COLOR: 1
       TERM: xterm-color
+      SETUPTOOLS_USE_DISTUTILS: stdlib
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
@@ -124,6 +125,7 @@ jobs:
           name: coverage${{ matrix.group }}
           path: .coverage
     env:
+      SETUPTOOLS_USE_DISTUTILS: stdlib
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
       POSTGRES_HOST: postgres
