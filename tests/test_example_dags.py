@@ -31,6 +31,7 @@ def session():
         "example_google_bigquery_gcs_load_and_save",
         "example_snowflake_partial_table_with_append",
         "example_sqlite_load_transform",
+        "example_dynamic_map_task",
     ],
 )
 def test_example_dag(session, dag_id):
