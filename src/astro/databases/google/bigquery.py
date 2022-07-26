@@ -322,7 +322,7 @@ class BigqueryDatabase(BaseDatabase):
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
-    ) -> None:
+    ) -> bool:
         """Transfer data from local to bigquery"""
         native_support_kwargs = native_support_kwargs or {}
         # We need to maintain file_type to biqquery_format and not use NATIVE_PATHS_SUPPORTED_FILE_TYPES
@@ -350,13 +350,19 @@ class BigqueryDatabase(BaseDatabase):
 
         # We are passing mode='rb' even for text files since Bigquery
         # complain and ask to open file in 'rb' mode
-        with open(source_file.path, mode="rb") as file:  # skipcq: PTC-W6004
-            job = client.load_table_from_file(
-                file,
-                job_config=job_config,
-                destination=self.get_table_qualified_name(target_table),
-            )
-        job.result()
+        try:
+            with open(source_file.path, mode="rb") as file:  # skipcq: PTC-W6004
+                job = client.load_table_from_file(
+                    file,
+                    job_config=job_config,
+                    destination=self.get_table_qualified_name(target_table),
+                )
+            job.result()
+        # Ignoring deepsource error as it needs to catch every other exception
+        except Exception as exe:  # skipcq: PYL-W0703
+            logging.warning(exe)
+            return False
+        return True
 
 
 class S3ToBigqueryDataTransfer:

@@ -312,19 +312,17 @@ class BaseDatabase(ABC):
                     native_support_kwargs=native_support_kwargs,
                     **kwargs,
                 ):
-                    return
+                    break
                 if fallback:
-                    dataframe = file.export_to_dataframe()
                     self.load_pandas_dataframe_to_table(
-                        dataframe,
+                        file.export_to_dataframe(),
                         output_table,
                         chunk_size=chunk_size,
                         if_exists=if_exists,
                     )
             else:
-                dataframe = file.export_to_dataframe()
                 self.load_pandas_dataframe_to_table(
-                    dataframe,
+                    file.export_to_dataframe(),
                     output_table,
                     chunk_size=chunk_size,
                     if_exists="append",  # We've already created a new table in this case
