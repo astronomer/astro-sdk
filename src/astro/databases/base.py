@@ -21,7 +21,6 @@ from astro.exceptions import NonExistentTableException
 from astro.files import File, resolve_file_path_pattern
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.sql.table import Metadata, Table
-from astro.utils.dataframe import convert_dataframe_col_case
 
 
 class BaseDatabase(ABC):
@@ -204,10 +203,6 @@ class BaseDatabase(ABC):
             source_dataframe = file.export_to_dataframe(
                 nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT
             )
-        source_dataframe = convert_dataframe_col_case(
-            df=source_dataframe,
-            columns_names_capitalization=columns_names_capitalization,
-        )
 
         db = SQLDatabase(engine=self.sqlalchemy_engine)
         db.prep_table(
