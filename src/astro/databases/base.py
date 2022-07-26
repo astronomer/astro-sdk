@@ -286,8 +286,7 @@ class BaseDatabase(ABC):
         :param use_native_support: Use native support for data transfer if available on the destination
         :param normalize_config: pandas json_normalize params config
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
-        :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer in case
-        optimised transfer fails.
+        :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         """
         normalize_config = normalize_config or {}
         input_files = resolve_file_path_pattern(
@@ -342,8 +341,7 @@ class BaseDatabase(ABC):
         :param if_exists: Overwrite file if exists
         :param chunk_size: Specify the number of records in each batch to be written at a time
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
-        :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer in case
-        optimised transfer fails.
+        :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer.
         """
         try:
             self.load_file_to_table_natively(
@@ -356,14 +354,13 @@ class BaseDatabase(ABC):
         # Catching NATIVE_LOAD_EXCEPTIONS for fallback
         except self.NATIVE_LOAD_EXCEPTIONS as exe:  # skipcq: PYL-W0703
             logging.warning(exe)
-
-        if enable_native_fallback:
-            self.load_pandas_dataframe_to_table(
-                source_file.export_to_dataframe(),
-                target_table=target_table,
-                chunk_size=chunk_size,
-                if_exists=if_exists,
-            )
+            if enable_native_fallback:
+                self.load_pandas_dataframe_to_table(
+                    source_file.export_to_dataframe(),
+                    target_table=target_table,
+                    chunk_size=chunk_size,
+                    if_exists=if_exists,
+                )
 
     def load_pandas_dataframe_to_table(
         self,

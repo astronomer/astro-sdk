@@ -23,8 +23,7 @@ class LoadFile(BaseOperator):
     :param if_exists: Overwrite file if exists. Default False.
     :param use_native_support: Use native support for data transfer if available on the destination.
     :param native_support_kwargs: kwargs to be used by method involved in native support flow
-    :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer in case optimised
-    transfer fails.
+    :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
 
     :return: If ``output_table`` is passed this operator returns a Table object. If not
         passed, returns a dataframe.
@@ -188,8 +187,7 @@ def load_file(
         ex - ``{"a": {"b":"c"}}`` will result in: ``column - "a_b"`` where ``ndjson_normalize_sep = "_"``
     :param use_native_support: Use native support for data transfer if available on the destination.
     :param native_support_kwargs: kwargs to be used by method involved in native support flow
-    :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer in case
-    optimised transfer fails.
+    :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
     """
 
     # Note - using path for task id is causing issues as it's a pattern and
