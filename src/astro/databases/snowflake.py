@@ -350,7 +350,7 @@ class SnowflakeDatabase(BaseDatabase):
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
-    ) -> None:
+    ) -> bool:
         """
         Load the content of a file to an existing Snowflake table natively by:
         - Creating a Snowflake external stage
@@ -377,16 +377,28 @@ class SnowflakeDatabase(BaseDatabase):
         """
         native_support_kwargs = native_support_kwargs or {}
         storage_integration = native_support_kwargs.get("storage_integration")
-        stage = self.create_stage(
-            file=source_file, storage_integration=storage_integration
-        )
+        try:
+            stage = self.create_stage(
+                file=source_file, storage_integration=storage_integration
+            )
+        # Ignoring deepsource error as it needs to catch every other exception
+        except Exception as exe:  # skipcq: PYL-W0703
+            logging.warning(exe)
+            return False
+
         table_name = self.get_table_qualified_name(target_table)
         file_path = os.path.basename(source_file.path) or ""
         sql_statement = (
             f"COPY INTO {table_name} FROM @{stage.qualified_name}/{file_path}"
         )
-        self.hook.run(sql_statement)
+        try:
+            self.hook.run(sql_statement)
+            # Ignoring deepsource error as it needs to catch every other exception
+        except Exception as exe:  # skipcq: PYL-W0703
+            logging.warning(exe)
+            return False
         self.drop_stage(stage)
+        return True
 
     def load_pandas_dataframe_to_table(
         self,
