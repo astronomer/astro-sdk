@@ -103,6 +103,7 @@ class LoadFile(BaseOperator):
             chunk_size=self.chunk_size,
             use_native_support=self.use_native_support,
             native_support_kwargs=self.native_support_kwargs,
+            columns_names_capitalization=self.columns_names_capitalization,
         )
         self.log.info("Completed loading the data into %s.", self.output_table)
         return self.output_table
