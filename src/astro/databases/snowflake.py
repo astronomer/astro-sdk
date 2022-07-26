@@ -14,6 +14,7 @@ from snowflake.connector.errors import ProgrammingError
 from astro import settings
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
+    ColumnCapitalization,
     FileLocation,
     FileType,
     LoadExistStrategy,
@@ -22,6 +23,7 @@ from astro.constants import (
 from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.sql.table import Metadata, Table
+from astro.utils.dataframe import convert_dataframe_col_case
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
 
@@ -306,6 +308,7 @@ class SnowflakeDatabase(BaseDatabase):
         table: Table,
         file: Optional[File] = None,
         dataframe: Optional[pd.DataFrame] = None,
+        columns_names_capitalization: ColumnCapitalization = "lower",
     ) -> None:
         """
         Create a SQL table, automatically inferring the schema using the given file.
@@ -321,8 +324,9 @@ class SnowflakeDatabase(BaseDatabase):
 
         # Snowflake doesn't handle well mixed capitalisation of column name chars
         # we are handling this more gracefully in a separate PR
-        if dataframe is not None:
-            dataframe.columns.str.upper()
+        dataframe = convert_dataframe_col_case(
+            df=dataframe, columns_names_capitalization=columns_names_capitalization
+        )
 
         super().create_table_using_schema_autodetection(table, dataframe=dataframe)
 
