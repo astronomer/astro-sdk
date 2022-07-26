@@ -263,7 +263,7 @@ class BigqueryDatabase(BaseDatabase):
             )
         # Ignoring deepsource error as it needs to catch every other exception
         except Exception as exe:  # skipcq: PYL-W0703
-            logging.error(exe)
+            logging.warning(exe)
             return False
         return True
 
@@ -300,7 +300,7 @@ class BigqueryDatabase(BaseDatabase):
             transfer.run()
         # Ignoring deepsource error as it needs to catch every other exception
         except Exception as exe:  # skipcq: PYL-W0703
-            logging.error(exe)
+            logging.warning(exe)
             return False
         return True
 
