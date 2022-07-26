@@ -9,7 +9,7 @@ from astro.constants import ColumnCapitalization
 from astro.databases import create_database
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.sql.table import Table
-from astro.utils.dataframe import convert_dataframe_col_case
+from astro.utils.dataframe import convert_columns_names_capitalization
 from astro.utils.table import find_first_table
 
 
@@ -21,7 +21,7 @@ def _get_dataframe(
     """
     database = create_database(table.conn_id)
     df = database.export_table_to_pandas_dataframe(source_table=table)
-    df = convert_dataframe_col_case(
+    df = convert_columns_names_capitalization(
         df=df, columns_names_capitalization=columns_names_capitalization
     )
 
@@ -134,7 +134,7 @@ class DataframeOperator(DecoratedOperator):
         )
 
         pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
-        pandas_dataframe = convert_dataframe_col_case(
+        pandas_dataframe = convert_columns_names_capitalization(
             df=pandas_dataframe,
             columns_names_capitalization=self.columns_names_capitalization,
         )

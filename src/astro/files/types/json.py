@@ -4,7 +4,7 @@ import pandas as pd
 
 from astro.constants import FileType as FileTypeConstants
 from astro.files.types.base import FileType
-from astro.utils.dataframe import convert_dataframe_col_case
+from astro.utils.dataframe import convert_columns_names_capitalization
 
 
 class JSONFileType(FileType):
@@ -26,7 +26,7 @@ class JSONFileType(FileType):
         # Pandas `read_json` does not support the `nrows` parameter unless we're using NDJSON
         kwargs_copy.pop("nrows", None)
         df = pd.read_json(stream, **kwargs_copy)
-        df = convert_dataframe_col_case(
+        df = convert_columns_names_capitalization(
             df=df, columns_names_capitalization=columns_names_capitalization
         )
         return df

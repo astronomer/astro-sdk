@@ -3,7 +3,7 @@ import pandas as pd
 from astro.constants import ColumnCapitalization
 
 
-def convert_dataframe_col_case(
+def convert_columns_names_capitalization(
     df: pd.DataFrame, columns_names_capitalization: ColumnCapitalization
 ):
     """

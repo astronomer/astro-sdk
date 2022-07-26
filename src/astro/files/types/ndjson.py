@@ -7,7 +7,7 @@ import pandas as pd
 from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.constants import FileType as FileTypeConstants
 from astro.files.types.base import FileType
-from astro.utils.dataframe import convert_dataframe_col_case
+from astro.utils.dataframe import convert_columns_names_capitalization
 
 
 class NDJSONFileType(FileType):
@@ -23,7 +23,7 @@ class NDJSONFileType(FileType):
             in the resulting dataframe
         """
         df = NDJSONFileType.flatten(self.normalize_config, stream, **kwargs)
-        df = convert_dataframe_col_case(
+        df = convert_columns_names_capitalization(
             df=df, columns_names_capitalization=columns_names_capitalization
         )
         return df
