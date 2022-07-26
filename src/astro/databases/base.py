@@ -184,7 +184,7 @@ class BaseDatabase(ABC):
         table: Table,
         file: Optional[File] = None,
         dataframe: Optional[pd.DataFrame] = None,
-        columns_names_capitalization: ColumnCapitalization = "lower",
+        columns_names_capitalization: ColumnCapitalization = "lower",  # skipcq
     ) -> None:
         """
         Create a SQL table, automatically inferring the schema using the given file.
