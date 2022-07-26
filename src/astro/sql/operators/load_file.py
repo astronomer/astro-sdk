@@ -10,7 +10,6 @@ from astro.databases import BaseDatabase, create_database
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.table import Table
-from astro.utils.dataframe import convert_dataframe_col_case
 from astro.utils.task_id_helper import get_task_id
 
 
@@ -42,7 +41,7 @@ class LoadFile(BaseOperator):
         ndjson_normalize_sep: str = "_",
         use_native_support: bool = True,
         native_support_kwargs: Optional[Dict] = None,
-        columns_names_capitalization: ColumnCapitalization = "lower",
+        columns_names_capitalization: ColumnCapitalization = "original",
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -119,13 +118,18 @@ class LoadFile(BaseOperator):
             input_file.conn_id,
         ):
             if isinstance(df, pd.DataFrame):
-                df = pd.concat([df, file.export_to_dataframe()])
+                df = pd.concat(
+                    [
+                        df,
+                        file.export_to_dataframe(
+                            columns_names_capitalization=self.columns_names_capitalization
+                        ),
+                    ]
+                )
             else:
-                df = file.export_to_dataframe()
-
-            df = convert_dataframe_col_case(
-                df=df, columns_names_capitalization=self.columns_names_capitalization
-            )
+                df = file.export_to_dataframe(
+                    columns_names_capitalization=self.columns_names_capitalization
+                )
 
         self.log.info("Completed loading the data into dataframe.")
         return df
@@ -181,7 +185,7 @@ def load_file(
     ndjson_normalize_sep: str = "_",
     use_native_support: bool = True,
     native_support_kwargs: Optional[Dict] = None,
-    columns_names_capitalization: ColumnCapitalization = "lower",
+    columns_names_capitalization: ColumnCapitalization = "original",
     **kwargs: Any,
 ) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.

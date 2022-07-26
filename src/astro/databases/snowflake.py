@@ -23,7 +23,6 @@ from astro.constants import (
 from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.sql.table import Metadata, Table
-from astro.utils.dataframe import convert_dataframe_col_case
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
 
@@ -317,17 +316,20 @@ class SnowflakeDatabase(BaseDatabase):
         :param file: File used to infer the new table columns.
         :param dataframe: Dataframe used to infer the new table columns if there is no file
         """
+
+        # Snowflake don't expect mixed case col names like - 'Title' or 'Category'
+        # we explicitly convert them to lower case, if not provided by user
+        if columns_names_capitalization not in ["lower", "upper"]:
+            columns_names_capitalization = "lower"
+
         if file:
             dataframe = file.export_to_dataframe(
-                nrows=settings.LOAD_TABLE_AUTODETECT_ROWS_COUNT
+                nrows=settings.LOAD_TABLE_AUTODETECT_ROWS_COUNT,
+                columns_names_capitalization=columns_names_capitalization,
             )
 
         # Snowflake doesn't handle well mixed capitalisation of column name chars
         # we are handling this more gracefully in a separate PR
-        dataframe = convert_dataframe_col_case(
-            df=dataframe, columns_names_capitalization=columns_names_capitalization
-        )
-
         super().create_table_using_schema_autodetection(table, dataframe=dataframe)
 
     def is_native_load_file_available(

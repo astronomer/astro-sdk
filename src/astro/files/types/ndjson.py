@@ -7,17 +7,26 @@ import pandas as pd
 from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.constants import FileType as FileTypeConstants
 from astro.files.types.base import FileType
+from astro.utils.dataframe import convert_dataframe_col_case
 
 
 class NDJSONFileType(FileType):
     """Concrete implementation to handle NDJSON file type"""
 
-    def export_to_dataframe(self, stream, **kwargs):
+    def export_to_dataframe(
+        self, stream, columns_names_capitalization="original", **kwargs
+    ):
         """read ndjson file from one of the supported locations and return dataframe
 
         :param stream: file stream object
+        :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
+            in the resulting dataframe
         """
-        return NDJSONFileType.flatten(self.normalize_config, stream, **kwargs)
+        df = NDJSONFileType.flatten(self.normalize_config, stream, **kwargs)
+        df = convert_dataframe_col_case(
+            df=df, columns_names_capitalization=columns_names_capitalization
+        )
+        return df
 
     def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
         """Write ndjson file to one of the supported locations

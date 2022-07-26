@@ -218,7 +218,7 @@ class BaseDatabase(ABC):
         table: Table,
         file: Optional[File] = None,
         dataframe: Optional[pd.DataFrame] = None,
-        columns_names_capitalization: ColumnCapitalization = "lower",
+        columns_names_capitalization: ColumnCapitalization = "original",
     ) -> None:
         """
         Create a table either using its explicitly defined columns or inferring
@@ -279,7 +279,7 @@ class BaseDatabase(ABC):
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         use_native_support: bool = True,
         native_support_kwargs: Optional[Dict] = None,
-        columns_names_capitalization: ColumnCapitalization = "lower",
+        columns_names_capitalization: ColumnCapitalization = "original",
         **kwargs,
     ):
         """
