@@ -1,4 +1,5 @@
 from datetime import datetime
+from pandas import DataFrame
 
 from airflow import DAG
 from airflow.decorators import task
@@ -10,6 +11,14 @@ from astro.sql.table import Metadata
 @task
 def summarize_campaign(capaign_id: str):
     print(capaign_id)
+
+
+@aql.dataframe(identifiers_as_lower=False)
+def my_df_func(input_df: DataFrame):
+    res = []
+    for row in input_df.iterrows():
+        res.append(row[0])
+    return res
 
 
 with DAG(
@@ -31,4 +40,4 @@ with DAG(
         return """select campaign_id from {{table}}"""
 
 
-    summarize_campaign.expand(capaign_id=get_campaigns(table=bq_table))
+    summarize_campaign.expand(capaign_id=my_df_func(get_campaigns(table=bq_table)))
