@@ -85,7 +85,6 @@ The benchmark was run as a Kubernetes job in GKE:
 * Container resource limit:
   * Memory: 10 Gi
 
-
 | database   | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
 |:-----------|:-----------|:-------------|:-------------|:----------------|:------------------|
 | snowflake  | ten_kb     | 4.75s        | 59.3MB       | 1.45s           | 100.0ms           |
@@ -94,6 +93,25 @@ The benchmark was run as a Kubernetes job in GKE:
 | snowflake  | one_gb     | 4.96min      | 57.3MB       | 14.21s          | 1.16s             |
 | snowflake  | five_gb    | 24.46min     | 97.85MB      | 1.43min         | 5.94s             |
 | snowflake  | ten_gb     | 50.85min     | 104.53MB     | 2.7min          | 12.11s            |
+
+### With native support
+
+The benchmark was run as a Kubernetes job in GKE:
+
+* Version: `astro-sdk-python` 1.0.0a1 (`bc58830`)
+* Machine type: `n2-standard-4`
+  * vCPU: 4
+  * Memory: 16 GB RAM
+* Container resource limit:
+  * Memory: 10 Gi
+
+| database   | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
+|:-----------|:-----------|:-------------|:-------------|:----------------|:------------------|
+| snowflake  | ten_kb     | 9.1s         | 56.45MB      | 2.56s           | 110.0ms           |
+| snowflake  | hundred_kb | 9.19s        | 45.4MB       | 2.55s           | 120.0ms           |
+| snowflake  | ten_mb     | 10.9s        | 47.51MB      | 2.58s           | 160.0ms           |
+| snowflake  | one_gb     | 1.07min      | 47.94MB      | 8.7s            | 5.67s             |
+| snowflake  | five_gb    | 5.49min      | 53.69MB      | 18.76s          | 1.6s              |
 
 ### Database: postgres
 
