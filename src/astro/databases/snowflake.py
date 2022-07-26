@@ -1,5 +1,6 @@
 """Snowflake database implementation."""
 import logging
+import os
 import random
 import string
 from dataclasses import dataclass, field
@@ -7,10 +8,10 @@ from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
-from pandas.io.sql import SQLDatabase
 from snowflake.connector import pandas_tools
 from snowflake.connector.errors import ProgrammingError
 
+from astro import settings
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
     FileLocation,
@@ -35,6 +36,14 @@ COPY_OPTIONS = {
     FileType.NDJSON: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
     FileType.PARQUET: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
 }
+
+DEFAULT_STORAGE_INTEGRATION = {
+    FileLocation.S3: settings.SNOWFLAKE_STORAGE_INTEGRATION_AMAZON,
+    FileLocation.GS: settings.SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE,
+}
+
+NATIVE_LOAD_SUPPORTED_FILE_TYPES = (FileType.CSV, FileType.NDJSON, FileType.PARQUET)
+NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS = (FileLocation.GS, FileLocation.S3)
 
 
 @dataclass
@@ -138,7 +147,6 @@ class SnowflakeDatabase(BaseDatabase):
     """
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
-        self.storage_integration: Optional[str] = None
         super().__init__(conn_id)
 
     @property
@@ -192,7 +200,9 @@ class SnowflakeDatabase(BaseDatabase):
         :param storage_integration: Previously created Snowflake storage integration
         :return: String containing line to be used for authentication on the remote storage
         """
-
+        storage_integration = storage_integration or DEFAULT_STORAGE_INTEGRATION.get(
+            file.location.location_type
+        )
         if storage_integration is not None:
             auth = f"storage_integration = {storage_integration};"
         else:
@@ -291,6 +301,93 @@ class SnowflakeDatabase(BaseDatabase):
     # Table load methods
     # ---------------------------------------------------------
 
+    def create_table_using_schema_autodetection(
+        self,
+        table: Table,
+        file: Optional[File] = None,
+        dataframe: Optional[pd.DataFrame] = None,
+    ) -> None:
+        """
+        Create a SQL table, automatically inferring the schema using the given file.
+
+        :param table: The table to be created.
+        :param file: File used to infer the new table columns.
+        :param dataframe: Dataframe used to infer the new table columns if there is no file
+        """
+        if file:
+            dataframe = file.export_to_dataframe(
+                nrows=settings.LOAD_TABLE_AUTODETECT_ROWS_COUNT
+            )
+
+        # Snowflake doesn't handle well mixed capitalisation of column name chars
+        # we are handling this more gracefully in a separate PR
+        if dataframe is not None:
+            dataframe.columns.str.upper()
+
+        super().create_table_using_schema_autodetection(table, dataframe=dataframe)
+
+    def is_native_load_file_available(
+        self, source_file: File, target_table: Table
+    ) -> bool:
+        """
+        Check if there is an optimised path for source to destination.
+
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table that needs to be populated with file data
+        """
+        is_file_type_supported = (
+            source_file.type.name in NATIVE_LOAD_SUPPORTED_FILE_TYPES
+        )
+        is_file_location_supported = (
+            source_file.location.location_type in NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS
+        )
+        return is_file_type_supported and is_file_location_supported
+
+    def load_file_to_table_natively(
+        self,
+        source_file: File,
+        target_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+        native_support_kwargs: Optional[Dict] = None,
+        **kwargs,
+    ) -> None:
+        """
+        Load the content of a file to an existing Snowflake table natively by:
+        - Creating a Snowflake external stage
+        - Using Snowflake COPY INTO statement
+
+        Requirements:
+        - The user must have permissions to create a STAGE in Snowflake.
+        - If loading from GCP Cloud Storage, `native_support_kwargs` must define `storage_integration`
+        - If loading from AWS S3, the credentials for creating the stage may be
+        retrieved from the Airflow connection or from the `storage_integration`
+        attribute within `native_support_kwargs`.
+
+        :param source_file: File from which we need to transfer data
+        :param target_table: Table to which the content of the file will be loaded to
+        :param if_exists: Strategy used to load (currently supported: "append" or "replace")
+        :param native_support_kwargs: may be used for the stage creation, as described above.
+
+        .. seealso::
+            `Snowflake official documentation on COPY INTO
+            <https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html>`_
+            `Snowflake official documentation on CREATE STAGE
+            <https://docs.snowflake.com/en/sql-reference/sql/create-stage.html>`_
+
+        """
+        native_support_kwargs = native_support_kwargs or {}
+        storage_integration = native_support_kwargs.get("storage_integration")
+        stage = self.create_stage(
+            file=source_file, storage_integration=storage_integration
+        )
+        table_name = self.get_table_qualified_name(target_table)
+        file_path = os.path.basename(source_file.path) or ""
+        sql_statement = (
+            f"COPY INTO {table_name} FROM @{stage.qualified_name}/{file_path}"
+        )
+        self.hook.run(sql_statement)
+        self.drop_stage(stage)
+
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,
@@ -307,27 +404,15 @@ class SnowflakeDatabase(BaseDatabase):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
-        db = SQLDatabase(engine=self.sqlalchemy_engine)
-        # Make columns uppercase to prevent weird errors in snowflake
-        source_dataframe.columns = source_dataframe.columns.str.upper()
-        schema = None
-        if target_table.metadata:
-            schema = getattr(target_table.metadata, "schema", None)
+        self.create_table(target_table, dataframe=source_dataframe)
 
-        # within prep_table() we use pandas drop() function which is used when we pass 'if_exists=replace'.
-        # There is an issue where has_table() works with uppercase table names but the function meta.reflect() don't.
-        # To prevent the issue we are passing table name in lowercase.
-        db.prep_table(
-            source_dataframe,
-            target_table.name.lower(),
-            schema=schema,
-            if_exists=if_exists,
-            index=False,
-        )
+        self.table_exists(target_table)
         pandas_tools.write_pandas(
-            self.hook.get_conn(),
-            source_dataframe,
-            target_table.name,
+            conn=self.hook.get_conn(),
+            df=source_dataframe,
+            table_name=target_table.name,
+            schema=target_table.metadata.schema,
+            database=target_table.metadata.database,
             chunk_size=chunk_size,
             quote_identifiers=False,
         )
