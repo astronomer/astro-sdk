@@ -11,19 +11,24 @@ Feature:
 * Optimize performance loading file to postgres via load_file operator [#428](https://github.com/astronomer/astro-sdk/issues/428)
 * Optimize loading file directly from GCS to snowflake via load_file operator [#430](https://github.com/astronomer/astro-sdk/issues/430)
 * Optimize loading file directly from S3 to snowflake via load_file operator [#430](https://github.com/astronomer/astro-sdk/issues/430)
+* Add user-facing doc-site using Sphinx [#472](https://github.com/astronomer/astro-sdk/issues/472)
 
 Internals:
 * Fix sphinx docs sidebar [#472](https://github.com/astronomer/astro-sdk/issues/472)
 * Add CI job to check for dead links
 
 Enhancement:
+* Define datasets to be used in the benchmark [#433](https://github.com/astronomer/astro-sdk/issues/433)
+* Define benchmark worker node configuration for benchmark [#435](https://github.com/astronomer/astro-sdk/issues/435)
+* Change benchmark tool to run in the GKE [#432](https://github.com/astronomer/astro-sdk/issues/432)
 * Add benchmark result for load_file to snowflake using Astro Python SDK [#438](https://github.com/astronomer/astro-sdk/issues/438)
 * Add postgres benchmarking result [#431](https://github.com/astronomer/astro-sdk/issues/431)
 * Fix issue in default schema selection [#503](https://github.com/astronomer/astro-sdk/issues/503)
 * Fix missing airflow's task terminal states to CleanUp Operator [#525](https://github.com/astronomer/astro-sdk/issues/525)
 * Allow running tests on PRs from forks + label [#179](https://github.com/astronomer/astro-sdk/issues/179)
 * Add benchmarking result from GCS to Bigquery after optimization [#429](https://github.com/astronomer/astro-sdk/issues/429)
-
+* Implement fallback mechanism in case native support fails to default option [#557](https://github.com/astronomer/astro-sdk/issues/557)
+* Convert current TruncateOperator into a DropTableOperator [#554](https://github.com/astronomer/astro-sdk/issues/554)
 
 ## 0.11.0
 
