@@ -220,7 +220,7 @@ def test_load_file_to_table_natively_for_not_optimised_path(database_table_fixtu
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     response = database.load_file_to_table_natively(File(filepath), target_table)
-    assert response is False
+    assert response is True
 
 
 @pytest.mark.parametrize(
