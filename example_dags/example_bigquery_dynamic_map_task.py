@@ -3,6 +3,7 @@ from datetime import datetime
 from airflow import DAG
 from airflow.decorators import task
 from pandas import DataFrame
+
 from astro import sql as aql
 from astro.sql import Table
 from astro.sql.table import Metadata
@@ -38,6 +39,5 @@ with DAG(
     @aql.transform()
     def get_campaigns(table: Table):
         return """select campaign_id from {{table}}"""
-
 
     summarize_campaign.expand(capaign_id=my_df_func(get_campaigns(table=bq_table)))
