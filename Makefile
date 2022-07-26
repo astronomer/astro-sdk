@@ -1,4 +1,4 @@
-.PHONY: help
+.PHONY: build-run clean logs stop help
 .DEFAULT_GOAL:= help
 SHELL := /bin/bash
 PROJECT_NAME := astro-sdk
@@ -68,5 +68,18 @@ unit: virtualenv config ## Run unit tests
 integration: virtualenv config  ## Run integration tests
 	@$(PYTEST) -s --cov --cov-branch --cov-report=term-missing -m integration
 
-help:
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+logs: ## View logs of the all the containers
+	docker-compose -f dev/docker-compose.yaml logs --follow
+
+stop: ## Stop all the containers
+	docker-compose -f dev/docker-compose.yaml down
+
+clean: ## Remove all the containers along with volumes
+	docker-compose -f dev/docker-compose.yaml down  --volumes --remove-orphans
+	rm -rf dev/logs
+
+build-run: ## Build the Docker Image & then run the containers
+	docker-compose -f dev/docker-compose.yaml up --build -d
+
+help: ## Prints this message
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-41s\033[0m %s\n", $$1, $$2}'
