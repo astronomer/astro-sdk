@@ -124,3 +124,23 @@ The benchmark was run as a Kubernetes job in GKE:
 | postgres_conn_benchmark | one_gb     | 5.56min      | 62.5MB       | 14.07s          | 1.14s             |
 | postgres_conn_benchmark | five_gb    | 24.44min     | 78.15MB      | 1.34min         | 5.73s             |
 | postgres_conn_benchmark | ten_gb     | 45.64min     | 61.71MB      | 2.37min         | 11.48s            |
+
+### Database S3 to Bigquery using default path
+Note - These results are generated manually, there is a issue added for the same [#574](https://github.com/astronomer/astro-sdk/issues/574)
+
+|  database | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
+|:----------|:-----------|:-------------|:-------------|:----------------|:------------------|
+| bigquery  | hundred_kb | 18.64s       | 54.51MB      | 20.45ms         | 5.73ms            |
+| bigquery  | one_gb     | 1.18hrs      | 6.56GB       | 8.4s            | 1.59s             |
+| bigquery  | ten_kb     | 19.02s       | 53.84MB      | 17.9ms          | 5.2ms             |
+| bigquery  | ten_mb     | 47.02s       | 201.8MB      | 32.79ms         | 11.09ms           |
+
+### Database S3 to Bigquery using native path
+Note - These results are generated manually, there is a issue added for the same [#574](https://github.com/astronomer/astro-sdk/issues/574)
+
+| database   | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
+|:-----------|:-----------|:-------------|:-------------|:----------------|:------------------|
+| bigquery   | hundred_kb | 2.92min      | 56.57MB      | 41.94ms         | 35.83ms           |
+| bigquery   | one_gb     | 4.25min      | 66.32MB      | 54.88ms         | 48.01ms           |
+| bigquery   | ten_kb     | 2.9min       | 55.51MB      | 40.74ms         | 34.94ms           |
+| bigquery   | ten_mb     | 4.17min      | 57.6MB       | 46.64ms         | 46.83ms           |
