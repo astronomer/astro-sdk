@@ -4,7 +4,7 @@ import os
 import random
 import string
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -55,21 +55,6 @@ DEFAULT_STORAGE_INTEGRATION = {
 
 NATIVE_LOAD_SUPPORTED_FILE_TYPES = (FileType.CSV, FileType.NDJSON, FileType.PARQUET)
 NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS = (FileLocation.GS, FileLocation.S3)
-NATIVE_LOAD_EXCEPTIONS = (
-    ValueError,
-    AttributeError,
-    ProgrammingError,
-    DatabaseError,
-    OperationalError,
-    DataError,
-    InternalError,
-    IntegrityError,
-    DataError,
-    NotSupportedError,
-    ServiceUnavailableError,
-    ForbiddenError,
-    RequestTimeoutError,
-)
 
 
 @dataclass
@@ -171,6 +156,22 @@ class SnowflakeDatabase(BaseDatabase):
     Handle interactions with snowflake databases. If this class is successful, we should not have any snowflake-specific
     logic in other parts of our code-base.
     """
+
+    NATIVE_LOAD_EXCEPTIONS: Any = (
+        ValueError,
+        AttributeError,
+        ProgrammingError,
+        DatabaseError,
+        OperationalError,
+        DataError,
+        InternalError,
+        IntegrityError,
+        DataError,
+        NotSupportedError,
+        ServiceUnavailableError,
+        ForbiddenError,
+        RequestTimeoutError,
+    )
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
         super().__init__(conn_id)
@@ -376,7 +377,7 @@ class SnowflakeDatabase(BaseDatabase):
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
-    ) -> bool:
+    ):
         """
         Load the content of a file to an existing Snowflake table natively by:
         - Creating a Snowflake external stage
@@ -403,29 +404,17 @@ class SnowflakeDatabase(BaseDatabase):
         """
         native_support_kwargs = native_support_kwargs or {}
         storage_integration = native_support_kwargs.get("storage_integration")
-        try:
-            stage = self.create_stage(
-                file=source_file, storage_integration=storage_integration
-            )
-        # Catching NATIVE_LOAD_EXCEPTIONS for fallback
-        except NATIVE_LOAD_EXCEPTIONS as exe:  # skipcq: PYL-W0703
-            logging.warning(exe)
-            return False
+        stage = self.create_stage(
+            file=source_file, storage_integration=storage_integration
+        )
 
         table_name = self.get_table_qualified_name(target_table)
         file_path = os.path.basename(source_file.path) or ""
         sql_statement = (
             f"COPY INTO {table_name} FROM @{stage.qualified_name}/{file_path}"
         )
-        try:
-            self.hook.run(sql_statement)
-        # Catching NATIVE_LOAD_EXCEPTIONS for fallback
-        except NATIVE_LOAD_EXCEPTIONS as exe:  # skipcq: PYL-W0703
-            logging.warning(exe)
-            return False
-
+        self.hook.run(sql_statement)
         self.drop_stage(stage)
-        return True
 
     def load_pandas_dataframe_to_table(
         self,

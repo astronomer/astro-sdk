@@ -1,5 +1,6 @@
+import logging
 from abc import ABC
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 import sqlalchemy
@@ -46,6 +47,7 @@ class BaseDatabase(ABC):
     # illegal_column_name_chars[0] will be replaced by value in illegal_column_name_chars_replacement[0]
     illegal_column_name_chars: List[str] = []
     illegal_column_name_chars_replacement: List[str] = []
+    NATIVE_LOAD_EXCEPTIONS: Any = (ValueError, AttributeError)
 
     def __init__(self, conn_id: str):
         self.conn_id = conn_id
@@ -270,7 +272,7 @@ class BaseDatabase(ABC):
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         use_native_support: bool = True,
         native_support_kwargs: Optional[Dict] = None,
-        fallback: Optional[bool] = True,
+        enable_native_fallback: Optional[bool] = True,
         **kwargs,
     ):
         """
@@ -284,7 +286,8 @@ class BaseDatabase(ABC):
         :param use_native_support: Use native support for data transfer if available on the destination
         :param normalize_config: pandas json_normalize params config
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
-        :param fallback: Use fallback=True to fall back to default transfer in case optimised transfer fails.
+        :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer in case
+        optimised transfer fails.
         """
         normalize_config = normalize_config or {}
         input_files = resolve_file_path_pattern(
@@ -305,21 +308,14 @@ class BaseDatabase(ABC):
             if use_native_support and self.is_native_load_file_available(
                 source_file=file, target_table=output_table
             ):
-                if self.load_file_to_table_natively(
+                self.load_file_to_table_natively_with_fallback(
                     source_file=file,
                     target_table=output_table,
                     if_exists=if_exists,
                     native_support_kwargs=native_support_kwargs,
-                    **kwargs,
-                ):
-                    break
-                if fallback:
-                    self.load_pandas_dataframe_to_table(
-                        file.export_to_dataframe(),
-                        output_table,
-                        chunk_size=chunk_size,
-                        if_exists=if_exists,
-                    )
+                    enable_native_fallback=enable_native_fallback,
+                    chunk_size=chunk_size,
+                )
             else:
                 self.load_pandas_dataframe_to_table(
                     file.export_to_dataframe(),
@@ -327,6 +323,47 @@ class BaseDatabase(ABC):
                     chunk_size=chunk_size,
                     if_exists="append",  # We've already created a new table in this case
                 )
+
+    def load_file_to_table_natively_with_fallback(
+        self,
+        source_file: File,
+        target_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+        native_support_kwargs: Optional[Dict] = None,
+        enable_native_fallback: Optional[bool] = True,
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        **kwargs,
+    ):
+        """
+        Load content of a file in output_table.
+
+        :param source_file: File path and conn_id for object stores
+        :param target_table: Table to create
+        :param if_exists: Overwrite file if exists
+        :param chunk_size: Specify the number of records in each batch to be written at a time
+        :param native_support_kwargs: kwargs to be used by method involved in native support flow
+        :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer in case
+        optimised transfer fails.
+        """
+        try:
+            self.load_file_to_table_natively(
+                source_file=source_file,
+                target_table=target_table,
+                if_exists=if_exists,
+                native_support_kwargs=native_support_kwargs,
+                **kwargs,
+            )
+        # Catching NATIVE_LOAD_EXCEPTIONS for fallback
+        except self.NATIVE_LOAD_EXCEPTIONS as exe:  # skipcq: PYL-W0703
+            logging.warning(exe)
+
+        if enable_native_fallback:
+            self.load_pandas_dataframe_to_table(
+                source_file.export_to_dataframe(),
+                target_table=target_table,
+                chunk_size=chunk_size,
+                if_exists=if_exists,
+            )
 
     def load_pandas_dataframe_to_table(
         self,

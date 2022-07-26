@@ -1,7 +1,6 @@
 """Google BigQuery table implementation."""
-import logging
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
@@ -57,23 +56,6 @@ NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
     FileType.PARQUET: "PARQUET",
 }
 BIGQUERY_WRITE_DISPOSITION = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
-NATIVE_LOAD_EXCEPTIONS = (
-    ValueError,
-    AttributeError,
-    GoogleNotFound,
-    ClientError,
-    GoogleAPIError,
-    RetryError,
-    InvalidArgument,
-    Unauthorized,
-    Forbidden,
-    Conflict,
-    TooManyRequests,
-    ResourceExhausted,
-    ServerError,
-    Unknown,
-    ServiceUnavailable,
-)
 
 
 class BigqueryDatabase(BaseDatabase):
@@ -90,6 +72,25 @@ class BigqueryDatabase(BaseDatabase):
 
     illegal_column_name_chars: List[str] = ["."]
     illegal_column_name_chars_replacement: List[str] = ["_"]
+    NATIVE_LOAD_EXCEPTIONS: Any = (
+        ValueError,
+        AttributeError,
+        GoogleNotFound,
+        ClientError,
+        GoogleAPIError,
+        RetryError,
+        InvalidArgument,
+        Unauthorized,
+        Forbidden,
+        Conflict,
+        TooManyRequests,
+        ResourceExhausted,
+        ServerError,
+        Unknown,
+        ServiceUnavailable,
+        InvalidResponse,
+        OSError,
+    )
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
         super().__init__(conn_id)
@@ -222,7 +223,7 @@ class BigqueryDatabase(BaseDatabase):
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
-    ) -> bool:
+    ):
         """
         Checks if optimised path for transfer between File location to database exists
         and if it does, it transfers it and returns true else false.
@@ -235,20 +236,18 @@ class BigqueryDatabase(BaseDatabase):
         method_name = self.NATIVE_PATHS.get(source_file.location.location_type)
         if method_name:
             transfer_method = self.__getattribute__(method_name)
-            if transfer_method(
+            transfer_method(
                 source_file=source_file,
                 target_table=target_table,
                 if_exists=if_exists,
                 native_support_kwargs=native_support_kwargs,
                 **kwargs,
-            ):
-                return True
+            )
         else:
-            logging.warning(
+            raise ValueError(
                 f"No transfer performed since there is no optimised path "
                 f"for {source_file.location.location_type} to bigquery."
             )
-        return False
 
     def load_gs_file_to_table(
         self,
@@ -257,7 +256,7 @@ class BigqueryDatabase(BaseDatabase):
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
-    ) -> bool:
+    ):
         """
         Transfer data from gcs to bigquery
 
@@ -291,15 +290,10 @@ class BigqueryDatabase(BaseDatabase):
             "load": load_job_config,
             "labels": {"target_table": target_table.name},
         }
-        try:
-            self.hook.insert_job(
-                configuration=job_config,
-            )
-        # Catching NATIVE_LOAD_EXCEPTIONS for fallback
-        except NATIVE_LOAD_EXCEPTIONS as exe:  # skipcq: PYL-W0703
-            logging.warning(exe)
-            return False
-        return True
+
+        self.hook.insert_job(
+            configuration=job_config,
+        )
 
     def load_s3_file_to_table(
         self,
@@ -307,7 +301,7 @@ class BigqueryDatabase(BaseDatabase):
         target_table: Table,
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
-    ) -> bool:
+    ):
         """
         Load content of multiple files in S3 to output_table in Bigquery by using a datatransfer job
         Note - To use this function we need
@@ -330,13 +324,7 @@ class BigqueryDatabase(BaseDatabase):
             native_support_kwargs=native_support_kwargs,
             **kwargs,
         )
-        try:
-            transfer.run()
-        # Catching NATIVE_LOAD_EXCEPTIONS for fallback
-        except NATIVE_LOAD_EXCEPTIONS as exe:  # skipcq: PYL-W0703
-            logging.warning(exe)
-            return False
-        return True
+        transfer.run()
 
     def get_project_id(self, target_table) -> str:
         """
@@ -356,7 +344,7 @@ class BigqueryDatabase(BaseDatabase):
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
-    ) -> bool:
+    ):
         """Transfer data from local to bigquery"""
         native_support_kwargs = native_support_kwargs or {}
         # We need to maintain file_type to biqquery_format and not use NATIVE_PATHS_SUPPORTED_FILE_TYPES
@@ -384,19 +372,13 @@ class BigqueryDatabase(BaseDatabase):
 
         # We are passing mode='rb' even for text files since Bigquery
         # complain and ask to open file in 'rb' mode
-        try:
-            with open(source_file.path, mode="rb") as file:  # skipcq: PTC-W6004
-                job = client.load_table_from_file(
-                    file,
-                    job_config=job_config,
-                    destination=self.get_table_qualified_name(target_table),
-                )
-            job.result()
-        # Ignoring deepsource error as it needs to catch every other exception
-        except (InvalidResponse, OSError) as exe:  # skipcq: PYL-W0703
-            logging.warning(exe)
-            return False
-        return True
+        with open(source_file.path, mode="rb") as file:  # skipcq: PTC-W6004
+            job = client.load_table_from_file(
+                file,
+                job_config=job_config,
+                destination=self.get_table_qualified_name(target_table),
+            )
+        job.result()
 
 
 class S3ToBigqueryDataTransfer:
