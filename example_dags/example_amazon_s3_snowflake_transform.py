@@ -21,17 +21,17 @@ def combine_data(center_1: Table, center_2: Table):
 @aql.transform()
 def clean_data(input_table: Table):
     return """SELECT *
-    FROM {{input_table}} WHERE TYPE NOT LIKE 'Guinea Pig'
+    FROM {{input_table}} WHERE type NOT LIKE 'Guinea Pig'
     """
 
 
-@aql.dataframe(identifiers_as_lower=False)
+@aql.dataframe()
 def aggregate_data(df: pd.DataFrame):
-    adoption_reporting_dataframe = df.pivot_table(
+    new_df = df.pivot_table(
         index="date", values="name", columns=["type"], aggfunc="count"
     ).reset_index()
-
-    return adoption_reporting_dataframe
+    new_df.columns = new_df.columns.str.lower()
+    return new_df
 
 
 @dag(
@@ -67,11 +67,11 @@ def example_amazon_s3_snowflake_transform():
     )
 
     temp_table_1 = aql.load_file(
-        input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_1.csv"),
+        input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_1_unquoted.csv"),
         output_table=input_table_1,
     )
     temp_table_2 = aql.load_file(
-        input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_2.csv"),
+        input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_2_unquoted.csv"),
         output_table=input_table_2,
     )
 
@@ -85,7 +85,10 @@ def example_amazon_s3_snowflake_transform():
         cleaned_data,
         output_table=Table(
             name="aggregated_adoptions_" + str(int(time.time())),
-            metadata=Metadata(schema=os.environ["SNOWFLAKE_SCHEMA"]),
+            metadata=Metadata(
+                schema=os.environ["SNOWFLAKE_SCHEMA"],
+                database=os.environ["SNOWFLAKE_DATABASE"],
+            ),
             conn_id="snowflake_conn",
         ),
     )

@@ -442,12 +442,15 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(
 def test_load_file(sample_dag, database_table_fixture, file_type):
     db, test_table = database_table_fixture
 
+    # Using the use_native_support=False here since the dataset
+    # used requires other optional params by local to Bigquery native path.
     with sample_dag:
         load_file(
             input_file=File(
                 path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))
             ),
             output_table=test_table,
+            use_native_support=False,
         )
     test_utils.run_dag(sample_dag)
 
@@ -547,6 +550,7 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
                     path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))
                 ),
                 output_table=test_table,
+                use_native_support=False,
             )
         test_utils.run_dag(sample_dag)
 
@@ -579,11 +583,14 @@ def test_aql_nested_ndjson_file_with_default_sep_param(
     """Test the flattening of single level nested ndjson, with default separator '_'."""
     db, test_table = database_table_fixture
     with sample_dag:
+        # Using the use_native_support=False here since the dataset
+        # used requires other optional params by local to Bigquery native path.
         load_file(
             input_file=File(
                 path=str(CWD) + "/../../data/github_single_level_nested.ndjson"
             ),
             output_table=test_table,
+            use_native_support=False,
         )
     test_utils.run_dag(sample_dag)
 
@@ -608,11 +615,14 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_sep_params(
     """Test the flattening of single level nested ndjson, with explicit separator '___'."""
     db, test_table = database_table_fixture
     with sample_dag:
+        # Using the use_native_support=False here since the dataset
+        # used requires other optional params by local to Bigquery native path.
         load_file(
             input_file=File(
                 path=str(CWD) + "/../../data/github_single_level_nested.ndjson"
             ),
             output_table=test_table,
+            use_native_support=False,
             ndjson_normalize_sep="___",
         )
     test_utils.run_dag(sample_dag)
@@ -642,12 +652,15 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_illegal_sep_params(
     """
     db, test_table = database_table_fixture
     with sample_dag:
+        # Using the use_native_support=False here since the dataset
+        # used requires other optional params by local to Bigquery native path.
         load_file(
             input_file=File(
                 path=str(CWD) + "/../../data/github_single_level_nested.ndjson"
             ),
             output_table=test_table,
             ndjson_normalize_sep=".",
+            use_native_support=False,
         )
     test_utils.run_dag(sample_dag)
 
@@ -718,9 +731,9 @@ def is_dict_subset(superset: dict, subset: dict) -> bool:
 
 @pytest.mark.parametrize(
     "remote_files_fixture",
-    [{"provider": "google"}, {"provider": "amazon"}],
+    [{"provider": "google"}, {"provider": "amazon"}, {"provider": "local"}],
     indirect=True,
-    ids=["google_gcs", "amazon_s3"],
+    ids=["google_gcs", "amazon_s3", "local"],
 )
 @pytest.mark.parametrize(
     "database_table_fixture",
@@ -746,7 +759,7 @@ def test_aql_load_file_optimized_path_method_called(
     file = File(file_uri)
     optimised_path_to_method = {
         ("gs", "bigquery",): {
-            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_gs_file_to_bigquery",
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_gs_file_to_table",
             "expected_kwargs": {
                 "source_file": file,
                 "target_table": test_table,
@@ -754,7 +767,15 @@ def test_aql_load_file_optimized_path_method_called(
             "expected_args": (),
         },
         ("s3", "bigquery",): {
-            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_s3_file_to_bigquery",
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_s3_file_to_table",
+            "expected_kwargs": {
+                "source_file": file,
+                "target_table": test_table,
+            },
+            "expected_args": (),
+        },
+        ("local", "bigquery",): {
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_local_file_to_table",
             "expected_kwargs": {
                 "source_file": file,
                 "target_table": test_table,
@@ -763,7 +784,11 @@ def test_aql_load_file_optimized_path_method_called(
         },
     }
 
-    source = file_uri.split(":")[0]
+    if file_uri.find(":") >= 0:
+        source = file_uri.split(":")[0]
+    else:
+        source = "local"
+
     destination = db.sql_type
     mock_path = optimised_path_to_method[(source, destination)]["method_path"]
     expected_kwargs = optimised_path_to_method[(source, destination)]["expected_kwargs"]
@@ -781,9 +806,9 @@ def test_aql_load_file_optimized_path_method_called(
 
 @pytest.mark.parametrize(
     "remote_files_fixture",
-    [{"provider": "google"}, {"provider": "amazon"}],
+    [{"provider": "google"}, {"provider": "amazon"}, {"provider": "local"}],
     indirect=True,
-    ids=["google_gcs", "amazon_s3"],
+    ids=["google_gcs", "amazon_s3", "local"],
 )
 @pytest.mark.parametrize(
     "database_table_fixture",
@@ -812,14 +837,19 @@ def test_aql_load_file_optimized_path_method_is_not_called(
     # }
     optimised_path_to_method = {
         ("gs", "bigquery",): {
-            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_gs_file_to_bigquery",
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_gs_file_to_table",
         },
         ("s3", "bigquery",): {
-            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_s3_file_to_bigquery",
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_s3_file_to_table",
+        },
+        ("local", "bigquery"): {
+            "method_path": "astro.databases.google.bigquery.BigqueryDatabase.load_local_file_to_table",
         },
     }
-
-    source = file_uri.split(":")[0]
+    if file_uri.find(":") >= 0:
+        source = file_uri.split(":")[0]
+    else:
+        source = "local"
     destination = db.sql_type
     mock_path = optimised_path_to_method[(source, destination)]["method_path"]
 
@@ -841,9 +871,7 @@ def test_aql_load_file_optimized_path_method_is_not_called(
     indirect=True,
     ids=["Bigquery"],
 )
-def test_aql_load_file_optimized_path_method_is_not_called_1(
-    sample_dag, database_table_fixture
-):
+def test_aql_load_file_s3_native_path(sample_dag, database_table_fixture):
     """
     Verify that the optimised path method is skipped in case use_native_support is set to False.
     """
@@ -865,3 +893,33 @@ def test_aql_load_file_optimized_path_method_is_not_called_1(
 
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (3, 9)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+        }
+    ],
+    indirect=True,
+    ids=["Bigquery"],
+)
+def test_loading_local_file_to_bigquery(database_table_fixture):
+    """
+    Verify that the optimised path method is skipped in case use_native_support is set to False.
+    """
+    path = str(CWD) + "/../../data/homes_main.csv"
+    db, test_table = database_table_fixture
+    load_file(
+        input_file=File(path),
+        output_table=test_table,
+        use_native_support=True,
+        native_support_kwargs={
+            "skip_leading_rows": "1",
+        },
+    ).operator.execute({})
+
+    bigquery_df = db.export_table_to_pandas_dataframe(test_table)
+    assert bigquery_df.shape == (3, 9)

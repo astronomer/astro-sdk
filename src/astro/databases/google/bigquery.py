@@ -9,7 +9,7 @@ from airflow.providers.google.cloud.hooks.bigquery_dts import (
     BiqQueryDataTransferServiceHook,
 )
 from google.api_core.exceptions import NotFound as GoogleNotFound
-from google.cloud import bigquery_datatransfer
+from google.cloud import bigquery, bigquery_datatransfer  # type: ignore
 from google.cloud.bigquery_datatransfer_v1.types import (
     StartManualTransferRunsResponse,
     TransferConfig,
@@ -39,6 +39,7 @@ NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
     FileType.NDJSON: "NEWLINE_DELIMITED_JSON",
     FileType.PARQUET: "PARQUET",
 }
+BIGQUERY_WRITE_DISPOSITION = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
 
 
 class BigqueryDatabase(BaseDatabase):
@@ -48,8 +49,9 @@ class BigqueryDatabase(BaseDatabase):
     """
 
     NATIVE_PATHS = {
-        FileLocation.GS: "load_gs_file_to_bigquery",
-        FileLocation.S3: "load_s3_file_to_bigquery",
+        FileLocation.GS: "load_gs_file_to_table",
+        FileLocation.S3: "load_s3_file_to_table",
+        FileLocation.LOCAL: "load_local_file_to_table",
     }
 
     illegal_column_name_chars: List[str] = ["."]
@@ -214,7 +216,7 @@ class BigqueryDatabase(BaseDatabase):
             )
         return False
 
-    def load_gs_file_to_bigquery(
+    def load_gs_file_to_table(
         self,
         source_file: File,
         target_table: Table,
@@ -232,8 +234,6 @@ class BigqueryDatabase(BaseDatabase):
         """
         native_support_kwargs = native_support_kwargs or {}
 
-        write_disposition_val = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
-
         load_job_config = {
             "sourceUris": [source_file.path],
             "destinationTable": {
@@ -242,7 +242,7 @@ class BigqueryDatabase(BaseDatabase):
                 "tableId": target_table.name,
             },
             "createDisposition": "CREATE_IF_NEEDED",
-            "writeDisposition": write_disposition_val[if_exists],
+            "writeDisposition": BIGQUERY_WRITE_DISPOSITION[if_exists],
             "sourceFormat": NATIVE_PATHS_SUPPORTED_FILE_TYPES[source_file.type.name],
             "autodetect": True,
         }
@@ -267,7 +267,7 @@ class BigqueryDatabase(BaseDatabase):
             return False
         return True
 
-    def load_s3_file_to_bigquery(
+    def load_s3_file_to_table(
         self,
         source_file: File,
         target_table: Table,
@@ -314,6 +314,49 @@ class BigqueryDatabase(BaseDatabase):
             return str(self.hook.project_id)
         except AttributeError:
             raise ValueError(f"conn_id {target_table.conn_id} has no project id")
+
+    def load_local_file_to_table(
+        self,
+        source_file: File,
+        target_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+        native_support_kwargs: Optional[Dict] = None,
+        **kwargs,
+    ) -> None:
+        """Transfer data from local to bigquery"""
+        native_support_kwargs = native_support_kwargs or {}
+        # We need to maintain file_type to biqquery_format and not use NATIVE_PATHS_SUPPORTED_FILE_TYPES
+        # because the load_table_from_file expects 'JSON' value for ndjson file.
+        file_types_to_bigquery_format = {
+            FileType.CSV: "CSV",
+            FileType.NDJSON: "JSON",
+            FileType.PARQUET: "PARQUET",
+        }
+
+        client = self.hook.get_client()
+        config = {
+            "source_format": file_types_to_bigquery_format[source_file.type.name],
+            "create_disposition": "CREATE_IF_NEEDED",
+            "write_disposition": BIGQUERY_WRITE_DISPOSITION[if_exists],
+            "autodetect": True,
+        }
+        config.update(native_support_kwargs)
+        job_config = bigquery.LoadJobConfig(**config)
+
+        # Deepsource pointed out - OWASP Top 10 2021 Category A01 - Broken Access Control
+        # and Category A05 - Security Misconfiguration. Which are not applicable in this
+        # case since user is always using there credentials, so they can't impersonate
+        # other user roles.
+
+        # We are passing mode='rb' even for text files since Bigquery
+        # complain and ask to open file in 'rb' mode
+        with open(source_file.path, mode="rb") as file:  # skipcq: PTC-W6004
+            job = client.load_table_from_file(
+                file,
+                job_config=job_config,
+                destination=self.get_table_qualified_name(target_table),
+            )
+        job.result()
 
 
 class S3ToBigqueryDataTransfer:

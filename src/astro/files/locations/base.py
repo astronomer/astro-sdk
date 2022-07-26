@@ -22,8 +22,8 @@ class BaseFileLocation(ABC):
         :param path: Path to a file in the filesystem/Object stores
         :param conn_id: Airflow connection ID
         """
-        self.path = path
-        self.conn_id = conn_id
+        self.path: str = path
+        self.conn_id: Optional[str] = conn_id
 
     @property
     def hook(self):
