@@ -1,8 +1,8 @@
 from datetime import datetime
-from pandas import DataFrame
 
 from airflow import DAG
 from airflow.decorators import task
+from pandas import DataFrame
 from astro import sql as aql
 from astro.sql import Table
 from astro.sql.table import Metadata
