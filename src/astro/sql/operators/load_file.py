@@ -25,6 +25,7 @@ class LoadFile(BaseOperator):
     :param native_support_kwargs: kwargs to be used by method involved in native support flow
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
+    :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
 
     :return: If ``output_table`` is passed this operator returns a Table object. If not
         passed, returns a dataframe.
@@ -42,6 +43,7 @@ class LoadFile(BaseOperator):
         use_native_support: bool = True,
         native_support_kwargs: Optional[Dict] = None,
         columns_names_capitalization: ColumnCapitalization = "original",
+        enable_native_fallback: Optional[bool] = True,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -55,6 +57,7 @@ class LoadFile(BaseOperator):
         self.use_native_support = use_native_support
         self.native_support_kwargs: Dict[str, Any] = native_support_kwargs or {}
         self.columns_names_capitalization = columns_names_capitalization
+        self.enable_native_fallback = enable_native_fallback
 
     def execute(self, context: Any) -> Union[Table, pd.DataFrame]:  # skipcq: PYL-W0613
         """
@@ -103,6 +106,7 @@ class LoadFile(BaseOperator):
             use_native_support=self.use_native_support,
             native_support_kwargs=self.native_support_kwargs,
             columns_names_capitalization=self.columns_names_capitalization,
+            enable_native_fallback=self.enable_native_fallback,
         )
         self.log.info("Completed loading the data into %s.", self.output_table)
         return self.output_table
@@ -186,6 +190,7 @@ def load_file(
     use_native_support: bool = True,
     native_support_kwargs: Optional[Dict] = None,
     columns_names_capitalization: ColumnCapitalization = "original",
+    enable_native_fallback: Optional[bool] = True,
     **kwargs: Any,
 ) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.
@@ -200,6 +205,7 @@ def load_file(
     :param native_support_kwargs: kwargs to be used by method involved in native support flow
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
         in the resulting dataframe
+    :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
     """
 
     # Note - using path for task id is causing issues as it's a pattern and
@@ -215,5 +221,6 @@ def load_file(
         use_native_support=use_native_support,
         native_support_kwargs=native_support_kwargs,
         columns_names_capitalization=columns_names_capitalization,
+        enable_native_fallback=enable_native_fallback,
         **kwargs,
     ).output

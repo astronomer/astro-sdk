@@ -9,10 +9,10 @@ from astro.sql import (
     append,
     cleanup,
     dataframe,
+    drop_table,
     load_file,
     run_raw_sql,
     transform,
-    truncate,
 )
 from astro.sql.table import Metadata, Table
 
@@ -136,7 +136,7 @@ def example_snowflake_partial_table_with_append():
     # We truncate this table only to avoid wasting Snowflake resources
     # Why? Between 2022-03-25 and 2022-04-11 it accumulated 301G (89 million rows) because
     # this example DAG used to append rows without deleting them
-    truncate_results = truncate(
+    truncate_results = drop_table(
         table=Table(name="homes_reporting", conn_id=SNOWFLAKE_CONN_ID)
     )
     truncate_results.set_upstream(record_results)
