@@ -9,7 +9,18 @@ from typing import Dict, List, Optional, Tuple
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from snowflake.connector import pandas_tools
-from snowflake.connector.errors import ProgrammingError
+from snowflake.connector.errors import (
+    DatabaseError,
+    DataError,
+    ForbiddenError,
+    IntegrityError,
+    InternalError,
+    NotSupportedError,
+    OperationalError,
+    ProgrammingError,
+    RequestTimeoutError,
+    ServiceUnavailableError,
+)
 
 from astro import settings
 from astro.constants import (
@@ -44,6 +55,21 @@ DEFAULT_STORAGE_INTEGRATION = {
 
 NATIVE_LOAD_SUPPORTED_FILE_TYPES = (FileType.CSV, FileType.NDJSON, FileType.PARQUET)
 NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS = (FileLocation.GS, FileLocation.S3)
+NATIVE_LOAD_EXCEPTIONS = (
+    ValueError,
+    AttributeError,
+    ProgrammingError,
+    DatabaseError,
+    OperationalError,
+    DataError,
+    InternalError,
+    IntegrityError,
+    DataError,
+    NotSupportedError,
+    ServiceUnavailableError,
+    ForbiddenError,
+    RequestTimeoutError,
+)
 
 
 @dataclass
@@ -381,8 +407,8 @@ class SnowflakeDatabase(BaseDatabase):
             stage = self.create_stage(
                 file=source_file, storage_integration=storage_integration
             )
-        # Ignoring deepsource error as it needs to catch every other exception
-        except Exception as exe:  # skipcq: PYL-W0703
+        # Catching NATIVE_LOAD_EXCEPTIONS for fallback
+        except NATIVE_LOAD_EXCEPTIONS as exe:  # skipcq: PYL-W0703
             logging.warning(exe)
             return False
 
@@ -393,10 +419,11 @@ class SnowflakeDatabase(BaseDatabase):
         )
         try:
             self.hook.run(sql_statement)
-            # Ignoring deepsource error as it needs to catch every other exception
-        except Exception as exe:  # skipcq: PYL-W0703
+        # Catching NATIVE_LOAD_EXCEPTIONS for fallback
+        except NATIVE_LOAD_EXCEPTIONS as exe:  # skipcq: PYL-W0703
             logging.warning(exe)
             return False
+
         self.drop_stage(stage)
         return True
 

@@ -8,7 +8,23 @@ from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.google.cloud.hooks.bigquery_dts import (
     BiqQueryDataTransferServiceHook,
 )
+from google.api_core.exceptions import (
+    ClientError,
+    Conflict,
+    Forbidden,
+    GoogleAPIError,
+    InvalidArgument,
+)
 from google.api_core.exceptions import NotFound as GoogleNotFound
+from google.api_core.exceptions import (
+    ResourceExhausted,
+    RetryError,
+    ServerError,
+    ServiceUnavailable,
+    TooManyRequests,
+    Unauthorized,
+    Unknown,
+)
 from google.cloud import bigquery, bigquery_datatransfer  # type: ignore
 from google.cloud.bigquery_datatransfer_v1.types import (
     StartManualTransferRunsResponse,
@@ -17,6 +33,7 @@ from google.cloud.bigquery_datatransfer_v1.types import (
 )
 from google.protobuf import timestamp_pb2  # type: ignore
 from google.protobuf.struct_pb2 import Struct  # type: ignore
+from google.resumable_media import InvalidResponse
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from tenacity import retry, stop_after_attempt
@@ -40,6 +57,23 @@ NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
     FileType.PARQUET: "PARQUET",
 }
 BIGQUERY_WRITE_DISPOSITION = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
+NATIVE_LOAD_EXCEPTIONS = (
+    ValueError,
+    AttributeError,
+    GoogleNotFound,
+    ClientError,
+    GoogleAPIError,
+    RetryError,
+    InvalidArgument,
+    Unauthorized,
+    Forbidden,
+    Conflict,
+    TooManyRequests,
+    ResourceExhausted,
+    ServerError,
+    Unknown,
+    ServiceUnavailable,
+)
 
 
 class BigqueryDatabase(BaseDatabase):
@@ -261,8 +295,8 @@ class BigqueryDatabase(BaseDatabase):
             self.hook.insert_job(
                 configuration=job_config,
             )
-        # Ignoring deepsource error as it needs to catch every other exception
-        except Exception as exe:  # skipcq: PYL-W0703
+        # Catching NATIVE_LOAD_EXCEPTIONS for fallback
+        except NATIVE_LOAD_EXCEPTIONS as exe:  # skipcq: PYL-W0703
             logging.warning(exe)
             return False
         return True
@@ -298,8 +332,8 @@ class BigqueryDatabase(BaseDatabase):
         )
         try:
             transfer.run()
-        # Ignoring deepsource error as it needs to catch every other exception
-        except Exception as exe:  # skipcq: PYL-W0703
+        # Catching NATIVE_LOAD_EXCEPTIONS for fallback
+        except NATIVE_LOAD_EXCEPTIONS as exe:  # skipcq: PYL-W0703
             logging.warning(exe)
             return False
         return True
@@ -359,7 +393,7 @@ class BigqueryDatabase(BaseDatabase):
                 )
             job.result()
         # Ignoring deepsource error as it needs to catch every other exception
-        except Exception as exe:  # skipcq: PYL-W0703
+        except (InvalidResponse, OSError) as exe:  # skipcq: PYL-W0703
             logging.warning(exe)
             return False
         return True
