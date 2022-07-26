@@ -1,6 +1,7 @@
 """Tests specific to the Sqlite Database implementation."""
 import os
 import pathlib
+from unittest import mock
 from urllib.parse import urlparse
 
 import pandas as pd
@@ -220,6 +221,34 @@ def test_load_file_to_table_natively_for_not_optimised_path(database_table_fixtu
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     response = database.load_file_to_table_natively(File(filepath), target_table)
+    assert response is None
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
+    ],
+    indirect=True,
+    ids=["bigquery"],
+)
+@mock.patch(
+    "astro.databases.google.bigquery.BigqueryDatabase.load_file_to_table_natively"
+)
+def test_load_file_to_table_natively_for_fallback(
+    mock_load_file, database_table_fixture
+):
+    """Test loading on files to bigquery natively for fallback."""
+    mock_load_file.side_effect = AttributeError
+    database, target_table = database_table_fixture
+    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
+    response = database.load_file_to_table_natively_with_fallback(
+        File(filepath), target_table
+    )
     assert response is None
 
 
