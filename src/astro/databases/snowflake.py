@@ -25,6 +25,7 @@ from snowflake.connector.errors import (
 from astro import settings
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
+    ColumnCapitalization,
     FileLocation,
     FileType,
     LoadExistStrategy,
@@ -333,6 +334,7 @@ class SnowflakeDatabase(BaseDatabase):
         table: Table,
         file: Optional[File] = None,
         dataframe: Optional[pd.DataFrame] = None,
+        columns_names_capitalization: ColumnCapitalization = "lower",
     ) -> None:
         """
         Create a SQL table, automatically inferring the schema using the given file.
@@ -341,16 +343,20 @@ class SnowflakeDatabase(BaseDatabase):
         :param file: File used to infer the new table columns.
         :param dataframe: Dataframe used to infer the new table columns if there is no file
         """
+
+        # Snowflake don't expect mixed case col names like - 'Title' or 'Category'
+        # we explicitly convert them to lower case, if not provided by user
+        if columns_names_capitalization not in ["lower", "upper"]:
+            columns_names_capitalization = "lower"
+
         if file:
             dataframe = file.export_to_dataframe(
-                nrows=settings.LOAD_TABLE_AUTODETECT_ROWS_COUNT
+                nrows=settings.LOAD_TABLE_AUTODETECT_ROWS_COUNT,
+                columns_names_capitalization=columns_names_capitalization,
             )
 
         # Snowflake doesn't handle well mixed capitalisation of column name chars
         # we are handling this more gracefully in a separate PR
-        if dataframe is not None:
-            dataframe.columns.str.upper()
-
         super().create_table_using_schema_autodetection(table, dataframe=dataframe)
 
     def is_native_load_file_available(

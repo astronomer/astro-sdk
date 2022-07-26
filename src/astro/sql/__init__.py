@@ -8,7 +8,7 @@ except ImportError:
     from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
-from astro.constants import MergeConflictStrategy
+from astro.constants import ColumnCapitalization, MergeConflictStrategy
 from astro.sql.operators.append import APPEND_COLUMN_TYPE, AppendOperator
 from astro.sql.operators.cleanup import CleanupOperator
 from astro.sql.operators.dataframe import DataframeOperator
@@ -245,7 +245,7 @@ def dataframe(
     database: Optional[str] = None,
     schema: Optional[str] = None,
     task_id: Optional[str] = None,
-    identifiers_as_lower: Optional[bool] = True,
+    columns_names_capitalization: ColumnCapitalization = "lower",
 ) -> Callable[..., pd.DataFrame]:
     """
     This decorator will allow users to write python functions while treating SQL tables as dataframes
@@ -257,7 +257,7 @@ def dataframe(
         "conn_id": conn_id,
         "database": database,
         "schema": schema,
-        "identifiers_as_lower": identifiers_as_lower,
+        "columns_names_capitalization": columns_names_capitalization,
     }
     if task_id:
         param_map["task_id"] = task_id

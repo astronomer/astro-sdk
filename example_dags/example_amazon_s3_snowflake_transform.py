@@ -25,7 +25,7 @@ def clean_data(input_table: Table):
     """
 
 
-@aql.dataframe()
+@aql.dataframe(columns_names_capitalization="original")
 def aggregate_data(df: pd.DataFrame):
     new_df = df.pivot_table(
         index="date", values="name", columns=["type"], aggfunc="count"

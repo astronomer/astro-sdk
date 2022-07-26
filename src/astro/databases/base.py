@@ -13,6 +13,7 @@ from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
+    ColumnCapitalization,
     ExportExistsStrategy,
     LoadExistStrategy,
     MergeConflictStrategy,
@@ -183,6 +184,7 @@ class BaseDatabase(ABC):
         table: Table,
         file: Optional[File] = None,
         dataframe: Optional[pd.DataFrame] = None,
+        columns_names_capitalization: ColumnCapitalization = "lower",  # skipcq
     ) -> None:
         """
         Create a SQL table, automatically inferring the schema using the given file.
@@ -190,6 +192,8 @@ class BaseDatabase(ABC):
         :param table: The table to be created.
         :param file: File used to infer the new table columns.
         :param dataframe: Dataframe used to infer the new table columns if there is no file
+        :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
+            in the resulting dataframe
         """
         if file is None:
             if dataframe is None:
@@ -201,6 +205,7 @@ class BaseDatabase(ABC):
             source_dataframe = file.export_to_dataframe(
                 nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT
             )
+
         db = SQLDatabase(engine=self.sqlalchemy_engine)
         db.prep_table(
             source_dataframe,
@@ -215,6 +220,7 @@ class BaseDatabase(ABC):
         table: Table,
         file: Optional[File] = None,
         dataframe: Optional[pd.DataFrame] = None,
+        columns_names_capitalization: ColumnCapitalization = "original",
     ) -> None:
         """
         Create a table either using its explicitly defined columns or inferring
@@ -223,12 +229,15 @@ class BaseDatabase(ABC):
         :param table: The table to be created
         :param file: (optional) File used to infer the table columns.
         :param dataframe: (optional) Dataframe used to infer the new table columns if there is no file
-
+        :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
+            in the resulting dataframe
         """
         if table.columns:
             self.create_table_using_columns(table)
         else:
-            self.create_table_using_schema_autodetection(table, file, dataframe)
+            self.create_table_using_schema_autodetection(
+                table, file, dataframe, columns_names_capitalization
+            )
 
     def create_table_from_select_statement(
         self,
@@ -272,6 +281,7 @@ class BaseDatabase(ABC):
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         use_native_support: bool = True,
         native_support_kwargs: Optional[Dict] = None,
+        columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: Optional[bool] = True,
         **kwargs,
     ):
@@ -286,6 +296,8 @@ class BaseDatabase(ABC):
         :param use_native_support: Use native support for data transfer if available on the destination
         :param normalize_config: pandas json_normalize params config
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
+        :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
+            in the resulting dataframe
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         """
         normalize_config = normalize_config or {}
@@ -297,7 +309,11 @@ class BaseDatabase(ABC):
         self.create_schema_if_needed(output_table.metadata.schema)
         if if_exists == "replace" or not self.table_exists(output_table):
             self.drop_table(output_table)
-            self.create_table(output_table, input_files[0])
+            self.create_table(
+                output_table,
+                input_files[0],
+                columns_names_capitalization=columns_names_capitalization,
+            )
             if_exists = "append"
 
         # TODO: many native transfers support the input_file.path - it may be better

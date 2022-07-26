@@ -923,3 +923,34 @@ def test_loading_local_file_to_bigquery(database_table_fixture):
 
     bigquery_df = db.export_table_to_pandas_dataframe(test_table)
     assert bigquery_df.shape == (3, 9)
+
+
+def test_aql_load_file_columns_names_capitalization_dataframe(sample_dag):
+    filename = str(CWD.parent) + "/../data/homes_pattern_1.csv"
+    from airflow.decorators import task
+
+    @task
+    def validate(input_df_1, input_df_2, input_df_3):
+        assert isinstance(input_df_1, pd.DataFrame)
+        assert isinstance(input_df_2, pd.DataFrame)
+        assert isinstance(input_df_3, pd.DataFrame)
+        assert all(x.isupper() for x in list(input_df_1.columns))
+        assert all(x.islower() for x in list(input_df_2.columns))
+        assert all(x.islower() for x in list(input_df_3.columns))
+
+    with sample_dag:
+        loaded_df_1 = load_file(
+            input_file=File(path=filename, filetype=FileType.CSV),
+            columns_names_capitalization="upper",
+        )
+        loaded_df_2 = load_file(
+            input_file=File(path=filename, filetype=FileType.CSV),
+            columns_names_capitalization="lower",
+        )
+        loaded_df_3 = load_file(
+            input_file=File(path=filename, filetype=FileType.CSV),
+            columns_names_capitalization="original",
+        )
+        validate(loaded_df_1, loaded_df_2, loaded_df_3)
+
+    test_utils.run_dag(sample_dag)

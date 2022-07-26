@@ -44,3 +44,5 @@ ExportExistsStrategy = Literal["replace", "exception"]
 
 # TODO: check how snowflake names these
 MergeConflictStrategy = Literal["ignore", "update", "exception"]
+
+ColumnCapitalization = Literal["upper", "lower", "original"]
