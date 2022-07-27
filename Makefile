@@ -79,7 +79,9 @@ clean: ## Remove all the containers along with volumes
 	rm -rf dev/logs
 
 build-run: ## Build the Docker Image & then run the containers
+	mkdir -p dev/astro_sdk && cp -r src dev/astro_sdk/ && cp pyproject.toml dev/astro_sdk/
 	docker-compose -f dev/docker-compose.yaml up --build -d
+	rm -rf dev/astro_sdk
 
 help: ## Prints this message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-41s\033[0m %s\n", $$1, $$2}'

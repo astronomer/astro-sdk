@@ -7,10 +7,9 @@ RUN apt-get install -y --no-install-recommends \
         libsasl2-2 \
         libsasl2-dev \
         libsasl2-modules
+ENV SETUPTOOLS_USE_DISTUTILS=stdlib
 
-RUN mkdir ${AIRFLOW_HOME}/astro_sdk
-COPY setup.cfg ${AIRFLOW_HOME}/astro_sdk/setup.cfg
-COPY pyproject.toml ${AIRFLOW_HOME}/astro_sdk/pyproject.toml
+COPY . ${AIRFLOW_HOME}/astro_sdk/
 
-RUN python -m pip install -e "${AIRFLOW_HOME}/astro_sdk"
+RUN pip install -e "${AIRFLOW_HOME}/astro_sdk/"
 USER astro
