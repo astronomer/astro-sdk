@@ -1,13 +1,29 @@
 """Google BigQuery table implementation."""
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.google.cloud.hooks.bigquery_dts import (
     BiqQueryDataTransferServiceHook,
 )
+from google.api_core.exceptions import (
+    ClientError,
+    Conflict,
+    Forbidden,
+    GoogleAPIError,
+    InvalidArgument,
+)
 from google.api_core.exceptions import NotFound as GoogleNotFound
+from google.api_core.exceptions import (
+    ResourceExhausted,
+    RetryError,
+    ServerError,
+    ServiceUnavailable,
+    TooManyRequests,
+    Unauthorized,
+    Unknown,
+)
 from google.cloud import bigquery, bigquery_datatransfer  # type: ignore
 from google.cloud.bigquery_datatransfer_v1.types import (
     StartManualTransferRunsResponse,
@@ -16,6 +32,7 @@ from google.cloud.bigquery_datatransfer_v1.types import (
 )
 from google.protobuf import timestamp_pb2  # type: ignore
 from google.protobuf.struct_pb2 import Struct  # type: ignore
+from google.resumable_media import InvalidResponse
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from tenacity import retry, stop_after_attempt
@@ -55,6 +72,25 @@ class BigqueryDatabase(BaseDatabase):
 
     illegal_column_name_chars: List[str] = ["."]
     illegal_column_name_chars_replacement: List[str] = ["_"]
+    NATIVE_LOAD_EXCEPTIONS: Any = (
+        ValueError,
+        AttributeError,
+        GoogleNotFound,
+        ClientError,
+        GoogleAPIError,
+        RetryError,
+        InvalidArgument,
+        Unauthorized,
+        Forbidden,
+        Conflict,
+        TooManyRequests,
+        ResourceExhausted,
+        ServerError,
+        Unknown,
+        ServiceUnavailable,
+        InvalidResponse,
+        OSError,
+    )
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
         super().__init__(conn_id)
@@ -156,15 +192,14 @@ class BigqueryDatabase(BaseDatabase):
             ON {' AND '.join(['T.' + col + '= S.' + col for col in target_conflict_columns])}\
             WHEN NOT MATCHED BY TARGET THEN INSERT ({','.join(target_columns)}) VALUES ({','.join(source_columns)})"
 
+        update_statement_map = ", ".join(
+            [
+                f"T.{target_columns[idx]}=S.{source_columns[idx]}"
+                for idx in range(len(target_columns))
+            ]
+        )
         if if_conflicts == "update":
-            update_statement = "UPDATE SET {}".format(
-                ", ".join(
-                    [
-                        f"T.{target_columns[idx]}=S.{source_columns[idx]}"
-                        for idx in range(len(target_columns))
-                    ]
-                )
-            )
+            update_statement = f"UPDATE SET {update_statement_map}"  # skipcq: BAN-B608
             statement += f" WHEN MATCHED THEN {update_statement}"
         self.run_sql(sql_statement=statement)
 
@@ -221,7 +256,7 @@ class BigqueryDatabase(BaseDatabase):
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
-    ) -> None:
+    ):
         """
         Transfer data from gcs to bigquery
 
@@ -255,6 +290,7 @@ class BigqueryDatabase(BaseDatabase):
             "load": load_job_config,
             "labels": {"target_table": target_table.name},
         }
+
         self.hook.insert_job(
             configuration=job_config,
         )
@@ -281,7 +317,6 @@ class BigqueryDatabase(BaseDatabase):
         native_support_kwargs = native_support_kwargs or {}
 
         project_id = self.get_project_id(target_table)
-
         transfer = S3ToBigqueryDataTransfer(
             target_table=target_table,
             source_file=source_file,
@@ -309,7 +344,7 @@ class BigqueryDatabase(BaseDatabase):
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: Optional[Dict] = None,
         **kwargs,
-    ) -> None:
+    ):
         """Transfer data from local to bigquery"""
         native_support_kwargs = native_support_kwargs or {}
         # We need to maintain file_type to biqquery_format and not use NATIVE_PATHS_SUPPORTED_FILE_TYPES

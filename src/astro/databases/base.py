@@ -1,5 +1,6 @@
+import logging
 from abc import ABC
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 import sqlalchemy
@@ -12,6 +13,7 @@ from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
+    ColumnCapitalization,
     ExportExistsStrategy,
     LoadExistStrategy,
     MergeConflictStrategy,
@@ -46,6 +48,7 @@ class BaseDatabase(ABC):
     # illegal_column_name_chars[0] will be replaced by value in illegal_column_name_chars_replacement[0]
     illegal_column_name_chars: List[str] = []
     illegal_column_name_chars_replacement: List[str] = []
+    NATIVE_LOAD_EXCEPTIONS: Any = (ValueError, AttributeError)
 
     def __init__(self, conn_id: str):
         self.conn_id = conn_id
@@ -181,6 +184,7 @@ class BaseDatabase(ABC):
         table: Table,
         file: Optional[File] = None,
         dataframe: Optional[pd.DataFrame] = None,
+        columns_names_capitalization: ColumnCapitalization = "lower",  # skipcq
     ) -> None:
         """
         Create a SQL table, automatically inferring the schema using the given file.
@@ -188,6 +192,8 @@ class BaseDatabase(ABC):
         :param table: The table to be created.
         :param file: File used to infer the new table columns.
         :param dataframe: Dataframe used to infer the new table columns if there is no file
+        :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
+            in the resulting dataframe
         """
         if file is None:
             if dataframe is None:
@@ -199,6 +205,7 @@ class BaseDatabase(ABC):
             source_dataframe = file.export_to_dataframe(
                 nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT
             )
+
         db = SQLDatabase(engine=self.sqlalchemy_engine)
         db.prep_table(
             source_dataframe,
@@ -213,6 +220,7 @@ class BaseDatabase(ABC):
         table: Table,
         file: Optional[File] = None,
         dataframe: Optional[pd.DataFrame] = None,
+        columns_names_capitalization: ColumnCapitalization = "original",
     ) -> None:
         """
         Create a table either using its explicitly defined columns or inferring
@@ -221,12 +229,15 @@ class BaseDatabase(ABC):
         :param table: The table to be created
         :param file: (optional) File used to infer the table columns.
         :param dataframe: (optional) Dataframe used to infer the new table columns if there is no file
-
+        :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
+            in the resulting dataframe
         """
         if table.columns:
             self.create_table_using_columns(table)
         else:
-            self.create_table_using_schema_autodetection(table, file, dataframe)
+            self.create_table_using_schema_autodetection(
+                table, file, dataframe, columns_names_capitalization
+            )
 
     def create_table_from_select_statement(
         self,
@@ -270,6 +281,8 @@ class BaseDatabase(ABC):
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         use_native_support: bool = True,
         native_support_kwargs: Optional[Dict] = None,
+        columns_names_capitalization: ColumnCapitalization = "original",
+        enable_native_fallback: Optional[bool] = True,
         **kwargs,
     ):
         """
@@ -283,6 +296,9 @@ class BaseDatabase(ABC):
         :param use_native_support: Use native support for data transfer if available on the destination
         :param normalize_config: pandas json_normalize params config
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
+        :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
+            in the resulting dataframe
+        :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         """
         normalize_config = normalize_config or {}
         input_files = resolve_file_path_pattern(
@@ -293,7 +309,11 @@ class BaseDatabase(ABC):
         self.create_schema_if_needed(output_table.metadata.schema)
         if if_exists == "replace" or not self.table_exists(output_table):
             self.drop_table(output_table)
-            self.create_table(output_table, input_files[0])
+            self.create_table(
+                output_table,
+                input_files[0],
+                columns_names_capitalization=columns_names_capitalization,
+            )
             if_exists = "append"
 
         # TODO: many native transfers support the input_file.path - it may be better
@@ -303,20 +323,59 @@ class BaseDatabase(ABC):
             if use_native_support and self.is_native_load_file_available(
                 source_file=file, target_table=output_table
             ):
-                self.load_file_to_table_natively(
+                self.load_file_to_table_natively_with_fallback(
                     source_file=file,
                     target_table=output_table,
                     if_exists=if_exists,
                     native_support_kwargs=native_support_kwargs,
-                    **kwargs,
+                    enable_native_fallback=enable_native_fallback,
+                    chunk_size=chunk_size,
                 )
             else:
-                dataframe = file.export_to_dataframe()
                 self.load_pandas_dataframe_to_table(
-                    dataframe,
+                    file.export_to_dataframe(),
                     output_table,
                     chunk_size=chunk_size,
                     if_exists="append",  # We've already created a new table in this case
+                )
+
+    def load_file_to_table_natively_with_fallback(
+        self,
+        source_file: File,
+        target_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+        native_support_kwargs: Optional[Dict] = None,
+        enable_native_fallback: Optional[bool] = True,
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        **kwargs,
+    ):
+        """
+        Load content of a file in output_table.
+
+        :param source_file: File path and conn_id for object stores
+        :param target_table: Table to create
+        :param if_exists: Overwrite file if exists
+        :param chunk_size: Specify the number of records in each batch to be written at a time
+        :param native_support_kwargs: kwargs to be used by method involved in native support flow
+        :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer.
+        """
+        try:
+            self.load_file_to_table_natively(
+                source_file=source_file,
+                target_table=target_table,
+                if_exists=if_exists,
+                native_support_kwargs=native_support_kwargs,
+                **kwargs,
+            )
+        # Catching NATIVE_LOAD_EXCEPTIONS for fallback
+        except self.NATIVE_LOAD_EXCEPTIONS as exe:  # skipcq: PYL-W0703
+            logging.warning(exe)
+            if enable_native_fallback:
+                self.load_pandas_dataframe_to_table(
+                    source_file.export_to_dataframe(),
+                    target_table=target_table,
+                    chunk_size=chunk_size,
+                    if_exists=if_exists,
                 )
 
     def load_pandas_dataframe_to_table(

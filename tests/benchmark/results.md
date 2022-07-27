@@ -59,6 +59,16 @@ For Machine types: n2-standard-4
 |stackoverflow/stackoverflow_posts_1g.ndjson|1GB  | 85.409014          |
 |trimmed/pypi/*                             |5GB  | 48.973093          |
 
+#### Results post optimization to load files from GCS to Bigquery using BigqueryHook
+
+|Dataset                                    |Size | Duration(seconds)  |
+|-------------------------------------------|-----|--------------------|
+|covid_overview/covid_overview_10kb.csv     |10 KB| 13.57           |
+|tate_britain/artist_data_100kb.csv         |100KB| 16.10          |
+|imdb/title_ratings_10mb.csv                |10MB | 19.40         |
+|stackoverflow/stackoverflow_posts_1g.ndjson|1GB  | 30.26          |
+|trimmed/pypi/*                             |5GB  | 59.90          |
+
 
 ## Performance evaluation of loading datasets from GCS with Astro Python SDK 0.11.0 into Snowflake
 
@@ -75,7 +85,6 @@ The benchmark was run as a Kubernetes job in GKE:
 * Container resource limit:
   * Memory: 10 Gi
 
-
 | database   | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
 |:-----------|:-----------|:-------------|:-------------|:----------------|:------------------|
 | snowflake  | ten_kb     | 4.75s        | 59.3MB       | 1.45s           | 100.0ms           |
@@ -84,6 +93,25 @@ The benchmark was run as a Kubernetes job in GKE:
 | snowflake  | one_gb     | 4.96min      | 57.3MB       | 14.21s          | 1.16s             |
 | snowflake  | five_gb    | 24.46min     | 97.85MB      | 1.43min         | 5.94s             |
 | snowflake  | ten_gb     | 50.85min     | 104.53MB     | 2.7min          | 12.11s            |
+
+### With native support
+
+The benchmark was run as a Kubernetes job in GKE:
+
+* Version: `astro-sdk-python` 1.0.0a1 (`bc58830`)
+* Machine type: `n2-standard-4`
+  * vCPU: 4
+  * Memory: 16 GB RAM
+* Container resource limit:
+  * Memory: 10 Gi
+
+| database   | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
+|:-----------|:-----------|:-------------|:-------------|:----------------|:------------------|
+| snowflake  | ten_kb     | 9.1s         | 56.45MB      | 2.56s           | 110.0ms           |
+| snowflake  | hundred_kb | 9.19s        | 45.4MB       | 2.55s           | 120.0ms           |
+| snowflake  | ten_mb     | 10.9s        | 47.51MB      | 2.58s           | 160.0ms           |
+| snowflake  | one_gb     | 1.07min      | 47.94MB      | 8.7s            | 5.67s             |
+| snowflake  | five_gb    | 5.49min      | 53.69MB      | 18.76s          | 1.6s              |
 
 ### Database: postgres
 
@@ -96,3 +124,23 @@ The benchmark was run as a Kubernetes job in GKE:
 | postgres_conn_benchmark | one_gb     | 5.56min      | 62.5MB       | 14.07s          | 1.14s             |
 | postgres_conn_benchmark | five_gb    | 24.44min     | 78.15MB      | 1.34min         | 5.73s             |
 | postgres_conn_benchmark | ten_gb     | 45.64min     | 61.71MB      | 2.37min         | 11.48s            |
+
+### Database S3 to Bigquery using default path
+Note - These results are generated manually, there is a issue added for the same [#574](https://github.com/astronomer/astro-sdk/issues/574)
+
+|  database | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
+|:----------|:-----------|:-------------|:-------------|:----------------|:------------------|
+| bigquery  | hundred_kb | 18.64s       | 54.51MB      | 20.45ms         | 5.73ms            |
+| bigquery  | one_gb     | 1.18hrs      | 6.56GB       | 8.4s            | 1.59s             |
+| bigquery  | ten_kb     | 19.02s       | 53.84MB      | 17.9ms          | 5.2ms             |
+| bigquery  | ten_mb     | 47.02s       | 201.8MB      | 32.79ms         | 11.09ms           |
+
+### Database S3 to Bigquery using native path
+Note - These results are generated manually, there is a issue added for the same [#574](https://github.com/astronomer/astro-sdk/issues/574)
+
+| database   | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
+|:-----------|:-----------|:-------------|:-------------|:----------------|:------------------|
+| bigquery   | hundred_kb | 2.92min      | 56.57MB      | 41.94ms         | 35.83ms           |
+| bigquery   | one_gb     | 4.25min      | 66.32MB      | 54.88ms         | 48.01ms           |
+| bigquery   | ten_kb     | 2.9min       | 55.51MB      | 40.74ms         | 34.94ms           |
+| bigquery   | ten_mb     | 4.17min      | 57.6MB       | 46.64ms         | 46.83ms           |
