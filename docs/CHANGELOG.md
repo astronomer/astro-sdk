@@ -5,7 +5,7 @@
 
 Feature:
 * Improved the performance of `aql.load_file` by supporting database-specific (native) load methods. This is now the default behaviour. Previously, the Astro SDK Python would always use Pandas to load files to SQL databases which passed the data to worker node which slowed the performance. [#557](https://github.com/astronomer/astro-sdk/issues/557), [#481](https://github.com/astronomer/astro-sdk/issues/481)
-  
+
   Introduced new arguments to `aql.load_file`:
     - `use_native_support` for data transfer if available on the destination (defaults to `use_native_support=True`)
     - `native_support_kwargs` is a keyword argument to be used by method involved in native support flow.
@@ -26,7 +26,7 @@ Breaking Change:
 * The `aql.dataframe` argument `identifiers_as_lower` (which was `boolean`, with default set to `False`) was replaced by the argument `columns_names_capitalization` (`string` within possible values `["upper", "lower", "original"]`, default is `lower`).[#564](https://github.com/astronomer/astro-sdk/issues/564)
 * The `aql.load_file` before would change the capitalization of all column titles to be uppercase, by default, now it makes them lowercase, by default. The old behaviour can be achieved by using the argument `columns_names_capitalization="upper"`. [#564](https://github.com/astronomer/astro-sdk/issues/564)
 * `aql.load_file` attempts to load files to BigQuery and Snowflake by using native methods, which may have pre-requirements to work. To disable this mode, use the argument `use_native_support=False` in `aql.load_file`. [#557](https://github.com/astronomer/astro-sdk/issues/557), [#481](https://github.com/astronomer/astro-sdk/issues/481)
-* `aql.dataframe` will raise an exception if the default Airflow XCom backend is being used. To solve this, either use an [external XCom backend, such as S3 or GCS](https://www.astronomer.io/guides/custom-xcom-backends) or set the configuration `AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE=True`. 
+* `aql.dataframe` will raise an exception if the default Airflow XCom backend is being used. To solve this, either use an [external XCom backend, such as S3 or GCS](https://www.astronomer.io/guides/custom-xcom-backends) or set the configuration `AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE=True`. [#444](https://github.com/astronomer/astro-sdk/issues/444)
 * Change the declaration for the default Astro SDK temporary schema from using `AIRFLOW__ASTRO__SQL_SCHEMA` to `AIRFLOW__ASTRO_SDK__SQL_SCHEMA` [#503](https://github.com/astronomer/astro-sdk/issues/503)
 * Renamed `aql.truncate` to `aql.drop_table` [#554](https://github.com/astronomer/astro-sdk/issues/554)
 
