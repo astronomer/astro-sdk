@@ -113,7 +113,17 @@ The benchmark was run as a Kubernetes job in GKE:
 | snowflake  | one_gb     | 1.07min      | 47.94MB      | 8.7s            | 5.67s             |
 | snowflake  | five_gb    | 5.49min      | 53.69MB      | 18.76s          | 1.6s              |
 
-### Database: postgres
+## Performance evaluation of loading datasets from GCS with Astro Python SDK 0.11.0 into Postgres in K8s
+
+### Without native support
+The benchmark was run as a Kubernetes job in GKE:
+
+* Version: `astro-sdk-python` 1.0.0a1 (`bc58830`)
+* Machine type: `n2-standard-4`
+  * vCPU: 4
+  * Memory: 16 GB RAM
+* Container resource limit:
+  * Memory: 10 Gi
 
 | database                | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
 |:------------------------|:-----------|:-------------|:-------------|:----------------|:------------------|
@@ -124,6 +134,34 @@ The benchmark was run as a Kubernetes job in GKE:
 | postgres_conn_benchmark | one_gb     | 5.56min      | 62.5MB       | 14.07s          | 1.14s             |
 | postgres_conn_benchmark | five_gb    | 24.44min     | 78.15MB      | 1.34min         | 5.73s             |
 | postgres_conn_benchmark | ten_gb     | 45.64min     | 61.71MB      | 2.37min         | 11.48s            |
+
+### With native support
+Two primary optimizations that have led to significant speed up
+
+The first optimization is to not directly place a smart_open into the read function of pandas. There have been multiple reports of pandas and smart_open working very slow when used together. Instead, we read the smart_open file into an IO buffer (either StringIO or BytesIO). This also has the benefit that we do not need to write to disc if there is enough memory to hold the object.
+
+The second optimization is postgres specific. The pandas.to_sql function uses the HIGHLY suboptimal INSERT statement for postgres. This is 10X slower than the COPY command. By saving objects as CSV buffers, we can use COPY to load the data into postgres as a stream instead of one value at a time.
+
+Here are the new numbers with the optimizations:
+
+The benchmark was run as a Kubernetes job in GKE:
+
+* Version: `astro-sdk-python` 1.0.0a1 (`bc58830`)
+* Machine type: `n2-standard-4`
+  * vCPU: 4
+  * Memory: 16 GB RAM
+* Container resource limit:
+  * Memory: 10 Gi
+
+| database   | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
+|:-----------|:-----------|:-------------|:-------------|:----------------|:------------------|
+| postgres   | ten_kb     | 432.93ms     | 43.19MB      | 540.0ms         | 60.0ms            |
+| postgres   | hundred_kb | 417.2ms      | 31.34MB      | 560.0ms         | 40.0ms            |
+| postgres   | ten_mb     | 2.21s        | 79.91MB      | 1.76s           | 170.0ms           |
+| postgres   | one_gb     | 13.9s        | 35.43MB      | 7.97s           | 5.76s             |
+| postgres   | five_gb    | 50.23s       | 43.27MB      | 26.64s          | 18.7s             |
+| postgres   | ten_gb     | 3.11min      | 43.29MB      | 1.36min         | 1.48min           |
+
 
 ### Database S3 to Bigquery using default path
 Note - These results are generated manually, there is a issue added for the same [#574](https://github.com/astronomer/astro-sdk/issues/574)
