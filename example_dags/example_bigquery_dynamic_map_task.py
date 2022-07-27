@@ -3,10 +3,11 @@ from datetime import datetime
 
 from airflow import DAG
 from airflow.decorators import task
+
 from astro import sql as aql
+from astro.files import File
 from astro.sql import Table
 from astro.sql.table import Metadata
-from astro.files import File
 
 ASTRO_BIGQUERY_DATASET = os.getenv("ASTRO_BIGQUERY_DATASET", "dag_authoring")
 ASTRO_GCP_LOCATION = os.getenv("ASTRO_GCP_LOCATION", "us")
@@ -26,27 +27,26 @@ def handle_result(result):
 
 
 with DAG(
-        dag_id="example_dynamic_map_task",
-        schedule_interval=None,
-        start_date=datetime(2022, 1, 1),
-        catchup=False,
+    dag_id="example_dynamic_map_task",
+    schedule_interval=None,
+    start_date=datetime(2022, 1, 1),
+    catchup=False,
 ) as dag:
-    bq_table = Table(
-        metadata=Metadata(
-            schema=ASTRO_BIGQUERY_DATASET,
-        ),
-        conn_id=ASTRO_GCP_CONN_ID,
-    )
-
-    my_homes_table = aql.load_file(
-        input_file=File(path=f"{s3_bucket}/ads.csv"),
-        output_table=bq_table,
-    )
 
     @aql.run_raw_sql(handler=handle_result)
     def get_campaigns(table: Table):
-        return """select campaign_id from {{table}}"""
+        return """select id from {{table}}"""
 
-    t1 = get_campaigns(bq_table)
-    summarize_campaign.expand(capaign_id=t1)
+    bq_table = aql.load_file(
+        input_file=File(path=f"{s3_bucket}/ads.csv"),
+        output_table=Table(
+            metadata=Metadata(
+                schema=ASTRO_BIGQUERY_DATASET,
+            ),
+            conn_id=ASTRO_GCP_CONN_ID,
+        ),
+        use_native_support=False,
+    )
+
+    summarize_campaign.expand(capaign_id=get_campaigns(bq_table))
     aql.cleanup()
