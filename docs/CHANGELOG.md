@@ -17,7 +17,7 @@ Feature:
     - `Hybrid`: This attempts to use the native strategy to load a file to the database and if native strategy(i) fails , fallback to Pandas (ii) with relevant log warnings.
 * Allow users to specify the table schema (column types) in which a file is being loaded by using `table.columns`. If this table attribute is not set, the Astro SDK still tries to infer the schema by using Pandas (which is previous behaviour).[#532](https://github.com/astronomer/astro-sdk/issues/532)
 * Implement fallback mechanism in case native support fails to default option with log warning for problem with native support. [#557](https://github.com/astronomer/astro-sdk/issues/557)
-* Add [Example DAG](/example_dags/example_bigquery_dynamic_map_task.py) for Dynamic Map Task with Astro-SDK. [#377](https://github.com/astronomer/astro-sdk/issues/377),[airflow-2.3.0](https://airflow.apache.org/blog/airflow-2.3.0/)
+* Add [Example DAG](../example_dags/example_bigquery_dynamic_map_task.py) for Dynamic Map Task with Astro-SDK. [#377](https://github.com/astronomer/astro-sdk/issues/377),[airflow-2.3.0](https://airflow.apache.org/blog/airflow-2.3.0/)
 
 Community:
 * Allow running tests on PRs from forks + label [#179](https://github.com/astronomer/astro-sdk/issues/179)
