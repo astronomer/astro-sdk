@@ -1,3 +1,11 @@
+"""
+This Example DAG:
+- Pull CSV from S3 and load in bigquery table
+- Run select query on bigquery table
+- Expand on the returned rows i.e if bigquery table contain n rows then
+    n copy of ``summarize_campaign`` task will be created dynamically
+    using dynamic task mapping
+"""
 import os
 from datetime import datetime
 
@@ -10,11 +18,8 @@ from astro.sql import Table
 from astro.sql.table import Metadata
 
 ASTRO_BIGQUERY_DATASET = os.getenv("ASTRO_BIGQUERY_DATASET", "dag_authoring")
-ASTRO_GCP_LOCATION = os.getenv("ASTRO_GCP_LOCATION", "us")
 ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_default")
-ASTRO_BIGQUERY_SCHEMA = os.getenv("ASTRO_BIGQUERY_SCHEMA", "dag_authoring")
-ASTRO_BIGQUERY_TABLE = os.getenv("ASTRO_BIGQUERY_TABLE", "campaigns")
-s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
+ASTRO_S3_BUCKET = os.getenv("S3_BUCKET", "s3://tmp9")
 
 
 @task
@@ -38,7 +43,7 @@ with DAG(
         return """select id from {{table}}"""
 
     bq_table = aql.load_file(
-        input_file=File(path=f"{s3_bucket}/ads.csv"),
+        input_file=File(path=f"{ASTRO_S3_BUCKET}/ads.csv"),
         output_table=Table(
             metadata=Metadata(
                 schema=ASTRO_BIGQUERY_DATASET,
