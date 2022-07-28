@@ -17,7 +17,6 @@ class BaseSQLDecoratedOperator(DecoratedOperator):
     """Handles all decorator classes that can return a SQL function"""
 
     database_impl: BaseDatabase
-    # template_fields = ("upstream_tasks", )
 
     def __init__(
         self,
