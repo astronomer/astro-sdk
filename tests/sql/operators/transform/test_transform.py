@@ -126,6 +126,66 @@ def test_raw_sql(database_table_fixture, sample_dag):
     test_utils.run_dag(sample_dag)
 
 
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.SNOWFLAKE},
+        {"database": Database.BIGQUERY},
+        {"database": Database.POSTGRES},
+        {"database": Database.SQLITE},
+    ],
+    indirect=True,
+    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+)
+def test_raw_sql_chained_queries(database_table_fixture, sample_dag):
+    import pandas
+
+    db, test_table = database_table_fixture
+
+    @aql.run_raw_sql(conn_id=db.conn_id)
+    def create_customers_table_func(t_table: Table):
+        return """CREATE TABLE {{t_table}} (
+            id integer,
+            name varchar (100)
+        )"""
+
+    @aql.run_raw_sql(conn_id=db.conn_id)
+    def seed_customers_table_func(t_table: Table):
+        return """-- manual dep: create_customers_table
+        INSERT INTO {{t_table}} (id, name)
+        VALUES
+            (1, 'Customer A'),
+            (2, 'Customer B'),
+            (3, 'Customer C');"""
+
+    @aql.transform(conn_id=db.conn_id)
+    def raw_sql_no_deps():
+        """
+        Let' test without any data dependencies, purely using upstream_tasks
+        Returns:
+
+        """
+        return f"""SELECT * FROM {test_table.name};"""
+
+    @aql.dataframe
+    def validate(df: pandas.DataFrame):
+        assert df.equals(
+            pandas.DataFrame(
+                {"id": [1, 2, 3], "name": ["Customer A", "Customer B", "Customer C"]}
+            )
+        )
+
+    with sample_dag:
+        create_customers_table = create_customers_table_func(t_table=test_table)
+        seed_customers_table = seed_customers_table_func(
+            t_table=test_table, upstream_tasks=[create_customers_table]
+        )
+        customers = raw_sql_no_deps(upstream_tasks=[seed_customers_table])
+        validate(test_table, upstream_tasks=[customers])
+
+    test_utils.run_dag(sample_dag)
+
+
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
@@ -156,7 +216,6 @@ def test_transform_with_templated_table_name(database_table_fixture, sample_dag)
         """
 
     with sample_dag:
-
         target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="sqlite_default")
 
         top_five_animations(input_table=imdb_table, output_table=target_table)

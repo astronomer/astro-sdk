@@ -4,6 +4,7 @@ from typing import Callable, Dict, Optional, Tuple, Union
 import pandas as pd
 from airflow.configuration import conf
 from airflow.decorators.base import DecoratedOperator
+from airflow.models.xcom_arg import XComArg
 
 from astro.constants import ColumnCapitalization
 from astro.databases import create_database
@@ -111,9 +112,15 @@ class DataframeOperator(DecoratedOperator):
         self.op_args = self.kwargs.get("op_args", ())  # type: ignore
         self.columns_names_capitalization = columns_names_capitalization
 
+        # We purposely do NOT render upstream_tasks otherwise we could have a case where a user
+        # has 10 dataframes as upstream tasks and it crashes the worker
+        upstream_tasks = self.op_kwargs.pop("upstream_tasks", [])
         super().__init__(
             **kwargs,
         )
+        for task in upstream_tasks:
+            if isinstance(task, XComArg):
+                self.set_upstream(task.operator)
 
     def execute(self, context: Dict) -> Union[Table, pd.DataFrame]:
         first_table = find_first_table(

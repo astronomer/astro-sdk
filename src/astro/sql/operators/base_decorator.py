@@ -4,6 +4,7 @@ from typing import Any, Dict, Optional, Tuple, Union
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
+from airflow.models.xcom_arg import XComArg
 from sqlalchemy.sql.functions import Function
 
 from astro.databases import create_database
@@ -16,6 +17,7 @@ class BaseSQLDecoratedOperator(DecoratedOperator):
     """Handles all decorator classes that can return a SQL function"""
 
     database_impl: BaseDatabase
+    # template_fields = ("upstream_tasks", )
 
     def __init__(
         self,
@@ -32,14 +34,22 @@ class BaseSQLDecoratedOperator(DecoratedOperator):
         self.output_table: Table = self.op_kwargs.pop("output_table", Table())
         self.handler = self.op_kwargs.pop("handler", handler)
         self.conn_id = self.op_kwargs.pop("conn_id", conn_id)
+
         self.sql = sql
         self.parameters = parameters or {}
         self.database = self.op_kwargs.pop("database", database)
         self.schema = self.op_kwargs.pop("schema", schema)
         self.op_args: Dict[str, Union[Table, pd.DataFrame]] = {}
+
+        # We purposely do NOT render upstream_tasks otherwise we could have a case where a user
+        # has 10 dataframes as upstream tasks and it crashes the worker
+        upstream_tasks = self.op_kwargs.pop("upstream_tasks", [])
         super().__init__(
             **kwargs,
         )
+        for task in upstream_tasks:
+            if isinstance(task, XComArg):
+                self.set_upstream(task.operator)
 
     def execute(self, context: Dict) -> None:
         first_table = find_first_table(
