@@ -142,22 +142,6 @@ def test_raw_sql_chained_queries(database_table_fixture, sample_dag):
 
     db, test_table = database_table_fixture
 
-    @aql.run_raw_sql(conn_id=db.conn_id)
-    def create_customers_table_func(t_table: Table):
-        return """CREATE TABLE {{t_table}} (
-            id integer,
-            name varchar (100)
-        )"""
-
-    @aql.run_raw_sql(conn_id=db.conn_id)
-    def seed_customers_table_func(t_table: Table):
-        return """-- manual dep: create_customers_table
-        INSERT INTO {{t_table}} (id, name)
-        VALUES
-            (1, 'Customer A'),
-            (2, 'Customer B'),
-            (3, 'Customer C');"""
-
     @aql.transform(conn_id=db.conn_id)
     def raw_sql_no_deps():
         """
@@ -169,19 +153,27 @@ def test_raw_sql_chained_queries(database_table_fixture, sample_dag):
 
     @aql.dataframe
     def validate(df: pandas.DataFrame):
-        assert df.equals(
-            pandas.DataFrame(
-                {"id": [1, 2, 3], "name": ["Customer A", "Customer B", "Customer C"]}
-            )
-        )
+        assert df.columns.tolist() == [
+            "sell",
+            "list",
+            "living",
+            "rooms",
+            "beds",
+            "baths",
+            "age",
+            "acres",
+            "taxes",
+        ]
 
     with sample_dag:
-        create_customers_table = create_customers_table_func(t_table=test_table)
-        seed_customers_table = seed_customers_table_func(
-            t_table=test_table, upstream_tasks=[create_customers_table]
+        homes_file = aql.load_file(
+            input_file=File(path=str(cwd) + "/../../../data/homes.csv"),
+            output_table=test_table,
         )
-        customers = raw_sql_no_deps(upstream_tasks=[seed_customers_table])
-        validate(test_table, upstream_tasks=[customers])
+        customers = raw_sql_no_deps(upstream_tasks=[homes_file])
+        customers1 = raw_sql_no_deps(upstream_tasks=[customers])
+        customers2 = raw_sql_no_deps(upstream_tasks=[customers1])
+        validate(test_table, upstream_tasks=[customers2])
 
     test_utils.run_dag(sample_dag)
 
