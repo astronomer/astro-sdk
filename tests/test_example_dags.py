@@ -36,6 +36,7 @@ def session():
         "example_load_file",
         "example_transform",
         "example_merge_bigquery",
+        "example_dynamic_task_template",
     ],
 )
 def test_example_dag(session, dag_id):
