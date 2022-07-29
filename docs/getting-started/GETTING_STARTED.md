@@ -392,3 +392,41 @@ or
 
 In all scenarios, even if the user gives a non-temporary table, only temporary
 tables will actually be deleted.
+
+## Tying Astro SDK decorators to traditional Airflow Operators
+
+1. Operators that pass data that can be picked up by astro functions
+2. Operators that don't pass any data but you want to run upstream of a task
+
+### Scenario 1: Operators that pass on data to astro sdk tasks
+
+```python
+@task
+def get_num_rows():
+    return 5
+
+
+@aql.transform
+def get_rows(table: Table, num_rows: int):
+    return "SELECT * FROM {{table}} LIMIT {{num_rows}}"
+
+
+with dag:
+    get_rows(table=Table(), num_rows=get_num_rows())
+```
+
+### Scenario 2: Operators that dont pass on data to astro sdk tasks
+
+```python
+@aql.transform
+def get_rows(table: Table, num_rows: int):
+    return "SELECT * FROM {{table}} LIMIT {{num_rows}}"
+
+
+with dag:
+    bash_command = BashOperator(...)
+    get_rows(table=Table(), num_rows=5, upstream_tasks=[bash_command])
+```
+When tying traditional tasks to astro-sdk decorators, you might run into a situation where the original operators
+might not pass any data. In
+One potential friction point when adopting astro-sdk mig

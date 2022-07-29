@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Tuple, Union
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.baseoperator import BaseOperator
+from airflow.models.xcom_arg import XComArg
 
 from astro.constants import MergeConflictStrategy
 from astro.databases import create_database
@@ -49,8 +50,11 @@ class MergeOperator(BaseOperator):
         self.columns = columns or {}
         self.if_conflicts = if_conflicts
         task_id = task_id or get_unique_task_id("_merge")
-
+        upstream_tasks = kwargs.pop("upstream_tasks", [])
         super().__init__(task_id=task_id, **kwargs)
+        for task in upstream_tasks:
+            if isinstance(task, XComArg):
+                self.set_upstream(task.operator)
 
     def execute(self, context: dict) -> Table:
         db = create_database(self.target_table.conn_id)

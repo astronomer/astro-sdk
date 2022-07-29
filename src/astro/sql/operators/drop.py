@@ -1,13 +1,13 @@
 from typing import Dict
 
 from airflow.decorators.base import get_unique_task_id
-from airflow.models import BaseOperator
 
 from astro.databases import create_database
+from astro.sql.operators.upstream_tasks import UpstreamTaskHandler
 from astro.sql.table import Table
 
 
-class DropTableOperator(BaseOperator):
+class DropTableOperator(UpstreamTaskHandler):
     """Airflow Operator for dropping SQL tables."""
 
     template_fields = ("table",)

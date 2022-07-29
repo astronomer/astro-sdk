@@ -126,58 +126,6 @@ def test_raw_sql(database_table_fixture, sample_dag):
     test_utils.run_dag(sample_dag)
 
 
-@pytest.mark.parametrize(
-    "database_table_fixture",
-    [
-        {"database": Database.SNOWFLAKE},
-        {"database": Database.BIGQUERY},
-        {"database": Database.POSTGRES},
-        {"database": Database.SQLITE},
-    ],
-    indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
-)
-def test_raw_sql_chained_queries(database_table_fixture, sample_dag):
-    import pandas
-
-    db, test_table = database_table_fixture
-
-    @aql.transform(conn_id=db.conn_id)
-    def raw_sql_no_deps():
-        """
-        Let' test without any data dependencies, purely using upstream_tasks
-        Returns:
-
-        """
-        return f"""SELECT * FROM {test_table.name};"""
-
-    @aql.dataframe
-    def validate(df: pandas.DataFrame):
-        assert df.columns.tolist() == [
-            "sell",
-            "list",
-            "living",
-            "rooms",
-            "beds",
-            "baths",
-            "age",
-            "acres",
-            "taxes",
-        ]
-
-    with sample_dag:
-        homes_file = aql.load_file(
-            input_file=File(path=str(cwd) + "/../../../data/homes.csv"),
-            output_table=test_table,
-        )
-        customers = raw_sql_no_deps(upstream_tasks=[homes_file])
-        customers1 = raw_sql_no_deps(upstream_tasks=[customers])
-        customers2 = raw_sql_no_deps(upstream_tasks=[customers1])
-        validate(test_table, upstream_tasks=[customers2])
-
-    test_utils.run_dag(sample_dag)
-
-
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
