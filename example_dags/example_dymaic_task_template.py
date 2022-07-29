@@ -21,8 +21,8 @@ with DAG(
     start_date=datetime(2022, 1, 1),
     catchup=False,
 ) as dag:
-    print_file_path.extend(path=dtt.get_file_list("aws_default", f"{S3_BUCKET}/*.csv"))
+    print_file_path.expand(path=dtt.get_file_list("aws_default", f"{S3_BUCKET}/*.csv"))
 
-    print_file_path.extend(
+    print_file_path.expand(
         path=dtt.get_file_list("google_cloud_default", f"{GCS_BUCKET}/*.csv")
     )
