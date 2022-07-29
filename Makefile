@@ -1,69 +1,72 @@
-.DEFAULT_GOAL := help
+.PHONY: help
+.DEFAULT_GOAL:= help
 SHELL := /bin/bash
-VENV = venv
+PROJECT_NAME := astro-sdk
+SYSTEM_PYTHON := python3.9
 
-OK := $(shell if [ -d $(VENV) ]; then echo "ok"; fi)
-
-ifdef venv
-	VENV = $(venv)
+# Set default virtualenv path, if not defined
+ifndef VIRTUALENV_PATH
+mkdir -p ~/.virtualenvs/
+override VIRTUALENV_PATH = ~/.virtualenvs/$(PROJECT_NAME)
 endif
 
-ifeq ($(OK),)
-	path := $(shell which python3)
-	PYTHON := $(path)
-	PIP := pip
-else
-	PYTHON = $(VENV)/bin/python3
-	PIP = $(VENV)/bin/pip
-endif
-
-install:
-	$(PIP) install --upgrade pip
-	$(PIP) install pipx nox
-	$(PIP) install '.[$(if $(collection),$(collection),all)]'
-	$(PIP) install .[tests]
-
-activate:
-	. $(VENV)/bin/activate
-
-init_venv:
-	test -d $(VENV) || $(PYTHON) -m venv $(VENV)
-	. $(VENV)/bin/activate
-
-setup: init_venv activate install
-	cat .env-template > .env
-	cat .github/ci-test-connections.yaml > test-connections.yaml
-
-test:
-ifdef db
-	pytest -s --cov-report term-missing --cov-branch -m "$(db)"
-else
-	pytest -s --cov-report term-missing --cov-branch
-endif
-
-unit_test:
-	pytest -s --cov-report term-missing --cov-branch -m "not integration"
-
-integration_test:
-	pytest -s --cov-report term-missing --cov-branch -m integration
+PYTHON = $(VIRTUALENV_PATH)/bin/python
+PIP = $(VIRTUALENV_PATH)/bin/pip
+PYTEST = $(VIRTUALENV_PATH)/bin/pytest
+PRECOMMIT = $(VIRTUALENV_PATH)/bin/pre-commit
 
 
-clean:
-	rm -rf __pycache__
-	rm -rf $(VENV)
+clean: ## Remove temporary files
+	@echo "Removing cached and temporary files from current directory"
+	@rm -rf logs
+	@find . -name "*.pyc" -delete
+	@find . -type d -name "__pycache__" -exec rm -rf {} +
+	@find . -name "*.sw[a-z]" -delete
+	@find . -type d -name "*.egg-info" -exec rm -rf {} +
 
-help:
-	@echo -e "Usage: make [command] [option]=[value]"
-	@echo -e "Commands:"
-	@echo -e "\t install \t install dependencies"
-	@echo -e "\t activate \t activate virtual environment"
-	@echo -e "\t init_venv \t initialize virtual environment \n\t\t\t Options: venv=[path] - path to virtual environment"
-	@echo -e "\t setup \t initialize virtual environment and install dependencies. \n\t\t\t Options: collection=[collection] - run tests for specific collection"
-	@echo -e "\t test \t run tests \n\t\t\t Options: db=[db] - run tests for specific database"
-	@echo -e "\t unit_test \t run unit tests"
-	@echo -e "\t integration_test \t run integration tests"
-	@echo -e "\t clean \t remove virtual environment"
-	@echo -e "\t help \t show this help"
+virtualenv:  ## Create Python virtualenv
+	@test -d $(VIRTUALENV_PATH) && \
+	(echo "The virtualenv $(VIRTUALENV_PATH) already exists. Skipping.") || \
+	(echo "Creating the virtualenv $(VIRTUALENV_PATH) using $(SYSTEM_PYTHON)" & \
+	$(SYSTEM_PYTHON) -m venv $(VIRTUALENV_PATH))
+
+install: virtualenv  ## Install python dependencies in existing virtualenv
+	@echo "Installing Python dependencies using $(PIP)"
+	@$(PIP) install --upgrade pip
+	@$(PIP) install nox
+	@$(PIP) install pre-commit
+	@$(PIP) install -e .[all]
+	@$(PIP) install .[tests]
+
+config:  ## Create sample configuration files related to Snowflake, Amazon and Google
+	@test -e .env && \
+		(echo "The file .env already exist. Skipping.") || \
+		(echo "Creating .env..." && \
+		cat .env-template > .env && \
+		echo "Please, update .env with your credentials")
+	@test -e test-connections.yaml && \
+		(echo "The file test-connections.yaml already exist. Skipping.") || \
+		(echo "Creating test-connections.yaml..." && \
+		cat .github/ci-test-connections.yaml > test-connections.yaml && \
+		echo "Please, update test-connections.yaml with your credentials")
+
+setup: config virtualenv install ## Setup a local development environment
 
 quality:
-	pre-commit run --all-files
+	@$(PRECOMMIT) run --all-files
+
+test: virtualenv config ## Run all tests (use option: db=[db] run only run database-specific ones)
+ifdef db
+	@$(PYTEST) -s --cov --cov-branch --cov-report=term-missing -m "$(db)"
+else
+	@$(PYTEST) -s --cov --cov-branch --cov-report=term-missing
+endif
+
+unit: virtualenv config ## Run unit tests
+	@$(PYTEST) -s --cov --cov-branch --cov-report=term-missing -m "not integration"
+
+integration: virtualenv config  ## Run integration tests
+	@$(PYTEST) -s --cov --cov-branch --cov-report=term-missing -m integration
+
+help:
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
