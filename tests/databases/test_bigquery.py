@@ -15,6 +15,7 @@ from google.cloud.bigquery_datatransfer_v1.types import (
 
 from astro.constants import Database
 from astro.databases import create_database
+from astro.databases.base import DatabaseCustomError
 from astro.databases.google.bigquery import BigqueryDatabase, S3ToBigqueryDataTransfer
 from astro.exceptions import NonExistentTableException
 from astro.files import File
@@ -243,7 +244,7 @@ def test_load_file_to_table_natively_for_fallback(
     mock_load_file, database_table_fixture
 ):
     """Test loading on files to bigquery natively for fallback."""
-    mock_load_file.side_effect = AttributeError
+    mock_load_file.side_effect = DatabaseCustomError
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     response = database.load_file_to_table_natively_with_fallback(
