@@ -28,13 +28,13 @@ def test_raw_sql_chained_queries(database_table_fixture, sample_dag):
     db, test_table = database_table_fixture
 
     @aql.run_raw_sql(conn_id=db.conn_id)
-    def raw_sql_no_deps(new_table: Table):
+    def raw_sql_no_deps(new_table: Table, t_table: Table):
         """
         Let' test without any data dependencies, purely using upstream_tasks
         Returns:
 
         """
-        return "CREATE TABLE {{new_table}} AS SELECT * FROM" + f" {test_table.name};"
+        return "CREATE TABLE {{new_table}} AS SELECT * FROM {{t_table}}"
 
     @aql.dataframe
     def validate(df1: pandas.DataFrame, df2: pandas.DataFrame):
@@ -49,7 +49,9 @@ def test_raw_sql_chained_queries(database_table_fixture, sample_dag):
         last_task = homes_file
         for i in range(5):
             n_table = test_table.create_similar_table()
-            n_task = raw_sql_no_deps(new_table=n_table, upstream_tasks=[last_task])
+            n_task = raw_sql_no_deps(
+                new_table=n_table, t_table=test_table, upstream_tasks=[last_task]
+            )
             generated_tables.append(n_table)
             last_task = n_task
 
