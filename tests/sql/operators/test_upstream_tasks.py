@@ -38,6 +38,8 @@ def test_raw_sql_chained_queries(database_table_fixture, sample_dag):
 
     @aql.dataframe
     def validate(df1: pandas.DataFrame, df2: pandas.DataFrame):
+        print(df1)
+        print(df2)
         assert df1.equals(df2)
 
     with sample_dag:
