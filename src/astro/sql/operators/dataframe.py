@@ -4,11 +4,11 @@ from typing import Callable, Dict, Optional, Tuple, Union
 import pandas as pd
 from airflow.configuration import conf
 from airflow.decorators.base import DecoratedOperator
-from airflow.models.xcom_arg import XComArg
 
 from astro.constants import ColumnCapitalization
 from astro.databases import create_database
 from astro.exceptions import IllegalLoadToDatabaseException
+from astro.sql.operators.upstream_tasks import UpstreamTaskMixin
 from astro.sql.table import Table
 from astro.utils.dataframe import convert_columns_names_capitalization
 from astro.utils.table import find_first_table
@@ -74,7 +74,7 @@ def load_op_kwarg_table_into_dataframe(
     }
 
 
-class DataframeOperator(DecoratedOperator):
+class DataframeOperator(UpstreamTaskMixin, DecoratedOperator):
     def __init__(
         self,
         conn_id: Optional[str] = None,
@@ -116,11 +116,9 @@ class DataframeOperator(DecoratedOperator):
         # has 10 dataframes as upstream tasks and it crashes the worker
         upstream_tasks = self.op_kwargs.pop("upstream_tasks", [])
         super().__init__(
+            upstream_tasks=upstream_tasks,
             **kwargs,
         )
-        for task in upstream_tasks:
-            if isinstance(task, XComArg):
-                self.set_upstream(task.operator)
 
     def execute(self, context: Dict) -> Union[Table, pd.DataFrame]:
         first_table = find_first_table(

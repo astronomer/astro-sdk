@@ -2,18 +2,19 @@ from typing import Any, Dict, Optional, Union
 
 import pandas as pd
 from airflow.configuration import conf
+from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import BaseDatabase, create_database
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
-from astro.sql.operators.upstream_tasks import UpstreamTaskHandler
+from astro.sql.operators.upstream_tasks import UpstreamTaskMixin
 from astro.sql.table import Table
 from astro.utils.task_id_helper import get_task_id
 
 
-class LoadFile(UpstreamTaskHandler):
+class LoadFile(UpstreamTaskMixin, BaseOperator):
     """Load S3/local file into either a database or a pandas dataframe
 
     :param input_file: File path and conn_id for object stores

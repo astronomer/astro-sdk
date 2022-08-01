@@ -4,16 +4,16 @@ from typing import Any, Dict, Optional, Tuple, Union
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
-from airflow.models.xcom_arg import XComArg
 from sqlalchemy.sql.functions import Function
 
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
+from astro.sql.operators.upstream_tasks import UpstreamTaskMixin
 from astro.sql.table import Table
 from astro.utils.table import find_first_table
 
 
-class BaseSQLDecoratedOperator(DecoratedOperator):
+class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
     """Handles all decorator classes that can return a SQL function"""
 
     database_impl: BaseDatabase
@@ -44,11 +44,9 @@ class BaseSQLDecoratedOperator(DecoratedOperator):
         # has 10 dataframes as upstream tasks and it crashes the worker
         upstream_tasks = self.op_kwargs.pop("upstream_tasks", [])
         super().__init__(
+            upstream_tasks=upstream_tasks,
             **kwargs,
         )
-        for task in upstream_tasks:
-            if isinstance(task, XComArg):
-                self.set_upstream(task.operator)
 
     def execute(self, context: Dict) -> None:
         first_table = find_first_table(

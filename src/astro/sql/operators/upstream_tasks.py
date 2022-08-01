@@ -1,8 +1,7 @@
-from airflow.models.operator import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
 
-class UpstreamTaskHandler(BaseOperator):
+class UpstreamTaskMixin:
     def __init__(self, **kwargs):
         upstream_tasks = kwargs.pop("upstream_tasks", [])
 
