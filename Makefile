@@ -1,4 +1,4 @@
-.PHONY: build-run clean logs stop help
+.PHONY: help
 .DEFAULT_GOAL:= help
 SHELL := /bin/bash
 PROJECT_NAME := astro-sdk
@@ -16,7 +16,7 @@ PYTEST = $(VIRTUALENV_PATH)/bin/pytest
 PRECOMMIT = $(VIRTUALENV_PATH)/bin/pre-commit
 
 
-clean: ## Remove temporary files
+clean-venv: ## Remove temporary files
 	@echo "Removing cached and temporary files from current directory"
 	@rm -rf logs
 	@find . -name "*.pyc" -delete
@@ -24,13 +24,13 @@ clean: ## Remove temporary files
 	@find . -name "*.sw[a-z]" -delete
 	@find . -type d -name "*.egg-info" -exec rm -rf {} +
 
-virtualenv:  ## Create Python virtualenv
+create-venv:  ## Create Python virtualenv
 	@test -d $(VIRTUALENV_PATH) && \
 	(echo "The virtualenv $(VIRTUALENV_PATH) already exists. Skipping.") || \
 	(echo "Creating the virtualenv $(VIRTUALENV_PATH) using $(SYSTEM_PYTHON)" & \
 	$(SYSTEM_PYTHON) -m venv $(VIRTUALENV_PATH))
 
-install: virtualenv  ## Install python dependencies in existing virtualenv
+install-dependency: create-venv  ## Install python dependencies in existing virtualenv
 	@echo "Installing Python dependencies using $(PIP)"
 	@$(PIP) install --upgrade pip
 	@$(PIP) install nox
@@ -38,7 +38,7 @@ install: virtualenv  ## Install python dependencies in existing virtualenv
 	@$(PIP) install -e .[all]
 	@$(PIP) install .[tests]
 
-config:  ## Create sample configuration files related to Snowflake, Amazon and Google
+create-config:  ## Create sample configuration files related to Snowflake, Amazon and Google
 	@test -e .env && \
 		(echo "The file .env already exist. Skipping.") || \
 		(echo "Creating .env..." && \
@@ -50,22 +50,22 @@ config:  ## Create sample configuration files related to Snowflake, Amazon and G
 		cat .github/ci-test-connections.yaml > test-connections.yaml && \
 		echo "Please, update test-connections.yaml with your credentials")
 
-setup: config virtualenv install ## Setup a local development environment
+setup-dev-env: create-config create-venv install-dependency ## Setup a local development environment
 
-quality:
+run-precommit:
 	@$(PRECOMMIT) run --all-files
 
-test: virtualenv config ## Run all tests (use option: db=[db] run only run database-specific ones)
+run-tests: create-venv create-config ## Run all tests (use option: db=[db] run only run database-specific ones)
 ifdef db
 	@$(PYTEST) -s --cov --cov-branch --cov-report=term-missing -m "$(db)"
 else
 	@$(PYTEST) -s --cov --cov-branch --cov-report=term-missing
 endif
 
-unit: virtualenv config ## Run unit tests
+run-unit-tests: create-venv create-config ## Run unit tests
 	@$(PYTEST) -s --cov --cov-branch --cov-report=term-missing -m "not integration"
 
-integration: virtualenv config  ## Run integration tests
+run-integration-tests: create-venv create-config  ## Run integration tests
 	@$(PYTEST) -s --cov --cov-branch --cov-report=term-missing -m integration
 
 logs: ## View logs of the all the containers
@@ -79,9 +79,7 @@ clean: ## Remove all the containers along with volumes
 	rm -rf dev/logs
 
 build-run: ## Build the Docker Image & then run the containers
-	mkdir -p dev/astro_sdk && cp -r src dev/astro_sdk/ && cp pyproject.toml dev/astro_sdk/
 	docker-compose -f dev/docker-compose.yaml up --build -d
-	rm -rf dev/astro_sdk
 
 help: ## Prints this message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-41s\033[0m %s\n", $$1, $$2}'
