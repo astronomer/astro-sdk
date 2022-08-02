@@ -38,8 +38,8 @@ def test_raw_sql_chained_queries(database_table_fixture, sample_dag):
 
     @aql.dataframe
     def validate(df1: pandas.DataFrame, df2: pandas.DataFrame):
-        print(df1)
-        print(df2)
+        df1 = df1.sort_values(by=df1.columns.tolist()).reset_index(drop=True)
+        df2 = df2.sort_values(by=df2.columns.tolist()).reset_index(drop=True)
         assert df1.equals(df2)
 
     with sample_dag:
