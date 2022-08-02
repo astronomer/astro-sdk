@@ -6,7 +6,7 @@ SYSTEM_PYTHON := python3.9
 
 # Set default virtualenv path, if not defined
 ifndef VIRTUALENV_PATH
-mkdir -p ~/.virtualenvs/
+$(shell mkdir -p ~/.virtualenvs/)
 override VIRTUALENV_PATH = ~/.virtualenvs/$(PROJECT_NAME)
 endif
 
