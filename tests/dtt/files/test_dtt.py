@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from airflow.models.connection import Connection
 
-from astro.dtt import get_file_list
+from astro.dtt.files import get_file_list
 
 CWD = pathlib.Path(__file__).parent
 LOCAL_FILEPATH = f"{CWD}/../../example_dags/data/"
