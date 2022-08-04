@@ -1,6 +1,7 @@
 """Tests specific to the Sqlite Database implementation."""
 import os
 import pathlib
+from unittest import mock
 from unittest.mock import patch
 
 import pandas as pd
@@ -182,6 +183,40 @@ def test_load_file_to_table(database_table_fixture):
         ]
     )
     test_utils.assert_dataframes_are_equal(df, expected)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SNOWFLAKE,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+@mock.patch("astro.databases.snowflake.SnowflakeDatabase.hook")
+@mock.patch("astro.databases.snowflake.SnowflakeDatabase.create_stage")
+def test_load_file_to_table_natively_for_fallback(
+    mock_stage, mock_hook, database_table_fixture
+):
+    """Test loading on files to bigquery natively for fallback."""
+    mock_hook.run.side_effect = ValueError
+    mock_stage.return_value = SnowflakeStage(
+        name="mock_stage",
+        url="gcs://bucket/prefix",
+        metadata=Metadata(database="SNOWFLAKE_DATABASE", schema="SNOWFLAKE_SCHEMA"),
+    )
+    database, target_table = database_table_fixture
+    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
+    response = database.load_file_to_table_natively_with_fallback(
+        source_file=File(filepath),
+        target_table=target_table,
+        enable_native_fallback=False,
+    )
+    assert response is None
 
 
 @pytest.mark.parametrize(
