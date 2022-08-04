@@ -1,12 +1,15 @@
+import pathlib
 from datetime import datetime, timedelta
 
 import sqlalchemy
 from airflow.models import DAG
 
 from astro import sql as aql
+from astro.constants import FileType
 from astro.files import File
 from astro.sql.table import Metadata, Table
 
+CWD = pathlib.Path(__file__).parent
 default_args = {
     "owner": "airflow",
     "retries": 1,
@@ -115,4 +118,14 @@ with dag:
     )
     # [load_file_example_9_end]
 
+    # [load_file_example_10_start]
+    my_homes_table = aql.load_file(
+        input_file=File(
+            path=str(CWD.parent) + "/../data/homes*", filetype=FileType.CSV
+        ),
+        output_table=Table(
+            conn_id="postgres_conn",
+        ),
+    )
+    # [load_file_example_10_end]
     aql.cleanup()

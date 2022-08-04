@@ -26,8 +26,10 @@ Case 2: Load into pandas dataframe
        :start-after: [load_file_example_2_start]
        :end-before: [load_file_example_2_end]
 
+.. _custom_schema:
+
 Parameters to use when loading a file to the database table
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #. **ndjson_normalize_sep** - This parameter is useful when the input file type is NDJSON. Since NDJSON file can be multidimensional, we normalize the data to two-dimensional data, so that it is suitable to be loaded into a table and this parameter is used as a delimiter for combining columns names if required.
     example:
         input JSON:
@@ -58,12 +60,40 @@ Parameters to use when loading a file to the database table
        :start-after: [load_file_example_4_start]
        :end-before: [load_file_example_4_end]
 
-#. **output_table** - We can specify the output table to be created by passing in this parameter, which is expected to be an instance of ``astro.sql.table.Table``. Users can specify the schema of tables by passing in the ``columns`` parameter of ``astro.sql.table.Table`` object, which is expected to be a list of the instance of ``sqlalchemy.Column``. If the user doesn't specify the schema the schema is inferred using pandas.
+    Note - When we are using ``if_exists='replace'`` we are dropping the existing table and then creating a new table. Here we are not reusing the schema.
+
+#. **output_table** - We can specify the output table to be created by passing in this parameter, which is expected to be an instance of ``astro.sql.table.Table``. Users can specify the schema of tables by passing in the ``columns`` parameter of ``astro.sql.table.Table`` object, which is expected to be a list of the instance of ``sqlalchemy.Column``. If the user doesn't specify the schema, the schema is inferred using pandas.
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
        :start-after: [load_file_example_5_start]
        :end-before: [load_file_example_5_end]
+
+
+.. _table_schema:
+
+Inferring Table Schema
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are two ways to get the schema of the table to be created
+
+#. **User specified schema** - Users can specify the schema of the table to be created in the Table object like the ``output_table`` section in :ref:`custom_schema`
+
+#. **Auto schema detection** - if the user doesn't specify the schema in the table object then by using the top 1000 rows of the table we infer the schema of the table. The default value is 1000, which can be changed by creating an environment variable
+
+    .. code:: shell
+
+       Shell
+       AIRFLOW__ASTRO_SDK_LOAD_TABLE_AUTODETECT_ROWS_COUNT
+
+    or within airflow config
+
+    .. code:: shell
+
+       [astro_sdk]
+       load_table_autodetect_rows_count = 1000
+
+    Note - this only applies to :ref:`filetype` JSON, NDJSON and CSV, PARQUET have type information and we don't need to infer it.
 
 
 Parameters to use when loading a file to pandas dataframe
@@ -77,6 +107,8 @@ Parameters to use when loading a file to pandas dataframe
        :language: python
        :start-after: [load_file_example_6_start]
        :end-before: [load_file_example_6_end]
+
+    Note - If we create the table in the `Snowflake` database with :ref:`table_schema` auto schema detect, we convert all the columns to lowercase by default, the user can change behavior by this parameter. Only valid values, in this case, are 'lower' and upper', if the user gives `original` we convert cols to lowercase.
 
 How load_file Works
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -112,7 +144,7 @@ Parameters for native path
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #. **use_native_support** - Native paths support is available for some FileSource and Databases, if it is available the default is to use this path. To leverage these paths certain settings/changes need to be done on destination databases. If for some reason users don't want to use these paths they can turn off this behavior by passing ``use_native_support=False``.
-        This feature is enabled by default, to disable it refer to below code.
+        This feature is enabled by default, to disable it refer to the below code.
 
         .. literalinclude:: ../../../../example_dags/example_load_file.py
            :language: python
@@ -160,3 +192,81 @@ Supported Native Paths
    * - GCS
      - Snowflake
      -
+
+.. _file_location:
+
+Supported File Location
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Users can load file from all the supported file location that are listed below:
+
+.. literalinclude:: ../../../../src/astro/constants.py
+   :language: python
+   :start-after: [filelocation_start]
+   :end-before: [filelocation_end]
+
+.. _filetype:
+
+Supported File Type
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Users can load the file of all the supported file types that are listed below:
+
+.. literalinclude:: ../../../../src/astro/constants.py
+   :language: python
+   :start-after: [filetypes_start]
+   :end-before: [filetypes_end]
+
+Supported Databases
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Users can create tables in all the supported databases listed below:
+
+.. literalinclude:: ../../../../src/astro/constants.py
+   :language: python
+   :start-after: [database_start]
+   :end-before: [database_end]
+
+Patterns in File path
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Load file can also resolve patterns in file path, there are three types of patterns supported by load file based on the :ref:`file_location`
+
+#. **Local** - On local we support glob pattern - https://docs.python.org/3/library/glob.html
+#. **S3** - prefix in file path - https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-prefixes.html
+#. **GCS** - prefix and wildcard in file path - https://cloud.google.com/storage/docs/gsutil/addlhelp/WildcardNames
+
+    .. literalinclude:: ../../../../example_dags/example_load_file.py
+       :language: python
+       :start-after: [load_file_example_10_start]
+       :end-before: [load_file_example_10_end]
+
+
+Inferring File Type
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are two ways we infer :ref:`filetype`
+
+#. **File object** - If the user has passed the ``filetype`` param while declaring the ``astro.files.File`` object, we use that as file type. Valid values are listed :ref:`filetype`
+
+    .. literalinclude:: ../../../../example_dags/example_load_file.py
+       :language: python
+       :start-after: [load_file_example_10_start]
+       :end-before: [load_file_example_10_end]
+
+    Note - This param becomes mandatory when the file path don't have extension.
+
+#. **From file extensions** - When we create ``astro.files.File`` object and passed a fully qualified path like below, file extensions are used to infer file types. Here the file type is CSV.
+
+    .. literalinclude:: ../../../../example_dags/example_load_file.py
+       :language: python
+       :start-after: [load_file_example_4_start]
+       :end-before: [load_file_example_4_end]
+
+
+Loading data from HTTP API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Users can also load data from HTTP API
+
+.. literalinclude:: ../../../../example_dags/example_google_bigquery_gcs_load_and_save.py
+   :language: python
+   :start-after: [load_file_http_example_start]
+   :end-before: [load_file_http_example_end]
