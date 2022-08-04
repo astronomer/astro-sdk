@@ -140,7 +140,7 @@ You can configure the Docker-based testing environment to test your DAG
 
 1. Install the latest versions of the Docker Community Edition and Docker Compose and add them to the PATH.
 
-2. Run ``make -f Makefile.mk build-run`` 
+2. Run ``make -f Makefile.mk build-run``
 
 3. Put the DAGs you want to run in the dev/dags directory:
 
