@@ -422,7 +422,7 @@ class SnowflakeDatabase(BaseDatabase):
             self.hook.run(sql_statement)
         except (ValueError, AttributeError) as exe:
             logging.warning(exe)
-            raise DatabaseCustomError
+            raise DatabaseCustomError from exe
         self.drop_stage(stage)
 
     def load_pandas_dataframe_to_table(

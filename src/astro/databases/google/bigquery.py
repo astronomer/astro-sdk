@@ -1,4 +1,5 @@
 """Google BigQuery table implementation."""
+import logging
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -332,10 +333,11 @@ class BigqueryDatabase(BaseDatabase):
         """
         try:
             return str(self.hook.project_id)
-        except AttributeError:
+        except AttributeError as exe:
+            logging.warning(exe)
             raise DatabaseCustomError(
                 f"conn_id {target_table.conn_id} has no project id"
-            )
+            ) from exe
 
     def load_local_file_to_table(
         self,
