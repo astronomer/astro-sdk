@@ -253,6 +253,36 @@ def test_load_file_to_table_natively_for_fallback(
     assert response is None
 
 
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
+    ],
+    indirect=True,
+    ids=["bigquery"],
+)
+def test_load_file_to_table_natively_for_fallback_wrong_file_location(
+    database_table_fixture,
+):
+    """
+    Test loading on files to bigquery natively for fallback without fallback
+    gracefully for wrong file location.
+    """
+    database, target_table = database_table_fixture
+    filepath = "https://www.data.com/data/sample.json"
+
+    response = database.load_file_to_table_natively_with_fallback(
+        source_file=File(filepath),
+        target_table=target_table,
+        enable_native_fallback=False,
+    )
+    assert response is None
+
+
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
