@@ -24,6 +24,15 @@ from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.sql.table import Metadata, Table
 
 
+class DatabaseCustomError(ValueError, AttributeError):
+    """
+    Inappropriate argument value (of correct type) or attribute
+    not found while running query. while running query
+    """
+
+    pass
+
+
 class BaseDatabase(ABC):
     """
     Base class to represent all the Database interactions.
@@ -48,7 +57,7 @@ class BaseDatabase(ABC):
     # illegal_column_name_chars[0] will be replaced by value in illegal_column_name_chars_replacement[0]
     illegal_column_name_chars: List[str] = []
     illegal_column_name_chars_replacement: List[str] = []
-    NATIVE_LOAD_EXCEPTIONS: Any = (ValueError, AttributeError)
+    NATIVE_LOAD_EXCEPTIONS: Any = DatabaseCustomError
     DEFAULT_SCHEMA = SCHEMA
 
     def __init__(self, conn_id: str):

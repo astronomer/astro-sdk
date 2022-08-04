@@ -1,4 +1,5 @@
 """Google BigQuery table implementation."""
+import logging
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -44,7 +45,7 @@ from astro.constants import (
     LoadExistStrategy,
     MergeConflictStrategy,
 )
-from astro.databases.base import BaseDatabase
+from astro.databases.base import BaseDatabase, DatabaseCustomError
 from astro.files import File
 from astro.settings import BIGQUERY_SCHEMA
 from astro.sql.table import Metadata, Table
@@ -74,8 +75,6 @@ class BigqueryDatabase(BaseDatabase):
     illegal_column_name_chars: List[str] = ["."]
     illegal_column_name_chars_replacement: List[str] = ["_"]
     NATIVE_LOAD_EXCEPTIONS: Any = (
-        ValueError,
-        AttributeError,
         GoogleNotFound,
         ClientError,
         GoogleAPIError,
@@ -90,7 +89,7 @@ class BigqueryDatabase(BaseDatabase):
         Unknown,
         ServiceUnavailable,
         InvalidResponse,
-        OSError,
+        DatabaseCustomError,
     )
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
@@ -245,7 +244,7 @@ class BigqueryDatabase(BaseDatabase):
                 **kwargs,
             )
         else:
-            raise ValueError(
+            raise DatabaseCustomError(
                 f"No transfer performed since there is no optimised path "
                 f"for {source_file.location.location_type} to bigquery."
             )
@@ -335,8 +334,11 @@ class BigqueryDatabase(BaseDatabase):
         """
         try:
             return str(self.hook.project_id)
-        except AttributeError:
-            raise ValueError(f"conn_id {target_table.conn_id} has no project id")
+        except AttributeError as exe:
+            logging.warning(exe)
+            raise DatabaseCustomError(
+                f"conn_id {target_table.conn_id} has no project id"
+            ) from exe
 
     def load_local_file_to_table(
         self,
@@ -439,7 +441,7 @@ class S3ToBigqueryDataTransfer:
                 time.sleep(self.poll_duration)
 
             if run_info.state != TransferState.SUCCEEDED:
-                raise ValueError(run_info.error_status)
+                raise DatabaseCustomError(run_info.error_status)
         finally:
             # delete transfer config created.
             self.delete_transfer_config(transfer_config_id)

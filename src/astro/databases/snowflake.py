@@ -32,7 +32,7 @@ from astro.constants import (
     LoadExistStrategy,
     MergeConflictStrategy,
 )
-from astro.databases.base import BaseDatabase
+from astro.databases.base import BaseDatabase, DatabaseCustomError
 from astro.files import File
 from astro.settings import SNOWFLAKE_SCHEMA
 from astro.sql.table import Metadata, Table
@@ -161,8 +161,7 @@ class SnowflakeDatabase(BaseDatabase):
     """
 
     NATIVE_LOAD_EXCEPTIONS: Any = (
-        ValueError,
-        AttributeError,
+        DatabaseCustomError,
         ProgrammingError,
         DatabaseError,
         OperationalError,
@@ -238,7 +237,7 @@ class SnowflakeDatabase(BaseDatabase):
             auth = f"storage_integration = {storage_integration};"
         else:
             if file.location.location_type == FileLocation.GS:
-                raise ValueError(
+                raise DatabaseCustomError(
                     "In order to create an stage for GCS, `storage_integration` is required."
                 )
             elif file.location.location_type == FileLocation.S3:
@@ -246,7 +245,7 @@ class SnowflakeDatabase(BaseDatabase):
                 if aws.access_key and aws.secret_key:
                     auth = f"credentials=(aws_key_id='{aws.access_key}' aws_secret_key='{aws.secret_key}');"
                 else:
-                    raise ValueError(
+                    raise DatabaseCustomError(
                         "In order to create an stage for S3, one of the following is required: "
                         "* `storage_integration`"
                         "* AWS_KEY_ID and SECRET_KEY_ID"
@@ -422,7 +421,11 @@ class SnowflakeDatabase(BaseDatabase):
         sql_statement = (
             f"COPY INTO {table_name} FROM @{stage.qualified_name}/{file_path}"
         )
-        self.hook.run(sql_statement)
+        try:
+            self.hook.run(sql_statement)
+        except (ValueError, AttributeError) as exe:
+            logging.warning(exe)
+            raise DatabaseCustomError from exe
         self.drop_stage(stage)
 
     def load_pandas_dataframe_to_table(
@@ -594,7 +597,7 @@ class SnowflakeDatabase(BaseDatabase):
         values_to_check.extend(target_cols)
         for v in values_to_check:
             if not is_valid_snow_identifier(v):
-                raise ValueError(
+                raise DatabaseCustomError(
                     f"The identifier {v} is invalid. Please check to prevent SQL injection"
                 )
         if if_conflicts == "update":
