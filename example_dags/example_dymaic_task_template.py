@@ -4,15 +4,29 @@ from datetime import datetime
 from airflow import DAG
 from airflow.decorators import task
 
-from astro import dtt
+from astro import sql as aql
+from astro.dtt.files import get_file_list
+from astro.files.base import File
+from astro.sql.table import Table
+from src.astro.sql.table import Metadata
 
-S3_BUCKET = os.getenv("S3_BUCKET", "s3://tmp9")
 GCS_BUCKET = os.getenv("GCS_BUCKET", "gs://dag-authoring")
+ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_default")
+ASTRO_BIGQUERY_DATASET = os.getenv("ASTRO_BIGQUERY_DATASET", "dag_authoring")
 
 
 @task
-def print_file_path(path):
-    print(path)
+def load_to_bigquery(path):
+    aql.load_file(
+        input_file=File(path=path),
+        output_table=Table(
+            metadata=Metadata(
+                schema=ASTRO_BIGQUERY_DATASET,
+            ),
+            conn_id=ASTRO_GCP_CONN_ID,
+        ),
+        use_native_support=False,
+    )
 
 
 with DAG(
@@ -21,8 +35,8 @@ with DAG(
     start_date=datetime(2022, 1, 1),
     catchup=False,
 ) as dag:
-    print_file_path.expand(path=dtt.get_file_list("aws_default", f"{S3_BUCKET}/*.csv"))
-
-    print_file_path.expand(
-        path=dtt.get_file_list("google_cloud_default", f"{GCS_BUCKET}/*.csv")
+    load_to_bigquery.expand(
+        path=get_file_list(ASTRO_GCP_CONN_ID, f"{GCS_BUCKET}/*.csv")
     )
+
+    aql.cleanup()
