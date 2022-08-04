@@ -36,6 +36,12 @@ Welcome to astro-sdk's documentation!
 
    CHANGELOG.md
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Operators:
+   :glob:
+
+   astro/sql/operators/*
 
 Indices and Tables
 ==================
