@@ -283,6 +283,39 @@ def test_load_file_to_table_natively_for_fallback_wrong_file_location(
     assert response is None
 
 
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
+    ],
+    indirect=True,
+    ids=["bigquery"],
+)
+@mock.patch("astro.databases.google.bigquery.BigqueryDatabase.hook")
+def test_get_project_id_raise_exception(
+    mock_hook,
+    database_table_fixture,
+):
+    """
+    Test loading on files to bigquery natively for fallback without fallback
+    gracefully for wrong file location.
+    """
+
+    class CustomAttibuteError:
+        def __str__(self):
+            raise AttributeError
+
+    mock_hook.project_id = CustomAttibuteError()
+    database, target_table = database_table_fixture
+
+    with pytest.raises(DatabaseCustomError):
+        database.get_project_id(target_table=target_table)
+
+
 @pytest.mark.parametrize(
     "database_table_fixture",
     [

@@ -11,6 +11,7 @@ from sqlalchemy.exc import ProgrammingError
 
 from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
+from astro.databases.base import DatabaseCustomError
 from astro.databases.snowflake import SnowflakeDatabase, SnowflakeStage
 from astro.exceptions import NonExistentTableException
 from astro.files import File
@@ -217,6 +218,34 @@ def test_load_file_to_table_natively_for_fallback(
         enable_native_fallback=False,
     )
     assert response is None
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SNOWFLAKE,
+            "table": Table(name="test_table", metadata=Metadata(schema=SCHEMA)),
+        },
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+@mock.patch("astro.databases.snowflake.is_valid_snow_identifier")
+def test_build_merge_sql(mock_is_valid_snow_identifier, database_table_fixture):
+    """Test build merge SQL for DatabaseCustomError"""
+    mock_is_valid_snow_identifier.return_value = False
+    database, target_table = database_table_fixture
+    with pytest.raises(DatabaseCustomError):
+        database._build_merge_sql(
+            source_table=Table(
+                name="source_test_table", metadata=Metadata(schema=SCHEMA)
+            ),
+            target_table=target_table,
+            source_to_target_columns_map={"list": "val"},
+            target_conflict_columns=["target"],
+        )
 
 
 @pytest.mark.parametrize(
