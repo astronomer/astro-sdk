@@ -30,6 +30,23 @@ Case 2: Load into pandas dataframe
 
 Parameters to use when loading a file to the database table
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#. **if_exists** - This parameter comes in handy when the table you trying to create already exists. In such a case, we have two options, either replace or append. Which can we accomplish by passing ``if_exists='append'`` or ``if_exists='replace'``.
+
+    .. literalinclude:: ../../../../example_dags/example_load_file.py
+       :language: python
+       :start-after: [load_file_example_4_start]
+       :end-before: [load_file_example_4_end]
+
+    Note - When we are using ``if_exists='replace'`` we are dropping the existing table and then creating a new table. Here we are not reusing the schema.
+
+#. **output_table** - We can specify the output table to be created by passing in this parameter, which is expected to be an instance of ``astro.sql.table.Table``. Users can specify the schema of tables by passing in the ``columns`` parameter of ``astro.sql.table.Table`` object, which is expected to be a list of the instance of ``sqlalchemy.Column``. If the user doesn't specify the schema, the schema is inferred using pandas.
+
+    .. literalinclude:: ../../../../example_dags/example_load_file.py
+       :language: python
+       :start-after: [load_file_example_5_start]
+       :end-before: [load_file_example_5_end]
+
 #. **ndjson_normalize_sep** - This parameter is useful when the input file type is NDJSON. Since NDJSON file can be multidimensional, we normalize the data to two-dimensional data, so that it is suitable to be loaded into a table and this parameter is used as a delimiter for combining columns names if required.
     example:
         input JSON:
@@ -53,29 +70,12 @@ Parameters to use when loading a file to the database table
        :start-after: [load_file_example_3_start]
        :end-before: [load_file_example_3_end]
 
-#. **if_exists** - This parameter comes in handy when the table you trying to create already exists. In such a case, we have two options, either replace or append. Which can we accomplish by passing ``if_exists='append'`` or ``if_exists='replace'``.
-
-    .. literalinclude:: ../../../../example_dags/example_load_file.py
-       :language: python
-       :start-after: [load_file_example_4_start]
-       :end-before: [load_file_example_4_end]
-
-    Note - When we are using ``if_exists='replace'`` we are dropping the existing table and then creating a new table. Here we are not reusing the schema.
-
-#. **output_table** - We can specify the output table to be created by passing in this parameter, which is expected to be an instance of ``astro.sql.table.Table``. Users can specify the schema of tables by passing in the ``columns`` parameter of ``astro.sql.table.Table`` object, which is expected to be a list of the instance of ``sqlalchemy.Column``. If the user doesn't specify the schema, the schema is inferred using pandas.
-
-    .. literalinclude:: ../../../../example_dags/example_load_file.py
-       :language: python
-       :start-after: [load_file_example_5_start]
-       :end-before: [load_file_example_5_end]
-
-
 .. _table_schema:
 
 Inferring Table Schema
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are two ways to get the schema of the table to be created
+There are two ways to get the schema of the table to be created, listed by priority
 
 #. **User specified schema** - Users can specify the schema of the table to be created in the Table object like the ``output_table`` section in :ref:`custom_schema`
 
@@ -136,7 +136,7 @@ Steps:
 #. Request destination database to ingest data from the file source.
 #. Database request file source for data.
 
-This is a faster way to ingest data as there is only one network call involved and usually the bandwidth between vendors is high. Also, there is no requirement for memory/processing power of the worker node, since data never gets on the node. There is significant performance improvement due to native paths as evident from benchmarking results.
+This is a faster way for datasets of larger size as there is only one network call involved and usually the bandwidth between vendors is high. Also, there is no requirement for memory/processing power of the worker node, since data never gets on the node. There is significant performance improvement due to native paths as evident from benchmarking results.
 
 **Note** - By default the native path is enabled and will be used if the source and destination support it, this behavior can be altered by the ``use_native_support`` param.
 
