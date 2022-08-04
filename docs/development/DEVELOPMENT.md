@@ -171,19 +171,19 @@ airflow_db:
 
 5. The following commands are available to run from the root of the repository.
 
-  ``make -f Makefile.mk logs`` - To view the logs of the all the containers
-  ``make -f Makefile.mk stop`` - To stop all the containers
-  ``make -f Makefile.mk clean`` - To remove all the containers along with volumes
-  ``make -f Makefile.mk help`` - To view the available commands
-  ``make -f Makefile.mk build-run`` - To build the docker image and then run containers
+  - ``make -f Makefile.mk logs`` - To view the logs of the all the containers
+  - ``make -f Makefile.mk stop`` - To stop all the containers
+  - ``make -f Makefile.mk clean`` - To remove all the containers along with volumes
+  - ``make -f Makefile.mk help`` - To view the available commands
+  - ``make -f Makefile.mk build-run`` - To build the docker image and then run containers
 
 6. Following ports are accessible from the host machine:
 
-  ``8080 ``- Webserver
-  ``5555`` - Flower
-  ``5432`` - Postgres
+  - ``8080 ``- Webserver
+  - ``5555`` - Flower
+  - ``5432`` - Postgres
 
 7. Dev Directories:
 
-  ``dev/dags/`` - DAG Files
-  ``dev/logs/`` - Logs files of the Airflow containers
+  - ``dev/dags/`` - DAG Files
+  - ``dev/logs/`` - Logs files of the Airflow containers
