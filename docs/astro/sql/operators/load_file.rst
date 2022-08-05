@@ -47,6 +47,9 @@ Parameters to use when loading a file to the database table
        :start-after: [load_file_example_5_start]
        :end-before: [load_file_example_5_end]
 
+#. **columns_names_capitalization** - Only applies when we want to create table in the ``Snowflake`` database with :ref:`table_schema` - auto schema detect and with ``if_exists=replace``. Default is to convert all the columns to lowercase. Users can change behavior by this parameter, valid values are ``lower`` and ``upper``, if the user gives ``original`` we convert cols to lowercase.
+
+
 #. **ndjson_normalize_sep** - This parameter is useful when the input file type is NDJSON. Since NDJSON file can be multidimensional, we normalize the data to two-dimensional data, so that it is suitable to be loaded into a table and this parameter is used as a delimiter for combining columns names if required.
     example:
         input JSON:
@@ -107,8 +110,6 @@ Parameters to use when loading a file to pandas dataframe
        :language: python
        :start-after: [load_file_example_6_start]
        :end-before: [load_file_example_6_end]
-
-    Note - If we create the table in the `Snowflake` database with :ref:`table_schema` auto schema detect, we convert all the columns to lowercase by default, the user can change behavior by this parameter. Only valid values, in this case, are 'lower' and upper', if the user gives `original` we convert cols to lowercase.
 
 How load_file Works
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
