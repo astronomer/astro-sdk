@@ -125,25 +125,25 @@ Steps:
 This is the default way of loading data into a table. There are performance bottlenecks because of limitations of memory, processing power, and internet bandwidth of worker node.
 
 
-Improving bottlenecks by using native paths
+Improving bottlenecks by using native transfer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. figure:: ../../../images/nativePath.png
 
-Some of the cloud databases like Bigquery and Snowflake support native paths (complete list of supported native paths :ref:`supported_native_path`) to ingest data from cloud storage directly. Using this we can ingest data much quicker and without any involvement of the worker node.
+Some of the cloud databases like Bigquery and Snowflake support native transfer (complete list of supported native transfers :ref:`supported_native_path`) to ingest data from cloud storage directly. Using this we can ingest data much quicker and without any involvement of the worker node.
 
 Steps:
 
 #. Request destination database to ingest data from the file source.
 #. Database request file source for data.
 
-This is a faster way for datasets of larger size as there is only one network call involved and usually the bandwidth between vendors is high. Also, there is no requirement for memory/processing power of the worker node, since data never gets on the node. There is significant performance improvement due to native paths as evident from benchmarking results.
+This is a faster way for datasets of larger size as there is only one network call involved and usually the bandwidth between vendors is high. Also, there is no requirement for memory/processing power of the worker node, since data never gets on the node. There is significant performance improvement due to native transfers as evident from benchmarking results.
 
-**Note** - By default the native path is enabled and will be used if the source and destination support it, this behavior can be altered by the ``use_native_support`` param.
+**Note** - By default the native transfer is enabled and will be used if the source and destination support it, this behavior can be altered by the ``use_native_support`` param.
 
-Parameters for native path
+Parameters for native transfer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#. **use_native_support** - Native paths support is available for some FileSource and Databases, if it is available the default is to use this path. To leverage these paths certain settings/changes need to be done on destination databases. If for some reason users don't want to use these paths they can turn off this behavior by passing ``use_native_support=False``.
+#. **use_native_support** - native transfer support is available for some FileSource and Databases, if it is available the default is to use this path. To leverage these paths certain settings/changes need to be done on destination databases. If for some reason users don't want to use these paths they can turn off this behavior by passing ``use_native_support=False``.
         This feature is enabled by default, to disable it refer to the below code.
 
         .. literalinclude:: ../../../../example_dags/example_load_file.py
@@ -151,7 +151,7 @@ Parameters for native path
            :start-after: [load_file_example_7_start]
            :end-before: [load_file_example_7_end]
 
-        To check if the native path will be used for data transfer for a combination of file location and database, refer section :ref:`supported_native_path`
+        To check if the native transfer will be used for data transfer for a combination of file location and database, refer section :ref:`supported_native_path`
 
 #. **native_support_kwargs** - Since we support multiple databases they may require some parameters to process a file or control error rate etc, those parameters can be passed in ``native_support_kwargs``. These parameters are passed to the destination database.
 
@@ -163,7 +163,7 @@ Parameters for native path
            :end-before: [load_file_example_8_end]
 
 
-#. **enable_native_fallback** -  When ``use_native_support`` is True, we try to use the native path, and if this fails we try to use the default path to load data, giving the user a warning. If you want to change this behavior pass ``enable_native_fallback=False``.
+#. **enable_native_fallback** -  When ``use_native_support`` is True, we try to use the native transfer, and if this fails we try to use the default path to load data, giving the user a warning. If you want to change this behavior pass ``enable_native_fallback=False``.
 
         .. literalinclude:: ../../../../example_dags/example_load_file.py
            :language: python
@@ -172,7 +172,7 @@ Parameters for native path
 
 .. _supported_native_path:
 
-Supported Native Paths
+Supported native transfers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. list-table::
    :widths: auto
