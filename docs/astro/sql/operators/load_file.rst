@@ -154,6 +154,16 @@ Parameters for native transfer
 
         To check if the native transfer will be used for data transfer for a combination of file location and database, refer section :ref:`supported_native_path`
 
+        **Case when you would like to turn off native transfer:**
+
+            * There are some limitations and/or additional services that need to be enabled on the database to use native transfer.
+
+                example - https://cloud.google.com/bigquery-transfer/docs/s3-transfer
+
+            * There may be some additional costs associated due to the services used to perform the native transfer.
+
+            * Native transfers are overkill in cases when we want to transfer the smaller file. It may take lesser time with the default approach.
+
 #. **native_support_kwargs** - Since we support multiple databases they may require some parameters to process a file or control error rate etc, those parameters can be passed in ``native_support_kwargs``. These parameters are passed to the destination database.
 
         Check for valid parameters based on **file location** and **database** combination in section :ref:`supported_native_path`
