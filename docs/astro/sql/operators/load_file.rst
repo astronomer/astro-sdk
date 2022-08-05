@@ -254,7 +254,7 @@ Load file can also resolve patterns in file path, there are three types of patte
 Inferring File Type
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are two ways we infer :ref:`filetype`
+There are two ways we infer :ref:`filetype` in the following order:
 
 #. **File object** - If the user has passed the ``filetype`` param while declaring the ``astro.files.File`` object, we use that as file type. Valid values are listed :ref:`filetype`
 
@@ -272,6 +272,7 @@ There are two ways we infer :ref:`filetype`
        :start-after: [START load_file_example_4]
        :end-before: [END load_file_example_4]
 
+Note - 1st way take priority over 2nd way.
 
 Loading data from HTTP API
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
