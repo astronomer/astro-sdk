@@ -15,16 +15,16 @@ Case 1: Load into a database table
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
-       :start-after: [load_file_example_1_start]
-       :end-before: [load_file_example_1_end]
+       :start-after: [START load_file_example_1]
+       :end-before: [END load_file_example_1]
 
 Case 2: Load into pandas dataframe
     If you don't pass the `output_table` to the load_file operator it converts the file into a pandas dataframe and returns the reference to dataframe.
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
-       :start-after: [load_file_example_2_start]
-       :end-before: [load_file_example_2_end]
+       :start-after: [START load_file_example_2]
+       :end-before: [END load_file_example_2]
 
 .. _custom_schema:
 
@@ -35,8 +35,8 @@ Parameters to use when loading a file to the database table
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
-       :start-after: [load_file_example_4_start]
-       :end-before: [load_file_example_4_end]
+       :start-after: [START load_file_example_4]
+       :end-before: [END load_file_example_4]
 
     Note - When we are using ``if_exists='replace'`` we are dropping the existing table and then creating a new table. Here we are not reusing the schema.
 
@@ -44,8 +44,8 @@ Parameters to use when loading a file to the database table
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
-       :start-after: [load_file_example_5_start]
-       :end-before: [load_file_example_5_end]
+       :start-after: [START load_file_example_5]
+       :end-before: [END load_file_example_5]
 
 #. **columns_names_capitalization** - Only applies when we want to create table in the ``Snowflake`` database with :ref:`table_schema` - auto schema detect and with ``if_exists=replace``. Default is to convert all the columns to lowercase. Users can change behavior by this parameter, valid values are ``lower`` and ``upper``, if the user gives ``original`` we convert cols to lowercase.
 
@@ -70,8 +70,8 @@ Parameters to use when loading a file to the database table
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
-       :start-after: [load_file_example_3_start]
-       :end-before: [load_file_example_3_end]
+       :start-after: [START load_file_example_3]
+       :end-before: [END load_file_example_3]
 
 .. _table_schema:
 
@@ -108,8 +108,8 @@ Parameters to use when loading a file to pandas dataframe
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
-       :start-after: [load_file_example_6_start]
-       :end-before: [load_file_example_6_end]
+       :start-after: [START load_file_example_6]
+       :end-before: [END load_file_example_6]
 
 How load_file Works
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -149,8 +149,8 @@ Parameters for native transfer
 
         .. literalinclude:: ../../../../example_dags/example_load_file.py
            :language: python
-           :start-after: [load_file_example_7_start]
-           :end-before: [load_file_example_7_end]
+           :start-after: [START load_file_example_7]
+           :end-before: [END load_file_example_7]
 
         To check if the native transfer will be used for data transfer for a combination of file location and database, refer section :ref:`supported_native_path`
 
@@ -160,16 +160,16 @@ Parameters for native transfer
 
         .. literalinclude:: ../../../../example_dags/example_load_file.py
            :language: python
-           :start-after: [load_file_example_8_start]
-           :end-before: [load_file_example_8_end]
+           :start-after: [START load_file_example_8]
+           :end-before: [END load_file_example_8]
 
 
 #. **enable_native_fallback** -  When ``use_native_support`` is True, we try to use the native transfer, and if this fails we try to use the default path to load data, giving the user a warning. If you want to change this behavior pass ``enable_native_fallback=False``.
 
         .. literalinclude:: ../../../../example_dags/example_load_file.py
            :language: python
-           :start-after: [load_file_example_9_start]
-           :end-before: [load_file_example_9_end]
+           :start-after: [START load_file_example_9]
+           :end-before: [END load_file_example_9]
 
 .. _supported_native_path:
 
@@ -202,8 +202,8 @@ Users can load file from all the supported file location that are listed below:
 
 .. literalinclude:: ../../../../src/astro/constants.py
    :language: python
-   :start-after: [filelocation_start]
-   :end-before: [filelocation_end]
+   :start-after: [START filelocation]
+   :end-before: [END filelocation]
 
 .. _filetype:
 
@@ -214,8 +214,8 @@ Users can load the file of all the supported file types that are listed below:
 
 .. literalinclude:: ../../../../src/astro/constants.py
    :language: python
-   :start-after: [filetypes_start]
-   :end-before: [filetypes_end]
+   :start-after: [START filetypes]
+   :end-before: [END filetypes]
 
 Supported Databases
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -223,8 +223,8 @@ Users can create tables in all the supported databases listed below:
 
 .. literalinclude:: ../../../../src/astro/constants.py
    :language: python
-   :start-after: [database_start]
-   :end-before: [database_end]
+   :start-after: [START database]
+   :end-before: [END database]
 
 Patterns in File path
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -237,8 +237,8 @@ Load file can also resolve patterns in file path, there are three types of patte
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
-       :start-after: [load_file_example_10_start]
-       :end-before: [load_file_example_10_end]
+       :start-after: [START load_file_example_10]
+       :end-before: [END load_file_example_10]
 
 
 Inferring File Type
@@ -250,8 +250,8 @@ There are two ways we infer :ref:`filetype`
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
-       :start-after: [load_file_example_10_start]
-       :end-before: [load_file_example_10_end]
+       :start-after: [START load_file_example_10]
+       :end-before: [END load_file_example_10]
 
     Note - This param becomes mandatory when the file path don't have extension.
 
@@ -259,8 +259,8 @@ There are two ways we infer :ref:`filetype`
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
-       :start-after: [load_file_example_4_start]
-       :end-before: [load_file_example_4_end]
+       :start-after: [START load_file_example_4]
+       :end-before: [END load_file_example_4]
 
 
 Loading data from HTTP API
@@ -269,5 +269,5 @@ Users can also load data from HTTP API
 
 .. literalinclude:: ../../../../example_dags/example_google_bigquery_gcs_load_and_save.py
    :language: python
-   :start-after: [load_file_http_example_start]
-   :end-before: [load_file_http_example_end]
+   :start-after: [START load_file_http_example]
+   :end-before: [END load_file_http_example]
