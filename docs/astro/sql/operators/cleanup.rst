@@ -4,7 +4,7 @@ cleanup operator
 
 When to Use cleanup operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Cleanup operator is used to clean :ref:`temp_table` created. It monitors the status of all the other tasks and execute at the end to clear all the :ref:`temp_table` created in a dag run. It is recommended to add cleanup operator in every DAG that uses AstroSDK.
+Cleanup operator is used to clean :ref:`temp_table` created. It monitors the status of all the other tasks and execute at the end to clear all the :ref:`temp_table` created in a dag run. It is recommended to add ``cleanup`` operator in every DAG that uses the Astro SDK.
 
 .. literalinclude:: ../../../../example_dags/example_amazon_s3_postgres.py
    :language: python
