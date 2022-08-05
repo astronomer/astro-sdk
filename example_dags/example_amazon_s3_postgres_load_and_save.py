@@ -25,7 +25,9 @@ s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
 def example_amazon_s3_postgres_load_and_save():
     t1 = aql.load_file(
         input_file=File(path=f"{s3_bucket}/homes.csv"),
+        # [named_table_example_start]
         output_table=Table(name="expected_table_from_s3", conn_id="postgres_conn"),
+        # [named_table_example_end]
     )
 
     aql.export_file(
