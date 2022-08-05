@@ -26,22 +26,22 @@ dag = DAG(
 
 
 with dag:
-    # [load_file_example_1_start]
+    # [START load_file_example_1]
     my_homes_table = aql.load_file(
         input_file=File(path="s3://astro-sdk/sample.csv"),
         output_table=Table(
             conn_id="postgres_conn",
         ),
     )
-    # [load_file_example_1_end]
+    # [END load_file_example_1]
 
-    # [load_file_example_2_start]
+    # [START load_file_example_2]
     dataframe = aql.load_file(
         input_file=File(path="s3://astro-sdk/sample.csv"),
     )
-    # [load_file_example_2_end]
+    # [END load_file_example_2]
 
-    # [load_file_example_3_start]
+    # [START load_file_example_3]
     sample_table = aql.load_file(
         input_file=File(path="s3://astro-sdk/sample.ndjson"),
         output_table=Table(
@@ -49,9 +49,9 @@ with dag:
         ),
         ndjson_normalize_sep="__",
     )
-    # [load_file_example_3_end]
+    # [END load_file_example_3]
 
-    # [load_file_example_4_start]
+    # [START load_file_example_4]
     new_table = aql.load_file(
         input_file=File(path="s3://astro-sdk/sample.csv"),
         output_table=Table(
@@ -59,9 +59,9 @@ with dag:
         ),
         if_exists="replace",
     )
-    # [load_file_example_4_end]
+    # [END load_file_example_4]
 
-    # [load_file_example_5_start]
+    # [START load_file_example_5]
     custom_schema_table = aql.load_file(
         input_file=File(path="s3://astro-sdk/sample.csv"),
         output_table=Table(
@@ -74,24 +74,24 @@ with dag:
             ],
         ),
     )
-    # [load_file_example_5_end]
+    # [END load_file_example_5]
 
-    # [load_file_example_6_start]
+    # [START load_file_example_6]
     dataframe = aql.load_file(
         input_file=File(path="s3://astro-sdk/sample.csv"),
         columns_names_capitalization="upper",
     )
-    # [load_file_example_6_end]
+    # [END load_file_example_6]
 
-    # [load_file_example_7_start]
+    # [START load_file_example_7]
     aql.load_file(
         input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
         output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
         use_native_support=False,
     )
-    # [load_file_example_7_end]
+    # [END load_file_example_7]
 
-    # [load_file_example_8_start]
+    # [START load_file_example_8]
     aql.load_file(
         input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
         output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
@@ -102,9 +102,9 @@ with dag:
             "skip_leading_rows": "1",
         },
     )
-    # [load_file_example_8_end]
+    # [END load_file_example_8]
 
-    # [load_file_example_9_start]
+    # [START load_file_example_9]
     aql.load_file(
         input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
         output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
@@ -116,9 +116,9 @@ with dag:
         },
         enable_native_fallback=False,
     )
-    # [load_file_example_9_end]
+    # [END load_file_example_9]
 
-    # [load_file_example_10_start]
+    # [START load_file_example_10]
     my_homes_table = aql.load_file(
         input_file=File(
             path=str(CWD.parent) + "/../data/homes*", filetype=FileType.CSV
@@ -127,5 +127,5 @@ with dag:
             conn_id="postgres_conn",
         ),
     )
-    # [load_file_example_10_end]
+    # [END load_file_example_10]
     aql.cleanup()
