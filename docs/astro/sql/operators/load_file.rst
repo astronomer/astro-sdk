@@ -2,7 +2,7 @@
 load_file operator
 ======================================
 
-When to Use load_file operator
+When to use the ``load_file`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 There are two use cases of the load_file operator.
