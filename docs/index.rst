@@ -49,7 +49,7 @@ Welcome to astro-sdk's documentation!
    :glob:
 
    concepts.rst
-   
+
 .. toctree::
    :maxdepth: 1
    :caption: Reference
