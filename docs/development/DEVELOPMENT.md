@@ -73,6 +73,10 @@ On only 3.9 (for example):
 Please also note that you can reuse an existing environment if you run nox with the `-r` argument (or even `-R` if you
 don't want to attempt to reinstall packages). This can significantly speed up repeat test runs.
 
+## Build documentation
+
+    nox -s build_docs
+
 ## Check code coverage
 
 To run code coverage locally, you can either use `pytest` in one of the test environments or
