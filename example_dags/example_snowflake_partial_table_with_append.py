@@ -136,9 +136,11 @@ def example_snowflake_partial_table_with_append():
     # We truncate this table only to avoid wasting Snowflake resources
     # Why? Between 2022-03-25 and 2022-04-11 it accumulated 301G (89 million rows) because
     # this example DAG used to append rows without deleting them
+    # [START drop_table_example]
     truncate_results = drop_table(
         table=Table(name="homes_reporting", conn_id=SNOWFLAKE_CONN_ID)
     )
+    # [END drop_table_example]
     truncate_results.set_upstream(record_results)
     cleanup()
 

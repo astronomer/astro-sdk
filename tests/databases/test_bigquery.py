@@ -15,6 +15,7 @@ from google.cloud.bigquery_datatransfer_v1.types import (
 
 from astro.constants import Database
 from astro.databases import create_database
+from astro.databases.base import DatabaseCustomError
 from astro.databases.google.bigquery import BigqueryDatabase, S3ToBigqueryDataTransfer
 from astro.exceptions import NonExistentTableException
 from astro.files import File
@@ -243,13 +244,76 @@ def test_load_file_to_table_natively_for_fallback(
     mock_load_file, database_table_fixture
 ):
     """Test loading on files to bigquery natively for fallback."""
-    mock_load_file.side_effect = AttributeError
+    mock_load_file.side_effect = DatabaseCustomError
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     response = database.load_file_to_table_natively_with_fallback(
         File(filepath), target_table
     )
     assert response is None
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
+    ],
+    indirect=True,
+    ids=["bigquery"],
+)
+def test_load_file_to_table_natively_for_fallback_wrong_file_location(
+    database_table_fixture,
+):
+    """
+    Test loading on files to bigquery natively for fallback without fallback
+    gracefully for wrong file location.
+    """
+    database, target_table = database_table_fixture
+    filepath = "https://www.data.com/data/sample.json"
+
+    response = database.load_file_to_table_natively_with_fallback(
+        source_file=File(filepath),
+        target_table=target_table,
+        enable_native_fallback=False,
+    )
+    assert response is None
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
+    ],
+    indirect=True,
+    ids=["bigquery"],
+)
+@mock.patch("astro.databases.google.bigquery.BigqueryDatabase.hook")
+def test_get_project_id_raise_exception(
+    mock_hook,
+    database_table_fixture,
+):
+    """
+    Test loading on files to bigquery natively for fallback without fallback
+    gracefully for wrong file location.
+    """
+
+    class CustomAttibuteError:
+        def __str__(self):
+            raise AttributeError
+
+    mock_hook.project_id = CustomAttibuteError()
+    database, target_table = database_table_fixture
+
+    with pytest.raises(DatabaseCustomError):
+        database.get_project_id(target_table=target_table)
 
 
 @pytest.mark.parametrize(
