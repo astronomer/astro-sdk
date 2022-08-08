@@ -23,7 +23,7 @@ or by updating Airflow's configuration
    [astro_sdk]
    schema = "tmp"
 
-We can also configure schema on database level.
+We can also configure the default schema specific to the database type (example: specific to Snowflake, BigQuery, Postgres). If both the default and database-specific schemas are defined, the preference is given to the database-specific value.
 
 .. code:: python
 
