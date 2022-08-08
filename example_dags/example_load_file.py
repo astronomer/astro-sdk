@@ -121,7 +121,7 @@ with dag:
     # [START load_file_example_10]
     my_homes_table = aql.load_file(
         input_file=File(
-            path=str(CWD.parent) + "/../data/homes*", filetype=FileType.CSV
+            path=str(CWD.parent) + "/tests/data/homes*", filetype=FileType.CSV
         ),
         output_table=Table(
             conn_id="postgres_conn",
