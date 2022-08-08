@@ -4,7 +4,7 @@ The purpose of an Astro Enhancement Proposal (AEP) is to introduce any significa
 
 This is required in order to balance the need to support new features, use cases, while avoiding accidentally introducing half thought-out interfaces that cause unnecessary problems when changed.
 
-This documentation is heavily based on the [Airflow Improvement Proposals](https://cwiki.apache.org/confluence/display/AIRFLOW/Airflow+Improvements+Proposals).
+This documentation is heavily based on the [Airflow Improvement Proposals](https://cwiki.apache.org/confluence/display/AIRFLOW/Airflow+Improvement+Proposals).
 
 
 ## What is considered a significant change that needs an API?

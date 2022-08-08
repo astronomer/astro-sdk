@@ -43,6 +43,12 @@ Welcome to astro-sdk's documentation!
 
    astro/sql/operators/*
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Concepts
+   :glob:
+
+   concepts.rst
 
 Indices and Tables
 ==================
