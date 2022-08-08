@@ -38,14 +38,14 @@ def my_df_func(input_df: DataFrame):
 with dag:
     my_homes_table = aql.load_file(
         input_file=File(path=f"{s3_bucket}/homes.csv"),
-        # [temp_table_example_start]
+        # [START temp_table_example]  skipcq: PY-W0069
         output_table=Table(
             conn_id="postgres_conn",
         ),
-        # [temp_table_example_end]
+        # [END temp_table_example]  skipcq: PY-W0069
     )
     sample_table = sample_create_table(my_homes_table)
     my_df_func(sample_table)
-    # [cleanup_example_start]
+    # [START cleanup_example]  skipcq: PY-W0069
     aql.cleanup()
-    # [cleanup_example_end]
+    # [END cleanup_example]  skipcq: PY-W0069

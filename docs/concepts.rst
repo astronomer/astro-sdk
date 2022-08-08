@@ -17,8 +17,8 @@ There are two types of tables:
 
     .. literalinclude:: ../example_dags/example_amazon_s3_postgres_load_and_save.py
        :language: python
-       :start-after: [named_table_example_start]
-       :end-before: [named_table_example_end]
+       :start-after: [START named_table_example]
+       :end-before: [END named_table_example]
 
 #. **Temporary Tables**
 
@@ -31,5 +31,5 @@ There are two types of tables:
 
         .. literalinclude:: ../example_dags/example_amazon_s3_postgres.py
            :language: python
-           :start-after: [temp_table_example_start]
-           :end-before: [temp_table_example_end]
+           :start-after: [START temp_table_example]
+           :end-before: [END temp_table_example]

@@ -10,5 +10,5 @@ Cleanup operator is used to clean temporary tables(:ref:`table`) created. It mon
 
 .. literalinclude:: ../../../../example_dags/example_amazon_s3_postgres.py
    :language: python
-   :start-after: [cleanup_example_start]
-   :end-before: [cleanup_example_end]
+   :start-after: [START cleanup_example]
+   :end-before: [END cleanup_example]
