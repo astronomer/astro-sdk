@@ -38,7 +38,7 @@ Welcome to astro-sdk's documentation!
 
 .. toctree::
    :maxdepth: 1
-   :caption: Configurations
+   :caption: Reference
    :glob:
 
    configurations.rst

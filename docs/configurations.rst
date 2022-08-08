@@ -1,5 +1,5 @@
-Configuration Reference
-=======================
+Configuration
+=============
 
 Configuring database default schema
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
