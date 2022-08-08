@@ -8,7 +8,7 @@ When to use the ``load_file`` operator
 There are two use cases of the ``load_file`` operator.
 
 #. When we want a (group of) file(s) to be loaded into a database table
-#. When we want a (group of) file(s) to be converted to dataframe
+#. When we want a (group of) file(s) to be loaded to a Pandas dataframe
 
 Case 1: Load into a database table
     you need to pass the `output_table` param to the load_file operator to convert it to a table and the operator returns an instance of the table object passed in `output_table`. The output table will be created if it doesn't exist and will be replaced if it does. We can change this behavior with the `if_exists` parameter.
