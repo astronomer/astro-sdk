@@ -12,3 +12,5 @@ The ``cleanup`` operator is used to clean temporary tables(:ref:`table`). It mon
    :language: python
    :start-after: [START cleanup_example]
    :end-before: [END cleanup_example]
+
+Users can also specify the temporary tables they want to delete by passing a list of tables in the parameter ``tables_to_cleanup``. If non temporary tables are passed they won't be deleted.
