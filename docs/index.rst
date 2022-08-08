@@ -50,6 +50,14 @@ Welcome to astro-sdk's documentation!
 
    concepts.rst
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Reference
+   :glob:
+
+   configurations.rst
+
+
 Indices and Tables
 ==================
 
