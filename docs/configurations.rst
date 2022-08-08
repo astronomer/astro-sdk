@@ -1,7 +1,7 @@
 Configuration
 =============
 
-Configuring database default schema
+Configuring the database default schema
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 We can configure the default schema that will be used for all operation involving database.
 environment variable :
