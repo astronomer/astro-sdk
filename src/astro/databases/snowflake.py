@@ -8,7 +8,6 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
-from pandas.io.sql import SQLDatabase
 from snowflake.connector import pandas_tools
 from snowflake.connector.errors import (
     DatabaseError,
