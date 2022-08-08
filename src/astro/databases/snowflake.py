@@ -33,6 +33,7 @@ from astro.constants import (
 )
 from astro.databases.base import BaseDatabase, DatabaseCustomError
 from astro.files import File
+from astro.settings import SNOWFLAKE_SCHEMA
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
@@ -172,6 +173,7 @@ class SnowflakeDatabase(BaseDatabase):
         ForbiddenError,
         RequestTimeoutError,
     )
+    DEFAULT_SCHEMA = SNOWFLAKE_SCHEMA
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
         super().__init__(conn_id)
