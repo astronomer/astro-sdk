@@ -40,7 +40,18 @@ class PostgresDatabase(BaseDatabase):
 
     @property
     def default_metadata(self) -> Metadata:
-        """Fill in default metadata values for table objects addressing postgres databases"""
+        """
+        Fill in default metadata values for table objects addressing postgres databases.
+
+        Currently, Schema is not being fetched from airflow connection for Postgres because in Postgres, databases and
+        schema are different concepts: https://www.postgresql.org/docs/current/ddl-schemas.html
+        The PostgresHook only exposes schema:
+        https://airflow.apache.org/docs/apache-airflow-providers-postgres/stable/_api/airflow/providers/postgres/hooks/postgres/index.html
+        However, implementation-wise, it seems that if the PostgresHook receives a schema during initialisation,
+        but it uses it as a database in the connection to Postgres:
+        https://github.com/apache/airflow/blob/main/airflow/providers/postgres/hooks/postgres.py#L96
+        """
+        # TODO: Change airflow PostgresHook to fetch database and schema separately
         database = self.hook.get_connection(self.conn_id).schema
         return Metadata(database=database, schema=self.DEFAULT_SCHEMA)
 
