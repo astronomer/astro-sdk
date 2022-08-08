@@ -111,38 +111,12 @@ Parameters to use when loading a file to pandas dataframe
        :start-after: [START load_file_example_6]
        :end-before: [END load_file_example_6]
 
-How load_file Works
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. figure:: ../../../images/defaultPath.png
 
-
-When we load a file located in cloud storage to a cloud database, internally the steps involved are:
-
-Steps:
-
-#. Get the file data in chunks from file storage to the worker node.
-#. Send data to the cloud database from the worker node.
-
-This is the default way of loading data into a table. There are performance bottlenecks because of limitations of memory, processing power, and internet bandwidth of worker node.
-
-
-Improving bottlenecks by using native transfer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. figure:: ../../../images/nativePath.png
-
-Some of the cloud databases like Bigquery and Snowflake support native transfer (complete list of supported native transfers :ref:`supported_native_path`) to ingest data from cloud storage directly. Using this we can ingest data much quicker and without any involvement of the worker node.
-
-Steps:
-
-#. Request destination database to ingest data from the file source.
-#. Database request file source for data.
-
-This is a faster way for datasets of larger size as there is only one network call involved and usually the bandwidth between vendors is high. Also, there is no requirement for memory/processing power of the worker node, since data never gets on the node. There is significant performance improvement due to native transfers as evident from `benchmarking results <https://github.com/astronomer/astro-sdk/blob/main/tests/benchmark/results.md>`_.
-
-**Note** - By default the native transfer is enabled and will be used if the source and destination support it, this behavior can be altered by the ``use_native_support`` param.
 
 Parameters for native transfer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Please refer :ref:`load_file_working` for detail on Native Path.
 
 #. **use_native_support** - native transfer support is available for some FileSource and Databases, if it is available the default is to use this path. To leverage these paths certain settings/changes need to be done on destination databases. If for some reason users don't want to use these paths they can turn off this behavior by passing ``use_native_support=False``.
         This feature is enabled by default, to disable it refer to the below code.
@@ -204,37 +178,6 @@ Supported native transfers
      - Snowflake
      -
 
-.. _file_location:
-
-Supported File Location
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Users can load file from all the supported file location that are listed below:
-
-.. literalinclude:: ../../../../src/astro/constants.py
-   :language: python
-   :start-after: [START filelocation]
-   :end-before: [END filelocation]
-
-.. _filetype:
-
-Supported File Type
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Users can load the file of all the supported file types that are listed below:
-
-.. literalinclude:: ../../../../src/astro/constants.py
-   :language: python
-   :start-after: [START filetypes]
-   :end-before: [END filetypes]
-
-Supported Databases
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Users can create tables in all the supported databases listed below:
-
-.. literalinclude:: ../../../../src/astro/constants.py
-   :language: python
-   :start-after: [START database]
-   :end-before: [END database]
 
 Patterns in File path
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
