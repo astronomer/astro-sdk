@@ -5,7 +5,7 @@ load_file operator
 When to use the ``load_file`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are two use cases of the load_file operator.
+There are two use cases of the ``load_file`` operator.
 
 #. When we want a (group of) file(s) to be loaded into a database table
 #. When we want a (group of) file(s) to be converted to dataframe
