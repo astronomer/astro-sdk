@@ -134,13 +134,13 @@ Publish a release to PyPI:
 * Pass `-r` to skip environment creation but re-install packages, e.g. `nox -rs dev`
 * Find more automation commands with `nox -l`
 
-## Test DAG in Airflow UI
+## Using a container to run Airflow DAGs
 
 You can configure the Docker-based testing environment to test your DAG
 
 1. Install the latest versions of the Docker Community Edition and Docker Compose and add them to the PATH.
 
-2. Run ``make -f Makefile.mk build-run``
+2. Run ``make container target=build-run``
 
 3. Put the DAGs you want to run in the dev/dags directory:
 
@@ -171,11 +171,11 @@ airflow_db:
 
 5. The following commands are available to run from the root of the repository.
 
-  - ``make -f Makefile.mk logs`` - To view the logs of the all the containers
-  - ``make -f Makefile.mk stop`` - To stop all the containers
-  - ``make -f Makefile.mk clean`` - To remove all the containers along with volumes
-  - ``make -f Makefile.mk help`` - To view the available commands
-  - ``make -f Makefile.mk build-run`` - To build the docker image and then run containers
+  - ``make container target=logs`` - To view the logs of the all the containers
+  - ``make container target=stop`` - To stop all the containers
+  - ``make container target=clean`` - To remove all the containers along with volumes
+  - ``make container target=help`` - To view the available commands
+  - ``make container target=build-run`` - To build the docker image and then run containers
 
 6. Following ports are accessible from the host machine:
 
