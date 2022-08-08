@@ -36,6 +36,13 @@ Welcome to astro-sdk's documentation!
 
    CHANGELOG.md
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Configurations
+   :glob:
+
+   configurations.rst
+
 
 Indices and Tables
 ==================
