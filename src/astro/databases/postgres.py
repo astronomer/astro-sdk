@@ -10,7 +10,7 @@ from psycopg2 import sql as postgres_sql
 
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
-from astro.settings import SCHEMA
+from astro.settings import POSTGRES_SCHEMA
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = PostgresHook.default_conn_name
@@ -22,6 +22,7 @@ class PostgresDatabase(BaseDatabase):
     logic in other parts of our code-base.
     """
 
+    DEFAULT_SCHEMA = POSTGRES_SCHEMA
     illegal_column_name_chars: List[str] = ["."]
     illegal_column_name_chars_replacement: List[str] = ["_"]
 
@@ -41,7 +42,7 @@ class PostgresDatabase(BaseDatabase):
     def default_metadata(self) -> Metadata:
         """Fill in default metadata values for table objects addressing postgres databases"""
         database = self.hook.get_connection(self.conn_id).schema
-        return Metadata(database=database, schema=SCHEMA)
+        return Metadata(database=database, schema=self.DEFAULT_SCHEMA)
 
     def schema_exists(self, schema) -> bool:
         """
