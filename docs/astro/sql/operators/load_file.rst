@@ -173,10 +173,10 @@ Supported native transfers
      - https://cloud.google.com/bigquery-transfer/docs/cloud-storage-transfer#bq
    * - S3
      - Snowflake
-     -
+     - https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html
    * - GCS
      - Snowflake
-     -
+     - https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html
 
 
 Patterns in File path
