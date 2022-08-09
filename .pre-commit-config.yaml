@@ -36,7 +36,9 @@ repos:
       - id: forbid-crlf
       - id: remove-crlf
       - id: forbid-tabs
-      - id: remove-tabs
+      # - id: remove-tabs
+        exclude: |
+          ^mk/.*\.mk
 
   - repo: https://github.com/psf/black
     rev: 22.3.0
