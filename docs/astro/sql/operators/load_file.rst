@@ -180,7 +180,7 @@ Supported native transfers
 
 
 Patterns in File path
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 Load file can also resolve patterns in file path, there are three types of patterns supported by load file based on the :ref:`file_location`
 
