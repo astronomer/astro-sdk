@@ -84,7 +84,7 @@ There are two ways to get the schema of the table to be created, listed by prior
 
 #. **Auto schema detection** - if the user doesn't specify the schema in the table object then by using the top 1000 rows of the table we infer the schema of the table. The default value is 1000, which can be changed by creating an environment variable
 
-    .. code:: shell
+    .. code-block:: shell
 
        Shell
        AIRFLOW__ASTRO_SDK_LOAD_TABLE_AUTODETECT_ROWS_COUNT
