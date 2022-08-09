@@ -36,9 +36,9 @@ repos:
       - id: forbid-crlf
       - id: remove-crlf
       - id: forbid-tabs
-      # - id: remove-tabs
-        exclude: |
-          ^mk/.*\.mk
+        exclude: ^mk/.*\.mk$|^docs/Makefile|^Makefile$|^tests/benchmark/Makefile$
+      - id: remove-tabs
+        exclude: ^mk/.*\.mk$|^docs/Makefile$|^Makefile$|^tests/benchmark/Makefile$
 
   - repo: https://github.com/psf/black
     rev: 22.3.0
