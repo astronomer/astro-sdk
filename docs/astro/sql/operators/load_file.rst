@@ -91,7 +91,7 @@ There are two ways to get the schema of the table to be created, listed by prior
 
     or within airflow config
 
-    .. code:: shell
+    .. code-block:: ini
 
        [astro_sdk]
        load_table_autodetect_rows_count = 1000
