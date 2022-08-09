@@ -218,7 +218,7 @@ There are two ways we infer :ref:`filetype` in the following order:
 Note - 1st way take priority over 2nd way.
 
 Loading data from HTTP API
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 Users can also load data from HTTP API
 
 .. literalinclude:: ../../../../example_dags/example_google_bigquery_gcs_load_and_save.py
