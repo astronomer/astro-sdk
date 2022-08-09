@@ -76,7 +76,7 @@ Parameters to use when loading a file to the database table
 .. _table_schema:
 
 Inferring Table Schema
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
 
 There are two ways to get the schema of the table to be created, listed by priority
 
