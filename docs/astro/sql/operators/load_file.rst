@@ -114,7 +114,7 @@ Parameters to use when loading a file to pandas dataframe
 
 
 Parameters for native transfer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Please refer :ref:`load_file_working` for detail on Native Path.
 
