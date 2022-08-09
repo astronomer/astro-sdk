@@ -33,3 +33,38 @@ There are two types of tables:
            :language: python
            :start-after: [START temp_table_example]
            :end-before: [END temp_table_example]
+
+.. _load_file_working:
+
+
+How load_file Works
+~~~~~~~~~~~~~~~~~~~
+.. to edit figure below refer - https://lucid.app/lucidchart/d52867aa-62b4-4aa8-a6ff-7abd3ffc8ece/edit?viewport_loc=-200%2C-117%2C2597%2C1294%2C0_0&invitationId=inv_b313e94c-eda2-4ece-a801-396764d12b46#
+.. figure:: /images/defaultPath.png
+
+
+When we load a file located in cloud storage to a cloud database, internally the steps involved are:
+
+Steps:
+
+#. Get the file data in chunks from file storage to the worker node.
+#. Send data to the cloud database from the worker node.
+
+This is the default way of loading data into a table. There are performance bottlenecks because of limitations of memory, processing power, and internet bandwidth of worker node.
+
+
+Improving bottlenecks by using native transfer
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. to edit figure below refer - https://lucid.app/lucidchart/d52867aa-62b4-4aa8-a6ff-7abd3ffc8ece/edit?viewport_loc=-200%2C-117%2C2597%2C1294%2C0_0&invitationId=inv_b313e94c-eda2-4ece-a801-396764d12b46#
+.. figure:: /images/nativePath.png
+
+Some of the cloud databases like Bigquery and Snowflake support native transfer (complete list of supported native transfers :ref:`supported_native_path`) to ingest data from cloud storage directly. Using this we can ingest data much quicker and without any involvement of the worker node.
+
+Steps:
+
+#. Request destination database to ingest data from the file source.
+#. Database request file source for data.
+
+This is a faster way for datasets of larger size as there is only one network call involved and usually the bandwidth between vendors is high. Also, there is no requirement for memory/processing power of the worker node, since data never gets on the node. There is significant performance improvement due to native transfers as evident from `benchmarking results <https://github.com/astronomer/astro-sdk/blob/main/tests/benchmark/results.md>`_.
+
+**Note** - By default the native transfer is enabled and will be used if the source and destination support it, this behavior can be altered by the ``use_native_support`` param.

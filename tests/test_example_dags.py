@@ -33,6 +33,7 @@ def session():
         "example_sqlite_load_transform",
         "example_dynamic_map_task",
         "example_append",
+        "example_load_file",
     ],
 )
 def test_example_dag(session, dag_id):

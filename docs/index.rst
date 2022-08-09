@@ -56,6 +56,8 @@ Welcome to astro-sdk's documentation!
    :glob:
 
    configurations.rst
+   supported_databases.rst
+   supported_file.rst
 
 
 Indices and Tables

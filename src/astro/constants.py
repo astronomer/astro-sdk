@@ -13,26 +13,32 @@ PYPI_PROJECT_NAME = "astro-sdk-python"
 
 
 class FileLocation(Enum):
+    # [START filelocation]
     LOCAL = "local"
     HTTP = "http"
     HTTPS = "https"
     GS = "gs"  # Google Cloud Storage
     S3 = "s3"  # Amazon S3
+    # [END filelocation]
 
 
 class FileType(Enum):
+    # [START filetypes]
     CSV = "csv"
     JSON = "json"
     NDJSON = "ndjson"
     PARQUET = "parquet"
+    # [END filetypes]
 
 
 class Database(Enum):
+    # [START database]
     POSTGRES = "postgres"
     POSTGRESQL = "postgres"
     SQLITE = "sqlite"
     BIGQUERY = "bigquery"
     SNOWFLAKE = "snowflake"
+    # [END database]
 
 
 SUPPORTED_FILE_LOCATIONS = [const.value for const in FileLocation]
