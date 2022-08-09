@@ -86,7 +86,6 @@ There are two ways to get the schema of the table to be created, listed by prior
 
     .. code-block:: shell
 
-       Shell
        AIRFLOW__ASTRO_SDK_LOAD_TABLE_AUTODETECT_ROWS_COUNT
 
     or within airflow config
