@@ -19,7 +19,7 @@ Case 1: Load into a database table
        :end-before: [END load_file_example_1]
 
 Case 2: Load into pandas dataframe
-    If you don't pass the `output_table` to the load_file operator it converts the file into a pandas dataframe and returns the reference to dataframe.
+    If you don't pass the ``output_table`` to the load_file operator it converts the file into a pandas dataframe and returns the reference to dataframe.
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
