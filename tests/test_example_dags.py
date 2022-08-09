@@ -32,6 +32,7 @@ def session():
         "example_snowflake_partial_table_with_append",
         "example_sqlite_load_transform",
         "example_dynamic_map_task",
+        "example_load_file",
     ],
 )
 def test_example_dag(session, dag_id):
