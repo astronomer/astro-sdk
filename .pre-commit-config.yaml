@@ -35,6 +35,8 @@ repos:
     hooks:
       - id: forbid-crlf
       - id: remove-crlf
+      - id: forbid-tabs
+      - id: remove-tabs
 
   - repo: https://github.com/psf/black
     rev: 22.3.0
