@@ -38,7 +38,7 @@ There are two types of tables:
 
 
 How load_file Works
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 .. figure:: /images/defaultPath.png
 
 
