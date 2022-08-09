@@ -126,11 +126,13 @@ def example_snowflake_partial_table_with_append():
 
     # Append transformed & filtered data to reporting table
     # Dependency is inferred by passing the previous `filtered_data` task to `append_table` param
+    # [START append_example_with_columns_list]
     record_results = append(
         source_table=filtered_data,
         target_table=Table(name="homes_reporting", conn_id=SNOWFLAKE_CONN_ID),
         columns=["sell", "list", "variable", "value"],
     )
+    # [END append_example_with_columns_list]
     record_results.set_upstream(create_results_table)
 
     # We truncate this table only to avoid wasting Snowflake resources
