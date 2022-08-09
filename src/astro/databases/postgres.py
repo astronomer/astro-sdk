@@ -42,7 +42,7 @@ class PostgresDatabase(BaseDatabase):
     def default_metadata(self) -> Metadata:
         """
         Fill in default metadata values for table objects addressing Postgres databases.
-        
+
         Currently, Schema is not being fetched from airflow connection for Postgres because, in Postgres, databases and
         schema are different concepts: https://www.postgresql.org/docs/current/ddl-schemas.html
         The PostgresHook only exposes schema:
