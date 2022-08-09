@@ -23,13 +23,15 @@ dag = DAG(
     default_args=default_args,
 )
 
+DATA_DIR = str(CWD) + "/data/"
+
 with dag:
     load_main = aql.load_file(
-        input_file=File(path=str(CWD) + "/data/homes.csv"),
+        input_file=File(path=DATA_DIR + "homes.csv"),
         output_table=Table(conn_id="postgres_conn"),
     )
     load_append = aql.load_file(
-        input_file=File(path=str(CWD) + "/data/homes2.csv"),
+        input_file=File(path=DATA_DIR + "/homes2.csv"),
         output_table=Table(conn_id="postgres_conn"),
     )
     # [START append_example]

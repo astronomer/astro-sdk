@@ -5,7 +5,7 @@ append operator
 .. _append_operator:
 
 When to use the ``append`` operator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 We can use ``append`` operator when we want to append the source table to the target table.
 
 .. literalinclude:: ../../../../example_dags/example_append.py
@@ -30,7 +30,7 @@ When tables have same schema
        :end-before: [END append_example_with_columns_list]
 
 When table have different schema
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 When tables have different schema, we can map different column names by passing a ``dict`` of *source cols to target cols*.
 
     .. literalinclude:: ../../../../example_dags/example_append.py
