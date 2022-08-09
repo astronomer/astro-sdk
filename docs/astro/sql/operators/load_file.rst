@@ -195,7 +195,7 @@ Load file can also resolve patterns in file path, there are three types of patte
 
 
 Inferring File Type
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
 
 There are two ways we infer :ref:`filetype` in the following order:
 
