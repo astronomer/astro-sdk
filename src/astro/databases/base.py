@@ -477,7 +477,10 @@ class BaseDatabase(ABC):
         :param table: Astro Table to be converted to SQLAlchemy table instance
         """
         return SqlaTable(
-            table.name, table.sqlalchemy_metadata, autoload_with=self.sqlalchemy_engine
+            table.name,
+            table.sqlalchemy_metadata,
+            autoload_with=self.sqlalchemy_engine,
+            extend_existing=True,
         )
 
     # ---------------------------------------------------------
