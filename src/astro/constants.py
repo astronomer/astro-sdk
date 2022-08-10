@@ -38,6 +38,7 @@ class Database(Enum):
     SQLITE = "sqlite"
     BIGQUERY = "bigquery"
     SNOWFLAKE = "snowflake"
+    REDSHIFT = "redshift"
     # [END database]
 
 
