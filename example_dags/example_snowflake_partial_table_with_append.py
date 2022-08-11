@@ -5,15 +5,7 @@ import pandas as pd
 from airflow.decorators import dag
 
 from astro.files import File
-from astro.sql import (
-    append,
-    cleanup,
-    dataframe,
-    drop_table,
-    load_file,
-    run_raw_sql,
-    transform,
-)
+from astro.sql import append, cleanup, dataframe, load_file, run_raw_sql, transform
 from astro.sql.table import Metadata, Table
 
 """
@@ -66,10 +58,10 @@ def filter_data(homes_long: Table):
 
 
 @run_raw_sql
-def create_table():
+def create_table(table: Table):
     """Create the reporting data which will be the target of the append method"""
     return """
-    CREATE TABLE IF NOT EXISTS homes_reporting (
+    CREATE TABLE IF NOT EXISTS {{table}} (
       sell number,
       list number,
       variable varchar,
@@ -85,7 +77,6 @@ def example_snowflake_partial_table_with_append():
     homes_data1 = load_file(
         input_file=File(path=FILE_PATH + "homes.csv"),
         output_table=Table(
-            name="homes",
             conn_id=SNOWFLAKE_CONN_ID,
             metadata=Metadata(
                 database=os.getenv("SNOWFLAKE_DATABASE"),
@@ -97,7 +88,6 @@ def example_snowflake_partial_table_with_append():
     homes_data2 = load_file(
         input_file=File(path=FILE_PATH + "homes2.csv"),
         output_table=Table(
-            name="homes2",
             conn_id=SNOWFLAKE_CONN_ID,
             metadata=Metadata(
                 database=os.getenv("SNOWFLAKE_DATABASE"),
@@ -119,31 +109,24 @@ def example_snowflake_partial_table_with_append():
 
     filtered_data = filter_data(
         homes_long=transformed_data,
-        output_table=Table(name="expensive_homes_long"),
+        output_table=Table(),
     )
-
-    create_results_table = create_table(conn_id=SNOWFLAKE_CONN_ID)
+    homes_reporting = Table(conn_id=SNOWFLAKE_CONN_ID)
+    create_results_table = create_table(
+        table=homes_reporting, conn_id=SNOWFLAKE_CONN_ID
+    )
 
     # Append transformed & filtered data to reporting table
     # Dependency is inferred by passing the previous `filtered_data` task to `append_table` param
     # [START append_example_with_columns_list]
     record_results = append(
         source_table=filtered_data,
-        target_table=Table(name="homes_reporting", conn_id=SNOWFLAKE_CONN_ID),
+        target_table=homes_reporting,
         columns=["sell", "list", "variable", "value"],
     )
     # [END append_example_with_columns_list]
     record_results.set_upstream(create_results_table)
 
-    # We truncate this table only to avoid wasting Snowflake resources
-    # Why? Between 2022-03-25 and 2022-04-11 it accumulated 301G (89 million rows) because
-    # this example DAG used to append rows without deleting them
-    # [START drop_table_example]
-    truncate_results = drop_table(
-        table=Table(name="homes_reporting", conn_id=SNOWFLAKE_CONN_ID)
-    )
-    # [END drop_table_example]
-    truncate_results.set_upstream(record_results)
     cleanup()
 
 
