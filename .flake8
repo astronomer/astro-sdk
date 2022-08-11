@@ -3,5 +3,5 @@ min_python_version = 3.7
 exclude = .git,__pycache__,docs/source/conf.py,old,build,dist
 max-complexity = 6
 max-line-length = 120
-ignore = A002,W503
+ignore = A002,W503,G200
 extend-ignore = E203
