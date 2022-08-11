@@ -1,16 +1,15 @@
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from airflow.decorators.base import get_unique_task_id
-from airflow.models.baseoperator import BaseOperator
 
 from astro.databases import create_database
-from astro.sql.operators.upstream_tasks import UpstreamTaskMixin
+from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import Table
 
 APPEND_COLUMN_TYPE = Optional[Union[List[str], Tuple[str], Dict[str, str]]]
 
 
-class AppendOperator(UpstreamTaskMixin, BaseOperator):
+class AppendOperator(AstroSQLBaseOperator):
     """
     Append the source table rows into a destination table.
 

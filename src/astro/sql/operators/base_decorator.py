@@ -8,7 +8,7 @@ from sqlalchemy.sql.functions import Function
 
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
-from astro.sql.operators.upstream_tasks import UpstreamTaskMixin
+from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
 from astro.sql.table import Table
 from astro.utils.table import find_first_table
 

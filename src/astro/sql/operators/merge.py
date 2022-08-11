@@ -5,13 +5,13 @@ from airflow.models.baseoperator import BaseOperator
 
 from astro.constants import MergeConflictStrategy
 from astro.databases import create_database
-from astro.sql.operators.upstream_tasks import UpstreamTaskMixin
+from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import Table
 
 MERGE_COLUMN_TYPE = Union[List[str], Tuple[str], Dict[str, str]]
 
 
-class MergeOperator(UpstreamTaskMixin, BaseOperator):
+class MergeOperator(AstroSQLBaseOperator, BaseOperator):
     """
     Merge the source table rows into a destination table.
 

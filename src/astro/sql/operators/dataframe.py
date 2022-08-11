@@ -8,7 +8,7 @@ from airflow.decorators.base import DecoratedOperator
 from astro.constants import ColumnCapitalization
 from astro.databases import create_database
 from astro.exceptions import IllegalLoadToDatabaseException
-from astro.sql.operators.upstream_tasks import UpstreamTaskMixin
+from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import Table
 from astro.utils.dataframe import convert_columns_names_capitalization
 from astro.utils.table import find_first_table
@@ -74,7 +74,7 @@ def load_op_kwarg_table_into_dataframe(
     }
 
 
-class DataframeOperator(UpstreamTaskMixin, DecoratedOperator):
+class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
     def __init__(
         self,
         conn_id: Optional[str] = None,

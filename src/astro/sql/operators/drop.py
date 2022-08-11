@@ -4,11 +4,11 @@ from airflow.decorators.base import get_unique_task_id
 from airflow.models.baseoperator import BaseOperator
 
 from astro.databases import create_database
-from astro.sql.operators.upstream_tasks import UpstreamTaskMixin
+from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import Table
 
 
-class DropTableOperator(UpstreamTaskMixin, BaseOperator):
+class DropTableOperator(AstroSQLBaseOperator, BaseOperator):
     """Airflow Operator for dropping SQL tables."""
 
     template_fields = ("table",)
