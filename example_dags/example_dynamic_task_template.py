@@ -9,7 +9,7 @@ from astro.files import get_file_list
 from astro.files.base import File
 from astro.sql.table import Metadata, Table
 
-GCS_BUCKET = os.getenv("GCS_BUCKET", "gs://dag-authoring")
+GCS_BUCKET = os.getenv("GCS_BUCKET", "gs://dag-authoring/dynamic_task/")
 ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_default")
 ASTRO_BIGQUERY_DATASET = os.getenv("ASTRO_BIGQUERY_DATASET", "dag_authoring")
 

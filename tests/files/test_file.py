@@ -1,8 +1,10 @@
 import pathlib
+from datetime import datetime
 from unittest.mock import mock_open, patch
 
 import pandas as pd
 import pytest
+from airflow import DAG
 from botocore.client import BaseClient
 from google.cloud.storage import Client
 
@@ -227,8 +229,13 @@ def test_resolve_file_path_pattern_raise_exception(invalid_path, caplog):
 
 def test_get_file_list():
     """Assert that get_file_list handle kwargs correctly"""
-    resp = get_file_list(path="path", conn_id="conn")
+    dag = DAG(dag_id="dag1", start_date=datetime(2022, 1, 1))
+
+    resp = get_file_list(path="path", conn_id="conn", dag=dag)
     assert resp.operator.task_id == "get_file_list"
+
+    resp = get_file_list(path="path", conn_id="conn", dag=dag)
+    assert resp.operator.task_id != "get_file_list"
 
     resp = get_file_list(path="path", conn_id="conn", task_id="test")
     assert resp.operator.task_id == "test"

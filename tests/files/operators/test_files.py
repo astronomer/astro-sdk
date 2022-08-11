@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from airflow.models.connection import Connection
 
-from astro.files.operators.files import _ListFileOperator
+from astro.files.operators.files import ListFileOperator
 
 
 def test_get_file_list_execute_local():
@@ -11,7 +11,7 @@ def test_get_file_list_execute_local():
     CWD = pathlib.Path(__file__).parent
     LOCAL_FILEPATH = f"{CWD}/../../example_dags/data/"
 
-    op = _ListFileOperator(task_id="task_id", conn_id="conn_id", path=LOCAL_FILEPATH)
+    op = ListFileOperator(task_id="task_id", conn_id="conn_id", path=LOCAL_FILEPATH)
     actual = op.execute(None)
     assert actual == [str(file) for file in pathlib.Path(LOCAL_FILEPATH).rglob("*")]
 
@@ -20,7 +20,7 @@ def test_get_file_list_execute_local():
 def test_get_file_list_execute_gcs(hook):
     """Assert that when file object location point to GCS then get_file_list using GCSHook"""
     hook.return_value = Connection(conn_id="conn", conn_type="google_cloud_platform")
-    op = _ListFileOperator(
+    op = ListFileOperator(
         task_id="task_id",
         conn_id="conn",
         path="gs://bucket/some-file",
@@ -33,7 +33,7 @@ def test_get_file_list_execute_gcs(hook):
 def test_get_file_list_s3(hook):
     """Assert that when file object location point to s3 then get_file_list using S3Hook"""
     hook.return_value = Connection(conn_id="conn", conn_type="s3")
-    op = _ListFileOperator(
+    op = ListFileOperator(
         task_id="task_id",
         conn_id="conn",
         path="s3://bucket/some-file",

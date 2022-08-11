@@ -6,13 +6,15 @@ from airflow.utils.context import Context
 from astro.files.locations import create_file_location
 
 
-class _ListFileOperator(BaseOperator):
+class ListFileOperator(BaseOperator):
     """List the file available at path and storage
 
     :param task_id: The task id for uniquely identify a task in a DAG
     :param path: A path pattern for which you want to get a list of file
     :param conn_id: connection id for the services
     """
+
+    template_fields = ('path', 'conn_id')
 
     def __init__(self, task_id: str, path: str, conn_id: str, **kwargs):
 
