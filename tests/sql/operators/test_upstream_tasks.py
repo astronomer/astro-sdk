@@ -49,7 +49,7 @@ def test_raw_sql_chained_queries(database_table_fixture, sample_dag):
         )
         generated_tables = []
         last_task = homes_file
-        for i in range(5):
+        for _ in range(5):
             n_table = test_table.create_similar_table()
             n_task = raw_sql_no_deps(
                 new_table=n_table, t_table=test_table, upstream_tasks=[last_task]
