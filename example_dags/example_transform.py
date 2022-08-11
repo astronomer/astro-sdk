@@ -8,7 +8,7 @@ from astro.files import File
 from astro.sql.table import Table
 
 START_DATE = datetime(2000, 1, 1)
-last_one_df = pd.DataFrame(data={"Title": ["Random movie"], "Rating": [121]})
+LAST_ONE_DF = pd.DataFrame(data={"Title": ["Random movie"], "Rating": [121]})
 
 
 # [START transform_example_1]  skipcq: PY-W0069
@@ -102,6 +102,6 @@ with DAG(
 
     union_table = union_top_and_last(top_five, last_five)
 
-    union_table_and_dataframe(union_table, last_one_df)
+    union_table_and_dataframe(union_table, LAST_ONE_DF)
 
     aql.cleanup()
