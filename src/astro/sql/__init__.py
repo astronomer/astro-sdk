@@ -244,8 +244,8 @@ def dataframe(
     conn_id: str = "",
     database: Optional[str] = None,
     schema: Optional[str] = None,
-    task_id: Optional[str] = None,
     columns_names_capitalization: ColumnCapitalization = "lower",
+    **kwargs: Any,
 ) -> Callable[..., pd.DataFrame]:
     """
     This decorator will allow users to write python functions while treating SQL tables as dataframes
@@ -253,18 +253,18 @@ def dataframe(
     This decorator allows a user to run python functions in Airflow but with the huge benefit that SQL tables
     will automatically be turned into dataframes and resulting dataframes can automatically used in astro.sql functions
     """
-    param_map = {
-        "conn_id": conn_id,
-        "database": database,
-        "schema": schema,
-        "columns_names_capitalization": columns_names_capitalization,
-    }
-    if task_id:
-        param_map["task_id"] = task_id
+    kwargs.update(
+        {
+            "conn_id": conn_id,
+            "database": database,
+            "schema": schema,
+            "columns_names_capitalization": columns_names_capitalization,
+        }
+    )
     decorated_function: Callable[..., pd.DataFrame] = task_decorator_factory(
         python_callable=python_callable,
         multiple_outputs=multiple_outputs,
         decorated_operator_class=DataframeOperator,  # type: ignore
-        **param_map,
+        **kwargs,
     )
     return decorated_function
