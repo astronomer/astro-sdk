@@ -25,6 +25,7 @@ def clean_data(input_table: Table):
     """
 
 
+# [START transform_example_1] skipcq: PY-W0069
 @aql.dataframe(columns_names_capitalization="original")
 def aggregate_data(df: pd.DataFrame):
     new_df = df.pivot_table(
@@ -32,6 +33,9 @@ def aggregate_data(df: pd.DataFrame):
     ).reset_index()
     new_df.columns = new_df.columns.str.lower()
     return new_df
+
+
+# [END transform_example_1] skipcq: PY-W0069
 
 
 @dag(
