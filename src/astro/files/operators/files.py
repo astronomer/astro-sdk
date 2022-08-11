@@ -14,7 +14,7 @@ class ListFileOperator(BaseOperator):
     :param conn_id: connection id for the services
     """
 
-    template_fields = ('path', 'conn_id')
+    template_fields = ("path", "conn_id")
 
     def __init__(self, task_id: str, path: str, conn_id: str, **kwargs):
 
