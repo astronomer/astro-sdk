@@ -1,4 +1,3 @@
-from airflow.decorators.base import get_unique_task_id
 from airflow.hooks.base import BaseHook
 from airflow.models.xcom_arg import XComArg
 
@@ -28,18 +27,7 @@ def get_file_list(path: str, conn_id: str, **kwargs) -> XComArg:
     :param conn_id: Airflow connection id
     :param path: Path pattern to the file in the filesystem/Object stores
     """
-    if "task_id" in kwargs:
-        task_id = kwargs["task_id"]
-        del kwargs["task_id"]
-    else:
-        task_id = get_unique_task_id(
-            task_id="get_file_list",
-            dag=kwargs.get("dag"),
-            task_group=kwargs.get("task_group"),
-        )
-
     return ListFileOperator(
-        task_id=task_id,
         path=path,
         conn_id=conn_id,
         **kwargs,

@@ -1,5 +1,6 @@
 from typing import Any
 
+from airflow.decorators.base import get_unique_task_id
 from airflow.models import BaseOperator
 from airflow.utils.context import Context
 
@@ -16,11 +17,13 @@ class ListFileOperator(BaseOperator):
 
     template_fields = ("path", "conn_id")
 
-    def __init__(self, task_id: str, path: str, conn_id: str, **kwargs):
-
-        super().__init__(task_id=task_id, **kwargs)
+    def __init__(self, path: str, conn_id: str, task_id: str = "", **kwargs):
+        task_id = task_id or get_unique_task_id(
+            "get_file_list", dag=kwargs.get("dag"), task_group=kwargs.get("task_group")
+        )
         self.path = path
         self.conn_id = conn_id
+        super().__init__(task_id=task_id, **kwargs)
 
     def execute(self, context: Context) -> Any:  # skipcq: PYL-W0613
         location = create_file_location(self.path, self.conn_id)
