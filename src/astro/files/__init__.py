@@ -1,6 +1,5 @@
-from airflow.decorators.base import TaskDecorator
+from airflow.decorators.base import TaskDecorator, get_unique_task_id
 from airflow.hooks.base import BaseHook
-from airflow.decorators.base import get_unique_task_id
 
 from astro.files.base import File  # noqa: F401 # skipcq: PY-W2000
 from astro.files.base import resolve_file_path_pattern  # noqa: F401 # skipcq: PY-W2000

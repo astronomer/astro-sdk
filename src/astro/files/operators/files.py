@@ -20,6 +20,6 @@ class _ListFileOperator(BaseOperator):
         self.path = path
         self.conn_id = conn_id
 
-    def execute(self, context: Context) -> Any:
+    def execute(self, context: Context) -> Any:  # skipcq: PYL-W0613
         location = create_file_location(self.path, self.conn_id)
         return location.paths
