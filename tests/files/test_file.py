@@ -8,6 +8,7 @@ from google.cloud.storage import Client
 
 from astro.constants import SUPPORTED_FILE_TYPES, FileType
 from astro.files import File, resolve_file_path_pattern
+from astro.files import get_file_list
 
 sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent, "data/sample.csv")
 sample_filepaths_per_filetype = [
@@ -223,3 +224,11 @@ def test_resolve_file_path_pattern_raise_exception(invalid_path, caplog):
         _ = resolve_file_path_pattern(path_pattern=invalid_path)
     expected_error = f"File(s) not found for path/pattern '{invalid_path}'"
     assert expected_error in str(e.value)
+
+
+def test_get_file_list():
+    resp = get_file_list(path="path", conn_id="conn")
+    assert resp.operator.task_id == "get_file_list"
+
+    resp = get_file_list(path="path", conn_id="conn", task_id="test")
+    assert resp.operator.task_id == "test"
