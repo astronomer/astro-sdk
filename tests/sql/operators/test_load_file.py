@@ -958,3 +958,25 @@ def test_aql_load_file_columns_names_capitalization_dataframe(sample_dag):
         validate(loaded_df_1, loaded_df_2, loaded_df_3)
 
     test_utils.run_dag(sample_dag)
+
+
+def test_unsupported_type_in_input_file():
+    """Test that error is raised if input_file is passed an object other than str or File object"""
+    with pytest.raises(TypeError) as exe_info:
+        load_file(34).operator.execute(None)
+    assert (
+        exe_info.value.args[0]
+        == "Unsupported type in input_file. Supported: File and str. Passed: <class 'int'>"
+    )
+
+
+@pytest.mark.parametrize(
+    "input_path,expected_path",
+    [
+        ("/opt/path1.csv", File("/opt/path1.csv")),
+        (File("/opt/path2.csv"), File("/opt/path2.csv")),
+    ],
+)
+def test_supported_type_in_input_file(input_path, expected_path):
+    """Test that users can pass File object and a str object to input_file"""
+    assert load_file(input_file=input_path).operator.input_file == expected_path
