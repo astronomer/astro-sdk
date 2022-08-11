@@ -14,6 +14,7 @@ ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_default")
 ASTRO_BIGQUERY_DATASET = os.getenv("ASTRO_BIGQUERY_DATASET", "dag_authoring")
 
 
+# [START howto_operator_get_file_list]
 @task
 def load_to_bigquery(path):
     aql.load_file(
@@ -38,4 +39,5 @@ with DAG(
         path=get_file_list(ASTRO_GCP_CONN_ID, f"{GCS_BUCKET}/*.csv")
     )
 
+    # [END howto_operator_get_file_list]
     aql.cleanup()
