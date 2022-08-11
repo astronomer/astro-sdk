@@ -13,5 +13,5 @@ Example:
 
     .. literalinclude:: ../../../../example_dags/example_amazon_s3_snowflake_transform.py
        :language: python
-       :start-after: [START transform_example_1]
-       :end-before: [END transform_example_1]
+       :start-after: [START dataframe_example_1]
+       :end-before: [END dataframe_example_1]
