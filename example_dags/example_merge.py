@@ -9,6 +9,7 @@ from astro.files import File
 from astro.sql.table import Metadata, Table
 
 CWD = pathlib.Path(__file__).parent
+DATA_DIR = str(CWD) + "/data/"
 
 default_args = {
     "owner": "airflow",
@@ -17,7 +18,7 @@ default_args = {
 }
 
 dag = DAG(
-    dag_id="example_amazon_s3_postgres",
+    dag_id="example_merge_bigquery",
     start_date=datetime(2019, 1, 1),
     max_active_runs=3,
     schedule_interval=timedelta(minutes=30),
@@ -36,26 +37,45 @@ def my_df_func(input_df: DataFrame):
 
 
 with dag:
-    target_table = aql.load_file(
-        input_file=File(str(pathlib.Path(CWD.parent.parent, "data/sample.csv"))),
+    target_table_1 = aql.load_file(
+        input_file=File(DATA_DIR + "sample.csv"),
+        output_table=Table(
+            conn_id="bigquery",
+            metadata=Metadata(schema="first_table_schema"),
+        ),
+    )
+    target_table_2 = aql.load_file(
+        input_file=File(DATA_DIR + "sample.csv"),
         output_table=Table(
             conn_id="bigquery",
             metadata=Metadata(schema="first_table_schema"),
         ),
     )
     source_table = aql.load_file(
-        input_file=File(str(pathlib.Path(CWD.parent.parent, "data/sample_part2.csv"))),
+        input_file=File(DATA_DIR + "sample_part2.csv"),
         output_table=Table(
             conn_id="bigquery",
             metadata=Metadata(schema="second_table_schema"),
         ),
     )
-    # [START merge_example]
+    # [START merge_col_list_example]
     aql.merge(
-        target_table=target_table,
+        target_table=target_table_1,
+        source_table=source_table,
+        target_conflict_columns=["id"],
+        columns=["id", "name"],
+        if_conflicts="update",
+    )
+    # [END merge_col_list_example]
+
+    # [START merge_col_dict_example]
+    aql.merge(
+        target_table=target_table_2,
         source_table=source_table,
         target_conflict_columns=["id"],
         columns={"id": "id", "name": "name"},
         if_conflicts="update",
     )
-    # [END merge_example]
+    # [END merge_col_dict_example]
+
+    aql.cleanup()

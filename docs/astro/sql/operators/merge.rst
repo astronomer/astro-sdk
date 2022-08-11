@@ -1,3 +1,5 @@
+.. _merge_operator:
+
 ======================================
 merge operator
 ======================================
@@ -5,24 +7,57 @@ merge operator
 When to use the ``merge`` operator
 ----------------------------------
 
-Merge operator is used when you expects some conflicts while merging two tables due to underline constraints. If you don't expect any conflicts you can use :ref:`append_operator`. There are two common cases when merging tables.
+Merge operator is used when you expect some conflicts while merging two tables due to underline constraints. If you don't expect any conflicts you can use :ref:`append_operator`. There are two common cases when merging tables.
 
-When tables have same schema
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-If the tables have same schema, we have to specify the complete ``list`` or ``tuple`` of columns in ``columns`` parameters because AstroSDK also have to handle :ref:`merge_conflicts` and it cannot assume which columns can raise conflicts, unlike :ref:`append_operator`. User can also select subset of columns to be part of merge.
+Prerequisite
+------------
+
+Merge operator internally run different SQL queries based on the databases and some databases only allow you to run these queries if there are constraints on columns specified in parameter ``target_conflict_columns``. Below is the list of databases and their constraint requirement.
+
+.. list-table::
+   :widths: auto
+   :header-rows: 1
+
+   * - Database
+     - Constraint required
+   * - Bigquery
+     - No
+   * - Postgres
+     - Yes
+   * - Snowflake
+     - Yes
+   * - SQLite
+     - Yes
 
 
+Schema
+------
 
-When table have different schema
+When tables have the same schema
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If the tables have the same schema, we have to specify the complete ``list`` or ``tuple`` of columns in ``columns`` parameters because AstroSDK also has to handle :ref:`merge_conflicts` and it cannot assume which columns can raise conflicts, unlike :ref:`append_operator`. Users can also select a subset of columns to be part of the merge.
+
+.. literalinclude:: ../../../../example_dags/example_merge.py
+   :language: python
+   :start-after: [START merge_col_list_example]
+   :end-before: [END merge_col_list_example]
+
+When tables have different schema
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 If tables have different schema user is expected to pass a ``dict`` mapped from ``source_table`` columns to ``target_table`` columns.
 
-
+.. literalinclude:: ../../../../example_dags/example_merge.py
+   :language: python
+   :start-after: [START merge_col_dict_example]
+   :end-before: [END merge_col_dict_example]
 
 .. _merge_conflicts:
+
 Conflicts
-~~~~~~~~~
-Conflicts arises due to ``target_table`` having constraints on columns. For example we can have duplicate primary key in ``source_table`` and ``target_table``. Now there are three strategy to deal with this situation.
+---------
+Conflicts arise due to ``target_table`` having constraints on columns. For example, we can have duplicate primary keys in ``source_table`` and ``target_table``. Now there are three strategies to deal with this situation.
 
 #. **ignore**
 
@@ -51,7 +86,7 @@ Conflicts arises due to ``target_table`` having constraints on columns. For exam
          - 9
 
 
-    .. list-table:: post merge Target table
+    .. list-table:: post-merge Target table
        :widths: auto
        :header-rows: 1
 
@@ -91,7 +126,7 @@ Conflicts arises due to ``target_table`` having constraints on columns. For exam
          - 9
 
 
-    .. list-table:: post merge Target table
+    .. list-table:: post-merge Target table
        :widths: auto
        :header-rows: 1
 
@@ -105,4 +140,4 @@ Conflicts arises due to ``target_table`` having constraints on columns. For exam
          - 2
 
 #. **exception**
-    This option will simply raise an exception if there is any conflicts at the time of merging.
+    This option will simply raise an exception if there are any conflicts at the time of merging.
