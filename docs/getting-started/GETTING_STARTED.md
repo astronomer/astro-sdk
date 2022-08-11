@@ -400,6 +400,9 @@ tables will actually be deleted.
 
 ### Scenario 1: Operators that pass on data to astro sdk tasks
 
+When passing operators that return Xcom-based data, you can just pass those values
+into the astro-sdk function using the `.output` function (or just using the output for values
+created with the taskflow API)
 ```python
 @task
 def get_num_rows():
@@ -407,15 +410,20 @@ def get_num_rows():
 
 
 @aql.transform
-def get_rows(table: Table, num_rows: int):
-    return "SELECT * FROM {{table}} LIMIT {{num_rows}}"
+def get_rows(table: Table, name: str, num_rows: int):
+    return "SELECT * FROM {{table}} WHERE name={{name}} LIMIT {{num_rows}}"
 
 
 with dag:
-    get_rows(table=Table(), num_rows=get_num_rows())
+    name_from_env = BashOperator(...)
+    get_rows(table=Table(), name=name_from_env.output, num_rows=get_num_rows())
 ```
 
 ### Scenario 2: Operators that dont pass on data to astro sdk tasks
+
+When tying traditional tasks to astro-sdk decorators, you might run into a situation where the original operators
+might not pass any data. In these cases you can use the `upstream_tasks` function to set up dependencies between
+traditional airflow tasks and Astro SDK tasks
 
 ```python
 @aql.transform
@@ -427,6 +435,3 @@ with dag:
     bash_command = BashOperator(...)
     get_rows(table=Table(), num_rows=5, upstream_tasks=[bash_command])
 ```
-When tying traditional tasks to astro-sdk decorators, you might run into a situation where the original operators
-might not pass any data. In
-One potential friction point when adopting astro-sdk mig
