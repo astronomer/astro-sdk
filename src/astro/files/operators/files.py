@@ -28,4 +28,9 @@ class ListFileOperator(BaseOperator):
 
     def execute(self, context: Context) -> Any:  # skipcq: PYL-W0613
         location = create_file_location(self.path, self.conn_id)
-        return [File(path=path, conn_id=location.conn_id) for path in location.paths]
+        # Get list of files excluding folders
+        return [
+            File(path=path, conn_id=location.conn_id)
+            for path in location.paths
+            if not path.endswith("/")
+        ]
