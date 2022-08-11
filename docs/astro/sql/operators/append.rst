@@ -1,8 +1,8 @@
+.. _append_operator:
+
 ======================================
 append operator
 ======================================
-
-.. _append_operator:
 
 When to use the ``append`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,4 +40,4 @@ When tables have different schema, we can map different column names by passing 
 
 Conflicts
 ~~~~~~~~~
-``append operator`` doesn't handle the conflicts that may arise while appending data. If you want to handle those scenarios, you can use ``merge operator``
+``append operator`` doesn't handle the conflicts that may arise while appending data. If you want to handle those scenarios, you can use :ref:`merge_operator`.
