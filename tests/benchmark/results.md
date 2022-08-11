@@ -182,3 +182,19 @@ Note - These results are generated manually, there is a issue added for the same
 | bigquery   | one_gb     | 4.25min      | 66.32MB      | 54.88ms         | 48.01ms           |
 | bigquery   | ten_kb     | 2.9min       | 55.51MB      | 40.74ms         | 34.94ms           |
 | bigquery   | ten_mb     | 4.17min      | 57.6MB       | 46.64ms         | 46.83ms           |
+
+### Local to Bigquery using native path
+
+| database   | dataset   | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
+|:-----------|:----------|:-------------|:-------------|:----------------|:------------------|
+| bigquery   | one_gb    | 13.18min     | 231.33MB     | 10.5min         | 1.15min           |
+| bigquery   | ten_kb    | 12.46s       | 62.74MB      | 8.28s           | 730.0ms           |
+| bigquery   | ten_mb    | 14.36s       | 39.78MB      | 8.2s            | 780.0ms           |
+
+### Local to Bigquery using default path
+
+| database   | dataset   | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
+|:-----------|:----------|:-------------|:-------------|:----------------|:------------------|
+| bigquery   | one_gb    | 12.23min     | 231.33MB     | 10.5min         | 1.15min           |
+| bigquery   | ten_kb    | 17.06s       | 61.65MB      | 7.16s           | 1.01s             |
+| bigquery   | ten_mb    | 15.22s       | 66.08MB      | 7.35s           | 940.0ms           |

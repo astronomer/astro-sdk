@@ -29,6 +29,7 @@ with DAG(
     schedule_interval=None,
     start_date=timezone.datetime(2022, 1, 1),
 ) as dag:
+    # [START load_file_http_example]
     t1 = aql.load_file(
         task_id="load_from_github_to_bq",
         input_file=File(
@@ -38,6 +39,7 @@ with DAG(
             name="imdb_movies", conn_id="bigquery", metadata=Metadata(schema="astro")
         ),
     )
+    # [END load_file_http_example]
 
     # Setting "identifiers_as_lower" to True will lowercase all column names
     @aql.dataframe(columns_names_capitalization="original")
