@@ -43,12 +43,12 @@ def last_five_animations(input_table: Table):
 
 # [START transform_example_3]  skipcq: PY-W0069
 @aql.transform
-def union_top_and_last(top_five: Table, last_five: Table):
-    """Union `top_five` and `last_five` tables to create a simple dataset."""
+def union_top_and_last(first_table: Table, second_table: Table):
+    """Union `first_table` and `second_table` tables to create a simple dataset."""
     return """
-            SELECT Title, Rating from {{top_five}}
+            SELECT Title, Rating from {{first_table}}
             UNION
-            SELECT Title, Rating from {{last_five}};
+            SELECT Title, Rating from {{second_table}};
             """
 
 
@@ -57,12 +57,12 @@ def union_top_and_last(top_five: Table, last_five: Table):
 
 # [START transform_example_4]  skipcq: PY-W0069
 @aql.transform
-def union_table_and_dataframe(union_table: Table, last_one_df: pd.DataFrame):
-    """Union `top_five` table and `last_one_df` dataframe to create a simple dataset."""
+def union_table_and_dataframe(input_table: Table, input_dataframe: pd.DataFrame):
+    """Union `union_table` table and `input_dataframe` dataframe to create a simple dataset."""
     return """
-            SELECT Title, Rating from {{union_table}}
+            SELECT Title, Rating from {{input_table}}
             UNION
-            SELECT Title, Rating from {{last_one_df}};
+            SELECT Title, Rating from {{input_dataframe}};
             """
 
 
