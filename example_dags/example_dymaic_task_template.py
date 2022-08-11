@@ -5,10 +5,10 @@ from airflow import DAG
 from airflow.decorators import task
 
 from astro import sql as aql
-from astro.dtt.files import get_file_list
+from astro.files import get_file_list
 from astro.files.base import File
 from astro.sql.table import Table
-from src.astro.sql.table import Metadata
+from astro.sql.table import Metadata
 
 GCS_BUCKET = os.getenv("GCS_BUCKET", "gs://dag-authoring")
 ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_default")

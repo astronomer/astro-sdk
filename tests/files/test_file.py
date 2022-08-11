@@ -227,6 +227,7 @@ def test_resolve_file_path_pattern_raise_exception(invalid_path, caplog):
 
 
 def test_get_file_list():
+    """Assert that get_file_list handle kwargs correctly"""
     resp = get_file_list(path="path", conn_id="conn")
     assert resp.operator.task_id == "get_file_list"
 
