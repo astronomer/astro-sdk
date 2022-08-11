@@ -26,7 +26,7 @@ def test_get_file_list_execute_gcs(hook):
         path="gs://bucket/some-file",
     )
     op.execute(None)
-    hook.list.assert_called_once()
+    hook.list.assert_called_once_with(bucket_name="bucket", prefix="some-file")
 
 
 @patch("astro.files.locations.amazon.s3.S3Location.hook")
@@ -39,4 +39,4 @@ def test_get_file_list_s3(hook):
         path="s3://bucket/some-file",
     )
     op.execute(None)
-    hook.list_keys.assert_called_once()
+    hook.list_keys.assert_called_once_with(bucket_name="bucket", prefix="some-file")
