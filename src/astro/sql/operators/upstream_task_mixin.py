@@ -1,5 +1,6 @@
 from airflow.models.xcom_arg import XComArg
 
+
 class UpstreamTaskMixin:
     def __init__(self, **kwargs):
         upstream_tasks = kwargs.pop("upstream_tasks", [])

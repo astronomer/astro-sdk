@@ -12,9 +12,9 @@ from airflow.utils.state import State
 
 from astro.databases import create_database
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
+from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.load_file import LoadFile
-from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import Table
 
 
