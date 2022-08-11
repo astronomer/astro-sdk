@@ -9,6 +9,7 @@ from astro.sql.table import Table
 START_DATE = datetime(2000, 1, 1)
 
 
+# [START transform_example_1]  skipcq: PY-W0069
 @aql.transform()
 def top_five_animations(input_table: Table):
     return """
@@ -19,6 +20,8 @@ def top_five_animations(input_table: Table):
         LIMIT 5;
     """
 
+
+# [END transform_example_1]  skipcq: PY-W0069
 
 with DAG(
     "example_sqlite_load_transform",

@@ -12,17 +12,24 @@ from astro.files import File
 from astro.sql.table import Metadata, Table
 
 
+# [START transform_example_2]  skipcq: PY-W0069
 @aql.transform()
 def combine_data(center_1: Table, center_2: Table):
     return """SELECT * FROM {{center_1}}
     UNION SELECT * FROM {{center_2}}"""
 
 
+# [END transform_example_2]  skipcq: PY-W0069
+
+# [START transform_example_3]  skipcq: PY-W0069
 @aql.transform()
 def clean_data(input_table: Table):
     return """SELECT *
     FROM {{input_table}} WHERE type NOT LIKE 'Guinea Pig'
     """
+
+
+# [END transform_example_3]  skipcq: PY-W0069
 
 
 @aql.dataframe(columns_names_capitalization="original")
