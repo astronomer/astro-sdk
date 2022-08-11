@@ -36,7 +36,7 @@ with DAG(
     catchup=False,
 ) as dag:
     load_to_bigquery.expand(
-        path=get_file_list(ASTRO_GCP_CONN_ID, f"{GCS_BUCKET}/*.csv")
+        path=get_file_list(path=GCS_BUCKET, conn_id=ASTRO_GCP_CONN_ID)
     )
 
     # [END howto_operator_get_file_list]
