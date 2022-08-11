@@ -261,3 +261,20 @@ def test_postgres_dataframe_without_table_arg(sample_dag):
         )
         validate_result(pg_df)
     test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [{"task_id": "task1", "queue": "new_1"}, {"queue": "new_2", "owner": "astro-sdk"}],
+)
+def test_pass_kwargs_to_base_operator(kwargs):
+    """Test that kwargs passed to decorator are passed to BaseOperator"""
+
+    @aql.dataframe(**kwargs)
+    def sample_df_1():  # skipcq: PY-D0003
+        return pandas.DataFrame(
+            {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
+        )
+
+    task1 = sample_df_1()
+    assert all(getattr(task1.operator, k) == v for k, v in kwargs.items())
