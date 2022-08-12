@@ -7,7 +7,7 @@ merge operator
 When to use the ``merge`` operator
 ----------------------------------
 
-Unlike the :ref:`append_operator`, which expects data to be unique and conflict free, the Merge operator allows users to add data with conflict resolution techniques like `ignore` and `update`.
+Unlike the :ref:`append_operator`, which expects data to be unique and conflict free, the Merge operator allows users to add data with conflict resolution techniques like ``ignore`` and ``update``.
 
 Prerequisite
 ------------
