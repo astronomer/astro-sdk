@@ -37,7 +37,7 @@ class LoadFileOperator(BaseOperator):
 
     def __init__(
         self,
-        input_file: Union[File, str],
+        input_file: File,
         output_table: Optional[Table] = None,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         if_exists: LoadExistStrategy = "replace",
@@ -50,9 +50,6 @@ class LoadFileOperator(BaseOperator):
     ) -> None:
         super().__init__(**kwargs)
         self.output_table = output_table
-        self.input_file: File
-        if isinstance(input_file, str):
-            input_file = File(input_file)
         self.input_file = input_file
         self.chunk_size = chunk_size
         self.kwargs = kwargs
@@ -68,10 +65,6 @@ class LoadFileOperator(BaseOperator):
         """
         Load an existing dataset from a supported file into a SQL table or a Dataframe.
         """
-        if not isinstance(self.input_file, File):
-            raise TypeError(
-                f"Unsupported type in input_file. Supported: File and str. Passed: {type(self.input_file)}"
-            )
         if self.input_file.conn_id:
             check_if_connection_exists(self.input_file.conn_id)
 
@@ -190,7 +183,7 @@ class LoadFileOperator(BaseOperator):
 
 
 def load_file(
-    input_file: Union[File, str],
+    input_file: File,
     output_table: Optional[Table] = None,
     task_id: Optional[str] = None,
     if_exists: LoadExistStrategy = "replace",
@@ -203,7 +196,7 @@ def load_file(
 ) -> "XComArg":
     """Load a file or bucket into either a SQL table or a pandas dataframe.
 
-    :param input_file: File object containing path and conn_id for object stores or a str
+    :param input_file: File path and conn_id for object stores
     :param output_table: Table to create
     :param task_id: task id, optional
     :param if_exists: default override an existing Table. Options: fail, replace, append
