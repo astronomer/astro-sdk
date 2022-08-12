@@ -1,8 +1,8 @@
+.. _get_file_list:
+
 =============
 get_file_list
 =============
-
-.. _get_file_list:
 
 When to use the ``get_file_list`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
