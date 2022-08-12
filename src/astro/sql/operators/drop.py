@@ -8,7 +8,7 @@ from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import Table
 
 
-class DropTableOperator(AstroSQLBaseOperator, BaseOperator):
+class DropTableOperator(AstroSQLBaseOperator):
     """Airflow Operator for dropping SQL tables."""
 
     template_fields = ("table",)
