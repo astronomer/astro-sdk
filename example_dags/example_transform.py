@@ -23,7 +23,7 @@ def top_five_animations(input_table: Table):
     """
 
 
-# [END transform_example_1]  skipcq: PY-W0069
+# [END transform_example_1]
 
 
 # [START transform_example_2]  skipcq: PY-W0069
