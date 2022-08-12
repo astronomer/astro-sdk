@@ -8,7 +8,7 @@ export_file operator
 
 When to use the ``export_file`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The ``export_file`` function writes SQL table to csv/parquet on local/S3/GCS. The ``export_file`` function imports data from :ref:`table` (Google BigQuery, Postgres, Snowflake and Sqlite) or pandas dataframe.
+The ``export_file`` function writes SQL table to csv/parquet on local/S3/GCS. The ``export_file`` function imports data from :ref:`supported_databases` or pandas dataframe.
 
 There are two use cases of the ``export_file`` operator.
 

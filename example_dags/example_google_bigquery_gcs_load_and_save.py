@@ -1,4 +1,3 @@
-# skipcq: PY-W0069
 """
 This Example DAG:
  - Pulls a CSV file from Github and loads it into BigQuery.
