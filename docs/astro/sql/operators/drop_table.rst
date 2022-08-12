@@ -4,9 +4,9 @@
 drop table operator
 ======================================
 
-When to Use drop operator
+When to Use drop table operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The drop operator is used to delete tables from the database if they exist. It can be used on both Temporary as well as Persistent Tables.
+The drop table operator is used to delete tables from the database if they exist. It can be used on both Temporary as well as Persistent Tables.
 
 .. literalinclude:: ../../../../example_dags/example_sqlite_load_transform.py
    :language: python
