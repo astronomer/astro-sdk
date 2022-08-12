@@ -1,6 +1,8 @@
-======================================
+.. _load_file:
+
+==================
 load_file operator
-======================================
+==================
 
 When to use the ``load_file`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -40,7 +42,7 @@ Parameters to use when loading a file to the database table
 
     Note - When we are using ``if_exists='replace'`` we are dropping the existing table and then creating a new table. Here we are not reusing the schema.
 
-#. **output_table** - We can specify the output table to be created by passing in this parameter, which is expected to be an instance of ``astro.sql.table.Table``. Users can specify the schema of tables by passing in the ``columns`` parameter of ``astro.sql.table.Table`` object, which is expected to be a list of the instance of ``sqlalchemy.Column``. If the user doesn't specify the schema, the schema is inferred using pandas.
+#. **output_table** - We can specify the output table to be created by passing in this parameter, which is expected to be an instance of ``astro.sql.table.Table``. Users can specify the schema of tables by passing in the ``columns`` parameter of ``astro.sql.table.Table`` object, which is expected to be a list of the instance of `sqlalchemy.Column <https://docs.sqlalchemy.org/en/14/core/metadata.html#sqlalchemy.schema.Column>`_. . If the user doesn't specify the schema, the schema is inferred using pandas.
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
