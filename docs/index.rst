@@ -42,6 +42,7 @@ Welcome to astro-sdk's documentation!
    :glob:
 
    astro/sql/operators/*
+   astro/files/operators/*
 
 .. toctree::
    :maxdepth: 1
