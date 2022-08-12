@@ -66,7 +66,7 @@ def union_table_and_dataframe(input_table: Table, input_dataframe: pd.DataFrame)
             """
 
 
-# [END transform_example_4]  skipcq: PY-W0069
+# [END transform_example_4]
 
 
 with DAG(
