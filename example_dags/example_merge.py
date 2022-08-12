@@ -10,7 +10,7 @@ from astro.files import File
 from astro.sql.table import Metadata, Table
 
 CWD = pathlib.Path(__file__).parent
-DATA_DIR = str(CWD) + "/data/"
+DATA_DIR = str(CWD) + "/../tests/data/"
 
 default_args = {
     "owner": "airflow",
