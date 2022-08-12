@@ -1,8 +1,9 @@
+.. _transform_operator:
+
 ==================
 transform operator
 ==================
 
-.. _transform_operator:
 
 When to use the ``transform`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
