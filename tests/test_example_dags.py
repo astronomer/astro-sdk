@@ -17,8 +17,10 @@ from tests.sql.operators import utils as test_utils
 RETRY_EXCEPTION = []
 try:
     from google.api_core.exceptions import Forbidden, TooManyRequests
-except ModuleNotFoundError:
+
     RETRY_EXCEPTION.extend([Forbidden, TooManyRequests])
+except ModuleNotFoundError:
+    pass
 
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
