@@ -11,7 +11,7 @@ START_DATE = datetime(2000, 1, 1)
 LAST_ONE_DF = pd.DataFrame(data={"Title": ["Random movie"], "Rating": [121]})
 
 
-# [START transform_example_1]  skipcq: PY-W0069
+# [START transform_example_1]
 @aql.transform()
 def top_five_animations(input_table: Table):
     return """
