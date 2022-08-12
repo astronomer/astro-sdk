@@ -1,5 +1,4 @@
 """Google BigQuery table implementation."""
-import logging
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
