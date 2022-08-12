@@ -5,7 +5,6 @@ from airflow.models.dagbag import DagBag
 from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import provide_session
-from google.api_core.exceptions import Forbidden, TooManyRequests
 from tenacity import (
     retry,
     retry_if_exception_type,
@@ -14,6 +13,13 @@ from tenacity import (
 )
 
 from tests.sql.operators import utils as test_utils
+
+RETRY_EXCEPTION = []
+try:
+    from google.api_core.exceptions import Forbidden, TooManyRequests
+except ModuleNotFoundError:
+    RETRY_EXCEPTION.extend([Forbidden, TooManyRequests])
+
 
 RETRY_EXCEPTION = [TooManyRequests, Forbidden]
 
@@ -43,14 +49,14 @@ def session():
 @pytest.mark.parametrize(
     "dag_id",
     [
-        # "example_amazon_s3_postgres",
-        # "example_amazon_s3_postgres_load_and_save",
-        # "example_amazon_s3_snowflake_transform",
-        # "example_google_bigquery_gcs_load_and_save",
-        # "example_snowflake_partial_table_with_append",
-        # "example_sqlite_load_transform",
-        # "example_dynamic_map_task",
-        # "example_append",
+        "example_amazon_s3_postgres",
+        "example_amazon_s3_postgres_load_and_save",
+        "example_amazon_s3_snowflake_transform",
+        "example_google_bigquery_gcs_load_and_save",
+        "example_snowflake_partial_table_with_append",
+        "example_sqlite_load_transform",
+        "example_dynamic_map_task",
+        "example_append",
         "example_load_file",
         "example_transform",
         "example_merge_bigquery",
