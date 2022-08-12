@@ -29,9 +29,12 @@ Merge operator internally runs different SQL queries based on the databases and 
    * - SQLite
      - Yes
 
+Users can create and add constraints on table by passing ``columns`` parameter to :ref:`load_file`. Refer :ref:`custom_schema` section for details.
 
-Schema
-------
+.. literalinclude:: ../../../../example_dags/example_merge.py
+   :language: python
+   :start-after: [START merge_load_file_with_primary_key_example]
+   :end-before: [END merge_load_file_with_primary_key_example]
 
 When tables have the same schema
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

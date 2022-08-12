@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 from airflow.models import DAG
 from pandas import DataFrame
+from sqlalchemy import Column, types
 
 from astro import sql as aql
 from astro.files import File
@@ -37,18 +38,28 @@ def my_df_func(input_df: DataFrame):
 
 
 with dag:
+    # [START merge_load_file_with_primary_key_example]
     target_table_1 = aql.load_file(
         input_file=File(DATA_DIR + "sample.csv"),
         output_table=Table(
             conn_id="bigquery",
             metadata=Metadata(schema="first_table_schema"),
+            columns=[
+                Column(name="id", type_=types.Integer, primary_key=True),
+                Column(name="name", type_=types.String),
+            ],
         ),
     )
+    # [END merge_load_file_with_primary_key_example]
     target_table_2 = aql.load_file(
         input_file=File(DATA_DIR + "sample.csv"),
         output_table=Table(
             conn_id="bigquery",
             metadata=Metadata(schema="first_table_schema"),
+            columns=[
+                Column(name="id", type_=types.Integer, primary_key=True),
+                Column(name="name", type_=types.String),
+            ],
         ),
     )
     source_table = aql.load_file(
