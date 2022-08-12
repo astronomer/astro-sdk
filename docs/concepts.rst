@@ -75,4 +75,11 @@ Templating
 ~~~~~~~~~~
 Templating is a powerful concept in Airflow to pass dynamic information into task instances at runtime. Templating in Airflow works exactly the same as templating with Jinja in Python: define your to-be-evaluated code between double curly braces, and the expression will be evaluated at runtime.
 
+The parameter list passed to the decorated function is also added to the context which is used to render template. For example:
+
+.. literalinclude:: ../example_dags/example_transform.py
+       :language: python
+       :start-after: [START transform_example_3]
+       :end-before: [END transform_example_3]
+
 More details can be found at `airflow templates reference <https://airflow.apache.org/docs/apache-airflow/stable/templates-ref.html>`_
