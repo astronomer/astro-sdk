@@ -378,8 +378,8 @@ class BaseDatabase(ABC):
                 **kwargs,
             )
         # Catching NATIVE_LOAD_EXCEPTIONS for fallback
-        except self.NATIVE_LOAD_EXCEPTIONS as exe:  # skipcq: PYL-W0703
-            logging.warning(exe)
+        except self.NATIVE_LOAD_EXCEPTIONS:  # skipcq: PYL-W0703
+            logging.warning("Loading files failed with Native Support. Falling back to Pandas-based load", exc_info=True)
             if enable_native_fallback:
                 self.load_pandas_dataframe_to_table(
                     source_file.export_to_dataframe(),
