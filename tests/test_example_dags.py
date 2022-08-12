@@ -48,7 +48,7 @@ def test_example_dag(session, dag_id):
     test_utils.run_dag(dag, account_for_cleanup_failure=True)
 
 
-@pytest.mark.skip(
+@pytest.mark.skipif(
     airflow.__version__ < "2.3.0", reason="Require Airflow version > 2.3.0"
 )
 @pytest.mark.parametrize(
