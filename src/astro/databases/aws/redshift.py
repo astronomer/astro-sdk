@@ -1,54 +1,19 @@
 """AWS Redshift table implementation."""
-import sqlalchemy
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import pandas as pd
+import sqlalchemy
 from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
-
-from google.api_core.exceptions import (
-    ClientError,
-    Conflict,
-    Forbidden,
-    GoogleAPIError,
-    InvalidArgument,
-)
-from google.api_core.exceptions import NotFound as GoogleNotFound
-from google.api_core.exceptions import (
-    ResourceExhausted,
-    RetryError,
-    ServerError,
-    ServiceUnavailable,
-    TooManyRequests,
-    Unauthorized,
-    Unknown,
-)
-
-from google.protobuf import timestamp_pb2  # type: ignore
-from google.protobuf.struct_pb2 import Struct  # type: ignore
-from google.resumable_media import InvalidResponse
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
-from tenacity import retry, stop_after_attempt
 
-from astro.constants import (
-    DEFAULT_CHUNK_SIZE,
-    FileLocation,
-    FileType,
-    LoadExistStrategy,
-    MergeConflictStrategy,
-)
-from astro.databases.base import BaseDatabase, DatabaseCustomError
+from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
+from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.settings import REDSHIFT_SChEMA
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = RedshiftSQLHook.default_conn_name
-NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
-    FileType.CSV: "CSV",
-    FileType.NDJSON: "NEWLINE_DELIMITED_JSON",
-    FileType.PARQUET: "PARQUET",
-}
-BIGQUERY_WRITE_DISPOSITION = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
 
 
 class RedshiftDatabase(BaseDatabase):
@@ -119,7 +84,11 @@ class RedshiftDatabase(BaseDatabase):
         :param table: Details of the table we want to check that exists
         """
         inspector = sqlalchemy.inspect(self.sqlalchemy_engine)
-        return bool(inspector.dialect.has_table(self.connection, table.name, schema=table.metadata.schema))
+        return bool(
+            inspector.dialect.has_table(
+                self.connection, table.name, schema=table.metadata.schema
+            )
+        )
 
     def load_pandas_dataframe_to_table(
         self,
