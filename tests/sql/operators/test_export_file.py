@@ -136,7 +136,6 @@ def test_save_returns_output_file(sample_dag, database_table_fixture):
     ],
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
-
 )
 def test_save_all_db_tables_to_s3(sample_dag, database_table_fixture):
     _creds = s3fs_creds()
