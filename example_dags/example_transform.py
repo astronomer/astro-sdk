@@ -26,7 +26,7 @@ def top_five_animations(input_table: Table):
 # [END transform_example_1]
 
 
-# [START transform_example_2]  skipcq: PY-W0069
+# [START transform_example_2]
 @aql.transform()
 def last_five_animations(input_table: Table):
     return """
