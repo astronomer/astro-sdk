@@ -49,7 +49,7 @@ def test_example_dag(session, dag_id):
 
 
 @pytest.mark.skipif(
-    airflow.__version__ < "2.3.0", reason="Require Airflow version > 2.3.0"
+    airflow.__version__ < "2.3.0", reason="Require Airflow version >= 2.3.0"
 )
 @pytest.mark.parametrize(
     "dag_id",
