@@ -1,3 +1,4 @@
+# skipcq: PY-W0069
 """
 This Example DAG:
  - Pulls a CSV file from Github and loads it into BigQuery.
@@ -53,7 +54,7 @@ with DAG(
 
     t2 = extract_top_5_movies(input_df=t1)
 
-    # [START export_example_1] skipcq: PY-W0069
+    # [START export_example_1]
     aql.export_file(
         task_id="save_file_to_gcs",
         input_data=t1,
@@ -63,9 +64,9 @@ with DAG(
         ),
         if_exists="replace",
     )
-    # [END export_example_1] skipcq: PY-W0069
+    # [END export_example_1]
 
-    # [START export_example_2] skipcq: PY-W0069
+    # [START export_example_2]
     aql.export_file(
         task_id="save_dataframe_to_gcs",
         input_data=t2,
@@ -75,6 +76,6 @@ with DAG(
         ),
         if_exists="replace",
     )
-    # [END export_example_2] skipcq: PY-W0069
+    # [END export_example_2]
 
     aql.cleanup()
