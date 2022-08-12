@@ -36,9 +36,13 @@ CWD = pathlib.Path(__file__).parent
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 def test_dataframe_from_sql_basic(sample_dag, database_table_fixture):
     """Test basic operation of dataframe operator."""
@@ -79,9 +83,13 @@ def test_dataframe_from_sql_basic(sample_dag, database_table_fixture):
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 def test_dataframe_from_sql_custom_task_id(sample_dag, database_table_fixture):
     """Test custom and taskId increment when same task is added multiple times."""
@@ -120,9 +128,13 @@ def test_dataframe_from_sql_custom_task_id(sample_dag, database_table_fixture):
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 def test_dataframe_from_sql_basic_op_arg(sample_dag, database_table_fixture):
     """Test basic operation of dataframe operator with op_args."""
@@ -167,9 +179,13 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, database_table_fixture):
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 def test_dataframe_from_sql_basic_op_arg_and_kwarg(
     sample_dag,
