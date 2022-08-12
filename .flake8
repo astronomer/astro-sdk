@@ -5,3 +5,5 @@ max-complexity = 6
 max-line-length = 120
 ignore = A002,W503
 extend-ignore = E203
+per-file-ignores =
+     src/astro/sql/__init__.py: F401

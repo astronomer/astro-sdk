@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.baseoperator import BaseOperator
@@ -6,6 +6,9 @@ from airflow.models.baseoperator import BaseOperator
 from astro.constants import MergeConflictStrategy
 from astro.databases import create_database
 from astro.sql.table import Table
+
+if TYPE_CHECKING:
+    from airflow.models.xcom_arg import XComArg
 
 MERGE_COLUMN_TYPE = Union[List[str], Tuple[str], Dict[str, str]]
 
@@ -65,3 +68,36 @@ class MergeOperator(BaseOperator):
             source_to_target_columns_map=self.columns,
         )
         return self.target_table
+
+
+def merge(
+    *,
+    target_table: Table,
+    source_table: Table,
+    columns: MERGE_COLUMN_TYPE,
+    target_conflict_columns: List[str],
+    if_conflicts: MergeConflictStrategy,
+    **kwargs: Any,
+) -> "XComArg":
+    """
+    Merge the source table rows into a destination table.
+
+    :param source_table: Contains the rows to be merged to the target_table (templated)
+    :param target_table: Contains the destination table in which the rows will be merged (templated)
+    :param columns: List/Tuple of columns if name of source and target tables are same.
+        If the column names in source and target tables are different pass a dictionary
+        of source_table columns names to target_table columns names.
+        Examples: ``["sell", "list"]`` or ``{"s_sell": "t_sell", "s_list": "t_list"}``
+    :param target_conflict_columns: List of cols where we expect to have a conflict while combining
+    :param if_conflicts: The strategy to be applied if there are conflicts.
+    :param kwargs: Any keyword arguments supported by the BaseOperator is supported (e.g ``queue``, ``owner``)
+    """
+
+    return MergeOperator(
+        target_table=target_table,
+        source_table=source_table,
+        columns=columns,
+        target_conflict_columns=target_conflict_columns,
+        if_conflicts=if_conflicts,
+        **kwargs,
+    ).output
