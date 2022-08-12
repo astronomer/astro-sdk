@@ -1,9 +1,8 @@
-======================================
-append operator
-======================================
-
 .. _append_operator:
 
+================
+append operator
+================
 When to use the ``append`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 We can use ``append`` operator when we want to append the source table to the target table.
@@ -40,4 +39,4 @@ When tables have different schema, we can map different column names by passing 
 
 Conflicts
 ~~~~~~~~~
-``append operator`` doesn't handle the conflicts that may arise while appending data. If you want to handle those scenarios, you can use ``merge operator``
+``append operator`` doesn't handle the conflicts that may arise while appending data. If you want to handle those scenarios, you can use :ref:`merge_operator`.
