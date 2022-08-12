@@ -22,8 +22,8 @@ DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 @retry(
     stop=stop_after_attempt(3),
-    retry=retry_if_exception_type(*RETRY_EXCEPTION),
-    wait=wait_exponential(multiplier=10, min=10, max=60),
+    retry=retry_if_exception_type(RETRY_EXCEPTION),
+    wait=wait_exponential(multiplier=10, min=10, max=60),  # values in seconds
 )
 def wrapper_run_dag(dag):
     test_utils.run_dag(dag, account_for_cleanup_failure=True)
@@ -43,14 +43,14 @@ def session():
 @pytest.mark.parametrize(
     "dag_id",
     [
-        "example_amazon_s3_postgres",
-        "example_amazon_s3_postgres_load_and_save",
-        "example_amazon_s3_snowflake_transform",
-        "example_google_bigquery_gcs_load_and_save",
-        "example_snowflake_partial_table_with_append",
-        "example_sqlite_load_transform",
-        "example_dynamic_map_task",
-        "example_append",
+        # "example_amazon_s3_postgres",
+        # "example_amazon_s3_postgres_load_and_save",
+        # "example_amazon_s3_snowflake_transform",
+        # "example_google_bigquery_gcs_load_and_save",
+        # "example_snowflake_partial_table_with_append",
+        # "example_sqlite_load_transform",
+        # "example_dynamic_map_task",
+        # "example_append",
         "example_load_file",
     ],
 )
