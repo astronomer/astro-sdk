@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 import io
-from typing import List, Optional, Union
 
 import pandas as pd
 import smart_open
@@ -20,9 +21,9 @@ class File:
     def __init__(
         self,
         path: str,
-        conn_id: Optional[str] = None,
-        filetype: Union[FileType, None] = None,
-        normalize_config: Optional[dict] = None,
+        conn_id: str | None = None,
+        filetype: FileType | None = None,
+        normalize_config: dict | None = None,
     ):
         """Init file object which represent a single file in local/object stores
 
@@ -41,7 +42,7 @@ class File:
         return self.location.path
 
     @property
-    def conn_id(self) -> Optional[str]:
+    def conn_id(self) -> str | None:
         return self.location.conn_id
 
     @property
@@ -125,10 +126,10 @@ class File:
 
 def resolve_file_path_pattern(
     path_pattern: str,
-    conn_id: Optional[str] = None,
-    filetype: Union[FileType, None] = None,
-    normalize_config: Optional[dict] = None,
-) -> List[File]:
+    conn_id: str | None = None,
+    filetype: FileType | None = None,
+    normalize_config: dict | None = None,
+) -> list[File]:
     """get file objects by resolving path_pattern from local/object stores
     path_pattern can be
     1. local location - glob pattern

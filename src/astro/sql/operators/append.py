@@ -1,4 +1,6 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.baseoperator import BaseOperator
@@ -8,8 +10,6 @@ from astro.sql.table import Table
 
 if TYPE_CHECKING:
     from airflow.models.xcom_arg import XComArg
-
-APPEND_COLUMN_TYPE = Optional[Union[List[str], Tuple[str], Dict[str, str]]]
 
 
 class AppendOperator(BaseOperator):
@@ -30,7 +30,7 @@ class AppendOperator(BaseOperator):
         self,
         source_table: Table,
         target_table: Table,
-        columns: APPEND_COLUMN_TYPE = None,
+        columns: list[str] | tuple[str] | dict[str, str] | None = None,
         task_id: str = "",
         **kwargs: Any,
     ) -> None:
@@ -63,9 +63,9 @@ def append(
     *,
     source_table: Table,
     target_table: Table,
-    columns: APPEND_COLUMN_TYPE = None,
+    columns: list[str] | tuple[str] | dict[str, str] | None = None,
     **kwargs: Any,
-) -> "XComArg":
+) -> XComArg:
     """
     Append the source table rows into a destination table.
 
