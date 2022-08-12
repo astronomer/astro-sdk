@@ -1,9 +1,8 @@
 .. _append_operator:
 
-======================================
+================
 append operator
-======================================
-
+================
 When to use the ``append`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 We can use ``append`` operator when we want to append the source table to the target table.
