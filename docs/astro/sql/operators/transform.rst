@@ -31,7 +31,7 @@ Case 1: When we pass tables between tasks while completing a data transformation
        :start-after: [START transform_example_2]
        :end-before: [END transform_example_2]
 
-    We can quickly pass tables between tasks when completing a data transformation.
+    We can easily pass tables between tasks when completing a data transformation.
 
     .. literalinclude:: ../../../../example_dags/example_transform.py
        :language: python
