@@ -1,10 +1,10 @@
 from typing import Any, Dict, Optional, Union
 
 import pandas as pd
-from airflow.configuration import conf
 from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
+from astro import settings
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import BaseDatabase, create_database
 from astro.exceptions import IllegalLoadToDatabaseException
@@ -74,10 +74,9 @@ class LoadFile(BaseOperator):
         if self.output_table:
             return self.load_data_to_table(input_file)
         else:
-            if conf.get(
-                "core", "xcom_backend"
-            ) == "airflow.models.xcom.BaseXCom" and not conf.getboolean(
-                "astro_sdk", "dataframe_allow_unsafe_storage"
+            if (
+                not settings.IS_CUSTOM_XCOM_BACKEND
+                and not settings.ALLOW_UNSAFE_DF_STORAGE
             ):
                 raise IllegalLoadToDatabaseException()
             return self.load_data_to_dataframe(input_file)
