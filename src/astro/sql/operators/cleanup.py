@@ -213,3 +213,20 @@ class CleanupOperator(BaseOperator):
                     )
 
         return res
+
+
+def cleanup(
+    tables_to_cleanup: Optional[List[Table]] = None, **kwargs
+) -> CleanupOperator:
+    """
+    Clean up temporary tables once either the DAG or upstream tasks are done
+
+    The cleanup operator allows for two possible scenarios: Either a user wants to clean up a specific set of tables
+    during the DAG run, or the user wants to ensure that all temporary tables are deleted once the DAG run is finished.
+    The idea here is to ensure that even if a user doesn't have access to a "temp" schema, that astro does not leave
+    hanging tables once execution is done.
+
+    :param tables_to_cleanup: A list of tables to cleanup, defaults to waiting for all upstream tasks to finish
+    :param kwargs: Any keyword arguments supported by the BaseOperator is supported (e.g ``queue``, ``owner``)
+    """
+    return CleanupOperator(tables_to_cleanup=tables_to_cleanup, **kwargs)
