@@ -17,8 +17,9 @@ from tests.sql.operators import utils as test_utils
 RETRY_EXCEPTION = []
 try:
     from google.api_core.exceptions import Forbidden, TooManyRequests
+    from pandas_gbq.exceptions import GenericGBQException
 
-    RETRY_EXCEPTION.extend([Forbidden, TooManyRequests])
+    RETRY_EXCEPTION.extend([Forbidden, TooManyRequests, GenericGBQException])
 except ModuleNotFoundError:
     pass
 
