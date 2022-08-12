@@ -1,8 +1,6 @@
 class NonExistentTableException(Exception):
     """Raised if an operation expected a SQL table to exist, but it does not exist"""
 
-    pass
-
 
 class IllegalLoadToDatabaseException(Exception):
     def __init__(self):
@@ -15,3 +13,10 @@ class IllegalLoadToDatabaseException(Exception):
             "knowing the risks. "
         )
         super().__init__(self.message)
+
+
+class DatabaseCustomError(ValueError, AttributeError):
+    """
+    Inappropriate argument value (of correct type) or attribute
+    not found while running query. while running query
+    """
