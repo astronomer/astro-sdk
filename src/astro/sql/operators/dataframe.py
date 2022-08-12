@@ -1,10 +1,16 @@
 import inspect
-from typing import Callable, Dict, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 import pandas as pd
-from airflow.configuration import conf
 from airflow.decorators.base import DecoratedOperator
 
+try:
+    from airflow.decorators.base import TaskDecorator, task_decorator_factory
+except ImportError:
+    from airflow.decorators.base import task_decorator_factory
+    from airflow.decorators import _TaskDecorator as TaskDecorator
+
+from astro import settings
 from astro.constants import ColumnCapitalization
 from astro.databases import create_database
 from astro.exceptions import IllegalLoadToDatabaseException
@@ -74,6 +80,22 @@ def load_op_kwarg_table_into_dataframe(
 
 
 class DataframeOperator(DecoratedOperator):
+    """
+    Converts a SQL table into a dataframe. Users can then give a python function that takes a dataframe as
+    one of its inputs and run that python function. Once that function has completed, the result is accessible
+    via the Taskflow API.
+
+    :param conn_id: Connection to the DB that you will pull the table from
+    :param database: Database for input table
+    :param schema:  schema for input table
+    :param warehouse: (Snowflake) Which warehouse to use for the input table
+    :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
+        in the resulting dataframe
+    :param kwargs: Any keyword arguments supported by the BaseOperator is supported (e.g ``queue``, ``owner``)
+    :return: If ``raw_sql`` is true, we return the result of the handler function, otherwise we will return the
+        generated output_table.
+    """
+
     def __init__(
         self,
         conn_id: Optional[str] = None,
@@ -82,22 +104,6 @@ class DataframeOperator(DecoratedOperator):
         columns_names_capitalization: ColumnCapitalization = "lower",
         **kwargs,
     ):
-        """
-        Converts a SQL table into a dataframe. Users can then give a python function that takes a dataframe as
-        one of its inputs and run that python function. Once that function has completed, the result is accessible
-        via the Taskflow API.
-
-        :param conn_id: Connection to the DB that you will pull the table from
-        :param database: Database for input table
-        :param schema:  schema for input table
-        :param warehouse: (Snowflake) Which warehouse to use for the input table
-        :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
-            in the resulting dataframe
-        :param kwargs:
-
-        :return: If ``raw_sql`` is true, we return the result of the handler function, otherwise we will return the
-        generated output_table.
-        """
         self.conn_id: str = conn_id or ""
         self.database = database
         self.schema = schema
@@ -149,10 +155,59 @@ class DataframeOperator(DecoratedOperator):
             )
             return self.output_table
         else:
-            if conf.get(
-                "core", "xcom_backend"
-            ) == "airflow.models.xcom.BaseXCom" and not conf.getboolean(
-                "astro_sdk", "dataframe_allow_unsafe_storage"
+            if (
+                not settings.IS_CUSTOM_XCOM_BACKEND
+                and not settings.ALLOW_UNSAFE_DF_STORAGE
             ):
                 raise IllegalLoadToDatabaseException()
             return pandas_dataframe
+
+
+def dataframe(
+    python_callable: Optional[Callable] = None,
+    multiple_outputs: Optional[bool] = None,
+    conn_id: str = "",
+    database: Optional[str] = None,
+    schema: Optional[str] = None,
+    columns_names_capitalization: ColumnCapitalization = "lower",
+    **kwargs: Any,
+) -> TaskDecorator:
+    """
+    This decorator will allow users to write python functions while treating SQL tables as dataframes
+
+    This decorator allows a user to run python functions in Airflow but with the huge benefit that SQL tables
+    will automatically be turned into dataframes and resulting dataframes can automatically used in astro.sql functions
+
+    :param python_callable: This parameter is filled in automatically when you use the dataframe function
+        as a decorator. This is where the python function gets passed to the wrapping function
+    :param multiple_outputs: If set to True, the decorated function's return value will be unrolled to
+        multiple XCom values. Dict will unroll to XCom values with its keys as XCom keys. Defaults to False.
+    :param conn_id: Connection ID for the database you want to connect to. If you do
+        not pass in a value for this object
+        we can infer the connection ID from the first table passed into the python_callable function.
+        (required if there are no table arguments)
+    :param database: Database within the SQL instance you want to access. If left blank we will
+        default to the table.metatadata.database in the first Table passed
+        to the function (required if there are no table arguments)
+    :param schema: Schema within the SQL instance you want to access. If left blank we will
+        default to the table.metatadata.schema in the first Table passed to the
+        function (required if there are no table arguments)
+    :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
+        in the resulting dataframe
+    :param kwargs: Any keyword arguments supported by the BaseOperator is supported (e.g ``queue``, ``owner``)
+    """
+    kwargs.update(
+        {
+            "conn_id": conn_id,
+            "database": database,
+            "schema": schema,
+            "columns_names_capitalization": columns_names_capitalization,
+        }
+    )
+    decorated_function = task_decorator_factory(
+        python_callable=python_callable,
+        multiple_outputs=multiple_outputs,
+        decorated_operator_class=DataframeOperator,  # type: ignore
+        **kwargs,
+    )
+    return decorated_function
