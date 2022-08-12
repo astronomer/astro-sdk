@@ -38,25 +38,24 @@ CWD = pathlib.Path(__file__).parent
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        # {
-        #     "database": Database.SNOWFLAKE,
-        # },
-        # {
-        #     "database": Database.BIGQUERY,
-        # },
-        # {
-        #     "database": Database.POSTGRES,
-        # },
-        # {
-        #     "database": Database.SQLITE,
-        # },
+        {
+            "database": Database.SNOWFLAKE,
+        },
+        {
+            "database": Database.BIGQUERY,
+        },
+        {
+            "database": Database.POSTGRES,
+        },
+        {
+            "database": Database.SQLITE,
+        },
         {
             "database": Database.REDSHIFT,
         }
     ],
     indirect=True,
-    # ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
-    ids=["redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
@@ -111,9 +110,12 @@ def test_unsafe_loading_of_dataframe(sample_dag):
         {
             "database": Database.SQLITE,
         },
+        {
+            "database": Database.REDSHIFT,
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 def test_aql_load_remote_file_to_dbs(
     sample_dag, database_table_fixture, remote_files_fixture
@@ -159,9 +161,13 @@ def test_aql_load_remote_file_to_dbs(
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 def test_aql_replace_existing_table(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
@@ -195,9 +201,12 @@ def test_aql_replace_existing_table(sample_dag, database_table_fixture):
         {
             "database": Database.SQLITE,
         },
+        {
+            "database": Database.REDSHIFT,
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 def test_aql_local_file_with_no_table_name(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
@@ -442,9 +451,12 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(
         {
             "database": Database.SQLITE,
         },
+        {
+            "database": Database.REDSHIFT,
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 @pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
 def test_load_file(sample_dag, database_table_fixture, file_type):
@@ -488,11 +500,15 @@ def test_load_file(sample_dag, database_table_fixture, file_type):
         {
             "database": Database.POSTGRES,
         },
+        {
+            "database": Database.REDSHIFT,
+        },
     ],
     indirect=True,
     ids=[
         "bigquery",
         "postgresql",
+        "redshift",
     ],
 )
 @pytest.mark.parametrize("file_type", ["csv"])
@@ -533,9 +549,12 @@ def test_load_file_with_named_schema(sample_dag, database_table_fixture, file_ty
         {
             "database": Database.BIGQUERY,
         },
+        {
+            "database": Database.REDSHIFT,
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery"],
+    ids=["snowflake", "bigquery", "redshift"],
 )
 def test_load_file_chunks(sample_dag, database_table_fixture):
     file_type = "csv"
@@ -544,11 +563,13 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
     chunk_function = {
         "bigquery": "pandas.DataFrame.to_gbq",
         "snowflake": "snowflake.connector.pandas_tools.write_pandas",
+        "redshift": "pandas.DataFrame.to_sql",
     }[db.sql_type]
 
     chunk_size_argument = {
         "bigquery": "chunksize",
         "snowflake": "chunk_size",
+        "redshift": "chunksize",
     }[db.sql_type]
 
     with mock.patch(chunk_function) as mock_chunk_function:
@@ -581,9 +602,12 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
         {
             "database": Database.SQLITE,
         },
+        {
+            "database": Database.REDSHIFT,
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 def test_aql_nested_ndjson_file_with_default_sep_param(
     sample_dag, database_table_fixture
@@ -613,11 +637,14 @@ def test_aql_nested_ndjson_file_with_default_sep_param(
         {
             "database": Database.BIGQUERY,
         },
+        {
+            "database": Database.REDSHIFT,
+        },
     ],
     indirect=True,
-    ids=["bigquery"],
+    ids=["bigquery", "redshift"],
 )
-def test_aql_nested_ndjson_file_to_bigquery_explicit_sep_params(
+def test_aql_nested_ndjson_file_to_database_explicit_sep_params(
     sample_dag, database_table_fixture
 ):
     """Test the flattening of single level nested ndjson, with explicit separator '___'."""
@@ -646,13 +673,17 @@ def test_aql_nested_ndjson_file_to_bigquery_explicit_sep_params(
         {
             "database": Database.BIGQUERY,
         },
+        {
+            "database": Database.REDSHIFT,
+        },
     ],
     indirect=True,
     ids=[
         "bigquery",
+        "redshift",
     ],
 )
-def test_aql_nested_ndjson_file_to_bigquery_explicit_illegal_sep_params(
+def test_aql_nested_ndjson_file_to_database_explicit_illegal_sep_params(
     sample_dag, database_table_fixture
 ):
     """Test the flattening of single level nested ndjson, with explicit separator illegal '.',
@@ -909,12 +940,15 @@ def test_aql_load_file_s3_native_path(sample_dag, database_table_fixture):
     [
         {
             "database": Database.BIGQUERY,
-        }
+        },
+        {
+            "database": Database.REDSHIFT,
+        },
     ],
     indirect=True,
-    ids=["Bigquery"],
+    ids=["Bigquery", "redshift"],
 )
-def test_loading_local_file_to_bigquery(database_table_fixture):
+def test_loading_local_file_to_database(database_table_fixture):
     """
     Verify that the optimised path method is skipped in case use_native_support is set to False.
     """
@@ -929,8 +963,8 @@ def test_loading_local_file_to_bigquery(database_table_fixture):
         },
     ).operator.execute({})
 
-    bigquery_df = db.export_table_to_pandas_dataframe(test_table)
-    assert bigquery_df.shape == (3, 9)
+    database_df = db.export_table_to_pandas_dataframe(test_table)
+    assert database_df.shape == (3, 9)
 
 
 def test_aql_load_file_columns_names_capitalization_dataframe(sample_dag):
