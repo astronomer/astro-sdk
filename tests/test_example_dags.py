@@ -34,6 +34,7 @@ def session():
         "example_dynamic_map_task",
         "example_append",
         "example_load_file",
+        "example_transform",
         "example_merge_bigquery",
     ],
 )
