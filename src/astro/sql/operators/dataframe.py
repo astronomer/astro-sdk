@@ -4,10 +4,10 @@ from typing import Callable, Dict, Optional, Tuple, Union
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 
+from astro import settings
 from astro.constants import ColumnCapitalization
 from astro.databases import create_database
 from astro.exceptions import IllegalLoadToDatabaseException
-from astro.settings import ALLOW_UNSAFE_DF_STORAGE, IS_CUSTOM_XCOM_BACKEND
 from astro.sql.table import Table
 from astro.utils.dataframe import convert_columns_names_capitalization
 from astro.utils.table import find_first_table
@@ -149,6 +149,9 @@ class DataframeOperator(DecoratedOperator):
             )
             return self.output_table
         else:
-            if not IS_CUSTOM_XCOM_BACKEND and not ALLOW_UNSAFE_DF_STORAGE:
+            if (
+                not settings.IS_CUSTOM_XCOM_BACKEND
+                and not settings.ALLOW_UNSAFE_DF_STORAGE
+            ):
                 raise IllegalLoadToDatabaseException()
             return pandas_dataframe

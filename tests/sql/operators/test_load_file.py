@@ -9,6 +9,7 @@ Run test:
     python3 -m unittest tests.operators.test_load_file.TestLoadFile.test_aql_local_file_to_postgres
 
 """
+import importlib
 import os
 import pathlib
 from unittest import mock
@@ -72,6 +73,10 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
     os.environ, {"AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE": "False"}
 )
 def test_unsafe_loading_of_dataframe(sample_dag):
+    from astro import settings
+
+    importlib.reload(settings)
+
     with pytest.raises(IllegalLoadToDatabaseException):
         load_file(
             input_file=File(
