@@ -18,19 +18,10 @@ from astro.constants import (
     LoadExistStrategy,
     MergeConflictStrategy,
 )
-from astro.exceptions import NonExistentTableException
+from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File, resolve_file_path_pattern
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.sql.table import Metadata, Table
-
-
-class DatabaseCustomError(ValueError, AttributeError):
-    """
-    Inappropriate argument value (of correct type) or attribute
-    not found while running query. while running query
-    """
-
-    pass
 
 
 class BaseDatabase(ABC):

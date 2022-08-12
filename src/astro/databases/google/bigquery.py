@@ -44,7 +44,8 @@ from astro.constants import (
     LoadExistStrategy,
     MergeConflictStrategy,
 )
-from astro.databases.base import BaseDatabase, DatabaseCustomError
+from astro.databases.base import BaseDatabase
+from astro.exceptions import DatabaseCustomError
 from astro.files import File
 from astro.settings import BIGQUERY_SCHEMA
 from astro.sql.table import Metadata, Table
