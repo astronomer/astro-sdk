@@ -14,12 +14,12 @@ from tenacity import (
 
 from tests.sql.operators import utils as test_utils
 
-RETRY_ON_EXCEPTION = []
+RETRY_ON_EXCEPTIONS = []
 try:
     from google.api_core.exceptions import Forbidden, TooManyRequests
     from pandas_gbq.exceptions import GenericGBQException
 
-    RETRY_ON_EXCEPTION.extend([Forbidden, TooManyRequests, GenericGBQException])
+    RETRY_ON_EXCEPTIONS.extend([Forbidden, TooManyRequests, GenericGBQException])
 except ModuleNotFoundError:
     pass
 
@@ -29,7 +29,7 @@ DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 @retry(
     stop=stop_after_attempt(3),
-    retry=retry_if_exception_type(RETRY_ON_EXCEPTION),
+    retry=retry_if_exception_type(RETRY_ON_EXCEPTIONS),
     wait=wait_exponential(multiplier=10, min=10, max=60),  # values in seconds
 )
 def wrapper_run_dag(dag):
