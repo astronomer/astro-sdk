@@ -7,7 +7,7 @@ merge operator
 When to use the ``merge`` operator
 ----------------------------------
 
-Merge operator is used when you expect some conflicts while merging two tables due to underline constraints. If you don't expect any conflicts you can use :ref:`append_operator`. There are two common cases when merging tables.
+Unlike the :ref:`append_operator`, which expects data to be unique and conflict free, the Merge operator allows users to add data with conflict resolution techniques like `ignore` and `update`.
 
 Prerequisite
 ------------
