@@ -52,10 +52,10 @@ def union_top_and_last(first_table: Table, second_table: Table):
             """
 
 
-# [END transform_example_3]  skipcq: PY-W0069
+# [END transform_example_3]
 
 
-# [START transform_example_4]  skipcq: PY-W0069
+# [START transform_example_4]
 @aql.transform
 def union_table_and_dataframe(input_table: Table, input_dataframe: pd.DataFrame):
     """Union `union_table` table and `input_dataframe` dataframe to create a simple dataset."""
