@@ -21,8 +21,6 @@ except ModuleNotFoundError:
     RETRY_EXCEPTION.extend([Forbidden, TooManyRequests])
 
 
-RETRY_EXCEPTION = [TooManyRequests, Forbidden]
-
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 
