@@ -1,9 +1,11 @@
-from typing import Any, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 import pandas as pd
-from airflow.configuration import conf
-from airflow.models.xcom_arg import XComArg
 
+if TYPE_CHECKING:
+    from airflow.models.xcom_arg import XComArg
+
+from astro import settings
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import BaseDatabase, create_database
 from astro.exceptions import IllegalLoadToDatabaseException
@@ -13,7 +15,7 @@ from astro.sql.table import Table
 from astro.utils.task_id_helper import get_task_id
 
 
-class LoadFile(AstroSQLBaseOperator):
+class LoadFileOperator(AstroSQLBaseOperator):
     """Load S3/local file into either a database or a pandas dataframe
 
     :param input_file: File path and conn_id for object stores
@@ -74,10 +76,9 @@ class LoadFile(AstroSQLBaseOperator):
         if self.output_table:
             return self.load_data_to_table(input_file)
         else:
-            if conf.get(
-                "core", "xcom_backend"
-            ) == "airflow.models.xcom.BaseXCom" and not conf.getboolean(
-                "astro_sdk", "dataframe_allow_unsafe_storage"
+            if (
+                not settings.IS_CUSTOM_XCOM_BACKEND
+                and not settings.ALLOW_UNSAFE_DF_STORAGE
             ):
                 raise IllegalLoadToDatabaseException()
             return self.load_data_to_dataframe(input_file)
@@ -192,7 +193,7 @@ def load_file(
     columns_names_capitalization: ColumnCapitalization = "original",
     enable_native_fallback: Optional[bool] = True,
     **kwargs: Any,
-) -> XComArg:
+) -> "XComArg":
     """Load a file or bucket into either a SQL table or a pandas dataframe.
 
     :param input_file: File path and conn_id for object stores
@@ -212,7 +213,7 @@ def load_file(
     # contain chars like - ?, * etc. Which are not acceptable as task id.
     task_id = task_id if task_id is not None else get_task_id("load_file", "")
 
-    return LoadFile(
+    return LoadFileOperator(
         task_id=task_id,
         input_file=input_file,
         output_table=output_table,

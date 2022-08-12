@@ -133,3 +133,57 @@ Publish a release to PyPI:
 * Pass `-R` to skip environment setup, e.g. `nox -Rs lint`
 * Pass `-r` to skip environment creation but re-install packages, e.g. `nox -rs dev`
 * Find more automation commands with `nox -l`
+
+## Using a container to run Airflow DAGs
+
+You can configure the Docker-based testing environment to test your DAG
+
+1. Install the latest versions of the Docker Community Edition and Docker Compose and add them to the PATH.
+
+2. Run ``make container target=build-run``
+
+3. Put the DAGs you want to run in the dev/dags directory:
+
+4. If you want to add Connections, create a connections.yaml file in the dev directory.
+
+   See the `Connections Guide <https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html>`_ for more information.
+
+   Example:
+
+```
+druid_broker_default:
+  conn_type: druid
+  extra: '{"endpoint": "druid/v2/sql"}'
+  host: druid-broker
+  login: null
+  password: null
+  port: 8082
+  schema: null
+airflow_db:
+  conn_type: mysql
+  extra: null
+  host: mysql
+  login: root
+  password: plainpassword
+  port: null
+  schema: airflow
+```
+
+5. The following commands are available to run from the root of the repository.
+
+  - ``make container target=logs`` - To view the logs of the all the containers
+  - ``make container target=stop`` - To stop all the containers
+  - ``make container target=clean`` - To remove all the containers along with volumes
+  - ``make container target=help`` - To view the available commands
+  - ``make container target=build-run`` - To build the docker image and then run containers
+
+6. Following ports are accessible from the host machine:
+
+  - ``8080 ``- Webserver
+  - ``5555`` - Flower
+  - ``5432`` - Postgres
+
+7. Dev Directories:
+
+  - ``dev/dags/`` - DAG Files
+  - ``dev/logs/`` - Logs files of the Airflow containers

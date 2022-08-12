@@ -1,5 +1,6 @@
 import os
 
+import airflow
 import pytest
 from airflow.models.dagbag import DagBag
 from airflow.utils import timezone
@@ -31,12 +32,33 @@ def session():
         "example_google_bigquery_gcs_load_and_save",
         "example_snowflake_partial_table_with_append",
         "example_sqlite_load_transform",
-        "example_dynamic_map_task",
         "example_append",
         "example_load_file",
+        "example_transform",
+        "example_merge_bigquery",
     ],
 )
 def test_example_dag(session, dag_id):
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    db = DagBag(dir_path + "/../example_dags")
+    dag = db.get_dag(dag_id)
+
+    if dag is None:
+        raise NameError(f"The DAG with dag_id: {dag_id} was not found")
+    test_utils.run_dag(dag, account_for_cleanup_failure=True)
+
+
+@pytest.mark.skipif(
+    airflow.__version__ < "2.3.0", reason="Require Airflow version >= 2.3.0"
+)
+@pytest.mark.parametrize(
+    "dag_id",
+    [
+        "example_dynamic_map_task",
+        "example_dynamic_task_template",
+    ],
+)
+def test_example_dynamic_task_map_dag(session, dag_id):
     dir_path = os.path.dirname(os.path.realpath(__file__))
     db = DagBag(dir_path + "/../example_dags")
     dag = db.get_dag(dag_id)

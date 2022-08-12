@@ -1,11 +1,13 @@
-from typing import Dict
+from typing import TYPE_CHECKING, Any, Dict
 
 from airflow.decorators.base import get_unique_task_id
-from airflow.models.baseoperator import BaseOperator
 
 from astro.databases import create_database
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import Table
+
+if TYPE_CHECKING:
+    from airflow.models.xcom_arg import XComArg
 
 
 class DropTableOperator(AstroSQLBaseOperator):
@@ -32,3 +34,17 @@ class DropTableOperator(AstroSQLBaseOperator):
         self.table = database.populate_table_metadata(self.table)
         database.drop_table(self.table)
         return self.table
+
+
+def drop_table(
+    table: Table,
+    **kwargs: Any,
+) -> "XComArg":
+    """
+    Drops a table.
+
+    :param table: Table to be dropped
+    :param kwargs: Any keyword arguments supported by the BaseOperator is supported (e.g ``queue``, ``owner``)
+    """
+
+    return DropTableOperator(table=table, **kwargs).output

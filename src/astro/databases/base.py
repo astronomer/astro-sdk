@@ -18,19 +18,10 @@ from astro.constants import (
     LoadExistStrategy,
     MergeConflictStrategy,
 )
-from astro.exceptions import NonExistentTableException
+from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File, resolve_file_path_pattern
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.sql.table import Metadata, Table
-
-
-class DatabaseCustomError(ValueError, AttributeError):
-    """
-    Inappropriate argument value (of correct type) or attribute
-    not found while running query. while running query
-    """
-
-    pass
 
 
 class BaseDatabase(ABC):
@@ -378,8 +369,11 @@ class BaseDatabase(ABC):
                 **kwargs,
             )
         # Catching NATIVE_LOAD_EXCEPTIONS for fallback
-        except self.NATIVE_LOAD_EXCEPTIONS as exe:  # skipcq: PYL-W0703
-            logging.warning(exe)
+        except self.NATIVE_LOAD_EXCEPTIONS:  # skipcq: PYL-W0703
+            logging.warning(
+                "Loading files failed with Native Support. Falling back to Pandas-based load",
+                exc_info=True,
+            )
             if enable_native_fallback:
                 self.load_pandas_dataframe_to_table(
                     source_file.export_to_dataframe(),

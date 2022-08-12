@@ -1,5 +1,4 @@
 """Google BigQuery table implementation."""
-import logging
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -45,7 +44,8 @@ from astro.constants import (
     LoadExistStrategy,
     MergeConflictStrategy,
 )
-from astro.databases.base import BaseDatabase, DatabaseCustomError
+from astro.databases.base import BaseDatabase
+from astro.exceptions import DatabaseCustomError
 from astro.files import File
 from astro.settings import BIGQUERY_SCHEMA
 from astro.sql.table import Metadata, Table
@@ -335,7 +335,6 @@ class BigqueryDatabase(BaseDatabase):
         try:
             return str(self.hook.project_id)
         except AttributeError as exe:
-            logging.warning(exe)
             raise DatabaseCustomError(
                 f"conn_id {target_table.conn_id} has no project id"
             ) from exe

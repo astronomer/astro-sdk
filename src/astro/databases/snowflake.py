@@ -31,7 +31,8 @@ from astro.constants import (
     LoadExistStrategy,
     MergeConflictStrategy,
 )
-from astro.databases.base import BaseDatabase, DatabaseCustomError
+from astro.databases.base import BaseDatabase
+from astro.exceptions import DatabaseCustomError
 from astro.files import File
 from astro.settings import SNOWFLAKE_SCHEMA
 from astro.sql.table import Metadata, Table
@@ -423,7 +424,6 @@ class SnowflakeDatabase(BaseDatabase):
         try:
             self.hook.run(sql_statement)
         except (ValueError, AttributeError) as exe:
-            logging.warning(exe)
             raise DatabaseCustomError from exe
         self.drop_stage(stage)
 

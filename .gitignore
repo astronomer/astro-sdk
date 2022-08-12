@@ -39,3 +39,7 @@ docs/sphinx/_build/*
 docs/logs/
 docs/webserver_config.py
 docs/autoapi/
+
+dev/dags
+dev/logs
+dev/plugins
