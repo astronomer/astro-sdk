@@ -1,7 +1,6 @@
 from typing import Any, Dict, List, Tuple, Union
 
 from airflow.decorators.base import get_unique_task_id
-from airflow.models.baseoperator import BaseOperator
 
 from astro.constants import MergeConflictStrategy
 from astro.databases import create_database
@@ -11,7 +10,7 @@ from astro.sql.table import Table
 MERGE_COLUMN_TYPE = Union[List[str], Tuple[str], Dict[str, str]]
 
 
-class MergeOperator(AstroSQLBaseOperator, BaseOperator):
+class MergeOperator(AstroSQLBaseOperator):
     """
     Merge the source table rows into a destination table.
 

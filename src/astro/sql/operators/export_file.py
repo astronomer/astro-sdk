@@ -1,7 +1,6 @@
 from typing import Any, Optional, Union
 
 import pandas as pd
-from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
 from astro.constants import ExportExistsStrategy
@@ -12,7 +11,7 @@ from astro.sql.table import Table
 from astro.utils.task_id_helper import get_task_id
 
 
-class ExportFile(AstroSQLBaseOperator, BaseOperator):
+class ExportFile(AstroSQLBaseOperator):
     """Write SQL table to csv/parquet on local/S3/GCS.
 
     :param input_data: Table to convert to file
