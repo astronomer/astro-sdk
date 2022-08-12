@@ -1,4 +1,5 @@
 """AWS Redshift table implementation."""
+import sqlalchemy
 from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
@@ -56,31 +57,9 @@ class RedshiftDatabase(BaseDatabase):
     """
 
     DEFAULT_SCHEMA = REDSHIFT_SChEMA
-    NATIVE_PATHS = {
-        FileLocation.GS: "load_gs_file_to_table",
-        FileLocation.S3: "load_s3_file_to_table",
-        FileLocation.LOCAL: "load_local_file_to_table",
-    }
 
     illegal_column_name_chars: List[str] = ["."]
     illegal_column_name_chars_replacement: List[str] = ["_"]
-    NATIVE_LOAD_EXCEPTIONS: Any = (
-        GoogleNotFound,
-        ClientError,
-        GoogleAPIError,
-        RetryError,
-        InvalidArgument,
-        Unauthorized,
-        Forbidden,
-        Conflict,
-        TooManyRequests,
-        ResourceExhausted,
-        ServerError,
-        Unknown,
-        ServiceUnavailable,
-        InvalidResponse,
-        DatabaseCustomError,
-    )
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
         super().__init__(conn_id)
@@ -107,7 +86,9 @@ class RedshiftDatabase(BaseDatabase):
 
         :return:
         """
-        return Metadata(schema=self.DEFAULT_SCHEMA, database=self.hook.conn.schema)
+        # TODO: Change airflow RedshiftSQLHook to fetch database and schema separately.
+        database = self.hook.conn.schema
+        return Metadata(database=database, schema=self.DEFAULT_SCHEMA)
 
     def schema_exists(self, schema: str) -> bool:
         """
@@ -116,7 +97,7 @@ class RedshiftDatabase(BaseDatabase):
         :param schema: Redshift namespace
         """
         schema_result = self.hook.run(
-            "SELECT nspname FROM pg_namespace WHERE lower(nspname) = lower(%(schema_name)s);",
+            "SELECT schema_name FROM information_schema.schemata WHERE lower(schema_name) = lower(%s);",
             parameters={"schema_name": schema.lower()},
             handler=lambda x: [y[0] for y in x.fetchall()],
         )
@@ -130,6 +111,15 @@ class RedshiftDatabase(BaseDatabase):
         is NOT NULL.
         """
         return "RETURN"
+
+    def table_exists(self, table: Table) -> bool:
+        """
+        Check if a table exists in the database.
+
+        :param table: Details of the table we want to check that exists
+        """
+        inspector = sqlalchemy.inspect(self.sqlalchemy_engine)
+        return bool(inspector.dialect.has_table(self.connection, table.name, schema=table.metadata.schema))
 
     def load_pandas_dataframe_to_table(
         self,
@@ -148,7 +138,10 @@ class RedshiftDatabase(BaseDatabase):
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
         source_dataframe.to_sql(
-            self.get_table_qualified_name(target_table),
+            target_table.name,
+            self.connection,
+            index=False,
+            schema=target_table.metadata.schema,
             if_exists=if_exists,
             chunksize=chunk_size,
         )
