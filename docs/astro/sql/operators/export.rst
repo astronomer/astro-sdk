@@ -10,8 +10,6 @@ The ``export_file`` function writes SQL table to csv/parquet on local/S3/GCS.
 
 There are two use cases of the ``export_file`` operator.
 
-#. Export file from table.
-#. Export file from dataframe.
 
 Case 1: Export file from table.
     The following example saves your ``Table`` of data to file storage using the ``aql.export_file``, which returns a pointer to File object.
