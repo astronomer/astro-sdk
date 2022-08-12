@@ -38,10 +38,10 @@ def last_five_animations(input_table: Table):
     """
 
 
-# [END transform_example_2]  skipcq: PY-W0069
+# [END transform_example_2]
 
 
-# [START transform_example_3]  skipcq: PY-W0069
+# [START transform_example_3]
 @aql.transform
 def union_top_and_last(first_table: Table, second_table: Table):
     """Union `first_table` and `second_table` tables to create a simple dataset."""
