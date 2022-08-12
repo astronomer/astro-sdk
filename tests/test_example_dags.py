@@ -5,10 +5,28 @@ from airflow.models.dagbag import DagBag
 from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import provide_session
+from google.api_core.exceptions import Forbidden, TooManyRequests
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from tests.sql.operators import utils as test_utils
 
+RETRY_EXCEPTION = [TooManyRequests, Forbidden]
+
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    retry=retry_if_exception_type(*RETRY_EXCEPTION),
+    wait=wait_exponential(multiplier=10, min=10, max=60),
+)
+def wrapper_run_dag(dag):
+    test_utils.run_dag(dag, account_for_cleanup_failure=True)
 
 
 @provide_session
@@ -43,4 +61,4 @@ def test_example_dag(session, dag_id):
 
     if dag is None:
         raise NameError(f"The DAG with dag_id: {dag_id} was not found")
-    test_utils.run_dag(dag, account_for_cleanup_failure=True)
+    wrapper_run_dag(dag)
