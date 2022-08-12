@@ -12,7 +12,7 @@ Merge operator is used when you expect some conflicts while merging two tables d
 Prerequisite
 ------------
 
-Merge operator internally run different SQL queries based on the databases and some databases only allow you to run these queries if there are constraints on columns specified in parameter ``target_conflict_columns``. Below is the list of databases and their constraint requirement.
+Merge operator internally runs different SQL queries based on the databases and some databases only allow you to run these queries if there are constraints on columns specified in parameter ``target_conflict_columns``. Below is the list of databases and their constraint requirement.
 
 .. list-table::
    :widths: auto
