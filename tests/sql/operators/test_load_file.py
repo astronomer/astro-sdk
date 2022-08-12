@@ -52,7 +52,7 @@ CWD = pathlib.Path(__file__).parent
         },
         {
             "database": Database.REDSHIFT,
-        }
+        },
     ],
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
