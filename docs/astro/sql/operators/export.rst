@@ -12,7 +12,7 @@ There are two use cases of the ``export_file`` operator.
 
 
 Case 1: Export file from table.
-    The following example saves your ``Table`` of data to file storage using the ``aql.export_file``, which returns a pointer to File object.
+    The following example saves your :ref:`table` of data to file storage using the ``export_file``, which returns a pointer to File object.
 
     .. literalinclude:: ../../../../example_dags/example_google_bigquery_gcs_load_and_save.py
        :language: python
