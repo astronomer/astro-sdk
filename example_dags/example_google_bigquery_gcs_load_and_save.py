@@ -53,8 +53,21 @@ with DAG(
 
     t2 = extract_top_5_movies(input_df=t1)
 
+    # [START export_example_1]
     aql.export_file(
-        task_id="save_to_gcs",
+        task_id="save_file_to_gcs",
+        input_data=t1,
+        output_file=File(
+            path=f"{gcs_bucket}/{{ task_instance_key_str }}/all_movies.csv",
+            conn_id="gcp_conn",
+        ),
+        if_exists="replace",
+    )
+    # [END export_example_1]
+
+    # [START export_example_2]
+    aql.export_file(
+        task_id="save_dataframe_to_gcs",
         input_data=t2,
         output_file=File(
             path=f"{gcs_bucket}/{{ task_instance_key_str }}/top_5_movies.csv",
@@ -62,4 +75,6 @@ with DAG(
         ),
         if_exists="replace",
     )
+    # [END export_example_2]
+
     aql.cleanup()
