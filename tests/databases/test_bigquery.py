@@ -15,9 +15,8 @@ from google.cloud.bigquery_datatransfer_v1.types import (
 
 from astro.constants import Database
 from astro.databases import create_database
-from astro.databases.base import DatabaseCustomError
 from astro.databases.google.bigquery import BigqueryDatabase, S3ToBigqueryDataTransfer
-from astro.exceptions import NonExistentTableException
+from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table

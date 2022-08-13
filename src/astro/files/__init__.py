@@ -1,7 +1,9 @@
 from airflow.hooks.base import BaseHook
+from airflow.models.xcom_arg import XComArg
 
 from astro.files.base import File  # noqa: F401 # skipcq: PY-W2000
 from astro.files.base import resolve_file_path_pattern  # noqa: F401 # skipcq: PY-W2000
+from astro.files.operators.files import ListFileOperator
 
 
 def check_if_connection_exists(conn_id: str) -> bool:
@@ -14,3 +16,19 @@ def check_if_connection_exists(conn_id: str) -> bool:
     """
     BaseHook.get_connection(conn_id)
     return True
+
+
+def get_file_list(path: str, conn_id: str, **kwargs) -> XComArg:
+    """
+    List the file path from the filesystem storage based on given path pattern
+
+    Supported filesystem: Local, HTTP, S3, GCS
+
+    :param conn_id: Airflow connection id
+    :param path: Path pattern to the file in the filesystem/Object stores
+    """
+    return ListFileOperator(
+        path=path,
+        conn_id=conn_id,
+        **kwargs,
+    ).output
