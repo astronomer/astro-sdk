@@ -71,7 +71,7 @@ def test_example_dag(session, dag_id):
     if dag is None:
         raise NameError(f"The DAG with dag_id: {dag_id} was not found")
     wrapper_run_dag(dag)
-    
+
 
 @pytest.mark.skipif(
     airflow.__version__ < "2.3.0", reason="Require Airflow version >= 2.3.0"
