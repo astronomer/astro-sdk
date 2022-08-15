@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import pandas as pd
 from airflow.models import BaseOperator
-
-if TYPE_CHECKING:
-    from airflow.models.xcom_arg import XComArg
+from airflow.models.xcom_arg import XComArg
 
 from airflow.decorators.base import get_unique_task_id
 
