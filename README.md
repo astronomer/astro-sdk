@@ -14,7 +14,7 @@
 [![CI](https://github.com/astronomer/astro-sdk/actions/workflows/ci.yaml/badge.svg)](https://github.com/astronomer/astro-sdk)
 [![codecov](https://codecov.io/gh/astronomer/astro-sdk/branch/main/graph/badge.svg?token=MI4SSE50Q6)](https://codecov.io/gh/astronomer/astro-sdk)
 
-**Astro Python SDK** allows for rapid and clean development of extract, transform, and load (ETL) workflows using Python.  
+**Astro Python SDK** allows for rapid and clean development of extract, transform, and load (ETL) workflows using Python.
 
 The SDK abstracts the boilerplate code required for communication between datasets and tasks, which helps DAG authors to achieve more with less code.
 
