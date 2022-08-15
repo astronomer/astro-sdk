@@ -1,15 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.baseoperator import BaseOperator
+from airflow.models.xcom_arg import XComArg
 
 from astro.databases import create_database
 from astro.sql.table import Table
-
-if TYPE_CHECKING:
-    from airflow.models.xcom_arg import XComArg
 
 
 class AppendOperator(BaseOperator):
