@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-* Python 3.9
+* At least Python 3.7, 3.8 or 3.9
 * (Optional but highly recommended) [pyenv](https://github.com/pyenv/pyenv)
 
 _On **Apple M1** it is [currently required](https://github.com/psycopg/psycopg2/issues/1286#issuecomment-914286206) to install `postgresql` package. Once [compatible wheels](https://github.com/psycopg/psycopg2/issues/1482) are released, you can remove it._
@@ -151,50 +151,50 @@ You can configure the Docker-based testing environment to test your DAG
 
 1. Install the latest versions of the Docker Community Edition and Docker Compose and add them to the PATH.
 
-1. Run ``make container target=build-run``
+1. Run `make container target=build-run`
 
 1. Put the DAGs you want to run in the dev/dags directory:
 
 1. If you want to add Connections, create a connections.yaml file in the dev directory.
 
-   See the `Connections Guide <https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html>`_ for more information.
+   See the [Connections Guide](https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html) for more information.
 
    Example:
 
     ```yaml
     druid_broker_default:
-    conn_type: druid
-    extra: '{"endpoint": "druid/v2/sql"}'
-    host: druid-broker
-    login: null
-    password: null
-    port: 8082
-    schema: null
+      conn_type: druid
+      extra: '{"endpoint": "druid/v2/sql"}'
+      host: druid-broker
+      login: null
+      password: null
+      port: 8082
+      schema: null
     airflow_db:
-    conn_type: mysql
-    extra: null
-    host: mysql
-    login: root
-    password: plainpassword
-    port: null
-    schema: airflow
+      conn_type: mysql
+      extra: null
+      host: mysql
+      login: root
+      password: plainpassword
+      port: null
+      schema: airflow
     ```
 
 1. The following commands are available to run from the root of the repository.
 
-* ``make container target=logs`` - To view the logs of the all the containers
-* ``make container target=stop`` - To stop all the containers
-* ``make container target=clean`` - To remove all the containers along with volumes
-* ``make container target=help`` - To view the available commands
-* ``make container target=build-run`` - To build the docker image and then run containers
+* `make container target=logs` - To view the logs of the all the containers
+* `make container target=stop` - To stop all the containers
+* `make container target=clean` - To remove all the containers along with volumes
+* `make container target=help` - To view the available commands
+* `make container target=build-run` - To build the docker image and then run containers
 
 1. Following ports are accessible from the host machine:
 
-* ``8080`` - Webserver
-* ``5555`` - Flower
-* ``5432`` - Postgres
+* `8080` - Webserver
+* `5555` - Flower
+* `5432` - Postgres
 
 1. Dev Directories:
 
-* ``dev/dags/`` - DAG Files
-* ``dev/logs/`` - Logs files of the Airflow containers
+* `dev/dags/` - DAG Files
+* `dev/logs/` - Logs files of the Airflow containers
