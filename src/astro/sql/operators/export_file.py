@@ -64,7 +64,7 @@ def export_file(
     if_exists: ExportExistsStrategy = "exception",
     task_id: Optional[str] = None,
     **kwargs: Any,
-) -> XComArg:
+) -> "XComArg":
     """Convert ExportFileOperator into a function. Returns XComArg.
 
     Returns an XComArg object of type File which matches the output_file parameter.

@@ -1,8 +1,10 @@
-from typing import Any, Dict, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Optional, Union
 
 import pandas as pd
 from airflow.models import BaseOperator
-from airflow.models.xcom_arg import XComArg
+
+if TYPE_CHECKING:
+    from airflow.models.xcom_arg import XComArg
 
 from astro import settings
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
@@ -191,7 +193,7 @@ def load_file(
     columns_names_capitalization: ColumnCapitalization = "original",
     enable_native_fallback: Optional[bool] = True,
     **kwargs: Any,
-) -> XComArg:
+) -> "XComArg":
     """Load a file or bucket into either a SQL table or a pandas dataframe.
 
     :param input_file: File path and conn_id for object stores

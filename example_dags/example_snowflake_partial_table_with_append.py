@@ -1,13 +1,3 @@
-import os
-from datetime import datetime
-
-import pandas as pd
-from airflow.decorators import dag
-
-from astro.files import File
-from astro.sql import append, cleanup, dataframe, load_file, run_raw_sql, transform
-from astro.sql.table import Metadata, Table
-
 """
 Example ETL DAG highlighting Astro functionality
 DAG requires 2 "Homes" csv's (found in this repo), and a supported database
@@ -17,6 +7,16 @@ filtering. The data is then loaded by appending to an existing reporting table.
 
 This example DAG creates the reporting table & truncates it by the end of the execution.
 """
+
+import os
+from datetime import datetime
+
+import pandas as pd
+from airflow.decorators import dag
+
+from astro.files import File
+from astro.sql import append, cleanup, dataframe, load_file, run_raw_sql, transform
+from astro.sql.table import Metadata, Table
 
 SNOWFLAKE_CONN_ID = "snowflake_conn"
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -57,6 +57,7 @@ def filter_data(homes_long: Table):
     """
 
 
+# [START howto_run_raw_sql_snowflake_1]
 @run_raw_sql
 def create_table(table: Table):
     """Create the reporting data which will be the target of the append method"""
@@ -72,6 +73,11 @@ def create_table(table: Table):
 
 @dag(start_date=datetime(2021, 12, 1), schedule_interval="@daily", catchup=False)
 def example_snowflake_partial_table_with_append():
+    homes_reporting = Table(conn_id=SNOWFLAKE_CONN_ID)
+    create_results_table = create_table(
+        table=homes_reporting, conn_id=SNOWFLAKE_CONN_ID
+    )
+    # [END howto_run_raw_sql_snowflake_1]
 
     # Initial load of homes data csv's into Snowflake
     homes_data1 = load_file(
@@ -110,10 +116,6 @@ def example_snowflake_partial_table_with_append():
     filtered_data = filter_data(
         homes_long=transformed_data,
         output_table=Table(),
-    )
-    homes_reporting = Table(conn_id=SNOWFLAKE_CONN_ID)
-    create_results_table = create_table(
-        table=homes_reporting, conn_id=SNOWFLAKE_CONN_ID
     )
 
     # Append transformed & filtered data to reporting table

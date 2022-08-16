@@ -15,9 +15,8 @@ from google.cloud.bigquery_datatransfer_v1.types import (
 
 from astro.constants import Database
 from astro.databases import create_database
-from astro.databases.base import DatabaseCustomError
 from astro.databases.google.bigquery import BigqueryDatabase, S3ToBigqueryDataTransfer
-from astro.exceptions import NonExistentTableException
+from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
@@ -99,7 +98,11 @@ def test_bigquery_create_table_with_columns(database_table_fixture):
     """Test table creation with columns data"""
     database, table = database_table_fixture
 
-    statement = f"SELECT * FROM {table.metadata.schema}.INFORMATION_SCHEMA.COLUMNS WHERE table_name='{table.name}'"
+    # Looking for specific columns in INFORMATION_SCHEMA.COLUMNS as Bigquery can add/remove columns in the table.
+    statement = (
+        f"SELECT TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, DATA_TYPE "
+        f"FROM {table.metadata.schema}.INFORMATION_SCHEMA.COLUMNS WHERE table_name='{table.name}'"
+    )
     response = database.run_sql(statement)
     assert response.first() is None
 
@@ -112,36 +115,15 @@ def test_bigquery_create_table_with_columns(database_table_fixture):
         f"{table.metadata.schema}",
         f"{table.name}",
         "id",
-        1,
-        "NO",
         "INT64",
-        "NEVER",
-        None,
-        None,
-        "NO",
-        None,
-        "NO",
-        "NO",
-        None,
-        "NULL",
     )
+
     assert rows[1] == (
         "astronomer-dag-authoring",
         f"{table.metadata.schema}",
         f"{table.name}",
         "name",
-        2,
-        "NO",
         "STRING(60)",
-        "NEVER",
-        None,
-        None,
-        "NO",
-        None,
-        "NO",
-        "NO",
-        None,
-        "NULL",
     )
 
 
