@@ -11,7 +11,7 @@ from astro.sql.table import Table
 from astro.utils.task_id_helper import get_task_id
 
 
-class ExportFile(BaseOperator):
+class ExportFileOperator(BaseOperator):
     """Write SQL table to csv/parquet on local/S3/GCS.
 
     :param input_data: Table to convert to file
@@ -65,7 +65,7 @@ def export_file(
     task_id: Optional[str] = None,
     **kwargs: Any,
 ) -> XComArg:
-    """Convert ExportFile into a function. Returns XComArg.
+    """Convert ExportFileOperator into a function. Returns XComArg.
 
     Returns an XComArg object of type File which matches the output_file parameter.
 
@@ -95,7 +95,7 @@ def export_file(
         task_id if task_id is not None else get_task_id("export_file", output_file.path)
     )
 
-    return ExportFile(
+    return ExportFileOperator(
         task_id=task_id,
         output_file=output_file,
         input_data=input_data,

@@ -31,7 +31,7 @@ with dag:
         output_table=Table(conn_id="postgres_conn"),
     )
     load_append = aql.load_file(
-        input_file=File(path=DATA_DIR + "/homes2.csv"),
+        input_file=File(path=DATA_DIR + "homes2.csv"),
         output_table=Table(conn_id="postgres_conn"),
     )
     # [START append_example]

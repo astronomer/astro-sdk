@@ -25,7 +25,7 @@ def clean_data(input_table: Table):
     """
 
 
-# [START dataframe_example_1] skipcq: PY-W0069
+# [START dataframe_example_1]
 @aql.dataframe(columns_names_capitalization="original")
 def aggregate_data(df: pd.DataFrame):
     new_df = df.pivot_table(
@@ -35,7 +35,7 @@ def aggregate_data(df: pd.DataFrame):
     return new_df
 
 
-# [END dataframe_example_1] skipcq: PY-W0069
+# [END dataframe_example_1]
 
 
 @dag(
@@ -85,6 +85,7 @@ def example_amazon_s3_snowflake_transform():
     )
 
     cleaned_data = clean_data(combined_data)
+    # [START dataframe_example_2]
     aggregate_data(
         cleaned_data,
         output_table=Table(
@@ -96,6 +97,7 @@ def example_amazon_s3_snowflake_transform():
             conn_id="snowflake_conn",
         ),
     )
+    # [END dataframe_example_2]
     aql.cleanup()
 
 
