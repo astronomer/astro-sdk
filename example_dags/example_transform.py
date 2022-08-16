@@ -77,6 +77,9 @@ def union_table_and_dataframe(input_table: Table, input_dataframe: pd.DataFrame)
     + "/example_dags/demo_parse_directory/last_ten_animations.sql"
 )
 def last_ten_animations(input_table: Table):
+    """
+    Pass SQL file ending with .sql
+    """
     return
 
 
