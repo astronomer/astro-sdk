@@ -27,6 +27,7 @@ def summarize_campaign(capaign_id: str):
     print(capaign_id)
 
 
+# [START howto_run_raw_sql_with_handle_1]
 def handle_result(result):
     return result.fetchall()
 
@@ -52,6 +53,9 @@ with DAG(
         ),
         use_native_support=False,
     )
+    ids = get_campaigns(bq_table)
+    # [END howto_run_raw_sql_with_handle_1]
 
-    summarize_campaign.expand(capaign_id=get_campaigns(bq_table))
+    summarize_campaign.expand(capaign_id=ids)
+
     aql.cleanup()
