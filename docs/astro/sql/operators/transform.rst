@@ -11,7 +11,7 @@ The transform function of the SQL decorator is the ``T`` of the ELT system. Each
 
 The ``transform`` function also treats values in the double brackets as Airflow jinja templates. More details on templating can be found at :ref:`templating`.
 
-There are two use cases of the ``transform`` operator.
+There are three use cases of the ``transform`` operator.
 
 Case 1: When we pass tables between tasks while completing a data transformation.
     The following example applies a SQL ``SELECT`` statement to a ``imdb_movies`` table with templating and saves the result to a ``top_animation`` table.
@@ -45,3 +45,11 @@ Case 2: When we pass a Pandas dataframe while completing a data transformation.
        :language: python
        :start-after: [START transform_example_4]
        :end-before: [END transform_example_4]
+
+Case 3: When we pass SQL file in the transform decorator.
+    The following example DAG shows how we can quickly pass SQL file for the data transformation.
+
+    .. literalinclude:: ../../../../example_dags/example_transform.py
+       :language: python
+       :start-after: [START transform_example_5]
+       :end-before: [END transform_example_5]

@@ -1,3 +1,4 @@
+import pathlib
 from datetime import datetime
 
 import pandas as pd
@@ -9,6 +10,7 @@ from astro.sql.table import Table
 
 START_DATE = datetime(2000, 1, 1)
 LAST_ONE_DF = pd.DataFrame(data={"Title": ["Random movie"], "Rating": [121]})
+CWD = pathlib.Path(__file__).parent
 
 
 # [START transform_example_1]
@@ -69,6 +71,18 @@ def union_table_and_dataframe(input_table: Table, input_dataframe: pd.DataFrame)
 # [END transform_example_4]
 
 
+# [START transform_example_5]
+@aql.transform(
+    sql=str(pathlib.Path(CWD).parents[0])
+    + "/example_dags/demo_parse_directory/last_ten_animations.sql"
+)
+def last_ten_animations(input_table: Table):
+    return
+
+
+# [END transform_example_5]
+
+
 with DAG(
     "example_transform",
     schedule_interval=None,
@@ -99,5 +113,12 @@ with DAG(
     union_table = union_top_and_last(top_five, last_five)
 
     union_table_and_dataframe(union_table, LAST_ONE_DF)
+
+    last_ten = last_ten_animations(
+        input_table=imdb_movies,
+        output_table=Table(
+            conn_id="sqlite_default",
+        ),
+    )
 
     aql.cleanup()

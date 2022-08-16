@@ -62,6 +62,14 @@ def transform(
               "exec_date": execution_date
           }
 
+    You can also pass SQL file to the sql parameter in the transform decorator
+
+     .. code-block:: python
+
+      @transform(sql="/path/to/sql/sql_file.sql")
+      def my_sql_file(table1: Table):
+          return
+
     :param python_callable: This parameter is filled in automatically when you use the transform function as a decorator
         This is where the python function gets passed to the wrapping function
     :param conn_id: Connection ID for the database you want to connect to. If you do not pass in a value for this object
