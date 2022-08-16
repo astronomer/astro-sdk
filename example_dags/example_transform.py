@@ -76,7 +76,7 @@ def union_table_and_dataframe(input_table: Table, input_dataframe: pd.DataFrame)
     sql=str(pathlib.Path(CWD).parents[0])
     + "/example_dags/demo_parse_directory/last_ten_animations.sql"
 )
-def last_ten_animations(input_table: Table):
+def last_ten_animations(input_table: Table):  # skipcq: PTC-W0049
     """
     Pass SQL file ending with .sql
     """
