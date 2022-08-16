@@ -10,7 +10,7 @@ We can use ``get_file_list`` when you want a list file available in storage base
 
 The supported filesystem are ``Local, S3, GCS, and HTTP``.
 
-The below example get files from GCS bucket and upload them in bigquery table by creating dynamic number of parallel task using dynamic task map ```expand`` method.
+The below example, get a file list from the GCS bucket and upload them to the Bigquery table by creating a dynamic number of parallel tasks using the dynamic task map ``expand`` method.
 
 .. literalinclude:: ../../../../example_dags/example_dynamic_task_template.py
    :language: python
