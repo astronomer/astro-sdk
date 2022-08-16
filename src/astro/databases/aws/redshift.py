@@ -6,7 +6,7 @@ import sqlalchemy
 from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
-
+from psycopg2 import sql as redshift_sql
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.files import File
@@ -28,6 +28,7 @@ class RedshiftDatabase(BaseDatabase):
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
         super().__init__(conn_id)
+        self._create_table_statement: str = "CREATE TABLE {} AS {}"
 
     @property
     def sql_type(self):
@@ -68,15 +69,6 @@ class RedshiftDatabase(BaseDatabase):
         )
         return len(schema_result) > 0
 
-    @staticmethod
-    def get_merge_initialization_query(parameters: Tuple) -> str:
-        """
-        Handles database-specific logic to handle constraints
-        for Redshift. The only constraint that Redshift supports
-        is NOT NULL.
-        """
-        return "RETURN"
-
     def table_exists(self, table: Table) -> bool:
         """
         Check if a table exists in the database.
@@ -116,12 +108,12 @@ class RedshiftDatabase(BaseDatabase):
         )
 
     def merge_table(
-        self,
-        source_table: Table,
-        target_table: Table,
-        source_to_target_columns_map: Dict[str, str],
-        target_conflict_columns: List[str],
-        if_conflicts: MergeConflictStrategy = "exception",
+            self,
+            source_table: Table,
+            target_table: Table,
+            source_to_target_columns_map: Dict[str, str],
+            target_conflict_columns: List[str],
+            if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """
         Merge the source table rows into a destination table.
@@ -134,26 +126,40 @@ class RedshiftDatabase(BaseDatabase):
         :param if_conflicts: The strategy to be applied if there are conflicts.
         """
 
+        def identifier_args(table: Table):
+            schema = table.metadata.schema
+            return (schema, table.name) if schema else (table.name,)
+
+        statement = "INSERT INTO {target_table} ({target_columns}) SELECT {source_columns} FROM {source_table}"
+
         source_columns = list(source_to_target_columns_map.keys())
         target_columns = list(source_to_target_columns_map.values())
 
-        target_table_name = self.get_table_qualified_name(target_table)
-        source_table_name = self.get_table_qualified_name(source_table)
+        if if_conflicts == "ignore":
+            statement += " ON CONFLICT ({target_conflict_columns}) DO NOTHING"
+        elif if_conflicts == "update":
+            statement += " ON CONFLICT ({target_conflict_columns}) DO UPDATE SET {update_statements}"
 
-        statement = f"MERGE {target_table_name} T USING {source_table_name} S\
-            ON {' AND '.join(['T.' + col + '= S.' + col for col in target_conflict_columns])}\
-            WHEN NOT MATCHED BY TARGET THEN INSERT ({','.join(target_columns)}) VALUES ({','.join(source_columns)})"
+        source_column_names = [redshift_sql.Identifier(col) for col in source_columns]
+        target_column_names = [redshift_sql.Identifier(col) for col in target_columns]
+        update_statements = [
+            redshift_sql.SQL("{col_name}=EXCLUDED.{col_name}").format(col_name=col_name)
+            for col_name in target_column_names
+        ]
 
-        update_statement_map = ", ".join(
-            [
-                f"T.{target_columns[idx]}=S.{source_columns[idx]}"
-                for idx in range(len(target_columns))
-            ]
+        query = redshift_sql.SQL(statement).format(
+            target_columns=redshift_sql.SQL(",").join(target_column_names),
+            target_table=redshift_sql.Identifier(*identifier_args(target_table)),
+            source_columns=redshift_sql.SQL(",").join(source_column_names),
+            source_table=redshift_sql.Identifier(*identifier_args(source_table)),
+            update_statements=redshift_sql.SQL(",").join(update_statements),
+            target_conflict_columns=redshift_sql.SQL(",").join(
+                [redshift_sql.Identifier(x) for x in target_conflict_columns]
+            ),
         )
-        if if_conflicts == "update":
-            update_statement = f"UPDATE SET {update_statement_map}"  # skipcq: BAN-B608
-            statement += f" WHEN MATCHED THEN {update_statement}"
-        self.run_sql(sql_statement=statement)
+
+        sql = query.as_string(self.hook.get_conn())
+        self.run_sql(sql_statement=sql)
 
     def is_native_load_file_available(
         self, source_file: File, target_table: Table
