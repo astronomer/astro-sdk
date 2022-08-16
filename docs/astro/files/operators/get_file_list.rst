@@ -8,6 +8,10 @@ When to use the ``get_file_list`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 We can use ``get_file_list`` when you want a list file available in storage based on storage path pattern and Airflow connection. This might useful when you want to create dynamic task on the response of this operator.
 
+The supported filesystem are ``Local, S3, GCS, and HTTP``.
+
+The below example get files from GCS bucket and upload them in bigquery table by creating dynamic number of parallel task using dynamic task map ```expand`` method.
+
 .. literalinclude:: ../../../../example_dags/example_dynamic_task_template.py
    :language: python
    :start-after: [START howto_operator_get_file_list]

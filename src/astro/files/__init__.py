@@ -24,6 +24,14 @@ def get_file_list(path: str, conn_id: str, **kwargs) -> XComArg:
 
     Supported filesystem: Local, HTTP, S3, GCS
 
+    Example path pattern:
+
+        - folder/*
+        - http://domain/some-file
+        - s3://bucket/some-file-prefix
+        - gs://bucket/some-file-prefix
+
+
     :param conn_id: Airflow connection id
     :param path: Path pattern to the file in the filesystem/Object stores
     """
