@@ -61,6 +61,7 @@ def session():
         "example_load_file",
         "example_transform",
         "example_merge_bigquery",
+        "astro_orders",
     ],
 )
 def test_example_dag(session, dag_id):
