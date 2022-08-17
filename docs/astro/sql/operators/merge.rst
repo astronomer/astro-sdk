@@ -64,7 +64,7 @@ Conflicts arise due to the ``target_table`` having constraints on certain column
 
 #. **ignore**
 
-    This method will not update the target table with the source table data if there is a conflict. 
+    This method will not update the target table with the source table data if there is a conflict.
 
     To use this method, you should specify ``if_conflicts='ignore'`` and provide the column(s) with constraints to ``target_conflict_columns``. For this example, ``target_conflict_columns=['A']``.
 
