@@ -51,7 +51,7 @@ class MergeOperator(BaseOperator):
             )
         self.columns = columns or {}
         self.if_conflicts = if_conflicts
-        task_id = task_id or get_unique_task_id("_merge")
+        task_id = task_id or get_unique_task_id("merge")
 
         super().__init__(task_id=task_id, **kwargs)
 

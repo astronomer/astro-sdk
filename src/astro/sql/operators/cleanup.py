@@ -59,7 +59,7 @@ class CleanupOperator(BaseOperator):
     ):
         self.tables_to_cleanup = tables_to_cleanup or []
         self.run_immediately = run_sync_mode
-        task_id = task_id or get_unique_task_id("_cleanup")
+        task_id = task_id or get_unique_task_id("cleanup")
 
         super().__init__(
             task_id=task_id, retries=retries, retry_delay=retry_delay, **kwargs
