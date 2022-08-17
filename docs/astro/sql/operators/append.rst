@@ -5,32 +5,32 @@ append operator
 ================
 When to use the ``append`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-We can use ``append`` operator when we want to append the source table to the target table.
+The ``append`` operator allows you to append data from a source table to a target table.
 
 .. literalinclude:: ../../../../example_dags/example_append.py
    :language: python
    :start-after: [START append_example]
    :end-before: [END append_example]
 
-When used without a columns parameter, AstroSDK assumes that both tables have the same schema.
+If a columns parameter is not provided, the ``append`` operator assumes that the source and target tables have the same schema.
 
-When tables have same schema
+Tables have the same schema
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#. **Case 1:** When complete table needs to be merged. You can skip ``columns`` parameter.
+#. **Case 1:** When the complete table needs to be appended, the ``columns`` parameter can be omitted.
     .. literalinclude:: ../../../../example_dags/example_append.py
        :language: python
        :start-after: [START append_example]
        :end-before: [END append_example]
 
-#. **Case 2:** When subset of columns needs to be merged to target table we pass ``List`` of cols in ``columns`` parameter.
+#. **Case 2:** When only a subset of columns needs to be appended, you can pass a ``list`` of columns to the ``columns`` parameter.
     .. literalinclude:: ../../../../example_dags/example_snowflake_partial_table_with_append.py
        :language: python
        :start-after: [START append_example_with_columns_list]
        :end-before: [END append_example_with_columns_list]
 
-When table have different schema
+Tables have different schemas
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-When tables have different schema, we can map different column names by passing a ``dict`` of *source cols to target cols*.
+When the source and target tables have different schemas, you can map different column names by passing a ``dict`` of *source columns to target columns*.
 
     .. literalinclude:: ../../../../example_dags/example_append.py
        :language: python
@@ -39,4 +39,4 @@ When tables have different schema, we can map different column names by passing 
 
 Conflicts
 ~~~~~~~~~
-``append operator`` doesn't handle the conflicts that may arise while appending data. If you want to handle those scenarios, you can use :ref:`merge_operator`.
+The ``append`` operator can't handle conflicts that may arise while appending data. If you want to handle those scenarios, you can use the :ref:`merge_operator`.
