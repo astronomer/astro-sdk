@@ -6,13 +6,14 @@ from airflow.models import BaseOperator
 if TYPE_CHECKING:
     from airflow.models.xcom_arg import XComArg
 
+from airflow.decorators.base import get_unique_task_id
+
 from astro import settings
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import BaseDatabase, create_database
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.table import Table
-from astro.utils.task_id_helper import get_task_id
 
 
 class LoadFileOperator(BaseOperator):
@@ -211,7 +212,7 @@ def load_file(
 
     # Note - using path for task id is causing issues as it's a pattern and
     # contain chars like - ?, * etc. Which are not acceptable as task id.
-    task_id = task_id if task_id is not None else get_task_id("load_file", "")
+    task_id = task_id if task_id is not None else get_unique_task_id("load_file")
 
     return LoadFileOperator(
         task_id=task_id,

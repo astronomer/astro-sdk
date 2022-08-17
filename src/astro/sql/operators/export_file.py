@@ -1,6 +1,7 @@
 from typing import Any, Optional, Union
 
 import pandas as pd
+from airflow.decorators.base import get_unique_task_id
 from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
@@ -8,7 +9,6 @@ from astro.constants import ExportExistsStrategy
 from astro.databases import create_database
 from astro.files import File
 from astro.sql.table import Table
-from astro.utils.task_id_helper import get_task_id
 
 
 class ExportFileOperator(BaseOperator):
@@ -91,9 +91,7 @@ def export_file(
     :param task_id: task id, optional
     """
 
-    task_id = (
-        task_id if task_id is not None else get_task_id("export_file", output_file.path)
-    )
+    task_id = task_id or get_unique_task_id("export_file")
 
     return ExportFileOperator(
         task_id=task_id,
