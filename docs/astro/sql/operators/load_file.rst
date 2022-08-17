@@ -43,7 +43,7 @@ Parameters to use when loading a file to a database table
 
     Note that if you use ``if_exists='replace'``, the existing table will be dropped and the schema of the new data will be used.
 
-#. **output_table** - This parameter defines the output table to load data to, which should be an instance of ``astro.sql.table.Table``. You can specify the schema of the table by providing a list of the instance of `sqlalchemy.Column <https://docs.sqlalchemy.org/en/14/core/metadata.html#sqlalchemy.schema.Column>` to the ``columns`` parameter. If you don't specify a schema, it will be inferred using Pandas.
+#. **output_table** - This parameter defines the output table to load data to, which should be an instance of ``astro.sql.table.Table``. You can specify the schema of the table by providing a list of the instance of ``sqlalchemy.Column <https://docs.sqlalchemy.org/en/14/core/metadata.html#sqlalchemy.schema.Column>`` to the ``columns`` parameter. If you don't specify a schema, it will be inferred using Pandas.
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
