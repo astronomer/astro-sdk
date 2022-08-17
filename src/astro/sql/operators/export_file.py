@@ -91,7 +91,7 @@ def export_file(
     :param task_id: task id, optional
     """
 
-    task_id = task_id if task_id is not None else get_unique_task_id("export_file")
+    task_id = task_id or get_unique_task_id("export_file")
 
     return ExportFileOperator(
         task_id=task_id,
