@@ -78,7 +78,7 @@ def union_table_and_dataframe(input_table: Table, input_dataframe: pd.DataFrame)
 )  # skipcq: PTC-W0049
 def last_ten_animations(input_table: Table):  # skipcq: PTC-W0049
     """
-    Pass SQL file ending with .sql
+    Run a transformation using a sql file.
     """
     return
 
