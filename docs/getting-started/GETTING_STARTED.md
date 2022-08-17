@@ -28,13 +28,13 @@ To complete this tutorial, you need:
 - An AWS S3 account with a [storage bucket](https://docs.aws.amazon.com/AmazonS3/latest/userguide/GetStartedWithS3.html). If you don't already have an account, Amazon offers 5GB of free storage in S3 for 12 months. This should be more than enough for this tutorial.
 - A Snowflake Enterprise account. If you don't already have an account, Snowflake has a [free Snowflake trial](https://signup.snowflake.com/) for 30 days.
 - Python 3.
-- A local Airflow environment. You can use either [Apache Airflow](https://airflow.apache.org/docs/apache-airflow/stable/start/local.html) or [the Astro CLI](https://docs.astronomer.io/astro/get-started) to run your environment. If you're using the Astro CLI, we recommend [creating a new Astro project](https://docs.astronomer.io/astro/create-project) for this tutorial.
+- A local Airflow environment. You can use either [Apache Airflow](https://airflow.apache.org/docs/apache-airflow/stable/start/local.html) or [the Astro CLI](https://docs.astronomer.io/astro/cli/get-started) to run your environment. If you're using the Astro CLI, we recommend [creating a new Astro project](https://docs.astronomer.io/astro/create-project) for this tutorial.
 
 ## Step 1: Set up your data stores
 
 1. On your local machine create a file named `test.csv` with the following data:
 
-    ```csv
+    ```text
     order_id,customer_id,purchase_date,amount
     ORDER1,CUST1,1/1/2021,100
     ORDER2,CUST2,2/2/2022,200
