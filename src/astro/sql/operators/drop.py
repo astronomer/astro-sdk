@@ -22,7 +22,7 @@ class DropTableOperator(BaseOperator):
         **kwargs,
     ):
         self.table = table
-        task_id = task_id or get_unique_task_id("_drop")
+        task_id = task_id or get_unique_task_id("drop")
         super().__init__(
             task_id=task_id,
             **kwargs,
