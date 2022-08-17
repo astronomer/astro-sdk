@@ -10,7 +10,7 @@ When to use the ``merge`` operator
 Unlike the :ref:`append_operator`, which expects data to be unique and conflict free, the ``merge`` operator allows you to to add data to an existing table with conflict resolution techniques like ``ignore`` and ``update``.
 
 Prerequisites
-------------
+-------------
 
 The ``merge`` operator runs different SQL queries behind the scenes based on the database used. Some databases only allow you to run these queries if there are constraints on the columns specified in the parameter ``target_conflict_columns``. Below is the list of supported databases and their constraint requirements.
 
