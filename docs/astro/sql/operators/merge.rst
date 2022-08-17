@@ -47,7 +47,7 @@ If the source and target tables have the same schema, you should specify the com
    :end-before: [END merge_col_list_example]
 
 When tables have different schemas
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If the source and target tables have different schemas, you should pass a ``dict`` object mapping the ``source_table`` columns to the ``target_table`` columns.
 

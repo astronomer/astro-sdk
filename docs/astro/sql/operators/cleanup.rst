@@ -5,7 +5,7 @@ cleanup operator
 .. _cleanup_operator:
 
 When to use the ``cleanup`` operator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The ``cleanup`` operator allows you to clean up temporary tables(:ref:`table`) created as part of your Astro SDK pipeline. The ``cleanup`` function monitors the status of all the tasks within your DAG, and deletes any temporary tables(:ref:`table`) at the end of the DAG run. Astronomer recommends adding a ``cleanup`` operator to every DAG that uses the Astro SDK.
 
 .. literalinclude:: ../../../../example_dags/example_amazon_s3_postgres.py

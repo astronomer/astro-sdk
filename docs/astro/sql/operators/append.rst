@@ -4,7 +4,7 @@
 append operator
 ================
 When to use the ``append`` operator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The ``append`` operator allows you to append data from a source table to a target table.
 
 .. literalinclude:: ../../../../example_dags/example_append.py
@@ -15,7 +15,7 @@ The ``append`` operator allows you to append data from a source table to a targe
 If a columns parameter is not provided, the ``append`` operator assumes that the source and target tables have the same schema.
 
 Tables have the same schema
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #. **Case 1:** When the complete table needs to be appended, the ``columns`` parameter can be omitted.
     .. literalinclude:: ../../../../example_dags/example_append.py
        :language: python
@@ -29,7 +29,7 @@ Tables have the same schema
        :end-before: [END append_example_with_columns_list]
 
 Tables have different schemas
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 When the source and target tables have different schemas, you can map different column names by passing a ``dict`` of *source columns to target columns*.
 
     .. literalinclude:: ../../../../example_dags/example_append.py

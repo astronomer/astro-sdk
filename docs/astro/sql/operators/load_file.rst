@@ -32,7 +32,7 @@ Case 2: Load files into a Pandas dataframe
 .. _custom_schema:
 
 Parameters to use when loading a file to a database table
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 #. **if_exists** - If the table you trying to create already exists, you can specify whether you want to replace the table or append the new data by specifying either ``if_exists='append'`` or ``if_exists='replace'``.
 
@@ -158,7 +158,7 @@ Refer to :ref:`load_file_working` for details on Native Path.
 .. _supported_native_path:
 
 Supported native transfers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. list-table::
    :widths: auto
 
