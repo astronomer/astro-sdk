@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11.1
+
+Bug fix:
+* Pass operator kwargs to dataframe decorator [#630](https://github.com/astronomer/astro-sdk/issues/630)
+
+
 ## 0.11.0
 
 Feature:
