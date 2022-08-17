@@ -3,10 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 import pandas as pd
+from airflow.decorators.base import get_unique_task_id
 from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
-
-from airflow.decorators.base import get_unique_task_id
 
 from astro import settings
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
