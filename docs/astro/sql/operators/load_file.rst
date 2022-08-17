@@ -186,13 +186,25 @@ Patterns in File path
 Load file can also resolve patterns in file path, there are three types of patterns supported by load file based on the :ref:`file_location`
 
 #. **Local** - On local we support glob pattern - https://docs.python.org/3/library/glob.html
-#. **S3** - prefix in file path - https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-prefixes.html
-#. **GCS** - prefix and wildcard in file path - https://cloud.google.com/storage/docs/gsutil/addlhelp/WildcardNames
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
        :start-after: [START load_file_example_10]
        :end-before: [END load_file_example_10]
+
+#. **S3** - prefix in file path - https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-prefixes.html
+
+    .. literalinclude:: ../../../../example_dags/example_load_file.py
+       :language: python
+       :start-after: [START load_file_example_11]
+       :end-before: [END load_file_example_11]
+
+#. **GCS** - prefix and wildcard in file path - https://cloud.google.com/storage/docs/gsutil/addlhelp/WildcardNames
+
+    .. literalinclude:: ../../../../example_dags/example_load_file.py
+       :language: python
+       :start-after: [START load_file_example_12]
+       :end-before: [END load_file_example_12]
 
 
 Inferring File Type
