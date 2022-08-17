@@ -11,10 +11,11 @@
 [![PyPI downloads](https://img.shields.io/pypi/dm/astro-sdk-python.svg)](https://pypistats.org/packages/astro-sdk-python)
 [![Contributors](https://img.shields.io/github/contributors/astronomer/astro-sdk)](https://github.com/astronomer/astro-sdk)
 [![Commit activity](https://img.shields.io/github/commit-activity/m/astronomer/astro-sdk)](https://github.com/astronomer/astro-sdk)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/astronomer/astro-sdk/main.svg)](https://results.pre-commit.ci/latest/github/astronomer/astro-sdk/main)
 [![CI](https://github.com/astronomer/astro-sdk/actions/workflows/ci.yaml/badge.svg)](https://github.com/astronomer/astro-sdk)
 [![codecov](https://codecov.io/gh/astronomer/astro-sdk/branch/main/graph/badge.svg?token=MI4SSE50Q6)](https://codecov.io/gh/astronomer/astro-sdk)
 
-**Astro Python SDK** allows for rapid and clean development of extract, transform, and load (ETL) workflows using Python.
+**Astro Python SDK** allows for rapid and clean development of extract, transform, and load (ETL) workflows using Python.  
 
 The SDK abstracts the boilerplate code required for communication between datasets and tasks, which helps DAG authors to achieve more with less code.
 
@@ -149,12 +150,11 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
 ## Available operations
 
-
 The following are some key functions available in the SDK:
 
 - `load_file`: load a given file into a SQL table
 - `transform`: applies a SQL select statement to a source table and saves the result to a destination table
-- `truncate`: remove all records from a SQL table
+- `drop_table`: Drops a SQL table
 - `run_raw_sql`: run any SQL statement without handling its output
 - `append`: insert rows from the source SQL table into the destination SQL table, if there are no conflicts
 - `merge`: insert rows from the source SQL table into the destination SQL table, depending on conflicts:
@@ -162,6 +162,8 @@ The following are some key functions available in the SDK:
   - update: replace existing rows with new ones
 - `export_file`: export SQL table rows into a destination file
 - `dataframe`: export given SQL table into in-memory Pandas data-frame
+
+For a full list of available operators, see the [SDK reference documentation](https://astro-sdk.readthedocs.io/en/latest/astro/sql/operators/append.html).
 
 ## Documentation
 
