@@ -1,0 +1,11 @@
+.astro
+.git
+.env
+airflow_settings.yaml
+logs/
+tests/
+.cache
+.idea
+.mypy_cache
+*.pyc
+__pycache__/
