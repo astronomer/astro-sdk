@@ -1,8 +1,9 @@
+from __future__ import annotations
+
 import glob
 import os
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Dict, List, Optional, Union
 from urllib.parse import urlparse
 
 import smart_open
@@ -15,7 +16,7 @@ class BaseFileLocation(ABC):
 
     template_fields = ("path", "conn_id")
 
-    def __init__(self, path: str, conn_id: Optional[str] = None):
+    def __init__(self, path: str, conn_id: str | None = None):
         """
         Manages and provide interface for the operation for all the supported locations.
 
@@ -23,7 +24,7 @@ class BaseFileLocation(ABC):
         :param conn_id: Airflow connection ID
         """
         self.path: str = path
-        self.conn_id: Optional[str] = conn_id
+        self.conn_id: str | None = conn_id
 
     @property
     def hook(self):
@@ -37,12 +38,12 @@ class BaseFileLocation(ABC):
 
     @property
     @abstractmethod
-    def paths(self) -> List[str]:
+    def paths(self) -> list[str]:
         """Resolve patterns in path"""
         raise NotImplementedError
 
     @property
-    def transport_params(self) -> Union[Dict, None]:  # skipcq: PYL-R0201
+    def transport_params(self) -> dict | None:  # skipcq: PYL-R0201
         """Get credentials required by smart open to access files"""
         return None
 
