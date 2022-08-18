@@ -6,7 +6,7 @@ transform operator
 
 When to use the ``transform`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The ``transform`` operator allows you to implement the ``T`` of an ELT system by running a SQL query. Each step of the transform pipeline creates a new table from the ``SELECT`` statement and enables tasks to pass those tables as if they were native Python objects.
+The ``transform`` operator allows you to implement the **T** of an ELT system by running a SQL query. Each step of the transform pipeline creates a new table from the ``SELECT`` statement and enables tasks to pass those tables as if they were native Python objects.
 
 The ``transform`` operator treats values in the double brackets as Airflow jinja templates. You can find more details on templating at :ref:`templating`.
 
@@ -15,7 +15,7 @@ There are two main uses for the ``transform`` operator.
 Case 1: Passing tables between tasks while completing data transformations.
     The following example applies a SQL ``SELECT`` statement to a ``imdb_movies`` table with templating and saves the result to a ``top_animation`` table.
 
-    Note that the ``input_table`` in the double brackets is treated as an Airflow jinja template. It is NOT an f string. F-strings in SQL formatting are at risk of security breaches via SQL injections. For security, you MUST explicitly identify tables in the function parameters by typing a value as a Table. Only then will the ``transform`` operator treat the value as a table.
+    Note that the ``input_table`` in the double brackets is treated as an Airflow jinja template. It is **not** an f string. F-strings in SQL formatting are at risk of security breaches via SQL injections. For security, you **must** explicitly identify tables in the function parameters by typing a value as a Table. Only then will the ``transform`` operator treat the value as a table.
 
     .. literalinclude:: ../../../../example_dags/example_transform.py
        :language: python

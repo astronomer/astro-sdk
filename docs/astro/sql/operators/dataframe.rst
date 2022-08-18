@@ -7,7 +7,7 @@ dataframe operator
 When to use the ``dataframe`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``dataframe`` operator allows you to run Python transformations in Airflow. Behind the scenes, the ``dataframe`` function automatically coverts the source SQL table into a Pandas dataframe, and makes any dataframes resulting from the transformation available to downstream astro.sql functions. This means you can seamlessly transition between Python and SQL for data transformations without writing any code to explicitly do so. To use the ``dataframe`` operator, you simply provide a Python function that takes a dataframe as one of its inputs, and specify a ``Table`` object as the input SQL table. If you want the resulting dataframe to be converted back to SQL, you can specify an ``output_table`` object.
+The ``dataframe`` operator allows you to run Python transformations in Airflow. Behind the scenes, the ``dataframe`` function automatically coverts the source SQL table into a Pandas dataframe, and makes any dataframes resulting from the transformation available to downstream ``astro.sql`` functions. This means you can seamlessly transition between Python and SQL for data transformations without writing any code to explicitly do so. To use the ``dataframe`` operator, you simply provide a Python function that takes a dataframe as one of its inputs, and specify a ``Table`` object as the input SQL table. If you want the resulting dataframe to be converted back to SQL, you can specify an ``output_table`` object.
 
 There are two main uses for the ``dataframe`` operator.
 
