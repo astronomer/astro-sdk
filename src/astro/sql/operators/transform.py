@@ -110,7 +110,7 @@ def transform_file(
 ) -> "XComArg":
     """
     :param file_path: File path for the SQL file you would like to parse. Can be an absolute path, or you can use a
-    relative path if the `template_searchpath` variable is set in your DAG
+        relative path if the `template_searchpath` variable is set in your DAG
     :param conn_id: Connection ID for the database you want to connect to. If you do not pass in a value for this object
         we can infer the connection ID from the first table passed into the python_callable function.
         (required if there are no table arguments)
