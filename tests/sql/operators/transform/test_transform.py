@@ -1,6 +1,5 @@
 import pathlib
 
-import pandas
 import pandas as pd
 import pytest
 from airflow.decorators import task
@@ -192,7 +191,7 @@ def test_transform_with_file(database_table_fixture, sample_dag):
     database, imdb_table = database_table_fixture
 
     @aql.dataframe
-    def validate(df: pandas.DataFrame):
+    def validate(df: pd.DataFrame):
         assert df.columns.tolist() == ["title", "rating"]
 
     with sample_dag:
