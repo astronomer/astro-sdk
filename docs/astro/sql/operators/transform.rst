@@ -45,11 +45,3 @@ Case 2: When we pass a Pandas dataframe while completing a data transformation.
        :language: python
        :start-after: [START transform_example_4]
        :end-before: [END transform_example_4]
-
-Case 3: When we pass SQL file in the transform decorator.
-    The following example DAG shows how we can quickly pass SQL file for the data transformation.
-
-    .. literalinclude:: ../../../../example_dags/example_transform.py
-       :language: python
-       :start-after: [START transform_example_5]
-       :end-before: [END transform_example_5]
