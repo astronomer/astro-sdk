@@ -25,7 +25,7 @@ with open("../src/astro/__init__.py") as f:
         if "__version__" in current_line:
             __version__ = current_line.split(" ")[-1]
 
-project = "astro-sdk"
+project = "astro-sdk-python"
 copyright = "2022, Astronomer inc."  # noqa
 author = "Astronomer inc."
 

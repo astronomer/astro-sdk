@@ -110,7 +110,8 @@ class BigqueryDatabase(BaseDatabase):
     def sqlalchemy_engine(self) -> Engine:
         """Return SQAlchemy engine."""
         uri = self.hook.get_uri()
-        return create_engine(uri)
+        with self.hook.provide_gcp_credential_file_as_context():
+            return create_engine(uri)
 
     @property
     def default_metadata(self) -> Metadata:
