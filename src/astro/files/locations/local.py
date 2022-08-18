@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import glob
 import os
 import pathlib
-from typing import List
 from urllib.parse import urlparse
 
 from astro.constants import FileLocation
@@ -14,7 +15,7 @@ class LocalLocation(BaseFileLocation):
     location_type = FileLocation.LOCAL
 
     @property
-    def paths(self) -> List[str]:
+    def paths(self) -> list[str]:
         """Resolve local filepath"""
         url = urlparse(self.path)
         path_object = pathlib.Path(url.path)

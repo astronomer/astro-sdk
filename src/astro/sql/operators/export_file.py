@@ -1,4 +1,6 @@
-from typing import Any, Optional, Union
+from __future__ import annotations
+
+from typing import Any
 
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
@@ -23,7 +25,7 @@ class ExportFileOperator(BaseOperator):
 
     def __init__(
         self,
-        input_data: Union[Table, pd.DataFrame],
+        input_data: Table | pd.DataFrame,
         output_file: File,
         if_exists: ExportExistsStrategy = "exception",
         **kwargs,
@@ -59,12 +61,12 @@ class ExportFileOperator(BaseOperator):
 
 
 def export_file(
-    input_data: Union[Table, pd.DataFrame],
+    input_data: Table | pd.DataFrame,
     output_file: File,
     if_exists: ExportExistsStrategy = "exception",
-    task_id: Optional[str] = None,
+    task_id: str | None = None,
     **kwargs: Any,
-) -> "XComArg":
+) -> XComArg:
     """Convert ExportFileOperator into a function. Returns XComArg.
 
     Returns an XComArg object of type File which matches the output_file parameter.

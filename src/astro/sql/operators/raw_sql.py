@@ -1,4 +1,7 @@
-from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Union
+from __future__ import annotations
+
+from collections.abc import Iterable, Mapping
+from typing import Any, Callable
 
 try:
     from airflow.decorators.base import TaskDecorator, task_decorator_factory
@@ -18,7 +21,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
     and on the SQL statement/function declared by the user.
     """
 
-    def execute(self, context: Dict) -> Any:
+    def execute(self, context: dict) -> Any:
         super().execute(context)
 
         result = self.database_impl.run_sql(
@@ -31,12 +34,12 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
 
 
 def run_raw_sql(
-    python_callable: Optional[Callable] = None,
+    python_callable: Callable | None = None,
     conn_id: str = "",
-    parameters: Optional[Union[Mapping, Iterable]] = None,
-    database: Optional[str] = None,
-    schema: Optional[str] = None,
-    handler: Optional[Callable] = None,
+    parameters: Mapping | Iterable | None = None,
+    database: str | None = None,
+    schema: str | None = None,
+    handler: Callable | None = None,
     **kwargs: Any,
 ) -> TaskDecorator:
     """
