@@ -22,15 +22,9 @@ def get_file_list(path: str, conn_id: str, **kwargs) -> XComArg:
     """
     List the file path from the filesystem storage based on given path pattern
 
-    Supported filesystem: Local, HTTP, S3, GCS
+    Supported filesystem: :ref:`file_location`
 
-    Example path pattern:
-
-        - folder/*
-        - http://domain/some-file
-        - s3://bucket/some-file-prefix
-        - gs://bucket/some-file-prefix
-
+    Supported file pattern: :ref:`file_pattern`
 
     :param conn_id: Airflow connection id
     :param path: Path pattern to the file in the filesystem/Object stores
