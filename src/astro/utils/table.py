@@ -1,10 +1,10 @@
 import inspect
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Optional
 
 from astro.sql.table import Table
 
 
-def _pull_first_table_from_parameters(parameters: Dict) -> Optional[Table]:
+def _pull_first_table_from_parameters(parameters: dict) -> Optional[Table]:
     """
     When trying to "magically" determine the context of a decorator, we will try to find the first table.
     This function attempts this by checking parameters
@@ -25,7 +25,7 @@ def _pull_first_table_from_parameters(parameters: Dict) -> Optional[Table]:
 
 
 def _pull_first_table_from_op_kwargs(
-    op_kwargs: Dict, python_callable: Callable
+    op_kwargs: dict, python_callable: Callable
 ) -> Optional[Table]:
     """
     When trying to "magically" determine the context of a decorator, we will try to find the first table.
@@ -48,7 +48,7 @@ def _pull_first_table_from_op_kwargs(
     return first_table
 
 
-def _find_first_table_from_op_args(op_args: Tuple) -> Optional[Table]:
+def _find_first_table_from_op_args(op_args: tuple) -> Optional[Table]:
     """
     When trying to "magically" determine the context of a decorator, we will try to find the first table.
     This function attempts this by checking op_args
@@ -71,7 +71,7 @@ def _find_first_table_from_op_args(op_args: Tuple) -> Optional[Table]:
 
 
 def find_first_table(
-    op_args: Tuple, op_kwargs: Dict, python_callable: Callable, parameters: Dict
+    op_args: tuple, op_kwargs: dict, python_callable: Callable, parameters: dict
 ) -> Optional[Table]:
     """
     When we create our SQL operation, we run with the assumption that the first table given is the "main table".

@@ -1,6 +1,8 @@
 """Google BigQuery table implementation."""
+from __future__ import annotations
+
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
@@ -72,8 +74,8 @@ class BigqueryDatabase(BaseDatabase):
         FileLocation.LOCAL: "load_local_file_to_table",
     }
 
-    illegal_column_name_chars: List[str] = ["."]
-    illegal_column_name_chars_replacement: List[str] = ["_"]
+    illegal_column_name_chars: list[str] = ["."]
+    illegal_column_name_chars_replacement: list[str] = ["_"]
     NATIVE_LOAD_EXCEPTIONS: Any = (
         GoogleNotFound,
         ClientError,
@@ -132,7 +134,7 @@ class BigqueryDatabase(BaseDatabase):
         return True
 
     @staticmethod
-    def get_merge_initialization_query(parameters: Tuple) -> str:
+    def get_merge_initialization_query(parameters: tuple) -> str:
         """
         Handles database-specific logic to handle constraints
         for BigQuery. The only constraint that BigQuery supports
@@ -167,8 +169,8 @@ class BigqueryDatabase(BaseDatabase):
         self,
         source_table: Table,
         target_table: Table,
-        source_to_target_columns_map: Dict[str, str],
-        target_conflict_columns: List[str],
+        source_to_target_columns_map: dict[str, str],
+        target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """
@@ -221,7 +223,7 @@ class BigqueryDatabase(BaseDatabase):
         source_file: File,
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
-        native_support_kwargs: Optional[Dict] = None,
+        native_support_kwargs: dict | None = None,
         **kwargs,
     ):
         """
@@ -254,7 +256,7 @@ class BigqueryDatabase(BaseDatabase):
         source_file: File,
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
-        native_support_kwargs: Optional[Dict] = None,
+        native_support_kwargs: dict | None = None,
         **kwargs,
     ):
         """
@@ -299,7 +301,7 @@ class BigqueryDatabase(BaseDatabase):
         self,
         source_file: File,
         target_table: Table,
-        native_support_kwargs: Optional[Dict] = None,
+        native_support_kwargs: dict | None = None,
         **kwargs,
     ):
         """
@@ -344,7 +346,7 @@ class BigqueryDatabase(BaseDatabase):
         source_file: File,
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
-        native_support_kwargs: Optional[Dict] = None,
+        native_support_kwargs: dict | None = None,
         **kwargs,
     ):
         """Transfer data from local to bigquery"""
@@ -400,7 +402,7 @@ class S3ToBigqueryDataTransfer:
         source_file: File,
         project_id: str,
         poll_duration: int = 1,
-        native_support_kwargs: Optional[Dict] = None,
+        native_support_kwargs: dict | None = None,
         **kwargs,
     ):
         self.client = BiqQueryDataTransferServiceHook(gcp_conn_id=target_table.conn_id)
