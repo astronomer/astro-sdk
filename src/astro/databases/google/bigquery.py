@@ -163,6 +163,7 @@ class BigqueryDatabase(BaseDatabase):
             if_exists=if_exists,
             chunksize=chunk_size,
             project_id=self.hook.project_id,
+            credentials=self.hook._get_credentials(),
         )
 
     def merge_table(
