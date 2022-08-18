@@ -1,4 +1,4 @@
-PHONY: build-run clean logs stop help
+PHONY: build-run clean docs logs stop shell restart restart-all help
 
 .DEFAULT_GOAL:= help
 
@@ -25,6 +25,9 @@ restart: ## Restart Triggerer, Scheduler and Worker containers
 
 restart-all: ## Restart all the containers
 	docker compose -f dev/docker-compose.yaml restart
+
+shell:  ## Runs a shell within a container (Allows interactive session)
+	docker compose -f ../dev/docker-compose.yaml run --rm airflow-scheduler bash
 
 help:  ## Prints this message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-41s\033[0m %s\n", $$1, $$2}'
