@@ -43,3 +43,5 @@ Case 2: Passing a Pandas dataframe between tasks while completing data transform
        :language: python
        :start-after: [START transform_example_4]
        :end-before: [END transform_example_4]
+
+Please note that in case you want to pass SQL file in the transform decorator, use :ref:`transform_file_operator`
