@@ -1,10 +1,15 @@
-from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Union
+from __future__ import annotations
+
+from collections.abc import Iterable, Mapping
+from typing import Any, Callable
 
 try:
     from airflow.decorators.base import TaskDecorator, task_decorator_factory
 except ImportError:
     from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
+
+from airflow.models.xcom_arg import XComArg
 
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 
@@ -15,7 +20,7 @@ class TransformOperator(BaseSQLDecoratedOperator):
     the result into a SQL table.
     """
 
-    def execute(self, context: Dict):
+    def execute(self, context: dict):
         super().execute(context)
 
         self.database_impl.create_schema_if_needed(self.output_table.metadata.schema)
@@ -29,11 +34,11 @@ class TransformOperator(BaseSQLDecoratedOperator):
 
 
 def transform(
-    python_callable: Optional[Callable] = None,
+    python_callable: Callable | None = None,
     conn_id: str = "",
-    parameters: Optional[Union[Mapping, Iterable]] = None,
-    database: Optional[str] = None,
-    schema: Optional[str] = None,
+    parameters: Mapping | Iterable | None = None,
+    database: str | None = None,
+    schema: str | None = None,
     **kwargs: Any,
 ) -> TaskDecorator:
     """
@@ -101,3 +106,41 @@ def transform(
         decorated_operator_class=TransformOperator,
         **kwargs,
     )
+
+
+def transform_file(
+    file_path: str,
+    conn_id: str = "",
+    parameters: Mapping | Iterable | None = None,
+    database: str | None = None,
+    schema: str | None = None,
+    **kwargs: Any,
+) -> XComArg:
+    """
+    :param file_path: File path for the SQL file you would like to parse. Can be an absolute path, or you can use a
+        relative path if the `template_searchpath` variable is set in your DAG
+    :param conn_id: Connection ID for the database you want to connect to. If you do not pass in a value for this object
+        we can infer the connection ID from the first table passed into the python_callable function.
+        (required if there are no table arguments)
+    :param parameters: parameters to pass into the SQL query
+    :param database: Database within the SQL instance you want to access. If left blank we will default to the
+        table.metatadata.database in the first Table passed to the function (required if there are no table arguments)
+    :param schema: Schema within the SQL instance you want to access. If left blank we will default to the
+        table.metatadata.schema in the first Table passed to the function (required if there are no table arguments)
+    :param kwargs: Any keyword arguments supported by the BaseOperator is supported (e.g ``queue``, ``owner``)
+    :return: Transform functions return a ``Table`` object that can be passed to future tasks.
+        This table will be either an auto-generated temporary table,
+        or will overwrite a table given in the `output_table` parameter.
+    """
+
+    @transform(
+        conn_id=conn_id,
+        parameters=parameters,
+        database=database,
+        schema=schema,
+        **kwargs,
+    )
+    def transform_file_func(file_path: str):
+        return file_path
+
+    return transform_file_func(file_path)

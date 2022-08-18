@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import random
 import string
 from dataclasses import dataclass, field, fields
-from typing import List, Optional
 
 from sqlalchemy import Column, MetaData
 
@@ -17,8 +18,8 @@ class Metadata:
     """
 
     # This property is used by several databases, including: Postgres, Snowflake and BigQuery ("namespace")
-    schema: Optional[str] = None
-    database: Optional[str] = None
+    schema: str | None = None
+    database: str | None = None
 
     def is_empty(self) -> bool:
         """Check if all the fields are None."""
@@ -45,7 +46,7 @@ class Table:
     name: str = ""
     _name: str = field(init=False, repr=False, default="")
     metadata: Metadata = field(default_factory=Metadata)
-    columns: List[Column] = field(default_factory=list)
+    columns: list[Column] = field(default_factory=list)
     temp: bool = False
 
     def __post_init__(self) -> None:
@@ -69,7 +70,7 @@ class Table:
 
         return unique_id
 
-    def create_similar_table(self) -> "Table":
+    def create_similar_table(self) -> Table:
         """
         Create a new table with a unique name but with the same metadata.
         """
