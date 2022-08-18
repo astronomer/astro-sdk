@@ -1,10 +1,14 @@
 # Changelog
 
 
-## 1.0.0b1
+## 1.0.0
 
-Feature:
-* Improved the performance of `aql.load_file` by supporting database-specific (native) load methods. This is now the default behaviour. Previously, the Astro SDK Python would always use Pandas to load files to SQL databases which passed the data to worker node which slowed the performance. [#557](https://github.com/astronomer/astro-sdk/issues/557), [#481](https://github.com/astronomer/astro-sdk/issues/481)
+### Features
+* Improved the performance of `aql.load_file` by supporting database-specific (native) load methods.
+  This is now the default behaviour. Previously, the Astro SDK Python would always use Pandas to load files to
+  SQL databases which passed the data to worker node which slowed the performance.
+  [#557](https://github.com/astronomer/astro-sdk/issues/557),
+  [#481](https://github.com/astronomer/astro-sdk/issues/481)
 
   Introduced new arguments to `aql.load_file`:
     - `use_native_support` for data transfer if available on the destination (defaults to `use_native_support=True`)
@@ -12,36 +16,61 @@ Feature:
     - `enable_native_fallback` can be used to fall back to default transfer(defaults to `enable_native_fallback=True`).
 
   Now, there are three modes:
-    - `Native`: Default, uses [Bigquery Load Job](https://cloud.google.com/bigquery/docs/loading-data) in the case of BigQuery and Snowflake [COPY INTO](https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html) using [external stage](https://docs.snowflake.com/en/sql-reference/sql/create-stage.html) in the case of Snowflake.
-    - `Pandas`: This is how datasets were previously loaded. To enable this mode, use the argument `use_native_support=False` in `aql.load_file`.
-    - `Hybrid`: This attempts to use the native strategy to load a file to the database and if native strategy(i) fails , fallback to Pandas (ii) with relevant log warnings.
-* Allow users to specify the table schema (column types) in which a file is being loaded by using `table.columns`. If this table attribute is not set, the Astro SDK still tries to infer the schema by using Pandas (which is previous behaviour).[#532](https://github.com/astronomer/astro-sdk/issues/532)
-* Implement fallback mechanism in case native support fails to default option with log warning for problem with native support. [#557](https://github.com/astronomer/astro-sdk/issues/557)
-* Add [Example DAG](../example_dags/example_bigquery_dynamic_map_task.py) for Dynamic Map Task with Astro-SDK. [#377](https://github.com/astronomer/astro-sdk/issues/377),[airflow-2.3.0](https://airflow.apache.org/blog/airflow-2.3.0/)
+    - `Native`: Default, uses [Bigquery Load Job](https://cloud.google.com/bigquery/docs/loading-data) in the
+       case of BigQuery and Snowflake [COPY INTO](https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html)
+       using [external stage](https://docs.snowflake.com/en/sql-reference/sql/create-stage.html) in the case of Snowflake.
+    - `Pandas`: This is how datasets were previously loaded. To enable this mode, use the argument
+      `use_native_support=False` in `aql.load_file`.
+    - `Hybrid`: This attempts to use the native strategy to load a file to the database and if native strategy(i)
+       fails , fallback to Pandas (ii) with relevant log warnings. [#557](https://github.com/astronomer/astro-sdk/issues/557)
+* Allow users to specify the table schema (column types) in which a file is being loaded by using `table.columns`.
+  If this table attribute is not set, the Astro SDK still tries to infer the schema by using Pandas
+  (which is previous behaviour).[#532](https://github.com/astronomer/astro-sdk/issues/532)
+* Add [Example DAG](../example_dags/example_bigquery_dynamic_map_task.py) for Dynamic Map Task with Astro-SDK.
+  [#377](https://github.com/astronomer/astro-sdk/issues/377),[airflow-2.3.0](https://airflow.apache.org/blog/airflow-2.3.0/)
 
-Community:
-* Allow running tests on PRs from forks + label [#179](https://github.com/astronomer/astro-sdk/issues/179)
-
-Breaking Change:
-* The `aql.dataframe` argument `identifiers_as_lower` (which was `boolean`, with default set to `False`) was replaced by the argument `columns_names_capitalization` (`string` within possible values `["upper", "lower", "original"]`, default is `lower`).[#564](https://github.com/astronomer/astro-sdk/issues/564)
-* The `aql.load_file` before would change the capitalization of all column titles to be uppercase, by default, now it makes them lowercase, by default. The old behaviour can be achieved by using the argument `columns_names_capitalization="upper"`. [#564](https://github.com/astronomer/astro-sdk/issues/564)
-* `aql.load_file` attempts to load files to BigQuery and Snowflake by using native methods, which may have pre-requirements to work. To disable this mode, use the argument `use_native_support=False` in `aql.load_file`. [#557](https://github.com/astronomer/astro-sdk/issues/557), [#481](https://github.com/astronomer/astro-sdk/issues/481)
-* `aql.dataframe` will raise an exception if the default Airflow XCom backend is being used. To solve this, either use an [external XCom backend, such as S3 or GCS](https://www.astronomer.io/guides/custom-xcom-backends) or set the configuration `AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE=True`. [#444](https://github.com/astronomer/astro-sdk/issues/444)
-* Change the declaration for the default Astro SDK temporary schema from using `AIRFLOW__ASTRO__SQL_SCHEMA` to `AIRFLOW__ASTRO_SDK__SQL_SCHEMA` [#503](https://github.com/astronomer/astro-sdk/issues/503)
+### Breaking Change
+* The `aql.dataframe` argument `identifiers_as_lower` (which was `boolean`, with default set to `False`)
+  was replaced by the argument `columns_names_capitalization` (`string` within possible values
+  `["upper", "lower", "original"]`, default is `lower`).[#564](https://github.com/astronomer/astro-sdk/issues/564)
+* The `aql.load_file` before would change the capitalization of all column titles to be uppercase, by default,
+  now it makes them lowercase, by default. The old behaviour can be achieved by using the argument
+  `columns_names_capitalization="upper"`. [#564](https://github.com/astronomer/astro-sdk/issues/564)
+* `aql.load_file` attempts to load files to BigQuery and Snowflake by using native methods, which may have
+  pre-requirements to work. To disable this mode, use the argument `use_native_support=False` in `aql.load_file`.
+  [#557](https://github.com/astronomer/astro-sdk/issues/557), [#481](https://github.com/astronomer/astro-sdk/issues/481)
+* `aql.dataframe` will raise an exception if the default Airflow XCom backend is being used.
+  To solve this, either use an [external XCom backend, such as S3 or GCS](https://www.astronomer.io/guides/custom-xcom-backends)
+  or set the configuration `AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE=True`. [#444](https://github.com/astronomer/astro-sdk/issues/444)
+* Change the declaration for the default Astro SDK temporary schema from using `AIRFLOW__ASTRO__SQL_SCHEMA`
+  to `AIRFLOW__ASTRO_SDK__SQL_SCHEMA` [#503](https://github.com/astronomer/astro-sdk/issues/503)
 * Renamed `aql.truncate` to `aql.drop_table` [#554](https://github.com/astronomer/astro-sdk/issues/554)
 
-Bug fix:
+### Bug fixes
 * Fix missing airflow's task terminal states to `CleanupOperator` [#525](https://github.com/astronomer/astro-sdk/issues/525)
 * Allow chaining `aql.drop_table` (previously `truncate`) tasks using the Task Flow API syntax. [#554](https://github.com/astronomer/astro-sdk/issues/554), [#515](https://github.com/astronomer/astro-sdk/issues/515)
 
-Enhancement:
-* Improved the performance of `aql.load_file` for files from AWS S3 to Google BigQuery up to 94%. [#429](https://github.com/astronomer/astro-sdk/issues/429), [#568](https://github.com/astronomer/astro-sdk/pull/568)
-* Improved the performance of `aql.load_file` for files from Google Cloud Storage to Google BigQuery up to 93%. [#429](https://github.com/astronomer/astro-sdk/issues/429), [#562](https://github.com/astronomer/astro-sdk/issues/562)
-* Improved the performance of `aql.load_file` for files from AWS S3/Google Cloud Storage to Snowflake up to 76%. [#430](https://github.com/astronomer/astro-sdk/issues/430), [#544](https://github.com/astronomer/astro-sdk/pull/544)
-* Improved the performance of `aql.load_file` for files from GCS to Postgres in K8s up to 93%. [#428](https://github.com/astronomer/astro-sdk/issues/428), [#531](https://github.com/astronomer/astro-sdk/pull/531)
-* Fix sphinx docs sidebar [#472](https://github.com/astronomer/astro-sdk/issues/472)
+### Enhancements
+* Improved the performance of `aql.load_file` for files for below:
+  * From AWS S3 to Google BigQuery up to 94%. [#429](https://github.com/astronomer/astro-sdk/issues/429), [#568](https://github.com/astronomer/astro-sdk/pull/568)
+  * From Google Cloud Storage to Google BigQuery up to 93%. [#429](https://github.com/astronomer/astro-sdk/issues/429), [#562](https://github.com/astronomer/astro-sdk/issues/562)
+  * From AWS S3/Google Cloud Storage to Snowflake up to 76%. [#430](https://github.com/astronomer/astro-sdk/issues/430), [#544](https://github.com/astronomer/astro-sdk/pull/544)
+  * From GCS to Postgres in K8s up to 93%. [#428](https://github.com/astronomer/astro-sdk/issues/428), [#531](https://github.com/astronomer/astro-sdk/pull/531)
 * Get configurations via Airflow Configuration manager. [#503](https://github.com/astronomer/astro-sdk/issues/503)
-* Add CI job to check for dead links [#526](https://github.com/astronomer/astro-sdk/pull/526)
+* Change catching `ValueError` and `AttributeError` to `DatabaseCustomError` [#595](https://github.com/astronomer/astro-sdk/pull/595)
+* Unpin pandas upperbound dependency [#620](https://github.com/astronomer/astro-sdk/pull/620)
+* Remove markupsafe from dependencies [#623](https://github.com/astronomer/astro-sdk/pull/623)
+* Added `extend_existing` to Sqla Table object [#626](https://github.com/astronomer/astro-sdk/pull/626)
+* Move config to store DF in XCom to settings file [#537](https://github.com/astronomer/astro-sdk/pull/537)
+* Make the operator names consistent [#634](https://github.com/astronomer/astro-sdk/pull/634)
+* Use `exc_info` for exception logging [#643](https://github.com/astronomer/astro-sdk/pull/643)
+* Use lazy evaluated Type Annotations from PEP 563 [#650](https://github.com/astronomer/astro-sdk/pull/650)
+* Provide Google Cloud Credentials env var for bigquery [#679](https://github.com/astronomer/astro-sdk/pull/679)
+* Handle breaking changes for Snowflake provide version 3.2.0 and 3.1.0 [#686](https://github.com/astronomer/astro-sdk/pull/686)
+
+### Misc
+* Allow running tests on PRs from forks + label [#179](https://github.com/astronomer/astro-sdk/issues/179)
+* Standardize language in docs files [#678](https://github.com/astronomer/astro-sdk/pull/678)
 
 ## 0.11.0
 
