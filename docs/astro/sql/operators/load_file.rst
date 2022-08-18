@@ -199,7 +199,7 @@ Load file can also resolve patterns in file path, there are three types of patte
        :start-after: [START load_file_example_11]
        :end-before: [END load_file_example_11]
 
-#. **GCS** - prefix and wildcard in file path - https://cloud.google.com/storage/docs/gsutil/addlhelp/WildcardNames
+#. **GCS** - prefix in file path - https://cloud.google.com/storage/docs/listing-objects
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
