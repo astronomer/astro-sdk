@@ -24,22 +24,24 @@ class File:
         conn_id: str | None = None,
         filetype: constants.FileType | None = None,
         normalize_config: dict | None = None,
+        delimiter: str | None = None
     ):
         """Init file object which represent a single file in local/object stores
 
         :param path: Path to a file in the filesystem/Object stores
         :param conn_id: Airflow connection ID
         :param filetype: constant to provide an explicit file type
-        :param normalize_config: parameters in dict format of pandas json_normalize() function.
+        :param normalize_config: parameters in dict format of pandas json_normalize() function
+        :param delimiter: the delimiter marks key hierarchy
         """
-        self.location: BaseFileLocation = create_file_location(path, conn_id)
+        self.location: BaseFileLocation = create_file_location(path, conn_id, delimiter)
         self.type = create_file_type(
             path=path, filetype=filetype, normalize_config=normalize_config
         )
 
     @property
     def path(self) -> str:
-        return self.location.path
+        return str(self.location.path)  # ToDo: look into typing issue
 
     @property
     def conn_id(self) -> str | None:
@@ -129,6 +131,7 @@ def resolve_file_path_pattern(
     conn_id: str | None = None,
     filetype: constants.FileType | None = None,
     normalize_config: dict | None = None,
+    delimiter: str | None = None
 ) -> list[File]:
     """get file objects by resolving path_pattern from local/object stores
     path_pattern can be
@@ -140,8 +143,9 @@ def resolve_file_path_pattern(
     :param conn_id: Airflow connection ID
     :param filetype: constant to provide an explicit file type
     :param normalize_config: parameters in dict format of pandas json_normalize() function
+    :param delimiter: the delimiter marks key hierarchy
     """
-    location = create_file_location(path_pattern, conn_id)
+    location = create_file_location(path_pattern, conn_id, delimiter)
     files = [
         File(
             path=path,
