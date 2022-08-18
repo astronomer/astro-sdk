@@ -506,14 +506,23 @@ class SnowflakeDatabase(BaseDatabase):
 
         :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
         """
-        created_schemas = [
-            x["SCHEMA_NAME"]
-            for x in self.hook.run(
+
+        # Below code is added due to breaking change in apache-airflow-providers-snowflake==3.2.0,
+        # we need to pass handler param to get the rows. But in version apache-airflow-providers-snowflake==3.1.0
+        # if we pass the handler provider raises an exception AttributeError 'sfid'.
+        try:
+            schemas = self.hook.run(
                 "SELECT SCHEMA_NAME from information_schema.schemata WHERE LOWER(SCHEMA_NAME) = %(schema_name)s;",
                 parameters={"schema_name": schema.lower()},
-                handler=lambda x: x,
+                handler=lambda cur: cur.fetchall(),
             )
-        ]
+        except AttributeError:
+            schemas = self.hook.run(
+                "SELECT SCHEMA_NAME from information_schema.schemata WHERE LOWER(SCHEMA_NAME) = %(schema_name)s;",
+                parameters={"schema_name": schema.lower()},
+            )
+
+        created_schemas = [x["SCHEMA_NAME"] for x in schemas]
         return len(created_schemas) == 1
 
     def merge_table(
