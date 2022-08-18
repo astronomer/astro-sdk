@@ -187,6 +187,10 @@ You can configure the Docker-based testing environment to test your DAG
 * `make container target=clean` - To remove all the containers along with volumes
 * `make container target=help` - To view the available commands
 * `make container target=build-run` - To build the docker image and then run containers
+* `make container target=docs` -  To build the docs using Sphinx
+* `make container target=restart` - To restart Scheduler & Triggerer containers
+* `make container target=restart-all` - To restart all the containers
+* `make container target=shell` - To run bash/shell within a container (Allows interactive session)
 
 1. Following ports are accessible from the host machine:
 

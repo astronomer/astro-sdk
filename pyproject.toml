@@ -76,8 +76,10 @@ all = [
     "s3fs"
 ]
 doc = [
+    "myst-parser",
     "sphinx>=4.4.0",
-    "sphinx-autoapi"
+    "sphinx-autoapi",
+    "sphinx-rtd-theme"
 ]
 
 [project.urls]

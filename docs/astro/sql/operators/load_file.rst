@@ -6,22 +6,23 @@ load_file operator
 
 When to use the ``load_file`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The ``load_file`` operator allows you to load data from files into your target transformation system.
 
-There are two use cases of the ``load_file`` operator.
+There are two uses of the ``load_file`` operator.
 
-#. When we want a (group of) file(s) to be loaded into a database table
-#. When we want a (group of) file(s) to be loaded to a Pandas dataframe
+#. Loading a file(s) into a database table
+#. Loading a file(s) into a Pandas dataframe
 
-Case 1: Load into a database table
-    you need to pass the ``output_table`` param to the load_file operator to convert it to a table and the operator returns an instance of the table object passed in ``output_table``. The output table will be created if it doesn't exist and will be replaced if it does. We can change this behavior with the `if_exists` parameter.
+Case 1: Load files into a database table
+    To load files into a database table, you need to provide the name and connection to the target table with the ``output_table`` parameter. The operator will return an instance of the table object passed in ``output_table``. If the specified table does not already exist, it will be created. If it does already exist, it will be replaced, unless the `if_exists` parameter is modified.
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
        :start-after: [START load_file_example_1]
        :end-before: [END load_file_example_1]
 
-Case 2: Load into pandas dataframe
-    If you don't pass the ``output_table`` to the load_file operator it converts the file into a pandas dataframe and returns the reference to dataframe.
+Case 2: Load files into a Pandas dataframe
+    If you don't provide an ``output_table`` to the ``load_file`` operator, it will convert the file into a Pandas dataframe and return the reference to dataframe.
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
@@ -30,29 +31,28 @@ Case 2: Load into pandas dataframe
 
 .. _custom_schema:
 
-Parameters to use when loading a file to the database table
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Parameters to use when loading a file to a database table
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-#. **if_exists** - This parameter comes in handy when the table you trying to create already exists. In such a case, we have two options, either replace or append. Which can we accomplish by passing ``if_exists='append'`` or ``if_exists='replace'``.
+#. **if_exists** - If the table you trying to create already exists, you can specify whether you want to replace the table or append the new data by specifying either ``if_exists='append'`` or ``if_exists='replace'``.
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
        :start-after: [START load_file_example_4]
        :end-before: [END load_file_example_4]
 
-    Note - When we are using ``if_exists='replace'`` we are dropping the existing table and then creating a new table. Here we are not reusing the schema.
+    Note that if you use ``if_exists='replace'``, the existing table will be dropped and the schema of the new data will be used.
 
-#. **output_table** - We can specify the output table to be created by passing in this parameter, which is expected to be an instance of ``astro.sql.table.Table``. Users can specify the schema of tables by passing in the ``columns`` parameter of ``astro.sql.table.Table`` object, which is expected to be a list of the instance of `sqlalchemy.Column <https://docs.sqlalchemy.org/en/14/core/metadata.html#sqlalchemy.schema.Column>`_. . If the user doesn't specify the schema, the schema is inferred using pandas.
+#. **output_table** - This parameter defines the output table to load data to, which should be an instance of ``astro.sql.table.Table``. You can specify the schema of the table by providing a list of the instance of ``sqlalchemy.Column <https://docs.sqlalchemy.org/en/14/core/metadata.html#sqlalchemy.schema.Column>`` to the ``columns`` parameter. If you don't specify a schema, it will be inferred using Pandas.
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
        :start-after: [START load_file_example_5]
        :end-before: [END load_file_example_5]
 
-#. **columns_names_capitalization** - Only applies when we want to create table in the ``Snowflake`` database with :ref:`table_schema` - auto schema detect and with ``if_exists=replace``. Default is to convert all the columns to lowercase. Users can change behavior by this parameter, valid values are ``lower`` and ``upper``, if the user gives ``original`` we convert cols to lowercase.
+#. **columns_names_capitalization** - If you are working with a ``Snowflake`` database with :ref:`table_schema` and with ``if_exists=replace``, you can control whether the column names of the output table are capitalized. The default is to convert all column names to lowercase. Valid inputs are ``lower``, ``upper``, or ``original`` which will convert column names to lowercase.
 
-
-#. **ndjson_normalize_sep** - This parameter is useful when the input file type is NDJSON. Since NDJSON file can be multidimensional, we normalize the data to two-dimensional data, so that it is suitable to be loaded into a table and this parameter is used as a delimiter for combining columns names if required.
+#. **ndjson_normalize_sep** - If your input file type is NDJSON, you can use this parameter to normalize the data to two dimensions. This makes the data suitable for loading into a table. This parameter is used as a delimiter for combining columns names if required.
     example:
         input JSON:
 
@@ -68,7 +68,7 @@ Parameters to use when loading a file to the database table
            * - a_b
            * - c
 
-    Note - columns a and b are merged to form one col a_b and `_` is used as a delimiter.
+    Note - columns a and b are merged to form one column a_b and `_` is used as a delimiter.
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
@@ -77,32 +77,32 @@ Parameters to use when loading a file to the database table
 
 .. _table_schema:
 
-Inferring Table Schema
-~~~~~~~~~~~~~~~~~~~~~~
+Inferring a Table Schema
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are two ways to get the schema of the table to be created, listed by priority
+There are two ways to infer the schema of the table to be created, listed by priority:
 
-#. **User specified schema** - Users can specify the schema of the table to be created in the Table object like the ``output_table`` section in :ref:`custom_schema`
+#. **User specified schema** - You can specify the schema of the table to be created in the Table object, like the ``output_table`` section in :ref:`custom_schema`
 
-#. **Auto schema detection** - if the user doesn't specify the schema in the table object then by using the top 1000 rows of the table we infer the schema of the table. The default value is 1000, which can be changed by creating an environment variable
+#. **Auto schema detection** - if you don't specify the schema in the table object, then ``load_file`` will infer the schema using the top 1000 rows. The default value of rows to look at is 1000, but this can be changed by creating an environment variable.
 
     .. code-block:: shell
 
        AIRFLOW__ASTRO_SDK_LOAD_TABLE_AUTODETECT_ROWS_COUNT
 
-    or within airflow config
+    Or within your Airflow config:
 
     .. code-block:: ini
 
        [astro_sdk]
        load_table_autodetect_rows_count = 1000
 
-    Note - this only applies to :ref:`filetype` JSON, NDJSON and CSV, PARQUET have type information and we don't need to infer it.
+    Note - this only applies to :ref:`filetype` JSON, NDJSON and CSV. PARQUET files have type information so schema inference is unnecessary.
 
 
-Parameters to use when loading a file to pandas dataframe
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#. ``columns_names_capitalization`` Control col names case of the dataframe generated from the file. The default value is ``original``.
+Parameters to use when loading a file to a Pandas dataframe
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#. **columns_names_capitalization**: Use to control the capitalization of column names in the generated dataframe. The default value is ``original``.
         *  **original** - Remains the same as the input file
         *  **upper** - Convert to uppercase
         *  **lower** - Convert to lowercase
@@ -113,35 +113,34 @@ Parameters to use when loading a file to pandas dataframe
        :end-before: [END load_file_example_6]
 
 
-
 Parameters for native transfer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Please refer :ref:`load_file_working` for detail on Native Path.
+Refer to :ref:`load_file_working` for details on Native Path.
 
-#. **use_native_support** - native transfer support is available for some FileSource and Databases, if it is available the default is to use this path. To leverage these paths certain settings/changes need to be done on destination databases. If for some reason users don't want to use these paths they can turn off this behavior by passing ``use_native_support=False``.
-        This feature is enabled by default, to disable it refer to the below code.
+#. **use_native_support**: Native transfer support is available for some file sources and databases. If it is available for your systems, the default is to use this support. To leverage native transfer support, certain settings may need to be modified on your destination database. If you do not wish to use native transfer support, you can turn off this behavior by specifying ``use_native_support=False``.
+        This feature is enabled by default, to disable it refer to the example below.
 
         .. literalinclude:: ../../../../example_dags/example_load_file.py
            :language: python
            :start-after: [START load_file_example_7]
            :end-before: [END load_file_example_7]
 
-        To check if the native transfer will be used for data transfer for a combination of file location and database, refer section :ref:`supported_native_path`
+        To check if the native transfer will be used for your combination of file location and database, refer to :ref:`supported_native_path`.
 
-        **Case when you would like to turn off native transfer:**
+        **When to turn off native transfer:**
 
-            * There are some limitations and/or additional services that need to be enabled on the database to use native transfer.
+            * Sometimes additional services need to be enabled on the target database to use native transfer.
 
-                example - https://cloud.google.com/bigquery-transfer/docs/s3-transfer
+               For example, see  https://cloud.google.com/bigquery-transfer/docs/s3-transfer
 
-            * There may be some additional costs associated due to the services used to perform the native transfer.
+            * There may be additional costs associated due to the services used to perform the native transfer.
 
-            * Native transfers are overkill in cases when we want to transfer the smaller file. It may take lesser time with the default approach.
+            * Native transfers are overkill in cases when you are transferring smaller files. It may take less time to load small files using the default approach.
 
-#. **native_support_kwargs** - Since we support multiple databases they may require some parameters to process a file or control error rate etc, those parameters can be passed in ``native_support_kwargs``. These parameters are passed to the destination database.
+#. **native_support_kwargs**: ``load_file`` supports multiple databases that may require different parameters like to process a file or control error rate. You can specify those parameters in ``native_support_kwargs``. These parameters will be passed to the destination database.
 
-        Check for valid parameters based on **file location** and **database** combination in section :ref:`supported_native_path`
+        Check for valid parameters based on **file location** and **database** combination in :ref:`supported_native_path`
 
         .. literalinclude:: ../../../../example_dags/example_load_file.py
            :language: python
@@ -149,7 +148,7 @@ Please refer :ref:`load_file_working` for detail on Native Path.
            :end-before: [END load_file_example_8]
 
 
-#. **enable_native_fallback** -  When ``use_native_support`` is True, we try to use the native transfer, and if this fails we try to use the default path to load data, giving the user a warning. If you want to change this behavior pass ``enable_native_fallback=False``.
+#. **enable_native_fallback**: When ``use_native_support`` is set to ``True``, ``load_file`` will attempt to use native transfer. If this fails, ``load_file`` will attempt to use the default path to load data and you will see a warning. If you want to change this behavior you can specify ``enable_native_fallback=False``.
 
         .. literalinclude:: ../../../../example_dags/example_load_file.py
            :language: python
@@ -159,7 +158,7 @@ Please refer :ref:`load_file_working` for detail on Native Path.
 .. _supported_native_path:
 
 Supported native transfers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. list-table::
    :widths: auto
 
@@ -180,10 +179,10 @@ Supported native transfers
      - https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html
 
 
-Patterns in File path
+Patterns in file path
 ~~~~~~~~~~~~~~~~~~~~~
 
-Load file can also resolve patterns in file path, there are three types of patterns supported by load file based on the :ref:`file_location`
+``load_file`` can resolve patterns in file path. There are three types of patterns supported based on the :ref:`file_location`
 
 #. **Local** - On local we support glob pattern - https://docs.python.org/3/library/glob.html
 
@@ -207,32 +206,31 @@ Load file can also resolve patterns in file path, there are three types of patte
        :end-before: [END load_file_example_12]
 
 
-Inferring File Type
+Inferring file type
 ~~~~~~~~~~~~~~~~~~~
 
-There are two ways we infer :ref:`filetype` in the following order:
+:ref:`filetype` will be inferred in two ways with the following priority:
 
-#. **File object** - If the user has passed the ``filetype`` param while declaring the ``astro.files.File`` object, we use that as file type. Valid values are listed :ref:`filetype`
+#. **File object** - If the user has passed the ``filetype`` parameter while declaring the ``astro.files.File`` object, that file type will be used. Valid values are listed in :ref:`filetype`.
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
        :start-after: [START load_file_example_10]
        :end-before: [END load_file_example_10]
 
-    Note - This param becomes mandatory when the file path don't have extension.
+    Note - This parameter becomes mandatory when the file path don't have an extension.
 
-#. **From file extensions** - When we create ``astro.files.File`` object and passed a fully qualified path like below, file extensions are used to infer file types. Here the file type is CSV.
+#. **From file extensions** - When an ``astro.files.File`` object is created and provided a fully qualified path, the file extension is used to infer file type. Here the file type is CSV.
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
        :start-after: [START load_file_example_4]
        :end-before: [END load_file_example_4]
 
-Note - 1st way take priority over 2nd way.
 
 Loading data from HTTP API
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
-Users can also load data from HTTP API
+Users can also load data from an HTTP API:
 
 .. literalinclude:: ../../../../example_dags/example_google_bigquery_gcs_load_and_save.py
    :language: python

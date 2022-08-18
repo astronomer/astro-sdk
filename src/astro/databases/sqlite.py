@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple
+from __future__ import annotations
 
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from sqlalchemy import MetaData as SqlaMetaData
@@ -64,7 +64,7 @@ class SqliteDatabase(BaseDatabase):
         table.conn_id = table.conn_id or self.conn_id
         return table
 
-    def create_schema_if_needed(self, schema: Optional[str]) -> None:
+    def create_schema_if_needed(self, schema: str | None) -> None:
         """
         Since SQLite does not have schemas, we do not need to set a schema here.
         """
@@ -76,7 +76,7 @@ class SqliteDatabase(BaseDatabase):
         return False
 
     @staticmethod
-    def get_merge_initialization_query(parameters: Tuple) -> str:
+    def get_merge_initialization_query(parameters: tuple) -> str:
         """
         Handles database-specific logic to handle index for Sqlite.
         """
@@ -86,8 +86,8 @@ class SqliteDatabase(BaseDatabase):
         self,
         source_table: Table,
         target_table: Table,
-        source_to_target_columns_map: Dict[str, str],
-        target_conflict_columns: List[str],
+        source_to_target_columns_map: dict[str, str],
+        target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """
