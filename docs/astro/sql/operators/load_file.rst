@@ -184,21 +184,21 @@ Patterns in file path
 
 ``load_file`` can resolve patterns in file path. There are three types of patterns supported based on the :ref:`file_location`
 
-#. **Local** - On local we support glob pattern - https://docs.python.org/3/library/glob.html
+#. **Local** - On local we support glob pattern - `glob doc <https://docs.python.org/3/library/glob.html>`_
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
        :start-after: [START load_file_example_10]
        :end-before: [END load_file_example_10]
 
-#. **S3** - prefix in file path - https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-prefixes.html
+#. **S3** - prefix in file path - `S3 doc <https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-prefixes.html>`_
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
        :start-after: [START load_file_example_11]
        :end-before: [END load_file_example_11]
 
-#. **GCS** - prefix in file path - https://cloud.google.com/storage/docs/listing-objects
+#. **GCS** - prefix in file path - `GCS doc <https://cloud.google.com/storage/docs/listing-objects>`_
 
     .. literalinclude:: ../../../../example_dags/example_load_file.py
        :language: python
