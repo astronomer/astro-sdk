@@ -478,3 +478,31 @@ def test_get_run_id():
         S3ToBigqueryDataTransfer.get_run_id(config)
         == "62d6a4df-0000-2fad-8752-d4f547e68ef4"
     )
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
+    ],
+    indirect=True,
+    ids=["bigquery"],
+)
+@mock.patch("astro.databases.google.bigquery.pd.DataFrame")
+def test_load_pandas_dataframe_to_table_with_service_account(
+    mock_df, database_table_fixture
+):
+    """Test loading a pandas dataframe to a table with service account authentication."""
+    database, target_table = database_table_fixture
+    # Skip running _get_credentials. We assume we always will get a Credentials object back.
+    database.hook._get_credentials = mock.Mock()
+
+    database.load_pandas_dataframe_to_table(mock_df, target_table)
+
+    _, kwargs = mock_df.to_gbq.call_args
+    # Check that we are using service account authentication i.e. by passing not None.
+    assert kwargs["credentials"] is not None
