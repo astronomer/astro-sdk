@@ -163,7 +163,7 @@ The following are some key functions available in the SDK:
 - `export_file`: export SQL table rows into a destination file
 - `dataframe`: export given SQL table into in-memory Pandas data-frame
 
-For a full list of available operators, see the [SDK reference documentation](https://astro-sdk.readthedocs.io/en/latest/astro/sql/operators/append.html).
+For a full list of available operators, see the [SDK reference documentation](https://astro-sdk-python.readthedocs.io/en/latest/astro/sql/operators/append.html).
 
 ## Documentation
 
@@ -171,7 +171,7 @@ The documentation is a work in progress--we aim to follow the [Diátaxis](https:
 
 - **[Getting Started](docs/getting-started/GETTING_STARTED.md)**: A hands-on introduction to the Astro Python SDK
 - **How-to guides**: Simple step-by-step user guides to accomplish specific tasks
-- **[Reference guide](https://astro-sdk.readthedocs.io/)**: Commands, modules, classes and methods
+- **[Reference guide](https://astro-sdk-python.readthedocs.io/)**: Commands, modules, classes and methods
 - **Explanation**: Clarification and discussion of key decisions when designing the project
 
 ## Changelog
