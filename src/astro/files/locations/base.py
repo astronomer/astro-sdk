@@ -16,7 +16,9 @@ class BaseFileLocation(ABC):
 
     template_fields = ("path", "conn_id")
 
-    def __init__(self, path: str, conn_id: str | None = None, delimiter: str | None = None):
+    def __init__(
+        self, path: str, conn_id: str | None = None, delimiter: str | None = None
+    ):
         """
         Manages and provide interface for the operation for all the supported locations.
 

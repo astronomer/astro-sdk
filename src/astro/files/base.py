@@ -24,7 +24,7 @@ class File:
         conn_id: str | None = None,
         filetype: constants.FileType | None = None,
         normalize_config: dict | None = None,
-        delimiter: str | None = None
+        delimiter: str | None = None,
     ):
         """Init file object which represent a single file in local/object stores
 
@@ -131,7 +131,7 @@ def resolve_file_path_pattern(
     conn_id: str | None = None,
     filetype: constants.FileType | None = None,
     normalize_config: dict | None = None,
-    delimiter: str | None = None
+    delimiter: str | None = None,
 ) -> list[File]:
     """get file objects by resolving path_pattern from local/object stores
     path_pattern can be
