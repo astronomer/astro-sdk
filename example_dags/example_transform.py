@@ -1,4 +1,3 @@
-import pathlib
 from datetime import datetime
 
 import pandas as pd
@@ -10,7 +9,6 @@ from astro.sql.table import Table
 
 START_DATE = datetime(2000, 1, 1)
 LAST_ONE_DF = pd.DataFrame(data={"Title": ["Random movie"], "Rating": [121]})
-CWD = pathlib.Path(__file__).parent
 
 
 # [START transform_example_1]
