@@ -48,13 +48,17 @@ def test_create_database(conn_id):
     ],
     ids=SUPPORTED_CONN_IDS,
 )
-def test_bigquery_sqlalchemy_engine(conn_id, expected_uri):
+@mock.patch(
+    "astro.databases.google.bigquery.BigQueryHook.provide_gcp_credential_file_as_context"
+)
+def test_bigquery_sqlalchemy_engine(mock_credentials, conn_id, expected_uri):
     """Test getting a bigquery based sqla engine."""
     database = BigqueryDatabase(conn_id)
     engine = database.sqlalchemy_engine
     assert isinstance(engine, sqlalchemy.engine.base.Engine)
     url = urlparse(str(engine.url))
     assert url.geturl() == expected_uri
+    mock_credentials.assert_called_once_with()
 
 
 @pytest.mark.integration
