@@ -107,7 +107,7 @@ def transform_file(
     database: Optional[str] = None,
     schema: Optional[str] = None,
     **kwargs: Any,
-) -> "XComArg":
+) -> XComArg:
     """
     :param file_path: File path for the SQL file you would like to parse. Can be an absolute path, or you can use a
         relative path if the `template_searchpath` variable is set in your DAG
