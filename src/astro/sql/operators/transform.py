@@ -103,9 +103,9 @@ def transform(
 def transform_file(
     file_path: str,
     conn_id: str = "",
-    parameters: Optional[Union[Mapping, Iterable]] = None,
-    database: Optional[str] = None,
-    schema: Optional[str] = None,
+    parameters: Mapping | Iterable | None = None,
+    database: str | None = None,
+    schema: str | None = None,
     **kwargs: Any,
 ) -> XComArg:
     """
