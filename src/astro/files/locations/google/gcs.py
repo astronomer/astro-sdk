@@ -29,7 +29,9 @@ class GCSLocation(BaseFileLocation):
         url = urlparse(self.path)
         bucket_name = url.netloc
         prefix = url.path[1:]
-        prefixes = self.hook.list(bucket_name=bucket_name, prefix=prefix)
+        prefixes = self.hook.list(
+            bucket_name=bucket_name, prefix=prefix, delimiter=self.delimiter
+        )
         paths = [
             urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in prefixes
         ]
