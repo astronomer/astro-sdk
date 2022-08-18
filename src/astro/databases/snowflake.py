@@ -511,6 +511,7 @@ class SnowflakeDatabase(BaseDatabase):
             for x in self.hook.run(
                 "SELECT SCHEMA_NAME from information_schema.schemata WHERE LOWER(SCHEMA_NAME) = %(schema_name)s;",
                 parameters={"schema_name": schema.lower()},
+                handler=lambda x: x,
             )
         ]
         return len(created_schemas) == 1
