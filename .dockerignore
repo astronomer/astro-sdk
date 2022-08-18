@@ -9,6 +9,4 @@ __pycache__
 dev
 docs
 example_dags
-mk
-tests
-dev/logs
+
