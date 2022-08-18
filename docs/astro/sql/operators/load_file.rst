@@ -148,7 +148,7 @@ Refer to :ref:`load_file_working` for details on Native Path.
            :end-before: [END load_file_example_8]
 
 
-#. **enable_native_fallback**: When ``use_native_support`` is set to True, ``load_file`` will attempt to use native transfer. If this fails, ``load_file`` will attempt to use the default path to load data and you will see a warning. If you want to change this behavior you can specify ``enable_native_fallback=False``.
+#. **enable_native_fallback**: When ``use_native_support`` is set to ``True``, ``load_file`` will attempt to use native transfer. If this fails, ``load_file`` will attempt to use the default path to load data and you will see a warning. If you want to change this behavior you can specify ``enable_native_fallback=False``.
 
         .. literalinclude:: ../../../../example_dags/example_load_file.py
            :language: python
