@@ -51,32 +51,21 @@ def aggregate_data(df: pd.DataFrame):
 )
 def example_amazon_s3_snowflake_transform():
 
+with dag:
     s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
 
     input_table_1 = Table(
         name="ADOPTION_CENTER_1",
-        metadata=Metadata(
-            database=os.environ["SNOWFLAKE_DATABASE"],
-            schema=os.environ["SNOWFLAKE_SCHEMA"],
-        ),
-        conn_id="snowflake_conn",
-    )
-    input_table_2 = Table(
-        name="ADOPTION_CENTER_2",
-        metadata=Metadata(
-            database=os.environ["SNOWFLAKE_DATABASE"],
-            schema=os.environ["SNOWFLAKE_SCHEMA"],
-        ),
         conn_id="snowflake_conn",
     )
 
     temp_table_1 = aql.load_file(
-        input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_1_unquoted.csv"),
-        output_table=input_table_1,
+        input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_1_unquoted.csv", conn_id="my_s3_conn_id"),
+        output_table= Table(conn_id="snowflake_conn"),
     )
     temp_table_2 = aql.load_file(
-        input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_2_unquoted.csv"),
-        output_table=input_table_2,
+        input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_2_unquoted.csv", conn_id="my_s3_conn_id"),
+        output_table= Table(conn_id="snowflake_conn"),
     )
 
     combined_data = combine_data(
