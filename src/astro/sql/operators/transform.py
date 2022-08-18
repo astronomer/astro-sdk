@@ -109,6 +109,9 @@ def transform_file(
     **kwargs: Any,
 ) -> XComArg:
     """
+    This function returns a ``Table`` object that can be passed to future tasks from specified SQL file.
+    Tables can be inserted via the parameters kwarg.
+
     :param file_path: File path for the SQL file you would like to parse. Can be an absolute path, or you can use a
         relative path if the `template_searchpath` variable is set in your DAG
     :param conn_id: Connection ID for the database you want to connect to. If you do not pass in a value for this object
