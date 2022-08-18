@@ -21,9 +21,6 @@ The SDK abstracts the boilerplate code required for communication between datase
 
 It is powered by [Apache Airflow](https://airflow.apache.org) and maintained by [Astronomer](https://astronomer.io).
 
-> :warning: **Disclaimer** This project is in a **preview** release state. In other words, it is not production-ready yet.
-The interfaces may change. We welcome users to try out the interfaces and provide us with feedback.
-
 ## Prerequisites
 
 - Apache Airflow >= 2.1.0.
