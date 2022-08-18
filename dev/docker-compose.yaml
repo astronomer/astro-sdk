@@ -11,7 +11,7 @@ x-airflow-common:
     DB_BACKEND: postgres
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     AIRFLOW__CORE__ENABLE_XCOM_PICKLING: "True"
-    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/airflow
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres:5432/airflow
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
     AIRFLOW__CORE__FERNET_KEY: ''
