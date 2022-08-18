@@ -186,7 +186,7 @@ def test_transform_with_templated_table_name(database_table_fixture, sample_dag)
 )
 def test_transform_with_file(database_table_fixture, sample_dag):
     """Test table creation via select statement in a SQL file"""
-    import pathlib
+    import pathlib  # skipcq: PYL-W0404
 
     CWD = pathlib.Path(__file__).parent
     database, imdb_table = database_table_fixture
