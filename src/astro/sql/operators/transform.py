@@ -1,7 +1,4 @@
-from __future__ import annotations
-
-from collections.abc import Iterable, Mapping
-from typing import Any, Callable
+from typing import Any, Callable, Dict, Iterable, Mapping, Optional, Union
 
 try:
     from airflow.decorators.base import TaskDecorator, task_decorator_factory
@@ -18,7 +15,7 @@ class TransformOperator(BaseSQLDecoratedOperator):
     the result into a SQL table.
     """
 
-    def execute(self, context: dict):
+    def execute(self, context: Dict):
         super().execute(context)
 
         self.database_impl.create_schema_if_needed(self.output_table.metadata.schema)
@@ -32,11 +29,11 @@ class TransformOperator(BaseSQLDecoratedOperator):
 
 
 def transform(
-    python_callable: Callable | None = None,
+    python_callable: Optional[Callable] = None,
     conn_id: str = "",
-    parameters: Mapping | Iterable | None = None,
-    database: str | None = None,
-    schema: str | None = None,
+    parameters: Optional[Union[Mapping, Iterable]] = None,
+    database: Optional[str] = None,
+    schema: Optional[str] = None,
     **kwargs: Any,
 ) -> TaskDecorator:
     """

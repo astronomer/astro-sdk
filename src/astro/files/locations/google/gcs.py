@@ -1,5 +1,4 @@
-from __future__ import annotations
-
+from typing import Dict, List
 from urllib.parse import urlparse, urlunparse
 
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
@@ -18,13 +17,13 @@ class GCSLocation(BaseFileLocation):
         return GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else GCSHook()
 
     @property
-    def transport_params(self) -> dict:
+    def transport_params(self) -> Dict:
         """get GCS credentials for storage"""
         client = self.hook.get_conn()
         return {"client": client}
 
     @property
-    def paths(self) -> list[str]:
+    def paths(self) -> List[str]:
         """Resolve GS file paths with prefix"""
         url = urlparse(self.path)
         bucket_name = url.netloc

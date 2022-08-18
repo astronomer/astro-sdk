@@ -1,12 +1,10 @@
 """Snowflake database implementation."""
-from __future__ import annotations
-
 import logging
 import os
 import random
 import string
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -222,7 +220,7 @@ class SnowflakeDatabase(BaseDatabase):
 
     @staticmethod
     def _create_stage_auth_sub_statement(
-        file: File, storage_integration: str | None = None
+        file: File, storage_integration: Optional[str] = None
     ) -> str:
         """
         Create authentication-related line for the Snowflake CREATE STAGE.
@@ -257,8 +255,8 @@ class SnowflakeDatabase(BaseDatabase):
     def create_stage(
         self,
         file: File,
-        storage_integration: str | None = None,
-        metadata: Metadata | None = None,
+        storage_integration: Optional[str] = None,
+        metadata: Optional[Metadata] = None,
     ) -> SnowflakeStage:
         """
         Creates a new named external stage to use for loading data from files into Snowflake
@@ -336,8 +334,8 @@ class SnowflakeDatabase(BaseDatabase):
     def create_table_using_schema_autodetection(
         self,
         table: Table,
-        file: File | None = None,
-        dataframe: pd.DataFrame | None = None,
+        file: Optional[File] = None,
+        dataframe: Optional[pd.DataFrame] = None,
         columns_names_capitalization: ColumnCapitalization = "lower",
     ) -> None:
         """
@@ -385,7 +383,7 @@ class SnowflakeDatabase(BaseDatabase):
         source_file: File,
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
-        native_support_kwargs: dict | None = None,
+        native_support_kwargs: Optional[Dict] = None,
         **kwargs,
     ):
         """
@@ -460,7 +458,7 @@ class SnowflakeDatabase(BaseDatabase):
 
     def get_sqlalchemy_template_table_identifier_and_parameter(
         self, table: Table, jinja_table_identifier: str
-    ) -> tuple[str, str]:
+    ) -> Tuple[str, str]:
         """
         During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
         convert a Jinja table identifier to a safe SQLAlchemy-compatible table identifier.
@@ -519,8 +517,8 @@ class SnowflakeDatabase(BaseDatabase):
         self,
         source_table: Table,
         target_table: Table,
-        source_to_target_columns_map: dict[str, str],
-        target_conflict_columns: list[str],
+        source_to_target_columns_map: Dict[str, str],
+        target_conflict_columns: List[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """
@@ -546,8 +544,8 @@ class SnowflakeDatabase(BaseDatabase):
         self,
         source_table: Table,
         target_table: Table,
-        source_to_target_columns_map: dict[str, str],
-        target_conflict_columns: list[str],
+        source_to_target_columns_map: Dict[str, str],
+        target_conflict_columns: List[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ):
         """Build the SQL statement for Merge operation"""

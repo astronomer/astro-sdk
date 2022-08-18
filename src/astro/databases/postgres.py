@@ -1,8 +1,7 @@
 """Postgres database implementation."""
-from __future__ import annotations
-
 import io
 from contextlib import closing
+from typing import Dict, List
 
 import pandas as pd
 import sqlalchemy
@@ -24,8 +23,8 @@ class PostgresDatabase(BaseDatabase):
     """
 
     DEFAULT_SCHEMA = POSTGRES_SCHEMA
-    illegal_column_name_chars: list[str] = ["."]
-    illegal_column_name_chars_replacement: list[str] = ["_"]
+    illegal_column_name_chars: List[str] = ["."]
+    illegal_column_name_chars_replacement: List[str] = ["_"]
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
         super().__init__(conn_id)
@@ -138,8 +137,8 @@ class PostgresDatabase(BaseDatabase):
         self,
         source_table: Table,
         target_table: Table,
-        source_to_target_columns_map: dict[str, str],
-        target_conflict_columns: list[str],
+        source_to_target_columns_map: Dict[str, str],
+        target_conflict_columns: List[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """

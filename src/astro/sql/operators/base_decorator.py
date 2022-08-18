@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 import inspect
-from typing import Any
+from typing import Any, Dict, Optional, Tuple, Union
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
@@ -21,16 +19,16 @@ class BaseSQLDecoratedOperator(DecoratedOperator):
 
     def __init__(
         self,
-        conn_id: str | None = None,
-        parameters: dict | None = None,
-        handler: Function | None = None,
-        database: str | None = None,
-        schema: str | None = None,
+        conn_id: Optional[str] = None,
+        parameters: Optional[dict] = None,
+        handler: Optional[Function] = None,
+        database: Optional[str] = None,
+        schema: Optional[str] = None,
         sql: str = "",
         **kwargs: Any,
     ):
         self.kwargs = kwargs or {}
-        self.op_kwargs: dict = self.kwargs.get("op_kwargs") or {}
+        self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
         self.output_table: Table = self.op_kwargs.pop("output_table", Table())
         self.handler = self.op_kwargs.pop("handler", handler)
         self.conn_id = self.op_kwargs.pop("conn_id", conn_id)
@@ -38,12 +36,12 @@ class BaseSQLDecoratedOperator(DecoratedOperator):
         self.parameters = parameters or {}
         self.database = self.op_kwargs.pop("database", database)
         self.schema = self.op_kwargs.pop("schema", schema)
-        self.op_args: dict[str, Table | pd.DataFrame] = {}
+        self.op_args: Dict[str, Union[Table, pd.DataFrame]] = {}
         super().__init__(
             **kwargs,
         )
 
-    def execute(self, context: dict) -> None:
+    def execute(self, context: Dict) -> None:
         first_table = find_first_table(
             op_args=self.op_args,  # type: ignore
             op_kwargs=self.op_kwargs,
@@ -114,7 +112,7 @@ class BaseSQLDecoratedOperator(DecoratedOperator):
             with open(self.sql) as file:
                 self.sql = file.read().replace("\n", " ")
 
-    def move_function_params_into_sql_params(self, context: dict) -> None:
+    def move_function_params_into_sql_params(self, context: Dict) -> None:
         """
         Pulls values from the function op_args and op_kwargs and places them into
         parameters for SQLAlchemy to parse
@@ -132,7 +130,7 @@ class BaseSQLDecoratedOperator(DecoratedOperator):
                 k: self.render_template(v, context) for k, v in self.parameters.items()  # type: ignore
             }
 
-    def translate_jinja_to_sqlalchemy_template(self, context: dict) -> None:
+    def translate_jinja_to_sqlalchemy_template(self, context: Dict) -> None:
         """
         This function handles all jinja templating to ensure that the SQL statement is ready for
         processing by SQLAlchemy. We use the database object here as different databases will have
@@ -170,8 +168,8 @@ class BaseSQLDecoratedOperator(DecoratedOperator):
 
 
 def load_op_arg_dataframes_into_sql(
-    conn_id: str, op_args: tuple, target_table: Table
-) -> tuple:
+    conn_id: str, op_args: Tuple, target_table: Table
+) -> Tuple:
     """
     Identify dataframes in op_args and load them to the table.
 
@@ -197,8 +195,8 @@ def load_op_arg_dataframes_into_sql(
 
 
 def load_op_kwarg_dataframes_into_sql(
-    conn_id: str, op_kwargs: dict, target_table: Table
-) -> dict:
+    conn_id: str, op_kwargs: Dict, target_table: Table
+) -> Dict:
     """
     Identify dataframes in op_kwargs and load them to a table.
 

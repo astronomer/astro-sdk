@@ -1,8 +1,6 @@
-from __future__ import annotations
-
 import time
 from datetime import timedelta
-from typing import Any
+from typing import Any, List, Optional
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.exceptions import AirflowException
@@ -19,7 +17,7 @@ from astro.sql.operators.load_file import LoadFileOperator
 from astro.sql.table import Table
 
 
-def filter_for_temp_tables(task_outputs: list[Any]) -> list[Table]:
+def filter_for_temp_tables(task_outputs: List[Any]) -> List[Table]:
     return [t for t in task_outputs if isinstance(t, Table) and t.temp]
 
 
@@ -52,7 +50,7 @@ class CleanupOperator(BaseOperator):
     def __init__(
         self,
         *,
-        tables_to_cleanup: list[Table] | None = None,
+        tables_to_cleanup: Optional[List[Table]] = None,
         task_id: str = "",
         retries: int = 3,
         retry_delay: timedelta = timedelta(seconds=10),
@@ -87,7 +85,7 @@ class CleanupOperator(BaseOperator):
         self.log.info("Dropping table %s", table.name)
         db.drop_table(table)
 
-    def _is_dag_running(self, task_instances: list[TaskInstance]) -> bool:
+    def _is_dag_running(self, task_instances: List[TaskInstance]) -> bool:
         """
         Given a list of task instances, determine whether the DAG (minus the current cleanup task) is still
         running.
@@ -164,7 +162,7 @@ class CleanupOperator(BaseOperator):
         return executor in ["SequentialExecutor", "DebugExecutor"]
 
     @staticmethod
-    def _get_executor_from_job_id(job_id: int) -> str | None:
+    def _get_executor_from_job_id(job_id: int) -> Optional[str]:
         from airflow.jobs.base_job import BaseJob
         from airflow.utils.session import create_session
 
@@ -172,7 +170,7 @@ class CleanupOperator(BaseOperator):
             job = session.get(BaseJob, job_id)
         return job.executor_class if job else None
 
-    def get_all_task_outputs(self, context: Context) -> list[Table]:
+    def get_all_task_outputs(self, context: Context) -> List[Table]:
         """
         In the scenario where we are not given a list of tasks to follow, we will want to gather all temporary tables
         To prevent scenarios where we grab objects that are not tables, we try to only follow up on SQL operators or
@@ -186,8 +184,8 @@ class CleanupOperator(BaseOperator):
         return task_outputs
 
     def resolve_tables_from_tasks(
-        self, tasks: list[BaseOperator], context: Context
-    ) -> list[Table]:
+        self, tasks: List[BaseOperator], context: Context
+    ) -> List[Table]:
         """
         For the moment, these are the only two classes that create temporary tables.
         This function allows us to only resolve xcom for those objects
@@ -217,7 +215,9 @@ class CleanupOperator(BaseOperator):
         return res
 
 
-def cleanup(tables_to_cleanup: list[Table] | None = None, **kwargs) -> CleanupOperator:
+def cleanup(
+    tables_to_cleanup: Optional[List[Table]] = None, **kwargs
+) -> CleanupOperator:
     """
     Clean up temporary tables once either the DAG or upstream tasks are done
 

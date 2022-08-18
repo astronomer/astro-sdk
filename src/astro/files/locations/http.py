@@ -1,4 +1,4 @@
-from __future__ import annotations
+from typing import List
 
 from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
@@ -10,7 +10,7 @@ class HTTPLocation(BaseFileLocation):
     location_type = FileLocation.HTTP
 
     @property
-    def paths(self) -> list[str]:
+    def paths(self) -> List[str]:
         """Resolve patterns in path"""
         return [self.path]
 

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import io
 
 import pandas as pd
@@ -16,7 +14,7 @@ class JSONFileType(FileType):
         self,
         stream: io.TextIOWrapper,
         columns_names_capitalization="original",
-        **kwargs,
+        **kwargs
     ) -> pd.DataFrame:
         """read json file from one of the supported locations and return dataframe
 

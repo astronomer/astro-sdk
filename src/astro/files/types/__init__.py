@@ -1,6 +1,5 @@
-from __future__ import annotations
-
 import pathlib
+from typing import Dict, Optional, Type, Union
 
 from astro.constants import FileType as FileTypeConstants
 from astro.files.types.base import FileType
@@ -12,11 +11,11 @@ from astro.files.types.parquet import ParquetFileType
 
 def create_file_type(
     path: str,
-    filetype: FileTypeConstants | None = None,
-    normalize_config: dict | None = None,
+    filetype: Union[FileTypeConstants, None] = None,
+    normalize_config: Optional[dict] = None,
 ) -> FileType:
     """Factory method to create FileType super objects based on the file extension in path or filetype specified."""
-    filetype_to_class: dict[FileTypeConstants, type[FileType]] = {
+    filetype_to_class: Dict[FileTypeConstants, Type[FileType]] = {
         FileTypeConstants.CSV: CSVFileType,
         FileTypeConstants.JSON: JSONFileType,
         FileTypeConstants.NDJSON: NDJSONFileType,
@@ -33,7 +32,7 @@ def create_file_type(
         )
 
 
-def get_filetype(filepath: str | pathlib.PosixPath) -> FileTypeConstants:
+def get_filetype(filepath: Union[str, pathlib.PosixPath]) -> FileTypeConstants:
     """
     Return a FileType given the filepath. Uses a naive strategy, using the file extension.
 

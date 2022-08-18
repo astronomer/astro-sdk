@@ -1,14 +1,16 @@
-from __future__ import annotations
-
-from typing import Any
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.baseoperator import BaseOperator
-from airflow.models.xcom_arg import XComArg
 
 from astro.constants import MergeConflictStrategy
 from astro.databases import create_database
 from astro.sql.table import Table
+
+if TYPE_CHECKING:
+    from airflow.models.xcom_arg import XComArg
+
+MERGE_COLUMN_TYPE = Union[List[str], Tuple[str], Dict[str, str]]
 
 
 class MergeOperator(BaseOperator):
@@ -32,9 +34,9 @@ class MergeOperator(BaseOperator):
         *,
         target_table: Table,
         source_table: Table,
-        columns: list[str] | tuple[str] | dict[str, str],
+        columns: MERGE_COLUMN_TYPE,
         if_conflicts: MergeConflictStrategy,
-        target_conflict_columns: list[str],
+        target_conflict_columns: List[str],
         task_id: str = "",
         **kwargs: Any,
     ):
@@ -72,11 +74,11 @@ def merge(
     *,
     target_table: Table,
     source_table: Table,
-    columns: list[str] | tuple[str] | dict[str, str],
-    target_conflict_columns: list[str],
+    columns: MERGE_COLUMN_TYPE,
+    target_conflict_columns: List[str],
     if_conflicts: MergeConflictStrategy,
     **kwargs: Any,
-) -> XComArg:
+) -> "XComArg":
     """
     Merge the source table rows into a destination table.
 

@@ -1,13 +1,13 @@
-from __future__ import annotations
-
-from typing import Any
+from typing import TYPE_CHECKING, Any, Dict
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models import BaseOperator
-from airflow.models.xcom_arg import XComArg
 
 from astro.databases import create_database
 from astro.sql.table import Table
+
+if TYPE_CHECKING:
+    from airflow.models.xcom_arg import XComArg
 
 
 class DropTableOperator(BaseOperator):
@@ -28,7 +28,7 @@ class DropTableOperator(BaseOperator):
             **kwargs,
         )
 
-    def execute(self, context: dict) -> Table:  # skipcq: PYL-W0613
+    def execute(self, context: Dict) -> Table:  # skipcq: PYL-W0613
         """Method run when the Airflow runner calls the operator."""
         database = create_database(self.table.conn_id)
         self.table = database.populate_table_metadata(self.table)
@@ -39,7 +39,7 @@ class DropTableOperator(BaseOperator):
 def drop_table(
     table: Table,
     **kwargs: Any,
-) -> XComArg:
+) -> "XComArg":
     """
     Drops a table.
 
