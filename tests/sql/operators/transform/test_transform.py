@@ -166,3 +166,44 @@ def test_transform_with_templated_table_name(database_table_fixture, sample_dag)
     expected_target_table.name = "test_is_True"
     database.drop_table(expected_target_table)
     assert not database.table_exists(expected_target_table)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SQLITE,
+            "file": File(
+                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv"
+            ),
+            "table": Table(name="imdb", conn_id="sqlite_default"),
+        }
+    ],
+    indirect=True,
+    ids=["sqlite"],
+)
+def test_transform_with_file(database_table_fixture, sample_dag):
+    """Test table creation via select statement in a SQL file"""
+    import pathlib  # skipcq: PYL-W0404
+
+    CWD = pathlib.Path(__file__).parent
+    database, imdb_table = database_table_fixture
+
+    @aql.dataframe
+    def validate(df: pd.DataFrame):
+        assert df.columns.tolist() == ["title", "rating"]
+
+    with sample_dag:
+        target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="sqlite_default")
+        table_from_query = aql.transform_file(
+            file_path=str(pathlib.Path(CWD).parents[0]) + "/transform/test.sql",
+            parameters={"input_table": imdb_table, "output_table": target_table},
+        )
+        validate(table_from_query)
+    test_utils.run_dag(sample_dag)
+
+    expected_target_table = target_table.create_similar_table()
+    expected_target_table.name = "test_is_True"
+    database.drop_table(expected_target_table)
+    assert not database.table_exists(expected_target_table)
