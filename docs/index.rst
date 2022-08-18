@@ -15,19 +15,21 @@ Welcome to astro-sdk-python's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Developing Astro SDK
-   :glob:
+   :caption: Guides
+   :titlesonly:
 
-   development/*
-
-   Astro Enhancement Proposals <aep/index>
+   concepts.rst
+   operators.rst
 
 .. toctree::
    :maxdepth: 1
-   :caption: API Reference
+   :caption: Reference
    :glob:
 
    autoapi/*
+   configurations.rst
+   supported_databases.rst
+   supported_file.rst
 
 .. toctree::
    :maxdepth: 1
@@ -53,12 +55,13 @@ Welcome to astro-sdk-python's documentation!
 .. toctree::
    :maxdepth: 1
    :caption: Reference
+   :maxdepth: 2
+   :caption: Developing Astro SDK
    :glob:
 
-   configurations.rst
-   supported_databases.rst
-   supported_file.rst
+   development/*
 
+   Astro Enhancement Proposals <aep/index>
 
 Indices and Tables
 ==================

@@ -72,7 +72,7 @@ This is a faster way for datasets of larger size as there is only one network ca
 .. _templating:
 
 Templating
-~~~~~~~~~~
+----------
 Templating is a powerful concept in Airflow to pass dynamic information into task instances at runtime. Templating in Airflow works exactly the same as templating with Jinja in Python: define your to-be-evaluated code between double curly braces, and the expression will be evaluated at runtime.
 
 The parameter list passed to the decorated function is also added to the context which is used to render template. For example:
