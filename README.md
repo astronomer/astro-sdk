@@ -149,16 +149,16 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
 The following are some key functions available in the SDK:
 
-- `load_file`: load a given file into a SQL table
-- `transform`: applies a SQL select statement to a source table and saves the result to a destination table
+- `load_file`: Load a given file into a SQL table
+- `transform`: Applies a SQL select statement to a source table and saves the result to a destination table
 - `drop_table`: Drops a SQL table
-- `run_raw_sql`: run any SQL statement without handling its output
-- `append`: insert rows from the source SQL table into the destination SQL table, if there are no conflicts
-- `merge`: insert rows from the source SQL table into the destination SQL table, depending on conflicts:
-  - ignore: do not add rows that already exist
-  - update: replace existing rows with new ones
-- `export_file`: export SQL table rows into a destination file
-- `dataframe`: export given SQL table into in-memory Pandas data-frame
+- `run_raw_sql`: Run any SQL statement without handling its output
+- `append`: Insert rows from the source SQL table into the destination SQL table, if there are no conflicts
+- `merge`: Insert rows from the source SQL table into the destination SQL table, depending on conflicts:
+  - `ignore`: Do not add rows that already exist
+  - `update`: Replace existing rows with new ones.
+- `export_file`: Export SQL table rows into a destination file.
+- `dataframe`: Export given SQL table into in-memory Pandas data-frame.
 
 For a full list of available operators, see the [SDK reference documentation](https://astro-sdk-python.readthedocs.io/en/stable/operators.html).
 
