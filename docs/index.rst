@@ -39,22 +39,6 @@ Welcome to astro-sdk-python's documentation!
    CHANGELOG.md
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Operators
-   :glob:
-
-   astro/sql/operators/*
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Concepts
-   :glob:
-
-   concepts.rst
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Reference
    :maxdepth: 2
    :caption: Developing Astro SDK
    :glob:
