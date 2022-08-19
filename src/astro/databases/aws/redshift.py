@@ -4,9 +4,10 @@ from typing import Dict, List, Tuple
 import pandas as pd
 import sqlalchemy
 from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
+from psycopg2 import sql as redshift_sql
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
-from psycopg2 import sql as redshift_sql
+
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.files import File
@@ -108,12 +109,12 @@ class RedshiftDatabase(BaseDatabase):
         )
 
     def merge_table(
-            self,
-            source_table: Table,
-            target_table: Table,
-            source_to_target_columns_map: Dict[str, str],
-            target_conflict_columns: List[str],
-            if_conflicts: MergeConflictStrategy = "exception",
+        self,
+        source_table: Table,
+        target_table: Table,
+        source_to_target_columns_map: Dict[str, str],
+        target_conflict_columns: List[str],
+        if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """
         Merge the source table rows into a destination table.
