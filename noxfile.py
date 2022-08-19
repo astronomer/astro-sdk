@@ -97,13 +97,7 @@ def build(session: nox.Session) -> None:
 @nox.session(python="3.9")
 def build_docs(session: nox.Session) -> None:
     """Build release artifacts."""
-    session.install("sphinx")
-    session.install("sphinx-view")
-    session.install("sphinx-autoapi")
-    session.install("sphinx-rtd-theme")
-    session.install("myst-parser")
-    # session.install("-e", ".[google]")
-
+    session.install("-e", ".[doc]")
     session.chdir("./docs")
     session.run("make", "html")
 
