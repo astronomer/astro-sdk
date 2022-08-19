@@ -4,7 +4,10 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "astro-sdk-python"
-dynamic = ["version", "description"]
+dynamic = ["version"]
+description = """
+Astro SDK allows rapid and clean development of {Extract, Load, Transform} workflows using Python and SQL, powered by Apache Airflow.
+"""
 
 authors = [
     {name = "Astronomer", email = "humans@astronomer.io"},
