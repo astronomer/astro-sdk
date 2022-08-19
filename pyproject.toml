@@ -26,12 +26,13 @@ keywords = ["airflow", "provider", "astronomer", "sql", "decorator", "task flow"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "License :: OSI Approved :: Apache Software License",
+    "Topic :: Database",
+    "Framework :: Apache Airflow",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
-    "Topic :: Database",
 ]
 
 [project.optional-dependencies]
