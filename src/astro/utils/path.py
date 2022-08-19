@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import pathlib
-from typing import Any, Dict
+from typing import Any
 
 
 def get_module_dot_notation(module_path: pathlib.Path) -> str:
@@ -18,7 +20,7 @@ def get_module_dot_notation(module_path: pathlib.Path) -> str:
 
 def get_dict_with_module_names_to_dot_notations(
     base_path: pathlib.Path,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """
     Given a directory, recursively identify which modules exist within it
     (ignoring __init__.py & base.py) and create a dictionary which has module names

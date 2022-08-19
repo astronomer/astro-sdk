@@ -24,7 +24,7 @@ dependencies = [
 
 keywords = ["airflow", "provider", "astronomer", "sql", "decorator", "task flow", "elt", "etl", "dag"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
@@ -76,12 +76,16 @@ all = [
     "s3fs"
 ]
 doc = [
+    "myst-parser",
     "sphinx>=4.4.0",
-    "sphinx-autoapi"
+    "sphinx-autoapi",
+    "sphinx-rtd-theme"
 ]
 
 [project.urls]
 Home = "https://astronomer.io/"
+Source = "https://github.com/astronomer/astro-sdk/"
+Documentation = "https://astro-sdk-python.rtfd.io/"
 
 [project.entry-points.apache_airflow_provider]
 provider_info = "astro.__init__:get_provider_info"

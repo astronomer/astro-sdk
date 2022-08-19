@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import logging
 from abc import ABC
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any
 
 import pandas as pd
 import sqlalchemy
@@ -18,19 +20,10 @@ from astro.constants import (
     LoadExistStrategy,
     MergeConflictStrategy,
 )
-from astro.exceptions import NonExistentTableException
+from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File, resolve_file_path_pattern
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.sql.table import Metadata, Table
-
-
-class DatabaseCustomError(ValueError, AttributeError):
-    """
-    Inappropriate argument value (of correct type) or attribute
-    not found while running query. while running query
-    """
-
-    pass
 
 
 class BaseDatabase(ABC):
@@ -55,8 +48,8 @@ class BaseDatabase(ABC):
     #   the col names generated is 'a.b'. char '.' maybe an illegal char in some db's col name.
     # Contains the illegal char and there replacement, where the value in
     # illegal_column_name_chars[0] will be replaced by value in illegal_column_name_chars_replacement[0]
-    illegal_column_name_chars: List[str] = []
-    illegal_column_name_chars_replacement: List[str] = []
+    illegal_column_name_chars: list[str] = []
+    illegal_column_name_chars_replacement: list[str] = []
     NATIVE_LOAD_EXCEPTIONS: Any = DatabaseCustomError
     DEFAULT_SCHEMA = SCHEMA
 
@@ -87,8 +80,8 @@ class BaseDatabase(ABC):
 
     def run_sql(
         self,
-        sql_statement: Union[str, ClauseElement],
-        parameters: Optional[dict] = None,
+        sql_statement: str | ClauseElement,
+        parameters: dict | None = None,
     ):
         """
         Return the results to running a SQL statement.
@@ -122,7 +115,7 @@ class BaseDatabase(ABC):
     # Table metadata
     # ---------------------------------------------------------
     @staticmethod
-    def get_merge_initialization_query(parameters: Tuple) -> str:
+    def get_merge_initialization_query(parameters: tuple) -> str:
         """
         Handles database-specific logic to handle constraints, keeping
         it agnostic to database.
@@ -192,8 +185,8 @@ class BaseDatabase(ABC):
     def create_table_using_schema_autodetection(
         self,
         table: Table,
-        file: Optional[File] = None,
-        dataframe: Optional[pd.DataFrame] = None,
+        file: File | None = None,
+        dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "lower",  # skipcq
     ) -> None:
         """
@@ -228,8 +221,8 @@ class BaseDatabase(ABC):
     def create_table(
         self,
         table: Table,
-        file: Optional[File] = None,
-        dataframe: Optional[pd.DataFrame] = None,
+        file: File | None = None,
+        dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
     ) -> None:
         """
@@ -253,7 +246,7 @@ class BaseDatabase(ABC):
         self,
         statement: str,
         target_table: Table,
-        parameters: Optional[dict] = None,
+        parameters: dict | None = None,
     ) -> None:
         """
         Export the result rows of a query statement into another table.
@@ -286,13 +279,13 @@ class BaseDatabase(ABC):
         self,
         input_file: File,
         output_table: Table,
-        normalize_config: Optional[Dict] = None,
+        normalize_config: dict | None = None,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         use_native_support: bool = True,
-        native_support_kwargs: Optional[Dict] = None,
+        native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
-        enable_native_fallback: Optional[bool] = True,
+        enable_native_fallback: bool | None = True,
         **kwargs,
     ):
         """
@@ -354,8 +347,8 @@ class BaseDatabase(ABC):
         source_file: File,
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
-        native_support_kwargs: Optional[Dict] = None,
-        enable_native_fallback: Optional[bool] = True,
+        native_support_kwargs: dict | None = None,
+        enable_native_fallback: bool | None = True,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         **kwargs,
     ):
@@ -420,7 +413,7 @@ class BaseDatabase(ABC):
         self,
         source_table: Table,
         target_table: Table,
-        source_to_target_columns_map: Dict[str, str],
+        source_to_target_columns_map: dict[str, str],
     ) -> None:
         """
         Append the source table rows into a destination table.
@@ -433,8 +426,8 @@ class BaseDatabase(ABC):
         target_table_sqla = self.get_sqla_table(target_table)
         source_table_sqla = self.get_sqla_table(source_table)
 
-        target_columns: List[ColumnClause]
-        source_columns: List[ColumnClause]
+        target_columns: list[ColumnClause]
+        source_columns: list[ColumnClause]
 
         if not source_to_target_columns_map:
             target_columns = [column(col) for col in target_table_sqla.c.keys()]
@@ -457,8 +450,8 @@ class BaseDatabase(ABC):
         self,
         source_table: Table,
         target_table: Table,
-        source_to_target_columns_map: Dict[str, str],
-        target_conflict_columns: List[str],
+        source_to_target_columns_map: dict[str, str],
+        target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """
@@ -529,7 +522,7 @@ class BaseDatabase(ABC):
     # Schema Management
     # ---------------------------------------------------------
 
-    def create_schema_if_needed(self, schema: Optional[str]) -> None:
+    def create_schema_if_needed(self, schema: str | None) -> None:
         """
         This function checks if the expected schema exists in the database. If the schema does not exist,
         it will attempt to create it.
@@ -556,7 +549,7 @@ class BaseDatabase(ABC):
 
     def get_sqlalchemy_template_table_identifier_and_parameter(
         self, table: Table, jinja_table_identifier: str
-    ) -> Tuple[str, str]:
+    ) -> tuple[str, str]:
         """
         During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
         convert a Jinja table identifier to a safe SQLAlchemy-compatible table identifier.
@@ -599,7 +592,7 @@ class BaseDatabase(ABC):
         source_file: File,
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
-        native_support_kwargs: Optional[Dict] = None,
+        native_support_kwargs: dict | None = None,
         **kwargs,
     ):
         """
