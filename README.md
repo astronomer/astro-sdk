@@ -156,9 +156,9 @@ The following are some key functions available in the SDK:
 - `append`: Insert rows from the source SQL table into the destination SQL table, if there are no conflicts
 - `merge`: Insert rows from the source SQL table into the destination SQL table, depending on conflicts:
   - `ignore`: Do not add rows that already exist
-  - `update`: Replace existing rows with new ones.
-- `export_file`: Export SQL table rows into a destination file.
-- `dataframe`: Export given SQL table into in-memory Pandas data-frame.
+  - `update`: Replace existing rows with new ones
+- `export_file`: Export SQL table rows into a destination file
+- `dataframe`: Export given SQL table into in-memory Pandas data-frame
 
 For a full list of available operators, see the [SDK reference documentation](https://astro-sdk-python.readthedocs.io/en/stable/operators.html).
 
