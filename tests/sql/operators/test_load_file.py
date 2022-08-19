@@ -901,16 +901,34 @@ def test_aql_load_file_optimized_path_method_is_not_called(
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    "database_table_fixture",
+    "database_table_fixture,native_support_kwargs",
     [
-        {
-            "database": Database.BIGQUERY,
-        }
+        (
+            {
+                "database": Database.BIGQUERY,
+            },
+            {
+                "ignore_unknown_values": True,
+                "allow_jagged_rows": True,
+                "skip_leading_rows": "1",
+            },
+        ),
+        (
+            {
+                "database": Database.REDSHIFT,
+            },
+            {
+                "IGNOREHEADER": 1,
+                "REGION": "us-west-2",
+            },
+        ),
     ],
-    indirect=True,
-    ids=["Bigquery"],
+    indirect=["database_table_fixture"],
+    ids=["Bigquery", "Redshift"],
 )
-def test_aql_load_file_s3_native_path(sample_dag, database_table_fixture):
+def test_aql_load_file_s3_native_path(
+    sample_dag, database_table_fixture, native_support_kwargs
+):
     """
     Verify that the optimised path method is skipped in case use_native_support is set to False.
     """
@@ -923,11 +941,7 @@ def test_aql_load_file_s3_native_path(sample_dag, database_table_fixture):
         input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
         output_table=test_table,
         use_native_support=True,
-        native_support_kwargs={
-            "ignore_unknown_values": True,
-            "allow_jagged_rows": True,
-            "skip_leading_rows": "1",
-        },
+        native_support_kwargs=native_support_kwargs,
     ).operator.execute({})
 
     df = db.export_table_to_pandas_dataframe(test_table)

@@ -128,4 +128,15 @@ with dag:
         ),
     )
     # [END load_file_example_10]
+
+    aql.load_file(
+        input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
+        output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
+        use_native_support=True,
+        native_support_kwargs={
+            "IGNOREHEADER": 1,
+            "REGION": "us-west-2",
+        },
+    )
+
     aql.cleanup()
