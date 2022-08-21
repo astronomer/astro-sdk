@@ -68,7 +68,7 @@ For Machine types: n2-standard-4
 | imdb/title_ratings_10mb.csv                                              | 10MB | 19.40  |
 | stackoverflow/stackoverflow_posts_1g.ndjson                              | 1GB  | 30.26  |
 | trimmed/pypi/*                                                           | 5GB  | 59.90  |
-| gs://astro-sdk/benchmark/trimmed/stackoverflow/10gb/ - 10 Files 1gb each | 10GB |11.88min|
+| gs://astro-sdk/benchmark/trimmed/stackoverflow/10gb/ - 10 Files 1gb each | 10GB |1.94min|
 
 
 
