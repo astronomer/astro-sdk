@@ -84,9 +84,9 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
         imdb_src = File("https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv")
         imdb_movies = Table(name="imdb_movies", conn_id="sqlite_default")
         imdb_movies = aql.load_file(imdb_src, imdb_movies)
-        
+
         top_animations = Table(name="top_animation")
-        top_animations = top_five_animations(input_table=imdb_movies, output_table=top_animations)        
+        top_animations = top_five_animations(input_table=imdb_movies, output_table=top_animations)
     ```
 
 4. Run the example DAG:
