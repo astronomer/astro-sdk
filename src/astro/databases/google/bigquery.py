@@ -414,7 +414,12 @@ class S3ToBigqueryDataTransfer:
         aws = source_file.location.hook.get_credentials()
         self.s3_access_key = aws.access_key
         self.s3_secret_key = aws.secret_key
-        self.s3_file_type = NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
+        file_types_to_bigquery_format = {
+            FileType.CSV: "CSV",
+            FileType.NDJSON: "JSON",
+            FileType.PARQUET: "PARQUET",
+        }
+        self.s3_file_type = file_types_to_bigquery_format.get(source_file.type.name)
 
         self.project_id = project_id
         self.poll_duration = poll_duration
