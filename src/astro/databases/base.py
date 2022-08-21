@@ -372,7 +372,7 @@ class BaseDatabase(ABC):
                 **kwargs,
             )
         # Catching NATIVE_LOAD_EXCEPTIONS for fallback
-        except self.NATIVE_LOAD_EXCEPTIONS:  # skipcq: PYL-W0703
+        except self.NATIVE_LOAD_EXCEPTIONS as e:  # skipcq: PYL-W0703
             logging.warning(
                 "Loading files failed with Native Support. Falling back to Pandas-based load",
                 exc_info=True,
@@ -384,6 +384,8 @@ class BaseDatabase(ABC):
                     chunk_size=chunk_size,
                     if_exists=if_exists,
                 )
+            else:
+                raise e
 
     def load_pandas_dataframe_to_table(
         self,
