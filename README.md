@@ -15,11 +15,7 @@
 [![CI](https://github.com/astronomer/astro-sdk/actions/workflows/ci.yaml/badge.svg)](https://github.com/astronomer/astro-sdk)
 [![codecov](https://codecov.io/gh/astronomer/astro-sdk/branch/main/graph/badge.svg?token=MI4SSE50Q6)](https://codecov.io/gh/astronomer/astro-sdk)
 
-**Astro Python SDK** allows for rapid and clean development of extract, transform, and load (ETL) workflows using Python.
-
-The SDK abstracts the boilerplate code required for communication between datasets and tasks, which helps DAG authors to achieve more with less code.
-
-It is powered by [Apache Airflow](https://airflow.apache.org) and maintained by [Astronomer](https://astronomer.io).
+**Astro Python SDK** is a Python SDK for rapid development of extract, transform, and load workflows. It allows you to express your workflows as a set of data dependencies without having to worry about ordering and tasks. The Astro Python SDK is built on top of [Apache Airflow](https://airflow.apache.org/) and maintained by [Astronomer](https://astronomer.io).
 
 ## Prerequisites
 
@@ -44,8 +40,23 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
 
 ## Quickstart
+1. Ensure that your Airflow environment is set up correctly by running the following commands:
 
-1. Copy the following DAG into a file named `calculate_popular_movies.py` and add it to the `dags` directory of your Airflow project:
+    ```shell
+    export AIRFLOW_HOME=`pwd`
+    export AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
+    airflow db init
+    ```
+
+2. Create a SQLite database for the example to run with:
+
+    ```shell
+    # The sqlite_default connection has different host for MAC vs. Linux
+    export SQL_TABLE_NAME=`airflow connections get sqlite_default -o     yaml | grep host | awk '{print $2}'`
+    sqlite3 "$SQL_TABLE_NAME" "VACUUM;"
+    ```
+
+3. Copy the following workflow into a file named `calculate_popular_movies.py` and add it to the `dags` directory of your Airflow project:
 
     ```Python
     from datetime import datetime
@@ -70,34 +81,12 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
         start_date=datetime(2000, 1, 1),
         catchup=False,
     ) as dag:
-        imdb_movies = aql.load_file(
-            File("https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv"),
-            output_table=Table(
-                name="imdb_movies", conn_id="sqlite_default"
-            ),
-        )
-        top_five_animations(
-            input_table=imdb_movies,
-            output_table=Table(
-                name="top_animation"
-            ),
-        )
-    ```
-
-2. Ensure that your Airflow environment is set up correctly by running the following commands:
-
-    ```shell
-    export AIRFLOW_HOME=`pwd`
-    export AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
-    airflow db init
-    ```
-
-3. Create a SQLite database for the example to run with and run the DAG:
-
-    ```shell
-    # The sqlite_default connection has different host for MAC vs. Linux
-    export SQL_TABLE_NAME=`airflow connections get sqlite_default -o     yaml | grep host | awk '{print $2}'`
-    sqlite3 "$SQL_TABLE_NAME" "VACUUM;"
+        imdb_src = File("https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv")
+        imdb_movies = Table(name="imdb_movies", conn_id="sqlite_default")
+        imdb_movies = aql.load_file(imdb_src, imdb_movies)
+        
+        top_animations = Table(name="top_animation")
+        top_animations = top_five_animations(input_table=imdb_movies, output_table=top_animations)        
     ```
 
 4. Run the example DAG:
