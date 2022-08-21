@@ -184,7 +184,7 @@ Note - These results are generated manually, there is a issue added for the same
 | bigquery   | one_gb      | 4.25min      | 66.32MB      | 54.88ms         | 48.01ms           |
 | bigquery   | ten_kb      | 2.9min       | 55.51MB      | 40.74ms         | 34.94ms           |
 | bigquery   | ten_mb      | 4.17min      | 57.6MB       | 46.64ms         | 46.83ms           |
-| bigquery   | ten_gb      | 56.68min     | 196.34MB     | 387.29ms        | 448.49ms          |
+| bigquery   | ten_gb      | 15.74min     | 180.74MB     | 208.2ms         | 155.44ms          |
 
 ### Local to Bigquery using native path
 
