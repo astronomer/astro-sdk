@@ -61,13 +61,15 @@ For Machine types: n2-standard-4
 
 #### Results post optimization to load files from GCS to Bigquery using BigqueryHook
 
-|Dataset                                    |Size | Duration(seconds)  |
-|-------------------------------------------|-----|--------------------|
-|covid_overview/covid_overview_10kb.csv     |10 KB| 13.57           |
-|tate_britain/artist_data_100kb.csv         |100KB| 16.10          |
-|imdb/title_ratings_10mb.csv                |10MB | 19.40         |
-|stackoverflow/stackoverflow_posts_1g.ndjson|1GB  | 30.26          |
-|trimmed/pypi/*                             |5GB  | 59.90          |
+| Dataset                                                                  | Size | Duration(seconds) |
+|--------------------------------------------------------------------------|------|--------|
+| covid_overview/covid_overview_10kb.csv                                   | 10 KB | 13.57  |
+| tate_britain/artist_data_100kb.csv                                       | 100KB | 16.10  |
+| imdb/title_ratings_10mb.csv                                              | 10MB | 19.40  |
+| stackoverflow/stackoverflow_posts_1g.ndjson                              | 1GB  | 30.26  |
+| trimmed/pypi/*                                                           | 5GB  | 59.90  |
+| gs://astro-sdk/benchmark/trimmed/stackoverflow/10gb/ - 10 Files 1gb each | 10GB |11.88min|
+
 
 
 ## Performance evaluation of loading datasets from GCS with Astro Python SDK 0.11.0 into Snowflake
@@ -176,12 +178,13 @@ Note - These results are generated manually, there is a issue added for the same
 ### Database S3 to Bigquery using native path
 Note - These results are generated manually, there is a issue added for the same [#574](https://github.com/astronomer/astro-sdk/issues/574)
 
-| database   | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
-|:-----------|:-----------|:-------------|:-------------|:----------------|:------------------|
-| bigquery   | hundred_kb | 2.92min      | 56.57MB      | 41.94ms         | 35.83ms           |
-| bigquery   | one_gb     | 4.25min      | 66.32MB      | 54.88ms         | 48.01ms           |
-| bigquery   | ten_kb     | 2.9min       | 55.51MB      | 40.74ms         | 34.94ms           |
-| bigquery   | ten_mb     | 4.17min      | 57.6MB       | 46.64ms         | 46.83ms           |
+| database   | dataset     | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
+|:-----------|:------------|:-------------|:-------------|:----------------|:------------------|
+| bigquery   | hundred_kb  | 2.92min      | 56.57MB      | 41.94ms         | 35.83ms           |
+| bigquery   | one_gb      | 4.25min      | 66.32MB      | 54.88ms         | 48.01ms           |
+| bigquery   | ten_kb      | 2.9min       | 55.51MB      | 40.74ms         | 34.94ms           |
+| bigquery   | ten_mb      | 4.17min      | 57.6MB       | 46.64ms         | 46.83ms           |
+| bigquery   | ten_gb      | 56.68min     | 196.34MB     | 387.29ms        | 448.49ms          |
 
 ### Local to Bigquery using native path
 
