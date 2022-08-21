@@ -14,7 +14,7 @@ from sqlalchemy.engine.base import Engine
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.files import File
-from astro.settings import REDSHIFT_SChEMA
+from astro.settings import REDSHIFT_SCHEMA
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = RedshiftSQLHook.default_conn_name
@@ -26,7 +26,7 @@ class RedshiftDatabase(BaseDatabase):
     Handle interactions with Redshift databases.
     """
 
-    DEFAULT_SCHEMA = REDSHIFT_SChEMA
+    DEFAULT_SCHEMA = REDSHIFT_SCHEMA
 
     illegal_column_name_chars: List[str] = ["."]
     illegal_column_name_chars_replacement: List[str] = ["_"]
