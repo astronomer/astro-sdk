@@ -1,11 +1,11 @@
 """AWS Redshift table implementation."""
-import string
 import random
-from typing import Dict, List, Tuple, Optional
+import string
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
-import sqlalchemy
 import psycopg2
+import sqlalchemy
 from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
 from psycopg2 import sql as redshift_sql
 from sqlalchemy import create_engine
@@ -135,7 +135,8 @@ class RedshiftDatabase(BaseDatabase):
         target_schema = target_table.metadata.schema
         target_table_name = f"{target_schema}.{target_table.name}"
         stage_table_name = random.choice(string.ascii_lowercase) + "".join(
-            random.choice(string.ascii_lowercase + string.digits) for _ in range(UNIQUE_HASH_SIZE - 1)
+            random.choice(string.ascii_lowercase + string.digits)
+            for _ in range(UNIQUE_HASH_SIZE - 1)
         )
 
         begin_transaction = "BEGIN TRANSACTION"
@@ -147,23 +148,28 @@ class RedshiftDatabase(BaseDatabase):
         source_column_names_string = ",".join(map(str, source_columns))
         insert_into_stage_table = (
             f"INSERT INTO {stage_table_name}({target_column_names_string}) "
-            f"SELECT {source_column_names_string} FROM {source_table_name}")
+            f"SELECT {source_column_names_string} FROM {source_table_name}"
+        )
 
         conflict_column = target_conflict_columns[0]
         conflict_statement: Optional[str] = None
         if if_conflicts == "ignore":
             conflict_statement = (
                 f"DELETE FROM {stage_table_name} USING {target_table_name} "
-                f"WHERE {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column} ")
+                f"WHERE {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column} "
+            )
         elif if_conflicts == "update":
             conflict_statement = (
                 f"DELETE FROM {target_table_name} USING {stage_table_name} "
-                f"WHERE {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column} ")
+                f"WHERE {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column} "
+            )
         if conflict_statement:
             for conflict_column in target_conflict_columns[1:]:
                 conflict_statement += f" AND {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column}"
 
-        insert_into_target_table = f"INSERT INTO {target_table_name} SELECT * FROM {stage_table_name}"
+        insert_into_target_table = (
+            f"INSERT INTO {target_table_name} SELECT * FROM {stage_table_name}"
+        )
         drop_stage_table = f"DROP TABLE {stage_table_name}"
         end_transaction = "END TRANSACTION"
 

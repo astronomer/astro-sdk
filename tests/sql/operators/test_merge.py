@@ -113,7 +113,6 @@ def run_merge(target_table: Table, source_table: Table, merge_parameters, mode):
         {"database": Database.SNOWFLAKE},
         {"database": Database.BIGQUERY},
         {"database": Database.REDSHIFT},
-
     ],
     indirect=True,
     ids=["snowflake", "bigquery", "redshift"],
