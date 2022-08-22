@@ -112,6 +112,7 @@ The benchmark was run as a Kubernetes job in GKE:
 | snowflake  | ten_mb     | 10.9s        | 47.51MB      | 2.58s           | 160.0ms           |
 | snowflake  | one_gb     | 1.07min      | 47.94MB      | 8.7s            | 5.67s             |
 | snowflake  | five_gb    | 5.49min      | 53.69MB      | 18.76s          | 1.6s              |
+| snowflake  | ten_gb     | 7.9min       | 53.68MB      | 34.41s          | 2.66s             |
 
 ## Performance evaluation of loading datasets from GCS with Astro Python SDK 0.11.0 into Postgres in K8s
 
