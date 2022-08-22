@@ -15,7 +15,7 @@
 [![CI](https://github.com/astronomer/astro-sdk/actions/workflows/ci.yaml/badge.svg)](https://github.com/astronomer/astro-sdk)
 [![codecov](https://codecov.io/gh/astronomer/astro-sdk/branch/main/graph/badge.svg?token=MI4SSE50Q6)](https://codecov.io/gh/astronomer/astro-sdk)
 
-**Astro Python SDK** is a Python SDK for rapid development of extract, transform, and load workflows in [Apache Airflow](https://airflow.apache.org/). It allows you to express your workflows as a set of data dependencies without having to worry about ordering and tasks. The Astro Python SDK maintained by [Astronomer](https://astronomer.io).
+**Astro Python SDK** is a Python SDK for rapid development of extract, transform, and load workflows in [Apache Airflow](https://airflow.apache.org/). It allows you to express your workflows as a set of data dependencies without having to worry about ordering and tasks. The Astro Python SDK is maintained by [Astronomer](https://astronomer.io).
 
 ## Prerequisites
 
