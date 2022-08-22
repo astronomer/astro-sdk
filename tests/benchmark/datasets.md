@@ -20,6 +20,7 @@ Within `gs://astro-sdk/benchmark/`, there are two paths:
 | one_gb     | 1 GB   | ndjson  | 940,000   | 17 (*)  | stackoverflow/stackoverflow_posts_1g.ndjson | Stack Overflow posts sample |
 | five_gb    | 5 GB   | ndjson  | 7,530,243 | 7 (*)   | pypi/*                                      | PyPI downloads sample       |
 | ten_gb     | 10 GB  | ndjson  | 1,263,685 | 9 (*)   | github/github-archive/*                     | Github timeline sample      |
+| ten_gb     | 10 GB  | ndjson  | 9400000 | 17 (*)  | benchmark/trimmed/stackoverflow/output_file.ndjson                  | Github timeline sample      |
 (*) Nested JSON, this number represents just the root-level properties
 
 
