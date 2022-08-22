@@ -116,6 +116,52 @@ The benchmark was run as a Kubernetes job in GKE:
 | snowflake  | five_gb    | 5.49min      | 53.69MB      | 18.76s          | 1.6s              |
 | snowflake  | ten_gb     | 7.9min       | 53.68MB      | 34.41s          | 2.66s             |
 
+
+# Performance evaluation of loading datasets from AWS S3 with Astro Python SDK 1.0.0 into Snowflake
+
+### Without native support
+
+Astro Python SDK 1.0.0 supports loading to Snowflake using Pandas, without any further optimizations.
+
+The benchmark was run as a Kubernetes job in GKE:
+
+* Version: `astro-sdk-python` 0.11.0 (`36a3042`)
+* Machine type: `n2-standard-4`
+  * vCPU: 4
+  * Memory: 16 GB RAM
+* Container resource limit:
+  * Memory: 10 Gi
+
+| database   | dataset    | total_time | memory_rss | cpu_time_user | cpu_time_system |
+|:-----------|:-----------|:-----------|:-----------|:--------------|:----------------|
+| snowflake  | one_gb     | 7.21min    | 49.5MB     | 15.19s        | 1.21s           |
+| snowflake  | ten_kb     | 5.21s      | 53.4MB     | 1.18s         | 97.11ms         |
+| snowflake  | ten_gb     | 55.15min   | 106.53MB   | 2.1min        | 14.12s          |
+| snowflake  | hundred_kb | 5.1s       | 53.16MB    | 1.12s         | 85.11ms         |
+| snowflake  | ten_mb     | 11.34s     | 61.5MB     | 3.11s         | 213.0ms         |
+| snowflake  | five_gb    | 31.61min   | 101.11MB   | 2.11min       | 6.43s           |
+
+### With native support
+
+The benchmark was run as a Kubernetes job in GKE:
+
+* Version: `astro-sdk-python` 1.0.0a1 (`bc58830`)
+* Machine type: `n2-standard-4`
+  * vCPU: 4
+  * Memory: 16 GB RAM
+* Container resource limit:
+  * Memory: 10 Gi
+
+| database   | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
+|:-----------|:-----------|:-------------|:-------------|:----------------|:------------------|
+| snowflake  | five_gb    | 5.5min       | 53.82MB      | 19.2s           | 1.48s             |
+| snowflake  | hundred_kb | 11.83s       | 45.62MB      | 2.88s           | 160.0ms           |
+| snowflake  | one_gb     | 1.04min      | 47.7MB       | 8.54s           | 5.26s             |
+| snowflake  | ten_gb     | 9.44min      | 54.58MB      | 35.04s          | 2.61s             |
+| snowflake  | ten_kb     | 9.83s        | 57.21MB      | 2.6s            | 110.0ms           |
+| snowflake  | ten_mb     | 10.27s       | 45.96MB      | 2.59s           | 140.0ms           |
+
+
 ## Performance evaluation of loading datasets from GCS with Astro Python SDK 0.11.0 into Postgres in K8s
 
 ### Without native support
