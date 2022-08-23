@@ -1,11 +1,8 @@
 """AWS Redshift table implementation."""
-import string
-import random
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
 
 import pandas as pd
 import sqlalchemy
-import psycopg2
 from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
 from psycopg2 import sql as redshift_sql
 from sqlalchemy import create_engine
@@ -18,7 +15,6 @@ from astro.settings import REDSHIFT_SCHEMA
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = RedshiftSQLHook.default_conn_name
-UNIQUE_HASH_SIZE = 16
 
 
 class RedshiftDatabase(BaseDatabase):
@@ -130,51 +126,41 @@ class RedshiftDatabase(BaseDatabase):
         :param target_conflict_columns: List of cols where we expect to have a conflict while combining
         :param if_conflicts: The strategy to be applied if there are conflicts.
         """
-        source_schema = source_table.metadata.schema
-        source_table_name = f"{source_schema}.{source_table.name}"
-        target_schema = target_table.metadata.schema
-        target_table_name = f"{target_schema}.{target_table.name}"
-        stage_table_name = random.choice(string.ascii_lowercase) + "".join(
-            random.choice(string.ascii_lowercase + string.digits) for _ in range(UNIQUE_HASH_SIZE - 1)
-        )
 
-        begin_transaction = "BEGIN TRANSACTION"
-        create_temp_table = f"CREATE TEMP TABLE {stage_table_name} (LIKE {target_schema}.{target_table.name})"
+        def identifier_args(table: Table):
+            schema = table.metadata.schema
+            return (schema, table.name) if schema else (table.name,)
+
+        statement = "INSERT INTO {target_table} ({target_columns}) SELECT {source_columns} FROM {source_table}"
 
         source_columns = list(source_to_target_columns_map.keys())
         target_columns = list(source_to_target_columns_map.values())
-        target_column_names_string = ",".join(map(str, target_columns))
-        source_column_names_string = ",".join(map(str, source_columns))
-        insert_into_stage_table = (
-            f"INSERT INTO {stage_table_name}({target_column_names_string}) "
-            f"SELECT {source_column_names_string} FROM {source_table_name}")
 
-        conflict_column = target_conflict_columns[0]
-        conflict_statement: Optional[str] = None
         if if_conflicts == "ignore":
-            conflict_statement = (
-                f"DELETE FROM {stage_table_name} USING {target_table_name} "
-                f"WHERE {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column} ")
+            statement += " ON CONFLICT ({target_conflict_columns}) DO NOTHING"
         elif if_conflicts == "update":
-            conflict_statement = (
-                f"DELETE FROM {target_table_name} USING {stage_table_name} "
-                f"WHERE {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column} ")
-        if conflict_statement:
-            for conflict_column in target_conflict_columns[1:]:
-                conflict_statement += f" AND {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column}"
+            statement += " ON CONFLICT ({target_conflict_columns}) DO UPDATE SET {update_statements}"
 
-        insert_into_target_table = f"INSERT INTO {target_table_name} SELECT * FROM {stage_table_name}"
-        drop_stage_table = f"DROP TABLE {stage_table_name}"
-        end_transaction = "END TRANSACTION"
+        source_column_names = [redshift_sql.Identifier(col) for col in source_columns]
+        target_column_names = [redshift_sql.Identifier(col) for col in target_columns]
+        update_statements = [
+            redshift_sql.SQL("{col_name}=EXCLUDED.{col_name}").format(col_name=col_name)
+            for col_name in target_column_names
+        ]
 
-        statements = [begin_transaction, create_temp_table, insert_into_stage_table]
-        if conflict_statement:
-            statements.append(conflict_statement)
-        statements.extend([insert_into_target_table, drop_stage_table, end_transaction])
+        query = redshift_sql.SQL(statement).format(
+            target_columns=redshift_sql.SQL(",").join(target_column_names),
+            target_table=redshift_sql.Identifier(*identifier_args(target_table)),
+            source_columns=redshift_sql.SQL(",").join(source_column_names),
+            source_table=redshift_sql.Identifier(*identifier_args(source_table)),
+            update_statements=redshift_sql.SQL(",").join(update_statements),
+            target_conflict_columns=redshift_sql.SQL(",").join(
+                [redshift_sql.Identifier(x) for x in target_conflict_columns]
+            ),
+        )
 
-        with self.hook.get_cursor() as cursor:
-            for statement in statements:
-                cursor.execute(statement)
+        sql = query.as_string(self.hook.get_conn())
+        self.run_sql(sql_statement=sql)
 
     def is_native_load_file_available(
         self, source_file: File, target_table: Table
