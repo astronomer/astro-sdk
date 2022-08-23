@@ -159,12 +159,17 @@ class BigqueryDatabase(BaseDatabase):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
+        try:
+            creds = self.hook._get_credentials()
+        except AttributeError:
+            # Details: https://github.com/astronomer/astro-sdk/issues/703
+            creds = self.hook.get_credentials()
         source_dataframe.to_gbq(
             self.get_table_qualified_name(target_table),
             if_exists=if_exists,
             chunksize=chunk_size,
             project_id=self.hook.project_id,
-            credentials=self.hook._get_credentials(),
+            credentials=creds,
         )
 
     def merge_table(
@@ -414,7 +419,12 @@ class S3ToBigqueryDataTransfer:
         aws = source_file.location.hook.get_credentials()
         self.s3_access_key = aws.access_key
         self.s3_secret_key = aws.secret_key
-        self.s3_file_type = NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
+        file_types_to_bigquery_format = {
+            FileType.CSV: "CSV",
+            FileType.NDJSON: "JSON",
+            FileType.PARQUET: "PARQUET",
+        }
+        self.s3_file_type = file_types_to_bigquery_format.get(source_file.type.name)
 
         self.project_id = project_id
         self.poll_duration = poll_duration

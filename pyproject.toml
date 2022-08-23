@@ -4,7 +4,10 @@ build-backend = "flit_core.buildapi"
 
 [project]
 name = "astro-sdk-python"
-dynamic = ["version", "description"]
+dynamic = ["version"]
+description = """
+Astro SDK allows rapid and clean development of {Extract, Load, Transform} workflows using Python and SQL, powered by Apache Airflow.
+"""
 
 authors = [
     {name = "Astronomer", email = "humans@astronomer.io"},
@@ -26,12 +29,13 @@ keywords = ["airflow", "provider", "astronomer", "sql", "decorator", "task flow"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "License :: OSI Approved :: Apache Software License",
+    "Topic :: Database",
+    "Framework :: Apache Airflow",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
-    "Topic :: Database",
 ]
 
 [project.optional-dependencies]
@@ -76,7 +80,7 @@ all = [
     "s3fs"
 ]
 doc = [
-    "myst-parser",
+    "myst-parser>=0.17",
     "sphinx>=4.4.0",
     "sphinx-autoapi",
     "sphinx-rtd-theme"

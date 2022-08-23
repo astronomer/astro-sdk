@@ -243,7 +243,7 @@ with dag:
     aql.cleanup()
 ```
 
-## Step 5: Run the code
+## Step 6: Run the code
 
 1. In the Airflow UI, you should see a DAG called `astro_orders`. Make it active by clicking the slider next to its name:
 
