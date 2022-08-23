@@ -179,8 +179,6 @@ class BaseDatabase(ABC):
         if not table.columns:
             raise ValueError("To use this method, table.columns must be defined")
 
-        self.drop_table(table)
-
         metadata = table.sqlalchemy_metadata
         sqlalchemy_table = sqlalchemy.Table(table.name, metadata, *table.columns)
         metadata.create_all(self.sqlalchemy_engine, tables=[sqlalchemy_table])
