@@ -1,4 +1,23 @@
 # Changelog
+## 1.0.1
+
+### Bug fixes
+* Added a check to create table only when `if_exists` is `replace` in `aql.load_file` for snowflake. [#729](https://github.com/astronomer/astro-sdk/issues/729)
+* Fix the file type for NDJSON file in Data transfer job in AWS S3 to Google BigQuery. [#724](https://github.com/astronomer/astro-sdk/issues/724)
+* Create a new version of imdb.csv with lowercase column names and update the examples to use it, so this change is backwards-compatible. [#721](https://github.com/astronomer/astro-sdk/issues/721), [#727](https://github.com/astronomer/astro-sdk/pull/727)
+* Skip folders while processing paths in load_file operator when file patterns is passed. [#733](https://github.com/astronomer/astro-sdk/issues/733)
+
+### Enhancements
+* Updated the performance of `aql.load_file` for files for below:
+  * From GCS to Snowflake up to 95%. [#712](https://github.com/astronomer/astro-sdk/issues/712)
+  * From AWS S3 to Snowflake up to 77%. [#707](https://github.com/astronomer/astro-sdk/issues/707)
+
+* Restructured the documentation in the project.toml, quickstart, readthedocs and README.md [#698](https://github.com/astronomer/astro-sdk/issues/698), [#704](https://github.com/astronomer/astro-sdk/issues/704), [#706](https://github.com/astronomer/astro-sdk/issues/706)
+* Make astro-sdk-python compatible with major version of Google Providers. [#703](https://github.com/astronomer/astro-sdk/issues/703)
+
+### Misc
+* Consolidate the documentation requirements for sphinx. [#699](https://github.com/astronomer/astro-sdk/issues/699)
+* Add CI/CD triggers on release branches with dependency on tests. [#672](https://github.com/astronomer/astro-sdk/issues/672)
 
 
 ## 1.0.0
