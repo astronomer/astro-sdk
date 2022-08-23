@@ -1,3 +1,9 @@
+"""
+This Example DAG:
+- List all files from a bigquery bucket for given connection and file path pattern
+- Dynamically expand on the list of files i.e create n parallel task if there are n files in the list to
+"""
+
 # [START howto_operator_get_file_list]
 
 import os
