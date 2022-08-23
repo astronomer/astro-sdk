@@ -1,5 +1,23 @@
 name: Build and test astro
 on:
+  workflow_call:
+    inputs:
+      image_name:
+        required: true
+        type: string
+      tag:
+        type: string
+    secrets:
+      GOOGLE_APPLICATION_CREDENTIALS_JSON:
+        required: true
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      SNOWFLAKE_ACCOUNT_NAME:
+        required: true
+      SNOWFLAKE_PASSWORD:
+        required: true
   push:
     branches: [ 'main', 'release-**' ]
   pull_request:

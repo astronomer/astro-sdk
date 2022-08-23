@@ -3,6 +3,18 @@ on:
   release:
     types: [created]
 jobs:
+  pre-commit-tests-coverage:
+    uses: astronomer/astro-sdk/.github/workflows/ci.yaml@main
+    with:
+      image_name: test-and-release
+      tag: $GITHUB_RUN_NUMBER
+    secrets:
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+
   build-n-publish:
     name: Build and publish Python 🐍 distributions 📦 to PyPI
     runs-on: ubuntu-18.04
