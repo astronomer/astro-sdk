@@ -310,9 +310,8 @@ def test_create_table_from_select_statement(database_table_fixture):
     """Test table creation via select statement"""
     database, original_table = database_table_fixture
 
-    statement = "SELECT * FROM {} WHERE id = 1;".format(
-        database.get_table_qualified_name(original_table)
-    )
+    table_qualified_name = database.get_table_qualified_name(original_table)
+    statement = f"SELECT * FROM {table_qualified_name} WHERE id = 1;"
     target_table = original_table.create_similar_table()
     database.create_table_from_select_statement(statement, target_table)
 
