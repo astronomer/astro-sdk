@@ -6,7 +6,7 @@ get_file_list
 
 When to use the ``get_file_list`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-You can use ``get_file_list`` retrieve a list of available files based on a storage path and an Airflow connection. This can be useful for dynamically generating tasks based on which files are available on your storage system.
+You can use ``get_file_list``to retrieve a list of available files based on a storage path and the Airflow connection. Based on the files available on your system storage, this can generate tasks dynamically.
 
 The supported filesystems are :ref:`file_location`
 
