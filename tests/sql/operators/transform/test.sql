@@ -1,5 +1,5 @@
-SELECT Title, Rating
+SELECT title, rating
 FROM {{ input_table }}
-WHERE Genre1=='Animation'
-ORDER BY Rating desc
+WHERE genre1=='Animation'
+ORDER BY rating desc
 LIMIT 5;

@@ -12,12 +12,12 @@ START_DATE = datetime(2000, 1, 1)
 
 
 @aql.transform()
-def get_top_five_animations(input_table: Table):
+def get_top_five_animations(input_table: Table):  # skipcq: PYL-W0613
     return """
-        SELECT Title, Rating
+        SELECT title, rating
         FROM {{input_table}}
-        WHERE Genre1=='Animation'
-        ORDER BY Rating desc
+        WHERE genre1=='Animation'
+        ORDER BY rating desc
         LIMIT 5;
     """
 
@@ -33,7 +33,7 @@ with DAG(
 
     imdb_movies = aql.load_file(
         input_file=File(
-            path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv"
+            path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
         ),
         task_id="load_csv",
         output_table=Table(name=imdb_movies_name, conn_id="sqlite_default"),
