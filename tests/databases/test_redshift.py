@@ -37,7 +37,10 @@ def test_create_database(conn_id):
     "conn_id,expected_uri",
     [
         (DEFAULT_CONN_ID, re.compile(r"^(redshift\+redshift_connector://)(.*)")),
-        (CUSTOM_CONN_ID, r"^(redshift\+redshift_connector://)(.*)(us-east-2.redshift.amazonaws.com:5439/dev)$"),
+        (
+            CUSTOM_CONN_ID,
+            r"^(redshift\+redshift_connector://)(.*)(us-east-2.redshift.amazonaws.com:5439/dev)$",
+        ),
     ],
     ids=SUPPORTED_CONN_IDS,
 )

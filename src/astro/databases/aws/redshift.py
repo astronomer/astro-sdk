@@ -1,14 +1,13 @@
 """AWS Redshift table implementation."""
-from typing import Dict, List, Tuple
+from typing import List
 
 import pandas as pd
 import sqlalchemy
 from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
-from psycopg2 import sql as redshift_sql
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
+from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
 from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.settings import REDSHIFT_SCHEMA
