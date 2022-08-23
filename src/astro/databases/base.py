@@ -236,6 +236,7 @@ class BaseDatabase(ABC):
             in the resulting dataframe
         """
         if table.columns:
+            self.drop_table(table)
             self.create_table_using_columns(table)
         else:
             self.create_table_using_schema_autodetection(
