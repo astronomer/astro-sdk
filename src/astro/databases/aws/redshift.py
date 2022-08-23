@@ -108,60 +108,6 @@ class RedshiftDatabase(BaseDatabase):
             chunksize=chunk_size,
         )
 
-    def merge_table(
-        self,
-        source_table: Table,
-        target_table: Table,
-        source_to_target_columns_map: Dict[str, str],
-        target_conflict_columns: List[str],
-        if_conflicts: MergeConflictStrategy = "exception",
-    ) -> None:
-        """
-        Merge the source table rows into a destination table.
-        The argument `if_conflicts` allows the user to define how to handle conflicts.
-
-        :param source_table: Contains the rows to be merged to the target_table
-        :param target_table: Contains the destination table in which the rows will be merged
-        :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names
-        :param target_conflict_columns: List of cols where we expect to have a conflict while combining
-        :param if_conflicts: The strategy to be applied if there are conflicts.
-        """
-
-        def identifier_args(table: Table):
-            schema = table.metadata.schema
-            return (schema, table.name) if schema else (table.name,)
-
-        statement = "INSERT INTO {target_table} ({target_columns}) SELECT {source_columns} FROM {source_table}"
-
-        source_columns = list(source_to_target_columns_map.keys())
-        target_columns = list(source_to_target_columns_map.values())
-
-        if if_conflicts == "ignore":
-            statement += " ON CONFLICT ({target_conflict_columns}) DO NOTHING"
-        elif if_conflicts == "update":
-            statement += " ON CONFLICT ({target_conflict_columns}) DO UPDATE SET {update_statements}"
-
-        source_column_names = [redshift_sql.Identifier(col) for col in source_columns]
-        target_column_names = [redshift_sql.Identifier(col) for col in target_columns]
-        update_statements = [
-            redshift_sql.SQL("{col_name}=EXCLUDED.{col_name}").format(col_name=col_name)
-            for col_name in target_column_names
-        ]
-
-        query = redshift_sql.SQL(statement).format(
-            target_columns=redshift_sql.SQL(",").join(target_column_names),
-            target_table=redshift_sql.Identifier(*identifier_args(target_table)),
-            source_columns=redshift_sql.SQL(",").join(source_column_names),
-            source_table=redshift_sql.Identifier(*identifier_args(source_table)),
-            update_statements=redshift_sql.SQL(",").join(update_statements),
-            target_conflict_columns=redshift_sql.SQL(",").join(
-                [redshift_sql.Identifier(x) for x in target_conflict_columns]
-            ),
-        )
-
-        sql = query.as_string(self.hook.get_conn())
-        self.run_sql(sql_statement=sql)
-
     def is_native_load_file_available(
         self, source_file: File, target_table: Table
     ) -> bool:
