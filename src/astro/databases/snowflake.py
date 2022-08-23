@@ -109,7 +109,7 @@ class SnowflakeStage:
         Given a file to be loaded/unloaded to from Snowflake, identifies its folder and
         sets as self.url.
 
-        It is also responsbile for adjusting any path specific requirements for Snowflake.
+        It is also responsible for adjusting any path specific requirements for Snowflake.
 
         :param file: File to be loaded/unloaded to from Snowflake
         """
