@@ -16,6 +16,7 @@ jobs:
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
 
   build-n-publish:
+    needs: pre-commit-tests-coverage
     name: Build and publish Python 🐍 distributions 📦 to PyPI
     runs-on: ubuntu-18.04
     steps:
