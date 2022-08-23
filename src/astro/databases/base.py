@@ -323,6 +323,11 @@ class BaseDatabase(ABC):
         # to use the native support to loading multiple files as opposed to iterating
         # here
         for file in input_files:
+
+            # Skip file object with folder paths
+            if file.path.endswith("/"):
+                continue
+
             if use_native_support and self.is_native_load_file_available(
                 source_file=file, target_table=output_table
             ):
