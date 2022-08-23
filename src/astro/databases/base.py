@@ -178,6 +178,9 @@ class BaseDatabase(ABC):
         """
         if not table.columns:
             raise ValueError("To use this method, table.columns must be defined")
+
+        self.drop_table(table)
+
         metadata = table.sqlalchemy_metadata
         sqlalchemy_table = sqlalchemy.Table(table.name, metadata, *table.columns)
         metadata.create_all(self.sqlalchemy_engine, tables=[sqlalchemy_table])
@@ -236,7 +239,6 @@ class BaseDatabase(ABC):
             in the resulting dataframe
         """
         if table.columns:
-            self.drop_table(table)
             self.create_table_using_columns(table)
         else:
             self.create_table_using_schema_autodetection(
