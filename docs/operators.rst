@@ -6,4 +6,3 @@ Operators
    :glob:
 
    astro/sql/operators/*
-   astro/files/operators/*
