@@ -176,7 +176,7 @@ def test_if_exist_param_of__load_pandas_dataframe_to_table(database_table_fixtur
             database.load_pandas_dataframe_to_table(
                 pandas_dataframe, table, if_exists="replace"
             )
-            assert method.called
+            assert method.called_once_with(table, pandas_dataframe)
 
         with mock.patch("astro.databases.base.BaseDatabase.create_table") as method:
             database.load_pandas_dataframe_to_table(
