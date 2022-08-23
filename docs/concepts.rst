@@ -91,6 +91,6 @@ Patterns in File path
 
 We also resolve the patterns in file path based on the :ref:`file_location`
 
-#. **Local** - Resolves `File.path` using the glob standard library (https://docs.python.org/3/library/glob.html)
-#. **S3** - Resolves `File.path` using AWS S3 prefix rules (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-prefixes.html)
-#. **GCS** - Resolves `File.path` using Google Cloud Storage (GCS) wildcard rules (https://cloud.google.com/storage/docs/gsutil/addlhelp/WildcardNames)
+#. **Local** - Resolves ``File.path`` using the glob standard library (https://docs.python.org/3/library/glob.html)
+#. **S3** - Resolves ``File.path`` using AWS S3 prefix rules (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-prefixes.html)
+#. **GCS** - Resolves ``File.path`` using Google Cloud Storage (GCS) wildcard rules (https://cloud.google.com/storage/docs/gsutil/addlhelp/WildcardNames)
