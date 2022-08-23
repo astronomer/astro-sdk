@@ -1,12 +1,12 @@
 name: Build and test astro
 on:
   push:
-    branches: [ 'main' ]
+    branches: [ 'main', 'release-**' ]
   pull_request:
-    branches: [ 'main' ]
+    branches: [ 'main', 'release-**' ]
   # Run on PRs from forks
   pull_request_target:
-    branches: [ 'main' ]
+    branches: [ 'main', 'release-**' ]
     types: ['labeled']
 jobs:
   Markdown-link-check:
