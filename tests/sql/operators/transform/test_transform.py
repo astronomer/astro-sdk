@@ -133,7 +133,7 @@ def test_raw_sql(database_table_fixture, sample_dag):
         {
             "database": Database.SQLITE,
             "file": File(
-                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv"
+                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
             ),
             "table": Table(name="imdb", conn_id="sqlite_default"),
         }
@@ -148,10 +148,10 @@ def test_transform_with_templated_table_name(database_table_fixture, sample_dag)
     @aql.transform
     def top_five_animations(input_table: Table) -> str:
         return """
-            SELECT Title, Rating
+            SELECT title, rating
             FROM {{ input_table }}
-            WHERE Genre1=='Animation'
-            ORDER BY Rating desc
+            WHERE genre1=='Animation'
+            ORDER BY rating desc
             LIMIT 5;
         """
 
@@ -175,7 +175,7 @@ def test_transform_with_templated_table_name(database_table_fixture, sample_dag)
         {
             "database": Database.SQLITE,
             "file": File(
-                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv"
+                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
             ),
             "table": Table(name="imdb", conn_id="sqlite_default"),
         }

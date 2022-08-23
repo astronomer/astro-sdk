@@ -68,10 +68,10 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
     @aql.transform()
     def top_five_animations(input_table: Table):
         return """
-            SELECT Title, Rating
+            SELECT title, rating
             FROM {{input_table}}
-            WHERE Genre1=='Animation'
-            ORDER BY Rating desc
+            WHERE genre1=='Animation'
+            ORDER BY rating desc
             LIMIT 5;
         """
 
@@ -81,7 +81,7 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
         start_date=datetime(2000, 1, 1),
         catchup=False,
     ) as dag:
-        imdb_src = File("https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv")
+        imdb_src = File("https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv")
         imdb_movies = Table(name="imdb_movies", conn_id="sqlite_default")
         imdb_movies = aql.load_file(imdb_src, imdb_movies)
 

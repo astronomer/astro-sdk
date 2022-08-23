@@ -8,17 +8,17 @@ from astro.files import File
 from astro.sql.table import Table
 
 START_DATE = datetime(2000, 1, 1)
-LAST_ONE_DF = pd.DataFrame(data={"Title": ["Random movie"], "Rating": [121]})
+LAST_ONE_DF = pd.DataFrame(data={"title": ["Random movie"], "rating": [121]})
 
 
 # [START transform_example_1]
 @aql.transform()
-def top_five_animations(input_table: Table):
+def top_five_animations(input_table: Table):  # skipcq: PYL-W0613
     return """
         SELECT *
         FROM {{input_table}}
-        WHERE Genre1=='Animation'
-        ORDER BY Rating desc
+        WHERE genre1=='Animation'
+        ORDER BY rating desc
         LIMIT 5;
     """
 
@@ -28,12 +28,12 @@ def top_five_animations(input_table: Table):
 
 # [START transform_example_2]
 @aql.transform()
-def last_five_animations(input_table: Table):
+def last_five_animations(input_table: Table):  # skipcq: PYL-W0613
     return """
         SELECT *
         FROM {{input_table}}
-        WHERE Genre1=='Animation'
-        ORDER BY Rating asc
+        WHERE genre1=='Animation'
+        ORDER BY rating asc
         LIMIT 5;
     """
 
@@ -43,12 +43,12 @@ def last_five_animations(input_table: Table):
 
 # [START transform_example_3]
 @aql.transform
-def union_top_and_last(first_table: Table, second_table: Table):
+def union_top_and_last(first_table: Table, second_table: Table):  # skipcq: PYL-W0613
     """Union `first_table` and `second_table` tables to create a simple dataset."""
     return """
-            SELECT Title, Rating from {{first_table}}
+            SELECT title, rating from {{first_table}}
             UNION
-            SELECT Title, Rating from {{second_table}};
+            SELECT title, rating from {{second_table}};
             """
 
 
@@ -57,12 +57,14 @@ def union_top_and_last(first_table: Table, second_table: Table):
 
 # [START transform_example_4]
 @aql.transform
-def union_table_and_dataframe(input_table: Table, input_dataframe: pd.DataFrame):
+def union_table_and_dataframe(
+    input_table: Table, input_dataframe: pd.DataFrame  # skipcq: PYL-W0613
+):
     """Union `union_table` table and `input_dataframe` dataframe to create a simple dataset."""
     return """
-            SELECT Title, Rating from {{input_table}}
+            SELECT title, rating from {{input_table}}
             UNION
-            SELECT Title, Rating from {{input_dataframe}};
+            SELECT title, rating from {{input_dataframe}};
             """
 
 
@@ -77,7 +79,7 @@ with DAG(
 ) as dag:
 
     imdb_movies = aql.load_file(
-        input_file=File(path="s3://astro-sdk/imdb.csv"),
+        input_file=File(path="s3://astro-sdk/imdb_v2.csv"),
         task_id="load_csv",
         output_table=Table(conn_id="sqlite_default"),
     )
