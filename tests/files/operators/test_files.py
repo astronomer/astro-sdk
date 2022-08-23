@@ -40,3 +40,15 @@ def test_get_file_list_s3(hook):
     )
     op.execute(None)
     hook.list_keys.assert_called_once_with(bucket_name="bucket", prefix="some-file")
+
+
+def test_get_file_list__folder_listing_issue_s3():
+    """Assert that when file object location point to s3 then get_file_list using S3Hook"""
+    op = ListFileOperator(
+        task_id="task_id",
+        conn_id="aws_default",
+        path="s3://astro-sdk-test/benchmark/trimmed/stackoverflow/10gb/",
+    )
+    files = op.execute(None)
+    for file in files:
+        assert not file.path.endswith("/")
