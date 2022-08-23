@@ -958,3 +958,42 @@ def test_aql_load_file_columns_names_capitalization_dataframe(sample_dag):
         validate(loaded_df_1, loaded_df_2, loaded_df_3)
 
     test_utils.run_dag(sample_dag)
+
+
+def test_aql_load_file_skipping_folders_S3():
+    with mock.patch(
+        "astro.databases.base.resolve_file_path_pattern"
+    ) as create_file_location:
+        create_file_location.return_value = [
+            File(
+                path="S3://some_random_folder/",
+                conn_id="aws_default",
+                filetype=FileType.CSV,
+            ),
+            File(
+                path="S3://some_random_folder/test.csv",
+                conn_id="aws_default",
+                filetype=FileType.CSV,
+            ),
+            File(
+                path="S3://some_random_folder/test2.csv",
+                conn_id="aws_default",
+                filetype=FileType.CSV,
+            ),
+        ]
+        with mock.patch("astro.databases.base.BaseDatabase.create_table"):
+            with mock.patch(
+                "astro.databases.base.BaseDatabase.load_file_to_table_natively_with_fallback"
+            ) as method:
+                load_file(
+                    input_file=File(
+                        path="S3://some_random_folder/", filetype=FileType.CSV
+                    ),
+                    output_table=Table(
+                        conn_id="gcp_conn", metadata=Metadata(schema=SCHEMA)
+                    ),
+                    use_native_support=True,
+                    if_exists="append",
+                ).operator.execute({})
+
+                assert method.call_count == 2
