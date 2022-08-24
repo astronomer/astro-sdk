@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+from typing import Any
 
 import pandas as pd
 import smart_open
@@ -38,11 +39,11 @@ class File:
         )
 
     @property
-    def path(self) -> str:
+    def path(self) -> Any:
         return self.location.path
 
     @property
-    def conn_id(self) -> str | None:
+    def conn_id(self) -> Any:
         return self.location.conn_id
 
     @property
@@ -142,15 +143,21 @@ def resolve_file_path_pattern(
     :param normalize_config: parameters in dict format of pandas json_normalize() function
     """
     location = create_file_location(path_pattern, conn_id)
-    files = [
-        File(
-            path=path,
-            conn_id=conn_id,
-            filetype=filetype,
-            normalize_config=normalize_config,
+
+    files = []
+    for path in location.paths:
+        # Skip file object with folder paths
+        if path.endswith("/"):
+            continue
+
+        files.append(
+            File(
+                path=path,
+                conn_id=conn_id,
+                filetype=filetype,
+                normalize_config=normalize_config,
+            )
         )
-        for path in location.paths
-    ]
     if len(files) == 0:
         raise ValueError(f"File(s) not found for path/pattern '{path_pattern}'")
 
