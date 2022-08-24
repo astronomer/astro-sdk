@@ -200,8 +200,43 @@ def test_if_exist_param_of__load_pandas_dataframe_to_table(database_table_fixtur
 def test_load_file_to_table(database_table_fixture):
     """Test loading on files to snowflake database"""
     database, target_table = database_table_fixture
-    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
-    database.load_file_to_table(File(filepath), target_table, {})
+    filepath = str(pathlib.Path(CWD.parent, "data/sub_folder/"))
+    database.load_file_to_table(File(filepath, filetype=FileType.CSV), target_table, {})
+
+    df = database.hook.get_pandas_df(
+        f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
+    )
+    assert len(df) == 3
+    expected = pd.DataFrame(
+        [
+            {"id": 1, "name": "First"},
+            {"id": 2, "name": "Second"},
+            {"id": 3, "name": "Third with unicode पांचाल"},
+        ]
+    )
+    test_utils.assert_dataframes_are_equal(df, expected)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SNOWFLAKE,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+def test_load_file_from_cloud_to_table(database_table_fixture):
+    """Test loading on files to snowflake database"""
+    database, target_table = database_table_fixture
+    database.load_file_to_table(
+        File("s3://astro-sdk/data/", conn_id="aws_conn", filetype=FileType.CSV),
+        target_table,
+        {},
+    )
 
     df = database.hook.get_pandas_df(
         f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
