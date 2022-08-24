@@ -65,7 +65,7 @@ Source = "https://github.com/astronomer/astro-sdk/sql-cli"
 Documentation = "https://astro-sdk-python.rtfd.io/"
 
 [project.entry-points.apache_airflow_provider]
-provider_info = "astro.__init__:get_provider_info"
+provider_info = "sql_cli.__init__:get_provider_info"
 
 [tool.pytest.ini_options]
 minversion = "6.0"
@@ -78,14 +78,14 @@ markers = [
 
 
 [tool.flit.module]
-name = "astro"  # Or "astro.sql" if you just want this directory, not the entire 'astro'.
+name = "sql_cli"
 
 [tool.mypy]
 color_output = true
 #disallow_any_generics = true
 #disallow_incomplete_defs = true
 #disallow_untyped_defs = true
-files = ["src/astro"]
+files = ["src/sql_cli"]
 follow_imports = "skip"
 no_implicit_optional = true
 pretty = true

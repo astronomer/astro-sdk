@@ -18,6 +18,8 @@ def dev(session: nox.Session) -> None:
     session.install("nox")
     session.install("-e", "../python-sdk/.[all]")
     session.install("-e", "../python-sdk/.[tests]")
+    session.install("-e", ".[all]")
+    session.install("-e", ".[tests]")
 
 
 @nox.session(python=["3.7", "3.8", "3.9"])
@@ -26,6 +28,8 @@ def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
     session.install("-e", "../python-sdk/.[all]")
     session.install("-e", "../python-sdk/.[tests]")
+    session.install("-e", ".[all]")
+    session.install("-e", ".[tests]")
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
     session.run("pip3", "freeze")
