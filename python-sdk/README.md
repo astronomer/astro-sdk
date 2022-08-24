@@ -178,4 +178,4 @@ Contributors and maintainers should abide by the [Contributor Code of Conduct](d
 
 ## License
 
-[Apache Licence 2.0](LICENSE)
+[Apache Licence 2.0](../LICENSE)
