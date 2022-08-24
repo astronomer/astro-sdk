@@ -87,6 +87,12 @@ repos:
           additional_dependencies: [types-PyYAML]
           pass_filenames: false
           files: "^python-sdk/*"
+          entry: bash -c 'cd python-sdk && mypy "$@"' --
+      - id: mypy
+        additional_dependencies: [ types-PyYAML ]
+        pass_filenames: false
+        files: "^sql-cli/*"
+        entry: bash -c 'cd sql-cli && mypy "$@"' --
 
   -   repo: https://github.com/asottile/pyupgrade
       rev: v2.37.3
