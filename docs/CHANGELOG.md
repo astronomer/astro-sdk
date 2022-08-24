@@ -4,6 +4,8 @@
 ### Bug fixes
 * Skip folders while processing paths in load_file operator when file pattern is passed. [#733](https://github.com/astronomer/astro-sdk/issues/733)
 
+### Misc
+* Limit Google Protobuf for compatibility with bigquery client. [#742]([#733](https://github.com/astronomer/astro-sdk/issues/742))
 
 
 ## 1.0.1
