@@ -4,8 +4,6 @@
 ### Bug fixes
 * Skip folders while processing paths in load_file operator when file pattern is passed. [#733](https://github.com/astronomer/astro-sdk/issues/733)
 
-### Docs
-* Add the doc requirements for ReadTheDocs.  [#736](https://github.com/astronomer/astro-sdk/issues/736)
 
 
 ## 1.0.1
