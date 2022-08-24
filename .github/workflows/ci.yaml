@@ -42,6 +42,9 @@ jobs:
 
   Build-Docs:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python-sdk
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v3
@@ -57,7 +60,7 @@ jobs:
       - run: pip3 install nox
       - run: nox -s build_docs
 
-  Run-Optional-Packages-tests:
+  Run-Optional-Packages-tests-python-sdk:
     if: >-
       github.event_name == 'push' ||
       (
@@ -72,6 +75,9 @@ jobs:
         github.event_name == 'release'
       )
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python-sdk
     services:
       postgres:
         image: dimberman/pagila-test
@@ -161,6 +167,9 @@ jobs:
       matrix:
         group: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python-sdk
     services:
       postgres:
         # Docker Hub image
@@ -248,6 +257,9 @@ jobs:
         github.event_name == 'release'
       )
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python-sdk
     needs:
       - Run-Unit-tests-Airflow-2-3
     services:
