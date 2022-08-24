@@ -109,7 +109,7 @@ class SnowflakeStage:
         Given a file to be loaded/unloaded to from Snowflake, identifies its folder and
         sets as self.url.
 
-        It is also responsbile for adjusting any path specific requirements for Snowflake.
+        It is also responsible for adjusting any path specific requirements for Snowflake.
 
         :param file: File to be loaded/unloaded to from Snowflake
         """
@@ -445,9 +445,9 @@ class SnowflakeDatabase(BaseDatabase):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
-        self.create_table(target_table, dataframe=source_dataframe)
+        if if_exists == "replace":
+            self.create_table(target_table, dataframe=source_dataframe)
 
-        self.table_exists(target_table)
         pandas_tools.write_pandas(
             conn=self.hook.get_conn(),
             df=source_dataframe,
