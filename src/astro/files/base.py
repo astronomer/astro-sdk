@@ -12,8 +12,9 @@ from astro.files.locations.base import BaseFileLocation
 from astro.files.types import create_file_type
 
 
-class File:
-    """Handle all file operations, and abstract away the details related to location and file types.
+class File:  # skipcq: PYL-W1641
+    """
+    Handle all file operations, and abstract away the details related to location and file types.
     Intended to be used within library.
     """
 
