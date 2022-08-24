@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import io
-from typing import Any
 
 import pandas as pd
 import smart_open
@@ -40,11 +39,11 @@ class File:  # skipcq: PYL-W1641
         )
 
     @property
-    def path(self) -> Any:
+    def path(self) -> str:
         return self.location.path
 
     @property
-    def conn_id(self) -> Any:
+    def conn_id(self) -> str | None:
         return self.location.conn_id
 
     @property
