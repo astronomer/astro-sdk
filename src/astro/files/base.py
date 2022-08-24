@@ -145,20 +145,16 @@ def resolve_file_path_pattern(
     """
     location = create_file_location(path_pattern, conn_id)
 
-    files = []
-    for path in location.paths:
-        # Skip file object with folder paths
-        if path.endswith("/"):
-            continue
-
-        files.append(
-            File(
-                path=path,
-                conn_id=conn_id,
-                filetype=filetype,
-                normalize_config=normalize_config,
-            )
+    files = [
+        File(
+            path=path,
+            conn_id=conn_id,
+            filetype=filetype,
+            normalize_config=normalize_config,
         )
+        for path in location.paths
+        if not path.endswith("/")
+    ]
     if len(files) == 0:
         raise ValueError(f"File(s) not found for path/pattern '{path_pattern}'")
 
