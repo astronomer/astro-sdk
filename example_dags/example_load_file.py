@@ -155,7 +155,7 @@ with dag:
     aql.load_file(
         input_file=File(
             "s3://astro-sdk/sample_pattern",
-            conn_id="redshift_conn",
+            conn_id="aws_conn",
             filetype=FileType.CSV,
         ),
         output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
