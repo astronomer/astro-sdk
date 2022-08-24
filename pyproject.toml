@@ -51,7 +51,7 @@ tests = [
     "sqlalchemy-stubs"  # Change when sqlalchemy is upgraded https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html
 ]
 google = [
-    "protobuf==3.20.*",
+    "protobuf<=3.20.*",
     "apache-airflow-providers-google>=6.4.0",
     "sqlalchemy-bigquery>=1.3.0",
     "smart-open[gcs]>=5.2.1"
