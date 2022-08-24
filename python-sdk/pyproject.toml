@@ -91,7 +91,7 @@ doc = [
 
 [project.urls]
 Home = "https://astronomer.io/"
-Source = "https://github.com/astronomer/astro-sdk/"
+Source = "https://github.com/astronomer/astro-sdk/python-sdk"
 Documentation = "https://astro-sdk-python.rtfd.io/"
 
 [project.entry-points.apache_airflow_provider]

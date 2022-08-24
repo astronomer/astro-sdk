@@ -3,7 +3,7 @@ requires = ["flit_core ~=3.2"]
 build-backend = "flit_core.buildapi"
 
 [project]
-name = "astro-sdk-python"
+name = "astro-sql-cli"
 dynamic = ["version"]
 description = """
 Astro SDK allows rapid and clean development of {Extract, Load, Transform} workflows using Python and SQL, powered by Apache Airflow.
@@ -39,59 +39,29 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-tests = [
-    "click==8.0.0",
-    "pytest>=6.0",
-    "pytest-split",
-    "pytest-dotenv",
-    "requests-mock",
-    "pytest-cov",
-    "pytest-describe",
-    "mypy",
-    "sqlalchemy-stubs"  # Change when sqlalchemy is upgraded https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html
-]
+tests = ["astro-sdk-python[test]"]
 google = [
-    "protobuf<=3.20", # Google bigquery client require protobuf <= 3.20.0. We can remove the limitation when this limitation is removed
-    "apache-airflow-providers-google>=6.4.0",
-    "sqlalchemy-bigquery>=1.3.0",
-    "smart-open[gcs]>=5.2.1"
+    "astro-sdk-python[google]"
 ]
 snowflake = [
-    "apache-airflow-providers-snowflake",
-    "snowflake-sqlalchemy>=1.2.0,<=1.2.4",
-    "snowflake-connector-python[pandas]",
+    "astro-sdk-python[snowflake]"
 ]
 postgres = [
-    "apache-airflow-providers-postgres",
-]
+    "astro-sdk-python[postgres]"]
 amazon = [
-    "apache-airflow-providers-amazon",
-    "s3fs",
-    "smart-open[s3]>=5.2.1",
+    "astro-sdk-python[amazon]"
 ]
 all = [
-    "apache-airflow-providers-amazon",
-    "apache-airflow-providers-google>=6.4.0",
-    "apache-airflow-providers-postgres",
-    "apache-airflow-providers-snowflake",
-    "protobuf<=3.20",
-    "smart-open[all]>=5.2.1",
-    "snowflake-connector-python[pandas]",
-    "snowflake-sqlalchemy>=1.2.0,<=1.2.4",
-    "sqlalchemy-bigquery>=1.3.0",
-    "s3fs",
-    "protobuf<=3.20", # Google bigquery client require protobuf <= 3.20.0. We can remove the limitation when this limitation is removed
+    "astro-sdk-python[all]"
 ]
 doc = [
-    "myst-parser>=0.17",
-    "sphinx>=4.4.0",
-    "sphinx-autoapi",
-    "sphinx-rtd-theme"
+    "astro-sdk-python[doc]"
+
 ]
 
 [project.urls]
 Home = "https://astronomer.io/"
-Source = "https://github.com/astronomer/astro-sdk/"
+Source = "https://github.com/astronomer/astro-sdk/sql-cli"
 Documentation = "https://astro-sdk-python.rtfd.io/"
 
 [project.entry-points.apache_airflow_provider]
