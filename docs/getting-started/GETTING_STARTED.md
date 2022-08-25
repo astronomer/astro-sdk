@@ -32,7 +32,7 @@ To complete this tutorial, you need:
 
 ## Step 1: Set up your data stores
 
-1. On your local machine create a file named `test.csv` with the following data:
+1. On your local machine create a file named `orders_data_header.csv` with the following data:
 
     ```text
     order_id,customer_id,purchase_date,amount
@@ -41,7 +41,7 @@ To complete this tutorial, you need:
     ORDER3,CUST3,3/3/2023,300
     ```
 
-2. [Upload `test.csv`](https://docs.aws.amazon.com/AmazonS3/latest/userguide/upload-objects.html) to your S3 bucket.
+2. [Upload `orders_data_header.csv`](https://docs.aws.amazon.com/AmazonS3/latest/userguide/upload-objects.html) to your S3 bucket.
 3. In Snowflake, create a new Worksheet and run the following SQL commands:
 
     ```sql
