@@ -63,7 +63,7 @@ def test_redshift_run_sql():
 
 
 @pytest.mark.integration
-def test_table_exists_raises_exception():
+def test_inexistent_table_returns_false_on_table_exists_check():
     """Test if table exists in redshift database"""
     database = RedshiftDatabase(conn_id=CUSTOM_CONN_ID)
     table = Table(name="inexistent-table", metadata=Metadata(schema=SCHEMA))
@@ -160,7 +160,7 @@ def test_load_file_to_table(database_table_fixture):
 
     df = database.hook.get_pandas_df(
         f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
-    )
+    ).sort_values(by="id")
     assert len(df) == 3
     expected = pd.DataFrame(
         [
@@ -168,7 +168,7 @@ def test_load_file_to_table(database_table_fixture):
             {"id": 2, "name": "Second"},
             {"id": 3, "name": "Third with unicode पांचाल"},
         ]
-    )
+    ).sort_values(by="id")
     test_utils.assert_dataframes_are_equal(df, expected)
 
 
@@ -195,7 +195,7 @@ def test_load_file_from_cloud_to_table(database_table_fixture):
 
     df = database.hook.get_pandas_df(
         f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
-    )
+    ).sort_values(by="id")
     assert len(df) == 3
     expected = pd.DataFrame(
         [
@@ -203,7 +203,7 @@ def test_load_file_from_cloud_to_table(database_table_fixture):
             {"id": 2, "name": "Second"},
             {"id": 3, "name": "Third with unicode पांचाल"},
         ]
-    )
+    ).sort_values(by="id")
     test_utils.assert_dataframes_are_equal(df, expected)
 
 
@@ -244,15 +244,33 @@ def test_export_table_to_file_file_already_exists_raises_exception(
 )
 def test_export_table_to_file_overrides_existing_file(database_table_fixture):
     """
-    Test export_table_to_file_file() where the end file already exists,
+    Test export_table_to_file() where the end file already exists,
     should result in overriding the existing file
     """
-    database, populated_table = database_table_fixture
+    filepath = "/tmp/file_to_override.csv"
 
-    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
+    previous_dataframe = pd.DataFrame([
+        {"id": 1, "name": "xyz"},
+        {"id": 2, "name": "abc"}
+    ])
+    previous_dataframe.to_csv(filepath)
+
+    df = test_utils.load_to_dataframe(filepath, "csv").sort_values(by="id")
+
+    expected = pd.DataFrame(
+        [
+            {"id": 1, "name": "First"},
+            {"id": 2, "name": "Second"},
+            {"id": 3, "name": "Third with unicode पांचाल"},
+        ]
+    ).sort_values(by="id")
+
+    assert not df.rename(columns=str.lower).equals(expected)
+
+    database, populated_table = database_table_fixture
     database.export_table_to_file(populated_table, File(filepath), if_exists="replace")
 
-    df = test_utils.load_to_dataframe(filepath, "csv")
+    df = test_utils.load_to_dataframe(filepath, "csv").sort_values(by="id")
     assert len(df) == 3
     expected = pd.DataFrame(
         [
@@ -260,9 +278,9 @@ def test_export_table_to_file_overrides_existing_file(database_table_fixture):
             {"id": 2, "name": "Second"},
             {"id": 3, "name": "Third with unicode पांचाल"},
         ]
-    )
+    ).sort_values(by="id")
     assert df.rename(columns=str.lower).equals(expected)
-
+    os.remove(filepath)
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
@@ -316,7 +334,7 @@ def test_export_table_to_file_in_the_cloud(
     )
 
     filepath = copy_remote_file_to_local(object_path)
-    df = pd.read_csv(filepath)
+    df = pd.read_csv(filepath).sort_values(by="id")
     assert len(df) == 3
     expected = pd.DataFrame(
         [
@@ -324,7 +342,7 @@ def test_export_table_to_file_in_the_cloud(
             {"id": 2, "name": "Second"},
             {"id": 3, "name": "Third with unicode पांचाल"},
         ]
-    )
+    ).sort_values(by="id")
     test_utils.assert_dataframes_are_equal(df, expected)
     os.remove(filepath)
 
@@ -352,8 +370,8 @@ def test_create_table_from_select_statement(database_table_fixture):
 
     df = database.hook.get_pandas_df(
         f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
-    )
+    ).sort_values(by="id")
     assert len(df) == 1
-    expected = pd.DataFrame([{"id": 1, "name": "First"}])
+    expected = pd.DataFrame([{"id": 1, "name": "First"}]).sort_values(by="id")
     test_utils.assert_dataframes_are_equal(df, expected)
     database.drop_table(target_table)
