@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 import sqlalchemy
 
-from astro.constants import Database
+from astro.constants import Database, FileType
 from astro.databases import create_database
 from astro.databases.aws.redshift import RedshiftDatabase
 from astro.exceptions import NonExistentTableException
@@ -155,8 +155,43 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
 def test_load_file_to_table(database_table_fixture):
     """Test loading on files to redshift database"""
     database, target_table = database_table_fixture
-    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
-    database.load_file_to_table(File(filepath), target_table, {})
+    filepath = str(pathlib.Path(CWD.parent, "data/sub_folder/"))
+    database.load_file_to_table(File(filepath, filetype=FileType.CSV), target_table, {})
+
+    df = database.hook.get_pandas_df(
+        f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
+    )
+    assert len(df) == 3
+    expected = pd.DataFrame(
+        [
+            {"id": 1, "name": "First"},
+            {"id": 2, "name": "Second"},
+            {"id": 3, "name": "Third with unicode पांचाल"},
+        ]
+    )
+    test_utils.assert_dataframes_are_equal(df, expected)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.REDSHIFT,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
+    ],
+    indirect=True,
+    ids=["redshift"],
+)
+def test_load_file_from_cloud_to_table(database_table_fixture):
+    """Test loading of files from S3 bucket folder to Redshift database."""
+    database, target_table = database_table_fixture
+    database.load_file_to_table(
+        File("s3://astro-sdk/data_redshift/", conn_id="aws_conn", filetype=FileType.CSV),
+        target_table,
+        {},
+    )
 
     df = database.hook.get_pandas_df(
         f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
