@@ -178,6 +178,7 @@ class BaseDatabase(ABC):
         """
         if not table.columns:
             raise ValueError("To use this method, table.columns must be defined")
+
         metadata = table.sqlalchemy_metadata
         sqlalchemy_table = sqlalchemy.Table(table.name, metadata, *table.columns)
         metadata.create_all(self.sqlalchemy_engine, tables=[sqlalchemy_table])
@@ -308,6 +309,7 @@ class BaseDatabase(ABC):
             input_file.path,
             input_file.conn_id,
             normalize_config=normalize_config,
+            filetype=input_file.type.name,
         )
         self.create_schema_if_needed(output_table.metadata.schema)
         if if_exists == "replace" or not self.table_exists(output_table):
@@ -323,6 +325,11 @@ class BaseDatabase(ABC):
         # to use the native support to loading multiple files as opposed to iterating
         # here
         for file in input_files:
+
+            # Skip file object with folder paths
+            if file.path.endswith("/"):
+                continue
+
             if use_native_support and self.is_native_load_file_available(
                 source_file=file, target_table=output_table
             ):

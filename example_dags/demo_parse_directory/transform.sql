@@ -1,1 +1,5 @@
-SELECT Title, Rating FROM {{ input_table }} WHERE Genre1=='Animation' ORDER BY Rating desc LIMIT 5;
+SELECT title, rating
+FROM {{ input_table }}
+WHERE genre1=='Animation'
+ORDER BY rating desc
+LIMIT 5;
