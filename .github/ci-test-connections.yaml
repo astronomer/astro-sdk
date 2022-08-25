@@ -54,8 +54,8 @@ connections:
     extra: null
   - conn_id: redshift_conn
     conn_type: redshift
-    schema: "dev"
-    host: "utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com"
+    schema: $REDSHIFT_DATABASE
+    host: $REDSHIFT_HOST
     port: 5439
     login: $REDSHIFT_USERNAME
     password: $REDSHIFT_PASSWORD

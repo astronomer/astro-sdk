@@ -47,11 +47,7 @@ class RedshiftDatabase(BaseDatabase):
 
     @property
     def default_metadata(self) -> Metadata:
-        """
-        Fill in default metadata values for table objects addressing redshift databases
-
-        :return:
-        """
+        """Fill in default metadata values for table objects addressing redshift databases"""
         # TODO: Change airflow RedshiftSQLHook to fetch database and schema separately.
         database = self.hook.conn.schema
         return Metadata(database=database, schema=self.DEFAULT_SCHEMA)
