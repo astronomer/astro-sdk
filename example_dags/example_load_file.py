@@ -175,4 +175,15 @@ with dag:
     )
     # [END load_file_example_14]
 
+    # [START load_file_example_15]
+    aql.load_file(
+        input_file=File(
+            path=str(CWD.parent) + "/tests/data/homes*", filetype=FileType.CSV
+        ),
+        output_table=Table(
+            conn_id="postgres_conn",
+        ),
+    )
+    # [END load_file_example_15]
+
     aql.cleanup()
