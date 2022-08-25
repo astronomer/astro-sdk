@@ -57,7 +57,7 @@ To complete this tutorial, you need:
 1. Install the Astro Python SDK. If you are using Apache Airflow, run the following command to install the Python SDK and additional packages packages required for working with AWS and Snowflake.
 
     ```shell
-    pip install 'astro-sdk-python[amazon,snowflake]>=0.11'
+    pip install 'astro-sdk-python[amazon,snowflake]>=1.02'
     ```
 
     If you are using the Astro CLI, you can install these packages by adding the following line to the `requirements.txt` file of your Astro project:
