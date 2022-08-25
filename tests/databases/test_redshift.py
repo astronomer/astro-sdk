@@ -45,7 +45,7 @@ def test_create_database(conn_id):
     ids=SUPPORTED_CONN_IDS,
 )
 def test_redshift_sqlalchemy_engine(conn_id, expected_uri):
-    """Test getting a redshift based sqla engine."""
+    """Test getting a redshift based sqlalchemy engine."""
     database = RedshiftDatabase(conn_id)
     engine = database.sqlalchemy_engine
     assert isinstance(engine, sqlalchemy.engine.base.Engine)

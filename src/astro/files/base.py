@@ -11,8 +11,9 @@ from astro.files.locations.base import BaseFileLocation
 from astro.files.types import create_file_type
 
 
-class File:
-    """Handle all file operations, and abstract away the details related to location and file types.
+class File:  # skipcq: PYL-W1641
+    """
+    Handle all file operations, and abstract away the details related to location and file types.
     Intended to be used within library.
     """
 
@@ -142,6 +143,7 @@ def resolve_file_path_pattern(
     :param normalize_config: parameters in dict format of pandas json_normalize() function
     """
     location = create_file_location(path_pattern, conn_id)
+
     files = [
         File(
             path=path,
@@ -150,6 +152,7 @@ def resolve_file_path_pattern(
             normalize_config=normalize_config,
         )
         for path in location.paths
+        if not path.endswith("/")
     ]
     if len(files) == 0:
         raise ValueError(f"File(s) not found for path/pattern '{path_pattern}'")
