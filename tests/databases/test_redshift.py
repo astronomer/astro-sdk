@@ -251,10 +251,9 @@ def test_export_table_to_file_overrides_existing_file(database_table_fixture):
     """
     filepath = "/tmp/file_to_override.csv"
 
-    previous_dataframe = pd.DataFrame([
-        {"id": 1, "name": "xyz"},
-        {"id": 2, "name": "abc"}
-    ])
+    previous_dataframe = pd.DataFrame(
+        [{"id": 1, "name": "xyz"}, {"id": 2, "name": "abc"}]
+    )
     previous_dataframe.to_csv(filepath)
 
     df = test_utils.load_to_dataframe(filepath, "csv").sort_values(by="id")
@@ -283,6 +282,7 @@ def test_export_table_to_file_overrides_existing_file(database_table_fixture):
     ).sort_values(by="id")
     assert df.rename(columns=str.lower).equals(expected)
     os.remove(filepath)
+
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
