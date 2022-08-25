@@ -56,7 +56,6 @@ all = [
 ]
 doc = [
     "astro-sdk-python[doc]"
-
 ]
 
 [project.urls]

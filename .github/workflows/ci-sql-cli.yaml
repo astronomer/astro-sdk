@@ -1,0 +1,51 @@
+name: Build and test astro SQL CLI
+on:
+  push:
+    branches: [ 'main', 'release-**' ]
+    paths:
+      - 'python-sdk/**'
+      - 'sql-cli/**'
+
+  pull_request:
+    branches: [ 'main', 'release-**' ]
+    paths:
+      - 'python-sdk/**'
+      - 'sql-cli/**'
+  # Run on PRs from forks
+  pull_request_target:
+    branches: [ 'main' ]
+    types: ['labeled']
+  release:
+    types: [ 'created' ]
+defaults:
+  run:
+    working-directory: sql-cli
+jobs:
+  Markdown-link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          config-file: '.github/workflows/mlc_config.json'
+
+  Type-Check:
+    runs-on: ubuntu-latest
+    env:
+      MYPY_FORCE_COLOR: 1
+      TERM: xterm-color
+      SETUPTOOLS_USE_DISTUTILS: stdlib
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+      - uses: actions/cache@v3
+        with:
+           path: |
+             ~/.cache/pip
+             .nox
+           key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+      - run: pip3 install nox
+      - run: nox -s type_check
