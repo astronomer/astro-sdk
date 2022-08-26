@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import pathlib
 
 import pandas as pd
 import smart_open
@@ -152,9 +153,26 @@ def resolve_file_path_pattern(
             normalize_config=normalize_config,
         )
         for path in location.paths
-        if not path.endswith("/")
+        if not path.endswith("/") and check_file_type_from_path(path, filetype)
     ]
     if len(files) == 0:
         raise ValueError(f"File(s) not found for path/pattern '{path_pattern}'")
 
     return files
+
+
+def check_file_type_from_path(
+    filepath: str, filetype: constants.FileType | None = None
+) -> bool:
+    """
+    Checks the filetype from the extension and return True if filetype matches
+    :param filepath: path to a file in the filesystem/Object stores
+    :param filetype: constant to provide an explicit file type
+    """
+    file_extension = pathlib.Path(filepath).suffix[1:]
+    try:
+        inferred_filetype = constants.FileType(file_extension)
+    except ValueError:
+        return False
+
+    return inferred_filetype == filetype
