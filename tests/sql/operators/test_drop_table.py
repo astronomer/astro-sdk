@@ -36,9 +36,13 @@ DEFAULT_FILEPATH = str(pathlib.Path(CWD.parent.parent, "data/sample.csv").absolu
             "database": Database.SNOWFLAKE,
             "file": File(DEFAULT_FILEPATH),
         },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(DEFAULT_FILEPATH),
+        },
     ],
     indirect=True,
-    ids=["sqlite", "postgres", "bigquery", "snowflake"],
+    ids=["sqlite", "postgres", "bigquery", "snowflake", "redshift"],
 )
 def test_drop_table_with_table_metadata(database_table_fixture, sample_dag):
     """Test drop table operator for all databases."""
@@ -75,10 +79,15 @@ def test_drop_table_with_table_metadata(database_table_fixture, sample_dag):
             "database": Database.POSTGRES,
             "table": Table(conn_id="postgres_conn"),
             "file": File(DEFAULT_FILEPATH),
-        }
+        },
+        {
+            "database": Database.REDSHIFT,
+            "table": Table(conn_id="redshift_conn"),
+            "file": File(DEFAULT_FILEPATH),
+        },
     ],
     indirect=True,
-    ids=["postgres"],
+    ids=["postgres", "redshift"],
 )
 def test_drop_table_without_table_metadata(database_table_fixture, sample_dag):
     """Test drop table operator for all databases."""

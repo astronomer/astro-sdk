@@ -129,28 +129,32 @@ def test_save_returns_output_file(sample_dag, database_table_fixture):
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes.csv"),
         },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/homes.csv"),
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
-def test_save_all_db_tables_to_S3(sample_dag, database_table_fixture):
+def test_save_all_db_tables_to_s3(sample_dag, database_table_fixture):
     _creds = s3fs_creds()
     file_name = f"{test_utils.get_table_name('test_save')}.csv"
 
-    OUTPUT_FILE_PATH = f"s3://tmp9/{file_name}"
+    output_file_path = f"s3://tmp9/{file_name}"
 
     db, test_table = database_table_fixture
     with sample_dag:
         export_file(
             input_data=test_table,
-            output_file=File(path=OUTPUT_FILE_PATH, conn_id="aws_default"),
+            output_file=File(path=output_file_path, conn_id="aws_default"),
             if_exists="replace",
         )
     test_utils.run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
     # # Read output CSV
-    df_file = pd.read_csv(OUTPUT_FILE_PATH, storage_options=s3fs_creds())
+    df_file = pd.read_csv(output_file_path, storage_options=s3fs_creds())
 
     assert len(df_file) == 47
     assert (df["sell"] == df_file["sell"]).all()
@@ -179,21 +183,25 @@ def test_save_all_db_tables_to_S3(sample_dag, database_table_fixture):
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
-def test_save_all_db_tables_to_GCS(sample_dag, database_table_fixture):
+def test_save_all_db_tables_to_gcs(sample_dag, database_table_fixture):
     database, test_table = database_table_fixture
     file_name = f"{test_utils.get_table_name('test_save')}.csv"
     bucket = "dag-authoring"
 
-    OUTPUT_FILE_PATH = f"gs://{bucket}/test/{file_name}"
+    output_file_path = f"gs://{bucket}/test/{file_name}"
 
     with sample_dag:
         export_file(
             input_data=test_table,
-            output_file=File(path=OUTPUT_FILE_PATH, conn_id="google_cloud_default"),
+            output_file=File(path=output_file_path, conn_id="google_cloud_default"),
             if_exists="replace",
         )
     test_utils.run_dag(sample_dag)
@@ -224,9 +232,13 @@ def test_save_all_db_tables_to_GCS(sample_dag, database_table_fixture):
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 def test_save_all_db_tables_to_local_file_exists_overwrite_false(
     sample_dag, database_table_fixture, caplog
@@ -264,9 +276,13 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes.csv"),
         },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/homes.csv"),
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 @pytest.mark.parametrize(
     "remote_files_fixture",
@@ -352,9 +368,13 @@ def test_unique_task_id_for_same_path(
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/sample.csv"),
         },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/sample.csv"),
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 @pytest.mark.parametrize("file_type", SUPPORTED_FILE_TYPES)
 def test_export_file(sample_dag, database_table_fixture, file_type):
@@ -388,9 +408,13 @@ def test_export_file(sample_dag, database_table_fixture, file_type):
             "database": Database.POSTGRES,
             "file": File(path=str(CWD) + "/../../data/sample.csv"),
         },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/sample.csv"),
+        },
     ],
     indirect=True,
-    ids=["postgresql"],
+    ids=["postgresql", "redshift"],
 )
 def test_populate_table_metadata(sample_dag, database_table_fixture):
     """
