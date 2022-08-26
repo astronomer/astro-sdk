@@ -71,12 +71,12 @@ def run_dag(dag: DAG, account_for_cleanup_failure=False):
             raise b
         failed_tasks = b.ti_status.failed
 
-        if len(failed_tasks) != 1 or list(failed_tasks)[0].task_id != "_cleanup":
+        if len(failed_tasks) != 1 or list(failed_tasks)[0].task_id != "cleanup":
             raise b
         ti_key = list(failed_tasks)[0]
 
         # Cleanup now that everything is done
-        ti = TaskInstance(task=dag.get_task("_cleanup"), run_id=ti_key.run_id)
+        ti = TaskInstance(task=dag.get_task("cleanup"), run_id=ti_key.run_id)
         ti = ti.task.execute({"ti": ti, "dag_run": ti.get_dagrun()})
 
 

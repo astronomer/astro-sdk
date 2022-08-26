@@ -1,10 +1,11 @@
-from typing import TYPE_CHECKING, Any, Dict, Optional, Union
+from __future__ import annotations
+
+from typing import Any
 
 import pandas as pd
+from airflow.decorators.base import get_unique_task_id
 from airflow.models import BaseOperator
-
-if TYPE_CHECKING:
-    from airflow.models.xcom_arg import XComArg
+from airflow.models.xcom_arg import XComArg
 
 from astro import settings
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
@@ -12,7 +13,6 @@ from astro.databases import BaseDatabase, create_database
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.table import Table
-from astro.utils.task_id_helper import get_task_id
 
 
 class LoadFileOperator(BaseOperator):
@@ -38,14 +38,14 @@ class LoadFileOperator(BaseOperator):
     def __init__(
         self,
         input_file: File,
-        output_table: Optional[Table] = None,
+        output_table: Table | None = None,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         if_exists: LoadExistStrategy = "replace",
         ndjson_normalize_sep: str = "_",
         use_native_support: bool = True,
-        native_support_kwargs: Optional[Dict] = None,
+        native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
-        enable_native_fallback: Optional[bool] = True,
+        enable_native_fallback: bool | None = True,
         **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -55,13 +55,13 @@ class LoadFileOperator(BaseOperator):
         self.kwargs = kwargs
         self.if_exists = if_exists
         self.ndjson_normalize_sep = ndjson_normalize_sep
-        self.normalize_config: Dict[str, str] = {}
+        self.normalize_config: dict[str, str] = {}
         self.use_native_support = use_native_support
-        self.native_support_kwargs: Dict[str, Any] = native_support_kwargs or {}
+        self.native_support_kwargs: dict[str, Any] = native_support_kwargs or {}
         self.columns_names_capitalization = columns_names_capitalization
         self.enable_native_fallback = enable_native_fallback
 
-    def execute(self, context: Any) -> Union[Table, pd.DataFrame]:  # skipcq: PYL-W0613
+    def execute(self, context: Any) -> Table | pd.DataFrame:  # skipcq: PYL-W0613
         """
         Load an existing dataset from a supported file into a SQL table or a Dataframe.
         """
@@ -70,7 +70,7 @@ class LoadFileOperator(BaseOperator):
 
         return self.load_data(input_file=self.input_file)
 
-    def load_data(self, input_file: File) -> Union[Table, pd.DataFrame]:
+    def load_data(self, input_file: File) -> Table | pd.DataFrame:
 
         self.log.info("Loading %s into %s ...", self.input_file.path, self.output_table)
         if self.output_table:
@@ -112,7 +112,7 @@ class LoadFileOperator(BaseOperator):
         self.log.info("Completed loading the data into %s.", self.output_table)
         return self.output_table
 
-    def load_data_to_dataframe(self, input_file: File) -> Optional[pd.DataFrame]:
+    def load_data_to_dataframe(self, input_file: File) -> pd.DataFrame | None:
         """
         Loads csv/parquet file from local/S3/GCS with Pandas. Returns dataframe as no
         SQL table was specified
@@ -143,7 +143,7 @@ class LoadFileOperator(BaseOperator):
     def _populate_normalize_config(
         database: BaseDatabase,
         ndjson_normalize_sep: str = "_",
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """
         Validate pandas json_normalize() parameter for databases, since default params result in
         invalid column name. Default parameter result in the columns name containing '.' char.
@@ -164,7 +164,7 @@ class LoadFileOperator(BaseOperator):
             else:
                 return str(char)
 
-        normalize_config: Dict[str, Any] = {
+        normalize_config: dict[str, Any] = {
             "meta_prefix": ndjson_normalize_sep,
             "record_prefix": ndjson_normalize_sep,
             "sep": ndjson_normalize_sep,
@@ -184,16 +184,16 @@ class LoadFileOperator(BaseOperator):
 
 def load_file(
     input_file: File,
-    output_table: Optional[Table] = None,
-    task_id: Optional[str] = None,
+    output_table: Table | None = None,
+    task_id: str | None = None,
     if_exists: LoadExistStrategy = "replace",
     ndjson_normalize_sep: str = "_",
     use_native_support: bool = True,
-    native_support_kwargs: Optional[Dict] = None,
+    native_support_kwargs: dict | None = None,
     columns_names_capitalization: ColumnCapitalization = "original",
-    enable_native_fallback: Optional[bool] = True,
+    enable_native_fallback: bool | None = True,
     **kwargs: Any,
-) -> "XComArg":
+) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.
 
     :param input_file: File path and conn_id for object stores
@@ -211,7 +211,7 @@ def load_file(
 
     # Note - using path for task id is causing issues as it's a pattern and
     # contain chars like - ?, * etc. Which are not acceptable as task id.
-    task_id = task_id if task_id is not None else get_task_id("load_file", "")
+    task_id = task_id if task_id is not None else get_unique_task_id("load_file")
 
     return LoadFileOperator(
         task_id=task_id,

@@ -52,3 +52,10 @@ connections:
     conn_type: aws
     description: null
     extra: null
+  - conn_id: redshift_conn
+    conn_type: redshift
+    schema: $REDSHIFT_DATABASE
+    host: $REDSHIFT_HOST
+    port: 5439
+    login: $REDSHIFT_USERNAME
+    password: $REDSHIFT_PASSWORD

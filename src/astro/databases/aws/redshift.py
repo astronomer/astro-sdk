@@ -1,10 +1,9 @@
 """AWS Redshift table implementation."""
-from typing import Dict, List, Optional
+from typing import List, Optional, Dict
 
 import pandas as pd
 import sqlalchemy
 from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
-from psycopg2 import sql as redshift_sql
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
@@ -13,12 +12,11 @@ from astro.constants import (
     FileLocation,
     FileType,
     LoadExistStrategy,
-    MergeConflictStrategy,
 )
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
-from astro.settings import REDSHIFT_SChEMA
+from astro.settings import REDSHIFT_SCHEMA
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = RedshiftSQLHook.default_conn_name
@@ -34,7 +32,7 @@ class RedshiftDatabase(BaseDatabase):
     Handle interactions with Redshift databases.
     """
 
-    DEFAULT_SCHEMA = REDSHIFT_SChEMA
+    DEFAULT_SCHEMA = REDSHIFT_SCHEMA
     NATIVE_PATHS = {
         FileLocation.S3: "load_s3_file_to_table",
     }
@@ -63,12 +61,9 @@ class RedshiftDatabase(BaseDatabase):
 
     @property
     def default_metadata(self) -> Metadata:
-        """
-        Fill in default metadata values for table objects addressing redshift databases
-
-        :return:
-        """
-        # TODO: Change airflow RedshiftSQLHook to fetch database and schema separately.
+        """Fill in default metadata values for table objects addressing redshift databases"""
+        # TODO: Change airflow RedshiftSQLHook to fetch database and schema separately as it
+        #  treats both of them the same way at the moment.
         database = self.hook.conn.schema
         return Metadata(database=database, schema=self.DEFAULT_SCHEMA)
 
@@ -99,11 +94,11 @@ class RedshiftDatabase(BaseDatabase):
         )
 
     def load_pandas_dataframe_to_table(
-        self,
-        source_dataframe: pd.DataFrame,
-        target_table: Table,
-        if_exists: LoadExistStrategy = "replace",
-        chunk_size: int = DEFAULT_CHUNK_SIZE,
+            self,
+            source_dataframe: pd.DataFrame,
+            target_table: Table,
+            if_exists: LoadExistStrategy = "replace",
+            chunk_size: int = DEFAULT_CHUNK_SIZE,
     ) -> None:
         """
         Create a table with the dataframe's contents.
@@ -123,62 +118,8 @@ class RedshiftDatabase(BaseDatabase):
             chunksize=chunk_size,
         )
 
-    def merge_table(
-        self,
-        source_table: Table,
-        target_table: Table,
-        source_to_target_columns_map: Dict[str, str],
-        target_conflict_columns: List[str],
-        if_conflicts: MergeConflictStrategy = "exception",
-    ) -> None:
-        """
-        Merge the source table rows into a destination table.
-        The argument `if_conflicts` allows the user to define how to handle conflicts.
-
-        :param source_table: Contains the rows to be merged to the target_table
-        :param target_table: Contains the destination table in which the rows will be merged
-        :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names
-        :param target_conflict_columns: List of cols where we expect to have a conflict while combining
-        :param if_conflicts: The strategy to be applied if there are conflicts.
-        """
-
-        def identifier_args(table: Table):
-            schema = table.metadata.schema
-            return (schema, table.name) if schema else (table.name,)
-
-        statement = "INSERT INTO {target_table} ({target_columns}) SELECT {source_columns} FROM {source_table}"
-
-        source_columns = list(source_to_target_columns_map.keys())
-        target_columns = list(source_to_target_columns_map.values())
-
-        if if_conflicts == "ignore":
-            statement += " ON CONFLICT ({target_conflict_columns}) DO NOTHING"
-        elif if_conflicts == "update":
-            statement += " ON CONFLICT ({target_conflict_columns}) DO UPDATE SET {update_statements}"
-
-        source_column_names = [redshift_sql.Identifier(col) for col in source_columns]
-        target_column_names = [redshift_sql.Identifier(col) for col in target_columns]
-        update_statements = [
-            redshift_sql.SQL("{col_name}=EXCLUDED.{col_name}").format(col_name=col_name)
-            for col_name in target_column_names
-        ]
-
-        query = redshift_sql.SQL(statement).format(
-            target_columns=redshift_sql.SQL(",").join(target_column_names),
-            target_table=redshift_sql.Identifier(*identifier_args(target_table)),
-            source_columns=redshift_sql.SQL(",").join(source_column_names),
-            source_table=redshift_sql.Identifier(*identifier_args(source_table)),
-            update_statements=redshift_sql.SQL(",").join(update_statements),
-            target_conflict_columns=redshift_sql.SQL(",").join(
-                [redshift_sql.Identifier(x) for x in target_conflict_columns]
-            ),
-        )
-
-        sql = query.as_string(self.hook.get_conn())
-        self.run_sql(sql_statement=sql)
-
     def is_native_load_file_available(
-        self, source_file: File, target_table: Table
+            self, source_file: File, target_table: Table
     ) -> bool:
         """
         Check if there is an optimised path for source to destination.
@@ -191,12 +132,12 @@ class RedshiftDatabase(BaseDatabase):
         return bool(location_type and file_type)
 
     def load_file_to_table_natively(
-        self,
-        source_file: File,
-        target_table: Table,
-        if_exists: LoadExistStrategy = "replace",
-        native_support_kwargs: Optional[Dict] = None,
-        **kwargs,
+            self,
+            source_file: File,
+            target_table: Table,
+            if_exists: LoadExistStrategy = "replace",
+            native_support_kwargs: Optional[Dict] = None,
+            **kwargs,
     ):
         """
         Checks if optimised path for transfer between File location to database exists
@@ -224,11 +165,11 @@ class RedshiftDatabase(BaseDatabase):
             )
 
     def load_s3_file_to_table(
-        self,
-        source_file: File,
-        target_table: Table,
-        native_support_kwargs: Optional[Dict] = None,
-        **kwargs,
+            self,
+            source_file: File,
+            target_table: Table,
+            native_support_kwargs: Optional[Dict] = None,
+            **kwargs,
     ):
         """
         Load content of multiple files in S3 to output_table in Redshift by:

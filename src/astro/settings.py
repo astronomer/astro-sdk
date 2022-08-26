@@ -6,7 +6,7 @@ SCHEMA = conf.get("astro_sdk", "sql_schema", fallback=DEFAULT_SCHEMA)
 POSTGRES_SCHEMA = conf.get("astro_sdk", "postgres_default_schema", fallback=SCHEMA)
 BIGQUERY_SCHEMA = conf.get("astro_sdk", "bigquery_default_schema", fallback=SCHEMA)
 SNOWFLAKE_SCHEMA = conf.get("astro_sdk", "snowflake_default_schema", fallback=SCHEMA)
-REDSHIFT_SChEMA = conf.get("astro_sdk", "redshift_default_schema", fallback=SCHEMA)
+REDSHIFT_SCHEMA = conf.get("astro_sdk", "redshift_default_schema", fallback=SCHEMA)
 
 
 ALLOW_UNSAFE_DF_STORAGE = conf.getboolean(

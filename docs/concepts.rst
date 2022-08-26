@@ -72,7 +72,7 @@ This is a faster way for datasets of larger size as there is only one network ca
 .. _templating:
 
 Templating
-~~~~~~~~~~
+----------
 Templating is a powerful concept in Airflow to pass dynamic information into task instances at runtime. Templating in Airflow works exactly the same as templating with Jinja in Python: define your to-be-evaluated code between double curly braces, and the expression will be evaluated at runtime.
 
 The parameter list passed to the decorated function is also added to the context which is used to render template. For example:
@@ -83,3 +83,14 @@ The parameter list passed to the decorated function is also added to the context
        :end-before: [END transform_example_3]
 
 More details can be found at `airflow templates reference <https://airflow.apache.org/docs/apache-airflow/stable/templates-ref.html>`_
+
+.. _file_pattern:
+
+Patterns in File path
+~~~~~~~~~~~~~~~~~~~~~
+
+We also resolve the patterns in file path based on the :ref:`file_location`
+
+#. **Local** - Resolves ``File.path`` using the glob standard library (https://docs.python.org/3/library/glob.html)
+#. **S3** - Resolves ``File.path`` using AWS S3 prefix rules (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-prefixes.html)
+#. **GCS** - Resolves ``File.path`` using Google Cloud Storage (GCS) wildcard rules (https://cloud.google.com/storage/docs/gsutil/addlhelp/WildcardNames)

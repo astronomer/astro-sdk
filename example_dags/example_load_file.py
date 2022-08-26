@@ -129,6 +129,64 @@ with dag:
     )
     # [END load_file_example_10]
 
+    # [START load_file_example_11]
+    aql.load_file(
+        input_file=File(
+            "s3://astro-sdk/sample_pattern", conn_id="aws_conn", filetype=FileType.CSV
+        ),
+        output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
+        use_native_support=False,
+    )
+    # [END load_file_example_11]
+
+    # [START load_file_example_12]
+    aql.load_file(
+        input_file=File(
+            "gs://astro-sdk/workspace/sample_pattern",
+            conn_id="bigquery",
+            filetype=FileType.CSV,
+        ),
+        output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
+        use_native_support=False,
+    )
+    # [END load_file_example_12]
+
+    # [START load_file_example_13]
+    aql.load_file(
+        input_file=File(
+            "s3://astro-sdk/sample_pattern",
+            conn_id="aws_conn",
+            filetype=FileType.CSV,
+        ),
+        output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
+        use_native_support=False,
+    )
+    # [END load_file_example_13]
+
+    # [START load_file_example_14]
+    aql.load_file(
+        input_file=File(
+            "gs://astro-sdk/workspace/sample_pattern",
+            conn_id="bigquery",
+            filetype=FileType.CSV,
+        ),
+        output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
+        use_native_support=False,
+    )
+    # [END load_file_example_14]
+
+    # [START load_file_example_15]
+    aql.load_file(
+        input_file=File(
+            path=str(CWD.parent) + "/tests/data/homes*", filetype=FileType.CSV
+        ),
+        output_table=Table(
+            conn_id="postgres_conn",
+        ),
+    )
+    # [END load_file_example_15]
+
+    # [START load_file_example_16]
     aql.load_file(
         input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
         output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
@@ -138,5 +196,6 @@ with dag:
             "REGION": "us-west-2",
         },
     )
+    # [END load_file_example_16]
 
     aql.cleanup()
