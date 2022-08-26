@@ -108,8 +108,12 @@ class RedshiftDatabase(BaseDatabase):
         )
 
     @staticmethod
-    def _get_conflict_statement(if_conflicts: MergeConflictStrategy, stage_table_name: str,
-                                target_table_name: str, target_conflict_columns: List[str]):
+    def _get_conflict_statement(
+        if_conflicts: MergeConflictStrategy,
+        stage_table_name: str,
+        target_table_name: str,
+        target_conflict_columns: List[str],
+    ):
         """
         Builds conflict SQL statement to be applied while merging.
 
@@ -123,11 +127,13 @@ class RedshiftDatabase(BaseDatabase):
         if if_conflicts == "ignore":
             conflict_statement = (
                 f"DELETE FROM {stage_table_name} USING {target_table_name} "
-                f"WHERE {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column} ")
+                f"WHERE {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column} "
+            )
         elif if_conflicts == "update":
             conflict_statement = (
                 f"DELETE FROM {target_table_name} USING {stage_table_name} "
-                f"WHERE {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column} ")
+                f"WHERE {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column} "
+            )
         if conflict_statement:
             for conflict_column in target_conflict_columns[1:]:
                 conflict_statement += f" AND {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column}"
@@ -172,8 +178,9 @@ class RedshiftDatabase(BaseDatabase):
             f"SELECT {source_column_names_string} FROM {source_table_name}"
         )
 
-        conflict_statement: Optional[str] = self._get_conflict_statement(if_conflicts, stage_table_name,
-                                                                         target_table_name, target_conflict_columns)
+        conflict_statement: Optional[str] = self._get_conflict_statement(
+            if_conflicts, stage_table_name, target_table_name, target_conflict_columns
+        )
 
         insert_into_target_table = (
             f"INSERT INTO {target_table_name} SELECT * FROM {stage_table_name}"
