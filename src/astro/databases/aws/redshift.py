@@ -1,5 +1,5 @@
 """AWS Redshift table implementation."""
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 
 import pandas as pd
 import sqlalchemy
@@ -94,11 +94,11 @@ class RedshiftDatabase(BaseDatabase):
         )
 
     def load_pandas_dataframe_to_table(
-            self,
-            source_dataframe: pd.DataFrame,
-            target_table: Table,
-            if_exists: LoadExistStrategy = "replace",
-            chunk_size: int = DEFAULT_CHUNK_SIZE,
+        self,
+        source_dataframe: pd.DataFrame,
+        target_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
     ) -> None:
         """
         Create a table with the dataframe's contents.
@@ -119,7 +119,7 @@ class RedshiftDatabase(BaseDatabase):
         )
 
     def is_native_load_file_available(
-            self, source_file: File, target_table: Table
+        self, source_file: File, target_table: Table
     ) -> bool:
         """
         Check if there is an optimised path for source to destination.
@@ -132,12 +132,12 @@ class RedshiftDatabase(BaseDatabase):
         return bool(location_type and file_type)
 
     def load_file_to_table_natively(
-            self,
-            source_file: File,
-            target_table: Table,
-            if_exists: LoadExistStrategy = "replace",
-            native_support_kwargs: Optional[Dict] = None,
-            **kwargs,
+        self,
+        source_file: File,
+        target_table: Table,
+        if_exists: LoadExistStrategy = "replace",
+        native_support_kwargs: Optional[Dict] = None,
+        **kwargs,
     ):
         """
         Checks if optimised path for transfer between File location to database exists
@@ -165,11 +165,11 @@ class RedshiftDatabase(BaseDatabase):
             )
 
     def load_s3_file_to_table(
-            self,
-            source_file: File,
-            target_table: Table,
-            native_support_kwargs: Optional[Dict] = None,
-            **kwargs,
+        self,
+        source_file: File,
+        target_table: Table,
+        native_support_kwargs: Optional[Dict] = None,
+        **kwargs,
     ):
         """
         Load content of multiple files in S3 to output_table in Redshift by:
