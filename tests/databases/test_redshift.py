@@ -7,7 +7,6 @@ from urllib.parse import urlparse
 import pandas as pd
 import pytest
 import sqlalchemy
-
 from astro.constants import Database, FileType
 from astro.databases import create_database
 from astro.databases.aws.redshift import RedshiftDatabase
