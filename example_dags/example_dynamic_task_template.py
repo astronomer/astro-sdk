@@ -12,7 +12,7 @@ from datetime import datetime
 from airflow import DAG
 
 from astro import sql as aql
-from astro.files import get_file_list, File
+from astro.files import File, get_file_list
 from astro.sql.operators.load_file import LoadFileOperator as LoadFile
 from astro.sql.table import Metadata, Table
 

@@ -12,7 +12,9 @@ def test_get_file_list_execute_local():
     CWD = pathlib.Path(__file__).parent
     LOCAL_FILEPATH = f"{CWD}/../../example_dags/data/"
 
-    op = ListFileOperator(task_id="task_id", file=File(conn_id="conn_id", path=LOCAL_FILEPATH))
+    op = ListFileOperator(
+        task_id="task_id", file=File(conn_id="conn_id", path=LOCAL_FILEPATH)
+    )
     actual = op.execute(None)
     assert actual == [str(file) for file in pathlib.Path(LOCAL_FILEPATH).rglob("*")]
 
