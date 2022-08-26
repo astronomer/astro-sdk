@@ -1,7 +1,7 @@
 """AWS Redshift table implementation."""
 import random
 import string
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
 
 import pandas as pd
 import sqlalchemy
@@ -134,12 +134,12 @@ class RedshiftDatabase(BaseDatabase):
         return conflict_statement
 
     def merge_table(
-            self,
-            source_table: Table,
-            target_table: Table,
-            source_to_target_columns_map: Dict[str, str],
-            target_conflict_columns: List[str],
-            if_conflicts: MergeConflictStrategy = "exception",
+        self,
+        source_table: Table,
+        target_table: Table,
+        source_to_target_columns_map: Dict[str, str],
+        target_conflict_columns: List[str],
+        if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """
         Merge the source table rows into a destination table.
@@ -156,7 +156,8 @@ class RedshiftDatabase(BaseDatabase):
         target_schema = target_table.metadata.schema
         target_table_name = f"{target_schema}.{target_table.name}"
         stage_table_name = random.choice(string.ascii_lowercase) + "".join(
-            random.choice(string.ascii_lowercase + string.digits) for _ in range(UNIQUE_HASH_SIZE - 1)
+            random.choice(string.ascii_lowercase + string.digits)
+            for _ in range(UNIQUE_HASH_SIZE - 1)
         )
 
         begin_transaction = "BEGIN TRANSACTION"
@@ -168,12 +169,15 @@ class RedshiftDatabase(BaseDatabase):
         source_column_names_string = ",".join(map(str, source_columns))
         insert_into_stage_table = (
             f"INSERT INTO {stage_table_name}({target_column_names_string}) "
-            f"SELECT {source_column_names_string} FROM {source_table_name}")
+            f"SELECT {source_column_names_string} FROM {source_table_name}"
+        )
 
         conflict_statement: Optional[str] = self._get_conflict_statement(if_conflicts, stage_table_name,
                                                                          target_table_name, target_conflict_columns)
 
-        insert_into_target_table = f"INSERT INTO {target_table_name} SELECT * FROM {stage_table_name}"
+        insert_into_target_table = (
+            f"INSERT INTO {target_table_name} SELECT * FROM {stage_table_name}"
+        )
         drop_stage_table = f"DROP TABLE {stage_table_name}"
         end_transaction = "END TRANSACTION"
 
