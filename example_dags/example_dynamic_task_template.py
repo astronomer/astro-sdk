@@ -12,7 +12,7 @@ from datetime import datetime
 from airflow import DAG
 
 from astro import sql as aql
-from astro.files import get_file_list
+from astro.files import get_file_list, File
 from astro.sql.operators.load_file import LoadFileOperator as LoadFile
 from astro.sql.table import Metadata, Table
 
@@ -36,7 +36,7 @@ with DAG(
             conn_id=ASTRO_GCP_CONN_ID,
         ),
         use_native_support=True,
-    ).expand(input_file=get_file_list(path=GCS_BUCKET, conn_id=ASTRO_GCP_CONN_ID))
+    ).expand(input_file=get_file_list(File(path=GCS_BUCKET, conn_id=ASTRO_GCP_CONN_ID)))
 
     # [END howto_operator_get_file_list]
     aql.cleanup()

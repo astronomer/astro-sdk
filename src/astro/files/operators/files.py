@@ -12,22 +12,18 @@ class ListFileOperator(BaseOperator):
     """List the file available at path and storage
 
     :param task_id: The task id for uniquely identify a task in a DAG
-    :param path: A path pattern for which you want to get a list of file
-    :param conn_id: connection id for the services
+    :param file: File object a reference to file path pattern and Airflow connection ID
     """
 
-    template_fields = ("path", "conn_id")
-
-    def __init__(self, path: str, conn_id: str, task_id: str = "", **kwargs):
+    def __init__(self, file: File, task_id: str = "", **kwargs):
         task_id = task_id or get_unique_task_id(
             "get_file_list", dag=kwargs.get("dag"), task_group=kwargs.get("task_group")
         )
-        self.path = path
-        self.conn_id = conn_id
+        self.file = file
         super().__init__(task_id=task_id, **kwargs)
 
     def execute(self, context: Context) -> Any:  # skipcq: PYL-W0613
-        location = create_file_location(self.path, self.conn_id)
+        location = create_file_location(self.file.path, self.file.conn_id)
         # Get list of files excluding folders
         return [
             File(path=path, conn_id=location.conn_id)

@@ -18,7 +18,7 @@ def check_if_connection_exists(conn_id: str) -> bool:
     return True
 
 
-def get_file_list(path: str, conn_id: str, **kwargs) -> XComArg:
+def get_file_list(file: File, **kwargs) -> XComArg:
     """
     List the file path from the filesystem storage based on given path pattern
 
@@ -26,11 +26,9 @@ def get_file_list(path: str, conn_id: str, **kwargs) -> XComArg:
 
     Supported file pattern: :ref:`file_pattern`
 
-    :param conn_id: Airflow connection id
-    :param path: Path pattern to the file in the filesystem/Object stores
+    :param file: File object a reference to file path pattern and Airflow connection ID
     """
     return ListFileOperator(
-        path=path,
-        conn_id=conn_id,
+        file=file,
         **kwargs,
     ).output
