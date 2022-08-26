@@ -112,9 +112,10 @@ def run_merge(target_table: Table, source_table: Table, merge_parameters, mode):
     [
         {"database": Database.SNOWFLAKE},
         {"database": Database.BIGQUERY},
+        {"database": Database.REDSHIFT},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery"],
+    ids=["snowflake", "bigquery", "redshift"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
@@ -158,9 +159,10 @@ def test_merge(
     [
         {"database": Database.SNOWFLAKE},
         {"database": Database.BIGQUERY},
+        {"database": Database.REDSHIFT},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery"],
+    ids=["snowflake", "bigquery", "redshift"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
@@ -215,9 +217,12 @@ def test_merge_with_the_same_schema(
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
-    [{"database": Database.BIGQUERY}],
+    [
+        {"database": Database.BIGQUERY},
+        {"database": Database.REDSHIFT}
+    ],
     indirect=True,
-    ids=["bigquery"],
+    ids=["bigquery", "redshift"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",

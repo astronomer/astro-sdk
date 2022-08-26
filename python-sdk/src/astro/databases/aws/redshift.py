@@ -1,5 +1,7 @@
 """AWS Redshift table implementation."""
-from typing import List
+import random
+import string
+from typing import List, Dict, Optional
 
 import pandas as pd
 import sqlalchemy
@@ -7,13 +9,14 @@ from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
+from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.settings import REDSHIFT_SCHEMA
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = RedshiftSQLHook.default_conn_name
+UNIQUE_HASH_SIZE = 16
 
 
 class RedshiftDatabase(BaseDatabase):
@@ -103,6 +106,70 @@ class RedshiftDatabase(BaseDatabase):
             if_exists=if_exists,
             chunksize=chunk_size,
         )
+
+    def merge_table(
+            self,
+            source_table: Table,
+            target_table: Table,
+            source_to_target_columns_map: Dict[str, str],
+            target_conflict_columns: List[str],
+            if_conflicts: MergeConflictStrategy = "exception",
+    ) -> None:
+        """
+        Merge the source table rows into a destination table.
+        The argument `if_conflicts` allows the user to define how to handle conflicts.
+
+        :param source_table: Contains the rows to be merged to the target_table
+        :param target_table: Contains the destination table in which the rows will be merged
+        :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names
+        :param target_conflict_columns: List of cols where we expect to have a conflict while combining
+        :param if_conflicts: The strategy to be applied if there are conflicts.
+        """
+        source_schema = source_table.metadata.schema
+        source_table_name = f"{source_schema}.{source_table.name}"
+        target_schema = target_table.metadata.schema
+        target_table_name = f"{target_schema}.{target_table.name}"
+        stage_table_name = random.choice(string.ascii_lowercase) + "".join(
+            random.choice(string.ascii_lowercase + string.digits) for _ in range(UNIQUE_HASH_SIZE - 1)
+        )
+
+        begin_transaction = "BEGIN TRANSACTION"
+        create_temp_table = f"CREATE TEMP TABLE {stage_table_name} (LIKE {target_schema}.{target_table.name})"
+
+        source_columns = list(source_to_target_columns_map.keys())
+        target_columns = list(source_to_target_columns_map.values())
+        target_column_names_string = ",".join(map(str, target_columns))
+        source_column_names_string = ",".join(map(str, source_columns))
+        insert_into_stage_table = (
+            f"INSERT INTO {stage_table_name}({target_column_names_string}) "
+            f"SELECT {source_column_names_string} FROM {source_table_name}")
+
+        conflict_column = target_conflict_columns[0]
+        conflict_statement: Optional[str] = None
+        if if_conflicts == "ignore":
+            conflict_statement = (
+                f"DELETE FROM {stage_table_name} USING {target_table_name} "
+                f"WHERE {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column} ")
+        elif if_conflicts == "update":
+            conflict_statement = (
+                f"DELETE FROM {target_table_name} USING {stage_table_name} "
+                f"WHERE {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column} ")
+        if conflict_statement:
+            for conflict_column in target_conflict_columns[1:]:
+                conflict_statement += f" AND {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column}"
+
+        insert_into_target_table = f"INSERT INTO {target_table_name} SELECT * FROM {stage_table_name}"
+        drop_stage_table = f"DROP TABLE {stage_table_name}"
+        end_transaction = "END TRANSACTION"
+
+        statements = [begin_transaction, create_temp_table, insert_into_stage_table]
+        if conflict_statement:
+            statements.append(conflict_statement)
+        statements.extend([insert_into_target_table, drop_stage_table, end_transaction])
+
+        with self.hook.get_cursor() as cursor:
+            for statement in statements:
+                cursor.execute(statement)
 
     def is_native_load_file_available(
         self, source_file: File, target_table: Table
