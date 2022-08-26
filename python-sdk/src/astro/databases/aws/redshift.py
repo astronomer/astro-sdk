@@ -107,6 +107,32 @@ class RedshiftDatabase(BaseDatabase):
             chunksize=chunk_size,
         )
 
+    @staticmethod
+    def _get_conflict_statement(if_conflicts: MergeConflictStrategy, stage_table_name: str,
+                                target_table_name: str, target_conflict_columns: List[str]):
+        """
+        Builds conflict SQL statement to be applied while merging.
+
+        :param if_conflicts: the strategy to be applied if there are conflicts
+        :param stage_table_name: name of the stage table created in Redshift for merge operation
+        :param target_table_name: name of the target table in which data is to be merged
+        :param target_conflict_columns: list of cols where we expect to have a conflict while combining
+        """
+        conflict_column = target_conflict_columns[0]
+        conflict_statement: Optional[str] = None
+        if if_conflicts == "ignore":
+            conflict_statement = (
+                f"DELETE FROM {stage_table_name} USING {target_table_name} "
+                f"WHERE {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column} ")
+        elif if_conflicts == "update":
+            conflict_statement = (
+                f"DELETE FROM {target_table_name} USING {stage_table_name} "
+                f"WHERE {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column} ")
+        if conflict_statement:
+            for conflict_column in target_conflict_columns[1:]:
+                conflict_statement += f" AND {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column}"
+        return conflict_statement
+
     def merge_table(
             self,
             source_table: Table,
@@ -144,19 +170,8 @@ class RedshiftDatabase(BaseDatabase):
             f"INSERT INTO {stage_table_name}({target_column_names_string}) "
             f"SELECT {source_column_names_string} FROM {source_table_name}")
 
-        conflict_column = target_conflict_columns[0]
-        conflict_statement: Optional[str] = None
-        if if_conflicts == "ignore":
-            conflict_statement = (
-                f"DELETE FROM {stage_table_name} USING {target_table_name} "
-                f"WHERE {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column} ")
-        elif if_conflicts == "update":
-            conflict_statement = (
-                f"DELETE FROM {target_table_name} USING {stage_table_name} "
-                f"WHERE {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column} ")
-        if conflict_statement:
-            for conflict_column in target_conflict_columns[1:]:
-                conflict_statement += f" AND {stage_table_name}.{conflict_column}={target_table_name}.{conflict_column}"
+        conflict_statement: Optional[str] = self._get_conflict_statement(if_conflicts, stage_table_name,
+                                                                         target_table_name, target_conflict_columns)
 
         insert_into_target_table = f"INSERT INTO {target_table_name} SELECT * FROM {stage_table_name}"
         drop_stage_table = f"DROP TABLE {stage_table_name}"
