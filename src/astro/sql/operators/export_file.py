@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import pandas as pd
+from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
 
 from astro.constants import ExportExistsStrategy
