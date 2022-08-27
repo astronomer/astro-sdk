@@ -1,2 +1,2 @@
-def basic_function():
+def basic_function() -> str:
     return "foo"
