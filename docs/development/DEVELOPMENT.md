@@ -1,18 +1,18 @@
 # Developing the package
 
-Prerequisites
+## Prerequisites
 
-* (Optional but highly recommended) [pipx](https://pypa.github.io/pipx/).
-* [Nox](https://nox.thea.codes/) for all automation.
+* At least Python 3.7, 3.8 or 3.9
+* (Optional but highly recommended) [pyenv](https://github.com/pyenv/pyenv)
 
-If you use pipx, use the following command to install Nox:
+_On **Apple M1** it is [currently required](https://github.com/psycopg/psycopg2/issues/1286#issuecomment-914286206) to install `postgresql` package. Once [compatible wheels](https://github.com/psycopg/psycopg2/issues/1482) are released, you can remove it._
 
-    pipx install nox
+## Setup a development environment
 
-Once you have installed, please run the following command to create a `.env` file:
+To setup your local environment simply run the below statement:
 
 ```bash
-cat .env-template > .env
+make local target=setup
 ```
 
 You will see that there are a series of AWS and Snowflake-based env variables. You really only need these set if you want
@@ -24,39 +24,41 @@ We've created a docker image that uses the sample [pagila](https://github.com/de
 To use this database please run the following docker image in the background. You'll notice that we are using port `5433` to ensure that
 this postgres instance does not interfere with other running postgres instances.
 
-```
+```bash
 docker run --rm -it -p 5433:5432 dimberman/pagila-test &
 ```
 
+## Setup IDE and editor support
 
-## Setup a development environment
-
-This is useful for IDE and editor support.
-
-    nox -s dev
+```bash
+nox -s dev
+```
 
 Once completed, point the Python environment to `.nox/dev` in your IDE or
 editor of choice.
-
 
 ## Set up pre-commit hooks
 
 If you do NOT have [pre-commit](https://pre-commit.com/) installed, run the
 following command to get a copy:
 
-    nox --install-only lint
+```bash
+nox --install-only lint
+```
 
 and find the `pre-commit` command in `.nox/lint`.
 
 After locating the pre-commit command, run:
 
-    path/to/pre-commit install
-
+```bash
+path/to/pre-commit install
+```
 
 ## Run linters manually
 
-    nox -s lint
-
+```bash
+nox -s lint
+```
 
 ## Run tests
 
@@ -64,18 +66,24 @@ After locating the pre-commit command, run:
 
 On all supported Python versions:
 
-    nox -s test
+```bash
+nox -s test
+```
 
 On only 3.9 (for example):
 
-    nox -s test-3.9
+```bash
+nox -s test-3.9
+```
 
 Please also note that you can reuse an existing environment if you run nox with the `-r` argument (or even `-R` if you
 don't want to attempt to reinstall packages). This can significantly speed up repeat test runs.
 
 ## Build documentation
 
-    nox -s build_docs
+```bash
+nox -s build_docs
+```
 
 ## Check code coverage
 
@@ -121,12 +129,15 @@ TOTAL                                                   733    374    222     18
 
 Build new release artifacts:
 
-    nox -s build
+```bash
+nox -s build
+```
 
 Publish a release to PyPI:
 
-    nox -s release
-
+```bash
+nox -s release
+```
 
 ## Nox tips
 
@@ -140,50 +151,54 @@ You can configure the Docker-based testing environment to test your DAG
 
 1. Install the latest versions of the Docker Community Edition and Docker Compose and add them to the PATH.
 
-2. Run ``make container target=build-run``
+1. Run `make container target=build-run`
 
-3. Put the DAGs you want to run in the dev/dags directory:
+1. Put the DAGs you want to run in the dev/dags directory:
 
-4. If you want to add Connections, create a connections.yaml file in the dev directory.
+1. If you want to add Connections, create a connections.yaml file in the dev directory.
 
-   See the `Connections Guide <https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html>`_ for more information.
+   See the [Connections Guide](https://airflow.apache.org/docs/apache-airflow/stable/howto/connection.html) for more information.
 
    Example:
 
-```
-druid_broker_default:
-  conn_type: druid
-  extra: '{"endpoint": "druid/v2/sql"}'
-  host: druid-broker
-  login: null
-  password: null
-  port: 8082
-  schema: null
-airflow_db:
-  conn_type: mysql
-  extra: null
-  host: mysql
-  login: root
-  password: plainpassword
-  port: null
-  schema: airflow
-```
+    ```yaml
+    druid_broker_default:
+      conn_type: druid
+      extra: '{"endpoint": "druid/v2/sql"}'
+      host: druid-broker
+      login: null
+      password: null
+      port: 8082
+      schema: null
+    airflow_db:
+      conn_type: mysql
+      extra: null
+      host: mysql
+      login: root
+      password: plainpassword
+      port: null
+      schema: airflow
+    ```
 
-5. The following commands are available to run from the root of the repository.
+1. The following commands are available to run from the root of the repository.
 
-  - ``make container target=logs`` - To view the logs of the all the containers
-  - ``make container target=stop`` - To stop all the containers
-  - ``make container target=clean`` - To remove all the containers along with volumes
-  - ``make container target=help`` - To view the available commands
-  - ``make container target=build-run`` - To build the docker image and then run containers
+* `make container target=logs` - To view the logs of the all the containers
+* `make container target=stop` - To stop all the containers
+* `make container target=clean` - To remove all the containers along with volumes
+* `make container target=help` - To view the available commands
+* `make container target=build-run` - To build the docker image and then run containers
+* `make container target=docs` -  To build the docs using Sphinx
+* `make container target=restart` - To restart Scheduler & Triggerer containers
+* `make container target=restart-all` - To restart all the containers
+* `make container target=shell` - To run bash/shell within a container (Allows interactive session)
 
-6. Following ports are accessible from the host machine:
+1. Following ports are accessible from the host machine:
 
-  - ``8080 ``- Webserver
-  - ``5555`` - Flower
-  - ``5432`` - Postgres
+* `8080` - Webserver
+* `5555` - Flower
+* `5432` - Postgres
 
-7. Dev Directories:
+1. Dev Directories:
 
-  - ``dev/dags/`` - DAG Files
-  - ``dev/logs/`` - Logs files of the Airflow containers
+* `dev/dags/` - DAG Files
+* `dev/logs/` - Logs files of the Airflow containers

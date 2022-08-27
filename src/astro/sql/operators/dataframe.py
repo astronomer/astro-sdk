@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import inspect
-from typing import Any, Callable, Dict, Optional, Tuple, Union
+from typing import Any, Callable
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
@@ -36,10 +38,10 @@ def _get_dataframe(
 
 
 def load_op_arg_table_into_dataframe(
-    op_args: Tuple,
+    op_args: tuple,
     python_callable: Callable,
     columns_names_capitalization: ColumnCapitalization,
-) -> Tuple:
+) -> tuple:
     """For dataframe based functions, takes any Table objects from the op_args
     and converts them into local dataframes that can be handled in the python context"""
     full_spec = inspect.getfullargspec(python_callable)
@@ -63,10 +65,10 @@ def load_op_arg_table_into_dataframe(
 
 
 def load_op_kwarg_table_into_dataframe(
-    op_kwargs: Dict,
+    op_kwargs: dict,
     python_callable: Callable,
     columns_names_capitalization: ColumnCapitalization,
-) -> Dict:
+) -> dict:
     """For dataframe based functions, takes any Table objects from the op_kwargs
     and converts them into local dataframes that can be handled in the python context"""
     param_types = inspect.signature(python_callable).parameters
@@ -99,9 +101,9 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
 
     def __init__(
         self,
-        conn_id: Optional[str] = None,
-        database: Optional[str] = None,
-        schema: Optional[str] = None,
+        conn_id: str | None = None,
+        database: str | None = None,
+        schema: str | None = None,
         columns_names_capitalization: ColumnCapitalization = "lower",
         **kwargs,
     ):
@@ -110,9 +112,9 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         self.schema = schema
         self.parameters = None
         self.kwargs = kwargs or {}
-        self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
+        self.op_kwargs: dict = self.kwargs.get("op_kwargs") or {}
         if self.op_kwargs.get("output_table"):
-            self.output_table: Optional[Table] = self.op_kwargs.pop("output_table")
+            self.output_table: Table | None = self.op_kwargs.pop("output_table")
         else:
             self.output_table = None
         self.op_args = self.kwargs.get("op_args", ())  # type: ignore
@@ -126,7 +128,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             **kwargs,
         )
 
-    def execute(self, context: Dict) -> Union[Table, pd.DataFrame]:
+    def execute(self, context: dict) -> Table | pd.DataFrame:
         first_table = find_first_table(
             op_args=self.op_args,  # type: ignore
             op_kwargs=self.op_kwargs,
@@ -169,11 +171,11 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
 
 
 def dataframe(
-    python_callable: Optional[Callable] = None,
-    multiple_outputs: Optional[bool] = None,
+    python_callable: Callable | None = None,
+    multiple_outputs: bool | None = None,
     conn_id: str = "",
-    database: Optional[str] = None,
-    schema: Optional[str] = None,
+    database: str | None = None,
+    schema: str | None = None,
     columns_names_capitalization: ColumnCapitalization = "lower",
     **kwargs: Any,
 ) -> TaskDecorator:

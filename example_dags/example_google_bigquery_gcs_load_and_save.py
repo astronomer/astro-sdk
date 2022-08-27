@@ -2,7 +2,7 @@
 This Example DAG:
  - Pulls a CSV file from Github and loads it into BigQuery.
  - Extracts the data from BigQuery and load into in-memory Pandas Dataframe
- - Finds the Top 5 movies based on Rating using pandas dataframe
+ - Finds the Top 5 movies based on rating using pandas dataframe
  - And loads it into a Google Cloud Storage bucket in a CSV file
 
 Pre-requisites:
@@ -33,7 +33,7 @@ with DAG(
     t1 = aql.load_file(
         task_id="load_from_github_to_bq",
         input_file=File(
-            path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv"
+            path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
         ),
         output_table=Table(
             name="imdb_movies", conn_id="bigquery", metadata=Metadata(schema="astro")
@@ -45,8 +45,8 @@ with DAG(
     @aql.dataframe(columns_names_capitalization="original")
     def extract_top_5_movies(input_df: pd.DataFrame):
         print(f"Total Number of records: {len(input_df)}")
-        top_5_movies = input_df.sort_values(by="Rating", ascending=False)[
-            ["Title", "Rating", "Genre1"]
+        top_5_movies = input_df.sort_values(by="rating", ascending=False)[
+            ["title", "rating", "genre1"]
         ].head(5)
         print(f"Top 5 Movies: {top_5_movies}")
         return top_5_movies

@@ -1,4 +1,6 @@
-from typing import Any, Optional, Union
+from __future__ import annotations
+
+from typing import Any
 
 import pandas as pd
 from airflow.models.xcom_arg import XComArg
@@ -8,7 +10,6 @@ from astro.databases import create_database
 from astro.files import File
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import Table
-from astro.utils.task_id_helper import get_task_id
 
 
 class ExportFileOperator(AstroSQLBaseOperator):
@@ -23,7 +24,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
 
     def __init__(
         self,
-        input_data: Union[Table, pd.DataFrame],
+        input_data: Table | pd.DataFrame,
         output_file: File,
         if_exists: ExportExistsStrategy = "exception",
         **kwargs,
@@ -59,12 +60,12 @@ class ExportFileOperator(AstroSQLBaseOperator):
 
 
 def export_file(
-    input_data: Union[Table, pd.DataFrame],
+    input_data: Table | pd.DataFrame,
     output_file: File,
     if_exists: ExportExistsStrategy = "exception",
-    task_id: Optional[str] = None,
+    task_id: str | None = None,
     **kwargs: Any,
-) -> "XComArg":
+) -> XComArg:
     """Convert ExportFileOperator into a function. Returns XComArg.
 
     Returns an XComArg object of type File which matches the output_file parameter.
@@ -91,9 +92,7 @@ def export_file(
     :param task_id: task id, optional
     """
 
-    task_id = (
-        task_id if task_id is not None else get_task_id("export_file", output_file.path)
-    )
+    task_id = task_id or get_unique_task_id("export_file")
 
     return ExportFileOperator(
         task_id=task_id,

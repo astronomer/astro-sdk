@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import inspect
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
@@ -20,16 +22,16 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
 
     def __init__(
         self,
-        conn_id: Optional[str] = None,
-        parameters: Optional[dict] = None,
-        handler: Optional[Function] = None,
-        database: Optional[str] = None,
-        schema: Optional[str] = None,
+        conn_id: str | None = None,
+        parameters: dict | None = None,
+        handler: Function | None = None,
+        database: str | None = None,
+        schema: str | None = None,
         sql: str = "",
         **kwargs: Any,
     ):
         self.kwargs = kwargs or {}
-        self.op_kwargs: Dict = self.kwargs.get("op_kwargs") or {}
+        self.op_kwargs: dict = self.kwargs.get("op_kwargs") or {}
         self.output_table: Table = self.op_kwargs.pop("output_table", Table())
         self.handler = self.op_kwargs.pop("handler", handler)
         self.conn_id = self.op_kwargs.pop("conn_id", conn_id)
@@ -38,7 +40,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         self.parameters = parameters or {}
         self.database = self.op_kwargs.pop("database", database)
         self.schema = self.op_kwargs.pop("schema", schema)
-        self.op_args: Dict[str, Union[Table, pd.DataFrame]] = {}
+        self.op_args: dict[str, Table | pd.DataFrame] = {}
 
         # We purposely do NOT render upstream_tasks otherwise we could have a case where a user
         # has 10 dataframes as upstream tasks and it crashes the worker
@@ -48,7 +50,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             **kwargs,
         )
 
-    def execute(self, context: Dict) -> None:
+    def execute(self, context: dict) -> None:
         first_table = find_first_table(
             op_args=self.op_args,  # type: ignore
             op_kwargs=self.op_kwargs,
@@ -119,7 +121,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             with open(self.sql) as file:
                 self.sql = file.read().replace("\n", " ")
 
-    def move_function_params_into_sql_params(self, context: Dict) -> None:
+    def move_function_params_into_sql_params(self, context: dict) -> None:
         """
         Pulls values from the function op_args and op_kwargs and places them into
         parameters for SQLAlchemy to parse
@@ -137,7 +139,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                 k: self.render_template(v, context) for k, v in self.parameters.items()  # type: ignore
             }
 
-    def translate_jinja_to_sqlalchemy_template(self, context: Dict) -> None:
+    def translate_jinja_to_sqlalchemy_template(self, context: dict) -> None:
         """
         This function handles all jinja templating to ensure that the SQL statement is ready for
         processing by SQLAlchemy. We use the database object here as different databases will have
@@ -175,8 +177,8 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
 
 
 def load_op_arg_dataframes_into_sql(
-    conn_id: str, op_args: Tuple, target_table: Table
-) -> Tuple:
+    conn_id: str, op_args: tuple, target_table: Table
+) -> tuple:
     """
     Identify dataframes in op_args and load them to the table.
 
@@ -202,8 +204,8 @@ def load_op_arg_dataframes_into_sql(
 
 
 def load_op_kwarg_dataframes_into_sql(
-    conn_id: str, op_kwargs: Dict, target_table: Table
-) -> Dict:
+    conn_id: str, op_kwargs: dict, target_table: Table
+) -> dict:
     """
     Identify dataframes in op_kwargs and load them to a table.
 

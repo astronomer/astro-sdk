@@ -28,6 +28,7 @@ DATABASE_NAME_TO_CONN_ID = {
     Database.BIGQUERY: "google_cloud_default",
     Database.POSTGRES: "postgres_conn",
     Database.SNOWFLAKE: "snowflake_conn",
+    Database.REDSHIFT: "redshift_conn",
 }
 
 

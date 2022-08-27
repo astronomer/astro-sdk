@@ -9,7 +9,9 @@ build:
 sphinx:
   configuration: docs/conf.py
 
-# Explicitly set the version of Python and its requirements
 python:
   install:
-    - requirements: docs/requirements.txt
+    - method: pip
+      path: .
+      extra_requirements:
+        - doc

@@ -8,21 +8,18 @@ export_file operator
 
 When to use the ``export_file`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The ``export_file`` function writes SQL table to csv/parquet on local/S3/GCS. The ``export_file`` function imports data from :ref:`supported_databases` or pandas dataframe.
+The ``export_file`` operator allows you to write SQL tables to CSV or parquet files and store them locally, on S3, or on GCS. The ``export_file`` function can export data from :ref:`supported_databases` or a Pandas dataframe.
 
-There are two use cases of the ``export_file`` operator.
+There are two main uses for the ``export_file`` operator.
 
-
-Case 1: Export file from table.
-    The following example saves your :ref:`table` of data to file storage using the ``export_file``, which returns a pointer to File object.
+Case 1: Export data from a table.
 
     .. literalinclude:: ../../../../example_dags/example_google_bigquery_gcs_load_and_save.py
        :language: python
        :start-after: [START export_example_1]
        :end-before: [END export_example_1]
 
-Case 2: Export file from dataframe.
-    The following example saves your pandas dataframe of data to file storage using the ``aql.export_file``, which returns a pointer to File object.
+Case 2: Export data from a Pandas dataframe.
 
     .. literalinclude:: ../../../../example_dags/example_google_bigquery_gcs_load_and_save.py
        :language: python

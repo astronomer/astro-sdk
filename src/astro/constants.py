@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 from enum import Enum
 
@@ -38,6 +40,7 @@ class Database(Enum):
     SQLITE = "sqlite"
     BIGQUERY = "bigquery"
     SNOWFLAKE = "snowflake"
+    REDSHIFT = "redshift"
     # [END database]
 
 

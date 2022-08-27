@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root ``toctree`` directive.
 
-Welcome to astro-sdk's documentation!
-=====================================
+Welcome to astro-sdk-python's documentation!
+============================================
 
 .. toctree::
    :maxdepth: 2
@@ -15,19 +15,21 @@ Welcome to astro-sdk's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Developing Astro SDK
-   :glob:
+   :caption: Guides
+   :titlesonly:
 
-   development/*
-
-   Astro Enhancement Proposals <aep/index>
+   concepts.rst
+   operators.rst
 
 .. toctree::
    :maxdepth: 1
-   :caption: API Reference
+   :caption: Reference
    :glob:
 
    autoapi/*
+   configurations.rst
+   supported_databases.rst
+   supported_file.rst
 
 .. toctree::
    :maxdepth: 1
@@ -37,29 +39,13 @@ Welcome to astro-sdk's documentation!
    CHANGELOG.md
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Operators
+   :maxdepth: 2
+   :caption: Developing Astro SDK
    :glob:
 
-   astro/sql/operators/*
-   astro/files/operators/*
+   development/*
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Concepts
-   :glob:
-
-   concepts.rst
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Reference
-   :glob:
-
-   configurations.rst
-   supported_databases.rst
-   supported_file.rst
-
+   Astro Enhancement Proposals <aep/index>
 
 Indices and Tables
 ==================

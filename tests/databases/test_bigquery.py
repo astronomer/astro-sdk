@@ -48,13 +48,17 @@ def test_create_database(conn_id):
     ],
     ids=SUPPORTED_CONN_IDS,
 )
-def test_bigquery_sqlalchemy_engine(conn_id, expected_uri):
+@mock.patch(
+    "astro.databases.google.bigquery.BigQueryHook.provide_gcp_credential_file_as_context"
+)
+def test_bigquery_sqlalchemy_engine(mock_credentials, conn_id, expected_uri):
     """Test getting a bigquery based sqla engine."""
     database = BigqueryDatabase(conn_id)
     engine = database.sqlalchemy_engine
     assert isinstance(engine, sqlalchemy.engine.base.Engine)
     url = urlparse(str(engine.url))
     assert url.geturl() == expected_uri
+    mock_credentials.assert_called_once_with()
 
 
 @pytest.mark.integration
@@ -98,7 +102,11 @@ def test_bigquery_create_table_with_columns(database_table_fixture):
     """Test table creation with columns data"""
     database, table = database_table_fixture
 
-    statement = f"SELECT * FROM {table.metadata.schema}.INFORMATION_SCHEMA.COLUMNS WHERE table_name='{table.name}'"
+    # Looking for specific columns in INFORMATION_SCHEMA.COLUMNS as Bigquery can add/remove columns in the table.
+    statement = (
+        f"SELECT TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, DATA_TYPE "
+        f"FROM {table.metadata.schema}.INFORMATION_SCHEMA.COLUMNS WHERE table_name='{table.name}'"
+    )
     response = database.run_sql(statement)
     assert response.first() is None
 
@@ -111,36 +119,15 @@ def test_bigquery_create_table_with_columns(database_table_fixture):
         f"{table.metadata.schema}",
         f"{table.name}",
         "id",
-        1,
-        "NO",
         "INT64",
-        "NEVER",
-        None,
-        None,
-        "NO",
-        None,
-        "NO",
-        "NO",
-        None,
-        "NULL",
     )
+
     assert rows[1] == (
         "astronomer-dag-authoring",
         f"{table.metadata.schema}",
         f"{table.name}",
         "name",
-        2,
-        "NO",
         "STRING(60)",
-        "NEVER",
-        None,
-        None,
-        "NO",
-        None,
-        "NO",
-        "NO",
-        None,
-        "NULL",
     )
 
 
@@ -495,3 +482,31 @@ def test_get_run_id():
         S3ToBigqueryDataTransfer.get_run_id(config)
         == "62d6a4df-0000-2fad-8752-d4f547e68ef4"
     )
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
+    ],
+    indirect=True,
+    ids=["bigquery"],
+)
+@mock.patch("astro.databases.google.bigquery.pd.DataFrame")
+def test_load_pandas_dataframe_to_table_with_service_account(
+    mock_df, database_table_fixture
+):
+    """Test loading a pandas dataframe to a table with service account authentication."""
+    database, target_table = database_table_fixture
+    # Skip running _get_credentials. We assume we always will get a Credentials object back.
+    database.hook._get_credentials = mock.Mock()
+
+    database.load_pandas_dataframe_to_table(mock_df, target_table)
+
+    _, kwargs = mock_df.to_gbq.call_args
+    # Check that we are using service account authentication i.e. by passing not None.
+    assert kwargs["credentials"] is not None
