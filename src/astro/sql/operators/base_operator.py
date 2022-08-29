@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import Any
 
 from airflow.models.baseoperator import BaseOperator
@@ -9,4 +8,8 @@ from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
 
 class AstroSQLBaseOperator(UpstreamTaskMixin, BaseOperator):
     def execute(self, context: Context) -> Any:
+        """
+        We are trying to make the documentation not take on the upstream BaseOperator documentation so
+        we are hoping that implementing this method will fix it.
+        """
         pass
