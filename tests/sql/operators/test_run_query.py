@@ -34,10 +34,10 @@ def test_run_query_postgres(mock_get_conn, sqlalchemy_engine):
     sqlalchemy_engine.assert_called_once()
 
 
-@patch("sqlalchemy.engine.base.Connection._execute_context")
+@patch("astro.databases.google.bigquery.BigqueryDatabase.sqlalchemy_engine", new_callable=PropertyMock)
 @patch("astro.databases.google.bigquery.BigqueryDatabase.hook", new_callable=PropertyMock)
 @patch("airflow.hooks.base.BaseHook.get_connection")
-def test_run_query_bigquery(mock_get_conn, mock_bigquery_hook, _execute_context):
+def test_run_query_bigquery(mock_get_conn, mock_bigquery_hook, sqlalchemy_engine):
     """Assert that if connection type is ``gcpbigquery`` then sqlalchemy create_engine called with correct uri"""
     mock_get_conn.return_value = Connection(conn_id="conn", conn_type="gcpbigquery")
     op = RunQueryOperator(
