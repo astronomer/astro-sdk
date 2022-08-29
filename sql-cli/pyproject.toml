@@ -39,7 +39,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-tests = ["astro-sdk-python[test]"]
+tests = ["astro-sdk-python[tests]"]
 google = [
     "astro-sdk-python[google]"
 ]
