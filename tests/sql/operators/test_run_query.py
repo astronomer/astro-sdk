@@ -6,7 +6,7 @@ from astro.sql.operators.run_query import RunQueryOperator
 
 
 @patch("sqlalchemy.engine.base.Connection._execute_context")
-@patch("sqlalchemy.create_engine")
+@patch("astro.databases.sqlite.SqliteDatabase.hook", new_callable=PropertyMock)
 @patch("airflow.hooks.base.BaseHook.get_connection")
 def test_run_query_sqlite(mock_get_conn, mock_create_engine, _execute_context):
     """Assert that if connection type is ``sqlite`` then sqlalchemy create_engine called with correct uri"""
@@ -17,7 +17,7 @@ def test_run_query_sqlite(mock_get_conn, mock_create_engine, _execute_context):
         task_id="task1", sql_statement="select * from 1", conn_id="conn"
     )
     op.execute(None)
-    mock_create_engine.assert_called_once_with("sqlite:///localhost")
+    mock_create_engine.assert_called_once()
 
 
 @patch("astro.databases.postgres.PostgresDatabase.hook", new_callable=PropertyMock)
@@ -31,23 +31,20 @@ def test_run_query_postgres(mock_get_conn, sqlalchemy_engine):
         task_id="task1", sql_statement="select * from 1", conn_id="conn"
     )
     op.execute(None)
-    sqlalchemy_engine.assert_called_once_with()
+    sqlalchemy_engine.assert_called_once()
 
 
-@patch("sqlalchemy.create_engine")
-@patch(
-    "airflow.providers.google.common.hooks.base_google.GoogleBaseHook._get_credentials_and_project_id"
-)
+@patch("sqlalchemy.engine.base.Connection._execute_context")
+@patch("astro.databases.google.bigquery.BigqueryDatabase.hook", new_callable=PropertyMock)
 @patch("airflow.hooks.base.BaseHook.get_connection")
-def test_run_query_bigquery(mock_get_conn, mock_cred, mock_create_engine):
+def test_run_query_bigquery(mock_get_conn, mock_bigquery_hook, _execute_context):
     """Assert that if connection type is ``gcpbigquery`` then sqlalchemy create_engine called with correct uri"""
-    mock_cred.return_value = {}, 123456789
     mock_get_conn.return_value = Connection(conn_id="conn", conn_type="gcpbigquery")
     op = RunQueryOperator(
         task_id="task1", sql_statement="select * from 1", conn_id="conn"
     )
     op.execute(None)
-    mock_create_engine.assert_called_once_with("bigquery://123456789")
+    mock_bigquery_hook.assert_called_once()
 
 
 @patch(
