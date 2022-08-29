@@ -1,3 +1,8 @@
+from datetime import datetime
+
+from airflow import DAG
+
+from astro.sql import get_value_list
 from astro.sql.table import Table
 
 
@@ -43,3 +48,17 @@ def test_table_name_with_temp_prefix():
     """Check that the table is no longer considered temp when the name is set after initialization."""
     table = Table(conn_id="some_connection")
     assert table.name.startswith("_tmp_")
+
+
+def test_get_value_list():
+    """Assert that get_file_list handle kwargs correctly"""
+    dag = DAG(dag_id="dag1", start_date=datetime(2022, 1, 1))
+
+    resp = get_value_list(sql_statement="path", conn_id="conn", dag=dag)
+    assert resp.operator.task_id == "get_value_list"
+
+    resp = get_value_list(sql_statement="path", conn_id="conn", dag=dag)
+    assert resp.operator.task_id != "get_value_list"
+
+    resp = get_value_list(sql_statement="path", conn_id="conn", task_id="test")
+    assert resp.operator.task_id == "test"
