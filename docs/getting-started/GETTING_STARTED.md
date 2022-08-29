@@ -74,6 +74,7 @@ To complete this tutorial, you need:
     ```
 
     > **Note:** `AIRFLOW__CORE__ENABLE_XCOM_PICKLING` needs to be enabled for `astro-sdk-python`.
+ 
  Currently, custom XCom backends are limited to data types that are json serializable. Since Dataframes are not json serializable, we need to enable XCom pickling to store dataframes.
 
 The data format used by pickle is Python-specific. This has the advantage that there are no restrictions imposed by external standards such as JSON or XDR (which can’t represent pointer sharing); however it means that non-Python programs may not be able to reconstruct pickled Python objects.
