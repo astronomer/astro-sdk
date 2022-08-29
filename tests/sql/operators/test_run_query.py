@@ -44,7 +44,7 @@ def test_run_query_bigquery(mock_get_conn, mock_bigquery_hook, sqlalchemy_engine
         task_id="task1", sql_statement="select * from 1", conn_id="conn"
     )
     op.execute(None)
-    mock_bigquery_hook.assert_called_once()
+    sqlalchemy_engine.assert_called_once()
 
 
 @patch(
