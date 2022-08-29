@@ -1,15 +1,9 @@
-from typing import Any
+from abc import ABC
 
 from airflow.models.baseoperator import BaseOperator
-from airflow.utils.context import Context
 
 from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
 
 
-class AstroSQLBaseOperator(UpstreamTaskMixin, BaseOperator):
-    def execute(self, context: Context) -> Any:
-        """
-        We are trying to make the documentation not take on the upstream BaseOperator documentation so
-        we are hoping that implementing this method will fix it.
-        """
-        pass
+class AstroSQLBaseOperator(UpstreamTaskMixin, BaseOperator, ABC):
+    """Base class for any SQL operator that allows users to define upstream tasks using an `upstream_tasks` parameter"""
