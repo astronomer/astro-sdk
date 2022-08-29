@@ -116,8 +116,8 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                 self.sql, self.parameters = returned_value
             else:
                 self.sql = returned_value
-                self.parameters = {}
-        elif self.sql.endswith(".sql"):
+                self.parameters = self.parameters or {}
+        if self.sql.endswith(".sql"):
             with open(self.sql) as file:
                 self.sql = file.read().replace("\n", " ")
 
