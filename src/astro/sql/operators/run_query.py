@@ -40,4 +40,3 @@ class RunQueryOperator(BaseOperator):
             return self.handler(result_set)
         else:
             return result_set.fetchall()
-        
