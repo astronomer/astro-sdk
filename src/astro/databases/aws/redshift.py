@@ -191,12 +191,12 @@ class RedshiftDatabase(BaseDatabase):
 
         table_name = self.get_table_qualified_name(target_table)
         file_type = NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
+
+        iam_role = native_support_kwargs.pop("IAM_ROLE") if native_support_kwargs.get("IAM_ROLE") else None
         copy_options = " ".join(
             f"{key} '{value}'" if isinstance(value, str) else f"{key} {value}"
             for key, value in native_support_kwargs.items()
         )
-
-        iam_role = native_support_kwargs.get("IAM_ROLE")
         if iam_role:
             sql_statement = (f"COPY {table_name} "
                              f"FROM '{source_file.path}' "
