@@ -2,8 +2,8 @@ import os
 import uuid
 
 import pytest
-from astro.constants import FileLocation
 
+from astro.constants import FileLocation
 from astro.files.locations import create_file_location, get_class_name
 
 LOCAL_FILEPATH = f"/tmp/{uuid.uuid4()}"

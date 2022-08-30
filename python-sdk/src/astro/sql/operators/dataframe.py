@@ -12,14 +12,13 @@ except ImportError:
     from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
+from astro import settings
 from astro.constants import ColumnCapitalization
+from astro.databases import create_database
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.sql.table import Table
 from astro.utils.dataframe import convert_columns_names_capitalization
 from astro.utils.table import find_first_table
-
-from astro import settings
-from astro.databases import create_database
 
 
 def _get_dataframe(

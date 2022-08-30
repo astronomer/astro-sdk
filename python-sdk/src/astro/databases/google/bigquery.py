@@ -9,17 +9,6 @@ from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.google.cloud.hooks.bigquery_dts import (
     BiqQueryDataTransferServiceHook,
 )
-from astro.constants import (
-    DEFAULT_CHUNK_SIZE,
-    FileLocation,
-    FileType,
-    LoadExistStrategy,
-    MergeConflictStrategy,
-)
-from astro.databases.base import BaseDatabase
-from astro.exceptions import DatabaseCustomError
-from astro.settings import BIGQUERY_SCHEMA
-from astro.sql.table import Metadata, Table
 from google.api_core.exceptions import (
     ClientError,
     Conflict,
@@ -50,7 +39,18 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from tenacity import retry, stop_after_attempt
 
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    FileLocation,
+    FileType,
+    LoadExistStrategy,
+    MergeConflictStrategy,
+)
+from astro.databases.base import BaseDatabase
+from astro.exceptions import DatabaseCustomError
 from astro.files import File
+from astro.settings import BIGQUERY_SCHEMA
+from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = BigQueryHook.default_conn_name
 NATIVE_PATHS_SUPPORTED_FILE_TYPES = {

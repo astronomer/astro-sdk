@@ -15,12 +15,12 @@ from airflow.operators.bash import BashOperator
 from airflow.settings import Session
 from airflow.utils.state import State
 from airflow.utils.timezone import datetime
-from astro.constants import Database
-from astro.sql.operators.cleanup import CleanupOperator
-from astro.sql.table import Table
 
 import astro.sql as aql
+from astro.constants import Database
 from astro.files import File
+from astro.sql.operators.cleanup import CleanupOperator
+from astro.sql.table import Table
 from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent

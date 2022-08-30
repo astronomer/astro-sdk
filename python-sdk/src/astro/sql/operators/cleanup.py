@@ -11,12 +11,12 @@ from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstance
 from airflow.utils.context import Context
 from airflow.utils.state import State
+
+from astro.databases import create_database
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.sql.table import Table
-
-from astro.databases import create_database
 
 
 def filter_for_temp_tables(task_outputs: list[Any]) -> list[Table]:

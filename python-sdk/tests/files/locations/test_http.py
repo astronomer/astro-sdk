@@ -1,10 +1,10 @@
 import pathlib
 
 import pytest
-from astro.constants import FileLocation
-from astro.files.locations.base import BaseFileLocation
 
+from astro.constants import FileLocation
 from astro.files.locations import create_file_location
+from astro.files.locations.base import BaseFileLocation
 
 CWD = pathlib.Path(__file__).parent
 

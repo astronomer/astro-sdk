@@ -8,7 +8,7 @@ nox.options.sessions = ["dev"]
 nox.options.reuse_existing_virtualenvs = True
 
 
-@nox.session(python="3.9")
+@nox.session(python="3.10")
 def dev(session: nox.Session) -> None:
     """Create a dev environment with everything installed.
 

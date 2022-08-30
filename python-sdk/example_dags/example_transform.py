@@ -2,10 +2,10 @@ from datetime import datetime
 
 import pandas as pd
 from airflow import DAG
-from astro.sql.table import Table
 
 from astro import sql as aql
 from astro.files import File
+from astro.sql.table import Table
 
 START_DATE = datetime(2000, 1, 1)
 LAST_ONE_DF = pd.DataFrame(data={"title": ["Random movie"], "rating": [121]})

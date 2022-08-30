@@ -2,14 +2,14 @@ import pathlib
 from unittest import mock
 
 import pytest
-from astro.constants import Database, FileType
-from astro.databases.base import BaseDatabase
-from astro.settings import SCHEMA
-from astro.sql.table import Metadata, Table
 from pandas import DataFrame
 
+from astro.constants import Database, FileType
 from astro.databases import create_database
+from astro.databases.base import BaseDatabase
 from astro.files import File
+from astro.settings import SCHEMA
+from astro.sql.table import Metadata, Table
 
 CWD = pathlib.Path(__file__).parent
 

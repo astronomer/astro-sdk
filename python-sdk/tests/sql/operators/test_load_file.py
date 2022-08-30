@@ -19,15 +19,15 @@ import pytest
 from airflow.exceptions import BackfillUnfinished
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
-from astro.constants import Database, FileType
-from astro.exceptions import IllegalLoadToDatabaseException
-from astro.settings import SCHEMA
-from astro.sql.operators.load_file import load_file
-from astro.sql.table import Metadata, Table
 from pandas.testing import assert_frame_equal
 
 from astro import sql as aql
+from astro.constants import Database, FileType
+from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File
+from astro.settings import SCHEMA
+from astro.sql.operators.load_file import load_file
+from astro.sql.table import Metadata, Table
 from tests.sql.operators import utils as test_utils
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("load_file_test_table")

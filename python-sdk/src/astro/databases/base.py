@@ -7,6 +7,12 @@ from typing import Any
 import pandas as pd
 import sqlalchemy
 from airflow.hooks.dbapi import DbApiHook
+from pandas.io.sql import SQLDatabase
+from sqlalchemy import column, insert, select
+from sqlalchemy.sql import ClauseElement
+from sqlalchemy.sql.elements import ColumnClause
+from sqlalchemy.sql.schema import Table as SqlaTable
+
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
     ColumnCapitalization,
@@ -15,15 +21,9 @@ from astro.constants import (
     MergeConflictStrategy,
 )
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
+from astro.files import File, resolve_file_path_pattern
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.sql.table import Metadata, Table
-from pandas.io.sql import SQLDatabase
-from sqlalchemy import column, insert, select
-from sqlalchemy.sql import ClauseElement
-from sqlalchemy.sql.elements import ColumnClause
-from sqlalchemy.sql.schema import Table as SqlaTable
-
-from astro.files import File, resolve_file_path_pattern
 
 
 class BaseDatabase(ABC):

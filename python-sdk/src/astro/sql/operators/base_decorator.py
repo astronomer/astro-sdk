@@ -6,12 +6,12 @@ from typing import Any
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
-from astro.databases.base import BaseDatabase
-from astro.sql.table import Table
-from astro.utils.table import find_first_table
 from sqlalchemy.sql.functions import Function
 
 from astro.databases import create_database
+from astro.databases.base import BaseDatabase
+from astro.sql.table import Table
+from astro.utils.table import find_first_table
 
 
 class BaseSQLDecoratedOperator(DecoratedOperator):

@@ -3,8 +3,8 @@ from typing import Any
 from airflow.decorators.base import get_unique_task_id
 from airflow.models import BaseOperator
 from airflow.utils.context import Context
-from astro.files.base import File
 
+from astro.files.base import File
 from astro.files.locations import create_file_location
 
 

@@ -19,15 +19,15 @@ import pandas as pd
 import pytest
 from airflow.exceptions import BackfillUnfinished
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
+
+import astro.sql as aql
 from astro.constants import SUPPORTED_FILE_TYPES, Database
+from astro.files import File
 from astro.settings import SCHEMA
 
 # Import Operator
 from astro.sql.operators.export_file import export_file
 from astro.sql.table import Table
-
-import astro.sql as aql
-from astro.files import File
 from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent

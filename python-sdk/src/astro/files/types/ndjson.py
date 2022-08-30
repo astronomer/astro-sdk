@@ -4,6 +4,7 @@ import io
 import json
 
 import pandas as pd
+
 from astro.constants import DEFAULT_CHUNK_SIZE
 from astro.constants import FileType as FileTypeConstants
 from astro.files.types.base import FileType

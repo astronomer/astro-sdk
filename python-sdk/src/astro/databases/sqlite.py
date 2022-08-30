@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
-from astro.constants import MergeConflictStrategy
-from astro.databases.base import BaseDatabase
-from astro.sql.table import Metadata, Table
 from sqlalchemy import MetaData as SqlaMetaData
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.sql.schema import Table as SqlaTable
+
+from astro.constants import MergeConflictStrategy
+from astro.databases.base import BaseDatabase
+from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = SqliteHook.default_conn_name
 

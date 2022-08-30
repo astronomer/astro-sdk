@@ -7,9 +7,13 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 import sqlalchemy
+from sqlalchemy.exc import ProgrammingError
+
 from astro.constants import Database, FileLocation, FileType
+from astro.databases import create_database
 from astro.databases.snowflake import SnowflakeDatabase, SnowflakeStage
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
+from astro.files import File
 from astro.settings import (
     SCHEMA,
     SNOWFLAKE_STORAGE_INTEGRATION_AMAZON,
@@ -17,10 +21,6 @@ from astro.settings import (
 )
 from astro.sql.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
-from sqlalchemy.exc import ProgrammingError
-
-from astro.databases import create_database
-from astro.files import File
 from tests.sql.operators import utils as test_utils
 
 DEFAULT_CONN_ID = "snowflake_default"

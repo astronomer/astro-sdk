@@ -17,10 +17,10 @@ import os
 import pandas as pd
 from airflow.models.dag import DAG
 from airflow.utils import timezone
-from astro.sql.table import Metadata, Table
 
 import astro.sql as aql
 from astro.files import File
+from astro.sql.table import Metadata, Table
 
 gcs_bucket = os.getenv("GCS_BUCKET", "gs://dag-authoring")
 

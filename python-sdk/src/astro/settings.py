@@ -1,4 +1,5 @@
 from airflow.configuration import conf
+
 from astro.constants import DEFAULT_SCHEMA
 
 SCHEMA = conf.get("astro_sdk", "sql_schema", fallback=DEFAULT_SCHEMA)

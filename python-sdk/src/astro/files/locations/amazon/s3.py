@@ -4,6 +4,7 @@ import os
 from urllib.parse import urlparse, urlunparse
 
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+
 from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
 

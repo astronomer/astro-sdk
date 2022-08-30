@@ -10,18 +10,6 @@ from typing import Any
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
-from astro.constants import (
-    DEFAULT_CHUNK_SIZE,
-    ColumnCapitalization,
-    FileLocation,
-    FileType,
-    LoadExistStrategy,
-    MergeConflictStrategy,
-)
-from astro.databases.base import BaseDatabase
-from astro.exceptions import DatabaseCustomError
-from astro.settings import SNOWFLAKE_SCHEMA
-from astro.sql.table import Metadata, Table
 from snowflake.connector import pandas_tools
 from snowflake.connector.errors import (
     DatabaseError,
@@ -37,7 +25,19 @@ from snowflake.connector.errors import (
 )
 
 from astro import settings
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    ColumnCapitalization,
+    FileLocation,
+    FileType,
+    LoadExistStrategy,
+    MergeConflictStrategy,
+)
+from astro.databases.base import BaseDatabase
+from astro.exceptions import DatabaseCustomError
 from astro.files import File
+from astro.settings import SNOWFLAKE_SCHEMA
+from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
 
