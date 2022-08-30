@@ -70,7 +70,13 @@ repos:
       - id: isort
         name: Run isort to sort imports in Python files
         args: [ "--profile", "black" ]
-        files: \.py$
+        files: .py$
+        entry: bash -c 'cd python-sdk && isort --profile black .' --
+      - id: isort
+        name: Run isort to sort imports in Python files
+        args: [ "--profile", "black" ]
+        files: .py$
+        entry: bash -c 'cd sql-clig && isort --profile black .' --
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.1
