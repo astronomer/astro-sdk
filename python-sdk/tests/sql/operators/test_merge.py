@@ -217,9 +217,9 @@ def test_merge_with_the_same_schema(
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
-    [{"database": Database.BIGQUERY}, {"database": Database.REDSHIFT}],
+    [{"database": Database.BIGQUERY}],
     indirect=True,
-    ids=["bigquery", "redshift"],
+    ids=["bigquery"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
