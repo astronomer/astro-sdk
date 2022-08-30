@@ -4,14 +4,14 @@ from typing import List
 import pandas as pd
 import sqlalchemy
 from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
-from astro.databases.base import BaseDatabase
-from astro.settings import REDSHIFT_SCHEMA
-from astro.sql.table import Metadata, Table
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
+from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
+from astro.databases.base import BaseDatabase
 from astro.files import File
+from astro.settings import REDSHIFT_SCHEMA
+from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = RedshiftSQLHook.default_conn_name
 

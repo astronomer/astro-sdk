@@ -76,7 +76,7 @@ repos:
         name: Run isort to sort imports in Python files
         args: [ "--profile", "black" ]
         files: .py$
-        entry: bash -c 'cd sql-clig && isort --profile black .' --
+        entry: bash -c 'cd sql-cli && isort --profile black .' --
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.1
