@@ -124,6 +124,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AIRFLOW__ASTRO_SDK__SQL_SCHEMA: astroflow_ci
+      REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
       REDSHIFT_DATABASE: dev
       REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
       REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
@@ -214,6 +215,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AIRFLOW__ASTRO_SDK__SQL_SCHEMA: astroflow_ci
+      REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
       REDSHIFT_DATABASE: dev
       REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
       REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
@@ -299,6 +301,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AIRFLOW__ASTRO_SDK__SQL_SCHEMA: astroflow_ci
+      REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
       REDSHIFT_DATABASE: dev
       REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
       REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
