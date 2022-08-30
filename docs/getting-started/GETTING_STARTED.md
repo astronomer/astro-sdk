@@ -32,7 +32,7 @@ To complete this tutorial, you need:
 
 ## Step 1: Set up your data stores
 
-1. On your local machine create a file named `test.csv` with the following data:
+1. On your local machine create a file named `orders_data_header.csv` with the following data:
 
     ```text
     order_id,customer_id,purchase_date,amount
@@ -41,7 +41,7 @@ To complete this tutorial, you need:
     ORDER3,CUST3,3/3/2023,300
     ```
 
-2. [Upload `test.csv`](https://docs.aws.amazon.com/AmazonS3/latest/userguide/upload-objects.html) to your S3 bucket.
+2. [Upload `orders_data_header.csv`](https://docs.aws.amazon.com/AmazonS3/latest/userguide/upload-objects.html) to your S3 bucket.
 3. In Snowflake, create a new Worksheet and run the following SQL commands:
 
     ```sql
@@ -57,7 +57,7 @@ To complete this tutorial, you need:
 1. Install the Astro Python SDK. If you are using Apache Airflow, run the following command to install the Python SDK and additional packages packages required for working with AWS and Snowflake.
 
     ```shell
-    pip install 'astro-sdk-python[amazon,snowflake]>=0.11'
+    pip install 'astro-sdk-python[amazon,snowflake]>=1.02'
     ```
 
     If you are using the Astro CLI, you can install these packages by adding the following line to the `requirements.txt` file of your Astro project:
