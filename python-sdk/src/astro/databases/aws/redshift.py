@@ -7,7 +7,12 @@ from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy, DEFAULT_SCHEMA
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    DEFAULT_SCHEMA,
+    LoadExistStrategy,
+    MergeConflictStrategy,
+)
 from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.settings import REDSHIFT_SCHEMA
