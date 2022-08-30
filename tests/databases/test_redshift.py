@@ -192,7 +192,7 @@ def test_load_file_from_cloud_to_table(database_table_fixture):
             "s3://astro-sdk-redshift/data_redshift/", conn_id="aws_conn", filetype=FileType.CSV
         ),
         target_table,
-        {},
+        use_native_support=False,
     )
 
     df = database.hook.get_pandas_df(
