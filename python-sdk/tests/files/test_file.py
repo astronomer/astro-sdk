@@ -6,9 +6,10 @@ import pandas as pd
 import pytest
 from airflow import DAG
 from astro.constants import SUPPORTED_FILE_TYPES, FileType
-from astro.files import File, get_file_list, resolve_file_path_pattern
 from botocore.client import BaseClient
 from google.cloud.storage import Client
+
+from astro.files import File, get_file_list, resolve_file_path_pattern
 
 sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent, "data/sample.csv")
 sample_filepaths_per_filetype = [

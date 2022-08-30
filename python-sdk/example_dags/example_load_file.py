@@ -4,10 +4,10 @@ from datetime import datetime, timedelta
 import sqlalchemy
 from airflow.models import DAG
 from astro.constants import FileType
-from astro.files import File
 from astro.sql.table import Metadata, Table
 
 from astro import sql as aql
+from astro.files import File
 
 CWD = pathlib.Path(__file__).parent
 default_args = {

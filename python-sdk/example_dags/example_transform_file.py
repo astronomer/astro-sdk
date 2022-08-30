@@ -2,10 +2,10 @@ import pathlib
 from datetime import datetime
 
 from airflow import DAG
-from astro.files import File
 from astro.sql.table import Table
 
 from astro import sql as aql
+from astro.files import File
 
 START_DATE = datetime(2000, 1, 1)
 CWD = pathlib.Path(__file__).parent

@@ -20,7 +20,6 @@ from astro.constants import (
 )
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
-from astro.files import File
 from astro.settings import SNOWFLAKE_SCHEMA
 from astro.sql.table import Metadata, Table
 from snowflake.connector import pandas_tools
@@ -38,6 +37,7 @@ from snowflake.connector.errors import (
 )
 
 from astro import settings
+from astro.files import File
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
 

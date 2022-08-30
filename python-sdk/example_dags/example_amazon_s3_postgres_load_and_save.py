@@ -1,11 +1,12 @@
 import os
 
-# Import Operator
-import astro.sql as aql
 from airflow.decorators import dag
 from airflow.utils import timezone
-from astro.files import File
 from astro.sql.table import Table
+
+# Import Operator
+import astro.sql as aql
+from astro.files import File
 
 default_args = {
     "owner": "airflow",

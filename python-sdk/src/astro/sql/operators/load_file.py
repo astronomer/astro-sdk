@@ -8,11 +8,11 @@ from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.exceptions import IllegalLoadToDatabaseException
-from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.table import Table
 
 from astro import settings
 from astro.databases import BaseDatabase, create_database
+from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 
 
 class LoadFileOperator(BaseOperator):

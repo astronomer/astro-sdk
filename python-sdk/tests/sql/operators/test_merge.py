@@ -7,13 +7,13 @@ import pandas as pd
 import pytest
 from airflow.decorators import task_group
 from astro.constants import Database
-from astro.files import File
-from astro.sql import MergeOperator
 from astro.sql.table import Metadata, Table
-from tests.sql.operators import utils as test_utils
 
 from astro import sql as aql
 from astro.databases import create_database
+from astro.files import File
+from astro.sql import MergeOperator
+from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
 

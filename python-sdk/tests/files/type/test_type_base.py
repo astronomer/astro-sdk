@@ -2,6 +2,7 @@ import pathlib
 
 import pytest
 from astro.constants import FileType
+
 from astro.files.types import get_filetype
 
 sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent, "data/sample.csv")
