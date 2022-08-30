@@ -158,16 +158,14 @@ class RedshiftDatabase(BaseDatabase):
         :param if_conflicts: The strategy to be applied if there are conflicts.
         """
         source_schema = source_table.metadata.schema
-        source_table_name = f"{source_schema}.{source_table.name}"
+        source_table_name = self.get_table_qualified_name(source_table)
         target_schema = target_table.metadata.schema
-        target_table_name = f"{target_schema}.{target_table.name}"
-        stage_table_name = random.choice(string.ascii_lowercase) + "".join(
-            random.choice(string.ascii_lowercase + string.digits)
-            for _ in range(UNIQUE_HASH_SIZE - 1)
+        target_table_name = self.get_table_qualified_name(target_table)
+        stage_table_name = self.get_table_qualified_name(Table(metadata=Metadata(schema=DEFAULT_SCHEMA)))
         )
 
         begin_transaction = "BEGIN TRANSACTION"
-        create_temp_table = f"CREATE TEMP TABLE {stage_table_name} (LIKE {target_schema}.{target_table.name})"
+        create_temp_table = f"CREATE TEMP TABLE {stage_table_name} (LIKE {target_table_name})"
 
         source_columns = list(source_to_target_columns_map.keys())
         target_columns = list(source_to_target_columns_map.values())
