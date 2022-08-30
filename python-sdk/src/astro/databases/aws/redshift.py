@@ -1,6 +1,4 @@
 """AWS Redshift table implementation."""
-import random
-import string
 from typing import Dict, List, Optional
 
 import pandas as pd
@@ -9,14 +7,13 @@ from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
+from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy, DEFAULT_SCHEMA
 from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.settings import REDSHIFT_SCHEMA
 from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = RedshiftSQLHook.default_conn_name
-UNIQUE_HASH_SIZE = 16
 
 
 class RedshiftDatabase(BaseDatabase):
@@ -157,9 +154,7 @@ class RedshiftDatabase(BaseDatabase):
         :param target_conflict_columns: List of cols where we expect to have a conflict while combining
         :param if_conflicts: The strategy to be applied if there are conflicts.
         """
-        source_schema = source_table.metadata.schema
         source_table_name = self.get_table_qualified_name(source_table)
-        target_schema = target_table.metadata.schema
         target_table_name = self.get_table_qualified_name(target_table)
         stage_table_name = self.get_table_qualified_name(
             Table(metadata=Metadata(schema=DEFAULT_SCHEMA))
