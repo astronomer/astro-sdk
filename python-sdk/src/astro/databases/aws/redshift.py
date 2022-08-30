@@ -161,10 +161,14 @@ class RedshiftDatabase(BaseDatabase):
         source_table_name = self.get_table_qualified_name(source_table)
         target_schema = target_table.metadata.schema
         target_table_name = self.get_table_qualified_name(target_table)
-        stage_table_name = self.get_table_qualified_name(Table(metadata=Metadata(schema=DEFAULT_SCHEMA)))
+        stage_table_name = self.get_table_qualified_name(
+            Table(metadata=Metadata(schema=DEFAULT_SCHEMA))
+        )
 
         begin_transaction = "BEGIN TRANSACTION"
-        create_temp_table = f"CREATE TEMP TABLE {stage_table_name} (LIKE {target_table_name})"
+        create_temp_table = (
+            f"CREATE TEMP TABLE {stage_table_name} (LIKE {target_table_name})"
+        )
 
         source_columns = list(source_to_target_columns_map.keys())
         target_columns = list(source_to_target_columns_map.values())
