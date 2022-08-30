@@ -22,6 +22,10 @@ from astro.sql.table import Metadata, Table
 DEFAULT_CONN_ID = RedshiftSQLHook.default_conn_name
 NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
     FileType.CSV: "CSV",
+    # By default, COPY attempts to match all columns in the target table to JSON field name keys.
+    # With this option, matching is case-sensitive. Column names in Amazon Redshift tables are always lowercase,
+    # so when you use the 'auto' option, matching JSON field names must also be lowercase.
+    # Refer: https://docs.aws.amazon.com/redshift/latest/dg/copy-parameters-data-format.html#copy-json
     FileType.JSON: "JSON 'auto'",
     FileType.PARQUET: "PARQUET",
 }
