@@ -1,0 +1,97 @@
+[build-system]
+requires = ["flit_core ~=3.2"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "astro-sql-cli"
+dynamic = ["version"]
+description = """
+Astro SDK allows rapid and clean development of {Extract, Load, Transform} workflows using Python and SQL, powered by Apache Airflow.
+"""
+
+authors = [
+    {name = "Astronomer", email = "humans@astronomer.io"},
+]
+readme = "README.md"
+license = {file = "LICENSE"}
+
+requires-python = ">=3.7"
+dependencies = [
+    "apache-airflow>=2.0",
+    "pandas>=1.3.4,<2.0.0",  # Pinning it to <2.0.0 to avoid breaking changes
+    "pyarrow",
+    "python-frontmatter",
+    "smart-open",
+    "SQLAlchemy>=1.3.18"
+]
+
+keywords = ["airflow", "provider", "astronomer", "sql", "decorator", "task flow", "elt", "etl", "dag"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: Apache Software License",
+    "Topic :: Database",
+    "Framework :: Apache Airflow",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+]
+
+[project.optional-dependencies]
+tests = ["astro-sdk-python[tests]"]
+google = [
+    "astro-sdk-python[google]"
+]
+snowflake = [
+    "astro-sdk-python[snowflake]"
+]
+postgres = [
+    "astro-sdk-python[postgres]"]
+amazon = [
+    "astro-sdk-python[amazon]"
+]
+all = [
+    "astro-sdk-python[all]"
+]
+doc = [
+    "astro-sdk-python[doc]"
+]
+
+[project.urls]
+Home = "https://astronomer.io/"
+Source = "https://github.com/astronomer/astro-sdk/sql-cli"
+Documentation = "https://astro-sdk-python.rtfd.io/"
+
+[project.entry-points.apache_airflow_provider]
+provider_info = "sql_cli.__init__:get_provider_info"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "--durations=30 --durations-min=1.0"
+env_files = [".env"]
+testpaths = ["tests"]
+markers = [
+    "integration"
+]
+
+
+[tool.flit.module]
+name = "sql_cli"
+
+[tool.mypy]
+color_output = true
+#disallow_any_generics = true
+#disallow_incomplete_defs = true
+#disallow_untyped_defs = true
+files = ["src/sql_cli"]
+follow_imports = "skip"
+no_implicit_optional = true
+pretty = true
+strict_equality = true
+show_error_codes = true
+show_error_context = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true

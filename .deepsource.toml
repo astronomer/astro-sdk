@@ -1,8 +1,8 @@
 version = 1
 
 test_patterns = [
-  "tests/**",
-  "test-docker/**"
+  "python-sdk/tests/**",
+  "python-sdk/test-docker/**"
 ]
 
 [[analyzers]]
