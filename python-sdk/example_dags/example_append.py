@@ -2,9 +2,10 @@ import pathlib
 from datetime import datetime, timedelta
 
 from airflow.models import DAG
-from astro import sql as aql
 from astro.files import File
 from astro.sql.table import Table
+
+from astro import sql as aql
 
 CWD = pathlib.Path(__file__).parent
 

@@ -9,6 +9,7 @@ import pytest
 import sqlalchemy
 from astro.constants import Database, FileType
 from astro.exceptions import NonExistentTableException
+from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
@@ -16,7 +17,6 @@ from tests.sql.operators import utils as test_utils
 
 from astro.databases import create_database
 from astro.databases.aws.redshift import RedshiftDatabase
-from astro.files import File
 
 DEFAULT_CONN_ID = "redshift_default"
 CUSTOM_CONN_ID = "redshift_conn"

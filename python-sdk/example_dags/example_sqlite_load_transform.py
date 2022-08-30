@@ -2,10 +2,11 @@ import time
 from datetime import datetime
 
 from airflow import DAG
-from astro import sql as aql
 from astro.files import File
 from astro.sql import drop_table
 from astro.sql.table import Table
+
+from astro import sql as aql
 
 START_DATE = datetime(2000, 1, 1)
 

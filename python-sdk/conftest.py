@@ -12,9 +12,10 @@ from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import create_session, provide_session
 from astro.constants import Database, FileLocation, FileType
-from astro.databases import create_database
 from astro.sql.table import MAX_TABLE_NAME_LENGTH, Table
 from tests.sql.operators import utils as test_utils
+
+from astro.databases import create_database
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 

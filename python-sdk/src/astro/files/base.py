@@ -4,10 +4,11 @@ import io
 
 import pandas as pd
 import smart_open
-from astro import constants
 from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
 from astro.files.types import create_file_type
+
+from astro import constants
 
 
 class File:  # skipcq: PYL-W1641

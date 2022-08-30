@@ -7,7 +7,6 @@ import pandas as pd
 import pytest
 import sqlalchemy
 from astro.constants import Database
-from astro.databases import create_database
 from astro.databases.postgres import PostgresDatabase
 from astro.exceptions import NonExistentTableException
 from astro.files import File
@@ -15,6 +14,8 @@ from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
 from tests.sql.operators import utils as test_utils
+
+from astro.databases import create_database
 
 DEFAULT_CONN_ID = "postgres_default"
 CUSTOM_CONN_ID = "postgres_conn"
