@@ -189,22 +189,28 @@ class RedshiftDatabase(BaseDatabase):
         """
         native_support_kwargs = native_support_kwargs or {}
 
-        self.create_table(target_table, file=source_file)
-
         table_name = self.get_table_qualified_name(target_table)
-        aws = source_file.location.hook.get_credentials()
         file_type = NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
         copy_options = " ".join(
             f"{key} '{value}'" if isinstance(value, str) else f"{key} {value}"
             for key, value in native_support_kwargs.items()
         )
-        sql_statement = f"""
-            COPY {table_name}
-            FROM '{source_file.path}'
-            CREDENTIALS 'aws_access_key_id={aws.access_key};aws_secret_access_key={aws.secret_key}'
-            {file_type}
-            {copy_options}
-        """
+
+        iam_role = native_support_kwargs.get("IAM_ROLE")
+        if iam_role:
+            sql_statement = (f"COPY {table_name} "
+                             f"FROM '{source_file.path}' "
+                             f"IAM_ROLE '{iam_role}' "
+                             f"{file_type} "
+                             f"{copy_options}")
+        else:
+            aws_creds = source_file.location.hook.get_credentials()
+            sql_statement = (f"COPY {table_name} "
+                             f"FROM '{source_file.path}' "
+                             f"CREDENTIALS 'aws_access_key_id={aws_creds.access_key};"
+                             f"aws_secret_access_key={aws_creds.secret_key}' "
+                             f"{file_type} "
+                             f"{copy_options}")
 
         try:
             self.hook.run(sql_statement)
