@@ -198,19 +198,23 @@ class RedshiftDatabase(BaseDatabase):
             for key, value in native_support_kwargs.items()
         )
         if iam_role:
-            sql_statement = (f"COPY {table_name} "
-                             f"FROM '{source_file.path}' "
-                             f"IAM_ROLE '{iam_role}' "
-                             f"{file_type} "
-                             f"{copy_options}")
+            sql_statement = (
+                f"COPY {table_name} "
+                f"FROM '{source_file.path}' "
+                f"IAM_ROLE '{iam_role}' "
+                f"{file_type} "
+                f"{copy_options}"
+            )
         else:
             aws_creds = source_file.location.hook.get_credentials()
-            sql_statement = (f"COPY {table_name} "
-                             f"FROM '{source_file.path}' "
-                             f"CREDENTIALS 'aws_access_key_id={aws_creds.access_key};"
-                             f"aws_secret_access_key={aws_creds.secret_key}' "
-                             f"{file_type} "
-                             f"{copy_options}")
+            sql_statement = (
+                f"COPY {table_name} "
+                f"FROM '{source_file.path}' "
+                f"CREDENTIALS 'aws_access_key_id={aws_creds.access_key};"
+                f"aws_secret_access_key={aws_creds.secret_key}' "
+                f"{file_type} "
+                f"{copy_options}"
+            )
 
         try:
             self.hook.run(sql_statement)
