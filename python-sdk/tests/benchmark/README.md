@@ -188,7 +188,7 @@ To publish the results to bigquery table, we need to create an environment varia
 
 ## Analyze the results
 
-[analyse.py](https://github.com/astronomer/astro-sdk/blob/main/tests/benchmark/analyse.py) takes local file path or GCS file path for ndjson file.
+[analyse.py](analyse.py) takes local file path or GCS file path for ndjson file.
 
 After running the benchmark, it is possible to run an analysis script using:
 
