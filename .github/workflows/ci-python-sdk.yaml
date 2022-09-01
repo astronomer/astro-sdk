@@ -2,14 +2,21 @@ name: Build and test astro
 on:
   push:
     branches: [ 'main', 'release-**' ]
+    paths:
+      - 'python-sdk/**'
   pull_request:
     branches: [ 'main', 'release-**' ]
+    paths:
+      - 'python-sdk/**'
   # Run on PRs from forks
   pull_request_target:
     branches: [ 'main' ]
     types: ['labeled']
   release:
     types: [ 'created' ]
+defaults:
+  run:
+    working-directory: python-sdk
 jobs:
   Markdown-link-check:
     runs-on: ubuntu-latest
@@ -57,7 +64,7 @@ jobs:
       - run: pip3 install nox
       - run: nox -s build_docs
 
-  Run-Optional-Packages-tests:
+  Run-Optional-Packages-tests-python-sdk:
     if: >-
       github.event_name == 'push' ||
       (
@@ -105,7 +112,7 @@ jobs:
             ~/.cache/pip
             .nox
           key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
-      - run: cat .github/ci-test-connections.yaml > test-connections.yaml
+      - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
@@ -195,7 +202,7 @@ jobs:
             ~/.cache/pip
             .nox
           key: ${{ runner.os }}-2.3-${{ hashFiles('pyproject.toml') }}
-      - run: cat .github/ci-test-connections.yaml > test-connections.yaml
+      - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
@@ -286,7 +293,7 @@ jobs:
             ~/.cache/pip
             .nox
           key: ${{ runner.os }}-2.2.5-${{ hashFiles('pyproject.toml') }}
-      - run: cat .github/ci-test-connections.yaml > test-connections.yaml
+      - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
@@ -323,7 +330,7 @@ jobs:
   Code-Coverage:
     needs:
       - Run-Unit-tests-Airflow-2-3
-      - Run-Optional-Packages-tests
+      - Run-Optional-Packages-tests-python-sdk
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -353,7 +360,7 @@ jobs:
     name: Build and publish Python 🐍 distributions 📦 to PyPI
     needs:
       - Run-Unit-tests-Airflow-2-3
-      - Run-Optional-Packages-tests
+      - Run-Optional-Packages-tests-python-sdk
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2
