@@ -920,6 +920,7 @@ def test_aql_load_file_optimized_path_method_is_not_called(
             {
                 "IGNOREHEADER": 1,
                 "REGION": "us-west-2",
+                "IAM_ROLE": os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN"),
             },
         ),
     ],

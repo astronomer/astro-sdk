@@ -199,21 +199,9 @@ with dag:
         native_support_kwargs={
             "IGNOREHEADER": 1,
             "REGION": "us-west-2",
-        },
-    )
-    # [END load_file_example_16]
-
-    # [START load_file_example_17]
-    aql.load_file(
-        input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
-        output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
-        use_native_support=True,
-        native_support_kwargs={
-            "IGNOREHEADER": 1,
-            "REGION": "us-west-2",
             "IAM_ROLE": REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN,
         },
     )
-    # [END load_file_example_17]
+    # [END load_file_example_16]
 
     aql.cleanup()
