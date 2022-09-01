@@ -177,7 +177,19 @@ Supported native transfers
    * - GCS
      - Snowflake
      - https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html
+   * - S3
+     - Redshift
+     - https://docs.aws.amazon.com/redshift/latest/dg/r_COPY.html
 
+.. note::
+   For loading from S3 to Redshift database, although Redshift allows the below two options for authorization, **we
+   only support the IAM Role option** as if you pass CREDENTIALS in the query, they might get printed in logs and
+   have a potential risk of getting leaked:
+
+   1. IAM Role
+   2. CREDENTIALS
+
+   Reference on how to create such a role is here: https://www.dataliftoff.com/iam-roles-for-loading-data-from-s3-into-redshift/
 
 Patterns in file path
 ~~~~~~~~~~~~~~~~~~~~~
