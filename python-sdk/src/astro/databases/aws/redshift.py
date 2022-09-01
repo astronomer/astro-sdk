@@ -1,5 +1,5 @@
 """AWS Redshift table implementation."""
-from typing import List
+from typing import Dict, List, Optional
 
 import pandas as pd
 import sqlalchemy
@@ -7,7 +7,7 @@ from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy
+from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.settings import REDSHIFT_SCHEMA
@@ -103,6 +103,157 @@ class RedshiftDatabase(BaseDatabase):
             if_exists=if_exists,
             chunksize=chunk_size,
         )
+
+    @staticmethod
+    def _get_conflict_statements(
+        if_conflicts: MergeConflictStrategy,
+        stage_table_name: str,
+        source_table_name: str,
+        source_to_target_map_source_columns: List[str],
+        source_to_target_map_target_columns: List[str],
+        source_table_all_columns_string: str,
+        target_table_all_columns_string: str,
+        target_conflict_columns: List[str],
+    ) -> Optional[List[str]]:
+        """
+        Builds conflict SQL statement to be applied while merging.
+
+        :param if_conflicts: the strategy to be applied if there are conflicts
+        :param stage_table_name: name of the stage table created in Redshift for merge operation
+        :param source_table_name: name of the source table from which data is to be merged
+        :param source_to_target_map_source_columns: list of source table columns built from the keys of provided
+            source_to_target column map
+        :param source_to_target_map_target_columns: list of target table columns built from the values of provided
+            source_to_target column map
+        :param source_table_all_columns_string: columns sequence to be used for the source table for fetching
+        :param target_table_all_columns_string: columns sequence to be used in the target table for insertion
+        :param target_conflict_columns: list of columns where we expect to have a conflict while combining
+        """
+        conflict_columns_str = ",".join(target_conflict_columns)
+        insert_statement = (
+            f"INSERT INTO {stage_table_name}({target_table_all_columns_string}) "
+            f"SELECT {source_table_all_columns_string} FROM {source_table_name} "
+            f"WHERE ({conflict_columns_str}) "
+            f"NOT IN (SELECT {conflict_columns_str} FROM {stage_table_name})"
+        )
+
+        conflict_statements = None
+        if if_conflicts == "ignore":
+            conflict_statements = [insert_statement]
+        elif if_conflicts == "update":
+            conflict_column = target_conflict_columns[0]
+            update_statement = (
+                f"UPDATE {stage_table_name} "
+                f"SET {source_to_target_map_target_columns[0]}="
+                f"{source_table_name}.{source_to_target_map_source_columns[0]}"
+            )
+            for (source_column, target_column) in zip(
+                source_to_target_map_source_columns[1:],
+                source_to_target_map_target_columns[1:],
+            ):
+                update_statement += (
+                    f", {target_column}={source_table_name}.{source_column} "
+                )
+            update_statement += (
+                f"FROM {source_table_name} "
+                f"WHERE {stage_table_name}.{conflict_column}={source_table_name}.{conflict_column} "
+            )
+            for conflict_col in target_conflict_columns[1:]:
+                update_statement += f"AND {stage_table_name}.{conflict_col}={source_table_name}.{conflict_col} "
+            conflict_statements = [update_statement, insert_statement]
+
+        return conflict_statements
+
+    def merge_table(
+        self,
+        source_table: Table,
+        target_table: Table,
+        source_to_target_columns_map: Dict[str, str],
+        target_conflict_columns: List[str],
+        if_conflicts: MergeConflictStrategy = "exception",
+    ) -> None:
+        """
+        Merge the source table rows into a destination table.
+        The argument `if_conflicts` allows the user to define how to handle conflicts.
+
+        :param source_table: Contains the rows to be merged to the target_table
+        :param target_table: Contains the destination table in which the rows will be merged
+        :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names
+        :param target_conflict_columns: List of cols where we expect to have a conflict while combining
+        :param if_conflicts: The strategy to be applied if there are conflicts.
+        """
+        source_table_name = self.get_table_qualified_name(source_table)
+        target_table_name = self.get_table_qualified_name(target_table)
+        stage_table_name = self.get_table_qualified_name(Table())
+
+        source_to_target_map_source_columns = list(source_to_target_columns_map.keys())
+        source_to_target_map_target_columns = list(
+            source_to_target_columns_map.values()
+        )
+        source_table_all_columns = self.hook.run(
+            f"select col_name from pg_get_cols('{source_table_name}') "
+            f"cols(view_schema name, view_name name, col_name name, col_type varchar, col_num int);",
+            handler=lambda x: [y[0] for y in x.fetchall()],
+        )
+        target_table_all_columns = self.hook.run(
+            f"select col_name from pg_get_cols('{target_table_name}') "
+            f"cols(view_schema name, view_name name, col_name name, col_type varchar, col_num int);",
+            handler=lambda x: [y[0] for y in x.fetchall()],
+        )
+        target_table_all_columns_string = ",".join(
+            map(str, source_to_target_map_target_columns)
+        )
+        source_table_all_columns_string = ",".join(
+            map(str, source_to_target_map_source_columns)
+        )
+        for column in target_table_all_columns:
+            if (
+                column not in source_to_target_map_target_columns
+                and column in source_table_all_columns
+            ):
+                target_table_all_columns_string += f",{column}"
+                source_table_all_columns_string += f",{column}"
+
+        begin_transaction = "BEGIN TRANSACTION"
+        create_temp_table = (
+            f"CREATE TEMP TABLE {stage_table_name} (LIKE {target_table_name})"
+        )
+        insert_into_stage_table = (
+            f"INSERT INTO {stage_table_name}({target_table_all_columns_string}) "
+            f"SELECT {target_table_all_columns_string} FROM {target_table_name}"
+        )
+        conflict_statements: Optional[List[str]] = self._get_conflict_statements(
+            if_conflicts,
+            stage_table_name,
+            source_table_name,
+            source_to_target_map_source_columns,
+            source_to_target_map_target_columns,
+            source_table_all_columns_string,
+            target_table_all_columns_string,
+            target_conflict_columns,
+        )
+        truncate_target_table = f"TRUNCATE {target_table_name}"
+        insert_into_target_table = (
+            f"INSERT INTO {target_table_name} SELECT * FROM {stage_table_name}"
+        )
+        drop_stage_table = f"DROP TABLE {stage_table_name}"
+        end_transaction = "END TRANSACTION"
+
+        statements = [begin_transaction, create_temp_table, insert_into_stage_table]
+        if conflict_statements:
+            statements.extend(conflict_statements)
+        statements.extend(
+            [
+                truncate_target_table,
+                insert_into_target_table,
+                drop_stage_table,
+                end_transaction,
+            ]
+        )
+
+        with self.hook.get_cursor() as cursor:
+            for statement in statements:
+                cursor.execute(statement)
 
     def is_native_load_file_available(
         self, source_file: File, target_table: Table
