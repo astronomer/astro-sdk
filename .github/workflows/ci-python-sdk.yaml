@@ -351,3 +351,30 @@ jobs:
     env:
       TWINE_USERNAME: __token__
       TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+  Code-Coverage:
+    needs:
+      - Run-Unit-tests-Airflow-2-3
+      - Run-Optional-Packages-tests-python-sdk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.8
+      - name: Install coverage
+        run: |
+          pip3 install coverage
+      - name: Download all artifacts
+        uses: actions/download-artifact@v2
+      - name: Run coverage
+        run: |
+          coverage combine coverage*/.coverage*
+          coverage report
+          coverage xml
+      - name: Upload coverage
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
