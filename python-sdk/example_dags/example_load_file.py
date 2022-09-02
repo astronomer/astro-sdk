@@ -1,3 +1,4 @@
+import os
 import pathlib
 from datetime import datetime, timedelta
 
@@ -8,6 +9,10 @@ from astro import sql as aql
 from astro.constants import FileType
 from astro.files import File
 from astro.sql.table import Metadata, Table
+
+# To create IAM role with needed permissions,
+# refer: https://www.dataliftoff.com/iam-roles-for-loading-data-from-s3-into-redshift/
+REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN = os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN")
 
 CWD = pathlib.Path(__file__).parent
 default_args = {
@@ -185,5 +190,18 @@ with dag:
         ),
     )
     # [END load_file_example_15]
+
+    # [START load_file_example_16]
+    aql.load_file(
+        input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
+        output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
+        use_native_support=True,
+        native_support_kwargs={
+            "IGNOREHEADER": 1,
+            "REGION": "us-west-2",
+            "IAM_ROLE": REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN,
+        },
+    )
+    # [END load_file_example_16]
 
     aql.cleanup()
