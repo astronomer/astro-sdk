@@ -207,6 +207,8 @@ jobs:
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
       - run: nox -s "test-3.8(airflow='2.3')" -- --splits 12 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: /usr/bin/pwd
+      - run: /usr/bin/ls
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
