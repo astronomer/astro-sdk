@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 import string
 
-from attr import define, field, fields_dict
+from attrs import define, field, fields_dict
 from sqlalchemy import Column, MetaData
 
 MAX_TABLE_NAME_LENGTH = 62
@@ -23,11 +23,12 @@ class Metadata:
 
     def is_empty(self) -> bool:
         """Check if all the fields are None."""
-        li = [
-            getattr(self, field_name) is None
-            for field_name in fields_dict(self.__class__)
-        ]
-        return all(li)
+        return all(
+            [
+                getattr(self, field_name) is None
+                for field_name in fields_dict(self.__class__)
+            ]
+        )
 
 
 @define

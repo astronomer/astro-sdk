@@ -41,7 +41,7 @@ repos:
         exclude: ^mk/.*\.mk$|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$
 
   - repo: https://github.com/psf/black
-    rev: 22.6.0
+    rev: 22.8.0
     hooks:
       - id: black
 
@@ -90,7 +90,7 @@ repos:
       rev: 'v0.971'
       hooks:
       -   id: mypy
-          additional_dependencies: [types-PyYAML]
+          additional_dependencies: [types-PyYAML, types-attrs]
           pass_filenames: false
           files: "^python-sdk/"
           entry: bash -c 'cd python-sdk && mypy "$@"' --
