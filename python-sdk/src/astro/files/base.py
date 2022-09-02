@@ -15,6 +15,11 @@ class File:  # skipcq: PYL-W1641
     """
     Handle all file operations, and abstract away the details related to location and file types.
     Intended to be used within library.
+
+    :param path: Path to a file in the filesystem/Object stores
+    :param conn_id: Airflow connection ID
+    :param filetype: constant to provide an explicit file type
+    :param normalize_config: parameters in dict format of pandas json_normalize() function.
     """
 
     template_fields = ("location",)
@@ -26,13 +31,6 @@ class File:  # skipcq: PYL-W1641
         filetype: constants.FileType | None = None,
         normalize_config: dict | None = None,
     ):
-        """Init file object which represent a single file in local/object stores
-
-        :param path: Path to a file in the filesystem/Object stores
-        :param conn_id: Airflow connection ID
-        :param filetype: constant to provide an explicit file type
-        :param normalize_config: parameters in dict format of pandas json_normalize() function.
-        """
         self.location: BaseFileLocation = create_file_location(path, conn_id)
         self.type = create_file_type(
             path=path, filetype=filetype, normalize_config=normalize_config
