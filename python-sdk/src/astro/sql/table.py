@@ -24,10 +24,8 @@ class Metadata:
     def is_empty(self) -> bool:
         """Check if all the fields are None."""
         return all(
-            [
-                getattr(self, field_name) is None
-                for field_name in fields_dict(self.__class__)
-            ]
+            getattr(self, field_name) is None
+            for field_name in fields_dict(self.__class__)
         )
 
 
