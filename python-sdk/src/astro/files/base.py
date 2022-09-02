@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import io
-import pathlib
 
 import pandas as pd
 import smart_open
@@ -9,7 +8,7 @@ import smart_open
 from astro import constants
 from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
-from astro.files.types import create_file_type
+from astro.files.types import create_file_type, get_filetype
 
 
 class File:  # skipcq: PYL-W1641
@@ -35,9 +34,7 @@ class File:  # skipcq: PYL-W1641
         :param normalize_config: parameters in dict format of pandas json_normalize() function.
         """
         self.location: BaseFileLocation = create_file_location(path, conn_id)
-        self.type = create_file_type(
-            path=path, filetype=filetype, normalize_config=normalize_config
-        )
+        self.type = filetype
 
     @property
     def path(self) -> str:
@@ -104,7 +101,6 @@ class File:  # skipcq: PYL-W1641
         https://github.com/RaRe-Technologies/smart_open/issues/524), we create a BytesIO or StringIO buffer
         before exporting to a dataframe. We've found a sizable speed improvement with this optimization.
         """
-
         return self.type.export_to_dataframe(
             self._convert_remote_file_to_byte_stream(), **kwargs
         )
@@ -144,35 +140,25 @@ def resolve_file_path_pattern(
     :param normalize_config: parameters in dict format of pandas json_normalize() function
     """
     location = create_file_location(path_pattern, conn_id)
+    files = []
 
-    files = [
-        File(
+    for path in location.paths:
+        if path.endswith("/"):
+            continue
+
+        file_obj = File(
             path=path,
             conn_id=conn_id,
-            filetype=filetype,
+            filetype=filetype if filetype else get_filetype(path),
             normalize_config=normalize_config,
         )
-        for path in location.paths
-        if not path.endswith("/") and check_file_type_from_path(path, filetype)
-    ]
+        file_obj.type = create_file_type(
+            path=path, filetype=filetype, normalize_config=normalize_config
+        )
+
+        files.append(file_obj)
+
     if len(files) == 0:
         raise ValueError(f"File(s) not found for path/pattern '{path_pattern}'")
 
     return files
-
-
-def check_file_type_from_path(
-    filepath: str, filetype: constants.FileType | None = None
-) -> bool:
-    """
-    Checks the filetype from the extension and return True if filetype matches
-    :param filepath: path to a file in the filesystem/Object stores
-    :param filetype: constant to provide an explicit file type
-    """
-    file_extension = pathlib.Path(filepath).suffix[1:]
-    try:
-        inferred_filetype = constants.FileType(file_extension)
-    except ValueError:
-        return False
-
-    return inferred_filetype == filetype

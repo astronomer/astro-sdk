@@ -309,7 +309,7 @@ class BaseDatabase(ABC):
             input_file.path,
             input_file.conn_id,
             normalize_config=normalize_config,
-            filetype=input_file.type.name,
+            filetype=input_file.type.name if input_file.type else None,
         )
         self.create_schema_if_needed(output_table.metadata.schema)
         if if_exists == "replace" or not self.table_exists(output_table):

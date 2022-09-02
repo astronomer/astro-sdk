@@ -14,7 +14,7 @@ def create_file_type(
     path: str,
     filetype: FileTypeConstants | None = None,
     normalize_config: dict | None = None,
-) -> FileType:
+) -> FileType | None:
     """Factory method to create FileType super objects based on the file extension in path or filetype specified."""
     filetype_to_class: dict[FileTypeConstants, type[FileType]] = {
         FileTypeConstants.CSV: CSVFileType,
@@ -22,7 +22,10 @@ def create_file_type(
         FileTypeConstants.NDJSON: NDJSONFileType,
         FileTypeConstants.PARQUET: ParquetFileType,
     }
-    if not filetype:
+    if not filetype and path.endswith("/"):
+        # filetype = get_filetype(path)
+        return None
+    else:
         filetype = get_filetype(path)
 
     try:
