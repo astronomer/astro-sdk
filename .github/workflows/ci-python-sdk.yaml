@@ -121,7 +121,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: coverage${{ matrix.group }}
-          path: .coverage
+          path: ./python-sdk/.coverage
     env:
       SETUPTOOLS_USE_DISTUTILS: stdlib
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
@@ -211,7 +211,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: coverage${{ matrix.group }}
-          path: .coverage
+          path: ./python-sdk/.coverage
     env:
       AWS_BUCKET: tmp9
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
