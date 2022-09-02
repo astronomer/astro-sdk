@@ -46,15 +46,14 @@ class Table:
     # SQL table itself
     # Some ideas: TableRef, TableMetadata, TableData, TableDataset
     conn_id: str = field(default="")
-    name: str = field(default="")
+    _name: str = field(default="")
     metadata: Metadata = field(factory=Metadata)
     columns: list[Column] = field(factory=list)
     temp: bool = field(default=False)
 
     def __attrs_post_init__(self) -> None:
-        if not self.name or self.name.startswith("_tmp"):
+        if not self._name or self._name.startswith("_tmp"):
             self.temp = True
-            self.name = self._create_unique_table_name(TEMP_PREFIX)
 
     def _create_unique_table_name(self, prefix: str = "") -> str:
         """
@@ -91,3 +90,22 @@ class Table:
         else:
             alchemy_metadata = MetaData()
         return alchemy_metadata
+
+    @property
+    def name(self) -> str:
+        """
+        Return either the user-defined name or auto-generate one.
+        :sphinx-autoapi-skip:
+        """
+        if self.temp and not self._name:
+            self._name = self._create_unique_table_name(TEMP_PREFIX)
+        return self._name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        """
+        Set the table name. Once this happens, the table is no longer considered temporary.
+        """
+        if not isinstance(value, property) and value != self._name:
+            self._name = value
+            self.temp = False
