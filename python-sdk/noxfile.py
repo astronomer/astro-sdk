@@ -99,7 +99,7 @@ def build_docs(session: nox.Session) -> None:
     """Build release artifacts."""
     session.install("-e", ".[doc]")
     session.chdir("./docs")
-    session.run("make", "html")
+    # session.run("make", "html")
 
 
 @nox.session()
