@@ -1,9 +1,21 @@
 """AWS Redshift table implementation."""
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 import sqlalchemy
 from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
+from redshift_connector.error import (
+    ArrayContentNotHomogenousError,
+    ArrayContentNotSupportedError,
+    ArrayDimensionsNotConsistentError,
+    DatabaseError,
+    DataError,
+    IntegrityError,
+    InternalError,
+    NotSupportedError,
+    OperationalError,
+    ProgrammingError,
+)
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 
@@ -25,9 +37,9 @@ NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
     FileType.CSV: "CSV",
     # By default, COPY attempts to match all columns in the target table to JSON field name keys.
     # With this option, matching is case-sensitive. Column names in Amazon Redshift tables are always lowercase,
-    # so when you use the 'auto' option, matching JSON field names must also be lowercase.
+    # so when you use the 'auto ignorecase' option, matching JSON field names is case-insensitive.
     # Refer: https://docs.aws.amazon.com/redshift/latest/dg/copy-parameters-data-format.html#copy-json
-    FileType.JSON: "JSON 'auto'",
+    FileType.JSON: "JSON 'auto ignorecase'",
     FileType.PARQUET: "PARQUET",
 }
 
@@ -37,6 +49,20 @@ class RedshiftDatabase(BaseDatabase):
     Handle interactions with Redshift databases.
     """
 
+    NATIVE_LOAD_EXCEPTIONS: Any = (
+        DatabaseCustomError,
+        ProgrammingError,
+        DatabaseError,
+        OperationalError,
+        DataError,
+        InternalError,
+        IntegrityError,
+        DataError,
+        NotSupportedError,
+        ArrayContentNotSupportedError,
+        ArrayContentNotHomogenousError,
+        ArrayDimensionsNotConsistentError,
+    )
     DEFAULT_SCHEMA = REDSHIFT_SCHEMA
     NATIVE_PATHS = {
         FileLocation.S3: "load_s3_file_to_table",

@@ -1011,3 +1011,40 @@ def test_aql_load_file_columns_names_capitalization_dataframe(sample_dag):
         validate(loaded_df_1, loaded_df_2, loaded_df_3)
 
     test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.parametrize(
+    "database_table_fixture,native_support_kwargs",
+    [
+        (
+            {
+                "database": Database.REDSHIFT,
+            },
+            {
+                "IGNOREHEADER": 1,
+                "REGION": "us-west-2",
+                "IAM_ROLE": os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN"),
+            },
+        ),
+    ],
+    indirect=["database_table_fixture"],
+    ids=["redshift"],
+)
+def test_aql_load_column_name_mixed_case_json_file_to_dbs(
+    database_table_fixture, native_support_kwargs
+):
+    """Test that json with mixed column name case loads fine natively to the database."""
+    db, test_table = database_table_fixture
+
+    # We are using a preexisting file for integration test, since the dynamically populating
+    # file on S3 results in file not found, since that file is not propagated to all the servers/clusters,
+    # and we might hit a server where the file in not yet populated, resulting in file not found issue.
+    load_file(
+        input_file=File("s3://tmp9/column_name_mixed_case.json", conn_id="aws_conn"),
+        output_table=test_table,
+        use_native_support=True,
+        native_support_kwargs=native_support_kwargs,
+    ).operator.execute({})
+
+    df = db.export_table_to_pandas_dataframe(test_table)
+    assert df.shape == (3, 2)
