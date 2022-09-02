@@ -98,7 +98,7 @@ def build(session: nox.Session) -> None:
 def build_docs(session: nox.Session) -> None:
     """Build release artifacts."""
     session.install("-e", ".[doc]")
-    session.chdir("./python-sdk/docs")
+    session.chdir("python-sdk/docs")
     session.run("make", "html")
 
 
