@@ -345,7 +345,7 @@ jobs:
         uses: actions/download-artifact@v2
       - name: Run coverage
         run: |
-          coverage combine coverage*/.coverage*
+          coverage combine ../coverage*/.coverage*
           coverage report
           coverage xml
       - name: Upload coverage
