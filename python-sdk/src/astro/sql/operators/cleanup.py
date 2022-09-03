@@ -2,14 +2,13 @@ from __future__ import annotations
 
 import time
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstance
-from airflow.utils.context import Context
 from airflow.utils.state import State
 
 from astro.databases import create_database
@@ -18,6 +17,10 @@ from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.sql.table import Table
+
+if TYPE_CHECKING:
+    # TODO: This can be removed from TYPE_CHECKING once there is a minimum requirement of Airflow 2.2.3+
+    from airflow.utils.context import Context
 
 
 def filter_for_temp_tables(task_outputs: list[Any]) -> list[Table]:
@@ -68,7 +71,7 @@ class CleanupOperator(AstroSQLBaseOperator):
             task_id=task_id, retries=retries, retry_delay=retry_delay, **kwargs
         )
 
-    def execute(self, context: Context) -> None:
+    def execute(self, context: "Context") -> None:
         self.log.info("Execute Cleanup")
         if not self.tables_to_cleanup:
             # tables not provided, attempt to either immediately run or wait for all other tasks to finish
@@ -119,7 +122,7 @@ class CleanupOperator(AstroSQLBaseOperator):
         else:
             return False
 
-    def wait_for_dag_to_finish(self, context: Context) -> None:
+    def wait_for_dag_to_finish(self, context: "Context") -> None:
         """
         In the event that we are not given any tables, we will want to wait for all other tasks to finish before
         we delete temporary tables. This prevents a scenario where either a) we delete temporary tables that
@@ -173,7 +176,7 @@ class CleanupOperator(AstroSQLBaseOperator):
             job = session.get(BaseJob, job_id)
         return job.executor_class if job else None
 
-    def get_all_task_outputs(self, context: Context) -> list[Table]:
+    def get_all_task_outputs(self, context: "Context") -> list[Table]:
         """
         In the scenario where we are not given a list of tasks to follow, we will want to gather all temporary tables
         To prevent scenarios where we grab objects that are not tables, we try to only follow up on SQL operators or
@@ -187,7 +190,7 @@ class CleanupOperator(AstroSQLBaseOperator):
         return task_outputs
 
     def resolve_tables_from_tasks(
-        self, tasks: list[BaseOperator], context: Context
+        self, tasks: list[BaseOperator], context: "Context"
     ) -> list[Table]:
         """
         For the moment, these are the only two classes that create temporary tables.
