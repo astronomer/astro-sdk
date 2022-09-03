@@ -128,7 +128,6 @@ class File:  # skipcq: PYL-W1641
 def resolve_file_path_pattern(
     path_pattern: str,
     conn_id: str | None = None,
-    filetype: constants.FileType | None = None,
     normalize_config: dict | None = None,
 ) -> list[File]:
     """get file objects by resolving path_pattern from local/object stores
