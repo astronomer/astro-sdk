@@ -46,7 +46,11 @@ class Table:
     # Some ideas: TableRef, TableMetadata, TableData, TableDataset
     conn_id: str = field(default="")
     _name: str = field(default="")
-    metadata: Metadata = field(factory=Metadata)
+    # Setting converter allows passing a dictionary to metadata arg
+    metadata: Metadata = field(
+        factory=Metadata,
+        converter=lambda val: Metadata(**val) if isinstance(val, dict) else val,
+    )
     columns: list[Column] = field(factory=list)
     temp: bool = field(default=False)
 
