@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import random
 import string
-from dataclasses import dataclass, field, fields
 
+from attrs import define, field, fields_dict
 from sqlalchemy import Column, MetaData
 
 MAX_TABLE_NAME_LENGTH = 62
 TEMP_PREFIX = "_tmp_"
 
 
-@dataclass
+@define
 class Metadata:
     """
     Contains additional information to access a SQL Table, which is very likely optional and, in some cases, may
@@ -23,11 +23,13 @@ class Metadata:
 
     def is_empty(self) -> bool:
         """Check if all the fields are None."""
-        values = [getattr(self, field.name) for field in fields(self)]
-        return values.count(None) == len(values)
+        return all(
+            getattr(self, field_name) is None
+            for field_name in fields_dict(self.__class__)
+        )
 
 
-@dataclass
+@define
 class Table:
     """
     Withholds the information necessary to access a SQL Table.
@@ -42,14 +44,13 @@ class Table:
     # TODO: discuss alternative names to this class, since it contains metadata as opposed to be the
     # SQL table itself
     # Some ideas: TableRef, TableMetadata, TableData, TableDataset
-    conn_id: str = ""
-    name: str = ""
-    _name: str = field(init=False, repr=False, default="")
-    metadata: Metadata = field(default_factory=Metadata)
-    columns: list[Column] = field(default_factory=list)
-    temp: bool = False
+    conn_id: str = field(default="")
+    _name: str = field(default="")
+    metadata: Metadata = field(factory=Metadata)
+    columns: list[Column] = field(factory=list)
+    temp: bool = field(default=False)
 
-    def __post_init__(self) -> None:
+    def __attrs_post_init__(self) -> None:
         if not self._name or self._name.startswith("_tmp"):
             self.temp = True
 
@@ -89,7 +90,7 @@ class Table:
             alchemy_metadata = MetaData()
         return alchemy_metadata
 
-    @property  # type: ignore
+    @property
     def name(self) -> str:
         """
         Return either the user-defined name or auto-generate one.
