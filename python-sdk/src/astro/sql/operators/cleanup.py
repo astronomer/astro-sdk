@@ -71,7 +71,7 @@ class CleanupOperator(AstroSQLBaseOperator):
             task_id=task_id, retries=retries, retry_delay=retry_delay, **kwargs
         )
 
-    def execute(self, context: "Context") -> None:
+    def execute(self, context: Context) -> None:
         self.log.info("Execute Cleanup")
         if not self.tables_to_cleanup:
             # tables not provided, attempt to either immediately run or wait for all other tasks to finish
@@ -122,7 +122,7 @@ class CleanupOperator(AstroSQLBaseOperator):
         else:
             return False
 
-    def wait_for_dag_to_finish(self, context: "Context") -> None:
+    def wait_for_dag_to_finish(self, context: Context) -> None:
         """
         In the event that we are not given any tables, we will want to wait for all other tasks to finish before
         we delete temporary tables. This prevents a scenario where either a) we delete temporary tables that
@@ -176,7 +176,7 @@ class CleanupOperator(AstroSQLBaseOperator):
             job = session.get(BaseJob, job_id)
         return job.executor_class if job else None
 
-    def get_all_task_outputs(self, context: "Context") -> list[Table]:
+    def get_all_task_outputs(self, context: Context) -> list[Table]:
         """
         In the scenario where we are not given a list of tasks to follow, we will want to gather all temporary tables
         To prevent scenarios where we grab objects that are not tables, we try to only follow up on SQL operators or
@@ -190,7 +190,7 @@ class CleanupOperator(AstroSQLBaseOperator):
         return task_outputs
 
     def resolve_tables_from_tasks(
-        self, tasks: list[BaseOperator], context: "Context"
+        self, tasks: list[BaseOperator], context: Context
     ) -> list[Table]:
         """
         For the moment, these are the only two classes that create temporary tables.
