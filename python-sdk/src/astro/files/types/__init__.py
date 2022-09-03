@@ -22,10 +22,8 @@ def create_file_type(
         FileTypeConstants.NDJSON: NDJSONFileType,
         FileTypeConstants.PARQUET: ParquetFileType,
     }
-    if not filetype and path.endswith("/"):
-        # filetype = get_filetype(path)
-        return None
-    else:
+
+    if not filetype:
         filetype = get_filetype(path)
 
     try:

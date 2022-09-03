@@ -221,7 +221,7 @@ class BigqueryDatabase(BaseDatabase):
         :param source_file: File from which we need to transfer data
         :param target_table: Table that needs to be populated with file data
         """
-        file_type = NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
+        file_type = NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)  # type: ignore
         location_type = self.NATIVE_PATHS.get(source_file.location.location_type)
         return bool(location_type and file_type)
 
@@ -285,7 +285,7 @@ class BigqueryDatabase(BaseDatabase):
             },
             "createDisposition": "CREATE_IF_NEEDED",
             "writeDisposition": BIGQUERY_WRITE_DISPOSITION[if_exists],
-            "sourceFormat": NATIVE_PATHS_SUPPORTED_FILE_TYPES[source_file.type.name],
+            "sourceFormat": NATIVE_PATHS_SUPPORTED_FILE_TYPES[source_file.type.name],  # type: ignore
             "autodetect": True,
         }
         native_support_kwargs.update(native_support_kwargs)
@@ -368,7 +368,7 @@ class BigqueryDatabase(BaseDatabase):
 
         client = self.hook.get_client()
         config = {
-            "source_format": file_types_to_bigquery_format[source_file.type.name],
+            "source_format": file_types_to_bigquery_format[source_file.type.name],  # type: ignore
             "create_disposition": "CREATE_IF_NEEDED",
             "write_disposition": BIGQUERY_WRITE_DISPOSITION[if_exists],
             "autodetect": True,
@@ -424,7 +424,7 @@ class S3ToBigqueryDataTransfer:
             FileType.NDJSON: "JSON",
             FileType.PARQUET: "PARQUET",
         }
-        self.s3_file_type = file_types_to_bigquery_format.get(source_file.type.name)
+        self.s3_file_type = file_types_to_bigquery_format.get(source_file.type.name)  # type: ignore
 
         self.project_id = project_id
         self.poll_duration = poll_duration

@@ -34,7 +34,13 @@ class File:  # skipcq: PYL-W1641
         :param normalize_config: parameters in dict format of pandas json_normalize() function.
         """
         self.location: BaseFileLocation = create_file_location(path, conn_id)
-        self.type = filetype
+        self.type = (
+            create_file_type(
+                path=path, filetype=filetype, normalize_config=normalize_config
+            )
+            if filetype
+            else None
+        )
 
     @property
     def path(self) -> str:
@@ -60,7 +66,10 @@ class File:  # skipcq: PYL-W1641
 
         :return: True or False
         """
-        result: bool = self.type.name == constants.FileType.PARQUET
+        result: bool = False
+        if not self.type:
+            result: bool = self.type.name == constants.FileType.PARQUET  # type: ignore
+
         return result
 
     def create_from_dataframe(self, df: pd.DataFrame) -> None:
@@ -71,7 +80,7 @@ class File:  # skipcq: PYL-W1641
         with smart_open.open(
             self.path, mode="wb", transport_params=self.location.transport_params
         ) as stream:
-            self.type.create_from_dataframe(stream=stream, df=df)
+            self.type.create_from_dataframe(stream=stream, df=df)  # type: ignore
 
     def _convert_remote_file_to_byte_stream(self) -> io.IOBase:
         """
@@ -101,9 +110,7 @@ class File:  # skipcq: PYL-W1641
         https://github.com/RaRe-Technologies/smart_open/issues/524), we create a BytesIO or StringIO buffer
         before exporting to a dataframe. We've found a sizable speed improvement with this optimization.
         """
-        return self.type.export_to_dataframe(
-            self._convert_remote_file_to_byte_stream(), **kwargs
-        )
+        return self.type.export_to_dataframe(self._convert_remote_file_to_byte_stream(), **kwargs)  # type: ignore
 
     def exists(self) -> bool:
         """Check if the file exists or not"""

@@ -309,7 +309,7 @@ class RedshiftDatabase(BaseDatabase):
         :param source_file: File from which we need to transfer data
         :param target_table: Table that needs to be populated with file data
         """
-        file_type = NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
+        file_type = NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)  # type: ignore
         location_type = self.NATIVE_PATHS.get(source_file.location.location_type)
         return bool(location_type and file_type)
 
@@ -372,7 +372,7 @@ class RedshiftDatabase(BaseDatabase):
         native_support_kwargs = native_support_kwargs or {}
 
         table_name = self.get_table_qualified_name(target_table)
-        file_type = NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
+        file_type = NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)  # type: ignore
 
         iam_role = native_support_kwargs.pop("IAM_ROLE", None)
         if not iam_role:
