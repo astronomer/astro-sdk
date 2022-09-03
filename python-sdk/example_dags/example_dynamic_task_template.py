@@ -55,7 +55,7 @@ with DAG(
 
     @task
     def avg_rating(rating_list):
-        return sum(rating_list)/len(rating_list)
+        return sum(rating_list) / len(rating_list)
 
     rating = custom_task.expand(
         row=get_value_list(sql_statement=QUERY_STATEMENT, conn_id=ASTRO_GCP_CONN_ID)

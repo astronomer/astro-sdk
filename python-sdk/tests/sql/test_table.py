@@ -1,6 +1,6 @@
-import pytest
 from datetime import datetime
 
+import pytest
 from airflow import DAG
 
 from astro.sql import get_value_list
