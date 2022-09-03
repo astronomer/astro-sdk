@@ -5,6 +5,7 @@ import pathlib
 from astro.constants import FileType as FileTypeConstants
 from astro.files.types.base import FileType
 from astro.files.types.csv import CSVFileType
+from astro.files.types.folder import FolderType
 from astro.files.types.json import JSONFileType
 from astro.files.types.ndjson import NDJSONFileType
 from astro.files.types.parquet import ParquetFileType
@@ -14,13 +15,14 @@ def create_file_type(
     path: str,
     filetype: FileTypeConstants | None = None,
     normalize_config: dict | None = None,
-) -> FileType | None:
+) -> FileType:
     """Factory method to create FileType super objects based on the file extension in path or filetype specified."""
     filetype_to_class: dict[FileTypeConstants, type[FileType]] = {
         FileTypeConstants.CSV: CSVFileType,
         FileTypeConstants.JSON: JSONFileType,
         FileTypeConstants.NDJSON: NDJSONFileType,
         FileTypeConstants.PARQUET: ParquetFileType,
+        FileTypeConstants.FOLDER: FolderType,
     }
 
     if not filetype:
@@ -52,10 +54,7 @@ def get_filetype(filepath: str | pathlib.PosixPath) -> FileTypeConstants:
             extension = tokenized_path[-1]
 
     if extension == "":
-        raise ValueError(
-            f"Missing file extension, cannot automatically determine filetype from path '{filepath}'."
-            f" Please pass the 'filetype' param with the explicit filetype (e.g. csv, ndjson, etc.)."
-        )
+        return FileTypeConstants("folder")
 
     try:
         return FileTypeConstants(extension)

@@ -287,8 +287,8 @@ class SnowflakeDatabase(BaseDatabase):
         stage = SnowflakeStage(metadata=metadata)
         stage.set_url_from_file(file)
 
-        fileformat = ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP[file.type.name]  # type: ignore
-        copy_options = COPY_OPTIONS[file.type.name]  # type: ignore
+        fileformat = ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP[file.type.name]
+        copy_options = COPY_OPTIONS[file.type.name]
 
         sql_statement = "".join(
             [
@@ -373,8 +373,8 @@ class SnowflakeDatabase(BaseDatabase):
         :param target_table: Table that needs to be populated with file data
         """
         is_file_type_supported = (
-            source_file.type.name in NATIVE_LOAD_SUPPORTED_FILE_TYPES  # type: ignore
-        )  # type: ignore
+            source_file.type.name in NATIVE_LOAD_SUPPORTED_FILE_TYPES
+        )
         is_file_location_supported = (
             source_file.location.location_type in NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS
         )

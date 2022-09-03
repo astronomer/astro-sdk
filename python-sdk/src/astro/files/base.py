@@ -34,12 +34,8 @@ class File:  # skipcq: PYL-W1641
         :param normalize_config: parameters in dict format of pandas json_normalize() function.
         """
         self.location: BaseFileLocation = create_file_location(path, conn_id)
-        self.type = (
-            create_file_type(
-                path=path, filetype=filetype, normalize_config=normalize_config
-            )
-            if filetype
-            else None
+        self.type = create_file_type(
+            path=path, filetype=filetype, normalize_config=normalize_config
         )
 
     @property
@@ -66,10 +62,8 @@ class File:  # skipcq: PYL-W1641
 
         :return: True or False
         """
-        result: bool = False
-        if not self.type:
-            result: bool = self.type.name == constants.FileType.PARQUET  # type: ignore
 
+        result: bool = self.type.name == constants.FileType.PARQUET
         return result
 
     def create_from_dataframe(self, df: pd.DataFrame) -> None:
@@ -80,7 +74,7 @@ class File:  # skipcq: PYL-W1641
         with smart_open.open(
             self.path, mode="wb", transport_params=self.location.transport_params
         ) as stream:
-            self.type.create_from_dataframe(stream=stream, df=df)  # type: ignore
+            self.type.create_from_dataframe(stream=stream, df=df)
 
     def _convert_remote_file_to_byte_stream(self) -> io.IOBase:
         """
@@ -110,7 +104,9 @@ class File:  # skipcq: PYL-W1641
         https://github.com/RaRe-Technologies/smart_open/issues/524), we create a BytesIO or StringIO buffer
         before exporting to a dataframe. We've found a sizable speed improvement with this optimization.
         """
-        return self.type.export_to_dataframe(self._convert_remote_file_to_byte_stream(), **kwargs)  # type: ignore
+        return self.type.export_to_dataframe(
+            self._convert_remote_file_to_byte_stream(), **kwargs
+        )
 
     def exists(self) -> bool:
         """Check if the file exists or not"""
@@ -156,11 +152,8 @@ def resolve_file_path_pattern(
         file_obj = File(
             path=path,
             conn_id=conn_id,
-            filetype=filetype if filetype else get_filetype(path),
+            filetype=get_filetype(path),
             normalize_config=normalize_config,
-        )
-        file_obj.type = create_file_type(
-            path=path, filetype=filetype, normalize_config=normalize_config
         )
 
         files.append(file_obj)
