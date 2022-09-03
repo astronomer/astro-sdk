@@ -122,12 +122,14 @@ class BaseFileLocation(ABC):
         except OSError:
             return False
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f'{self.__class__.__name__}(path="{self.path}",conn_id="{self.conn_id}")'
 
-    def __str__(self):
+    def __str__(self) -> str:
         """String representation of location"""
         return self.path
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, self.__class__):
+            return NotImplemented
         return self.path == other.path and self.conn_id == other.conn_id
