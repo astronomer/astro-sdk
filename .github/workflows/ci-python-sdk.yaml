@@ -344,7 +344,7 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v2
         with:
-          path: ./python-sdk/coverage
+          path: ./python-sdk/
       - name: Run coverage
         run: |
           /usr/bin/pwd
