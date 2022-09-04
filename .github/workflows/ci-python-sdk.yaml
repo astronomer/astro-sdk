@@ -348,6 +348,7 @@ jobs:
       - name: Run coverage
         run: |
           /usr/bin/pwd
+          /usr/bin/ls -la ./coverage
           coverage combine ./coverage/coverage*
           coverage report
           coverage xml
