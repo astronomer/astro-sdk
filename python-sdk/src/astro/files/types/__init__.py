@@ -8,7 +8,7 @@ from astro.files.types.csv import CSVFileType
 from astro.files.types.json import JSONFileType
 from astro.files.types.ndjson import NDJSONFileType
 from astro.files.types.parquet import ParquetFileType
-from astro.files.types.pattern import PatternType
+from astro.files.types.pattern import PatternFileType
 
 
 def create_file_type(
@@ -22,11 +22,11 @@ def create_file_type(
         FileTypeConstants.JSON: JSONFileType,
         FileTypeConstants.NDJSON: NDJSONFileType,
         FileTypeConstants.PARQUET: ParquetFileType,
-        FileTypeConstants.PATTERN: PatternType,
+        FileTypeConstants.PATTERN: PatternFileType,
     }
 
     if not filetype:
-        filetype = get_filetype(path)
+        filetype = FileTypeConstants.PATTERN
 
     try:
         return filetype_to_class[filetype](path=path, normalize_config=normalize_config)

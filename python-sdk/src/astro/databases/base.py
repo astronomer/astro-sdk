@@ -21,7 +21,7 @@ from astro.constants import (
     MergeConflictStrategy,
 )
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
-from astro.files import File, resolve_file_path_pattern
+from astro.files import File
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.sql.table import Metadata, Table
 
@@ -305,17 +305,13 @@ class BaseDatabase(ABC):
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         """
         normalize_config = normalize_config or {}
-        input_files = resolve_file_path_pattern(
-            input_file.path,
-            input_file.conn_id,
-            normalize_config=normalize_config,
-        )
+
         self.create_schema_if_needed(output_table.metadata.schema)
         if if_exists == "replace" or not self.table_exists(output_table):
             self.drop_table(output_table)
             self.create_table(
                 output_table,
-                input_files[0],
+                input_file.get_first(),
                 columns_names_capitalization=columns_names_capitalization,
             )
             if_exists = "append"
@@ -323,7 +319,7 @@ class BaseDatabase(ABC):
         # TODO: many native transfers support the input_file.path - it may be better
         # to use the native support to loading multiple files as opposed to iterating
         # here
-        for file in input_files:
+        for file in input_file:
             if use_native_support and self.is_native_load_file_available(
                 source_file=file, target_table=output_table
             ):

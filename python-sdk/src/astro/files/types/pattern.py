@@ -8,7 +8,7 @@ from astro.constants import FileType as FileTypeConstants
 from astro.files.types.base import FileType
 
 
-class PatternType(FileType):
+class PatternFileType(FileType):
     """Concrete implementation to handle file pattern type"""
 
     def export_to_dataframe(
@@ -21,4 +21,4 @@ class PatternType(FileType):
 
     @property
     def name(self):
-        return FileTypeConstants.FOLDER
+        return FileTypeConstants.PATTERN

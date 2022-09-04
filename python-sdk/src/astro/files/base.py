@@ -9,6 +9,7 @@ from astro import constants
 from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
 from astro.files.types import create_file_type, get_filetype
+from astro.files.types.pattern import PatternFileType
 
 
 class File:  # skipcq: PYL-W1641
@@ -34,6 +35,8 @@ class File:  # skipcq: PYL-W1641
         :param normalize_config: parameters in dict format of pandas json_normalize() function.
         """
         self.location: BaseFileLocation = create_file_location(path, conn_id)
+        self.normalize_config = normalize_config
+        self.provided_filetype = filetype
         self.type = create_file_type(
             path=path, filetype=filetype, normalize_config=normalize_config
         )
@@ -124,40 +127,43 @@ class File:  # skipcq: PYL-W1641
     def __eq__(self, other):
         return self.location == other.location and self.type == other.type
 
+    def __iter__(self):
+        """
+        Returns an iterable based on file pattern
+        """
+        location = create_file_location(self.path, self.conn_id)
 
-def resolve_file_path_pattern(
-    path_pattern: str,
-    conn_id: str | None = None,
-    normalize_config: dict | None = None,
-) -> list[File]:
-    """get file objects by resolving path_pattern from local/object stores
-    path_pattern can be
-    1. local location - glob pattern
-    2. s3/gcs location - prefix
+        self._files = []
+        self._file_counter = 0
+        for path in location.paths:
+            if path.endswith("/"):
+                continue
 
-    :param path_pattern: path/pattern to a file in the filesystem/Object stores,
-        supports glob and prefix pattern for object stores
-    :param conn_id: Airflow connection ID
-    :param filetype: constant to provide an explicit file type
-    :param normalize_config: parameters in dict format of pandas json_normalize() function
-    """
-    location = create_file_location(path_pattern, conn_id)
-    files = []
+            self._files.append(
+                File(
+                    path=path,
+                    conn_id=self.conn_id,
+                    filetype=get_filetype(path)
+                    if isinstance(self.type, PatternFileType)
+                    else self.provided_filetype,
+                    normalize_config=self.normalize_config,
+                )
+            )
+        if len(self._files) == 0:
+            raise ValueError(f"File(s) not found for path/pattern '{self.path}'")
 
-    for path in location.paths:
-        if path.endswith("/"):
-            continue
+        return self
 
-        file_obj = File(
-            path=path,
-            conn_id=conn_id,
-            filetype=get_filetype(path),
-            normalize_config=normalize_config,
-        )
+    def __next__(self):
+        if self._file_counter >= len(self._files):
+            raise StopIteration
 
-        files.append(file_obj)
+        file_obj = self._files[self._file_counter]
+        self._file_counter += 1
+        return file_obj
 
-    if len(files) == 0:
-        raise ValueError(f"File(s) not found for path/pattern '{path_pattern}'")
-
-    return files
+    def get_first(self):
+        """
+        Returns the first item in iterator
+        """
+        return next(iter(self))

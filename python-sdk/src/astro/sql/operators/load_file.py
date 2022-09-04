@@ -11,7 +11,7 @@ from astro import settings
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import BaseDatabase, create_database
 from astro.exceptions import IllegalLoadToDatabaseException
-from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
+from astro.files import File, check_if_connection_exists
 from astro.sql.table import Table
 
 
@@ -118,10 +118,7 @@ class LoadFileOperator(BaseOperator):
         SQL table was specified
         """
         df = None
-        for file in resolve_file_path_pattern(
-            input_file.path,
-            input_file.conn_id,
-        ):
+        for file in input_file:
             if isinstance(df, pd.DataFrame):
                 df = pd.concat(
                     [
