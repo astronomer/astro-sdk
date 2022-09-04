@@ -96,7 +96,7 @@ class RedshiftDatabase(BaseDatabase):
         # TODO: Change airflow RedshiftSQLHook to fetch database and schema separately as it
         #  treats both of them the same way at the moment.
         database = self.hook.conn.schema
-        return Metadata(database=database, schema=self.DEFAULT_SCHEMA)
+        return Metadata(database=database, schema=self.DEFAULT_SCHEMA)  # type: ignore
 
     def schema_exists(self, schema: str) -> bool:
         """

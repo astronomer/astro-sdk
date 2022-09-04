@@ -79,7 +79,7 @@ class Table:
         """
         Create a new table with a unique name but with the same metadata.
         """
-        return Table(
+        return Table(  # type: ignore
             name=self._create_unique_table_name(),
             conn_id=self.conn_id,
             metadata=self.metadata,

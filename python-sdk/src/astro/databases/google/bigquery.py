@@ -120,7 +120,7 @@ class BigqueryDatabase(BaseDatabase):
 
         :return:
         """
-        return Metadata(schema=self.DEFAULT_SCHEMA, database=self.hook.project_id)
+        return Metadata(schema=self.DEFAULT_SCHEMA, database=self.hook.project_id)  # type: ignore
 
     def schema_exists(self, schema: str) -> bool:
         """

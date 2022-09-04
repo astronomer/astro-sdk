@@ -54,7 +54,7 @@ class PostgresDatabase(BaseDatabase):
         """
         # TODO: Change airflow PostgresHook to fetch database and schema separately
         database = self.hook.get_connection(self.conn_id).schema
-        return Metadata(database=database, schema=self.DEFAULT_SCHEMA)
+        return Metadata(database=database, schema=self.DEFAULT_SCHEMA)  # type: ignore
 
     def schema_exists(self, schema) -> bool:
         """
