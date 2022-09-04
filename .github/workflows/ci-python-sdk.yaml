@@ -349,7 +349,7 @@ jobs:
           /usr/bin/pwd
           /usr/bin/ls -la ./coverage/
           /usr/bin/ls -la ./coverage/coverage1/
-          coverage combine ./coverage/coverage*
+          coverage combine ./coverage/coverage*/.coverage
           coverage report
           coverage xml
       - name: Upload coverage
