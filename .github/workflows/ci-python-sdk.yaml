@@ -347,11 +347,11 @@ jobs:
       - name: Run coverage
         run: |
           /usr/bin/pwd
-          /usr/bin/ls -la ./coverage/
-          /usr/bin/ls -la ./coverage/coverage1/
           coverage combine ./coverage/coverage*/.coverage
           coverage report
           coverage xml
+          /usr/bin/ls -la
+          /usr/bin/ls -la ./coverage/
       - name: Upload coverage
         uses: codecov/codecov-action@v2
         with:
