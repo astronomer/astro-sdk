@@ -57,3 +57,19 @@ def test_table_name_with_temp_prefix():
 def test_is_empty_metadata(metadata, expected_is_empty):
     """Check that is_empty returns"""
     assert metadata.is_empty() == expected_is_empty
+
+
+@pytest.mark.parametrize(
+    "metadata,expected_metadata",
+    [
+        (
+            {"schema": "test", "database": "db1"},
+            Metadata(schema="test", database="db1"),
+        ),
+        (Metadata(schema="test"), Metadata(schema="test")),
+    ],
+)
+def test_metadata_converter(metadata, expected_metadata):
+    """Test you can pass a dict to metadata param"""
+    table = Table(metadata=metadata)
+    assert table.metadata == expected_metadata
