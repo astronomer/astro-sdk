@@ -133,8 +133,8 @@ class File:  # skipcq: PYL-W1641
         """
         location = create_file_location(self.path, self.conn_id)
 
-        self._files = []
-        self._file_counter = 0
+        self._files = []  # skipcq : PYL-W0201
+        self._file_counter = 0  # skipcq : PYL-W0201
         for path in location.paths:
             if path.endswith("/"):
                 continue
