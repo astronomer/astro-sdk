@@ -8,8 +8,8 @@ from astro.constants import FileType as FileTypeConstants
 from astro.files.types.base import FileType
 
 
-class FolderType(FileType):
-    """Concrete implementation to handle folder type"""
+class PatternType(FileType):
+    """Concrete implementation to handle file pattern type"""
 
     def export_to_dataframe(
         self, stream, columns_names_capitalization="original", **kwargs

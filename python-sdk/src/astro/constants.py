@@ -30,7 +30,7 @@ class FileType(Enum):
     JSON = "json"
     NDJSON = "ndjson"
     PARQUET = "parquet"
-    FOLDER = "folder"
+    PATTERN = "pattern"
     # [END filetypes]
 
 

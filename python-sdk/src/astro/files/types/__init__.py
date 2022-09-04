@@ -5,10 +5,10 @@ import pathlib
 from astro.constants import FileType as FileTypeConstants
 from astro.files.types.base import FileType
 from astro.files.types.csv import CSVFileType
-from astro.files.types.folder import FolderType
 from astro.files.types.json import JSONFileType
 from astro.files.types.ndjson import NDJSONFileType
 from astro.files.types.parquet import ParquetFileType
+from astro.files.types.pattern import PatternType
 
 
 def create_file_type(
@@ -22,7 +22,7 @@ def create_file_type(
         FileTypeConstants.JSON: JSONFileType,
         FileTypeConstants.NDJSON: NDJSONFileType,
         FileTypeConstants.PARQUET: ParquetFileType,
-        FileTypeConstants.FOLDER: FolderType,
+        FileTypeConstants.PATTERN: PatternType,
     }
 
     if not filetype:
@@ -54,7 +54,7 @@ def get_filetype(filepath: str | pathlib.PosixPath) -> FileTypeConstants:
             extension = tokenized_path[-1]
 
     if extension == "":
-        return FileTypeConstants("folder")
+        return FileTypeConstants("pattern")
 
     try:
         return FileTypeConstants(extension)
