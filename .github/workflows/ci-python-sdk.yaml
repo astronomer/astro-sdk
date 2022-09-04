@@ -330,6 +330,7 @@ jobs:
   Code-Coverage:
     needs:
       - Run-Unit-tests-Airflow-2-3
+      - Run-Optional-Packages-tests-python-sdk
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
