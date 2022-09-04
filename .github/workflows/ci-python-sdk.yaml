@@ -348,7 +348,7 @@ jobs:
       - name: Run coverage
         run: |
           /usr/bin/pwd
-          coverage combine coverage*/.coverage*
+          coverage combine ./coverage/.coverage*
           coverage report
           coverage xml
       - name: Upload coverage
