@@ -357,7 +357,7 @@ jobs:
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage.xml
+          files: ./python-sdk/coverage.xml
 
   build-n-publish:
     if: github.event_name == 'release'
