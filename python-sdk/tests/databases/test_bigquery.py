@@ -175,7 +175,7 @@ def test_load_file_to_table(database_table_fixture):
     """Test loading on files to bigquery database"""
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
-    database.load_file_to_table(File(filepath), target_table, {})
+    database.load_file_to_table(File(filepath).get_first(), target_table, {})
 
     df = database.hook.get_pandas_df(
         f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
@@ -207,7 +207,9 @@ def test_load_file_to_table_natively_for_not_optimised_path(database_table_fixtu
     """Test loading on files to bigquery natively for non optimized path."""
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
-    response = database.load_file_to_table_natively(File(filepath), target_table)
+    response = database.load_file_to_table_natively(
+        File(filepath).get_first(), target_table
+    )
     assert response is None
 
 
@@ -234,7 +236,7 @@ def test_load_file_to_table_natively_for_fallback(
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     response = database.load_file_to_table_natively_with_fallback(
-        File(filepath), target_table
+        File(filepath).get_first(), target_table
     )
     assert response is None
 
@@ -262,7 +264,7 @@ def test_load_file_to_table_natively_for_fallback_wrong_file_location(
     filepath = "https://www.data.com/data/sample.json"
 
     response = database.load_file_to_table_natively_with_fallback(
-        source_file=File(filepath),
+        source_file=File(filepath).get_first(),
         target_table=target_table,
         enable_native_fallback=False,
     )
@@ -334,7 +336,7 @@ def test_export_table_to_file_file_already_exists_raises_exception(
     [
         {
             "database": Database.BIGQUERY,
-            "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
+            "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))).get_first(),
             "table": Table(metadata=Metadata(schema=SCHEMA)),
         },
     ],
@@ -349,7 +351,9 @@ def test_export_table_to_file_overrides_existing_file(database_table_fixture):
     database, populated_table = database_table_fixture
 
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
-    database.export_table_to_file(populated_table, File(filepath), if_exists="replace")
+    database.export_table_to_file(
+        populated_table, File(filepath).get_first(), if_exists="replace"
+    )
 
     df = test_utils.load_to_dataframe(filepath, "csv")
     assert len(df) == 3
@@ -411,7 +415,7 @@ def test_export_table_to_file_in_the_cloud(
 
     database.export_table_to_file(
         populated_table,
-        File(object_path),
+        File(object_path).get_first(),
         if_exists="replace",
     )
 
@@ -436,7 +440,7 @@ def test_export_table_to_file_in_the_cloud(
         {
             "database": Database.BIGQUERY,
             "table": Table(metadata=Metadata(schema=SCHEMA)),
-            "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
+            "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))).get_first(),
         }
     ],
     indirect=True,

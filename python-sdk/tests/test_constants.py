@@ -17,7 +17,7 @@ def test_supported_file_locations():
 
 
 def test_supported_file_types():
-    expected = ["csv", "json", "ndjson", "parquet"]
+    expected = ["csv", "json", "ndjson", "parquet", "pattern"]
     assert sorted(SUPPORTED_FILE_TYPES) == expected
 
 

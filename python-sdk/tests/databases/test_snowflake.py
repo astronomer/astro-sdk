@@ -131,7 +131,7 @@ def test_snowflake_create_table_with_columns(database_table_fixture):
         {
             "database": Database.SNOWFLAKE,
             "table": Table(metadata=Metadata(schema=SCHEMA)),
-            "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
+            "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))).get_first(),
         },
     ],
     indirect=True,
@@ -201,7 +201,9 @@ def test_load_file_to_table(database_table_fixture):
     """Test loading on files to snowflake database"""
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sub_folder/"))
-    database.load_file_to_table(File(filepath, filetype=FileType.CSV), target_table, {})
+    database.load_file_to_table(
+        File(filepath, filetype=FileType.CSV).get_first(), target_table, {}
+    )
 
     df = database.hook.get_pandas_df(
         f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
