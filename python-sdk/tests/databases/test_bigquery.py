@@ -415,7 +415,7 @@ def test_export_table_to_file_in_the_cloud(
 
     database.export_table_to_file(
         populated_table,
-        File(object_path).get_first(),
+        File(object_path),
         if_exists="replace",
     )
 
