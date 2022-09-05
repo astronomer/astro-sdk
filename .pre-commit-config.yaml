@@ -38,9 +38,9 @@ repos:
       - id: forbid-crlf
       - id: remove-crlf
       - id: forbid-tabs
-        exclude: ^mk/.*\.mk$|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$
-      #- id: remove-tabs
-      #  exclude: ^mk/.*\.mk$|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$
+        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$
+      - id: remove-tabs
+        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$
 
   - repo: https://github.com/psf/black
     rev: 22.8.0
