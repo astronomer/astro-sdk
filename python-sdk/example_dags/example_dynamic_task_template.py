@@ -49,7 +49,10 @@ with DAG(
     @task
     def custom_task(rating_val):
         try:
-            return float(rating_val)
+            print("rating_val ", rating_val)
+            print("rating_val.__dict__ ", rating_val.__dict__)
+            print("rating_val.__dict__.get()", rating_val.__dict__.get("rating"))
+            return float(rating_val.__dict__.get("rating"))
         except ValueError:
             pass
 
