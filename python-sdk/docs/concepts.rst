@@ -34,6 +34,18 @@ There are two types of tables:
            :start-after: [START temp_table_example]
            :end-before: [END temp_table_example]
 
+Metadata
+~~~~~~~~~
+Metadata is used in tables to pass additional information to access a SQL Table, which will be database specific.
+For example we can have multiple tables in different schema or database, we can pass metadata object while defining table to pass this information.
+
+.. literalinclude:: ../example_dags/example_amazon_s3_snowflake_transform.py
+   :language: python
+   :start-after: [START metadata_example_1]
+   :end-before: [END metadata_example_1]
+
+
+
 .. _load_file_working:
 
 
