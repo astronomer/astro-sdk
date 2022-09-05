@@ -196,7 +196,7 @@ class SnowflakeDatabase(BaseDatabase):
         Fill in default metadata values for table objects addressing snowflake databases
         """
         connection = self.hook.get_conn()
-        return Metadata(
+        return Metadata(  # type: ignore
             schema=connection.schema,
             database=connection.database,
         )
