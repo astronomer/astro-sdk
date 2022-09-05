@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 import sqlalchemy
 
-from astro.constants import Database, FileType
+from astro.constants import Database
 from astro.databases import create_database
 from astro.databases.aws.redshift import RedshiftDatabase
 from astro.exceptions import NonExistentTableException
@@ -156,7 +156,7 @@ def test_load_file_to_table(database_table_fixture):
     """Test loading on files to redshift database"""
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sub_folder/"))
-    database.load_file_to_table(File(filepath, filetype=FileType.CSV), target_table, {})
+    database.load_file_to_table(File(filepath).get_first(), target_table, {})
 
     df = database.hook.get_pandas_df(
         f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
@@ -191,8 +191,7 @@ def test_load_file_from_cloud_to_table(database_table_fixture):
         File(
             "s3://astro-sdk-redshift/data_redshift/",
             conn_id="aws_conn",
-            filetype=FileType.CSV,
-        ),
+        ).get_first(),
         target_table,
         use_native_support=False,
     )
