@@ -26,7 +26,7 @@ def create_file_type(
     }
 
     if not filetype:
-        filetype = FileTypeConstants.PATTERN
+        filetype = get_filetype(path)
 
     try:
         return filetype_to_class[filetype](path=path, normalize_config=normalize_config)
