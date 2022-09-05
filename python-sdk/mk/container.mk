@@ -3,7 +3,7 @@ PHONY: build-run clean docs logs stop shell restart restart-all help
 .DEFAULT_GOAL:= help
 
 logs: ## View logs of the all the containers
-    docker compose -f ../dev/docker-compose.yaml logs --follow
+	docker compose -f ../dev/docker-compose.yaml logs --follow
 
 stop: ## Stop all the containers
     docker compose -f ../dev/docker-compose.yaml down
