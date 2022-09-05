@@ -70,7 +70,7 @@ def example_amazon_s3_snowflake_transform():
         ),
         conn_id="snowflake_conn",
     )
-    # [END metadata_example_1]
+    # [END metadata_example_snowflake]
 
     temp_table_1 = aql.load_file(
         input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_1_unquoted.csv"),
