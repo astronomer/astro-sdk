@@ -336,7 +336,7 @@ def test_export_table_to_file_file_already_exists_raises_exception(
     [
         {
             "database": Database.BIGQUERY,
-            "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))).get_first(),
+            "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
             "table": Table(metadata=Metadata(schema=SCHEMA)),
         },
     ],
@@ -351,9 +351,7 @@ def test_export_table_to_file_overrides_existing_file(database_table_fixture):
     database, populated_table = database_table_fixture
 
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
-    database.export_table_to_file(
-        populated_table, File(filepath).get_first(), if_exists="replace"
-    )
+    database.export_table_to_file(populated_table, File(filepath), if_exists="replace")
 
     df = test_utils.load_to_dataframe(filepath, "csv")
     assert len(df) == 3
