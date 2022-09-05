@@ -50,7 +50,7 @@ with DAG(
     def custom_task(row):
         try:
             return float(row.get("rating"))
-        except ValueError as e:
+        except ValueError:
             pass
 
     @task
