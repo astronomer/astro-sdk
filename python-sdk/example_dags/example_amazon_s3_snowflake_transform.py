@@ -61,7 +61,7 @@ def example_amazon_s3_snowflake_transform():
         ),
         conn_id="snowflake_conn",
     )
-    # [START metadata_example_1]
+    # [START metadata_example_snowflake]
     input_table_2 = Table(
         name="ADOPTION_CENTER_2",
         metadata=Metadata(
