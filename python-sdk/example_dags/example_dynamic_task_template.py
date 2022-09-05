@@ -49,13 +49,14 @@ with DAG(
     @task
     def custom_task(rating_val):
         try:
-            print("rating_val ", rating_val)
             return float(rating_val[0])
         except ValueError:
+            # If value is not valid then ignore it
             pass
 
     @task
     def avg_rating(rating_list):
+        rating_list = [val for val in rating_list if val]
         return sum(rating_list) / len(rating_list)
 
     rating = custom_task.expand(
