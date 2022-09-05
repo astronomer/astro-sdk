@@ -42,7 +42,7 @@ For example, a user can detail the Snowflake schema and database for a table, wh
 .. literalinclude:: ../example_dags/example_amazon_s3_snowflake_transform.py
    :language: python
    :start-after: [START metadata_example_snowflake]
-   :end-before: [END metadata_example_1]
+   :end-before: [END metadata_example_snowflake]
 
 
 
