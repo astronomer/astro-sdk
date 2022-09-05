@@ -36,7 +36,7 @@ There are two types of tables:
 
 Metadata
 ~~~~~~~~~
-Metadata is used in tables to pass additional information to access a SQL Table, which will be database specific.
+Metadata is used to give additional information to access a SQL Table.
 For example we can have multiple tables in different schema or database, we can pass metadata object while defining table to pass this information.
 
 .. literalinclude:: ../example_dags/example_amazon_s3_snowflake_transform.py
