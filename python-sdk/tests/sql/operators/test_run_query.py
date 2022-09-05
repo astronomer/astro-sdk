@@ -64,7 +64,7 @@ def test_run_query_snowflake(mock_get_conn, mock_snowflake_sqlalchemy_engine):
         task_id="task1",
         sql_statement="select * from 1",
         conn_id="conn",
-        handler=(lambda result_set: [result_set])(1),
+        handler=lambda result_set: result_set.fetchall(),
     )
     op.execute(None)
     mock_snowflake_sqlalchemy_engine.assert_called_once()
