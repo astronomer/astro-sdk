@@ -136,7 +136,7 @@ def test_sqlite_create_table_autodetection_with_file(database_table_fixture):
     assert response.first() is None
 
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
-    database.create_table(table, File(filepath))
+    database.create_table(table, File(filepath).get_first())
     response = database.run_sql(statement)
     rows = response.fetchall()
     assert len(rows) == 2
@@ -255,7 +255,9 @@ def test_export_table_to_file_overrides_existing_file(database_table_fixture):
     database, populated_table = database_table_fixture
 
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv").absolute())
-    database.export_table_to_file(populated_table, File(filepath), if_exists="replace")
+    database.export_table_to_file(
+        populated_table, File(filepath).get_first(), if_exists="replace"
+    )
 
     df = test_utils.load_to_dataframe(filepath, "csv")
     assert len(df) == 3
@@ -310,7 +312,7 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
 def test_export_table_to_file_in_the_cloud(
     database_table_fixture, remote_files_fixture
 ):
-    """Export a SQL tale to a file in the cloud"""
+    """Export a SQL table to a file in the cloud"""
     object_path = remote_files_fixture[0]
     database, populated_table = database_table_fixture
 
