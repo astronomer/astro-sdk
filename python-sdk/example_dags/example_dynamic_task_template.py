@@ -23,7 +23,7 @@ ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_default")
 ASTRO_BIGQUERY_DATASET = os.getenv("ASTRO_BIGQUERY_DATASET", "dag_authoring")
 QUERY_STATEMENT = os.getenv(
     "ASTRO_BIGQUERY_DATASET",
-    "SELECT * FROM `astronomer-dag-authoring.dynamic_template.movie`",
+    "SELECT rating FROM `astronomer-dag-authoring.dynamic_template.movie`",
 )
 
 with DAG(
@@ -47,9 +47,9 @@ with DAG(
 
     # [START howto_operator_get_value_list]
     @task
-    def custom_task(row):
+    def custom_task(rating_val):
         try:
-            return float(row.get("rating"))
+            return float(rating_val)
         except ValueError:
             pass
 
@@ -58,7 +58,7 @@ with DAG(
         return sum(rating_list) / len(rating_list)
 
     rating = custom_task.expand(
-        row=get_value_list(sql_statement=QUERY_STATEMENT, conn_id=ASTRO_GCP_CONN_ID)
+        rating_val=get_value_list(sql_statement=QUERY_STATEMENT, conn_id=ASTRO_GCP_CONN_ID)
     )
 
     print(avg_rating(rating))
