@@ -201,9 +201,7 @@ def test_load_file_to_table(database_table_fixture):
     """Test loading on files to snowflake database"""
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sub_folder/"))
-    database.load_file_to_table(
-        File(filepath, filetype=FileType.CSV).get_first(), target_table, {}
-    )
+    database.load_file_to_table(File(filepath), target_table, {})
 
     df = database.hook.get_pandas_df(
         f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
@@ -235,7 +233,7 @@ def test_load_file_from_cloud_to_table(database_table_fixture):
     """Test loading on files to snowflake database"""
     database, target_table = database_table_fixture
     database.load_file_to_table(
-        File("s3://astro-sdk/data/", conn_id="aws_conn", filetype=FileType.CSV),
+        File("s3://astro-sdk/data/", conn_id="aws_conn").get_first(),
         target_table,
         {},
     )
@@ -281,7 +279,7 @@ def test_load_file_to_table_natively_for_fallback(
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     response = database.load_file_to_table_natively_with_fallback(
-        source_file=File(filepath),
+        source_file=File(filepath).get_first(),
         target_table=target_table,
         enable_native_fallback=False,
     )
@@ -607,7 +605,7 @@ def test_load_file_to_table_natively(remote_files_fixture, database_table_fixtur
     filepath = remote_files_fixture[0]
     database, target_table = database_table_fixture
     database.load_file_to_table(
-        File(filepath), target_table, {}, use_native_support=True
+        File(filepath).get_first(), target_table, {}, use_native_support=True
     )
 
     df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
