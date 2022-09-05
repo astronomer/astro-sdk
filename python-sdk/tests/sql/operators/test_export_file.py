@@ -21,7 +21,7 @@ from airflow.exceptions import BackfillUnfinished
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
 
 import astro.sql as aql
-from astro.constants import SUPPORTED_FILE_TYPES, Database, FileType
+from astro.constants import SUPPORTED_FILE_TYPES, Database
 from astro.files import File
 from astro.settings import SCHEMA
 
@@ -379,7 +379,7 @@ def test_unique_task_id_for_same_path(
 @pytest.mark.parametrize("file_type", SUPPORTED_FILE_TYPES)
 def test_export_file(sample_dag, database_table_fixture, file_type):
     _, test_table = database_table_fixture
-    if file_type == FileType.PATTERN:
+    if file_type == "pattern":
         return
     with tempfile.TemporaryDirectory() as tmp_dir:
         filepath = Path(tmp_dir, f"sample.{file_type}")
