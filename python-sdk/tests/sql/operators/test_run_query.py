@@ -61,7 +61,10 @@ def test_run_query_snowflake(mock_get_conn, mock_snowflake_sqlalchemy_engine):
     """Assert that if connection type is ``snowflake`` then snowflake get_sqlalchemy_engine called"""
     mock_get_conn.return_value = Connection(conn_id="conn", conn_type="snowflake")
     op = RunQueryOperator(
-        task_id="task1", sql_statement="select * from 1", conn_id="conn"
+        task_id="task1",
+        sql_statement="select * from 1",
+        conn_id="conn",
+        handler=lambda result_set: print(result_set)
     )
     op.execute(None)
     mock_snowflake_sqlalchemy_engine.assert_called_once()
