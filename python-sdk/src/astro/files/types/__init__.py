@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pathlib
 
+from astro.constants import SUPPORTED_FILE_EXTENSIONS
 from astro.constants import FileType as FileTypeConstants
 from astro.files.types.base import FileType
 from astro.files.types.csv import CSVFileType
@@ -45,18 +46,17 @@ def get_filetype(filepath: str | pathlib.PosixPath) -> FileTypeConstants:
     :return: The filetype (e.g. csv, ndjson, json, parquet)
     :rtype: astro.constants.FileType
     """
-    if isinstance(filepath, pathlib.PosixPath):
-        extension = filepath.suffix[1:]
-    else:
-        extension = ""
-        tokenized_path = filepath.split(".")
-        if len(tokenized_path) > 1:
-            extension = tokenized_path[-1]
+
+    if not isinstance(filepath, pathlib.PosixPath):
+        filepath = pathlib.PosixPath(filepath)
+
+    extension = filepath.suffix
 
     if extension == "":
         return FileTypeConstants("pattern")
 
     try:
-        return FileTypeConstants(extension)
+        if extension in SUPPORTED_FILE_EXTENSIONS:
+            return FileTypeConstants(extension[1:])
     except ValueError:
         raise ValueError(f"Unsupported filetype '{extension}' from file '{filepath}'.")

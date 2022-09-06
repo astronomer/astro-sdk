@@ -45,6 +45,7 @@ class Database(Enum):
     # [END database]
 
 
+SUPPORTED_FILE_EXTENSIONS = (".csv", ".json", ".ndjson", ".parquet")
 SUPPORTED_FILE_LOCATIONS = [const.value for const in FileLocation]
 SUPPORTED_FILE_TYPES = [const.value for const in FileType]
 SUPPORTED_DATABASES = [const.value for const in Database]
