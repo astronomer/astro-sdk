@@ -68,20 +68,13 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
     curl -O https://raw.githubusercontent.com/astronomer/astro-sdk/main/example_dags/calculate_popular_movies.py
    ```
 
-4. Ensure that your Airflow environment is set up correctly by running the following commands:
-
-   ```python
-        top_animations = Table(name="top_animation")
-        top_animations = top_five_animations(input_table=imdb_movies, output_table=top_animations)
-    ```
-
-6. Run the example DAG:
+4. Run the example DAG:
 
     ```sh
     airflow dags test calculate_popular_movies `date -Iseconds`
     ```
 
-7. Check the result of your DAG by running:
+5. Check the result of your DAG by running:
 
     ```shell
     sqlite3 "$SQL_TABLE_NAME" "select * from top_animation;" ".exit"
