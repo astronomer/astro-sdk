@@ -61,36 +61,12 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
 3. Copy the following workflow into a file named `calculate_popular_movies.py` and add it to the `dags` directory of your Airflow project:
 
-    ```Python
-    from datetime import datetime
-    from airflow import DAG
-    from astro import sql as aql
-    from astro.files import File
-    from astro.sql.table import Table
+   https://github.com/astronomer/astro-sdk/blob/d5aa768b2d4bca72ef98f8d533fe3f99624b172f/example_dags/calculate_popular_movies.py#L1-L37
 
-    @aql.transform()
-    def top_five_animations(input_table: Table):
-        return """
-            SELECT title, rating
-            FROM {{input_table}}
-            WHERE genre1=='Animation'
-            ORDER BY rating desc
-            LIMIT 5;
-        """
-
-    with DAG(
-        "calculate_popular_movies",
-        schedule_interval=None,
-        start_date=datetime(2000, 1, 1),
-        catchup=False,
-    ) as dag:
-        imdb_src = File("https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv")
-        imdb_movies = Table(name="imdb_movies", conn_id="sqlite_default")
-        imdb_movies = aql.load_file(imdb_src, imdb_movies)
-
-        top_animations = Table(name="top_animation")
-        top_animations = top_five_animations(input_table=imdb_movies, output_table=top_animations)
-    ```
+   Alternatively, you can download `calculate_popular_movies.py`
+   ```shell
+    curl -O https://raw.githubusercontent.com/astronomer/astro-sdk/main/example_dags/calculate_popular_movies.py
+   ```
 
 4. Run the example DAG:
 
