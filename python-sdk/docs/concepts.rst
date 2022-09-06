@@ -34,6 +34,18 @@ There are two types of tables:
            :start-after: [START temp_table_example]
            :end-before: [END temp_table_example]
 
+Metadata
+~~~~~~~~
+Metadata is used to give additional information to access a SQL Table.
+For example, a user can detail the Snowflake schema and database for a table, whereas a BigQuery user can specify the namespace and dataset. Although these parameters can change name depending on the database, we have normalised the :class:`~astro.sql.table.Metadata` class to name their schema and database.
+
+.. literalinclude:: ../example_dags/example_amazon_s3_snowflake_transform.py
+   :language: python
+   :start-after: [START metadata_example_snowflake]
+   :end-before: [END metadata_example_snowflake]
+
+
+
 .. _load_file_working:
 
 
