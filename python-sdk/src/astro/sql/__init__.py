@@ -26,7 +26,7 @@ def get_value_list(sql_statement: str, conn_id: str, **kwargs) -> XComArg:
         and connect with it at runtime
     """
     handler = kwargs.get("handler") or (lambda result_set: result_set.fetchall())
-    max_map_length = conf.get(section="core", key="max_map_length")
+    max_map_length = int(conf.get(section="core", key="max_map_length"))
     op_kwargs = {
         "handler": handler,
         "response_limit": max_map_length,
