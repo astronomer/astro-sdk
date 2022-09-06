@@ -11,6 +11,7 @@ from astro.sql.operators.merge import MergeOperator, merge
 from astro.sql.operators.raw_sql import RawSQLOperator, run_raw_sql
 from astro.sql.operators.transform import TransformOperator, transform, transform_file
 from astro.sql.table import Metadata, Table
+from airflow.decorators.base import get_unique_task_id
 
 
 def get_value_list(sql_statement: str, conn_id: str, **kwargs) -> XComArg:
@@ -30,6 +31,14 @@ def get_value_list(sql_statement: str, conn_id: str, **kwargs) -> XComArg:
         "handler": handler,
         "response_limit": max_map_length,
     }
+    task_id = kwargs.get("task_id") or get_unique_task_id(
+            "get_value_list", dag=kwargs.get("dag"), task_group=kwargs.get("task_group")
+        )
+    kwargs.update(
+        {
+            "task_id": task_id
+        }
+    )
     return RawSQLOperator(
         sql=sql_statement, conn_id=conn_id, op_kwargs=op_kwargs, python_callable=(lambda *args: None), **kwargs
     ).output
