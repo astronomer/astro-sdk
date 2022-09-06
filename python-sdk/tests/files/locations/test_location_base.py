@@ -94,3 +94,8 @@ def test_location_eq(loc_1, loc_2, equality):
         assert loc_1 == loc_2
     else:
         assert loc_1 != loc_2
+
+
+def test_location_hash():
+    """Test that hashing works"""
+    assert isinstance(hash(LocalLocation("/tmp/file_a.csv")), int)
