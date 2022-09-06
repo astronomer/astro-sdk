@@ -73,6 +73,8 @@ To complete this tutorial, you need:
     export AIRFLOW__ASTRO_SDK__SQL_SCHEMA=ASTRO_SDK_SCHEMA
     ```
 
+    > **Note:** `AIRFLOW__CORE__ENABLE_XCOM_PICKLING` needs to be enabled for `astro-sdk-python`. Read more: [Airflow Core Enable XCOM Pickling](../../README.md#quickstart)
+
     If you are using the Astro CLI, you can do this by adding the following text to your `.env` file:
 
     ```text

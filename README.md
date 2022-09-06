@@ -48,6 +48,9 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
     airflow db init
     ```
 
+    > **Note:** `AIRFLOW__CORE__ENABLE_XCOM_PICKLING` needs to be enabled for `astro-sdk-python`. Read more: [Airflow Core Enable XCOM Pickling](python-sdk/README.md#quickstart)
+
+
 2. Create a SQLite database for the example to run with:
 
     ```shell
