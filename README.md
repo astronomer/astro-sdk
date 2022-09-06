@@ -70,7 +70,7 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
 4. Ensure that your Airflow environment is set up correctly by running the following commands:
 
-5. ```python
+   ```python
         top_animations = Table(name="top_animation")
         top_animations = top_five_animations(input_table=imdb_movies, output_table=top_animations)
     ```
