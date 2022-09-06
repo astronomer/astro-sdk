@@ -26,7 +26,7 @@ class BaseSQLDecoratedOperator(DecoratedOperator):
         handler: Function | None = None,
         database: str | None = None,
         schema: str | None = None,
-        response_limit: int | 0 = 0,
+        response_limit: int = 0,
         sql: str = "",
         **kwargs: Any,
     ):

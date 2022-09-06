@@ -31,5 +31,5 @@ def get_value_list(sql_statement: str, conn_id: str, **kwargs) -> XComArg:
         "response_limit": max_map_length,
     }
     return RawSQLOperator(
-        sql=sql_statement, conn_id=conn_id, op_kwargs=op_kwargs, **kwargs
+        sql=sql_statement, conn_id=conn_id, op_kwargs=op_kwargs, python_callable=None, **kwargs
     ).output
