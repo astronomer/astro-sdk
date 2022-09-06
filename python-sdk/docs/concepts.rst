@@ -37,7 +37,7 @@ There are two types of tables:
 Metadata
 ~~~~~~~~~
 Metadata is used to give additional information to access a SQL Table.
-For example, a user can detail the Snowflake schema and database for a table, whereas a BigQuery user can specify the namespace and dataset. Although these parameters can change name depending on the database, we have normalised the `Metadata` class to name their schema and database.
+For example, a user can detail the Snowflake schema and database for a table, whereas a BigQuery user can specify the namespace and dataset. Although these parameters can change name depending on the database, we have normalised the ``Metadata`` class to name their schema and database.
 
 .. literalinclude:: ../example_dags/example_amazon_s3_snowflake_transform.py
    :language: python
