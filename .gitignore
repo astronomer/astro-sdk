@@ -2,9 +2,8 @@
 coverage.xml
 .env
 .coverage
-integration-tests/test_data*
-astronomer_sql_decorator.egg-info
-test-connections.yaml
+python-sdk/integration-tests/test_data*
+python-sdk/test-connections.yaml
 .idea
 .env
 airflow_settings.yaml
@@ -19,8 +18,8 @@ airflow.db
 airflow.cfg
 unittests.db
 unittests.cfg
-tests/benchmark/logs/*
-tests/benchmark/webserver_config.py
+python-sdk/tests/benchmark/logs/*
+python-sdk/tests/benchmark/webserver_config.py
 
 # VIM
 *.sw[a-z]
@@ -34,11 +33,11 @@ tests/benchmark/webserver_config.py
 **/.terraform.lock.hcl
 
 # Sphinx-related
-docs/_build
-docs/sphinx/_build/*
-docs/logs/
-docs/webserver_config.py
-docs/autoapi/
+python-sdk/docs/_build
+python-sdk/docs/sphinx/_build/*
+python-sdk/docs/logs/
+python-sdk/docs/webserver_config.py
+python-sdk/docs/autoapi/
 
 dev/dags
 dev/logs

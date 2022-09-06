@@ -48,18 +48,6 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
     airflow db init
     ```
 
-    > **Note:** `AIRFLOW__CORE__ENABLE_XCOM_PICKLING` needs to be enabled for `astro-sdk-python`.
-
-    Currently, custom XCom backends are limited to data types that are json serializable. Since Dataframes are not json serializable, we need to enable XCom pickling to store dataframes.
-
-    The data format used by pickle is Python-specific. This has the advantage that there are no restrictions imposed by external standards such as JSON or XDR (which can’t represent pointer sharing); however it means that non-Python programs may not be able to reconstruct pickled Python objects.
-
-    Read more: [enable_xcom_pickling](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#enable-xcom-pickling) and [pickle](https://docs.python.org/3/library/pickle.html#comparison-with-json):
-            ```shell
-            export AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
-            ```
-
-
 2. Create a SQLite database for the example to run with:
 
     ```shell
@@ -167,27 +155,27 @@ For a full list of available operators, see the [SDK reference documentation](ht
 
 The documentation is a work in progress--we aim to follow the [Diátaxis](https://diataxis.fr/) system:
 
-- **[Getting Started](python-sdk/docs/getting-started/GETTING_STARTED.md)**: A hands-on introduction to the Astro Python SDK
+- **[Getting Started](./docs/getting-started/GETTING_STARTED.md)**: A hands-on introduction to the Astro Python SDK
 - **How-to guides**: Simple step-by-step user guides to accomplish specific tasks
 - **[Reference guide](https://astro-sdk-python.readthedocs.io/)**: Commands, modules, classes and methods
 - **Explanation**: Clarification and discussion of key decisions when designing the project
 
 ## Changelog
 
-The Astro Python SDK follows semantic versioning for releases. Check the [changelog](python-sdk/docs/CHANGELOG.md) for the latest changes.
+The Astro Python SDK follows semantic versioning for releases. Check the [changelog](docs/CHANGELOG.md) for the latest changes.
 
 ## Release managements
 
-To learn more about our release philosophy and steps, see [Managing Releases](python-sdk/docs/development/RELEASE.md).
+To learn more about our release philosophy and steps, see [Managing Releases](docs/development/RELEASE.md).
 
 ## Contribution guidelines
 
 All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
 
-Read the [Contribution Guideline](python-sdk/docs/development/CONTRIBUTING.md) for a detailed overview on how to contribute.
+Read the [Contribution Guideline](./docs/development/CONTRIBUTING.md) for a detailed overview on how to contribute.
 
-Contributors and maintainers should abide by the [Contributor Code of Conduct](python-sdk/docs/development/CODE_OF_CONDUCT.md).
+Contributors and maintainers should abide by the [Contributor Code of Conduct](docs/development/CODE_OF_CONDUCT.md).
 
 ## License
 
-[Apache Licence 2.0](LICENSE)
+[Apache Licence 2.0](../LICENSE)
