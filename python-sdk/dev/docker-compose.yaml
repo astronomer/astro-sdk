@@ -23,7 +23,7 @@ x-airflow-common:
     - ./dags:/usr/local/airflow/dags
     - ./logs:/usr/local/airflow/logs
     - ./plugins:/usr/local/airflow/plugins
-    - ../../astro-sdk:/usr/local/airflow/astro_sdk
+    - ../../python-sdk:/usr/local/airflow/astro_sdk
   depends_on:
     &airflow-common-depends-on
     redis:
