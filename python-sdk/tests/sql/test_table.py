@@ -91,3 +91,46 @@ def test_get_value_list():
 
     resp = get_value_list(sql_statement="path", conn_id="conn", task_id="test")
     assert resp.operator.task_id == "test"
+
+
+@pytest.mark.parametrize(
+    "table,dataset_uri",
+    [
+        (Table(name="test_table"), "astro://@?table=test_table"),
+        (
+            Table(name="test_table", conn_id="test_conn"),
+            "astro://test_conn@?table=test_table",
+        ),
+        (
+            Table(name="test_table", conn_id="test_conn", temp=True),
+            "astro://test_conn@?table=test_table",
+        ),
+        (
+            Table(
+                name="test_table",
+                conn_id="test_conn",
+                metadata=Metadata(schema="schema", database="database"),
+            ),
+            "astro://test_conn@?table=test_table&schema=schema&database=database",
+        ),
+        (
+            Table(
+                name="test_table",
+                conn_id="test_conn",
+                metadata=Metadata(schema="schema"),
+            ),
+            "astro://test_conn@?table=test_table&schema=schema",
+        ),
+    ],
+)
+def test_table_to_datasets_uri(table, dataset_uri):
+    """Verify that Table build and pass correct URI"""
+    assert table.uri == dataset_uri
+
+
+def test_table_to_datasets_extra():
+    """Verify that extra is set"""
+    table = Table(
+        name="test_table", conn_id="test_conn", metadata=Metadata(schema="schema")
+    )
+    assert table.extra == {}

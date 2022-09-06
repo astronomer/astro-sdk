@@ -3,8 +3,10 @@ from __future__ import annotations
 import random
 import string
 
-from attrs import define, field, fields_dict
+from attr import define, field, fields_dict
 from sqlalchemy import Column, MetaData
+
+from astro.airflow.datasets import Dataset
 
 MAX_TABLE_NAME_LENGTH = 62
 TEMP_PREFIX = "_tmp_"
@@ -33,7 +35,7 @@ class Metadata:
 
 
 @define
-class Table:
+class Table(Dataset):
     """
     Withholds the information necessary to access a SQL Table.
     It is agnostic to the database type.
@@ -61,6 +63,9 @@ class Table:
     )
     columns: list[Column] = field(factory=list)
     temp: bool = field(default=False)
+
+    uri: str = field(init=False)
+    extra: dict | None = field(init=False, factory=dict)
 
     def __attrs_post_init__(self) -> None:
         if not self._name or self._name.startswith("_tmp"):
@@ -120,3 +125,19 @@ class Table:
         if not isinstance(value, property) and value != self._name:
             self._name = value
             self.temp = False
+
+    @uri.default
+    def _path_to_dataset_uri(self) -> str:
+        """Build a URI to be passed to Dataset obj introduced in Airflow 2.4"""
+        from urllib.parse import urlencode, urlparse
+
+        path = f"astro://{self.conn_id}@"
+        db_extra = {}
+        if self.metadata.schema:
+            db_extra["schema"] = self.metadata.schema
+        if self.metadata.database:
+            db_extra["database"] = self.metadata.database
+        db_extra["table"] = self.name
+        parsed_url = urlparse(url=path)
+        new_parsed_url = parsed_url._replace(query=urlencode(db_extra))
+        return new_parsed_url.geturl()
