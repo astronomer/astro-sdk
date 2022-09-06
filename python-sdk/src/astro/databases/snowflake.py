@@ -63,6 +63,77 @@ NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS = (FileLocation.GS, FileLocation.S3)
 
 
 @dataclass
+class SnowflakeFileFormat:
+    """
+    Dataclass which abstracts properties of a Snowflake File Format.
+
+    Snowflake File Formats are used to define the format of files stored in a stage.
+
+    Example:
+
+    .. code-block:: python
+
+        snowflake_stage = SnowflakeFileFormat(
+            name="file_format",
+            file_type="PARQUET",
+        )
+
+    .. seealso::
+        `Snowflake official documentation on file format creation
+        <https://docs.snowflake.com/en/sql-reference/sql/create-file-format.html>`_
+    """
+
+    name: str = ""
+    _name: str = field(init=False, repr=False, default="")
+    file_type: str = ""
+
+    @staticmethod
+    def _create_unique_name() -> str:
+        """
+        Generate a valid Snowflake file format name.
+
+        :return: unique file format name
+        """
+        return (
+            "file_format_"
+            + random.choice(string.ascii_lowercase)
+            + "".join(
+                random.choice(string.ascii_lowercase + string.digits) for _ in range(7)
+            )
+        )
+
+    def set_file_type_from_file(self, file: File) -> None:
+        """
+        Set Snowflake specific file format based on a given file.
+
+        :param file: File to use for file type mapping.
+        """
+        self.file_type = ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP[file.type.name]
+
+    @property  # type: ignore
+    def name(self) -> str:
+        """
+        Return either the user-defined name or auto-generated one.
+
+        :return: file format name
+        :sphinx-autoapi-skip:
+        """
+        if not self._name:
+            self._name = self._create_unique_name()
+        return self._name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        """
+        Set the file format name.
+
+        :param value: File format name.
+        """
+        if not isinstance(value, property) and value != self._name:
+            self._name = value
+
+
+@dataclass
 class SnowflakeStage:
     """
     Dataclass which abstracts properties of a Snowflake Stage.
@@ -217,6 +288,34 @@ class SnowflakeDatabase(BaseDatabase):
         return qualified_name
 
     # ---------------------------------------------------------
+    # Snowflake file format methods
+    # ---------------------------------------------------------
+
+    def create_file_format(self, file: File) -> SnowflakeFileFormat:
+        """
+        Create a new named file format.
+
+        :param file: File to use for file format creation.
+
+        .. seealso::
+            `Snowflake official documentation on file format creation
+            <https://docs.snowflake.com/en/sql-reference/sql/create-file-format.html>`_
+        """
+        file_format = SnowflakeFileFormat()
+        file_format.set_file_type_from_file(file)
+
+        sql_statement = "".join(
+            [
+                f"CREATE OR REPLACE FILE FORMAT {file_format.name} ",
+                f"TYPE={file_format.file_type} ",
+            ]
+        )
+
+        self.run_sql(sql_statement)
+
+        return file_format
+
+    # ---------------------------------------------------------
     # Snowflake stage methods
     # ---------------------------------------------------------
 
@@ -332,6 +431,33 @@ class SnowflakeDatabase(BaseDatabase):
     # ---------------------------------------------------------
     # Table load methods
     # ---------------------------------------------------------
+
+    def create_table_using_native_schema_autodetection(
+        self,
+        table: Table,
+        file: File,
+    ) -> None:
+        """
+        Create a SQL table, automatically inferring the schema using the given file via native database support.
+
+        :param table: The table to be created.
+        :param file: File used to infer the new table columns.
+        """
+        table_name = self.get_table_qualified_name(table)
+        file_format = self.create_file_format(file)
+        stage = self.create_stage(file)
+        file_path = os.path.basename(file.path) or ""
+        sql_statement = f"""
+            create table {table_name} using template (
+                select array_agg(object_construct(*))
+                from table(
+                    infer_schema(
+                        location=>'@{stage.qualified_name}/{file_path}',
+                        file_format=>'{file_format.name}'
+                    )
+                ));
+        """
+        self.hook.run(sql_statement, autocommit=True)
 
     def create_table_using_schema_autodetection(
         self,
