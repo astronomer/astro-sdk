@@ -31,7 +31,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
         if self.handler:
             response = self.handler(result)
             if self.response_limit and len(response) > self.response_limit:
-                raise IllegalLoadToDatabaseException()
+                raise IllegalLoadToDatabaseException()  # pragma: no cover
             return response
         else:
             return None
