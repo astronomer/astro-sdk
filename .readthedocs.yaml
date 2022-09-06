@@ -7,11 +7,11 @@ build:
 
 # Build from the docs/ directory with Sphinx
 sphinx:
-  configuration: docs/conf.py
+  configuration: python-sdk/docs/conf.py
 
 python:
   install:
     - method: pip
-      path: .
+      path: python-sdk
       extra_requirements:
         - doc
