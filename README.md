@@ -70,17 +70,18 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
 4. Ensure that your Airflow environment is set up correctly by running the following commands:
 
+5. ```python
         top_animations = Table(name="top_animation")
         top_animations = top_five_animations(input_table=imdb_movies, output_table=top_animations)
     ```
 
-5. Run the example DAG:
+6. Run the example DAG:
 
     ```sh
     airflow dags test calculate_popular_movies `date -Iseconds`
     ```
 
-6. Check the result of your DAG by running:
+7. Check the result of your DAG by running:
 
     ```shell
     sqlite3 "$SQL_TABLE_NAME" "select * from top_animation;" ".exit"
