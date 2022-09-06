@@ -63,7 +63,7 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
    https://github.com/astronomer/astro-sdk/blob/d5aa768b2d4bca72ef98f8d533fe3f99624b172f/example_dags/calculate_popular_movies.py#L1-L37
 
-   Alternatively you can download the file
+   Alternatively, you can download `calculate_popular_movies.py`
    ```shell
     curl -O https://raw.githubusercontent.com/astronomer/astro-sdk/main/example_dags/calculate_popular_movies.py
    ```
