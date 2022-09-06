@@ -8,6 +8,7 @@ from airflow import DAG
 from botocore.client import BaseClient
 from google.cloud.storage import Client
 
+from astro import constants
 from astro.constants import SUPPORTED_FILE_TYPES, FileType
 from astro.files import File, get_file_list, resolve_file_path_pattern
 
@@ -239,3 +240,42 @@ def test_get_file_list():
 
     resp = get_file_list(path="path", conn_id="conn", task_id="test")
     assert resp.operator.task_id == "test"
+
+
+@pytest.mark.parametrize(
+    "file_1,file_2,equality",
+    [
+        (File("/tmp/file_a.csv"), File("/tmp/file_a.csv"), True),
+        (
+            File("/tmp/file_a.csv", conn_id="test"),
+            File("/tmp/file_a.csv", conn_id="test"),
+            True,
+        ),
+        (
+            File("/tmp/file_a.csv", conn_id="test", filetype=constants.FileType.CSV),
+            File("/tmp/file_a.csv", conn_id="test", filetype=constants.FileType.CSV),
+            True,
+        ),
+        (
+            File("/tmp/file_a.csv", conn_id="test", filetype=constants.FileType.CSV),
+            File("/tmp/file_a.csv", conn_id="test2", filetype=constants.FileType.JSON),
+            False,
+        ),
+        (
+            File("/tmp/file_a.csv", conn_id="test", filetype=constants.FileType.CSV),
+            File("/tmp/file_b.csv", conn_id="test", filetype=constants.FileType.CSV),
+            False,
+        ),
+    ],
+)
+def test_file_eq(file_1, file_2, equality):
+    """Test that equality works"""
+    if equality:
+        assert file_1 == file_2
+    else:
+        assert file_1 != file_2
+
+
+def test_file_hash():
+    """Test that hashing works"""
+    assert isinstance(hash(File("/tmp/file_a.csv")), int)

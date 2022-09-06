@@ -133,3 +133,6 @@ class BaseFileLocation(ABC):
         if not isinstance(other, self.__class__):
             return NotImplemented
         return self.path == other.path and self.conn_id == other.conn_id
+
+    def __hash__(self) -> int:
+        return hash((self.path, self.conn_id))
