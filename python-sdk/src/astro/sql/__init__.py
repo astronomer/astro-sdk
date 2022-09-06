@@ -13,7 +13,6 @@ from astro.sql.operators.transform import TransformOperator, transform, transfor
 from astro.sql.table import Metadata, Table
 
 
-@run_raw_sql()
 def get_value_list(sql_statement: str, conn_id: str, **kwargs) -> XComArg:
     """
     Execute a sql statement and return the result
