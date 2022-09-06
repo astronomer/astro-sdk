@@ -21,10 +21,10 @@ docs:  ## Build the docs using Sphinx
 	@echo "Documentation built in $(shell cd .. && pwd)/docs/_build/html/index.html"
 
 restart: ## Restart Triggerer, Scheduler and Worker containers
-	docker compose -f dev/docker-compose.yaml restart airflow-triggerer airflow-scheduler airflow-worker
+	docker compose -f ../dev/docker-compose.yaml restart airflow-triggerer airflow-scheduler airflow-worker
 
 restart-all: ## Restart all the containers
-	docker compose -f dev/docker-compose.yaml restart
+	docker compose -f ../dev/docker-compose.yaml restart
 
 shell:  ## Runs a shell within a container (Allows interactive session)
 	docker compose -f ../dev/docker-compose.yaml run --rm airflow-scheduler bash
