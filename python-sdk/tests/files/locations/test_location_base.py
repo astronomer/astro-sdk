@@ -5,6 +5,7 @@ import pytest
 
 from astro.constants import FileLocation
 from astro.files.locations import create_file_location, get_class_name
+from astro.files.locations.local import LocalLocation
 
 LOCAL_FILEPATH = f"/tmp/{uuid.uuid4()}"
 
@@ -59,3 +60,37 @@ def test_get_class_name_method_invalid_name():
 
     expected_msg = "No expected class name found, please note that the class names should an expected formats."
     assert exc_info.value.args[0] == expected_msg
+
+
+@pytest.mark.parametrize(
+    "loc_1,loc_2,equality",
+    [
+        (LocalLocation("/tmp/file_a.csv"), LocalLocation("/tmp/file_a.csv"), True),
+        (
+            LocalLocation("/tmp/file_a.csv", conn_id="test"),
+            LocalLocation("/tmp/file_a.csv", conn_id="test"),
+            True,
+        ),
+        (
+            LocalLocation("/tmp/file_a.csv", conn_id="test"),
+            LocalLocation("/tmp/file_a.csv", conn_id="test"),
+            True,
+        ),
+        (
+            LocalLocation("/tmp/file_a.csv", conn_id="test"),
+            LocalLocation("/tmp/file_a.csv", conn_id="test2"),
+            False,
+        ),
+        (
+            LocalLocation("/tmp/file_a.csv", conn_id="test"),
+            LocalLocation("/tmp/file_b.csv", conn_id="test"),
+            False,
+        ),
+    ],
+)
+def test_location_eq(loc_1, loc_2, equality):
+    """Test that equality works"""
+    if equality:
+        assert loc_1 == loc_2
+    else:
+        assert loc_1 != loc_2
