@@ -9,8 +9,8 @@ except ImportError:
     from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
-from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 from astro.exceptions import IllegalLoadToDatabaseException
+from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 
 
 class RawSQLOperator(BaseSQLDecoratedOperator):

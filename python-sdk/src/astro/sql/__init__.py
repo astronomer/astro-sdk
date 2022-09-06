@@ -1,3 +1,4 @@
+from airflow.configuration import conf
 from airflow.models.xcom_arg import XComArg
 
 from astro.sql.operators.append import AppendOperator, append
@@ -10,7 +11,6 @@ from astro.sql.operators.merge import MergeOperator, merge
 from astro.sql.operators.raw_sql import RawSQLOperator, run_raw_sql
 from astro.sql.operators.transform import TransformOperator, transform, transform_file
 from astro.sql.table import Metadata, Table
-from airflow.configuration import conf
 
 
 def get_value_list(sql_statement: str, conn_id: str, **kwargs) -> XComArg:
