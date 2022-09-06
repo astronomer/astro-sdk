@@ -1,4 +1,6 @@
-from astro.sql.table import Table
+import pytest
+
+from astro.sql.table import Metadata, Table
 
 
 def test_table_with_explicit_name():
@@ -43,3 +45,31 @@ def test_table_name_with_temp_prefix():
     """Check that the table is no longer considered temp when the name is set after initialization."""
     table = Table(conn_id="some_connection")
     assert table.name.startswith("_tmp_")
+
+
+@pytest.mark.parametrize(
+    "metadata,expected_is_empty",
+    [
+        (Metadata(), True),
+        (Metadata(schema="test"), False),
+    ],
+)
+def test_is_empty_metadata(metadata, expected_is_empty):
+    """Check that is_empty returns"""
+    assert metadata.is_empty() == expected_is_empty
+
+
+@pytest.mark.parametrize(
+    "metadata,expected_metadata",
+    [
+        (
+            {"schema": "test", "database": "db1"},
+            Metadata(schema="test", database="db1"),
+        ),
+        (Metadata(schema="test"), Metadata(schema="test")),
+    ],
+)
+def test_metadata_converter(metadata, expected_metadata):
+    """Test you can pass a dict to metadata param"""
+    table = Table(metadata=metadata)
+    assert table.metadata == expected_metadata

@@ -4,47 +4,47 @@ import io
 
 import pandas as pd
 import smart_open
+from attrs import define
 
 from astro import constants
 from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
-from astro.files.types import create_file_type
+from astro.files.types import FileType, create_file_type
 
 
-class File:  # skipcq: PYL-W1641
+@define
+class File:
     """
     Handle all file operations, and abstract away the details related to location and file types.
     Intended to be used within library.
+
+    :param path: Path to a file in the filesystem/Object stores
+    :param conn_id: Airflow connection ID
+    :param filetype: constant to provide an explicit file type
+    :param normalize_config: parameters in dict format of pandas json_normalize() function.
     """
 
-    template_fields = ("location",)
+    path: str
+    conn_id: str | None = None
+    filetype: constants.FileType | None = None
+    normalize_config: dict | None = None
 
-    def __init__(
-        self,
-        path: str,
-        conn_id: str | None = None,
-        filetype: constants.FileType | None = None,
-        normalize_config: dict | None = None,
-    ):
-        """Init file object which represent a single file in local/object stores
+    template_fields = (
+        "path",
+        "conn_id",
+    )
 
-        :param path: Path to a file in the filesystem/Object stores
-        :param conn_id: Airflow connection ID
-        :param filetype: constant to provide an explicit file type
-        :param normalize_config: parameters in dict format of pandas json_normalize() function.
-        """
-        self.location: BaseFileLocation = create_file_location(path, conn_id)
-        self.type = create_file_type(
-            path=path, filetype=filetype, normalize_config=normalize_config
+    @property
+    def location(self) -> BaseFileLocation:
+        return create_file_location(self.path, self.conn_id)
+
+    @property
+    def type(self) -> FileType:  # noqa: A003
+        return create_file_type(
+            path=self.path,
+            filetype=self.filetype,
+            normalize_config=self.normalize_config,
         )
-
-    @property
-    def path(self) -> str:
-        return self.location.path
-
-    @property
-    def conn_id(self) -> str | None:
-        return self.location.conn_id
 
     @property
     def size(self) -> int:
@@ -113,16 +113,16 @@ class File:  # skipcq: PYL-W1641
         file_exists: bool = self.location.exists()
         return file_exists
 
-    def __repr__(self) -> str:
-        return (
-            f'{self.__class__.__name__}(location="{self.location}",type="{self.type}")'
-        )
-
     def __str__(self) -> str:
-        return self.location.path  # type: ignore
+        return self.path
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, self.__class__):
+            return NotImplemented
         return self.location == other.location and self.type == other.type
+
+    def __hash__(self) -> int:
+        return hash((self.path, self.conn_id, self.filetype))
 
 
 def resolve_file_path_pattern(

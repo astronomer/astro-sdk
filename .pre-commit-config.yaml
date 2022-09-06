@@ -1,4 +1,6 @@
 ---
+ci:
+  skip: [mypy]
 default_stages: [commit, push]
 default_language_version:
   # force all unspecified python hooks to run python3
@@ -36,12 +38,12 @@ repos:
       - id: forbid-crlf
       - id: remove-crlf
       - id: forbid-tabs
-        exclude: ^mk/.*\.mk$|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$
+        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$
       - id: remove-tabs
-        exclude: ^mk/.*\.mk$|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$
+        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$
 
   - repo: https://github.com/psf/black
-    rev: 22.6.0
+    rev: 22.8.0
     hooks:
       - id: black
 
@@ -89,11 +91,11 @@ repos:
   -   repo: https://github.com/pre-commit/mirrors-mypy
       rev: 'v0.971'
       hooks:
-      -   id: mypy
-          additional_dependencies: [types-PyYAML]
-          pass_filenames: false
-          files: "^python-sdk/"
-          entry: bash -c 'cd python-sdk && mypy "$@"' --
+      - id: mypy
+        additional_dependencies: [types-PyYAML, types-attrs]
+        pass_filenames: false
+        files: "^python-sdk/"
+        entry: bash -c 'cd python-sdk && mypy "$@"' --
       - id: mypy
         additional_dependencies: [ types-PyYAML ]
         pass_filenames: false
