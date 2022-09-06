@@ -8,9 +8,9 @@ from astro.sql.operators.export_file import ExportFileOperator, export_file
 from astro.sql.operators.load_file import LoadFileOperator, load_file
 from astro.sql.operators.merge import MergeOperator, merge
 from astro.sql.operators.raw_sql import RawSQLOperator, run_raw_sql
-from astro.sql.operators.run_query import RunQueryOperator
 from astro.sql.operators.transform import TransformOperator, transform, transform_file
 from astro.sql.table import Metadata, Table
+from airflow.configuration import conf
 
 
 def get_value_list(sql_statement: str, conn_id: str, **kwargs) -> XComArg:
@@ -24,6 +24,12 @@ def get_value_list(sql_statement: str, conn_id: str, **kwargs) -> XComArg:
     :param conn_id: Airflow connection id. This connection id will be used to identify the database client
         and connect with it at runtime
     """
-    return RunQueryOperator(
-        sql_statement=sql_statement, conn_id=conn_id, **kwargs
+    handler = kwargs.get("handler") or (lambda result_set: result_set.fetchall())
+    max_map_length = conf.get(section="core", key="max_map_length")
+    op_kwargs = {
+        "handler": handler,
+        "response_limit": max_map_length,
+    }
+    return RawSQLOperator(
+        sql=sql_statement, conn_id=conn_id, op_kwargs=op_kwargs, **kwargs
     ).output
