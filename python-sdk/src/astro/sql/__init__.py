@@ -16,12 +16,15 @@ from astro.sql.table import Metadata, Table
 
 def get_value_list(sql_statement: str, conn_id: str, **kwargs) -> XComArg:
     """
-    Execute a sql statement and return the result
+    Execute a sql statement and return the result.
+    By default, the response size is less than equal to value of ``max_map_length`` conf.
+    You can call a callable handler to alter the response by default it call ``fetchall`` on database result set.
+
 
     :param sql_statement: sql query to execute.
         If the sql query will return huge number of row then it can overload the XCOM.
         also, If you are using output of this method to expand a task using dynamic task map then
-        it can create lots of parallel task. So it is advisible to limit your sql query statement.
+        it can create lots of parallel task. So it is advisable to limit your sql query statement.
     :param conn_id: Airflow connection id. This connection id will be used to identify the database client
         and connect with it at runtime
     """
