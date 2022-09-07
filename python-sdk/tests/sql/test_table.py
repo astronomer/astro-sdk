@@ -1,5 +1,9 @@
-import pytest
+from datetime import datetime
 
+import pytest
+from airflow import DAG
+
+from astro.sql import get_value_list
 from astro.sql.table import Metadata, Table
 
 
@@ -73,3 +77,17 @@ def test_metadata_converter(metadata, expected_metadata):
     """Test you can pass a dict to metadata param"""
     table = Table(metadata=metadata)
     assert table.metadata == expected_metadata
+
+
+def test_get_value_list():
+    """Assert that get_file_list handle kwargs correctly"""
+    dag = DAG(dag_id="dag1", start_date=datetime(2022, 1, 1))
+
+    resp = get_value_list(sql_statement="path", conn_id="conn", dag=dag)
+    assert resp.operator.task_id == "get_value_list"
+
+    resp = get_value_list(sql_statement="path", conn_id="conn", dag=dag)
+    assert resp.operator.task_id != "get_value_list"
+
+    resp = get_value_list(sql_statement="path", conn_id="conn", task_id="test")
+    assert resp.operator.task_id == "test"

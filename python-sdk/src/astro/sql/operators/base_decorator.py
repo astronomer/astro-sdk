@@ -26,6 +26,7 @@ class BaseSQLDecoratedOperator(DecoratedOperator):
         handler: Function | None = None,
         database: str | None = None,
         schema: str | None = None,
+        response_limit: int = 0,
         sql: str = "",
         **kwargs: Any,
     ):
@@ -38,6 +39,7 @@ class BaseSQLDecoratedOperator(DecoratedOperator):
         self.parameters = parameters or {}
         self.database = self.op_kwargs.pop("database", database)
         self.schema = self.op_kwargs.pop("schema", schema)
+        self.response_limit = self.op_kwargs.pop("response_limit", response_limit)
         self.op_args: dict[str, Table | pd.DataFrame] = {}
         super().__init__(
             **kwargs,
