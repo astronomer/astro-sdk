@@ -20,7 +20,7 @@ def check_if_connection_exists(conn_id: str) -> bool:
 
 def get_file_list(path: str, conn_id: str, **kwargs) -> XComArg:
     """
-    List the file path from a remote object store or the local filesystem based on the given path pattern.
+    List file path from a remote object store or the local filesystem based on the given path pattern.
     It is not advisable to fetch huge number of files since it would overload the XCOM and
     also, if you are using response of this method in dynamic task map ``expand`` method
     it can create huge number of parallel task
