@@ -44,7 +44,9 @@ class Table:
     :param conn_id: The Airflow connection id. This will be used to identify the right database type at the runtime
     :param name: The name of the database table. If name not provided then it would create a temporary name
     :param metadata: A metadata object which will have database or schema name
-    :param columns:
+    :param columns: Table columns names.
+        If columns values provided then it would create table having provided columns names
+        otherwise it autodetect columns name from dataset
     """
 
     template_fields = ("name",)
