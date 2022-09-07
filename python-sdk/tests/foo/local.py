@@ -12,7 +12,7 @@ from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 from airflow.models.dagrun import DagRunState
 from sqlalchemy.orm import Session
-
+import timeit
 log = logging.getLogger(__name__)
 
 CWD = pathlib.Path(__file__).parent
@@ -31,7 +31,7 @@ def local_dag_flow(
     dr = dag.create_dagrun(state=DagRunState.QUEUED, execution_date=execution_date, run_id=run_id)
     # dr = get_or_create_dagrun(dag, execution_date, run_id, session)
     tasks = dag.tasks
-    tasks.reverse()  # Reversing to test what happens when a task doesn't have dependencies met
+    # tasks.reverse()  # Reversing to test what happens when a task doesn't have dependencies met
     while tasks:
         unfinished_tasks = []
         for task in tasks:
@@ -45,7 +45,13 @@ def local_dag_flow(
 
 
 def run_task(session, ti):
-    xcom_value = ti.render_templates(ti.get_template_context()).execute(
+    import sys
+    current_task = ti.render_templates(ti.get_template_context())
+    handler = logging.StreamHandler(sys.stdout)
+    if not current_task.log.handlers:  # only add log handler once
+        current_task.log.addHandler(handler)
+
+    xcom_value = current_task.execute(
         context=ti.get_template_context()
     )
     ti.xcom_push(key=XCOM_RETURN_KEY, value=xcom_value, session=session)
@@ -88,24 +94,28 @@ def get_or_create_dagrun(dag, execution_date, run_id, session):
     return dr
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Run an Airflow DAG locally")
-    parser.add_argument(
-        "--dag_dir", metavar="dag_dir", required=True, help="The path to the DAG file you want to parse"
-    )
-    parser.add_argument(
-        "--dag_id", metavar="dag_id", required=True, help="The dag_id of the DAG you want to run"
-    )
-    parser.add_argument(
-        "--execution_date",
-        metavar="execution_date",
-        required=False,
-        default=timezone.utcnow(),
-        help="The execution date of the DAG you're running",
-    )
-    args = parser.parse_args()
-    local_dag_flow(args.dag_dir, args.dag_id, args.execution_date)
+# if __name__ == "__main__":
+#     parser = argparse.ArgumentParser(description="Run an Airflow DAG locally")
+#     parser.add_argument(
+#         "--dag_dir", metavar="dag_dir", required=True, help="The path to the DAG file you want to parse"
+#     )
+#     parser.add_argument(
+#         "--dag_id", metavar="dag_id", required=True, help="The dag_id of the DAG you want to run"
+#     )
+#     parser.add_argument(
+#         "--execution_date",
+#         metavar="execution_date",
+#         required=False,
+#         default=timezone.utcnow(),
+#         help="The execution date of the DAG you're running",
+#     )
+#     args = parser.parse_args()
+#     local_dag_flow(args.dag_dir, args.dag_id, args.execution_date)
 
 # This is for local development if we don't want to use the command line
-# filepath = str(pathlib.Path(CWD.parent, "../example_dags/basic.py"))
-# local_dag_flow(filepath, "example_dag_basic")
+start = timeit.default_timer()
+filepath = str(pathlib.Path(CWD.parent, "../example_dags/basic.py"))
+local_dag_flow(filepath, "example_dag_basic")
+stop = timeit.default_timer()
+
+print('Time: ', stop - start)
