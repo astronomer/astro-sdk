@@ -88,23 +88,24 @@ def get_or_create_dagrun(dag, execution_date, run_id, session):
     return dr
 
 
-# if __name__ == "__main__":
-#     parser = argparse.ArgumentParser(description="Run an Airflow DAG locally")
-#     parser.add_argument(
-#         "--dag_dir", metavar="dag_dir", required=True, help="The path to the DAG file you want to parse"
-#     )
-#     parser.add_argument(
-#         "--dag_id", metavar="dag_id", required=True, help="The dag_id of the DAG you want to run"
-#     )
-#     parser.add_argument(
-#         "--execution_date",
-#         metavar="execution_date",
-#         required=False,
-#         default=timezone.utcnow(),
-#         help="The execution date of the DAG you're running",
-#     )
-#     args = parser.parse_args()
-#     local_dag_flow(args.dag_dir, args.dag_id, args.execution_date)
-# else:
-filepath = str(pathlib.Path(CWD.parent, "../example_dags/basic.py"))
-local_dag_flow(filepath, "example_dag_basic")
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run an Airflow DAG locally")
+    parser.add_argument(
+        "--dag_dir", metavar="dag_dir", required=True, help="The path to the DAG file you want to parse"
+    )
+    parser.add_argument(
+        "--dag_id", metavar="dag_id", required=True, help="The dag_id of the DAG you want to run"
+    )
+    parser.add_argument(
+        "--execution_date",
+        metavar="execution_date",
+        required=False,
+        default=timezone.utcnow(),
+        help="The execution date of the DAG you're running",
+    )
+    args = parser.parse_args()
+    local_dag_flow(args.dag_dir, args.dag_id, args.execution_date)
+
+# This is for local development if we don't want to use the command line
+# filepath = str(pathlib.Path(CWD.parent, "../example_dags/basic.py"))
+# local_dag_flow(filepath, "example_dag_basic")
