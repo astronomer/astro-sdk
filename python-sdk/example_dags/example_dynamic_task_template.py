@@ -4,7 +4,7 @@ This Example DAG:
 - Dynamically expand on the list of files i.e create n parallel task if there are n files in the list to
 
 - List the rows of a bigquery table
-- Dynamically expand on the list of rows can calculate average rating if rating data is a valid number.
+- Dynamically expand on the list of rows to calculate average rating if rating is a valid number.
 """
 
 # [START howto_operator_get_file_list]

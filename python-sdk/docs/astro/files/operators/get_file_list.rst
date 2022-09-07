@@ -11,7 +11,7 @@ You can use ``get_file_list`` to retrieve a list of available files based on a s
 The supported filesystems are :ref:`file_location`
 
 .. warning::
-    Fetching a lots of files using this method can lead to overload XCOM and also can create lots of parallel tasks if using in dynamic task map expand method.
+    Fetching a lot of files using this method can lead to overloaded XCOM. This can create lot of parallel tasks when used in dynamic task map ``expand`` method.
 
 The following example retrieves a file list from the GCS bucket and dynamically generates tasks using ``expand`` to upload each listed file to a Bigquery table.
 
