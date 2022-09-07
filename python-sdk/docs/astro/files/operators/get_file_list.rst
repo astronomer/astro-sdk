@@ -10,9 +10,18 @@ You can use ``get_file_list`` to retrieve a list of available files based on a s
 
 The supported filesystems are :ref:`file_location`
 
+.. warning::
+    Fetching a lots of files using this method can lead to overload XCOM and also can create lots of parallel tasks if using in dynamic task map expand method.
+
 The following example retrieves a file list from the GCS bucket and dynamically generates tasks using ``expand`` to upload each listed file to a Bigquery table.
 
 .. literalinclude:: ../../../../example_dags/example_dynamic_task_template.py
    :language: python
    :start-after: [START howto_operator_get_file_list]
    :end-before: [END howto_operator_get_file_list]
+
+Related references
+~~~~~~~~~~~~~~~~~~
+
+- `Dynamic task map Apache Airflow guild <https://airflow.apache.org/docs/apache-airflow/2.3.0/concepts/dynamic-task-mapping.html>`_
+- `Dynamic task map Astronomer guild <https://www.astronomer.io/guides/dynamic-tasks/>`_

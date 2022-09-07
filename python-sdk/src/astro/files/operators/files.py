@@ -9,11 +9,13 @@ from astro.files.locations import create_file_location
 
 
 class ListFileOperator(BaseOperator):
-    """List the file available at path and storage
+    """
+    List the file available at path and storage
 
     :param task_id: The task id for uniquely identify a task in a DAG
     :param path: A path pattern for which you want to get a list of file
-    :param conn_id: connection id for the services
+    :param conn_id: Airflow connection id.
+        This will be used to identify the right Airflow hook at runtime to connect with storage services
     """
 
     template_fields = ("path", "conn_id")
