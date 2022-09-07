@@ -1,4 +1,3 @@
-  GNU nano 5.4                                                                                       download_datasets.sh
 #!/usr/bin/env bash
 
 #set -x
