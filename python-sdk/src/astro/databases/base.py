@@ -260,7 +260,6 @@ class BaseDatabase(ABC):
         :param dataframe: (optional) Dataframe used to infer the new table columns if there is no file
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
-        :param native_autodetect_schema: use native infer schema functionality
         """
         if table.columns:
             self.create_table_using_columns(table)
