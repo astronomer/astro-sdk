@@ -15,6 +15,9 @@ class Metadata:
     """
     Contains additional information to access a SQL Table, which is very likely optional and, in some cases, may
     be database-specific.
+
+    :param schema: A schema name
+    :param database: A database name
     """
 
     # This property is used by several databases, including: Postgres, Snowflake and BigQuery ("namespace")
@@ -37,6 +40,11 @@ class Table:
     If no name is given, it auto-generates a name for the Table and considers it temporary.
 
     Temporary tables are prefixed with the prefix TEMP_PREFIX.
+
+    :param conn_id: The Airflow connection id. This will be used to identify the right database type at the runtime
+    :param name: The name of the database table. If name not provided then it would create a temporary name
+    :param metadata: A metadata object which will have database or schema name
+    :param columns:
     """
 
     template_fields = ("name",)
