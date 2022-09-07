@@ -4,7 +4,7 @@ import io
 
 import pandas as pd
 import smart_open
-from attrs import define
+from attr import define
 
 from astro import constants
 from astro.files.locations import create_file_location

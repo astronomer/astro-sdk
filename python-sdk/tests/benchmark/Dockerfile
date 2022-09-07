@@ -26,7 +26,7 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
 
 # Install Astro SDK dependencies
 
-COPY . .
+COPY python-sdk/ .
 # We need to update pip as only newer versions of pip allow installing in edit mode for pyproject.toml projects. For more info: https://peps.python.org/pep-0660/
 RUN pip install --upgrade pip
 RUN pip install -e .[all]
@@ -40,13 +40,13 @@ ENV AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
 
 RUN mkdir -p $AIRFLOW_HOME
 WORKDIR $AIRFLOW_HOME
-COPY . .
+COPY python-sdk/ .
 
 
-COPY tests/benchmark/dags $AIRFLOW_HOME/dags
-COPY tests/benchmark/run.sh $AIRFLOW_HOME/
-COPY tests/benchmark/run.py $AIRFLOW_HOME/
-COPY tests/benchmark/config.json $AIRFLOW_HOME/config.json
+COPY python-sdk/tests/benchmark/dags $AIRFLOW_HOME/dags
+COPY python-sdk/tests/benchmark/run.sh $AIRFLOW_HOME/
+COPY python-sdk/tests/benchmark/run.py $AIRFLOW_HOME/
+COPY python-sdk/tests/benchmark/config.json $AIRFLOW_HOME/config.json
 
 # Debian Bullseye is shipped with Python 3.9
 # Upgrade built-in pip
