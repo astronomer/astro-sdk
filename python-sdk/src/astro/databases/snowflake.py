@@ -468,17 +468,25 @@ class SnowflakeDatabase(BaseDatabase):
         file_format = self.create_file_format(file)
         stage = self.create_stage(file)
         file_path = os.path.basename(file.path) or ""
-        sql_statement = f"""
-            create table {table_name} using template (
+        sql_statement = """
+            create table identifier(%(table_name)s) using template (
                 select array_agg(object_construct(*))
                 from table(
                     infer_schema(
-                        location=>'@{stage.qualified_name}/{file_path}',
-                        file_format=>'{file_format.name}'
+                        location=>%(location)s,
+                        file_format=>%(file_format)s
                     )
-                ));
+                )
+            );
         """
-        self.hook.run(sql_statement, autocommit=True)
+        self.hook.run(
+            sql_statement,
+            parameters={
+                "table_name": table_name,
+                "location": f"@{stage.qualified_name}/{file_path}",
+                "file_format": file_format.name,
+            },
+        )
 
     def create_table_using_schema_autodetection(
         self,
