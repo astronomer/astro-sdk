@@ -61,6 +61,9 @@ DEFAULT_STORAGE_INTEGRATION = {
 NATIVE_LOAD_SUPPORTED_FILE_TYPES = (FileType.CSV, FileType.NDJSON, FileType.PARQUET)
 NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS = (FileLocation.GS, FileLocation.S3)
 
+NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES = (FileType.PARQUET,)
+NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS = (FileLocation.GS, FileLocation.S3)
+
 
 @dataclass
 class SnowflakeFileFormat:
@@ -431,6 +434,22 @@ class SnowflakeDatabase(BaseDatabase):
     # ---------------------------------------------------------
     # Table load methods
     # ---------------------------------------------------------
+
+    def is_native_autodetect_schema_available(self, file: File) -> bool:
+        """
+        Check if native auto detection of schema is available.
+
+        :param file: File used to check the file type of to decide
+            whether there is a native auto detection available for it.
+        """
+        is_file_type_supported = (
+            file.type.name in NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES
+        )
+        is_file_location_supported = (
+            file.location.location_type
+            in NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS
+        )
+        return is_file_type_supported and is_file_location_supported
 
     def create_table_using_native_schema_autodetection(
         self,

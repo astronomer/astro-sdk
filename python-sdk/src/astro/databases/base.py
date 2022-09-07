@@ -235,13 +235,21 @@ class BaseDatabase(ABC):
             index=False,
         )
 
+    def is_native_autodetect_schema_available(self, file: File) -> bool:
+        """
+        Check if native auto detection of schema is available.
+
+        :param file: File used to check the file type of to decide
+            whether there is a native auto detection available for it.
+        """
+        return False
+
     def create_table(
         self,
         table: Table,
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
-        native_autodetect_schema: bool = False,
     ) -> None:
         """
         Create a table either using its explicitly defined columns or inferring
@@ -256,7 +264,7 @@ class BaseDatabase(ABC):
         """
         if table.columns:
             self.create_table_using_columns(table)
-        elif native_autodetect_schema and file is not None:
+        elif file and self.is_native_autodetect_schema_available(file):
             self.create_table_using_native_schema_autodetection(table, file)
         else:
             self.create_table_using_schema_autodetection(
