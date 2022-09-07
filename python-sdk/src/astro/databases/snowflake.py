@@ -435,7 +435,9 @@ class SnowflakeDatabase(BaseDatabase):
     # Table load methods
     # ---------------------------------------------------------
 
-    def is_native_autodetect_schema_available(self, file: File) -> bool:
+    def is_native_autodetect_schema_available(  # skipcq: PYL-R0201
+        self, file: File  # skipcq: PYL-W0613
+    ) -> bool:
         """
         Check if native auto detection of schema is available.
 
