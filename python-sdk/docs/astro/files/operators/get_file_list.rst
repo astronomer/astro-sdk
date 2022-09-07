@@ -23,5 +23,5 @@ The following example retrieves a file list from the GCS bucket and dynamically 
 Related references
 ~~~~~~~~~~~~~~~~~~
 
-- `Dynamic task map Apache Airflow guild <https://airflow.apache.org/docs/apache-airflow/2.3.0/concepts/dynamic-task-mapping.html>`_
-- `Dynamic task map Astronomer guild <https://www.astronomer.io/guides/dynamic-tasks/>`_
+- `Dynamic task mapping - Apache Airflow <https://airflow.apache.org/docs/apache-airflow/2.3.0/concepts/dynamic-task-mapping.html>`_
+- `Dynamic tasks - Astronomer <https://www.astronomer.io/guides/dynamic-tasks/>`_
