@@ -195,8 +195,7 @@ class BaseDatabase(ABC):
         :param file: File used to infer the new table columns.
         """
         raise NotImplementedError(
-            "No native schema detection available. "
-            "Please use pandas schema detection by setting 'native_autodetect_schema=False'."
+            "No native schema detection available for the current database."
         )
 
     def create_table_using_schema_autodetection(
