@@ -73,6 +73,17 @@ class BigqueryDatabase(BaseDatabase):
         FileLocation.S3: "load_s3_file_to_table",
         FileLocation.LOCAL: "load_local_file_to_table",
     }
+    AUTODETECT_SCHEMA_SUPPORTED = {
+        FileLocation.GS: True,
+        FileLocation.S3: True,
+        FileLocation.LOCAL: True,
+    }
+
+    FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED = {
+        FileLocation.GS: True,
+        FileLocation.S3: True,
+        FileLocation.LOCAL: True,
+    }
 
     illegal_column_name_chars: list[str] = ["."]
     illegal_column_name_chars_replacement: list[str] = ["_"]
@@ -224,6 +235,29 @@ class BigqueryDatabase(BaseDatabase):
         file_type = NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
         location_type = self.NATIVE_PATHS.get(source_file.location.location_type)
         return bool(location_type and file_type)
+
+    def check_schema_autodetection_is_supported(self, source_file: File) -> bool:
+        """
+        Checks if schema autodetection is handled natively by the database
+
+        :param source_file: File from which we need to transfer data
+        """
+        return self.AUTODETECT_SCHEMA_SUPPORTED.get(
+            source_file.location.location_type, False
+        )
+
+    def check_file_pattern_based_schema_autodetection_is_supported(
+        self, source_file: File
+    ) -> bool:
+        """
+        Checks if schema autodetection is handled natively by the database for file
+        patterns and prefixes.
+
+        :param source_file: File from which we need to transfer data
+        """
+        return self.FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED.get(
+            source_file.location.location_type, False
+        )
 
     def load_file_to_table_natively(
         self,

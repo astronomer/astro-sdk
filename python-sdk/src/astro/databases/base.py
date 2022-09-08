@@ -276,6 +276,55 @@ class BaseDatabase(ABC):
     # Table load methods
     # ---------------------------------------------------------
 
+    def create_schema_table_if_needed(
+        self,
+        table: Table,
+        file: File,
+        normalize_config: dict | None = None,
+        columns_names_capitalization: ColumnCapitalization = "original",
+        if_exists: LoadExistStrategy = "replace",
+        use_native_support: bool = True,
+    ):
+        """
+        Checks if the autodetect schema exists for native support else creates the schema and table
+        :param table: Table to create
+        :param file: File path and conn_id for object stores
+        :param normalize_config: pandas json_normalize params config
+        :param columns_names_capitalization:  determines whether to convert all columns to lowercase/uppercase
+            in the resulting dataframe
+        :param if_exists:  Overwrite file if exists
+        :param use_native_support: Use native support for data transfer if available on the destination
+        """
+        if (
+            use_native_support
+            and self.check_schema_autodetection_is_supported(source_file=file)
+            and not file.is_pattern()
+        ):
+            return
+        elif (
+            use_native_support
+            and file.is_pattern()
+            and self.check_schema_autodetection_is_supported(source_file=file)
+            and self.check_file_pattern_based_schema_autodetection_is_supported(
+                source_file=file
+            )
+        ):
+            return
+
+        self.create_schema_if_needed(table.metadata.schema)
+        if if_exists == "replace" or not self.table_exists(table):
+            self.drop_table(table)
+            self.create_table(
+                table,
+                resolve_file_path_pattern(
+                    file.path,
+                    file.conn_id,
+                    normalize_config=normalize_config,
+                    filetype=file.type.name,
+                )[0],
+                columns_names_capitalization=columns_names_capitalization,
+            )
+
     def load_file_to_table(
         self,
         input_file: File,
@@ -305,50 +354,66 @@ class BaseDatabase(ABC):
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         """
         normalize_config = normalize_config or {}
+
+        self.create_schema_table_if_needed(
+            file=input_file,
+            table=output_table,
+            columns_names_capitalization=columns_names_capitalization,
+            if_exists=if_exists,
+        )
+        if_exists = "append"
+
+        if use_native_support and self.is_native_load_file_available(
+            source_file=input_file, target_table=output_table
+        ):
+
+            self.load_file_to_table_natively_with_fallback(
+                source_file=input_file,
+                target_table=output_table,
+                if_exists=if_exists,
+                normalize_config=normalize_config,
+                native_support_kwargs=native_support_kwargs,
+                enable_native_fallback=enable_native_fallback,
+                chunk_size=chunk_size,
+            )
+        else:
+            self.load_file_to_table_using_pandas(
+                input_file=input_file,
+                output_table=output_table,
+                normalize_config=normalize_config,
+                if_exists=if_exists,
+                chunk_size=chunk_size,
+            )
+
+    def load_file_to_table_using_pandas(
+        self,
+        input_file: File,
+        output_table: Table,
+        normalize_config: dict | None = None,
+        if_exists: LoadExistStrategy = "replace",
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+    ):
         input_files = resolve_file_path_pattern(
             input_file.path,
             input_file.conn_id,
             normalize_config=normalize_config,
             filetype=input_file.type.name,
         )
-        self.create_schema_if_needed(output_table.metadata.schema)
-        if if_exists == "replace" or not self.table_exists(output_table):
-            self.drop_table(output_table)
-            self.create_table(
-                output_table,
-                input_files[0],
-                columns_names_capitalization=columns_names_capitalization,
-            )
-            if_exists = "append"
 
-        # TODO: many native transfers support the input_file.path - it may be better
-        # to use the native support to loading multiple files as opposed to iterating
-        # here
         for file in input_files:
-            if use_native_support and self.is_native_load_file_available(
-                source_file=file, target_table=output_table
-            ):
-                self.load_file_to_table_natively_with_fallback(
-                    source_file=file,
-                    target_table=output_table,
-                    if_exists=if_exists,
-                    native_support_kwargs=native_support_kwargs,
-                    enable_native_fallback=enable_native_fallback,
-                    chunk_size=chunk_size,
-                )
-            else:
-                self.load_pandas_dataframe_to_table(
-                    file.export_to_dataframe(),
-                    output_table,
-                    chunk_size=chunk_size,
-                    if_exists="append",  # We've already created a new table in this case
-                )
+            self.load_pandas_dataframe_to_table(
+                file.export_to_dataframe(),
+                output_table,
+                chunk_size=chunk_size,
+                if_exists=if_exists,
+            )
 
     def load_file_to_table_natively_with_fallback(
         self,
         source_file: File,
         target_table: Table,
         if_exists: LoadExistStrategy = "replace",
+        normalize_config: dict | None = None,
         native_support_kwargs: dict | None = None,
         enable_native_fallback: bool | None = True,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
@@ -363,7 +428,9 @@ class BaseDatabase(ABC):
         :param chunk_size: Specify the number of records in each batch to be written at a time
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer.
+        :param normalize_config: pandas json_normalize params config
         """
+
         try:
             self.load_file_to_table_natively(
                 source_file=source_file,
@@ -379,11 +446,12 @@ class BaseDatabase(ABC):
                 exc_info=True,
             )
             if enable_native_fallback:
-                self.load_pandas_dataframe_to_table(
-                    source_file.export_to_dataframe(),
-                    target_table=target_table,
-                    chunk_size=chunk_size,
+                self.load_file_to_table_using_pandas(
+                    input_file=source_file,
+                    output_table=target_table,
+                    normalize_config=normalize_config,
                     if_exists=if_exists,
+                    chunk_size=chunk_size,
                 )
 
     def load_pandas_dataframe_to_table(
@@ -607,3 +675,22 @@ class BaseDatabase(ABC):
         :param native_support_kwargs: kwargs to be used by native loading command
         """
         raise NotImplementedError
+
+    def check_schema_autodetection_is_supported(self, source_file):
+        """
+        Checks if schema autodetection is handled natively by the database.
+
+        :param source_file: File from which we need to transfer data
+        """
+        return False
+
+    def check_file_pattern_based_schema_autodetection_is_supported(
+        self, source_file: File
+    ) -> bool:
+        """
+        Checks if schema autodetection is handled natively by the database for file
+        patterns and prefixes.
+
+        :param source_file: File from which we need to transfer data
+        """
+        return False

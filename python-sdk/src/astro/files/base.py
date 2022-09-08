@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import io
+import pathlib
 
 import pandas as pd
 import smart_open
-from attrs import define
+from attr import define  # type: ignore
 
 from astro import constants
 from astro.files.locations import create_file_location
@@ -64,6 +65,21 @@ class File:
         """
         result: bool = self.type.name == constants.FileType.PARQUET
         return result
+
+    def is_pattern(self) -> bool:
+        """
+        Returns True when file path is a pattern(eg. s3://bucket/folder or /folder/sample_* etc)
+
+        :return: True or False
+        """
+        filepath: str | pathlib.PosixPath = self.path
+        if not isinstance(filepath, pathlib.PosixPath):
+            filepath = pathlib.PosixPath(filepath)
+        extension = filepath.suffix
+
+        if extension == "":
+            return True
+        return False
 
     def create_from_dataframe(self, df: pd.DataFrame) -> None:
         """Create a file in the desired location using the values of a dataframe.

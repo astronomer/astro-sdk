@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 import string
 
-from attrs import define, field, fields_dict
+from attr import define, field, fields_dict  # type: ignore
 from sqlalchemy import Column, MetaData
 
 MAX_TABLE_NAME_LENGTH = 62
