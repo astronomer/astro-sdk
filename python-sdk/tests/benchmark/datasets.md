@@ -4,7 +4,7 @@
 
 The following datasets are used for running performance benchmarking on Astro SDK `load_file` feature for all databases
 except for Redshift. For Redshift, files with consistent schema for various sizes have been created using the
-[Python Faker libary](https://faker.readthedocs.io/en/master/) by generating fake data.
+[Python Faker library](https://faker.readthedocs.io/en/master/) by generating fake data.
 
 All of them (except the ones for Redshift) are based on real external datasets. For reproducibility of the benchmark
 tests, they were copied to: `gs://astro-sdk/benchmark/`.
