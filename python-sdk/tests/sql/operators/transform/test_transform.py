@@ -159,7 +159,6 @@ def test_transform_with_templated_table_name(database_table_fixture, sample_dag)
         """
 
     with sample_dag:
-
         target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="sqlite_default")
 
         top_five_animations(input_table=imdb_table, output_table=target_table)

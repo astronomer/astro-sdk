@@ -16,6 +16,7 @@ from astro import settings
 from astro.constants import ColumnCapitalization
 from astro.databases import create_database
 from astro.exceptions import IllegalLoadToDatabaseException
+from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import Table
 from astro.utils.dataframe import convert_columns_names_capitalization
 from astro.utils.table import find_first_table
@@ -81,7 +82,7 @@ def load_op_kwarg_table_into_dataframe(
     }
 
 
-class DataframeOperator(DecoratedOperator):
+class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
     """
     Converts a SQL table into a dataframe. Users can then give a python function that takes a dataframe as
     one of its inputs and run that python function. Once that function has completed, the result is accessible
@@ -119,7 +120,11 @@ class DataframeOperator(DecoratedOperator):
         self.op_args = self.kwargs.get("op_args", ())  # type: ignore
         self.columns_names_capitalization = columns_names_capitalization
 
+        # We purposely do NOT render upstream_tasks otherwise we could have a case where a user
+        # has 10 dataframes as upstream tasks and it crashes the worker
+        upstream_tasks = self.op_kwargs.pop("upstream_tasks", [])
         super().__init__(
+            upstream_tasks=upstream_tasks,
             **kwargs,
         )
 
