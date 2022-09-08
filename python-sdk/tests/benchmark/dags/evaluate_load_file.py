@@ -62,6 +62,12 @@ def create_dag(database_name, table_args, dataset):
             task_id="load",
             output_table=table,
             chunk_size=chunk_size,
+            use_native_support=True,
+            native_support_kwargs={
+                "IGNOREHEADER": 1,
+                "REGION": "us-east-1",
+                "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
+            }
         )
         aql.cleanup([my_table])
 

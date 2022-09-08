@@ -9,12 +9,68 @@
   ],
   "datasets": [
     {
-      "conn_id": "bigquery",
+      "conn_id": "aws_conn",
+      "file_type": "csv",
+      "name": "ten_kb",
+      "path": "s3://astro-sdk-test/benchmark/fake_data/10_kb.csv",
+      "rows": 160,
+      "size": "10 KB"
+    },
+    {
+      "conn_id": "aws_conn",
+      "file_type": "csv",
+      "name": "hundred_kb",
+      "path": "s3://astro-sdk-test/benchmark/fake_data/100_kb.csv",
+      "rows": 748,
+      "size": "100 KB"
+    },
+    {
+      "conn_id": "aws_conn",
+      "file_type": "csv",
+      "name": "one_mb",
+      "path": "s3://astro-sdk-test/benchmark/fake_data/1_mb.csv",
+      "rows": 748,
+      "size": "100 KB"
+    },
+    {
+      "conn_id": "aws_conn",
       "file_type": "csv",
       "name": "ten_mb",
-      "path": "gs://astro-sdk/benchmark/trimmed/imdb/title_ratings_10mb.csv",
+      "path": "s3://astro-sdk-test/benchmark/fake_data/10_mb.csv",
       "rows": 600000,
       "size": "10M"
+    },
+    {
+      "conn_id": "aws_conn",
+      "file_type": "csv",
+      "name": "hundred_mb",
+      "path": "s3://astro-sdk-test/benchmark/fake_data/100_mb.csv",
+      "rows": 600000,
+      "size": "100M"
+    },
+    {
+      "conn_id": "aws_conn",
+      "file_type": "csv",
+      "name": "one_gb",
+      "path": "s3://astro-sdk-test/benchmark/fake_data/1_gb.csv",
+      "rows": 940000,
+      "size": "1G"
+    },
+    {
+      "conn_id": "aws_conn",
+      "file_type": "csv",
+      "name": "five_gb",
+      "path": "s3://astro-sdk-test/benchmark/fake_data/5_gb.csv",
+      "rows": 7530243,
+      "size": "5G"
+    },
+    {
+      "conn_id": "aws_conn",
+      "file_type": "csv",
+      "name": "ten_gb",
+      "path": "s3://astro-sdk-test/benchmark/fake_data/10_gb.csv",
+      "rows": 1263685,
+      "size": "10G"
     }
   ]
 }
