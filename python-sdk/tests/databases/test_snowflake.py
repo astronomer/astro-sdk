@@ -141,7 +141,7 @@ def test_snowflake_create_table_with_columns(database_table_fixture):
 def test_snowflake_create_table_using_native_schema_autodetection(
     database_table_fixture,
 ):
-    """Test table creation with columns data"""
+    """Test table creation using native schema autodetection"""
     database, table = database_table_fixture
 
     statement = f"DESC TABLE {database.get_table_qualified_name(table)}"

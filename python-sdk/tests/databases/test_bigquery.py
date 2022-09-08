@@ -137,6 +137,62 @@ def test_bigquery_create_table_with_columns(database_table_fixture):
     [
         {
             "database": Database.BIGQUERY,
+            "table": Table(
+                metadata=Metadata(schema=SCHEMA),
+            ),
+        }
+    ],
+    indirect=True,
+    ids=["bigquery"],
+)
+def test_bigquery_create_table_using_native_schema_autodetection(
+    database_table_fixture,
+):
+    """Test table creation using native schema autodetection"""
+    database, table = database_table_fixture
+
+    # Looking for specific columns in INFORMATION_SCHEMA.COLUMNS as Bigquery can add/remove columns in the table.
+    statement = (
+        f"SELECT TABLE_CATALOG, TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, DATA_TYPE "
+        f"FROM {table.metadata.schema}.INFORMATION_SCHEMA.COLUMNS WHERE table_name='{table.name}'"
+    )
+    response = database.run_sql(statement)
+    assert response.first() is None
+
+    file = File("gs://astro-sdk/workspace/test-sample-njson.ndjson", conn_id="gcp_conn")
+    database.create_table(table, file)
+    response = database.run_sql(statement)
+    rows = response.fetchall()
+    assert len(rows) == 2
+    assert rows == [
+        (
+            "astronomer-dag-authoring",
+            table.metadata.schema,
+            table.name,
+            "result",
+            (
+                "STRUCT<pageData STRUCT<timestamp INT64, statusCode INT64>,"
+                " sequenceNumber INT64, timestamp INT64, extractorData STRUCT<data"
+                " ARRAY<STRUCT<`group` ARRAY<STRUCT<Business ARRAY<STRUCT<text STRING,"
+                " href STRING>>>>>>, url STRING>>"
+            ),
+        ),
+        (
+            "astronomer-dag-authoring",
+            table.metadata.schema,
+            table.name,
+            "url",
+            "STRING",
+        ),
+    ]
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
             "table": Table(metadata=Metadata(schema=SCHEMA)),
         },
     ],
