@@ -34,7 +34,7 @@ class ParquetFileType(FileType):
         return df
 
     @staticmethod
-    def _convert_remote_file_to_byte_stream(self, stream) -> io.IOBase:
+    def _convert_remote_file_to_byte_stream(stream) -> io.IOBase:
         """
         Convert file stream into a buffer that can be streamed into other data
         structures.
