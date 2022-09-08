@@ -73,16 +73,11 @@ class BigqueryDatabase(BaseDatabase):
         FileLocation.S3: "load_s3_file_to_table",
         FileLocation.LOCAL: "load_local_file_to_table",
     }
-    AUTODETECT_SCHEMA_SUPPORTED = {
-        FileLocation.GS: True,
-        FileLocation.S3: True,
-        FileLocation.LOCAL: True,
-    }
+    AUTODETECT_SCHEMA_SUPPORTED = {FileLocation.GS, FileLocation.LOCAL}
 
     FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED = {
-        FileLocation.GS: True,
-        FileLocation.S3: True,
-        FileLocation.LOCAL: True,
+        FileLocation.GS,
+        FileLocation.LOCAL,
     }
 
     illegal_column_name_chars: list[str] = ["."]
@@ -242,8 +237,10 @@ class BigqueryDatabase(BaseDatabase):
 
         :param source_file: File from which we need to transfer data
         """
-        return self.AUTODETECT_SCHEMA_SUPPORTED.get(
-            source_file.location.location_type, False
+        return (
+            True
+            if source_file.location.location_type in self.AUTODETECT_SCHEMA_SUPPORTED
+            else False
         )
 
     def check_file_pattern_based_schema_autodetection_is_supported(
@@ -255,8 +252,11 @@ class BigqueryDatabase(BaseDatabase):
 
         :param source_file: File from which we need to transfer data
         """
-        return self.FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED.get(
-            source_file.location.location_type, False
+        return (
+            True
+            if source_file.location.location_type
+            in self.FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED
+            else False
         )
 
     def load_file_to_table_natively(

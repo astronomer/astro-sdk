@@ -301,7 +301,7 @@ class BaseDatabase(ABC):
             and not file.is_pattern()
         ):
             return
-        elif (
+        if (
             use_native_support
             and file.is_pattern()
             and self.check_schema_autodetection_is_supported(source_file=file)
@@ -361,7 +361,6 @@ class BaseDatabase(ABC):
             columns_names_capitalization=columns_names_capitalization,
             if_exists=if_exists,
         )
-        if_exists = "append"
 
         if use_native_support and self.is_native_load_file_available(
             source_file=input_file, target_table=output_table
@@ -370,7 +369,7 @@ class BaseDatabase(ABC):
             self.load_file_to_table_natively_with_fallback(
                 source_file=input_file,
                 target_table=output_table,
-                if_exists=if_exists,
+                if_exists="append",
                 normalize_config=normalize_config,
                 native_support_kwargs=native_support_kwargs,
                 enable_native_fallback=enable_native_fallback,
@@ -381,7 +380,7 @@ class BaseDatabase(ABC):
                 input_file=input_file,
                 output_table=output_table,
                 normalize_config=normalize_config,
-                if_exists=if_exists,
+                if_exists="append",
                 chunk_size=chunk_size,
             )
 
