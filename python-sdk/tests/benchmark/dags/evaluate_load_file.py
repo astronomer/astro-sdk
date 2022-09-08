@@ -67,7 +67,7 @@ def create_dag(database_name, table_args, dataset):
                 "IGNOREHEADER": 1,
                 "REGION": "us-east-1",
                 "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
-            }
+            },
         )
         aql.cleanup([my_table])
 
