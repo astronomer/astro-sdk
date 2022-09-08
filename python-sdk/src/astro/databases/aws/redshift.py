@@ -39,7 +39,7 @@ NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
     # With this option, matching is case-sensitive. Column names in Amazon Redshift tables are always lowercase,
     # so when you use the 'auto ignorecase' option, matching JSON field names is case-insensitive.
     # Refer: https://docs.aws.amazon.com/redshift/latest/dg/copy-parameters-data-format.html#copy-json
-    FileType.JSON: "JSON 'auto ignorecase'",
+    FileType.NDJSON: "JSON 'auto ignorecase'",
     FileType.PARQUET: "PARQUET",
 }
 
