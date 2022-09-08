@@ -490,15 +490,13 @@ class BaseDatabase(ABC):
 
         :param source_table: An existing table in the database
         """
-        table_qualified_name = self.get_table_qualified_name(source_table)
         if self.table_exists(source_table):
-            return pd.read_sql(
-                # We are avoiding SQL injection by confirming the table exists before this statement
-                f"SELECT * FROM {table_qualified_name}",  # skipcq BAN-B608
-                con=self.sqlalchemy_engine,
-            )
+            sqla_table = self.get_sqla_table(source_table)
+            return pd.read_sql(sql=select(sqla_table), con=self.sqlalchemy_engine)
+
+        table_qualified_name = self.get_table_qualified_name(source_table)
         raise NonExistentTableException(
-            "The table %s does not exist" % table_qualified_name
+            f"The table {table_qualified_name} does not exist"
         )
 
     def export_table_to_file(
