@@ -132,12 +132,11 @@ class Table(Dataset):
         from urllib.parse import urlencode, urlparse
 
         path = f"astro://{self.conn_id}@"
-        db_extra = {}
+        db_extra = {"table": self.name}
         if self.metadata.schema:
             db_extra["schema"] = self.metadata.schema
         if self.metadata.database:
             db_extra["database"] = self.metadata.database
-        db_extra["table"] = self.name
         parsed_url = urlparse(url=path)
         new_parsed_url = parsed_url._replace(query=urlencode(db_extra))
         return new_parsed_url.geturl()

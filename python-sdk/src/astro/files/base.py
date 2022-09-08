@@ -135,9 +135,9 @@ class File(Dataset):
 
         parsed_url = urlparse(url=self.path)
         netloc = parsed_url.netloc
-        parsed_scheme = parsed_url.scheme
         # Local filepaths do not have scheme
-        scheme = f"astro+{parsed_scheme}" if parsed_scheme else "astro+file"
+        parsed_scheme = parsed_url.scheme or "file"
+        scheme = f"astro+{parsed_scheme}"
         extra = {}
         if self.filetype:
             extra["filetype"] = str(self.filetype)
