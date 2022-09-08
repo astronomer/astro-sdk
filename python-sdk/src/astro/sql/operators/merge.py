@@ -5,6 +5,7 @@ from typing import Any
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
 
+from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import MergeConflictStrategy
 from astro.databases import create_database
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
@@ -50,8 +51,14 @@ class MergeOperator(AstroSQLBaseOperator):
         self.columns = columns or {}
         self.if_conflicts = if_conflicts
         task_id = task_id or get_unique_task_id("merge")
-
-        super().__init__(task_id=task_id, **kwargs)
+        super().__init__(
+            task_id=task_id,
+            **kwargs_with_datasets(
+                kwargs=kwargs,
+                input_datasets=source_table,
+                output_datasets=target_table,
+            ),
+        )
 
     def execute(self, context: dict) -> Table:
         db = create_database(self.target_table.conn_id)
