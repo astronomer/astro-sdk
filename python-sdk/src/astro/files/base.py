@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 import smart_open
-from attr import define, field
+from attr import define, field  # type: ignore
 
 from astro import constants
 from astro.airflow.datasets import Dataset
@@ -101,7 +101,7 @@ class File(Dataset):
     def __hash__(self) -> int:
         return hash((self.path, self.conn_id, self.filetype))
 
-    @uri.default
+    @uri.default  # type: ignore
     def _path_to_dataset_uri(self) -> str:
         """Build a URI to be passed to Dataset obj introduced in Airflow 2.4"""
         from urllib.parse import urlencode, urlparse
