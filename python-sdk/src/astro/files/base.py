@@ -83,7 +83,7 @@ class File(Dataset):
         """Read file from all supported location and convert them into dataframes."""
         mode = "rb" if self.is_binary() else "r"
         with smart_open.open(
-                self.path, mode=mode, transport_params=self.location.transport_params
+            self.path, mode=mode, transport_params=self.location.transport_params
         ) as stream:
             return self.type.export_to_dataframe(stream, **kwargs)
 
