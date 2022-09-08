@@ -1022,7 +1022,7 @@ def test_aql_load_file_columns_names_capitalization_dataframe(sample_dag):
             },
             {
                 "IGNOREHEADER": 1,
-                "REGION": "us-west-2",
+                "REGION": "us-east-1",
                 "IAM_ROLE": os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN"),
             },
         ),
@@ -1040,11 +1040,11 @@ def test_aql_load_column_name_mixed_case_json_file_to_dbs(
     # file on S3 results in file not found, since that file is not propagated to all the servers/clusters,
     # and we might hit a server where the file in not yet populated, resulting in file not found issue.
     load_file(
-        input_file=File("s3://tmp9/column_name_mixed_case.json", conn_id="aws_conn"),
+        input_file=File("s3://astro-sdk/sample.ndjson", conn_id="aws_conn"),
         output_table=test_table,
         use_native_support=True,
         native_support_kwargs=native_support_kwargs,
     ).operator.execute({})
 
     df = db.export_table_to_pandas_dataframe(test_table)
-    assert df.shape == (3, 2)
+    assert df.shape == (2, 2)
