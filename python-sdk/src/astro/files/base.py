@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import io
-
 import pandas as pd
 import smart_open
 from attr import define, field
