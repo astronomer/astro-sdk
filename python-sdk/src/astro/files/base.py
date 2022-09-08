@@ -145,7 +145,7 @@ def resolve_file_path_pattern(
     location = create_file_location(path_pattern, conn_id)
 
     files = [
-        File(
+        File(  # type: ignore
             path=path,
             conn_id=conn_id,
             filetype=filetype,

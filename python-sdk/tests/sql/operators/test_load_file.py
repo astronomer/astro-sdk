@@ -1048,3 +1048,28 @@ def test_aql_load_column_name_mixed_case_json_file_to_dbs(
 
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (3, 2)
+
+
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SQLITE,
+        },
+    ],
+    indirect=True,
+    ids=["Sqlite"],
+)
+@pytest.mark.parametrize("if_exists", ["replace", "append"])
+def test_tables_creation_if_they_dont_exist(database_table_fixture, if_exists):
+    """
+    Verify creation of new tables in case we pass if_exists=replace/append if they don't exists.
+    """
+    path = str(CWD) + "/../../data/homes_main.csv"
+    db, test_table = database_table_fixture
+    load_file(
+        input_file=File(path), output_table=test_table, if_exists=if_exists
+    ).operator.execute({})
+
+    database_df = db.export_table_to_pandas_dataframe(test_table)
+    assert database_df.shape == (3, 9)
