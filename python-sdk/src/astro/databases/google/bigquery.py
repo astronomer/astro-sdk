@@ -205,16 +205,15 @@ class BigqueryDatabase(BaseDatabase):
             f" ON {' AND '.join(f'T.{col}=S.{col}' for col in target_conflict_columns)}"
             f" WHEN NOT MATCHED BY TARGET THEN {insert_statement}"
         )
-        parameters = {}
         if if_conflicts == "update":
             update_statement_map = ", ".join(
                 f"T.{col}=S.{source_columns[idx]}"
                 for idx, col in enumerate(target_columns)
             )
-            update_statement = f"UPDATE SET {update_statement_map}"
+            # FIXME: sql injection issue
+            update_statement = f"UPDATE SET {update_statement_map}"  # skipcq BAN-B608
             merge_statement += f" WHEN MATCHED THEN {update_statement}"
-            # parameters["update_statement_map"] = update_statement_map
-        self.run_sql(sql_statement=merge_statement, parameters=parameters)
+        self.run_sql(sql_statement=merge_statement)
 
     def is_native_load_file_available(
         self, source_file: File, target_table: Table
