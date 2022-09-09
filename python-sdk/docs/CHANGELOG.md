@@ -1,4 +1,74 @@
 # Changelog
+## 1.1.0b1
+
+### Features
+* Add support for Redshift ([#639](https://github.com/astronomer/astro-sdk/pull/639),
+[#753](https://github.com/astronomer/astro-sdk/pull/753),
+[#700](https://github.com/astronomer/astro-sdk/pull/700))
+* Support for Datasets introduced in Airflow 2.4 ([#786](https://github.com/astronomer/astro-sdk/pull/786),[#808](https://github.com/astronomer/astro-sdk/pull/808))
+
+    - `inlets` and `outlets` will be automatically set for all the operators.
+    - Users can now schedule DAGs on `File` and `Table` objects. Example:
+
+      ```python
+      input_file = File(
+          path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
+      )
+      imdb_movies_table = Table(name="imdb_movies", conn_id="sqlite_default")
+      top_animations_table = Table(name="top_animation", conn_id="sqlite_default")
+      START_DATE = datetime(2022, 9, 1)
+
+
+      @aql.transform()
+      def get_top_five_animations(input_table: Table):
+          return """
+              SELECT title, rating
+              FROM {{input_table}}
+              WHERE genre1='Animation'
+              ORDER BY rating desc
+              LIMIT 5;
+          """
+
+
+      with DAG(
+          dag_id="example_dataset_producer",
+          schedule=None,
+          start_date=START_DATE,
+          catchup=False,
+      ) as load_dag:
+          imdb_movies = aql.load_file(
+              input_file=input_file,
+              task_id="load_csv",
+              output_table=imdb_movies_table,
+          )
+
+      with DAG(
+          dag_id="example_dataset_consumer",
+          schedule=[imdb_movies_table],
+          start_date=START_DATE,
+          catchup=False,
+      ) as transform_dag:
+          top_five_animations = get_top_five_animations(
+              input_table=imdb_movies_table,
+              output_table=top_animations_table,
+          )
+      ```
+* Dynamic Task Templates: Tasks that can be used with Dynamic Task Mapping (Airflow 2.3+)
+  * Get list of files from a Bucket - `get_file_list` ([#596](https://github.com/astronomer/astro-sdk/pull/596))
+  * Get list of values from a DB - `get_value_list` ([#673](https://github.com/astronomer/astro-sdk/pull/673))
+
+* Create upstream_tasks parameter for dependencies independent of data transfers ([#585](https://github.com/astronomer/astro-sdk/pull/585))
+
+### Bug fixes
+* Add response_size to run_raw_sql and warn about db thrashing ([#815](https://github.com/astronomer/astro-sdk/pull/815))
+
+### Docs
+* Add section explaining table metadata ([#774](https://github.com/astronomer/astro-sdk/pull/774))
+* Fix docstring for run_raw_sql ([#817](https://github.com/astronomer/astro-sdk/pull/817))
+* Add missing docs for Table class ([#788](https://github.com/astronomer/astro-sdk/pull/788))
+* Add the readme.md example dag to example dags folder ([#681](https://github.com/astronomer/astro-sdk/pull/681))
+* Add reason for enabling XCOM pickling ([#747](https://github.com/astronomer/astro-sdk/pull/747))
+
 ## 1.0.2
 
 ### Bug fixes
