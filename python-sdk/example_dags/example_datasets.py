@@ -30,7 +30,7 @@ input_file = File(
 )
 imdb_movies_table = Table(name="imdb_movies", conn_id="sqlite_default")
 top_animations_table = Table(name="top_animation", conn_id="sqlite_default")
-START_DATE = datetime(2000, 1, 1)
+START_DATE = datetime(2022, 9, 1)
 
 
 @aql.transform()
