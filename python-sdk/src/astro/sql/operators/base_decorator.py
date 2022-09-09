@@ -27,7 +27,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         handler: Function | None = None,
         database: str | None = None,
         schema: str | None = None,
-        response_limit: int = 0,
+        response_limit: int = -1,
         response_size: int = -1,
         sql: str = "",
         **kwargs: Any,

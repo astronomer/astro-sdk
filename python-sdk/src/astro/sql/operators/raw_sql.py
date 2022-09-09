@@ -40,7 +40,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
 
         if self.handler:
             response = self.handler(result)
-            if self.response_limit and len(response) > self.response_limit:
+            if self.response_limit >= 0 and len(response) > self.response_limit:
                 raise IllegalLoadToDatabaseException()  # pragma: no cover
             if self.response_size >= 0:
                 return response[: self.response_size]
@@ -96,7 +96,8 @@ def run_raw_sql(
     :param handler: Handler function to process the result of the SQL query. For more information please consult
         https://docs.sqlalchemy.org/en/14/core/connections.html#sqlalchemy.engine.Result
     :param response_size: Used to trim the responses returned to avoid trashing the Airflow DB.
-        By default it is -1, and the response size is not changed.
+        The default value is -1, which means the response is not changed. Otherwise, if the response is a list,
+        returns up to the desired amount of items. If the response is a string, trims it to the desired size.
     :param kwargs:
     :return: By default returns None unless there is a handler function,
         in which case returns the result of the handler
