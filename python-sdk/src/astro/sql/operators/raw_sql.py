@@ -69,7 +69,7 @@ def run_raw_sql(
 
     .. code-block:: python
 
-      @transform
+      @run_raw_sql
       def my_sql_statement(table1: Table) -> Table:
           return "DROP TABLE {{table1}}"
 
