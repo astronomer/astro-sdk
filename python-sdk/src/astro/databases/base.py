@@ -492,7 +492,7 @@ class BaseDatabase(ABC):
         """
         if self.table_exists(source_table):
             sqla_table = self.get_sqla_table(source_table)
-            return pd.read_sql(sql=select(sqla_table), con=self.sqlalchemy_engine)
+            return pd.read_sql(sql=sqla_table.select(), con=self.sqlalchemy_engine)
 
         table_qualified_name = self.get_table_qualified_name(source_table)
         raise NonExistentTableException(
