@@ -20,13 +20,17 @@ def check_if_connection_exists(conn_id: str) -> bool:
 
 def get_file_list(path: str, conn_id: str, **kwargs) -> XComArg:
     """
-    List the file path from the filesystem storage based on given path pattern
+    List file path from a remote object store or the local filesystem based on the given path pattern.
+    It is not advisable to fetch huge number of files since it would overload the XCOM and
+    also, if you are using response of this method in dynamic task map ``expand`` method
+    it can create huge number of parallel task
 
     Supported filesystem: :ref:`file_location`
 
     Supported file pattern: :ref:`file_pattern`
 
-    :param conn_id: Airflow connection id
+    :param conn_id: Airflow connection id.
+        This will be used to identify the right Airflow hook at runtime to connect with storage services
     :param path: Path pattern to the file in the filesystem/Object stores
     """
     return ListFileOperator(

@@ -9,6 +9,7 @@ except ImportError:
     from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
+from astro.exceptions import IllegalLoadToDatabaseException
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 
 
@@ -28,7 +29,10 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
             sql_statement=self.sql, parameters=self.parameters
         )
         if self.handler:
-            return self.handler(result)
+            response = self.handler(result)
+            if self.response_limit and len(response) > self.response_limit:
+                raise IllegalLoadToDatabaseException()  # pragma: no cover
+            return response
         else:
             return None
 

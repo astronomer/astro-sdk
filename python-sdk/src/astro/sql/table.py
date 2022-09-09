@@ -3,8 +3,10 @@ from __future__ import annotations
 import random
 import string
 
-from attrs import define, field, fields_dict
+from attr import define, field, fields_dict
 from sqlalchemy import Column, MetaData
+
+from astro.airflow.datasets import Dataset
 
 MAX_TABLE_NAME_LENGTH = 62
 TEMP_PREFIX = "_tmp_"
@@ -15,6 +17,9 @@ class Metadata:
     """
     Contains additional information to access a SQL Table, which is very likely optional and, in some cases, may
     be database-specific.
+
+    :param schema: A schema name
+    :param database: A database name
     """
 
     # This property is used by several databases, including: Postgres, Snowflake and BigQuery ("namespace")
@@ -30,13 +35,18 @@ class Metadata:
 
 
 @define
-class Table:
+class Table(Dataset):
     """
     Withholds the information necessary to access a SQL Table.
     It is agnostic to the database type.
     If no name is given, it auto-generates a name for the Table and considers it temporary.
 
     Temporary tables are prefixed with the prefix TEMP_PREFIX.
+
+    :param conn_id: The Airflow connection id. This will be used to identify the right database type at the runtime
+    :param name: The name of the database table. If name not provided then it would create a temporary name
+    :param metadata: A metadata object which will have database or schema name
+    :param columns: columns which define the database table schema.
     """
 
     template_fields = ("name",)
@@ -53,6 +63,9 @@ class Table:
     )
     columns: list[Column] = field(factory=list)
     temp: bool = field(default=False)
+
+    uri: str = field(init=False)
+    extra: dict | None = field(init=False, factory=dict)
 
     def __attrs_post_init__(self) -> None:
         if not self._name or self._name.startswith("_tmp"):
@@ -112,3 +125,18 @@ class Table:
         if not isinstance(value, property) and value != self._name:
             self._name = value
             self.temp = False
+
+    @uri.default
+    def _path_to_dataset_uri(self) -> str:
+        """Build a URI to be passed to Dataset obj introduced in Airflow 2.4"""
+        from urllib.parse import urlencode, urlparse
+
+        path = f"astro://{self.conn_id}@"
+        db_extra = {"table": self.name}
+        if self.metadata.schema:
+            db_extra["schema"] = self.metadata.schema
+        if self.metadata.database:
+            db_extra["database"] = self.metadata.database
+        parsed_url = urlparse(url=path)
+        new_parsed_url = parsed_url._replace(query=urlencode(db_extra))
+        return new_parsed_url.geturl()
