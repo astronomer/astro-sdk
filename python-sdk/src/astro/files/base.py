@@ -5,8 +5,8 @@ import pathlib
 
 import pandas as pd
 import smart_open
-
 from attr import define, field  # type: ignore
+
 from astro import constants
 from astro.airflow.datasets import Dataset
 from astro.files.locations import create_file_location
