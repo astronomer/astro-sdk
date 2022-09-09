@@ -291,7 +291,6 @@ class BaseDatabase(ABC):
         :param file: File path and conn_id for object stores
         :param normalize_config: pandas json_normalize params config
         :param columns_names_capitalization:  determines whether to convert all columns to lowercase/uppercase
-            in the resulting dataframe
         :param if_exists:  Overwrite file if exists
         :param use_native_support: Use native support for data transfer if available on the destination
         """
@@ -688,7 +687,7 @@ class BaseDatabase(ABC):
         """
         Checks if schema autodetection is handled natively by the database.
 
-        :param source_file: File from which we need to transfer data
+         :param source_file: File from which we need to transfer data
         """
         return False
 
@@ -696,9 +695,8 @@ class BaseDatabase(ABC):
         self, source_file: File  # skipcq: PYL-W0613
     ) -> bool:
         """
-        Checks if schema autodetection is handled natively by the database for file
-        patterns and prefixes.
+        Checks if schema autodetection is handled natively by the database for file patterns and prefixes.
 
-        :param source_file: File from which we need to transfer data
+         :param source_file: File from which we need to transfer data
         """
         return False
