@@ -32,7 +32,7 @@ class ListFileOperator(BaseOperator):
         location = create_file_location(self.path, self.conn_id)
         # Get list of files excluding folders
         return [
-            File(path=path, conn_id=location.conn_id)  # type: ignore
+            File(path=path, conn_id=location.conn_id)
             for path in location.paths
             if not path.endswith("/")
         ]
