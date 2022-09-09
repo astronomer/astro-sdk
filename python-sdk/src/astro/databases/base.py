@@ -682,7 +682,9 @@ class BaseDatabase(ABC):
         """
         raise NotImplementedError
 
-    def check_schema_autodetection_is_supported(self, source_file):
+    def check_schema_autodetection_is_supported(  # skipcq: PYL-R0201
+        self, source_file  # skipcq: PYL-W0613
+    ):
         """
         Checks if schema autodetection is handled natively by the database.
 
@@ -690,8 +692,8 @@ class BaseDatabase(ABC):
         """
         return False
 
-    def check_file_pattern_based_schema_autodetection_is_supported(
-        self, source_file: File
+    def check_file_pattern_based_schema_autodetection_is_supported(  # skipcq: PYL-R0201
+        self, source_file: File  # skipcq: PYL-W0613
     ) -> bool:
         """
         Checks if schema autodetection is handled natively by the database for file

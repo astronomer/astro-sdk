@@ -240,11 +240,10 @@ class BigqueryDatabase(BaseDatabase):
 
         :param source_file: File from which we need to transfer data
         """
-        return (
-            True
-            if source_file.location.location_type in self.AUTODETECT_SCHEMA_SUPPORTED
-            else False
+        is_autodetect_schema_supported = (
+            source_file.location.location_type in self.AUTODETECT_SCHEMA_SUPPORTED
         )
+        return is_autodetect_schema_supported
 
     def check_file_pattern_based_schema_autodetection_is_supported(
         self, source_file: File
@@ -255,12 +254,11 @@ class BigqueryDatabase(BaseDatabase):
 
         :param source_file: File from which we need to transfer data
         """
-        return (
-            True
-            if source_file.location.location_type
+        is_file_pattern_based_schema_autodetection_supported = (
+            source_file.location.location_type
             in self.FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED
-            else False
         )
+        return is_file_pattern_based_schema_autodetection_supported
 
     def load_file_to_table_natively(
         self,
