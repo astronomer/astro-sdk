@@ -28,7 +28,8 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         handler: Function | None = None,
         database: str | None = None,
         schema: str | None = None,
-        response_limit: int = 0,
+        response_limit: int = -1,
+        response_size: int = -1,
         sql: str = "",
         **kwargs: Any,
     ):
@@ -43,6 +44,8 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         self.database = self.op_kwargs.pop("database", database)
         self.schema = self.op_kwargs.pop("schema", schema)
         self.response_limit = self.op_kwargs.pop("response_limit", response_limit)
+        self.response_size = self.op_kwargs.pop("response_size", response_size)
+
         self.op_args: dict[str, Table | pd.DataFrame] = {}
 
         # We purposely do NOT render upstream_tasks otherwise we could have a case where a user
