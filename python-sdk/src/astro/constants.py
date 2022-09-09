@@ -23,6 +23,9 @@ class FileLocation(Enum):
     S3 = "s3"  # Amazon S3
     # [END filelocation]
 
+    def __str__(self) -> str:
+        return self.value
+
 
 class FileType(Enum):
     # [START filetypes]
@@ -31,6 +34,9 @@ class FileType(Enum):
     NDJSON = "ndjson"
     PARQUET = "parquet"
     # [END filetypes]
+
+    def __str__(self) -> str:
+        return self.value
 
 
 class Database(Enum):
@@ -42,6 +48,9 @@ class Database(Enum):
     SNOWFLAKE = "snowflake"
     REDSHIFT = "redshift"
     # [END database]
+
+    def __str__(self) -> str:
+        return self.value
 
 
 SUPPORTED_FILE_LOCATIONS = [const.value for const in FileLocation]

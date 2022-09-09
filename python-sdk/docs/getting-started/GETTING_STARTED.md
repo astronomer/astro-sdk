@@ -73,6 +73,8 @@ To complete this tutorial, you need:
     export AIRFLOW__ASTRO_SDK__SQL_SCHEMA=ASTRO_SDK_SCHEMA
     ```
 
+    > **Note:** `AIRFLOW__CORE__ENABLE_XCOM_PICKLING` needs to be enabled for `astro-sdk-python`. Read more: [Airflow Core Enable XCOM Pickling](../../README.md#quickstart)
+
     If you are using the Astro CLI, you can do this by adding the following text to your `.env` file:
 
     ```text
@@ -380,3 +382,49 @@ You can clean up temporary tables in one of two ways:
     # Alternative syntax:
     [orders_data, joined_data] >> aql.cleanup()
     ```
+
+In all scenarios, even if the user gives a non-temporary table, only temporary
+tables will actually be deleted.
+
+## Tying Astro SDK decorators to traditional Airflow Operators
+
+1. Operators that pass data that can be picked up by astro functions
+2. Operators that don't pass any data but you want to run upstream of a task
+
+### Scenario 1: Operators that pass on data to astro sdk tasks
+
+When passing operators that return Xcom-based data, you can just pass those values
+into the astro-sdk function using the `.output` function (or just using the output for values
+created with the taskflow API)
+```python
+@task
+def get_num_rows():
+    return 5
+
+
+@aql.transform
+def get_rows(table: Table, name: str, num_rows: int):
+    return "SELECT * FROM {{table}} WHERE name={{name}} LIMIT {{num_rows}}"
+
+
+with dag:
+    name_from_env = BashOperator(...)
+    get_rows(table=Table(), name=name_from_env.output, num_rows=get_num_rows())
+```
+
+### Scenario 2: Operators that dont pass on data to astro sdk tasks
+
+When tying traditional tasks to astro-sdk decorators, you might run into a situation where the original operators
+might not pass any data. In these cases you can use the `upstream_tasks` function to set up dependencies between
+traditional airflow tasks and Astro SDK tasks
+
+```python
+@aql.transform
+def get_rows(table: Table, num_rows: int):
+    return "SELECT * FROM {{table}} LIMIT {{num_rows}}"
+
+
+with dag:
+    bash_command = BashOperator(...)
+    get_rows(table=Table(), num_rows=5, upstream_tasks=[bash_command])
+```

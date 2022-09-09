@@ -39,6 +39,6 @@ python-sdk/docs/logs/
 python-sdk/docs/webserver_config.py
 python-sdk/docs/autoapi/
 
-dev/dags
-dev/logs
-dev/plugins
+**/dev/dags
+**/dev/logs
+**/dev/plugins
