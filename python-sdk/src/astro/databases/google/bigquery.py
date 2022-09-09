@@ -73,12 +73,12 @@ class BigqueryDatabase(BaseDatabase):
         FileLocation.S3: "load_s3_file_to_table",
         FileLocation.LOCAL: "load_local_file_to_table",
     }
-    AUTODETECT_SCHEMA_SUPPORTED = {
+    AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = {
         FileLocation.GS,
         FileLocation.LOCAL,
     }
 
-    FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED = {
+    FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = {
         FileLocation.GS,
         FileLocation.LOCAL,
     }

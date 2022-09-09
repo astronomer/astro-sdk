@@ -67,6 +67,9 @@ class RedshiftDatabase(BaseDatabase):
     NATIVE_PATHS = {
         FileLocation.S3: "load_s3_file_to_table",
     }
+    AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = {FileLocation.GS, FileLocation.S3}
+
+    FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[Any] = set()
 
     illegal_column_name_chars: List[str] = ["."]
     illegal_column_name_chars_replacement: List[str] = ["_"]
@@ -123,6 +126,32 @@ class RedshiftDatabase(BaseDatabase):
                 self.connection, table.name, schema=table.metadata.schema
             )
         )
+
+    def check_schema_autodetection_is_supported(self, source_file: File) -> bool:
+        """
+        Checks if schema autodetection is handled natively by the database
+
+        :param source_file: File from which we need to transfer data
+        """
+        is_autodetect_schema_supported = (
+            source_file.location.location_type in self.AUTODETECT_SCHEMA_SUPPORTED
+        )
+        return is_autodetect_schema_supported
+
+    def check_file_pattern_based_schema_autodetection_is_supported(
+        self, source_file: File
+    ) -> bool:
+        """
+        Checks if schema autodetection is handled natively by the database for file
+        patterns and prefixes.
+
+        :param source_file: File from which we need to transfer data
+        """
+        is_file_pattern_based_schema_autodetection_supported = (
+            source_file.location.location_type
+            in self.FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED
+        )
+        return is_file_pattern_based_schema_autodetection_supported
 
     def load_pandas_dataframe_to_table(
         self,

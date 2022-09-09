@@ -126,7 +126,7 @@ class Table(Dataset):
             self._name = value
             self.temp = False
 
-    @uri.default
+    @uri.default  # type: ignore
     def _path_to_dataset_uri(self) -> str:
         """Build a URI to be passed to Dataset obj introduced in Airflow 2.4"""
         from urllib.parse import urlencode, urlparse
