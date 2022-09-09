@@ -1,14 +1,11 @@
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models import BaseOperator
 
 from astro.files.base import File
 from astro.files.locations import create_file_location
-
-if TYPE_CHECKING:
-    # TODO: This can be removed from TYPE_CHECKING once there is a minimum requirement of Airflow 2.2.3+
-    from airflow.utils.context import Context
+from astro.utils.typing_compat import Context
 
 
 class ListFileOperator(BaseOperator):
@@ -31,7 +28,7 @@ class ListFileOperator(BaseOperator):
         self.conn_id = conn_id
         super().__init__(task_id=task_id, **kwargs)
 
-    def execute(self, context: "Context") -> Any:  # skipcq: PYL-W0613
+    def execute(self, context: Context) -> Any:  # skipcq: PYL-W0613
         location = create_file_location(self.path, self.conn_id)
         # Get list of files excluding folders
         return [

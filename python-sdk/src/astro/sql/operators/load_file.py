@@ -14,6 +14,7 @@ from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import Table
+from astro.utils.typing_compat import Context
 
 
 class LoadFileOperator(AstroSQLBaseOperator):
@@ -68,7 +69,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         self.columns_names_capitalization = columns_names_capitalization
         self.enable_native_fallback = enable_native_fallback
 
-    def execute(self, context: Any) -> Table | pd.DataFrame:  # skipcq: PYL-W0613
+    def execute(self, context: Context) -> Table | pd.DataFrame:  # skipcq: PYL-W0613
         """
         Load an existing dataset from a supported file into a SQL table or a Dataframe.
         """

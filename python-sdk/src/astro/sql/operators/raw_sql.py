@@ -13,6 +13,7 @@ except ImportError:
 from astro import settings
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
+from astro.utils.typing_compat import Context
 
 
 class RawSQLOperator(BaseSQLDecoratedOperator):
@@ -24,7 +25,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
     and on the SQL statement/function declared by the user.
     """
 
-    def execute(self, context: dict) -> Any:
+    def execute(self, context: Context) -> Any:
         super().execute(context)
 
         result = self.database_impl.run_sql(

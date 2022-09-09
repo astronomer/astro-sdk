@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import time
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.exceptions import AirflowException
@@ -17,10 +17,7 @@ from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.sql.table import Table
-
-if TYPE_CHECKING:
-    # TODO: This can be removed from TYPE_CHECKING once there is a minimum requirement of Airflow 2.2.3+
-    from airflow.utils.context import Context
+from astro.utils.typing_compat import Context
 
 
 def filter_for_temp_tables(task_outputs: list[Any]) -> list[Table]:
