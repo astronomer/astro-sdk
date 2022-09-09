@@ -7,6 +7,7 @@ from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
 
 from astro import settings
+from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import BaseDatabase, create_database
 from astro.exceptions import IllegalLoadToDatabaseException
@@ -48,7 +49,13 @@ class LoadFileOperator(AstroSQLBaseOperator):
         enable_native_fallback: bool | None = True,
         **kwargs,
     ) -> None:
-        super().__init__(**kwargs)
+        super().__init__(
+            **kwargs_with_datasets(
+                kwargs=kwargs,
+                input_datasets=input_file,
+                output_datasets=output_table,
+            )
+        )
         self.output_table = output_table
         self.input_file = input_file
         self.chunk_size = chunk_size

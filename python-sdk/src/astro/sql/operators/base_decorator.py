@@ -8,6 +8,7 @@ from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
 from sqlalchemy.sql.functions import Function
 
+from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
@@ -49,7 +50,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         upstream_tasks = self.op_kwargs.pop("upstream_tasks", [])
         super().__init__(
             upstream_tasks=upstream_tasks,
-            **kwargs,
+            **kwargs_with_datasets(kwargs=kwargs, output_datasets=self.output_table),
         )
 
     def execute(self, context: dict) -> None:
