@@ -211,9 +211,9 @@ class BigqueryDatabase(BaseDatabase):
                 f"T.{col}=S.{source_columns[idx]}"
                 for idx, col in enumerate(target_columns)
             )
-            update_statement = "UPDATE SET %(update_statement_map)s"
+            update_statement = f"UPDATE SET {update_statement_map}"
             merge_statement += f" WHEN MATCHED THEN {update_statement}"
-            parameters["update_statement_map"] = update_statement_map
+            # parameters["update_statement_map"] = update_statement_map
         self.run_sql(sql_statement=merge_statement, parameters=parameters)
 
     def is_native_load_file_available(
