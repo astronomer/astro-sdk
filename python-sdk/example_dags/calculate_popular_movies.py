@@ -10,9 +10,9 @@ from astro.sql.table import Table
 @aql.transform()
 def top_five_animations(input_table: Table):
     return """
-        SELECT Title, Rating
+        SELECT title, rating
         FROM {{input_table}}
-        WHERE Genre1=='Animation'
+        WHERE genre1='Animation'
         ORDER BY Rating desc
         LIMIT 5;
     """
@@ -26,7 +26,7 @@ with DAG(
 ) as dag:
     imdb_movies = aql.load_file(
         File(
-            "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv"
+            "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
         ),
         output_table=Table(conn_id="sqlite_default"),
     )
@@ -34,4 +34,3 @@ with DAG(
         input_table=imdb_movies,
         output_table=Table(name="top_animation"),
     )
-    aql.cleanup()
