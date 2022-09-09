@@ -110,12 +110,12 @@ def run_merge(target_table: Table, source_table: Table, merge_parameters, mode):
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SNOWFLAKE},
+        # {"database": Database.SNOWFLAKE},
         {"database": Database.BIGQUERY},
-        {"database": Database.REDSHIFT},
+        # {"database": Database.REDSHIFT},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "redshift"],
+    ids=["bigquery"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",

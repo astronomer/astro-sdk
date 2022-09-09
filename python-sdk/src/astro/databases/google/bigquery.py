@@ -197,20 +197,24 @@ class BigqueryDatabase(BaseDatabase):
         target_table_name = self.get_table_qualified_name(target_table)
         source_table_name = self.get_table_qualified_name(source_table)
 
-        statement = f"MERGE {target_table_name} T USING {source_table_name} S\
-            ON {' AND '.join(['T.' + col + '= S.' + col for col in target_conflict_columns])}\
-            WHEN NOT MATCHED BY TARGET THEN INSERT ({','.join(target_columns)}) VALUES ({','.join(source_columns)})"
-
-        update_statement_map = ", ".join(
-            [
-                f"T.{target_columns[idx]}=S.{source_columns[idx]}"
-                for idx in range(len(target_columns))
-            ]
+        insert_statement = (
+            f"INSERT ({', '.join(target_columns)}) VALUES ({', '.join(source_columns)})"
         )
+        merge_statement = (
+            f"MERGE {target_table_name} T USING {source_table_name} S"
+            f" ON {' AND '.join(f'T.{col}=S.{col}' for col in target_conflict_columns)}"
+            f" WHEN NOT MATCHED BY TARGET THEN {insert_statement}"
+        )
+        parameters = {}
         if if_conflicts == "update":
-            update_statement = f"UPDATE SET {update_statement_map}"
-            statement += f" WHEN MATCHED THEN {update_statement}"
-        self.run_sql(sql_statement=statement)
+            update_statement_map = ", ".join(
+                f"T.{col}=S.{source_columns[idx]}"
+                for idx, col in enumerate(target_columns)
+            )
+            update_statement = "UPDATE SET %(update_statement_map)s"
+            merge_statement += f" WHEN MATCHED THEN {update_statement}"
+            parameters["update_statement_map"] = update_statement_map
+        self.run_sql(sql_statement=merge_statement, parameters=parameters)
 
     def is_native_load_file_available(
         self, source_file: File, target_table: Table
