@@ -279,3 +279,48 @@ def test_file_eq(file_1, file_2, equality):
 def test_file_hash():
     """Test that hashing works"""
     assert isinstance(hash(File("/tmp/file_a.csv")), int)
+
+
+@pytest.mark.parametrize(
+    "table,dataset_uri",
+    [
+        (File(path="gs://bucket/object/path"), "astro+gs://bucket/object/path"),
+        (
+            File(path="gs://bucket/object/path", conn_id="test_conn"),
+            "astro+gs://test_conn@bucket/object/path",
+        ),
+        (
+            File(
+                path="gs://bucket/object/path",
+                conn_id="test_conn",
+                filetype=constants.FileType.CSV,
+            ),
+            "astro+gs://test_conn@bucket/object/path?filetype=csv",
+        ),
+        (
+            File(
+                path=str(
+                    pathlib.Path(
+                        pathlib.Path(__file__).parent.parent, "data/sample.csv"
+                    )
+                )
+            ),
+            f"astro+file:{str(pathlib.Path(pathlib.Path(__file__).parent.parent, 'data/sample.csv'))}",
+        ),
+        (
+            File(
+                path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
+            ),
+            "astro+https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv",
+        ),
+    ],
+)
+def test_file_to_datasets_uri(table, dataset_uri):
+    """Verify that Table build and pass correct URI"""
+    assert table.uri == dataset_uri
+
+
+def test_file_to_datasets_extra():
+    """Verify that extra is set"""
+    table = File(path="gs://bucket/object/path", conn_id="test_conn")
+    assert table.extra == {}

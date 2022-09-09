@@ -10,11 +10,12 @@ from sqlalchemy.sql.functions import Function
 
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
+from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
 from astro.sql.table import Table
 from astro.utils.table import find_first_table
 
 
-class BaseSQLDecoratedOperator(DecoratedOperator):
+class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
     """Handles all decorator classes that can return a SQL function"""
 
     database_impl: BaseDatabase
@@ -26,6 +27,7 @@ class BaseSQLDecoratedOperator(DecoratedOperator):
         handler: Function | None = None,
         database: str | None = None,
         schema: str | None = None,
+        response_limit: int = 0,
         sql: str = "",
         **kwargs: Any,
     ):
@@ -34,12 +36,19 @@ class BaseSQLDecoratedOperator(DecoratedOperator):
         self.output_table: Table = self.op_kwargs.pop("output_table", Table())
         self.handler = self.op_kwargs.pop("handler", handler)
         self.conn_id = self.op_kwargs.pop("conn_id", conn_id)
+
         self.sql = sql
         self.parameters = parameters or {}
         self.database = self.op_kwargs.pop("database", database)
         self.schema = self.op_kwargs.pop("schema", schema)
+        self.response_limit = self.op_kwargs.pop("response_limit", response_limit)
         self.op_args: dict[str, Table | pd.DataFrame] = {}
+
+        # We purposely do NOT render upstream_tasks otherwise we could have a case where a user
+        # has 10 dataframes as upstream tasks and it crashes the worker
+        upstream_tasks = self.op_kwargs.pop("upstream_tasks", [])
         super().__init__(
+            upstream_tasks=upstream_tasks,
             **kwargs,
         )
 

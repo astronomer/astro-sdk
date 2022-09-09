@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import Any
 
 from airflow.decorators.base import get_unique_task_id
-from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
 from astro.databases import create_database
+from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import Table
 
 
-class DropTableOperator(BaseOperator):
+class DropTableOperator(AstroSQLBaseOperator):
     """Airflow Operator for dropping SQL tables."""
 
     template_fields = ("table",)

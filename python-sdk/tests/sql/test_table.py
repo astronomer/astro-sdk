@@ -1,5 +1,9 @@
-import pytest
+from datetime import datetime
 
+import pytest
+from airflow import DAG
+
+from astro.sql import get_value_list
 from astro.sql.table import Metadata, Table
 
 
@@ -73,3 +77,60 @@ def test_metadata_converter(metadata, expected_metadata):
     """Test you can pass a dict to metadata param"""
     table = Table(metadata=metadata)
     assert table.metadata == expected_metadata
+
+
+def test_get_value_list():
+    """Assert that get_file_list handle kwargs correctly"""
+    dag = DAG(dag_id="dag1", start_date=datetime(2022, 1, 1))
+
+    resp = get_value_list(sql_statement="path", conn_id="conn", dag=dag)
+    assert resp.operator.task_id == "get_value_list"
+
+    resp = get_value_list(sql_statement="path", conn_id="conn", dag=dag)
+    assert resp.operator.task_id != "get_value_list"
+
+    resp = get_value_list(sql_statement="path", conn_id="conn", task_id="test")
+    assert resp.operator.task_id == "test"
+
+
+@pytest.mark.parametrize(
+    "table,dataset_uri",
+    [
+        (Table(name="test_table"), "astro://@?table=test_table"),
+        (
+            Table(name="test_table", conn_id="test_conn"),
+            "astro://test_conn@?table=test_table",
+        ),
+        (
+            Table(name="test_table", conn_id="test_conn", temp=True),
+            "astro://test_conn@?table=test_table",
+        ),
+        (
+            Table(
+                name="test_table",
+                conn_id="test_conn",
+                metadata=Metadata(schema="schema", database="database"),
+            ),
+            "astro://test_conn@?table=test_table&schema=schema&database=database",
+        ),
+        (
+            Table(
+                name="test_table",
+                conn_id="test_conn",
+                metadata=Metadata(schema="schema"),
+            ),
+            "astro://test_conn@?table=test_table&schema=schema",
+        ),
+    ],
+)
+def test_table_to_datasets_uri(table, dataset_uri):
+    """Verify that Table build and pass correct URI"""
+    assert table.uri == dataset_uri
+
+
+def test_table_to_datasets_extra():
+    """Verify that extra is set"""
+    table = Table(
+        name="test_table", conn_id="test_conn", metadata=Metadata(schema="schema")
+    )
+    assert table.extra == {}
