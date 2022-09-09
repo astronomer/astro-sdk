@@ -177,6 +177,9 @@ class SnowflakeDatabase(BaseDatabase):
         RequestTimeoutError,
     )
     DEFAULT_SCHEMA = SNOWFLAKE_SCHEMA
+    AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = {FileLocation.GS, FileLocation.S3}
+
+    FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[Any] = set()
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID):
         super().__init__(conn_id)
@@ -379,6 +382,32 @@ class SnowflakeDatabase(BaseDatabase):
             source_file.location.location_type in NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS
         )
         return is_file_type_supported and is_file_location_supported
+
+    def check_schema_autodetection_is_supported(self, source_file: File) -> bool:
+        """
+        Checks if schema autodetection is handled natively by the database
+
+        :param source_file: File from which we need to transfer data
+        """
+        is_autodetect_schema_supported = (
+            source_file.location.location_type in self.AUTODETECT_SCHEMA_SUPPORTED
+        )
+        return is_autodetect_schema_supported
+
+    def check_file_pattern_based_schema_autodetection_is_supported(
+        self, source_file: File
+    ) -> bool:
+        """
+        Checks if schema autodetection is handled natively by the database for file
+        patterns and prefixes.
+
+        :param source_file: File from which we need to transfer data
+        """
+        is_file_pattern_based_schema_autodetection_supported = (
+            source_file.location.location_type
+            in self.FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED
+        )
+        return is_file_pattern_based_schema_autodetection_supported
 
     def load_file_to_table_natively(
         self,

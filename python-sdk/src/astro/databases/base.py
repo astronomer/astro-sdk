@@ -295,19 +295,26 @@ class BaseDatabase(ABC):
         :param if_exists:  Overwrite file if exists
         :param use_native_support: Use native support for data transfer if available on the destination
         """
+        is_schema_autodetection_supported = (
+            self.check_schema_autodetection_is_supported(source_file=file)
+        )
+        is_file_pattern_based_schema_autodetection_supported = (
+            self.check_file_pattern_based_schema_autodetection_is_supported(
+                source_file=file
+            )
+        )
+
         if (
             use_native_support
-            and self.check_schema_autodetection_is_supported(source_file=file)
+            and is_schema_autodetection_supported
             and not file.is_pattern()
         ):
             return
         if (
             use_native_support
             and file.is_pattern()
-            and self.check_schema_autodetection_is_supported(source_file=file)
-            and self.check_file_pattern_based_schema_autodetection_is_supported(
-                source_file=file
-            )
+            and is_schema_autodetection_supported
+            and is_file_pattern_based_schema_autodetection_supported
         ):
             return
 
