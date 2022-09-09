@@ -364,9 +364,9 @@ jobs:
   build-n-publish:
     if: github.event_name == 'release'
     name: Build and publish Python 🐍 distributions 📦 to PyPI
-    needs:
-      - Run-Unit-tests-Airflow-2-3
-      - Run-Optional-Packages-tests-python-sdk
+#    needs:
+#      - Run-Unit-tests-Airflow-2-3
+#      - Run-Optional-Packages-tests-python-sdk
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2
