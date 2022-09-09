@@ -9,7 +9,7 @@ on:
     branches: [ 'main', 'release-**' ]
     paths:
       - 'python-sdk/**'
-      - '.pre-commit-config.yaml'
+      - '*'
   # Run on PRs from forks
   pull_request_target:
     branches: [ 'main' ]
