@@ -12,6 +12,7 @@ airflow_settings.yaml
 .idea%
 /build/
 /dist/
+**/dist/
 
 # Benchmark
 airflow.db
