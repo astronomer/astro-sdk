@@ -13,7 +13,5 @@ except ModuleNotFoundError:
     class Context(MutableMapping[str, Any]):  # type: ignore[no-redef]
         """Placeholder typing class for ``airflow.utils.context.Context``."""
 
-        ...
-
 
 __all__ = ["Context"]
