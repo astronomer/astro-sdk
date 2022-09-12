@@ -12,6 +12,7 @@ from astro.databases import create_database
 from astro.files import File
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import Table
+from astro.utils.typing_compat import Context
 
 
 class ExportFileOperator(AstroSQLBaseOperator):
@@ -40,7 +41,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
             datasets["input_datasets"] = input_data
         super().__init__(**kwargs_with_datasets(kwargs=kwargs, **datasets))
 
-    def execute(self, context: dict) -> File:
+    def execute(self, context: Context) -> File:
         """Write SQL table to csv/parquet on local/S3/GCS.
 
         Infers SQL database type based on connection.

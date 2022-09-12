@@ -14,6 +14,7 @@ from astro.databases.base import BaseDatabase
 from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
 from astro.sql.table import Table
 from astro.utils.table import find_first_table
+from astro.utils.typing_compat import Context
 
 
 class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
@@ -56,7 +57,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             **kwargs_with_datasets(kwargs=kwargs, output_datasets=self.output_table),
         )
 
-    def execute(self, context: dict) -> None:
+    def execute(self, context: Context) -> None:
         first_table = find_first_table(
             op_args=self.op_args,  # type: ignore
             op_kwargs=self.op_kwargs,
