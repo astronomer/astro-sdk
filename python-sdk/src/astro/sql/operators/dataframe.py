@@ -6,6 +6,8 @@ from typing import Any, Callable
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 
+from astro.airflow.datasets import kwargs_with_datasets
+
 try:
     from airflow.decorators.base import TaskDecorator, task_decorator_factory
 except ImportError:
@@ -125,7 +127,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         upstream_tasks = self.op_kwargs.pop("upstream_tasks", [])
         super().__init__(
             upstream_tasks=upstream_tasks,
-            **kwargs,
+            **kwargs_with_datasets(kwargs=kwargs, output_datasets=self.output_table),
         )
 
     def execute(self, context: dict) -> Table | pd.DataFrame:

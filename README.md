@@ -55,7 +55,7 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
     ```shell
     # The sqlite_default connection has different host for MAC vs. Linux
-    export SQL_TABLE_NAME=`airflow connections get sqlite_default -o     yaml | grep host | awk '{print $2}'`
+    export SQL_TABLE_NAME=`airflow connections get sqlite_default -o yaml | grep host | awk '{print $2}'`
     sqlite3 "$SQL_TABLE_NAME" "VACUUM;"
     ```
 

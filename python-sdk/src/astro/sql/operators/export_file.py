@@ -6,6 +6,7 @@ import pandas as pd
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
 
+from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import ExportExistsStrategy
 from astro.databases import create_database
 from astro.files import File
@@ -30,11 +31,14 @@ class ExportFileOperator(AstroSQLBaseOperator):
         if_exists: ExportExistsStrategy = "exception",
         **kwargs,
     ) -> None:
-        super().__init__(**kwargs)
         self.output_file = output_file
         self.input_data = input_data
         self.if_exists = if_exists
         self.kwargs = kwargs
+        datasets = {"output_datasets": self.output_file}
+        if isinstance(input_data, Table):
+            datasets["input_datasets"] = input_data
+        super().__init__(**kwargs_with_datasets(kwargs=kwargs, **datasets))
 
     def execute(self, context: dict) -> File:
         """Write SQL table to csv/parquet on local/S3/GCS.

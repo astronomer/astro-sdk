@@ -47,7 +47,7 @@ jobs:
            path: |
              ~/.cache/pip
              .nox
-           key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+           key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}
       - run: pip3 install nox
       - run: nox -s type_check
 
@@ -64,7 +64,7 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+          key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}
       - run: pip3 install nox
       - run: nox -s build_docs
 
@@ -115,7 +115,7 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+          key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
@@ -205,7 +205,7 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: ${{ runner.os }}-2.3-${{ hashFiles('pyproject.toml') }}
+          key: ${{ runner.os }}-2.3-${{ hashFiles('python-sdk/pyproject.toml') }}
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
@@ -296,7 +296,7 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: ${{ runner.os }}-2.2.5-${{ hashFiles('pyproject.toml') }}
+          key: ${{ runner.os }}-2.2.5-${{ hashFiles('python-sdk/pyproject.toml') }}
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
@@ -377,7 +377,7 @@ jobs:
     - uses: actions/cache@v2
       with:
         path: ~/.cache/pip
-        key: ${{ hashFiles('pyproject.toml') }}
+        key: ${{ hashFiles('python-sdk/pyproject.toml') }}
     - run: pip3 install nox
     - run: nox -s build
     - run: nox -s release -- dist/*

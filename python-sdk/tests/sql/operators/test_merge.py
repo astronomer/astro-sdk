@@ -8,6 +8,7 @@ import pytest
 from airflow.decorators import task_group
 
 from astro import sql as aql
+from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.databases import create_database
 from astro.files import File
@@ -349,3 +350,47 @@ def test_invalid_columns_param():
         exec_info.value.args[0]
         == "columns is not a valid type. Valid types: [tuple, list, dict], Passed: <class 'set'>"
     )
+
+
+@pytest.mark.skipif(
+    not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
+)
+def test_inlets_outlets_supported_ds():
+    """Test Datasets are set as inlets and outlets"""
+    source_table = Table(
+        name="source_table", conn_id="test1", metadata=Metadata(schema="test")
+    )
+    target_table = Table(
+        name="target_table", conn_id="test2", metadata=Metadata(schema="test")
+    )
+    task = aql.merge(
+        source_table=source_table,
+        target_table=target_table,
+        target_conflict_columns=["list"],
+        columns=["set_item_1", "set_item_2", "set_item_3"],
+        if_conflicts="ignore",
+    )
+    assert task.operator.inlets == [source_table]
+    assert task.operator.outlets == [target_table]
+
+
+@pytest.mark.skipif(
+    DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
+)
+def test_inlets_outlets_non_supported_ds():
+    """Test inlets and outlets are not set if Datasets are not supported"""
+    source_table = Table(
+        name="source_table", conn_id="test1", metadata=Metadata(schema="test")
+    )
+    target_table = Table(
+        name="target_table", conn_id="test2", metadata=Metadata(schema="test")
+    )
+    task = aql.merge(
+        source_table=source_table,
+        target_table=target_table,
+        target_conflict_columns=["list"],
+        columns=["set_item_1", "set_item_2", "set_item_3"],
+        if_conflicts="ignore",
+    )
+    assert task.operator.inlets == []
+    assert task.operator.outlets == []
