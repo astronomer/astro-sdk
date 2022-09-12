@@ -20,7 +20,8 @@ else
   connections_file="${benchmark_dir}/../../test-connections.yaml"
 fi
 
-git_revision="${GIT_REVISION:=`git rev-parse --short HEAD`}"
+git_revision="${GIT_HASH:=`git rev-parse --short HEAD`}"
+echo $git_revision
 
 results_file=/tmp/results-`date -u +%FT%T`.ndjson
 

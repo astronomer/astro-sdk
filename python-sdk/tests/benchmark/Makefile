@@ -38,8 +38,8 @@ container:
 
 local: check_google_credentials
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
-	@gcloud auth configure-docker
-	@docker build -t benchmark -f ./Dockerfile  ../../ --build-arg=GIT_HASH=`git rev-parse --short HEAD`
+	#@gcloud auth configure-docker
+	@docker build -t benchmark -f ./Dockerfile ../../../ --build-arg=GIT_HASH=`git rev-parse --short HEAD`
 	@mkdir -p /tmp/docker
 	@sudo chmod a+rwx /tmp/docker/
 	@docker run -it \
