@@ -61,13 +61,19 @@ class NDJSONFileType(FileType):
         chunksize = kwargs.get("chunksize", DEFAULT_CHUNK_SIZE)
 
         result_df = None
-        rows = stream.readlines(chunksize)
         row_count = 0
-        while len(rows) > 0 and (nrows and row_count < nrows):
+        extra_rows = []
+
+        while nrows and row_count < nrows:
+            extra_rows.extend(stream.readlines(chunksize))
+            rows = extra_rows
+            if len(rows) == 0:
+                break
+
             # Remove extra rows
             if nrows and nrows < row_count + len(rows):
-                diff = (row_count + len(rows)) - nrows
-                rows = rows[: diff + 1]
+                extra_rows = rows[nrows:]
+                rows = rows[:nrows]
 
             df = pd.DataFrame(
                 pd.json_normalize([json.loads(row) for row in rows], **normalize_config)
@@ -78,6 +84,5 @@ class NDJSONFileType(FileType):
                 result_df = pd.concat([result_df, df])
 
             row_count = result_df.shape[0]
-            rows = stream.readlines(DEFAULT_CHUNK_SIZE)
 
         return result_df
