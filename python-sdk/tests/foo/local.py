@@ -68,7 +68,7 @@ def local_dag_flow(
 
 def add_logger_if_needed(ti: TaskInstance):
     """
-    Add a formatted logger to the taskinstance so all logs are surfaced to the commmand linen
+    Add a formatted logger to the taskinstance so all logs are surfaced to the command line
     Args:
         ti:
 
