@@ -23,20 +23,24 @@ clean:
 	@rm -f ../../unittests.db
 	@rm -f ../../airflow.cfg
 	@rm -f ../../airflow.db
+	@rm -f ../../../unittests.cfg
+	@rm -f ../../../unittests.db
+	@rm -f ../../../airflow.cfg
+	@rm -f ../../../airflow.db
 
 # Takes approximately 7min
-setup_gke:
+setup_gke: clean
 	@cd infrastructure/terraform && \
 		terraform init && \
 		terraform apply
 
-container:
+container: clean
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
-	@gcloud auth configure-docker
-	@docker build --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):latest -f ./Dockerfile  ../../
+	#@gcloud auth configure-docker
+	@docker build --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):latest -f ./Dockerfile  ../../../
 	@docker push $(CONTAINER_REGISTRY)
 
-local: check_google_credentials
+local: clean check_google_credentials
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
 	#@gcloud auth configure-docker
 	@docker build -t benchmark -f ./Dockerfile ../../../ --build-arg=GIT_HASH=`git rev-parse --short HEAD`

@@ -28,7 +28,6 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
 RUN apt install -y libpq-dev python3-dev
 
 # Install Astro SDK dependencies
-
 COPY . .
 COPY python-sdk .
 # We need to update pip as only newer versions of pip allow installing in edit mode for pyproject.toml projects. For more info: https://peps.python.org/pep-0660/
@@ -44,24 +43,12 @@ ENV AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
 
 RUN mkdir -p $AIRFLOW_HOME
 WORKDIR $AIRFLOW_HOME
+
 COPY . .
-
-
 COPY python-sdk/tests/benchmark/dags $AIRFLOW_HOME/dags
 COPY python-sdk/tests/benchmark/run.sh $AIRFLOW_HOME/
 COPY python-sdk/tests/benchmark/run.py $AIRFLOW_HOME/
 COPY python-sdk/tests/benchmark/config.json $AIRFLOW_HOME/config.json
-
-# Debian Bullseye is shipped with Python 3.9
-# Upgrade built-in pip
-RUN apt-get update
-RUN apt-get install -y python3-pip
-RUN apt-get install -y git
-RUN apt install -y jq
-
-# Install the Google SDK
-RUN apt install -y curl
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && apt-get update -y && apt-get install google-cloud-cli -y
 
 WORKDIR ./python-sdk/tests/benchmark/
 
