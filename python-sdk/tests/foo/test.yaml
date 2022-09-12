@@ -1,0 +1,20 @@
+airflow:
+  connections:
+    - conn_id: david_snowflake
+      conn_type: snowflake
+      conn_host: https://gp21411.us-east-1.snowflakecomputing.com
+      conn_schema: DAVIDKOENITZER
+      conn_login: DAVIDKOENITZER
+      conn_password:
+      conn_port: 443
+      conn_extra:
+        extra__snowflake__account: gp21411.us-east-1
+        extra__snowflake__database: SANDBOX
+        extra__snowflake__insecure_mode: 'False'
+  pools:
+    - pool_name: subdag_limit
+      pool_slot: 3
+      pool_description:
+  variables:
+    - variable_name: myvar
+      variable_value: myval

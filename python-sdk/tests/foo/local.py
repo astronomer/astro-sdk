@@ -2,7 +2,6 @@ import argparse
 import logging
 import pathlib
 
-from airflow.models import DagRun
 from airflow.models.taskinstance import TaskInstance
 from airflow.models.xcom import XCOM_RETURN_KEY
 from airflow.utils import timezone
@@ -12,6 +11,13 @@ from airflow.utils.state import State
 from airflow.utils.types import DagRunType
 from airflow.models.dagrun import DagRunState
 from sqlalchemy.orm import Session
+import os
+
+import yaml
+from airflow.models import Connection, DagRun
+from airflow.models import TaskInstance as TI
+from airflow.utils.db import create_default_connections
+from airflow.utils.session import create_session
 import timeit
 log = logging.getLogger(__name__)
 
@@ -47,14 +53,18 @@ def local_dag_flow(
 def run_task(session, ti):
     import sys
     current_task = ti.render_templates(ti.get_template_context())
+    format = logging.Formatter("\t[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s")
     handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(format)
     if not current_task.log.handlers:  # only add log handler once
         current_task.log.addHandler(handler)
-
+    print(f"Running task {current_task.task_id}")
     xcom_value = current_task.execute(
         context=ti.get_template_context()
     )
     ti.xcom_push(key=XCOM_RETURN_KEY, value=xcom_value, session=session)
+    print(f"{current_task.task_id} ran successfully!")
+
     ti.set_state(State.SUCCESS)
 
 
@@ -94,28 +104,58 @@ def get_or_create_dagrun(dag, execution_date, run_id, session):
     return dr
 
 
-# if __name__ == "__main__":
-#     parser = argparse.ArgumentParser(description="Run an Airflow DAG locally")
-#     parser.add_argument(
-#         "--dag_dir", metavar="dag_dir", required=True, help="The path to the DAG file you want to parse"
-#     )
-#     parser.add_argument(
-#         "--dag_id", metavar="dag_id", required=True, help="The dag_id of the DAG you want to run"
-#     )
-#     parser.add_argument(
-#         "--execution_date",
-#         metavar="execution_date",
-#         required=False,
-#         default=timezone.utcnow(),
-#         help="The execution date of the DAG you're running",
-#     )
-#     args = parser.parse_args()
-#     local_dag_flow(args.dag_dir, args.dag_id, args.execution_date)
+def fix_keys(conn_dict):
+    new_dict = {}
+    for k, v in conn_dict.items():
+        if k == "conn_id" or k == "conn_type":
+            new_dict[k] = v
+        else:
+            new_dict[k.replace("conn_", "")] = v
+    return new_dict
 
-# This is for local development if we don't want to use the command line
-start = timeit.default_timer()
-filepath = str(pathlib.Path(CWD.parent, "../example_dags/basic.py"))
-local_dag_flow(filepath, "example_dag_basic")
-stop = timeit.default_timer()
 
-print('Time: ', stop - start)
+def create_database_connections(settings_file):
+    with open(settings_file) as fp:
+        yaml_with_env = os.path.expandvars(fp.read())
+        yaml_dicts = yaml.safe_load(yaml_with_env)
+        connections = []
+        for i in yaml_dicts['airflow']["connections"]:
+            i = fix_keys(i)
+            connections.append(Connection(**i))
+    with create_session() as session:
+        session.query(DagRun).delete()
+        session.query(TI).delete()
+        session.query(Connection).delete()
+        create_default_connections(session)
+        for conn in connections:
+            session.add(conn)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run an Airflow DAG locally")
+    parser.add_argument(
+        "--dag_dir", metavar="dag_dir", required=True, help="The path to the DAG file you want to parse"
+    )
+    parser.add_argument(
+        "--dag_id", metavar="dag_id", required=True, help="The dag_id of the DAG you want to run"
+    )
+    parser.add_argument(
+        "--settings_file", metavar="dag_id", required=False, default=None, help="The dag_id of the DAG you want to run"
+    )
+
+    parser.add_argument(
+        "--execution_date",
+        metavar="execution_date",
+        required=False,
+        default=timezone.utcnow(),
+        help="The execution date of the DAG you're running",
+    )
+    args = parser.parse_args()
+
+    if args.settings_file:
+        create_database_connections(args.settings_file)
+
+    start = timeit.default_timer()
+    local_dag_flow(args.dag_dir, args.dag_id, args.execution_date)
+    stop = timeit.default_timer()
+    print('Time: ', stop - start)
