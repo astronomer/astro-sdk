@@ -172,23 +172,6 @@ class BigqueryDatabase(BaseDatabase):
             credentials=creds,
         )
 
-    def columns_exist(self, table: Table, columns: list[str]) -> bool:
-        """
-        Check that a list of columns exist in the given table.
-
-        :param table: The table to check in.
-        :param columns: The columns to check.
-
-        :returns: whether the columns exist in the table or not.
-        """
-        statement = (
-            "SELECT COLUMN_NAME"
-            f" FROM {table.metadata.schema}.INFORMATION_SCHEMA.COLUMNS WHERE table_name='{table.name}'"
-        )
-        response = self.run_sql(statement)
-        rows = response.fetchall()
-        return all(any(row[0] == column for row in rows) for column in columns)
-
     def merge_table(
         self,
         source_table: Table,

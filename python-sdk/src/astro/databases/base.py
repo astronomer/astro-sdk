@@ -101,6 +101,21 @@ class BaseDatabase(ABC):
             result = self.connection.execute(sql_statement, parameters)
         return result
 
+    def columns_exist(self, table: Table, columns: list[str]) -> bool:
+        """
+        Check that a list of columns exist in the given table.
+
+        :param table: The table to check in.
+        :param columns: The columns to check.
+
+        :returns: whether the columns exist in the table or not.
+        """
+        sqla_table = self.get_sqla_table(table)
+        return all(
+            any(sqla_column.name == column for sqla_column in sqla_table.columns)
+            for column in columns
+        )
+
     def table_exists(self, table: Table) -> bool:
         """
         Check if a table exists in the database.
