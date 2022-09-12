@@ -1,24 +1,24 @@
 import argparse
 import logging
-import pathlib
-
-from airflow.models.taskinstance import TaskInstance
-from airflow.models.xcom import XCOM_RETURN_KEY
-from airflow.utils import timezone
-from airflow.utils.cli import get_dag
-from airflow.utils.session import NEW_SESSION, provide_session
-from airflow.utils.state import State
-from airflow.utils.types import DagRunType
-from airflow.models.dagrun import DagRunState
-from sqlalchemy.orm import Session
 import os
+import pathlib
+import sys
+import timeit
 
 import yaml
 from airflow.models import Connection, DagRun
 from airflow.models import TaskInstance as TI
+from airflow.models.dagrun import DagRunState
+from airflow.models.taskinstance import TaskInstance
+from airflow.models.xcom import XCOM_RETURN_KEY
+from airflow.utils import timezone
+from airflow.utils.cli import get_dag
 from airflow.utils.db import create_default_connections
-from airflow.utils.session import create_session
-import timeit
+from airflow.utils.session import NEW_SESSION, create_session, provide_session
+from airflow.utils.state import State
+from airflow.utils.types import DagRunType
+from sqlalchemy.orm import Session
+
 log = logging.getLogger(__name__)
 
 CWD = pathlib.Path(__file__).parent
@@ -48,7 +48,9 @@ def local_dag_flow(
     dag = get_dag(subdir=subdir, dag_id=dag_id)
     dag.clear(dag_run_state=False)
     # TODO: ask Ash how we should handle recreating existing DAGruns
-    dr = dag.create_dagrun(state=DagRunState.QUEUED, execution_date=execution_date, run_id=run_id)
+    dr = dag.create_dagrun(
+        state=DagRunState.QUEUED, execution_date=execution_date, run_id=run_id
+    )
     # dr = get_or_create_dagrun(dag, execution_date, run_id, session)
     tasks = dag.tasks
     # tasks.reverse()  # Reversing to test what happens when a task doesn't have dependencies met
@@ -58,24 +60,44 @@ def local_dag_flow(
             ti = get_or_create_taskinstance(dr, run_id, session, task)
             ti.task = task
             if ti.are_dependencies_met():
-                run_task(session, ti)
+                run_task(ti, session)
             else:
                 unfinished_tasks.append(task)
         tasks = unfinished_tasks
 
 
-def run_task(session, ti):
-    import sys
-    current_task = ti.render_templates(ti.get_template_context())
-    format = logging.Formatter("\t[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s")
+def add_logger_if_needed(ti: TaskInstance):
+    """
+    Add a formatted logger to the taskinstance so all logs are surfaced to the commmand linen
+    Args:
+        ti:
+
+    Returns:
+
+    """
+    format = logging.Formatter(
+        "\t[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s"
+    )
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(format)
-    if not current_task.log.handlers:  # only add log handler once
-        current_task.log.addHandler(handler)
+    if not ti.log.handlers:  # only add log handler once
+        ti.log.addHandler(handler)
+
+
+@provide_session
+def run_task(ti: TaskInstance, session=None):
+    """
+    Run a single task instance, write log output to the command-line, and push result to Xcom for downstream tasks
+    Args:
+        ti:
+
+    Returns:
+
+    """
+    current_task = ti.render_templates(ti.get_template_context())
+    add_logger_if_needed(ti)
     print(f"Running task {current_task.task_id}")
-    xcom_value = current_task.execute(
-        context=ti.get_template_context()
-    )
+    xcom_value = current_task.execute(context=ti.get_template_context())
     ti.xcom_push(key=XCOM_RETURN_KEY, value=xcom_value, session=session)
     print(f"{current_task.task_id} ran successfully!")
 
@@ -85,9 +107,7 @@ def run_task(session, ti):
 def get_or_create_taskinstance(dr, run_id, session, task):
     ti = (
         session.query(TaskInstance)
-        .filter(
-            TaskInstance.task_id == task.task_id, TaskInstance.run_id == run_id
-        )
+        .filter(TaskInstance.task_id == task.task_id, TaskInstance.run_id == run_id)
         .first()
     )
 
@@ -150,7 +170,7 @@ def create_database_connections(settings_file):
         yaml_with_env = os.path.expandvars(fp.read())
         yaml_dicts = yaml.safe_load(yaml_with_env)
         connections = []
-        for i in yaml_dicts['airflow']["connections"]:
+        for i in yaml_dicts["airflow"]["connections"]:
             i = fix_keys(i)
             connections.append(Connection(**i))
     # Add connections to DB
@@ -166,13 +186,23 @@ def create_database_connections(settings_file):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run an Airflow DAG locally")
     parser.add_argument(
-        "--dag_dir", metavar="dag_dir", required=True, help="The path to the DAG file you want to parse"
+        "--dag_dir",
+        metavar="dag_dir",
+        required=True,
+        help="The path to the DAG file you want to parse",
     )
     parser.add_argument(
-        "--dag_id", metavar="dag_id", required=True, help="The dag_id of the DAG you want to run"
+        "--dag_id",
+        metavar="dag_id",
+        required=True,
+        help="The dag_id of the DAG you want to run",
     )
     parser.add_argument(
-        "--settings_file", metavar="dag_id", required=False, default=None, help="The dag_id of the DAG you want to run"
+        "--settings_file",
+        metavar="dag_id",
+        required=False,
+        default=None,
+        help="The dag_id of the DAG you want to run",
     )
 
     parser.add_argument(
@@ -190,4 +220,4 @@ if __name__ == "__main__":
     start = timeit.default_timer()
     local_dag_flow(args.dag_dir, args.dag_id, args.execution_date)
     stop = timeit.default_timer()
-    print('Time: ', stop - start)
+    print("Time: ", stop - start)
