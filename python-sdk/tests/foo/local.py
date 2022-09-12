@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import logging
 import os
 import pathlib
@@ -28,7 +29,9 @@ DEFAULT_DATE = timezone.datetime(2022, 1, 1)
 # TODO: Check webserver code to find how to pull all dependencies for a specific task
 @provide_session
 def local_dag_flow(
-    subdir, dag_id, execution_date=timezone.utcnow(), session: Session = NEW_SESSION
+        subdir: str, dag_id: str, execution_date: datetime.datetime = timezone.utcnow(),
+        start_date: datetime.datetime | None = None, external_trigger: bool | None = None,
+        session: Session = NEW_SESSION
 ):
     """
     Run a DAG locally without all of the extra airflow bits.
@@ -38,6 +41,8 @@ def local_dag_flow(
     fashion and handle XCom, without all other Airflow logic.gi
 
     Args:
+        external_trigger:
+        start_date:
         subdir: directory or dag file we should parse. We recommend you parse the minimum number of files possible
         dag_id: dag_id of the dag you'd like to run. Should exist within the subdir
         execution_date: (optional) execution date of this DAG run
@@ -49,20 +54,34 @@ def local_dag_flow(
     dag.clear(dag_run_state=False)
     # TODO: ask Ash how we should handle recreating existing DAGruns
     dr = dag.create_dagrun(
-        state=DagRunState.QUEUED, execution_date=execution_date, run_id=run_id
+        state=DagRunState.QUEUED, execution_date=execution_date, run_id=run_id, start_date=start_date or execution_date,
+        session=session,
     )
     # dr = get_or_create_dagrun(dag, execution_date, run_id, session)
     tasks = dag.tasks
     # tasks.reverse()  # Reversing to test what happens when a task doesn't have dependencies met
+
     while tasks:
         unfinished_tasks = []
         for task in tasks:
+            # print(f"running {task.task_id}")
             ti = get_or_create_taskinstance(dr, run_id, session, task)
             ti.task = task
-            if ti.are_dependencies_met():
+            add_logger_if_needed(ti)
+            # print(f"state is {ti.state}")
+            if ti.are_dependencies_met(verbose=True):
                 run_task(ti, session)
             else:
-                unfinished_tasks.append(task)
+                upstream_tis = [t for t in dr.get_task_instances() if t.task_id in task.upstream_task_ids]
+                skipped_upstream_tis = [t for t in upstream_tis if t.state == State.SKIPPED]
+                # If all upstream tasks are skipped, then we should skip this task too
+                if len(upstream_tis) == len(skipped_upstream_tis):
+                    ti.state = State.SKIPPED
+                    session.add(ti)
+                    session.commit()
+                if ti.state != State.SKIPPED:
+                    unfinished_tasks.append(task)
+
         tasks = unfinished_tasks
 
 
@@ -95,7 +114,6 @@ def run_task(ti: TaskInstance, session=None):
 
     """
     current_task = ti.render_templates(ti.get_template_context())
-    add_logger_if_needed(ti)
     print(f"Running task {current_task.task_id}")
     xcom_value = current_task.execute(context=ti.get_template_context())
     ti.xcom_push(key=XCOM_RETURN_KEY, value=xcom_value, session=session)
