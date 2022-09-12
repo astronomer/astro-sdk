@@ -177,7 +177,7 @@ class SnowflakeDatabase(BaseDatabase):
         RequestTimeoutError,
     )
     DEFAULT_SCHEMA = SNOWFLAKE_SCHEMA
-    AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = {FileLocation.GS, FileLocation.S3}
+    AUTODETECT_SCHEMA_SUPPORTED: set[Any] = set()
 
     FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[Any] = set()
 
