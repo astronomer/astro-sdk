@@ -6,6 +6,7 @@ from airflow.models.xcom import XCom
 from airflow.utils import timezone
 
 import astro.sql as aql
+from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.files import File
 from astro.sql.table import Table
@@ -300,3 +301,37 @@ def test_pass_kwargs_to_base_operator(kwargs):
 
     task1 = sample_df_1()
     assert all(getattr(task1.operator, k) == v for k, v in kwargs.items())
+
+
+@pytest.mark.skipif(
+    not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
+)
+def test_inlets_outlets_supported_ds():
+    """Test Datasets are set as inlets and outlets"""
+    output_table = Table("test_name")
+
+    @aql.dataframe()
+    def sample_df_1(**kwargs):
+        return pandas.DataFrame(
+            {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
+        )
+
+    task = sample_df_1(output_table=output_table)
+    assert task.operator.outlets == [output_table]
+
+
+@pytest.mark.skipif(
+    DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
+)
+def test_inlets_outlets_non_supported_ds():
+    """Test inlets and outlets are not set if Datasets are not supported"""
+    output_table = Table("test_name")
+
+    @aql.dataframe()
+    def sample_df_1(**kwargs):
+        return pandas.DataFrame(
+            {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
+        )
+
+    task = sample_df_1(output_table=output_table)
+    assert task.operator.outlets == []

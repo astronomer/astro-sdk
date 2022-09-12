@@ -3,14 +3,15 @@ from __future__ import annotations
 from typing import Any
 
 from airflow.decorators.base import get_unique_task_id
-from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
+from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
+from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import Table
 
 
-class AppendOperator(BaseOperator):
+class AppendOperator(AstroSQLBaseOperator):
     """
     Append the source table rows into a destination table.
 
@@ -43,7 +44,12 @@ class AppendOperator(BaseOperator):
         self.columns = columns or {}
         task_id = task_id or get_unique_task_id("append_table")
 
-        super().__init__(task_id=task_id, **kwargs)
+        super().__init__(
+            task_id=task_id,
+            **kwargs_with_datasets(
+                kwargs=kwargs, input_datasets=source_table, output_datasets=target_table
+            ),
+        )
 
     def execute(self, context: dict) -> Table:  # skipcq: PYL-W0613
         db = create_database(self.target_table.conn_id)
