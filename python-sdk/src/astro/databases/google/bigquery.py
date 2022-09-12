@@ -265,6 +265,10 @@ class BigqueryDatabase(BaseDatabase):
             configuration=job_config,
         )
 
+        # We have to clear the table afterwards as bigquery automatically loads the data when creating the table.
+        statement = f"TRUNCATE TABLE `{self.get_table_qualified_name(table)}`"
+        self.run_sql(statement)
+
     def is_native_load_file_available(
         self, source_file: File, target_table: Table
     ) -> bool:

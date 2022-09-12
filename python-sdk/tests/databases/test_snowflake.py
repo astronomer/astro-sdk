@@ -170,6 +170,9 @@ def test_snowflake_create_table_using_native_schema_autodetection(
         ),
         ("id", "NUMBER(38,0)", "COLUMN", "Y", None, "N", "N", None, None, None, None),
     ]
+    statement = f"SELECT COUNT(*) FROM {database.get_table_qualified_name(table)}"
+    count = database.run_sql(statement).scalar()
+    assert count == 0
 
 
 @pytest.mark.integration
