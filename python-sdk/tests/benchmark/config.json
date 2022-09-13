@@ -37,14 +37,6 @@
     {
       "conn_id": "bigquery",
       "file_type": "csv",
-      "name": "hundred_kb",
-      "path": "gs://astro-sdk/benchmark/trimmed/tate_britain/artist_data_100kb.csv",
-      "rows": 748,
-      "size": "100 KB"
-    },
-    {
-      "conn_id": "bigquery",
-      "file_type": "csv",
       "name": "ten_mb",
       "path": "gs://astro-sdk/benchmark/trimmed/imdb/title_ratings_10mb.csv",
       "rows": 600000,
