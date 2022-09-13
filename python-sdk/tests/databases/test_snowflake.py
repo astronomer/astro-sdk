@@ -130,6 +130,57 @@ def test_snowflake_create_table_with_columns(database_table_fixture):
     [
         {
             "database": Database.SNOWFLAKE,
+            "table": Table(
+                metadata=Metadata(schema=SCHEMA),
+            ),
+        }
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+def test_snowflake_create_table_using_native_schema_autodetection(
+    database_table_fixture,
+):
+    """Test table creation using native schema autodetection"""
+    database, table = database_table_fixture
+
+    statement = f"DESC TABLE {database.get_table_qualified_name(table)}"
+    with pytest.raises(ProgrammingError) as e:
+        database.run_sql(statement)
+    assert e.match("does not exist or not authorized")
+
+    file = File("s3://astro-sdk/sample.parquet", conn_id="aws_conn")
+    database.create_table(table, file)
+    response = database.run_sql(statement)
+    rows = response.fetchall()
+    assert len(rows) == 2
+    assert rows == [
+        (
+            "name",
+            "VARCHAR(16777216)",
+            "COLUMN",
+            "Y",
+            None,
+            "N",
+            "N",
+            None,
+            None,
+            None,
+            None,
+        ),
+        ("id", "NUMBER(38,0)", "COLUMN", "Y", None, "N", "N", None, None, None, None),
+    ]
+    statement = f"SELECT COUNT(*) FROM {database.get_table_qualified_name(table)}"
+    count = database.run_sql(statement).scalar()
+    assert count == 0
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SNOWFLAKE,
             "table": Table(metadata=Metadata(schema=SCHEMA)),
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
         },
