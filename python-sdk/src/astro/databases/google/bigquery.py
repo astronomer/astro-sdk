@@ -286,7 +286,6 @@ class BigqueryDatabase(BaseDatabase):
             "createDisposition": "CREATE_IF_NEEDED",
             "writeDisposition": BIGQUERY_WRITE_DISPOSITION[if_exists],
             "sourceFormat": NATIVE_PATHS_SUPPORTED_FILE_TYPES[source_file.type.name],
-            "autodetect": True,
         }
         native_support_kwargs.update(native_support_kwargs)
 
