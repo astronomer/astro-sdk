@@ -266,7 +266,7 @@ def test_load_file_from_cloud_to_table(database_table_fixture):
 )
 @mock.patch("astro.databases.snowflake.SnowflakeDatabase.hook")
 @mock.patch("astro.databases.snowflake.SnowflakeDatabase.create_stage")
-def test_load_file_to_table_natively_for_fallback(
+def test_load_file_to_table_natively_for_fallback_raises_exception_if_not_enable_native_fallback(
     mock_stage, mock_hook, database_table_fixture
 ):
     """Test loading on files to bigquery natively for fallback."""
@@ -278,12 +278,12 @@ def test_load_file_to_table_natively_for_fallback(
     )
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
-    response = database.load_file_to_table_natively_with_fallback(
-        source_file=File(filepath),
-        target_table=target_table,
-        enable_native_fallback=False,
-    )
-    assert response is None
+    with pytest.raises(DatabaseCustomError):
+        database.load_file_to_table_natively_with_fallback(
+            source_file=File(filepath),
+            target_table=target_table,
+            enable_native_fallback=False,
+        )
 
 
 @pytest.mark.integration
