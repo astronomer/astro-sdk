@@ -35,13 +35,13 @@ run: clean
 
 container: clean
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
-	#@gcloud auth configure-docker
+	@gcloud auth configure-docker gcr.io
 	@docker build --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):latest -f ./Dockerfile  ../../
 	@docker push $(CONTAINER_REGISTRY)
 
 local: clean check_google_credentials
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
-	#@gcloud auth configure-docker
+	@gcloud auth configure-docker gcr.io
 	@docker build -t benchmark -f ./Dockerfile ../../ --build-arg=GIT_HASH=$(GIT_HASH)
 	@mkdir -p /tmp/docker
 	@sudo chmod a+rwx /tmp/docker/
