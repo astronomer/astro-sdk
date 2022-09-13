@@ -5,6 +5,7 @@ import os
 import pathlib
 import sys
 import timeit
+from typing import Optional
 
 import yaml
 from airflow.models import Connection, DagRun
@@ -29,9 +30,12 @@ DEFAULT_DATE = timezone.datetime(2022, 1, 1)
 # TODO: Check webserver code to find how to pull all dependencies for a specific task
 @provide_session
 def local_dag_flow(
-        subdir: str, dag_id: str, execution_date: datetime.datetime = timezone.utcnow(),
-        start_date: datetime.datetime | None = None, external_trigger: bool | None = None,
-        session: Session = NEW_SESSION
+    subdir: str,
+    dag_id: str,
+    execution_date: datetime.datetime = timezone.utcnow(),
+    start_date: Optional[datetime.datetime] = None,
+    external_trigger: Optional[bool] = None,
+    session: Session = NEW_SESSION,
 ):
     """
     Run a DAG locally without all of the extra airflow bits.
@@ -49,40 +53,22 @@ def local_dag_flow(
     Returns:
 
     """
-    run_id = DagRun.generate_run_id(DagRunType.MANUAL, execution_date)
     dag = get_dag(subdir=subdir, dag_id=dag_id)
-    dag.clear(dag_run_state=False)
-    # TODO: ask Ash how we should handle recreating existing DAGruns
-    dr = dag.create_dagrun(
-        state=DagRunState.QUEUED, execution_date=execution_date, run_id=run_id, start_date=start_date or execution_date,
+    dag.clear(dag_run_state=False, start_date=execution_date, end_date=execution_date)
+    dr: DagRun = get_or_create_dagrun(
+        dag=dag,
+        start_date=start_date,
+        execution_date=execution_date,
+        run_id=DagRun.generate_run_id(DagRunType.MANUAL, execution_date),
         session=session,
     )
-    # dr = get_or_create_dagrun(dag, execution_date, run_id, session)
-    tasks = dag.tasks
-    # tasks.reverse()  # Reversing to test what happens when a task doesn't have dependencies met
 
-    while tasks:
-        unfinished_tasks = []
-        for task in tasks:
-            # print(f"running {task.task_id}")
-            ti = get_or_create_taskinstance(dr, run_id, session, task)
-            ti.task = task
-            add_logger_if_needed(ti)
-            # print(f"state is {ti.state}")
-            if ti.are_dependencies_met(verbose=True):
-                run_task(ti, session)
-            else:
-                upstream_tis = [t for t in dr.get_task_instances() if t.task_id in task.upstream_task_ids]
-                skipped_upstream_tis = [t for t in upstream_tis if t.state == State.SKIPPED]
-                # If all upstream tasks are skipped, then we should skip this task too
-                if len(upstream_tis) == len(skipped_upstream_tis):
-                    ti.state = State.SKIPPED
-                    session.add(ti)
-                    session.commit()
-                if ti.state != State.SKIPPED:
-                    unfinished_tasks.append(task)
-
-        tasks = unfinished_tasks
+    tasks = dag.task_dict
+    while dr.state == State.RUNNING:
+        schedulable_tis, _ = dr.update_state(session=session)
+        for ti in schedulable_tis:
+            ti.task = tasks[ti.task_id]
+            run_task(ti)
 
 
 def add_logger_if_needed(ti: TaskInstance):
@@ -137,21 +123,24 @@ def get_or_create_taskinstance(dr, run_id, session, task):
     return ti
 
 
-def get_or_create_dagrun(dag, execution_date, run_id, session):
-    dr = (
+def get_or_create_dagrun(dag, start_date, execution_date, run_id, session):
+    dr: DagRun = (
         session.query(DagRun)
         .filter(DagRun.dag_id == dag.dag_id, DagRun.run_id == run_id)
         .first()
     )
-    if not dr:
-        dr = DagRun(
-            dag_id=dag.dag_id,
-            run_id=DagRun.generate_run_id(DagRunType.MANUAL, execution_date),
-            run_type=DagRunType.MANUAL,
-            execution_date=execution_date,
-        )
-        session.add(dr)
+    if dr:
+        session.delete(dr)
         session.flush()
+    dr: DagRun = dag.create_dagrun(
+        state=DagRunState.RUNNING,
+        execution_date=execution_date,
+        run_id=run_id,
+        start_date=start_date or execution_date,
+        session=session,
+    )
+    session.add(dr)
+    session.flush()
     return dr
 
 
@@ -227,7 +216,8 @@ if __name__ == "__main__":
         "--execution_date",
         metavar="execution_date",
         required=False,
-        default=timezone.utcnow(),
+        default=n
+    DEFAULT_DATE,
         help="The execution date of the DAG you're running",
     )
     args = parser.parse_args()
