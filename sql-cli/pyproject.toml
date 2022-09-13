@@ -18,11 +18,9 @@ license = {file = "LICENSE"}
 requires-python = ">=3.7"
 dependencies = [
     "apache-airflow>=2.0",
-    "pandas>=1.3.4,<2.0.0",  # Pinning it to <2.0.0 to avoid breaking changes
-    "pyarrow",
-    "python-frontmatter",
-    "smart-open",
-    "SQLAlchemy>=1.3.18"
+    "astro-sdk-python>=1.0.0",
+    "python-frontmatter>=1.0.0",
+    "networkx>=2.8.6",
 ]
 
 keywords = ["airflow", "provider", "astronomer", "sql", "decorator", "task flow", "elt", "etl", "dag"]
@@ -39,23 +37,9 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-tests = ["astro-sdk-python[tests]"]
-google = [
-    "astro-sdk-python[google]"
-]
-snowflake = [
-    "astro-sdk-python[snowflake]"
-]
-postgres = [
-    "astro-sdk-python[postgres]"]
-amazon = [
-    "astro-sdk-python[amazon]"
-]
-all = [
-    "astro-sdk-python[all]"
-]
-doc = [
-    "astro-sdk-python[doc]"
+tests = [
+    "astro-sdk-python[tests]",
+    "pytest-freezegun",
 ]
 
 [project.urls]
