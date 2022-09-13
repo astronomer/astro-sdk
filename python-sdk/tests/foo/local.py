@@ -216,8 +216,7 @@ if __name__ == "__main__":
         "--execution_date",
         metavar="execution_date",
         required=False,
-        default=n
-    DEFAULT_DATE,
+        default=DEFAULT_DATE,
         help="The execution date of the DAG you're running",
     )
     args = parser.parse_args()
