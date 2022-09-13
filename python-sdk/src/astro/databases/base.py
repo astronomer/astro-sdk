@@ -101,6 +101,21 @@ class BaseDatabase(ABC):
             result = self.connection.execute(sql_statement, parameters)
         return result
 
+    def columns_exist(self, table: Table, columns: list[str]) -> bool:
+        """
+        Check that a list of columns exist in the given table.
+
+        :param table: The table to check in.
+        :param columns: The columns to check.
+
+        :returns: whether the columns exist in the table or not.
+        """
+        sqla_table = self.get_sqla_table(table)
+        return all(
+            any(sqla_column.name == column for sqla_column in sqla_table.columns)
+            for column in columns
+        )
+
     def table_exists(self, table: Table) -> bool:
         """
         Check if a table exists in the database.
@@ -492,15 +507,13 @@ class BaseDatabase(ABC):
 
         :param source_table: An existing table in the database
         """
-        table_qualified_name = self.get_table_qualified_name(source_table)
         if self.table_exists(source_table):
-            return pd.read_sql(
-                # We are avoiding SQL injection by confirming the table exists before this statement
-                f"SELECT * FROM {table_qualified_name}",  # skipcq BAN-B608
-                con=self.sqlalchemy_engine,
-            )
+            sqla_table = self.get_sqla_table(source_table)
+            return pd.read_sql(sql=sqla_table.select(), con=self.sqlalchemy_engine)
+
+        table_qualified_name = self.get_table_qualified_name(source_table)
         raise NonExistentTableException(
-            "The table %s does not exist" % table_qualified_name
+            f"The table {table_qualified_name} does not exist"
         )
 
     def export_table_to_file(
