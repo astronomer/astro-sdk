@@ -34,6 +34,10 @@ setup_gke: clean
 		terraform init && \
 		terraform apply
 
+run: clean
+	@AIRFLOW__ASTRO_SDK__SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE=gcs_int_python_sdk GCP_BUCKET=dag-authoring ./run.sh
+
+
 container: clean
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
 	#@gcloud auth configure-docker
