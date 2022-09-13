@@ -29,7 +29,6 @@ RUN apt install -y libpq-dev python3-dev
 
 # Install Astro SDK dependencies
 COPY . .
-COPY python-sdk .
 # We need to update pip as only newer versions of pip allow installing in edit mode for pyproject.toml projects. For more info: https://peps.python.org/pep-0660/
 RUN pip install --upgrade pip
 RUN pip install -e .[all]
@@ -45,11 +44,11 @@ RUN mkdir -p $AIRFLOW_HOME
 WORKDIR $AIRFLOW_HOME
 
 COPY . .
-COPY python-sdk/tests/benchmark/dags $AIRFLOW_HOME/dags
-COPY python-sdk/tests/benchmark/run.sh $AIRFLOW_HOME/
-COPY python-sdk/tests/benchmark/run.py $AIRFLOW_HOME/
-COPY python-sdk/tests/benchmark/config.json $AIRFLOW_HOME/config.json
+COPY tests/benchmark/dags $AIRFLOW_HOME/dags
+COPY tests/benchmark/run.sh $AIRFLOW_HOME/
+COPY tests/benchmark/run.py $AIRFLOW_HOME/
+COPY tests/benchmark/config.json $AIRFLOW_HOME/config.json
 
-WORKDIR ./python-sdk/tests/benchmark/
+WORKDIR ./tests/benchmark/
 
 CMD ./run.sh
