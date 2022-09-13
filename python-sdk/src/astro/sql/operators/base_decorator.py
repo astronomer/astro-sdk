@@ -8,11 +8,13 @@ from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
 from sqlalchemy.sql.functions import Function
 
+from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
 from astro.sql.table import Table
 from astro.utils.table import find_first_table
+from astro.utils.typing_compat import Context
 
 
 class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
@@ -27,7 +29,8 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         handler: Function | None = None,
         database: str | None = None,
         schema: str | None = None,
-        response_limit: int = 0,
+        response_limit: int = -1,
+        response_size: int = -1,
         sql: str = "",
         **kwargs: Any,
     ):
@@ -42,6 +45,8 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         self.database = self.op_kwargs.pop("database", database)
         self.schema = self.op_kwargs.pop("schema", schema)
         self.response_limit = self.op_kwargs.pop("response_limit", response_limit)
+        self.response_size = self.op_kwargs.pop("response_size", response_size)
+
         self.op_args: dict[str, Table | pd.DataFrame] = {}
 
         # We purposely do NOT render upstream_tasks otherwise we could have a case where a user
@@ -49,10 +54,10 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         upstream_tasks = self.op_kwargs.pop("upstream_tasks", [])
         super().__init__(
             upstream_tasks=upstream_tasks,
-            **kwargs,
+            **kwargs_with_datasets(kwargs=kwargs, output_datasets=self.output_table),
         )
 
-    def execute(self, context: dict) -> None:
+    def execute(self, context: Context) -> None:
         first_table = find_first_table(
             op_args=self.op_args,  # type: ignore
             op_kwargs=self.op_kwargs,

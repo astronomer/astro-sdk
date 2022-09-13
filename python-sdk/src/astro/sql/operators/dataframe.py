@@ -6,6 +6,8 @@ from typing import Any, Callable
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 
+from astro.airflow.datasets import kwargs_with_datasets
+
 try:
     from airflow.decorators.base import TaskDecorator, task_decorator_factory
 except ImportError:
@@ -20,6 +22,7 @@ from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import Table
 from astro.utils.dataframe import convert_columns_names_capitalization
 from astro.utils.table import find_first_table
+from astro.utils.typing_compat import Context
 
 
 def _get_dataframe(
@@ -125,10 +128,10 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         upstream_tasks = self.op_kwargs.pop("upstream_tasks", [])
         super().__init__(
             upstream_tasks=upstream_tasks,
-            **kwargs,
+            **kwargs_with_datasets(kwargs=kwargs, output_datasets=self.output_table),
         )
 
-    def execute(self, context: dict) -> Table | pd.DataFrame:
+    def execute(self, context: Context) -> Table | pd.DataFrame:
         first_table = find_first_table(
             op_args=self.op_args,  # type: ignore
             op_kwargs=self.op_kwargs,
