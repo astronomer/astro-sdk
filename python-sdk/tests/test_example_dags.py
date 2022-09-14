@@ -63,6 +63,7 @@ def session():
         "example_merge_bigquery",
         "example_transform_file",
         "calculate_popular_movies",
+        "example_dataset_producer"
     ],
 )
 def test_example_dag(session, dag_id):
