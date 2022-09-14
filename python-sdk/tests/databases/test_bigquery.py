@@ -218,6 +218,22 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
     assert rows[1] == (2,)
 
 
+def test_is_native_autodetect_schema_available():
+    """
+    Test if native autodetect schema is available for S3 and GCS.
+    """
+    db = BigqueryDatabase(conn_id="fake_conn_id")
+    assert (
+        db.is_native_autodetect_schema_available(file=File(path="s3://bucket/key.csv"))
+        is False
+    )
+
+    assert (
+        db.is_native_autodetect_schema_available(file=File(path="gs://bucket/key.csv"))
+        is True
+    )
+
+
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
