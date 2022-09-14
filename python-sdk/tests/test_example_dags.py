@@ -63,7 +63,6 @@ def session():
         "example_merge_bigquery",
         "example_transform_file",
         "calculate_popular_movies",
-        "example_dataset_producer"
     ],
 )
 def test_example_dag(session, dag_id):
@@ -87,6 +86,25 @@ def test_example_dag(session, dag_id):
     ],
 )
 def test_example_dynamic_task_map_dag(session, dag_id):
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    db = DagBag(dir_path + "/../example_dags")
+    dag = db.get_dag(dag_id)
+
+    if dag is None:
+        raise NameError(f"The DAG with dag_id: {dag_id} was not found")
+    wrapper_run_dag(dag)
+
+
+@pytest.mark.skipif(
+    airflow.__version__ < "2.4.0", reason="Require Airflow version >= 2.4.0"
+)
+@pytest.mark.parametrize(
+    "dag_id",
+    [
+        "example_dataset_producer",
+    ],
+)
+def test_example_dataset_dag(session, dag_id):
     dir_path = os.path.dirname(os.path.realpath(__file__))
     db = DagBag(dir_path + "/../example_dags")
     dag = db.get_dag(dag_id)
