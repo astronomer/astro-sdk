@@ -27,8 +27,9 @@ clean:
 # Takes approximately 7min
 setup_gke: clean
 	@cd infrastructure/terraform && \
-		terraform init && \
-		terraform apply
+		terraform init -input=false && \
+		terraform plan -out=tfplan -input=false && \
+		terraform apply -input=false tfplan
 
 run: clean
 	@AIRFLOW__ASTRO_SDK__SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE=gcs_int_python_sdk GCP_BUCKET=dag-authoring ./run.sh
@@ -37,6 +38,7 @@ container: clean
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
 	@gcloud auth configure-docker gcr.io
 	@docker build --platform=$(PLATFORM) --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):latest -f ./Dockerfile  ../../
+	@gcloud auth activate-service-account --key-file $(GOOGLE_APPLICATION_CREDENTIALS)
 	@docker push $(CONTAINER_REGISTRY)
 
 local: clean check_google_credentials
