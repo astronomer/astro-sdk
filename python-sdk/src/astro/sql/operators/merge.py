@@ -3,15 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 from airflow.decorators.base import get_unique_task_id
-from airflow.models.baseoperator import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
+from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import MergeConflictStrategy
 from astro.databases import create_database
+from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import Table
+from astro.utils.typing_compat import Context
 
 
-class MergeOperator(BaseOperator):
+class MergeOperator(AstroSQLBaseOperator):
     """
     Merge the source table rows into a destination table.
 
@@ -50,10 +52,16 @@ class MergeOperator(BaseOperator):
         self.columns = columns or {}
         self.if_conflicts = if_conflicts
         task_id = task_id or get_unique_task_id("merge")
+        super().__init__(
+            task_id=task_id,
+            **kwargs_with_datasets(
+                kwargs=kwargs,
+                input_datasets=source_table,
+                output_datasets=target_table,
+            ),
+        )
 
-        super().__init__(task_id=task_id, **kwargs)
-
-    def execute(self, context: dict) -> Table:
+    def execute(self, context: Context) -> Table:
         db = create_database(self.target_table.conn_id)
         self.source_table = db.populate_table_metadata(self.source_table)
         self.target_table = db.populate_table_metadata(self.target_table)

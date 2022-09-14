@@ -60,6 +60,9 @@ NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
 }
 BIGQUERY_WRITE_DISPOSITION = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
 
+NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES = {FileType.CSV, FileType.NDJSON}
+NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS = {FileLocation.GS}
+
 
 class BigqueryDatabase(BaseDatabase):
     """
@@ -197,20 +200,85 @@ class BigqueryDatabase(BaseDatabase):
         target_table_name = self.get_table_qualified_name(target_table)
         source_table_name = self.get_table_qualified_name(source_table)
 
-        statement = f"MERGE {target_table_name} T USING {source_table_name} S\
-            ON {' AND '.join(['T.' + col + '= S.' + col for col in target_conflict_columns])}\
-            WHEN NOT MATCHED BY TARGET THEN INSERT ({','.join(target_columns)}) VALUES ({','.join(source_columns)})"
-
-        update_statement_map = ", ".join(
-            [
-                f"T.{target_columns[idx]}=S.{source_columns[idx]}"
-                for idx in range(len(target_columns))
-            ]
+        insert_statement = (
+            f"INSERT ({', '.join(target_columns)}) VALUES ({', '.join(source_columns)})"
+        )
+        merge_statement = (
+            f"MERGE {target_table_name} T USING {source_table_name} S"
+            f" ON {' AND '.join(f'T.{col}=S.{col}' for col in target_conflict_columns)}"
+            f" WHEN NOT MATCHED BY TARGET THEN {insert_statement}"
         )
         if if_conflicts == "update":
-            update_statement = f"UPDATE SET {update_statement_map}"  # skipcq: BAN-B608
-            statement += f" WHEN MATCHED THEN {update_statement}"
-        self.run_sql(sql_statement=statement)
+            update_statement_map = ", ".join(
+                f"T.{col}=S.{source_columns[idx]}"
+                for idx, col in enumerate(target_columns)
+            )
+            if not self.columns_exist(source_table, source_columns):
+                raise ValueError(
+                    f"Not all the columns provided exist for {source_table_name}!"
+                )
+            if not self.columns_exist(target_table, target_columns):
+                raise ValueError(
+                    f"Not all the columns provided exist for {target_table_name}!"
+                )
+            # Note: Ignoring below sql injection warning, as we validate that the table columns exist beforehand.
+            update_statement = f"UPDATE SET {update_statement_map}"  # skipcq BAN-B608
+            merge_statement += f" WHEN MATCHED THEN {update_statement}"
+        self.run_sql(sql_statement=merge_statement)
+
+    def is_native_autodetect_schema_available(  # skipcq: PYL-R0201
+        self, file: File  # skipcq: PYL-W0613
+    ) -> bool:
+        """
+        Check if native auto detection of schema is available.
+
+        :param file: File used to check the file type of to decide
+            whether there is a native auto detection available for it.
+        """
+        is_file_type_supported = (
+            file.type.name in NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES
+        )
+        is_file_location_supported = (
+            file.location.location_type
+            in NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS
+        )
+        return is_file_type_supported and is_file_location_supported
+
+    def create_table_using_native_schema_autodetection(
+        self,
+        table: Table,
+        file: File,
+    ) -> None:
+        """
+        Create a SQL table, automatically inferring the schema using the given file via native database support.
+
+        :param table: The table to be created.
+        :param file: File used to infer the new table columns.
+        """
+        load_job_config = {
+            "sourceUris": [file.path],
+            "destinationTable": {
+                "projectId": self.get_project_id(table),
+                "datasetId": table.metadata.schema,
+                "tableId": table.name,
+            },
+            "sourceFormat": NATIVE_PATHS_SUPPORTED_FILE_TYPES[file.type.name],
+            "autodetect": True,
+        }
+
+        job_config = {
+            "jobType": "LOAD",
+            "load": load_job_config,
+            "labels": {"target_table": table.name},
+        }
+
+        self.hook.insert_job(
+            configuration=job_config,
+        )
+
+        # We have to clear the table afterwards as bigquery automatically loads the data when creating the table.
+        statement = f"TRUNCATE TABLE `{self.get_table_qualified_name(table)}`"
+        self.run_sql(statement)
 
     def is_native_load_file_available(
         self, source_file: File, target_table: Table

@@ -5,7 +5,7 @@ set -v
 set -e
 
 
-repeat=${1:-1}  # how many times we want to repeat each DAG run (default: 1)
+repeat=${1:-3}  # how many times we want to repeat each DAG run (default: 3)
 
 benchmark_dir="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 config_path="${benchmark_dir}/config.json"
@@ -20,7 +20,8 @@ else
   connections_file="${benchmark_dir}/../../test-connections.yaml"
 fi
 
-git_revision="${GIT_REVISION:=`git rev-parse --short HEAD`}"
+git_revision="${GIT_HASH:=`git rev-parse --short HEAD`}"
+echo $git_revision
 
 results_file=/tmp/results-`date -u +%FT%T`.ndjson
 

@@ -92,7 +92,7 @@ repos:
       rev: 'v0.971'
       hooks:
       - id: mypy
-        additional_dependencies: [types-PyYAML, types-attrs]
+        additional_dependencies: [types-PyYAML, types-attrs, attrs]
         pass_filenames: false
         files: "^python-sdk/"
         entry: bash -c 'cd python-sdk && mypy "$@"' --
@@ -107,3 +107,11 @@ repos:
       hooks:
       -   id: pyupgrade
           args: [--py37-plus]
+
+  - repo: local
+    hooks:
+    - id: check-context-typing-compat
+      name: Ensure modules use local typing compat for airflow.utils.context.Context
+      entry: python-sdk/dev/scripts/pre_commit_context_typing_compat.py
+      language: python
+      pass_filenames: false

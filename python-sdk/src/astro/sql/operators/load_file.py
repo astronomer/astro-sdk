@@ -4,18 +4,20 @@ from typing import Any
 
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
-from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
 
 from astro import settings
+from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import BaseDatabase, create_database
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
+from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import Table
+from astro.utils.typing_compat import Context
 
 
-class LoadFileOperator(BaseOperator):
+class LoadFileOperator(AstroSQLBaseOperator):
     """Load S3/local file into either a database or a pandas dataframe
 
     :param input_file: File path and conn_id for object stores
@@ -48,7 +50,13 @@ class LoadFileOperator(BaseOperator):
         enable_native_fallback: bool | None = True,
         **kwargs,
     ) -> None:
-        super().__init__(**kwargs)
+        super().__init__(
+            **kwargs_with_datasets(
+                kwargs=kwargs,
+                input_datasets=input_file,
+                output_datasets=output_table,
+            )
+        )
         self.output_table = output_table
         self.input_file = input_file
         self.chunk_size = chunk_size
@@ -61,7 +69,7 @@ class LoadFileOperator(BaseOperator):
         self.columns_names_capitalization = columns_names_capitalization
         self.enable_native_fallback = enable_native_fallback
 
-    def execute(self, context: Any) -> Table | pd.DataFrame:  # skipcq: PYL-W0613
+    def execute(self, context: Context) -> Table | pd.DataFrame:  # skipcq: PYL-W0613
         """
         Load an existing dataset from a supported file into a SQL table or a Dataframe.
         """

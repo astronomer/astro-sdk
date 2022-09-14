@@ -12,6 +12,7 @@ except ImportError:
 from airflow.models.xcom_arg import XComArg
 
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
+from astro.utils.typing_compat import Context
 
 
 class TransformOperator(BaseSQLDecoratedOperator):
@@ -20,7 +21,7 @@ class TransformOperator(BaseSQLDecoratedOperator):
     the result into a SQL table.
     """
 
-    def execute(self, context: dict):
+    def execute(self, context: Context):
         super().execute(context)
 
         self.database_impl.create_schema_if_needed(self.output_table.metadata.schema)

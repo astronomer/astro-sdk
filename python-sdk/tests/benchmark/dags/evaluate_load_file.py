@@ -62,6 +62,7 @@ def create_dag(database_name, table_args, dataset):
             task_id="load",
             output_table=table,
             chunk_size=chunk_size,
+            enable_native_fallback=False,
         )
         aql.cleanup([my_table])
 

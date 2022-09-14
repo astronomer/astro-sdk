@@ -7,6 +7,7 @@ import pytest
 from airflow.exceptions import BackfillUnfinished
 
 from astro import sql as aql
+from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.files import File
 from astro.sql.operators.append import AppendOperator
@@ -182,3 +183,33 @@ def test_append_on_tables_on_different_db(sample_dag, database_table_fixture):
                 source_table=load_append,
             )
         test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.skipif(
+    not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
+)
+def test_inlets_outlets_supported_ds():
+    """Test Datasets are set as inlets and outlets"""
+    input_file = File("gs://bucket/object.csv")
+    output_table = Table("test_name")
+    task = aql.load_file(
+        input_file=input_file,
+        output_table=output_table,
+    )
+    assert task.operator.inlets == [input_file]
+    assert task.operator.outlets == [output_table]
+
+
+@pytest.mark.skipif(
+    DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
+)
+def test_inlets_outlets_non_supported_ds():
+    """Test inlets and outlets are not set if Datasets are not supported"""
+    input_file = File("gs://bucket/object.csv")
+    output_table = Table("test_name")
+    task = aql.load_file(
+        input_file=input_file,
+        output_table=output_table,
+    )
+    assert task.operator.inlets == []
+    assert task.operator.outlets == []
