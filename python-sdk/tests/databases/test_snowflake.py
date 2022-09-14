@@ -11,7 +11,11 @@ from sqlalchemy.exc import ProgrammingError
 
 from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
-from astro.databases.snowflake import SnowflakeDatabase, SnowflakeStage
+from astro.databases.snowflake import (
+    SnowflakeDatabase,
+    SnowflakeFileFormat,
+    SnowflakeStage,
+)
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File
 from astro.settings import (
@@ -669,3 +673,11 @@ def test_load_file_to_table_natively(remote_files_fixture, database_table_fixtur
         ]
     )
     test_utils.assert_dataframes_are_equal(df, expected)
+
+
+def test_snowflake_file_format_create_unique_name():
+    """
+    Test if file format is being set properly.
+    """
+    snowflake_file_format = SnowflakeFileFormat(name="file_format", file_type="PARQUET")
+    assert snowflake_file_format.name == "file_format"
