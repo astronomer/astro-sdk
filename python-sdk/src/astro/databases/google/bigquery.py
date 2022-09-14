@@ -60,6 +60,9 @@ NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
 }
 BIGQUERY_WRITE_DISPOSITION = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
 
+NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES = {FileType.CSV, FileType.NDJSON}
+NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS = {FileLocation.GS}
+
 
 class BigqueryDatabase(BaseDatabase):
     """
@@ -222,6 +225,60 @@ class BigqueryDatabase(BaseDatabase):
             update_statement = f"UPDATE SET {update_statement_map}"  # skipcq BAN-B608
             merge_statement += f" WHEN MATCHED THEN {update_statement}"
         self.run_sql(sql_statement=merge_statement)
+
+    def is_native_autodetect_schema_available(  # skipcq: PYL-R0201
+        self, file: File  # skipcq: PYL-W0613
+    ) -> bool:
+        """
+        Check if native auto detection of schema is available.
+
+        :param file: File used to check the file type of to decide
+            whether there is a native auto detection available for it.
+        """
+        is_file_type_supported = (
+            file.type.name in NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES
+        )
+        is_file_location_supported = (
+            file.location.location_type
+            in NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS
+        )
+        return is_file_type_supported and is_file_location_supported
+
+    def create_table_using_native_schema_autodetection(
+        self,
+        table: Table,
+        file: File,
+    ) -> None:
+        """
+        Create a SQL table, automatically inferring the schema using the given file via native database support.
+
+        :param table: The table to be created.
+        :param file: File used to infer the new table columns.
+        """
+        load_job_config = {
+            "sourceUris": [file.path],
+            "destinationTable": {
+                "projectId": self.get_project_id(table),
+                "datasetId": table.metadata.schema,
+                "tableId": table.name,
+            },
+            "sourceFormat": NATIVE_PATHS_SUPPORTED_FILE_TYPES[file.type.name],
+            "autodetect": True,
+        }
+
+        job_config = {
+            "jobType": "LOAD",
+            "load": load_job_config,
+            "labels": {"target_table": table.name},
+        }
+
+        self.hook.insert_job(
+            configuration=job_config,
+        )
+
+        # We have to clear the table afterwards as bigquery automatically loads the data when creating the table.
+        statement = f"TRUNCATE TABLE `{self.get_table_qualified_name(table)}`"
+        self.run_sql(statement)
 
     def is_native_load_file_available(
         self, source_file: File, target_table: Table

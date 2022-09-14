@@ -198,6 +198,21 @@ class BaseDatabase(ABC):
         sqlalchemy_table = sqlalchemy.Table(table.name, metadata, *table.columns)
         metadata.create_all(self.sqlalchemy_engine, tables=[sqlalchemy_table])
 
+    def create_table_using_native_schema_autodetection(
+        self,
+        table: Table,
+        file: File,
+    ) -> None:
+        """
+        Create a SQL table, automatically inferring the schema using the given file via native database support.
+
+        :param table: The table to be created.
+        :param file: File used to infer the new table columns.
+        """
+        raise NotImplementedError(
+            "Missing implementation of native schema autodetection."
+        )
+
     def create_table_using_schema_autodetection(
         self,
         table: Table,
@@ -234,6 +249,17 @@ class BaseDatabase(ABC):
             index=False,
         )
 
+    def is_native_autodetect_schema_available(  # skipcq: PYL-R0201
+        self, file: File  # skipcq: PYL-W0613
+    ) -> bool:
+        """
+        Check if native auto detection of schema is available.
+
+        :param file: File used to check the file type of to decide
+            whether there is a native auto detection available for it.
+        """
+        return False
+
     def create_table(
         self,
         table: Table,
@@ -253,6 +279,8 @@ class BaseDatabase(ABC):
         """
         if table.columns:
             self.create_table_using_columns(table)
+        elif file and self.is_native_autodetect_schema_available(file):
+            self.create_table_using_native_schema_autodetection(table, file)
         else:
             self.create_table_using_schema_autodetection(
                 table, file, dataframe, columns_names_capitalization
