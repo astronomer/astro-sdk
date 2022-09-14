@@ -36,6 +36,14 @@ def test_subclass_missing_not_implemented_methods_raise_exception():
         db.run_sql("SELECT * FROM inexistent_table")
 
 
+def test_create_table_using_native_schema_autodetection_not_implemented():
+    db = DatabaseSubclass(conn_id="fake_conn_id")
+    with pytest.raises(NotImplementedError):
+        db.create_table_using_native_schema_autodetection(
+            table=Table(), file=File(path="s3://bucket/key")
+        )
+
+
 def test_subclass_missing_load_pandas_dataframe_to_table_raises_exception():
     db = DatabaseSubclass(conn_id="fake_conn_id")
     table = Table()
