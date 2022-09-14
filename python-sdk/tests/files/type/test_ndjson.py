@@ -61,3 +61,26 @@ def test_ndjson_file_nrows():
     with open(sample_file) as stream:
         df = file.export_to_dataframe(stream, chunksize=10)
         assert df.shape[0] == 3
+
+
+def test_the_order_of_rows_getting_loaded_ndjson_file_nrows():
+    """
+    Verify that the rows of a dataframe loaded from a file are top n rows.
+    """
+    sample_file = pathlib.Path(
+        pathlib.Path(__file__).parent.parent.parent, "data/order_check_nrows.ndjson"
+    )
+    file = NDJSONFileType(sample_file)
+    with open(sample_file) as stream:
+        df = file.export_to_dataframe(stream, nrows=5)
+        df = df.sort_values(by="id")
+        assert (df["id"] == [1, 2, 3, 4, 5]).all()
+
+    sample_file = pathlib.Path(
+        pathlib.Path(__file__).parent.parent.parent, "data/sample.ndjson"
+    )
+    file = NDJSONFileType(sample_file)
+    with open(sample_file) as stream:
+        df = file.export_to_dataframe(stream, nrows=5)
+        df = df.sort_values(by="id")
+        assert (df["id"] == [1, 2, 3]).all()

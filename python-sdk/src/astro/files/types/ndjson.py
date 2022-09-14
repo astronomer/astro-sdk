@@ -74,6 +74,8 @@ class NDJSONFileType(FileType):
             if nrows and nrows < row_count + len(rows):
                 extra_rows = rows[nrows:]
                 rows = rows[:nrows]
+            else:
+                extra_rows = []
 
             df = pd.DataFrame(
                 pd.json_normalize([json.loads(row) for row in rows], **normalize_config)
