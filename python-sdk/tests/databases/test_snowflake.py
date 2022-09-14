@@ -330,7 +330,7 @@ def test_load_file_to_table_natively_for_fallback_raise_exception(
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     with pytest.raises(DatabaseCustomError):
-        database.git(
+        database.load_file_to_table_natively_with_fallback(
             source_file=File(filepath),
             target_table=target_table,
             enable_native_fallback=False,
