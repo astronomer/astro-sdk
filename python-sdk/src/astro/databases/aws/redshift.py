@@ -395,3 +395,11 @@ class RedshiftDatabase(BaseDatabase):
             self.hook.run(sql_statement)
         except (ValueError, AttributeError) as exe:
             raise DatabaseCustomError from exe
+
+    @staticmethod
+    def get_merge_initialization_query(parameters: tuple) -> str:
+        """
+        Handles database-specific logic to handle constraints
+        for Redshift.
+        """
+        return "SELECT 1 + 1"
