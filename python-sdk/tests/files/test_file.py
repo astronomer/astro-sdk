@@ -357,11 +357,12 @@ def test_smart_open_file_stream_only_conveted_to_BytesIO_buffer_for_parquet(file
     sample_file_object = File(path)
     with patch(
         "astro.files.types.parquet.ParquetFileType._convert_remote_file_to_byte_stream"
-    ) as _convert_remote_file_to_byte_stream:
-        with patch("astro.files.types.parquet.pd.read_parquet") as read_parquet:
-            read_parquet.return_value = pd.DataFrame([1, 2])
-            sample_file_object.export_to_dataframe()
-            if _convert_remote_file_to_byte_stream_called:
-                _convert_remote_file_to_byte_stream.assert_called()
-            else:
-                _convert_remote_file_to_byte_stream.assert_not_called()
+    ) as _convert_remote_file_to_byte_stream, patch(
+        "astro.files.types.parquet.pd.read_parquet"
+    ) as read_parquet:
+        read_parquet.return_value = pd.DataFrame([1, 2])
+        sample_file_object.export_to_dataframe()
+        if _convert_remote_file_to_byte_stream_called:
+            _convert_remote_file_to_byte_stream.assert_called()
+        else:
+            _convert_remote_file_to_byte_stream.assert_not_called()
