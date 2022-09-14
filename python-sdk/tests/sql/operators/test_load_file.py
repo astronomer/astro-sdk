@@ -19,15 +19,16 @@ import pytest
 from airflow.exceptions import BackfillUnfinished
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
-from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database, FileType
 from astro.exceptions import IllegalLoadToDatabaseException
-from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
 from astro.sql.table import Metadata, Table
 from pandas.testing import assert_frame_equal
+
+from astro import sql as aql
+from astro.files import File
 from tests.sql.operators import utils as test_utils
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("load_file_test_table")
@@ -1078,3 +1079,37 @@ def test_inlets_outlets_non_supported_ds():
     )
     assert task.operator.inlets == []
     assert task.operator.outlets == []
+
+
+@pytest.mark.parametrize(
+    "file",
+    [
+        File("gs://astro-sdk/workspace/sample.parquet"),
+        File("gs://astro-sdk/workspace/sample.csv"),
+        File("gs://astro-sdk/workspace/sample.ndjson"),
+    ],
+    ids=["parquet", "csv", "ndjson"],
+)
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+        }
+    ],
+    indirect=True,
+    ids=["Bigquery"],
+)
+def test_loading_gcs_file_to_database(database_table_fixture, file):
+    """
+    Test working of optimised path method with autodetect for files in GCS
+    """
+    db, test_table = database_table_fixture
+    load_file(
+        input_file=file,
+        output_table=test_table,
+        use_native_support=True,
+    ).operator.execute({})
+
+    database_df = db.export_table_to_pandas_dataframe(test_table)
+    assert database_df.shape == (3, 2)
