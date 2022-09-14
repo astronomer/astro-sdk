@@ -14,7 +14,6 @@ from datetime import datetime
 
 from airflow import DAG
 from airflow.decorators import task
-
 from astro import sql as aql
 from astro.files import get_file_list
 from astro.sql import get_value_list

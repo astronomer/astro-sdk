@@ -1,7 +1,6 @@
 from unittest import mock
 
 import pytest
-
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.sql.table import Table
 

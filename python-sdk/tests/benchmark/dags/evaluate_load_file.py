@@ -4,7 +4,6 @@ from datetime import datetime
 from pathlib import Path
 
 from airflow import DAG
-
 from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
 from astro.files import File

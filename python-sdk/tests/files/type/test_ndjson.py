@@ -3,7 +3,6 @@ import pathlib
 import tempfile
 
 import pandas as pd
-
 from astro.files.types import NDJSONFileType
 
 sample_file = pathlib.Path(

@@ -1,7 +1,6 @@
 import pathlib
 
 import pytest
-
 from astro import sql as aql
 from astro.constants import Database
 from astro.files import File

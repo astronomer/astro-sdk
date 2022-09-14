@@ -5,7 +5,6 @@ from unittest import mock
 import pandas as pd
 import pytest
 from airflow.exceptions import BackfillUnfinished
-
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database

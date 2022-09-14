@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 import pandas as pd
 import pytest
 import sqlalchemy
-
 from astro.constants import Database
 from astro.databases import create_database
 from astro.databases.postgres import PostgresDatabase
