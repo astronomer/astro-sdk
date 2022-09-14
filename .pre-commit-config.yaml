@@ -70,15 +70,13 @@ repos:
     rev: 5.10.1
     hooks:
       - id: isort
-        name: Run isort to sort imports in Python files
+        name: Run isort for python-sdk
         args: [ "--profile", "black" ]
-        files: .py$
-        entry: bash -c 'cd python-sdk && isort --profile black .' --
+        files: ^python-sdk/
       - id: isort
-        name: Run isort to sort imports in Python files
+        name: Run isort for sql-cli
         args: [ "--profile", "black" ]
-        files: .py$
-        entry: bash -c 'cd sql-cli && isort --profile black .' --
+        files: ^sql-cli/
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.1
