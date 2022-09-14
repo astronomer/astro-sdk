@@ -2,6 +2,7 @@ import os
 import pathlib
 from unittest import mock
 
+import astro.sql as aql
 import pandas
 import pytest
 from airflow import DAG, AirflowException
@@ -15,8 +16,6 @@ from airflow.operators.bash import BashOperator
 from airflow.settings import Session
 from airflow.utils.state import State
 from airflow.utils.timezone import datetime
-
-import astro.sql as aql
 from astro.constants import Database
 from astro.files import File
 from astro.sql.operators.cleanup import CleanupOperator

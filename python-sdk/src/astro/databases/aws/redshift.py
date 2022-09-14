@@ -4,6 +4,18 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 import sqlalchemy
 from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    FileLocation,
+    FileType,
+    LoadExistStrategy,
+    MergeConflictStrategy,
+)
+from astro.databases.base import BaseDatabase
+from astro.exceptions import DatabaseCustomError
+from astro.files import File
+from astro.settings import REDSHIFT_SCHEMA
+from astro.sql.table import Metadata, Table
 from redshift_connector.error import (
     ArrayContentNotHomogenousError,
     ArrayContentNotSupportedError,
@@ -18,19 +30,6 @@ from redshift_connector.error import (
 )
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
-
-from astro.constants import (
-    DEFAULT_CHUNK_SIZE,
-    FileLocation,
-    FileType,
-    LoadExistStrategy,
-    MergeConflictStrategy,
-)
-from astro.databases.base import BaseDatabase
-from astro.exceptions import DatabaseCustomError
-from astro.files import File
-from astro.settings import REDSHIFT_SCHEMA
-from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = RedshiftSQLHook.default_conn_name
 NATIVE_PATHS_SUPPORTED_FILE_TYPES = {

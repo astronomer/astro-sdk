@@ -6,7 +6,6 @@ from unittest import mock
 import pandas as pd
 import pytest
 from airflow.decorators import task_group
-
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database

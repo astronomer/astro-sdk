@@ -2,7 +2,6 @@ import pathlib
 from unittest.mock import patch
 
 from airflow.models.connection import Connection
-
 from astro.files.operators.files import ListFileOperator
 
 

@@ -7,7 +7,6 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import smart_open
-
 from astro.constants import FileLocation
 
 
