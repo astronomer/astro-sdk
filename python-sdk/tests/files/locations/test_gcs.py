@@ -1,8 +1,7 @@
 from unittest.mock import patch
 
-from google.cloud.storage import Client
-
 from astro.files.locations import create_file_location
+from google.cloud.storage import Client
 
 
 def test_get_transport_params_for_gcs():  # skipcq: PYL-W0612, PTC-W0065

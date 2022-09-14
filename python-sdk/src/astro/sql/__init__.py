@@ -1,7 +1,6 @@
 from airflow.configuration import conf
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
-
 from astro.sql.operators.append import AppendOperator, append
 from astro.sql.operators.cleanup import CleanupOperator, cleanup
 from astro.sql.operators.dataframe import DataframeOperator, dataframe

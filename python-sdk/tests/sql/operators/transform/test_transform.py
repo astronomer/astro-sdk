@@ -3,8 +3,8 @@ import pathlib
 import pandas as pd
 import pytest
 from airflow.decorators import task
-
 from astro import sql as aql
+from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.files import File
 from astro.sql.table import Table
@@ -159,7 +159,6 @@ def test_transform_with_templated_table_name(database_table_fixture, sample_dag)
         """
 
     with sample_dag:
-
         target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="sqlite_default")
 
         top_five_animations(input_table=imdb_table, output_table=target_table)
@@ -190,7 +189,7 @@ def test_transform_with_file(database_table_fixture, sample_dag):
     """Test table creation via select statement in a SQL file"""
     import pathlib  # skipcq: PYL-W0404
 
-    CWD = pathlib.Path(__file__).parent
+    cwd = pathlib.Path(__file__).parent
     database, imdb_table = database_table_fixture
 
     @aql.dataframe
@@ -200,7 +199,7 @@ def test_transform_with_file(database_table_fixture, sample_dag):
     with sample_dag:
         target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="sqlite_default")
         table_from_query = aql.transform_file(
-            file_path=str(pathlib.Path(CWD).parents[0]) + "/transform/test.sql",
+            file_path=str(pathlib.Path(cwd).parents[0]) + "/transform/test.sql",
             parameters={"input_table": imdb_table, "output_table": target_table},
         )
         validate(table_from_query)
@@ -210,3 +209,35 @@ def test_transform_with_file(database_table_fixture, sample_dag):
     expected_target_table.name = "test_is_True"
     database.drop_table(expected_target_table)
     assert not database.table_exists(expected_target_table)
+
+
+@pytest.mark.skipif(
+    not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
+)
+def test_inlets_outlets_supported_ds():
+    """Test Datasets are set as inlets and outlets"""
+    imdb_table = (Table(name="imdb", conn_id="sqlite_default"),)
+    output_table = Table(name="test_name")
+
+    @aql.transform
+    def top_five_animations(input_table: Table) -> str:
+        return "SELECT title, rating FROM {{ input_table }} LIMIT 5;"
+
+    task = top_five_animations(input_table=imdb_table, output_table=output_table)
+    assert task.operator.outlets == [output_table]
+
+
+@pytest.mark.skipif(
+    DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
+)
+def test_inlets_outlets_non_supported_ds():
+    """Test inlets and outlets are not set if Datasets are not supported"""
+    imdb_table = (Table(name="imdb", conn_id="sqlite_default"),)
+    output_table = Table(name="test_name")
+
+    @aql.transform
+    def top_five_animations(input_table: Table) -> str:
+        return "SELECT title, rating FROM {{ input_table }} LIMIT 5;"
+
+    task = top_five_animations(input_table=imdb_table, output_table=output_table)
+    assert task.operator.outlets == []

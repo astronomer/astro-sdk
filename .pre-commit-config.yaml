@@ -1,6 +1,8 @@
 ---
 ci:
-  skip: [mypy]
+  skip:
+    - mypy  # requires additional dependencies in ci
+    - identity  # output is too verbose for ci; pre-commit.ci truncates almost all output after that
 default_stages: [commit, push]
 default_language_version:
   # force all unspecified python hooks to run python3
@@ -70,15 +72,13 @@ repos:
     rev: 5.10.1
     hooks:
       - id: isort
-        name: Run isort to sort imports in Python files
+        name: Run isort for python-sdk
         args: [ "--profile", "black" ]
-        files: .py$
-        entry: bash -c 'cd python-sdk && isort --profile black .' --
+        files: ^python-sdk/
       - id: isort
-        name: Run isort to sort imports in Python files
+        name: Run isort for sql-cli
         args: [ "--profile", "black" ]
-        files: .py$
-        entry: bash -c 'cd sql-cli && isort --profile black .' --
+        files: ^sql-cli/
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.1
@@ -92,7 +92,7 @@ repos:
       rev: 'v0.971'
       hooks:
       - id: mypy
-        additional_dependencies: [types-PyYAML, types-attrs]
+        additional_dependencies: [types-PyYAML, types-attrs, attrs]
         pass_filenames: false
         files: "^python-sdk/"
         entry: bash -c 'cd python-sdk && mypy "$@"' --
@@ -107,3 +107,11 @@ repos:
       hooks:
       -   id: pyupgrade
           args: [--py37-plus]
+
+  - repo: local
+    hooks:
+    - id: check-context-typing-compat
+      name: Ensure modules use local typing compat for airflow.utils.context.Context
+      entry: python-sdk/dev/scripts/pre_commit_context_typing_compat.py
+      language: python
+      pass_filenames: false

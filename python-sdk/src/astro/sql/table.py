@@ -3,10 +3,9 @@ from __future__ import annotations
 import random
 import string
 
+from astro.airflow.datasets import Dataset
 from attr import define, field, fields_dict
 from sqlalchemy import Column, MetaData
-
-from astro.airflow.datasets import Dataset
 
 MAX_TABLE_NAME_LENGTH = 62
 TEMP_PREFIX = "_tmp_"
@@ -54,8 +53,8 @@ class Table(Dataset):
     # TODO: discuss alternative names to this class, since it contains metadata as opposed to be the
     # SQL table itself
     # Some ideas: TableRef, TableMetadata, TableData, TableDataset
-    conn_id: str = field(default="")
     _name: str = field(default="")
+    conn_id: str = field(default="")
     # Setting converter allows passing a dictionary to metadata arg
     metadata: Metadata = field(
         factory=Metadata,

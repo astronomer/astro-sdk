@@ -19,15 +19,15 @@ import pytest
 from airflow.exceptions import BackfillUnfinished
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
-from pandas.testing import assert_frame_equal
-
 from astro import sql as aql
+from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database, FileType
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
 from astro.sql.table import Metadata, Table
+from pandas.testing import assert_frame_equal
 from tests.sql.operators import utils as test_utils
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("load_file_test_table")
@@ -1048,3 +1048,33 @@ def test_aql_load_column_name_mixed_case_json_file_to_dbs(
 
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (2, 2)
+
+
+@pytest.mark.skipif(
+    not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
+)
+def test_inlets_outlets_supported_ds():
+    """Test Datasets are set as inlets and outlets"""
+    input_file = File("gs://bucket/object.csv")
+    output_table = Table("test_name")
+    task = aql.load_file(
+        input_file=input_file,
+        output_table=output_table,
+    )
+    assert task.operator.inlets == [input_file]
+    assert task.operator.outlets == [output_table]
+
+
+@pytest.mark.skipif(
+    DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
+)
+def test_inlets_outlets_non_supported_ds():
+    """Test inlets and outlets are not set if Datasets are not supported"""
+    input_file = File("gs://bucket/object.csv")
+    output_table = Table("test_name")
+    task = aql.load_file(
+        input_file=input_file,
+        output_table=output_table,
+    )
+    assert task.operator.inlets == []
+    assert task.operator.outlets == []

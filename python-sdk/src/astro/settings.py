@@ -1,5 +1,4 @@
 from airflow.configuration import conf
-
 from astro.constants import DEFAULT_SCHEMA
 
 SCHEMA = conf.get("astro_sdk", "sql_schema", fallback=DEFAULT_SCHEMA)
@@ -30,4 +29,10 @@ SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE = conf.get(
 #: How many file rows should be loaded to infer the table columns types
 LOAD_TABLE_AUTODETECT_ROWS_COUNT = conf.getint(
     section="astro_sdk", key="load_table_autodetect_rows_count", fallback=1000
+)
+
+
+#: Reduce responses sizes returned by aql.run_raw_sql to avoid trashing the Airflow DB if the BaseXCom is used.
+RAW_SQL_MAX_RESPONSE_SIZE = conf.getint(
+    section="astro_sdk", key="run_raw_sql_response_size", fallback=-1
 )

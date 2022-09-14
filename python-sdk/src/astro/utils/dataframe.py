@@ -1,5 +1,4 @@
 import pandas as pd
-
 from astro.constants import ColumnCapitalization
 
 
