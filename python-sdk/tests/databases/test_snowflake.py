@@ -320,7 +320,7 @@ def test_load_file_from_cloud_to_table(database_table_fixture):
 def test_load_file_to_table_natively_for_fallback_raises_exception_if_not_enable_native_fallback(
     mock_stage, mock_hook, database_table_fixture
 ):
-    """Test loading on files to bigquery natively for fallback."""
+    """Test loading on files to snowflake natively for fallback raise exception."""
     mock_hook.run.side_effect = ValueError
     mock_stage.return_value = SnowflakeStage(
         name="mock_stage",
