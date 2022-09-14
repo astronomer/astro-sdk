@@ -5,7 +5,6 @@ from typing import Any, Callable
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
-
 from astro.airflow.datasets import kwargs_with_datasets
 
 try:

@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 
 import sqlalchemy
 from airflow.models import DAG
-
 from astro import sql as aql
 from astro.constants import FileType
 from astro.files import File

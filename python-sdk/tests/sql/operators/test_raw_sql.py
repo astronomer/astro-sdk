@@ -3,7 +3,6 @@ import pathlib
 
 import pytest
 from airflow.decorators import task
-
 from astro import sql as aql
 from astro.constants import Database
 from astro.files import File

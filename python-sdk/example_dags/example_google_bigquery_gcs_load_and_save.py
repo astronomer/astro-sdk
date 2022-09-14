@@ -14,11 +14,10 @@ Pre-requisites:
 """
 import os
 
+import astro.sql as aql
 import pandas as pd
 from airflow.models.dag import DAG
 from airflow.utils import timezone
-
-import astro.sql as aql
 from astro.files import File
 from astro.sql.table import Metadata, Table
 

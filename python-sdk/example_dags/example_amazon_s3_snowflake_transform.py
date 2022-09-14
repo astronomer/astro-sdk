@@ -6,7 +6,6 @@ import pandas as pd
 
 # Uses data from https://www.kaggle.com/c/shelter-animal-outcomes
 from airflow.decorators import dag
-
 from astro import sql as aql
 from astro.files import File
 from astro.sql.table import Metadata, Table

@@ -10,7 +10,6 @@ except ImportError:
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
 from airflow.models.xcom_arg import XComArg
-
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 from astro.utils.typing_compat import Context
 

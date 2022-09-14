@@ -3,7 +3,6 @@ from __future__ import annotations
 from urllib.parse import urlparse, urlunparse
 
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
-
 from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
 
