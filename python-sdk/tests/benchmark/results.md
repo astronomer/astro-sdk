@@ -248,3 +248,54 @@ Note - These results are generated manually, there is a issue added for the same
 | bigquery   | one_gb    | 12.23min     | 231.33MB     | 10.5min         | 1.15min           |
 | bigquery   | ten_kb    | 17.06s       | 61.65MB      | 7.16s           | 1.01s             |
 | bigquery   | ten_mb    | 15.22s       | 66.08MB      | 7.35s           | 940.0ms           |
+
+
+# Performance evaluation of loading datasets from AWS S3 with Astro Python SDK 1.1.0 into Redshift
+
+### Without native support
+
+Astro Python SDK 1.1.0 supports loading to Redshift using Pandas, without any further optimizations.
+
+The benchmark was run as a Kubernetes job in GKE:
+
+* Version: `astro-sdk-python` 1.1.0
+* Machine type: `n2-standard-4`
+  * vCPU: 4
+  * Memory: 16 GB RAM
+* Container resource limit:
+  * Memory: 10 Gi
+
+| database   | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system|
+|:-----------|:-----------|:-------------|:-------------|:----------------|:---------------|
+| redshift   | ten_kb     | 21.1s        | 59.57MB      | 910.0ms         | 100.0ms        |
+| redshift   | hundred_kb | 1.15min      | 59.22MB      | 1.16s           | 180.0ms        |
+| redshift   | one_mb     | 11.01min     | 62.89MB      | 3.46s           | 810.0ms        |
+
+The `pandas.to_sql` function uses highly suboptimal INSERT statement for Redshift. Hence, you're not recommended
+to use this approach for large files, but instead use the native approach.
+
+### With native support
+
+The fastest solution as per recommendations is to use the Redshift COPY command after dumping the dataframe as a
+CSV/NDJSON/PARQUET into an S3 bucket. The native implementation uses this Redshift COPY command and expects data files
+to be available in Amazon S3 as that it is the only cloud object store that Redshift supports at the moment.
+
+The benchmark was run as a standalone job on a GCP cloud instance with below type:
+
+* Version: `astro-sdk-python` 1.1.0
+* Machine type: `n2-standard-4`
+  * vCPU: 4
+  * Memory: 16 GB RAM
+* Container resource limit:
+  * Memory: 10 Gi
+
+| database   | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system|
+|:-----------|:-----------|:-------------|:-------------|:----------------|:---------------|
+| redshift   | ten_kb     | 5.32s        | 58.9MB       | 800.0ms         | 100.0ms        |
+| redshift   | hundred_kb | 5.18s        | 57.38MB      | 790.0ms         | 50.0ms         |
+| redshift   | one_mb     | 5.2s         | 57.98MB      | 810.0ms         | 60.0ms         |
+| redshift   | ten_mb     | 6.0s         | 57.77MB      | 790.0ms         | 70.0ms         |
+| redshift   | hundred_mb | 11.37s       | 57.68MB      | 800.0ms         | 60.0ms         |
+| redshift   | one_gb     | 44.35s       | 58.02MB      | 780.0ms         | 60.0ms         |
+| redshift   | five_gb    | 2.97min      | 58.79MB      | 780.0ms         | 70.0ms         |
+| redshift   | ten_gb     | 5.78min      | 58.34MB      | 780.0ms         | 70.0ms         |
