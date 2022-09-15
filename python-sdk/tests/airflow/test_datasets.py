@@ -1,10 +1,11 @@
+import os
 from unittest import mock
+
 import airflow
 import pytest
+from airflow.models.dagbag import DagBag
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.sql.table import Table
-import os
-from airflow.models.dagbag import DagBag
 
 
 @pytest.mark.parametrize(
