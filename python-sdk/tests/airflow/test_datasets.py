@@ -88,7 +88,9 @@ def test_kwargs_with_datasets(
         )
 
 
-@mock.patch("astro.airflow.datasets.DATASET_SUPPORT", new=True)
+@pytest.mark.skipif(
+    airflow.__version__ < "2.4.0", reason="Require Airflow version >= 2.4.0"
+)
 def test_kwargs_with_temp_table():
     """Test that temp tables are not passed to inlets and outlets"""
     assert kwargs_with_datasets(

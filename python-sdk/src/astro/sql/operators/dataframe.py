@@ -18,7 +18,7 @@ from astro.constants import ColumnCapitalization
 from astro.databases import create_database
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
-from astro.sql.table import Table
+from astro.sql.table import BaseTable, Table
 from astro.utils.dataframe import convert_columns_names_capitalization
 from astro.utils.table import find_first_table
 from astro.utils.typing_compat import Context
@@ -54,7 +54,7 @@ def load_op_arg_table_into_dataframe(
     for arg in op_args_list:
         current_arg = full_spec.args.pop(0)
         if full_spec.annotations[current_arg] == pd.DataFrame and isinstance(
-            arg, Table
+            arg, BaseTable
         ):
             ret_args.append(
                 _get_dataframe(
@@ -78,7 +78,7 @@ def load_op_kwarg_table_into_dataframe(
     # this table to be converted into a dataframe, rather that passed in as a table
     return {
         k: _get_dataframe(v, columns_names_capitalization=columns_names_capitalization)
-        if param_types.get(k).annotation is pd.DataFrame and isinstance(v, Table)  # type: ignore
+        if param_types.get(k).annotation is pd.DataFrame and isinstance(v, BaseTable)  # type: ignore
         else v
         for k, v in op_kwargs.items()
     }

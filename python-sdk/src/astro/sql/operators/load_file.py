@@ -12,7 +12,7 @@ from astro.databases import BaseDatabase, create_database
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
-from astro.sql.table import Table
+from astro.sql.table import BaseTable, Table
 from astro.utils.typing_compat import Context
 
 
@@ -95,7 +95,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         Loads csv/parquet table from local/S3/GCS with Pandas.
         Infers SQL database type based on connection then loads table to db.
         """
-        if not isinstance(self.output_table, Table):
+        if not isinstance(self.output_table, BaseTable):
             raise ValueError(
                 "Please pass a valid Table instance in 'output_table' parameter"
             )

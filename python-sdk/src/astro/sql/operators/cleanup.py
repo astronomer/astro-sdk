@@ -15,12 +15,12 @@ from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.load_file import LoadFileOperator
-from astro.sql.table import Table
+from astro.sql.table import BaseTable, Table, TempTable
 from astro.utils.typing_compat import Context
 
 
 def filter_for_temp_tables(task_outputs: list[Any]) -> list[Table]:
-    return [t for t in task_outputs if isinstance(t, Table) and t.temp]
+    return [t for t in task_outputs if isinstance(t, TempTable) and t.temp]
 
 
 class CleanupOperator(AstroSQLBaseOperator):
@@ -206,7 +206,7 @@ class CleanupOperator(AstroSQLBaseOperator):
             ):
                 try:
                     t = task.output.resolve(context)
-                    if isinstance(t, Table):
+                    if isinstance(t, BaseTable):
                         res.append(t)
                 except AirflowException:
                     self.log.info(
