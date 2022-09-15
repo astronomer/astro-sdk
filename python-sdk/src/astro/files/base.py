@@ -74,14 +74,9 @@ class File(Dataset):
 
         :return: True or False
         """
-        filepath: str | pathlib.PosixPath = self.path
-        if not isinstance(filepath, pathlib.PosixPath):
-            filepath = pathlib.PosixPath(filepath)
-        extension = filepath.suffix
-
-        if extension == "":
-            return True
-        return False
+        if isinstance(self.path, str):
+            return not pathlib.PosixPath(self.path).suffix
+        return not self.path.suffix
 
     def create_from_dataframe(self, df: pd.DataFrame) -> None:
         """Create a file in the desired location using the values of a dataframe.
