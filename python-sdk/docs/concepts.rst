@@ -120,7 +120,7 @@ A dataset is defined by a Uniform Resource Identifier (URI):
 
     from airflow import Dataset
 
-    example_dataset = Dataset('s3://dataset-bucket/example.csv')
+    example_dataset = Dataset("s3://dataset-bucket/example.csv")
 
 Astro SDK uses following URIs as datasets across its operators.
 
