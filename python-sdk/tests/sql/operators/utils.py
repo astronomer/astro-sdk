@@ -65,8 +65,6 @@ def run_dag(dag: DAG, account_for_cleanup_failure=False):
             end_date=DEFAULT_DATE,
             run_at_least_once=True,
         )
-        print("******************")
-        print(dag.task_ids)
     except BackfillUnfinished as b:
         if not account_for_cleanup_failure:
             raise b
