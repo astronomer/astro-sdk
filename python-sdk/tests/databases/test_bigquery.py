@@ -8,8 +8,10 @@ import pandas as pd
 import pytest
 import sqlalchemy
 from astro.constants import Database
+from astro.databases import create_database
 from astro.databases.google.bigquery import BigqueryDatabase, S3ToBigqueryDataTransfer
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
+from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
@@ -18,9 +20,6 @@ from google.cloud.bigquery_datatransfer_v1.types import (
     TransferConfig,
     TransferRun,
 )
-
-from astro.databases import create_database
-from astro.files import File
 from tests.sql.operators import utils as test_utils
 
 DEFAULT_CONN_ID = "google_cloud_default"
