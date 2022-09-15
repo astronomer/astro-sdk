@@ -11,11 +11,11 @@ from astro.constants import (
     DEFAULT_CHUNK_SIZE,
     ColumnCapitalization,
     ExportExistsStrategy,
+    FileLocation,
     LoadExistStrategy,
     MergeConflictStrategy,
 )
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
-from astro.files import File, resolve_file_path_pattern
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.sql.table import Metadata, Table
 from pandas.io.sql import SQLDatabase
@@ -23,6 +23,8 @@ from sqlalchemy import column, insert, select
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
+
+from astro.files import File, resolve_file_path_pattern
 
 
 class BaseDatabase(ABC):
@@ -51,8 +53,8 @@ class BaseDatabase(ABC):
     illegal_column_name_chars_replacement: list[str] = []
     NATIVE_LOAD_EXCEPTIONS: Any = DatabaseCustomError
     DEFAULT_SCHEMA = SCHEMA
-    AUTODETECT_SCHEMA_SUPPORTED: set[Any] = set()
-    FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[Any] = set()
+    AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = set()
+    FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = set()
 
     def __init__(self, conn_id: str):
         self.conn_id = conn_id

@@ -18,7 +18,6 @@ from astro.constants import (
 )
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
-from astro.files import File
 from astro.settings import BIGQUERY_SCHEMA
 from astro.sql.table import Metadata, Table
 from google.api_core.exceptions import (
@@ -50,6 +49,8 @@ from google.resumable_media import InvalidResponse
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from tenacity import retry, stop_after_attempt
+
+from astro.files import File
 
 DEFAULT_CONN_ID = BigQueryHook.default_conn_name
 NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
@@ -300,32 +301,6 @@ class BigqueryDatabase(BaseDatabase):
         file_type = NATIVE_PATHS_SUPPORTED_FILE_TYPES.get(source_file.type.name)
         location_type = self.NATIVE_PATHS.get(source_file.location.location_type)
         return bool(location_type and file_type)
-
-    def check_schema_autodetection_is_supported(self, source_file: File) -> bool:
-        """
-        Checks if schema autodetection is handled natively by the database
-
-        :param source_file: File from which we need to transfer data
-        """
-        is_autodetect_schema_supported = (
-            source_file.location.location_type in self.AUTODETECT_SCHEMA_SUPPORTED
-        )
-        return is_autodetect_schema_supported
-
-    def check_file_pattern_based_schema_autodetection_is_supported(
-        self, source_file: File
-    ) -> bool:
-        """
-        Checks if schema autodetection is handled natively by the database for file
-        patterns and prefixes.
-
-        :param source_file: File from which we need to transfer data
-        """
-        is_file_pattern_based_schema_autodetection_supported = (
-            source_file.location.location_type
-            in self.FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED
-        )
-        return is_file_pattern_based_schema_autodetection_supported
 
     def load_file_to_table_natively(
         self,
