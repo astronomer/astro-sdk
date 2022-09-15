@@ -164,4 +164,4 @@ Following is a view of dag dependencies on datasets
 More details can be found at `airflow datasets concept <https://airflow.apache.org/docs/apache-airflow/stable/concepts/datasets.html>`_
 
 .. Note::
-    The concepts of Datasets is supported only with Airflow versions **2.4.0** and above.
+    The concept of Datasets in astro-sdk is supported only from the **1.1.0** release ( and requires Airflow version **2.4.0** and above).
