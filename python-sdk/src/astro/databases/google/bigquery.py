@@ -18,7 +18,6 @@ from astro.constants import (
 )
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
-from astro.files import File
 from astro.settings import BIGQUERY_SCHEMA
 from astro.sql.table import Metadata, Table
 from google.api_core.exceptions import (
@@ -50,6 +49,8 @@ from google.resumable_media import InvalidResponse
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from tenacity import retry, stop_after_attempt
+
+from astro.files import File
 
 DEFAULT_CONN_ID = BigQueryHook.default_conn_name
 NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
@@ -247,7 +248,7 @@ class BigqueryDatabase(BaseDatabase):
             return True
         return False
 
-    def create_table_using_native_schema_autodetection(
+    def create_table_using_native_schema_autodetection(  # skipcq: PYL-R0201
         self,
         table: Table,
         file: File,
