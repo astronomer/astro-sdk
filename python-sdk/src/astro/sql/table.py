@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import random
 import string
-from attr import define, field, fields_dict  # type: ignore
+
 from astro.airflow.datasets import Dataset
+from attr import define, field, fields_dict
 from sqlalchemy import Column, MetaData
 
 MAX_TABLE_NAME_LENGTH = 62
