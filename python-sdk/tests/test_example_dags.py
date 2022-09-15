@@ -92,4 +92,3 @@ def test_example_dynamic_task_map_dag(session, dag_id):
     if dag is None:
         raise NameError(f"The DAG with dag_id: {dag_id} was not found")
     wrapper_run_dag(dag)
-

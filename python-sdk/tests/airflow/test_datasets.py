@@ -1,4 +1,5 @@
 from unittest import mock
+
 import airflow
 import pytest
 from astro.airflow.datasets import kwargs_with_datasets
@@ -11,59 +12,59 @@ from astro.sql.table import Table
         (None, None, None, True, {}),
         ({"task_id": "ex1"}, None, None, True, {"task_id": "ex1"}),
         (
-                {"task_id": "ex1"},
-                Table("inlet", conn_id="con1"),
-                Table("outlet", conn_id="con2"),
-                True,
-                {
-                    "task_id": "ex1",
-                    "inlets": [Table("inlet", conn_id="con1")],
-                    "outlets": [Table("outlet", conn_id="con2")],
-                },
+            {"task_id": "ex1"},
+            Table("inlet", conn_id="con1"),
+            Table("outlet", conn_id="con2"),
+            True,
+            {
+                "task_id": "ex1",
+                "inlets": [Table("inlet", conn_id="con1")],
+                "outlets": [Table("outlet", conn_id="con2")],
+            },
         ),
         (
-                {
-                    "task_id": "ex1",
-                    "inlets": Table("inlet", conn_id="con1"),
-                    "outlets": Table("outlet"),
-                },
-                Table("input_dataset"),
-                Table("output_dataset"),
-                True,
-                {
-                    "task_id": "ex1",
-                    "inlets": [Table("inlet", conn_id="con1")],
-                    "outlets": [Table("outlet")],
-                },
+            {
+                "task_id": "ex1",
+                "inlets": Table("inlet", conn_id="con1"),
+                "outlets": Table("outlet"),
+            },
+            Table("input_dataset"),
+            Table("output_dataset"),
+            True,
+            {
+                "task_id": "ex1",
+                "inlets": [Table("inlet", conn_id="con1")],
+                "outlets": [Table("outlet")],
+            },
         ),
         (None, None, None, False, {}),
         ({"task_id": "ex1"}, None, None, False, {"task_id": "ex1"}),
         (
-                {"task_id": "ex1"},
-                Table("inlet", conn_id="con1"),
-                Table("outlet", conn_id="con2"),
-                False,
-                {"task_id": "ex1"},
+            {"task_id": "ex1"},
+            Table("inlet", conn_id="con1"),
+            Table("outlet", conn_id="con2"),
+            False,
+            {"task_id": "ex1"},
         ),
         (
-                {
-                    "task_id": "ex1",
-                    "inlets": Table("inlet", conn_id="con1"),
-                    "outlets": Table("outlet", conn_id="con2"),
-                },
-                Table("input_dataset"),
-                Table("output_dataset"),
-                False,
-                {
-                    "task_id": "ex1",
-                    "inlets": [Table("inlet", conn_id="con1")],
-                    "outlets": [Table("outlet", conn_id="con2")],
-                },
+            {
+                "task_id": "ex1",
+                "inlets": Table("inlet", conn_id="con1"),
+                "outlets": Table("outlet", conn_id="con2"),
+            },
+            Table("input_dataset"),
+            Table("output_dataset"),
+            False,
+            {
+                "task_id": "ex1",
+                "inlets": [Table("inlet", conn_id="con1")],
+                "outlets": [Table("outlet", conn_id="con2")],
+            },
         ),
     ],
 )
 def test_kwargs_with_datasets(
-        kwargs, input_datasets, output_datasets, dataset_support, expected_kwargs
+    kwargs, input_datasets, output_datasets, dataset_support, expected_kwargs
 ):
     """
     Test that:
@@ -73,8 +74,8 @@ def test_kwargs_with_datasets(
     """
     with mock.patch("astro.airflow.datasets.DATASET_SUPPORT", new=dataset_support):
         assert (
-                kwargs_with_datasets(kwargs, input_datasets, output_datasets)
-                == expected_kwargs
+            kwargs_with_datasets(kwargs, input_datasets, output_datasets)
+            == expected_kwargs
         )
 
 
@@ -83,11 +84,14 @@ def test_kwargs_with_datasets(
 )
 def test_example_dataset_dag():
     import os
+
     from airflow.models.dagbag import DagBag
+
     dir_path = os.path.dirname(os.path.realpath(__file__))
     db = DagBag(dir_path + "/../../example_dags")
 
     from airflow.datasets import Dataset
+
     producer_dag = db.get_dag("example_dataset_producer")
     consumer_dag = db.get_dag("example_dataset_consumer")
     # Test that last task in the producer DAG produces an outlet
