@@ -366,14 +366,16 @@ class BaseDatabase(ABC):
         self.create_schema_if_needed(table.metadata.schema)
         if if_exists == "replace" or not self.table_exists(table):
             self.drop_table(table)
+            files = resolve_file_path_pattern(
+                file.path,
+                file.conn_id,
+                normalize_config=normalize_config,
+                filetype=file.type.name,
+            )
             self.create_table(
                 table,
-                resolve_file_path_pattern(
-                    file.path,
-                    file.conn_id,
-                    normalize_config=normalize_config,
-                    filetype=file.type.name,
-                )[0],
+                # We only use the first file for inferring the table schema
+                files[0],
                 columns_names_capitalization=columns_names_capitalization,
             )
 
