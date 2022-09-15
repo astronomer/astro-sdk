@@ -14,13 +14,12 @@ import pathlib
 import tempfile
 from pathlib import Path
 
+import astro.sql as aql
 import boto3
 import pandas as pd
 import pytest
 from airflow.exceptions import BackfillUnfinished
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
-
-import astro.sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import SUPPORTED_FILE_TYPES, Database
 from astro.files import File

@@ -7,12 +7,6 @@ from urllib.parse import urlparse
 import pandas as pd
 import pytest
 import sqlalchemy
-from google.cloud.bigquery_datatransfer_v1.types import (
-    StartManualTransferRunsResponse,
-    TransferConfig,
-    TransferRun,
-)
-
 from astro.constants import Database
 from astro.databases import create_database
 from astro.databases.google.bigquery import BigqueryDatabase, S3ToBigqueryDataTransfer
@@ -21,6 +15,11 @@ from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
+from google.cloud.bigquery_datatransfer_v1.types import (
+    StartManualTransferRunsResponse,
+    TransferConfig,
+    TransferRun,
+)
 from tests.sql.operators import utils as test_utils
 
 DEFAULT_CONN_ID = "google_cloud_default"
@@ -218,6 +217,22 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
     assert rows[1] == (2,)
 
 
+def test_is_native_autodetect_schema_available():
+    """
+    Test if native autodetect schema is available for S3 and GCS.
+    """
+    db = BigqueryDatabase(conn_id="fake_conn_id")
+    assert (
+        db.is_native_autodetect_schema_available(file=File(path="s3://bucket/key.csv"))
+        is False
+    )
+
+    assert (
+        db.is_native_autodetect_schema_available(file=File(path="gs://bucket/key.csv"))
+        is True
+    )
+
+
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
@@ -310,7 +325,7 @@ def test_load_file_to_table_natively_for_fallback(
     indirect=True,
     ids=["bigquery"],
 )
-def test_load_file_to_table_natively_for_fallback_wrong_file_location(
+def test_load_file_to_table_natively_for_fallback_wrong_file_location_with_enable_native_fallback(
     database_table_fixture,
 ):
     """

@@ -9,9 +9,8 @@ from airflow.models.dag import DAG
 from airflow.models.taskinstance import TaskInstance
 from airflow.utils import timezone
 from airflow.utils.state import State
-from pandas.testing import assert_frame_equal
-
 from astro.sql.table import Metadata
+from pandas.testing import assert_frame_equal
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 

@@ -2,14 +2,13 @@ import pathlib
 from unittest import mock
 
 import pytest
-from pandas import DataFrame
-
 from astro.constants import Database, FileType
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
+from pandas import DataFrame
 
 CWD = pathlib.Path(__file__).parent
 
@@ -34,6 +33,14 @@ def test_subclass_missing_not_implemented_methods_raise_exception():
 
     with pytest.raises(NotImplementedError):
         db.run_sql("SELECT * FROM inexistent_table")
+
+
+def test_create_table_using_native_schema_autodetection_not_implemented():
+    db = DatabaseSubclass(conn_id="fake_conn_id")
+    with pytest.raises(NotImplementedError):
+        db.create_table_using_native_schema_autodetection(
+            table=Table(), file=File(path="s3://bucket/key")
+        )
 
 
 def test_subclass_missing_load_pandas_dataframe_to_table_raises_exception():

@@ -7,12 +7,11 @@ from contextlib import closing
 import pandas as pd
 import sqlalchemy
 from airflow.providers.postgres.hooks.postgres import PostgresHook
-from psycopg2 import sql as postgres_sql
-
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.settings import POSTGRES_SCHEMA
 from astro.sql.table import Metadata, Table
+from psycopg2 import sql as postgres_sql
 
 DEFAULT_CONN_ID = PostgresHook.default_conn_name
 

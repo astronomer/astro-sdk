@@ -4,7 +4,6 @@ import pandas as pd
 import pytest
 from airflow.decorators import task, task_group
 from airflow.utils import timezone
-
 from astro import sql as aql
 from astro.constants import Database
 from astro.databases import create_database

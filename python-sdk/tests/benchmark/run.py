@@ -11,7 +11,6 @@ from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import TaskInstance
 from airflow.utils import timezone
 from airflow.utils.session import provide_session
-
 from astro.databases import create_database
 from astro.sql.table import Metadata, Table
 
