@@ -345,7 +345,8 @@ class BaseDatabase(ABC):
                 source_file=file
             )
         )
-
+        if if_exists == "replace":
+            self.drop_table(table)
         if (
             use_native_support
             and is_schema_autodetection_supported
