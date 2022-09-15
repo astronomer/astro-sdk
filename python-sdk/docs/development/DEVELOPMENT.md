@@ -260,11 +260,11 @@ To start with you can take the following steps for the initial configuration:
    [.github/workflows/ci-python-sdk.yaml](https://github.com/astronomer/astro-sdk/blob/main/.github/workflows/ci-python-sdk.yaml).
 7. Add the database as Python SDK supported database in the [test_constants.py](https://github.com/astronomer/astro-sdk/blob/main/python-sdk/tests/test_constants.py) module's [test_supported_database()](https://github.com/astronomer/astro-sdk/blob/main/python-sdk/tests/test_constants.py#L23) method implementation.
 
-With the above configuration set, you can now proceed for the implementation of supporting all the SDK operators the new database.
+With the above configurations set, you can now proceed for the implementation of supporting all SDK operators in the new database.
 The purpose of each of the operators can be found in the [Astro SDK Python - Operators](https://astro-sdk-python.readthedocs.io/en/stable/operators.html) document.
 As described before, you can use test driven development and run the tests for the operators one by one located in the `tests` directory.
 By default, the [base class](https://github.com/astronomer/astro-sdk/blob/main/python-sdk/src/astro/databases/base.py)
-implementation methods will be used for the database in the tests. You will need to override some of these base class methods for the database
+implementation methods will be used for the database in the tests. You will need to override some of these methods. 
 to make run the tests successfully. You can create a module for your database in the [databases](https://github.com/astronomer/astro-sdk/tree/main/python-sdk/src/astro/databases) directory.
 You can start with running the tests for the `load_file` operator. Relevant tests can be found in [tests/sql/operators](https://github.com/astronomer/astro-sdk/tree/main/python-sdk/tests/sql/operators) directory.
 Tests for load_operator are kept in [test_load_file.py](https://github.com/astronomer/astro-sdk/blob/main/python-sdk/tests/sql/operators/test_load_file.py).
