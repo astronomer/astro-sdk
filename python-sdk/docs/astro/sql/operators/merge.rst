@@ -150,3 +150,8 @@ Conflicts arise due to the ``target_table`` having constraints on certain column
     This method will raise an exception if there are any conflicts at the time of merging.
 
     To use this method, you should specify ``if_conflicts='exception'``.
+
+Default Datasets
+~~~~~~~~~~~~~~~~
+* Input dataset - Source table for the operator.
+* Output dataset - Target table of the operator.

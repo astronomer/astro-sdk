@@ -25,3 +25,8 @@ Case 2: Export data from a Pandas dataframe.
        :language: python
        :start-after: [START export_example_2]
        :end-before: [END export_example_2]
+
+Default Datasets
+~~~~~~~~~~~~~~~~
+* Input dataset - Source table for the operator.
+* Output dataset - Target file of the operator.
