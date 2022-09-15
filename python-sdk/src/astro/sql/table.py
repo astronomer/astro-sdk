@@ -33,19 +33,19 @@ class Metadata:
         )
 
 
-@define
-class Table(Dataset):
+@define(slots=False)
+class BaseTable:
     """
-    Withholds the information necessary to access a SQL Table.
-    It is agnostic to the database type.
+    Base class that has information necessary to access a SQL Table. It is agnostic to the database type.
     If no name is given, it auto-generates a name for the Table and considers it temporary.
 
     Temporary tables are prefixed with the prefix TEMP_PREFIX.
 
-    :param conn_id: The Airflow connection id. This will be used to identify the right database type at the runtime
     :param name: The name of the database table. If name not provided then it would create a temporary name
+    :param conn_id: The Airflow connection id. This will be used to identify the right database type at the runtime
     :param metadata: A metadata object which will have database or schema name
     :param columns: columns which define the database table schema.
+    :sphinx-autoapi-skip:
     """
 
     template_fields = ("name",)
@@ -62,9 +62,6 @@ class Table(Dataset):
     )
     columns: list[Column] = field(factory=list)
     temp: bool = field(default=False)
-
-    uri: str = field(init=False)
-    extra: dict | None = field(init=False, factory=dict)
 
     def __attrs_post_init__(self) -> None:
         if not self._name or self._name.startswith("_tmp"):
@@ -124,6 +121,42 @@ class Table(Dataset):
         if not isinstance(value, property) and value != self._name:
             self._name = value
             self.temp = False
+
+
+@define(slots=False)
+class TempTable(BaseTable):
+    """
+    Internal class to represent a Temporary table
+
+    :sphinx-autoapi-skip:
+    """
+
+    temp: bool = field(default=True)
+
+
+@define(slots=False)
+class Table(BaseTable, Dataset):
+    """
+    User-facing class that has information necessary to access a SQL Table. It is agnostic to the database type.
+    If no name is given, it auto-generates a name for the Table and considers it temporary.
+
+    Temporary tables are prefixed with the prefix TEMP_PREFIX.
+
+    :param name: The name of the database table. If name not provided then it would create a temporary name
+    :param conn_id: The Airflow connection id. This will be used to identify the right database type at the runtime
+    :param metadata: A metadata object which will have database or schema name
+    :param columns: columns which define the database table schema.
+    """
+
+    uri: str = field(init=False)
+    extra: dict | None = field(init=False, factory=dict)
+
+    def __new__(cls, *args, **kwargs):
+        name = kwargs.get("name", "") or (args[0] if len(args) > 0 else "")
+        temp = kwargs.get("temp", False)
+        if temp or (not name or name.startswith("_tmp")):
+            return TempTable(*args, **kwargs)
+        return super().__new__(cls)
 
     @uri.default
     def _path_to_dataset_uri(self) -> str:
