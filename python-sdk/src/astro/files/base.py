@@ -4,12 +4,13 @@ import pathlib
 
 import pandas as pd
 import smart_open
-from astro import constants
 from astro.airflow.datasets import Dataset
-from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
-from astro.files.types import FileType, create_file_type
 from attr import define, field
+
+from astro import constants
+from astro.files.locations import create_file_location
+from astro.files.types import FileType, create_file_type
 
 
 @define
@@ -74,9 +75,7 @@ class File(Dataset):
 
         :return: True or False
         """
-        if isinstance(self.path, str):
-            return not pathlib.PosixPath(self.path).suffix
-        return not self.path.suffix
+        return not pathlib.PosixPath(self.path).suffix
 
     def create_from_dataframe(self, df: pd.DataFrame) -> None:
         """Create a file in the desired location using the values of a dataframe.
