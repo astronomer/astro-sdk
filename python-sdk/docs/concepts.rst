@@ -13,7 +13,7 @@ There are two types of tables:
 
 #. **Persistent Table**
 
-    These are tables that are of some importance to users and will we persist in a database even after a DAG run is finished and won't be deleted by :ref:`cleanup_operator`. Users can still drop them by using ``drop_table operator(to be replaced with ref)``. You can create these tables by passing in a ``name`` parameter while creating a ``astro.sql.table.Table`` object.
+    These are tables that are of some importance to users and will we persist in a database even after a DAG run is finished and won't be deleted by :ref:`cleanup_operator`. Users can still drop them by using :ref:`drop_table_operator`. You can create these tables by passing in a ``name`` parameter while creating a ``astro.sql.table.Table`` object.
 
     .. literalinclude:: ../example_dags/example_amazon_s3_postgres_load_and_save.py
        :language: python
