@@ -1,9 +1,10 @@
 from unittest import mock
-
 import airflow
 import pytest
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.sql.table import Table
+import os
+from airflow.models.dagbag import DagBag
 
 
 @pytest.mark.parametrize(
@@ -83,10 +84,6 @@ def test_kwargs_with_datasets(
     airflow.__version__ < "2.4.0", reason="Require Airflow version >= 2.4.0"
 )
 def test_example_dataset_dag():
-    import os
-
-    from airflow.models.dagbag import DagBag
-
     dir_path = os.path.dirname(os.path.realpath(__file__))
     db = DagBag(dir_path + "/../../example_dags")
 
