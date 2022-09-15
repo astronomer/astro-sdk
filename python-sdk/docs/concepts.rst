@@ -157,6 +157,10 @@ Following examples show how to produce and use datasets for scheduling.
 Python SDK uses default datasets for its operators and the details of the default datasets generated and used by them can be found in the respective :ref:`operators` document.
 However, you can override them by passing the keyword arguments ``inlets`` and ``outlets`` to the operators.
 
+Following is a view of dag dependencies on datasets
+
+.. image:: ./images/dag-dependencies-on-datasets.png
+
 More details can be found at `airflow datasets concept <https://airflow.apache.org/docs/apache-airflow/stable/concepts/datasets.html>`_
 
 .. Note::
