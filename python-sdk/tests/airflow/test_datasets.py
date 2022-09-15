@@ -25,6 +25,13 @@ from astro.sql.table import Table
             },
         ),
         (
+            {"task_id": "ex1", "inlets": [], "outlets": []},
+            Table("inlet", conn_id="con1"),
+            Table("outlet", conn_id="con2"),
+            True,
+            {"task_id": "ex1", "inlets": [], "outlets": []},
+        ),
+        (
             {
                 "task_id": "ex1",
                 "inlets": Table("inlet", conn_id="con1"),
@@ -72,7 +79,7 @@ def test_kwargs_with_datasets(
     Test that:
       1. we can extract inlets and outlets from kwargs if users pass it
       2. passed input_datasets and output_datasets are correctly set as inlets/outlets and passed to kwargs
-      3. if dataset is not support (Airflow <2.4), we do not set inlets/outlets unless user specifies it
+      3. if dataset is not supported (Airflow <2.4), we do not set inlets/outlets unless user specifies it
     """
     with mock.patch("astro.airflow.datasets.DATASET_SUPPORT", new=dataset_support):
         assert (
@@ -98,3 +105,13 @@ def test_example_dataset_dag():
     # Test that dataset_triggers is only set if all the instances passed to the DAG object are Datasets
     assert consumer_dag.dataset_triggers == outlets
     assert outlets[0].uri == "astro://sqlite_default@?table=imdb_movies"
+
+
+def test_disable_auto_inlets_outlets():
+    """Test that if ``[astro_sdk] auto_add_inlets_outlets = False``, inlets/outlets are not set"""
+    with mock.patch("astro.settings.AUTO_ADD_INLETS_OUTLETS", new=False):
+        assert kwargs_with_datasets(
+            {"task_id": "ex1"},
+            [Table("inlet", conn_id="con1")],
+            [Table("outlet", conn_id="con2")],
+        ) == {"task_id": "ex1"}
