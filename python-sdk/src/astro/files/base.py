@@ -4,12 +4,13 @@ import pathlib
 
 import pandas as pd
 import smart_open
-from astro import constants
 from astro.airflow.datasets import Dataset
-from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
-from astro.files.types import FileType, create_file_type
 from attr import define, field
+
+from astro import constants
+from astro.files.locations import create_file_location
+from astro.files.types import FileType, create_file_type
 
 
 @define
@@ -117,7 +118,7 @@ class File(Dataset):
     def __hash__(self) -> int:
         return hash((self.path, self.conn_id, self.filetype))
 
-    @uri.default  # type: ignore
+    @uri.default
     def _path_to_dataset_uri(self) -> str:
         """Build a URI to be passed to Dataset obj introduced in Airflow 2.4"""
         from urllib.parse import urlencode, urlparse

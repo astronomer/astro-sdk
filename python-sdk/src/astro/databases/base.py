@@ -52,6 +52,8 @@ class BaseDatabase(ABC):
     illegal_column_name_chars_replacement: list[str] = []
     NATIVE_LOAD_EXCEPTIONS: Any = DatabaseCustomError
     DEFAULT_SCHEMA = SCHEMA
+    AUTODETECT_SCHEMA_SUPPORTED: set[Any] = set()
+    FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[Any] = set()
 
     def __init__(self, conn_id: str):
         self.conn_id = conn_id
@@ -319,7 +321,7 @@ class BaseDatabase(ABC):
     # Table load methods
     # ---------------------------------------------------------
 
-    def create_schema_table_if_needed(
+    def create_schema_and_table_if_needed(
         self,
         table: Table,
         file: File,
@@ -405,7 +407,7 @@ class BaseDatabase(ABC):
         """
         normalize_config = normalize_config or {}
 
-        self.create_schema_table_if_needed(
+        self.create_schema_and_table_if_needed(
             file=input_file,
             table=output_table,
             columns_names_capitalization=columns_names_capitalization,
@@ -726,22 +728,28 @@ class BaseDatabase(ABC):
         """
         raise NotImplementedError
 
-    def check_schema_autodetection_is_supported(  # skipcq: PYL-R0201
-        self, source_file  # skipcq: PYL-W0613
-    ):
+    def check_schema_autodetection_is_supported(self, source_file: File) -> bool:
         """
-        Checks if schema autodetection is handled natively by the database.
+        Checks if schema autodetection is handled natively by the database
 
-         :param source_file: File from which we need to transfer data
+        :param source_file: File from which we need to transfer data
         """
-        return False
+        is_autodetect_schema_supported = (
+            source_file.location.location_type in self.AUTODETECT_SCHEMA_SUPPORTED
+        )
+        return is_autodetect_schema_supported
 
-    def check_file_pattern_based_schema_autodetection_is_supported(  # skipcq: PYL-R0201
-        self, source_file: File  # skipcq: PYL-W0613
+    def check_file_pattern_based_schema_autodetection_is_supported(
+        self, source_file: File
     ) -> bool:
         """
-        Checks if schema autodetection is handled natively by the database for file patterns and prefixes.
+        Checks if schema autodetection is handled natively by the database for file
+        patterns and prefixes.
 
-         :param source_file: File from which we need to transfer data
+        :param source_file: File from which we need to transfer data
         """
-        return False
+        is_file_pattern_based_schema_autodetection_supported = (
+            source_file.location.location_type
+            in self.FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED
+        )
+        return is_file_pattern_based_schema_autodetection_supported
