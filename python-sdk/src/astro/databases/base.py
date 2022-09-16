@@ -321,7 +321,7 @@ class BaseDatabase(ABC):
         statement = self._create_table_statement.format(
             self.get_table_qualified_name(target_table), statement
         )
-        self.run_sql_query(statement, parameters)
+        self.run_sql(statement, parameters)
 
     def drop_table(self, table: BaseTable) -> None:
         """
@@ -332,7 +332,7 @@ class BaseDatabase(ABC):
         statement = self._drop_table_statement.format(
             self.get_table_qualified_name(table)
         )
-        self.run_sql_query(statement)
+        self.run_sql(statement)
 
     # ---------------------------------------------------------
     # Table load methods
@@ -586,7 +586,7 @@ class BaseDatabase(ABC):
         # TODO: We should fix the following Type Error
         # incompatible type List[ColumnClause[<nothing>]]; expected List[Column[Any]]
         sql = insert(target_table_sqla).from_select(target_columns, sel)  # type: ignore[arg-type]
-        self.run_sql_query(sql=sql)
+        self.run_sql(sql=sql)
 
     def merge_table(
         self,
@@ -673,7 +673,7 @@ class BaseDatabase(ABC):
         # doesn't actually create a schema.
         if schema and not self.schema_exists(schema):
             statement = self._create_schema_statement.format(schema)
-            self.run_sql_query(statement)
+            self.run_sql(statement)
 
     def schema_exists(self, schema: str) -> bool:
         """
