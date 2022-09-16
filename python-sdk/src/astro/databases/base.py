@@ -17,8 +17,7 @@ from astro.constants import (
     MergeConflictStrategy,
 )
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
-from astro.files import File, resolve_file_path_pattern
-from astro.files.types import create_file_type
+from astro.files.types.base import FileType as FileTypeConstants
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.sql.table import BaseTable, Metadata
 from pandas.io.sql import SQLDatabase
@@ -26,6 +25,9 @@ from sqlalchemy import column, insert, select
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
+
+from astro.files import File, resolve_file_path_pattern
+from astro.files.types import create_file_type
 
 
 class BaseDatabase(ABC):
@@ -744,21 +746,17 @@ class BaseDatabase(ABC):
             source_file.location.location_type
         )
 
-        source_filetype = create_file_type(
-            path=source_file.path, filetype=source_file.type.name
+        source_filetype = (
+            source_file
+            if isinstance(source_file.type, FileTypeConstants)
+            else create_file_type(path=source_file.path, filetype=source_file.type)  # type: ignore
         )
-        if source_file.is_pattern():
-            is_source_filetype_supported = (
-                (source_filetype in filetype_supported.get("filetype"))  # type: ignore
-                if filetype_supported
-                else None
-            )
-        else:
-            is_source_filetype_supported = (
-                (source_filetype.type.name in filetype_supported.get("filetype"))  # type: ignore
-                if filetype_supported
-                else None
-            )
+
+        is_source_filetype_supported = (
+            (source_filetype.type.name in filetype_supported.get("filetype"))  # type: ignore
+            if filetype_supported
+            else None
+        )
 
         location_type = self.NATIVE_PATHS.get(source_file.location.location_type)
         return bool(location_type and is_source_filetype_supported)
