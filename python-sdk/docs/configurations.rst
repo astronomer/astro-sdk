@@ -43,20 +43,6 @@ or by updating Airflow's configuration
    redshift_default_schema = "redshift_tmp"
 
 
-Configuring the Custom XCom Backends
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-You can also examine Airflow’s configuration:
-
-.. code:: shell
-
-   AIRFLOW__CORE__XCOM_BACKEND="tmp"
-
-or by updating Airflow's configuration
-
-.. code:: shell
-
-   [astro_sdk]
-   xcom_backend = "tmp"
 
 
 Configuring the unsafe dataframe storage
