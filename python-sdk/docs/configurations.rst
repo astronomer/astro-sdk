@@ -23,7 +23,7 @@ or by updating Airflow's configuration
    [astro_sdk]
    schema = "tmp"
 
-We can modify all databases by one config ``AIRFLOW__ASTRO_SDK__SQL_SCHEMA``. We can also configure the default schema specific to the database type (example: specific to Snowflake, BigQuery, Postgres). If both the default and database-specific schemas are defined, the preference is given to the database-specific value.
+We can also configure the default schema specific to the database type (example: specific to Snowflake, BigQuery, Postgres). If both the default and database-specific schemas are defined, the preference is given to the database-specific value.
 
 .. code:: python
 
