@@ -74,7 +74,6 @@ def test_check_schema_autodetection_is_supported():
         db.check_schema_autodetection_is_supported(
             source_file=File(path="gs://bucket/prefix/key.csv")
         )
-        is True
     )
 
     assert (
