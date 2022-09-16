@@ -23,7 +23,7 @@ or by updating Airflow's configuration
    [astro_sdk]
    schema = "tmp"
 
-We can also configure the default schema specific to the database type (example: specific to Snowflake, BigQuery, Postgres). If both the default and database-specific schemas are defined, the preference is given to the database-specific value.
+We can modify all databases by one config ``AIRFLOW__ASTRO_SDK__SQL_SCHEMA``. We can also configure the default schema specific to the database type (example: specific to Snowflake, BigQuery, Postgres). If both the default and database-specific schemas are defined, the preference is given to the database-specific value.
 
 .. code:: python
 
@@ -44,6 +44,7 @@ or by updating Airflow's configuration
 
 Configuring the unsafe dataframe storage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The dataframe are pickled in astro-sdk-python and saved in airflow database. The dataframe is defined by the user and if it is big enough it might potentially break Airflow's metadata. Hence, unsafe dataframe storage should be set to True.
 
 .. code:: shell
 
