@@ -152,7 +152,7 @@ class Table(BaseTable, Dataset):
     extra: dict | None = field(init=False, factory=dict)
 
     def __new__(cls, *args, **kwargs):
-        name = kwargs.get("name", "") or (args[0] if len(args) > 0 else "")
+        name = kwargs.get("name") or args and args[0] or ""
         temp = kwargs.get("temp", False)
         if temp or (not name or name.startswith("_tmp")):
             return TempTable(*args, **kwargs)

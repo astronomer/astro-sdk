@@ -73,11 +73,11 @@ repos:
     hooks:
       - id: isort
         name: Run isort for python-sdk
-        args: ["--profile=black"]
+        args: [ "--profile", "black" ]
         files: ^python-sdk/
       - id: isort
         name: Run isort for sql-cli
-        args: ["--profile=black"]
+        args: [ "--profile", "black" ]
         files: ^sql-cli/
 
   - repo: https://github.com/codespell-project/codespell
