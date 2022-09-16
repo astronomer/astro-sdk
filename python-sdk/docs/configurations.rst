@@ -44,7 +44,7 @@ or by updating Airflow's configuration
 
 Configuring the unsafe dataframe storage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The dataframe are pickled in astro-sdk-python and saved in airflow database. The dataframe is defined by the user and if it is big enough it might potentially break Airflow's metadata. Hence, unsafe dataframe storage should be set to True.
+The dataframes are pickled in astro-sdk-python and saved in the airflow metadata database. Since this dataframe is defined by the user and if it is huge, it might potentially break Airflow's metadata DB by using all the available resources. Hence, unsafe dataframe storage should be set to ``True`` once you are aware of this risk and are OK with it.
 
 .. code:: shell
 
