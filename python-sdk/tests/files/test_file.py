@@ -1,15 +1,17 @@
 import pathlib
+import pickle
 from datetime import datetime
 from unittest.mock import mock_open, patch
 
 import pandas as pd
 import pytest
 from airflow import DAG
-from astro import constants
 from astro.constants import SUPPORTED_FILE_TYPES, FileType
-from astro.files import File, get_file_list, resolve_file_path_pattern
 from botocore.client import BaseClient
 from google.cloud.storage import Client
+
+from astro import constants
+from astro.files import File, get_file_list, resolve_file_path_pattern
 
 sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent, "data/sample.csv")
 sample_filepaths_per_filetype = [
@@ -384,3 +386,8 @@ def test_smart_open_file_stream_only_conveted_to_BytesIO_buffer_for_parquet(file
             _convert_remote_file_to_byte_stream.assert_called()
         else:
             _convert_remote_file_to_byte_stream.assert_not_called()
+
+
+def test_if_file_object_can_be_pickled():
+    """Verify if we can pickle File object"""
+    pickle.loads(pickle.dumps(File(path="test")))
