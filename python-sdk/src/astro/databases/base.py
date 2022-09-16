@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import warnings
 from abc import ABC
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Mapping, Union
 
 import pandas as pd
 import sqlalchemy
@@ -112,7 +112,7 @@ class BaseDatabase(ABC):
                 DeprecationWarning,
                 stacklevel=2,
             )
-        sql = sql or kwargs.get("sql_statement")
+        sql: Union[str, ClauseElement] = sql or kwargs.get("sql_statement")
 
         if isinstance(sql, str):
             result = self.connection.execute(sqlalchemy.text(sql), parameters)
