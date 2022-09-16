@@ -80,7 +80,7 @@ Configuring the table autodetect row count
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Following configuration indicates how many file rows should be loaded to infer the table columns types. This defaults to 1000 rows.
 
-.. code:: shell
+.. code:: ini
 
    AIRFLOW__ASTRO_SDK__LOAD_TABLE_AUTODETECT_ROWS_COUNT = 1000
 
