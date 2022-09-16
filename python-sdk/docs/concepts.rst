@@ -157,6 +157,19 @@ Following examples show how to produce and use datasets for scheduling.
 Python SDK uses default datasets for its operators and the details of the default datasets generated and used by them can be found in the respective :ref:`operators` document.
 However, you can override them by passing the keyword arguments ``inlets`` and ``outlets`` to the operators.
 
+You can disable the usage of these default datasets and hence disable data-aware scheduling of DAGs by updating Airflow's configuration in ``airflow.cfg``
+
+.. code:: shell
+
+   [astro_sdk]
+   auto_add_inlets_outlets = "false"
+
+or by setting the below environment variable in your deployment
+
+.. code:: python
+
+   AIRFLOW__ASTRO_SDK__AUTO_ADD_INLETS_OUTLETS = "false"
+
 Following is a view of dag dependencies on datasets
 
 .. image:: ./images/dag-dependencies-on-datasets.png
