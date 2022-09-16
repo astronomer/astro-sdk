@@ -3,12 +3,13 @@ from unittest import mock
 
 import pytest
 from astro.constants import Database, FileType
-from astro.databases import create_database
 from astro.databases.base import BaseDatabase
-from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
 from pandas import DataFrame
+
+from astro.databases import create_database
+from astro.files import File
 
 CWD = pathlib.Path(__file__).parent
 
@@ -57,6 +58,33 @@ def test_create_table_using_columns_raises_exception():
     with pytest.raises(ValueError) as exc_info:
         db.create_table_using_columns(table)
     assert exc_info.match("To use this method, table.columns must be defined")
+
+
+def test_check_schema_autodetection_is_supported():
+    """
+    Test the condition native schema autodetection for files and prefixes
+    """
+    db = create_database("gcp_conn")
+    assert (
+        db.check_schema_autodetection_is_supported(
+            source_file=File(path="gs://bucket/prefix", filetype=FileType.CSV)
+        )
+        is True
+    )
+
+    assert (
+        db.check_schema_autodetection_is_supported(
+            source_file=File(path="gs://bucket/prefix/key.csv")
+        )
+        is True
+    )
+
+    assert (
+        db.check_schema_autodetection_is_supported(
+            source_file=File(path="s3://bucket/prefix/key.csv")
+        )
+        is False
+    )
 
 
 def test_subclass_missing_append_table_raises_exception():
