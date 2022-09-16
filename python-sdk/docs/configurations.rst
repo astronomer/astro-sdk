@@ -70,7 +70,7 @@ Read more at: `Snowflake storage integrations <https://docs.snowflake.com/en/sql
 
 or by updating Airflow's configuration
 
-.. code:: shell
+.. code:: ini
 
    [astro_sdk]
    snowflake_storage_integration_amazon = "aws_integration"
