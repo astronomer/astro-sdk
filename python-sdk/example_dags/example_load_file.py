@@ -206,7 +206,11 @@ with dag:
 
     # [START load_file_example_17]
     aql.load_file(
-        input_file=File("gs://astro-sdk/workspace/sample_pattern", conn_id="bigquery"),
+        input_file=File(
+            "gs://astro-sdk/workspace/sample_pattern",
+            conn_id="bigquery",
+            filetype=FileType.CSV,
+        ),
         output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
         use_native_support=True,
         native_support_kwargs={
