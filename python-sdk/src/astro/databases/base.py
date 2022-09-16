@@ -105,14 +105,13 @@ class BaseDatabase(ABC):
         if parameters is None:
             parameters = {}
 
-        if "sql_statement" in kwargs:
+        if "sql_statement" in kwargs:  # pragma: no cover
             warnings.warn(
                 "`sql_statement` is deprecated and will be removed in future release"
                 "Please use  `sql` param instead.",
                 DeprecationWarning,
                 stacklevel=2,
             )
-        if kwargs.get("sql_statement"):
             sql = kwargs.get("sql_statement")  # type: ignore
 
         if isinstance(sql, str):
