@@ -63,7 +63,7 @@ with DAG(
 
     rating = custom_task.expand(
         rating_val=get_value_list(
-            sql_statement=QUERY_STATEMENT, conn_id=ASTRO_GCP_CONN_ID
+            sql=QUERY_STATEMENT, conn_id=ASTRO_GCP_CONN_ID
         )
     )
 

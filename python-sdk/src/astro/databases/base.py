@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import warnings
 from abc import ABC
 from typing import Any, Callable, Mapping
 
@@ -87,8 +88,21 @@ class BaseDatabase(ABC):
         return self.hook.get_sqlalchemy_engine()  # type: ignore[no-any-return]
 
     def run_sql(
+            self,
+            sql_statement: str | ClauseElement,
+            parameters: dict | None = None,
+    ):
+        warnings.warn(
+            "`run_sql` is deprecated and will be removed "
+            "Please use  `run_sql_query` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.run_sql_query(sql=sql_statement, parameters=parameters)
+
+    def run_sql_query(
         self,
-        sql_statement: str | ClauseElement,
+        sql: str | ClauseElement,
         parameters: dict | None = None,
     ):
         """
@@ -97,16 +111,16 @@ class BaseDatabase(ABC):
         Whenever possible, this method should be implemented using Airflow Hooks,
         since this will simplify the integration with Async operators.
 
-        :param sql_statement: Contains SQL query to be run against database
+        :param sql: Contains SQL query to be run against database
         :param parameters: Optional parameters to be used to render the query
         """
         if parameters is None:
             parameters = {}
 
-        if isinstance(sql_statement, str):
-            result = self.connection.execute(sqlalchemy.text(sql_statement), parameters)
+        if isinstance(sql, str):
+            result = self.connection.execute(sqlalchemy.text(sql), parameters)
         else:
-            result = self.connection.execute(sql_statement, parameters)
+            result = self.connection.execute(sql, parameters)
         return result
 
     def columns_exist(self, table: BaseTable, columns: list[str]) -> bool:
@@ -310,7 +324,7 @@ class BaseDatabase(ABC):
         statement = self._create_table_statement.format(
             self.get_table_qualified_name(target_table), statement
         )
-        self.run_sql(statement, parameters)
+        self.run_sql_query(statement, parameters)
 
     def drop_table(self, table: BaseTable) -> None:
         """
@@ -321,7 +335,7 @@ class BaseDatabase(ABC):
         statement = self._drop_table_statement.format(
             self.get_table_qualified_name(table)
         )
-        self.run_sql(statement)
+        self.run_sql_query(statement)
 
     # ---------------------------------------------------------
     # Table load methods
@@ -575,7 +589,7 @@ class BaseDatabase(ABC):
         # TODO: We should fix the following Type Error
         # incompatible type List[ColumnClause[<nothing>]]; expected List[Column[Any]]
         sql = insert(target_table_sqla).from_select(target_columns, sel)  # type: ignore[arg-type]
-        self.run_sql(sql_statement=sql)
+        self.run_sql_query(sql=sql)
 
     def merge_table(
         self,
@@ -662,7 +676,7 @@ class BaseDatabase(ABC):
         # doesn't actually create a schema.
         if schema and not self.schema_exists(schema):
             statement = self._create_schema_statement.format(schema)
-            self.run_sql(statement)
+            self.run_sql_query(statement)
 
     def schema_exists(self, schema: str) -> bool:
         """
@@ -684,7 +698,7 @@ class BaseDatabase(ABC):
         convert a Jinja table identifier to a safe SQLAlchemy-compatible table identifier.
 
         For example, the query:
-            sql_statement = "SELECT * FROM {{input_table}};"
+            sql = "SELECT * FROM {{input_table}};"
             parameters = {"input_table": Table(name="user_defined_table", metadata=Metadata(schema="some_schema"))}
 
         Can become (depending on the database):
