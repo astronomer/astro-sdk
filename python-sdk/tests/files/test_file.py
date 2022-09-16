@@ -389,4 +389,5 @@ def test_smart_open_file_stream_only_conveted_to_BytesIO_buffer_for_parquet(file
 
 def test_if_file_object_can_be_pickled():
     """Verify if we can pickle File object"""
-    pickle.loads(pickle.dumps(File(path="test")))
+    file = File(path="./test.csv")
+    assert pickle.loads(pickle.dumps(file)) == file
