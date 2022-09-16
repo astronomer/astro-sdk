@@ -86,7 +86,7 @@ Following configuration indicates how many file rows should be loaded to infer t
 
 or by updating Airflow's configuration
 
-.. code:: shell
+.. code:: ini
 
    [astro_sdk]
    load_table_autodetect_rows_count = 1000
