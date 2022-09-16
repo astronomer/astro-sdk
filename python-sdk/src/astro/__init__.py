@@ -1,6 +1,6 @@
 """A decorator that allows users to run SQL queries natively in Airflow."""
 
-__version__ = "1.1.0b1"
+__version__ = "1.1.0b2"
 
 
 # The following line is an import work-around to avoid raising a circular dependency issue related to `create_database`
@@ -14,8 +14,9 @@ __version__ = "1.1.0b1"
 # imported beforehand, it will also load astro.sql. In astro.sql we import lots of operators which depend on
 # astro.database, and this is what leads to the circular dependency.
 
-import astro.sql  # noqa: F401
 from airflow.configuration import conf
+
+import astro.sql  # noqa: F401
 
 
 # This is needed to allow Airflow to pick up specific metadata fields it needs

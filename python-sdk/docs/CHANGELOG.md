@@ -1,4 +1,26 @@
 # Changelog
+## 1.1.0b2
+
+### Features
+* Add native autodetect schema feature (#780)
+* Allow users to disable auto addition of inlets/outlets via airflow.cfg (#858)
+
+### Improvements
+* Avoid loading whole file into memory with load_operator for schema detection (#805)
+* Directly pass the file to native library when native support is enabled (#802)
+
+### Bug fixes
+* Add compat module for typing execute `context` in operators (#770)
+* Fix sql injection issues (#807)
+* Stop generating Datasets for temp tables (#862)(#871)
+
+### Docs
+* Update quick start example (#819)
+* Add links to docs from README (#832)
+* Fix Astro CLI doc link (#842)
+* Add docs on Dataset (AIP-48) support (#852)
+* Add configuration details from settings.py (#861)
+
 ## 1.1.0b1
 
 ### Features
