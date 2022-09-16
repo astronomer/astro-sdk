@@ -17,6 +17,8 @@ from astro.constants import (
     MergeConflictStrategy,
 )
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
+from astro.files import File, resolve_file_path_pattern
+from astro.files.types import create_file_type
 from astro.files.types.base import FileType as FileTypeConstants
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.sql.table import BaseTable, Metadata
@@ -25,9 +27,6 @@ from sqlalchemy import column, insert, select
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
-
-from astro.files import File, resolve_file_path_pattern
-from astro.files.types import create_file_type
 
 
 class BaseDatabase(ABC):
