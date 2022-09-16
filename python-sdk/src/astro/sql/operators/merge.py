@@ -6,10 +6,11 @@ from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import MergeConflictStrategy
-from astro.databases import create_database
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
-from astro.sql.table import Table
+from astro.sql.table import BaseTable
 from astro.utils.typing_compat import Context
+
+from astro.databases import create_database
 
 
 class MergeOperator(AstroSQLBaseOperator):
@@ -31,8 +32,8 @@ class MergeOperator(AstroSQLBaseOperator):
     def __init__(
         self,
         *,
-        target_table: Table,
-        source_table: Table,
+        target_table: BaseTable,
+        source_table: BaseTable,
         columns: list[str] | tuple[str] | dict[str, str],
         if_conflicts: MergeConflictStrategy,
         target_conflict_columns: list[str],
@@ -60,7 +61,7 @@ class MergeOperator(AstroSQLBaseOperator):
             ),
         )
 
-    def execute(self, context: Context) -> Table:
+    def execute(self, context: Context) -> BaseTable:
         db = create_database(self.target_table.conn_id)
         self.source_table = db.populate_table_metadata(self.source_table)
         self.target_table = db.populate_table_metadata(self.target_table)
@@ -77,8 +78,8 @@ class MergeOperator(AstroSQLBaseOperator):
 
 def merge(
     *,
-    target_table: Table,
-    source_table: Table,
+    target_table: BaseTable,
+    source_table: BaseTable,
     columns: list[str] | tuple[str] | dict[str, str],
     target_conflict_columns: list[str],
     if_conflicts: MergeConflictStrategy,

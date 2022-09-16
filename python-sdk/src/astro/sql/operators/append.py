@@ -5,10 +5,11 @@ from typing import Any
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
 from astro.airflow.datasets import kwargs_with_datasets
-from astro.databases import create_database
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
-from astro.sql.table import Table
+from astro.sql.table import BaseTable
 from astro.utils.typing_compat import Context
+
+from astro.databases import create_database
 
 
 class AppendOperator(AstroSQLBaseOperator):
@@ -27,8 +28,8 @@ class AppendOperator(AstroSQLBaseOperator):
 
     def __init__(
         self,
-        source_table: Table,
-        target_table: Table,
+        source_table: BaseTable,
+        target_table: BaseTable,
         columns: list[str] | tuple[str] | dict[str, str] | None = None,
         task_id: str = "",
         **kwargs: Any,
@@ -51,7 +52,7 @@ class AppendOperator(AstroSQLBaseOperator):
             ),
         )
 
-    def execute(self, context: Context) -> Table:  # skipcq: PYL-W0613
+    def execute(self, context: Context) -> BaseTable:  # skipcq: PYL-W0613
         db = create_database(self.target_table.conn_id)
         self.source_table = db.populate_table_metadata(self.source_table)
         self.target_table = db.populate_table_metadata(self.target_table)
@@ -65,8 +66,8 @@ class AppendOperator(AstroSQLBaseOperator):
 
 def append(
     *,
-    source_table: Table,
-    target_table: Table,
+    source_table: BaseTable,
+    target_table: BaseTable,
     columns: list[str] | tuple[str] | dict[str, str] | None = None,
     **kwargs: Any,
 ) -> XComArg:

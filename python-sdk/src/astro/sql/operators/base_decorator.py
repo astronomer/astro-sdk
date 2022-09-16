@@ -1,19 +1,20 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any
+from typing import Any, cast
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
 from astro.airflow.datasets import kwargs_with_datasets
-from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
 from astro.sql.table import BaseTable, Table
 from astro.utils.table import find_first_table
 from astro.utils.typing_compat import Context
 from sqlalchemy.sql.functions import Function
+
+from astro.databases import create_database
 
 
 class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
@@ -35,7 +36,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
     ):
         self.kwargs = kwargs or {}
         self.op_kwargs: dict = self.kwargs.get("op_kwargs") or {}
-        self.output_table: Table = self.op_kwargs.pop("output_table", Table())
+        self.output_table: BaseTable = self.op_kwargs.pop("output_table", Table())
         self.handler = self.op_kwargs.pop("handler", handler)
         self.conn_id = self.op_kwargs.pop("conn_id", conn_id)
 
@@ -183,7 +184,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
 
 
 def load_op_arg_dataframes_into_sql(
-    conn_id: str, op_args: tuple, target_table: Table
+    conn_id: str, op_args: tuple, target_table: BaseTable
 ) -> tuple:
     """
     Identify dataframes in op_args and load them to the table.
@@ -210,7 +211,7 @@ def load_op_arg_dataframes_into_sql(
 
 
 def load_op_kwarg_dataframes_into_sql(
-    conn_id: str, op_kwargs: dict, target_table: Table
+    conn_id: str, op_kwargs: dict, target_table: BaseTable
 ) -> dict:
     """
     Identify dataframes in op_kwargs and load them to a table.
@@ -224,7 +225,7 @@ def load_op_kwarg_dataframes_into_sql(
     database = create_database(conn_id=conn_id)
     for key, value in op_kwargs.items():
         if isinstance(value, pd.DataFrame):
-            df_table = target_table.create_similar_table()
+            df_table = cast(BaseTable, target_table.create_similar_table())
             database.load_pandas_dataframe_to_table(
                 source_dataframe=value, target_table=df_table
             )

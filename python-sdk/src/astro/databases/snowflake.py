@@ -10,7 +10,6 @@ from typing import Any
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
-from astro import settings
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
     ColumnCapitalization,
@@ -21,9 +20,8 @@ from astro.constants import (
 )
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
-from astro.files import File
 from astro.settings import SNOWFLAKE_SCHEMA
-from astro.sql.table import Metadata, Table
+from astro.sql.table import BaseTable, Metadata
 from snowflake.connector import pandas_tools
 from snowflake.connector.errors import (
     DatabaseError,
@@ -37,6 +35,9 @@ from snowflake.connector.errors import (
     RequestTimeoutError,
     ServiceUnavailableError,
 )
+
+from astro import settings
+from astro.files import File
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
 
@@ -275,7 +276,7 @@ class SnowflakeDatabase(BaseDatabase):
         )
 
     @staticmethod
-    def get_table_qualified_name(table: Table) -> str:  # skipcq: PYL-R0201
+    def get_table_qualified_name(table: BaseTable) -> str:  # skipcq: PYL-R0201
         """
         Return table qualified name. In Snowflake, it is the database, schema and table
 
@@ -454,7 +455,7 @@ class SnowflakeDatabase(BaseDatabase):
 
     def create_table_using_native_schema_autodetection(
         self,
-        table: Table,
+        table: BaseTable,
         file: File,
     ) -> None:
         """
@@ -489,7 +490,7 @@ class SnowflakeDatabase(BaseDatabase):
 
     def create_table_using_schema_autodetection(
         self,
-        table: Table,
+        table: BaseTable,
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "lower",
@@ -518,7 +519,7 @@ class SnowflakeDatabase(BaseDatabase):
         super().create_table_using_schema_autodetection(table, dataframe=dataframe)
 
     def is_native_load_file_available(
-        self, source_file: File, target_table: Table
+        self, source_file: File, target_table: BaseTable
     ) -> bool:
         """
         Check if there is an optimised path for source to destination.
@@ -537,7 +538,7 @@ class SnowflakeDatabase(BaseDatabase):
     def load_file_to_table_natively(
         self,
         source_file: File,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
         **kwargs,
@@ -586,7 +587,7 @@ class SnowflakeDatabase(BaseDatabase):
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
     ) -> None:
@@ -613,7 +614,7 @@ class SnowflakeDatabase(BaseDatabase):
         )
 
     def get_sqlalchemy_template_table_identifier_and_parameter(
-        self, table: Table, jinja_table_identifier: str
+        self, table: BaseTable, jinja_table_identifier: str
     ) -> tuple[str, str]:
         """
         During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
@@ -681,8 +682,8 @@ class SnowflakeDatabase(BaseDatabase):
 
     def merge_table(
         self,
-        source_table: Table,
-        target_table: Table,
+        source_table: BaseTable,
+        target_table: BaseTable,
         source_to_target_columns_map: dict[str, str],
         target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",
@@ -708,8 +709,8 @@ class SnowflakeDatabase(BaseDatabase):
 
     def _build_merge_sql(
         self,
-        source_table: Table,
-        target_table: Table,
+        source_table: BaseTable,
+        target_table: BaseTable,
         source_to_target_columns_map: dict[str, str],
         target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",

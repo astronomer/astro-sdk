@@ -7,11 +7,12 @@ from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import ExportExistsStrategy
-from astro.databases import create_database
-from astro.files import File
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable, Table
 from astro.utils.typing_compat import Context
+
+from astro.databases import create_database
+from astro.files import File
 
 
 class ExportFileOperator(AstroSQLBaseOperator):
@@ -26,7 +27,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
 
     def __init__(
         self,
-        input_data: Table | pd.DataFrame,
+        input_data: BaseTable | pd.DataFrame,
         output_file: File,
         if_exists: ExportExistsStrategy = "exception",
         **kwargs,
@@ -65,7 +66,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
 
 
 def export_file(
-    input_data: Table | pd.DataFrame,
+    input_data: BaseTable | pd.DataFrame,
     output_file: File,
     if_exists: ExportExistsStrategy = "exception",
     task_id: str | None = None,

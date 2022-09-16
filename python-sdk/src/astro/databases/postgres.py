@@ -10,7 +10,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.settings import POSTGRES_SCHEMA
-from astro.sql.table import Metadata, Table
+from astro.sql.table import BaseTable, Metadata
 from psycopg2 import sql as postgres_sql
 
 DEFAULT_CONN_ID = PostgresHook.default_conn_name
@@ -71,7 +71,7 @@ class PostgresDatabase(BaseDatabase):
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
     ) -> None:
@@ -102,7 +102,7 @@ class PostgresDatabase(BaseDatabase):
             conn.commit()
 
     @staticmethod
-    def get_table_qualified_name(table: Table) -> str:  # skipcq: PYL-R0201
+    def get_table_qualified_name(table: BaseTable) -> str:  # skipcq: PYL-R0201
         """
         Return table qualified name. This is Database-specific.
         For instance, in Sqlite this is the table name. In Snowflake, however, it is the database, schema and table
@@ -118,7 +118,7 @@ class PostgresDatabase(BaseDatabase):
             qualified_name = table.name
         return qualified_name
 
-    def table_exists(self, table: Table) -> bool:
+    def table_exists(self, table: BaseTable) -> bool:
         """
         Check if a table exists in the database
 
@@ -135,8 +135,8 @@ class PostgresDatabase(BaseDatabase):
 
     def merge_table(
         self,
-        source_table: Table,
-        target_table: Table,
+        source_table: BaseTable,
+        target_table: BaseTable,
         source_to_target_columns_map: dict[str, str],
         target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",
@@ -152,7 +152,7 @@ class PostgresDatabase(BaseDatabase):
         :param if_conflicts: The strategy to be applied if there are conflicts.
         """
 
-        def identifier_args(table: Table):
+        def identifier_args(table: BaseTable):
             schema = table.metadata.schema
             return (schema, table.name) if schema else (table.name,)
 

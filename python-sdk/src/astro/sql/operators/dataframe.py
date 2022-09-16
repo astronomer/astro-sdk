@@ -13,9 +13,7 @@ except ImportError:
     from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
-from astro import settings
 from astro.constants import ColumnCapitalization
-from astro.databases import create_database
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable, Table
@@ -23,9 +21,12 @@ from astro.utils.dataframe import convert_columns_names_capitalization
 from astro.utils.table import find_first_table
 from astro.utils.typing_compat import Context
 
+from astro import settings
+from astro.databases import create_database
+
 
 def _get_dataframe(
-    table: Table, columns_names_capitalization: ColumnCapitalization = "lower"
+    table: BaseTable, columns_names_capitalization: ColumnCapitalization = "lower"
 ) -> pd.DataFrame:
     """
     Exports records from a SQL table and converts it into a pandas dataframe
@@ -116,7 +117,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         self.kwargs = kwargs or {}
         self.op_kwargs: dict = self.kwargs.get("op_kwargs") or {}
         if self.op_kwargs.get("output_table"):
-            self.output_table: Table | None = self.op_kwargs.pop("output_table")
+            self.output_table: BaseTable | None = self.op_kwargs.pop("output_table")
         else:
             self.output_table = None
         self.op_args = self.kwargs.get("op_args", ())  # type: ignore
