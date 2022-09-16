@@ -111,7 +111,7 @@ Configuring the Dataset inlets/outlets
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Astro SDK automatically adds inlets and outlets for all the operators if DATASET is supported (Airflow >=2.4).
 
-Users can over-ride it on a task level by adding inlets and outlets themselves. However, for users who want to use SDK with Airflow 2.4 and above but do not want to leverage Data-aware scheduling, auto-addition of inlets/outlets would be annoying so this new config setting will provide an escape hatch for such users.
+While users can override it on a task level by adding inlets and outlets, this might be inconvenient for some users who do not want to leverage Data-aware scheduling. Such users can set the following config to `False` to disable auto addition of inlets and outlets
 
 .. code:: shell
 
