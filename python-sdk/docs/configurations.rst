@@ -101,7 +101,7 @@ Reduce responses sizes returned by aql.run_raw_sql to avoid trashing the Airflow
 
 or by updating Airflow's configuration
 
-.. code:: shell
+.. code:: ini
 
    [astro_sdk]
    run_raw_sql_response_size = 1
