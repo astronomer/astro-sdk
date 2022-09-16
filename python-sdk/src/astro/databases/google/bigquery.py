@@ -81,10 +81,6 @@ class BigqueryDatabase(BaseDatabase):
             "filetype": [FileType.CSV, FileType.NDJSON, FileType.PARQUET],
             "method": lambda table, file: None,
         },
-        FileLocation.LOCAL: {
-            "filetype": [FileType.CSV, FileType.NDJSON, FileType.PARQUET],
-            "method": lambda table, file: None,
-        },
     }
 
     FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = {
