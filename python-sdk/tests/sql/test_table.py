@@ -1,3 +1,4 @@
+import pickle
 from datetime import datetime
 
 import pytest
@@ -145,3 +146,9 @@ def test_temp_table(table):
     assert table.temp
     assert isinstance(table, TempTable)
     assert not isinstance(table, Table)
+
+
+def test_if_table_object_can_be_pickled():
+    """Verify if we can pickle Table object"""
+    table = Table()
+    assert pickle.loads(pickle.dumps(table)) == table
