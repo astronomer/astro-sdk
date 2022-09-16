@@ -3,9 +3,8 @@ from datetime import datetime
 
 import pytest
 from airflow import DAG
-from astro.sql.table import Metadata, Table, TempTable
-
 from astro.sql import get_value_list
+from astro.sql.table import Metadata, Table, TempTable
 
 
 def test_table_with_explicit_name():
