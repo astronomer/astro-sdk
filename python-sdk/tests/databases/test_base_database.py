@@ -74,11 +74,10 @@ def test_check_schema_autodetection_is_supported():
         )
     )
 
-    assert (
+    assert not (
         db.check_schema_autodetection_is_supported(
             source_file=File(path="s3://bucket/prefix/key.csv")
         )
-        is False
     )
 
 
