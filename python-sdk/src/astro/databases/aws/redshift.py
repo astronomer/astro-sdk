@@ -13,6 +13,7 @@ from astro.constants import (
 )
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
+from astro.files import File
 from astro.settings import REDSHIFT_SCHEMA
 from astro.sql.table import BaseTable, Metadata, Table
 from redshift_connector.error import (
@@ -29,8 +30,6 @@ from redshift_connector.error import (
 )
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
-
-from astro.files import File
 
 DEFAULT_CONN_ID = RedshiftSQLHook.default_conn_name
 NATIVE_PATHS_SUPPORTED_FILE_TYPES = {

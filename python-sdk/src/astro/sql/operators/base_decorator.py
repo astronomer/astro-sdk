@@ -7,14 +7,13 @@ import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
 from astro.airflow.datasets import kwargs_with_datasets
+from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
 from astro.sql.table import BaseTable, Table
 from astro.utils.table import find_first_table
 from astro.utils.typing_compat import Context
 from sqlalchemy.sql.functions import Function
-
-from astro.databases import create_database
 
 
 class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):

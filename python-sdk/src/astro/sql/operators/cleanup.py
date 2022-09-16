@@ -10,14 +10,13 @@ from airflow.models.baseoperator import BaseOperator
 from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstance
 from airflow.utils.state import State
+from astro.databases import create_database
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.sql.table import BaseTable, TempTable
 from astro.utils.typing_compat import Context
-
-from astro.databases import create_database
 
 
 def filter_for_temp_tables(task_outputs: list[Any]) -> list[TempTable]:
