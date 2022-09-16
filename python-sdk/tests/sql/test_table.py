@@ -1,9 +1,11 @@
+import pickle
 from datetime import datetime
 
 import pytest
 from airflow import DAG
-from astro.sql import get_value_list
 from astro.sql.table import Metadata, Table, TempTable
+
+from astro.sql import get_value_list
 
 
 def test_table_with_explicit_name():
@@ -145,3 +147,8 @@ def test_temp_table(table):
     assert table.temp
     assert isinstance(table, TempTable)
     assert not isinstance(table, Table)
+
+
+def test_if_table_object_can_be_pickled():
+    """Verify if we can pickle Table object"""
+    pickle.loads(pickle.dumps(Table(name="test")))

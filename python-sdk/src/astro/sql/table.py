@@ -63,6 +63,9 @@ class BaseTable:
     columns: list[Column] = field(factory=list)
     temp: bool = field(default=False)
 
+    def __getstate__(self):
+        return self.__dict__
+
     def __attrs_post_init__(self) -> None:
         if not self._name or self._name.startswith("_tmp"):
             self.temp = True
