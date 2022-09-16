@@ -218,7 +218,7 @@ To start with you can take the following steps for the initial configuration:
 2. Add the database schema constant to the [settings.py](https://github.com/astronomer/astro-sdk/blob/2692d1c334fcf43a4c677a790a74ab25403a679c/python-sdk/src/astro/settings.py#L8) module.
    The [default schema name](https://github.com/astronomer/astro-sdk/blob/2692d1c334fcf43a4c677a790a74ab25403a679c/python-sdk/src/astro/constants.py#L12) is `tmp_astro`.
    So in case you do not specify your own schema name, your tests will create tables in that schema in your database.
-3. Create a `test-connections.yaml` in the [python-sdk](../../) directory to add connections to the database which will be used by the tests.
+3. Create a `test-connections.yaml` in the [python-sdk](../../../python-sdk) directory to add connections to the database which will be used by the tests.
    This file is ignored by git as mentioned in [.gitignore](../../../.gitignore) , so you may not worry that your secrets will get checked in accidentally.
    Sample `test-connections.yaml` file would look like the below:
    ```yaml
@@ -278,6 +278,8 @@ Following are important pointers for implementing the operators:
 4. The default approach to load a file to a database table is to load the table into a Pandas dataframe first and then load the Pandas dataframe into the database table. However, this generally is a slower approach.
    For optimised loads, you need to try to support native loads. Check what all file types and object stores the database supports for native load and provide support for those. Also, handle/retry the native load exceptions thrown by the corresponding connector library.
    Example PR: [Native load support for Redshift](https://github.com/astronomer/astro-sdk/pull/700).
+
+You're recommended to provide example DAGs to guide on the usage relevant to your database in [example_dags](../../example_dags) directory and add those example DAGs as part of integration test suite run in [test_example_dags.py](../../tests/test_example_dags.py).
 
 Additionally, once you have implemented support for all the Astro SDK Python Operators, you also need to benchmark the performance of the file loads.
 You can refer to the [benchmarking guide](../../tests/benchmark/README.md) to generate results and publish those for the database like in [PR](https://github.com/astronomer/astro-sdk/pull/806).
