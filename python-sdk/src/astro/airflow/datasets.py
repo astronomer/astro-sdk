@@ -20,13 +20,25 @@ def kwargs_with_datasets(
     Extract inlets and outlets from kwargs if users have passed it. If not, set input datasets as inlets and
     set output dataset as outlets
     """
+    from astro import settings
+
     kwargs = kwargs or {}
-    if "inlets" in kwargs or DATASET_SUPPORT and input_datasets:
+    if (
+        "inlets" in kwargs
+        or DATASET_SUPPORT
+        and settings.AUTO_ADD_INLETS_OUTLETS
+        and input_datasets
+    ):
         inlets = kwargs.get("inlets", input_datasets)
         inlets = inlets if isinstance(inlets, list) else [inlets]
         kwargs.update({"inlets": inlets})
 
-    if "outlets" in kwargs or DATASET_SUPPORT and output_datasets:
+    if (
+        "outlets" in kwargs
+        or DATASET_SUPPORT
+        and settings.AUTO_ADD_INLETS_OUTLETS
+        and output_datasets
+    ):
         outlets = kwargs.get("outlets", output_datasets)
         outlets = outlets if isinstance(outlets, list) else [outlets]
         kwargs.update({"outlets": outlets})
