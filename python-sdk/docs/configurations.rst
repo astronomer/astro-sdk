@@ -34,7 +34,7 @@ We can also configure the default schema specific to the database type (example:
 
 or by updating Airflow's configuration
 
-.. code:: shell
+.. code:: ini
 
    [astro_sdk]
    postgres_default_schema = "postgres_tmp"
