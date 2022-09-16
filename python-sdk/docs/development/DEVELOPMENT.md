@@ -202,3 +202,84 @@ You can configure the Docker-based testing environment to test your DAG
 
 * `dev/dags/` - DAG Files
 * `dev/logs/` - Logs files of the Airflow containers
+
+
+## Adding support for a new database
+
+You can use Test Driven approach for adding support for a new database to the Astro Python SDK. You can fulfil the
+[tests](../../tests) for all the
+Python SDK operators by adding parameters to the existing tests for the database and additionally adding more database specific
+implementation tests. You can take a look at this [PR](https://github.com/astronomer/astro-sdk/pull/639) and
+[PR](https://github.com/astronomer/astro-sdk/pull/753) on how to add parameters for the existing tests for all the
+operators.
+
+To start with you can take the following steps for the initial configuration:
+1. Add the database name constant to the [Database](https://github.com/astronomer/astro-sdk/blob/2692d1c334fcf43a4c677a790a74ab25403a679c/python-sdk/src/astro/constants.py#L42) class in the `constants.py` module.
+2. Add the database schema constant to the [settings.py](https://github.com/astronomer/astro-sdk/blob/2692d1c334fcf43a4c677a790a74ab25403a679c/python-sdk/src/astro/settings.py#L8) module.
+   The [default schema name](https://github.com/astronomer/astro-sdk/blob/2692d1c334fcf43a4c677a790a74ab25403a679c/python-sdk/src/astro/constants.py#L12) is `tmp_astro`.
+   So in case you do not specify your own schema name, your tests will create tables in that schema in your database.
+3. Create a `test-connections.yaml` in the [python-sdk](../../../python-sdk) directory to add connections to the database which will be used by the tests.
+   This file is ignored by git as mentioned in [.gitignore](../../../.gitignore) , so you may not worry that your secrets will get checked in accidentally.
+   Sample `test-connections.yaml` file would look like the below:
+   ```yaml
+   - conn_id: gcp_conn
+     conn_type: google_cloud_platform
+     description: null
+     extra: null
+   - conn_id: aws_conn
+     conn_type: aws
+     description: null
+     extra: null
+   - conn_id: redshift_conn
+     conn_type: redshift
+     schema: "dev"
+     host: <YOUR_REDSHIFT_CLUSTER_HOST_URL>
+     port: 5439
+     login: <YOUR_REDSHIFT_CLUSTER_USER>
+     password: <YOUR_REDSHIFT_CLUSTER_PASSWORD>
+   ```
+4. Add a mapping of the database name to the connection ID in [conftest.py](https://github.com/astronomer/astro-sdk/blob/2692d1c334fcf43a4c677a790a74ab25403a679c/python-sdk/conftest.py#L25).
+5. Add needed environment variables for the implementation to work by creating a `.env` file and adding those to it.
+   The environment variable could be related to cloud access credentials, development specific airflow config variables, etc. <br/>
+   `.env` file could look like the below (you can ask your team to share with you team level credentials for accessing specific sources, if any.)
+   ```text
+   AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
+   GOOGLE_APPLICATION_CREDENTIALS=<PATH_TO_GOOGLE_SERVICE_ACCOUNT_JSON>
+   AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE=True
+   AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID>
+   AWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY>
+   ASTRO_CHUNKSIZE=10
+   GCP_BUCKET=astro-sdk
+   REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN=<REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN>
+   ASTRO_PUBLISH_BENCHMARK_DATA=True
+   ```
+6. For the tests to run in CI, you will need to create appropriate secrets in the Github Actions configuration for the repository. Contact the repository admins
+   @kaxil [Kaxil Naik](mailto: kaxil@astronomer.io) or @tatiana [Tatiana Al-Chueyr](mailto: tatiana.alchueyr@astronomer.io)  to add your needed secrets to Github Actions.
+   To make the connections available, create them in [.github/ci-test-connection.yaml](../../../.github/ci-test-connections.yaml)
+   similar to that in step 3 and refer the secrets from the environment variables which need to be created in
+   [.github/workflows/ci-python-sdk.yaml](../../../.github/workflows/ci-python-sdk.yaml).
+7. Add the database as Python SDK supported database in the [test_constants.py](../../tests/test_constants.py) module's [test_supported_database()](https://github.com/astronomer/astro-sdk/blob/2692d1c334fcf43a4c677a790a74ab25403a679c/python-sdk/tests/test_constants.py#L23) method implementation.
+
+With the above configurations set, you can now proceed for the implementation of supporting all SDK operators in the new database.
+The purpose of each of the operators can be found in the [Astro SDK Python - Operators](https://astro-sdk-python.readthedocs.io/en/stable/operators.html) document.
+As described before, you can use test driven development and run the tests for the operators one by one located in the [tests](../../tests) directory.
+By default, the [base class](../../src/astro/databases/base.py)
+implementation methods will be used for the database in the tests. You will need to override some of these methods
+to make run the tests successfully. You can create a module for your database in the [databases](../../src/astro/databases) directory.
+You can start with running the tests for the `load_file` operator. Relevant tests can be found in [tests/sql/operators](../../tests/sql/operators) directory.
+Tests for load_operator are kept in [test_load_file.py](../../tests/sql/operators/test_load_file.py).
+You might to need to override few base class methods to establish connection to the database based on its semantics.
+e.g. `sql_type()`, `hook()`, `sqlalchemy_engine()`, `default_metadata()`, `schema_exists()`, `table_exists()`, `load_pandas_dataframe_to_table()`
+
+Following are important pointers for implementing the operators:
+1. Investigate how to write a Pandas dataframe to the database and use that in the `load_pandas_dataframe_to_table` implementation.
+2. Check what all file types are supported by the database for load and implement support for those. In general, Astro SDK supported file types and file stores can be found [here](../../README.md#supported-technologies).
+3. Check what merge strategies the database supports and use that in the `merge_table` implementation. Example PR: [Merge implementation for Redshift](https://github.com/astronomer/astro-sdk/pull/753).
+4. The default approach to load a file to a database table is to load the table into a Pandas dataframe first and then load the Pandas dataframe into the database table. However, this generally is a slower approach.
+   For optimised loads, you need to try to support native loads. Check what all file types and object stores the database supports for native load and provide support for those. Also, handle/retry the native load exceptions thrown by the corresponding connector library.
+   Example PR: [Native load support for Redshift](https://github.com/astronomer/astro-sdk/pull/700).
+
+You're recommended to provide example DAGs to guide on the usage relevant to your database in [example_dags](../../example_dags) directory and add those example DAGs as part of integration test suite run in [test_example_dags.py](../../tests/test_example_dags.py).
+
+Additionally, once you have implemented support for all the Astro SDK Python Operators, you also need to benchmark the performance of the file loads.
+You can refer to the [benchmarking guide](../../tests/benchmark/README.md) to generate results and publish those for the database like in [PR](https://github.com/astronomer/astro-sdk/pull/806).
