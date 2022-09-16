@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC
-from typing import Any
+from typing import Any, Callable, Mapping
 
 import pandas as pd
 import sqlalchemy
@@ -11,13 +11,16 @@ from astro.constants import (
     DEFAULT_CHUNK_SIZE,
     ColumnCapitalization,
     ExportExistsStrategy,
+    FileLocation,
+    FileType,
     LoadExistStrategy,
     MergeConflictStrategy,
 )
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File, resolve_file_path_pattern
+from astro.files.types import create_file_type
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
-from astro.sql.table import Metadata, Table
+from astro.sql.table import BaseTable, Metadata
 from pandas.io.sql import SQLDatabase
 from sqlalchemy import column, insert, select
 from sqlalchemy.sql import ClauseElement
@@ -49,8 +52,13 @@ class BaseDatabase(ABC):
     # illegal_column_name_chars[0] will be replaced by value in illegal_column_name_chars_replacement[0]
     illegal_column_name_chars: list[str] = []
     illegal_column_name_chars_replacement: list[str] = []
+    NATIVE_PATHS: dict[Any, Any] = {}
     NATIVE_LOAD_EXCEPTIONS: Any = DatabaseCustomError
     DEFAULT_SCHEMA = SCHEMA
+    NATIVE_AUTODETECT_SCHEMA_CONFIG: Mapping[
+        FileLocation, Mapping[str, list[FileType] | Callable]
+    ] = {}
+    FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = set()
 
     def __init__(self, conn_id: str):
         self.conn_id = conn_id
@@ -100,7 +108,7 @@ class BaseDatabase(ABC):
             result = self.connection.execute(sql_statement, parameters)
         return result
 
-    def columns_exist(self, table: Table, columns: list[str]) -> bool:
+    def columns_exist(self, table: BaseTable, columns: list[str]) -> bool:
         """
         Check that a list of columns exist in the given table.
 
@@ -115,7 +123,7 @@ class BaseDatabase(ABC):
             for column in columns
         )
 
-    def table_exists(self, table: Table) -> bool:
+    def table_exists(self, table: BaseTable) -> bool:
         """
         Check if a table exists in the database.
 
@@ -139,7 +147,7 @@ class BaseDatabase(ABC):
         return sql
 
     @staticmethod
-    def get_table_qualified_name(table: Table) -> str:  # skipcq: PYL-R0201
+    def get_table_qualified_name(table: BaseTable) -> str:  # skipcq: PYL-R0201
         """
         Return table qualified name. This is Database-specific.
         For instance, in Sqlite this is the table name. In Snowflake, however, it is the database, schema and table
@@ -165,7 +173,7 @@ class BaseDatabase(ABC):
         """
         raise NotImplementedError
 
-    def populate_table_metadata(self, table: Table) -> Table:
+    def populate_table_metadata(self, table: BaseTable) -> BaseTable:
         """
         Given a table, check if the table has metadata.
         If the metadata is missing, and the database has metadata, assign it to the table.
@@ -184,7 +192,7 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
     # Table creation & deletion methods
     # ---------------------------------------------------------
-    def create_table_using_columns(self, table: Table) -> None:
+    def create_table_using_columns(self, table: BaseTable) -> None:
         """
         Create a SQL table using the table columns.
 
@@ -199,7 +207,7 @@ class BaseDatabase(ABC):
 
     def create_table_using_native_schema_autodetection(
         self,
-        table: Table,
+        table: BaseTable,
         file: File,
     ) -> None:
         """
@@ -214,7 +222,7 @@ class BaseDatabase(ABC):
 
     def create_table_using_schema_autodetection(
         self,
-        table: Table,
+        table: BaseTable,
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "lower",  # skipcq
@@ -261,7 +269,7 @@ class BaseDatabase(ABC):
 
     def create_table(
         self,
-        table: Table,
+        table: BaseTable,
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
@@ -288,7 +296,7 @@ class BaseDatabase(ABC):
     def create_table_from_select_statement(
         self,
         statement: str,
-        target_table: Table,
+        target_table: BaseTable,
         parameters: dict | None = None,
     ) -> None:
         """
@@ -303,7 +311,7 @@ class BaseDatabase(ABC):
         )
         self.run_sql(statement, parameters)
 
-    def drop_table(self, table: Table) -> None:
+    def drop_table(self, table: BaseTable) -> None:
         """
         Delete a SQL table, if it exists.
 
@@ -318,10 +326,67 @@ class BaseDatabase(ABC):
     # Table load methods
     # ---------------------------------------------------------
 
+    def create_schema_and_table_if_needed(
+        self,
+        table: BaseTable,
+        file: File,
+        normalize_config: dict | None = None,
+        columns_names_capitalization: ColumnCapitalization = "original",
+        if_exists: LoadExistStrategy = "replace",
+        use_native_support: bool = True,
+    ):
+        """
+        Checks if the autodetect schema exists for native support else creates the schema and table
+        :param table: Table to create
+        :param file: File path and conn_id for object stores
+        :param normalize_config: pandas json_normalize params config
+        :param columns_names_capitalization:  determines whether to convert all columns to lowercase/uppercase
+        :param if_exists:  Overwrite file if exists
+        :param use_native_support: Use native support for data transfer if available on the destination
+        """
+        is_schema_autodetection_supported = (
+            self.check_schema_autodetection_is_supported(source_file=file)
+        )
+        is_file_pattern_based_schema_autodetection_supported = (
+            self.check_file_pattern_based_schema_autodetection_is_supported(
+                source_file=file
+            )
+        )
+        if if_exists == "replace":
+            self.drop_table(table)
+        if (
+            use_native_support
+            and is_schema_autodetection_supported
+            and not file.is_pattern()
+        ):
+            return
+        if (
+            use_native_support
+            and file.is_pattern()
+            and is_schema_autodetection_supported
+            and is_file_pattern_based_schema_autodetection_supported
+        ):
+            return
+
+        self.create_schema_if_needed(table.metadata.schema)
+        if if_exists == "replace" or not self.table_exists(table):
+            files = resolve_file_path_pattern(
+                file.path,
+                file.conn_id,
+                normalize_config=normalize_config,
+                filetype=file.type.name,
+            )
+            self.create_table(
+                table,
+                # We only use the first file for inferring the table schema
+                files[0],
+                columns_names_capitalization=columns_names_capitalization,
+            )
+
     def load_file_to_table(
         self,
         input_file: File,
-        output_table: Table,
+        output_table: BaseTable,
         normalize_config: dict | None = None,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
@@ -347,50 +412,66 @@ class BaseDatabase(ABC):
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         """
         normalize_config = normalize_config or {}
+
+        self.create_schema_and_table_if_needed(
+            file=input_file,
+            table=output_table,
+            columns_names_capitalization=columns_names_capitalization,
+            if_exists=if_exists,
+            normalize_config=normalize_config,
+        )
+
+        if use_native_support and self.is_native_load_file_available(
+            source_file=input_file, target_table=output_table
+        ):
+
+            self.load_file_to_table_natively_with_fallback(
+                source_file=input_file,
+                target_table=output_table,
+                if_exists="append",
+                normalize_config=normalize_config,
+                native_support_kwargs=native_support_kwargs,
+                enable_native_fallback=enable_native_fallback,
+                chunk_size=chunk_size,
+            )
+        else:
+            self.load_file_to_table_using_pandas(
+                input_file=input_file,
+                output_table=output_table,
+                normalize_config=normalize_config,
+                if_exists="append",
+                chunk_size=chunk_size,
+            )
+
+    def load_file_to_table_using_pandas(
+        self,
+        input_file: File,
+        output_table: BaseTable,
+        normalize_config: dict | None = None,
+        if_exists: LoadExistStrategy = "replace",
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+    ):
         input_files = resolve_file_path_pattern(
             input_file.path,
             input_file.conn_id,
             normalize_config=normalize_config,
             filetype=input_file.type.name,
         )
-        self.create_schema_if_needed(output_table.metadata.schema)
-        if if_exists == "replace" or not self.table_exists(output_table):
-            self.drop_table(output_table)
-            self.create_table(
-                output_table,
-                input_files[0],
-                columns_names_capitalization=columns_names_capitalization,
-            )
-            if_exists = "append"
 
-        # TODO: many native transfers support the input_file.path - it may be better
-        # to use the native support to loading multiple files as opposed to iterating
-        # here
         for file in input_files:
-            if use_native_support and self.is_native_load_file_available(
-                source_file=file, target_table=output_table
-            ):
-                self.load_file_to_table_natively_with_fallback(
-                    source_file=file,
-                    target_table=output_table,
-                    if_exists=if_exists,
-                    native_support_kwargs=native_support_kwargs,
-                    enable_native_fallback=enable_native_fallback,
-                    chunk_size=chunk_size,
-                )
-            else:
-                self.load_pandas_dataframe_to_table(
-                    file.export_to_dataframe(),
-                    output_table,
-                    chunk_size=chunk_size,
-                    if_exists="append",  # We've already created a new table in this case
-                )
+            self.load_pandas_dataframe_to_table(
+                file.export_to_dataframe(),
+                output_table,
+                chunk_size=chunk_size,
+                if_exists=if_exists,
+            )
 
     def load_file_to_table_natively_with_fallback(
         self,
         source_file: File,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
+        normalize_config: dict | None = None,
         native_support_kwargs: dict | None = None,
         enable_native_fallback: bool | None = True,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
@@ -405,7 +486,9 @@ class BaseDatabase(ABC):
         :param chunk_size: Specify the number of records in each batch to be written at a time
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer.
+        :param normalize_config: pandas json_normalize params config
         """
+
         try:
             self.load_file_to_table_natively(
                 source_file=source_file,
@@ -421,11 +504,12 @@ class BaseDatabase(ABC):
                 exc_info=True,
             )
             if enable_native_fallback:
-                self.load_pandas_dataframe_to_table(
-                    source_file.export_to_dataframe(),
-                    target_table=target_table,
-                    chunk_size=chunk_size,
+                self.load_file_to_table_using_pandas(
+                    input_file=source_file,
+                    output_table=target_table,
+                    normalize_config=normalize_config,
                     if_exists=if_exists,
+                    chunk_size=chunk_size,
                 )
             else:
                 raise load_exception
@@ -433,7 +517,7 @@ class BaseDatabase(ABC):
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
     ) -> None:
@@ -457,8 +541,8 @@ class BaseDatabase(ABC):
 
     def append_table(
         self,
-        source_table: Table,
-        target_table: Table,
+        source_table: BaseTable,
+        target_table: BaseTable,
         source_to_target_columns_map: dict[str, str],
     ) -> None:
         """
@@ -494,8 +578,8 @@ class BaseDatabase(ABC):
 
     def merge_table(
         self,
-        source_table: Table,
-        target_table: Table,
+        source_table: BaseTable,
+        target_table: BaseTable,
         source_to_target_columns_map: dict[str, str],
         target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",
@@ -512,7 +596,7 @@ class BaseDatabase(ABC):
         """
         raise NotImplementedError
 
-    def get_sqla_table(self, table: Table) -> SqlaTable:
+    def get_sqla_table(self, table: BaseTable) -> SqlaTable:
         """
         Return SQLAlchemy table instance
 
@@ -528,7 +612,7 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
     # Extract methods
     # ---------------------------------------------------------
-    def export_table_to_pandas_dataframe(self, source_table: Table) -> pd.DataFrame:
+    def export_table_to_pandas_dataframe(self, source_table: BaseTable) -> pd.DataFrame:
         """
         Copy the content of a table to an in-memory Pandas dataframe.
 
@@ -545,7 +629,7 @@ class BaseDatabase(ABC):
 
     def export_table_to_file(
         self,
-        source_table: Table,
+        source_table: BaseTable,
         target_file: File,
         if_exists: ExportExistsStrategy = "exception",
     ) -> None:
@@ -592,7 +676,7 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
 
     def get_sqlalchemy_template_table_identifier_and_parameter(
-        self, table: Table, jinja_table_identifier: str
+        self, table: BaseTable, jinja_table_identifier: str
     ) -> tuple[str, str]:
         """
         During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
@@ -621,7 +705,7 @@ class BaseDatabase(ABC):
         )
 
     def is_native_load_file_available(  # skipcq: PYL-R0201
-        self, source_file: File, target_table: Table  # skipcq: PYL-W0613
+        self, source_file: File, target_table: BaseTable  # skipcq: PYL-W0613
     ) -> bool:
         """
         Check if there is an optimised path for source to destination.
@@ -634,7 +718,7 @@ class BaseDatabase(ABC):
     def load_file_to_table_natively(
         self,
         source_file: File,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
         **kwargs,
@@ -649,3 +733,40 @@ class BaseDatabase(ABC):
         :param native_support_kwargs: kwargs to be used by native loading command
         """
         raise NotImplementedError
+
+    def check_schema_autodetection_is_supported(self, source_file: File) -> bool:
+        """
+        Checks if schema autodetection is handled natively by the database
+
+        :param source_file: File from which we need to transfer data
+        """
+        filetype_supported = self.NATIVE_AUTODETECT_SCHEMA_CONFIG.get(
+            source_file.location.location_type
+        )
+
+        source_filetype = create_file_type(
+            path=source_file.path, filetype=source_file.type.name
+        )
+        is_source_filetype_supported = (
+            (source_filetype in filetype_supported.get("filetype"))  # type: ignore
+            if filetype_supported
+            else None
+        )
+
+        location_type = self.NATIVE_PATHS.get(source_file.location.location_type)
+        return bool(location_type and is_source_filetype_supported)
+
+    def check_file_pattern_based_schema_autodetection_is_supported(
+        self, source_file: File
+    ) -> bool:
+        """
+        Checks if schema autodetection is handled natively by the database for file
+        patterns and prefixes.
+
+        :param source_file: File from which we need to transfer data
+        """
+        is_file_pattern_based_schema_autodetection_supported = (
+            source_file.location.location_type
+            in self.FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED
+        )
+        return is_file_pattern_based_schema_autodetection_supported

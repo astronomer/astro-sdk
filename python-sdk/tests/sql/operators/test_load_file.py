@@ -1078,3 +1078,37 @@ def test_inlets_outlets_non_supported_ds():
     )
     assert task.operator.inlets == []
     assert task.operator.outlets == []
+
+
+@pytest.mark.parametrize(
+    "file",
+    [
+        File("gs://astro-sdk/workspace/sample.parquet"),
+        File("gs://astro-sdk/workspace/sample.csv"),
+        File("gs://astro-sdk/workspace/sample.ndjson"),
+    ],
+    ids=["parquet", "csv", "ndjson"],
+)
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+        }
+    ],
+    indirect=True,
+    ids=["Bigquery"],
+)
+def test_loading_gcs_file_to_database(database_table_fixture, file):
+    """
+    Test working of optimised path method with autodetect for files in GCS
+    """
+    db, test_table = database_table_fixture
+    load_file(
+        input_file=file,
+        output_table=test_table,
+        use_native_support=True,
+    ).operator.execute({})
+
+    database_df = db.export_table_to_pandas_dataframe(test_table)
+    assert database_df.shape == (3, 2)

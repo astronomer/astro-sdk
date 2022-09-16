@@ -250,3 +250,8 @@ Users can also load data from an HTTP API:
    :language: python
    :start-after: [START load_file_http_example]
    :end-before: [END load_file_http_example]
+
+Default Datasets
+~~~~~~~~~~~~~~~~
+* Input dataset - Source file for the operator.
+* Output dataset - Target table of the operator.

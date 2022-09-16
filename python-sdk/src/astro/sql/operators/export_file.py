@@ -10,7 +10,7 @@ from astro.constants import ExportExistsStrategy
 from astro.databases import create_database
 from astro.files import File
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
-from astro.sql.table import Table
+from astro.sql.table import BaseTable, Table
 from astro.utils.typing_compat import Context
 
 
@@ -26,7 +26,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
 
     def __init__(
         self,
-        input_data: Table | pd.DataFrame,
+        input_data: BaseTable | pd.DataFrame,
         output_file: File,
         if_exists: ExportExistsStrategy = "exception",
         **kwargs,
@@ -46,7 +46,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
         Infers SQL database type based on connection.
         """
         # Infer db type from `input_conn_id`.
-        if isinstance(self.input_data, Table):
+        if isinstance(self.input_data, BaseTable):
             database = create_database(self.input_data.conn_id)
             self.input_data = database.populate_table_metadata(self.input_data)
             df = database.export_table_to_pandas_dataframe(self.input_data)
@@ -65,7 +65,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
 
 
 def export_file(
-    input_data: Table | pd.DataFrame,
+    input_data: BaseTable | pd.DataFrame,
     output_file: File,
     if_exists: ExportExistsStrategy = "exception",
     task_id: str | None = None,

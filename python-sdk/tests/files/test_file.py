@@ -35,6 +35,25 @@ def test_is_binary(filetype):
     assert File(filetype[1]).is_binary() == filetype[0]
 
 
+@pytest.mark.parametrize(
+    "filetype",
+    [
+        (False, "/tmp/sample.csv"),
+        (False, "/tmp/sample.json"),
+        (False, "/tmp/sample.ndjson"),
+        (False, "/tmp/sample.parquet"),
+        (True, "/tmp/"),
+        (True, "s3://tmp/home_*"),
+        (False, "s3://tmp/.folder/sample.csv"),
+        (True, "s3://tmp/.folder/"),
+    ],
+    ids=["csv", "json", "ndjson", "parquet", "csv", "json", "csv", "json"],
+)
+def test_is_pattern(filetype):
+    """Test if the file is a file pattern"""
+    assert File(filetype[1]).is_pattern() == filetype[0]
+
+
 def test_path_property():
     """Test path property is having correct path"""
     path = "/tmp/sample.csv"

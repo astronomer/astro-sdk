@@ -40,3 +40,8 @@ When the source and target tables have different schemas, you can map different 
 Conflicts
 ~~~~~~~~~
 The ``append`` operator can't handle conflicts that may arise while appending data. If you want to handle those scenarios, you can use the :ref:`merge_operator`.
+
+Default Datasets
+~~~~~~~~~~~~~~~~
+* Input dataset - Source table for the operator.
+* Output dataset - Target table of the operator.

@@ -3,7 +3,7 @@ from datetime import datetime
 import pytest
 from airflow import DAG
 from astro.sql import get_value_list
-from astro.sql.table import Metadata, Table
+from astro.sql.table import Metadata, Table, TempTable
 
 
 def test_table_with_explicit_name():
@@ -101,10 +101,6 @@ def test_get_value_list():
             "astro://test_conn@?table=test_table",
         ),
         (
-            Table(name="test_table", conn_id="test_conn", temp=True),
-            "astro://test_conn@?table=test_table",
-        ),
-        (
             Table(
                 name="test_table",
                 conn_id="test_conn",
@@ -133,3 +129,19 @@ def test_table_to_datasets_extra():
         name="test_table", conn_id="test_conn", metadata=Metadata(schema="schema")
     )
     assert table.extra == {}
+
+
+@pytest.mark.parametrize(
+    "table",
+    [
+        Table(),
+        Table("_tmp"),
+        Table(name="_tmp", conn_id="test_conn"),
+        Table(name="name", conn_id="test_conn", temp=True),
+    ],
+)
+def test_temp_table(table):
+    """Verify that temp table is generated if no name is passed or temp is set to True"""
+    assert table.temp
+    assert isinstance(table, TempTable)
+    assert not isinstance(table, Table)
