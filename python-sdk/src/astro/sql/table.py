@@ -63,6 +63,7 @@ class BaseTable:
     columns: list[Column] = field(factory=list)
     temp: bool = field(default=False)
 
+    # We need this method to pickle Table object, without this we cannot push/pull this object from xcom.
     def __getstate__(self):
         return self.__dict__
 
