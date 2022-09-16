@@ -112,7 +112,8 @@ class BaseDatabase(ABC):
                 DeprecationWarning,
                 stacklevel=2,
             )
-        sql = sql or kwargs.get("sql_statement")  # type: ignore
+        if kwargs.get("sql_statement"):
+            sql = kwargs.get("sql_statement")  # type: ignor
 
         if isinstance(sql, str):
             result = self.connection.execute(sqlalchemy.text(sql), parameters)
