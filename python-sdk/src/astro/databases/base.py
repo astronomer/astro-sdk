@@ -88,22 +88,10 @@ class BaseDatabase(ABC):
         return self.hook.get_sqlalchemy_engine()  # type: ignore[no-any-return]
 
     def run_sql(
-            self,
-            sql_statement: str | ClauseElement,
-            parameters: dict | None = None,
-    ):
-        warnings.warn(
-            "`run_sql` is deprecated and will be removed "
-            "Please use  `run_sql_query` instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.run_sql_query(sql=sql_statement, parameters=parameters)
-
-    def run_sql_query(
         self,
-        sql: str | ClauseElement,
+        sql: str | ClauseElement = '',
         parameters: dict | None = None,
+        **kwargs,
     ):
         """
         Return the results to running a SQL statement.
@@ -116,6 +104,15 @@ class BaseDatabase(ABC):
         """
         if parameters is None:
             parameters = {}
+
+        if "sql_statement" in kwargs:
+            warnings.warn(
+                "`sql_statement` is deprecated and will be removed in future release"
+                "Please use  `sql` param instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        sql = sql or kwargs.get("sql_statement")
 
         if isinstance(sql, str):
             result = self.connection.execute(sqlalchemy.text(sql), parameters)
