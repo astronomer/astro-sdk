@@ -42,14 +42,12 @@ or by updating Airflow's configuration
    snowflake_default_schema = "snowflake_tmp"
    redshift_default_schema = "redshift_tmp"
 
-
-
-
 Configuring the unsafe dataframe storage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. code:: shell
 
-   AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE = False
+   AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE = True
 
 or by updating Airflow's configuration
 
@@ -106,3 +104,21 @@ or by updating Airflow's configuration
 
    [astro_sdk]
    run_raw_sql_response_size = 1
+
+
+Configuring the Dataset inlets/outlets
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Astro SDK automatically adds inlets and outlets for all the operators if DATASET is supported (Airflow >=2.4).
+
+Users can over-ride it on a task level by adding inlets and outlets themselves. However, for users who want to use SDK with Airflow 2.4 and above but do not want to leverage Data-aware scheduling, auto-addition of inlets/outlets would be annoying so this new config setting will provide an escape hatch for such users.
+
+.. code:: shell
+
+   AIRFLOW__ASTRO_SDK__AUTO_ADD_INLETS_OUTLETS = True
+
+or by updating Airflow's configuration
+
+.. code:: shell
+
+   [astro_sdk]
+   auto_add_inlets_outlets = True
