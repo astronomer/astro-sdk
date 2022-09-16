@@ -18,7 +18,7 @@ from astro.constants import (
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File, resolve_file_path_pattern
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
-from astro.sql.table import Metadata, Table
+from astro.sql.table import BaseTable, Metadata
 from pandas.io.sql import SQLDatabase
 from sqlalchemy import column, insert, select
 from sqlalchemy.sql import ClauseElement
@@ -103,7 +103,7 @@ class BaseDatabase(ABC):
             result = self.connection.execute(sql_statement, parameters)
         return result
 
-    def columns_exist(self, table: Table, columns: list[str]) -> bool:
+    def columns_exist(self, table: BaseTable, columns: list[str]) -> bool:
         """
         Check that a list of columns exist in the given table.
 
@@ -118,7 +118,7 @@ class BaseDatabase(ABC):
             for column in columns
         )
 
-    def table_exists(self, table: Table) -> bool:
+    def table_exists(self, table: BaseTable) -> bool:
         """
         Check if a table exists in the database.
 
@@ -142,7 +142,7 @@ class BaseDatabase(ABC):
         return sql
 
     @staticmethod
-    def get_table_qualified_name(table: Table) -> str:  # skipcq: PYL-R0201
+    def get_table_qualified_name(table: BaseTable) -> str:  # skipcq: PYL-R0201
         """
         Return table qualified name. This is Database-specific.
         For instance, in Sqlite this is the table name. In Snowflake, however, it is the database, schema and table
@@ -168,7 +168,7 @@ class BaseDatabase(ABC):
         """
         raise NotImplementedError
 
-    def populate_table_metadata(self, table: Table) -> Table:
+    def populate_table_metadata(self, table: BaseTable) -> BaseTable:
         """
         Given a table, check if the table has metadata.
         If the metadata is missing, and the database has metadata, assign it to the table.
@@ -187,7 +187,7 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
     # Table creation & deletion methods
     # ---------------------------------------------------------
-    def create_table_using_columns(self, table: Table) -> None:
+    def create_table_using_columns(self, table: BaseTable) -> None:
         """
         Create a SQL table using the table columns.
 
@@ -202,7 +202,7 @@ class BaseDatabase(ABC):
 
     def create_table_using_native_schema_autodetection(
         self,
-        table: Table,
+        table: BaseTable,
         file: File,
     ) -> None:
         """
@@ -217,7 +217,7 @@ class BaseDatabase(ABC):
 
     def create_table_using_schema_autodetection(
         self,
-        table: Table,
+        table: BaseTable,
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "lower",  # skipcq
@@ -264,7 +264,7 @@ class BaseDatabase(ABC):
 
     def create_table(
         self,
-        table: Table,
+        table: BaseTable,
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
@@ -291,7 +291,7 @@ class BaseDatabase(ABC):
     def create_table_from_select_statement(
         self,
         statement: str,
-        target_table: Table,
+        target_table: BaseTable,
         parameters: dict | None = None,
     ) -> None:
         """
@@ -306,7 +306,7 @@ class BaseDatabase(ABC):
         )
         self.run_sql(statement, parameters)
 
-    def drop_table(self, table: Table) -> None:
+    def drop_table(self, table: BaseTable) -> None:
         """
         Delete a SQL table, if it exists.
 
@@ -381,7 +381,7 @@ class BaseDatabase(ABC):
     def load_file_to_table(
         self,
         input_file: File,
-        output_table: Table,
+        output_table: BaseTable,
         normalize_config: dict | None = None,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
@@ -464,7 +464,7 @@ class BaseDatabase(ABC):
     def load_file_to_table_natively_with_fallback(
         self,
         source_file: File,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         normalize_config: dict | None = None,
         native_support_kwargs: dict | None = None,
@@ -512,7 +512,7 @@ class BaseDatabase(ABC):
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
     ) -> None:
@@ -536,8 +536,8 @@ class BaseDatabase(ABC):
 
     def append_table(
         self,
-        source_table: Table,
-        target_table: Table,
+        source_table: BaseTable,
+        target_table: BaseTable,
         source_to_target_columns_map: dict[str, str],
     ) -> None:
         """
@@ -573,8 +573,8 @@ class BaseDatabase(ABC):
 
     def merge_table(
         self,
-        source_table: Table,
-        target_table: Table,
+        source_table: BaseTable,
+        target_table: BaseTable,
         source_to_target_columns_map: dict[str, str],
         target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",
@@ -591,7 +591,7 @@ class BaseDatabase(ABC):
         """
         raise NotImplementedError
 
-    def get_sqla_table(self, table: Table) -> SqlaTable:
+    def get_sqla_table(self, table: BaseTable) -> SqlaTable:
         """
         Return SQLAlchemy table instance
 
@@ -607,7 +607,7 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
     # Extract methods
     # ---------------------------------------------------------
-    def export_table_to_pandas_dataframe(self, source_table: Table) -> pd.DataFrame:
+    def export_table_to_pandas_dataframe(self, source_table: BaseTable) -> pd.DataFrame:
         """
         Copy the content of a table to an in-memory Pandas dataframe.
 
@@ -624,7 +624,7 @@ class BaseDatabase(ABC):
 
     def export_table_to_file(
         self,
-        source_table: Table,
+        source_table: BaseTable,
         target_file: File,
         if_exists: ExportExistsStrategy = "exception",
     ) -> None:
@@ -671,7 +671,7 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
 
     def get_sqlalchemy_template_table_identifier_and_parameter(
-        self, table: Table, jinja_table_identifier: str
+        self, table: BaseTable, jinja_table_identifier: str
     ) -> tuple[str, str]:
         """
         During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
@@ -700,7 +700,7 @@ class BaseDatabase(ABC):
         )
 
     def is_native_load_file_available(  # skipcq: PYL-R0201
-        self, source_file: File, target_table: Table  # skipcq: PYL-W0613
+        self, source_file: File, target_table: BaseTable  # skipcq: PYL-W0613
     ) -> bool:
         """
         Check if there is an optimised path for source to destination.
@@ -713,7 +713,7 @@ class BaseDatabase(ABC):
     def load_file_to_table_natively(
         self,
         source_file: File,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
         **kwargs,

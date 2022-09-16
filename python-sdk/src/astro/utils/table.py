@@ -1,20 +1,20 @@
 import inspect
 from typing import Callable, Optional
 
-from astro.sql.table import Table
+from astro.sql.table import BaseTable
 
 
-def _pull_first_table_from_parameters(parameters: dict) -> Optional[Table]:
+def _pull_first_table_from_parameters(parameters: dict) -> Optional[BaseTable]:
     """
     When trying to "magically" determine the context of a decorator, we will try to find the first table.
     This function attempts this by checking parameters
 
     :param parameters: a user-defined dictionary of parameters
-    :return: the first parameter of type Table, if any. Return None otherwise.
+    :return: the first parameter of type BaseTable, if any. Return None otherwise.
     """
     first_table = None
     params_of_table_type = [
-        param for param in parameters.values() if isinstance(param, Table)
+        param for param in parameters.values() if isinstance(param, BaseTable)
     ]
     if (
         len(params_of_table_type) == 1
@@ -26,19 +26,20 @@ def _pull_first_table_from_parameters(parameters: dict) -> Optional[Table]:
 
 def _pull_first_table_from_op_kwargs(
     op_kwargs: dict, python_callable: Callable
-) -> Optional[Table]:
+) -> Optional[BaseTable]:
     """
     When trying to "magically" determine the context of a decorator, we will try to find the first table.
     This function attempts this by checking op_kwargs
 
     :param op_kwargs: user-defined operator's kwargs
-    :return: the first kwarg declared in the decorated method which is an instance of Table. Return None if non-existent
+    :return: the first kwarg declared in the decorated method which is an
+        instance of BaseTable. Return None if non-existent
     """
     first_table = None
     kwargs_of_table_type = [
         op_kwargs[kwarg.name]
         for kwarg in inspect.signature(python_callable).parameters.values()
-        if isinstance(op_kwargs[kwarg.name], Table)
+        if isinstance(op_kwargs[kwarg.name], BaseTable)
     ]
     if (
         len(kwargs_of_table_type) == 1
@@ -48,16 +49,16 @@ def _pull_first_table_from_op_kwargs(
     return first_table
 
 
-def _find_first_table_from_op_args(op_args: tuple) -> Optional[Table]:
+def _find_first_table_from_op_args(op_args: tuple) -> Optional[BaseTable]:
     """
     When trying to "magically" determine the context of a decorator, we will try to find the first table.
     This function attempts this by checking op_args
 
     :param op_args: user-defined operator's args
-    :return: the first arg which is an instance of Table. If there are no instances, return None.
+    :return: the first arg which is an instance of BaseTable. If there are no instances, return None.
     """
     first_table = None
-    args_of_table_type = [arg for arg in op_args if isinstance(arg, Table)]
+    args_of_table_type = [arg for arg in op_args if isinstance(arg, BaseTable)]
     # Check to see if all tables belong to same conn_id. Otherwise, we this can go wrong for cases
     # 1. When we have tables from different DBs.
     # 2. When we have tables from different conn_id, since they can be configured with different
@@ -72,7 +73,7 @@ def _find_first_table_from_op_args(op_args: tuple) -> Optional[Table]:
 
 def find_first_table(
     op_args: tuple, op_kwargs: dict, python_callable: Callable, parameters: dict
-) -> Optional[Table]:
+) -> Optional[BaseTable]:
     """
     When we create our SQL operation, we run with the assumption that the first table given is the "main table".
     This means that a user doesn't need to define default conn_id, database, etc. in the function unless they want
@@ -81,7 +82,7 @@ def find_first_table(
     :param parameters: user-defined parameters to be injected into SQL statement
     :return: the first table declared as decorator arg or kwarg
     """
-    first_table: Optional[Table] = None
+    first_table: Optional[BaseTable] = None
     if op_args:
         first_table = _find_first_table_from_op_args(op_args=op_args)
 
