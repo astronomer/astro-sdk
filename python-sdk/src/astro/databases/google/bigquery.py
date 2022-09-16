@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import time
-from typing import Any
+from typing import Any, Callable, Mapping
 
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
@@ -59,8 +59,14 @@ NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
 }
 BIGQUERY_WRITE_DISPOSITION = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
 
-NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES = {FileType.CSV, FileType.NDJSON}
-NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS = {FileLocation.GS}
+NATIVE_AUTODETECT_SCHEMA_CONFIG: Mapping[
+    FileLocation, Mapping[str, list[FileType] | Callable]
+] = {
+    FileLocation.GS: {
+        "filetype": [FileType.CSV, FileType.NDJSON, FileType.PARQUET],
+        "method": lambda table, file: None,
+    }
+}
 
 
 class BigqueryDatabase(BaseDatabase):
@@ -234,16 +240,14 @@ class BigqueryDatabase(BaseDatabase):
         :param file: File used to check the file type of to decide
             whether there is a native auto detection available for it.
         """
-        is_file_type_supported = (
-            file.type.name in NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES
-        )
-        is_file_location_supported = (
+        supported_config = NATIVE_AUTODETECT_SCHEMA_CONFIG.get(
             file.location.location_type
-            in NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS
         )
-        return is_file_type_supported and is_file_location_supported
+        if supported_config and file.type.name in supported_config["filetype"]:  # type: ignore
+            return True
+        return False
 
-    def create_table_using_native_schema_autodetection(
+    def create_table_using_native_schema_autodetection(  # skipcq: PYL-R0201
         self,
         table: Table,
         file: File,
@@ -254,30 +258,10 @@ class BigqueryDatabase(BaseDatabase):
         :param table: The table to be created.
         :param file: File used to infer the new table columns.
         """
-        load_job_config = {
-            "sourceUris": [file.path],
-            "destinationTable": {
-                "projectId": self.get_project_id(table),
-                "datasetId": table.metadata.schema,
-                "tableId": table.name,
-            },
-            "sourceFormat": NATIVE_PATHS_SUPPORTED_FILE_TYPES[file.type.name],
-            "autodetect": True,
-        }
-
-        job_config = {
-            "jobType": "LOAD",
-            "load": load_job_config,
-            "labels": {"target_table": table.name},
-        }
-
-        self.hook.insert_job(
-            configuration=job_config,
+        supported_config = NATIVE_AUTODETECT_SCHEMA_CONFIG.get(
+            file.location.location_type
         )
-
-        # We have to clear the table afterwards as bigquery automatically loads the data when creating the table.
-        statement = f"TRUNCATE TABLE `{self.get_table_qualified_name(table)}`"
-        self.run_sql(statement)
+        return supported_config["method"](table=table, file=file)  # type: ignore
 
     def is_native_load_file_available(
         self, source_file: File, target_table: Table
@@ -354,6 +338,9 @@ class BigqueryDatabase(BaseDatabase):
             "writeDisposition": BIGQUERY_WRITE_DISPOSITION[if_exists],
             "sourceFormat": NATIVE_PATHS_SUPPORTED_FILE_TYPES[source_file.type.name],
         }
+        if self.is_native_autodetect_schema_available(file=source_file):
+            load_job_config["autodetect"] = True  # type: ignore
+
         native_support_kwargs.update(native_support_kwargs)
 
         # Since bigquery has other options besides used here, we need to expose them to end user.
