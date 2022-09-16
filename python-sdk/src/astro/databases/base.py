@@ -113,7 +113,7 @@ class BaseDatabase(ABC):
                 stacklevel=2,
             )
         if kwargs.get("sql_statement"):
-            sql = kwargs.get("sql_statement")  # type: ignor
+            sql = kwargs.get("sql_statement")  # type: ignore
 
         if isinstance(sql, str):
             result = self.connection.execute(sqlalchemy.text(sql), parameters)
