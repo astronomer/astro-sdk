@@ -1,4 +1,11 @@
 # Changelog
+## 1.1.1
+### Features
+
+### Improvements
+
+### Bug fixes
+
 ## 1.1.0
 
 ### Features
