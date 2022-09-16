@@ -106,3 +106,75 @@ We also resolve the patterns in file path based on the :ref:`file_location`
 #. **Local** - Resolves ``File.path`` using the glob standard library (https://docs.python.org/3/library/glob.html)
 #. **S3** - Resolves ``File.path`` using AWS S3 prefix rules (https://docs.aws.amazon.com/AmazonS3/latest/userguide/using-prefixes.html)
 #. **GCS** - Resolves ``File.path`` using Google Cloud Storage (GCS) wildcard rules (https://cloud.google.com/storage/docs/gsutil/addlhelp/WildcardNames)
+
+.. _dataset:
+
+Datasets
+--------
+
+An Airflow dataset is a stand-in for a logical grouping of data. Datasets may be updated by upstream "producer" tasks, and dataset updates contribute to scheduling downstream "consumer" DAGs.
+
+A dataset is defined by a Uniform Resource Identifier (URI):
+
+.. code-block:: python
+
+    from airflow import Dataset
+
+    example_dataset = Dataset("s3://dataset-bucket/example.csv")
+
+Astro SDK uses following URIs as datasets across its operators.
+
+#. :ref:`table` as a Dataset
+
+    .. literalinclude:: ../example_dags/example_datasets.py
+           :language: python
+           :start-after: [START dataset_table]
+           :end-before: [END dataset_table]
+
+#. File as a Dataset
+
+    .. literalinclude:: ../example_dags/example_datasets.py
+           :language: python
+           :start-after: [START dataset_file]
+           :end-before: [END dataset_file]
+
+Following examples show how to produce and use datasets for scheduling.
+
+#. **Dataset Producer** - Produces output dataset ``imdb_movies_table`` as a Table.
+
+    .. literalinclude:: ../example_dags/example_datasets.py
+           :language: python
+           :start-after: [START dataset_producer]
+           :end-before: [END dataset_producer]
+
+#. **Dataset Consumer** - DAG gets scheduled post input dataset Table ``imdb_movies_table`` is produced by the upstream DAG above.
+
+    .. literalinclude:: ../example_dags/example_datasets.py
+           :language: python
+           :start-after: [START dataset_consumer]
+           :end-before: [END dataset_consumer]
+
+Python SDK uses default datasets for its operators and the details of the default datasets generated and used by them can be found in the respective :ref:`operators` document.
+However, you can override them by passing the keyword arguments ``inlets`` and ``outlets`` to the operators.
+
+You can disable the usage of these default datasets and hence disable data-aware scheduling of DAGs by updating Airflow's configuration in ``airflow.cfg``
+
+.. code:: shell
+
+   [astro_sdk]
+   auto_add_inlets_outlets = "false"
+
+or by setting the below environment variable in your deployment
+
+.. code:: python
+
+   AIRFLOW__ASTRO_SDK__AUTO_ADD_INLETS_OUTLETS = "false"
+
+Following is a view of dag dependencies on datasets
+
+.. image:: ./images/dag-dependencies-on-datasets.png
+
+More details can be found at `airflow datasets concept <https://airflow.apache.org/docs/apache-airflow/stable/concepts/datasets.html>`_
+
+.. Note::
+    The concept of Datasets in astro-sdk is supported only from the **1.1.0** release ( and requires Airflow version **2.4.0** and above).

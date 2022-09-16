@@ -24,10 +24,16 @@ from astro import sql as aql
 from astro.files import File
 from astro.sql.table import Table
 
+# [START dataset_file]
 input_file = File(
     path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
 )
+# [END dataset_file]
+
+# [START dataset_table]
 imdb_movies_table = Table(name="imdb_movies", conn_id="sqlite_default")
+# [END dataset_table]
+
 top_animations_table = Table(name="top_animation", conn_id="sqlite_default")
 START_DATE = datetime(2022, 9, 1)
 
@@ -43,6 +49,7 @@ def get_top_five_animations(input_table: Table):  # skipcq: PYL-W0613
     """
 
 
+# [START dataset_producer]
 with DAG(
     dag_id="example_dataset_producer",
     schedule=None,
@@ -54,7 +61,9 @@ with DAG(
         task_id="load_csv",
         output_table=imdb_movies_table,
     )
+# [END dataset_producer]
 
+# [START dataset_consumer]
 with DAG(
     dag_id="example_dataset_consumer",
     schedule=[imdb_movies_table],
@@ -65,3 +74,4 @@ with DAG(
         input_table=imdb_movies_table,
         output_table=top_animations_table,
     )
+# [END dataset_consumer]

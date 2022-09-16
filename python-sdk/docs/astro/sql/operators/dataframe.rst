@@ -24,3 +24,8 @@ Case 2: Convert the resulting dataframe into a table. When the ``output_table`` 
            :language: python
            :start-after: [START dataframe_example_2]
            :end-before: [END dataframe_example_2]
+
+Default Datasets
+~~~~~~~~~~~~~~~~
+* Input dataset - No default input dataset.
+* Output dataset - Target table of the operator.
