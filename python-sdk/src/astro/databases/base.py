@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC
-from typing import Any
+from typing import Any, Callable, Mapping
 
 import pandas as pd
 import sqlalchemy
@@ -12,6 +12,7 @@ from astro.constants import (
     ColumnCapitalization,
     ExportExistsStrategy,
     FileLocation,
+    FileType,
     LoadExistStrategy,
     MergeConflictStrategy,
 )
@@ -25,6 +26,7 @@ from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.files import File, resolve_file_path_pattern
+from astro.files.types import create_file_type
 
 
 class BaseDatabase(ABC):
@@ -51,9 +53,12 @@ class BaseDatabase(ABC):
     # illegal_column_name_chars[0] will be replaced by value in illegal_column_name_chars_replacement[0]
     illegal_column_name_chars: list[str] = []
     illegal_column_name_chars_replacement: list[str] = []
+    NATIVE_PATHS: dict[Any, Any] = {}
     NATIVE_LOAD_EXCEPTIONS: Any = DatabaseCustomError
     DEFAULT_SCHEMA = SCHEMA
-    AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = set()
+    NATIVE_AUTODETECT_SCHEMA_CONFIG: Mapping[
+        FileLocation, Mapping[str, list[FileType] | Callable]
+    ] = {}
     FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = set()
 
     def __init__(self, conn_id: str):
@@ -736,10 +741,21 @@ class BaseDatabase(ABC):
 
         :param source_file: File from which we need to transfer data
         """
-        is_autodetect_schema_supported = (
-            source_file.location.location_type in self.AUTODETECT_SCHEMA_SUPPORTED
+        filetype_supported = self.NATIVE_AUTODETECT_SCHEMA_CONFIG.get(
+            source_file.location.location_type
         )
-        return is_autodetect_schema_supported
+
+        source_filetype = create_file_type(
+            path=source_file.path, filetype=source_file.type.name
+        )
+        is_source_filetype_supported = (
+            (source_filetype in filetype_supported.get("filetype"))  # type: ignore
+            if filetype_supported
+            else None
+        )
+
+        location_type = self.NATIVE_PATHS.get(source_file.location.location_type)
+        return bool(location_type and is_source_filetype_supported)
 
     def check_file_pattern_based_schema_autodetection_is_supported(
         self, source_file: File

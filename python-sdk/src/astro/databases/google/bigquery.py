@@ -18,7 +18,6 @@ from astro.constants import (
 )
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
-from astro.files import File
 from astro.settings import BIGQUERY_SCHEMA
 from astro.sql.table import BaseTable, Metadata
 from google.api_core.exceptions import (
@@ -51,6 +50,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from tenacity import retry, stop_after_attempt
 
+from astro.files import File
+
 DEFAULT_CONN_ID = BigQueryHook.default_conn_name
 NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
     FileType.CSV: "CSV",
@@ -58,15 +59,6 @@ NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
     FileType.PARQUET: "PARQUET",
 }
 BIGQUERY_WRITE_DISPOSITION = {"replace": "WRITE_TRUNCATE", "append": "WRITE_APPEND"}
-
-NATIVE_AUTODETECT_SCHEMA_CONFIG: Mapping[
-    FileLocation, Mapping[str, list[FileType] | Callable]
-] = {
-    FileLocation.GS: {
-        "filetype": [FileType.CSV, FileType.NDJSON, FileType.PARQUET],
-        "method": lambda table, file: None,
-    }
-}
 
 
 class BigqueryDatabase(BaseDatabase):
@@ -81,9 +73,18 @@ class BigqueryDatabase(BaseDatabase):
         FileLocation.S3: "load_s3_file_to_table",
         FileLocation.LOCAL: "load_local_file_to_table",
     }
-    AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = {
-        FileLocation.GS,
-        FileLocation.LOCAL,
+
+    NATIVE_AUTODETECT_SCHEMA_CONFIG: Mapping[
+        FileLocation, Mapping[str, list[FileType] | Callable]
+    ] = {
+        FileLocation.GS: {
+            "filetype": [FileType.CSV, FileType.NDJSON, FileType.PARQUET],
+            "method": lambda table, file: None,
+        },
+        FileLocation.LOCAL: {
+            "filetype": [FileType.CSV, FileType.NDJSON, FileType.PARQUET],
+            "method": lambda table, file: None,
+        },
     }
 
     FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = {
@@ -249,7 +250,7 @@ class BigqueryDatabase(BaseDatabase):
         :param file: File used to check the file type of to decide
             whether there is a native auto detection available for it.
         """
-        supported_config = NATIVE_AUTODETECT_SCHEMA_CONFIG.get(
+        supported_config = self.NATIVE_AUTODETECT_SCHEMA_CONFIG.get(
             file.location.location_type
         )
         if supported_config and file.type.name in supported_config["filetype"]:  # type: ignore
@@ -267,7 +268,7 @@ class BigqueryDatabase(BaseDatabase):
         :param table: The table to be created.
         :param file: File used to infer the new table columns.
         """
-        supported_config = NATIVE_AUTODETECT_SCHEMA_CONFIG.get(
+        supported_config = self.NATIVE_AUTODETECT_SCHEMA_CONFIG.get(
             file.location.location_type
         )
         return supported_config["method"](table=table, file=file)  # type: ignore
