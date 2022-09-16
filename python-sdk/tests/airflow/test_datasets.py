@@ -42,8 +42,8 @@ from astro.sql.table import Table
             True,
             {
                 "task_id": "ex1",
-                "inlets": [Table("inlet", conn_id="con1")],
-                "outlets": [Table("outlet")],
+                "inlets": Table("inlet", conn_id="con1"),
+                "outlets": Table("outlet"),
             },
         ),
         (None, None, None, False, {}),
@@ -66,8 +66,8 @@ from astro.sql.table import Table
             False,
             {
                 "task_id": "ex1",
-                "inlets": [Table("inlet", conn_id="con1")],
-                "outlets": [Table("outlet", conn_id="con2")],
+                "inlets": Table("inlet", conn_id="con1"),
+                "outlets": Table("outlet", conn_id="con2"),
             },
         ),
     ],
@@ -91,11 +91,31 @@ def test_kwargs_with_datasets(
 @pytest.mark.skipif(
     airflow.__version__ < "2.4.0", reason="Require Airflow version >= 2.4.0"
 )
+def test_kwargs_with_temp_table():
+    """Test that temp tables are not passed to inlets and outlets"""
+    assert kwargs_with_datasets(
+        kwargs={"task_id": "ex1"},
+        input_datasets=Table(conn_id="con1"),  # temp table
+        output_datasets=[
+            Table("outlet", conn_id="con2"),
+            Table("_tmp_1", conn_id="con1"),  # temp table
+        ],
+    ) == {
+        "task_id": "ex1",
+        "inlets": [],
+        "outlets": [Table("outlet", conn_id="con2")],
+    }
+
+
+@pytest.mark.skipif(
+    airflow.__version__ < "2.4.0", reason="Require Airflow version >= 2.4.0"
+)
 def test_example_dataset_dag():
+    from airflow.datasets import Dataset
+    from airflow.models.dataset import DatasetModel
+
     dir_path = os.path.dirname(os.path.realpath(__file__))
     db = DagBag(dir_path + "/../../example_dags")
-
-    from airflow.datasets import Dataset
 
     producer_dag = db.get_dag("example_dataset_producer")
     consumer_dag = db.get_dag("example_dataset_consumer")
@@ -105,6 +125,9 @@ def test_example_dataset_dag():
     # Test that dataset_triggers is only set if all the instances passed to the DAG object are Datasets
     assert consumer_dag.dataset_triggers == outlets
     assert outlets[0].uri == "astro://sqlite_default@?table=imdb_movies"
+    assert DatasetModel.from_public(outlets[0]) == Dataset(
+        "astro://sqlite_default@?table=imdb_movies"
+    )
 
 
 def test_disable_auto_inlets_outlets():

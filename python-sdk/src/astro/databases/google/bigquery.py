@@ -20,7 +20,7 @@ from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
 from astro.settings import BIGQUERY_SCHEMA
-from astro.sql.table import Metadata, Table
+from astro.sql.table import BaseTable, Metadata
 from google.api_core.exceptions import (
     ClientError,
     Conflict,
@@ -154,7 +154,7 @@ class BigqueryDatabase(BaseDatabase):
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
     ) -> None:
@@ -182,8 +182,8 @@ class BigqueryDatabase(BaseDatabase):
 
     def merge_table(
         self,
-        source_table: Table,
-        target_table: Table,
+        source_table: BaseTable,
+        target_table: BaseTable,
         source_to_target_columns_map: dict[str, str],
         target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",
@@ -249,7 +249,7 @@ class BigqueryDatabase(BaseDatabase):
 
     def create_table_using_native_schema_autodetection(  # skipcq: PYL-R0201
         self,
-        table: Table,
+        table: BaseTable,
         file: File,
     ) -> None:
         """
@@ -264,7 +264,7 @@ class BigqueryDatabase(BaseDatabase):
         return supported_config["method"](table=table, file=file)  # type: ignore
 
     def is_native_load_file_available(
-        self, source_file: File, target_table: Table
+        self, source_file: File, target_table: BaseTable
     ) -> bool:
         """
         Check if there is an optimised path for source to destination.
@@ -279,7 +279,7 @@ class BigqueryDatabase(BaseDatabase):
     def load_file_to_table_natively(
         self,
         source_file: File,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
         **kwargs,
@@ -312,7 +312,7 @@ class BigqueryDatabase(BaseDatabase):
     def load_gs_file_to_table(
         self,
         source_file: File,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
         **kwargs,
@@ -360,7 +360,7 @@ class BigqueryDatabase(BaseDatabase):
     def load_s3_file_to_table(
         self,
         source_file: File,
-        target_table: Table,
+        target_table: BaseTable,
         native_support_kwargs: dict | None = None,
         **kwargs,
     ):
@@ -404,7 +404,7 @@ class BigqueryDatabase(BaseDatabase):
     def load_local_file_to_table(
         self,
         source_file: File,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
         **kwargs,
@@ -458,7 +458,7 @@ class S3ToBigqueryDataTransfer:
 
     def __init__(
         self,
-        target_table: Table,
+        target_table: BaseTable,
         source_file: File,
         project_id: str,
         poll_duration: int = 1,
