@@ -19,6 +19,7 @@ from astro.constants import (
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File, resolve_file_path_pattern
 from astro.files.types import create_file_type
+from astro.files.types.base import FileType as FileTypeConstants
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.sql.table import BaseTable, Metadata
 from pandas.io.sql import SQLDatabase
@@ -744,11 +745,14 @@ class BaseDatabase(ABC):
             source_file.location.location_type
         )
 
-        source_filetype = create_file_type(
-            path=source_file.path, filetype=source_file.type.name
+        source_filetype = (
+            source_file
+            if isinstance(source_file.type, FileTypeConstants)
+            else create_file_type(path=source_file.path, filetype=source_file.type)  # type: ignore
         )
+
         is_source_filetype_supported = (
-            (source_filetype in filetype_supported.get("filetype"))  # type: ignore
+            (source_filetype.type.name in filetype_supported.get("filetype"))  # type: ignore
             if filetype_supported
             else None
         )
