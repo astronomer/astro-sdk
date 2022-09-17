@@ -59,6 +59,26 @@ def test_create_table_using_columns_raises_exception():
     assert exc_info.match("To use this method, table.columns must be defined")
 
 
+def test_check_schema_autodetection_is_supported():
+    """
+    Test the condition native schema autodetection for files and prefixes
+    """
+    db = create_database("gcp_conn")
+    assert db.check_schema_autodetection_is_supported(
+        source_file=File(path="gs://bucket/prefix", filetype=FileType.CSV)
+    )
+
+    assert db.check_schema_autodetection_is_supported(
+        source_file=File(path="gs://bucket/prefix/key.csv")
+    )
+
+    assert not (
+        db.check_schema_autodetection_is_supported(
+            source_file=File(path="s3://bucket/prefix/key.csv")
+        )
+    )
+
+
 def test_subclass_missing_append_table_raises_exception():
     db = DatabaseSubclass(conn_id="fake_conn_id")
     source_table = Table()
