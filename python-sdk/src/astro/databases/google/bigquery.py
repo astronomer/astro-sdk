@@ -234,7 +234,7 @@ class BigqueryDatabase(BaseDatabase):
             # Note: Ignoring below sql injection warning, as we validate that the table columns exist beforehand.
             update_statement = f"UPDATE SET {update_statement_map}"  # skipcq BAN-B608
             merge_statement += f" WHEN MATCHED THEN {update_statement}"
-        self.run_sql(sql_statement=merge_statement)
+        self.run_sql(sql=merge_statement)
 
     def is_native_autodetect_schema_available(  # skipcq: PYL-R0201
         self, file: File  # skipcq: PYL-W0613

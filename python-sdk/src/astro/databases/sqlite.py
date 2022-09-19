@@ -120,7 +120,7 @@ class SqliteDatabase(BaseDatabase):
             merge_keys=",".join(list(target_conflict_columns)),
         )
 
-        self.run_sql(sql_statement=query)
+        self.run_sql(sql=query)
 
     def get_sqla_table(self, table: BaseTable) -> SqlaTable:
         """

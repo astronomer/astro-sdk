@@ -704,7 +704,7 @@ class SnowflakeDatabase(BaseDatabase):
             target_conflict_columns=target_conflict_columns,
             if_conflicts=if_conflicts,
         )
-        self.run_sql(sql_statement=statement, parameters=params)
+        self.run_sql(sql=statement, parameters=params)
 
     def _build_merge_sql(
         self,

@@ -185,4 +185,4 @@ class PostgresDatabase(BaseDatabase):
         )
 
         sql = query.as_string(self.hook.get_conn())
-        self.run_sql(sql_statement=sql)
+        self.run_sql(sql=sql)
