@@ -89,7 +89,7 @@ class BaseDatabase(ABC):
 
     def run_sql(
         self,
-        sql: str | ClauseElement = '',
+        sql: str | ClauseElement = "",
         parameters: dict | None = None,
         **kwargs,
     ):
