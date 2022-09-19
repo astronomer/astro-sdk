@@ -83,13 +83,13 @@ def test_get_value_list():
     """Assert that get_file_list handle kwargs correctly"""
     dag = DAG(dag_id="dag1", start_date=datetime(2022, 1, 1))
 
-    resp = get_value_list(sql_statement="path", conn_id="conn", dag=dag)
+    resp = get_value_list(sql="path", conn_id="conn", dag=dag)
     assert resp.operator.task_id == "get_value_list"
 
-    resp = get_value_list(sql_statement="path", conn_id="conn", dag=dag)
+    resp = get_value_list(sql="path", conn_id="conn", dag=dag)
     assert resp.operator.task_id != "get_value_list"
 
-    resp = get_value_list(sql_statement="path", conn_id="conn", task_id="test")
+    resp = get_value_list(sql="path", conn_id="conn", task_id="test")
     assert resp.operator.task_id == "test"
 
 

@@ -13,14 +13,14 @@ from astro.sql.operators.transform import TransformOperator, transform, transfor
 from astro.sql.table import Metadata, Table
 
 
-def get_value_list(sql_statement: str, conn_id: str, **kwargs) -> XComArg:
+def get_value_list(sql: str, conn_id: str, **kwargs) -> XComArg:
     """
     Execute a sql statement and return the result.
     By default, the response size is less than equal to value of ``max_map_length`` conf.
     You can call a callable handler to alter the response by default it call ``fetchall`` on database result set.
 
 
-    :param sql_statement: sql query to execute.
+    :param sql: sql query to execute.
         If the sql query will return huge number of row then it can overload the XCOM.
         also, If you are using output of this method to expand a task using dynamic task map then
         it can create lots of parallel task. So it is advisable to limit your sql query statement.
@@ -38,7 +38,7 @@ def get_value_list(sql_statement: str, conn_id: str, **kwargs) -> XComArg:
     )
     kwargs.update({"task_id": task_id})
     return RawSQLOperator(
-        sql=sql_statement,
+        sql=sql,
         conn_id=conn_id,
         op_kwargs=op_kwargs,
         python_callable=(lambda *args: None),
