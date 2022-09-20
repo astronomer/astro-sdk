@@ -64,4 +64,4 @@ run_job:
 teardown_gke:
 	@cd infrastructure/terraform && \
 		terraform init && \
-		terraform apply -destroy
+		terraform destroy --target google_container_node_pool.benchmark -auto-approve
