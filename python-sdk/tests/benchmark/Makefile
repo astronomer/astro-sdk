@@ -1,4 +1,4 @@
-all: clean setup_gke container run_job teardown_gke
+all: clean setup_gke container run_job # teardown_gke
 .PHONY: all
 
 GCP_PROJECT ?= astronomer-dag-authoring
@@ -27,9 +27,8 @@ clean:
 # Takes approximately 7min
 setup_gke: clean
 	@cd infrastructure/terraform && \
-		terraform init -input=false && \
-		terraform plan -out=tfplan -input=false && \
-		terraform apply -input=false tfplan
+		terraform init  && \
+		terraform apply -auto-approve
 
 run: clean
 	@AIRFLOW__ASTRO_SDK__SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE=gcs_int_python_sdk GCP_BUCKET=dag-authoring ./run.sh
@@ -63,7 +62,7 @@ run_job:
 	@kubectl create -f infrastructure/kubernetes/job.yaml
 
 # Takes approximately 2min
-teardown_gke:
-	@cd infrastructure/terraform && \
-		terraform init && \
-		terraform destroy --target google_container_node_pool.benchmark -auto-approve
+#teardown_gke:
+#	@cd infrastructure/terraform && \
+#		terraform init && \
+#		terraform destroy --target google_container_node_pool.benchmark -auto-approve
