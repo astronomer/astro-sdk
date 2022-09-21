@@ -9,6 +9,17 @@ jobs:
     env:
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_SCHEMA: ASTROFLOW_CI
+      SNOWFLAKE_DATABASE: SANDBOX
+      SNOWFLAKE_WAREHOUSE: DEMO
+      SNOWFLAKE_HOST: https://gp21411.us-east-1.snowflakecomputing.com
+      SNOWFLAKE_ACCOUNT: gp21411
+      SNOWFLAKE_REGION: us-east-1
+      SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
     steps:
       - uses: actions/checkout@v2
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
