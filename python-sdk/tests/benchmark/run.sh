@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-set -x
-set -v
-set -e
+set -x  # print the shell command before being executed
+set -v  # run bash in verbose mode (echos each command before running it)
+set -e  # stop the execution instantly if a command returns a non-zero status
 
 
 repeat=${1:-3}  # how many times we want to repeat each DAG run (default: 3)
@@ -73,9 +73,10 @@ echo - Output: $(get_abs_filename $results_file)
       jq -r '.datasets[] | [.name] | @tsv' $config_path | while IFS=$'\t' read -r dataset; do
         for chunk_size in "${chunk_sizes_array[@]}"; do
           echo "$i $dataset $database $chunk_size"
+          set +e  # allow us to see the content of $results_file regardless of the run being successful or not
           ASTRO_CHUNKSIZE=$chunk_size python3 -W ignore $runner_path --dataset="$dataset" --database="$database" --revision $git_revision --chunk-size=$chunk_size 1>> $results_file
           cat $results_file
-
+          set -e  # do not allow errors from here onwards
           if [[ -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
         echo "$GOOGLE_APPLICATION_CREDENTIALS is not defined"
       else
