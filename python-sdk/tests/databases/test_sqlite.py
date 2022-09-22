@@ -6,7 +6,6 @@ import pandas as pd
 import pytest
 import sqlalchemy
 from airflow.hooks.base import BaseHook
-
 from astro.constants import Database
 from astro.databases import create_database
 from astro.databases.sqlite import SqliteDatabase

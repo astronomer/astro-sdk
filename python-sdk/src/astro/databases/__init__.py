@@ -2,7 +2,6 @@ import importlib
 from pathlib import Path
 
 from airflow.hooks.base import BaseHook
-
 from astro.databases.base import BaseDatabase
 from astro.utils.path import get_class_name, get_dict_with_module_names_to_dot_notations
 

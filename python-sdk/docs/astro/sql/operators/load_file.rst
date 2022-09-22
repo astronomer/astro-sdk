@@ -80,11 +80,13 @@ Parameters to use when loading a file to a database table
 Inferring a Table Schema
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are two ways to infer the schema of the table to be created, listed by priority:
+There are three ways to infer the schema of the table to be created, listed by priority:
 
 #. **User specified schema** - You can specify the schema of the table to be created in the Table object, like the ``output_table`` section in :ref:`custom_schema`
 
-#. **Auto schema detection** - if you don't specify the schema in the table object, then ``load_file`` will infer the schema using the top 1000 rows. The default value of rows to look at is 1000, but this can be changed by creating an environment variable.
+#. **Native auto schema detection** - If available, this will be used over pandas auto schema detection below, which will use the schema inference mechanism provided by the database.
+
+#. **Pandas auto schema detection** - if you don't specify the schema in the table object, then ``load_file`` will infer the schema using the top 1000 rows. The default value of rows to look at is 1000, but this can be changed by creating an environment variable.
 
     .. code-block:: shell
 
@@ -248,3 +250,8 @@ Users can also load data from an HTTP API:
    :language: python
    :start-after: [START load_file_http_example]
    :end-before: [END load_file_http_example]
+
+Default Datasets
+~~~~~~~~~~~~~~~~
+* Input dataset - Source file for the operator.
+* Output dataset - Target table of the operator.

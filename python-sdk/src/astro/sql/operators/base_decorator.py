@@ -1,20 +1,22 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any
+from typing import Any, cast
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
-from sqlalchemy.sql.functions import Function
-
+from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
-from astro.sql.table import Table
+from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
+from astro.sql.table import BaseTable, Table
 from astro.utils.table import find_first_table
+from astro.utils.typing_compat import Context
+from sqlalchemy.sql.functions import Function
 
 
-class BaseSQLDecoratedOperator(DecoratedOperator):
+class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
     """Handles all decorator classes that can return a SQL function"""
 
     database_impl: BaseDatabase
@@ -26,26 +28,35 @@ class BaseSQLDecoratedOperator(DecoratedOperator):
         handler: Function | None = None,
         database: str | None = None,
         schema: str | None = None,
-        response_limit: int = 0,
+        response_limit: int = -1,
+        response_size: int = -1,
         sql: str = "",
         **kwargs: Any,
     ):
         self.kwargs = kwargs or {}
         self.op_kwargs: dict = self.kwargs.get("op_kwargs") or {}
-        self.output_table: Table = self.op_kwargs.pop("output_table", Table())
+        self.output_table: BaseTable = self.op_kwargs.pop("output_table", Table())
         self.handler = self.op_kwargs.pop("handler", handler)
         self.conn_id = self.op_kwargs.pop("conn_id", conn_id)
+
         self.sql = sql
         self.parameters = parameters or {}
         self.database = self.op_kwargs.pop("database", database)
         self.schema = self.op_kwargs.pop("schema", schema)
         self.response_limit = self.op_kwargs.pop("response_limit", response_limit)
+        self.response_size = self.op_kwargs.pop("response_size", response_size)
+
         self.op_args: dict[str, Table | pd.DataFrame] = {}
+
+        # We purposely do NOT render upstream_tasks otherwise we could have a case where a user
+        # has 10 dataframes as upstream tasks and it crashes the worker
+        upstream_tasks = self.op_kwargs.pop("upstream_tasks", [])
         super().__init__(
-            **kwargs,
+            upstream_tasks=upstream_tasks,
+            **kwargs_with_datasets(kwargs=kwargs, output_datasets=self.output_table),
         )
 
-    def execute(self, context: dict) -> None:
+    def execute(self, context: Context) -> None:
         first_table = find_first_table(
             op_args=self.op_args,  # type: ignore
             op_kwargs=self.op_kwargs,
@@ -154,7 +165,7 @@ class BaseSQLDecoratedOperator(DecoratedOperator):
         """
         # convert Jinja templating to SQLAlchemy SQL templating, safely converting table identifiers
         for k, v in self.parameters.items():
-            if isinstance(v, Table):
+            if isinstance(v, BaseTable):
                 (
                     jinja_table_identifier,
                     jinja_table_parameter_value,
@@ -172,7 +183,7 @@ class BaseSQLDecoratedOperator(DecoratedOperator):
 
 
 def load_op_arg_dataframes_into_sql(
-    conn_id: str, op_args: tuple, target_table: Table
+    conn_id: str, op_args: tuple, target_table: BaseTable
 ) -> tuple:
     """
     Identify dataframes in op_args and load them to the table.
@@ -190,7 +201,7 @@ def load_op_arg_dataframes_into_sql(
                 source_dataframe=arg, target_table=target_table
             )
             final_args.append(target_table)
-        elif isinstance(arg, Table):
+        elif isinstance(arg, BaseTable):
             arg = database.populate_table_metadata(arg)
             final_args.append(arg)
         else:
@@ -199,7 +210,7 @@ def load_op_arg_dataframes_into_sql(
 
 
 def load_op_kwarg_dataframes_into_sql(
-    conn_id: str, op_kwargs: dict, target_table: Table
+    conn_id: str, op_kwargs: dict, target_table: BaseTable
 ) -> dict:
     """
     Identify dataframes in op_kwargs and load them to a table.
@@ -213,12 +224,12 @@ def load_op_kwarg_dataframes_into_sql(
     database = create_database(conn_id=conn_id)
     for key, value in op_kwargs.items():
         if isinstance(value, pd.DataFrame):
-            df_table = target_table.create_similar_table()
+            df_table = cast(BaseTable, target_table.create_similar_table())
             database.load_pandas_dataframe_to_table(
                 source_dataframe=value, target_table=df_table
             )
             final_kwargs[key] = df_table
-        elif isinstance(value, Table):
+        elif isinstance(value, BaseTable):
             value = database.populate_table_metadata(value)
             final_kwargs[key] = value
         else:

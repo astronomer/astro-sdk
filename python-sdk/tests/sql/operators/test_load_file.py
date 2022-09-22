@@ -19,15 +19,15 @@ import pytest
 from airflow.exceptions import BackfillUnfinished
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
-from pandas.testing import assert_frame_equal
-
 from astro import sql as aql
+from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database, FileType
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
 from astro.sql.table import Metadata, Table
+from pandas.testing import assert_frame_equal
 from tests.sql.operators import utils as test_utils
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("load_file_test_table")
@@ -1022,7 +1022,7 @@ def test_aql_load_file_columns_names_capitalization_dataframe(sample_dag):
             },
             {
                 "IGNOREHEADER": 1,
-                "REGION": "us-west-2",
+                "REGION": "us-east-1",
                 "IAM_ROLE": os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN"),
             },
         ),
@@ -1040,14 +1040,78 @@ def test_aql_load_column_name_mixed_case_json_file_to_dbs(
     # file on S3 results in file not found, since that file is not propagated to all the servers/clusters,
     # and we might hit a server where the file in not yet populated, resulting in file not found issue.
     load_file(
-        input_file=File("s3://tmp9/column_name_mixed_case.json", conn_id="aws_conn"),
+        input_file=File("s3://astro-sdk/sample.ndjson", conn_id="aws_conn"),
         output_table=test_table,
         use_native_support=True,
         native_support_kwargs=native_support_kwargs,
     ).operator.execute({})
 
     df = db.export_table_to_pandas_dataframe(test_table)
-    assert df.shape == (3, 2)
+    assert df.shape == (2, 2)
+
+
+@pytest.mark.skipif(
+    not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
+)
+def test_inlets_outlets_supported_ds():
+    """Test Datasets are set as inlets and outlets"""
+    input_file = File("gs://bucket/object.csv")
+    output_table = Table("test_name")
+    task = aql.load_file(
+        input_file=input_file,
+        output_table=output_table,
+    )
+    assert task.operator.inlets == [input_file]
+    assert task.operator.outlets == [output_table]
+
+
+@pytest.mark.skipif(
+    DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
+)
+def test_inlets_outlets_non_supported_ds():
+    """Test inlets and outlets are not set if Datasets are not supported"""
+    input_file = File("gs://bucket/object.csv")
+    output_table = Table("test_name")
+    task = aql.load_file(
+        input_file=input_file,
+        output_table=output_table,
+    )
+    assert task.operator.inlets == []
+    assert task.operator.outlets == []
+
+
+@pytest.mark.parametrize(
+    "file",
+    [
+        File("gs://astro-sdk/workspace/sample.parquet"),
+        File("gs://astro-sdk/workspace/sample.csv"),
+        File("gs://astro-sdk/workspace/sample.ndjson"),
+    ],
+    ids=["parquet", "csv", "ndjson"],
+)
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+        }
+    ],
+    indirect=True,
+    ids=["Bigquery"],
+)
+def test_loading_gcs_file_to_database(database_table_fixture, file):
+    """
+    Test working of optimised path method with autodetect for files in GCS
+    """
+    db, test_table = database_table_fixture
+    load_file(
+        input_file=file,
+        output_table=test_table,
+        use_native_support=True,
+    ).operator.execute({})
+
+    database_df = db.export_table_to_pandas_dataframe(test_table)
+    assert database_df.shape == (3, 2)
 
 
 @pytest.mark.parametrize(

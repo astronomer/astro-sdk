@@ -4,16 +4,17 @@ from typing import Any
 
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
-from airflow.models import BaseOperator
 from airflow.models.xcom_arg import XComArg
-
+from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import ExportExistsStrategy
 from astro.databases import create_database
 from astro.files import File
-from astro.sql.table import Table
+from astro.sql.operators.base_operator import AstroSQLBaseOperator
+from astro.sql.table import BaseTable, Table
+from astro.utils.typing_compat import Context
 
 
-class ExportFileOperator(BaseOperator):
+class ExportFileOperator(AstroSQLBaseOperator):
     """Write SQL table to csv/parquet on local/S3/GCS.
 
     :param input_data: Table to convert to file
@@ -25,24 +26,27 @@ class ExportFileOperator(BaseOperator):
 
     def __init__(
         self,
-        input_data: Table | pd.DataFrame,
+        input_data: BaseTable | pd.DataFrame,
         output_file: File,
         if_exists: ExportExistsStrategy = "exception",
         **kwargs,
     ) -> None:
-        super().__init__(**kwargs)
         self.output_file = output_file
         self.input_data = input_data
         self.if_exists = if_exists
         self.kwargs = kwargs
+        datasets = {"output_datasets": self.output_file}
+        if isinstance(input_data, Table):
+            datasets["input_datasets"] = input_data
+        super().__init__(**kwargs_with_datasets(kwargs=kwargs, **datasets))
 
-    def execute(self, context: dict) -> File:
+    def execute(self, context: Context) -> File:
         """Write SQL table to csv/parquet on local/S3/GCS.
 
         Infers SQL database type based on connection.
         """
         # Infer db type from `input_conn_id`.
-        if isinstance(self.input_data, Table):
+        if isinstance(self.input_data, BaseTable):
             database = create_database(self.input_data.conn_id)
             self.input_data = database.populate_table_metadata(self.input_data)
             df = database.export_table_to_pandas_dataframe(self.input_data)
@@ -61,7 +65,7 @@ class ExportFileOperator(BaseOperator):
 
 
 def export_file(
-    input_data: Table | pd.DataFrame,
+    input_data: BaseTable | pd.DataFrame,
     output_file: File,
     if_exists: ExportExistsStrategy = "exception",
     task_id: str | None = None,

@@ -10,20 +10,6 @@ from typing import Any
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
-from snowflake.connector import pandas_tools
-from snowflake.connector.errors import (
-    DatabaseError,
-    DataError,
-    ForbiddenError,
-    IntegrityError,
-    InternalError,
-    NotSupportedError,
-    OperationalError,
-    ProgrammingError,
-    RequestTimeoutError,
-    ServiceUnavailableError,
-)
-
 from astro import settings
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
@@ -37,7 +23,20 @@ from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
 from astro.settings import SNOWFLAKE_SCHEMA
-from astro.sql.table import Metadata, Table
+from astro.sql.table import BaseTable, Metadata
+from snowflake.connector import pandas_tools
+from snowflake.connector.errors import (
+    DatabaseError,
+    DataError,
+    ForbiddenError,
+    IntegrityError,
+    InternalError,
+    NotSupportedError,
+    OperationalError,
+    ProgrammingError,
+    RequestTimeoutError,
+    ServiceUnavailableError,
+)
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
 
@@ -60,6 +59,80 @@ DEFAULT_STORAGE_INTEGRATION = {
 
 NATIVE_LOAD_SUPPORTED_FILE_TYPES = (FileType.CSV, FileType.NDJSON, FileType.PARQUET)
 NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS = (FileLocation.GS, FileLocation.S3)
+
+NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES = {FileType.PARQUET}
+NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS = {FileLocation.GS, FileLocation.S3}
+
+
+@dataclass
+class SnowflakeFileFormat:
+    """
+    Dataclass which abstracts properties of a Snowflake File Format.
+
+    Snowflake File Formats are used to define the format of files stored in a stage.
+
+    Example:
+
+    .. code-block:: python
+
+        snowflake_stage = SnowflakeFileFormat(
+            name="file_format",
+            file_type="PARQUET",
+        )
+
+    .. seealso::
+        `Snowflake official documentation on file format creation
+        <https://docs.snowflake.com/en/sql-reference/sql/create-file-format.html>`_
+    """
+
+    name: str = ""
+    _name: str = field(init=False, repr=False, default="")
+    file_type: str = ""
+
+    @staticmethod
+    def _create_unique_name() -> str:
+        """
+        Generate a valid Snowflake file format name.
+
+        :return: unique file format name
+        """
+        return (
+            "file_format_"
+            + random.choice(string.ascii_lowercase)
+            + "".join(
+                random.choice(string.ascii_lowercase + string.digits) for _ in range(7)
+            )
+        )
+
+    def set_file_type_from_file(self, file: File) -> None:
+        """
+        Set Snowflake specific file format based on a given file.
+
+        :param file: File to use for file type mapping.
+        """
+        self.file_type = ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP[file.type.name]
+
+    @property  # type: ignore
+    def name(self) -> str:
+        """
+        Return either the user-defined name or auto-generated one.
+
+        :return: file format name
+        :sphinx-autoapi-skip:
+        """
+        if not self._name:
+            self._name = self._create_unique_name()
+        return self._name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        """
+        Set the file format name.
+
+        :param value: File format name.
+        """
+        if not isinstance(value, property) and value != self._name:
+            self._name = value
 
 
 @dataclass
@@ -202,7 +275,7 @@ class SnowflakeDatabase(BaseDatabase):
         )
 
     @staticmethod
-    def get_table_qualified_name(table: Table) -> str:  # skipcq: PYL-R0201
+    def get_table_qualified_name(table: BaseTable) -> str:  # skipcq: PYL-R0201
         """
         Return table qualified name. In Snowflake, it is the database, schema and table
 
@@ -215,6 +288,34 @@ class SnowflakeDatabase(BaseDatabase):
         ]
         qualified_name = ".".join(name for name in qualified_name_lists if name)
         return qualified_name
+
+    # ---------------------------------------------------------
+    # Snowflake file format methods
+    # ---------------------------------------------------------
+
+    def create_file_format(self, file: File) -> SnowflakeFileFormat:
+        """
+        Create a new named file format.
+
+        :param file: File to use for file format creation.
+
+        .. seealso::
+            `Snowflake official documentation on file format creation
+            <https://docs.snowflake.com/en/sql-reference/sql/create-file-format.html>`_
+        """
+        file_format = SnowflakeFileFormat()
+        file_format.set_file_type_from_file(file)
+
+        sql_statement = "".join(
+            [
+                f"CREATE OR REPLACE FILE FORMAT {file_format.name} ",
+                f"TYPE={file_format.file_type} ",
+            ]
+        )
+
+        self.run_sql(sql_statement)
+
+        return file_format
 
     # ---------------------------------------------------------
     # Snowflake stage methods
@@ -333,9 +434,62 @@ class SnowflakeDatabase(BaseDatabase):
     # Table load methods
     # ---------------------------------------------------------
 
+    def is_native_autodetect_schema_available(  # skipcq: PYL-R0201
+        self, file: File  # skipcq: PYL-W0613
+    ) -> bool:
+        """
+        Check if native auto detection of schema is available.
+
+        :param file: File used to check the file type of to decide
+            whether there is a native auto detection available for it.
+        """
+        is_file_type_supported = (
+            file.type.name in NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES
+        )
+        is_file_location_supported = (
+            file.location.location_type
+            in NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS
+        )
+        return is_file_type_supported and is_file_location_supported
+
+    def create_table_using_native_schema_autodetection(
+        self,
+        table: BaseTable,
+        file: File,
+    ) -> None:
+        """
+        Create a SQL table, automatically inferring the schema using the given file via native database support.
+
+        :param table: The table to be created.
+        :param file: File used to infer the new table columns.
+        """
+        table_name = self.get_table_qualified_name(table)
+        file_format = self.create_file_format(file)
+        stage = self.create_stage(file)
+        file_path = os.path.basename(file.path) or ""
+        sql_statement = """
+            create table identifier(%(table_name)s) using template (
+                select array_agg(object_construct(*))
+                from table(
+                    infer_schema(
+                        location=>%(location)s,
+                        file_format=>%(file_format)s
+                    )
+                )
+            );
+        """
+        self.hook.run(
+            sql_statement,
+            parameters={
+                "table_name": table_name,
+                "location": f"@{stage.qualified_name}/{file_path}",
+                "file_format": file_format.name,
+            },
+        )
+
     def create_table_using_schema_autodetection(
         self,
-        table: Table,
+        table: BaseTable,
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "lower",
@@ -364,7 +518,7 @@ class SnowflakeDatabase(BaseDatabase):
         super().create_table_using_schema_autodetection(table, dataframe=dataframe)
 
     def is_native_load_file_available(
-        self, source_file: File, target_table: Table
+        self, source_file: File, target_table: BaseTable
     ) -> bool:
         """
         Check if there is an optimised path for source to destination.
@@ -383,7 +537,7 @@ class SnowflakeDatabase(BaseDatabase):
     def load_file_to_table_natively(
         self,
         source_file: File,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
         **kwargs,
@@ -432,7 +586,7 @@ class SnowflakeDatabase(BaseDatabase):
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
     ) -> None:
@@ -459,7 +613,7 @@ class SnowflakeDatabase(BaseDatabase):
         )
 
     def get_sqlalchemy_template_table_identifier_and_parameter(
-        self, table: Table, jinja_table_identifier: str
+        self, table: BaseTable, jinja_table_identifier: str
     ) -> tuple[str, str]:
         """
         During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
@@ -527,8 +681,8 @@ class SnowflakeDatabase(BaseDatabase):
 
     def merge_table(
         self,
-        source_table: Table,
-        target_table: Table,
+        source_table: BaseTable,
+        target_table: BaseTable,
         source_to_target_columns_map: dict[str, str],
         target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",
@@ -550,12 +704,12 @@ class SnowflakeDatabase(BaseDatabase):
             target_conflict_columns=target_conflict_columns,
             if_conflicts=if_conflicts,
         )
-        self.run_sql(sql_statement=statement, parameters=params)
+        self.run_sql(sql=statement, parameters=params)
 
     def _build_merge_sql(
         self,
-        source_table: Table,
-        target_table: Table,
+        source_table: BaseTable,
+        target_table: BaseTable,
         source_to_target_columns_map: dict[str, str],
         target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",

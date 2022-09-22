@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
+from astro.constants import MergeConflictStrategy
+from astro.databases.base import BaseDatabase
+from astro.sql.table import BaseTable, Metadata
 from sqlalchemy import MetaData as SqlaMetaData
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.sql.schema import Table as SqlaTable
-
-from astro.constants import MergeConflictStrategy
-from astro.databases.base import BaseDatabase
-from astro.sql.table import Metadata, Table
 
 DEFAULT_CONN_ID = SqliteHook.default_conn_name
 
@@ -48,7 +47,7 @@ class SqliteDatabase(BaseDatabase):
     # Table metadata
     # ---------------------------------------------------------
     @staticmethod
-    def get_table_qualified_name(table: Table) -> str:
+    def get_table_qualified_name(table: BaseTable) -> str:
         """
         Return the table qualified name.
 
@@ -56,7 +55,7 @@ class SqliteDatabase(BaseDatabase):
         """
         return str(table.name)
 
-    def populate_table_metadata(self, table: Table) -> Table:
+    def populate_table_metadata(self, table: BaseTable) -> BaseTable:
         """
         Since SQLite does not have a concept of databases or schemas, we just return the table as is,
         without any modifications.
@@ -84,8 +83,8 @@ class SqliteDatabase(BaseDatabase):
 
     def merge_table(
         self,
-        source_table: Table,
-        target_table: Table,
+        source_table: BaseTable,
+        target_table: BaseTable,
         source_to_target_columns_map: dict[str, str],
         target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",
@@ -121,9 +120,9 @@ class SqliteDatabase(BaseDatabase):
             merge_keys=",".join(list(target_conflict_columns)),
         )
 
-        self.run_sql(sql_statement=query)
+        self.run_sql(sql=query)
 
-    def get_sqla_table(self, table: Table) -> SqlaTable:
+    def get_sqla_table(self, table: BaseTable) -> SqlaTable:
         """
         Return SQLAlchemy table instance
 

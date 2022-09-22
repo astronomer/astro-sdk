@@ -2,7 +2,6 @@ import pathlib
 import tempfile
 
 import pandas as pd
-
 from astro.files.types import JSONFileType
 
 sample_file = pathlib.Path(

@@ -2,13 +2,25 @@
 from __future__ import annotations
 
 import time
-from typing import Any
+from typing import Any, Callable, Mapping
 
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
 from airflow.providers.google.cloud.hooks.bigquery_dts import (
     BiqQueryDataTransferServiceHook,
 )
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    FileLocation,
+    FileType,
+    LoadExistStrategy,
+    MergeConflictStrategy,
+)
+from astro.databases.base import BaseDatabase
+from astro.exceptions import DatabaseCustomError
+from astro.files import File
+from astro.settings import BIGQUERY_SCHEMA
+from astro.sql.table import BaseTable, Metadata
 from google.api_core.exceptions import (
     ClientError,
     Conflict,
@@ -39,19 +51,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from tenacity import retry, stop_after_attempt
 
-from astro.constants import (
-    DEFAULT_CHUNK_SIZE,
-    FileLocation,
-    FileType,
-    LoadExistStrategy,
-    MergeConflictStrategy,
-)
-from astro.databases.base import BaseDatabase
-from astro.exceptions import DatabaseCustomError
-from astro.files import File
-from astro.settings import BIGQUERY_SCHEMA
-from astro.sql.table import Metadata, Table
-
 DEFAULT_CONN_ID = BigQueryHook.default_conn_name
 NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
     FileType.CSV: "CSV",
@@ -72,6 +71,20 @@ class BigqueryDatabase(BaseDatabase):
         FileLocation.GS: "load_gs_file_to_table",
         FileLocation.S3: "load_s3_file_to_table",
         FileLocation.LOCAL: "load_local_file_to_table",
+    }
+
+    NATIVE_AUTODETECT_SCHEMA_CONFIG: Mapping[
+        FileLocation, Mapping[str, list[FileType] | Callable]
+    ] = {
+        FileLocation.GS: {
+            "filetype": [FileType.CSV, FileType.NDJSON, FileType.PARQUET],
+            "method": lambda table, file: None,
+        },
+    }
+
+    FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = {
+        FileLocation.GS,
+        FileLocation.LOCAL,
     }
 
     illegal_column_name_chars: list[str] = ["."]
@@ -146,7 +159,7 @@ class BigqueryDatabase(BaseDatabase):
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
     ) -> None:
@@ -174,8 +187,8 @@ class BigqueryDatabase(BaseDatabase):
 
     def merge_table(
         self,
-        source_table: Table,
-        target_table: Table,
+        source_table: BaseTable,
+        target_table: BaseTable,
         source_to_target_columns_map: dict[str, str],
         target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",
@@ -197,23 +210,66 @@ class BigqueryDatabase(BaseDatabase):
         target_table_name = self.get_table_qualified_name(target_table)
         source_table_name = self.get_table_qualified_name(source_table)
 
-        statement = f"MERGE {target_table_name} T USING {source_table_name} S\
-            ON {' AND '.join(['T.' + col + '= S.' + col for col in target_conflict_columns])}\
-            WHEN NOT MATCHED BY TARGET THEN INSERT ({','.join(target_columns)}) VALUES ({','.join(source_columns)})"
-
-        update_statement_map = ", ".join(
-            [
-                f"T.{target_columns[idx]}=S.{source_columns[idx]}"
-                for idx in range(len(target_columns))
-            ]
+        insert_statement = (
+            f"INSERT ({', '.join(target_columns)}) VALUES ({', '.join(source_columns)})"
+        )
+        merge_statement = (
+            f"MERGE {target_table_name} T USING {source_table_name} S"
+            f" ON {' AND '.join(f'T.{col}=S.{col}' for col in target_conflict_columns)}"
+            f" WHEN NOT MATCHED BY TARGET THEN {insert_statement}"
         )
         if if_conflicts == "update":
-            update_statement = f"UPDATE SET {update_statement_map}"  # skipcq: BAN-B608
-            statement += f" WHEN MATCHED THEN {update_statement}"
-        self.run_sql(sql_statement=statement)
+            update_statement_map = ", ".join(
+                f"T.{col}=S.{source_columns[idx]}"
+                for idx, col in enumerate(target_columns)
+            )
+            if not self.columns_exist(source_table, source_columns):
+                raise ValueError(
+                    f"Not all the columns provided exist for {source_table_name}!"
+                )
+            if not self.columns_exist(target_table, target_columns):
+                raise ValueError(
+                    f"Not all the columns provided exist for {target_table_name}!"
+                )
+            # Note: Ignoring below sql injection warning, as we validate that the table columns exist beforehand.
+            update_statement = f"UPDATE SET {update_statement_map}"  # skipcq BAN-B608
+            merge_statement += f" WHEN MATCHED THEN {update_statement}"
+        self.run_sql(sql=merge_statement)
+
+    def is_native_autodetect_schema_available(  # skipcq: PYL-R0201
+        self, file: File  # skipcq: PYL-W0613
+    ) -> bool:
+        """
+        Check if native auto detection of schema is available.
+
+        :param file: File used to check the file type of to decide
+            whether there is a native auto detection available for it.
+        """
+        supported_config = self.NATIVE_AUTODETECT_SCHEMA_CONFIG.get(
+            file.location.location_type
+        )
+        if supported_config and file.type.name in supported_config["filetype"]:  # type: ignore
+            return True
+        return False
+
+    def create_table_using_native_schema_autodetection(  # skipcq: PYL-R0201
+        self,
+        table: BaseTable,
+        file: File,
+    ) -> None:
+        """
+        Create a SQL table, automatically inferring the schema using the given file via native database support.
+
+        :param table: The table to be created.
+        :param file: File used to infer the new table columns.
+        """
+        supported_config = self.NATIVE_AUTODETECT_SCHEMA_CONFIG.get(
+            file.location.location_type
+        )
+        return supported_config["method"](table=table, file=file)  # type: ignore
 
     def is_native_load_file_available(
-        self, source_file: File, target_table: Table
+        self, source_file: File, target_table: BaseTable
     ) -> bool:
         """
         Check if there is an optimised path for source to destination.
@@ -228,7 +284,7 @@ class BigqueryDatabase(BaseDatabase):
     def load_file_to_table_natively(
         self,
         source_file: File,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
         **kwargs,
@@ -261,7 +317,7 @@ class BigqueryDatabase(BaseDatabase):
     def load_gs_file_to_table(
         self,
         source_file: File,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
         **kwargs,
@@ -286,8 +342,10 @@ class BigqueryDatabase(BaseDatabase):
             "createDisposition": "CREATE_IF_NEEDED",
             "writeDisposition": BIGQUERY_WRITE_DISPOSITION[if_exists],
             "sourceFormat": NATIVE_PATHS_SUPPORTED_FILE_TYPES[source_file.type.name],
-            "autodetect": True,
         }
+        if self.is_native_autodetect_schema_available(file=source_file):
+            load_job_config["autodetect"] = True  # type: ignore
+
         native_support_kwargs.update(native_support_kwargs)
 
         # Since bigquery has other options besides used here, we need to expose them to end user.
@@ -307,7 +365,7 @@ class BigqueryDatabase(BaseDatabase):
     def load_s3_file_to_table(
         self,
         source_file: File,
-        target_table: Table,
+        target_table: BaseTable,
         native_support_kwargs: dict | None = None,
         **kwargs,
     ):
@@ -351,7 +409,7 @@ class BigqueryDatabase(BaseDatabase):
     def load_local_file_to_table(
         self,
         source_file: File,
-        target_table: Table,
+        target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
         **kwargs,
@@ -405,7 +463,7 @@ class S3ToBigqueryDataTransfer:
 
     def __init__(
         self,
-        target_table: Table,
+        target_table: BaseTable,
         source_file: File,
         project_id: str,
         poll_duration: int = 1,

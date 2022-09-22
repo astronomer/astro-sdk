@@ -4,7 +4,6 @@ from datetime import datetime
 from pathlib import Path
 
 from airflow import DAG
-
 from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
 from astro.files import File
@@ -62,6 +61,7 @@ def create_dag(database_name, table_args, dataset):
             task_id="load",
             output_table=table,
             chunk_size=chunk_size,
+            enable_native_fallback=False,
         )
         aql.cleanup([my_table])
 

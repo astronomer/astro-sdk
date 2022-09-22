@@ -51,6 +51,10 @@ autoapi_options = [
     "show-inheritance",
     "show-module-summary",
 ]
+
+suppress_warnings = [
+    "autoapi.python_import_resolution",
+]
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_autoapi_templates"]
 

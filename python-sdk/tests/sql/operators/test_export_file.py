@@ -14,13 +14,13 @@ import pathlib
 import tempfile
 from pathlib import Path
 
+import astro.sql as aql
 import boto3
 import pandas as pd
 import pytest
 from airflow.exceptions import BackfillUnfinished
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
-
-import astro.sql as aql
+from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import SUPPORTED_FILE_TYPES, Database
 from astro.files import File
 from astro.settings import SCHEMA
@@ -436,3 +436,33 @@ def test_populate_table_metadata(sample_dag, database_table_fixture):
         validate(test_table)
 
     test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.skipif(
+    not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
+)
+def test_inlets_outlets_supported_ds():
+    """Test Datasets are set as inlets and outlets"""
+    input_data = Table("test_name")
+    output_file = File("gs://bucket/object.csv")
+    task = aql.export_file(
+        input_data=input_data,
+        output_file=output_file,
+    )
+    assert task.operator.inlets == [input_data]
+    assert task.operator.outlets == [output_file]
+
+
+@pytest.mark.skipif(
+    DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
+)
+def test_inlets_outlets_non_supported_ds():
+    """Test inlets and outlets are not set if Datasets are not supported"""
+    input_data = Table("test_name")
+    output_file = File("gs://bucket/object.csv")
+    task = aql.export_file(
+        input_data=input_data,
+        output_file=output_file,
+    )
+    assert task.operator.inlets == []
+    assert task.operator.outlets == []

@@ -1,19 +1,19 @@
 from __future__ import annotations
 
-import io
+import pathlib
 
 import pandas as pd
 import smart_open
-from attrs import define
-
 from astro import constants
+from astro.airflow.datasets import Dataset
 from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
 from astro.files.types import FileType, create_file_type
+from attr import define, field
 
 
 @define
-class File:
+class File(Dataset):
     """
     Handle all file operations, and abstract away the details related to location and file types.
     Intended to be used within library.
@@ -28,6 +28,9 @@ class File:
     conn_id: str | None = None
     filetype: constants.FileType | None = None
     normalize_config: dict | None = None
+
+    uri: str = field(init=False)
+    extra: dict | None = field(init=False, factory=dict)
 
     template_fields = (
         "path",
@@ -65,6 +68,14 @@ class File:
         result: bool = self.type.name == constants.FileType.PARQUET
         return result
 
+    def is_pattern(self) -> bool:
+        """
+        Returns True when file path is a pattern(eg. s3://bucket/folder or /folder/sample_* etc)
+
+        :return: True or False
+        """
+        return not pathlib.PosixPath(self.path).suffix
+
     def create_from_dataframe(self, df: pd.DataFrame) -> None:
         """Create a file in the desired location using the values of a dataframe.
 
@@ -75,38 +86,13 @@ class File:
         ) as stream:
             self.type.create_from_dataframe(stream=stream, df=df)
 
-    def _convert_remote_file_to_byte_stream(self) -> io.IOBase:
-        """
-        Read file from all supported location and convert them into a buffer that can be streamed into other data
-        structures.
-
-        Due to noted issues with using smart_open with pandas (like
-        https://github.com/RaRe-Technologies/smart_open/issues/524), we create a BytesIO or StringIO buffer
-        before exporting to a dataframe. We've found a sizable speed improvement with this optimizat
-
-        Returns: an io object that can be streamed into a dataframe (or other object)
-
-        """
+    def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
+        """Read file from all supported location and convert them into dataframes."""
         mode = "rb" if self.is_binary() else "r"
-        remote_obj_buffer = io.BytesIO() if self.is_binary() else io.StringIO()
         with smart_open.open(
             self.path, mode=mode, transport_params=self.location.transport_params
         ) as stream:
-            remote_obj_buffer.write(stream.read())
-        remote_obj_buffer.seek(0)
-        return remote_obj_buffer
-
-    def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
-        """Read file from all supported location and convert them into dataframes.
-
-        Due to noted issues with using smart_open with pandas (like
-        https://github.com/RaRe-Technologies/smart_open/issues/524), we create a BytesIO or StringIO buffer
-        before exporting to a dataframe. We've found a sizable speed improvement with this optimization.
-        """
-
-        return self.type.export_to_dataframe(
-            self._convert_remote_file_to_byte_stream(), **kwargs
-        )
+            return self.type.export_to_dataframe(stream, **kwargs)
 
     def exists(self) -> bool:
         """Check if the file exists or not"""
@@ -123,6 +109,27 @@ class File:
 
     def __hash__(self) -> int:
         return hash((self.path, self.conn_id, self.filetype))
+
+    @uri.default
+    def _path_to_dataset_uri(self) -> str:
+        """Build a URI to be passed to Dataset obj introduced in Airflow 2.4"""
+        from urllib.parse import urlencode, urlparse
+
+        parsed_url = urlparse(url=self.path)
+        netloc = parsed_url.netloc
+        # Local filepaths do not have scheme
+        parsed_scheme = parsed_url.scheme or "file"
+        scheme = f"astro+{parsed_scheme}"
+        extra = {}
+        if self.filetype:
+            extra["filetype"] = str(self.filetype)
+
+        new_parsed_url = parsed_url._replace(
+            netloc=f"{self.conn_id}@{netloc}" if self.conn_id else netloc,
+            scheme=scheme,
+            query=urlencode(extra),
+        )
+        return new_parsed_url.geturl()
 
 
 def resolve_file_path_pattern(

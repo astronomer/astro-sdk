@@ -5,6 +5,7 @@ from typing import Any, Callable
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
+from astro.airflow.datasets import kwargs_with_datasets
 
 try:
     from airflow.decorators.base import TaskDecorator, task_decorator_factory
@@ -16,13 +17,15 @@ from astro import settings
 from astro.constants import ColumnCapitalization
 from astro.databases import create_database
 from astro.exceptions import IllegalLoadToDatabaseException
-from astro.sql.table import Table
+from astro.sql.operators.base_operator import AstroSQLBaseOperator
+from astro.sql.table import BaseTable, Table
 from astro.utils.dataframe import convert_columns_names_capitalization
 from astro.utils.table import find_first_table
+from astro.utils.typing_compat import Context
 
 
 def _get_dataframe(
-    table: Table, columns_names_capitalization: ColumnCapitalization = "lower"
+    table: BaseTable, columns_names_capitalization: ColumnCapitalization = "lower"
 ) -> pd.DataFrame:
     """
     Exports records from a SQL table and converts it into a pandas dataframe
@@ -51,7 +54,7 @@ def load_op_arg_table_into_dataframe(
     for arg in op_args_list:
         current_arg = full_spec.args.pop(0)
         if full_spec.annotations[current_arg] == pd.DataFrame and isinstance(
-            arg, Table
+            arg, BaseTable
         ):
             ret_args.append(
                 _get_dataframe(
@@ -75,13 +78,13 @@ def load_op_kwarg_table_into_dataframe(
     # this table to be converted into a dataframe, rather that passed in as a table
     return {
         k: _get_dataframe(v, columns_names_capitalization=columns_names_capitalization)
-        if param_types.get(k).annotation is pd.DataFrame and isinstance(v, Table)  # type: ignore
+        if param_types.get(k).annotation is pd.DataFrame and isinstance(v, BaseTable)  # type: ignore
         else v
         for k, v in op_kwargs.items()
     }
 
 
-class DataframeOperator(DecoratedOperator):
+class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
     """
     Converts a SQL table into a dataframe. Users can then give a python function that takes a dataframe as
     one of its inputs and run that python function. Once that function has completed, the result is accessible
@@ -113,17 +116,21 @@ class DataframeOperator(DecoratedOperator):
         self.kwargs = kwargs or {}
         self.op_kwargs: dict = self.kwargs.get("op_kwargs") or {}
         if self.op_kwargs.get("output_table"):
-            self.output_table: Table | None = self.op_kwargs.pop("output_table")
+            self.output_table: BaseTable | None = self.op_kwargs.pop("output_table")
         else:
             self.output_table = None
         self.op_args = self.kwargs.get("op_args", ())  # type: ignore
         self.columns_names_capitalization = columns_names_capitalization
 
+        # We purposely do NOT render upstream_tasks otherwise we could have a case where a user
+        # has 10 dataframes as upstream tasks and it crashes the worker
+        upstream_tasks = self.op_kwargs.pop("upstream_tasks", [])
         super().__init__(
-            **kwargs,
+            upstream_tasks=upstream_tasks,
+            **kwargs_with_datasets(kwargs=kwargs, output_datasets=self.output_table),
         )
 
-    def execute(self, context: dict) -> Table | pd.DataFrame:
+    def execute(self, context: Context) -> Table | pd.DataFrame:
         first_table = find_first_table(
             op_args=self.op_args,  # type: ignore
             op_kwargs=self.op_kwargs,

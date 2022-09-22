@@ -3,7 +3,8 @@ from __future__ import annotations
 import random
 import string
 
-from attrs import define, field, fields_dict
+from astro.airflow.datasets import Dataset
+from attr import define, field, fields_dict
 from sqlalchemy import Column, MetaData
 
 MAX_TABLE_NAME_LENGTH = 62
@@ -32,19 +33,19 @@ class Metadata:
         )
 
 
-@define
-class Table:
+@define(slots=False)
+class BaseTable:
     """
-    Withholds the information necessary to access a SQL Table.
-    It is agnostic to the database type.
+    Base class that has information necessary to access a SQL Table. It is agnostic to the database type.
     If no name is given, it auto-generates a name for the Table and considers it temporary.
 
     Temporary tables are prefixed with the prefix TEMP_PREFIX.
 
-    :param conn_id: The Airflow connection id. This will be used to identify the right database type at the runtime
     :param name: The name of the database table. If name not provided then it would create a temporary name
+    :param conn_id: The Airflow connection id. This will be used to identify the right database type at the runtime
     :param metadata: A metadata object which will have database or schema name
     :param columns: columns which define the database table schema.
+    :sphinx-autoapi-skip:
     """
 
     template_fields = ("name",)
@@ -52,8 +53,8 @@ class Table:
     # TODO: discuss alternative names to this class, since it contains metadata as opposed to be the
     # SQL table itself
     # Some ideas: TableRef, TableMetadata, TableData, TableDataset
-    conn_id: str = field(default="")
     _name: str = field(default="")
+    conn_id: str = field(default="")
     # Setting converter allows passing a dictionary to metadata arg
     metadata: Metadata = field(
         factory=Metadata,
@@ -61,6 +62,10 @@ class Table:
     )
     columns: list[Column] = field(factory=list)
     temp: bool = field(default=False)
+
+    # We need this method to pickle Table object, without this we cannot push/pull this object from xcom.
+    def __getstate__(self):
+        return self.__dict__
 
     def __attrs_post_init__(self) -> None:
         if not self._name or self._name.startswith("_tmp"):
@@ -120,3 +125,54 @@ class Table:
         if not isinstance(value, property) and value != self._name:
             self._name = value
             self.temp = False
+
+
+@define(slots=False)
+class TempTable(BaseTable):
+    """
+    Internal class to represent a Temporary table
+
+    :sphinx-autoapi-skip:
+    """
+
+    temp: bool = field(default=True)
+
+
+@define(slots=False)
+class Table(BaseTable, Dataset):
+    """
+    User-facing class that has information necessary to access a SQL Table. It is agnostic to the database type.
+    If no name is given, it auto-generates a name for the Table and considers it temporary.
+
+    Temporary tables are prefixed with the prefix TEMP_PREFIX.
+
+    :param name: The name of the database table. If name not provided then it would create a temporary name
+    :param conn_id: The Airflow connection id. This will be used to identify the right database type at the runtime
+    :param metadata: A metadata object which will have database or schema name
+    :param columns: columns which define the database table schema.
+    """
+
+    uri: str = field(init=False)
+    extra: dict | None = field(init=False, factory=dict)
+
+    def __new__(cls, *args, **kwargs):
+        name = kwargs.get("name") or args and args[0] or ""
+        temp = kwargs.get("temp", False)
+        if temp or (not name or name.startswith("_tmp")):
+            return TempTable(*args, **kwargs)
+        return super().__new__(cls)
+
+    @uri.default
+    def _path_to_dataset_uri(self) -> str:
+        """Build a URI to be passed to Dataset obj introduced in Airflow 2.4"""
+        from urllib.parse import urlencode, urlparse
+
+        path = f"astro://{self.conn_id}@"
+        db_extra = {"table": self.name}
+        if self.metadata.schema:
+            db_extra["schema"] = self.metadata.schema
+        if self.metadata.database:
+            db_extra["database"] = self.metadata.database
+        parsed_url = urlparse(url=path)
+        new_parsed_url = parsed_url._replace(query=urlencode(db_extra))
+        return new_parsed_url.geturl()
