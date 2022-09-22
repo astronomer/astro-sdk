@@ -4,12 +4,13 @@ import pathlib
 
 import pandas as pd
 import smart_open
-from astro import constants
 from astro.airflow.datasets import Dataset
-from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
-from astro.files.types import FileType, create_file_type
 from attr import define, field
+
+from astro import constants
+from astro.files.locations import create_file_location
+from astro.files.types import FileType, create_file_type
 
 
 @define
@@ -152,7 +153,7 @@ def resolve_file_path_pattern(
     location = create_file_location(path_pattern, conn_id)
 
     files = [
-        File(  # type: ignore
+        File(
             path=path,
             conn_id=conn_id,
             filetype=filetype,

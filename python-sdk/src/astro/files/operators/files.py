@@ -3,8 +3,9 @@ from typing import Any
 from airflow.decorators.base import get_unique_task_id
 from airflow.models import BaseOperator
 from astro.files.base import File
-from astro.files.locations import create_file_location
 from astro.utils.typing_compat import Context
+
+from astro.files.locations import create_file_location
 
 
 class ListFileOperator(BaseOperator):
@@ -31,7 +32,7 @@ class ListFileOperator(BaseOperator):
         location = create_file_location(self.path, self.conn_id)
         # Get list of files excluding folders
         return [
-            File(path=path, conn_id=location.conn_id)  # type: ignore
+            File(path=path, conn_id=location.conn_id)
             for path in location.paths
             if not path.endswith("/")
         ]
