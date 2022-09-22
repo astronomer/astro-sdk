@@ -13,12 +13,13 @@ def generate_data(file_name, records):
     customer = []
     # Iterate the loop based on the input value and generate fake data
     for n in range(0, records):
-        cus = {}
-        cus["id"] = n
-        cus["name"] = fake.name()
-        cus["address"] = fake.address()
-        cus["email"] = str(fake.email())
-        cus["phone"] = str(fake.phone_number())
+        cus = {
+            "id": n,
+            "name": fake.name(),
+            "address": fake.address(),
+            "email": str(fake.email()),
+            "phone": str(fake.phone_number()),
+        }
         customer.append(cus)
     # Write the data into the NDJSON file
     with open(file_name, "w") as fp:
