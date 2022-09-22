@@ -43,9 +43,11 @@ Within `s3://astro-sdk-test/benchmark/fake_data/`, following are the files with 
 
 ## Origin of the synthetic datasets
 
-To make the benchmarking results uniform, we have generated synthetic dataset for various size for all the file types:
+To make the benchmarking results uniform, we have generated synthetic dataset for various size for all the file types.
 
 1. CSV files
+
+The [script](synthetic_csv_generator.py) is used to generate the Parquet file.
 
 - GCS path
 
@@ -59,6 +61,8 @@ To make the benchmarking results uniform, we have generated synthetic dataset fo
 | two_gb     | 2 GB   | csv    | gs://astro-sdk/benchmark/synthetic-dataset/csv/two_gb.csv     |
 | five_gb    | 5 GB   | csv    | gs://astro-sdk/benchmark/synthetic-dataset/csv/five_gb.csv    |
 | ten_gb     | 10 GB  | csv    | gs://astro-sdk/benchmark/synthetic-dataset/csv/ten_gb.csv     |
+| five_gb    | 5 GB   | csv    | gs://astro-sdk/benchmark/synthetic-dataset/csv/five_gb/       |
+| ten_gb     | 10 GB  | csv    | gs://astro-sdk/benchmark/synthetic-dataset/csv/ten_gb/        |
 
 - AWS S3 path
 
@@ -72,8 +76,12 @@ To make the benchmarking results uniform, we have generated synthetic dataset fo
 | two_gb     | 2 GB   | csv    | s3://astro-sdk/benchmark/synthetic-dataset/csv/two_gb.csv     |
 | five_gb    | 5 GB   | csv    | s3://astro-sdk/benchmark/synthetic-dataset/csv/five_gb.csv    |
 | ten_gb     | 10 GB  | csv    | s3://astro-sdk/benchmark/synthetic-dataset/csv/ten_gb.csv     |
+| five_gb    | 5 GB   | csv    | s3://astro-sdk/benchmark/synthetic-dataset/csv/five_gb/       |
+| ten_gb     | 10 GB  | csv    | s3://astro-sdk/benchmark/synthetic-dataset/csv/ten_gb/        |
 
 2. Parquet files
+
+The [script](synthetic_parquet_generator.py) is used to generate the Parquet file.
 
 - GCS path
 
@@ -104,6 +112,8 @@ To make the benchmarking results uniform, we have generated synthetic dataset fo
 | ten_gb     | 10 GB  | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/ten_gb/            |
 
 3. NDJSON files
+
+The [script](synthetic_ndjson_generator.py) is used to generate the NDJSON file.
 
 - GCS path
 
