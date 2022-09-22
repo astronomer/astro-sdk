@@ -5,15 +5,16 @@ from typing import Any
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
-from astro import settings
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
-from astro.databases import BaseDatabase, create_database
 from astro.exceptions import IllegalLoadToDatabaseException
-from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable, Table
 from astro.utils.typing_compat import Context
+
+from astro import settings
+from astro.databases import BaseDatabase, create_database
+from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 
 
 class LoadFileOperator(AstroSQLBaseOperator):
@@ -128,6 +129,8 @@ class LoadFileOperator(AstroSQLBaseOperator):
         for file in resolve_file_path_pattern(
             input_file.path,
             input_file.conn_id,
+            normalize_config=self.normalize_config,
+            filetype=input_file.type.name,
         ):
             if isinstance(df, pd.DataFrame):
                 df = pd.concat(
