@@ -9,18 +9,16 @@ fake = Faker()
 
 # Define function to generate fake data and store into a NDJSON file
 def generate_data(file_name, records):
-    # Declare an empty list
-    customer = []
-    # Iterate the loop based on the input value and generate fake data
-    for n in range(0, records):
-        cus = {
+    customer = [
+        {
             "id": n,
             "name": fake.name(),
             "address": fake.address(),
             "email": str(fake.email()),
             "phone": str(fake.phone_number()),
         }
-        customer.append(cus)
+        for n in range(0, records)
+    ]
     # Write the data into the NDJSON file
     with open(file_name, "w") as fp:
         ndjson.dump(customer, fp)
