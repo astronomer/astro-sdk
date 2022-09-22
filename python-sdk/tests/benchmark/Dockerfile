@@ -1,4 +1,4 @@
-FROM debian:bullseye AS build
+FROM --platform=linux/amd64 debian:bullseye AS build
 MAINTAINER Astronomer DAG Authoring Team <airflow_dag_authors@astronomer.io>
 
 ARG GIT_HASH=""
