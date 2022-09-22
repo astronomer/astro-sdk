@@ -49,7 +49,7 @@ To make the benchmarking results uniform, we have generated synthetic dataset fo
 
 - GCS path
 
-|            | size   | format | GCS path to csv file(s)                                       |
+|            | size   | format | path to csv file(s)                                           |
 |------------|--------|--------|---------------------------------------------------------------|
 | ten_kb     | 10 KB  | csv    | gs://astro-sdk/benchmark/synthetic-dataset/csv/ten_kb.csv     |
 | hundred_kb | 100 KB | csv    | gs://astro-sdk/benchmark/synthetic-dataset/csv/hundred_kb.csv |
@@ -60,11 +60,24 @@ To make the benchmarking results uniform, we have generated synthetic dataset fo
 | five_gb    | 5 GB   | csv    | gs://astro-sdk/benchmark/synthetic-dataset/csv/five_gb.csv    |
 | ten_gb     | 10 GB  | csv    | gs://astro-sdk/benchmark/synthetic-dataset/csv/ten_gb.csv     |
 
+- AWS S3 path
+
+|            | size   | format | path to csv file(s)                                           |
+|------------|--------|--------|---------------------------------------------------------------|
+| ten_kb     | 10 KB  | csv    | s3://astro-sdk/benchmark/synthetic-dataset/csv/ten_kb.csv     |
+| hundred_kb | 100 KB | csv    | s3://astro-sdk/benchmark/synthetic-dataset/csv/hundred_kb.csv |
+| ten_mb     | 10 MB  | csv    | s3://astro-sdk/benchmark/synthetic-dataset/csv/ten_mb.csv     |
+| hundred_mb | 100 MB | csv    | s3://astro-sdk/benchmark/synthetic-dataset/csv/hundred_mb.csv |
+| one_gb     | 1 GB   | csv    | s3://astro-sdk/benchmark/synthetic-dataset/csv/one_gb.csv     |
+| two_gb     | 2 GB   | csv    | s3://astro-sdk/benchmark/synthetic-dataset/csv/two_gb.csv     |
+| five_gb    | 5 GB   | csv    | s3://astro-sdk/benchmark/synthetic-dataset/csv/five_gb.csv    |
+| ten_gb     | 10 GB  | csv    | s3://astro-sdk/benchmark/synthetic-dataset/csv/ten_gb.csv     |
+
 2. Parquet files
 
 - GCS path
 
-|            | size   | format     | GCS path to parquet file(s)                                           |
+|            | size   | format     | path to parquet file(s)                                               |
 |------------|--------|------------|-----------------------------------------------------------------------|
 | ten_kb     | 10 KB  | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/ten_kb.parquet     |
 | hundred_kb | 100 KB | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_kb.parquet |
@@ -72,23 +85,53 @@ To make the benchmarking results uniform, we have generated synthetic dataset fo
 | hundred_mb | 100 MB | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_mb.parquet |
 | one_gb     | 1 GB   | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/one_gb.parquet     |
 | two_gb     | 2 GB   | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/two_gb.parquet     |
-| five_gb    | 5 GB   | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/five_gb.parquet    |
-| ten_gb     | 10 GB  | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/ten_gb.parquet     |
+| five_gb    | 2.8 GB | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/five_gb.parquet    |
+| five_gb    | 5 GB   | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/five_gb/           |
+| ten_gb     | 10 GB  | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/ten_gb/            |
+
+- AWS S3 path
+
+|            | size   | format     | path to parquet file(s)                                               |
+|------------|--------|------------|-----------------------------------------------------------------------|
+| ten_kb     | 10 KB  | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/ten_kb.parquet     |
+| hundred_kb | 100 KB | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_kb.parquet |
+| ten_mb     | 10 MB  | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/ten_mb.parquet     |
+| hundred_mb | 100 MB | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_mb.parquet |
+| one_gb     | 1 GB   | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/one_gb.parquet     |
+| two_gb     | 2 GB   | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/two_gb.parquet     |
+| five_gb    | 2.8 GB | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/five_gb.parquet    |
+| five_gb    | 5 GB   | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/five_gb/           |
+| ten_gb     | 10 GB  | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/ten_gb/            |
 
 3. NDJSON files
 
 - GCS path
 
-|            | size   | format | GCS path to ndjson file(s)                                          |
-|------------|--------|--------|---------------------------------------------------------------------|
-| ten_kb     | 10 KB  | csv    | gs://astro-sdk/benchmark/synthetic-dataset/ndjson/ten_kb.ndjson     |
-| hundred_kb | 100 KB | csv    | gs://astro-sdk/benchmark/synthetic-dataset/ndjson/hundred_kb.csv    |
-| ten_mb     | 10 MB  | csv    | gs://astro-sdk/benchmark/synthetic-dataset/ndjson/ten_mb.ndjson     |
-| hundred_mb | 100 MB | csv    | gs://astro-sdk/benchmark/synthetic-dataset/ndjson/hundred_mb.ndjson |
-| one_gb     | 1 GB   | csv    | gs://astro-sdk/benchmark/synthetic-dataset/ndjson/one_gb.ndjson     |
-| two_gb     | 2 GB   | csv    | gs://astro-sdk/benchmark/synthetic-dataset/ndjson/two_gb.ndjson     |
-| five_gb    | 5 GB   | csv    | gs://astro-sdk/benchmark/synthetic-dataset/ndjson/five_gb.ndjson    |
-| ten_gb     | 10 GB  | csv    | gs://astro-sdk/benchmark/synthetic-dataset/ndjson/ten_gb.ndjson     |
+|            | size   | format   | path to ndjson file(s)                                              |
+|------------|--------|----------|---------------------------------------------------------------------|
+| ten_kb     | 10 KB  | NDJSON   | gs://astro-sdk/benchmark/synthetic-dataset/ndjson/ten_kb.ndjson     |
+| hundred_kb | 100 KB | NDJSON   | gs://astro-sdk/benchmark/synthetic-dataset/ndjson/hundred_kb.ndjson |
+| ten_mb     | 10 MB  | NDJSON   | gs://astro-sdk/benchmark/synthetic-dataset/ndjson/ten_mb.ndjson     |
+| hundred_mb | 100 MB | NDJSON   | gs://astro-sdk/benchmark/synthetic-dataset/ndjson/hundred_mb.ndjson |
+| one_gb     | 1 GB   | NDJSON   | gs://astro-sdk/benchmark/synthetic-dataset/ndjson/one_gb.ndjson     |
+| two_gb     | 2 GB   | NDJSON   | gs://astro-sdk/benchmark/synthetic-dataset/ndjson/two_gb.ndjson     |
+| five_gb    | 4.5 GB | NDJSON   | gs://astro-sdk/benchmark/synthetic-dataset/ndjson/five_gb.ndjson    |
+| five_gb    | 5 GB   | NDJSON   | gs://astro-sdk/benchmark/synthetic-dataset/ndjson/five_gb/          |
+| ten_gb     | 10 GB  | NDJSON   | gs://astro-sdk/benchmark/synthetic-dataset/ndjson/ten_gb/           |
+
+- AWS S3 path
+
+|            | size   | format   | path to ndjson file(s)                                              |
+|------------|--------|----------|---------------------------------------------------------------------|
+| ten_kb     | 10 KB  | NDJSON   | s3://astro-sdk/benchmark/synthetic-dataset/ndjson/ten_kb.ndjson     |
+| hundred_kb | 100 KB | NDJSON   | s3://astro-sdk/benchmark/synthetic-dataset/ndjson/hundred_kb.ndjson |
+| ten_mb     | 10 MB  | NDJSON   | s3://astro-sdk/benchmark/synthetic-dataset/ndjson/ten_mb.ndjson     |
+| hundred_mb | 100 MB | NDJSON   | s3://astro-sdk/benchmark/synthetic-dataset/ndjson/hundred_mb.ndjson |
+| one_gb     | 1 GB   | NDJSON   | s3://astro-sdk/benchmark/synthetic-dataset/ndjson/one_gb.ndjson     |
+| two_gb     | 2 GB   | NDJSON   | s3://astro-sdk/benchmark/synthetic-dataset/ndjson/two_gb.ndjson     |
+| five_gb    | 4.5 GB | NDJSON   | s3://astro-sdk/benchmark/synthetic-dataset/ndjson/five_gb.ndjson    |
+| five_gb    | 5 GB   | NDJSON   | s3://astro-sdk/benchmark/synthetic-dataset/ndjson/five_gb/          |
+| ten_gb     | 10 GB  | NDJSON   | s3://astro-sdk/benchmark/synthetic-dataset/ndjson/ten_gb/           |
 
 ## Origin of the real datasets
 
