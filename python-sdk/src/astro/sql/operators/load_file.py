@@ -128,6 +128,8 @@ class LoadFileOperator(AstroSQLBaseOperator):
         for file in resolve_file_path_pattern(
             input_file.path,
             input_file.conn_id,
+            normalize_config=self.normalize_config,
+            filetype=input_file.type.name,
         ):
             if isinstance(df, pd.DataFrame):
                 df = pd.concat(
