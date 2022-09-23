@@ -20,6 +20,10 @@ else
   connections_file="${benchmark_dir}/../../test-connections.yaml"
 fi
 
+echo "===================================================="
+cat connections_file
+echo "===================================================="
+
 git_revision="${GIT_HASH:=`git rev-parse --short HEAD`}"
 echo $git_revision
 
