@@ -5,7 +5,7 @@ GCP_PROJECT ?= astronomer-dag-authoring
 GIT_HASH = $(shell git log -1 --format=%h)
 APP ?= benchmark
 CONTAINER_REGISTRY=gcr.io/$(GCP_PROJECT)/$(APP)
-
+PLATFORM="linux/amd64"
 
 check_google_credentials:
 ifndef GOOGLE_APPLICATION_CREDENTIALS
@@ -36,13 +36,13 @@ run: clean
 container: clean
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
 	@gcloud auth configure-docker gcr.io
-	@docker build --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):latest -f ./Dockerfile  ../../
+	@docker build --platform=$(PLATFORM) --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):latest -f ./Dockerfile  ../../
 	@docker push $(CONTAINER_REGISTRY)
 
 local: clean check_google_credentials
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
 	@gcloud auth configure-docker gcr.io
-	@docker build -t benchmark -f ./Dockerfile ../../ --build-arg=GIT_HASH=$(GIT_HASH)
+	@docker build -t benchmark -f ./Dockerfile ../../ --platform=$(PLATFORM) --build-arg=GIT_HASH=$(GIT_HASH)
 	@mkdir -p /tmp/docker
 	@sudo chmod a+rwx /tmp/docker/
 	@docker run -it \
