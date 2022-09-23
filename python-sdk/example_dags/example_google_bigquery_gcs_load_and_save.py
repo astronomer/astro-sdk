@@ -14,13 +14,12 @@ Pre-requisites:
 """
 import os
 
+import astro.sql as aql
 import pandas as pd
 from airflow.models.dag import DAG
 from airflow.utils import timezone
-from astro.sql.table import Metadata, Table
-
-import astro.sql as aql
 from astro.files import File
+from astro.sql.table import Metadata, Table
 
 with DAG(
     dag_id="example_google_bigquery_gcs_load_and_save",
