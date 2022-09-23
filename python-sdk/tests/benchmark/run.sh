@@ -19,9 +19,11 @@ if test -f "${benchmark_dir}/test-connections.yaml"; then
 else
   connections_file="${benchmark_dir}/../../test-connections.yaml"
 fi
-
+ls -al
 echo "===================================================="
-cat connections_file
+cat "$(connections_file)"
+
+
 echo "===================================================="
 
 git_revision="${GIT_HASH:=`git rev-parse --short HEAD`}"
