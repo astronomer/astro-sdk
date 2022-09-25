@@ -404,7 +404,7 @@ jobs:
       SETUPTOOLS_USE_DISTUTILS: stdlib
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
-      POSTGRES_HOST: postgres
+      POSTGRES_HOST: 0.0.0.0
       POSTGRES_PORT: 5432
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -432,7 +432,7 @@ jobs:
       - uses: actions/checkout@v2
       - run: rm -f test-connections.yaml
       - run: ( echo "cat <<EOF >test-connections.yaml";
-              cat ../../../.github/ci-test-connections.yaml;
+              cat ../.github/ci-test-connections.yaml;
               ) >test-connections.yaml && . test-connections.yaml
       #- run: cat ../.github/ci-test-connections.yaml > tests/benchmark/test-connections.yaml
       - run: pwd
