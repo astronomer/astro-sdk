@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import json
+import time
 
 import pandas as pd
 from astro.constants import DEFAULT_CHUNK_SIZE
@@ -63,8 +64,16 @@ class NDJSONFileType(FileType):
         row_count = 0
         extra_rows = []
 
+        readlines_counter = 0.0
+        flattening_counter = 0.0
+        concat_counter = 0.0
+
         while nrows and row_count < nrows:
+
+            start_readlines = time.time()
             extra_rows.extend(stream.readlines(chunksize))
+            readlines_counter = readlines_counter + (time.time() - start_readlines)
+
             rows = extra_rows
             if len(rows) == 0:
                 break
@@ -76,14 +85,24 @@ class NDJSONFileType(FileType):
             else:
                 extra_rows = []
 
+            start_flattening = time.time()
             df = pd.DataFrame(
                 pd.json_normalize([json.loads(row) for row in rows], **normalize_config)
             )
+            flattening_counter = flattening_counter + (time.time() - start_flattening)
+
             if result_df is None:
                 result_df = df
             else:
+
+                start_concat = time.time()
                 result_df = pd.concat([result_df, df])
+                concat_counter = concat_counter + (time.time() - start_concat)
 
             row_count = result_df.shape[0]
+
+        print(">>>>>>>>>>>>>>> readlines_counter: ", readlines_counter)
+        print(">>>>>>>>>>>>>>> flattening_counter: ", flattening_counter)
+        print(">>>>>>>>>>>>>>> concat_counter: ", concat_counter)
 
         return result_df
