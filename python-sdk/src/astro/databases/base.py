@@ -480,7 +480,7 @@ class BaseDatabase(ABC):
 
         for file in input_files:
             self.load_pandas_dataframe_to_table(
-                file.export_to_dataframe(),
+                self.get_dataframe_from_file(file),
                 output_table,
                 chunk_size=chunk_size,
                 if_exists=if_exists,
