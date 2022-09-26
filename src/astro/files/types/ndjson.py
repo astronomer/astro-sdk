@@ -19,8 +19,9 @@ class NDJSONFileType(FileType):
         :param stream: file stream object
         """
         start = time.time()
-        return NDJSONFileType.flatten(self.normalize_config, stream)
+        val = NDJSONFileType.flatten(self.normalize_config, stream)
         print(">>>>>>>>>>>>>>>> 6 NDJSONFileType.flatten: ", time.time() - start)
+        return val
 
     def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:
         """Write ndjson file to one of the supported locations
@@ -52,9 +53,7 @@ class NDJSONFileType(FileType):
         normalize_config = normalize_config or {}
 
         df = None
-        start = time.time()
         rows = stream.readlines(DEFAULT_CHUNK_SIZE)
-        print(">>>>>>>>>>>>>>>> 7 stream.readlines: ", time.time() - start)
         while len(rows) > 0:
             if df is None:
                 df = pd.DataFrame(
@@ -62,7 +61,5 @@ class NDJSONFileType(FileType):
                         [json.loads(row) for row in rows], **normalize_config
                     )
                 )
-            start = time.time()
             rows = stream.readlines(DEFAULT_CHUNK_SIZE)
-            print(">>>>>>>>>>>>>>>> 7 stream.readlines: ", time.time() - start)
         return df
