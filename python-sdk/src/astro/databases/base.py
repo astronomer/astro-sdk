@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 import warnings
 from abc import ABC
 from typing import Any, Callable, Mapping
@@ -18,8 +19,6 @@ from astro.constants import (
     MergeConflictStrategy,
 )
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
-from astro.files import File, resolve_file_path_pattern
-from astro.files.types import create_file_type
 from astro.files.types.base import FileType as FileTypeConstants
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.sql.table import BaseTable, Metadata
@@ -28,6 +27,9 @@ from sqlalchemy import column, insert, select
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
+
+from astro.files import File, resolve_file_path_pattern
+from astro.files.types import create_file_type
 
 
 class BaseDatabase(ABC):
@@ -425,12 +427,17 @@ class BaseDatabase(ABC):
         """
         normalize_config = normalize_config or {}
 
+        start = time.time()
         self.create_schema_and_table_if_needed(
             file=input_file,
             table=output_table,
             columns_names_capitalization=columns_names_capitalization,
             if_exists=if_exists,
             normalize_config=normalize_config,
+        )
+        print(
+            ">>>>>>>>>>>>>>> 1 create_schema_and_table_if_needed : ",
+            (time.time() - start),
         )
 
         if use_native_support and self.is_native_load_file_available(
@@ -447,12 +454,17 @@ class BaseDatabase(ABC):
                 chunk_size=chunk_size,
             )
         else:
+            start = time.time()
             self.load_file_to_table_using_pandas(
                 input_file=input_file,
                 output_table=output_table,
                 normalize_config=normalize_config,
                 if_exists="append",
                 chunk_size=chunk_size,
+            )
+            print(
+                ">>>>>>>>>>>>>>> 2 load_file_to_table_using_pandas : ",
+                (time.time() - start),
             )
 
     def load_file_to_table_using_pandas(
@@ -463,19 +475,26 @@ class BaseDatabase(ABC):
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
     ):
+        start = time.time()
         input_files = resolve_file_path_pattern(
             input_file.path,
             input_file.conn_id,
             normalize_config=normalize_config,
             filetype=input_file.type.name,
         )
+        print(">>>>>>>>>>>>>>> 3 resolve_file_path_pattern : ", (time.time() - start))
 
         for file in input_files:
+            start = time.time()
             self.load_pandas_dataframe_to_table(
                 file.export_to_dataframe(),
                 output_table,
                 chunk_size=chunk_size,
                 if_exists=if_exists,
+            )
+            print(
+                ">>>>>>>>>>>>>>> 4 load_pandas_dataframe_to_table : ",
+                (time.time() - start),
             )
 
     def load_file_to_table_natively_with_fallback(
