@@ -33,7 +33,7 @@ setup_gke: clean
 run: clean
 	@AIRFLOW__ASTRO_SDK__SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE=gcs_int_python_sdk GCP_BUCKET=dag-authoring ./run.sh
 
-container: clean
+container: clean check_google_credentials
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
 	@gcloud auth configure-docker gcr.io
 	@docker build --platform=$(PLATFORM) --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):latest -f ./Dockerfile  ../../

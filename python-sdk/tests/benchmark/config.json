@@ -1,6 +1,12 @@
 {
   "databases": [
     {
+      "name": "snowflake",
+      "params": {
+        "conn_id": "snowflake_conn"
+      }
+    },
+    {
       "name": "postgres",
       "params": {
         "conn_id": "postgres_conn",

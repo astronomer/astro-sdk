@@ -387,19 +387,6 @@ jobs:
 
   Run-Benchmark:
     runs-on: ubuntu-18.04
-    services:
-      postgres:
-        image: dimberman/pagila-test
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-          --name postgres
-        ports:
-          - 5432:5432
     env:
       SETUPTOOLS_USE_DISTUTILS: stdlib
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
@@ -431,11 +418,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: rm -f test-connections.yaml
-      - run: ( echo "cat <<EOF >test-connections.yaml";
-              cat ../.github/ci-test-connections.yaml;
-              ) >test-connections.yaml && . test-connections.yaml
-      #- run: cat ../.github/ci-test-connections.yaml > tests/benchmark/test-connections.yaml
-      - run: pwd
-      - run: ls -la
+      - run: ( echo "cat <<EOF >test-connections.yaml"; cat ../.github/ci-test-connections-benchmark.yaml; ) >test-connections.yaml && . test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: cd tests/benchmark && make
