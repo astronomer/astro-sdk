@@ -81,7 +81,7 @@ def test_export_table_to_pandas_dataframe(
         {"database": Database.SQLITE, "table": Table()},
     ],
     indirect=True,
-    ids=["bigquery", "postgres", "redshift", "snowflake", "sqlite"],
+    ids=["bigquery", "postgres", "snowflake", "sqlite"],
 )
 def test_export_to_dataframe_via_byte_stream_is_called_for_postgres(
     database_table_fixture,
