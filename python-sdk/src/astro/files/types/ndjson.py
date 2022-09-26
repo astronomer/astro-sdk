@@ -91,7 +91,8 @@ class NDJSONFileType(FileType):
             json_load_counter = json_load_counter + (time.time() - start_json_load)
 
             start_flattening = time.time()
-            df = pd.DataFrame(pd.json_normalize(r, **normalize_config))
+            df = pd.json_normalize(r, **normalize_config)
+            print(">>>>>>>>>>>>>>>>>>> \n", df)
             flattening_counter = flattening_counter + (time.time() - start_flattening)
 
             # if result_df is None:
