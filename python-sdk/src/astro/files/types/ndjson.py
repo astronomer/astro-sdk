@@ -96,7 +96,7 @@ class NDJSONFileType(FileType):
             else:
 
                 start_concat = time.time()
-                result_df = pd.concat([result_df, df])
+                result_df = result_df.append(df)  # pd.concat([result_df, df])
                 concat_counter = concat_counter + (time.time() - start_concat)
 
             row_count = result_df.shape[0]
