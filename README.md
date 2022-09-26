@@ -99,6 +99,7 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 | Postgres        |
 | Snowflake       |
 | SQLite          |
+| Amazon Redshift |
 
 | File types |
 |------------|
