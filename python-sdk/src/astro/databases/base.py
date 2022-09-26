@@ -484,7 +484,9 @@ class BaseDatabase(ABC):
         )
         print(">>>>>>>>>>>>>>> 3 resolve_file_path_pattern : ", (time.time() - start))
 
+        count = 1
         for file in input_files:
+            print(f">>>>>>>>>>>>>>>>>>>> {count}/{len(input_files)} : ", file)
             start = time.time()
             f = file.export_to_dataframe()
             print(
@@ -502,6 +504,7 @@ class BaseDatabase(ABC):
                 ">>>>>>>>>>>>>>> 5 load_pandas_dataframe_to_table : ",
                 (time.time() - start),
             )
+            count = count + 1
 
     def load_file_to_table_natively_with_fallback(
         self,
