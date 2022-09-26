@@ -1,3 +1,4 @@
+import time
 from abc import ABC
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -284,16 +285,24 @@ class BaseDatabase(ABC):
         :param normalize_config: pandas json_normalize params config
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
         """
+        start = time.time()
         input_files = resolve_file_path_pattern(
             input_file.path,
             input_file.conn_id,
             normalize_config=normalize_config,
         )
+        print(">>>>>>>>>>>>>>>> 1 resolve_file_path_pattern: ", time.time() - start)
+
+        start = time.time()
         self.create_schema_if_needed(output_table.metadata.schema)
+        print(">>>>>>>>>>>>>>>> 2 create_schema_if_needed: ", time.time() - start)
+
+        start = time.time()
         if if_exists == "replace" or not self.table_exists(output_table):
             self.drop_table(output_table)
             self.create_table(output_table, input_files[0])
             if_exists = "append"
+        print(">>>>>>>>>>>>>>>> 3 create_table: ", time.time() - start)
 
         # TODO: many native transfers support the input_file.path - it may be better
         # to use the native support to loading multiple files as opposed to iterating
@@ -310,12 +319,21 @@ class BaseDatabase(ABC):
                     **kwargs,
                 )
             else:
+
+                start = time.time()
                 dataframe = file.export_to_dataframe()
+                print(">>>>>>>>>>>>>>>> 4 export_to_dataframe: ", time.time() - start)
+
+                start = time.time()
                 self.load_pandas_dataframe_to_table(
                     dataframe,
                     output_table,
                     chunk_size=chunk_size,
                     if_exists="append",  # We've already created a new table in this case
+                )
+                print(
+                    ">>>>>>>>>>>>>>>> 5 load_pandas_dataframe_to_table: ",
+                    time.time() - start,
                 )
 
     def load_pandas_dataframe_to_table(
