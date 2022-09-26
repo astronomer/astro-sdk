@@ -1,4 +1,4 @@
-all: clean setup_gke container run_job # teardown_gke
+all: clean setup_gke container run_job teardown_gke
 .PHONY: all
 
 GCP_PROJECT ?= astronomer-dag-authoring
