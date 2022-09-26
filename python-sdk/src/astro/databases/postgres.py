@@ -90,7 +90,7 @@ class PostgresDatabase(BaseDatabase):
         if not self.table_exists(table=target_table) or if_exists == "replace":
             self.create_table(table=target_table, dataframe=source_dataframe)
         print(
-            ">>>>>>>>>>>>>>> 6 load_pandas_dataframe_to_table : ",
+            ">>>>>>>>>>>>>>> 6 create_schema : ",
             (time.time() - start),
         )
 
@@ -98,7 +98,7 @@ class PostgresDatabase(BaseDatabase):
         start = time.time()
         source_dataframe.to_csv(output_buffer, sep=",", header=True, index=False)
         print(
-            ">>>>>>>>>>>>>>> 7 load_pandas_dataframe_to_table : ",
+            ">>>>>>>>>>>>>>> 7 source_dataframe.to_csv : ",
             (time.time() - start),
         )
         output_buffer.seek(0)
@@ -112,7 +112,7 @@ class PostgresDatabase(BaseDatabase):
             )
             conn.commit()
             print(
-                ">>>>>>>>>>>>>>> 8 load_pandas_dataframe_to_table : ",
+                ">>>>>>>>>>>>>>> 8 cur.copy_expert : ",
                 (time.time() - start),
             )
 
