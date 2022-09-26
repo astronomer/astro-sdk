@@ -92,7 +92,6 @@ class NDJSONFileType(FileType):
 
             start_flattening = time.time()
             df = pd.json_normalize(r, **normalize_config)
-            print(">>>>>>>>>>>>>>>>>>> \n", df)
             flattening_counter = flattening_counter + (time.time() - start_flattening)
 
             # if result_df is None:
