@@ -84,7 +84,7 @@ echo - Output: $(get_abs_filename $results_file)
             gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
       fi
 
-          gsutil cp $results_file gs://${GCP_BUCKET}/benchmark/results/
+#          gsutil cp $results_file gs://${GCP_BUCKET}/benchmark/results/
           if command -v peekprof &> /dev/null; then
              # https://github.com/exapsy/peekprof
              peekprof -html "/tmp/$dataset-$database-$chunk_size.html" -refresh 1000ms -pid $! > /tmp/$dataset-$database-$chunk_size.csv

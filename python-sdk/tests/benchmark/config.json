@@ -1,24 +1,9 @@
 {
   "databases": [
     {
-      "name": "snowflake",
-      "params": {
-        "conn_id": "snowflake_conn"
-      }
-    },
-    {
       "name": "postgres",
       "params": {
-        "conn_id": "postgres_conn_benchmark",
-        "metadata": {
-          "database": "postgres"
-        }
-      }
-    },
-    {
-      "name": "postgres",
-      "params": {
-        "conn_id": "postgres_conn_benchmark",
+        "conn_id": "postgres_conn",
         "metadata": {
           "database": "postgres"
         }
