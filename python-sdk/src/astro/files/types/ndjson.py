@@ -67,6 +67,7 @@ class NDJSONFileType(FileType):
         readlines_counter = 0.0
         flattening_counter = 0.0
         concat_counter = 0.0
+        json_load_counter = 0.0
 
         while nrows and row_count < nrows:
 
@@ -85,10 +86,12 @@ class NDJSONFileType(FileType):
             else:
                 extra_rows = []
 
+            start_json_load = time.time()
+            r = [json.loads(row) for row in rows]
+            json_load_counter = json_load_counter + (time.time() - start_json_load)
+
             start_flattening = time.time()
-            df = pd.DataFrame(
-                pd.json_normalize([json.loads(row) for row in rows], **normalize_config)
-            )
+            df = pd.DataFrame(pd.json_normalize(r, **normalize_config))
             flattening_counter = flattening_counter + (time.time() - start_flattening)
 
             # if result_df is None:
