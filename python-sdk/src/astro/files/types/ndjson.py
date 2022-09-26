@@ -109,6 +109,7 @@ class NDJSONFileType(FileType):
         concat_counter = concat_counter + (time.time() - start_concat)
 
         print(">>>>>>>>>>>>>>> readlines_counter: ", readlines_counter)
+        print(">>>>>>>>>>>>>>> json_load_counter: ", json_load_counter)
         print(">>>>>>>>>>>>>>> flattening_counter: ", flattening_counter)
         print(">>>>>>>>>>>>>>> concat_counter: ", concat_counter)
 
