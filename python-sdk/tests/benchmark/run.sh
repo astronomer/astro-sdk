@@ -74,7 +74,7 @@ echo - Output: $(get_abs_filename $results_file)
         for chunk_size in "${chunk_sizes_array[@]}"; do
           echo "$i $dataset $database $chunk_size"
           set +e  # allow us to see the content of $results_file regardless of the run being successful or not
-          ASTRO_CHUNKSIZE=$chunk_size python3 -W ignore $runner_path --dataset="$dataset" --database="$database" --revision $git_revision --chunk-size=$chunk_size 1>> $results_file
+          ASTRO_CHUNKSIZE=$chunk_size python3 -u -W ignore $runner_path --dataset="$dataset" --database="$database" --revision $git_revision --chunk-size=$chunk_size 1>> $results_file
           cat $results_file
           set -e  # do not allow errors from here onwards
           if [[ -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
