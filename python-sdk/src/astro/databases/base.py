@@ -486,14 +486,20 @@ class BaseDatabase(ABC):
 
         for file in input_files:
             start = time.time()
+            f = file.export_to_dataframe()
+            print(
+                ">>>>>>>>>>>>>>> 4 file.export_to_dataframe : ",
+                (time.time() - start),
+            )
+            start = time.time()
             self.load_pandas_dataframe_to_table(
-                file.export_to_dataframe(),
+                f,
                 output_table,
                 chunk_size=chunk_size,
                 if_exists=if_exists,
             )
             print(
-                ">>>>>>>>>>>>>>> 4 load_pandas_dataframe_to_table : ",
+                ">>>>>>>>>>>>>>> 5 load_pandas_dataframe_to_table : ",
                 (time.time() - start),
             )
 

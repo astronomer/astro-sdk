@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import io
+import time
 from contextlib import closing
 
 import pandas as pd
@@ -84,22 +85,36 @@ class PostgresDatabase(BaseDatabase):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
-
+        start = time.time()
         self.create_schema_if_needed(target_table.metadata.schema)
         if not self.table_exists(table=target_table) or if_exists == "replace":
             self.create_table(table=target_table, dataframe=source_dataframe)
+        print(
+            ">>>>>>>>>>>>>>> 6 load_pandas_dataframe_to_table : ",
+            (time.time() - start),
+        )
 
         output_buffer = io.StringIO()
+        start = time.time()
         source_dataframe.to_csv(output_buffer, sep=",", header=True, index=False)
+        print(
+            ">>>>>>>>>>>>>>> 7 load_pandas_dataframe_to_table : ",
+            (time.time() - start),
+        )
         output_buffer.seek(0)
         table_name = self.get_table_qualified_name(target_table)
         postgres_conn = self.hook.get_conn()
         with closing(postgres_conn) as conn, closing(conn.cursor()) as cur:
+            start = time.time()
             cur.copy_expert(
                 f"COPY {table_name} FROM STDIN DELIMITER ',' CSV HEADER;",
                 output_buffer,
             )
             conn.commit()
+            print(
+                ">>>>>>>>>>>>>>> 8 load_pandas_dataframe_to_table : ",
+                (time.time() - start),
+            )
 
     @staticmethod
     def get_table_qualified_name(table: BaseTable) -> str:  # skipcq: PYL-R0201
