@@ -62,7 +62,7 @@ run_job:
 	@kubectl create -f infrastructure/kubernetes/job.yaml
 
 # Takes approximately 2min
-#teardown_gke:
-#	@cd infrastructure/terraform && \
-#		terraform init && \
-#		terraform destroy --target google_container_node_pool.benchmark -auto-approve
+teardown_gke:
+	@cd infrastructure/terraform && \
+		terraform init && \
+		terraform destroy --target google_container_node_pool.benchmark -auto-approve
