@@ -5,10 +5,9 @@ from unittest import mock
 import pandas as pd
 import pytest
 from astro.constants import Database
+from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.table import Metadata, Table
-
-from astro.files import File
 
 CWD = pathlib.Path(__file__).parent
 
