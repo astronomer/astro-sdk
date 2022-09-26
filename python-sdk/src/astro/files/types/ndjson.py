@@ -60,7 +60,7 @@ class NDJSONFileType(FileType):
         nrows = kwargs.get("nrows", float("inf"))
         chunksize = kwargs.get("chunksize", DEFAULT_CHUNK_SIZE)
 
-        result_df = None
+        result_df = []
         row_count = 0
         extra_rows = []
 
@@ -91,18 +91,22 @@ class NDJSONFileType(FileType):
             )
             flattening_counter = flattening_counter + (time.time() - start_flattening)
 
-            if result_df is None:
-                result_df = df
-            else:
+            # if result_df is None:
+            #     result_df = df
+            # else:
+            #
+            #     start_concat = time.time()
+            #     result_df = result_df.append(df)  # pd.concat([result_df, df])
+            #     concat_counter = concat_counter + (time.time() - start_concat)
+            result_df.append(df)
+            row_count = row_count + df.shape[0]
 
-                start_concat = time.time()
-                result_df = result_df.append(df)  # pd.concat([result_df, df])
-                concat_counter = concat_counter + (time.time() - start_concat)
-
-            row_count = result_df.shape[0]
+        start_concat = time.time()
+        finale_df = pd.concat(result_df)
+        concat_counter = concat_counter + (time.time() - start_concat)
 
         print(">>>>>>>>>>>>>>> readlines_counter: ", readlines_counter)
         print(">>>>>>>>>>>>>>> flattening_counter: ", flattening_counter)
         print(">>>>>>>>>>>>>>> concat_counter: ", concat_counter)
 
-        return result_df
+        return finale_df
