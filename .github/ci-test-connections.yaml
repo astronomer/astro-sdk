@@ -1,7 +1,7 @@
 connections:
   - conn_id: postgres_conn
     conn_type: postgres
-    host: localhost
+    host: postgres
     schema:
     login: postgres
     password: postgres
