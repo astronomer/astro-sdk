@@ -1,33 +1,53 @@
+from __future__ import annotations
+
 from astro.files import File
 from astro.sql.table import Table, TempTable, Metadata
+from typing import Any
 
 
-def serialize(input: Table | File) -> dict:
-    if isinstance(input, Table) or isinstance(input, TempTable):
+def serialize(obj: Table | File | Any) -> dict | Any:
+    if isinstance(obj, Table) or isinstance(obj, TempTable):
         return {
             "class": "Table",
-            "name": input.name,
+            "name": obj.name,
             "metadata": {
-                "schema": input.metadata.schema,
-                "database": input.metadata.database
+                "schema": obj.metadata.schema,
+                "database": obj.metadata.database
             },
-            "temp": input.temp,
-            "conn_id": input.conn_id
+            "temp": obj.temp,
+            "conn_id": obj.conn_id
+        }
+    elif isinstance(obj, File):
+        return {
+            "class": "File",
+            "conn_id": obj.conn_id,
+            "path": obj.path,
+            "uri": obj.uri,
+            'filetype': obj.filetype,
+            "normalize_config": obj.normalize_config,
         }
     else:
-        return input
+        return obj
 
 
-def deserialize(input: dict):
-    if not isinstance(input, dict) or not input.get("class") or input["class"] not in ["Table"]:
-        return input
-    if input["class"] == "Table":
+def deserialize(obj: dict) -> Table | File | Any:
+    if not isinstance(obj, dict) or not obj.get("class") or obj["class"] not in ["Table"]:
+        return obj
+    if obj["class"] == "Table":
         return Table(
-            name=input["name"],
+            name=obj["name"],
             metadata=Metadata(
-                **input["metadata"]
+                **obj["metadata"]
             ),
-            temp=input["temp"],
-            conn_id=input["conn_id"]
+            temp=obj["temp"],
+            conn_id=obj["conn_id"]
         )
-    return input
+    elif obj["class"] == "File":
+        return File(
+            conn_id=obj["conn_id"],
+            path=obj["path"],
+            filetype=obj["filetype"],
+            normalize_config=obj["normalize_config"],
+            uri=obj["uri"]
+        )
+    return obj
