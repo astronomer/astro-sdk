@@ -1,9 +1,11 @@
-import pandas as pd
-from astro.constants import ColumnCapitalization
-from astro.settings import DATAFRAME_STORAGE_CONN_ID, DATAFRAME_STORAGE_URL
-from astro.constants import FileType
 import random
 import string
+
+import pandas as pd
+from astro.constants import ColumnCapitalization, FileType
+from astro.settings import DATAFRAME_STORAGE_CONN_ID, DATAFRAME_STORAGE_URL
+
+
 def convert_columns_names_capitalization(
     df: pd.DataFrame, columns_names_capitalization: ColumnCapitalization
 ):
@@ -20,17 +22,24 @@ def convert_columns_names_capitalization(
             df.columns = [col_label.upper() for col_label in df.columns]
     return df
 
+
 def convert_to_file(df: pd.DataFrame):
     unique_id = random.choice(string.ascii_lowercase) + "".join(
-        random.choice(string.ascii_lowercase + string.digits)
-        for _ in range(64)
+        random.choice(string.ascii_lowercase + string.digits) for _ in range(64)
     )
     from astro.files import File
-    file = File(path=DATAFRAME_STORAGE_URL + "/" + unique_id + ".parquet", conn_id=DATAFRAME_STORAGE_CONN_ID, filetype=FileType.PARQUET)
+
+    file = File(
+        path=DATAFRAME_STORAGE_URL + "/" + unique_id + ".parquet",
+        conn_id=DATAFRAME_STORAGE_CONN_ID,
+        filetype=FileType.PARQUET,
+    )
     file.create_from_dataframe(df)
     return file
 
+
 def convert_file_to_dataframe(f):
     from astro.files import File
+
     f: File = f
     return f.export_to_dataframe()

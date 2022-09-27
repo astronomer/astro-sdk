@@ -31,4 +31,3 @@ def get_provider_info() -> dict:
         "hook-class-names": [],
         "extra-links": [],
     }
-

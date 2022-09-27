@@ -8,7 +8,9 @@ SNOWFLAKE_SCHEMA = conf.get("astro_sdk", "snowflake_default_schema", fallback=SC
 REDSHIFT_SCHEMA = conf.get("astro_sdk", "redshift_default_schema", fallback=SCHEMA)
 
 
-DATAFRAME_STORAGE_CONN_ID = conf.get("astro_sdk", "dataframe_storage_conn_id", fallback=None)
+DATAFRAME_STORAGE_CONN_ID = conf.get(
+    "astro_sdk", "dataframe_storage_conn_id", fallback=None
+)
 DATAFRAME_STORAGE_URL = conf.get("astro_sdk", "dataframe_storage_url", fallback="/tmp")
 
 # We are not defining a fallback key on purpose. S3 Snowflake stages can also
