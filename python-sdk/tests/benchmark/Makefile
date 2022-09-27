@@ -1,4 +1,4 @@
-all: clean setup_gke container run_job teardown_gke wait
+all: clean setup_gke container run_job teardown_gke
 .PHONY: all
 
 GCP_PROJECT ?= astronomer-dag-authoring
@@ -66,6 +66,3 @@ teardown_gke:
 	@cd infrastructure/terraform && \
 		terraform init && \
 		terraform destroy --target google_container_node_pool.benchmark -auto-approve
-
-wait:
-	sh wait_for_status.sh
