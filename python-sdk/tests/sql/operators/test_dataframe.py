@@ -1,17 +1,18 @@
+import os
 import pathlib
+from unittest import mock
 
 import astro.sql as aql
 import pandas
 import pytest
-from airflow.models.xcom import XCom
+from airflow.models.xcom import BaseXCom
 from airflow.utils import timezone
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
+from astro.custom_backend.astro_custom_backend import AstroCustomXcomBackend as XCom
 from astro.files import File
 from astro.table import Table
 from tests.sql.operators import utils as test_utils
-
-# Import Operator
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 CWD = pathlib.Path(__file__).parent
@@ -334,3 +335,36 @@ def test_inlets_outlets_non_supported_ds():
 
     task = sample_df_1(output_table=output_table)
     assert task.operator.outlets == []
+
+
+def test_dataframe_from_file(sample_dag):
+    @aql.dataframe
+    def validate_file(df: pandas.DataFrame):  # skipcq: PY-D0003
+        assert len(df) == 5
+        assert "sell" in df.columns
+
+    with sample_dag:
+        validate_file(df=File(path=str(CWD) + "/../../data/homes2.csv"))
+        validate_file(File(path=str(CWD) + "/../../data/homes2.csv"))
+    test_utils.run_dag(sample_dag)
+
+
+@mock.patch("airflow.models.xcom.XCom", BaseXCom)
+@mock.patch("astro.custom_backend.serializer")
+@mock.patch.dict(os.environ, {"AIRFLOW__CORE__ENABLE_XCOM_PICKLING": "True"})
+def test_dataframe_from_file_xcom_pickling(mock_serde, sample_dag):
+    @aql.dataframe
+    def validate_file(df: pandas.DataFrame):  # skipcq: PY-D0003
+        assert len(df) == 5
+        assert "sell" in df.columns
+        return df
+
+    @aql.dataframe()
+    def count_df(df: pandas.DataFrame):
+        return len(df)
+
+    with sample_dag:
+        count_df(validate_file(df=File(path=str(CWD) + "/../../data/homes2.csv")))
+    test_utils.run_dag(sample_dag)
+    mock_serde.serialize.assert_not_called()
+    mock_serde.deserialize.assert_not_called()

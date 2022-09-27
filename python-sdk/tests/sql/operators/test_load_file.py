@@ -9,7 +9,6 @@ Run test:
     python3 -m unittest tests.operators.test_load_file.TestLoadFile.test_aql_local_file_to_postgres
 
 """
-import importlib
 import os
 import pathlib
 from unittest import mock
@@ -22,7 +21,6 @@ from airflow.providers.google.cloud.hooks.gcs import GCSHook
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database, FileType
-from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
@@ -70,22 +68,6 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
 
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (3, 9)
-
-
-@mock.patch.dict(
-    os.environ, {"AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE": "False"}
-)
-def test_unsafe_loading_of_dataframe(sample_dag):
-    from astro import settings
-
-    importlib.reload(settings)
-
-    with pytest.raises(IllegalLoadToDatabaseException):
-        load_file(
-            input_file=File(
-                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/homes_main.csv"
-            ),
-        ).operator.execute({})
 
 
 @pytest.mark.integration
@@ -981,6 +963,7 @@ def test_loading_local_file_to_database(database_table_fixture):
 
 def test_aql_load_file_columns_names_capitalization_dataframe(sample_dag):
     filename = str(CWD.parent) + "/../data/homes_pattern_1.csv"
+
     from airflow.decorators import task
 
     @task
