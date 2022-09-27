@@ -9,7 +9,7 @@
     {
       "name": "postgres",
       "params": {
-        "conn_id": "postgres_conn",
+        "conn_id": "postgres_benchmark_conn",
         "metadata": {
           "database": "postgres"
         }
