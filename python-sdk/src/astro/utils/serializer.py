@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from astro.files import File
-from astro.sql.table import Table, TempTable, Metadata
 from typing import Any
+
+from astro.files import File
+from astro.sql.table import Metadata, Table, TempTable
 
 
 def serialize(obj: Table | File | Any) -> dict | Any:
@@ -12,10 +13,10 @@ def serialize(obj: Table | File | Any) -> dict | Any:
             "name": obj.name,
             "metadata": {
                 "schema": obj.metadata.schema,
-                "database": obj.metadata.database
+                "database": obj.metadata.database,
             },
             "temp": obj.temp,
-            "conn_id": obj.conn_id
+            "conn_id": obj.conn_id,
         }
     elif isinstance(obj, File):
         return {
@@ -23,7 +24,7 @@ def serialize(obj: Table | File | Any) -> dict | Any:
             "conn_id": obj.conn_id,
             "path": obj.path,
             "uri": obj.uri,
-            'filetype': obj.filetype,
+            "filetype": obj.filetype,
             "normalize_config": obj.normalize_config,
         }
     else:
@@ -31,16 +32,18 @@ def serialize(obj: Table | File | Any) -> dict | Any:
 
 
 def deserialize(obj: dict) -> Table | File | Any:
-    if not isinstance(obj, dict) or not obj.get("class") or obj["class"] not in ["Table"]:
+    if (
+        not isinstance(obj, dict)
+        or not obj.get("class")
+        or obj["class"] not in ["Table"]
+    ):
         return obj
     if obj["class"] == "Table":
         return Table(
             name=obj["name"],
-            metadata=Metadata(
-                **obj["metadata"]
-            ),
+            metadata=Metadata(**obj["metadata"]),
             temp=obj["temp"],
-            conn_id=obj["conn_id"]
+            conn_id=obj["conn_id"],
         )
     elif obj["class"] == "File":
         return File(
@@ -48,6 +51,6 @@ def deserialize(obj: dict) -> Table | File | Any:
             path=obj["path"],
             filetype=obj["filetype"],
             normalize_config=obj["normalize_config"],
-            uri=obj["uri"]
+            uri=obj["uri"],
         )
     return obj
