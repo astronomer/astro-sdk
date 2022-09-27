@@ -18,8 +18,6 @@ from astro.constants import (
     MergeConflictStrategy,
 )
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
-from astro.files import File, resolve_file_path_pattern
-from astro.files.types import create_file_type
 from astro.files.types.base import FileType as FileTypeConstants
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.sql.table import BaseTable, Metadata
@@ -28,6 +26,9 @@ from sqlalchemy import column, insert, select
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
+
+from astro.files import File, resolve_file_path_pattern
+from astro.files.types import create_file_type
 
 
 class BaseDatabase(ABC):
@@ -624,15 +625,22 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
     # Extract methods
     # ---------------------------------------------------------
-    def export_table_to_pandas_dataframe(self, source_table: BaseTable) -> pd.DataFrame:
+    def export_table_to_pandas_dataframe(
+        self, source_table: BaseTable, select_kwargs: dict | None = None
+    ) -> pd.DataFrame:
         """
         Copy the content of a table to an in-memory Pandas dataframe.
 
         :param source_table: An existing table in the database
+        :param select_kwargs: kwargs for select statement
         """
+        select_kwargs = select_kwargs or {}
+
         if self.table_exists(source_table):
             sqla_table = self.get_sqla_table(source_table)
-            return pd.read_sql(sql=sqla_table.select(), con=self.sqlalchemy_engine)
+            return pd.read_sql(
+                sql=sqla_table.select(**select_kwargs), con=self.sqlalchemy_engine
+            )
 
         table_qualified_name = self.get_table_qualified_name(source_table)
         raise NonExistentTableException(

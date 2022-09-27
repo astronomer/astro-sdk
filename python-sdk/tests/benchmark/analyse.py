@@ -7,8 +7,14 @@ import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
+import constants as benchmark_constant
+import pandas
 import pandas as pd
+from astro.sql.table import Metadata, Table
 from google.cloud import storage
+from sqlalchemy import text
+
+from astro.databases import create_database
 
 SUMMARY_FIELDS = [
     "database",
@@ -88,14 +94,46 @@ def download_files_from_gcs(results_filepath):
     return local_destination_file_path
 
 
-def analyse_results(results_filepath):
+def analyse_results_from_file(results_filepath: str, output_filepath: str):
     data = []
     with open(results_filepath) as fp:
         for line in fp.readlines():
             data.append(json.loads(line.strip()))
 
     df = pd.json_normalize(data, sep="_")
+    analyse_results(df, output_filepath)
 
+
+def import_profile_data_to_bq(
+    git_sha: str, conn_id: str = benchmark_constant.publish_benchmarks_db_conn_id
+):
+    """Import profile data to bigquery table
+
+    :param git_sha: git_sha used to filter records
+    :param conn_id: Airflow's connection id to be used to publish the profiling data
+    """
+    db = create_database(conn_id)
+    table = Table(
+        name=benchmark_constant.publish_benchmarks_table,
+        metadata=Metadata(schema=benchmark_constant.publish_benchmarks_schema),
+    )
+
+    return db.export_table_to_pandas_dataframe(
+        table,
+        select_kwargs={
+            "whereclause": text(
+                f'{benchmark_constant.publish_benchmarks_table_grouping_col}="{git_sha}"'
+            )
+        },
+    )
+
+
+def analyse_results_from_database(git_sha: str, output_filepath: str):
+    df = import_profile_data_to_bq(git_sha=git_sha)
+    analyse_results(df, output_filepath)
+
+
+def analyse_results(df: pandas.DataFrame, output_filepath: str = None):
     # calculate total CPU from process & children
     mean_by_dag = df.groupby("dag_id", as_index=False).mean()
 
@@ -131,24 +169,55 @@ def analyse_results(results_filepath):
 
     summary = mean_by_dag[SUMMARY_FIELDS]
 
+    content = ""
     # print Markdown tables per database
     for database_name in summary["database"].unique().tolist():
-        print(f"\n### Database: {database_name}\n")
-        print(summary[summary["database"] == database_name].to_markdown(index=False))
+        content = content + f"\n\n### Database: {database_name}\n"
+        content = content + str(
+            summary[summary["database"] == database_name].to_markdown(index=False)
+        )
+
+    if output_filepath:
+        f = open(output_filepath, "w")
+        f.write(content)
+    else:
+        print(content)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Trigger benchmark DAG")
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         "--results-filepath",
         "-r",
         type=str,
         help="NDJSON local path (/path/to/file.ndjson) or Google "
         "cloud storage path (gs://bucket/sample.ndjson) containing the results for a benchmark run",
     )
+    group.add_argument(
+        "--git-sha",
+        "-g",
+        type=str,
+        help=f"Use to render benchmarking markdown from data stored in bigquery "
+        f"table({benchmark_constant.publish_benchmarks_schema}.{benchmark_constant.publish_benchmarks_table})."
+        f" The data that qualifies for the generation will be filtered by Git SHA. Use initial 7 letters of a commit."
+        f" Matched against {benchmark_constant.publish_benchmarks_table_grouping_col} col.",
+    )
+    parser.add_argument(
+        "--output-filepath",
+        "-o",
+        type=str,
+        required=False,
+        help="File path to create markdown file",
+    )
     args = parser.parse_args()
     results_filepath = args.results_filepath
+    git_sha = args.git_sha
+    output_filepath = args.output_filepath
     print(f"Running the analysis on {results_filepath}...")
-    if check_gcs_path(results_filepath):
-        results_filepath = download_files_from_gcs(results_filepath)
-    analyse_results(results_filepath)
+    if results_filepath:
+        if check_gcs_path(results_filepath):
+            results_filepath = download_files_from_gcs(results_filepath)
+        analyse_results_from_file(results_filepath, output_filepath)
+    elif git_sha:
+        analyse_results_from_database(git_sha, output_filepath)
