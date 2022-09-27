@@ -8,7 +8,6 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import constants as benchmark_constant
-import pandas
 import pandas as pd
 from astro.databases import create_database
 from astro.sql.table import Metadata, Table
@@ -132,7 +131,7 @@ def analyse_results_from_database(git_sha: str, output_filepath: str):
     analyse_results(df, output_filepath)
 
 
-def analyse_results(df: pandas.DataFrame, output_filepath: str = None):
+def analyse_results(df: pd.DataFrame, output_filepath: str = None):
     # calculate total CPU from process & children
     mean_by_dag = df.groupby("dag_id", as_index=False).mean()
 
