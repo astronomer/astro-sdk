@@ -68,7 +68,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         self.columns_names_capitalization = columns_names_capitalization
         self.enable_native_fallback = enable_native_fallback
 
-    def execute(self, context: Context) -> Table | pd.DataFrame:  # skipcq: PYL-W0613
+    def execute(self, context: Context) -> BaseTable | File:  # skipcq: PYL-W0613
         """
         Load an existing dataset from a supported file into a SQL table or a Dataframe.
         """
@@ -77,18 +77,13 @@ class LoadFileOperator(AstroSQLBaseOperator):
 
         return self.load_data(input_file=self.input_file)
 
-    def load_data(self, input_file: File) -> Table | pd.DataFrame:
+    def load_data(self, input_file: File) -> BaseTable | File:
 
         self.log.info("Loading %s into %s ...", self.input_file.path, self.output_table)
         if self.output_table:
             return self.load_data_to_table(input_file)
         else:
-            if (
-                not settings.IS_CUSTOM_XCOM_BACKEND
-                and not settings.ALLOW_UNSAFE_DF_STORAGE
-            ):
-                raise IllegalLoadToDatabaseException()
-            return self.load_data_to_dataframe(input_file)
+            return input_file
 
     def load_data_to_table(self, input_file: File) -> BaseTable:
         """

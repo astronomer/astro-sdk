@@ -4,7 +4,7 @@ import json
 import os
 import sys
 
-import airflow
+import airflow_integrations
 import pandas as pd
 import psutil
 from airflow.executors.debug_executor import DebugExecutor
@@ -96,7 +96,7 @@ def profile(func, *args, **kwargs):  # noqa: C901
 
 @profile
 def run_dag(dag_id, execution_date, **kwargs):
-    dagbag = airflow.models.DagBag()
+    dagbag = airflow_integrations.models.DagBag()
     dag = dagbag.get_dag(dag_id)
     dag.clear(start_date=execution_date, end_date=execution_date, dag_run_state=False)
 

@@ -14,7 +14,6 @@ __version__ = "1.2.0.dev1"
 # astro.database, and this is what leads to the circular dependency.
 
 import astro.sql  # noqa: F401
-from airflow.configuration import conf
 
 
 # This is needed to allow Airflow to pick up specific metadata fields it needs
@@ -33,9 +32,3 @@ def get_provider_info() -> dict:
         "extra-links": [],
     }
 
-
-if not conf.getboolean(section="core", key="enable_xcom_pickling"):
-    raise OSError(
-        "AIRFLOW__CORE__ENABLE_XCOM_PICKLING environment variable needs to be set to True or enable_xcom_pickling=true "
-        "in airflow.cfg before importing astro-sdk-python."
-    )

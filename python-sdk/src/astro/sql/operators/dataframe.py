@@ -13,16 +13,14 @@ except ImportError:
     from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
-from astro import settings
 from astro.constants import ColumnCapitalization
 from astro.databases import create_database
-from astro.exceptions import IllegalLoadToDatabaseException
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable, Table
-from astro.utils.dataframe import convert_columns_names_capitalization
+from astro.utils.dataframe import convert_columns_names_capitalization, convert_to_file
 from astro.utils.table import find_first_table
 from astro.utils.typing_compat import Context
-
+from astro.files import File
 
 def _get_dataframe(
     table: BaseTable, columns_names_capitalization: ColumnCapitalization = "lower"
@@ -60,6 +58,12 @@ def load_op_arg_table_into_dataframe(
                 _get_dataframe(
                     arg, columns_names_capitalization=columns_names_capitalization
                 )
+            )
+        elif full_spec.annotations[current_arg] == pd.DataFrame and isinstance(
+            arg, File
+        ):
+            ret_args.append(
+                arg.export_to_dataframe()
             )
         else:
             ret_args.append(arg)
@@ -164,12 +168,8 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             )
             return self.output_table
         else:
-            if (
-                not settings.IS_CUSTOM_XCOM_BACKEND
-                and not settings.ALLOW_UNSAFE_DF_STORAGE
-            ):
-                raise IllegalLoadToDatabaseException()
-            return pandas_dataframe
+            pandas_file = convert_to_file(pandas_dataframe)
+            return pandas_file
 
 
 def dataframe(
