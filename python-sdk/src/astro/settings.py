@@ -13,6 +13,8 @@ DATAFRAME_STORAGE_CONN_ID = conf.get(
 )
 DATAFRAME_STORAGE_URL = conf.get("astro_sdk", "dataframe_storage_url", fallback="/tmp")
 
+XCOM_BACKEND = conf.get("core", "xcom_backend")
+IS_CUSTOM_XCOM_BACKEND = XCOM_BACKEND != "airflow.models.xcom.BaseXCom"
 # We are not defining a fallback key on purpose. S3 Snowflake stages can also
 # be created without a storage integration, by using the Airflow AWS connection
 # properties.
