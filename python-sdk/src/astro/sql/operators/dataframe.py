@@ -22,6 +22,7 @@ from astro.utils.dataframe import convert_columns_names_capitalization, convert_
 from astro.utils.table import find_first_table
 from astro.utils.typing_compat import Context
 
+from astro.utils.serializer import deserialize, serialize
 
 def _get_dataframe(
     table: BaseTable, columns_names_capitalization: ColumnCapitalization = "lower"
@@ -138,7 +139,9 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             **kwargs_with_datasets(kwargs=kwargs, output_datasets=self.output_table),
         )
 
-    def execute(self, context: Context) -> Table | pd.DataFrame:
+    def execute(self, context: Context) -> Table | pd.DataFrame | list:
+        self.op_args = [deserialize(i) for i in self.op_args]
+        self.op_kwargs = {k: deserialize(v) for k,v in self.op_kwargs.items()}
         first_table = find_first_table(
             op_args=self.op_args,  # type: ignore
             op_kwargs=self.op_kwargs,
@@ -156,9 +159,9 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             self.op_kwargs, self.python_callable, self.columns_names_capitalization
         )
 
-        pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
+        function_output = self.python_callable(*self.op_args, **self.op_kwargs)
         pandas_dataframe = convert_columns_names_capitalization(
-            df=pandas_dataframe,
+            df=function_output,
             columns_names_capitalization=self.columns_names_capitalization,
         )
         if self.output_table:
@@ -170,10 +173,14 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                 target_table=self.output_table,
                 if_exists="replace",
             )
-            return self.output_table
+            return serialize(self.output_table)
         else:
-            pandas_file = convert_to_file(pandas_dataframe)
-            return pandas_file
+            if isinstance(function_output, pd.DataFrame):
+                return serialize(convert_to_file(pandas_dataframe))
+            elif isinstance(function_output, list):
+                return [serialize(convert_to_file(df)) for df in function_output if isinstance(df, pd.DataFrame)]
+            else:
+                return function_output
 
 
 def dataframe(

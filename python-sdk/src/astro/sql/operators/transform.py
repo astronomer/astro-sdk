@@ -12,6 +12,7 @@ except ImportError:
 from airflow.models.xcom_arg import XComArg
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 from astro.utils.typing_compat import Context
+from astro.utils.serializer import serialize, deserialize
 
 
 class TransformOperator(BaseSQLDecoratedOperator):
@@ -30,7 +31,7 @@ class TransformOperator(BaseSQLDecoratedOperator):
             target_table=self.output_table,
             parameters=self.parameters,
         )
-        return self.output_table
+        return serialize(self.output_table)
 
 
 def transform(
