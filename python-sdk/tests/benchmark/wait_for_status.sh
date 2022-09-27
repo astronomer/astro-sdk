@@ -1,3 +1,6 @@
+set -x  # print the shell command before being executed
+set -v  # run bash in verbose mode (echos each command before running it)
+
 retval_complete=1
 retval_failed=1
 while [[ $retval_complete -ne 0 ]] && [[ $retval_failed -ne 0 ]]; do
