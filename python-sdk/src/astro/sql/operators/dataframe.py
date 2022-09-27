@@ -79,12 +79,17 @@ def load_op_kwarg_table_into_dataframe(
     param_types = inspect.signature(python_callable).parameters
     # We check if the type annotation is of type dataframe to determine that the user actually WANTS
     # this table to be converted into a dataframe, rather that passed in as a table
-    return {
-        k: _get_dataframe(v, columns_names_capitalization=columns_names_capitalization)
-        if param_types.get(k).annotation is pd.DataFrame and isinstance(v, BaseTable)  # type: ignore
-        else v
-        for k, v in op_kwargs.items()
-    }
+    out_dict = {}
+    for k, v in op_kwargs.items():
+        if param_types.get(k).annotation is pd.DataFrame and isinstance(v, BaseTable):  # type: ignore
+            out_dict[k] = _get_dataframe(
+                v, columns_names_capitalization=columns_names_capitalization
+            )
+        elif param_types.get(k).annotation is pd.DataFrame and isinstance(v, File):  # type: ignore
+            out_dict[k] = v.export_to_dataframe()
+        else:
+            out_dict[k] = v
+    return out_dict
 
 
 class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
