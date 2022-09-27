@@ -1,4 +1,4 @@
-all: clean setup_gke container run_job teardown_gke
+all: clean setup_gke container run_job # teardown_gke
 .PHONY: all
 
 GCP_PROJECT ?= astronomer-dag-authoring
@@ -62,7 +62,7 @@ run_job:
 	@kubectl create -f infrastructure/kubernetes/job.yaml
 
 # Takes approximately 2min
-teardown_gke:
-	@cd infrastructure/terraform && \
-		terraform init && \
-		terraform destroy --target google_container_node_pool.benchmark -auto-approve
+#teardown_gke:
+#	@cd infrastructure/terraform && \
+#		terraform init && \
+#		terraform destroy --target google_container_node_pool.benchmark -auto-approve

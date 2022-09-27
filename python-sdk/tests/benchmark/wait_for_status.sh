@@ -1,13 +1,21 @@
-status_complete=1
-status_failed=1
-while [[ $status_complete -ne 0 ]] && [[ $status_failed -ne 0 ]]; do
-    sleep 5
-    output=$(kubectl wait --for=condition=failed job/benchmark --timeout=0 2>&1)
-    status_failed=$?
-    output=$(kubectl wait --for=condition=complete job/benchmark --timeout=0 2>&1)
-    status_complete=$?
-done
+# wait for completion as background process - capture PID
+kubectl wait --for=condition=complete job/benchmark &
+completion_pid=$!
 
-if [ $status_failed -eq 0 ]; then
-    exit 1
+# wait for failure as background process - capture PID
+kubectl wait --for=condition=failed job/benchmark && exit 1 &
+failure_pid=$!
+
+# capture exit code of the first subprocess to exit
+wait -n $completion_pid $failure_pid
+
+# store exit code in variable
+exit_code=$?
+
+if (( $exit_code == 0 )); then
+  echo "Job completed"
+else
+  echo "Job failed with exit code ${exit_code}, exiting..."
 fi
+
+exit $exit_code
