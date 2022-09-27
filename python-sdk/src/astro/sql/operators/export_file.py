@@ -12,6 +12,7 @@ from astro.files import File
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable, Table
 from astro.utils.typing_compat import Context
+from astro.utils.serializer import serialize,deserialize
 
 
 class ExportFileOperator(AstroSQLBaseOperator):
@@ -46,6 +47,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
         Infers SQL database type based on connection.
         """
         # Infer db type from `input_conn_id`.
+        self.input_data = deserialize(self.input_data)
         if isinstance(self.input_data, BaseTable):
             database = create_database(self.input_data.conn_id)
             self.input_data = database.populate_table_metadata(self.input_data)
@@ -59,7 +61,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
         # Write file if overwrite == True or if file doesn't exist.
         if self.if_exists == "replace" or not self.output_file.exists():
             self.output_file.create_from_dataframe(df)
-            return self.output_file
+            return serialize(self.output_file)
         else:
             raise FileExistsError(f"{self.output_file.path} file already exists.")
 

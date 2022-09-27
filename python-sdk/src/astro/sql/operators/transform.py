@@ -11,7 +11,7 @@ except ImportError:
 
 from airflow.models.xcom_arg import XComArg
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
-from astro.utils.serializer import deserialize, serialize
+from astro.utils.serializer import serialize
 from astro.utils.typing_compat import Context
 
 

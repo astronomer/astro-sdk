@@ -12,6 +12,7 @@ from astro.files import File, check_if_connection_exists, resolve_file_path_patt
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable
 from astro.utils.typing_compat import Context
+from astro.utils.serializer import serialize
 
 
 class LoadFileOperator(AstroSQLBaseOperator):
@@ -79,9 +80,9 @@ class LoadFileOperator(AstroSQLBaseOperator):
 
         self.log.info("Loading %s into %s ...", self.input_file.path, self.output_table)
         if self.output_table:
-            return self.load_data_to_table(input_file)
+            return serialize(self.load_data_to_table(input_file))
         else:
-            return input_file
+            return serialize(input_file)
 
     def load_data_to_table(self, input_file: File) -> BaseTable:
         """
