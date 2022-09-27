@@ -421,4 +421,4 @@ jobs:
       - run: ( echo "cat <<EOF >test-connections.yaml"; cat ../.github/ci-test-connections-benchmark.yaml; ) >test-connections.yaml && . test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: cd tests/benchmark && make
-      - run: cd tests/benchmark && sh wait_for_status.sh
+      - run: cd tests/benchmark && bash wait_for_status.sh
