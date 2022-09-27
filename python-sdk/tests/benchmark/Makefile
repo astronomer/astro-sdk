@@ -1,4 +1,4 @@
-all: clean setup_gke container run_job wait teardown_gke
+all: clean setup_gke container run_job teardown_gke wait
 .PHONY: all
 
 GCP_PROJECT ?= astronomer-dag-authoring
@@ -61,11 +61,11 @@ run_job:
 	@kubectl apply -f infrastructure/kubernetes/postgres_svc.yaml
 	@kubectl create -f infrastructure/kubernetes/job.yaml
 
-wait:
-	sh wait_for_status.sh
-
 # Takes approximately 2min
 teardown_gke:
 	@cd infrastructure/terraform && \
 		terraform init && \
 		terraform destroy --target google_container_node_pool.benchmark -auto-approve
+
+wait:
+	sh wait_for_status.sh
