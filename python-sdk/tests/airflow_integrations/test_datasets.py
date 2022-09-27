@@ -1,7 +1,7 @@
 import os
 from unittest import mock
 
-import airflow_integrations
+import airflow
 import pytest
 from airflow.models.dagbag import DagBag
 from astro.airflow.datasets import kwargs_with_datasets
@@ -89,7 +89,7 @@ def test_kwargs_with_datasets(
 
 
 @pytest.mark.skipif(
-    airflow_integrations.__version__ < "2.4.0",
+    airflow.__version__ < "2.4.0",
     reason="Require Airflow version >= 2.4.0",
 )
 def test_kwargs_with_temp_table():
@@ -109,7 +109,7 @@ def test_kwargs_with_temp_table():
 
 
 @pytest.mark.skipif(
-    airflow_integrations.__version__ < "2.4.0",
+    airflow.__version__ < "2.4.0",
     reason="Require Airflow version >= 2.4.0",
 )
 def test_example_dataset_dag():
