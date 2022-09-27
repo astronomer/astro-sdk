@@ -60,3 +60,9 @@ run_job:
 	@kubectl apply -f infrastructure/kubernetes/postgres.yaml
 	@kubectl apply -f infrastructure/kubernetes/postgres_svc.yaml
 	@kubectl create -f infrastructure/kubernetes/job.yaml
+
+# Takes approximately 2min
+teardown_gke:
+	@cd infrastructure/terraform && \
+		terraform init && \
+		terraform destroy --target google_container_node_pool.benchmark -auto-approve
