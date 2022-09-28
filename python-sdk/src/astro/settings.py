@@ -37,6 +37,7 @@ RAW_SQL_MAX_RESPONSE_SIZE = conf.getint(
     section="astro_sdk", key="run_raw_sql_response_size", fallback=-1
 )
 
+# Temp changes
 # Should Astro SDK automatically add inlets/outlets to take advantage of Airflow 2.4 Data-aware scheduling
 AUTO_ADD_INLETS_OUTLETS = conf.getboolean(
     "astro_sdk", "auto_add_inlets_outlets", fallback=True
