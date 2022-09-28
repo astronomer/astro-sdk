@@ -7,7 +7,7 @@ on:
       - '.github/workflows/ci-python-sdk.yaml'
       - '*'
   pull_request:
-    branches: [ 'main', 'release-**' ]
+    branches: [ 'main', 'release-**', 'labeled' ]
     paths:
       - 'python-sdk/**'
       - '.github/workflows/ci-python-sdk.yaml'
@@ -23,6 +23,7 @@ defaults:
     working-directory: python-sdk
 jobs:
   Markdown-link-check:
+    if: github.event.action != 'labeled'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -31,6 +32,7 @@ jobs:
           config-file: '.github/workflows/mlc_config.json'
 
   Type-Check:
+    if: github.event.action != 'labeled'
     runs-on: ubuntu-latest
     env:
       MYPY_FORCE_COLOR: 1
@@ -52,6 +54,7 @@ jobs:
       - run: nox -s type_check
 
   Build-Docs:
+    if: github.event.action != 'labeled'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -417,6 +420,7 @@ jobs:
       AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE: True
 
   Code-Coverage:
+    if: github.event.action != 'labeled'
     needs:
       - Run-Unit-tests-Airflow-2-4
       - Run-Optional-Packages-tests-python-sdk
