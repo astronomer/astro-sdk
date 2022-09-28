@@ -84,8 +84,8 @@ all = [
 ]
 doc = [
     "myst-parser>=0.17",
-    "sphinx==5.0.0", # TODO: https://github.com/astronomer/astro-sdk/issues/916
-    "sphinx-autoapi",
+    "sphinx>=4.4.0",
+    "sphinx-autoapi>=2.0.0",
     "sphinx-rtd-theme"
 ]
 
