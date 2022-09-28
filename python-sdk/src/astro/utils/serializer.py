@@ -20,11 +20,12 @@ def serialize(obj: Table | File | Any) -> dict | Any:
             "conn_id": obj.conn_id,
         }
     elif isinstance(obj, File):
+        filetype = None if not obj.filetype else obj.filetype.value
         return {
             "class": "File",
             "conn_id": obj.conn_id,
             "path": obj.path,
-            "filetype": obj.filetype.value,
+            "filetype": filetype,
             "normalize_config": obj.normalize_config,
         }
     else:

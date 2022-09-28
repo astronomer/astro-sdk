@@ -75,7 +75,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         if self.input_file.conn_id:
             check_if_connection_exists(self.input_file.conn_id)
 
-        return self.load_data(input_file=self.input_file)
+        return serialize(self.load_data(input_file=self.input_file))
 
     def load_data(self, input_file: File) -> BaseTable | File:
 
@@ -83,7 +83,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         if self.output_table:
             return serialize(self.load_data_to_table(input_file))
         else:
-            return serialize(convert_to_file(self.load_data_to_dataframe(input_file)))
+            return convert_to_file(self.load_data_to_dataframe(input_file))
 
     def load_data_to_table(self, input_file: File) -> BaseTable:
         """

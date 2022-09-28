@@ -13,6 +13,7 @@ from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable, Table
 from astro.utils.serializer import deserialize, serialize
 from astro.utils.typing_compat import Context
+from astro.utils.dataframe import convert_file_to_dataframe
 
 
 class ExportFileOperator(AstroSQLBaseOperator):
@@ -48,6 +49,8 @@ class ExportFileOperator(AstroSQLBaseOperator):
         """
         # Infer db type from `input_conn_id`.
         self.input_data = deserialize(self.input_data)
+        if isinstance(self.input_data, File):
+            self.input_data = convert_file_to_dataframe(self.input_data)
         if isinstance(self.input_data, BaseTable):
             database = create_database(self.input_data.conn_id)
             self.input_data = database.populate_table_metadata(self.input_data)
