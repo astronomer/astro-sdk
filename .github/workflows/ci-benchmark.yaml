@@ -38,6 +38,6 @@ jobs:
       - uses: actions/checkout@v2
       - run: rm -f test-connections.yaml
       - run: ls -la
-      - run: ( echo "cat <<EOF >test-connections.yaml"; cat ../.github/ci-test-connections.yaml; ) >test-connections.yaml && . test-connections.yaml
+      - run: ( echo "cat <<EOF >test-connections.yaml"; cat .github/ci-test-connections.yaml; ) >pythn-sdk/test-connections.yaml && . python-sdk/test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
-      - run: cd tests/benchmark && make
+      - run: cd python-sdk/tests/benchmark && make
