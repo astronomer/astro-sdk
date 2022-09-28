@@ -12,7 +12,6 @@ on:
       - 'python-sdk/**'
       - '.github/workflows/ci-python-sdk.yaml'
       - '*'
-    types: ['labeled', 'opened', 'synchronize']
   # Run on PRs from forks
   pull_request_target:
     branches: [ 'main' ]
@@ -393,7 +392,7 @@ jobs:
       TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
 
   Run-Benchmark:
-    if: github.event.label.name == 'benchmark'
+    if: github.event.label.name == 'run-benchmark'
     runs-on: ubuntu-latest
     env:
       SETUPTOOLS_USE_DISTUTILS: stdlib
