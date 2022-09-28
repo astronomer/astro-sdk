@@ -456,7 +456,7 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(
         },
     ],
     indirect=True,
-    # ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 @pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
 def test_load_file(sample_dag, database_table_fixture, file_type):
@@ -986,7 +986,7 @@ def test_aql_load_file_columns_names_capitalization_dataframe(sample_dag):
     filename = str(CWD.parent) + "/../data/homes_pattern_1.csv"
     from airflow.decorators import task
 
-    @task
+    @aql.dataframe
     def validate(input_df_1, input_df_2, input_df_3):
         assert isinstance(input_df_1, pd.DataFrame)
         assert isinstance(input_df_2, pd.DataFrame)

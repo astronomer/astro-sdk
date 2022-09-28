@@ -14,6 +14,7 @@ from astro import settings
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 from astro.utils.typing_compat import Context
+from astro.utils.serializer import serialize
 
 
 class RawSQLOperator(BaseSQLDecoratedOperator):
@@ -42,9 +43,8 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
             if self.response_limit >= 0 and len(response) > self.response_limit:
                 raise IllegalLoadToDatabaseException()  # pragma: no cover
             if self.response_size >= 0:
-                return response[: self.response_size]
-            else:
-                return response
+                response = response[: self.response_size]
+            return serialize(response)
         else:
             return None
 

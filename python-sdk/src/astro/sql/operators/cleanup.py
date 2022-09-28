@@ -17,6 +17,7 @@ from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.sql.table import BaseTable, TempTable
 from astro.utils.typing_compat import Context
+from astro.utils.serializer import serialize
 
 
 def filter_for_temp_tables(task_outputs: list[Any]) -> list[TempTable]:
@@ -214,7 +215,7 @@ class CleanupOperator(AstroSQLBaseOperator):
                         task.task_id,
                     )
 
-        return res
+        return serialize(res)
 
 
 def cleanup(

@@ -6,7 +6,7 @@ import numpy
 from astro.constants import FileType
 from astro.files import File
 from astro.sql.table import Metadata, Table, TempTable
-
+from sqlalchemy.engine.row import LegacyRow
 
 def serialize(obj: Table | File | Any) -> dict | Any:
     if isinstance(obj, Table) or isinstance(obj, TempTable):
@@ -35,15 +35,25 @@ def serialize(obj: Table | File | Any) -> dict | Any:
         return float(obj)
     elif isinstance(obj, numpy.ndarray):
         return obj.tolist()
+    elif isinstance(obj, list):
+        x = [serialize(o) for o in obj]
+        return x
+    elif isinstance(obj, LegacyRow):
+        val = obj._asdict()
+        return {"class": "LegacyRow", "value": val}
     else:
         return obj
 
 
 def deserialize(obj: dict) -> Table | File | Any:
+    if isinstance(obj, list):
+        return [deserialize(o) for o in obj]
+    # if isinstance(obj, tuple):
+
     if (
         not isinstance(obj, dict)
         or not obj.get("class")
-        or obj["class"] not in ["Table", "File"]
+        or obj["class"] not in ["Table", "File", "LegacyRow"]
     ):
         return obj
     if obj["class"] == "Table":
@@ -60,4 +70,6 @@ def deserialize(obj: dict) -> Table | File | Any:
             filetype=FileType(obj["filetype"]),
             normalize_config=obj["normalize_config"],
         )
+    elif obj["class"] == "LegacyRow":
+        return LegacyRow(**obj["value"])
     return obj

@@ -92,14 +92,14 @@ def test_transform(database_table_fixture, sample_dag):
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SNOWFLAKE},
-        {"database": Database.BIGQUERY},
-        {"database": Database.POSTGRES},
+        # {"database": Database.SNOWFLAKE},
+        # {"database": Database.BIGQUERY},
+        # {"database": Database.POSTGRES},
         {"database": Database.SQLITE},
-        {"database": Database.REDSHIFT},
+        # {"database": Database.REDSHIFT},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    # ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 def test_raw_sql(database_table_fixture, sample_dag):
     _, test_table = database_table_fixture
@@ -108,8 +108,8 @@ def test_raw_sql(database_table_fixture, sample_dag):
     def raw_sql_query(my_input_table: Table, created_table: Table, num_rows: int):
         return "SELECT * FROM {{my_input_table}} LIMIT {{num_rows}}"
 
-    @task
-    def validate_raw_sql(cur):
+    @aql.dataframe
+    def validate_raw_sql(cur: list):
         print(cur)
 
     with sample_dag:

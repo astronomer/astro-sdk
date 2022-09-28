@@ -9,6 +9,7 @@ from astro.databases import create_database
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable
 from astro.utils.typing_compat import Context
+from astro.utils.serializer import deserialize, serialize
 
 
 class AppendOperator(AstroSQLBaseOperator):
@@ -51,8 +52,10 @@ class AppendOperator(AstroSQLBaseOperator):
             ),
         )
 
-    def execute(self, context: Context) -> BaseTable:  # skipcq: PYL-W0613
+    def execute(self, context: Context) -> dict:  # skipcq: PYL-W0613
         db = create_database(self.target_table.conn_id)
+        self.source_table = deserialize(self.source_table)  # type: ignore
+        self.target_table = deserialize(self.target_table)  # type: ignore
         self.source_table = db.populate_table_metadata(self.source_table)
         self.target_table = db.populate_table_metadata(self.target_table)
         db.append_table(
@@ -60,7 +63,7 @@ class AppendOperator(AstroSQLBaseOperator):
             target_table=self.target_table,
             source_to_target_columns_map=self.columns,
         )
-        return self.target_table
+        return serialize(self.target_table)
 
 
 def append(
