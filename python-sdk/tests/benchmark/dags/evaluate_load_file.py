@@ -4,10 +4,11 @@ from datetime import datetime
 from pathlib import Path
 
 from airflow import DAG
-from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
-from astro.files import File
 from astro.sql.table import Metadata, Table
+
+from astro import sql as aql
+from astro.files import File
 
 START_DATE = datetime(2000, 1, 1)
 
@@ -35,7 +36,7 @@ def count_columns(input_table: Table):
     """
 
 
-def create_dag(database_name, table_args, dataset):
+def create_dag(database_name, table_args, dataset, kwargs):
     dataset_name = dataset["name"]
     dataset_path = dataset["path"]
     dataset_conn_id = dataset.get("conn_id")
@@ -52,17 +53,20 @@ def create_dag(database_name, table_args, dataset):
         else:
             table = Table(**table_args)
 
-        my_table = aql.load_file(  # noqa: F841
-            input_file=File(
+        params = {
+            "input_file": File(
                 path=dataset_path,
                 conn_id=dataset_conn_id,
                 filetype=FileType(dataset_filetype),
             ),
-            task_id="load",
-            output_table=table,
-            chunk_size=chunk_size,
-            enable_native_fallback=False,
-        )
+            "task_id": "load",
+            "output_table": table,
+            "chunk_size": chunk_size,
+        }
+        # Override params from config
+        params.update(kwargs)
+
+        my_table = aql.load_file(**params)
         aql.cleanup([my_table])
 
         # Todo: Check is broken so the following code is commented out, uncomment when fixed
@@ -79,9 +83,10 @@ def create_dag(database_name, table_args, dataset):
 config = load_config()
 for database in config["databases"]:
     database_name = database["name"]
-    table_args = database["params"]
+    table_args = database["output_table"]
+    kwargs = database["kwargs"]
     for dataset in config["datasets"]:
         table_args_copy = table_args.copy()
 
-        dag = create_dag(database_name, table_args_copy, dataset)
+        dag = create_dag(database_name, table_args_copy, dataset, kwargs)
         globals()[dag.dag_id] = dag

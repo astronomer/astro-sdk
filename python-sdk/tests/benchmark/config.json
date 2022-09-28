@@ -1,14 +1,20 @@
 {
   "databases": [
     {
+      "kwargs": {
+        "enable_native_fallback": false
+      },
       "name": "snowflake",
-      "params": {
+      "output_table": {
         "conn_id": "snowflake_conn"
       }
     },
     {
+      "kwargs": {
+        "enable_native_fallback": false
+      },
       "name": "postgres",
-      "params": {
+      "output_table": {
         "conn_id": "postgres_benchmark_conn",
         "metadata": {
           "database": "postgres"
