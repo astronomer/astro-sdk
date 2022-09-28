@@ -3,32 +3,17 @@ from __future__ import annotations
 from typing import Any
 
 import numpy
-from astro.constants import FileType
-from astro.files import File
-from astro.sql.table import Metadata, Table, TempTable
 from sqlalchemy.engine.row import LegacyRow
+
+from astro.files import File
+from astro.sql.table import Table, TempTable
+
 
 def serialize(obj: Table | File | Any) -> dict | Any:
     if isinstance(obj, Table) or isinstance(obj, TempTable):
-        return {
-            "class": "Table",
-            "name": obj.name,
-            "metadata": {
-                "schema": obj.metadata.schema,
-                "database": obj.metadata.database,
-            },
-            "temp": obj.temp,
-            "conn_id": obj.conn_id,
-        }
+        obj.to_json()
     elif isinstance(obj, File):
-        filetype = None if not obj.filetype else obj.filetype.value
-        return {
-            "class": "File",
-            "conn_id": obj.conn_id,
-            "path": obj.path,
-            "filetype": filetype,
-            "normalize_config": obj.normalize_config,
-        }
+        obj.to_json()
     elif isinstance(obj, numpy.integer):
         return int(obj)
     elif isinstance(obj, numpy.floating):
@@ -48,8 +33,6 @@ def serialize(obj: Table | File | Any) -> dict | Any:
 def deserialize(obj: dict) -> Table | File | Any:
     if isinstance(obj, list):
         return [deserialize(o) for o in obj]
-    # if isinstance(obj, tuple):
-
     if (
         not isinstance(obj, dict)
         or not obj.get("class")
@@ -57,19 +40,9 @@ def deserialize(obj: dict) -> Table | File | Any:
     ):
         return obj
     if obj["class"] == "Table":
-        return Table(
-            name=obj["name"],
-            metadata=Metadata(**obj["metadata"]),
-            temp=obj["temp"],
-            conn_id=obj["conn_id"],
-        )
+        return Table.from_json(obj)
     elif obj["class"] == "File":
-        return File(
-            conn_id=obj["conn_id"],
-            path=obj["path"],
-            filetype=FileType(obj["filetype"]),
-            normalize_config=obj["normalize_config"],
-        )
+        return File.from_json(obj)
     elif obj["class"] == "LegacyRow":
         return LegacyRow(**obj["value"])
     return obj

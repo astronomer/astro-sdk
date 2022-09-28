@@ -49,6 +49,25 @@ class File(Dataset):
             normalize_config=self.normalize_config,
         )
 
+    def to_json(self):
+        filetype = None if not self.filetype else self.filetype.value
+        return {
+            "class": "File",
+            "conn_id": self.conn_id,
+            "path": self.path,
+            "filetype": filetype,
+            "normalize_config": self.normalize_config,
+        }
+
+    @classmethod
+    def from_json(cls, ser: dict):
+        return File(
+            conn_id=ser["conn_id"],
+            path=ser["path"],
+            filetype=FileType(ser["filetype"]),
+            normalize_config=ser["normalize_config"],
+        )
+
     @property
     def size(self) -> int:
         """
