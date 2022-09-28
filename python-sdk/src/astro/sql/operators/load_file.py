@@ -10,6 +10,8 @@ from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistS
 from astro.databases import BaseDatabase, create_database
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
+from astro.utils.dataframe import convert_columns_names_capitalization, convert_to_file
+
 from astro.sql.table import BaseTable
 from astro.utils.typing_compat import Context
 from astro.utils.serializer import serialize
@@ -82,7 +84,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         if self.output_table:
             return serialize(self.load_data_to_table(input_file))
         else:
-            return serialize(input_file)
+            return serialize(convert_to_file(self.load_data_to_dataframe(input_file)))
 
     def load_data_to_table(self, input_file: File) -> BaseTable:
         """

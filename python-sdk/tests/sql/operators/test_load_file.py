@@ -349,8 +349,8 @@ def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
 
     from airflow.decorators import task
 
-    @task
-    def validate(input_df):
+    @aql.dataframe
+    def validate(input_df: pd.DataFrame):
         assert isinstance(input_df, pd.DataFrame)
         assert test_df.shape == input_df.shape
         assert test_df.sort_values("sell").equals(input_df.sort_values("sell"))
@@ -456,7 +456,7 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    # ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 @pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
 def test_load_file(sample_dag, database_table_fixture, file_type):

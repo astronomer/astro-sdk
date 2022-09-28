@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from astro.files import File
+from astro.constants import FileType
 from astro.sql.table import Metadata, Table, TempTable
 
 
@@ -23,8 +24,7 @@ def serialize(obj: Table | File | Any) -> dict | Any:
             "class": "File",
             "conn_id": obj.conn_id,
             "path": obj.path,
-            "uri": obj.uri,
-            "filetype": obj.filetype,
+            "filetype": obj.filetype.value,
             "normalize_config": obj.normalize_config,
         }
     else:
@@ -35,7 +35,7 @@ def deserialize(obj: dict) -> Table | File | Any:
     if (
         not isinstance(obj, dict)
         or not obj.get("class")
-        or obj["class"] not in ["Table"]
+        or obj["class"] not in ["Table", "File"]
     ):
         return obj
     if obj["class"] == "Table":
@@ -49,8 +49,7 @@ def deserialize(obj: dict) -> Table | File | Any:
         return File(
             conn_id=obj["conn_id"],
             path=obj["path"],
-            filetype=obj["filetype"],
+            filetype=FileType(obj["filetype"]),
             normalize_config=obj["normalize_config"],
-            uri=obj["uri"],
         )
     return obj
