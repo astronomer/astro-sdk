@@ -167,7 +167,15 @@ def analyse_results(df: pd.DataFrame, output_filepath: str = None):
     ).apply(lambda ms_time: format_time(ms_time))
 
     summary = mean_by_dag[SUMMARY_FIELDS]
+    content = get_content(summary)
+    if output_filepath:
+        with open(output_filepath, "w") as file:
+            file.write(content)
+    else:
+        print(content)
 
+
+def get_content(summary):
     content = ""
     # print Markdown tables per database
     for database_name in summary["database"].unique().tolist():
@@ -175,12 +183,7 @@ def analyse_results(df: pd.DataFrame, output_filepath: str = None):
         content = content + str(
             summary[summary["database"] == database_name].to_markdown(index=False)
         )
-
-    if output_filepath:
-        with open(output_filepath, "w") as file:
-            file.write(content)
-    else:
-        print(content)
+    return content
 
 
 if __name__ == "__main__":
