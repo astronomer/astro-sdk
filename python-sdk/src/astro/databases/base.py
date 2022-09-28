@@ -457,7 +457,9 @@ class BaseDatabase(ABC):
 
     @staticmethod
     def get_dataframe_from_file(file: File):
-        """Get pandas dataframe file
+        """
+        Get pandas dataframe file
+
         :param file: File path and conn_id for object stores
         """
         # We need export_to_dataframe() for Biqqery, Snowflake and Redshift except for Postgres. For postgres
