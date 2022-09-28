@@ -184,7 +184,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                     if isinstance(df, pd.DataFrame)
                 ]
             else:
-                return function_output
+                return serialize(function_output)
 
 
 def dataframe(

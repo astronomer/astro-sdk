@@ -9,6 +9,7 @@ from astro.constants import MergeConflictStrategy
 from astro.databases import create_database
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable
+from astro.utils.serializer import deserialize, serialize
 from astro.utils.typing_compat import Context
 
 
@@ -60,8 +61,10 @@ class MergeOperator(AstroSQLBaseOperator):
             ),
         )
 
-    def execute(self, context: Context) -> BaseTable:
+    def execute(self, context: Context) -> dict:
         db = create_database(self.target_table.conn_id)
+        self.source_table = deserialize(self.source_table)  # type: ignore
+        self.target_table = deserialize(self.target_table)  # type: ignore
         self.source_table = db.populate_table_metadata(self.source_table)
         self.target_table = db.populate_table_metadata(self.target_table)
 
@@ -72,7 +75,7 @@ class MergeOperator(AstroSQLBaseOperator):
             target_conflict_columns=self.target_conflict_columns,
             source_to_target_columns_map=self.columns,
         )
-        return self.target_table
+        return serialize(self.target_table)
 
 
 def merge(

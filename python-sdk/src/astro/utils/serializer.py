@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import numpy
 from astro.constants import FileType
 from astro.files import File
 from astro.sql.table import Metadata, Table, TempTable
@@ -28,6 +29,12 @@ def serialize(obj: Table | File | Any) -> dict | Any:
             "filetype": filetype,
             "normalize_config": obj.normalize_config,
         }
+    elif isinstance(obj, numpy.integer):
+        return int(obj)
+    elif isinstance(obj, numpy.floating):
+        return float(obj)
+    elif isinstance(obj, numpy.ndarray):
+        return obj.tolist()
     else:
         return obj
 
