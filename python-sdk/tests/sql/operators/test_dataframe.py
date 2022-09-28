@@ -1,16 +1,15 @@
 import pathlib
 
+import astro.sql as aql
 import pandas
 import pytest
 from airflow.models.xcom import XCom
 from airflow.utils import timezone
+from astro import settings
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
-from astro.sql.table import Table
-
-import astro.sql as aql
-from astro import settings
 from astro.files import File
+from astro.sql.table import Table
 from tests.sql.operators import utils as test_utils
 
 # Import Operator

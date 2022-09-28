@@ -3,11 +3,10 @@ from __future__ import annotations
 import io
 
 import pandas as pd
+from astro import settings
 from astro.constants import FileType as FileTypeConstants
 from astro.files.types.base import FileType
 from astro.utils.dataframe import convert_columns_names_capitalization
-
-from astro import settings
 
 
 class ParquetFileType(FileType):
