@@ -1,14 +1,16 @@
 import pathlib
 
-import astro.sql as aql
 import pandas
 import pytest
 from airflow.models.xcom import XCom
 from airflow.utils import timezone
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
-from astro.files import File
 from astro.sql.table import Table
+
+import astro.sql as aql
+from astro import settings
+from astro.files import File
 from tests.sql.operators import utils as test_utils
 
 # Import Operator
@@ -334,3 +336,24 @@ def test_inlets_outlets_non_supported_ds():
 
     task = sample_df_1(output_table=output_table)
     assert task.operator.outlets == []
+
+
+def test_col_capitalization_default_dataframe(sample_dag):
+    """Test that capitalization of col remains the same"""
+
+    assert settings.COLUMN_CAPITALIZATION == "original"
+
+    @aql.dataframe()
+    def sample_df_1(**kwargs):
+        return pandas.DataFrame(
+            {"Numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]}
+        )
+
+    with sample_dag:
+        task = sample_df_1()
+    test_utils.run_dag(sample_dag)
+
+    df = XCom.get_one(
+        execution_date=DEFAULT_DATE, key=task.key, task_id=task.operator.task_id
+    )
+    assert list(df.columns) == ["Numbers", "Colors"]

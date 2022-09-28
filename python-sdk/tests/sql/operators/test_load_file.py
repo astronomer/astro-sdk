@@ -19,15 +19,17 @@ import pytest
 from airflow.exceptions import BackfillUnfinished
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
-from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database, FileType
 from astro.exceptions import IllegalLoadToDatabaseException
-from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
 from astro.sql.table import Metadata, Table
 from pandas.testing import assert_frame_equal
+
+from astro import settings
+from astro import sql as aql
+from astro.files import File
 from tests.sql.operators import utils as test_utils
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("load_file_test_table")
@@ -1112,3 +1114,30 @@ def test_loading_gcs_file_to_database(database_table_fixture, file):
 
     database_df = db.export_table_to_pandas_dataframe(test_table)
     assert database_df.shape == (3, 2)
+
+
+def test_col_capitalization_default_load_file(sample_dag):
+    """Test that capitalization of col remains the same"""
+
+    assert settings.COLUMN_CAPITALIZATION == "original"
+
+    assert settings.COLUMN_CAPITALIZATION == "original"
+    path = str(CWD) + "/../../data/homes_upper.csv"
+    with sample_dag:
+        df = load_file(
+            input_file=File(path),
+            use_native_support=True,
+        ).operator.execute({})
+    test_utils.run_dag(sample_dag)
+
+    assert list(df.columns) == [
+        "Sell",
+        "List",
+        "Living",
+        "Rooms",
+        "Beds",
+        "Baths",
+        "Age",
+        "Acres",
+        "Taxes",
+    ]

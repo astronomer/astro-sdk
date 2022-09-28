@@ -1,5 +1,5 @@
 from airflow.configuration import conf
-from astro.constants import DEFAULT_SCHEMA
+from astro.constants import DEFAULT_COLUMN_CAPITALIZATION, DEFAULT_SCHEMA
 
 SCHEMA = conf.get("astro_sdk", "sql_schema", fallback=DEFAULT_SCHEMA)
 POSTGRES_SCHEMA = conf.get("astro_sdk", "postgres_default_schema", fallback=SCHEMA)
@@ -40,4 +40,9 @@ RAW_SQL_MAX_RESPONSE_SIZE = conf.getint(
 # Should Astro SDK automatically add inlets/outlets to take advantage of Airflow 2.4 Data-aware scheduling
 AUTO_ADD_INLETS_OUTLETS = conf.getboolean(
     "astro_sdk", "auto_add_inlets_outlets", fallback=True
+)
+
+
+COLUMN_CAPITALIZATION = conf.get(
+    "astro_sdk", "column_capitalization", fallback=DEFAULT_COLUMN_CAPITALIZATION
 )

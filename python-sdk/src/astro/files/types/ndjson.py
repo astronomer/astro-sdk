@@ -9,12 +9,17 @@ from astro.constants import FileType as FileTypeConstants
 from astro.files.types.base import FileType
 from astro.utils.dataframe import convert_columns_names_capitalization
 
+from astro import settings
+
 
 class NDJSONFileType(FileType):
     """Concrete implementation to handle NDJSON file type"""
 
     def export_to_dataframe(
-        self, stream, columns_names_capitalization="original", **kwargs
+        self,
+        stream,
+        columns_names_capitalization=settings.COLUMN_CAPITALIZATION,
+        **kwargs,
     ):
         """read ndjson file from one of the supported locations and return dataframe
 

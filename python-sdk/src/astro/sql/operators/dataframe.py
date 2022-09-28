@@ -13,9 +13,7 @@ except ImportError:
     from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
-from astro import settings
 from astro.constants import ColumnCapitalization
-from astro.databases import create_database
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable, Table
@@ -23,9 +21,13 @@ from astro.utils.dataframe import convert_columns_names_capitalization
 from astro.utils.table import find_first_table
 from astro.utils.typing_compat import Context
 
+from astro import settings
+from astro.databases import create_database
+
 
 def _get_dataframe(
-    table: BaseTable, columns_names_capitalization: ColumnCapitalization = "lower"
+    table: BaseTable,
+    columns_names_capitalization: ColumnCapitalization = settings.COLUMN_CAPITALIZATION,
 ) -> pd.DataFrame:
     """
     Exports records from a SQL table and converts it into a pandas dataframe
@@ -106,7 +108,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         conn_id: str | None = None,
         database: str | None = None,
         schema: str | None = None,
-        columns_names_capitalization: ColumnCapitalization = "lower",
+        columns_names_capitalization: ColumnCapitalization = settings.COLUMN_CAPITALIZATION,
         **kwargs,
     ):
         self.conn_id: str = conn_id or ""
@@ -178,7 +180,7 @@ def dataframe(
     conn_id: str = "",
     database: str | None = None,
     schema: str | None = None,
-    columns_names_capitalization: ColumnCapitalization = "lower",
+    columns_names_capitalization: ColumnCapitalization = settings.COLUMN_CAPITALIZATION,
     **kwargs: Any,
 ) -> TaskDecorator:
     """

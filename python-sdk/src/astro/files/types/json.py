@@ -7,6 +7,8 @@ from astro.constants import FileType as FileTypeConstants
 from astro.files.types.base import FileType
 from astro.utils.dataframe import convert_columns_names_capitalization
 
+from astro import settings
+
 
 class JSONFileType(FileType):
     """Concrete implementation to handle JSON file type"""
@@ -14,7 +16,7 @@ class JSONFileType(FileType):
     def export_to_dataframe(
         self,
         stream: io.TextIOWrapper,
-        columns_names_capitalization="original",
+        columns_names_capitalization=settings.COLUMN_CAPITALIZATION,
         **kwargs,
     ) -> pd.DataFrame:
         """read json file from one of the supported locations and return dataframe
