@@ -176,8 +176,8 @@ def analyse_results(df: pd.DataFrame, output_filepath: str = None):
         )
 
     if output_filepath:
-        f = open(output_filepath, "w")
-        f.write(content)
+        with open(output_filepath, "w") as file:
+            file.write(content)
     else:
         print(content)
 
