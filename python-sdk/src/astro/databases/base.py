@@ -455,6 +455,19 @@ class BaseDatabase(ABC):
                 chunk_size=chunk_size,
             )
 
+    @staticmethod
+    def get_dataframe_from_file(file: File):
+        """
+        Get pandas dataframe file. We need export_to_dataframe() for Biqqery,Snowflake and Redshift except for Postgres.
+        For postgres we are overriding this method and using export_to_dataframe_via_byte_stream().
+        export_to_dataframe_via_byte_stream copies files in a buffer and then use that buffer to ingest data.
+        With this approach we have significant performance boost for postgres.
+
+        :param file: File path and conn_id for object stores
+        """
+
+        return file.export_to_dataframe()
+
     def load_file_to_table_using_pandas(
         self,
         input_file: File,
@@ -472,7 +485,7 @@ class BaseDatabase(ABC):
 
         for file in input_files:
             self.load_pandas_dataframe_to_table(
-                file.export_to_dataframe(),
+                self.get_dataframe_from_file(file),
                 output_table,
                 chunk_size=chunk_size,
                 if_exists=if_exists,
