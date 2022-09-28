@@ -7,8 +7,8 @@ import sys
 from pathlib import Path
 from urllib.parse import urlparse
 
-import constants as benchmark_constant
 import pandas as pd
+import settings as benchmark_settings
 from astro.sql.table import Metadata, Table
 from google.cloud import storage
 from sqlalchemy import text
@@ -104,7 +104,7 @@ def analyse_results_from_file(results_filepath: str, output_filepath: str):
 
 
 def import_profile_data_to_bq(
-    bq_git_sha: str, conn_id: str = benchmark_constant.publish_benchmarks_db_conn_id
+    bq_git_sha: str, conn_id: str = benchmark_settings.publish_benchmarks_db_conn_id
 ):
     """Import profile data to bigquery table
 
@@ -113,15 +113,15 @@ def import_profile_data_to_bq(
     """
     db = create_database(conn_id)
     table = Table(
-        name=benchmark_constant.publish_benchmarks_table,
-        metadata=Metadata(schema=benchmark_constant.publish_benchmarks_schema),
+        name=benchmark_settings.publish_benchmarks_table,
+        metadata=Metadata(schema=benchmark_settings.publish_benchmarks_schema),
     )
 
     return db.export_table_to_pandas_dataframe(
         table,
         select_kwargs={
             "whereclause": text(
-                f'{benchmark_constant.publish_benchmarks_table_grouping_col}="{bq_git_sha}"'
+                f'{benchmark_settings.publish_benchmarks_table_grouping_col}="{bq_git_sha}"'
             )
         },
     )
@@ -198,9 +198,9 @@ if __name__ == "__main__":
         "-b",
         type=str,
         help=f"Use to render benchmarking markdown from data stored in bigquery "
-        f"table({benchmark_constant.publish_benchmarks_schema}.{benchmark_constant.publish_benchmarks_table})."
+        f"table({benchmark_settings.publish_benchmarks_schema}.{benchmark_settings.publish_benchmarks_table})."
         f" The data that qualifies for the generation will be filtered by Git SHA. Use initial 7 letters of a commit."
-        f" Matched against {benchmark_constant.publish_benchmarks_table_grouping_col} col.",
+        f" Matched against {benchmark_settings.publish_benchmarks_table_grouping_col} col.",
     )
     parser.add_argument(
         "--output-filepath",

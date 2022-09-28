@@ -5,15 +5,16 @@ import os
 import sys
 
 import airflow
-import constants as benchmark_constant
 import pandas as pd
 import psutil
+import settings as benchmark_settings
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import TaskInstance
 from airflow.utils import timezone
 from airflow.utils.session import provide_session
-from astro.databases import create_database
 from astro.sql.table import Metadata, Table
+
+from astro.databases import create_database
 
 
 def get_disk_usage():
@@ -36,8 +37,8 @@ def export_profile_data_to_bq(profile_data: dict, conn_id: str = "bigquery"):
     del profile_data["io_counters"]
     df = pd.json_normalize(profile_data, sep="_")
     table = Table(
-        name=benchmark_constant.publish_benchmarks_table,
-        metadata=Metadata(schema=benchmark_constant.publish_benchmarks_schema),
+        name=benchmark_settings.publish_benchmarks_table,
+        metadata=Metadata(schema=benchmark_settings.publish_benchmarks_schema),
     )
     db.load_pandas_dataframe_to_table(df, table, if_exists="append")
 
@@ -89,7 +90,7 @@ def profile(func, *args, **kwargs):  # noqa: C901
 
         profile = {**profile, **kwargs}
         print(json.dumps(profile, default=str))
-        if benchmark_constant.publish_benchmarks:
+        if benchmark_settings.publish_benchmarks:
             export_profile_data_to_bq(profile)
 
     if inspect.isfunction(func):
