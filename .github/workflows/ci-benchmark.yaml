@@ -1,11 +1,11 @@
 name: Run benchmark
 on:
   schedule:
-  - cron: '0 */6 * * *'
+  - cron: '0 0 * * *'
 
 jobs:
   Run-Benchmark:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     env:
       SETUPTOOLS_USE_DISTUTILS: stdlib
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
@@ -36,7 +36,8 @@ jobs:
       FORCE_COLOR: "true"
     steps:
       - uses: actions/checkout@v2
-      - run: rm -f test-connections.yaml
-      - run: ( echo "cat <<EOF >test-connections.yaml"; cat ../.github/ci-test-connections.yaml; ) >test-connections.yaml && . test-connections.yaml
+      - run: rm -f python-sdk/test-connections.yaml
+      - run: ls -la
+      - run: ( echo "cat <<EOF >python-sdk/test-connections.yaml"; cat .github/ci-test-connections.yaml; ) >python-sdk/test-connections.yaml && . python-sdk/test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
-      - run: cd tests/benchmark && make
+      - run: cd python-sdk/tests/benchmark && make
