@@ -7,7 +7,6 @@ import sys
 import airflow
 import pandas as pd
 import psutil
-import settings as benchmark_settings
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import TaskInstance
 from airflow.utils import timezone
@@ -35,10 +34,7 @@ def export_profile_data_to_bq(profile_data: dict, conn_id: str = "bigquery"):
     db = create_database(conn_id)
     del profile_data["io_counters"]
     df = pd.json_normalize(profile_data, sep="_")
-    table = Table(
-        name=benchmark_settings.publish_benchmarks_table,
-        metadata=Metadata(schema=benchmark_settings.publish_benchmarks_schema),
-    )
+    table = Table(name="load_files_to_database", metadata=Metadata(schema="benchmark"))
     db.load_pandas_dataframe_to_table(df, table, if_exists="append")
 
 
@@ -89,7 +85,7 @@ def profile(func, *args, **kwargs):  # noqa: C901
 
         profile = {**profile, **kwargs}
         print(json.dumps(profile, default=str))
-        if benchmark_settings.publish_benchmarks:
+        if os.getenv("ASTRO_PUBLISH_BENCHMARK_DATA"):
             export_profile_data_to_bq(profile)
 
     if inspect.isfunction(func):
