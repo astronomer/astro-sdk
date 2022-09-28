@@ -11,8 +11,8 @@ from astro.databases import create_database
 from astro.files import File
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable, Table
+from astro.utils.serializer import deserialize, serialize
 from astro.utils.typing_compat import Context
-from astro.utils.serializer import serialize,deserialize
 
 
 class ExportFileOperator(AstroSQLBaseOperator):

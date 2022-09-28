@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from astro.files import File
 from astro.constants import FileType
+from astro.files import File
 from astro.sql.table import Metadata, Table, TempTable
 
 
