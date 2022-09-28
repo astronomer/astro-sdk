@@ -12,10 +12,11 @@ on:
       - 'python-sdk/**'
       - '.github/workflows/ci-python-sdk.yaml'
       - '*'
+    types: ['labeled', 'opened', 'synchronize']
   # Run on PRs from forks
-  pull_request_target:
-    branches: [ 'main' ]
-    types: ['labeled']
+#  pull_request_target:
+#    branches: [ 'main' ]
+#    types: ['labeled']
   release:
     types: [ 'created' ]
 defaults:
