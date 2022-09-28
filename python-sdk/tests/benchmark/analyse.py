@@ -9,10 +9,11 @@ from urllib.parse import urlparse
 
 import constants as benchmark_constant
 import pandas as pd
-from astro.databases import create_database
 from astro.sql.table import Metadata, Table
 from google.cloud import storage
 from sqlalchemy import text
+
+from astro.databases import create_database
 
 SUMMARY_FIELDS = [
     "database",
@@ -103,11 +104,11 @@ def analyse_results_from_file(results_filepath: str, output_filepath: str):
 
 
 def import_profile_data_to_bq(
-    git_sha: str, conn_id: str = benchmark_constant.publish_benchmarks_db_conn_id
+    bq_git_sha: str, conn_id: str = benchmark_constant.publish_benchmarks_db_conn_id
 ):
     """Import profile data to bigquery table
 
-    :param git_sha: git_sha used to filter records
+    :param bq_git_sha: bq_git_sha used to filter records
     :param conn_id: Airflow's connection id to be used to publish the profiling data
     """
     db = create_database(conn_id)
@@ -120,14 +121,14 @@ def import_profile_data_to_bq(
         table,
         select_kwargs={
             "whereclause": text(
-                f'{benchmark_constant.publish_benchmarks_table_grouping_col}="{git_sha}"'
+                f'{benchmark_constant.publish_benchmarks_table_grouping_col}="{bq_git_sha}"'
             )
         },
     )
 
 
-def analyse_results_from_database(git_sha: str, output_filepath: str):
-    df = import_profile_data_to_bq(git_sha=git_sha)
+def analyse_results_from_database(bq_git_sha: str, output_filepath: str):
+    df = import_profile_data_to_bq(bq_git_sha=bq_git_sha)
     analyse_results(df, output_filepath)
 
 
@@ -193,8 +194,8 @@ if __name__ == "__main__":
         "cloud storage path (gs://bucket/sample.ndjson) containing the results for a benchmark run",
     )
     group.add_argument(
-        "--git-sha",
-        "-g",
+        "--bq-git-sha",
+        "-b",
         type=str,
         help=f"Use to render benchmarking markdown from data stored in bigquery "
         f"table({benchmark_constant.publish_benchmarks_schema}.{benchmark_constant.publish_benchmarks_table})."
@@ -210,12 +211,12 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     results_filepath = args.results_filepath
-    git_sha = args.git_sha
+    bq_git_sha = args.bq_git_sha
     output_filepath = args.output_filepath
     print(f"Running the analysis on {results_filepath}...")
     if results_filepath:
         if check_gcs_path(results_filepath):
             results_filepath = download_files_from_gcs(results_filepath)
         analyse_results_from_file(results_filepath, output_filepath)
-    elif git_sha:
-        analyse_results_from_database(git_sha, output_filepath)
+    elif bq_git_sha:
+        analyse_results_from_database(bq_git_sha, output_filepath)
