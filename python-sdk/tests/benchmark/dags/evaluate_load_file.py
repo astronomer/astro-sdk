@@ -1,21 +1,27 @@
 import json
 import os
 from datetime import datetime
-from pathlib import Path
 
 from airflow import DAG
-from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
-from astro.files import File
 from astro.sql.table import Metadata, Table
+from google.cloud import storage
+from tests.benchmark import settings as benchmark_settings
+
+from astro import sql as aql
+from astro.files import File
 
 START_DATE = datetime(2000, 1, 1)
 
 
 def load_config():
-    config_path = Path(Path(__file__).parent.parent, "config.json").resolve()
-    with open(config_path) as fp:
-        return json.load(fp)
+    tmp_config = "/tmp/config.json"
+    storage_client = storage.Client()
+    storage_client.download_blob_to_file(
+        file_obj=open(tmp_config, "wb"),
+        blob_or_uri=benchmark_settings.publish_benchmarks_config_path,
+    )
+    return json.load(open(tmp_config))
 
 
 @aql.transform

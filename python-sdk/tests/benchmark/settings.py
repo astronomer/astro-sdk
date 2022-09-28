@@ -11,3 +11,6 @@ publish_benchmarks_table = os.getenv(
 publish_benchmarks_table_grouping_col = os.getenv(
     "ASTRO_PUBLISH_BENCHMARK_GROUPING_COL", "revision"
 )
+publish_benchmarks_config_path = os.getenv(
+    "ASTRO_PUBLISH_BENCHMARK_CONFIG_PATH", "gs://astro-sdk-config/config.json"
+)
