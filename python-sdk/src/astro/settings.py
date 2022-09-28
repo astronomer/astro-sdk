@@ -43,4 +43,6 @@ AUTO_ADD_INLETS_OUTLETS = conf.getboolean(
 )
 
 
-COLUMN_CAPITALIZATION = conf.get("astro_sdk", "column_capitalization", fallback="original")
+COLUMN_CAPITALIZATION = conf.get(
+    "astro_sdk", "column_capitalization", fallback="original"
+)
