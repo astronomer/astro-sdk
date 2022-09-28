@@ -102,7 +102,8 @@ class File(Dataset):
         Due to noted issues with using smart_open with pandas (like
         https://github.com/RaRe-Technologies/smart_open/issues/524), we create a BytesIO or StringIO buffer
         before exporting to a dataframe. We've found a sizable speed improvement with this optimizat
-        Returns: an io object that can be streamed into a dataframe (or other object)
+
+        :returns: an io object that can be streamed into a dataframe (or other object)
         """
 
         mode = "rb" if self.is_binary() else "r"
