@@ -1,5 +1,6 @@
 """Tests all Database implementations."""
 import pathlib
+from unittest import mock
 
 import pandas as pd
 import pytest
@@ -60,3 +61,41 @@ def test_export_table_to_pandas_dataframe(
         ]
     )
     assert df.rename(columns=str.lower).equals(expected)
+
+
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
+        {
+            "database": Database.POSTGRES,
+            "table": Table(metadata=Metadata(schema=SCHEMA.lower())),
+        },
+        {
+            "database": Database.SNOWFLAKE,
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
+        {"database": Database.SQLITE, "table": Table()},
+    ],
+    indirect=True,
+    ids=["bigquery", "postgres", "snowflake", "sqlite"],
+)
+@mock.patch("astro.files.base.File.export_to_dataframe")
+@mock.patch("astro.files.base.File.export_to_dataframe_via_byte_stream")
+def test_export_to_dataframe_via_byte_stream_is_called_for_postgres(
+    export_to_dataframe_via_byte_stream,
+    export_to_dataframe,
+    database_table_fixture,
+):
+    """Test export_to_dataframe_via_byte_stream() is called in case the db is postgres."""
+    database, _ = database_table_fixture
+    file = File(str(pathlib.Path(CWD.parent, "data/sample.csv")))
+
+    database.get_dataframe_from_file(file)
+    if database.sql_type == "postgresql":
+        export_to_dataframe_via_byte_stream.assert_called()
+    else:
+        export_to_dataframe.assert_called()
