@@ -15,9 +15,8 @@ __version__ = "1.2.0.dev1"
 
 import logging
 
-from airflow.configuration import conf
-
 import astro.sql  # noqa: F401
+from airflow.configuration import conf
 
 # Override the default log level from logging.ERROR to logging.WARNING
 logging.getLogger().setLevel(level=logging.WARNING)
