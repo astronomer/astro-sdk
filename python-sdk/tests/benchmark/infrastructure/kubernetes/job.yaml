@@ -17,7 +17,16 @@ spec:
             memory: 6Gi
           limits:
             memory: 10Gi
+        volumeMounts:
+          # mount the nfs volume for local files
+          - name: benchmark-pvc
+            mountPath: "/mnt"
       # Do not restart containers after they exit
       restartPolicy: Never
+
+      volumes:
+        - name: benchmark-pvc
+          persistentVolumeClaim:
+            claimName: nfs
   # of retries before marking as failed.
   backoffLimit: 1
