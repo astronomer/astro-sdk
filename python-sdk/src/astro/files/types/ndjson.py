@@ -63,7 +63,7 @@ class NDJSONFileType(FileType):
         nrows = kwargs.get("nrows", float("inf"))
         chunksize = kwargs.get("chunksize", DEFAULT_CHUNK_SIZE)
 
-        result_df = None
+        result_df = []
         row_count = 0
         extra_rows = []
 
@@ -80,14 +80,14 @@ class NDJSONFileType(FileType):
             else:
                 extra_rows = []
 
-            df = pd.DataFrame(
-                pd.json_normalize([json.loads(row) for row in rows], **normalize_config)
+            df = pd.json_normalize(
+                [json.loads(row) for row in rows], **normalize_config
             )
-            if result_df is None:
-                result_df = df
-            else:
-                result_df = pd.concat([result_df, df])
+            result_df.append(df)
 
-            row_count = result_df.shape[0]
+            row_count = row_count + df.shape[0]
 
-        return result_df
+        # Running concat multiple times is much slower instead we are appending all the generated dataframes
+        # in a list and then concatenating in single call. This brought down the cost from 351.79550790786743
+        # to 2.3778765201568604.
+        return pd.concat(result_df)
