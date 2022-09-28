@@ -3,13 +3,12 @@ import os
 from datetime import datetime
 
 from airflow import DAG
+from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
+from astro.files import File
 from astro.sql.table import Metadata, Table
 from google.cloud import storage
 from tests.benchmark import settings as benchmark_settings
-
-from astro import sql as aql
-from astro.files import File
 
 START_DATE = datetime(2000, 1, 1)
 
