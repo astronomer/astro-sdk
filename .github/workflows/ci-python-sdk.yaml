@@ -80,8 +80,7 @@ jobs:
       ) ||
       (
         github.event_name == 'pull_request_target' &&
-        contains(github.event.pull_request.labels.*.name, 'safe to test') &&
-        github.event.pull_request.head.repo.fork == true
+        contains(github.event.pull_request.labels.*.name, 'safe to test')
       ) ||
       (
         github.event_name == 'release'
@@ -167,8 +166,7 @@ jobs:
       ) ||
       (
         github.event_name == 'pull_request_target' &&
-        contains(github.event.pull_request.labels.*.name, 'safe to test') &&
-        github.event.pull_request.head.repo.fork == true
+        contains(github.event.pull_request.labels.*.name, 'safe to test')
       ) ||
       (
         github.event_name == 'release'
@@ -259,8 +257,7 @@ jobs:
       ) ||
       (
         github.event_name == 'pull_request_target' &&
-        contains(github.event.pull_request.labels.*.name, 'safe to test') &&
-        github.event.pull_request.head.repo.fork == true
+        contains(github.event.pull_request.labels.*.name, 'safe to test')
       )||
       (
         github.event_name == 'release'
