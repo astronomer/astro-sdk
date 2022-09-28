@@ -190,7 +190,9 @@ class PostgresDatabase(BaseDatabase):
 
     @staticmethod
     def get_dataframe_from_file(file: File):
-        """Get pandas dataframe file
+        """
+        Get pandas dataframe file
+
         :param file: File path and conn_id for object stores
         """
         return file.export_to_dataframe_via_byte_stream()
