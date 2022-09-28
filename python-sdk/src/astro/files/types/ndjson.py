@@ -76,10 +76,6 @@ class NDJSONFileType(FileType):
             else:
                 extra_rows = []
 
-            # ToDo: Check if there is an alternative to pandas json_normalize(). A custom implementation is much faster.
-            # But that would entail breaking changes.
-            # ref : https://stackoverflow.com/questions/69945941/
-            #   why-does-pandas-json-normalize-run-slower-than-my-hand-crafted-loop
             df = pd.json_normalize(
                 [json.loads(row) for row in rows], **normalize_config
             )
