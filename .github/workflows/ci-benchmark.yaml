@@ -1,0 +1,43 @@
+name: Run benchmark
+on:
+  schedule:
+  - cron: '*/15 * * * *'
+
+jobs:
+  Run-Benchmark:
+    runs-on: ubuntu-latest
+    env:
+      SETUPTOOLS_USE_DISTUTILS: stdlib
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
+      POSTGRES_HOST: 0.0.0.0
+      POSTGRES_PORT: 5432
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AIRFLOW__ASTRO_SDK__SQL_SCHEMA: astroflow_ci
+      REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
+      REDSHIFT_DATABASE: dev
+      REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
+      REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
+      REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
+      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_SCHEMA: ASTROFLOW_CI
+      SNOWFLAKE_DATABASE: SANDBOX
+      SNOWFLAKE_WAREHOUSE: DEMO
+      SNOWFLAKE_HOST: https://gp21411.us-east-1.snowflakecomputing.com
+      SNOWFLAKE_ACCOUNT: gp21411
+      SNOWFLAKE_REGION: us-east-1
+      SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
+      AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
+      AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
+      AIRFLOW_VAR_FOO: templated_file_name
+      AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE: True
+      FORCE_COLOR: "true"
+    steps:
+      - uses: actions/checkout@v2
+      - run: rm -f test-connections.yaml
+      - run: ls -la
+      - run: ( echo "cat <<EOF >test-connections.yaml"; cat .github/ci-test-connections.yaml; ) >pythn-sdk/test-connections.yaml && . python-sdk/test-connections.yaml
+      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      - run: cd python-sdk/tests/benchmark && make
