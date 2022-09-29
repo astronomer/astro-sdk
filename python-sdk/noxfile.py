@@ -49,7 +49,7 @@ def benchmark(session: nox.Session, airflow) -> None:
         "../.github/ci-test-connections.yaml > test-connections.yaml",
     )
     session.run("airflow", "db", "init")
-    session.run("bash", "./tests/benchmark/")
+    session.run("bash", "./tests/benchmark/run_benchmark_ci.sh")
     # session.run(
     #     "python3",
     #     "-c",
