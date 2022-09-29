@@ -10,7 +10,7 @@ spec:
     spec:
       containers:
       - name: benchmark
-        image: gcr.io/astronomer-dag-authoring/benchmark
+        image: gcr.io/astronomer-dag-authoring/benchmark:%VERSION%
         command: ["./run.sh"]
         resources:
           requests:
