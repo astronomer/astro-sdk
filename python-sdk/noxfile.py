@@ -33,6 +33,18 @@ def test(session: nox.Session, airflow) -> None:
     session.run("pytest", *session.posargs)
 
 
+@nox.session(python=["3.7", "3.8", "3.9"])
+@nox.parametrize("airflow", ["2.2.5", "2.3"])
+def benchmark(session: nox.Session, airflow) -> None:
+    """Run both unit and integration tests."""
+    session.install("-e", ".[all]")
+    session.install("-e", ".[tests]")
+    # Log all the installed dependencies
+    session.log("Installed Dependencies:")
+    session.run("pip3", "freeze")
+    session.run("airflow", "db", "init")
+
+
 @nox.session(python=["3.8"])
 def type_check(session: nox.Session) -> None:
     """Run MyPy checks."""
