@@ -38,7 +38,7 @@ container: clean check_google_credentials
 	@gcloud auth configure-docker gcr.io
 	@docker build --platform=$(PLATFORM) --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) -f ./Dockerfile  ../../
 	@gcloud auth activate-service-account --key-file $(GOOGLE_APPLICATION_CREDENTIALS)
-	@docker push $(CONTAINER_REGISTRY)
+	@docker push $(CONTAINER_REGISTRY):$(GIT_HASH)
 
 local: clean check_google_credentials
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
