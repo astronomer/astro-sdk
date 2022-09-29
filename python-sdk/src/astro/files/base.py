@@ -29,6 +29,7 @@ class File(Dataset):
     conn_id: str | None = None
     filetype: constants.FileType | None = None
     normalize_config: dict | None = None
+    is_dataframe: bool = False
 
     uri: str = field(init=False)
     extra: dict | None = field(init=False, factory=dict)
@@ -101,6 +102,7 @@ class File(Dataset):
 
         :param df: pandas dataframe
         """
+        self.is_dataframe = True
         with smart_open.open(
             self.path, mode="wb", transport_params=self.location.transport_params
         ) as stream:
