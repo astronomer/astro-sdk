@@ -179,9 +179,10 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                 return serialize(convert_to_file(pandas_dataframe))
             elif isinstance(function_output, list):
                 return [
-                    serialize(convert_to_file(df))
-                    for df in function_output
-                    if isinstance(df, pd.DataFrame)
+                    serialize(convert_to_file(obj))
+                    if isinstance(obj, pd.DataFrame)
+                    else serialize(obj)
+                    for obj in function_output
                 ]
             else:
                 return serialize(function_output)

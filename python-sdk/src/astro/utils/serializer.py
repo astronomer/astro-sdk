@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import Any
 
 import numpy
@@ -21,10 +22,12 @@ def serialize(obj: Table | File | Any) -> dict | Any:
     elif isinstance(obj, numpy.ndarray):
         return obj.tolist()
     elif isinstance(obj, list):
-        x = [serialize(o) for o in obj]
-        return x
+        return [serialize(o) for o in obj]
     else:
-        return pickle.dumps(obj).hex()
+        try:
+            return json.dumps(obj)
+        except Exception:
+            return pickle.dumps(obj).hex()
 
 
 def deserialize(obj: dict) -> Table | File | Any:
@@ -41,6 +44,9 @@ def deserialize(obj: dict) -> Table | File | Any:
             return File.from_json(obj)
     else:
         try:
-            return pickle.loads(bytes.fromhex(obj))
+            return json.loads(obj)
         except Exception:
-            return obj
+            try:
+                return pickle.loads(bytes.fromhex(obj))
+            except Exception:
+                return obj
