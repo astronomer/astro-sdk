@@ -10,7 +10,7 @@ while [[ $complete_status -ne 0 ]] && [[ $failed_status -ne 0 ]]; do
   complete_status=$?
 done
 
-kubectl delete job benchmark-"${GIT_HASH}" -n benchmark
+#kubectl delete job benchmark-"${GIT_HASH}" -n benchmark
 
 if [ $failed_status -eq 0 ]; then
     echo "Job failed. Please check logs."
