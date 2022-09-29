@@ -42,8 +42,13 @@ def benchmark(session: nox.Session, airflow) -> None:
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
     session.run("pip3", "freeze")
+    session.run(
+        "bash",
+        "-c",
+        "cat",
+        "../.github/ci-test-connections.yaml > test-connections.yaml",
+    )
     session.run("airflow", "db", "init")
-    session.run("bash", "-c", "cd", "tests/benchmark")
     session.run("bash", "-c", "GIT_HASH=$(git log -1 --format=%h)")
     session.run("bash", "-c", "pwd")
     session.run(
