@@ -430,7 +430,10 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "benchmark-3.8(airflow='2.3')" && cd tests/benchmark && GIT_HASH=$(git log -1 --format=%h) && python analyse.py -b $GIT_HASH -o ./auto_generated_results.md
+      - run: |
+          nox -s "benchmark-3.8(airflow='2.3')"
+          source .nox/benchmark/bin/activate
+      - run: cd tests/benchmark && GIT_HASH=$(git log -1 --format=%h) && python analyse.py -b $GIT_HASH -o ./auto_generated_results.md
 #      - run: cd tests/benchmark && make
       - run: CONTENT=$(cat ./auto_generated_results.md)
       - uses: mshick/add-pr-comment@v1
