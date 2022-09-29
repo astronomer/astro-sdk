@@ -57,7 +57,7 @@ def benchmark(session: nox.Session, airflow) -> None:
         "f.write(json.dumps({item['conn_id']:item for item in data}))",
     )
     session.run("airflow", "connections", "import", "./test-connections.json")
-    session.run("bash", "-c", "GIT_HASH=$(git log -1 --format=%h)")
+    # session.run("bash", "-c", "GIT_HASH=$(git log -1 --format=%h)")
     session.run("bash", "-c", "pwd")
     session.run(
         "python",
@@ -66,6 +66,7 @@ def benchmark(session: nox.Session, airflow) -> None:
         "$GIT_HASH",
         "-o",
         "./auto_generated_results.md",
+        env={"GIT_HASH": "$(git log -1 --format=%h)"},
     )
 
 

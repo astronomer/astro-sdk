@@ -9,10 +9,11 @@ from urllib.parse import urlparse
 
 import pandas as pd
 import settings as benchmark_settings
-from astro.databases import create_database
 from astro.sql.table import Metadata, Table
 from google.cloud import storage
 from sqlalchemy import text
+
+from astro.databases import create_database
 
 SUMMARY_FIELDS = [
     "database",
@@ -133,6 +134,7 @@ def analyse_results_from_database(bq_git_sha: str, output_filepath: str):
 
 def analyse_results(df: pd.DataFrame, output_filepath: str = None):
     # calculate total CPU from process & children
+    print("df : ", df)
     mean_by_dag = df.groupby("dag_id", as_index=False).mean()
 
     # format data
@@ -221,4 +223,5 @@ if __name__ == "__main__":
             results_filepath = download_files_from_gcs(results_filepath)
         analyse_results_from_file(results_filepath, output_filepath)
     elif bq_git_sha:
+        print("bq_git_sha : ", bq_git_sha)
         analyse_results_from_database(bq_git_sha, output_filepath)
