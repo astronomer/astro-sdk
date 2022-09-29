@@ -43,6 +43,11 @@ def benchmark(session: nox.Session, airflow) -> None:
     session.log("Installed Dependencies:")
     session.run("pip3", "freeze")
     session.run("airflow", "db", "init")
+    session.run("cd", "tests/benchmark")
+    session.run("GIT_HASH=$(git log -1 --format=%h)")
+    session.run(
+        "python", "analyse.py", "-b", "$GIT_HASH", "-o", "./auto_generated_results.md"
+    )
 
 
 @nox.session(python=["3.8"])
