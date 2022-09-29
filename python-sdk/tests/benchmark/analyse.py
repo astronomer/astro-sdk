@@ -9,11 +9,10 @@ from urllib.parse import urlparse
 
 import pandas as pd
 import settings as benchmark_settings
+from astro.databases import create_database
 from astro.sql.table import Metadata, Table
 from google.cloud import storage
 from sqlalchemy import text
-
-from astro.databases import create_database
 
 SUMMARY_FIELDS = [
     "database",
