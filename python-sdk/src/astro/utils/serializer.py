@@ -38,7 +38,7 @@ def deserialize(obj: dict | str | list) -> Table | File | Any:
     ):
         if obj["class"] == "Table":
             return Table.from_json(obj)
-        elif obj["class"] == "Table":
+        elif obj["class"] == "File":
             return File.from_json(obj)
         else:
             return obj["value"]

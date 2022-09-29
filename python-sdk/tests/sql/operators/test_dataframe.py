@@ -10,6 +10,7 @@ from astro.constants import Database
 from astro.files import File
 from astro.sql.table import Table
 from tests.sql.operators import utils as test_utils
+from astro.utils.serializer import deserialize
 
 # Import Operator
 
@@ -165,16 +166,14 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, database_table_fixture):
     def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
         return df.sell.count()
 
+    @aql.dataframe
+    def validate(num: int):
+        assert num == 5
+
     with sample_dag:
         res = my_df_func(test_table)
+        validate(res)
     test_utils.run_dag(sample_dag)
-
-    assert (
-        XCom.get_one(
-            execution_date=DEFAULT_DATE, key=res.key, task_id=res.operator.task_id
-        )
-        == 5
-    )
 
 
 @pytest.mark.parametrize(
@@ -218,16 +217,14 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(
     def my_df_func(df_1: pandas.DataFrame, df_2: pandas.DataFrame):  # skipcq: PY-D0003
         return df_1.sell.count() + df_2.sell.count()
 
+    @aql.dataframe
+    def validate(num: int):
+        assert num == 10
+
     with sample_dag:
         res = my_df_func(test_table, df_2=test_table)
+        validate(res)
     test_utils.run_dag(sample_dag)
-
-    assert (
-        XCom.get_one(
-            execution_date=DEFAULT_DATE, key=res.key, task_id=res.operator.task_id
-        )
-        == 10
-    )
 
 
 def test_postgres_dataframe_without_table_arg(sample_dag):
