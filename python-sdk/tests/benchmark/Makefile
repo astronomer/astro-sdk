@@ -1,4 +1,4 @@
-all: clean setup_gke container run_job
+all: clean setup_gke container run_job wait_for_completion
 .PHONY: all
 
 GCP_PROJECT ?= astronomer-dag-authoring
@@ -61,6 +61,9 @@ run_job:
 	@kubectl apply -f infrastructure/kubernetes/postgres_svc.yaml
 	@sed s/%VERSION%/${GIT_HASH}/g infrastructure/kubernetes/job.yaml > infrastructure/kubernetes/job_final.yaml
 	@kubectl create -f infrastructure/kubernetes/job_final.yaml
+
+wait_for_completion:
+	bash wait_for_completion.sh
 
 # Takes approximately 2min
 teardown_gke:
