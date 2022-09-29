@@ -25,7 +25,7 @@ from astro.utils.typing_compat import Context
 
 
 def _get_dataframe(
-        table: BaseTable, columns_names_capitalization: ColumnCapitalization = "lower"
+    table: BaseTable, columns_names_capitalization: ColumnCapitalization = "lower"
 ) -> pd.DataFrame:
     """
     Exports records from a SQL table and converts it into a pandas dataframe
@@ -40,9 +40,9 @@ def _get_dataframe(
 
 
 def load_op_arg_table_into_dataframe(
-        op_args: tuple,
-        python_callable: Callable,
-        columns_names_capitalization: ColumnCapitalization,
+    op_args: tuple,
+    python_callable: Callable,
+    columns_names_capitalization: ColumnCapitalization,
 ) -> tuple:
     """For dataframe based functions, takes any Table objects from the op_args
     and converts them into local dataframes that can be handled in the python context"""
@@ -54,16 +54,16 @@ def load_op_arg_table_into_dataframe(
     for arg in op_args_list:
         current_arg = full_spec.args.pop(0)
         if full_spec.annotations.get(current_arg) == pd.DataFrame and isinstance(
-                arg, BaseTable
+            arg, BaseTable
         ):
             ret_args.append(
                 _get_dataframe(
                     arg, columns_names_capitalization=columns_names_capitalization
                 )
             )
-        elif isinstance(
-                arg, File
-        ) and (full_spec.annotations.get(current_arg) == pd.DataFrame or arg.is_dataframe):
+        elif isinstance(arg, File) and (
+            full_spec.annotations.get(current_arg) == pd.DataFrame or arg.is_dataframe
+        ):
             ret_args.append(arg.export_to_dataframe())
         else:
             ret_args.append(arg)
@@ -71,9 +71,9 @@ def load_op_arg_table_into_dataframe(
 
 
 def load_op_kwarg_table_into_dataframe(
-        op_kwargs: dict,
-        python_callable: Callable,
-        columns_names_capitalization: ColumnCapitalization,
+    op_kwargs: dict,
+    python_callable: Callable,
+    columns_names_capitalization: ColumnCapitalization,
 ) -> dict:
     """For dataframe based functions, takes any Table objects from the op_kwargs
     and converts them into local dataframes that can be handled in the python context"""
@@ -111,12 +111,12 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
     """
 
     def __init__(
-            self,
-            conn_id: str | None = None,
-            database: str | None = None,
-            schema: str | None = None,
-            columns_names_capitalization: ColumnCapitalization = "lower",
-            **kwargs,
+        self,
+        conn_id: str | None = None,
+        database: str | None = None,
+        schema: str | None = None,
+        columns_names_capitalization: ColumnCapitalization = "lower",
+        **kwargs,
     ):
         self.conn_id: str = conn_id or ""
         self.database = database
@@ -189,13 +189,13 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
 
 
 def dataframe(
-        python_callable: Callable | None = None,
-        multiple_outputs: bool | None = None,
-        conn_id: str = "",
-        database: str | None = None,
-        schema: str | None = None,
-        columns_names_capitalization: ColumnCapitalization = "lower",
-        **kwargs: Any,
+    python_callable: Callable | None = None,
+    multiple_outputs: bool | None = None,
+    conn_id: str = "",
+    database: str | None = None,
+    schema: str | None = None,
+    columns_names_capitalization: ColumnCapitalization = "lower",
+    **kwargs: Any,
 ) -> TaskDecorator:
     """
     This decorator will allow users to write python functions while treating SQL tables as dataframes
