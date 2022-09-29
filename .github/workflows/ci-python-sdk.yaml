@@ -428,7 +428,7 @@ jobs:
 #      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: cd tests/benchmark
       - run: GIT_HASH=$(git log -1 --format=%h)
-      - run: python analyse.py -b $GIT_HASH -o ./auto_generated_results.md
+      - run: ls -la && python analyse.py -b $GIT_HASH -o ./auto_generated_results.md
       - run: CONTENT = $(cat ./auto_generated_results.md)
       - uses: mshick/add-pr-comment@v1
         with:
