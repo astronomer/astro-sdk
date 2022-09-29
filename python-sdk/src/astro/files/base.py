@@ -59,6 +59,7 @@ class File(Dataset):
             "path": self.path,
             "filetype": filetype,
             "normalize_config": self.normalize_config,
+            "is_dataframe": self.is_dataframe,
         }
 
     @classmethod
@@ -68,6 +69,7 @@ class File(Dataset):
             path=serialized_object["path"],
             filetype=constants.FileType(serialized_object["filetype"]),
             normalize_config=serialized_object["normalize_config"],
+            is_dataframe=serialized_object["is_dataframe"],
         )
 
     @property

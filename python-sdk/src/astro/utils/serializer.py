@@ -39,7 +39,10 @@ def deserialize(obj: dict | str | list) -> Table | File | Any:
         if obj["class"] == "Table":
             return Table.from_json(obj)
         elif obj["class"] == "File":
-            return File.from_json(obj)
+            file = File.from_json(obj)
+            if file.is_dataframe:
+                return file.export_to_dataframe()
+            return file
         else:
             return obj["value"]
     else:

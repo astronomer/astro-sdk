@@ -9,7 +9,7 @@ from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.files import File
 from astro.sql.table import Table
-from astro.utils.serializer import deserialize
+
 from tests.sql.operators import utils as test_utils
 
 # Import Operator
@@ -51,18 +51,18 @@ def test_dataframe_from_sql_basic(sample_dag, database_table_fixture):
     _, test_table = database_table_fixture
 
     @aql.dataframe
+    def validate(num):
+        assert num == 5
+
+    @aql.dataframe
     def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
         return df.sell.count()
 
     with sample_dag:
         f = my_df_func(df=test_table)
+        validate(f)
 
     test_utils.run_dag(sample_dag)
-
-    assert (
-        XCom.get_one(execution_date=DEFAULT_DATE, key=f.key, task_id=f.operator.task_id)
-        == 5
-    )
 
 
 def test_dataframe_pass_list(sample_dag):
@@ -179,26 +179,26 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, database_table_fixture):
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        # {
-        #     "database": Database.SNOWFLAKE,
-        #     "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-        # },
-        # {
-        #     "database": Database.BIGQUERY,
-        #     "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-        # },
-        # {
-        #     "database": Database.POSTGRES,
-        #     "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-        # },
+        {
+            "database": Database.SNOWFLAKE,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.BIGQUERY,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.POSTGRES,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
         {
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        #     "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-        # },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
     # ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
