@@ -108,12 +108,13 @@ def test_raw_sql(database_table_fixture, sample_dag):
     def raw_sql_query(my_input_table: Table, created_table: Table, num_rows: int):
         return "SELECT * FROM {{my_input_table}} LIMIT {{num_rows}}"
 
-    @aql.dataframe
-    def validate_raw_sql(cur: list):
-        print(cur)
+    @aql.dataframe()
+    def validate_raw_sql(cur):
         from sqlalchemy.engine.row import LegacyRow
-        for c in cur:
+        #Note: It's a broken feature on th main branch that this is return in a list of lists. Problem reported here:
+        for c in cur[0]:
             assert isinstance(c, LegacyRow)
+        print(cur)
 
     with sample_dag:
         homes_file = aql.load_file(
