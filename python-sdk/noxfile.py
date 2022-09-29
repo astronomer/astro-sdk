@@ -49,25 +49,24 @@ def benchmark(session: nox.Session, airflow) -> None:
         "../.github/ci-test-connections.yaml > test-connections.yaml",
     )
     session.run("airflow", "db", "init")
-    session.run(
-        "python3",
-        "-c",
-        "import yaml; import json; data = yaml.safe_load(open('./test-connections.yaml'))['connections']; "
-        "f=open('./test-connections.json', 'w'); "
-        "f.write(json.dumps({item['conn_id']:item for item in data}))",
-    )
-    session.run("airflow", "connections", "import", "./test-connections.json")
+    session.run("bash", "./tests/benchmark/")
+    # session.run(
+    #     "python3",
+    #     "-c",
+    #     "import yaml; import json; data = yaml.safe_load(open('./test-connections.yaml'))['connections']; "
+    #     "f=open('./test-connections.json', 'w'); "
+    #     "f.write(json.dumps({item['conn_id']:item for item in data}))",
+    # )
+    # session.run("airflow", "connections", "import", "./test-connections.json")
     # session.run("bash", "-c", "GIT_HASH=$(git log -1 --format=%h)")
-    session.run("bash", "-c", "pwd")
-    session.run(
-        "python",
-        "./tests/benchmark/analyse.py",
-        "-b",
-        "$GIT_HASH",
-        "-o",
-        "./auto_generated_results.md",
-        env={"GIT_HASH": "$(git log -1 --format=%h)"},
-    )
+    # session.run("bash", "-c", "pwd")
+    # session.run(
+    #     "python",
+    #     "./tests/benchmark/analyse.py",
+    #     "-b",
+    #     "-o",
+    #     "./auto_generated_results.md"
+    # )
 
 
 @nox.session(python=["3.8"])
