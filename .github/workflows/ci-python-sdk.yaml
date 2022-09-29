@@ -427,3 +427,13 @@ jobs:
       - run: ( echo "cat <<EOF >test-connections.yaml"; cat ../.github/ci-test-connections.yaml; ) >test-connections.yaml && . test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: cd tests/benchmark && make
+      - run: GIT_HASH = $(git log -1 --format=%h)
+      - run: python analyse.py -b $(GCP_PROJECT) -o ./auto_generated_results.md
+      - run: CONTENT = $(cat ./auto_generated_results.md)
+      - uses: mshick/add-pr-comment@v1
+        with:
+          message: |
+            echo "**Benchmark Results**\n $CONTENT"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token-user-login: 'github-actions[bot]'
+          allow-repeats: false
