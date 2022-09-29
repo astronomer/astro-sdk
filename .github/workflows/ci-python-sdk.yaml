@@ -431,7 +431,7 @@ jobs:
       - uses: mshick/add-pr-comment@v1
         with:
           message: |
-            CONTENT = $(cat ./auto_generated_results.md)
+            CONTENT=$(cat ./auto_generated_results.md)
             echo "**Benchmark Results**\n $CONTENT"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           repo-token-user-login: 'github-actions[bot]'
