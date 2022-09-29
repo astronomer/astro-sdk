@@ -91,6 +91,7 @@ class BaseTable:
             temp=obj["temp"],
             conn_id=obj["conn_id"],
         )
+
     def _create_unique_table_name(self, prefix: str = "") -> str:
         """
         If a table is instantiated without a name, create a unique table for it.

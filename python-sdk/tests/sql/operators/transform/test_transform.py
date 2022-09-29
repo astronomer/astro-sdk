@@ -111,7 +111,8 @@ def test_raw_sql(database_table_fixture, sample_dag):
     @aql.dataframe()
     def validate_raw_sql(cur):
         from sqlalchemy.engine.row import LegacyRow
-        #Note: It's a broken feature on th main branch that this is return in a list of lists. Problem reported here:
+
+        # Note: It's a broken feature on th main branch that this is return in a list of lists. Problem reported here:
         for c in cur[0]:
             assert isinstance(c, LegacyRow)
         print(cur)

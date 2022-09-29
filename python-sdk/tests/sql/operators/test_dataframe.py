@@ -67,19 +67,19 @@ def test_dataframe_from_sql_basic(sample_dag, database_table_fixture):
 def test_dataframe_pass_list(sample_dag):
     """Test basic operation of dataframe operator."""
 
-
     @aql.dataframe
     def create_list():  # skipcq: PY-D0003
-        return [1,2,3,4,5]
+        return [1, 2, 3, 4, 5]
 
     @aql.dataframe
     def validate_list(l: list):
-        assert l == [1,2,3,4,5]
+        assert l == [1, 2, 3, 4, 5]
 
     with sample_dag:
         validate_list(create_list())
 
     test_utils.run_dag(sample_dag)
+
 
 @pytest.mark.parametrize(
     "database_table_fixture",

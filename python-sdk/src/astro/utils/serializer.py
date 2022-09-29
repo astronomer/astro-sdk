@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import json
+import pickle
 from typing import Any
 
 import numpy
-
 from astro.files import File
 from astro.sql.table import Table, TempTable
-import pickle
 
 
 def serialize(obj: Table | File | Any) -> dict | Any:

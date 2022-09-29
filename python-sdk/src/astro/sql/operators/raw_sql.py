@@ -13,8 +13,8 @@ except ImportError:
 from astro import settings
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
-from astro.utils.typing_compat import Context
 from astro.utils.serializer import serialize
+from astro.utils.typing_compat import Context
 
 
 class RawSQLOperator(BaseSQLDecoratedOperator):
