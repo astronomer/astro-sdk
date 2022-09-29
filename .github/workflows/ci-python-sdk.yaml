@@ -389,7 +389,7 @@ jobs:
       TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
 
   Run-Benchmark:
-    if: github.event.label.name == 'run-benchmark'
+    if: github.event.label.name == 'run_benchmark'
     runs-on: ubuntu-latest
     env:
       SETUPTOOLS_USE_DISTUTILS: stdlib
