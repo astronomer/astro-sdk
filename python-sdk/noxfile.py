@@ -45,8 +45,14 @@ def benchmark(session: nox.Session, airflow) -> None:
     session.run("airflow", "db", "init")
     session.run("bash", "-c", "cd", "tests/benchmark")
     session.run("bash", "-c", "GIT_HASH=$(git log -1 --format=%h)")
+    session.run("bash", "-c", "pwd")
     session.run(
-        "python", "analyse.py", "-b", "$GIT_HASH", "-o", "./auto_generated_results.md"
+        "python",
+        "./tests/benchmark/analyse.py",
+        "-b",
+        "$GIT_HASH",
+        "-o",
+        "./auto_generated_results.md",
     )
 
 
