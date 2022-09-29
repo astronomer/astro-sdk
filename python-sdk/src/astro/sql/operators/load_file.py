@@ -11,7 +11,7 @@ from astro.databases import BaseDatabase, create_database
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable
-from astro.utils.dataframe import convert_columns_names_capitalization, convert_to_file
+from astro.utils.dataframe import convert_to_file
 from astro.utils.serializer import serialize
 from astro.utils.typing_compat import Context
 

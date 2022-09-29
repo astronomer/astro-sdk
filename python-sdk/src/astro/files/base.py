@@ -61,12 +61,12 @@ class File(Dataset):
         }
 
     @classmethod
-    def from_json(cls, ser: dict):
+    def from_json(cls, serialized_object: dict):
         return File(
-            conn_id=ser["conn_id"],
-            path=ser["path"],
-            filetype=FileType(ser["filetype"]),
-            normalize_config=ser["normalize_config"],
+            conn_id=serialized_object["conn_id"],
+            path=serialized_object["path"],
+            filetype=constants.FileType(serialized_object["filetype"]),
+            normalize_config=serialized_object["normalize_config"],
         )
 
     @property

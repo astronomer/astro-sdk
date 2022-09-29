@@ -9,6 +9,7 @@ from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.files import File
 from astro.sql.table import Table
+
 from tests.sql.operators import utils as test_utils
 
 # Import Operator
@@ -72,8 +73,8 @@ def test_dataframe_pass_list(sample_dag):
         return [1, 2, 3, 4, 5]
 
     @aql.dataframe
-    def validate_list(l: list):
-        assert l == [1, 2, 3, 4, 5]
+    def validate_list(input_list: list):
+        assert input_list == [1, 2, 3, 4, 5]
 
     with sample_dag:
         validate_list(create_list())

@@ -2,12 +2,12 @@ import pathlib
 
 import pandas as pd
 import pytest
-from airflow.decorators import task
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.files import File
 from astro.sql.table import Table
+
 from tests.sql.operators import utils as test_utils
 
 cwd = pathlib.Path(__file__).parent
