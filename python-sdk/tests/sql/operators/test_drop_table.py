@@ -53,7 +53,7 @@ def test_drop_table_with_table_metadata(database_table_fixture, sample_dag):
     def do_nothing(df: pandas.DataFrame):
         return df
 
-    @task
+    @aql.dataframe
     def validate_table_exists(table: Table):
         assert database.table_exists(table)
         assert table.name == tmp_table.name

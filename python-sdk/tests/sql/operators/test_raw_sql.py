@@ -27,7 +27,7 @@ def test_run_raw_sql_without_limit(caplog, sample_dag, database_table_fixture):
     def raw_sql_query(input_table):
         return "SELECT * from {{input_table}}"
 
-    @task
+    @aql.dataframe
     def assert_num_rows(results):
         assert len(results) == 3
         assert results == [

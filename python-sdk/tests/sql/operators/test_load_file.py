@@ -984,7 +984,7 @@ def test_aql_load_file_columns_names_capitalization_dataframe(sample_dag):
     filename = str(CWD.parent) + "/../data/homes_pattern_1.csv"
 
     @aql.dataframe
-    def validate(input_df_1, input_df_2, input_df_3):
+    def validate(input_df_1: pd.DataFrame, input_df_2: pd.DataFrame, input_df_3: pd.DataFrame):
         assert isinstance(input_df_1, pd.DataFrame)
         assert isinstance(input_df_2, pd.DataFrame)
         assert isinstance(input_df_3, pd.DataFrame)
