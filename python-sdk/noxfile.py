@@ -49,7 +49,7 @@ def benchmark(session: nox.Session, airflow) -> None:
         "../.github/ci-test-connections.yaml > test-connections.yaml",
     )
     session.run("airflow", "db", "init")
-    session.run("pytest", "-k", "NonExistentTest")
+    session.run("pytest", "--setup-only")
     session.run("bash", "-c", "GIT_HASH=$(git log -1 --format=%h)")
     session.run("bash", "-c", "pwd")
     session.run(
