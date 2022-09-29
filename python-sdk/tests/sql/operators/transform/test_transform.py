@@ -111,6 +111,9 @@ def test_raw_sql(database_table_fixture, sample_dag):
     @aql.dataframe
     def validate_raw_sql(cur: list):
         print(cur)
+        from sqlalchemy.engine.row import LegacyRow
+        for c in cur:
+            assert isinstance(c, LegacyRow)
 
     with sample_dag:
         homes_file = aql.load_file(

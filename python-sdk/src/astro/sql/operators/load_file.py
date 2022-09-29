@@ -81,7 +81,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
 
         self.log.info("Loading %s into %s ...", self.input_file.path, self.output_table)
         if self.output_table:
-            return serialize(self.load_data_to_table(input_file))
+            return self.load_data_to_table(input_file)
         else:
             return convert_to_file(self.load_data_to_dataframe(input_file))
 
