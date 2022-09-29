@@ -20,7 +20,7 @@ spec:
         volumeMounts:
           # mount the nfs volume for local files
           - name: nfs
-            mountPath: "/mnt"
+            mountPath: "/"
       # Do not restart containers after they exit
       restartPolicy: Never
 
