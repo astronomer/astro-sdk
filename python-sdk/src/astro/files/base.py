@@ -5,13 +5,13 @@ import pathlib
 
 import pandas as pd
 import smart_open
+from airflow.utils.log.logging_mixin import LoggingMixin
 from astro import constants
 from astro.airflow.datasets import Dataset
 from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
 from astro.files.types import FileType, create_file_type
 from attr import define, field
-from airflow.utils.log.logging_mixin import LoggingMixin
 
 
 @define

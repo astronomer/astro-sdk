@@ -41,10 +41,10 @@ def _get_dataframe(
 
 
 def load_op_arg_table_into_dataframe(
-        op_args: tuple,
-        python_callable: Callable,
-        columns_names_capitalization: ColumnCapitalization,
-        log: logging.Logger,
+    op_args: tuple,
+    python_callable: Callable,
+    columns_names_capitalization: ColumnCapitalization,
+    log: logging.Logger,
 ) -> tuple:
     """For dataframe based functions, takes any Table objects from the op_args
     and converts them into local dataframes that can be handled in the python context"""
@@ -69,7 +69,9 @@ def load_op_arg_table_into_dataframe(
         elif isinstance(arg, File) and (
             full_spec.annotations.get(current_arg) == pd.DataFrame or arg.is_dataframe
         ):
-            log.debug("Found dataframe file, retrieving dataframe from file %s", arg.path)
+            log.debug(
+                "Found dataframe file, retrieving dataframe from file %s", arg.path
+            )
             ret_args.append(arg.export_to_dataframe())
         else:
             ret_args.append(arg)
@@ -77,10 +79,10 @@ def load_op_arg_table_into_dataframe(
 
 
 def load_op_kwarg_table_into_dataframe(
-        op_kwargs: dict,
-        python_callable: Callable,
-        columns_names_capitalization: ColumnCapitalization,
-        log: logging.Logger
+    op_kwargs: dict,
+    python_callable: Callable,
+    columns_names_capitalization: ColumnCapitalization,
+    log: logging.Logger,
 ) -> dict:
     """For dataframe based functions, takes any Table objects from the op_kwargs
     and converts them into local dataframes that can be handled in the python context"""
