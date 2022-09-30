@@ -72,4 +72,4 @@ Example implementation can be found [here](https://github.com/astronomer/astro-s
 ### Cons
 
 * Dynamic Tasks i.e. the task generation does affect the performance of the Airflow DAG parser
-* Difficult to debug the DAG as tasks are being generated dynamically
+* Difficult to debug the DAG as tasks are being generated dynamically i.e. there is no way of looking at the generated tasks
