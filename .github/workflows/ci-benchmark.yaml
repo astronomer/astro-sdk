@@ -1,10 +1,19 @@
-name: Run benchmark
+name: Run benchmarks
 on:
+  pull_request:
+    types:
+      - labeled
   schedule:
-  - cron: '*/15 * * * *'
+    - cron: '0 0 * * *'
 
 jobs:
   Run-Benchmark:
+    if: >-
+      github.event_name == 'schedule' ||
+      (
+        github.event.label.name == 'run_benchmark' &&
+        github.event.name != 'pull_request_target'
+      )
     runs-on: ubuntu-latest
     env:
       SETUPTOOLS_USE_DISTUTILS: stdlib
@@ -34,10 +43,11 @@ jobs:
       AIRFLOW_VAR_FOO: templated_file_name
       AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE: True
       FORCE_COLOR: "true"
+      ASTRO_PUBLISH_BENCHMARK_DATA: ${{ github.event_name == 'schedule' }}
     steps:
       - uses: actions/checkout@v2
-      - run: rm -f test-connections.yaml
+      - run: rm -f python-sdk/test-connections.yaml
       - run: ls -la
-      - run: ( echo "cat <<EOF >test-connections.yaml"; cat .github/ci-test-connections.yaml; ) >pythn-sdk/test-connections.yaml && . python-sdk/test-connections.yaml
+      - run: ( echo "cat <<EOF >python-sdk/test-connections.yaml"; cat .github/ci-test-connections.yaml; ) >python-sdk/test-connections.yaml && . python-sdk/test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: cd python-sdk/tests/benchmark && make

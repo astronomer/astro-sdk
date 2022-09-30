@@ -9,6 +9,7 @@ import sqlalchemy
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
+from astro.files import File
 from astro.settings import POSTGRES_SCHEMA
 from astro.sql.table import BaseTable, Metadata
 from psycopg2 import sql as postgres_sql
@@ -186,3 +187,12 @@ class PostgresDatabase(BaseDatabase):
 
         sql = query.as_string(self.hook.get_conn())
         self.run_sql(sql=sql)
+
+    @staticmethod
+    def get_dataframe_from_file(file: File):
+        """
+        Get pandas dataframe file
+
+        :param file: File path and conn_id for object stores
+        """
+        return file.export_to_dataframe_via_byte_stream()

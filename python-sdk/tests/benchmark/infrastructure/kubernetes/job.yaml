@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  generateName: benchmark-
+  name: benchmark-%VERSION%
   namespace: benchmark
 spec:
   template:
@@ -10,7 +10,7 @@ spec:
     spec:
       containers:
       - name: benchmark
-        image: gcr.io/astronomer-dag-authoring/benchmark
+        image: gcr.io/astronomer-dag-authoring/benchmark:%VERSION%
         command: ["./run.sh"]
         resources:
           requests:

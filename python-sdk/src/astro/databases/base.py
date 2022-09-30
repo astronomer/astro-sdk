@@ -455,6 +455,19 @@ class BaseDatabase(ABC):
                 chunk_size=chunk_size,
             )
 
+    @staticmethod
+    def get_dataframe_from_file(file: File):
+        """
+        Get pandas dataframe file. We need export_to_dataframe() for Biqqery,Snowflake and Redshift except for Postgres.
+        For postgres we are overriding this method and using export_to_dataframe_via_byte_stream().
+        export_to_dataframe_via_byte_stream copies files in a buffer and then use that buffer to ingest data.
+        With this approach we have significant performance boost for postgres.
+
+        :param file: File path and conn_id for object stores
+        """
+
+        return file.export_to_dataframe()
+
     def load_file_to_table_using_pandas(
         self,
         input_file: File,
@@ -472,7 +485,7 @@ class BaseDatabase(ABC):
 
         for file in input_files:
             self.load_pandas_dataframe_to_table(
-                file.export_to_dataframe(),
+                self.get_dataframe_from_file(file),
                 output_table,
                 chunk_size=chunk_size,
                 if_exists=if_exists,
@@ -624,15 +637,22 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
     # Extract methods
     # ---------------------------------------------------------
-    def export_table_to_pandas_dataframe(self, source_table: BaseTable) -> pd.DataFrame:
+    def export_table_to_pandas_dataframe(
+        self, source_table: BaseTable, select_kwargs: dict | None = None
+    ) -> pd.DataFrame:
         """
         Copy the content of a table to an in-memory Pandas dataframe.
 
         :param source_table: An existing table in the database
+        :param select_kwargs: kwargs for select statement
         """
+        select_kwargs = select_kwargs or {}
+
         if self.table_exists(source_table):
             sqla_table = self.get_sqla_table(source_table)
-            return pd.read_sql(sql=sqla_table.select(), con=self.sqlalchemy_engine)
+            return pd.read_sql(
+                sql=sqla_table.select(**select_kwargs), con=self.sqlalchemy_engine
+            )
 
         table_qualified_name = self.get_table_qualified_name(source_table)
         raise NonExistentTableException(
