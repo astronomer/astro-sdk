@@ -16,10 +16,10 @@ def generate_datasets():
         "ten_mb": "10 MB",
         "hundred_mb": "100 MB",
         "one_gb": "1 GB",
-        "two_gb": "2 GB",
-        "five_gb": "5 BG",
-        "five_gb/": "5 GB",
-        "ten_gb/": "10 GB",
+        #"two_gb": "2 GB",
+        #"five_gb": "5 BG",
+        #"five_gb/": "5 GB",
+        #"ten_gb/": "10 GB",
     }
 
     conn_maps = {"gs": "bigquery_conn_benchmark", "s3": "s3_conn_benchmark"}
