@@ -43,11 +43,11 @@ class SqlFile:
 
     def __gt__(self, other: SqlFile) -> bool:
         """
-        Check if this sql file is greater than the other sql file.
+        Check if this sql file path comes before the other sql file path in alphabetic order.
 
         :param other: The other sql file to compare to.
 
-        :returns: True if this sql file comes before the other one in alphabetic order.
+        :returns: True if this sql file path comes before the other one in alphabetic order.
         """
         return self.root_directory / self.path > self.root_directory / other.path
 
