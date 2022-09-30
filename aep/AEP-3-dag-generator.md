@@ -63,7 +63,7 @@ Cons:
 
 This method would be exposed as CLI command to generate an Airflow DAG from a directory of SQL files.
 
-Example implementation can be found [here](https://github.com/astronomer/astro-sdk/blob/0.8.4/src/astro/SQL/parsers/SQL_directory_parser.py).
+Example implementation can be found [here](https://github.com/astronomer/astro-sdk/blob/0.8.4/src/astro/sql/parsers/sql_directory_parser.py).
 
 ### Pros
 
