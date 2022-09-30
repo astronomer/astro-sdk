@@ -66,10 +66,15 @@ class File(LoggingMixin, Dataset):
 
     @classmethod
     def from_json(cls, serialized_object: dict):
+        filetype = (
+            constants.FileType(serialized_object["filetype"])
+            if serialized_object.get("filetype")
+            else None
+        )
         return File(
             conn_id=serialized_object["conn_id"],
             path=serialized_object["path"],
-            filetype=constants.FileType(serialized_object["filetype"]),
+            filetype=filetype,
             normalize_config=serialized_object["normalize_config"],
             is_dataframe=serialized_object["is_dataframe"],
         )

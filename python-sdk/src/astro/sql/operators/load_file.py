@@ -72,7 +72,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         """
         Load an existing dataset from a supported file into a SQL table or a Dataframe.
         """
-        self.input_file = deserialize(self.input_file)  # type: ignro
+        self.input_file = deserialize(self.input_file)  # type: ignore
         self.output_table = deserialize(self.output_table)
         if self.input_file.conn_id:
             check_if_connection_exists(self.input_file.conn_id)
