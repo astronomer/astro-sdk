@@ -1,4 +1,4 @@
-all: clean setup_gke container run_job
+all: clean setup_gke container run_job wait_for_completion
 .PHONY: all
 
 GCP_PROJECT ?= astronomer-dag-authoring
@@ -36,9 +36,9 @@ run: clean
 container: clean check_google_credentials
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
 	@gcloud auth configure-docker gcr.io
-	@docker build --platform=$(PLATFORM) --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):latest -f ./Dockerfile  ../../
+	@docker build --platform=$(PLATFORM) --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) -f ./Dockerfile  ../../
 	@gcloud auth activate-service-account --key-file $(GOOGLE_APPLICATION_CREDENTIALS)
-	@docker push $(CONTAINER_REGISTRY)
+	@docker push $(CONTAINER_REGISTRY):$(GIT_HASH)
 
 local: clean check_google_credentials
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
@@ -59,7 +59,11 @@ run_job:
 	@kubectl apply -f infrastructure/kubernetes/namespace.yaml
 	@kubectl apply -f infrastructure/kubernetes/postgres.yaml
 	@kubectl apply -f infrastructure/kubernetes/postgres_svc.yaml
-	@kubectl create -f infrastructure/kubernetes/job.yaml
+	@sed s/%VERSION%/${GIT_HASH}/g infrastructure/kubernetes/job.yaml > infrastructure/kubernetes/job_final.yaml
+	@kubectl create -f infrastructure/kubernetes/job_final.yaml
+
+wait_for_completion:
+	bash wait_for_completion.sh
 
 # Takes approximately 2min
 teardown_gke:

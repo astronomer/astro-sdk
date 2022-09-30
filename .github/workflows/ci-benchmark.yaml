@@ -1,10 +1,19 @@
-name: Run benchmark
+name: Run benchmarks
 on:
+  pull_request:
+    types:
+      - labeled
   schedule:
-  - cron: '*/15 * * * *'
+    - cron: '0 0 * * *'
 
 jobs:
   Run-Benchmark:
+    if: >-
+      github.event_name == 'schedule' ||
+      (
+        github.event.label.name == 'run_benchmark' &&
+        github.event.name != 'pull_request_target'
+      )
     runs-on: ubuntu-latest
     env:
       SETUPTOOLS_USE_DISTUTILS: stdlib
@@ -34,6 +43,7 @@ jobs:
       AIRFLOW_VAR_FOO: templated_file_name
       AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE: True
       FORCE_COLOR: "true"
+      ASTRO_PUBLISH_BENCHMARK_DATA: ${{ github.event_name == 'schedule' }}
     steps:
       - uses: actions/checkout@v2
       - run: rm -f python-sdk/test-connections.yaml
