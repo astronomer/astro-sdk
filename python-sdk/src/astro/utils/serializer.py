@@ -49,7 +49,7 @@ def deserialize(obj: dict | str | list) -> Table | File | Any:
         return _attempt_to_deser_unknown_object(obj)
 
 
-def _attempt_to_deser_unknown_object(obj: dict | str):
+def _attempt_to_deser_unknown_object(obj: str):
     try:
         return json.loads(obj)
     except Exception:

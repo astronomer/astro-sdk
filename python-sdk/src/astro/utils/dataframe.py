@@ -24,9 +24,22 @@ def convert_columns_names_capitalization(
 
 
 def convert_to_file(df: pd.DataFrame):
+    """
+    Passes a dataframe into a File using parquet as an efficient storage format. This allows us to use
+    Json as a storage method without filling the metadata database. the values for conn_id and bucket path can
+    be found in the airflow.cfg as follows:
+
+    [astro]
+    dataframe_storage_conn_id=...
+    dataframe_storage_url=///
+    :param df: Dataframe to convert to file
+    :return:
+    """
     unique_id = random.choice(string.ascii_lowercase) + "".join(
         random.choice(string.ascii_lowercase + string.digits) for _ in range(64)
     )
+
+    # importing here to prevent circular imports
     from astro.files import File
 
     file = File(
@@ -37,10 +50,3 @@ def convert_to_file(df: pd.DataFrame):
     )
     file.create_from_dataframe(df)
     return file
-
-
-def convert_file_to_dataframe(f):
-    from astro.files import File
-
-    f: File = f
-    return f.export_to_dataframe()
