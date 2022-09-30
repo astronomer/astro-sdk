@@ -1,11 +1,8 @@
 from __future__ import annotations
 
 from networkx import DiGraph, depth_first_search, find_cycle, is_directed_acyclic_graph
+from sql_cli.exceptions import DagCycle
 from sql_cli.sql_directory_parser import SqlFile
-
-
-class DagCycle(Exception):
-    """An exception raised when DAG contains a cycle."""
 
 
 class SqlFilesDAG:

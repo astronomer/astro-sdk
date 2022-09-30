@@ -27,16 +27,18 @@ class SqlFile:
         self.content = post.content
         self.metadata = post.metadata
 
-    def __eq__(self, __o: object) -> bool:
+    def __eq__(self, other: object) -> bool:
         """
         Check if this sql file equals the given object.
 
-        :param __o: The object to compare to.
+        :param other: The object to compare to.
 
         :returns: True if this sql file is equal to the other one.
         """
-        if isinstance(__o, SqlFile):
-            return self.root_directory == __o.root_directory and self.path == __o.path
+        if isinstance(other, SqlFile):
+            return (
+                self.root_directory == other.root_directory and self.path == other.path
+            )
         return False
 
     def __gt__(self, other: SqlFile) -> bool:
