@@ -29,7 +29,7 @@ The initial scope must contain the following objectives:
 
 ## Assumptions and Limitations
 
-### Option 1: Static Task generation using `aql.transform_sql` with raw SQL
+### Option 1: Static Task generation using `aql.transform`
 
 This method would be exposed as CLI command to generate an Airflow DAG from a directory of SQL files.
 
@@ -40,10 +40,10 @@ Pros:
 
 Cons:
 
-* Requires DAG creation via SQL files prior to creating the Airflow DAG to determine the right order of `aql.transform_file` statements
+* Requires DAG creation via SQL files prior to creating the Airflow DAG to determine the right order of `aql.transform` statements
 * DAG can become very huge as it contains the raw SQL content to execute
 
-### Option 2: Static Task generation using `aql.transform_sql` with file path
+### Option 2: Static Task generation using `aql.transform_file` with file path
 
 This method would be exposed as CLI command to generate an Airflow DAG from a directory of SQL files.
 
