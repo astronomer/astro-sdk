@@ -71,7 +71,10 @@ def _attempt_to_deser_unknown_object(obj: str):
         return json.loads(obj)
     except JSONDecodeError:
         try:
-            log.debug("Json debugging failed for object %s, attempting to pickle deserialize", obj)
+            log.debug(
+                "Json debugging failed for object %s, attempting to pickle deserialize",
+                obj,
+            )
             return pickle.loads(bytes.fromhex(obj))
         except UnpicklingError:
             log.debug("unpickling failed for object %s, returning raw object", obj)
