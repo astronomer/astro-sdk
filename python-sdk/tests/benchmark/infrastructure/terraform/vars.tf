@@ -25,5 +25,5 @@ variable "tfstate_bucket" {
 variable "gke_node_pool_machine_type" {
   type        = string
   description = "GCP machine type used for the GKE Node Pool"
-  default     = "n2-standard-4"  # 4 vCPU and 16GB RAM, more options at https://cloud.google.com/compute/vm-instance-pricing
+  default     = "n2-standard-8"  # 4 vCPU and 16GB RAM, more options at https://cloud.google.com/compute/vm-instance-pricing
 }
