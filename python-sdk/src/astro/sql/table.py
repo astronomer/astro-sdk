@@ -71,27 +71,6 @@ class BaseTable:
         if not self._name or self._name.startswith("_tmp"):
             self.temp = True
 
-    def to_json(self):
-        return {
-            "class": "Table",
-            "name": self.name,
-            "metadata": {
-                "schema": self.metadata.schema,
-                "database": self.metadata.database,
-            },
-            "temp": self.temp,
-            "conn_id": self.conn_id,
-        }
-
-    @classmethod
-    def from_json(cls, obj: dict):
-        return Table(
-            name=obj["name"],
-            metadata=Metadata(**obj["metadata"]),
-            temp=obj["temp"],
-            conn_id=obj["conn_id"],
-        )
-
     def _create_unique_table_name(self, prefix: str = "") -> str:
         """
         If a table is instantiated without a name, create a unique table for it.

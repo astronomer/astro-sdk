@@ -52,33 +52,6 @@ class File(LoggingMixin, Dataset):
             normalize_config=self.normalize_config,
         )
 
-    def to_json(self):
-        self.log.debug("converting file %s into json", self.path)
-        filetype = None if not self.filetype else self.filetype.value
-        return {
-            "class": "File",
-            "conn_id": self.conn_id,
-            "path": self.path,
-            "filetype": filetype,
-            "normalize_config": self.normalize_config,
-            "is_dataframe": self.is_dataframe,
-        }
-
-    @classmethod
-    def from_json(cls, serialized_object: dict):
-        filetype = (
-            constants.FileType(serialized_object["filetype"])
-            if serialized_object.get("filetype")
-            else None
-        )
-        return File(
-            conn_id=serialized_object["conn_id"],
-            path=serialized_object["path"],
-            filetype=filetype,
-            normalize_config=serialized_object["normalize_config"],
-            is_dataframe=serialized_object["is_dataframe"],
-        )
-
     @property
     def size(self) -> int:
         """

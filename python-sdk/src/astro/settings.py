@@ -1,3 +1,5 @@
+import tempfile
+
 from airflow.configuration import conf
 from astro.constants import DEFAULT_SCHEMA
 
@@ -11,7 +13,7 @@ REDSHIFT_SCHEMA = conf.get("astro_sdk", "redshift_default_schema", fallback=SCHE
 DATAFRAME_STORAGE_CONN_ID = conf.get(
     "astro_sdk", "dataframe_storage_conn_id", fallback=None
 )
-DATAFRAME_STORAGE_URL = conf.get("astro_sdk", "dataframe_storage_url", fallback="/tmp")
+DATAFRAME_STORAGE_URL = conf.get("astro_sdk", "dataframe_storage_url", fallback=tempfile.gettempdir())
 
 XCOM_BACKEND = conf.get("core", "xcom_backend")
 IS_CUSTOM_XCOM_BACKEND = XCOM_BACKEND != "airflow.models.xcom.BaseXCom"
