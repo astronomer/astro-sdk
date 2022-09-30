@@ -15,7 +15,7 @@ from attr import define, field
 
 
 @define
-class File(Dataset, LoggingMixin):
+class File(LoggingMixin, Dataset):
     """
     Handle all file operations, and abstract away the details related to location and file types.
     Intended to be used within library.
