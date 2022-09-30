@@ -7,7 +7,7 @@ on:
       - '.github/workflows/ci-python-sdk.yaml'
       - '*'
   pull_request:
-    branches: [ 'main', 'release-**', 'labeled' ]
+    branches: [ 'main', 'release-**' ]
     paths:
       - 'python-sdk/**'
       - '.github/workflows/ci-python-sdk.yaml'
