@@ -72,22 +72,6 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
     assert df.shape == (3, 9)
 
 
-@mock.patch.dict(
-    os.environ, {"AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE": "False"}
-)
-def test_unsafe_loading_of_dataframe(sample_dag):
-    from astro import settings
-
-    importlib.reload(settings)
-
-    with pytest.raises(IllegalLoadToDatabaseException):
-        load_file(
-            input_file=File(
-                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/homes_main.csv"
-            ),
-        ).operator.execute({})
-
-
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "remote_files_fixture",
