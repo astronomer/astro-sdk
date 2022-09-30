@@ -53,9 +53,9 @@ class AppendOperator(AstroSQLBaseOperator):
         )
 
     def execute(self, context: Context) -> dict:  # skipcq: PYL-W0613
-        db = create_database(self.target_table.conn_id)
         self.source_table = deserialize(self.source_table)  # type: ignore
         self.target_table = deserialize(self.target_table)  # type: ignore
+        db = create_database(self.target_table.conn_id)
         self.source_table = db.populate_table_metadata(self.source_table)
         self.target_table = db.populate_table_metadata(self.target_table)
         db.append_table(

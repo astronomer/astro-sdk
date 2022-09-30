@@ -65,7 +65,7 @@ def test_run_raw_sql_with_limit(sample_dag, database_table_fixture):
     def raw_sql_query(input_table):
         return "SELECT * from {{input_table}}"
 
-    @task
+    @aql.dataframe
     def assert_num_rows(results):
         assert len(results) == 1
         assert results == [(1, "First")]
