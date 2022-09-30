@@ -8,10 +8,10 @@ from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import MergeConflictStrategy
 from astro.databases import create_database
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
-from astro.sql.table import BaseTable
+from astro.sql.table import BaseTable, Table
 from astro.utils.serializer import deserialize, serialize
 from astro.utils.typing_compat import Context
-from astro.sql.table import Table
+
 
 class MergeOperator(AstroSQLBaseOperator):
     """
