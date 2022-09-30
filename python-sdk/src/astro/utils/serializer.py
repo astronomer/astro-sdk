@@ -1,16 +1,14 @@
 from __future__ import annotations
 
 import json
+import logging
 import pickle
-from typing import Any
-
-import attrs
-
-from astro.files import File
-from astro.sql.table import Table, TempTable, BaseTable
 from json import JSONDecodeError
 from pickle import UnpicklingError
-import logging
+from typing import Any
+
+from astro.files import File
+from astro.sql.table import Table, TempTable
 
 log = logging.getLogger("astro.utils.serializer")
 
@@ -30,8 +28,10 @@ def serialize(obj: Table | File | Any) -> dict | Any:
 
 def _attempt_to_serialize_unknown_object(obj: object):
     try:
+        log.debug("Attempting to json serialize %s", obj)
         return json.dumps(obj)
-    except Exception:
+    except ValueError:
+        log.debug("Json serializing failed for obj %s, attempting to pickle", obj)
         return pickle.dumps(obj).hex()
 
 
