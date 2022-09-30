@@ -59,9 +59,9 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         )
 
     def execute(self, context: Context) -> None:
-        self.op_args = [deserialize(i) for i in self.op_args]
-        self.op_kwargs = {k: deserialize(v) for k, v in self.op_kwargs.items()}
-        self.parameters = {k: deserialize(v) for k, v in self.parameters.items()}
+        self.op_args = [deserialize(i) for i in self.op_args]  # type: ignore
+        self.op_kwargs = {k: deserialize(v) for k, v in self.op_kwargs.items()}  # type: ignore
+        self.parameters = {k: deserialize(v) for k, v in self.parameters.items()}  # type: ignore
         first_table = find_first_table(
             op_args=self.op_args,  # type: ignore
             op_kwargs=self.op_kwargs,

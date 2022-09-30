@@ -153,7 +153,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         )
 
     def execute(self, context: Context) -> Table | pd.DataFrame | list:
-        self.op_args = [deserialize(i) for i in self.op_args]
+        self.op_args = tuple([deserialize(i) for i in self.op_args])
         self.op_kwargs = {k: deserialize(v) for k, v in self.op_kwargs.items()}
         first_table = find_first_table(
             op_args=self.op_args,  # type: ignore
