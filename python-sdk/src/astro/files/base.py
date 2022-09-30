@@ -106,12 +106,13 @@ class File(LoggingMixin, Dataset):
         """
         return not pathlib.PosixPath(self.path).suffix
 
-    def create_from_dataframe(self, df: pd.DataFrame) -> None:
+    def create_from_dataframe(self, df: pd.DataFrame, store_as_dataframe: bool = True) -> None:
         """Create a file in the desired location using the values of a dataframe.
 
+        :param store_as_dataframe:
         :param df: pandas dataframe
         """
-        self.is_dataframe = True
+        self.is_dataframe = store_as_dataframe
         with smart_open.open(
             self.path, mode="wb", transport_params=self.location.transport_params
         ) as stream:
