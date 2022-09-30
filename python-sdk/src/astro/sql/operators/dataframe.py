@@ -166,11 +166,16 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             self.database = self.database or first_table.metadata.database  # type: ignore
             self.schema = self.schema or first_table.metadata.schema  # type: ignore
         self.op_args = load_op_arg_table_into_dataframe(
-            self.op_args, self.python_callable, self.columns_names_capitalization, self.log
+            self.op_args,
+            self.python_callable,
+            self.columns_names_capitalization,
+            self.log,
         )
         self.op_kwargs = load_op_kwarg_table_into_dataframe(
-            self.op_kwargs, self.python_callable, self.columns_names_capitalization, self.log
-            
+            self.op_kwargs,
+            self.python_callable,
+            self.columns_names_capitalization,
+            self.log,
         )
 
         function_output = self.python_callable(*self.op_args, **self.op_kwargs)
