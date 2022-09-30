@@ -118,14 +118,14 @@ def test_invalid_columns_param():
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SNOWFLAKE},
-        {"database": Database.BIGQUERY},
-        {"database": Database.POSTGRES},
+        # {"database": Database.SNOWFLAKE},
+        # {"database": Database.BIGQUERY},
+        # {"database": Database.POSTGRES},
         {"database": Database.SQLITE},
-        {"database": Database.REDSHIFT},
+        # {"database": Database.REDSHIFT},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    # ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
