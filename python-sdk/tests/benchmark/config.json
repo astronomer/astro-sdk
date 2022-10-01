@@ -4,30 +4,12 @@
             "kwargs": {
                 "enable_native_fallback": false
             },
-            "name": "bigquery",
-            "output_table": {
-                "conn_id": "bigquery_conn_benchmark"
-            }
-        },
-        {
-            "kwargs": {
-                "enable_native_fallback": false
-            },
             "name": "postgres",
             "output_table": {
                 "conn_id": "postgres_conn_benchmark",
                 "metadata": {
                     "database": "postgres"
                 }
-            }
-        },
-        {
-            "kwargs": {
-                "enable_native_fallback": false
-            },
-            "name": "redshift",
-            "output_table": {
-                "conn_id": "redshift_conn_benchmark"
             }
         },
         {
