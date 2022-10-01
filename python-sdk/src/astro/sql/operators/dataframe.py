@@ -156,6 +156,8 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                 )
                 for f in function_output
             ]
+        elif isinstance(function_output, dict):
+            function_output = {k :convert_columns_names_capitalization(df=f, columns_names_capitalization=self.columns_names_capitalization) for k,v  in function_output.items()}
         pandas_dataframe = convert_columns_names_capitalization(
             df=function_output,
             columns_names_capitalization=self.columns_names_capitalization,
