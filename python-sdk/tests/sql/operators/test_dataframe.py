@@ -337,12 +337,9 @@ def test_inlets_outlets_non_supported_ds():
 
 
 def test_dataframe_list(sample_dag):
-    df1 = pandas.DataFrame(
-        {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
-    )
-    df2 = pandas.DataFrame(
-        {"numbers": [4, 5, 6], "colors": ["red", "white", "blue"]}
-    )
+    df1 = pandas.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
+    df2 = pandas.DataFrame({"numbers": [4, 5, 6], "colors": ["red", "white", "blue"]})
+
     @aql.dataframe
     def create_multiple_dataframes():
         return [df1, df2]
@@ -359,12 +356,9 @@ def test_dataframe_list(sample_dag):
 
 
 def test_dataframe_mix_list(sample_dag):
-    df1 = pandas.DataFrame(
-        {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
-    )
-    df2 = pandas.DataFrame(
-        {"numbers": [4, 5, 6], "colors": ["red", "white", "blue"]}
-    )
+    df1 = pandas.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
+    df2 = pandas.DataFrame({"numbers": [4, 5, 6], "colors": ["red", "white", "blue"]})
+
     @aql.dataframe
     def create_multiple_dataframes():
         return [df1, df2, 3, 4, 5]
@@ -374,7 +368,7 @@ def test_dataframe_mix_list(sample_dag):
         assert df1.equals(input_dfs[0])
         assert df2.equals(input_dfs[1])
 
-        assert input_dfs[2:] == [3,4,5]
+        assert input_dfs[2:] == [3, 4, 5]
 
     with sample_dag:
         res_1 = create_multiple_dataframes()

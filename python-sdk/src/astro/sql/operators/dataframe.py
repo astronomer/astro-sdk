@@ -150,7 +150,12 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
 
         function_output = self.python_callable(*self.op_args, **self.op_kwargs)
         if isinstance(function_output, (list, tuple)):
-            function_output = [convert_columns_names_capitalization(df=f, columns_names_capitalization=self.columns_names_capitalization) for f in function_output]
+            function_output = [
+                convert_columns_names_capitalization(
+                    df=f, columns_names_capitalization=self.columns_names_capitalization
+                )
+                for f in function_output
+            ]
         pandas_dataframe = convert_columns_names_capitalization(
             df=function_output,
             columns_names_capitalization=self.columns_names_capitalization,
