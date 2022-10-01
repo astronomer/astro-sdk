@@ -170,10 +170,14 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                 columns_names_capitalization=self.columns_names_capitalization,
             )
         if self.output_table:
-            self.log.debug("Output table found, converting function output to SQL table")
+            self.log.debug(
+                "Output table found, converting function output to SQL table"
+            )
             if not isinstance(function_output, pandas.DataFrame):
-                raise ValueError("Astro can only turn a single dataframe into a table. Please change your"
-                                 "function output.")
+                raise ValueError(
+                    "Astro can only turn a single dataframe into a table. Please change your"
+                    "function output."
+                )
             self.output_table.conn_id = self.output_table.conn_id or self.conn_id
             db = create_database(self.output_table.conn_id)
             self.output_table = db.populate_table_metadata(self.output_table)
