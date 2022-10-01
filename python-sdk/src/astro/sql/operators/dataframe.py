@@ -3,6 +3,7 @@ from __future__ import annotations
 import inspect
 from typing import Any, Callable
 
+import pandas
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from astro.airflow.datasets import kwargs_with_datasets
@@ -163,16 +164,21 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                 )
                 for k, v in function_output.items()
             }
-        pandas_dataframe = convert_columns_names_capitalization(
-            df=function_output,
-            columns_names_capitalization=self.columns_names_capitalization,
-        )
+        else:
+            function_output = convert_columns_names_capitalization(
+                df=function_output,
+                columns_names_capitalization=self.columns_names_capitalization,
+            )
         if self.output_table:
+            self.log.debug("Output table found, converting function output to SQL table")
+            if not isinstance(function_output, pandas.DataFrame):
+                raise ValueError("Astro can only turn a single dataframe into a table. Please change your"
+                                 "function output.")
             self.output_table.conn_id = self.output_table.conn_id or self.conn_id
             db = create_database(self.output_table.conn_id)
             self.output_table = db.populate_table_metadata(self.output_table)
             db.load_pandas_dataframe_to_table(
-                source_dataframe=pandas_dataframe,
+                source_dataframe=function_output,
                 target_table=self.output_table,
                 if_exists="replace",
             )
