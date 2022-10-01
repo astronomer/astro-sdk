@@ -3,7 +3,6 @@ from __future__ import annotations
 import inspect
 from typing import Any, Callable
 
-import pandas
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from astro.airflow.datasets import kwargs_with_datasets
@@ -19,7 +18,7 @@ from astro.constants import ColumnCapitalization
 from astro.databases import create_database
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
-from astro.sql.table import BaseTable, Table
+from astro.sql.table import BaseTable
 from astro.utils.dataframe import convert_columns_names_capitalization
 from astro.utils.table import find_first_table
 from astro.utils.typing_compat import Context
@@ -149,31 +148,12 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             self.op_kwargs, self.python_callable, self.columns_names_capitalization
         )
 
-        function_output = self.python_callable(*self.op_args, **self.op_kwargs)
-        if isinstance(function_output, (list, tuple)):
-            function_output = [
-                convert_columns_names_capitalization(
-                    df=f, columns_names_capitalization=self.columns_names_capitalization
-                )
-                for f in function_output
-            ]
-        elif isinstance(function_output, dict):
-            function_output = {
-                k: convert_columns_names_capitalization(
-                    df=v, columns_names_capitalization=self.columns_names_capitalization
-                )
-                for k, v in function_output.items()
-            }
-        else:
-            function_output = convert_columns_names_capitalization(
-                df=function_output,
-                columns_names_capitalization=self.columns_names_capitalization,
-            )
+        function_output = self._convert_column_capitlization_for_output()
         if self.output_table:
             self.log.debug(
                 "Output table found, converting function output to SQL table"
             )
-            if not isinstance(function_output, pandas.DataFrame):
+            if not isinstance(function_output, pd.DataFrame):
                 raise ValueError(
                     "Astro can only turn a single dataframe into a table. Please change your"
                     "function output."
@@ -194,6 +174,30 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             ):
                 raise IllegalLoadToDatabaseException()
             return function_output
+
+    def _convert_column_capitlization_for_output(self):
+        """Handles column capitalization for single outputs, lists, and dictionaries"""
+        function_output = self.python_callable(*self.op_args, **self.op_kwargs)
+        if isinstance(function_output, (list, tuple)):
+            function_output = [
+                convert_columns_names_capitalization(
+                    df=f, columns_names_capitalization=self.columns_names_capitalization
+                )
+                for f in function_output
+            ]
+        elif isinstance(function_output, dict):
+            function_output = {
+                k: convert_columns_names_capitalization(
+                    df=v, columns_names_capitalization=self.columns_names_capitalization
+                )
+                for k, v in function_output.items()
+            }
+        else:
+            function_output = convert_columns_names_capitalization(
+                df=function_output,
+                columns_names_capitalization=self.columns_names_capitalization,
+            )
+        return function_output
 
 
 def dataframe(
