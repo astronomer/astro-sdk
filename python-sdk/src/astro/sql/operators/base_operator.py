@@ -1,8 +1,9 @@
 from abc import ABC
 
 from airflow.models.baseoperator import BaseOperator
-from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
 from airflow.utils.log.logging_mixin import LoggingMixin
+from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
+
 
 
 class AstroSQLBaseOperator(UpstreamTaskMixin, BaseOperator, LoggingMixin, ABC):
