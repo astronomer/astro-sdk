@@ -53,7 +53,7 @@ def load_op_arg_table_into_dataframe(
     # this table to be converted into a dataframe, rather that passed in as a table
     for arg in op_args_list:
         current_arg = full_spec.args.pop(0)
-        if full_spec.annotations[current_arg] == pd.DataFrame and isinstance(
+        if full_spec.annotations.get(current_arg) == pd.DataFrame and isinstance(
             arg, BaseTable
         ):
             ret_args.append(
@@ -130,7 +130,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             **kwargs_with_datasets(kwargs=kwargs, output_datasets=self.output_table),
         )
 
-    def execute(self, context: Context) -> Table | pd.DataFrame:
+    def execute(self, context: Context) -> BaseTable | pd.DataFrame | list:
         first_table = find_first_table(
             op_args=self.op_args,  # type: ignore
             op_kwargs=self.op_kwargs,
@@ -148,9 +148,11 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             self.op_kwargs, self.python_callable, self.columns_names_capitalization
         )
 
-        pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
+        function_output = self.python_callable(*self.op_args, **self.op_kwargs)
+        if isinstance(function_output, (list, tuple)):
+            function_output = [convert_columns_names_capitalization(df=f, columns_names_capitalization=self.columns_names_capitalization) for f in function_output]
         pandas_dataframe = convert_columns_names_capitalization(
-            df=pandas_dataframe,
+            df=function_output,
             columns_names_capitalization=self.columns_names_capitalization,
         )
         if self.output_table:
@@ -169,7 +171,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                 and not settings.ALLOW_UNSAFE_DF_STORAGE
             ):
                 raise IllegalLoadToDatabaseException()
-            return pandas_dataframe
+            return function_output
 
 
 def dataframe(
