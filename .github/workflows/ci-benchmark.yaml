@@ -43,7 +43,7 @@ jobs:
       AIRFLOW_VAR_FOO: templated_file_name
       AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE: True
       FORCE_COLOR: "true"
-      ASTRO_PUBLISH_BENCHMARK_DATA: ${{ github.event_name == 'schedule' }}
+      ASTRO_PUBLISH_BENCHMARK_DATA: True
     steps:
       - uses: actions/checkout@v2
       - run: rm -f python-sdk/test-connections.yaml
