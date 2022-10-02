@@ -79,7 +79,7 @@ echo - Output: $(get_abs_filename $results_file)
           set +e  # allow us to see the content of $results_file regardless of the run being successful or not
           ASTRO_CHUNKSIZE=$chunk_size python3 -W ignore $runner_path --dataset="$dataset_name" --database="$database" --filetype="$dataset_type" --path="$dataset_path" --revision $git_revision --chunk-size=$chunk_size 1>> $results_file
           cat $results_file
-#          set -e  # do not allow errors from here onwards
+          set -e  # do not allow errors from here onwards
           if [[ -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
             echo "$GOOGLE_APPLICATION_CREDENTIALS is not defined"
           else

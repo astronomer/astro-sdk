@@ -3,6 +3,7 @@ import inspect
 import json
 import os
 import sys
+from urllib.parse import urlparse
 
 import airflow
 import pandas as pd
@@ -40,9 +41,7 @@ def export_profile_data_to_bq(profile_data: dict, conn_id: str = "bigquery"):
         name=benchmark_settings.publish_benchmarks_table,
         metadata=Metadata(schema=benchmark_settings.publish_benchmarks_schema),
     )
-    print("table : ", table)
-    print("df :", df)
-    db.load_pandas_dataframe_to_table(df, table, if_exists="replace")
+    db.load_pandas_dataframe_to_table(df, table, if_exists="append")
 
 
 @provide_session
@@ -57,6 +56,13 @@ def get_load_task_duration(dag, session=None):
         .first()
     )
     return ti.duration
+
+
+def get_location(path):
+    scheme = urlparse(path).scheme
+    if scheme == "":
+        return "local"
+    return scheme
 
 
 def profile(func, *args, **kwargs):  # noqa: C901
@@ -119,8 +125,8 @@ def run_dag(dag_id, execution_date, **kwargs):
     return dag
 
 
-def build_dag_id(dataset, database, filetype):
-    return f"load_file_{dataset}_{filetype}_into_{database}"
+def build_dag_id(dataset, database, filetype, location):
+    return f"load_file_{dataset}_{filetype}_{location}_into_{database}"
 
 
 if __name__ == "__main__":
@@ -161,7 +167,8 @@ if __name__ == "__main__":
         help="Chunk size used for loading from file to database. Default: [1,000,000]",
     )
     args = parser.parse_args()
-    dag_id = build_dag_id(args.dataset, args.database, args.filetype)
+    location = get_location(args.path)
+    dag_id = build_dag_id(args.dataset, args.database, args.filetype, location)
     run_dag(
         dag_id=dag_id,
         execution_date=timezone.utcnow(),
