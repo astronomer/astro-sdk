@@ -157,22 +157,6 @@ def test_snowflake_create_table_using_native_schema_autodetection(
     response = database.run_sql(statement)
     rows = response.fetchall()
     assert len(rows) == 2
-    assert rows == [
-        (
-            "name",
-            "VARCHAR(16777216)",
-            "COLUMN",
-            "Y",
-            None,
-            "N",
-            "N",
-            None,
-            None,
-            None,
-            None,
-        ),
-        ("id", "NUMBER(38,0)", "COLUMN", "Y", None, "N", "N", None, None, None, None),
-    ]
     statement = f"SELECT COUNT(*) FROM {database.get_table_qualified_name(table)}"
     count = database.run_sql(statement).scalar()
     assert count == 0

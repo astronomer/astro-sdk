@@ -82,10 +82,12 @@ To complete this tutorial, you need:
     AIRFLOW__ASTRO_SDK__SQL_SCHEMA=ASTRO_SDK_SCHEMA
     ```
 
-    > **Note:** If you're running Airflow on macOS, you must additionally set the following environment variable [(background)](https://github.com/apache/airflow/issues/12808):
-        ```shell
-        export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
-        ```
+    > **Note:** If you are running Airflow on macOS without docker, you might need
+    to additionally set the following environment variable [(background)](https://github.com/apache/airflow/issues/12808):
+
+     ```shell
+     export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+     ```
 
 3. Start Airflow. If you have an Apache Airflow environment, you can do this by running:
 
