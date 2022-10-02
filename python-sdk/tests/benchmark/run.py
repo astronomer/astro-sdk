@@ -12,8 +12,9 @@ from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import TaskInstance
 from airflow.utils import timezone
 from airflow.utils.session import provide_session
-from astro.databases import create_database
 from astro.sql.table import Metadata, Table
+
+from astro.databases import create_database
 
 
 def get_disk_usage():
@@ -40,7 +41,9 @@ def export_profile_data_to_bq(profile_data: dict, conn_id: str = "bigquery"):
         name=benchmark_settings.publish_benchmarks_table,
         metadata=Metadata(schema=benchmark_settings.publish_benchmarks_schema),
     )
-    db.load_pandas_dataframe_to_table(df, table, if_exists="append")
+    print("table : ", table)
+    print("df :", df)
+    db.load_pandas_dataframe_to_table(df, table, if_exists="replace")
 
 
 @provide_session
