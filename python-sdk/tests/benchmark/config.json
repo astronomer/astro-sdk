@@ -26,7 +26,7 @@
         "enable_native_fallback": false
       },
       "name": "bigquery",
-      "params": {
+      "output_table": {
         "conn_id": "bigquery",
         "metadata": {
           "database": "bigquery"
