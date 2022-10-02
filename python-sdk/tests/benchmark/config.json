@@ -4,21 +4,9 @@
             "kwargs": {
                 "enable_native_fallback": false
             },
-            "name": "postgres",
+            "name": "sqlite",
             "output_table": {
-                "conn_id": "postgres_conn_benchmark",
-                "metadata": {
-                    "database": "postgres"
-                }
-            }
-        },
-        {
-            "kwargs": {
-                "enable_native_fallback": false
-            },
-            "name": "snowflake",
-            "output_table": {
-                "conn_id": "snowflake_conn_benchmark"
+                "conn_id": "sqlite_conn_benchmark"
             }
         }
     ],
