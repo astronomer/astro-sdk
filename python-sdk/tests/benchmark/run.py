@@ -3,6 +3,7 @@ import inspect
 import json
 import os
 import sys
+from urllib.parse import urlparse
 
 import airflow
 import pandas as pd
@@ -33,7 +34,8 @@ def export_profile_data_to_bq(profile_data: dict, conn_id: str = "bigquery"):
     :param conn_id: Airflow's connection id to be used to publish the profiling data
     """
     db = create_database(conn_id)
-    del profile_data["io_counters"]
+    if sys.platform == "linux":
+        del profile_data["io_counters"]
     df = pd.json_normalize(profile_data, sep="_")
     table = Table(
         name=benchmark_settings.publish_benchmarks_table,
@@ -54,6 +56,13 @@ def get_load_task_duration(dag, session=None):
         .first()
     )
     return ti.duration
+
+
+def get_location(path):
+    scheme = urlparse(path).scheme
+    if scheme == "":
+        return "local"
+    return scheme
 
 
 def profile(func, *args, **kwargs):  # noqa: C901
@@ -116,8 +125,8 @@ def run_dag(dag_id, execution_date, **kwargs):
     return dag
 
 
-def build_dag_id(dataset, database):
-    return f"load_file_{dataset}_into_{database}"
+def build_dag_id(dataset, database, filetype, location):
+    return f"load_file_{dataset}_{filetype}_{location}_into_{database}"
 
 
 if __name__ == "__main__":
@@ -135,6 +144,18 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument(
+        "--filetype",
+        type=str,
+        help="filetype {csv, ndjson, parquet}",
+        required=True,
+    )
+    parser.add_argument(
+        "--path",
+        type=str,
+        help="dataset path",
+        required=True,
+    )
+    parser.add_argument(
         "--revision",
         type=str,
         help="Git commit hash, to relate the results to a version",
@@ -146,10 +167,15 @@ if __name__ == "__main__":
         help="Chunk size used for loading from file to database. Default: [1,000,000]",
     )
     args = parser.parse_args()
-    dag_id = build_dag_id(args.dataset, args.database)
+    location = get_location(args.path)
+    dag_id = build_dag_id(args.dataset, args.database, args.filetype, location)
     run_dag(
         dag_id=dag_id,
         execution_date=timezone.utcnow(),
         revision=args.revision,
         chunk_size=args.chunk_size,
+        database=args.database,
+        filetype=args.filetype,
+        dataset=args.dataset,
+        path=args.path,
     )
