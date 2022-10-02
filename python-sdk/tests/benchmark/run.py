@@ -41,7 +41,7 @@ def export_profile_data_to_bq(profile_data: dict, conn_id: str = "bigquery"):
         name=benchmark_settings.publish_benchmarks_table,
         metadata=Metadata(schema=benchmark_settings.publish_benchmarks_schema),
     )
-    db.load_pandas_dataframe_to_table(df, table, if_exists="replace")
+    db.load_pandas_dataframe_to_table(df, table, if_exists="append")
 
 
 @provide_session
