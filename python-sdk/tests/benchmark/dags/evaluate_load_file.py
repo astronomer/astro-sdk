@@ -2,6 +2,7 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urlparse
 
 from airflow import DAG
 from astro import sql as aql
@@ -35,14 +36,24 @@ def count_columns(input_table: Table):
     """
 
 
+def get_location(path):
+    scheme = urlparse(path).scheme
+    if scheme == "":
+        return "local"
+    return scheme
+
+
 def create_dag(database_name, table_args, dataset, kwargs):
     dataset_name = dataset["name"]
     dataset_path = dataset["path"]
     dataset_conn_id = dataset.get("conn_id")
     dataset_filetype = dataset.get("file_type")
+    location = get_location(dataset_path)
     # dataset_rows = dataset["rows"]
 
-    dag_name = f"load_file_{dataset_name}_into_{database_name}"
+    dag_name = (
+        f"load_file_{dataset_name}_{dataset_filetype}_{location}_into_{database_name}"
+    )
 
     with DAG(dag_name, schedule_interval=None, start_date=START_DATE) as dag:
         chunk_size = int(os.getenv("ASTRO_CHUNK_SIZE", str(DEFAULT_CHUNK_SIZE)))
