@@ -4,10 +4,11 @@ from datetime import datetime
 from pathlib import Path
 
 from airflow import DAG
-from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
-from astro.files import File
 from astro.sql.table import Metadata, Table
+
+from astro import sql as aql
+from astro.files import File
 
 START_DATE = datetime(2000, 1, 1)
 
@@ -35,12 +36,14 @@ def count_columns(input_table: Table):
     """
 
 
-def create_dag(database_name, table_args, dataset, kwargs):
+def create_dag(database_name, table_args, dataset, global_db_kwargs):
     dataset_name = dataset["name"]
     dataset_path = dataset["path"]
     dataset_conn_id = dataset.get("conn_id")
     dataset_filetype = dataset.get("file_type")
     # dataset_rows = dataset["rows"]
+    dataset_databases_kwargs = dataset.get("database_kwargs", {})
+    local_db_kwargs = dataset_databases_kwargs.get(database_name, {})
 
     dag_name = f"load_file_{dataset_name}_into_{database_name}"
 
@@ -62,9 +65,74 @@ def create_dag(database_name, table_args, dataset, kwargs):
             "output_table": table,
             "chunk_size": chunk_size,
         }
-        # Override params from config
-        params.update(kwargs)
 
+        # Override params from config
+        # example config:
+        # {
+        #     "databases": [
+        #         {
+        #             "kwargs": {                            # global config bigquery db
+        #                 "enable_native_fallback": false
+        #             },
+        #             "name": "biquery",
+        #             "output_table": {
+        #                 "conn_id": "biquery"
+        #             }
+        #         },{
+        #              "kwargs": {                          # global config for redshift db
+        #                   "enable_native_fallback": false
+        #               },
+        #               "name": "redshift",
+        #               "output_table": {
+        #                   "conn_id": "redshift"
+        #               }
+        #         }],
+        #       "datasets": [
+        #             {
+        #                 "conn_id": "aws",
+        #                 "file_type": "parquet",
+        #                 "name": "ten_kb",
+        #                 "path": "s3://astro-sdk/benchmark/trimmed/covid_overview/covid_overview_10kb.csv",
+        #                 "rows": 160,
+        #                 "size": "10 KB",
+        #                 "database_kwargs" : {
+        #                      "biquery": {                           # local config for bigquery db
+        #                          native_support_kwargs: {"skip_leading_rows": 1}
+        #                      },
+        #                      "redshift": {                          # local config for redshift db
+        #                            native_support_kwargs:{
+        #                               "IGNOREHEADER": 1,
+        #                               "REGION": "us-west-2",
+        #                               "IAM_ROLE": "REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN",
+        #                             }
+        #                      }
+        #                  }
+        #             }]
+        # }
+        #
+        # Final config for load_file()
+        #     1. Redshift
+        #         {
+        #             native_support_kwargs: {
+        #                 "IGNOREHEADER": 1,
+        #                 "REGION": "us-west-2",
+        #                 "IAM_ROLE": REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN".
+        #             },
+        #             "enable_native_fallback": false
+        #         }
+        #     2.  Bigquery
+        #         {
+        #             native_support_kwargs: {
+        #                 "skip_leading_rows": 1,
+        #             },
+        #             "enable_native_fallback": false
+        #         }
+        # Note - If there is a config present in both local and global config.
+        # Local config will override the global one.
+
+        params.update(global_db_kwargs)
+        params.update(local_db_kwargs)
+        print("params: ", params)
         my_table = aql.load_file(**params)
         aql.cleanup([my_table])
 
@@ -83,9 +151,9 @@ config = load_config()
 for database in config["databases"]:
     database_name = database["name"]
     table_args = database["output_table"]
-    kwargs = database["kwargs"]
+    global_db_kwargs = database["kwargs"]
     for dataset in config["datasets"]:
         table_args_copy = table_args.copy()
 
-        dag = create_dag(database_name, table_args_copy, dataset, kwargs)
+        dag = create_dag(database_name, table_args_copy, dataset, global_db_kwargs)
         globals()[dag.dag_id] = dag
