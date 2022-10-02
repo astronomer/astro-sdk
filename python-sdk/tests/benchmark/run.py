@@ -12,8 +12,9 @@ from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import TaskInstance
 from airflow.utils import timezone
 from airflow.utils.session import provide_session
-from astro.databases import create_database
 from astro.sql.table import Metadata, Table
+
+from astro.databases import create_database
 
 
 def get_disk_usage():
@@ -33,7 +34,8 @@ def export_profile_data_to_bq(profile_data: dict, conn_id: str = "bigquery"):
     :param conn_id: Airflow's connection id to be used to publish the profiling data
     """
     db = create_database(conn_id)
-    del profile_data["io_counters"]
+    if sys.platform == "linux":
+        del profile_data["io_counters"]
     df = pd.json_normalize(profile_data, sep="_")
     table = Table(
         name=benchmark_settings.publish_benchmarks_table,
@@ -116,8 +118,8 @@ def run_dag(dag_id, execution_date, **kwargs):
     return dag
 
 
-def build_dag_id(dataset, database):
-    return f"load_file_{dataset}_into_{database}"
+def build_dag_id(dataset, database, filetype):
+    return f"load_file_{dataset}_{filetype}_into_{database}"
 
 
 if __name__ == "__main__":
@@ -135,6 +137,18 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument(
+        "--filetype",
+        type=str,
+        help="filetype {csv, ndjson, parquet}",
+        required=True,
+    )
+    parser.add_argument(
+        "--path",
+        type=str,
+        help="dataset path",
+        required=True,
+    )
+    parser.add_argument(
         "--revision",
         type=str,
         help="Git commit hash, to relate the results to a version",
@@ -146,10 +160,14 @@ if __name__ == "__main__":
         help="Chunk size used for loading from file to database. Default: [1,000,000]",
     )
     args = parser.parse_args()
-    dag_id = build_dag_id(args.dataset, args.database)
+    dag_id = build_dag_id(args.dataset, args.database, args.filetype)
     run_dag(
         dag_id=dag_id,
         execution_date=timezone.utcnow(),
         revision=args.revision,
         chunk_size=args.chunk_size,
+        database=args.database,
+        filetype=args.filetype,
+        dataset=args.dataset,
+        path=args.path,
     )

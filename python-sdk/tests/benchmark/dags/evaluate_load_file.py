@@ -4,10 +4,11 @@ from datetime import datetime
 from pathlib import Path
 
 from airflow import DAG
-from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
-from astro.files import File
 from astro.sql.table import Metadata, Table
+
+from astro import sql as aql
+from astro.files import File
 
 START_DATE = datetime(2000, 1, 1)
 
@@ -42,7 +43,7 @@ def create_dag(database_name, table_args, dataset, kwargs):
     dataset_filetype = dataset.get("file_type")
     # dataset_rows = dataset["rows"]
 
-    dag_name = f"load_file_{dataset_name}_into_{database_name}"
+    dag_name = f"load_file_{dataset_name}_{dataset_filetype}_into_{database_name}"
 
     with DAG(dag_name, schedule_interval=None, start_date=START_DATE) as dag:
         chunk_size = int(os.getenv("ASTRO_CHUNK_SIZE", str(DEFAULT_CHUNK_SIZE)))
