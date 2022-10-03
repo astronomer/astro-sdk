@@ -21,14 +21,16 @@ install:  ## Create Python virtualenv and install python dependencies
 	@poetry install
 
 virtualenv:  ## Activate project virtualenv
-	@source $(poetry env info --path)/bin/activate
+	@echo "The virtual env is:" $(shell poetry env info -p)
 
 setup: system install  ## Setup a local development environment
 
 pre-commit:  # Run pre-commit
 	@git ls-files -- . | xargs pre-commit run --files
 
-test:
+flow:  # Build and run the latest version of flow
+
+test:  # Run tests
 	@poetry run pytest -s --cov --cov-branch --cov-report=term-missing
 
 help:
