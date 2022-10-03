@@ -5,10 +5,11 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from airflow import DAG
-from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
-from astro.files import File
 from astro.sql.table import Metadata, Table
+
+from astro import sql as aql
+from astro.files import File
 
 START_DATE = datetime(2000, 1, 1)
 
@@ -142,7 +143,7 @@ def create_dag(database_name, table_args, dataset, global_db_kwargs):
             "output_table": table,
             "chunk_size": chunk_size,
         }
-
+        local_db_kwargs.pop("skip")
         params.update(global_db_kwargs)
         params.update(local_db_kwargs)
         my_table = aql.load_file(**params)
