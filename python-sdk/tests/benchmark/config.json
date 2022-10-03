@@ -205,7 +205,7 @@
       },
       "file_type": "parquet",
       "name": "one_gb",
-      "path": "gs://astro-sdk/benchmark/synthetic-dataset/parquet/one_gb/.*",
+      "path": "gs://astro-sdk/benchmark/synthetic-dataset/parquet/one_gb/*",
       "rows": 160,
       "size": "10 KB"
     },
