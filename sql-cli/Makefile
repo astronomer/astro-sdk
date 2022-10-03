@@ -33,6 +33,9 @@ flow:  # Build and run the latest version of flow
 test:  # Run tests
 	@poetry run pytest -s --cov --cov-branch --cov-report=term-missing
 
+release:  # Build a package
+	@poetry build
+
 help:
 	@echo "Makefile for the SQL CLI project"
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

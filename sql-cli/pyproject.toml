@@ -24,7 +24,6 @@ classifiers = [
 [project.urls]
 Home = "https://astronomer.io/"
 Source = "https://github.com/astronomer/astro-sdk/sql-cli"
-Documentation = "https://astro-sdk-python.rtfd.io/"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0.0"
