@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "astro-sql-cli"
+version = "0.0.1"
+description = "Empower analysts to build workflows to transform data using SQL"
+authors = [
+    "Astronomer <humans@astronomer.io>",
+]
+readme = "README.md"
+license = "Apache-2.0"
+keywords = ["sql", "transform", "analyst", "workflow", "airflow"]
+packages = [{include = "sql_cli"}]
+
+[tool.poetry.dependencies]
+python = ">=3.7"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
