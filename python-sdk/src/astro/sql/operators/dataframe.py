@@ -147,8 +147,10 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         self.op_kwargs = load_op_kwarg_table_into_dataframe(
             self.op_kwargs, self.python_callable, self.columns_names_capitalization
         )
-
-        function_output = self._convert_column_capitlization_for_output()
+        function_output = self.python_callable(*self.op_args, **self.op_kwargs)
+        function_output = self._convert_column_capitlization_for_output(
+            function_output, self.columns_names_capitalization
+        )
         if self.output_table:
             self.log.debug(
                 "Output table found, converting function output to SQL table"
@@ -175,27 +177,29 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                 raise IllegalLoadToDatabaseException()
             return function_output
 
-    def _convert_column_capitlization_for_output(self):
+    @staticmethod
+    def _convert_column_capitlization_for_output(
+        function_output, columns_names_capitalization
+    ):
         """Handles column capitalization for single outputs, lists, and dictionaries"""
-        function_output = self.python_callable(*self.op_args, **self.op_kwargs)
         if isinstance(function_output, (list, tuple)):
             function_output = [
                 convert_columns_names_capitalization(
-                    df=f, columns_names_capitalization=self.columns_names_capitalization
+                    df=f, columns_names_capitalization=columns_names_capitalization
                 )
                 for f in function_output
             ]
         elif isinstance(function_output, dict):
             function_output = {
                 k: convert_columns_names_capitalization(
-                    df=v, columns_names_capitalization=self.columns_names_capitalization
+                    df=v, columns_names_capitalization=columns_names_capitalization
                 )
                 for k, v in function_output.items()
             }
         else:
             function_output = convert_columns_names_capitalization(
                 df=function_output,
-                columns_names_capitalization=self.columns_names_capitalization,
+                columns_names_capitalization=columns_names_capitalization,
             )
         return function_output
 

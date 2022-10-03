@@ -9,6 +9,7 @@ from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.files import File
 from astro.sql.table import Table
+
 from tests.sql.operators import utils as test_utils
 
 # Import Operator
@@ -283,6 +284,51 @@ def test_columns_names_capitalization(sample_dag):
     cols.sort()
     assert cols[1].islower()
     assert cols[0].isupper()
+
+
+test_df = pandas.DataFrame({"numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
+test_df_2 = pandas.DataFrame({"Numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
+
+
+@pytest.mark.parametrize(
+    "capital_settings",
+    [
+        {"column_setting": "upper", "function": "isupper"},
+        {"column_setting": "lower", "function": "islower"},
+        {"column_setting": "original", "function": "__eq__"},
+    ],
+    ids=["upper", "lower", "original"],
+)
+@pytest.mark.parametrize(
+    "function_output",
+    [[1, 2, test_df], [test_df, test_df_2], [test_df]],
+    ids=["mixed", "two_df", "single_df"],
+)
+def test_columns_name_cap_list(sample_dag, capital_settings, function_output):
+    def validate_dataframe(df: pandas.DataFrame):
+        cols = list(df)
+        print(cols)
+        assert all([getattr(x, capital_settings["function"]) for x in cols])
+
+    @aql.dataframe(columns_names_capitalization=capital_settings["column_setting"])
+    def make_df():
+        return function_output
+
+    @aql.dataframe()
+    def validate(x):
+        assert len(x) == len(function_output)
+        for pre, post in zip(function_output, x):
+            assert isinstance(pre, pandas.DataFrame) == isinstance(
+                post, pandas.DataFrame
+            )
+            if isinstance(pre, pandas.DataFrame):
+                validate_dataframe(post)
+
+        [validate_dataframe(df) for df in x if isinstance(df, pandas.DataFrame)]
+
+    with sample_dag:
+        validate(make_df())
+    test_utils.run_dag(sample_dag)
 
 
 @pytest.mark.parametrize(
