@@ -18,7 +18,7 @@ def test_generate_dag(root_directory, target_directory, dags_directory):
 runner = CliRunner()
 
 
-def test_main_version():
+def test_about():
     result = runner.invoke(app, ["about"])
     assert result.exit_code == 0
     assert "Find out more" in result.stdout

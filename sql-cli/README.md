@@ -14,7 +14,7 @@ Empower analysts to build workflows to transform data using SQL.
 ### Try it out
 
 ```bash
-    flow --version
+    flow version
 ```
 
 
@@ -29,7 +29,7 @@ Setup your local environment:
 Try your own version of the SQL CLI locally:
 
 ```bash
-    poetry run flow --version
+    poetry run flow version
 ```
 
 Run the tests:
