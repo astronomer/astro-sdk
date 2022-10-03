@@ -107,7 +107,7 @@
       },
       "file_type": "ndjson",
       "name": "ten_kb",
-      "path": " gs://astro-sdk/benchmark/synthetic-dataset/ndjson/ten_kb.ndjson",
+      "path": "gs://astro-sdk/benchmark/synthetic-dataset/ndjson/ten_kb.ndjson",
       "rows": 160,
       "size": "10 KB"
     }
