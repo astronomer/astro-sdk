@@ -1,44 +1,44 @@
 {
-    "databases": [
-        {
-            "kwargs": {
-                "enable_native_fallback": false,
-                "native_support_kwargs": {
-                    "IGNOREHEADER": 1,
-                    "REGION": "us-west-2",
-                    "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
-                }
-            },
-            "name": "redshift",
-            "output_table": {
-                "conn_id": "redshift_conn_benchmark"
-            }
+  "databases": [
+    {
+      "kwargs": {
+        "enable_native_fallback": false,
+        "native_support_kwargs": {
+          "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
+          "IGNOREHEADER": 1,
+          "REGION": "us-west-2"
         }
-    ],
-    "datasets": [
-        {
-            "conn_id": "s3_conn_benchmark",
-            "file_type": "csv",
-            "name": "one_gb",
-            "path": "s3://astro-sdk/benchmark/synthetic-dataset/csv/one_gb.csv",
-            "rows": 1,
-            "size": "1 GB"
-        },
-        {
-            "conn_id": "s3_conn_benchmark",
-            "file_type": "parquet",
-            "name": "one_gb",
-            "path": "s3://astro-sdk/benchmark/synthetic-dataset/parquet/one_gb.parquet",
-            "rows": 1,
-            "size": "1 GB"
-        },
-        {
-            "conn_id": "s3_conn_benchmark",
-            "file_type": "ndjson",
-            "name": "one_gb",
-            "path": "s3://astro-sdk/benchmark/synthetic-dataset/ndjson/one_gb.ndjson",
-            "rows": 1,
-            "size": "1 GB"
-        }
-    ]
+      },
+      "name": "redshift",
+      "output_table": {
+        "conn_id": "redshift_conn_benchmark"
+      }
+    }
+  ],
+  "datasets": [
+    {
+      "conn_id": "s3_conn_benchmark",
+      "file_type": "csv",
+      "name": "one_gb",
+      "path": "s3://astro-sdk/benchmark/synthetic-dataset/csv/one_gb.csv",
+      "rows": 1,
+      "size": "1 GB"
+    },
+    {
+      "conn_id": "s3_conn_benchmark",
+      "file_type": "parquet",
+      "name": "one_gb",
+      "path": "s3://astro-sdk/benchmark/synthetic-dataset/parquet/one_gb.parquet",
+      "rows": 1,
+      "size": "1 GB"
+    },
+    {
+      "conn_id": "s3_conn_benchmark",
+      "file_type": "ndjson",
+      "name": "one_gb",
+      "path": "s3://astro-sdk/benchmark/synthetic-dataset/ndjson/one_gb.ndjson",
+      "rows": 1,
+      "size": "1 GB"
+    }
+  ]
 }
