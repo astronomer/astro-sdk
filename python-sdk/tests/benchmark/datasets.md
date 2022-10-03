@@ -91,9 +91,8 @@ The [script](synthetic_parquet_generator.py) is used to generate the Parquet fil
 | hundred_kb | 100 KB | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_kb.parquet |
 | ten_mb     | 10 MB  | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/ten_mb.parquet     |
 | hundred_mb | 100 MB | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_mb.parquet |
-| one_gb     | 1 GB   | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/one_gb.parquet     |
-| two_gb     | 2 GB   | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/two_gb.parquet     |
-| five_gb    | 2.8 GB | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/five_gb.parquet    |
+| one_gb     | 1 GB   | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/one_gb/            |
+| two_gb     | 2 GB   | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/two_gb/            |
 | five_gb    | 5 GB   | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/five_gb/           |
 | ten_gb     | 10 GB  | parquet    | gs://astro-sdk/benchmark/synthetic-dataset/parquet/ten_gb/            |
 
@@ -105,9 +104,8 @@ The [script](synthetic_parquet_generator.py) is used to generate the Parquet fil
 | hundred_kb | 100 KB | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_kb.parquet |
 | ten_mb     | 10 MB  | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/ten_mb.parquet     |
 | hundred_mb | 100 MB | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_mb.parquet |
-| one_gb     | 1 GB   | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/one_gb.parquet     |
-| two_gb     | 2 GB   | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/two_gb.parquet     |
-| five_gb    | 2.8 GB | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/five_gb.parquet    |
+| one_gb     | 1 GB   | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/one_gb/            |
+| two_gb     | 2 GB   | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/two_gb/            |
 | five_gb    | 5 GB   | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/five_gb/           |
 | ten_gb     | 10 GB  | parquet    | s3://astro-sdk/benchmark/synthetic-dataset/parquet/ten_gb/            |
 
