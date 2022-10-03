@@ -64,7 +64,7 @@
       "size": "10 KB"
     },
     {
-      "conn_id": "aws_conn",
+      "conn_id": "s3_conn_benchmark",
       "database_kwargs": {
         "bigquery": {
           "native_support_kwargs": {
