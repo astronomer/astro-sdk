@@ -5,11 +5,10 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from airflow import DAG
-from astro.constants import DEFAULT_CHUNK_SIZE, FileType
-from astro.sql.table import Metadata, Table
-
 from astro import sql as aql
+from astro.constants import DEFAULT_CHUNK_SIZE, FileType
 from astro.files import File
+from astro.sql.table import Metadata, Table
 
 START_DATE = datetime(2000, 1, 1)
 
