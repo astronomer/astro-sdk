@@ -54,7 +54,8 @@
           "native_support_kwargs": {
             "snowflake_storage_integration_google": "gcs_int_python_sdk",
             "storage_integration": "gcs_int_python_sdk"
-          }
+          },
+          "skip": true
         }
       },
       "file_type": "parquet",
@@ -170,9 +171,7 @@
         "postgres": {},
         "redshift": {
           "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
-            "IGNOREHEADER": 1,
-            "region": "us-east-1"
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
           }
         },
         "snowflake": {
@@ -193,7 +192,9 @@
       "database_kwargs": {
         "bigquery": {},
         "postgres": {},
-        "redshift": {},
+        "redshift": {
+          "skip": true
+        },
         "snowflake": {
           "native_support_kwargs": {
             "snowflake_storage_integration_google": "gcs_int_python_sdk",
@@ -212,7 +213,9 @@
       "database_kwargs": {
         "bigquery": {},
         "postgres": {},
-        "redshift": {},
+        "redshift": {
+          "skip": true
+        },
         "snowflake": {
           "native_support_kwargs": {
             "snowflake_storage_integration_google": "gcs_int_python_sdk",
@@ -231,7 +234,9 @@
       "database_kwargs": {
         "bigquery": {},
         "postgres": {},
-        "redshift": {},
+        "redshift": {
+          "skip": true
+        },
         "snowflake": {
           "native_support_kwargs": {
             "snowflake_storage_integration_google": "gcs_int_python_sdk",
@@ -314,9 +319,7 @@
         "postgres": {},
         "redshift": {
           "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
-            "IGNOREHEADER": 1,
-            "region": "us-east-1"
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
           }
         },
         "snowflake": {
