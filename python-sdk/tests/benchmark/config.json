@@ -27,7 +27,7 @@
       },
       "name": "redshift",
       "output_table": {
-        "conn_id": "redshift_conn_benchmark"
+        "conn_id": "redshift_conn"
       }
     },
     {
