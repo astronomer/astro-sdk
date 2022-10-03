@@ -1,8 +1,8 @@
 # AEP-ID Title
 
 Authors:
-* Name <email>
 
+* Name (email)
 
 ## Status
 
@@ -12,13 +12,12 @@ Authors:
 | **Discussion** | Link to Github issue                                      |
 | **Created**    | YYYY-MM-DD                                                |
 
-
 ## Motivation
 
 Give context and describe the motivation of your proposal here.
+
 * Why is it needed?
 * What problem does it solve?
-
 
 ## Proposal
 
@@ -28,7 +27,6 @@ Give context and describe the motivation of your proposal here.
 * What is the scope of this AEP?
 * What defines this AEP as "done"?
 
-
 ## Assumptions and Limitations
 
 * Are there any downsides to this change?
@@ -36,4 +34,3 @@ Give context and describe the motivation of your proposal here.
 * How are users affected by the change? (e.g. is it a breaking change?)
 * Is there anything special to consider about this AEP?
 * Difficulty in implementation or rollout etc.?
-* Downsides?
