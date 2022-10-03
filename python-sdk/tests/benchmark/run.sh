@@ -4,7 +4,6 @@ set -x  # print the shell command before being executed
 set -v  # run bash in verbose mode (echos each command before running it)
 set -e  # stop the execution instantly if a command returns a non-zero status
 
-
 repeat=${1:-3}  # how many times we want to repeat each DAG run (default: 3)
 
 benchmark_dir="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
@@ -66,11 +65,12 @@ fi
 echo Benchmark test started:
 echo - Input configuration: $(get_abs_filename $config_path)
 echo - Output: $(get_abs_filename $results_file)
-
+error_code=0
+error_log_files=()
 
   for i in {1..$(($2))}; do
-    jq -r '.databases[] | [.name] | @tsv' $config_path | while IFS=$'\t' read -r database; do
-      jq -r '.datasets[] | [.name, .file_type, .path] | @tsv' $config_path | while IFS=$'\t' read -r dataset; do
+    for database in $(jq -r '.databases[] | [.name] | @tsv' $config_path); do
+      for dataset in $(jq -r '.datasets[] | [.name, .file_type, .path] | @tsv' $config_path); do
         for chunk_size in "${chunk_sizes_array[@]}"; do
           dataset_name=$(echo $dataset | cut -d " " -f1)
           dataset_type=$(echo $dataset | cut -d " " -f2)
@@ -78,6 +78,12 @@ echo - Output: $(get_abs_filename $results_file)
           echo "$i $dataset $database $chunk_size"
           set +e  # allow us to see the content of $results_file regardless of the run being successful or not
           ASTRO_CHUNKSIZE=$chunk_size python3 -W ignore $runner_path --dataset="$dataset_name" --database="$database" --filetype="$dataset_type" --path="$dataset_path" --revision $git_revision --chunk-size=$chunk_size 1>> $results_file
+          # track the log file and error
+          curr_error=$?
+          if [ $curr_error -ne 0 ]; then
+            error_code=$((error_code+1))
+            error_log_files+=("$results_file")
+          fi
           cat $results_file
           set -e  # do not allow errors from here onwards
           if [[ -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
@@ -91,9 +97,22 @@ echo - Output: $(get_abs_filename $results_file)
              # https://github.com/exapsy/peekprof
              peekprof -html "/tmp/$dataset-$database-$chunk_size.html" -refresh 1000ms -pid $! > /tmp/$dataset-$database-$chunk_size.csv
           fi
-        done
       done
+     done
     done
   done
+
+
+# print the error log file path and exit
+if [ $error_code -ne 0 ]; then
+  echo "Benchmark test completed with error."
+  echo "More logs are available at below location"
+  for error_log_file in "${error_log_files[@]}"
+  do
+    IFS='/' list=($error_log_file)
+    echo gs://"${GCP_BUCKET}"/benchmark/"${list[2]}"/
+  done
+  exit 1
+fi
 
 echo Benchmark test completed!
