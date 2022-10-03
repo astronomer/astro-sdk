@@ -5,7 +5,6 @@
         "enable_native_fallback": false,
         "native_support_kwargs": {
           "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
-          "REGION": "us-east-1"
         }
       },
       "name": "redshift",
