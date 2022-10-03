@@ -290,6 +290,29 @@ test_df = pandas.DataFrame({"numbers": [1, 2, 3], "Colors": ["red", "white", "bl
 test_df_2 = pandas.DataFrame({"Numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
 
 
+def validate_dataframe(df: pandas.DataFrame, capital_settings: dict):
+    cols = list(df)
+    assert all([getattr(x, capital_settings["function"]) for x in cols])
+
+
+def validate_list(x: list, function_output: list, capital_settings: dict):
+    assert len(x) == len(function_output)
+    for pre, post in zip(function_output, x):
+        assert isinstance(pre, pandas.DataFrame) == isinstance(post, pandas.DataFrame)
+        if isinstance(pre, pandas.DataFrame):
+            validate_dataframe(post, capital_settings)
+
+
+def validate_dict(x: dict, function_output: dict, capital_settings: dict):
+    assert x.keys() == function_output.keys()
+    for key in function_output.keys():
+        post = x[key]
+        pre = function_output[key]
+        assert isinstance(pre, pandas.DataFrame) == isinstance(post, pandas.DataFrame)
+        if isinstance(pre, pandas.DataFrame):
+            validate_dataframe(post, capital_settings)
+
+
 @pytest.mark.parametrize(
     "capital_settings",
     [
@@ -300,15 +323,29 @@ test_df_2 = pandas.DataFrame({"Numbers": [1, 2, 3], "Colors": ["red", "white", "
     ids=["upper", "lower", "original"],
 )
 @pytest.mark.parametrize(
-    "function_output",
-    [[1, 2, test_df], [test_df, test_df_2], [test_df]],
-    ids=["mixed", "two_df", "single_df"],
+    "function_output_and_validator",
+    [
+        ([1, 2, test_df], validate_list),
+        ([test_df, test_df_2], validate_list),
+        ([test_df], validate_list),
+        ({"foo": 1, "bar": 2, "baz": test_df}, validate_dict),
+        ({"foo": test_df, "bar": test_df_2}, validate_dict),
+        ({"foo": test_df}, validate_dict),
+    ],
+    ids=[
+        "mixed_list",
+        "two_df_list",
+        "single_df_list",
+        "mixed_dict",
+        "two_df_dict",
+        "single_df_dict",
+    ],
 )
-def test_columns_name_cap_list(sample_dag, capital_settings, function_output):
-    def validate_dataframe(df: pandas.DataFrame):
-        cols = list(df)
-        print(cols)
-        assert all([getattr(x, capital_settings["function"]) for x in cols])
+def test_columns_name_cap_multi_output(
+    sample_dag, capital_settings, function_output_and_validator
+):
+
+    function_output, validator = function_output_and_validator
 
     @aql.dataframe(columns_names_capitalization=capital_settings["column_setting"])
     def make_df():
@@ -316,15 +353,7 @@ def test_columns_name_cap_list(sample_dag, capital_settings, function_output):
 
     @aql.dataframe()
     def validate(x):
-        assert len(x) == len(function_output)
-        for pre, post in zip(function_output, x):
-            assert isinstance(pre, pandas.DataFrame) == isinstance(
-                post, pandas.DataFrame
-            )
-            if isinstance(pre, pandas.DataFrame):
-                validate_dataframe(post)
-
-        [validate_dataframe(df) for df in x if isinstance(df, pandas.DataFrame)]
+        validator(x, function_output, capital_settings)
 
     with sample_dag:
         validate(make_df())
