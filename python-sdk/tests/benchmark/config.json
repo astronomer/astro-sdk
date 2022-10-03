@@ -6,7 +6,7 @@
         "native_support_kwargs": {
           "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
           "IGNOREHEADER": 1,
-          "REGION": "us-west-2"
+          "REGION": "us-east-1"
         }
       },
       "name": "redshift",
