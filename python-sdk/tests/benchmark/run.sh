@@ -71,13 +71,19 @@ echo - Output: $(get_abs_filename $results_file)
   for i in {1..$(($2))}; do
     jq -r '.databases[] | [.name] | @tsv' $config_path | while IFS=$'\t' read -r database; do
       jq -r '.datasets[] | [.name, .file_type, .path, (.database_kwargs | .'$database' | .skip)] | @tsv' $config_path | while IFS=$'\t' read -r dataset; do
-        if [ -z $dataset_skip ]; then
-          for chunk_size in "${chunk_sizes_array[@]}"; do
-            dataset_name=$(echo $dataset | cut -d " " -f1)
-            dataset_type=$(echo $dataset | cut -d " " -f2)
-            dataset_path=$(echo $dataset | cut -d " " -f3)
-            dataset_skip=$(echo $dataset | cut -d " " -f4)
+        dataset_name=$(echo $dataset | cut -d " " -f1)
+        dataset_type=$(echo $dataset | cut -d " " -f2)
+        dataset_path=$(echo $dataset | cut -d " " -f3)
+        dataset_skip=$(echo $dataset | cut -d " " -f4)
 
+        if [ -z $dataset_skip ]; then
+
+          echo "------------------------------------------------------------------"
+          echo $database
+          echo $dataset_skip
+          echo "------------------------------------------------------------------"
+
+          for chunk_size in "${chunk_sizes_array[@]}"; do
             echo "$i $dataset $database $chunk_size"
             set +e  # allow us to see the content of $results_file regardless of the run being successful or not
             ASTRO_CHUNKSIZE=$chunk_size python3 -W ignore $runner_path --dataset="$dataset_name" --database="$database" --filetype="$dataset_type" --path="$dataset_path" --revision $git_revision --chunk-size=$chunk_size 1>> $results_file
