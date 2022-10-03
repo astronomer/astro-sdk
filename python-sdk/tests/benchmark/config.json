@@ -4,96 +4,30 @@
       "kwargs": {
         "enable_native_fallback": false
       },
-      "name": "snowflake",
+      "name": "bigquery",
       "output_table": {
-        "conn_id": "snowflake_conn"
-      }
-    },
-    {
-      "kwargs": {
-        "enable_native_fallback": false
-      },
-      "name": "postgres",
-      "output_table": {
-        "conn_id": "postgres_benchmark_conn",
+        "conn_id": "bigquery",
         "metadata": {
-          "database": "postgres"
+          "database": "bigquery"
         }
       }
     }
   ],
   "datasets": [
     {
-      "conn_id": "bigquery",
+      "conn_id": "aws_conn",
       "database_kwargs": {
-        "postgres": {},
-        "snowflake": {}
+        "bigquery": {
+          "native_support_kwargs": {
+            "skip_leading_rows": "1"
+          }
+        }
       },
-      "file_type": "parquet",
+      "file_type": "csv",
       "name": "ten_kb",
-      "path": "gs://astro-sdk/benchmark/trimmed/covid_overview/covid_overview_10kb.parquet",
+      "path": "s3://astro-sdk/benchmark/synthetic-dataset/csv/ten_kb.csv",
       "rows": 160,
       "size": "10 KB"
-    },
-    {
-      "conn_id": "bigquery",
-      "database_kwargs": {
-        "postgres": {},
-        "snowflake": {}
-      },
-      "file_type": "csv",
-      "name": "hundred_kb",
-      "path": "gs://astro-sdk/benchmark/trimmed/tate_britain/artist_data_100kb.csv",
-      "rows": 748,
-      "size": "100 KB"
-    },
-    {
-      "conn_id": "bigquery",
-      "database_kwargs": {
-        "postgres": {},
-        "snowflake": {}
-      },
-      "file_type": "csv",
-      "name": "ten_mb",
-      "path": "gs://astro-sdk/benchmark/trimmed/imdb/title_ratings_10mb.csv",
-      "rows": 600000,
-      "size": "10M"
-    },
-    {
-      "conn_id": "bigquery",
-      "database_kwargs": {
-        "postgres": {},
-        "snowflake": {}
-      },
-      "file_type": "ndjson",
-      "name": "one_gb",
-      "path": "gs://astro-sdk/benchmark/trimmed/stackoverflow/stackoverflow_posts_1g.ndjson",
-      "rows": 940000,
-      "size": "1G"
-    },
-    {
-      "conn_id": "bigquery",
-      "database_kwargs": {
-        "postgres": {},
-        "snowflake": {}
-      },
-      "file_type": "ndjson",
-      "name": "five_gb",
-      "path": "gs://astro-sdk/benchmark/trimmed/pypi/",
-      "rows": 7530243,
-      "size": "5G"
-    },
-    {
-      "conn_id": "bigquery",
-      "database_kwargs": {
-        "postgres": {},
-        "snowflake": {}
-      },
-      "file_type": "ndjson",
-      "name": "ten_gb",
-      "path": "gs://astro-sdk/benchmark/trimmed/github/github-archive/",
-      "rows": 1263685,
-      "size": "10G"
     }
   ]
 }
