@@ -16,59 +16,30 @@ def dev(session: nox.Session) -> None:
     development environment to ``.nox/dev``.
     """
     session.install("nox")
-    session.install("-e", "../python-sdk/.[all]")
-    session.install("-e", "../python-sdk/.[tests]")
-    session.install("-e", ".[all]")
-    session.install("-e", ".[tests]")
+    session.install("-e", "../sql-cli/.[tool.poetry.dependencies]")
+    session.install("-e", "../sql-cli/.[tool.poetry.group.dev.dependencies]")
 
 
 @nox.session(python=["3.7", "3.8", "3.9"])
 @nox.parametrize("airflow", ["2.2.5", "2.3"])
 def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
-    session.install("-e", "../python-sdk/.[all]")
-    session.install("-e", "../python-sdk/.[tests]")
-    session.install("-e", ".[all]")
-    session.install("-e", ".[tests]")
+    session.install("-e", "../sql-cli/.[tool.poetry.dependencies]")
+    session.install("-e", "../sql-cli/.[tool.poetry.group.dev.dependencies]")
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
     session.run("pip3", "freeze")
-    session.run("airflow", "db", "init")
     session.run("pytest", *session.posargs)
 
 
 @nox.session(python=["3.8"])
 def type_check(session: nox.Session) -> None:
     """Run MyPy checks."""
-    session.install("-e", "../python-sdk/.[all]")
-    session.install("-e", "../python-sdk/.[tests]")
-    session.install("-e", ".[all]")
-    session.install("-e", ".[tests]")
+    session.install("mypy")
+    session.install("-e", "../sql-cli/.[tool.poetry.dependencies]")
+    session.install("-e", "../sql-cli/.[tool.poetry.group.dev.dependencies]")
     session.run("mypy", "--version")
     session.run("mypy")
-
-
-@nox.session()
-@nox.parametrize(
-    "extras",
-    [
-        ("postgres-amazon", {"include": ["postgres", "amazon"]}),
-        ("snowflake-amazon", {"include": ["snowflake", "amazon"]}),
-        ("sqlite", {"include": ["sqlite"]}),
-    ],
-)
-def test_examples_by_dependency(session: nox.Session, extras):
-    _, extras = extras
-    pypi_deps = ",".join(extras["include"])
-    pytest_options = " and ".join(extras["include"])
-    pytest_options = " and not ".join([pytest_options, *extras.get("exclude", [])])
-    pytest_args = ["-k", pytest_options]
-
-    session.install("-e", f".[{pypi_deps}]")
-    session.install("-e", ".[tests]")
-    session.run("airflow", "db", "init")
-
-    session.run("pytest", "tests/test_example_dags.py", *pytest_args, *session.posargs)
 
 
 @nox.session()
