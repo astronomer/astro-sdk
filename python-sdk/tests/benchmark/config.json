@@ -17,30 +17,6 @@
     ],
     "datasets": [
         {
-            "conn_id": "bigquery_conn_benchmark",
-            "file_type": "csv",
-            "name": "one_gb",
-            "path": "gs://astro-sdk/benchmark/synthetic-dataset/csv/one_gb.csv",
-            "rows": 1,
-            "size": "1 GB"
-        },
-        {
-            "conn_id": "bigquery_conn_benchmark",
-            "file_type": "parquet",
-            "name": "one_gb",
-            "path": "gs://astro-sdk/benchmark/synthetic-dataset/parquet/one_gb.parquet",
-            "rows": 1,
-            "size": "1 GB"
-        },
-        {
-            "conn_id": "bigquery_conn_benchmark",
-            "file_type": "ndjson",
-            "name": "one_gb",
-            "path": "gs://astro-sdk/benchmark/synthetic-dataset/ndjson/one_gb.ndjson",
-            "rows": 1,
-            "size": "1 GB"
-        },
-        {
             "conn_id": "s3_conn_benchmark",
             "file_type": "csv",
             "name": "one_gb",
