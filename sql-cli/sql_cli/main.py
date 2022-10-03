@@ -6,16 +6,16 @@ app = typer.Typer(add_completion=False)
 
 
 @app.command()
-def version():
+def version() -> None:
     """
-    Empower analysts to build workflows to transform data using SQL.
+    Print the SQL CLI version.
     """
     typer.echo(f"Astro SQL CLI {sql_cli.__version__}")
 
 
 @app.command()
-def about():
+def about() -> None:
     """
-    About the project.
+    Print additional information about the project.
     """
     typer.echo("Find out more: https://github.com/astronomer/astro-sdk/sql-cli")
