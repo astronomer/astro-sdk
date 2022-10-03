@@ -34,7 +34,10 @@ test:  # Run tests
 	@poetry run pytest -s --cov --cov-branch --cov-report=term-missing
 
 release:  # Build a package
-	@poetry build
+	@echo -e "If this is your first time, please, manually follow these two steps: \n" \
+        	"1. Create a token at: https://pypi.org/manage/account/token/ \n" \
+		"2. Set your token using: $ poetry config pypi-token.pypi <your-token>"
+	@poetry publish --build
 
 help:
 	@echo "Makefile for the SQL CLI project"
