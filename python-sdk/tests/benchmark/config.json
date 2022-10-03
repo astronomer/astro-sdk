@@ -2,11 +2,16 @@
     "databases": [
         {
             "kwargs": {
-                "enable_native_fallback": false
+                "enable_native_fallback": false,
+                "native_support_kwargs": {
+                    "IGNOREHEADER": 1,
+                    "REGION": "us-west-2",
+                    "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
+                }
             },
-            "name": "sqlite",
+            "name": "redshift",
             "output_table": {
-                "conn_id": "sqlite_conn_benchmark"
+                "conn_id": "redshift_conn_benchmark"
             }
         }
     ],
