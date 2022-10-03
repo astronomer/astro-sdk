@@ -142,7 +142,8 @@ def create_dag(database_name, table_args, dataset, global_db_kwargs):
             "output_table": table,
             "chunk_size": chunk_size,
         }
-        local_db_kwargs.pop("skip")
+        if local_db_kwargs.get("skip"):
+            local_db_kwargs.pop("skip")
         params.update(global_db_kwargs)
         params.update(local_db_kwargs)
         my_table = aql.load_file(**params)
