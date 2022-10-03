@@ -7,8 +7,24 @@ authors = [
 ]
 readme = "README.md"
 license = "Apache-2.0"
-keywords = ["sql", "transform", "analyst", "workflow", "airflow"]
+keywords = ["sql", "transform", "analyst", "workflow", "airflow", "astronomer"]
 packages = [{include = "sql_cli"}]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: Apache Software License",
+    "Topic :: Database",
+    "Framework :: Apache Airflow",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+]
+
+[project.urls]
+Home = "https://astronomer.io/"
+Source = "https://github.com/astronomer/astro-sdk/sql-cli"
+Documentation = "https://astro-sdk-python.rtfd.io/"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4.0.0"
@@ -27,3 +43,20 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 src_paths = ["sql_cli", "tests"]
+
+[tool.mypy]
+color_output = true
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+files = ["src/sql_cli"]
+follow_imports = "skip"
+no_implicit_optional = true
+pretty = true
+strict_equality = true
+show_error_codes = true
+show_error_context = true
+warn_redundant_casts = true
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
