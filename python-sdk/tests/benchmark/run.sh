@@ -78,13 +78,6 @@ echo - Output: $(get_abs_filename $results_file)
             dataset_path=$(echo $dataset | cut -d " " -f3)
             dataset_skip=$(echo $dataset | cut -d " " -f4)
 
-            echo $dataset_name
-            echo $dataset_type
-            echo $dataset_path
-            echo $dataset_skip
-
-            continue
-
             echo "$i $dataset $database $chunk_size"
             set +e  # allow us to see the content of $results_file regardless of the run being successful or not
             ASTRO_CHUNKSIZE=$chunk_size python3 -W ignore $runner_path --dataset="$dataset_name" --database="$database" --filetype="$dataset_type" --path="$dataset_path" --revision $git_revision --chunk-size=$chunk_size 1>> $results_file
