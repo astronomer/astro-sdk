@@ -10,7 +10,7 @@ from typing import Any
 
 import pandas as pd
 from airflow.configuration import secrets_backend_list
-from airflow.exceptions import AirflowSkipException, BackfillUnfinished
+from airflow.exceptions import AirflowSkipException
 from airflow.models.dag import DAG
 from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstance
