@@ -21,8 +21,6 @@ from airflow.utils import timezone
 from astro.files import File
 from astro.sql.table import Metadata, Table
 
-gcs_bucket = os.getenv("GCS_BUCKET", "gs://dag-authoring")
-
 with DAG(
     dag_id="example_google_bigquery_gcs_load_and_save",
     schedule_interval=None,
@@ -53,6 +51,8 @@ with DAG(
     t2 = extract_top_5_movies(input_df=t1)
 
     # [START export_example_1]
+    gcs_bucket = os.getenv("GCS_BUCKET", "gs://dag-authoring")
+
     aql.export_file(
         task_id="save_file_to_gcs",
         input_data=t1,

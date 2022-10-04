@@ -53,6 +53,7 @@ Parameters to use when loading a file to a database table
 #. **columns_names_capitalization** - If you are working with a ``Snowflake`` database with :ref:`table_schema` and with ``if_exists=replace``, you can control whether the column names of the output table are capitalized. The default is to convert all column names to lowercase. Valid inputs are ``lower``, ``upper``, or ``original`` which will convert column names to lowercase.
 
 #. **ndjson_normalize_sep** - If your input file type is NDJSON, you can use this parameter to normalize the data to two dimensions. This makes the data suitable for loading into a table. This parameter is used as a delimiter for combining columns names if required.
+
     example:
         input JSON:
 
@@ -105,6 +106,7 @@ There are three ways to infer the schema of the table to be created, listed by p
 Parameters to use when loading a file to a Pandas dataframe
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #. **columns_names_capitalization**: Use to control the capitalization of column names in the generated dataframe. The default value is ``original``.
+
         *  **original** - Remains the same as the input file
         *  **upper** - Convert to uppercase
         *  **lower** - Convert to lowercase
@@ -121,6 +123,7 @@ Parameters for native transfer
 Refer to :ref:`load_file_working` for details on Native Path.
 
 #. **use_native_support**: Native transfer support is available for some file sources and databases. If it is available for your systems, the default is to use this support. To leverage native transfer support, certain settings may need to be modified on your destination database. If you do not wish to use native transfer support, you can turn off this behavior by specifying ``use_native_support=False``.
+
         This feature is enabled by default, to disable it refer to the example below.
 
         .. literalinclude:: ../../../../example_dags/example_load_file.py

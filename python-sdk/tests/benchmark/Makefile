@@ -1,11 +1,11 @@
-all: clean setup_gke container run_job teardown_gke
+all: clean setup_gke container run_job wait_for_completion
 .PHONY: all
 
 GCP_PROJECT ?= astronomer-dag-authoring
 GIT_HASH = $(shell git log -1 --format=%h)
 APP ?= benchmark
 CONTAINER_REGISTRY=gcr.io/$(GCP_PROJECT)/$(APP)
-
+PLATFORM="linux/amd64"
 
 check_google_credentials:
 ifndef GOOGLE_APPLICATION_CREDENTIALS
@@ -27,22 +27,23 @@ clean:
 # Takes approximately 7min
 setup_gke: clean
 	@cd infrastructure/terraform && \
-		terraform init && \
-		terraform apply
+		terraform init  && \
+		terraform apply -auto-approve
 
 run: clean
 	@AIRFLOW__ASTRO_SDK__SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE=gcs_int_python_sdk GCP_BUCKET=dag-authoring ./run.sh
 
-container: clean
+container: clean check_google_credentials
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
 	@gcloud auth configure-docker gcr.io
-	@docker build --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):latest -f ./Dockerfile  ../../
-	@docker push $(CONTAINER_REGISTRY)
+	@docker build --platform=$(PLATFORM) --build-arg=GIT_HASH=$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) --tag=$(CONTAINER_REGISTRY):$(GIT_HASH) -f ./Dockerfile  ../../
+	@gcloud auth activate-service-account --key-file $(GOOGLE_APPLICATION_CREDENTIALS)
+	@docker push $(CONTAINER_REGISTRY):$(GIT_HASH)
 
 local: clean check_google_credentials
 	@echo "Building and pushing container $(CONTAINER_REGISTRY)"
 	@gcloud auth configure-docker gcr.io
-	@docker build -t benchmark -f ./Dockerfile ../../ --build-arg=GIT_HASH=$(GIT_HASH)
+	@docker build -t benchmark -f ./Dockerfile ../../ --platform=$(PLATFORM) --build-arg=GIT_HASH=$(GIT_HASH)
 	@mkdir -p /tmp/docker
 	@sudo chmod a+rwx /tmp/docker/
 	@docker run -it \
@@ -58,7 +59,11 @@ run_job:
 	@kubectl apply -f infrastructure/kubernetes/namespace.yaml
 	@kubectl apply -f infrastructure/kubernetes/postgres.yaml
 	@kubectl apply -f infrastructure/kubernetes/postgres_svc.yaml
-	@kubectl create -f infrastructure/kubernetes/job.yaml
+	@sed s/%VERSION%/${GIT_HASH}/g infrastructure/kubernetes/job.yaml > infrastructure/kubernetes/job_final.yaml
+	@kubectl create -f infrastructure/kubernetes/job_final.yaml
+
+wait_for_completion:
+	bash wait_for_completion.sh
 
 # Takes approximately 2min
 teardown_gke:

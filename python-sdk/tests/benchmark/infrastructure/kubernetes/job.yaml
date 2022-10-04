@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  generateName: benchmark-
+  name: benchmark-%VERSION%
   namespace: benchmark
 spec:
   template:
@@ -10,13 +10,13 @@ spec:
     spec:
       containers:
       - name: benchmark
-        image: gcr.io/astronomer-dag-authoring/benchmark
+        image: gcr.io/astronomer-dag-authoring/benchmark:%VERSION%
         command: ["./run.sh"]
         resources:
           requests:
-            memory: 6Gi
+            memory: 16Gi
           limits:
-            memory: 10Gi
+            memory: 32Gi
       # Do not restart containers after they exit
       restartPolicy: Never
   # of retries before marking as failed.
