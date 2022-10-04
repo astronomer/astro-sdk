@@ -80,6 +80,12 @@ jobs:
           key: ${{ runner.os }}-2.3-${{ hashFiles('sql-cli/pyproject.toml') }}
       - run: pip3 install nox
       - run: nox -s "test-3.8(airflow='2.3')"
+      - name: Upload coverage
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage
+          path: ./sql-cli/.coverage
+
 
   Code-Coverage:
     if: github.event.action != 'labeled'
