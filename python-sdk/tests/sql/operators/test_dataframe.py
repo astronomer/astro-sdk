@@ -294,7 +294,7 @@ def _find_validator(function_output):
         {"foo": test_df, "bar": test_df_2},
         {"foo": test_df},
         test_df,
-        test_df_2
+        test_df_2,
     ],
     ids=[
         "mixed_list",
@@ -304,16 +304,15 @@ def _find_validator(function_output):
         "two_df_dict",
         "single_df_dict",
         "single_df",
-        "single_df_mixed"
+        "single_df_mixed",
     ],
 )
-def test_columns_name_cap_multi_output(
-    sample_dag, capital_settings, function_output
-):
+def test_columns_name_cap_multi_output(sample_dag, capital_settings, function_output):
 
     function_output = function_output
 
     validator = _find_validator(function_output)
+
     @aql.dataframe(columns_names_capitalization=capital_settings["column_setting"])
     def make_df():
         return function_output
