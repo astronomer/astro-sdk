@@ -16,6 +16,7 @@ from unittest import mock
 
 import pandas as pd
 import pytest
+from airflow.exceptions import AirflowNotFoundException
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
 from astro import sql as aql
@@ -427,7 +428,7 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(
         "input_file": File(path=file_uri, conn_id=file_conn_id),
         "output_table": Table(name=OUTPUT_TABLE_NAME, **sql_server_params),
     }
-    with pytest.raises(ValueError):
+    with pytest.raises(AirflowNotFoundException):
         with sample_dag:
             load_file(**task_params)
         test_utils.run_dag(sample_dag)
