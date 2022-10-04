@@ -16,16 +16,16 @@ def dev(session: nox.Session) -> None:
     development environment to ``.nox/dev``.
     """
     session.install("nox")
-    session.install("-e", "../sql-cli/.[tool.poetry.dependencies]")
-    session.install("-e", "../sql-cli/.[tool.poetry.group.dev.dependencies]")
+    session.install("poetry")
+    session.run("poetry", "install")
 
 
 @nox.session(python=["3.7", "3.8", "3.9"])
 @nox.parametrize("airflow", ["2.3"])
 def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
-    session.install("-e", "../sql-cli/.[tool.poetry.dependencies]")
-    session.install("-e", "../sql-cli/.[tool.poetry.group.dev.dependencies]")
+    session.install("poetry")
+    session.run("poetry", "install")
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
     session.run("pip3", "freeze")
@@ -35,7 +35,8 @@ def test(session: nox.Session, airflow) -> None:
 @nox.session(python=["3.8"])
 def type_check(session: nox.Session) -> None:
     """Run MyPy checks."""
-    session.install("mypy")
+    session.install("poetry")
+    session.run("poetry", "install")
     session.install("-e", "../sql-cli/.[tool.poetry.dependencies]")
     session.install("-e", "../sql-cli/.[tool.poetry.group.dev.dependencies]")
     session.run("mypy", "--version")
@@ -69,14 +70,6 @@ def build(session: nox.Session) -> None:
     dist.mkdir(exist_ok=True)
 
     session.run("python", "-m", "build", *session.posargs)
-
-
-@nox.session(python="3.9")
-def build_docs(session: nox.Session) -> None:
-    """Build release artifacts."""
-    session.install("-e", ".[doc]")
-    session.chdir("./docs")
-    session.run("make", "html")
 
 
 @nox.session()

@@ -27,4 +27,4 @@ def test_about():
 def test_version():
     result = runner.invoke(app, ["version"])
     assert result.exit_code == 0
-    assert "Astro SQL CLI 0.0.1" in result.stdout
+    assert "Astro SQL CLI 0.0.0" in result.stdout
