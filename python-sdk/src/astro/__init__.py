@@ -14,9 +14,8 @@ __version__ = "1.1.1"
 # imported beforehand, it will also load astro.sql. In astro.sql we import lots of operators which depend on
 # astro.database, and this is what leads to the circular dependency.
 
-from airflow.configuration import conf
-
 import astro.sql  # noqa: F401
+from airflow.configuration import conf
 
 
 # This is needed to allow Airflow to pick up specific metadata fields it needs
