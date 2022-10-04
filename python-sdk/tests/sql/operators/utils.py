@@ -1,27 +1,17 @@
 from __future__ import annotations
-import time
-
-import pandas as pd
-from airflow.exceptions import BackfillUnfinished
-from airflow.models.dag import DAG
-from astro.sql.table import Metadata
-from pandas.testing import assert_frame_equal
 
 import copy
 import logging
 import os
 import sys
+import time
 from datetime import datetime
-from typing import (
-    Any,
-)
+from typing import Any
 
-from sqlalchemy.orm.session import Session
-
+import pandas as pd
 from airflow.configuration import secrets_backend_list
-from airflow.exceptions import (
-    AirflowSkipException,
-)
+from airflow.exceptions import AirflowSkipException, BackfillUnfinished
+from airflow.models.dag import DAG
 from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstance
 from airflow.secrets.local_filesystem import LocalFilesystemBackend
@@ -29,6 +19,10 @@ from airflow.utils import timezone
 from airflow.utils.session import NEW_SESSION, provide_session
 from airflow.utils.state import DagRunState, State
 from airflow.utils.types import DagRunType
+from astro.sql.table import Metadata
+from pandas.testing import assert_frame_equal
+from sqlalchemy.orm.session import Session
+
 log = logging.getLogger(__name__)
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -114,7 +108,8 @@ def assert_dataframes_are_equal(df: pd.DataFrame, expected: pd.DataFrame) -> Non
     df = df.astype({"id": "int64"})
     expected = expected.astype({"id": "int64"})
     assert_frame_equal(df, expected)
-    
+
+
 @provide_session
 def test_dag(
     dag,
@@ -134,32 +129,10 @@ def test_dag(
     :param session: database connection (optional)
     """
 
-    def add_logger_if_needed(ti: TaskInstance):
-        """
-        Add a formatted logger to the taskinstance so all logs are surfaced to the command line instead
-        of into a task file. Since this is a local test run, it is much better for the user to see logs
-        in the command line, rather than needing to search for a log file.
-        Args:
-            ti: The taskinstance that will receive a logger
-
-        """
-        format = logging.Formatter("[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s")
-        handler = logging.StreamHandler(sys.stdout)
-        handler.level = logging.INFO
-        handler.setFormatter(format)
-        # only add log handler once
-        if not any(isinstance(h, logging.StreamHandler) for h in ti.log.handlers):
-            dag.log.debug("Adding Streamhandler to taskinstance %s", ti.task_id)
-            ti.log.addHandler(handler)
-
-    if conn_file_path or variable_file_path:
-        local_secrets = LocalFilesystemBackend(
-            variables_file_path=variable_file_path, connections_file_path=conn_file_path
-        )
-        secrets_backend_list.insert(0, local_secrets)
-
     execution_date = execution_date or timezone.utcnow()
-    dag.log.debug("Clearing existing task instances for execution date %s", execution_date)
+    dag.log.debug(
+        "Clearing existing task instances for execution date %s", execution_date
+    )
     dag.clear(
         start_date=execution_date,
         end_date=execution_date,
@@ -184,13 +157,41 @@ def test_dag(
     while dr.state == State.RUNNING:
         schedulable_tis, _ = dr.update_state(session=session)
         for ti in schedulable_tis:
-            add_logger_if_needed(ti)
+            add_logger_if_needed(dag, ti)
             ti.task = tasks[ti.task_id]
             _run_task(ti, session=session)
     if conn_file_path or variable_file_path:
         # Remove the local variables we have added to the secrets_backend_list
         secrets_backend_list.pop(0)
-        
+
+    if conn_file_path or variable_file_path:
+        local_secrets = LocalFilesystemBackend(
+            variables_file_path=variable_file_path, connections_file_path=conn_file_path
+        )
+        secrets_backend_list.insert(0, local_secrets)
+
+
+def add_logger_if_needed(dag: DAG, ti: TaskInstance):
+    """
+    Add a formatted logger to the taskinstance so all logs are surfaced to the command line instead
+    of into a task file. Since this is a local test run, it is much better for the user to see logs
+    in the command line, rather than needing to search for a log file.
+    Args:
+        ti: The taskinstance that will receive a logger
+
+    """
+    logging_format = logging.Formatter(
+        "[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s"
+    )
+    handler = logging.StreamHandler(sys.stdout)
+    handler.level = logging.INFO
+    handler.setFormatter(logging_format)
+    # only add log handler once
+    if not any(isinstance(h, logging.StreamHandler) for h in ti.log.handlers):
+        dag.log.debug("Adding Streamhandler to taskinstance %s", ti.task_id)
+        ti.log.addHandler(handler)
+
+
 def _run_task(ti: TaskInstance, session):
     """
     Run a single task instance, and push result to Xcom for downstream tasks. Bypasses a lot of
@@ -250,6 +251,5 @@ def _get_or_create_dagrun(
         session=session,
         conf=conf,  # type: ignore
     )
-    log.info("created dagrun " + str(dr))
+    log.info("created dagrun %s", str(dr))
     return dr
-
