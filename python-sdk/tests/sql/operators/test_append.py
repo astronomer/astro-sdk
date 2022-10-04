@@ -11,7 +11,6 @@ from astro.files import File
 from astro.sql.operators.append import AppendOperator
 from astro.sql.table import Metadata, Table
 from sqlalchemy.exc import NoSuchTableError
-
 from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
