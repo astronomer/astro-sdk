@@ -19,10 +19,10 @@ from airflow.utils import timezone
 from airflow.utils.session import NEW_SESSION, provide_session
 from airflow.utils.state import DagRunState, State
 from airflow.utils.types import DagRunType
+from astro.sql.operators.cleanup import AstroCleanupException
 from astro.sql.table import Metadata
 from pandas.testing import assert_frame_equal
 from sqlalchemy.orm.session import Session
-from astro.sql.operators.cleanup import AstroCleanupException
 
 log = logging.getLogger(__name__)
 
@@ -74,6 +74,7 @@ def run_dag(dag: DAG, account_for_cleanup_failure=False):
     dag.clear(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE, dag_run_state=State.NONE)
 
     test_dag(dag=dag, execution_date=DEFAULT_DATE)
+
 
 def load_to_dataframe(filepath, file_type):
     read = {
