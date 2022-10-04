@@ -238,7 +238,7 @@ def test_read_with_explicit_valid_type(filetype, locations, type_method_map_fixt
         "/tmp/cklcdklscdksl/*.csv",
     ],
 )
-def test_resolve_file_path_pattern_raise_exception(invalid_path, caplog):
+def test_resolve_file_path_pattern_raise_exception(invalid_path):
     """resolve_file_path_pattern expected to fail with default 'if_file_doesnt_exist' exception strategy"""
 
     with pytest.raises(FileNotFoundError) as e:

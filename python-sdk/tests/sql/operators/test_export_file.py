@@ -240,7 +240,7 @@ def test_save_all_db_tables_to_gcs(sample_dag, database_table_fixture):
     ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 def test_save_all_db_tables_to_local_file_exists_overwrite_false(
-    sample_dag, database_table_fixture, caplog
+    sample_dag, database_table_fixture
 ):
     _, test_table = database_table_fixture
     with tempfile.NamedTemporaryFile(suffix=".csv") as temp_file, pytest.raises(
