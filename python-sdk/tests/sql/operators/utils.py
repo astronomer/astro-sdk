@@ -200,8 +200,8 @@ def _run_task(ti: TaskInstance, session):
         log.info("%s ran successfully!", ti.task_id)
     except AirflowSkipException:
         log.info("Task Skipped, continuing")
-    except AstroCleanupException:
-        log.info("Cleanup task async failure, continuing")
+    except AstroCleanupException as a:
+        log.info(a)
     log.info("*****************************************************")
 
 
