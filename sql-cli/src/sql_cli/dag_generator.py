@@ -1,47 +1,93 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import datetime
+
 from networkx import DiGraph, depth_first_search, find_cycle, is_directed_acyclic_graph
 from sql_cli.exceptions import DagCycle
 from sql_cli.sql_directory_parser import SqlFile
 
 
+@dataclass
 class SqlFilesDAG:
     """
     A DAG of sql files i.e. used for finding the right order to execute the sql files in.
 
+    :param dag_id: The id of the DAG to generate.
+    :param start_date: The start date of the DAG.
     :param sql_files: The sql files to use for DAG generation.
     """
 
-    def __init__(self, sql_files: set[SqlFile]) -> None:
-        self.sql_files = sorted(sql_files)
-        self.nodes = [sql_file.get_variable_name() for sql_file in self.sql_files]
-        self.edges = [
-            (sql_file.get_variable_name(), parameter)
-            for sql_file in self.sql_files
-            for parameter in sql_file.get_parameters()
-            if parameter in self.nodes  # only add edges for existing nodes
-        ]
+    dag_id: str
+    start_date: datetime
+    sql_files: list[SqlFile]
 
-    def build(self) -> list[SqlFile]:
+    def has_table_metadata(self) -> bool:
         """
-        Build a directed graph from a list of sql files.
+        Check if any sql file uses Astro SDK Table Metadata fields.
 
-        :returns: a list of sql files sorted by least dependencies first
+        :returns: True if any sql file uses Astro SDK Table Metadata fields.
+        """
+        return any(
+            "database" in sql_file.metadata or "schema" in sql_file.metadata
+            for sql_file in self.sql_files
+        )
+
+    def has_sql_file(self, variable_name) -> bool:
+        """
+        Check whether the given variable name belongs to a real SQL file.
+
+        :params variable_name: The variable name of the SQL file to check.
+
+        :returns: True if there is any SQL file with the given variable name.
+        """
+        return any(
+            sql_file.get_variable_name() == variable_name for sql_file in self.sql_files
+        )
+
+    def find_sql_file(self, variable_name) -> SqlFile:
+        """
+        Find a SQL file with the given variable name.
+
+        :params variable_name: The variable name of the SQL file to find.
+
+        :returns: if found a SQL file else raises an exception.
+        """
+        return next(
+            sql_file
+            for sql_file in self.sql_files
+            if sql_file.get_variable_name() == variable_name
+        )
+
+    def sorted_sql_files(self) -> list[SqlFile]:
+        """
+        Build, validate and sort the SQL files.
+
+        :returns: a list of sql files sorted
             so they can be called sequentially in python code.
         """
-        graph = DiGraph()
-        graph.add_nodes_from(self.nodes)
-        graph.add_edges_from(self.edges)
+        # Create a graph based on all sql files and parameters
+        graph = DiGraph(
+            [
+                (sql_file, self.find_sql_file(parameter))
+                for sql_file in self.sql_files
+                for parameter in sql_file.get_parameters()
+                if self.has_sql_file(parameter)
+            ]
+        )
+
+        if not graph.nodes:
+            # Add nodes without edges i.e. without any table references
+            graph.add_nodes_from(self.sql_files)
 
         if not is_directed_acyclic_graph(graph):
+            cycle_edges = " and ".join(
+                " and ".join(edge.get_variable_name() for edge in edges)
+                for edges in find_cycle(graph)
+            )
             raise DagCycle(
-                "Could not generate DAG! "
-                f"A cycle between {' and '.join(' and '.join(edges) for edges in find_cycle(graph))} has been detected!"
+                "Could not generate DAG!"
+                f" A cycle between {cycle_edges} has been detected!"
             )
 
-        order = list(depth_first_search.dfs_postorder_nodes(graph))
-
-        return sorted(
-            self.sql_files,
-            key=lambda sql_file: order.index(sql_file.get_variable_name()),
-        )
+        return list(depth_first_search.dfs_postorder_nodes(graph))

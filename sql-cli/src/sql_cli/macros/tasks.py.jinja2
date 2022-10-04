@@ -1,9 +1,9 @@
-{% macro define_task(sql_file, input_tables) -%}
+{% macro define_task(sql_file, dag) -%}
 {{ sql_file.get_variable_name() }} = aql.transform_sql(
     sql="{{ sql_file.get_relative_target_path() }}",
     parameters={
         {%- for parameter in sql_file.get_parameters() %}
-        {%- if parameter in input_tables %}
+        {%- if dag.has_sql_file(parameter) %}
         "{{ parameter }}": {{ parameter }},
         {%- endif %}
         {%- endfor %}

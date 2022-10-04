@@ -3,13 +3,13 @@
 from airflow import DAG
 from airflow.utils import timezone
 from astro import sql as aql
-from astro.sql.table import {%- if needs_metadata_import %} Metadata, {%- endif %} Table
+from astro.sql.table import {%- if dag.has_table_metadata() %} Metadata, {%- endif %} Table
 
 with DAG(
-    dag_id="{{ dag_id }}",
-    start_date=timezone.parse("{{ start_date }}"),
+    dag_id="{{ dag.dag_id }}",
+    start_date=timezone.parse("{{ dag.start_date }}"),
     schedule_interval=None,
 ) as dag:
-    {%- for sql_file in sql_files %}
-    {{ define_task(sql_file, input_tables)|indent(width=4) }}
+    {%- for sql_file in dag.sorted_sql_files() %}
+    {{ define_task(sql_file, dag)|indent(width=4) }}
     {%- endfor %}

@@ -6,7 +6,7 @@ from astro.sql.table import Table
 
 with DAG(
     dag_id="simple",
-    start_date=timezone.parse("2022-09-27 12:27:52.224715"),
+    start_date=timezone.parse("2022-10-04 11:47:37.764537"),
     schedule_interval=None,
 ) as dag:
     imdb_movies = aql.transform_sql(

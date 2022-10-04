@@ -43,21 +43,15 @@ def generate_dag(directory: Path, target_directory: Path, dags_directory: Path) 
     :params target_directory: The directory containing the executable sql files.
     :params dags_directory: The directory containing the generated DAG.
     """
-    sql_files = get_sql_files(directory, target_directory)
-    sql_files_dag = SqlFilesDAG(sql_files)
-    sql_files_sorted = sql_files_dag.build()
+    sql_files = sorted(get_sql_files(directory, target_directory))
+    sql_files_dag = SqlFilesDAG(
+        dag_id=directory.name,
+        start_date=datetime.utcnow(),
+        sql_files=sql_files,
+    )
     render_jinja(
-        context={
-            "dag_id": directory.name,
-            "start_date": datetime.utcnow(),
-            "sql_files": sql_files_sorted,
-            "input_tables": sql_files_dag.nodes,
-            "needs_metadata_import": any(
-                "database" in sql_file.metadata or "schema" in sql_file.metadata
-                for sql_file in sql_files
-            ),
-        },
-        output_file=dags_directory / f"{directory.name}.py",
+        context={"dag": sql_files_dag},
+        output_file=dags_directory / f"{sql_files_dag.dag_id}.py",
     )
 
 

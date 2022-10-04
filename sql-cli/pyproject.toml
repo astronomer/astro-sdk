@@ -17,8 +17,7 @@ license = {file = "LICENSE"}
 
 requires-python = ">=3.7"
 dependencies = [
-    "apache-airflow>=2.0",
-    "astro-sdk-python>=1.0.0",
+    "astro-sdk-python[all]>=1.0.0",
     "python-frontmatter>=1.0.0",
     "networkx>=2.8.6",
 ]
