@@ -1,5 +1,49 @@
 # Changelog
 
+## 1.1.1
+
+### Improvements
+* Rename param sql_statement to sql in get_value_list [#865](https://github.com/astronomer/astro-sdk/issues/865), [#866](https://github.com/astronomer/astro-sdk/issues/866)
+* Benchmarking CI
+  * Improve benchmark cluster teardown [#880](https://github.com/astronomer/astro-sdk/pull/880)
+  * Make the benchmark script more verbose during failure [#882](https://github.com/astronomer/astro-sdk/pull/882)
+  * Added synthetic datasets [#879](https://github.com/astronomer/astro-sdk/pull/879)
+  * Update benchmark schedule job time [#938](https://github.com/astronomer/astro-sdk/pull/938)
+  * Run benchmark job on label [#928](https://github.com/astronomer/astro-sdk/pull/928)
+  * Wait for benchmark completion [#924](https://github.com/astronomer/astro-sdk/pull/924)
+  * Publish results to bq[#975](https://github.com/astronomer/astro-sdk/pull/975)
+* Bump runtime image version to 6.0.0 for python-sdk dev [#908](https://github.com/astronomer/astro-sdk/pull/908)
+* Move the bucket var in the docs [#907](https://github.com/astronomer/astro-sdk/pull/907)
+* Add filetype when resolving path in case of loading into dataframe [#881](https://github.com/astronomer/astro-sdk/issues/881)
+
+### Bug fixes
+* Fix postgres performance regression
+
+  * version - 1.1.1
+
+| database   | dataset               | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
+|:-----------|:----------------------|:-------------|:-------------|:----------------|:------------------|
+| postgres   | hundred_kb_csv_gs     | 723.18ms     | 36.37MB      | 715.0ms         | 50.0ms            |
+| postgres   | hundred_mb_ndjson_gs  | 11.18s       | 102.99MB     | 9.06s           | 800.0ms           |
+| postgres   | hundred_mb_parquet_gs | 17.83s       | 231.55MB     | 11.86s          | 3.37s             |
+| postgres   | one_gb_csv_gs         | 1.64min      | 426.18MB     | 57.22s          | 10.37s            |
+| postgres   | one_gb_ndjson_gs      | 1.84min      | 335.99MB     | 1.43min         | 6.66s             |
+| postgres   | one_gb_parquet_gs     | 2.38min      | 3.31GB       | 1.23min         | 22.14s            |
+| postgres   | ten_kb_csv_gs         | 778.76ms     | 35.63MB      | 700.0ms         | 60.0ms            |
+| postgres   | ten_mb_csv_gs         | 1.63s        | 47.16MB      | 1.25s           | 150.0ms           |
+
+
+   * version - 1.1.0
+
+| database                | dataset    | total_time   | memory_rss   | cpu_time_user   | cpu_time_system   |
+|:------------------------|:-----------|:-------------|:-------------|:----------------|:------------------|
+| postgres_conn_benchmark | few_kb     | 494.42ms     | 36.06MB      | 570.0ms         | 50.0ms            |
+| postgres_conn_benchmark | ten_kb     | 689.05ms     | 42.96MB      | 540.0ms         | 40.0ms            |
+| postgres_conn_benchmark | hundred_kb | 580.7ms      | 36.43MB      | 570.0ms         | 50.0ms            |
+| postgres_conn_benchmark | ten_mb     | 44.67s       | 1.38GB       | 31.03s          | 4.03s             |
+| postgres_conn_benchmark | one_gb     | 5.56min      | 62.5MB       | 14.07s          | 1.14s             |
+
+
 ## 1.1.0
 
 ### Features
