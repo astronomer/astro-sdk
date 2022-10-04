@@ -51,10 +51,10 @@ dag_bag = DagBag(Path.cwd().parent / "example_dags")
 airflow_2_3 = pytest.mark.skipif(
     airflow.__version__ < "2.3.0", reason="Require Airflow version >= 2.3.0"
 )
-airflow_2_3_dag_ids = [
+airflow_2_3_dag_ids = {
     "example_dynamic_map_task",
     "example_dynamic_task_template",
-]
+}
 dag_ids = [
     pytest.param(dag_id, marks=airflow_2_3) if dag_id in airflow_2_3_dag_ids else dag_id
     for dag_id in dag_bag.dag_ids
