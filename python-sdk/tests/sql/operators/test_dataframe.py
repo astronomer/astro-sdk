@@ -239,77 +239,40 @@ def test_postgres_dataframe_without_table_arg(sample_dag):
     test_utils.run_dag(sample_dag)
 
 
-def test_columns_names_capitalization(sample_dag):
-    """Test dataframe operator with columns_names_capitalization param"""
-
-    @aql.dataframe(columns_names_capitalization="lower")
-    def sample_df_1():  # skipcq: PY-D0003
-        return pandas.DataFrame(
-            {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
-        )
-
-    @aql.dataframe(columns_names_capitalization="upper")
-    def sample_df_2():  # skipcq: PY-D0003
-        return pandas.DataFrame(
-            {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
-        )
-
-    @aql.dataframe(columns_names_capitalization="original")
-    def sample_df_3():  # skipcq: PY-D0003
-        return pandas.DataFrame(
-            {"numbers": [1, 2, 3], "COLORS": ["red", "white", "blue"]}
-        )
-
-    with sample_dag:
-        res_1 = sample_df_1()
-        res_2 = sample_df_2()
-        res_3 = sample_df_3()
-    test_utils.run_dag(sample_dag)
-
-    columns = XCom.get_one(
-        execution_date=DEFAULT_DATE, key=res_1.key, task_id=res_1.operator.task_id
-    )
-    assert all(x.islower() for x in columns)
-
-    columns = XCom.get_one(
-        execution_date=DEFAULT_DATE, key=res_2.key, task_id=res_2.operator.task_id
-    )
-    assert all(x.isupper() for x in columns)
-
-    columns = XCom.get_one(
-        execution_date=DEFAULT_DATE, key=res_3.key, task_id=res_3.operator.task_id
-    )
-    cols = list(columns.columns)
-    cols.sort()
-    assert cols[1].islower()
-    assert cols[0].isupper()
-
-
 test_df = pandas.DataFrame({"numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
 test_df_2 = pandas.DataFrame({"Numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
 
 
-def validate_dataframe(df: pandas.DataFrame, capital_settings: dict):
+def _validate_dataframe(df: pandas.DataFrame, capital_settings: dict):
     cols = list(df)
     assert all([getattr(x, capital_settings["function"]) for x in cols])
 
 
-def validate_list(x: list, function_output: list, capital_settings: dict):
+def _validate_list(x: list, function_output: list, capital_settings: dict):
     assert len(x) == len(function_output)
     for pre, post in zip(function_output, x):
         assert isinstance(pre, pandas.DataFrame) == isinstance(post, pandas.DataFrame)
         if isinstance(pre, pandas.DataFrame):
-            validate_dataframe(post, capital_settings)
+            _validate_dataframe(post, capital_settings)
 
 
-def validate_dict(x: dict, function_output: dict, capital_settings: dict):
+def _validate_dict(x: dict, function_output: dict, capital_settings: dict):
     assert x.keys() == function_output.keys()
     for key in function_output.keys():
         post = x[key]
         pre = function_output[key]
         assert isinstance(pre, pandas.DataFrame) == isinstance(post, pandas.DataFrame)
         if isinstance(pre, pandas.DataFrame):
-            validate_dataframe(post, capital_settings)
+            _validate_dataframe(post, capital_settings)
+
+
+def _find_validator(function_output):
+    if isinstance(function_output, list):
+        return _validate_list
+    elif isinstance(function_output, dict):
+        return _validate_dict
+    else:
+        return _validate_dataframe
 
 
 @pytest.mark.parametrize(
@@ -322,14 +285,16 @@ def validate_dict(x: dict, function_output: dict, capital_settings: dict):
     ids=["upper", "lower", "original"],
 )
 @pytest.mark.parametrize(
-    "function_output_and_validator",
+    "function_output",
     [
-        ([1, 2, test_df], validate_list),
-        ([test_df, test_df_2], validate_list),
-        ([test_df], validate_list),
-        ({"foo": 1, "bar": 2, "baz": test_df}, validate_dict),
-        ({"foo": test_df, "bar": test_df_2}, validate_dict),
-        ({"foo": test_df}, validate_dict),
+        [1, 2, test_df],
+        [test_df, test_df_2],
+        [test_df],
+        {"foo": 1, "bar": 2, "baz": test_df},
+        {"foo": test_df, "bar": test_df_2},
+        {"foo": test_df},
+        test_df,
+        test_df_2
     ],
     ids=[
         "mixed_list",
@@ -338,14 +303,17 @@ def validate_dict(x: dict, function_output: dict, capital_settings: dict):
         "mixed_dict",
         "two_df_dict",
         "single_df_dict",
+        "single_df",
+        "single_df_mixed"
     ],
 )
 def test_columns_name_cap_multi_output(
-    sample_dag, capital_settings, function_output_and_validator
+    sample_dag, capital_settings, function_output
 ):
 
-    function_output, validator = function_output_and_validator
+    function_output = function_output
 
+    validator = _find_validator(function_output)
     @aql.dataframe(columns_names_capitalization=capital_settings["column_setting"])
     def make_df():
         return function_output
