@@ -12,8 +12,13 @@ def root_directory():
 
 
 @pytest.fixture()
-def root_directory_invalid():
-    return Path.cwd() / "tests" / "sql_files_invalid"
+def root_directory_cycle():
+    return Path.cwd() / "tests" / "sql_files_cycle"
+
+
+@pytest.fixture()
+def root_directory_symlink():
+    return Path.cwd() / "tests" / "sql_files_symlink"
 
 
 @pytest.fixture()
@@ -54,10 +59,10 @@ def sql_file_in_sub_directory(root_directory, target_directory):
 
 
 @pytest.fixture()
-def sql_file_with_cycle(root_directory_invalid, target_directory):
+def sql_file_with_cycle(root_directory_cycle, target_directory):
     return SqlFile(
-        root_directory=root_directory_invalid,
-        path=root_directory_invalid / "d.sql",
+        root_directory=root_directory_cycle,
+        path=root_directory_cycle / "d.sql",
         target_directory=target_directory,
     )
 

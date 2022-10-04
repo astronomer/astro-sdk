@@ -44,3 +44,10 @@ def test_get_sql_files(root_directory, target_directory):
         )
         for path in {"a.sql", "b.sql", "c.sql", "sub_dir/a.sql"}
     }
+
+
+def test_get_sql_files_with_symlink(root_directory_symlink, target_directory):
+    """Test that get_sql_files ignores symlinks."""
+    assert not get_sql_files(
+        directory=root_directory_symlink, target_directory=target_directory
+    )
