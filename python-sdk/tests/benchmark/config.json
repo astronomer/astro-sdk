@@ -69,7 +69,7 @@
       },
       "file_type": "parquet",
       "name": "ten_kb",
-      "path": "s3://astro-sdk/benchmark/synthetic-dataset/parquet/ten_kb.parquet",
+      "path": "s3://astro-sdk-redshift/synthetic-dataset/parquet/ten_kb.parquet",
       "rows": 160,
       "size": "10 KB"
     },
@@ -97,7 +97,7 @@
       },
       "file_type": "parquet",
       "name": "hundred_kb",
-      "path": "s3://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_kb.parquet",
+      "path": "s3://astro-sdk-redshift/synthetic-dataset/parquet/hundred_kb.parquet",
       "rows": 160,
       "size": "10 KB"
     },
@@ -125,7 +125,7 @@
       },
       "file_type": "parquet",
       "name": "ten_mb",
-      "path": "s3://astro-sdk/benchmark/synthetic-dataset/parquet/ten_mb.parquet",
+      "path": "s3://astro-sdk-redshift/synthetic-dataset/parquet/ten_mb.parquet",
       "rows": 160,
       "size": "10 KB"
     },
@@ -153,7 +153,7 @@
       },
       "file_type": "parquet",
       "name": "hundred_mb",
-      "path": "s3://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_mb.parquet",
+      "path": "s3://astro-sdk-redshift/synthetic-dataset/parquet/hundred_mb.parquet",
       "rows": 160,
       "size": "10 KB"
     },
@@ -181,7 +181,7 @@
       },
       "file_type": "parquet",
       "name": "one_gb",
-      "path": "s3://astro-sdk/benchmark/synthetic-dataset/parquet/one_gb/",
+      "path": "s3://astro-sdk-redshift/synthetic-dataset/parquet/one_gb/",
       "rows": 160,
       "size": "10 KB"
     },
