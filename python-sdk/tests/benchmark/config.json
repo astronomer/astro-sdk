@@ -196,7 +196,9 @@
         },
         "redshift": {
           "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
+            "IGNOREHEADER": 1,
+            "region": "us-east-1"
           }
         },
         "snowflake": {
@@ -227,7 +229,9 @@
         },
         "redshift": {
           "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
+            "IGNOREHEADER": 1,
+            "region": "us-east-1"
           }
         },
         "snowflake": {
@@ -255,7 +259,9 @@
         },
         "redshift": {
           "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
+            "IGNOREHEADER": 1,
+            "region": "us-east-1"
           }
         },
         "snowflake": {
@@ -283,7 +289,9 @@
         },
         "redshift": {
           "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
+            "IGNOREHEADER": 1,
+            "region": "us-east-1"
           }
         },
         "snowflake": {
@@ -311,7 +319,9 @@
         },
         "redshift": {
           "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
+            "IGNOREHEADER": 1,
+            "region": "us-east-1"
           }
         },
         "snowflake": {
