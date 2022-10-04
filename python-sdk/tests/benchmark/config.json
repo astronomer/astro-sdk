@@ -49,26 +49,9 @@
       "database_kwargs": {
         "bigquery": {},
         "postgres": {},
-        "redshift": {},
-        "snowflake": {
-          "native_support_kwargs": {
-            "snowflake_storage_integration_google": "gcs_int_python_sdk",
-            "storage_integration": "gcs_int_python_sdk"
-          }
-        }
-      },
-      "file_type": "parquet",
-      "name": "ten_kb",
-      "path": "gs://astro-sdk/benchmark/synthetic-dataset/parquet/ten_kb.parquet",
-      "rows": 160,
-      "size": "10 KB"
-    },
-    {
-      "conn_id": "bigquery",
-      "database_kwargs": {
-        "bigquery": {},
-        "postgres": {},
-        "redshift": {},
+        "redshift": {
+          "skip": true
+        },
         "snowflake": {
           "native_support_kwargs": {
             "snowflake_storage_integration_google": "gcs_int_python_sdk",
@@ -87,26 +70,9 @@
       "database_kwargs": {
         "bigquery": {},
         "postgres": {},
-        "redshift": {},
-        "snowflake": {
-          "native_support_kwargs": {
-            "snowflake_storage_integration_google": "gcs_int_python_sdk",
-            "storage_integration": "gcs_int_python_sdk"
-          }
-        }
-      },
-      "file_type": "ndjson",
-      "name": "ten_kb",
-      "path": "gs://astro-sdk/benchmark/synthetic-dataset/ndjson/ten_kb.ndjson",
-      "rows": 160,
-      "size": "10 KB"
-    },
-    {
-      "conn_id": "bigquery",
-      "database_kwargs": {
-        "bigquery": {},
-        "postgres": {},
-        "redshift": {},
+        "redshift": {
+          "skip": true
+        },
         "snowflake": {
           "native_support_kwargs": {
             "snowflake_storage_integration_google": "gcs_int_python_sdk",
@@ -125,7 +91,9 @@
       "database_kwargs": {
         "bigquery": {},
         "postgres": {},
-        "redshift": {},
+        "redshift": {
+          "skip": true
+        },
         "snowflake": {
           "native_support_kwargs": {
             "snowflake_storage_integration_google": "gcs_int_python_sdk",
@@ -144,7 +112,9 @@
       "database_kwargs": {
         "bigquery": {},
         "postgres": {},
-        "redshift": {},
+        "redshift": {
+          "skip": true
+        },
         "snowflake": {
           "native_support_kwargs": {
             "snowflake_storage_integration_google": "gcs_int_python_sdk",
@@ -153,8 +123,29 @@
         }
       },
       "file_type": "csv",
-      "name": "hundred_mb",
+      "name": "hundred_kb",
       "path": "gs://astro-sdk/benchmark/synthetic-dataset/csv/hundred_mb.csv",
+      "rows": 160,
+      "size": "10 KB"
+    },
+    {
+      "conn_id": "bigquery",
+      "database_kwargs": {
+        "bigquery": {},
+        "postgres": {},
+        "redshift": {
+          "skip": true
+        },
+        "snowflake": {
+          "native_support_kwargs": {
+            "snowflake_storage_integration_google": "gcs_int_python_sdk",
+            "storage_integration": "gcs_int_python_sdk"
+          }
+        }
+      },
+      "file_type": "csv",
+      "name": "one_gb",
+      "path": "gs://astro-sdk/benchmark/synthetic-dataset/csv/one_gb.csv",
       "rows": 160,
       "size": "10 KB"
     },
@@ -184,7 +175,7 @@
       },
       "file_type": "csv",
       "name": "ten_kb",
-      "path": "s3://astro-sdk-redshift/synthetic-dataset/csv/ten_kb.csv",
+      "path": "s3://astro-sdk/benchmark/synthetic-dataset/csv/ten_kb.csv",
       "rows": 160,
       "size": "10 KB"
     },
@@ -202,62 +193,6 @@
             "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
             "IGNOREHEADER": 1,
             "region": "us-east-1"
-          }
-        },
-        "snowflake": {
-          "native_support_kwargs": {
-            "snowflake_storage_integration_amazon": "gcs_int_python_sdk",
-            "storage_integration": "gcs_int_python_sdk"
-          },
-          "skip": true
-        }
-      },
-      "file_type": "ndjson",
-      "name": "ten_kb",
-      "path": "s3://astro-sdk-redshift/synthetic-dataset/ndjson/ten_kb.ndjson",
-      "rows": 160,
-      "size": "10 KB"
-    },
-    {
-      "conn_id": "s3_conn_benchmark",
-      "database_kwargs": {
-        "bigquery": {
-          "native_support_kwargs": {
-            "skip_leading_rows": "1"
-          }
-        },
-        "postgres": {},
-        "redshift": {
-          "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
-          }
-        },
-        "snowflake": {
-          "native_support_kwargs": {
-            "snowflake_storage_integration_amazon": "gcs_int_python_sdk",
-            "storage_integration": "gcs_int_python_sdk"
-          },
-          "skip": true
-        }
-      },
-      "file_type": "parquet",
-      "name": "ten_kb",
-      "path": "s3://astro-sdk-redshift/synthetic-dataset/parquet/ten_kb.parquet",
-      "rows": 160,
-      "size": "10 KB"
-    },
-    {
-      "conn_id": "s3_conn_benchmark",
-      "database_kwargs": {
-        "bigquery": {
-          "native_support_kwargs": {
-            "skip_leading_rows": "1"
-          }
-        },
-        "postgres": {},
-        "redshift": {
-          "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
           }
         },
         "snowflake": {
@@ -285,7 +220,9 @@
         "postgres": {},
         "redshift": {
           "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
+            "IGNOREHEADER": 1,
+            "region": "us-east-1"
           }
         },
         "snowflake": {
@@ -313,7 +250,9 @@
         "postgres": {},
         "redshift": {
           "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
+            "IGNOREHEADER": 1,
+            "region": "us-east-1"
           }
         },
         "snowflake": {
@@ -327,6 +266,120 @@
       "file_type": "csv",
       "name": "hundred_mb",
       "path": "s3://astro-sdk/benchmark/synthetic-dataset/csv/hundred_mb.csv",
+      "rows": 160,
+      "size": "10 KB"
+    },
+    {
+      "conn_id": "s3_conn_benchmark",
+      "database_kwargs": {
+        "bigquery": {
+          "native_support_kwargs": {
+            "skip_leading_rows": "1"
+          }
+        },
+        "postgres": {},
+        "redshift": {
+          "native_support_kwargs": {
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
+            "IGNOREHEADER": 1,
+            "region": "us-east-1"
+          }
+        },
+        "snowflake": {
+          "native_support_kwargs": {
+            "snowflake_storage_integration_amazon": "gcs_int_python_sdk",
+            "storage_integration": "gcs_int_python_sdk"
+          },
+          "skip": true
+        }
+      },
+      "file_type": "csv",
+      "name": "one_gb",
+      "path": "s3://astro-sdk/benchmark/synthetic-dataset/csv/one_gb.csv",
+      "rows": 160,
+      "size": "10 KB"
+    },
+    {
+      "conn_id": "bigquery",
+      "database_kwargs": {
+        "bigquery": {},
+        "postgres": {},
+        "redshift": {
+          "skip": true
+        },
+        "snowflake": {
+          "native_support_kwargs": {
+            "snowflake_storage_integration_google": "gcs_int_python_sdk",
+            "storage_integration": "gcs_int_python_sdk"
+          }
+        }
+      },
+      "file_type": "parquet",
+      "name": "ten_kb",
+      "path": "gs://astro-sdk/benchmark/synthetic-dataset/parquet/ten_kb.parquet",
+      "rows": 160,
+      "size": "10 KB"
+    },
+    {
+      "conn_id": "bigquery",
+      "database_kwargs": {
+        "bigquery": {},
+        "postgres": {},
+        "redshift": {
+          "skip": true
+        },
+        "snowflake": {
+          "native_support_kwargs": {
+            "snowflake_storage_integration_google": "gcs_int_python_sdk",
+            "storage_integration": "gcs_int_python_sdk"
+          }
+        }
+      },
+      "file_type": "parquet",
+      "name": "hundred_kb",
+      "path": "gs://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_kb.parquet",
+      "rows": 160,
+      "size": "10 KB"
+    },
+    {
+      "conn_id": "bigquery",
+      "database_kwargs": {
+        "bigquery": {},
+        "postgres": {},
+        "redshift": {
+          "skip": true
+        },
+        "snowflake": {
+          "native_support_kwargs": {
+            "snowflake_storage_integration_google": "gcs_int_python_sdk",
+            "storage_integration": "gcs_int_python_sdk"
+          }
+        }
+      },
+      "file_type": "parquet",
+      "name": "ten_mb",
+      "path": "gs://astro-sdk/benchmark/synthetic-dataset/parquet/ten_mb.parquet",
+      "rows": 160,
+      "size": "10 KB"
+    },
+    {
+      "conn_id": "bigquery",
+      "database_kwargs": {
+        "bigquery": {},
+        "postgres": {},
+        "redshift": {
+          "skip": true
+        },
+        "snowflake": {
+          "native_support_kwargs": {
+            "snowflake_storage_integration_google": "gcs_int_python_sdk",
+            "storage_integration": "gcs_int_python_sdk"
+          }
+        }
+      },
+      "file_type": "parquet",
+      "name": "hundred_mb",
+      "path": "gs://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_mb.parquet",
       "rows": 160,
       "size": "10 KB"
     },
@@ -374,6 +427,126 @@
       "size": "10 KB"
     },
     {
+      "conn_id": "s3_conn_benchmark",
+      "database_kwargs": {
+        "bigquery": {},
+        "postgres": {},
+        "redshift": {
+          "native_support_kwargs": {
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
+          }
+        },
+        "snowflake": {
+          "native_support_kwargs": {
+            "snowflake_storage_integration_amazon": "gcs_int_python_sdk",
+            "storage_integration": "gcs_int_python_sdk"
+          },
+          "skip": true
+        }
+      },
+      "file_type": "parquet",
+      "name": "ten_kb",
+      "path": "s3://astro-sdk/benchmark/synthetic-dataset/parquet/ten_kb.parquet",
+      "rows": 160,
+      "size": "10 KB"
+    },
+    {
+      "conn_id": "s3_conn_benchmark",
+      "database_kwargs": {
+        "bigquery": {},
+        "postgres": {},
+        "redshift": {
+          "native_support_kwargs": {
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
+          }
+        },
+        "snowflake": {
+          "native_support_kwargs": {
+            "snowflake_storage_integration_amazon": "gcs_int_python_sdk",
+            "storage_integration": "gcs_int_python_sdk"
+          },
+          "skip": true
+        }
+      },
+      "file_type": "parquet",
+      "name": "hundred_kb",
+      "path": "s3://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_kb.parquet",
+      "rows": 160,
+      "size": "10 KB"
+    },
+    {
+      "conn_id": "s3_conn_benchmark",
+      "database_kwargs": {
+        "bigquery": {},
+        "postgres": {},
+        "redshift": {
+          "native_support_kwargs": {
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
+          }
+        },
+        "snowflake": {
+          "native_support_kwargs": {
+            "snowflake_storage_integration_amazon": "gcs_int_python_sdk",
+            "storage_integration": "gcs_int_python_sdk"
+          },
+          "skip": true
+        }
+      },
+      "file_type": "parquet",
+      "name": "ten_mb",
+      "path": "s3://astro-sdk/benchmark/synthetic-dataset/parquet/ten_mb.parquet",
+      "rows": 160,
+      "size": "10 KB"
+    },
+    {
+      "conn_id": "s3_conn_benchmark",
+      "database_kwargs": {
+        "bigquery": {},
+        "postgres": {},
+        "redshift": {
+          "native_support_kwargs": {
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
+          }
+        },
+        "snowflake": {
+          "native_support_kwargs": {
+            "snowflake_storage_integration_amazon": "gcs_int_python_sdk",
+            "storage_integration": "gcs_int_python_sdk"
+          },
+          "skip": true
+        }
+      },
+      "file_type": "parquet",
+      "name": "hundred_mb",
+      "path": "s3://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_mb.parquet",
+      "rows": 160,
+      "size": "10 KB"
+    },
+    {
+      "conn_id": "s3_conn_benchmark",
+      "database_kwargs": {
+        "bigquery": {},
+        "postgres": {},
+        "redshift": {
+          "native_support_kwargs": {
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
+          }
+        },
+        "snowflake": {
+          "native_support_kwargs": {
+            "snowflake_storage_integration_amazon": "gcs_int_python_sdk",
+            "storage_integration": "gcs_int_python_sdk"
+          },
+          "skip": true
+        }
+      },
+      "file_type": "parquet",
+      "name": "one_gb",
+      "path": "s3://astro-sdk/benchmark/synthetic-dataset/parquet/one_gb/",
+      "rows": 160,
+      "size": "10 KB"
+    },
+    {
       "conn_id": "bigquery",
       "database_kwargs": {
         "bigquery": {},
@@ -388,9 +561,72 @@
           }
         }
       },
-      "file_type": "csv",
-      "name": "one_gb",
-      "path": "gs://astro-sdk/benchmark/synthetic-dataset/csv/one_gb.csv",
+      "file_type": "ndjson",
+      "name": "ten_kb",
+      "path": "gs://astro-sdk/benchmark/synthetic-dataset/ndjson/ten_kb.ndjson",
+      "rows": 160,
+      "size": "10 KB"
+    },
+    {
+      "conn_id": "bigquery",
+      "database_kwargs": {
+        "bigquery": {},
+        "postgres": {},
+        "redshift": {
+          "skip": true
+        },
+        "snowflake": {
+          "native_support_kwargs": {
+            "snowflake_storage_integration_google": "gcs_int_python_sdk",
+            "storage_integration": "gcs_int_python_sdk"
+          }
+        }
+      },
+      "file_type": "ndjson",
+      "name": "hundred_kb",
+      "path": "gs://astro-sdk/benchmark/synthetic-dataset/ndjson/hundred_kb.ndjson",
+      "rows": 160,
+      "size": "10 KB"
+    },
+    {
+      "conn_id": "bigquery",
+      "database_kwargs": {
+        "bigquery": {},
+        "postgres": {},
+        "redshift": {
+          "skip": true
+        },
+        "snowflake": {
+          "native_support_kwargs": {
+            "snowflake_storage_integration_google": "gcs_int_python_sdk",
+            "storage_integration": "gcs_int_python_sdk"
+          }
+        }
+      },
+      "file_type": "ndjson",
+      "name": "ten_mb",
+      "path": "gs://astro-sdk/benchmark/synthetic-dataset/ndjson/ten_mb.ndjson",
+      "rows": 160,
+      "size": "10 KB"
+    },
+    {
+      "conn_id": "bigquery",
+      "database_kwargs": {
+        "bigquery": {},
+        "postgres": {},
+        "redshift": {
+          "skip": true
+        },
+        "snowflake": {
+          "native_support_kwargs": {
+            "snowflake_storage_integration_google": "gcs_int_python_sdk",
+            "storage_integration": "gcs_int_python_sdk"
+          }
+        }
+      },
+      "file_type": "ndjson",
+      "name": "hundred_mb",
+      "path": "gs://astro-sdk/benchmark/synthetic-dataset/ndjson/hundred_mb.ndjson",
       "rows": 160,
       "size": "10 KB"
     },
@@ -418,71 +654,7 @@
     {
       "conn_id": "s3_conn_benchmark",
       "database_kwargs": {
-        "bigquery": {
-          "native_support_kwargs": {
-            "skip_leading_rows": "1"
-          }
-        },
-        "postgres": {},
-        "redshift": {
-          "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
-            "IGNOREHEADER": 1,
-            "region": "us-east-1"
-          }
-        },
-        "snowflake": {
-          "native_support_kwargs": {
-            "snowflake_storage_integration_amazon": "gcs_int_python_sdk",
-            "storage_integration": "gcs_int_python_sdk"
-          },
-          "skip": true
-        }
-      },
-      "file_type": "csv",
-      "name": "one_gb",
-      "path": "s3://astro-sdk-redshift/synthetic-dataset/csv/one_gb.csv",
-      "rows": 160,
-      "size": "1 GB"
-    },
-    {
-      "conn_id": "s3_conn_benchmark",
-      "database_kwargs": {
-        "bigquery": {
-          "native_support_kwargs": {
-            "skip_leading_rows": "1"
-          }
-        },
-        "postgres": {},
-        "redshift": {
-          "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
-            "IGNOREHEADER": 1,
-            "region": "us-east-1"
-          }
-        },
-        "snowflake": {
-          "native_support_kwargs": {
-            "snowflake_storage_integration_amazon": "gcs_int_python_sdk",
-            "storage_integration": "gcs_int_python_sdk"
-          },
-          "skip": true
-        }
-      },
-      "file_type": "ndjson",
-      "name": "one_gb",
-      "path": "s3://astro-sdk-redshift/synthetic-dataset/ndjson/one_gb.ndjson",
-      "rows": 160,
-      "size": "1 GB"
-    },
-    {
-      "conn_id": "s3_conn_benchmark",
-      "database_kwargs": {
-        "bigquery": {
-          "native_support_kwargs": {
-            "skip_leading_rows": "1"
-          }
-        },
+        "bigquery": {},
         "postgres": {},
         "redshift": {
           "native_support_kwargs": {
@@ -497,11 +669,11 @@
           "skip": true
         }
       },
-      "file_type": "parquet",
-      "name": "one_gb",
-      "path": "s3://astro-sdk-redshift/synthetic-dataset/parquet/one_gb/",
+      "file_type": "ndjson",
+      "name": "ten_kb",
+      "path": "s3://astro-sdk/benchmark/synthetic-dataset/ndjson/ten_kb.ndjson",
       "rows": 160,
-      "size": "1 GB"
+      "size": "10 KB"
     },
     {
       "conn_id": "s3_conn_benchmark",
@@ -515,206 +687,6 @@
         "redshift": {
           "native_support_kwargs": {
             "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
-          }
-        },
-        "snowflake": {
-          "native_support_kwargs": {
-            "snowflake_storage_integration_amazon": "gcs_int_python_sdk",
-            "storage_integration": "gcs_int_python_sdk"
-          },
-          "skip": true
-        }
-      },
-      "file_type": "parquet",
-      "name": "hundred_kb",
-      "path": "s3://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_kb.parquet",
-      "rows": 160,
-      "size": "1 GB"
-    },
-    {
-      "conn_id": "s3_conn_benchmark",
-      "database_kwargs": {
-        "bigquery": {
-          "native_support_kwargs": {
-            "skip_leading_rows": "1"
-          }
-        },
-        "postgres": {},
-        "redshift": {
-          "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
-          }
-        },
-        "snowflake": {
-          "native_support_kwargs": {
-            "snowflake_storage_integration_amazon": "gcs_int_python_sdk",
-            "storage_integration": "gcs_int_python_sdk"
-          },
-          "skip": true
-        }
-      },
-      "file_type": "parquet",
-      "name": "hundred_kb",
-      "path": "s3://astro-sdk/benchmark/synthetic-dataset/parquet/ten_mb.parquet",
-      "rows": 160,
-      "size": "1 GB"
-    },
-    {
-      "conn_id": "s3_conn_benchmark",
-      "database_kwargs": {
-        "bigquery": {
-          "native_support_kwargs": {
-            "skip_leading_rows": "1"
-          }
-        },
-        "postgres": {},
-        "redshift": {
-          "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
-          }
-        },
-        "snowflake": {
-          "native_support_kwargs": {
-            "snowflake_storage_integration_amazon": "gcs_int_python_sdk",
-            "storage_integration": "gcs_int_python_sdk"
-          },
-          "skip": true
-        }
-      },
-      "file_type": "parquet",
-      "name": "hundred_mb",
-      "path": "s3://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_mb.parquet",
-      "rows": 160,
-      "size": "1 GB"
-    },
-    {
-      "conn_id": "bigquery",
-      "database_kwargs": {
-        "bigquery": {},
-        "postgres": {},
-        "redshift": {},
-        "snowflake": {
-          "native_support_kwargs": {
-            "snowflake_storage_integration_google": "gcs_int_python_sdk",
-            "storage_integration": "gcs_int_python_sdk"
-          }
-        }
-      },
-      "file_type": "parquet",
-      "name": "hundred_kb",
-      "path": "gs://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_kb.parquet",
-      "rows": 160,
-      "size": "10 KB"
-    },
-    {
-      "conn_id": "bigquery",
-      "database_kwargs": {
-        "bigquery": {},
-        "postgres": {},
-        "redshift": {},
-        "snowflake": {
-          "native_support_kwargs": {
-            "snowflake_storage_integration_google": "gcs_int_python_sdk",
-            "storage_integration": "gcs_int_python_sdk"
-          }
-        }
-      },
-      "file_type": "parquet",
-      "name": "hundred_kb",
-      "path": "gs://astro-sdk/benchmark/synthetic-dataset/parquet/ten_mb.parquet",
-      "rows": 160,
-      "size": "10 KB"
-    },
-    {
-      "conn_id": "bigquery",
-      "database_kwargs": {
-        "bigquery": {},
-        "postgres": {},
-        "redshift": {},
-        "snowflake": {
-          "native_support_kwargs": {
-            "snowflake_storage_integration_google": "gcs_int_python_sdk",
-            "storage_integration": "gcs_int_python_sdk"
-          }
-        }
-      },
-      "file_type": "parquet",
-      "name": "hundred_mb",
-      "path": "gs://astro-sdk/benchmark/synthetic-dataset/parquet/hundred_mb.parquet",
-      "rows": 160,
-      "size": "10 KB"
-    },
-    {
-      "conn_id": "bigquery",
-      "database_kwargs": {
-        "bigquery": {},
-        "postgres": {},
-        "redshift": {},
-        "snowflake": {
-          "native_support_kwargs": {
-            "snowflake_storage_integration_google": "gcs_int_python_sdk",
-            "storage_integration": "gcs_int_python_sdk"
-          }
-        }
-      },
-      "file_type": "ndjson",
-      "name": "hundred_kb",
-      "path": "gs://astro-sdk/benchmark/synthetic-dataset/ndjson/hundred_kb.ndjson",
-      "rows": 160,
-      "size": "10 KB"
-    },
-    {
-      "conn_id": "bigquery",
-      "database_kwargs": {
-        "bigquery": {},
-        "postgres": {},
-        "redshift": {},
-        "snowflake": {
-          "native_support_kwargs": {
-            "snowflake_storage_integration_google": "gcs_int_python_sdk",
-            "storage_integration": "gcs_int_python_sdk"
-          }
-        }
-      },
-      "file_type": "ndjson",
-      "name": "ten_mb",
-      "path": "gs://astro-sdk/benchmark/synthetic-dataset/ndjson/ten_mb.ndjson",
-      "rows": 160,
-      "size": "10 KB"
-    },
-    {
-      "conn_id": "bigquery",
-      "database_kwargs": {
-        "bigquery": {},
-        "postgres": {},
-        "redshift": {},
-        "snowflake": {
-          "native_support_kwargs": {
-            "snowflake_storage_integration_google": "gcs_int_python_sdk",
-            "storage_integration": "gcs_int_python_sdk"
-          }
-        }
-      },
-      "file_type": "ndjson",
-      "name": "hundred_mb",
-      "path": "gs://astro-sdk/benchmark/synthetic-dataset/ndjson/hundred_mb.ndjson",
-      "rows": 160,
-      "size": "10 KB"
-    },
-    {
-      "conn_id": "s3_conn_benchmark",
-      "database_kwargs": {
-        "bigquery": {
-          "native_support_kwargs": {
-            "skip_leading_rows": "1"
-          }
-        },
-        "postgres": {},
-        "redshift": {
-          "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
-            "IGNOREHEADER": 1,
-            "region": "us-east-1"
           }
         },
         "snowflake": {
@@ -729,22 +701,16 @@
       "name": "hundred_kb",
       "path": "s3://astro-sdk/benchmark/synthetic-dataset/ndjson/hundred_kb.ndjson",
       "rows": 160,
-      "size": "1 GB"
+      "size": "10 KB"
     },
     {
       "conn_id": "s3_conn_benchmark",
       "database_kwargs": {
-        "bigquery": {
-          "native_support_kwargs": {
-            "skip_leading_rows": "1"
-          }
-        },
+        "bigquery": {},
         "postgres": {},
         "redshift": {
           "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
-            "IGNOREHEADER": 1,
-            "region": "us-east-1"
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
           }
         },
         "snowflake": {
@@ -759,22 +725,16 @@
       "name": "ten_mb",
       "path": "s3://astro-sdk/benchmark/synthetic-dataset/ndjson/ten_mb.ndjson",
       "rows": 160,
-      "size": "1 GB"
+      "size": "10 KB"
     },
     {
       "conn_id": "s3_conn_benchmark",
       "database_kwargs": {
-        "bigquery": {
-          "native_support_kwargs": {
-            "skip_leading_rows": "1"
-          }
-        },
+        "bigquery": {},
         "postgres": {},
         "redshift": {
           "native_support_kwargs": {
-            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly",
-            "IGNOREHEADER": 1,
-            "region": "us-east-1"
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
           }
         },
         "snowflake": {
@@ -786,10 +746,34 @@
         }
       },
       "file_type": "ndjson",
-      "name": "ten_mb",
+      "name": "hundred_mb",
       "path": "s3://astro-sdk/benchmark/synthetic-dataset/ndjson/hundred_mb.ndjson",
       "rows": 160,
-      "size": "1 GB"
+      "size": "10 KB"
+    },
+    {
+      "conn_id": "s3_conn_benchmark",
+      "database_kwargs": {
+        "bigquery": {},
+        "postgres": {},
+        "redshift": {
+          "native_support_kwargs": {
+            "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
+          }
+        },
+        "snowflake": {
+          "native_support_kwargs": {
+            "snowflake_storage_integration_amazon": "gcs_int_python_sdk",
+            "storage_integration": "gcs_int_python_sdk"
+          },
+          "skip": true
+        }
+      },
+      "file_type": "ndjson",
+      "name": "one_gb",
+      "path": "s3://astro-sdk/benchmark/synthetic-dataset/ndjson/one_gb.ndjson",
+      "rows": 160,
+      "size": "10 KB"
     }
   ]
 }
