@@ -28,6 +28,7 @@ from astro.settings import SCHEMA
 # Import Operator
 from astro.sql.operators.export_file import export_file
 from astro.sql.table import Table
+
 from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
@@ -245,7 +246,7 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
 ):
     _, test_table = database_table_fixture
     with tempfile.NamedTemporaryFile(suffix=".csv") as temp_file:
-        with pytest.raises(BackfillUnfinished):
+        with pytest.raises(FileExistsError):
             with sample_dag:
                 export_file(
                     input_data=test_table,
@@ -253,8 +254,6 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
                     if_exists="exception",
                 )
             test_utils.run_dag(sample_dag)
-        expected_error = f"{temp_file.name} file already exists."
-        assert expected_error in caplog.text
 
 
 @pytest.mark.parametrize(
