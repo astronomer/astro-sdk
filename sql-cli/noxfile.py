@@ -39,8 +39,6 @@ def type_check(session: nox.Session) -> None:
     """Run MyPy checks."""
     session.install("poetry")
     session.run("poetry", "install")
-    session.install("-e", "../sql-cli/.[tool.poetry.dependencies]")
-    session.install("-e", "../sql-cli/.[tool.poetry.group.dev.dependencies]")
     session.run("mypy", "--version")
     session.run("mypy")
 
