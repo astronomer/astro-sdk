@@ -10,7 +10,7 @@ license = "Apache-2.0"
 keywords = ["sql", "transform", "analyst", "workflow", "airflow", "astronomer"]
 packages = [{include = "sql_cli"}]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: Apache Software License",
     "Topic :: Database",
     "Framework :: Apache Airflow",
