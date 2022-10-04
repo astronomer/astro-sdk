@@ -1,7 +1,20 @@
 .PHONY: help
 .DEFAULT_GOAL:= help
 SHELL := /bin/bash
-SYSTEM_PIP := pip
+
+PROJECT_NAME := sql-cli
+SYSTEM_PYTHON := python3.9
+
+# Set default virtualenv path, if not defined
+ifndef VIRTUALENV_PATH
+$(shell mkdir -p ~/.virtualenvs/)
+override VIRTUALENV_PATH = ~/.virtualenvs/$(PROJECT_NAME)
+endif
+
+PYTHON = $(VIRTUALENV_PATH)/bin/python
+PIP = $(VIRTUALENV_PATH)/bin/pip
+PYTEST = $(VIRTUALENV_PATH)/bin/pytest
+PRECOMMIT = $(VIRTUALENV_PATH)/bin/pre-commit
 
 
 clean:  ## Remove temporary files
@@ -12,32 +25,34 @@ clean:  ## Remove temporary files
 	@find . -name "*.sw[a-z]" -delete
 	@find . -type d -name "*.egg-info" -exec rm -rf {} +
 
+virtualenv:  ## Create Python virtualenv
+	@test -d $(VIRTUALENV_PATH) && \
+	(echo "The virtualenv $(VIRTUALENV_PATH) already exists. Skipping.") || \
+	(echo "Creating the virtualenv $(VIRTUALENV_PATH) using $(SYSTEM_PYTHON)" & \
+	$(SYSTEM_PYTHON) -m venv $(VIRTUALENV_PATH))
+
+
 system:  ## Install system dependencies
 	@echo "Installing system dependencies using default pip"
-	@$(SYSTEM_PIP) install poetry
-	@$(SYSTEM_PIP) install pre-commit
+	@$(PIP) install nox
+	@$(PIP) install pre-commit
 
-install:  ## Create Python virtualenv and install python dependencies
-	@poetry install
 
-virtualenv:  ## Activate project virtualenv
-	@echo "The virtual env is:" $(shell poetry env info -p)
+install: virtualenv  ## Install python dependencies in existing virtualenv
+	@echo "Installing Python dependencies using $(PIP)"
+	@$(PIP) install --upgrade pip
+	@$(PIP) install nox
+	@$(PIP) install pre-commit
+	@$(PIP) install -e .[all]
+	@$(PIP) install .[tests]
 
 setup: system install  ## Setup a local development environment
 
 pre-commit:  # Run pre-commit
 	@git ls-files -- . | xargs pre-commit run --files
 
-flow:  # Build and run the latest version of flow
-
 test:  # Run tests
-	@poetry run pytest -s --cov --cov-branch --cov-report=term-missing
-
-release:  # Build a package
-	@echo -e "If this is your first time, please, manually follow these two steps: \n" \
-        	"1. Create a token at: https://pypi.org/manage/account/token/ \n" \
-		"2. Set your token using: $ poetry config pypi-token.pypi <your-token>"
-	@poetry publish --build
+	@nox -s "test-3.8"
 
 help:
 	@echo "Makefile for the SQL CLI project"
