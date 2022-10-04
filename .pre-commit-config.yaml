@@ -22,6 +22,8 @@ repos:
       - id: check-yaml
       - id: debug-statements
       - id: end-of-file-fixer
+        # Exclude auto-generated example files from being changed
+        exclude: ^sql-cli/examples/_dags/|^sql-cli/examples/_target/
       - id: mixed-line-ending
       - id: trailing-whitespace
       - id: pretty-format-json
@@ -48,6 +50,8 @@ repos:
     rev: 22.8.0
     hooks:
       - id: black
+        # Exclude auto-generated example files from being changed
+        exclude: ^sql-cli/examples/_dags/
 
   - repo: https://github.com/asottile/blacken-docs
     rev: v1.12.1
@@ -79,6 +83,8 @@ repos:
         name: Run isort for sql-cli
         args: [ "--profile", "black" ]
         files: ^sql-cli/
+        # Exclude auto-generated example files from being changed
+        exclude: ^sql-cli/examples/_dags/
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.1
@@ -107,6 +113,8 @@ repos:
       hooks:
       -   id: pyupgrade
           args: [--py37-plus]
+          # Exclude auto-generated example files from being changed
+          exclude: ^sql-cli/examples/_dags/
 
   - repo: local
     hooks:
