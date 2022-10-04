@@ -22,6 +22,7 @@ from airflow.utils.types import DagRunType
 from astro.sql.table import Metadata
 from pandas.testing import assert_frame_equal
 from sqlalchemy.orm.session import Session
+from astro.sql.operators.cleanup import AstroCleanupException
 
 log = logging.getLogger(__name__)
 
@@ -71,21 +72,8 @@ def run_dag(dag: DAG, account_for_cleanup_failure=False):
     :return:
     """
     dag.clear(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE, dag_run_state=State.NONE)
-    try:
-        test_dag(dag=dag, execution_date=DEFAULT_DATE)
-    except BackfillUnfinished as b:
-        if not account_for_cleanup_failure:
-            raise b
-        failed_tasks = b.ti_status.failed
 
-        if len(failed_tasks) != 1 or list(failed_tasks)[0].task_id != "cleanup":
-            raise b
-        ti_key = list(failed_tasks)[0]
-
-        # Cleanup now that everything is done
-        ti = TaskInstance(task=dag.get_task("cleanup"), run_id=ti_key.run_id)
-        ti = ti.task.execute({"ti": ti, "dag_run": ti.get_dagrun()})
-
+    test_dag(dag=dag, execution_date=DEFAULT_DATE)
 
 def load_to_dataframe(filepath, file_type):
     read = {
@@ -212,6 +200,8 @@ def _run_task(ti: TaskInstance, session):
         log.info("%s ran successfully!", ti.task_id)
     except AirflowSkipException:
         log.info("Task Skipped, continuing")
+    except AstroCleanupException:
+        log.info("Cleanup task async failure, continuing")
     log.info("*****************************************************")
 
 
