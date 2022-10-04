@@ -178,7 +178,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             return function_output
 
     @staticmethod
-    def _convert_column_capitlization_for_output(
+    def _convert_column_capitalization_for_output(
         function_output, columns_names_capitalization
     ):
         """Handles column capitalization for single outputs, lists, and dictionaries"""
