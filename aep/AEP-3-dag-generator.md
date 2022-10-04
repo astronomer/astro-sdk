@@ -42,6 +42,7 @@ Cons:
 
 * Requires DAG creation via SQL files prior to creating the Airflow DAG to determine the right order of `aql.transform` statements
 * DAG can become very huge as it contains the raw SQL content to execute
+* The DAG must be regenerated regularly (before runs and deployments)
 
 ### Option 2: Static Task generation using `aql.transform_file` with file path
 
@@ -58,6 +59,7 @@ Pros:
 Cons:
 
 * Requires DAG creation via SQL files prior to creating the Airflow DAG to determine the right order of `aql.transform_file` statements
+* The DAG must be regenerated regularly (before runs and deployments)
 
 ### Option 3: Dynamic Task generation using `aql.transform_directory` (previously `aql.render`)
 
@@ -68,6 +70,7 @@ Example implementation can be found [here](https://github.com/astronomer/astro-s
 ### Pros
 
 * **Compact DAG** as it only contains references to SQL files hence it does not grow as SQL content grows
+* The DAG does **not require regeneration** (before runs and deployments)
 
 ### Cons
 
