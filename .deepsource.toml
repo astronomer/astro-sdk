@@ -2,7 +2,8 @@ version = 1
 
 test_patterns = [
   "python-sdk/tests/**",
-  "python-sdk/test-docker/**"
+  "python-sdk/test-docker/**",
+  "sql-cli/tests/**"
 ]
 
 [[analyzers]]

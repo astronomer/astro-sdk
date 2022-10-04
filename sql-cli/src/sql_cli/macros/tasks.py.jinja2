@@ -1,0 +1,27 @@
+{% macro define_task(sql_file, dag) -%}
+{{ sql_file.get_variable_name() }} = aql.transform_sql(
+    sql="{{ sql_file.get_relative_target_path() }}",
+    parameters={
+        {%- for parameter in sql_file.get_parameters() %}
+        {%- if dag.has_sql_file(parameter) %}
+        "{{ parameter }}": {{ parameter }},
+        {%- endif %}
+        {%- endfor %}
+    },
+    {%- if sql_file.metadata and "conn_id" in sql_file.metadata %}
+    conn_id="{{ sql_file.metadata.conn_id }}",
+    {%- endif %}
+    {%- if sql_file.metadata and "database" in sql_file.metadata %}
+    database="{{ sql_file.metadata.database }}",
+    {%- endif %}
+    {%- if sql_file.metadata and "schema" in sql_file.metadata %}
+    schema="{{ sql_file.metadata.schema }}",
+    {%- endif %}
+    op_kwargs={
+        "output_table": Table(
+            name="{{ sql_file.path.stem }}",
+        ),
+    },
+    task_id="{{ sql_file.get_variable_name() }}",
+)
+{%- endmacro -%}
