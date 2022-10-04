@@ -11,19 +11,15 @@
     {%- if sql_file.metadata and "conn_id" in sql_file.metadata %}
     conn_id="{{ sql_file.metadata.conn_id }}",
     {%- endif %}
+    {%- if sql_file.metadata and "database" in sql_file.metadata %}
+    database="{{ sql_file.metadata.database }}",
+    {%- endif %}
+    {%- if sql_file.metadata and "schema" in sql_file.metadata %}
+    schema="{{ sql_file.metadata.schema }}",
+    {%- endif %}
     op_kwargs={
         "output_table": Table(
             name="{{ sql_file.path.stem }}",
-            {%- if "database" in sql_file.metadata or "schema" in sql_file.metadata %}
-            metadata=Metadata(
-                {%- if "database" in sql_file.metadata %}
-                database="{{ sql_file.metadata.database }}",
-                {%- endif %}
-                {%- if "schema" in sql_file.metadata %}
-                schema="{{ sql_file.metadata.schema }}",
-                {%- endif %}
-            ),
-            {%- endif %}
         ),
     },
     task_id="{{ sql_file.get_variable_name() }}",

@@ -22,17 +22,6 @@ class SqlFilesDAG:
     start_date: datetime
     sql_files: list[SqlFile]
 
-    def has_table_metadata(self) -> bool:
-        """
-        Check if any sql file uses Astro SDK Table Metadata fields.
-
-        :returns: True if any sql file uses Astro SDK Table Metadata fields.
-        """
-        return any(
-            "database" in sql_file.metadata or "schema" in sql_file.metadata
-            for sql_file in self.sql_files
-        )
-
     def has_sql_file(self, variable_name: str) -> bool:
         """
         Check whether the given variable name belongs to a real SQL file.
