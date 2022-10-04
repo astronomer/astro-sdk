@@ -1,6 +1,5 @@
-import os
+from pathlib import Path
 
-import airflow
 import pytest
 from airflow.models.dagbag import DagBag
 from airflow.utils import timezone
@@ -47,47 +46,12 @@ def session():
     return get_session()
 
 
-@pytest.mark.parametrize(
-    "dag_id",
-    [
-        "example_amazon_s3_postgres",
-        "example_amazon_s3_postgres_load_and_save",
-        "example_amazon_s3_snowflake_transform",
-        "example_google_bigquery_gcs_load_and_save",
-        "example_snowflake_partial_table_with_append",
-        "example_sqlite_load_transform",
-        "example_append",
-        "example_load_file",
-        "example_transform",
-        "example_merge_bigquery",
-        "example_transform_file",
-        "calculate_popular_movies",
-    ],
-)
+dag_bag = DagBag(Path.cwd().parent / "example_dags")
+
+
+@pytest.mark.parametrize("dag_id", dag_bag.dag_ids)
 def test_example_dag(session, dag_id):
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    db = DagBag(dir_path + "/../example_dags")
-    dag = db.get_dag(dag_id)
-
-    if dag is None:
-        raise NameError(f"The DAG with dag_id: {dag_id} was not found")
-    wrapper_run_dag(dag)
-
-
-@pytest.mark.skipif(
-    airflow.__version__ < "2.3.0", reason="Require Airflow version >= 2.3.0"
-)
-@pytest.mark.parametrize(
-    "dag_id",
-    [
-        "example_dynamic_map_task",
-        "example_dynamic_task_template",
-    ],
-)
-def test_example_dynamic_task_map_dag(session, dag_id):
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    db = DagBag(dir_path + "/../example_dags")
-    dag = db.get_dag(dag_id)
+    dag = dag_bag.get_dag(dag_id)
 
     if dag is None:
         raise NameError(f"The DAG with dag_id: {dag_id} was not found")
