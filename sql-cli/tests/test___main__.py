@@ -2,7 +2,7 @@ import pytest
 from typer.testing import CliRunner
 
 from sql_cli.main import generate_dag
-from sql_cli.main import app
+from sql_cli.__main__ import app
 
 
 @pytest.mark.freeze_time("2022-09-28")
