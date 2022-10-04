@@ -1,20 +1,8 @@
 # Changelog
-<<<<<<< HEAD
-## 1.1.1
-### Features
-
-### Improvements
-
-### Bug fixes
 
 ## 1.1.0
 
 ### Features
-=======
-## 1.1.0
-
-### Features
->>>>>>> 72e15572 (Bump version & add changelog)
 * Add native autodetect schema feature [#780](https://github.com/astronomer/astro-sdk/pull/780)
 * Allow users to disable auto addition of inlets/outlets via airflow.cfg [#858](https://github.com/astronomer/astro-sdk/pull/858)
 * Add support for Redshift [#639](https://github.com/astronomer/astro-sdk/pull/639), [#753](https://github.com/astronomer/astro-sdk/pull/753), [#700](https://github.com/astronomer/astro-sdk/pull/700)

@@ -1,11 +1,6 @@
 """A decorator that allows users to run SQL queries natively in Airflow."""
 
-<<<<<<< HEAD
-__version__ = "1.1.1"
-=======
 __version__ = "1.1.0"
-
->>>>>>> 72e15572 (Bump version & add changelog)
 
 
 # The following line is an import work-around to avoid raising a circular dependency issue related to `create_database`
