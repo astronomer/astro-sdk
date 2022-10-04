@@ -148,7 +148,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             self.op_kwargs, self.python_callable, self.columns_names_capitalization
         )
         function_output = self.python_callable(*self.op_args, **self.op_kwargs)
-        function_output = self._convert_column_capitlization_for_output(
+        function_output = self._convert_column_capitalization_for_output(
             function_output, self.columns_names_capitalization
         )
         if self.output_table:
