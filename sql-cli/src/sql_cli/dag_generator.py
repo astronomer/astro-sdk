@@ -33,7 +33,7 @@ class SqlFilesDAG:
             for sql_file in self.sql_files
         )
 
-    def has_sql_file(self, variable_name) -> bool:
+    def has_sql_file(self, variable_name: str) -> bool:
         """
         Check whether the given variable name belongs to a real SQL file.
 
@@ -45,7 +45,7 @@ class SqlFilesDAG:
             sql_file.get_variable_name() == variable_name for sql_file in self.sql_files
         )
 
-    def find_sql_file(self, variable_name) -> SqlFile:
+    def find_sql_file(self, variable_name: str) -> SqlFile:
         """
         Find a SQL file with the given variable name.
 
@@ -53,11 +53,14 @@ class SqlFilesDAG:
 
         :returns: if found a SQL file else raises an exception.
         """
-        return next(
-            sql_file
-            for sql_file in self.sql_files
-            if sql_file.get_variable_name() == variable_name
-        )
+        try:
+            return next(
+                sql_file
+                for sql_file in self.sql_files
+                if sql_file.get_variable_name() == variable_name
+            )
+        except StopIteration:
+            raise ValueError("No sql file has been found for variable name!")
 
     def sorted_sql_files(self) -> list[SqlFile]:
         """
