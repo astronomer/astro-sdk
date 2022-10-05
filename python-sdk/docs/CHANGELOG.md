@@ -1,4 +1,13 @@
 # Changelog
+## 1.1.1
+
+### Improvements
+* Add filetype when resolving path in case of loading into dataframe [#881](https://github.com/astronomer/astro-sdk/issues/881)
+
+### Bug fixes
+* Fix postgres performance regression (example from one_gb file - 5.56min to 1.84min) [#876](https://github.com/astronomer/astro-sdk/issues/876)
+
+
 ## 1.1.0
 
 ### Features
