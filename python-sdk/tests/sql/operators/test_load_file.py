@@ -28,6 +28,7 @@ from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
 from astro.sql.table import Metadata, Table
 from pandas.testing import assert_frame_equal
+
 from tests.sql.operators import utils as test_utils
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("load_file_test_table")
@@ -427,7 +428,9 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(
         "input_file": File(path=file_uri, conn_id=file_conn_id),
         "output_table": Table(name=OUTPUT_TABLE_NAME, **sql_server_params),
     }
-    with pytest.raises(AirflowNotFoundException):
+    with pytest.raises(
+        AirflowNotFoundException, match=r"The conn_id `fake_conn` isn't defined"
+    ):
         with sample_dag:
             load_file(**task_params)
         test_utils.run_dag(sample_dag)
