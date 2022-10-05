@@ -2,6 +2,7 @@ from pathlib import Path
 
 import airflow
 import pytest
+from airflow.models import DAG
 from airflow.models.dagbag import DagBag
 from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
@@ -47,23 +48,38 @@ def session():
     return get_session()
 
 
-dag_bag = DagBag(Path(__file__).parent.parent / "example_dags")
-airflow_2_3 = pytest.mark.skipif(
-    airflow.__version__ < "2.3.0", reason="Require Airflow version >= 2.3.0"
+DAG_BAG = DagBag(Path(__file__).parent.parent / "example_dags", include_examples=False)
+AIRFLOW_VERSION_INDICATOR = "airflow_version:"
+MINIMUM_AIRFLOW_VERSION = "2.2.5"
+
+
+def get_airflow_version(dag: DAG):
+    for tag in dag.tags:
+        if tag.startswith(AIRFLOW_VERSION_INDICATOR):
+            return tag[len(AIRFLOW_VERSION_INDICATOR) :]
+    return MINIMUM_AIRFLOW_VERSION
+
+
+def get_airflow_dags():
+    for dag_id, dag in DAG_BAG.dags.items():
+        yield dag_id, get_airflow_version(dag)
+
+
+@pytest.mark.parametrize(
+    "dag_id",
+    [
+        pytest.param(
+            dag_id,
+            marks=pytest.mark.skipif(
+                airflow.__version__ < dag_airflow_version,
+                reason=f"Require Airflow version >= {dag_airflow_version}",
+            ),
+        )
+        for dag_id, dag_airflow_version in get_airflow_dags()
+    ],
 )
-airflow_2_3_dag_ids = {
-    "example_dynamic_map_task",
-    "example_dynamic_task_template",
-}
-dag_ids = [
-    pytest.param(dag_id, marks=airflow_2_3) if dag_id in airflow_2_3_dag_ids else dag_id
-    for dag_id in dag_bag.dag_ids
-]
-
-
-@pytest.mark.parametrize("dag_id", dag_ids)
 def test_example_dag(session, dag_id):
-    dag = dag_bag.get_dag(dag_id)
+    dag = DAG_BAG.get_dag(dag_id)
 
     if dag is None:
         raise NameError(f"The DAG with dag_id: {dag_id} was not found")
