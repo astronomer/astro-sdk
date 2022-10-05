@@ -194,6 +194,6 @@ def resolve_file_path_pattern(
         if not path.endswith("/")
     ]
     if len(files) == 0:
-        raise ValueError(f"File(s) not found for path/pattern '{path_pattern}'")
+        raise FileNotFoundError(f"File(s) not found for path/pattern '{path_pattern}'")
 
     return files

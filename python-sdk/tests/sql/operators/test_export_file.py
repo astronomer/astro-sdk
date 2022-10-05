@@ -18,7 +18,6 @@ import astro.sql as aql
 import boto3
 import pandas as pd
 import pytest
-from airflow.exceptions import BackfillUnfinished
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import SUPPORTED_FILE_TYPES, Database
@@ -241,20 +240,19 @@ def test_save_all_db_tables_to_gcs(sample_dag, database_table_fixture):
     ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 def test_save_all_db_tables_to_local_file_exists_overwrite_false(
-    sample_dag, database_table_fixture, caplog
+    sample_dag, database_table_fixture
 ):
     _, test_table = database_table_fixture
-    with tempfile.NamedTemporaryFile(suffix=".csv") as temp_file:
-        with pytest.raises(BackfillUnfinished):
-            with sample_dag:
-                export_file(
-                    input_data=test_table,
-                    output_file=File(path=temp_file.name),
-                    if_exists="exception",
-                )
-            test_utils.run_dag(sample_dag)
-        expected_error = f"{temp_file.name} file already exists."
-        assert expected_error in caplog.text
+    with tempfile.NamedTemporaryFile(suffix=".csv") as temp_file, pytest.raises(
+        FileExistsError
+    ):
+        with sample_dag:
+            export_file(
+                input_data=test_table,
+                output_file=File(path=temp_file.name),
+                if_exists="exception",
+            )
+        test_utils.run_dag(sample_dag)
 
 
 @pytest.mark.parametrize(
@@ -291,10 +289,10 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
     ids=["google", "amazon"],
 )
 def test_save_table_remote_file_exists_overwrite_false(
-    sample_dag, database_table_fixture, remote_files_fixture, caplog
+    sample_dag, database_table_fixture, remote_files_fixture
 ):
     _, test_table = database_table_fixture
-    with pytest.raises(BackfillUnfinished):
+    with pytest.raises(FileExistsError):
         with sample_dag:
             export_file(
                 input_data=test_table,
@@ -302,9 +300,6 @@ def test_save_table_remote_file_exists_overwrite_false(
                 if_exists="exception",
             )
         test_utils.run_dag(sample_dag)
-
-    expected_error = f"{remote_files_fixture[0]} file already exists."
-    assert expected_error in caplog.text
 
 
 @pytest.mark.parametrize(
