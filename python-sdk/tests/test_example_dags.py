@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from pathlib import Path
+from typing import Iterator
 
 import airflow
 import pytest
@@ -53,14 +56,14 @@ AIRFLOW_VERSION_INDICATOR = "airflow_version:"
 MINIMUM_AIRFLOW_VERSION = "2.2.5"
 
 
-def get_airflow_version(dag: DAG):
+def get_airflow_version(dag: DAG) -> str:
     for tag in dag.tags:
         if tag.startswith(AIRFLOW_VERSION_INDICATOR):
             return tag[len(AIRFLOW_VERSION_INDICATOR) :]
     return MINIMUM_AIRFLOW_VERSION
 
 
-def get_airflow_dags():
+def get_airflow_dags() -> Iterator[tuple[str, str]]:
     for dag_id, dag in DAG_BAG.dags.items():
         yield dag_id, get_airflow_version(dag)
 
@@ -84,3 +87,7 @@ def test_example_dag(session, dag_id):
     if dag is None:
         raise NameError(f"The DAG with dag_id: {dag_id} was not found")
     wrapper_run_dag(dag)
+
+
+def test_example_dags_loaded():
+    assert DAG_BAG.dag_ids
