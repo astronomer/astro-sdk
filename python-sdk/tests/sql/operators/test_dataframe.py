@@ -9,6 +9,7 @@ from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.files import File
 from astro.sql.table import Table
+
 from tests.sql.operators import utils as test_utils
 
 # Import Operator
@@ -326,6 +327,20 @@ def test_columns_name_cap_multi_output(sample_dag, capital_settings, function_ou
     test_utils.run_dag(sample_dag)
 
 
+def test_pass_table_multi_df(sample_dag):
+    @aql.dataframe()
+    def make_df():
+        return [test_df, test_df_2]
+
+    with pytest.raises(
+        ValueError,
+        match="Astro can only turn a single dataframe into a table. Please change your function output.",
+    ):
+        with sample_dag:
+            make_df(output_table=Table())
+        test_utils.run_dag(sample_dag)
+
+
 @pytest.mark.parametrize(
     "kwargs",
     [{"task_id": "task1", "queue": "new_1"}, {"queue": "new_2", "owner": "astro-sdk"}],
@@ -375,43 +390,3 @@ def test_inlets_outlets_non_supported_ds():
 
     task = sample_df_1(output_table=output_table)
     assert task.operator.outlets == []
-
-
-def test_dataframe_list(sample_dag):
-    df1 = pandas.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
-    df2 = pandas.DataFrame({"numbers": [4, 5, 6], "colors": ["red", "white", "blue"]})
-
-    @aql.dataframe
-    def create_multiple_dataframes():
-        return [df1, df2]
-
-    @aql.dataframe()
-    def validate_dfs(input_dfs):
-        assert df1.equals(input_dfs[0])
-        assert df2.equals(input_dfs[1])
-
-    with sample_dag:
-        res_1 = create_multiple_dataframes()
-        validate_dfs(res_1)
-    test_utils.run_dag(sample_dag)
-
-
-def test_dataframe_mix_list(sample_dag):
-    df1 = pandas.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
-    df2 = pandas.DataFrame({"numbers": [4, 5, 6], "colors": ["red", "white", "blue"]})
-
-    @aql.dataframe
-    def create_multiple_dataframes():
-        return [df1, df2, 3, 4, 5]
-
-    @aql.dataframe()
-    def validate_dfs(input_dfs):
-        assert df1.equals(input_dfs[0])
-        assert df2.equals(input_dfs[1])
-
-        assert input_dfs[2:] == [3, 4, 5]
-
-    with sample_dag:
-        res_1 = create_multiple_dataframes()
-        validate_dfs(res_1)
-    test_utils.run_dag(sample_dag)

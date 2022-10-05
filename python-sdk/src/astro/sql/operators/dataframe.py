@@ -157,7 +157,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             )
             if not isinstance(function_output, pd.DataFrame):
                 raise ValueError(
-                    "Astro can only turn a single dataframe into a table. Please change your"
+                    "Astro can only turn a single dataframe into a table. Please change your "
                     "function output."
                 )
             self.output_table.conn_id = self.output_table.conn_id or self.conn_id
