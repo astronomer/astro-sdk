@@ -47,7 +47,7 @@ def session():
     return get_session()
 
 
-dag_bag = DagBag(Path.cwd() / "example_dags")
+dag_bag = DagBag(Path(__file__).parent.parent / "example_dags")
 airflow_2_3 = pytest.mark.skipif(
     airflow.__version__ < "2.3.0", reason="Require Airflow version >= 2.3.0"
 )
