@@ -23,6 +23,18 @@ def filter_for_temp_tables(task_outputs: list[Any]) -> list[TempTable]:
     return [t for t in task_outputs if isinstance(t, TempTable) and t.temp]
 
 
+class AstroCleanupException(AirflowException):
+    msg = (
+        "When using a synchronous executor (e.g. SequentialExecutor and DebugExecutor), "
+        "the first run of this task will fail on purpose, "
+        "so the single worker thread is unblocked to execute other tasks. "
+        "The task is set up for retry and eventually works."
+    )
+
+    def __init__(self):
+        super().__init__(self.msg)
+
+
 class CleanupOperator(AstroSQLBaseOperator):
     """
     Clean up temporary tables at the end of a DAG run. Temporary tables are the ones that are
@@ -138,12 +150,7 @@ class CleanupOperator(AstroSQLBaseOperator):
             dag_is_running = self._is_dag_running(current_dagrun.get_task_instances())
             if dag_is_running:
                 if single_worker_mode:
-                    raise AirflowException(
-                        "When using a synchronous executor (e.g. SequentialExecutor and DebugExecutor), "
-                        "the first run of this task will fail on purpose, "
-                        "so the single worker thread is unblocked to execute other tasks. "
-                        "The task is set up for retry and eventually works."
-                    )
+                    raise AstroCleanupException()
                 self.log.warning(
                     "You are currently running the 'waiting mode', where the task will wait "
                     "for all other tasks to complete. Please note that for asynchronous executors (e.g. "
