@@ -28,7 +28,6 @@ from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
 from astro.sql.table import Metadata, Table
 from pandas.testing import assert_frame_equal
-
 from tests.sql.operators import utils as test_utils
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("load_file_test_table")
