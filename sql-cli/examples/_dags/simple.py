@@ -6,11 +6,11 @@ from astro.sql.table import Table
 
 with DAG(
     dag_id="simple",
-    start_date=timezone.parse("2022-10-04 14:21:31.146165"),
+    start_date=timezone.parse("2022-10-05 06:47:20.684131"),
     schedule_interval=None,
 ) as dag:
-    imdb_movies = aql.transform_sql(
-        sql="_target/simple/imdb_movies.sql",
+    imdb_movies = aql.transform_file(
+        file_path="_target/simple/imdb_movies.sql",
         parameters={
         },
         conn_id="postgres_conn",
@@ -21,8 +21,8 @@ with DAG(
         },
         task_id="imdb_movies",
     )
-    last_five_animations = aql.transform_sql(
-        sql="_target/simple/last_five_animations.sql",
+    last_five_animations = aql.transform_file(
+        file_path="_target/simple/last_five_animations.sql",
         parameters={
             "imdb_movies": imdb_movies,
         },
@@ -33,8 +33,8 @@ with DAG(
         },
         task_id="last_five_animations",
     )
-    top_five_animations = aql.transform_sql(
-        sql="_target/simple/top_five_animations.sql",
+    top_five_animations = aql.transform_file(
+        file_path="_target/simple/top_five_animations.sql",
         parameters={
             "imdb_movies": imdb_movies,
         },
@@ -45,8 +45,8 @@ with DAG(
         },
         task_id="top_five_animations",
     )
-    union_top_and_last = aql.transform_sql(
-        sql="_target/simple/union_top_and_last.sql",
+    union_top_and_last = aql.transform_file(
+        file_path="_target/simple/union_top_and_last.sql",
         parameters={
             "last_five_animations": last_five_animations,
             "top_five_animations": top_five_animations,
