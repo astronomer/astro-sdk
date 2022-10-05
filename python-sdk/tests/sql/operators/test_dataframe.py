@@ -246,7 +246,7 @@ test_df_2 = pandas.DataFrame({"Numbers": [1, 2, 3], "Colors": ["red", "white", "
 
 def _validate_dataframe(df: pandas.DataFrame, capital_settings: dict):
     cols = list(df)
-    assert all([getattr(x, capital_settings["function"]) for x in cols])
+    assert all(getattr(x, capital_settings["function"]) for x in cols)
 
 
 def _validate_list(x: list, function_output: list, capital_settings: dict):
@@ -309,8 +309,6 @@ def _find_validator(function_output):
     ],
 )
 def test_columns_name_cap_multi_output(sample_dag, capital_settings, function_output):
-
-    function_output = function_output
 
     validator = _find_validator(function_output)
 
