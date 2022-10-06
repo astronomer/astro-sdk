@@ -78,17 +78,16 @@ echo - Output: $(get_abs_filename $results_file)
 
         for chunk_size in "${chunk_sizes_array[@]}"; do
           echo "$i $dataset $database $chunk_size"
-#          set +e  # allow us to see the content of $results_file regardless of the run being successful or not
+          set +e  # allow us to see the content of $results_file regardless of the run being successful or not
           ASTRO_CHUNKSIZE=$chunk_size python3 -W ignore $runner_path --dataset="$dataset_name" --database="$database" --filetype="$dataset_type" --path="$dataset_path" --skip="$dataset_skip" --revision $git_revision --chunk-size=$chunk_size 1>> $results_file
           cat $results_file
-#          set -e  # do not allow errors from here onwards
           if [[ -z "${GOOGLE_APPLICATION_CREDENTIALS}" ]]; then
             echo "$GOOGLE_APPLICATION_CREDENTIALS is not defined"
           else
             echo "$GOOGLE_APPLICATION_CREDENTIALS is defined"
                 gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
           fi
-#            gsutil cp $results_file gs://${GCP_BUCKET}/benchmark/results/
+          gsutil cp $results_file gs://${GCP_BUCKET}/benchmark/results/
           if command -v peekprof &> /dev/null; then
              # https://github.com/exapsy/peekprof
              peekprof -html "/tmp/$dataset-$database-$chunk_size.html" -refresh 1000ms -pid $! > /tmp/$dataset-$database-$chunk_size.csv
