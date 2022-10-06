@@ -13,8 +13,9 @@ from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import TaskInstance
 from airflow.utils import timezone
 from airflow.utils.session import provide_session
-from astro.databases import create_database
 from astro.sql.table import Metadata, Table
+
+from astro.databases import create_database
 
 
 def get_disk_usage():
@@ -35,7 +36,7 @@ def export_profile_data_to_bq(profile_data: dict, conn_id: str = "bigquery"):
     """
 
     db = create_database(conn_id)
-    if sys.platform == "linux":
+    if profile_data.get("io_counters", False):
         del profile_data["io_counters"]
     df = pd.json_normalize(profile_data, sep="_")
     table = Table(
