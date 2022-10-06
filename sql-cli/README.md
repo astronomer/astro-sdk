@@ -1,6 +1,40 @@
-<h1 align="center">
-  Astro SQL CLI - Coming Soon!
-</h1>
-  <h3 align="center">
-  workflows made easy<br><br>
-</h3>
+# Astro SQL CLI
+
+Empower analysts to build workflows to transform data using SQL.
+
+
+## Getting started
+
+### Install
+
+```bash
+    pip install astro-sql-cli
+```
+
+### Try it out
+
+```bash
+    flow version
+```
+
+
+## Development
+
+Setup your local environment:
+
+```bash
+    make setup
+```
+
+Try your own version of the SQL CLI locally:
+
+```bash
+    source ~/.virtualenvs/sql-cli/bin/activate
+    python -m sql_cli version
+```
+
+Run the tests:
+
+```bash
+    make test
+```

@@ -42,3 +42,77 @@ jobs:
            key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
       - run: pip3 install nox
       - run: nox -s type_check
+
+  Run-SQL-CLI-tests:
+    if: >-
+      github.event_name == 'push' ||
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.fork == false
+      ) ||
+      (
+        github.event_name == 'pull_request_target' &&
+        contains(github.event.pull_request.labels.*.name, 'safe to test')
+      )||
+      (
+        github.event_name == 'release'
+      )
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-2.3-${{ hashFiles('sql-cli/pyproject.toml') }}
+      - run: pip3 install nox
+      - run: nox -s "test-3.8"
+      - name: Upload coverage
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage
+          path: ./sql-cli/.coverage
+
+
+  Code-Coverage:
+    if: github.event.action != 'labeled'
+    needs:
+      - Run-SQL-CLI-tests-Airflow-2-3
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.8
+      - name: Install coverage
+        run: |
+          pip3 install coverage
+      - name: Download all artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: ./sql-cli/coverage
+      - name: Run coverage
+        run: |
+          coverage combine ./coverage/coverage*/.coverage
+          coverage report
+          coverage xml
+      - name: Upload coverage
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./sql-cli/coverage.xml

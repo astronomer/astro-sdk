@@ -1,11 +1,10 @@
-name: Build and test astro
+name: Build and test astro Python SDK
 on:
   push:
     branches: [ 'main', 'release-**' ]
     paths:
       - 'python-sdk/**'
       - '.github/workflows/ci-python-sdk.yaml'
-      - '*'
   pull_request:
     branches: [ 'main', 'release-**' ]
     paths:
@@ -16,6 +15,10 @@ on:
   pull_request_target:
     branches: [ 'main' ]
     types: ['labeled']
+    paths:
+      - 'python-sdk/**'
+      - '.github/workflows/ci-python-sdk.yaml'
+      - '*'
   release:
     types: [ 'created' ]
 defaults:
@@ -157,6 +160,7 @@ jobs:
       AIRFLOW_VAR_FOO: templated_file_name
       AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE: True
       FORCE_COLOR: "true"
+
   Run-Unit-tests-Airflow-2-3:
     if: >-
       github.event_name == 'push' ||
