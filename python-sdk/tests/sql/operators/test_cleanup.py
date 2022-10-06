@@ -19,7 +19,7 @@ from airflow.utils.timezone import datetime
 from astro.constants import Database
 from astro.files import File
 from astro.sql.operators.cleanup import CleanupOperator
-from astro.sql.table import Table
+from astro.table import Table
 from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent

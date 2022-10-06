@@ -3,7 +3,7 @@ from __future__ import annotations
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from astro.constants import MergeConflictStrategy
 from astro.databases.base import BaseDatabase
-from astro.sql.table import BaseTable, Metadata
+from astro.table import BaseTable, Metadata
 from sqlalchemy import MetaData as SqlaMetaData
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine

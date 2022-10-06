@@ -9,7 +9,7 @@ from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.files import File
 from astro.sql.operators.append import AppendOperator
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 from sqlalchemy.exc import NoSuchTableError
 from tests.sql.operators import utils as test_utils
 

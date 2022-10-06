@@ -26,7 +26,7 @@ from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 from pandas.testing import assert_frame_equal
 from tests.sql.operators import utils as test_utils
 

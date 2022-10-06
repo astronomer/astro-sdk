@@ -23,7 +23,7 @@ from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
 from astro.settings import SNOWFLAKE_SCHEMA
-from astro.sql.table import BaseTable, Metadata
+from astro.table import BaseTable, Metadata
 from snowflake.connector import pandas_tools
 from snowflake.connector.errors import (
     DatabaseError,

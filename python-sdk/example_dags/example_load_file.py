@@ -7,7 +7,7 @@ from airflow.models import DAG
 from astro import sql as aql
 from astro.constants import FileType
 from astro.files import File
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 
 # To create IAM role with needed permissions,
 # refer: https://www.dataliftoff.com/iam-roles-for-loading-data-from-s3-into-redshift/

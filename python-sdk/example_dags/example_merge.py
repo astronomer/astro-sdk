@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from astro import sql as aql
 from astro.files import File
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 from pandas import DataFrame
 from sqlalchemy import Column, types
 

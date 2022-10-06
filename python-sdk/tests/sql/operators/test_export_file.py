@@ -26,7 +26,7 @@ from astro.settings import SCHEMA
 
 # Import Operator
 from astro.sql.operators.export_file import export_file
-from astro.sql.table import Table
+from astro.table import Table
 from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
