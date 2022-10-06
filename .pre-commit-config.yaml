@@ -42,9 +42,9 @@ repos:
       - id: forbid-crlf
       - id: remove-crlf
       - id: forbid-tabs
-        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$
+        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile|^sql-cli/Makefile$
       - id: remove-tabs
-        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$
+        exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile|^sql-cli/Makefile$
 
   - repo: https://github.com/psf/black
     rev: 22.8.0
@@ -98,15 +98,13 @@ repos:
       rev: 'v0.981'
       hooks:
       - id: mypy
+        name: mypy-python-sdk
         additional_dependencies: [types-PyYAML, types-attrs, attrs]
-        pass_filenames: false
         files: "^python-sdk/"
-        entry: bash -c 'cd python-sdk && mypy "$@"' --
       - id: mypy
-        additional_dependencies: [ types-PyYAML ]
-        pass_filenames: false
+        name: mypy-sql-cli
+        additional_dependencies: [types-PyYAML]
         files: "^sql-cli/"
-        entry: bash -c 'cd sql-cli && mypy "$@"' --
 
   -   repo: https://github.com/asottile/pyupgrade
       rev: v2.38.2

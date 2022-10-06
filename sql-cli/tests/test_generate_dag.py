@@ -1,5 +1,6 @@
 import pytest
-from sql_cli.main import generate_dag
+
+from sql_cli.generate_dag import generate_dag
 
 
 @pytest.mark.freeze_time("2022-09-28")

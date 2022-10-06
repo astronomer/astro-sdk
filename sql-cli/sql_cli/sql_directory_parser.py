@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Iterable
 
 import frontmatter
+
 from sql_cli.utils import find_template_variables
 
 
