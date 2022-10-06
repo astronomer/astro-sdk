@@ -1,7 +1,11 @@
-import os
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Iterator
 
 import airflow
 import pytest
+from airflow.models import DAG
 from airflow.models.dagbag import DagBag
 from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
@@ -47,48 +51,44 @@ def session():
     return get_session()
 
 
+DAG_BAG = DagBag(Path(__file__).parent.parent / "example_dags", include_examples=False)
+AIRFLOW_VERSION_INDICATOR = "airflow_version:"
+MINIMUM_AIRFLOW_VERSION = "2.2.5"
+
+
+def get_airflow_version(dag: DAG) -> str:
+    for tag in dag.tags:
+        if tag.startswith(AIRFLOW_VERSION_INDICATOR):
+            return tag[len(AIRFLOW_VERSION_INDICATOR) :]
+    return MINIMUM_AIRFLOW_VERSION
+
+
+def get_airflow_dags() -> Iterator[tuple[str, str]]:
+    for dag_id, dag in DAG_BAG.dags.items():
+        yield dag_id, dag, get_airflow_version(dag)
+
+
 @pytest.mark.parametrize(
-    "dag_id",
+    "dag",
     [
-        "example_amazon_s3_postgres",
-        "example_amazon_s3_postgres_load_and_save",
-        "example_amazon_s3_snowflake_transform",
-        "example_google_bigquery_gcs_load_and_save",
-        "example_snowflake_partial_table_with_append",
-        "example_sqlite_load_transform",
-        "example_append",
-        "example_load_file",
-        "example_transform",
-        "example_merge_bigquery",
-        "example_transform_file",
-        "calculate_popular_movies",
+        pytest.param(
+            dag,
+            id=dag_id,
+            marks=pytest.mark.skipif(
+                airflow.__version__ < dag_airflow_version,
+                reason=f"Require Airflow version >= {dag_airflow_version}",
+            ),
+        )
+        for dag_id, dag, dag_airflow_version in get_airflow_dags()
     ],
 )
-def test_example_dag(session, dag_id):
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    db = DagBag(dir_path + "/../example_dags")
-    dag = db.get_dag(dag_id)
-
-    if dag is None:
-        raise NameError(f"The DAG with dag_id: {dag_id} was not found")
+def test_example_dag(session, dag: DAG):
     wrapper_run_dag(dag)
 
 
-@pytest.mark.skipif(
-    airflow.__version__ < "2.3.0", reason="Require Airflow version >= 2.3.0"
-)
-@pytest.mark.parametrize(
-    "dag_id",
-    [
-        "example_dynamic_map_task",
-        "example_dynamic_task_template",
-    ],
-)
-def test_example_dynamic_task_map_dag(session, dag_id):
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    db = DagBag(dir_path + "/../example_dags")
-    dag = db.get_dag(dag_id)
+def test_example_dags_loaded():
+    assert DAG_BAG.dags
 
-    if dag is None:
-        raise NameError(f"The DAG with dag_id: {dag_id} was not found")
-    wrapper_run_dag(dag)
+
+def test_example_dags_no_import_errors():
+    assert not DAG_BAG.import_errors

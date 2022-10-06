@@ -33,6 +33,7 @@ with DAG(
     schedule_interval=None,
     start_date=datetime(2022, 1, 1),
     catchup=False,
+    tags=["airflow_version:2.3.0"],
 ) as dag:
     LoadFile.partial(
         task_id="load_gcs_to_bq",
