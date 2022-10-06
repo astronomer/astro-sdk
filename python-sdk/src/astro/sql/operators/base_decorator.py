@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, cast
+from typing import Any, Sequence, cast
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
@@ -19,6 +19,8 @@ from astro.utils.typing_compat import Context
 
 class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
     """Handles all decorator classes that can return a SQL function"""
+
+    template_fields: Sequence[str] = ("parameters", "op_args", "op_kwargs")
 
     database_impl: BaseDatabase
 
@@ -63,6 +65,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             op_kwargs=self.op_kwargs,
             python_callable=self.python_callable,
             parameters=self.parameters,  # type: ignore
+            context=context,
         )
         if first_table:
             self.conn_id = self.conn_id or first_table.conn_id  # type: ignore
