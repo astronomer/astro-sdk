@@ -24,7 +24,7 @@ def dump():
         date = parse(js["eventTime"]).date()
         job_name = js["job"]["name"]
         event_name = f"{date}-{job_name}"
-    except Exception:
+    except TypeError:
         content = str(request.data, "UTF-8")
     file_path = f"{DUMPS_DIR}/{event_name}.json"
 
