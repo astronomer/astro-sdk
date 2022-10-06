@@ -1,14 +1,17 @@
 import json
 import os
+import traceback
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
+import settings as benchmark_settings
 from airflow import DAG
 from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
 from astro.files import File
 from astro.sql.table import Metadata, Table
+from run import export_profile_data_to_bq
 
 START_DATE = datetime(2000, 1, 1)
 
@@ -41,6 +44,17 @@ def get_location(path):
     if scheme == "":
         return "local"
     return scheme
+
+
+def get_traceback(exc) -> str:
+    """
+    Get traceback string from exception
+    :param exc: Exception object
+    """
+    tb = traceback.format_exception(  # skipcq: PYL-E1123,PYL-E1120
+        etype=type(exc), value=exc, tb=exc.__traceback__
+    )
+    return "".join(tb)
 
 
 def create_dag(database_name, table_args, dataset, global_db_kwargs):
@@ -124,6 +138,27 @@ def create_dag(database_name, table_args, dataset, global_db_kwargs):
         f"load_file_{dataset_name}_{dataset_filetype}_{location}_into_{database_name}"
     )
 
+    def handle_failure(context):
+        """
+        Handle failures and publish data to bq
+        :param context: Airflow taskinstance context
+        """
+
+        exc = context["exception"]
+
+        exc_string = get_traceback(exc)
+        profile = {
+            "database": database_name,
+            "filetype": dataset_filetype,
+            "path": dataset_path,
+            "dataset": dataset_name,
+            "error": "True",
+            "error_context": exc_string,
+        }
+
+        if benchmark_settings.publish_benchmarks:
+            export_profile_data_to_bq(profile)
+
     with DAG(dag_name, schedule_interval=None, start_date=START_DATE) as dag:
         chunk_size = int(os.getenv("ASTRO_CHUNK_SIZE", str(DEFAULT_CHUNK_SIZE)))
         table_metadata = table_args.pop("metadata", {})
@@ -142,10 +177,11 @@ def create_dag(database_name, table_args, dataset, global_db_kwargs):
             "output_table": table,
             "chunk_size": chunk_size,
         }
-
+        if local_db_kwargs.get("skip"):
+            local_db_kwargs.pop("skip")
         params.update(global_db_kwargs)
         params.update(local_db_kwargs)
-        my_table = aql.load_file(**params)
+        my_table = aql.load_file(**params, on_failure_callback=handle_failure)
         aql.cleanup([my_table])
 
         # Todo: Check is broken so the following code is commented out, uncomment when fixed

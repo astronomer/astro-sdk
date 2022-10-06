@@ -33,6 +33,7 @@ def export_profile_data_to_bq(profile_data: dict, conn_id: str = "bigquery"):
     :param profile_data: profiling data collected
     :param conn_id: Airflow's connection id to be used to publish the profiling data
     """
+
     db = create_database(conn_id)
     if sys.platform == "linux":
         del profile_data["io_counters"]
@@ -75,28 +76,43 @@ def profile(func, *args, **kwargs):  # noqa: C901
         if sys.platform == "linux":
             io_counters_before = process.io_counters()._asdict()
 
-        # run decorated function
-        dag = func(*args, **kwargs)
-
-        # metrics after
-        memory_full_info_after = process.memory_full_info()._asdict()
-        cpu_time_after = process.cpu_times()._asdict()
-        disk_usage_after = get_disk_usage()
-        if sys.platform == "linux":
-            io_counters_after = process.io_counters()._asdict()
+        skip = kwargs.pop("skip", False)
 
         profile = {
-            "duration": get_load_task_duration(dag=dag),
-            "memory_full_info": subtract(
-                memory_full_info_after, memory_full_info_before
-            ),
-            "cpu_time": subtract(cpu_time_after, cpu_time_before),
-            "disk_usage": disk_usage_after - disk_usage_before,
+            "database": kwargs.get("database"),
+            "filetype": kwargs.get("filetype"),
+            "path": kwargs.get("path"),
+            "dataset": kwargs.get("dataset"),
+            "error": "False",
+            "error_context": "Skipped",
         }
-        if sys.platform == "linux":
-            profile["io_counters"] = (subtract(io_counters_after, io_counters_before),)
 
-        profile = {**profile, **kwargs}
+        if not skip:
+            # run decorated function
+            dag = func(*args, **kwargs)
+
+            # metrics after
+            memory_full_info_after = process.memory_full_info()._asdict()
+            cpu_time_after = process.cpu_times()._asdict()
+            disk_usage_after = get_disk_usage()
+            if sys.platform == "linux":
+                io_counters_after = process.io_counters()._asdict()
+
+            profile = {
+                "duration": get_load_task_duration(dag=dag),
+                "memory_full_info": subtract(
+                    memory_full_info_after, memory_full_info_before
+                ),
+                "cpu_time": subtract(cpu_time_after, cpu_time_before),
+                "disk_usage": disk_usage_after - disk_usage_before,
+            }
+            if sys.platform == "linux":
+                profile["io_counters"] = (
+                    subtract(io_counters_after, io_counters_before),
+                )
+
+            profile = {**profile, **kwargs, "error": "False", "error_context": None}
+
         print(json.dumps(profile, default=str))
         if benchmark_settings.publish_benchmarks:
             export_profile_data_to_bq(profile)
@@ -156,6 +172,13 @@ if __name__ == "__main__":
         required=True,
     )
     parser.add_argument(
+        "--skip",
+        type=str,
+        help="Skip this dataset from benchmarking. "
+        "This is useful because we still record in db that this dataset/db combo is skipped",
+        required=True,
+    )
+    parser.add_argument(
         "--revision",
         type=str,
         help="Git commit hash, to relate the results to a version",
@@ -178,4 +201,5 @@ if __name__ == "__main__":
         filetype=args.filetype,
         dataset=args.dataset,
         path=args.path,
+        skip=args.skip,
     )
