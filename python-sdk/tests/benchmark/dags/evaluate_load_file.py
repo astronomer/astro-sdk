@@ -1,14 +1,18 @@
 import json
 import os
+import traceback
 from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
+import settings as benchmark_settings
 from airflow import DAG
-from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
-from astro.files import File
 from astro.sql.table import Metadata, Table
+from run import export_profile_data_to_bq
+
+from astro import sql as aql
+from astro.files import File
 
 START_DATE = datetime(2000, 1, 1)
 
@@ -124,6 +128,24 @@ def create_dag(database_name, table_args, dataset, global_db_kwargs):
         f"load_file_{dataset_name}_{dataset_filetype}_{location}_into_{database_name}"
     )
 
+    def handle_failure(context):
+
+        exc = context["exception"]
+        exc_string = "".join(
+            traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
+        )
+        profile = {
+            "database": database_name,
+            "filetype": dataset_filetype,
+            "path": dataset_path,
+            "dataset": dataset_name,
+            "error": "True",
+            "error_context": exc_string,
+        }
+
+        if benchmark_settings.publish_benchmarks:
+            export_profile_data_to_bq(profile)
+
     with DAG(dag_name, schedule_interval=None, start_date=START_DATE) as dag:
         chunk_size = int(os.getenv("ASTRO_CHUNK_SIZE", str(DEFAULT_CHUNK_SIZE)))
         table_metadata = table_args.pop("metadata", {})
@@ -146,7 +168,7 @@ def create_dag(database_name, table_args, dataset, global_db_kwargs):
             local_db_kwargs.pop("skip")
         params.update(global_db_kwargs)
         params.update(local_db_kwargs)
-        my_table = aql.load_file(**params)
+        my_table = aql.load_file(**params, on_failure_callback=handle_failure)
         aql.cleanup([my_table])
 
         # Todo: Check is broken so the following code is commented out, uncomment when fixed
