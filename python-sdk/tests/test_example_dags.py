@@ -65,29 +65,32 @@ def get_airflow_version(dag: DAG) -> str:
 
 def get_airflow_dags() -> Iterator[tuple[str, str]]:
     for dag_id, dag in DAG_BAG.dags.items():
-        yield dag_id, get_airflow_version(dag)
+        yield dag_id, dag, get_airflow_version(dag)
 
 
 @pytest.mark.parametrize(
-    "dag_id",
+    "dag",
     [
         pytest.param(
-            dag_id,
+            dag,
+            id=dag_id,
             marks=pytest.mark.skipif(
                 airflow.__version__ < dag_airflow_version,
                 reason=f"Require Airflow version >= {dag_airflow_version}",
             ),
         )
-        for dag_id, dag_airflow_version in get_airflow_dags()
+        for dag_id, dag, dag_airflow_version in get_airflow_dags()
     ],
 )
-def test_example_dag(session, dag_id):
-    dag = DAG_BAG.get_dag(dag_id)
-
+def test_example_dag(session, dag: DAG):
     if dag is None:
-        raise NameError(f"The DAG with dag_id: {dag_id} was not found")
+        raise NameError(f"The DAG with dag_id: {dag.dag_id} was not found")
     wrapper_run_dag(dag)
 
 
 def test_example_dags_loaded():
-    assert DAG_BAG.dag_ids
+    assert DAG_BAG.dags
+
+
+def test_example_dags_no_import_errors():
+    assert not DAG_BAG.import_errors
