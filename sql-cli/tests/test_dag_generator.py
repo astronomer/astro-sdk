@@ -1,4 +1,5 @@
 import pytest
+
 from sql_cli.dag_generator import DagCycle
 
 
