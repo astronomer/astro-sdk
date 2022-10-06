@@ -92,7 +92,7 @@ error_log_files=()
             echo "$GOOGLE_APPLICATION_CREDENTIALS is defined"
                 gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
           fi
-          gsutil cp $results_file gs://${GCP_BUCKET}/benchmark/results/
+          # gsutil cp $results_file gs://${GCP_BUCKET}/benchmark/results/
           if command -v peekprof &> /dev/null; then
              # https://github.com/exapsy/peekprof
              peekprof -html "/tmp/$dataset-$database-$chunk_size.html" -refresh 1000ms -pid $! > /tmp/$dataset-$database-$chunk_size.csv
@@ -104,15 +104,19 @@ error_log_files=()
 
 
 # print the error log file path and exit
-if [ $error_code -ne 0 ]; then
-  echo "Benchmark test completed with error."
-  echo "More logs are available at below location"
-  for error_log_file in "${error_log_files[@]}"
-  do
-    IFS='/' list=($error_log_file)
-    echo gs://"${GCP_BUCKET}"/benchmark/"${list[2]}"/
-  done
-  exit 1
-fi
+function check_error {
+  if [ $error_code -ne 0 ]; then
+    echo "Benchmark test completed with error."
+    echo "More logs are available at below location"
+    for error_log_file in "${error_log_files[@]}"
+    do
+      IFS='/' list=($error_log_file)
+      echo gs://"${GCP_BUCKET}"/benchmark/"${list[2]}"/
+    done
+    exit 1
+  fi
+}
+
+check_error
 
 echo Benchmark test completed!
