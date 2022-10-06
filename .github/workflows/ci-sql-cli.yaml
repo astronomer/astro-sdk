@@ -43,7 +43,7 @@ jobs:
       - run: pip3 install nox
       - run: nox -s type_check
 
-  Run-SQL-CLI-tests-Airflow-2-3:
+  Run-SQL-CLI-tests:
     if: >-
       github.event_name == 'push' ||
       (
@@ -79,7 +79,7 @@ jobs:
             .nox
           key: ${{ runner.os }}-2.3-${{ hashFiles('sql-cli/pyproject.toml') }}
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.3')"
+      - run: nox -s "test-3.8"
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:

@@ -10,6 +10,7 @@ on:
     paths:
       - 'python-sdk/**'
       - '.github/workflows/ci-python-sdk.yaml'
+      - '*'
   # Run on PRs from forks
   pull_request_target:
     branches: [ 'main' ]
@@ -17,6 +18,7 @@ on:
     paths:
       - 'python-sdk/**'
       - '.github/workflows/ci-python-sdk.yaml'
+      - '*'
   release:
     types: [ 'created' ]
 defaults:
