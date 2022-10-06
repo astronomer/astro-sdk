@@ -33,16 +33,19 @@ def export_profile_data_to_bq(profile_data: dict, conn_id: str = "bigquery"):
     :param profile_data: profiling data collected
     :param conn_id: Airflow's connection id to be used to publish the profiling data
     """
-
-    db = create_database(conn_id)
-    if profile_data.get("io_counters", False):
-        del profile_data["io_counters"]
-    df = pd.json_normalize(profile_data, sep="_")
-    table = Table(
-        name=benchmark_settings.publish_benchmarks_table,
-        metadata=Metadata(schema=benchmark_settings.publish_benchmarks_schema),
-    )
-    db.load_pandas_dataframe_to_table(df, table, if_exists="append")
+    try:
+        db = create_database(conn_id)
+        if profile_data.get("io_counters", False):
+            del profile_data["io_counters"]
+        df = pd.json_normalize(profile_data, sep="_")
+        table = Table(
+            name=benchmark_settings.publish_benchmarks_table,
+            metadata=Metadata(schema=benchmark_settings.publish_benchmarks_schema),
+        )
+        db.load_pandas_dataframe_to_table(df, table, if_exists="append")
+    except Exception as e:
+        print("=========================================")
+        print(e)
 
 
 @provide_session
@@ -82,6 +85,7 @@ def profile(func, *args, **kwargs):  # noqa: C901
             "database": kwargs.get("database"),
             "filetype": kwargs.get("filetype"),
             "path": kwargs.get("path"),
+            "revision": kwargs.get("revision"),
             "dataset": kwargs.get("dataset"),
             "error": "False",
             "error_context": "Skipped",

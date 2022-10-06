@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
@@ -7,11 +8,12 @@ from urllib.parse import urlparse
 
 import settings as benchmark_settings
 from airflow import DAG
-from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
-from astro.files import File
 from astro.sql.table import Metadata, Table
 from run import export_profile_data_to_bq
+
+from astro import sql as aql
+from astro.files import File
 
 START_DATE = datetime(2000, 1, 1)
 
@@ -46,14 +48,19 @@ def get_location(path):
     return scheme
 
 
-def get_traceback(exc) -> str:
+def get_traceback(exc: BaseException) -> str:
     """
     Get traceback string from exception
     :param exc: Exception object
     """
-    tb = traceback.format_exception(  # skipcq: PYL-E1123,PYL-E1120
-        etype=type(exc), value=exc, tb=exc.__traceback__
-    )
+    if sys.version_info >= (3, 10, 1):
+        tb = traceback.format_exception(  # skipcq: PYL-E1123,PYL-E1120
+            exc=exc, value=exc, tb=exc.__traceback__  # type: ignore
+        )
+    else:
+        tb = traceback.format_exception(  # skipcq: PYL-E1123,PYL-E1120  type: ignore
+            etype=type(exc), value=exc, tb=exc.__traceback__  # type: ignore
+        )
     return "".join(tb)
 
 
@@ -138,13 +145,18 @@ def create_dag(database_name, table_args, dataset, global_db_kwargs):
         f"load_file_{dataset_name}_{dataset_filetype}_{location}_into_{database_name}"
     )
 
+    def get_git_sha():
+        output_stream = os.popen("git rev-parse --short HEAD")
+        output = output_stream.read()
+        return output.strip()
+
     def handle_failure(context):
         """
         Handle failures and publish data to bq
         :param context: Airflow taskinstance context
         """
 
-        exc = context["exception"]
+        exc: BaseException = context["exception"]
 
         exc_string = get_traceback(exc)
         profile = {
@@ -154,6 +166,7 @@ def create_dag(database_name, table_args, dataset, global_db_kwargs):
             "dataset": dataset_name,
             "error": "True",
             "error_context": exc_string,
+            "revision": get_git_sha(),
         }
 
         if benchmark_settings.publish_benchmarks:
