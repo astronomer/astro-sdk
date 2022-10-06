@@ -83,8 +83,6 @@ def get_airflow_dags() -> Iterator[tuple[str, str]]:
     ],
 )
 def test_example_dag(session, dag: DAG):
-    if dag is None:
-        raise NameError(f"The DAG with dag_id: {dag.dag_id} was not found")
     wrapper_run_dag(dag)
 
 
