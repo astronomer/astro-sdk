@@ -47,6 +47,25 @@ def get_location(path):
     return scheme
 
 
+def get_traceback(exc) -> str:
+    """
+    Get traceback string from exception
+    :param exc: Exception object
+    """
+    version = f"{sys.version_info.major}.{sys.version_info.minor}"
+    if version in ["3.10"]:
+        tb = traceback.format_exception(exc=exc, value=exc, tb=exc.__traceback__)
+    elif version in ["3.8", "3.9"]:
+        tb = traceback.format_exception(
+            etype=type(exc), value=exc, tb=exc.__traceback__
+        )
+    else:
+        tb = traceback.format_exception(
+            etype=type(exc), value=exc, tb=exc.__traceback__
+        )
+    return "".join(tb)
+
+
 def create_dag(database_name, table_args, dataset, global_db_kwargs):
     """
     Create dag dynamically
@@ -135,16 +154,8 @@ def create_dag(database_name, table_args, dataset, global_db_kwargs):
         """
 
         exc = context["exception"]
-        version = f"{sys.version_info.major}.{sys.version_info.minor}"
 
-        if version in ["3.10"]:
-            tb = traceback.format_exception(exc=exc, value=exc, tb=exc.__traceback__)
-        else:
-            tb = traceback.format_exception(
-                etype=type(exc), value=exc, tb=exc.__traceback__
-            )
-
-        exc_string = "".join(tb)
+        exc_string = get_traceback(exc)
         profile = {
             "database": database_name,
             "filetype": dataset_filetype,
