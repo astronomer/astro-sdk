@@ -8,11 +8,12 @@ from urllib.parse import urlparse
 
 import settings as benchmark_settings
 from airflow import DAG
-from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
-from astro.files import File
 from astro.sql.table import Metadata, Table
 from run import export_profile_data_to_bq
+
+from astro import sql as aql
+from astro.files import File
 
 START_DATE = datetime(2000, 1, 1)
 
@@ -55,14 +56,13 @@ def get_traceback(exc) -> str:
     version = f"{sys.version_info.major}.{sys.version_info.minor}"
     if version in ["3.10"]:
         tb = traceback.format_exception(exc=exc, value=exc, tb=exc.__traceback__)
-    elif version in ["3.8", "3.9"]:
-        tb = traceback.format_exception(
-            etype=type(exc), value=exc, tb=exc.__traceback__
-        )
+    elif version in ["3.9"]:
+        tb = traceback.format_exception(value=exc, tb=exc.__traceback__)
     else:
         tb = traceback.format_exception(
             etype=type(exc), value=exc, tb=exc.__traceback__
         )
+
     return "".join(tb)
 
 
