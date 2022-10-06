@@ -78,15 +78,16 @@ def profile(func, *args, **kwargs):  # noqa: C901
 
         skip = kwargs.pop("skip", False)
         profile = {}
+
     profile = {
-            "database": kwargs.get("database"),
-            "filetype": kwargs.get("filetype"),
-            "path": kwargs.get("path"),
-            "dataset": kwargs.get("dataset"),
-            "error": "False",
-            "error_context": "Skipped",
-        }
-        
+        "database": kwargs.get("database"),
+        "filetype": kwargs.get("filetype"),
+        "path": kwargs.get("path"),
+        "dataset": kwargs.get("dataset"),
+        "error": "False",
+        "error_context": "Skipped",
+    }
+
     if not skip:
         # run decorated function
         dag = func(*args, **kwargs)
@@ -107,9 +108,7 @@ def profile(func, *args, **kwargs):  # noqa: C901
             "disk_usage": disk_usage_after - disk_usage_before,
         }
         if sys.platform == "linux":
-            profile["io_counters"] = (
-                subtract(io_counters_after, io_counters_before),
-            )
+            profile["io_counters"] = (subtract(io_counters_after, io_counters_before),)
 
         profile = {**profile, **kwargs, "error": "False", "error_context": None}
 
