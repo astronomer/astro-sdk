@@ -53,15 +53,17 @@ def get_traceback(exc) -> str:
     :param exc: Exception object
     """
     version = f"{sys.version_info.major}.{sys.version_info.minor}"
+    # major = sys.version_info.major
+    # minor = sys.version_info.minor
+
     if version in ["3.10"]:
         tb = traceback.format_exception(exc=exc, value=exc, tb=exc.__traceback__)
     elif version in ["3.9"]:
         tb = traceback.format_exception(value=exc, tb=exc.__traceback__)
-    else:
+    elif version in ["3.8"]:
         tb = traceback.format_exception(
             etype=type(exc), value=exc, tb=exc.__traceback__
         )
-
     return "".join(tb)
 
 
