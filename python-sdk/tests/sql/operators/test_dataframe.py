@@ -9,6 +9,7 @@ from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.files import File
 from astro.sql.table import Table
+
 from tests.sql.operators import utils as test_utils
 
 # Import Operator
@@ -243,17 +244,20 @@ test_df = pandas.DataFrame({"numbers": [1, 2, 3], "Colors": ["red", "white", "bl
 test_df_2 = pandas.DataFrame({"Numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
 
 
-def _validate_dataframe(df: pandas.DataFrame, capital_settings: dict):
+def _validate_dataframe(
+    original: pandas.DataFrame, df: pandas.DataFrame, capital_settings: dict
+):
     cols = list(df)
+    assert len(df) == len(original)
     assert all(getattr(x, capital_settings["function"]) for x in cols)
 
 
-def _validate_list(x: list, function_output: list, capital_settings: dict):
-    assert len(x) == len(function_output)
-    for pre, post in zip(function_output, x):
+def _validate_list(original: list, function_output: list, capital_settings: dict):
+    assert len(original) == len(function_output)
+    for pre, post in zip(function_output, original):
         assert isinstance(pre, pandas.DataFrame) == isinstance(post, pandas.DataFrame)
         if isinstance(pre, pandas.DataFrame):
-            _validate_dataframe(post, capital_settings)
+            _validate_dataframe(pre, post, capital_settings)
 
 
 def _validate_dict(x: dict, function_output: dict, capital_settings: dict):
@@ -263,7 +267,7 @@ def _validate_dict(x: dict, function_output: dict, capital_settings: dict):
         pre = function_output[key]
         assert isinstance(pre, pandas.DataFrame) == isinstance(post, pandas.DataFrame)
         if isinstance(pre, pandas.DataFrame):
-            _validate_dataframe(post, capital_settings)
+            _validate_dataframe(pre, post, capital_settings)
 
 
 def _find_validator(function_output):
