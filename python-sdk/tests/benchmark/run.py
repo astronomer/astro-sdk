@@ -13,8 +13,9 @@ from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import TaskInstance
 from airflow.utils import timezone
 from airflow.utils.session import provide_session
-from astro.databases import create_database
 from astro.sql.table import Metadata, Table
+
+from astro.databases import create_database
 
 
 def get_disk_usage():
@@ -77,40 +78,41 @@ def profile(func, *args, **kwargs):  # noqa: C901
             io_counters_before = process.io_counters()._asdict()
 
         skip = kwargs.pop("skip", False)
-        profile = {}
-
-    profile = {
-        "database": kwargs.get("database"),
-        "filetype": kwargs.get("filetype"),
-        "path": kwargs.get("path"),
-        "dataset": kwargs.get("dataset"),
-        "error": "False",
-        "error_context": "Skipped",
-    }
-
-    if not skip:
-        # run decorated function
-        dag = func(*args, **kwargs)
-
-        # metrics after
-        memory_full_info_after = process.memory_full_info()._asdict()
-        cpu_time_after = process.cpu_times()._asdict()
-        disk_usage_after = get_disk_usage()
-        if sys.platform == "linux":
-            io_counters_after = process.io_counters()._asdict()
 
         profile = {
-            "duration": get_load_task_duration(dag=dag),
-            "memory_full_info": subtract(
-                memory_full_info_after, memory_full_info_before
-            ),
-            "cpu_time": subtract(cpu_time_after, cpu_time_before),
-            "disk_usage": disk_usage_after - disk_usage_before,
+            "database": kwargs.get("database"),
+            "filetype": kwargs.get("filetype"),
+            "path": kwargs.get("path"),
+            "dataset": kwargs.get("dataset"),
+            "error": "False",
+            "error_context": "Skipped",
         }
-        if sys.platform == "linux":
-            profile["io_counters"] = (subtract(io_counters_after, io_counters_before),)
 
-        profile = {**profile, **kwargs, "error": "False", "error_context": None}
+        if not skip:
+            # run decorated function
+            dag = func(*args, **kwargs)
+
+            # metrics after
+            memory_full_info_after = process.memory_full_info()._asdict()
+            cpu_time_after = process.cpu_times()._asdict()
+            disk_usage_after = get_disk_usage()
+            if sys.platform == "linux":
+                io_counters_after = process.io_counters()._asdict()
+
+            profile = {
+                "duration": get_load_task_duration(dag=dag),
+                "memory_full_info": subtract(
+                    memory_full_info_after, memory_full_info_before
+                ),
+                "cpu_time": subtract(cpu_time_after, cpu_time_before),
+                "disk_usage": disk_usage_after - disk_usage_before,
+            }
+            if sys.platform == "linux":
+                profile["io_counters"] = (
+                    subtract(io_counters_after, io_counters_before),
+                )
+
+            profile = {**profile, **kwargs, "error": "False", "error_context": None}
 
         print(json.dumps(profile, default=str))
         if benchmark_settings.publish_benchmarks:
