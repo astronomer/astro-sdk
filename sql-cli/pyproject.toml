@@ -1,30 +1,16 @@
-[build-system]
-requires = ["flit_core ~=3.2"]
-build-backend = "flit_core.buildapi"
-
 [project]
 name = "astro-sql-cli"
-dynamic = ["version"]
-description = """
-Astro SDK allows rapid and clean development of {Extract, Load, Transform} workflows using Python and SQL, powered by Apache Airflow.
-"""
-
+version = "0.0.0"
+description = "Empower analysts to build workflows to transform data using SQL"
 authors = [
     {name = "Astronomer", email = "humans@astronomer.io"},
 ]
 readme = "README.md"
 license = {file = "LICENSE"}
-
 requires-python = ">=3.7"
-dependencies = [
-    "astro-sdk-python[all]>=1.0.0",
-    "python-frontmatter>=1.0.0",
-    "networkx>=2.8.6",
-]
-
-keywords = ["airflow", "provider", "astronomer", "sql", "decorator", "task flow", "elt", "etl", "dag"]
+keywords = ["sql", "transform", "analyst", "workflow", "airflow", "astronomer"]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: Apache Software License",
     "Topic :: Database",
     "Framework :: Apache Airflow",
@@ -34,40 +20,30 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
 ]
-
-[project.optional-dependencies]
-tests = [
-    "astro-sdk-python[tests]",
-    "pytest-freezegun",
+dependencies = [
+    "networkx",
+    "typer[all]>=0.6.1"
 ]
-
 [project.urls]
 Home = "https://astronomer.io/"
 Source = "https://github.com/astronomer/astro-sdk/sql-cli"
-Documentation = "https://astro-sdk-python.rtfd.io/"
 
-[project.entry-points.apache_airflow_provider]
-provider_info = "sql_cli.__init__:get_provider_info"
-
-[tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "--durations=30 --durations-min=1.0"
-env_files = [".env"]
-testpaths = ["tests"]
-markers = [
-    "integration"
+[project.optional-dependencies]
+tests = [
+    "pytest",
+    "pytest-cov",
+    "mypy"
 ]
 
-
-[tool.flit.module]
-name = "sql_cli"
+[tool.isort]
+src_paths = ["sql_cli", "tests"]
 
 [tool.mypy]
 color_output = true
-#disallow_any_generics = true
-#disallow_incomplete_defs = true
-#disallow_untyped_defs = true
-files = ["src/sql_cli"]
+disallow_any_generics = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+files = ["sql_cli"]
 follow_imports = "skip"
 no_implicit_optional = true
 pretty = true

@@ -2,6 +2,7 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
+
 from sql_cli.dag_generator import SqlFilesDAG
 from sql_cli.sql_directory_parser import SqlFile
 
