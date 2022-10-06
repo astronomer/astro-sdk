@@ -37,6 +37,7 @@ install: virtualenv  ## Install python dependencies in existing virtualenv
 	@$(PIP) install pre-commit
 	@cd .. && $(PIP) install -e .[all]
 	@cd .. && $(PIP) install .[tests]
+	@cd .. && $(PIP) install .[doc]
 
 config:  ## Create sample configuration files related to Snowflake, Amazon and Google
 	@cd .. && test -e .env && \
