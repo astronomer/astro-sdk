@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
@@ -7,11 +8,12 @@ from urllib.parse import urlparse
 
 import settings as benchmark_settings
 from airflow import DAG
-from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
-from astro.files import File
 from astro.sql.table import Metadata, Table
 from run import export_profile_data_to_bq
+
+from astro import sql as aql
+from astro.files import File
 
 START_DATE = datetime(2000, 1, 1)
 
@@ -134,9 +136,16 @@ def create_dag(database_name, table_args, dataset, global_db_kwargs):
         """
 
         exc = context["exception"]
-        exc_string = "".join(
-            traceback.format_exception(etype=type(exc), value=exc, tb=exc.__traceback__)
-        )
+        version = f"{sys.version_info.major}.{sys.version_info.minor}"
+
+        if version in ["3.10"]:
+            tb = traceback.format_exception(exc=exc, value=exc, tb=exc.__traceback__)
+        else:
+            tb = traceback.format_exception(
+                etype=type(exc), value=exc, tb=exc.__traceback__
+            )
+
+        exc_string = "".join(tb)
         profile = {
             "database": database_name,
             "filetype": dataset_filetype,
