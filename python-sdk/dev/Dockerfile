@@ -1,4 +1,4 @@
-FROM quay.io/astronomer/astro-runtime:6.0.0-base
+FROM quay.io/astronomer/astro-runtime:6.0.2-base
 
 USER root
 RUN apt-get update -y && apt-get install -y git

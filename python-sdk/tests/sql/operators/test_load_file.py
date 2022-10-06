@@ -16,7 +16,7 @@ from unittest import mock
 
 import pandas as pd
 import pytest
-from airflow.exceptions import BackfillUnfinished
+from airflow.exceptions import AirflowNotFoundException
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
 from astro import sql as aql
@@ -415,7 +415,7 @@ def test_load_file_using_file_connection(
     ids=["postgresql"],
 )
 def test_load_file_using_file_connection_fails_nonexistent_conn(
-    caplog, sample_dag, database_table_fixture
+    sample_dag, database_table_fixture
 ):
     database_name = "postgres"
     file_conn_id = "fake_conn"
@@ -427,13 +427,12 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(
         "input_file": File(path=file_uri, conn_id=file_conn_id),
         "output_table": Table(name=OUTPUT_TABLE_NAME, **sql_server_params),
     }
-    with pytest.raises(BackfillUnfinished):
+    with pytest.raises(
+        AirflowNotFoundException, match=r"The conn_id `fake_conn` isn't defined"
+    ):
         with sample_dag:
             load_file(**task_params)
         test_utils.run_dag(sample_dag)
-
-    expected_error = "Failed to execute task: The conn_id `fake_conn` isn't defined."
-    assert expected_error in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -733,21 +732,19 @@ def test_populate_table_metadata(sample_dag):
         "/tmp/cklcdklscdksl/*.csv",
     ],
 )
-def test_load_file_should_fail_loudly(sample_dag, invalid_path, caplog):
+def test_load_file_should_fail_loudly(sample_dag, invalid_path):
     """
     load_file() operator is expected to fail for files which don't exist and 'if_file_doesnt_exist' is having exception
     strategy selected.
     """
 
-    with pytest.raises(BackfillUnfinished):
+    with pytest.raises(FileNotFoundError):
         with sample_dag:
             _ = load_file(
                 input_file=File(path=invalid_path),
                 output_table=Table(conn_id="postgres_conn_pagila"),
             )
         test_utils.run_dag(sample_dag)
-    expected_error = f"File(s) not found for path/pattern '{invalid_path}'"
-    assert expected_error in caplog.text
 
 
 def is_dict_subset(superset: dict, subset: dict) -> bool:
@@ -1112,3 +1109,28 @@ def test_loading_gcs_file_to_database(database_table_fixture, file):
 
     database_df = db.export_table_to_pandas_dataframe(test_table)
     assert database_df.shape == (3, 2)
+
+
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SQLITE,
+        },
+    ],
+    indirect=True,
+    ids=["Sqlite"],
+)
+@pytest.mark.parametrize("if_exists", ["replace", "append"])
+def test_tables_creation_if_they_dont_exist(database_table_fixture, if_exists):
+    """
+    Verify creation of new tables in case we pass if_exists=replace/append if they don't exists.
+    """
+    path = str(CWD) + "/../../data/homes_main.csv"
+    db, test_table = database_table_fixture
+    load_file(
+        input_file=File(path), output_table=test_table, if_exists=if_exists
+    ).operator.execute({})
+
+    database_df = db.export_table_to_pandas_dataframe(test_table)
+    assert database_df.shape == (3, 9)

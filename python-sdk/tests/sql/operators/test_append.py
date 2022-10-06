@@ -4,13 +4,13 @@ from unittest import mock
 
 import pandas as pd
 import pytest
-from airflow.exceptions import BackfillUnfinished
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.files import File
 from astro.sql.operators.append import AppendOperator
 from astro.sql.table import Metadata, Table
+from sqlalchemy.exc import NoSuchTableError
 from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
@@ -167,7 +167,7 @@ def test_append(
 def test_append_on_tables_on_different_db(sample_dag, database_table_fixture):
     test_table_1 = Table(conn_id="postgres_conn")
     test_table_2 = Table(conn_id="sqlite_conn")
-    with pytest.raises(BackfillUnfinished):
+    with pytest.raises(NoSuchTableError):
         with sample_dag:
             load_main = aql.load_file(
                 input_file=File(path=str(CWD) + "/../../data/homes_main.csv"),
