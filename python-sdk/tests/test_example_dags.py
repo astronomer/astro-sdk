@@ -57,16 +57,19 @@ def get_dag_folder() -> Path:
     :return: the dag folder containing the airflow dags.
     """
     base_folder = Path(__file__).parent.parent / "example_dags"
-    try:
-        return next(
-            folder
-            for folder in base_folder.rglob("./")
-            if version.parse(airflow.__version__) >= version.parse(folder.name)
-        )
-    except StopIteration:
-        raise ValueError(
-            "Could not find a dag folder with the same name as the current airflow version!"
-        )
+
+    for path in base_folder.rglob("*"):
+        if path.is_dir():
+            _version = version.parse(path.name)
+            if (
+                isinstance(_version, version.Version)
+                and version.parse(airflow.__version__) >= _version
+            ):
+                return path
+
+    raise ValueError(
+        "Could not find a dag folder with the same name as the current airflow version!"
+    )
 
 
 DAG_BAG = DagBag(dag_folder=get_dag_folder(), include_examples=False)
@@ -83,4 +86,5 @@ def test_example_dags_loaded():
 
 
 def test_example_dags_no_import_errors():
+    print(DAG_BAG.dag_folder)
     assert not DAG_BAG.import_errors
