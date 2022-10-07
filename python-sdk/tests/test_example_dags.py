@@ -8,6 +8,7 @@ from airflow.models.dagbag import DagBag
 from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import provide_session
+from packaging import version
 from tenacity import (
     retry,
     retry_if_exception_type,
@@ -60,7 +61,7 @@ def get_dag_folder() -> Path:
         return next(
             folder
             for folder in base_folder.rglob("./")
-            if folder.name == airflow.__version__
+            if version.parse(airflow.__version__) >= version.parse(folder.name)
         )
     except StopIteration:
         raise ValueError(

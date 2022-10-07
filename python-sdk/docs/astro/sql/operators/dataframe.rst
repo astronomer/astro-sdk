@@ -13,14 +13,14 @@ There are two main uses for the ``dataframe`` operator.
 
 Case 1: Convert a SQL table into a dataframe.
 
-    .. literalinclude:: ../../../../example_dags/example_amazon_s3_snowflake_transform.py
+    .. literalinclude:: ../../../../example_dags/2.4/2.3/2.2.5/example_amazon_s3_snowflake_transform.py
        :language: python
        :start-after: [START dataframe_example_1]
        :end-before: [END dataframe_example_1]
 
 Case 2: Convert the resulting dataframe into a table. When the ``output_table`` parameter is specified, the resulting dataframe is turned into a table.
 
-    .. literalinclude:: ../../../../example_dags/example_amazon_s3_snowflake_transform.py
+    .. literalinclude:: ../../../../example_dags/2.4/2.3/2.2.5/example_amazon_s3_snowflake_transform.py
            :language: python
            :start-after: [START dataframe_example_2]
            :end-before: [END dataframe_example_2]

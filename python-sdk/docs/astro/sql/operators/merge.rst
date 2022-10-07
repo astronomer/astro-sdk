@@ -31,7 +31,7 @@ The ``merge`` operator runs different SQL queries behind the scenes based on the
 
 You can create and add constraints on a table by providing them in the ``columns`` parameter of :ref:`load_file`. Refer to the :ref:`custom_schema` section for details.
 
-.. literalinclude:: ../../../../example_dags/example_merge.py
+.. literalinclude:: ../../../../example_dags/2.4/2.3/2.2.5/example_merge.py
    :language: python
    :start-after: [START merge_load_file_with_primary_key_example]
    :end-before: [END merge_load_file_with_primary_key_example]
@@ -41,7 +41,7 @@ When tables have the same schema
 
 If the source and target tables have the same schema, you should specify the complete ``list`` or ``tuple`` of columns to the ``columns`` parameter. This is required so the ``merge`` function can determine which columns might have :ref:`merge_conflicts`. You can also select a subset of columns to be part of the merge.
 
-.. literalinclude:: ../../../../example_dags/example_merge.py
+.. literalinclude:: ../../../../example_dags/2.4/2.3/2.2.5/example_merge.py
    :language: python
    :start-after: [START merge_col_list_example]
    :end-before: [END merge_col_list_example]
@@ -51,7 +51,7 @@ When tables have different schemas
 
 If the source and target tables have different schemas, you should pass a ``dict`` object mapping the ``source_table`` columns to the ``target_table`` columns.
 
-.. literalinclude:: ../../../../example_dags/example_merge.py
+.. literalinclude:: ../../../../example_dags/2.4/2.3/2.2.5/example_merge.py
    :language: python
    :start-after: [START merge_col_dict_example]
    :end-before: [END merge_col_dict_example]

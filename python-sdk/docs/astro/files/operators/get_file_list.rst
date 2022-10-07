@@ -15,7 +15,7 @@ The supported filesystems are :ref:`file_location`
 
 The following example retrieves a file list from the GCS bucket and dynamically generates tasks using ``expand`` to upload each listed file to a Bigquery table.
 
-.. literalinclude:: ../../../../example_dags/example_dynamic_task_template.py
+.. literalinclude:: ../../../../example_dags/2.4/2.3/example_dynamic_task_template.py
    :language: python
    :start-after: [START howto_operator_get_file_list]
    :end-before: [END howto_operator_get_file_list]

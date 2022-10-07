@@ -14,14 +14,14 @@ There are two main uses for the ``export_file`` operator.
 
 Case 1: Export data from a table.
 
-    .. literalinclude:: ../../../../example_dags/example_google_bigquery_gcs_load_and_save.py
+    .. literalinclude:: ../../../../example_dags/2.4/2.3/2.2.5/example_google_bigquery_gcs_load_and_save.py
        :language: python
        :start-after: [START export_example_1]
        :end-before: [END export_example_1]
 
 Case 2: Export data from a Pandas dataframe.
 
-    .. literalinclude:: ../../../../example_dags/example_google_bigquery_gcs_load_and_save.py
+    .. literalinclude:: ../../../../example_dags/2.4/2.3/2.2.5/example_google_bigquery_gcs_load_and_save.py
        :language: python
        :start-after: [START export_example_2]
        :end-before: [END export_example_2]

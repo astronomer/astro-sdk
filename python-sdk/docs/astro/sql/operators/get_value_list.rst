@@ -11,7 +11,7 @@ We can use ``get_value_list`` when you want to execute a SQL query on a database
 .. warning::
     Using this operator without limit in the SQL query can push lots of data in XCOM and also can create lots of parallel tasks if using in dynamic task map expand method.
 
-.. literalinclude:: ../../../../example_dags/example_dynamic_task_template.py
+.. literalinclude:: ../../../../example_dags/2.4/2.3/example_dynamic_task_template.py
    :language: python
    :start-after: [START howto_operator_get_value_list]
    :end-before: [END howto_operator_get_value_list]
