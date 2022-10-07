@@ -24,6 +24,7 @@ def dev(session: nox.Session) -> None:
 @nox.parametrize("airflow", ["2.2.5", "2.3"])
 def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
+    session.install(f"apache-airflow=={airflow}")
     session.install("-e", ".[all]")
     session.install("-e", ".[tests]")
     # Log all the installed dependencies
