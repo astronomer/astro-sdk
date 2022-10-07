@@ -16,7 +16,6 @@ from tenacity import (
     stop_after_attempt,
     wait_exponential,
 )
-
 from tests.sql.operators import utils as test_utils
 
 RETRY_ON_EXCEPTIONS = []
