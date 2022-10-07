@@ -27,7 +27,8 @@ def test(session: nox.Session, airflow) -> None:
     # Otherwise it fails with
     # Pandas requires version '1.4.0' or newer of 'sqlalchemy' (version '1.3.24' currently installed).
     constraints_url = (
-        f"https://raw.githubusercontent.com/apache/airflow/constraints-{airflow}/constraints-{session.python}.txt",
+        "https://raw.githubusercontent.com/apache/airflow/"
+        f"constraints-{airflow}/constraints-{session.python}.txt"
     )
     constraints = ["-c", constraints_url] if airflow == "2.2.5" else []
     session.install(f"apache-airflow=={airflow}", *constraints)

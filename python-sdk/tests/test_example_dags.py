@@ -52,7 +52,7 @@ def session():
 
 
 MIN_VER_DAG_FILE: dict[str, list[str]] = {
-    "2.3": ["example_dynamic_task_template.py"],
+    "2.3": ["example_dynamic_task_template.py", "example_bigquery_dynamic_map_task.py"],
     "2.4": ["example_datasets.py"],
 }
 
@@ -72,8 +72,10 @@ def get_dag_bag() -> DagBag:
         for min_version, files in MIN_VER_DAG_FILE_VER.items():
             if Version(airflow.__version__) < min_version:
                 print(f"Adding {files} to .airflowignore")
-                file.writelines(files)
+                file.writelines([f"{file}\n" for file in files])
 
+    print(".airflowignore contents: ")
+    print(airflow_ignore_file.read_text())
     dag_bag = DagBag(example_dags_dir, include_examples=False)
     return dag_bag
 
