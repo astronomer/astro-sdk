@@ -86,5 +86,4 @@ def test_example_dags_loaded():
 
 
 def test_example_dags_no_import_errors():
-    print(DAG_BAG.dag_folder)
     assert not DAG_BAG.import_errors
