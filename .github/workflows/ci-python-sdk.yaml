@@ -157,6 +157,7 @@ jobs:
       SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
       AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
       AIRFLOW_VAR_FOO: templated_file_name
+      AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
       AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
       FORCE_COLOR: "true"
 
@@ -247,6 +248,7 @@ jobs:
       SNOWFLAKE_REGION: us-east-1
       SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
       AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
+      AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
       AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
       AIRFLOW_VAR_FOO: templated_file_name
 
@@ -331,6 +333,7 @@ jobs:
       SNOWFLAKE_REGION: us-east-1
       SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
       AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
+      AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
       AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
       AIRFLOW_VAR_FOO: templated_file_name
 
