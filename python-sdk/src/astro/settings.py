@@ -14,7 +14,7 @@ DATAFRAME_STORAGE_CONN_ID = conf.get("astro_sdk", "xcom_storage_conn_id", fallba
 DATAFRAME_STORAGE_URL = conf.get(
     "astro_sdk", "xcom_storage_url", fallback=tempfile.gettempdir()
 )
-
+STORE_DATA_LOCAL_DEV = conf.get("astro_sdk", "store_data_local_dev", fallback=False)
 XCOM_BACKEND = conf.get("core", "xcom_backend")
 IS_CUSTOM_XCOM_BACKEND = XCOM_BACKEND not in [
     "airflow.models.xcom.BaseXCom",

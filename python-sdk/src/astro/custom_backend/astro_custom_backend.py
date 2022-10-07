@@ -25,9 +25,9 @@ class AstroCustomXcomBackend(BaseXCom):
         :param kwargs:
         :return:
         """
-        from astro.settings import DATAFRAME_STORAGE_CONN_ID
+        from astro.settings import DATAFRAME_STORAGE_CONN_ID, STORE_DATA_LOCAL_DEV
 
-        if DATAFRAME_STORAGE_CONN_ID:
+        if DATAFRAME_STORAGE_CONN_ID or STORE_DATA_LOCAL_DEV:
             value = serialize(value)
         else:
             warnings.warn(
