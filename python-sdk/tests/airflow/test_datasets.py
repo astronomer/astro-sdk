@@ -5,7 +5,7 @@ import airflow
 import pytest
 from airflow.models.dagbag import DagBag
 from astro.airflow.datasets import kwargs_with_datasets
-from astro.sql.table import Table
+from astro.table import Table
 
 
 @pytest.mark.parametrize(

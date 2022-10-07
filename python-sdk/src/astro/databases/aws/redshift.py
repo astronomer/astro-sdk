@@ -15,7 +15,7 @@ from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
 from astro.settings import REDSHIFT_SCHEMA
-from astro.sql.table import BaseTable, Metadata, Table
+from astro.table import BaseTable, Metadata, Table
 from redshift_connector.error import (
     ArrayContentNotHomogenousError,
     ArrayContentNotSupportedError,

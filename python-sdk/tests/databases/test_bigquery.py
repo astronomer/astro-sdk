@@ -13,7 +13,7 @@ from astro.databases.google.bigquery import BigqueryDatabase, S3ToBigqueryDataTr
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File
 from astro.settings import SCHEMA
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
 from google.cloud.bigquery_datatransfer_v1.types import (
     StartManualTransferRunsResponse,

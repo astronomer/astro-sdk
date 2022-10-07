@@ -71,7 +71,7 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
     from airflow import DAG
     from astro import sql as aql
     from astro.files import File
-    from astro.sql.table import Table
+    from astro.table import Table
 
     @aql.transform()
     def top_five_animations(input_table: Table):

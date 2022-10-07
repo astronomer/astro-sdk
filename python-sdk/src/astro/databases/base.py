@@ -22,7 +22,7 @@ from astro.files import File, resolve_file_path_pattern
 from astro.files.types import create_file_type
 from astro.files.types.base import FileType as FileTypeConstants
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
-from astro.sql.table import BaseTable, Metadata
+from astro.table import BaseTable, Metadata
 from pandas.io.sql import SQLDatabase
 from sqlalchemy import column, insert, select
 from sqlalchemy.sql import ClauseElement

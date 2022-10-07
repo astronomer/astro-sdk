@@ -21,7 +21,7 @@ from astro.settings import (
     SNOWFLAKE_STORAGE_INTEGRATION_AMAZON,
     SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE,
 )
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
 from sqlalchemy.exc import ProgrammingError
 from tests.sql.operators import utils as test_utils

@@ -14,7 +14,7 @@ from airflow.models import TaskInstance
 from airflow.utils import timezone
 from airflow.utils.session import provide_session
 from astro.databases import create_database
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 
 
 def get_disk_usage():
