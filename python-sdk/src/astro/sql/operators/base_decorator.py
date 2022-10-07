@@ -3,9 +3,11 @@ from __future__ import annotations
 import inspect
 from typing import Any, Callable, Sequence, cast
 
+import jinja2
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
+from airflow.models import BaseOperator
 from sqlalchemy.sql.functions import Function
 
 from astro.airflow.datasets import kwargs_with_datasets
@@ -20,7 +22,8 @@ from astro.utils.table import find_first_table
 class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
     """Handles all decorator classes that can return a SQL function"""
 
-    template_fields: Sequence[str] = ("parameters", "op_args", "op_kwargs")
+    template_fields: Sequence[str] = ("sql", "parameters", "op_args", "op_kwargs")
+    template_ext: Sequence[str] = (".sql",)
 
     database_impl: BaseDatabase
 
@@ -59,7 +62,19 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             **kwargs_with_datasets(kwargs=kwargs, output_datasets=self.output_table),
         )
 
-    def execute(self, context: Context) -> None:
+    def _enrich_context(self, context: Context) -> Context:
+        """
+        Prepare the sql and context for execution.
+
+        Specifically, it will do the following:
+        1. Preset database settings
+        2. Load dataframes into tables
+        3. Render sql as sqlalchemy executable string
+
+        :param context: The Airflow Context which will be extended.
+
+        :return: the enriched context with astro specific information.
+        """
         first_table = find_first_table(
             op_args=self.op_args,  # type: ignore
             op_kwargs=self.op_kwargs,
@@ -108,6 +123,26 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         # if there is no SQL to run we raise an error
         if self.sql == "" or not self.sql:
             raise AirflowException("There's no SQL to run")
+        return context
+
+    def render_template_fields(
+        self,
+        context: Context,
+        jinja_env: jinja2.Environment | None = None,
+    ) -> BaseOperator | None:
+        """Template all attributes listed in template_fields.
+
+        This mutates the attributes in-place and is irreversible.
+
+        :param context: Dict with values to apply on content
+        :param jinja_env: Jinja environment
+        """
+        context = self._enrich_context(context)
+
+        return super().render_template_fields(context, jinja_env)
+
+    def execute(self, context: Context) -> None:
+        self._enrich_context(context)
 
         # TODO: remove pushing to XCom once we update the airflow version.
         context["ti"].xcom_push(key="base_sql_query", value=str(self.sql))
