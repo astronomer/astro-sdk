@@ -73,9 +73,6 @@ def get_dag_bag() -> DagBag:
             if Version(airflow.__version__) < min_version:
                 print(f"Adding {files} to .airflowignore")
                 file.writelines(files)
-                # We want to find a version in the map that is less than the installed version
-                # but greater than other versions
-                break
 
     dag_bag = DagBag(example_dags_dir, include_examples=False)
     return dag_bag
