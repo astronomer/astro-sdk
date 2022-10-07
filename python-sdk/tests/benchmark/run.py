@@ -13,8 +13,9 @@ from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import TaskInstance
 from airflow.utils import timezone
 from airflow.utils.session import provide_session
-from astro.databases import create_database
 from astro.sql.table import Metadata, Table
+
+from astro.databases import create_database
 
 
 def get_disk_usage():
@@ -33,19 +34,15 @@ def export_profile_data_to_bq(profile_data: dict, conn_id: str = "bigquery"):
     :param profile_data: profiling data collected
     :param conn_id: Airflow's connection id to be used to publish the profiling data
     """
-    try:
-        db = create_database(conn_id)
-        if profile_data.get("io_counters", False):
-            del profile_data["io_counters"]
-        df = pd.json_normalize(profile_data, sep="_")
-        table = Table(
-            name=benchmark_settings.publish_benchmarks_table,
-            metadata=Metadata(schema=benchmark_settings.publish_benchmarks_schema),
-        )
-        db.load_pandas_dataframe_to_table(df, table, if_exists="append")
-    except Exception as e:
-        print("=========================================")
-        print(e)
+    db = create_database(conn_id)
+    if profile_data.get("io_counters", False):
+        del profile_data["io_counters"]
+    df = pd.json_normalize(profile_data, sep="_")
+    table = Table(
+        name=benchmark_settings.publish_benchmarks_table,
+        metadata=Metadata(schema=benchmark_settings.publish_benchmarks_schema),
+    )
+    db.load_pandas_dataframe_to_table(df, table, if_exists="append")
 
 
 @provide_session
