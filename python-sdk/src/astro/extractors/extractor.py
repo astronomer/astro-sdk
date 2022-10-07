@@ -1,6 +1,5 @@
 from typing import List, Optional
 
-from airflow.models.taskinstance import TaskInstance
 from openlineage.airflow.extractors import TaskMetadata
 from openlineage.airflow.extractors.base import BaseExtractor
 from openlineage.airflow.utils import get_job_name
@@ -21,13 +20,10 @@ class PythonSDKExtractor(BaseExtractor):
         """Empty extract implementation for the abstractmethod of the ``BaseExtractor`` class."""
         return None
 
-    def extract_on_complete(
-        self, task_instance: TaskInstance
-    ) -> Optional[TaskMetadata]:
+    def extract_on_complete(self) -> Optional[TaskMetadata]:
         """
-        Callback on get_openlineage_facets(ti) task completion to fetch metadata extraction details that are to
-         be pushed to the Lineage server.
-        :param task_instance: Instance of the Airflow task whose metadata needs to be extracted.
+        Callback on get_openlineage_facets(ti) task completion to fetch metadata extraction details that are to be
+        pushed to the Lineage server.
         """
         try:
             input_dataset, output_dataset = self.operator.get_openlineage_facets()
