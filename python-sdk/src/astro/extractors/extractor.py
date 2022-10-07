@@ -22,7 +22,7 @@ class PythonSDKExtractor(BaseExtractor):
 
     def extract_on_complete(self) -> Optional[TaskMetadata]:
         """
-        Callback on get_openlineage_facets(ti) task completion to fetch metadata extraction details that are to be
+        Callback on ``get_openlineage_facets(ti)`` task completion to fetch metadata extraction details that are to be
         pushed to the Lineage server.
         """
         try:
