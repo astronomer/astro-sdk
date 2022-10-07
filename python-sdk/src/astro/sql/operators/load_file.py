@@ -7,14 +7,13 @@ from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
+from astro.databases import create_database
 from astro.databases.base import BaseDatabase
+from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
 from astro.utils.dataframe import convert_to_file
 from astro.utils.typing_compat import Context
-
-from astro.databases import create_database
-from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 
 
 class LoadFileOperator(AstroSQLBaseOperator):
