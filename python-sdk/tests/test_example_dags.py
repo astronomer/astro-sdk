@@ -1,11 +1,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Iterator
 
 import airflow
 import pytest
-from airflow.models import DAG
 from airflow.models.dagbag import DagBag
 from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
@@ -51,38 +49,31 @@ def session():
     return get_session()
 
 
-DAG_BAG = DagBag(Path(__file__).parent.parent / "example_dags", include_examples=False)
-AIRFLOW_VERSION_INDICATOR = "airflow_version:"
-MINIMUM_AIRFLOW_VERSION = "2.2.5"
+def get_dag_folder() -> Path:
+    """
+    Recursively find the dag folder for the current airflow version.
 
-
-def get_airflow_version(dag: DAG) -> str:
-    for tag in dag.tags:
-        if tag.startswith(AIRFLOW_VERSION_INDICATOR):
-            return tag[len(AIRFLOW_VERSION_INDICATOR) :]
-    return MINIMUM_AIRFLOW_VERSION
-
-
-def get_airflow_dags() -> Iterator[tuple[str, str]]:
-    for dag_id, dag in DAG_BAG.dags.items():
-        yield dag_id, dag, get_airflow_version(dag)
-
-
-@pytest.mark.parametrize(
-    "dag",
-    [
-        pytest.param(
-            dag,
-            id=dag_id,
-            marks=pytest.mark.skipif(
-                airflow.__version__ < dag_airflow_version,
-                reason=f"Require Airflow version >= {dag_airflow_version}",
-            ),
+    :return: the dag folder containing the airflow dags.
+    """
+    base_folder = Path(__file__).parent.parent / "example_dags"
+    try:
+        return next(
+            folder
+            for folder in base_folder.rglob("./")
+            if folder.name == airflow.__version__
         )
-        for dag_id, dag, dag_airflow_version in get_airflow_dags()
-    ],
-)
-def test_example_dag(session, dag: DAG):
+    except StopIteration:
+        raise ValueError(
+            "Could not find a dag folder with the same name as the current airflow version!"
+        )
+
+
+DAG_BAG = DagBag(dag_folder=get_dag_folder(), include_examples=False)
+
+
+@pytest.mark.parametrize("dag_id", DAG_BAG.dag_ids)
+def test_example_dag(session, dag_id):
+    dag = DAG_BAG.get_dag(dag_id)
     wrapper_run_dag(dag)
 
 
