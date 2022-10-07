@@ -207,13 +207,29 @@ def create_dag(database_name, table_args, dataset, global_db_kwargs):
         return dag
 
 
+def is_skipped(dataset: dict, database_name: str) -> bool:
+    """
+    Check if the dataset is skipped for database. Default value is False.
+    :param database_name: name of db expected in database_kwargs
+    :param dataset: dataset config
+    """
+    database_kwargs = dataset["database_kwargs"]
+    if database_name not in database_kwargs:
+        return False
+    elif "skip" not in database_kwargs[database_name]:
+        return False
+
+    return bool(database_kwargs[database_name].get("skip"))
+
+
 config = load_config()
 for database in config["databases"]:
     database_name = database["name"]
     table_args = database["output_table"]
     global_db_kwargs = database["kwargs"]
     for dataset in config["datasets"]:
-        table_args_copy = table_args.copy()
+        if is_skipped(dataset, database_name):
+            table_args_copy = table_args.copy()
 
-        dag = create_dag(database_name, table_args_copy, dataset, global_db_kwargs)
-        globals()[dag.dag_id] = dag
+            dag = create_dag(database_name, table_args_copy, dataset, global_db_kwargs)
+            globals()[dag.dag_id] = dag
