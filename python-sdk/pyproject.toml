@@ -48,7 +48,8 @@ tests = [
     "pytest-cov",
     "pytest-describe",
     "mypy",
-    "sqlalchemy-stubs"  # Change when sqlalchemy is upgraded https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html
+    "sqlalchemy-stubs",  # Change when sqlalchemy is upgraded https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html
+    "openlineage-airflow>=0.12.0"
 ]
 google = [
     "protobuf<=3.20", # Google bigquery client require protobuf <= 3.20.0. We can remove the limitation when this limitation is removed

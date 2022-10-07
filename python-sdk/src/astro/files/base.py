@@ -2,15 +2,17 @@ from __future__ import annotations
 
 import io
 import pathlib
+from typing import Any
 
 import pandas as pd
 import smart_open
-from astro import constants
 from astro.airflow.datasets import Dataset
-from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
-from astro.files.types import FileType, create_file_type
 from attr import define, field
+
+from astro import constants
+from astro.files.locations import create_file_location
+from astro.files.types import FileType, create_file_type
 
 
 @define
@@ -88,7 +90,7 @@ class File(Dataset):
             self.type.create_from_dataframe(stream=stream, df=df)
 
     @property
-    def openlineage_dataset_namespace(self) -> str:
+    def openlineage_dataset_namespace(self) -> Any:
         """
         Returns the open lineage dataset namespace as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
@@ -96,7 +98,7 @@ class File(Dataset):
         return self.location.openlineage_dataset_namespace
 
     @property
-    def openlineage_dataset_name(self) -> str:
+    def openlineage_dataset_name(self) -> Any:
         """
         Returns the open lineage dataset name as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
