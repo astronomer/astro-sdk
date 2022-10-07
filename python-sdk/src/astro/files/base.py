@@ -5,12 +5,13 @@ import pathlib
 
 import pandas as pd
 import smart_open
-from astro import constants
 from astro.airflow.datasets import Dataset
-from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
-from astro.files.types import FileType, create_file_type
 from attr import define, field
+
+from astro import constants
+from astro.files.locations import create_file_location
+from astro.files.types import FileType, create_file_type
 
 
 @define
@@ -86,6 +87,22 @@ class File(Dataset):
             self.path, mode="wb", transport_params=self.location.transport_params
         ) as stream:
             self.type.create_from_dataframe(stream=stream, df=df)
+
+    @property
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return self.location.openlineage_dataset_namespace
+
+    @property
+    def openlineage_dataset_name(self) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return self.location.openlineage_dataset_name
 
     def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes."""

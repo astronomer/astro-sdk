@@ -52,6 +52,24 @@ class BaseFileLocation(ABC):
         """Return the size in bytes of the given file"""
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def openlineage_dataset_namespace(self):
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def openlineage_dataset_name(self):
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        raise NotImplementedError
+
     @staticmethod
     def is_valid_path(path: str) -> bool:
         """

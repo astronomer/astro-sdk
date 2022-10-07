@@ -5,16 +5,18 @@ from typing import Any
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
-from astro import settings
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
-from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.exceptions import IllegalLoadToDatabaseException
-from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable, Table
 from astro.utils.typing_compat import Context
+from openlineage.client.run import Dataset as OpenlineageDataset
+
+from astro import settings
+from astro.databases import create_database
+from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 
 
 class LoadFileOperator(AstroSQLBaseOperator):
@@ -190,6 +192,39 @@ class LoadFileOperator(AstroSQLBaseOperator):
         )
 
         return normalize_config
+
+    def get_openlineage_facets(self):
+        """
+        Returns the lineage data
+        """
+        input_files = resolve_file_path_pattern(
+            self.input_file.path,
+            self.input_file.conn_id,
+            normalize_config={},
+            filetype=self.input_file.type.name,
+        )
+
+        input_dataset = [
+            OpenlineageDataset(
+                namespace=self.input_file.openlineage_dataset_namespace,
+                name=self.input_file.openlineage_dataset_name,
+                facets={
+                    "file_size": self.input_file.size,
+                    "is_pattern": self.input_file.is_pattern(),
+                    "files": [file.path for file in input_files],
+                    "number_of_files": len(input_files),
+                },
+            )
+        ]
+
+        output_dataset = [
+            OpenlineageDataset(
+                namespace=self.output_table.conn_id,
+                name=self.output_table.name,
+                facets={},
+            )
+        ]
+        return input_dataset, output_dataset
 
 
 def load_file(
