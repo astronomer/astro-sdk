@@ -1,5 +1,6 @@
 from typing import List, Optional
 
+from airflow.models.taskinstance import TaskInstance
 from openlineage.airflow.extractors import TaskMetadata
 from openlineage.airflow.extractors.base import BaseExtractor
 from openlineage.airflow.utils import get_job_name
@@ -20,11 +21,15 @@ class PythonSDKExtractor(BaseExtractor):
         """Empty extract implementation for the abstractmethod of the ``BaseExtractor`` class."""
         return None
 
-    def extract_on_complete(self) -> Optional[TaskMetadata]:  # skipcq: PYL-R0201
+    def extract_on_complete(
+        self, task_instance: TaskInstance
+    ) -> Optional[TaskMetadata]:  # skipcq: PYL-R0201
         """
         Callback on ``get_openlineage_facets(ti)`` task completion to fetch metadata extraction details that are to be
         pushed to the Lineage server.
         """
+        self.log.debug("extract_on_complete on")
+        self.log.debug(task_instance)
         try:
             input_dataset, output_dataset = self.operator.get_openlineage_facets()
         except ValueError:
