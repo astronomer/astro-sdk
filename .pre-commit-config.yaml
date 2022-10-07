@@ -99,11 +99,11 @@ repos:
       hooks:
       - id: mypy
         name: mypy-python-sdk
-        additional_dependencies: [types-PyYAML, types-attrs, attrs]
+        additional_dependencies: [types-PyYAML, types-attrs, attrs, types-requests]
         files: "^python-sdk/"
       - id: mypy
         name: mypy-sql-cli
-        additional_dependencies: [types-PyYAML]
+        additional_dependencies: [types-PyYAML, types-requests]
         files: "^sql-cli/"
 
   -   repo: https://github.com/asottile/pyupgrade
