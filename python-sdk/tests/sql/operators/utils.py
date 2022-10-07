@@ -191,7 +191,7 @@ def _run_task(ti: TaskInstance, session):
         ti: TaskInstance to run
     """
     log.info("*****************************************************")
-    if ti.map_index > 0:
+    if hasattr(ti, "map_index") and ti.map_index > 0:
         log.info("Running task %s index %d", ti.task_id, ti.map_index)
     else:
         log.info("Running task %s", ti.task_id)
