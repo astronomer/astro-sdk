@@ -27,8 +27,7 @@ with DAG(
 
     # [START transform_file_example_1]
     table_from_query = aql.transform_file(
-        file_path=str(pathlib.Path(CWD).parents[0])
-        + "/example_dags/demo_parse_directory/transform.sql",
+        file_path=f"{CWD.parent.parent.parent.as_posix()}/demo_parse_directory/transform.sql",
         parameters={"input_table": imdb_movies, "output_table": target_table},
     )
     # [END transform_file_example_1]
