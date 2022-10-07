@@ -143,7 +143,7 @@
 * Allow users to specify the table schema (column types) in which a file is being loaded by using `table.columns`.
   If this table attribute is not set, the Astro SDK still tries to infer the schema by using Pandas
   (which is previous behaviour).[#532](https://github.com/astronomer/astro-sdk/issues/532)
-* Add [Example DAG](../example_dags/example_bigquery_dynamic_map_task.py) for Dynamic Map Task with Astro-SDK.
+* Add [Example DAG](../example_dags/2.4/2.3/example_bigquery_dynamic_map_task.py) for Dynamic Map Task with Astro-SDK.
   [#377](https://github.com/astronomer/astro-sdk/issues/377),[airflow-2.3.0](https://airflow.apache.org/blog/airflow-2.3.0/)
 
 ### Breaking Change
