@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
@@ -52,12 +53,10 @@ def get_traceback(exc) -> str:
     Get traceback string from exception
     :param exc: Exception object
     """
-    # tb = traceback.format_exception(  # skipcq: PYL-E1123,PYL-E1120
-    #     etype=type(exc), value=exc, tb=exc.__traceback__  # ignore
-    # )
-    tb = traceback.format_exception(  # skipcq: PYL-E1123,PYL-E1120
-        type(exc), value=exc, tb=exc.__traceback__  # ignore
-    )
+    if sys.version_info >= (3, 10, 0):
+        tb = traceback.format_exception(exc, value=exc, tb=exc.__traceback__)
+    else:
+        tb = traceback.format_exception(type(exc), value=exc, tb=exc.__traceback__)
     return "".join(tb)
 
 
