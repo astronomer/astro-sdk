@@ -267,8 +267,6 @@ jobs:
         github.event_name == 'release'
       )
     runs-on: ubuntu-latest
-    needs:
-      - Run-Unit-tests-Airflow-2-4
     services:
       postgres:
         # Docker Hub image
@@ -373,6 +371,7 @@ jobs:
     name: Build and publish Python 🐍 distributions 📦 to PyPI
     needs:
       - Run-Unit-tests-Airflow-2-4
+      - Run-Unit-tests-Airflow-2-2-5
       - Run-Optional-Packages-tests-python-sdk
     runs-on: ubuntu-18.04
     steps:
