@@ -18,7 +18,7 @@ from astro.constants import ColumnCapitalization
 from astro.databases import create_database
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
-from astro.sql.table import BaseTable
+from astro.table import BaseTable, Table
 from astro.utils.dataframe import convert_columns_names_capitalization
 from astro.utils.table import find_first_table
 from astro.utils.typing_compat import Context

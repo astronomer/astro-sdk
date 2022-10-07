@@ -10,7 +10,7 @@ from airflow import DAG
 from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
 from astro.files import File
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 from run import export_profile_data_to_bq
 
 START_DATE = datetime(2000, 1, 1)

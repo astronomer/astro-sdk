@@ -15,7 +15,7 @@ import pandas as pd
 from airflow.decorators import dag
 from astro.files import File
 from astro.sql import append, cleanup, dataframe, load_file, run_raw_sql, transform
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 
 SNOWFLAKE_CONN_ID = "snowflake_conn"
 dir_path = os.path.dirname(os.path.realpath(__file__))

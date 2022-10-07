@@ -2,7 +2,7 @@
 from airflow import DAG
 from airflow.utils import timezone
 from astro import sql as aql
-from astro.sql.table import Table
+from astro.table import Table
 
 with DAG(
     dag_id="simple",

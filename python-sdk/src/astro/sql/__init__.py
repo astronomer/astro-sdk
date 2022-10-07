@@ -10,7 +10,7 @@ from astro.sql.operators.load_file import LoadFileOperator, load_file
 from astro.sql.operators.merge import MergeOperator, merge
 from astro.sql.operators.raw_sql import RawSQLOperator, run_raw_sql
 from astro.sql.operators.transform import TransformOperator, transform, transform_file
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 
 
 def get_value_list(sql: str, conn_id: str, **kwargs) -> XComArg:

@@ -20,7 +20,7 @@ from airflow.utils.session import NEW_SESSION, provide_session
 from airflow.utils.state import DagRunState, State
 from airflow.utils.types import DagRunType
 from astro.sql.operators.cleanup import AstroCleanupException
-from astro.sql.table import Metadata
+from astro.table import Metadata
 from pandas.testing import assert_frame_equal
 from sqlalchemy.orm.session import Session
 

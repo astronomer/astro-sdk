@@ -35,7 +35,7 @@ install: virtualenv  ## Install python dependencies in existing virtualenv
 	@$(PIP) install --upgrade pip
 	@$(PIP) install nox
 	@$(PIP) install pre-commit
-	@cd .. && $(PIP) install -e .[all, tests, doc]
+	@cd .. && $(PIP) install -e .[all,tests,doc]
 
 config:  ## Create sample configuration files related to Snowflake, Amazon and Google
 	@cd .. && test -e .env && \

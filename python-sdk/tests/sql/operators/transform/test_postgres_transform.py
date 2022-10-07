@@ -6,7 +6,7 @@ from airflow.models import TaskInstance as TI
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 from astro.constants import Database
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 from tests.sql.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
