@@ -24,6 +24,12 @@ on:
 defaults:
   run:
     working-directory: python-sdk
+
+# This allows a subsequently queued workflow run to interrupt and cancel previous runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   Markdown-link-check:
     if: github.event.action != 'labeled'

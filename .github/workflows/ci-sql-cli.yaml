@@ -20,6 +20,12 @@ on:
 defaults:
   run:
     working-directory: sql-cli
+
+# This allows a subsequently queued workflow run to interrupt and cancel previous runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   Type-Check:
     if: github.event.action != 'labeled'
@@ -90,7 +96,7 @@ jobs:
   Code-Coverage:
     if: github.event.action != 'labeled'
     needs:
-      - Run-SQL-CLI-tests-Airflow-2-3
+      - Run-SQL-CLI-tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
