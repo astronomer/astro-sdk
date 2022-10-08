@@ -13,7 +13,7 @@ from astro.databases.aws.redshift import RedshiftDatabase
 from astro.exceptions import NonExistentTableException
 from astro.files import File
 from astro.settings import SCHEMA
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
 from tests.sql.operators import utils as test_utils
 

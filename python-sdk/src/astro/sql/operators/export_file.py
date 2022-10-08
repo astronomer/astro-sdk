@@ -10,7 +10,7 @@ from astro.constants import ExportExistsStrategy
 from astro.databases import create_database
 from astro.files import File
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
-from astro.sql.table import BaseTable, Table
+from astro.table import BaseTable, Table
 from astro.utils.typing_compat import Context
 
 

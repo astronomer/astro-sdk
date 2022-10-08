@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from astro import sql as aql
 from astro.files import File
-from astro.sql.table import Table
+from astro.table import Table
 from pandas import DataFrame
 
 s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")

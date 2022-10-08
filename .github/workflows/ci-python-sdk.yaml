@@ -24,6 +24,12 @@ on:
 defaults:
   run:
     working-directory: python-sdk
+
+# This allows a subsequently queued workflow run to interrupt and cancel previous runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   Markdown-link-check:
     if: github.event.action != 'labeled'
@@ -161,7 +167,7 @@ jobs:
       AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE: True
       FORCE_COLOR: "true"
 
-  Run-Unit-tests-Airflow-2-3:
+  Run-Unit-tests-Airflow-2-4:
     if: >-
       github.event_name == 'push' ||
       (
@@ -217,7 +223,7 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.3')" -- --splits 12 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-3.8(airflow='2.4')" -- --splits 12 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
@@ -267,8 +273,6 @@ jobs:
         github.event_name == 'release'
       )
     runs-on: ubuntu-latest
-    needs:
-      - Run-Unit-tests-Airflow-2-3
     services:
       postgres:
         # Docker Hub image
@@ -340,7 +344,7 @@ jobs:
   Code-Coverage:
     if: github.event.action != 'labeled'
     needs:
-      - Run-Unit-tests-Airflow-2-3
+      - Run-Unit-tests-Airflow-2-4
       - Run-Optional-Packages-tests-python-sdk
     runs-on: ubuntu-latest
     steps:
@@ -372,7 +376,8 @@ jobs:
     if: github.event_name == 'release'
     name: Build and publish Python 🐍 distributions 📦 to PyPI
     needs:
-      - Run-Unit-tests-Airflow-2-3
+      - Run-Unit-tests-Airflow-2-4
+      - Run-Unit-tests-Airflow-2-2-5
       - Run-Optional-Packages-tests-python-sdk
     runs-on: ubuntu-18.04
     steps:

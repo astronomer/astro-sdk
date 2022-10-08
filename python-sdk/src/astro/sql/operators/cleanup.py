@@ -15,7 +15,7 @@ from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.load_file import LoadFileOperator
-from astro.sql.table import BaseTable, TempTable
+from astro.table import BaseTable, TempTable
 from astro.utils.typing_compat import Context
 
 

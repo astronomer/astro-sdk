@@ -20,7 +20,7 @@ from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
 from astro.settings import BIGQUERY_SCHEMA
-from astro.sql.table import BaseTable, Metadata
+from astro.table import BaseTable, Metadata
 from google.api_core.exceptions import (
     ClientError,
     Conflict,

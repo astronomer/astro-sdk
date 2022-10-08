@@ -5,7 +5,7 @@ from airflow import DAG
 from astro import sql as aql
 from astro.files import File
 from astro.sql import drop_table
-from astro.sql.table import Table
+from astro.table import Table
 
 START_DATE = datetime(2000, 1, 1)
 

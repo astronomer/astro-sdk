@@ -1,7 +1,7 @@
 import inspect
 from typing import Callable, Optional
 
-from astro.sql.table import BaseTable
+from astro.table import BaseTable
 
 
 def _pull_first_table_from_parameters(parameters: dict) -> Optional[BaseTable]:

@@ -11,7 +11,7 @@ from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflict
 from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.settings import POSTGRES_SCHEMA
-from astro.sql.table import BaseTable, Metadata
+from astro.table import BaseTable, Metadata
 from psycopg2 import sql as postgres_sql
 
 DEFAULT_CONN_ID = PostgresHook.default_conn_name
