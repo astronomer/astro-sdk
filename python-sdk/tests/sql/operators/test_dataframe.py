@@ -12,6 +12,7 @@ from astro.constants import Database
 from astro.custom_backend.astro_custom_backend import AstroCustomXcomBackend as XCom
 from astro.files import File
 from astro.table import Table
+
 from tests.sql.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -113,29 +114,29 @@ def test_dataframe_from_sql_custom_task_id(sample_dag, database_table_fixture):
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        # {
-        #     "database": Database.SNOWFLAKE,
-        #     "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-        # },
-        # {
-        #     "database": Database.BIGQUERY,
-        #     "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-        # },
-        # {
-        #     "database": Database.POSTGRES,
-        #     "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-        # },
+        {
+            "database": Database.SNOWFLAKE,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.BIGQUERY,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
+        {
+            "database": Database.POSTGRES,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
         {
             "database": Database.SQLITE,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
-        # {
-        #     "database": Database.REDSHIFT,
-        #     "file": File(path=str(CWD) + "/../../data/homes2.csv"),
-        # },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
-    # ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 def test_dataframe_from_sql_basic_op_arg(sample_dag, database_table_fixture):
     """Test basic operation of dataframe operator with op_args."""
@@ -368,3 +369,27 @@ def test_dataframe_from_file_xcom_pickling(mock_serde, sample_dag):
     test_utils.run_dag(sample_dag)
     mock_serde.serialize.assert_not_called()
     mock_serde.deserialize.assert_not_called()
+
+
+@mock.patch("astro.settings.STORE_DATA_LOCAL_DEV", False)
+@mock.patch("warnings.warn")
+def test_dataframe_no_storage_option_raises_warning(mock_warning, sample_dag):
+    @aql.dataframe
+    def validate_file(df: pandas.DataFrame):  # skipcq: PY-D0003
+        assert len(df) == 5
+        assert "sell" in df.columns
+        return df
+
+    @aql.dataframe()
+    def count_df(df: pandas.DataFrame):
+        return len(df)
+
+    with pytest.raises(TypeError):
+        with sample_dag:
+            count_df(validate_file(df=File(path=str(CWD) + "/../../data/homes2.csv")))
+        test_utils.run_dag(sample_dag)
+    mock_warning.assert_called()
+    assert (
+        "Since you have not provided a remote object storage conn_id"
+        in mock_warning.call_args[0][0]
+    )
