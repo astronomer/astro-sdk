@@ -6,6 +6,7 @@ from astro import sql as aql
 from astro.files import File
 from astro.sql import drop_table
 from astro.table import Table
+from astro.test_dag import test_dag
 
 START_DATE = datetime(2000, 1, 1)
 
@@ -53,3 +54,5 @@ with DAG(
     # [END drop_table_example]
     truncate_results.set_upstream(top_five_animations)
     aql.cleanup()
+if __name__ == "__main__":
+    test_dag(dag)

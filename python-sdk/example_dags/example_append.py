@@ -5,6 +5,7 @@ from airflow.models import DAG
 from astro import sql as aql
 from astro.files import File
 from astro.table import Table
+from astro.test_dag import test_dag
 
 CWD = pathlib.Path(__file__).parent
 
@@ -47,3 +48,5 @@ with dag:
     # [END append_example_col_dict]
 
     aql.cleanup()
+if __name__ == "__main__":
+    test_dag(dag)

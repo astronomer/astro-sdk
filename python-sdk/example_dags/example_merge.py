@@ -5,6 +5,7 @@ from airflow.models import DAG
 from astro import sql as aql
 from astro.files import File
 from astro.table import Metadata, Table
+from astro.test_dag import test_dag
 from pandas import DataFrame
 from sqlalchemy import Column, types
 
@@ -89,3 +90,5 @@ with dag:
     # [END merge_col_dict_example]
 
     aql.cleanup()
+if __name__ == "__main__":
+    test_dag(dag)

@@ -5,6 +5,7 @@ from airflow.models import DAG
 from astro import sql as aql
 from astro.files import File
 from astro.table import Table
+from astro.test_dag import test_dag
 from pandas import DataFrame
 
 s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
@@ -48,3 +49,6 @@ with dag:
     # [START cleanup_example]  skipcq: PY-W0069
     aql.cleanup()
     # [END cleanup_example]  skipcq: PY-W0069
+
+if __name__ == "__main__":
+    test_dag(dag)

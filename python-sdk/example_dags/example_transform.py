@@ -5,6 +5,7 @@ from airflow import DAG
 from astro import sql as aql
 from astro.files import File
 from astro.table import Table
+from astro.test_dag import test_dag
 
 START_DATE = datetime(2000, 1, 1)
 LAST_ONE_DF = pd.DataFrame(data={"title": ["Random movie"], "rating": [121]})
@@ -102,3 +103,5 @@ with DAG(
     union_table_and_dataframe(union_table, LAST_ONE_DF)
 
     aql.cleanup()
+if __name__ == "__main__":
+    test_dag(dag)

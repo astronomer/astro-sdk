@@ -4,6 +4,7 @@ from airflow import DAG
 from astro import sql as aql
 from astro.files import File
 from astro.table import Table
+from astro.test_dag import test_dag
 
 
 @aql.transform()
@@ -33,3 +34,6 @@ with DAG(
         input_table=imdb_movies,
         output_table=Table(name="top_animation"),
     )
+
+if __name__ == "__main__":
+    test_dag(dag)

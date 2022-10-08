@@ -19,6 +19,7 @@ from astro.files import get_file_list
 from astro.sql import get_value_list
 from astro.sql.operators.load_file import LoadFileOperator as LoadFile
 from astro.table import Metadata, Table
+from astro.test_dag import test_dag
 
 GCS_BUCKET = os.getenv("GCS_BUCKET", "gs://dag-authoring/dynamic_task/")
 ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_default")
@@ -70,3 +71,5 @@ with DAG(
     # [END howto_operator_get_value_list]
 
     aql.cleanup()
+if __name__ == "__main__":
+    test_dag(dag)

@@ -20,6 +20,7 @@ from airflow.models.dag import DAG
 from airflow.utils import timezone
 from astro.files import File
 from astro.table import Metadata, Table
+from astro.test_dag import test_dag
 
 with DAG(
     dag_id="example_google_bigquery_gcs_load_and_save",
@@ -77,3 +78,5 @@ with DAG(
     # [END export_example_2]
 
     aql.cleanup()
+if __name__ == "__main__":
+    test_dag(dag)

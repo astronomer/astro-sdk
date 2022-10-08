@@ -9,6 +9,7 @@ from airflow.decorators import dag
 from astro import sql as aql
 from astro.files import File
 from astro.table import Metadata, Table
+from astro.test_dag import test_dag
 
 
 @aql.transform()
@@ -103,3 +104,5 @@ def example_amazon_s3_snowflake_transform():
 
 
 dag = example_amazon_s3_snowflake_transform()
+if __name__ == "__main__":
+    test_dag(dag)

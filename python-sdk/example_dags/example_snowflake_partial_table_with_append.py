@@ -16,6 +16,7 @@ from airflow.decorators import dag
 from astro.files import File
 from astro.sql import append, cleanup, dataframe, load_file, run_raw_sql, transform
 from astro.table import Metadata, Table
+from astro.test_dag import test_dag
 
 SNOWFLAKE_CONN_ID = "snowflake_conn"
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -132,3 +133,5 @@ def example_snowflake_partial_table_with_append():
 
 
 example_snowflake_partial_table_dag = example_snowflake_partial_table_with_append()
+if __name__ == "__main__":
+    test_dag(dag)

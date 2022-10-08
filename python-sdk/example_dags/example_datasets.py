@@ -23,6 +23,7 @@ from airflow import DAG
 from astro import sql as aql
 from astro.files import File
 from astro.table import Table
+from astro.test_dag import test_dag
 
 # [START dataset_file]
 input_file = File(
@@ -75,3 +76,5 @@ with DAG(
         output_table=top_animations_table,
     )
 # [END dataset_consumer]
+if __name__ == "__main__":
+    test_dag(load_dag)

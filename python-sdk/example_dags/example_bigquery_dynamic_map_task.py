@@ -15,6 +15,7 @@ from astro import sql as aql
 from astro.files import File
 from astro.sql import Table
 from astro.table import Metadata
+from astro.test_dag import test_dag
 
 ASTRO_BIGQUERY_DATASET = os.getenv("ASTRO_BIGQUERY_DATASET", "dag_authoring")
 ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_default")
@@ -59,3 +60,5 @@ with DAG(
     summarize_campaign.expand(capaign_id=ids)
 
     aql.cleanup()
+if __name__ == "__main__":
+    test_dag(dag)

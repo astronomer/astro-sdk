@@ -6,6 +6,7 @@ from airflow.decorators import dag
 from airflow.utils import timezone
 from astro.files import File
 from astro.table import Table
+from astro.test_dag import test_dag
 
 default_args = {
     "owner": "airflow",
@@ -40,3 +41,5 @@ def example_amazon_s3_postgres_load_and_save():
 example_amazon_s3_postgres_load_and_save_dag = (
     example_amazon_s3_postgres_load_and_save()
 )
+if __name__ == "__main__":
+    test_dag(example_amazon_s3_postgres_load_and_save_dag)

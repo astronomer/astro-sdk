@@ -5,6 +5,7 @@ from airflow import DAG
 from astro import sql as aql
 from astro.files import File
 from astro.table import Table
+from astro.test_dag import test_dag
 
 START_DATE = datetime(2000, 1, 1)
 CWD = pathlib.Path(__file__).parent
@@ -32,3 +33,5 @@ with DAG(
         parameters={"input_table": imdb_movies, "output_table": target_table},
     )
     # [END transform_file_example_1]
+if __name__ == "__main__":
+    test_dag(dag)

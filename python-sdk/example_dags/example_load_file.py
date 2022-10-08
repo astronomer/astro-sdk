@@ -8,6 +8,7 @@ from astro import sql as aql
 from astro.constants import FileType
 from astro.files import File
 from astro.table import Metadata, Table
+from astro.test_dag import test_dag
 
 # To create IAM role with needed permissions,
 # refer: https://www.dataliftoff.com/iam-roles-for-loading-data-from-s3-into-redshift/
@@ -227,3 +228,5 @@ with dag:
     # [END load_file_example_18]
 
     aql.cleanup()
+if __name__ == "__main__":
+    test_dag(dag)
