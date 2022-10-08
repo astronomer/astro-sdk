@@ -52,6 +52,7 @@ repos:
       - id: black
         # Exclude auto-generated example files from being changed
         exclude: ^sql-cli/examples/_dags/
+        args: ["--config", "./python-sdk/pyproject.toml"]
 
   - repo: https://github.com/asottile/blacken-docs
     rev: v1.12.1
@@ -76,13 +77,7 @@ repos:
     rev: 5.10.1
     hooks:
       - id: isort
-        name: Run isort for python-sdk
-        args: [ "--profile", "black" ]
-        files: ^python-sdk/
-      - id: isort
-        name: Run isort for sql-cli
-        args: [ "--profile", "black" ]
-        files: ^sql-cli/
+        name: Run isort
         # Exclude auto-generated example files from being changed
         exclude: ^sql-cli/examples/_dags/
 
