@@ -49,3 +49,6 @@ sql-cli/tests/_dags/*
 !sql-cli/tests/_dags/.gitkeep
 sql-cli/tests/_target/*
 !sql-cli/tests/_target/.gitkeep
+
+# Airflow
+**/.airflowignore

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Iterator
 
 import airflow
 import pytest
@@ -10,6 +9,7 @@ from airflow.models.dagbag import DagBag
 from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import provide_session
+from packaging.version import Version
 from tenacity import (
     retry,
     retry_if_exception_type,
@@ -51,44 +51,44 @@ def session():
     return get_session()
 
 
-DAG_BAG = DagBag(Path(__file__).parent.parent / "example_dags", include_examples=False)
-AIRFLOW_VERSION_INDICATOR = "airflow_version:"
-MINIMUM_AIRFLOW_VERSION = "2.2.5"
+MIN_VER_DAG_FILE: dict[str, list[str]] = {
+    "2.3": ["example_dynamic_task_template.py", "example_bigquery_dynamic_map_task.py"],
+    "2.4": ["example_datasets.py"],
+}
+
+# Sort descending based on Versions and convert string to an actual version
+MIN_VER_DAG_FILE_VER: dict[Version, list[str]] = {
+    Version(version): MIN_VER_DAG_FILE[version]
+    for version in sorted(MIN_VER_DAG_FILE, key=Version, reverse=True)
+}
 
 
-def get_airflow_version(dag: DAG) -> str:
-    for tag in dag.tags:
-        if tag.startswith(AIRFLOW_VERSION_INDICATOR):
-            return tag[len(AIRFLOW_VERSION_INDICATOR) :]
-    return MINIMUM_AIRFLOW_VERSION
+def get_dag_bag() -> DagBag:
+    """Create a DagBag by adding the files that are not supported to .airflowignore"""
+    example_dags_dir = Path(__file__).parent.parent / "example_dags"
+    airflow_ignore_file = example_dags_dir / ".airflowignore"
 
+    with open(airflow_ignore_file, "w+") as file:
+        for min_version, files in MIN_VER_DAG_FILE_VER.items():
+            if Version(airflow.__version__) < min_version:
+                print(f"Adding {files} to .airflowignore")
+                file.writelines([f"{file}\n" for file in files])
 
-def get_airflow_dags() -> Iterator[tuple[str, str]]:
-    for dag_id, dag in DAG_BAG.dags.items():
-        yield dag_id, dag, get_airflow_version(dag)
+    print(".airflowignore contents: ")
+    print(airflow_ignore_file.read_text())
+    dag_bag = DagBag(example_dags_dir, include_examples=False)
+    return dag_bag
 
 
 @pytest.mark.parametrize(
     "dag",
-    [
-        pytest.param(
-            dag,
-            id=dag_id,
-            marks=pytest.mark.skipif(
-                airflow.__version__ < dag_airflow_version,
-                reason=f"Require Airflow version >= {dag_airflow_version}",
-            ),
-        )
-        for dag_id, dag, dag_airflow_version in get_airflow_dags()
-    ],
+    [pytest.param(dag, id=dag_id) for dag_id, dag in get_dag_bag().dags.items()],
 )
 def test_example_dag(session, dag: DAG):
     wrapper_run_dag(dag)
 
 
-def test_example_dags_loaded():
-    assert DAG_BAG.dags
-
-
-def test_example_dags_no_import_errors():
-    assert not DAG_BAG.import_errors
+def test_example_dags_loaded_with_no_errors():
+    dag_bag = get_dag_bag()
+    assert dag_bag.dags
+    assert not dag_bag.import_errors
