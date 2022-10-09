@@ -15,7 +15,7 @@ spec:
         args: ["config-postgres.json"]
         resources:
           requests:
-            memory: 16Gi
+            memory: 8Gi
           limits:
             memory: 32Gi
       - name: benchmark-bigquery
@@ -24,7 +24,7 @@ spec:
         args: ["config-bigquery.json"]
         resources:
           requests:
-            memory: 16Gi
+            memory: 8Gi
           limits:
             memory: 32Gi
       - name: benchmark-redshift
@@ -33,7 +33,7 @@ spec:
         args: ["config-redshift.json" ]
         resources:
           requests:
-            memory: 16Gi
+            memory: 8Gi
           limits:
             memory: 32Gi
       - name: benchmark-snowflake
@@ -42,7 +42,7 @@ spec:
         args: ["config-snowflake.json" ]
         resources:
           requests:
-            memory: 16Gi
+            memory: 8Gi
           limits:
             memory: 32Gi
       # Do not restart containers after they exit
