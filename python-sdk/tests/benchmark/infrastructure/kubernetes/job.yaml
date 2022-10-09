@@ -14,7 +14,7 @@ spec:
         command: ["./run.sh"]
         resources:
           requests:
-            memory: 64Gi
+            memory: 50Gi
           limits:
             memory: 64Gi
       # Do not restart containers after they exit
