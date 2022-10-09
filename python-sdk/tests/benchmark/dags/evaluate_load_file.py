@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
@@ -51,9 +52,10 @@ def get_traceback(exc) -> str:
     Get traceback string from exception
     :param exc: Exception object
     """
-    tb = traceback.format_exception(  # skipcq: PYL-E1123,PYL-E1120
-        etype=type(exc), value=exc, tb=exc.__traceback__
-    )
+    if sys.version_info >= (3, 10, 0):
+        tb = traceback.format_exception(exc, value=exc, tb=exc.__traceback__)
+    else:
+        tb = traceback.format_exception(type(exc), value=exc, tb=exc.__traceback__)
     return "".join(tb)
 
 
@@ -138,6 +140,11 @@ def create_dag(database_name, table_args, dataset, global_db_kwargs):
         f"load_file_{dataset_name}_{dataset_filetype}_{location}_into_{database_name}"
     )
 
+    def get_git_sha():
+        output_stream = os.popen("git rev-parse --short HEAD")
+        output = output_stream.read()
+        return output.strip()
+
     def handle_failure(context):
         """
         Handle failures and publish data to bq
@@ -154,6 +161,7 @@ def create_dag(database_name, table_args, dataset, global_db_kwargs):
             "dataset": dataset_name,
             "error": "True",
             "error_context": exc_string,
+            "revision": get_git_sha(),
         }
 
         if benchmark_settings.publish_benchmarks:
@@ -195,13 +203,28 @@ def create_dag(database_name, table_args, dataset, global_db_kwargs):
         return dag
 
 
+def is_skipped(dataset: dict, database_name: str) -> bool:
+    """
+    Check if the dataset is skipped for database. Default value is False.
+    :param database_name: name of db expected in database_kwargs
+    :param dataset: dataset config
+    """
+    database_kwargs = dataset["database_kwargs"]
+    if database_name not in database_kwargs:
+        return False
+    elif "skip" not in database_kwargs[database_name]:
+        return False
+
+    return bool(database_kwargs[database_name].get("skip"))
+
+
 config = load_config()
 for database in config["databases"]:
     database_name = database["name"]
     table_args = database["output_table"]
     global_db_kwargs = database["kwargs"]
     for dataset in config["datasets"]:
-        table_args_copy = table_args.copy()
-
-        dag = create_dag(database_name, table_args_copy, dataset, global_db_kwargs)
-        globals()[dag.dag_id] = dag
+        if not is_skipped(dataset, database_name):
+            table_args_copy = table_args.copy()
+            dag = create_dag(database_name, table_args_copy, dataset, global_db_kwargs)
+            globals()[dag.dag_id] = dag
