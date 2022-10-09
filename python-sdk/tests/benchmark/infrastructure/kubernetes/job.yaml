@@ -36,7 +36,7 @@ spec:
             memory: 16Gi
           limits:
             memory: 32Gi
-      - name: benchmark-bigquery
+      - name: benchmark-snowflake
         image: gcr.io/astronomer-dag-authoring/benchmark:%VERSION%
         command: ["./run.sh" ]
         args: ["config-snowflake.json" ]
