@@ -14,9 +14,9 @@ spec:
         command: ["./run.sh"]
         resources:
           requests:
-            memory: 32Gi
+            memory: 64Gi
           limits:
-            memory: 32Gi
+            memory: 64Gi
       # Do not restart containers after they exit
       restartPolicy: Never
   # of retries before marking as failed.
