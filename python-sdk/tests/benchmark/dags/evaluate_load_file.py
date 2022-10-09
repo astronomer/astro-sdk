@@ -52,14 +52,10 @@ def get_traceback(exc: BaseException) -> str:
     Get traceback string from exception
     :param exc: Exception object
     """
-    if sys.version_info >= (3, 10, 1):
-        tb = traceback.format_exception(  # skipcq: PYL-E1123,PYL-E1120
-            exc=exc, value=exc, tb=exc.__traceback__  # type: ignore
-        )
+    if sys.version_info >= (3, 10, 0):
+        tb = traceback.format_exception(exc, value=exc, tb=exc.__traceback__)
     else:
-        tb = traceback.format_exception(  # skipcq: PYL-E1123,PYL-E1120  type: ignore
-            etype=type(exc), value=exc, tb=exc.__traceback__  # type: ignore
-        )
+        tb = traceback.format_exception(type(exc), value=exc, tb=exc.__traceback__)
     return "".join(tb)
 
 
@@ -230,6 +226,5 @@ for database in config["databases"]:
     for dataset in config["datasets"]:
         if not is_skipped(dataset, database_name):
             table_args_copy = table_args.copy()
-
             dag = create_dag(database_name, table_args_copy, dataset, global_db_kwargs)
             globals()[dag.dag_id] = dag
