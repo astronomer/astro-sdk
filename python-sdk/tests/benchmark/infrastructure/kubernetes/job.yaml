@@ -9,9 +9,37 @@ spec:
       name: benchmark
     spec:
       containers:
-      - name: benchmark
+      - name: benchmark-postgres
         image: gcr.io/astronomer-dag-authoring/benchmark:%VERSION%
         command: ["./run.sh"]
+        args: ["config-postgres.json"]
+        resources:
+          requests:
+            memory: 16Gi
+          limits:
+            memory: 32Gi
+      - name: benchmark-bigquery
+        image: gcr.io/astronomer-dag-authoring/benchmark:%VERSION%
+        command: ["./run.sh" ]
+        args: ["config-bigquery.json"]
+        resources:
+          requests:
+            memory: 16Gi
+          limits:
+            memory: 32Gi
+      - name: benchmark-redshift
+        image: gcr.io/astronomer-dag-authoring/benchmark:%VERSION%
+        command: ["./run.sh" ]
+        args: ["config-redshift.json" ]
+        resources:
+          requests:
+            memory: 16Gi
+          limits:
+            memory: 32Gi
+      - name: benchmark-bigquery
+        image: gcr.io/astronomer-dag-authoring/benchmark:%VERSION%
+        command: ["./run.sh" ]
+        args: ["config-snowflake.json" ]
         resources:
           requests:
             memory: 16Gi
