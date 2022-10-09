@@ -660,12 +660,8 @@
     {
       "conn_id": "s3_conn_benchmark",
       "database_kwargs": {
-        "bigquery": {
-          "skip": true
-        },
-        "postgres": {
-          "skip": true
-        },
+        "bigquery": {},
+        "postgres": {},
         "redshift": {
           "native_support_kwargs": {
             "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
@@ -688,12 +684,8 @@
     {
       "conn_id": "s3_conn_benchmark",
       "database_kwargs": {
-        "bigquery": {
-          "skip": true
-        },
-        "postgres": {
-          "skip": true
-        },
+        "bigquery": {},
+        "postgres": {},
         "redshift": {
           "native_support_kwargs": {
             "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
@@ -716,12 +708,8 @@
     {
       "conn_id": "s3_conn_benchmark",
       "database_kwargs": {
-        "bigquery": {
-          "skip": true
-        },
-        "postgres": {
-          "skip": true
-        },
+        "bigquery": {},
+        "postgres": {},
         "redshift": {
           "native_support_kwargs": {
             "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
@@ -744,12 +732,8 @@
     {
       "conn_id": "s3_conn_benchmark",
       "database_kwargs": {
-        "bigquery": {
-          "skip": true
-        },
-        "postgres": {
-          "skip": true
-        },
+        "bigquery": {},
+        "postgres": {},
         "redshift": {
           "native_support_kwargs": {
             "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
@@ -772,12 +756,8 @@
     {
       "conn_id": "s3_conn_benchmark",
       "database_kwargs": {
-        "bigquery": {
-          "skip": true
-        },
-        "postgres": {
-          "skip": true
-        },
+        "bigquery": {},
+        "postgres": {},
         "redshift": {
           "native_support_kwargs": {
             "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
@@ -800,12 +780,8 @@
     {
       "conn_id": "s3_conn_benchmark",
       "database_kwargs": {
-        "bigquery": {
-          "skip": true
-        },
-        "postgres": {
-          "skip": true
-        },
+        "bigquery": {},
+        "postgres": {},
         "redshift": {
           "native_support_kwargs": {
             "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
@@ -828,12 +804,8 @@
     {
       "conn_id": "s3_conn_benchmark",
       "database_kwargs": {
-        "bigquery": {
-          "skip": true
-        },
-        "postgres": {
-          "skip": true
-        },
+        "bigquery": {},
+        "postgres": {},
         "redshift": {
           "native_support_kwargs": {
             "IAM_ROLE": "arn:aws:iam::633294268925:role/redshift-s3-readonly"
