@@ -9,40 +9,12 @@ spec:
       name: benchmark
     spec:
       containers:
-      - name: benchmark-postgres
+      - name: benchmark
         image: gcr.io/astronomer-dag-authoring/benchmark:%VERSION%
         command: ["./run.sh"]
-        args: ["config-postgres.json"]
         resources:
           requests:
-            memory: 8Gi
-          limits:
             memory: 32Gi
-      - name: benchmark-bigquery
-        image: gcr.io/astronomer-dag-authoring/benchmark:%VERSION%
-        command: ["./run.sh" ]
-        args: ["config-bigquery.json"]
-        resources:
-          requests:
-            memory: 8Gi
-          limits:
-            memory: 32Gi
-      - name: benchmark-redshift
-        image: gcr.io/astronomer-dag-authoring/benchmark:%VERSION%
-        command: ["./run.sh" ]
-        args: ["config-redshift.json" ]
-        resources:
-          requests:
-            memory: 8Gi
-          limits:
-            memory: 32Gi
-      - name: benchmark-snowflake
-        image: gcr.io/astronomer-dag-authoring/benchmark:%VERSION%
-        command: ["./run.sh" ]
-        args: ["config-snowflake.json" ]
-        resources:
-          requests:
-            memory: 8Gi
           limits:
             memory: 32Gi
       # Do not restart containers after they exit

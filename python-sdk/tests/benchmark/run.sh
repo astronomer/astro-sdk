@@ -8,8 +8,8 @@ set -e  # stop the execution instantly if a command returns a non-zero status
 repeat=${1:-3}  # how many times we want to repeat each DAG run (default: 3)
 
 benchmark_dir="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-#config_path="${benchmark_dir}/config.json"
-config_path="${benchmark_dir}/$1"
+config_path="${benchmark_dir}/config.json"
+#config_path="${benchmark_dir}/$1"
 runner_path="${benchmark_dir}/run.py"
 astro_dir="${benchmark_dir}/../../src"
 airflow_home="${AIRFLOW_HOME:-$benchmark_dir}"
