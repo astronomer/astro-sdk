@@ -86,7 +86,7 @@ class File(LoggingMixin, Dataset):
         """Create a file in the desired location using the values of a dataframe.
 
         :param store_as_dataframe: Whether the data should later be deserialized as a dataframe or as a file containing
-        delimited data (e.g. csv, parquet, etc.).
+            delimited data (e.g. csv, parquet, etc.).
         :param df: pandas dataframe
         """
         self.is_dataframe = store_as_dataframe
