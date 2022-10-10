@@ -14,6 +14,7 @@ from datetime import datetime
 
 from airflow import DAG
 from airflow.decorators import task
+
 from astro import sql as aql
 from astro.files import get_file_list
 from astro.sql import get_value_list
@@ -62,9 +63,7 @@ with DAG(
         rating_list = [val for val in rating_list if val]
         return sum(rating_list) / len(rating_list)
 
-    rating = custom_task.expand(
-        rating_val=get_value_list(sql=QUERY_STATEMENT, conn_id=ASTRO_GCP_CONN_ID)
-    )
+    rating = custom_task.expand(rating_val=get_value_list(sql=QUERY_STATEMENT, conn_id=ASTRO_GCP_CONN_ID))
 
     print(avg_rating(rating))
     # [END howto_operator_get_value_list]

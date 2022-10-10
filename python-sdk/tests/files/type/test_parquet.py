@@ -2,11 +2,10 @@ import pathlib
 import tempfile
 
 import pandas as pd
+
 from astro.files.types import ParquetFileType
 
-sample_file = pathlib.Path(
-    pathlib.Path(__file__).parent.parent.parent, "data/sample.parquet"
-)
+sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent.parent, "data/sample.parquet")
 
 
 def test_read_parquet_file():

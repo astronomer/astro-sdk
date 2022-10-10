@@ -3,6 +3,7 @@ from __future__ import annotations
 from urllib.parse import urlparse, urlunparse
 
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
+
 from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
 
@@ -29,9 +30,7 @@ class GCSLocation(BaseFileLocation):
         bucket_name = url.netloc
         prefix = url.path[1:]
         prefixes = self.hook.list(bucket_name=bucket_name, prefix=prefix)
-        paths = [
-            urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in prefixes
-        ]
+        paths = [urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in prefixes]
         return paths
 
     @property

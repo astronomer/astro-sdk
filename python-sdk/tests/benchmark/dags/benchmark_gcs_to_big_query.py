@@ -6,12 +6,8 @@ from datetime import datetime, timedelta
 
 from airflow import models
 from airflow.operators import bash_operator
-from airflow.providers.google.cloud.operators.bigquery import (
-    BigQueryDeleteDatasetOperator,
-)
-from airflow.providers.google.cloud.transfers.gcs_to_bigquery import (
-    GCSToBigQueryOperator,
-)
+from airflow.providers.google.cloud.operators.bigquery import BigQueryDeleteDatasetOperator
+from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
 
 DATASET_NAME = os.environ.get("GCP_DATASET_NAME", "gcs_to_bq_benchmarking_dataset")
 TABLE_NAME = os.environ.get("GCP_TABLE_NAME", "gcs_to_bq_table")
@@ -87,18 +83,9 @@ load_five_gb = GCSToBigQueryOperator(
     task_id="load_five_gb",
     bucket="astro-sdk",
     source_objects=[
-        (
-            "benchmark/trimmed/pypi/pypi-downloads-2021-03-28-0000000000"
-            + str(i)
-            + ".ndjson"
-        )
+        ("benchmark/trimmed/pypi/pypi-downloads-2021-03-28-0000000000" + str(i) + ".ndjson")
         if i >= 10
-        else (
-            "benchmark/trimmed/pypi/pypi-downloads-2021-03-28-0000000000"
-            + "0"
-            + str(i)
-            + ".ndjson"
-        )
+        else ("benchmark/trimmed/pypi/pypi-downloads-2021-03-28-0000000000" + "0" + str(i) + ".ndjson")
         for i in range(20)
     ],
     destination_project_dataset_table=f"{DATASET_NAME}.{TABLE_NAME}",

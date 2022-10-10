@@ -2,10 +2,11 @@
 
 import pathlib
 
-import astro.sql as aql
 import pandas
 import pytest
 from airflow.decorators import task
+
+import astro.sql as aql
 from astro.constants import Database
 from astro.files import File
 from astro.table import Table

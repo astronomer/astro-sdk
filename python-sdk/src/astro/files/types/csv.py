@@ -3,6 +3,7 @@ from __future__ import annotations
 import io
 
 import pandas as pd
+
 from astro.constants import FileType as FileTypeConstants
 from astro.files.types.base import FileType
 from astro.utils.dataframe import convert_columns_names_capitalization
@@ -11,9 +12,7 @@ from astro.utils.dataframe import convert_columns_names_capitalization
 class CSVFileType(FileType):
     """Concrete implementation to handle CSV file type"""
 
-    def export_to_dataframe(
-        self, stream, columns_names_capitalization="original", **kwargs
-    ) -> pd.DataFrame:
+    def export_to_dataframe(self, stream, columns_names_capitalization="original", **kwargs) -> pd.DataFrame:
         """read csv file from one of the supported locations and return dataframe
 
         :param stream: file stream object

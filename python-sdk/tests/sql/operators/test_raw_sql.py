@@ -3,6 +3,7 @@ import pathlib
 
 import pytest
 from airflow.decorators import task
+
 from astro import sql as aql
 from astro.constants import Database
 from astro.files import File
@@ -45,9 +46,7 @@ def test_run_raw_sql_without_limit(caplog, sample_dag, database_table_fixture):
 
     test_utils.run_dag(sample_dag)
 
-    expected_warning = (
-        "excessive amount of data being recorded to the Airflow metadata database"
-    )
+    expected_warning = "excessive amount of data being recorded to the Airflow metadata database"
     assert expected_warning in caplog.text
 
 

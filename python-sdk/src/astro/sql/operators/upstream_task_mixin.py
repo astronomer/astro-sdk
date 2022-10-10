@@ -16,6 +16,5 @@ class UpstreamTaskMixin:
                 self.set_upstream(task)
             else:
                 raise AirflowException(
-                    "Cannot upstream a non-task, please only use XcomArg or operators for this"
-                    " parameter"
+                    "Cannot upstream a non-task, please only use XcomArg or operators for this" " parameter"
                 )

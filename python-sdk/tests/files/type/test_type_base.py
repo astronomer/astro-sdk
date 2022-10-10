@@ -1,6 +1,7 @@
 import pathlib
 
 import pytest
+
 from astro.constants import FileType
 from astro.files.types import get_filetype
 

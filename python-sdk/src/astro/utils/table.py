@@ -13,20 +13,13 @@ def _pull_first_table_from_parameters(parameters: dict) -> Optional[BaseTable]:
     :return: the first parameter of type BaseTable, if any. Return None otherwise.
     """
     first_table = None
-    params_of_table_type = [
-        param for param in parameters.values() if isinstance(param, BaseTable)
-    ]
-    if (
-        len(params_of_table_type) == 1
-        or len({param.conn_id for param in params_of_table_type}) == 1
-    ):
+    params_of_table_type = [param for param in parameters.values() if isinstance(param, BaseTable)]
+    if len(params_of_table_type) == 1 or len({param.conn_id for param in params_of_table_type}) == 1:
         first_table = params_of_table_type[0]
     return first_table
 
 
-def _pull_first_table_from_op_kwargs(
-    op_kwargs: dict, python_callable: Callable
-) -> Optional[BaseTable]:
+def _pull_first_table_from_op_kwargs(op_kwargs: dict, python_callable: Callable) -> Optional[BaseTable]:
     """
     When trying to "magically" determine the context of a decorator, we will try to find the first table.
     This function attempts this by checking op_kwargs
@@ -41,10 +34,7 @@ def _pull_first_table_from_op_kwargs(
         for kwarg in inspect.signature(python_callable).parameters.values()
         if isinstance(op_kwargs[kwarg.name], BaseTable)
     ]
-    if (
-        len(kwargs_of_table_type) == 1
-        or len({kwarg.conn_id for kwarg in kwargs_of_table_type}) == 1
-    ):
+    if len(kwargs_of_table_type) == 1 or len({kwarg.conn_id for kwarg in kwargs_of_table_type}) == 1:
         first_table = kwargs_of_table_type[0]
     return first_table
 
@@ -63,10 +53,7 @@ def _find_first_table_from_op_args(op_args: tuple) -> Optional[BaseTable]:
     # 1. When we have tables from different DBs.
     # 2. When we have tables from different conn_id, since they can be configured with different
     # database/schema etc.
-    if (
-        len(args_of_table_type) == 1
-        or len({arg.conn_id for arg in args_of_table_type}) == 1
-    ):
+    if len(args_of_table_type) == 1 or len({arg.conn_id for arg in args_of_table_type}) == 1:
         first_table = args_of_table_type[0]
     return first_table
 
@@ -87,9 +74,7 @@ def find_first_table(
         first_table = _find_first_table_from_op_args(op_args=op_args)
 
     if not first_table and op_kwargs and python_callable:
-        first_table = _pull_first_table_from_op_kwargs(
-            op_kwargs=op_kwargs, python_callable=python_callable
-        )
+        first_table = _pull_first_table_from_op_kwargs(op_kwargs=op_kwargs, python_callable=python_callable)
 
     # If there is no first table via op_ags or kwargs, we check the parameters
     if not first_table and parameters:

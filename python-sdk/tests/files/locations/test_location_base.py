@@ -2,6 +2,7 @@ import os
 import uuid
 
 import pytest
+
 from astro.constants import FileLocation
 from astro.files.locations import create_file_location, get_class_name
 from astro.files.locations.local import LocalLocation
@@ -57,7 +58,9 @@ def test_get_class_name_method_invalid_name():
     with pytest.raises(ValueError) as exc_info:
         get_class_name(Test)
 
-    expected_msg = "No expected class name found, please note that the class names should an expected formats."
+    expected_msg = (
+        "No expected class name found, please note that the class names should an expected formats."
+    )
     assert exc_info.value.args[0] == expected_msg
 
 

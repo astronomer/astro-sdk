@@ -4,6 +4,7 @@ import shutil
 import uuid
 
 import pytest
+
 from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
 from astro.files.locations.local import LocalLocation
@@ -18,9 +19,7 @@ LOCAL_DIR_FILE_2 = str(pathlib.Path(LOCAL_DIR, "file_2.txt"))
 sample_filepaths_per_location = [
     (FileLocation.LOCAL, LOCAL_FILEPATH),
 ]
-sample_file = pathlib.Path(
-    pathlib.Path(__file__).parent.parent.parent, "data/sample.csv"
-)
+sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent.parent, "data/sample.csv")
 
 
 @pytest.fixture()
@@ -54,9 +53,7 @@ def test_get_transport_params_with_local():  # skipcq: PYL-W0612
     assert location.transport_params is None
 
 
-@pytest.mark.parametrize(
-    "path", [LOCAL_DIR, LOCAL_DIR + "file_*"], ids=["without-prefix", "with-prefix"]
-)
+@pytest.mark.parametrize("path", [LOCAL_DIR, LOCAL_DIR + "file_*"], ids=["without-prefix", "with-prefix"])
 def test_get_paths_with_local_dir(local_dir, path):  # skipcq: PYL-W0612
     """with local filepath"""
     location = LocalLocation(path)

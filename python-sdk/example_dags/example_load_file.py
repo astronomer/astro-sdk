@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 import sqlalchemy
 from airflow.models import DAG
+
 from astro import sql as aql
 from astro.constants import FileType
 from astro.files import File
@@ -73,9 +74,7 @@ with dag:
             conn_id="postgres_conn",
             columns=[
                 sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
-                sqlalchemy.Column(
-                    "name", sqlalchemy.String(60), nullable=False, key="name"
-                ),
+                sqlalchemy.Column("name", sqlalchemy.String(60), nullable=False, key="name"),
             ],
         ),
     )
@@ -125,9 +124,7 @@ with dag:
 
     # [START load_file_example_10]
     my_homes_table = aql.load_file(
-        input_file=File(
-            path=str(CWD.parent) + "/tests/data/homes*", filetype=FileType.CSV
-        ),
+        input_file=File(path=str(CWD.parent) + "/tests/data/homes*", filetype=FileType.CSV),
         output_table=Table(
             conn_id="postgres_conn",
         ),
@@ -136,9 +133,7 @@ with dag:
 
     # [START load_file_example_11]
     aql.load_file(
-        input_file=File(
-            "s3://astro-sdk/sample_pattern", conn_id="aws_conn", filetype=FileType.CSV
-        ),
+        input_file=File("s3://astro-sdk/sample_pattern", conn_id="aws_conn", filetype=FileType.CSV),
         output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
         use_native_support=False,
     )
@@ -182,9 +177,7 @@ with dag:
 
     # [START load_file_example_15]
     aql.load_file(
-        input_file=File(
-            path=str(CWD.parent) + "/tests/data/homes*", filetype=FileType.CSV
-        ),
+        input_file=File(path=str(CWD.parent) + "/tests/data/homes*", filetype=FileType.CSV),
         output_table=Table(
             conn_id="postgres_conn",
         ),

@@ -19,10 +19,11 @@ from airflow.utils import timezone
 from airflow.utils.session import NEW_SESSION, provide_session
 from airflow.utils.state import DagRunState, State
 from airflow.utils.types import DagRunType
-from astro.sql.operators.cleanup import AstroCleanupException
-from astro.table import Metadata
 from pandas.testing import assert_frame_equal
 from sqlalchemy.orm.session import Session
+
+from astro.sql.operators.cleanup import AstroCleanupException
+from astro.table import Metadata
 
 log = logging.getLogger(__name__)
 
@@ -119,9 +120,7 @@ def test_dag(
     """
 
     execution_date = execution_date or timezone.utcnow()
-    dag.log.debug(
-        "Clearing existing task instances for execution date %s", execution_date
-    )
+    dag.log.debug("Clearing existing task instances for execution date %s", execution_date)
     dag.clear(
         start_date=execution_date,
         end_date=execution_date,
@@ -169,9 +168,7 @@ def add_logger_if_needed(dag: DAG, ti: TaskInstance):
         ti: The taskinstance that will receive a logger
 
     """
-    logging_format = logging.Formatter(
-        "[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s"
-    )
+    logging_format = logging.Formatter("[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s")
     handler = logging.StreamHandler(sys.stdout)
     handler.level = logging.INFO
     handler.setFormatter(logging_format)
