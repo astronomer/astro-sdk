@@ -12,7 +12,6 @@ from astro.constants import Database
 from astro.custom_backend.astro_custom_backend import AstroCustomXcomBackend as XCom
 from astro.files import File
 from astro.table import Table
-
 from tests.sql.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
