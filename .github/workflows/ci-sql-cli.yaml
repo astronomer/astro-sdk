@@ -110,7 +110,7 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v2
         with:
-          path: ./sql-cli/.coverage
+          path: ./sql-cli/coverage
       - name: Run coverage
         run: |
           coverage combine ./coverage/coverage*/.coverage
