@@ -2,7 +2,9 @@ from pathlib import Path
 
 from rich import print as rprint
 from typer import Typer
+from typing import Optional
 
+from sql_cli.connections import validate_connections
 from sql_cli import __version__
 from sql_cli.dag_generator import generate_dag
 
@@ -36,6 +38,11 @@ def generate(
     """
     dag_file = generate_dag(directory, target_directory, dags_directory)
     rprint("The DAG file", dag_file.resolve(), "has been successfully generated. 🎉")
+
+
+@app.command()
+def validate(environment: str = "default", connection: Optional[str] = None) -> None:
+    validate_connections(environment=environment, connection=connection)
 
 
 if __name__ == "__main__":  # pragma: no cover
