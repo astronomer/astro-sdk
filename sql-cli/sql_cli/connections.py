@@ -33,7 +33,12 @@ def _test_connection(conn_obj: Connection, environment: str) -> bool:
     try:
         status, message = conn_obj.test_connection()
         if not status:
-            logging.info("Connection %s failed in %s environment", conn_id, environment)
+            logging.info(
+                "Connection %s failed in %s environment with error %s",
+                conn_id,
+                environment,
+                message,
+            )
             return False
         logging.info(
             "Connection %s tested successfully in %s environment", conn_id, environment
