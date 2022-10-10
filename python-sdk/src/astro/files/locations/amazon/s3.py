@@ -53,7 +53,7 @@ class S3Location(BaseFileLocation):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         parsed_url = urlparse(self.path)
-        return parsed_url.scheme + "://" + parsed_url.netloc
+        return f"{parsed_url.scheme}://{parsed_url.netloc}"
 
     @property
     def openlineage_dataset_name(self) -> str:

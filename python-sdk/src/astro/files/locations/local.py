@@ -40,7 +40,7 @@ class LocalLocation(BaseFileLocation):
         Returns the open lineage dataset namespace as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
-        return ""
+        return os.path.basename(self.path)
 
     @property
     def openlineage_dataset_name(self) -> str:
