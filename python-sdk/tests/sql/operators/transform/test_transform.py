@@ -109,7 +109,13 @@ def test_raw_sql(database_table_fixture, sample_dag):
         return "SELECT * FROM {{my_input_table}} LIMIT {{num_rows}}"
 
     @task
-    def validate_raw_sql(cur):
+    def validate_raw_sql(cur: pd.DataFrame):
+        from sqlalchemy.engine.row import LegacyRow
+
+        # Note: It's a broken feature on the main branch that this is return in a list of lists. Problem reported here:
+        # https://github.com/astronomer/astro-sdk/issues/1035
+        for c in cur[0]:
+            assert isinstance(c, LegacyRow)
         print(cur)
 
     with sample_dag:
