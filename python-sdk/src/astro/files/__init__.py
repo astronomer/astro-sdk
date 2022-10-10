@@ -18,7 +18,7 @@ def check_if_connection_exists(conn_id: str) -> bool:
     return True
 
 
-def get_file_list(path: str, conn_id: str, **kwargs) -> XComArg:
+def get_file_list(path: str, conn_id: str, **kwargs) -> "XComArg":
     """
     List file path from a remote object store or the local filesystem based on the given path pattern.
     It is not advisable to fetch huge number of files since it would overload the XCOM and
