@@ -8,6 +8,7 @@ from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.files import File
 from astro.table import Table
+
 from tests.sql.operators import utils as test_utils
 
 cwd = pathlib.Path(__file__).parent
@@ -112,7 +113,8 @@ def test_raw_sql(database_table_fixture, sample_dag):
     def validate_raw_sql(cur: pd.DataFrame):
         from sqlalchemy.engine.row import LegacyRow
 
-        # Note: It's a broken feature on th main branch that this is return in a list of lists. Problem reported here:
+        # Note: It's a broken feature on the main branch that this is return in a list of lists. Problem reported here:
+        # https://github.com/astronomer/astro-sdk/issues/1035
         for c in cur[0]:
             assert isinstance(c, LegacyRow)
         print(cur)
