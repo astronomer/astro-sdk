@@ -58,7 +58,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
             )
         # Write file if overwrite == True or if file doesn't exist.
         if self.if_exists == "replace" or not self.output_file.exists():
-            self.output_file.create_from_dataframe(df)
+            self.output_file.create_from_dataframe(df, store_as_dataframe=False)
             return self.output_file
         else:
             raise FileExistsError(f"{self.output_file.path} file already exists.")

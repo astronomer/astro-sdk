@@ -126,6 +126,27 @@ class BaseTable:
             self._name = value
             self.temp = False
 
+    def to_json(self):
+        return {
+            "class": "Table",
+            "name": self.name,
+            "metadata": {
+                "schema": self.metadata.schema,
+                "database": self.metadata.database,
+            },
+            "temp": self.temp,
+            "conn_id": self.conn_id,
+        }
+
+    @classmethod
+    def from_json(cls, obj: dict):
+        return Table(
+            name=obj["name"],
+            metadata=Metadata(**obj["metadata"]),
+            temp=obj["temp"],
+            conn_id=obj["conn_id"],
+        )
+
 
 @define(slots=False)
 class TempTable(BaseTable):

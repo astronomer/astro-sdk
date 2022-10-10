@@ -29,8 +29,7 @@ Setup your local environment:
 Try your own version of the SQL CLI locally:
 
 ```bash
-    source ~/.virtualenvs/sql-cli/bin/activate
-    python -m sql_cli version
+    poetry run flow version
 ```
 
 Run the tests:
