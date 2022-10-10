@@ -10,12 +10,8 @@ from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import provide_session
 from packaging.version import Version
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+
 from tests.sql.operators import utils as test_utils
 
 RETRY_ON_EXCEPTIONS = []

@@ -5,6 +5,7 @@ from typing import Any
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
+
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import create_database
@@ -91,9 +92,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         Infers SQL database type based on connection then loads table to db.
         """
         if not isinstance(self.output_table, BaseTable):
-            raise ValueError(
-                "Please pass a valid Table instance in 'output_table' parameter"
-            )
+            raise ValueError("Please pass a valid Table instance in 'output_table' parameter")
         database = create_database(self.output_table.conn_id)
         self.output_table = database.populate_table_metadata(self.output_table)
         normalize_config = self._populate_normalize_config(
@@ -136,9 +135,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
                     ]
                 )
             else:
-                df = file.export_to_dataframe(
-                    columns_names_capitalization=self.columns_names_capitalization
-                )
+                df = file.export_to_dataframe(columns_names_capitalization=self.columns_names_capitalization)
 
         self.log.info("Completed loading the data into dataframe.")
         return df
@@ -179,9 +176,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         normalize_config["record_prefix"] = replace_illegal_columns_chars(
             normalize_config["record_prefix"], database
         )
-        normalize_config["sep"] = replace_illegal_columns_chars(
-            normalize_config["sep"], database
-        )
+        normalize_config["sep"] = replace_illegal_columns_chars(normalize_config["sep"], database)
 
         return normalize_config
 

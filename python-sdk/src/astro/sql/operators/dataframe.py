@@ -6,6 +6,7 @@ from typing import Any, Callable
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
+
 from astro.airflow.datasets import kwargs_with_datasets
 
 try:
@@ -56,21 +57,13 @@ def load_op_arg_table_into_dataframe(
 
     for arg in op_args_list:
         current_arg = full_spec.args.pop(0)
-        if full_spec.annotations.get(current_arg) == pd.DataFrame and isinstance(
-            arg, BaseTable
-        ):
+        if full_spec.annotations.get(current_arg) == pd.DataFrame and isinstance(arg, BaseTable):
             log.debug("Found SQL table, retrieving dataframe from table %s", arg.name)
-            ret_args.append(
-                _get_dataframe(
-                    arg, columns_names_capitalization=columns_names_capitalization
-                )
-            )
+            ret_args.append(_get_dataframe(arg, columns_names_capitalization=columns_names_capitalization))
         elif isinstance(arg, File) and (
             full_spec.annotations.get(current_arg) == pd.DataFrame or arg.is_dataframe
         ):
-            log.debug(
-                "Found dataframe file, retrieving dataframe from file %s", arg.path
-            )
+            log.debug("Found dataframe file, retrieving dataframe from file %s", arg.path)
             ret_args.append(arg.export_to_dataframe())
         else:
             ret_args.append(arg)
@@ -94,9 +87,7 @@ def load_op_kwarg_table_into_dataframe(
     for k, v in op_kwargs.items():
         if param_types.get(k).annotation is pd.DataFrame and isinstance(v, BaseTable):  # type: ignore
             log.debug("Found SQL table, retrieving dataframe from table %s", v.name)
-            out_dict[k] = _get_dataframe(
-                v, columns_names_capitalization=columns_names_capitalization
-            )
+            out_dict[k] = _get_dataframe(v, columns_names_capitalization=columns_names_capitalization)
         elif isinstance(v, File) and (param_types.get(k).annotation is pd.DataFrame or v.is_dataframe):  # type: ignore
             log.debug("Found dataframe file, retrieving dataframe from file %s", v.path)
             out_dict[k] = v.export_to_dataframe()
@@ -195,8 +186,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                 return pandas_dataframe
             elif isinstance(function_output, list):
                 return [
-                    convert_to_file(obj) if isinstance(obj, pd.DataFrame) else obj
-                    for obj in function_output
+                    convert_to_file(obj) if isinstance(obj, pd.DataFrame) else obj for obj in function_output
                 ]
             else:
                 return function_output

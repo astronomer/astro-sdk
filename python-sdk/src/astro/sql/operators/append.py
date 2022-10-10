@@ -4,6 +4,7 @@ from typing import Any
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
+
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
@@ -46,9 +47,7 @@ class AppendOperator(AstroSQLBaseOperator):
 
         super().__init__(
             task_id=task_id,
-            **kwargs_with_datasets(
-                kwargs=kwargs, input_datasets=source_table, output_datasets=target_table
-            ),
+            **kwargs_with_datasets(kwargs=kwargs, input_datasets=source_table, output_datasets=target_table),
         )
 
     def execute(self, context: Context) -> BaseTable:  # skipcq: PYL-W0613

@@ -3,9 +3,10 @@ from __future__ import annotations
 import random
 import string
 
-from astro.airflow.datasets import Dataset
 from attr import define, field, fields_dict
 from sqlalchemy import Column, MetaData
+
+from astro.airflow.datasets import Dataset
 
 MAX_TABLE_NAME_LENGTH = 62
 TEMP_PREFIX = "_tmp_"
@@ -27,10 +28,7 @@ class Metadata:
 
     def is_empty(self) -> bool:
         """Check if all the fields are None."""
-        return all(
-            getattr(self, field_name) is None
-            for field_name in fields_dict(self.__class__)
-        )
+        return all(getattr(self, field_name) is None for field_name in fields_dict(self.__class__))
 
 
 @define(slots=False)

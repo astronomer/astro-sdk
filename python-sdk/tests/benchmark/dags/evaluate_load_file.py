@@ -8,11 +8,12 @@ from urllib.parse import urlparse
 
 import settings as benchmark_settings
 from airflow import DAG
+from run import export_profile_data_to_bq
+
 from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
 from astro.files import File
 from astro.table import Metadata, Table
-from run import export_profile_data_to_bq
 
 START_DATE = datetime(2000, 1, 1)
 
@@ -136,9 +137,7 @@ def create_dag(database_name, table_args, dataset, global_db_kwargs):
     dataset_databases_kwargs = dataset.get("database_kwargs", {})
     local_db_kwargs = dataset_databases_kwargs.get(database_name, {})
 
-    dag_name = (
-        f"load_file_{dataset_name}_{dataset_filetype}_{location}_into_{database_name}"
-    )
+    dag_name = f"load_file_{dataset_name}_{dataset_filetype}_{location}_into_{database_name}"
 
     def get_git_sha():
         output_stream = os.popen("git rev-parse --short HEAD")
