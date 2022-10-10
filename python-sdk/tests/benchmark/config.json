@@ -4,6 +4,15 @@
       "kwargs": {
         "enable_native_fallback": false
       },
+      "name": "snowflake",
+      "output_table": {
+        "conn_id": "snowflake_conn"
+      }
+    },
+    {
+      "kwargs": {
+        "enable_native_fallback": false
+      },
       "name": "postgres",
       "output_table": {
         "conn_id": "postgres_benchmark_conn",
@@ -32,9 +41,43 @@
           "database": "bigquery"
         }
       }
+    },
+    {
+      "kwargs": {
+        "enable_native_fallback": false
+      },
+      "name": "snowflake",
+      "output_table": {
+        "conn_id": "snowflake_conn"
+      }
     }
   ],
   "datasets": [
+    {
+      "conn_id": "bigquery",
+      "database_kwargs": {
+        "bigquery": {
+          "skip": true
+        },
+        "postgres": {
+          "skip": true
+        },
+        "redshift": {
+          "skip": true
+        },
+        "snowflake": {
+          "native_support_kwargs": {
+            "snowflake_storage_integration_google": "gcs_int_python_sdk",
+            "storage_integration": "gcs_int_python_sdk"
+          }
+        }
+      },
+      "file_type": "parquet",
+      "name": "one_gb",
+      "path": "gs://astro-sdk/benchmark/synthetic-dataset/parquet/one_gb/",
+      "rows": 160,
+      "size": "10 KB"
+    },
     {
       "conn_id": "s3_conn_benchmark",
       "database_kwargs": {
@@ -55,7 +98,7 @@
       },
       "file_type": "parquet",
       "name": "one_gb",
-      "path": "s3://astro-sdk-redshift/synthetic-dataset/parquet/one_gb_v2/",
+      "path": "s3://astro-sdk-redshift/synthetic-dataset/parquet/one_gb/",
       "rows": 160,
       "size": "10 KB"
     }
