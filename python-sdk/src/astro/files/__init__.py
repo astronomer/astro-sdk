@@ -1,7 +1,9 @@
 from typing import TYPE_CHECKING
+
 from airflow.hooks.base import BaseHook
 from astro.files.base import File  # noqa: F401 # skipcq: PY-W2000
 from astro.files.base import resolve_file_path_pattern  # noqa: F401 # skipcq: PY-W2000
+
 if TYPE_CHECKING:
     from airflow.models.xcom_arg import XComArg
 
