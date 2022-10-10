@@ -28,7 +28,6 @@ class LocalLocation(BaseFileLocation):
     @property
     def size(self) -> int:
         """Return the size in bytes of the given file.
-
         :return: File size in bytes
         """
         path = pathlib.Path(self.path)

@@ -127,3 +127,11 @@ class SqliteDatabase(BaseDatabase):
         :param table: Astro Table to be converted to SQLAlchemy table instance
         """
         return SqlaTable(table.name, SqlaMetaData(), autoload_with=self.sqlalchemy_engine)
+
+    def openlineage_dataset_name(self, table: BaseTable = None):
+        conn = self.hook.get_connection(self.conn_id)
+        return f"{conn.host}.{table.name}"
+
+    def openlineage_dataset_namespace(self):
+        conn = self.hook.get_connection(self.conn_id)
+        return f"{conn.host}"

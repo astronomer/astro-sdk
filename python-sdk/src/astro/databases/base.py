@@ -789,3 +789,9 @@ class BaseDatabase(ABC):
             source_file.location.location_type in self.FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED
         )
         return is_file_pattern_based_schema_autodetection_supported
+
+    def openlineage_dataset_name(self, table: BaseTable):
+        raise NotImplementedError
+
+    def openlineage_dataset_namespace(self):
+        raise NotImplementedError

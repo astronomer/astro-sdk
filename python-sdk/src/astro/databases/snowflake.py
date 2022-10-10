@@ -766,6 +766,17 @@ class SnowflakeDatabase(BaseDatabase):
         }
         return statement, params
 
+    def openlineage_dataset_name(self, table: BaseTable = None):
+        conn = self.hook.get_connection(self.conn_id)
+        conn_extra = conn.extra_dejson
+        schema = conn_extra.get("schema") or conn.schema
+        db = conn_extra.get("database")
+        return f"{db}.{schema}.{table.name}"
+
+    def openlineage_dataset_namespace(self):
+        account = self.hook.get_connection(self.conn_id).extra_dejson.get("account")
+        return f"{self.sql_type}://{account}"
+
 
 def wrap_identifier(inp: str) -> str:
     return f"Identifier(:{inp})"

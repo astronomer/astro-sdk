@@ -7,6 +7,7 @@ from attr import define, field, fields_dict
 from sqlalchemy import Column, MetaData
 
 from astro.airflow.datasets import Dataset
+from astro.databases import create_database
 
 MAX_TABLE_NAME_LENGTH = 62
 TEMP_PREFIX = "_tmp_"
@@ -144,6 +145,14 @@ class BaseTable:
             temp=obj["temp"],
             conn_id=obj["conn_id"],
         )
+
+    def openlineage_dataset_name(self):
+        database = create_database(self.conn_id)
+        return database.openlineage_dataset_name(table=self)
+
+    def openlineage_dataset_namespace(self):
+        database = create_database(self.conn_id)
+        return database.openlineage_dataset_namespace()
 
 
 @define(slots=False)

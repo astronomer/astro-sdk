@@ -429,6 +429,13 @@ class BigqueryDatabase(BaseDatabase):
             )
         job.result()
 
+    def openlineage_dataset_name(self, table: BaseTable = None):
+        dataset = table.metadata.database or table.metadata.schema
+        return f"{self.hook.project_id}.{dataset}.{table.name}"
+
+    def openlineage_dataset_namespace(self):
+        return self.sql_type
+
 
 class S3ToBigqueryDataTransfer:
     """

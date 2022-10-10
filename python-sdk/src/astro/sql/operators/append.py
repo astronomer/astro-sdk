@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
+from openlineage.client.run import Dataset as OpenlineageDataset
 
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
@@ -59,7 +61,35 @@ class AppendOperator(AstroSQLBaseOperator):
             target_table=self.target_table,
             source_to_target_columns_map=self.columns,
         )
+
         return self.target_table
+
+    def get_openlineage_facets(self):
+        input_dataset = [
+            OpenlineageDataset(
+                namespace=self.source_table.openlineage_dataset_namespace(),
+                name=self.source_table.openlineage_dataset_name(),
+                facets={
+                    "table_name": self.source_table.name,
+                    "row_affected": 0,  # FixMe
+                    "columns": self.columns,
+                },
+            )
+        ]
+
+        output_dataset = [
+            OpenlineageDataset(
+                namespace=self.target_table.openlineage_dataset_namespace(),
+                name=self.target_table.openlineage_dataset_name(),
+                facets={
+                    "table_name": self.target_table.name,
+                    "row_affected": 0,  # FixMe
+                    "columns": self.columns,
+                },
+            )
+        ]
+
+        return input_dataset, output_dataset
 
 
 def append(

@@ -199,3 +199,11 @@ class PostgresDatabase(BaseDatabase):
         :param file: File path and conn_id for object stores
         """
         return file.export_to_dataframe_via_byte_stream()
+
+    def openlineage_dataset_name(self, table: BaseTable = None):
+        schema = self.hook.get_connection(self.conn_id).schema or "public"
+        return f"{schema}.{table.name}"
+
+    def openlineage_dataset_namespace(self):
+        conn = self.hook.get_connection(self.conn_id)
+        return f"{self.sql_type}://{conn.host}:{conn.port}"

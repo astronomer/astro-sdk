@@ -384,3 +384,11 @@ class RedshiftDatabase(BaseDatabase):
         for Redshift.
         """
         return "SELECT 1 + 1"
+
+    def openlineage_dataset_name(self, table: BaseTable = None):
+        conn = self.hook.get_connection(self.conn_id)
+        return f"{conn.schema}.{table.name}"
+
+    def openlineage_dataset_namespace(self):
+        conn = self.hook.conn
+        return f"{self.sql_type}://{conn.host}:{conn.port}"
