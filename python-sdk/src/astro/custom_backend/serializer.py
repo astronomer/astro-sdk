@@ -22,12 +22,12 @@ def serialize(obj: Table | File | Any) -> dict | Any:
     :param obj: object to serialize
     :return:
     """
-    from astro.utils.dataframe import convert_to_file
+    from astro.utils.dataframe import convert_dataframe_to_file
 
     if isinstance(obj, (Table, TempTable)):
         return obj.to_json()
     elif isinstance(obj, pandas.DataFrame):
-        file = convert_to_file(obj)
+        file = convert_dataframe_to_file(obj)
         return serialize(file)
     elif isinstance(obj, File):
         return obj.to_json()

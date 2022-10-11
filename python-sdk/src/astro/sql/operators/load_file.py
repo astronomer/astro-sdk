@@ -13,7 +13,7 @@ from astro.databases.base import BaseDatabase
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
-from astro.utils.dataframe import convert_to_file
+from astro.utils.dataframe import convert_dataframe_to_file
 from astro.utils.typing_compat import Context
 
 
@@ -84,7 +84,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         if self.output_table:
             return self.load_data_to_table(input_file)
         else:
-            return convert_to_file(self.load_data_to_dataframe(input_file))
+            return convert_dataframe_to_file(self.load_data_to_dataframe(input_file))
 
     def load_data_to_table(self, input_file: File) -> BaseTable:
         """

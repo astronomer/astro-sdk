@@ -30,7 +30,7 @@ def convert_columns_names_capitalization(
     return df
 
 
-def convert_to_file(df: pd.DataFrame) -> File:
+def convert_dataframe_to_file(df: pd.DataFrame) -> File:
     """
     Passes a dataframe into a File using parquet as an efficient storage format. This allows us to use
     Json as a storage method without filling the metadata database. the values for conn_id and bucket path can
