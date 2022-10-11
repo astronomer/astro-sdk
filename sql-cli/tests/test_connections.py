@@ -8,8 +8,8 @@ from sql_cli.connections import SQL_CLI_PROJECT_DIRECTORY, _load_yaml_connection
 
 def test_validate_connections(caplog):
     logging.info("SQL_CLI_PROJECT_DIRECTORY Is %s", SQL_CLI_PROJECT_DIRECTORY)
-    logging.info(os.system("echo $PWD"))
-    logging.info(os.system("echo $PYTHONPATH"))
+    logging.info(os.popen("echo $PWD").read())
+    logging.info(os.popen("echo $PYTHONPATH").read())
     os.system("echo 'y' | airflow db reset")
     validate_connections()
 
