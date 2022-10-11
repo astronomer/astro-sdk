@@ -69,6 +69,7 @@ def test_examples_by_dependency(session: nox.Session, extras):
     session.install("-e", ".[tests]")
     session.run("airflow", "db", "init")
 
+    # Since pytest is not installed in the nox session directly, we need to set `external=true`.
     session.run("pytest", "tests/test_example_dags.py", *pytest_args, *session.posargs, external=True)
 
 
