@@ -53,9 +53,9 @@ def _create_or_replace_connection(conn_obj: Connection) -> str:
         session.commit()
 
     if connection_replaced:
-        log = "Validating connection %25s PASSED and REPLACED\n" % conn_id
+        log = f"Validating connection {conn_id:25} PASSED and REPLACED\n"
     else:
-        log = "Validating connection %25s PASSED and ADDED\n" % conn_id
+        log = f"Validating connection {conn_id:25} PASSED and ADDED\n"
     return log
 
 
@@ -81,7 +81,7 @@ def validate_connections(environment: str = "default", connection: str | None = 
         log = _create_or_replace_connection(conn_obj)
 
         if not _test_connection(conn_obj):
-            logs += "Validating connection %25s FAILED\n" % conn_id
+            logs += f"Validating connection {conn_id:25} FAILED\n"
             continue
 
         logs += log
