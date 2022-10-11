@@ -6,7 +6,7 @@ from sql_cli.connections import _load_yaml_connections, validate_connections
 
 
 def test_validate_connections(caplog):
-    os.system("echo 'y' | airflow db reset")
+    os.system("airflow db init")
     validate_connections()
 
     postgres_conn_id = "postgres_conn"
@@ -16,12 +16,8 @@ def test_validate_connections(caplog):
 
     sqlite_conn_id = "sqlite_conn"
     sqlite_conn_id_formatted_string = sqlite_conn_id + " " * (25 - len(sqlite_conn_id))
-    added_connection_log = f"Validating connection {sqlite_conn_id_formatted_string} PASSED and ADDED"
+    added_connection_log = f"Validating connection {sqlite_conn_id_formatted_string} PASSED"
     assert added_connection_log in caplog.text
-
-    validate_connections()
-    replaced_connection_log = f"Validating connection {sqlite_conn_id_formatted_string} PASSED and REPLACED"
-    assert replaced_connection_log in caplog.text
 
 
 def test_validate_connections_config_file_not_found_exception():

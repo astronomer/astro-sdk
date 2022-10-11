@@ -39,24 +39,16 @@ def _test_connection(conn_obj: Connection) -> bool:
         raise BadRequest(detail=str(err.messages))
 
 
-def _create_or_replace_connection(conn_obj: Connection) -> str:
+def _create_or_replace_connection(conn_obj: Connection) -> None:
     """Creates a new or replaces existing connection in the Airflow DB with the given connection object."""
     conn_id = conn_obj.conn_id
-    connection_replaced = False
     with create_session() as session:
         db_connection = session.query(Connection).filter_by(conn_id=conn_id).one_or_none()
         if db_connection:
             session.delete(db_connection)
             session.commit()
-            connection_replaced = True
         session.add(conn_obj)
         session.commit()
-
-    if connection_replaced:
-        log = f"Validating connection {conn_id:25} PASSED and REPLACED\n"
-    else:
-        log = f"Validating connection {conn_id:25} PASSED and ADDED\n"
-    return log
 
 
 def validate_connections(environment: str = "default", connection: str | None = None) -> None:
@@ -78,13 +70,13 @@ def validate_connections(environment: str = "default", connection: str | None = 
             config_file_contains_connection = True
         conn_obj = Connection(**data)
 
-        log = _create_or_replace_connection(conn_obj)
+        _create_or_replace_connection(conn_obj)
 
         if not _test_connection(conn_obj):
             logs += f"Validating connection {conn_id:25} FAILED\n"
             continue
 
-        logs += log
+        logs += f"Validating connection {conn_id:25} PASSED\n"
 
     logging.info(logs)
 
