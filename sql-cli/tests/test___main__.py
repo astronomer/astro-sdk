@@ -1,5 +1,6 @@
-from sql_cli.__main__ import app
 from typer.testing import CliRunner
+
+from sql_cli.__main__ import app
 
 runner = CliRunner()
 

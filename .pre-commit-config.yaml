@@ -80,7 +80,15 @@ repos:
         name: Run isort
         # Exclude auto-generated example files from being changed
         exclude: ^sql-cli/examples/_dags/
-
+        args:
+          # These options are duplicated to known_first_party in .isort.cfg,
+          # Please keep these in sync for now. (See comments there for details.)
+          - --profile=black
+          - -l=110
+          - --combine-as
+          - -p=astro
+          - -p=tests
+          - -p=sql_cli
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.1
     hooks:
@@ -94,11 +102,11 @@ repos:
       hooks:
       - id: mypy
         name: mypy-python-sdk
-        additional_dependencies: [types-PyYAML, types-attrs, attrs]
+        additional_dependencies: [types-PyYAML, types-attrs, attrs, types-requests, types-python-dateutil]
         files: "^python-sdk/"
       - id: mypy
         name: mypy-sql-cli
-        additional_dependencies: [types-PyYAML]
+        additional_dependencies: [types-PyYAML, types-requests]
         files: "^sql-cli/"
 
   -   repo: https://github.com/asottile/pyupgrade

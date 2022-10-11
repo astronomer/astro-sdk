@@ -1,5 +1,6 @@
-import sql_cli
 import typer
+
+import sql_cli
 
 app = typer.Typer(add_completion=False)
 

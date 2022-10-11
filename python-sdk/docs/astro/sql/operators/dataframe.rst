@@ -25,6 +25,13 @@ Case 2: Convert the resulting dataframe into a table. When the ``output_table`` 
            :start-after: [START dataframe_example_2]
            :end-before: [END dataframe_example_2]
 
+Case 3: Pass the result of a dataframe function as a list or a dictionary
+
+    .. literalinclude:: ../../../../example_dags/example_dataframe_api.py
+           :language: python
+           :start-after: [START dataframe_api]
+           :end-before: [END dataframe_api]
+
 Default Datasets
 ~~~~~~~~~~~~~~~~
 * Input dataset - No default input dataset.

@@ -1,4 +1,5 @@
 import pytest
+
 from sql_cli.generate_dag import generate_dag
 
 

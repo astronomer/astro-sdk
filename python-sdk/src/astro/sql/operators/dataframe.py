@@ -20,7 +20,7 @@ from astro.databases import create_database
 from astro.files import File
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable, Table
-from astro.utils.dataframe import convert_columns_names_capitalization, convert_to_file
+from astro.utils.dataframe import convert_columns_names_capitalization
 from astro.utils.table import find_first_table
 from astro.utils.typing_compat import Context
 
@@ -167,29 +167,52 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         )
 
         function_output = self.python_callable(*self.op_args, **self.op_kwargs)
-        pandas_dataframe = convert_columns_names_capitalization(
-            df=function_output,
+        function_output = self._convert_column_capitalization_for_output(
+            function_output=function_output,
             columns_names_capitalization=self.columns_names_capitalization,
         )
         if self.output_table:
+            self.log.debug("Output table found, converting function output to SQL table")
+            if not isinstance(function_output, pd.DataFrame):
+                raise ValueError(
+                    "Astro can only turn a single dataframe into a table. Please change your "
+                    "function output."
+                )
             self.output_table.conn_id = self.output_table.conn_id or self.conn_id
             db = create_database(self.output_table.conn_id)
             self.output_table = db.populate_table_metadata(self.output_table)
             db.load_pandas_dataframe_to_table(
-                source_dataframe=pandas_dataframe,
+                source_dataframe=function_output,
                 target_table=self.output_table,
                 if_exists="replace",
             )
             return self.output_table
         else:
-            if isinstance(function_output, pd.DataFrame):
-                return pandas_dataframe
-            elif isinstance(function_output, list):
-                return [
-                    convert_to_file(obj) if isinstance(obj, pd.DataFrame) else obj for obj in function_output
-                ]
-            else:
-                return function_output
+            return function_output
+
+    @staticmethod
+    def _convert_column_capitalization_for_output(function_output, columns_names_capitalization):
+        """Handles column capitalization for single outputs, lists, and dictionaries"""
+        if isinstance(function_output, (list, tuple)):
+            function_output = [
+                convert_columns_names_capitalization(
+                    df=f, columns_names_capitalization=columns_names_capitalization
+                )
+                for f in function_output
+            ]
+        elif isinstance(function_output, dict):
+            function_output = {
+                k: convert_columns_names_capitalization(
+                    df=v, columns_names_capitalization=columns_names_capitalization
+                )
+                for k, v in function_output.items()
+            }
+        else:
+            function_output = convert_columns_names_capitalization(
+                df=function_output,
+                columns_names_capitalization=columns_names_capitalization,
+            )
+        return function_output
 
 
 def dataframe(
