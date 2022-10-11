@@ -90,7 +90,10 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: coverage
-          path: ./sql-cli/.coverage
+          path: ./sql-cli/.coveragea
+    env:
+      AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
+      AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
 
 
   Code-Coverage:

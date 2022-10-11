@@ -1,10 +1,20 @@
+import random
+import string
 from datetime import datetime
 from pathlib import Path
 
 import pytest
+from airflow.models import DAG, DagRun, TaskInstance as TI
+from airflow.utils import timezone
+from airflow.utils.session import create_session
 
+from astro.table import MAX_TABLE_NAME_LENGTH
 from sql_cli.dag_generator import SqlFilesDAG
 from sql_cli.sql_directory_parser import SqlFile
+
+DEFAULT_DATE = timezone.datetime(2016, 1, 1)
+
+UNIQUE_HASH_SIZE = 16
 
 
 @pytest.fixture()
@@ -89,3 +99,25 @@ def sql_files_dag_with_cycle(sql_file_with_cycle):
         start_date=datetime(2022, 10, 4),
         sql_files=[sql_file_with_cycle],
     )
+
+
+def create_unique_table_name(length: int = MAX_TABLE_NAME_LENGTH) -> str:
+    """
+    Create a unique table name of the requested size, which is compatible with all supported databases.
+
+    :return: Unique table name
+    :rtype: str
+    """
+    unique_id = random.choice(string.ascii_lowercase) + "".join(
+        random.choice(string.ascii_lowercase + string.digits) for _ in range(length - 1)
+    )
+    return unique_id
+
+
+@pytest.fixture
+def sample_dag():
+    dag_id = create_unique_table_name(UNIQUE_HASH_SIZE)
+    yield DAG(dag_id, start_date=DEFAULT_DATE)
+    with create_session() as session_:
+        session_.query(DagRun).delete()
+        session_.query(TI).delete()
