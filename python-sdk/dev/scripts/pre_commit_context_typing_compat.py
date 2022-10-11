@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 from ast import ImportFrom, NodeVisitor, parse
-from pathlib import Path, PosixPath
+from pathlib import Path
 
 SOURCES_ROOT = Path(__file__).parents[2]
 ASTRO_ROOT = SOURCES_ROOT / "src" / "astro"
@@ -32,7 +32,7 @@ class ImportCrawler(NodeVisitor):
                     self.has_incompatible_context_imports = True
 
 
-def get_all_provider_files() -> list[PosixPath]:
+def get_all_provider_files() -> list[Path]:
     """Retrieve all eligible provider module files."""
     provider_files = []
     for (root, _, file_names) in os.walk(ASTRO_ROOT):
@@ -48,7 +48,7 @@ def get_all_provider_files() -> list[PosixPath]:
     return provider_files
 
 
-def find_incompatible_context_imports(file_paths: list[PosixPath]) -> list[str]:
+def find_incompatible_context_imports(file_paths: list[Path]) -> list[str]:
     """Retrieve any provider files that import `airflow.utils.context.Context` directly."""
     incompatible_context_imports = []
     for file_path in file_paths:
