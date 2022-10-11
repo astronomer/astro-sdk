@@ -1,25 +1,21 @@
-import logging
 import os
 
 import pytest
 
-from sql_cli.connections import SQL_CLI_PROJECT_DIRECTORY, _load_yaml_connections, validate_connections
+from sql_cli.connections import _load_yaml_connections, validate_connections
 
 
 def test_validate_connections(caplog):
-    logging.info("SQL_CLI_PROJECT_DIRECTORY Is %s", SQL_CLI_PROJECT_DIRECTORY)
-    logging.info(os.popen("echo $PWD").read())
-    logging.info(os.popen("echo $PYTHONPATH").read())
     os.system("echo 'y' | airflow db reset")
     validate_connections()
 
     postgres_conn_id = "postgres_conn"
-    postgres_conn_id_formatted_string = " " * (25 - len(postgres_conn_id)) + postgres_conn_id
+    postgres_conn_id_formatted_string = postgres_conn_id + " " * (25 - len(postgres_conn_id))
     failed_connection_log = f"Validating connection {postgres_conn_id_formatted_string} FAILED"
     assert failed_connection_log in caplog.text
 
     sqlite_conn_id = "sqlite_conn"
-    sqlite_conn_id_formatted_string = " " * (25 - len(sqlite_conn_id)) + sqlite_conn_id
+    sqlite_conn_id_formatted_string = sqlite_conn_id + " " * (25 - len(sqlite_conn_id))
     added_connection_log = f"Validating connection {sqlite_conn_id_formatted_string} PASSED and ADDED"
     assert added_connection_log in caplog.text
 
