@@ -183,7 +183,6 @@ class BaseDatabase(ABC):
         """
         raise NotImplementedError
 
-
     def openlineage_dataset_namespace(self) -> str:
         """
         Returns the open lineage dataset namespace as per

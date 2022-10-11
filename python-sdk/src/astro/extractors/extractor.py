@@ -1,4 +1,5 @@
-from typing import List, Optional, Dict
+import logging
+from typing import Dict, List, Optional
 
 from airflow.models.taskinstance import TaskInstance
 from openlineage.airflow.extractors import TaskMetadata
@@ -6,16 +7,15 @@ from openlineage.airflow.extractors.base import BaseExtractor
 from openlineage.airflow.utils import get_job_name
 from openlineage.client.facet import BaseFacet
 from openlineage.client.run import Dataset as OpenlineageDataset
-import logging
 
 
 class OpenLineageFacets:
     def __init__(
-            self,
-            inputs: List[OpenlineageDataset],
-            outputs: List[OpenlineageDataset],
-            run_facets: Dict[str, BaseFacet],
-            job_facets: Dict[str, BaseFacet]
+        self,
+        inputs: List[OpenlineageDataset],
+        outputs: List[OpenlineageDataset],
+        run_facets: Dict[str, BaseFacet],
+        job_facets: Dict[str, BaseFacet],
     ):
         self.inputs = inputs
         self.outputs = outputs
@@ -38,19 +38,17 @@ class PythonSDKExtractor(BaseExtractor):
         """Empty extract implementation for the abstractmethod of the ``BaseExtractor`` class."""
         return None
 
-    def extract_on_complete(
-            self, task_instance: TaskInstance
-    ) -> Optional[TaskMetadata]:  # skipcq: PYL-R0201
+    def extract_on_complete(self, task_instance: TaskInstance) -> Optional[TaskMetadata]:  # skipcq: PYL-R0201
         """
         Callback on ``get_openlineage_facets(ti)`` task completion to fetch metadata extraction details that are to be
         pushed to the Lineage server.
         """
-        open_lineage_facets:OpenLineageFacets = self.operator.get_openlineage_facets()
+        open_lineage_facets: OpenLineageFacets = self.operator.get_openlineage_facets()
 
         return TaskMetadata(
             name=get_job_name(task=self.operator),
             inputs=open_lineage_facets.inputs,
             outputs=open_lineage_facets.outputs,
             run_facets=open_lineage_facets.run_facets,
-            job_facets=open_lineage_facets.job_facets
+            job_facets=open_lineage_facets.job_facets,
         )

@@ -5,19 +5,19 @@ from typing import Any, Dict, List, Union
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
+from openlineage.client.facet import BaseFacet
+from openlineage.client.run import Dataset as OpenlineageDataset
 
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
+from astro.extractors.extractor import OpenLineageFacets
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
 from astro.utils.dataframe import convert_to_file
 from astro.utils.typing_compat import Context
-from openlineage.client.run import Dataset as OpenlineageDataset
-from openlineage.client.facet import BaseFacet
-from astro.extractors.extractor import OpenLineageFacets
 
 
 class LoadFileOperator(AstroSQLBaseOperator):
@@ -41,17 +41,17 @@ class LoadFileOperator(AstroSQLBaseOperator):
     template_fields = ("output_table", "input_file")
 
     def __init__(
-            self,
-            input_file: File,
-            output_table: BaseTable | None = None,
-            chunk_size: int = DEFAULT_CHUNK_SIZE,
-            if_exists: LoadExistStrategy = "replace",
-            ndjson_normalize_sep: str = "_",
-            use_native_support: bool = True,
-            native_support_kwargs: dict | None = None,
-            columns_names_capitalization: ColumnCapitalization = "original",
-            enable_native_fallback: bool | None = True,
-            **kwargs,
+        self,
+        input_file: File,
+        output_table: BaseTable | None = None,
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+        if_exists: LoadExistStrategy = "replace",
+        ndjson_normalize_sep: str = "_",
+        use_native_support: bool = True,
+        native_support_kwargs: dict | None = None,
+        columns_names_capitalization: ColumnCapitalization = "original",
+        enable_native_fallback: bool | None = True,
+        **kwargs,
     ) -> None:
         super().__init__(
             **kwargs_with_datasets(
@@ -123,10 +123,10 @@ class LoadFileOperator(AstroSQLBaseOperator):
         """
         df = None
         for file in resolve_file_path_pattern(
-                input_file.path,
-                input_file.conn_id,
-                normalize_config=self.normalize_config,
-                filetype=input_file.type.name,
+            input_file.path,
+            input_file.conn_id,
+            normalize_config=self.normalize_config,
+            filetype=input_file.type.name,
         ):
             if isinstance(df, pd.DataFrame):
                 df = pd.concat(
@@ -145,8 +145,8 @@ class LoadFileOperator(AstroSQLBaseOperator):
 
     @staticmethod
     def _populate_normalize_config(
-            database: BaseDatabase,
-            ndjson_normalize_sep: str = "_",
+        database: BaseDatabase,
+        ndjson_normalize_sep: str = "_",
     ) -> dict[str, str]:
         """
         Validate pandas json_normalize() parameter for databases, since default params result in
@@ -194,7 +194,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
             filetype=self.input_file.type.name,
         )
 
-        input_dataset: List[OpenlineageDataset] = [
+        input_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(
                 namespace=self.input_file.openlineage_dataset_namespace,
                 name=self.input_file.openlineage_dataset_name,
@@ -208,7 +208,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         ]
 
         output_database = create_database(self.output_table.conn_id)
-        output_dataset: List[OpenlineageDataset] = [
+        output_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(
                 namespace=output_database.openlineage_dataset_namespace(),
                 name=output_database.openlineage_dataset_name(table=self.output_table),
@@ -220,28 +220,25 @@ class LoadFileOperator(AstroSQLBaseOperator):
             )
         ]
 
-        run_facets: Dict[str, BaseFacet] = {}
-        job_facets: Dict[str, BaseFacet] = {}
+        run_facets: dict[str, BaseFacet] = {}
+        job_facets: dict[str, BaseFacet] = {}
 
         return OpenLineageFacets(
-            inputs=input_dataset,
-            outputs=output_dataset,
-            run_facets=run_facets,
-            job_facets=job_facets
+            inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
 
 
 def load_file(
-        input_file: File,
-        output_table: BaseTable | None = None,
-        task_id: str | None = None,
-        if_exists: LoadExistStrategy = "replace",
-        ndjson_normalize_sep: str = "_",
-        use_native_support: bool = True,
-        native_support_kwargs: dict | None = None,
-        columns_names_capitalization: ColumnCapitalization = "original",
-        enable_native_fallback: bool | None = True,
-        **kwargs: Any,
+    input_file: File,
+    output_table: BaseTable | None = None,
+    task_id: str | None = None,
+    if_exists: LoadExistStrategy = "replace",
+    ndjson_normalize_sep: str = "_",
+    use_native_support: bool = True,
+    native_support_kwargs: dict | None = None,
+    columns_names_capitalization: ColumnCapitalization = "original",
+    enable_native_fallback: bool | None = True,
+    **kwargs: Any,
 ) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.
 
