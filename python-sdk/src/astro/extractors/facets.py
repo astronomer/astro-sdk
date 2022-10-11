@@ -1,14 +1,14 @@
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import attr
-from openlineage.client.facet import SCHEMA_URI, BaseFacet
+from openlineage.client.facet import BaseFacet
 
 from astro.constants import FileType
 from astro.table import Column, Metadata
 
 
 @attr.s
-class InputDatasetFacet(BaseFacet):
+class InputFileDatasetFacet(BaseFacet):
     """
     Facet that represents input dataset Facets for load file
     :param file_size: size of the file.
@@ -28,7 +28,7 @@ class InputDatasetFacet(BaseFacet):
 
 
 @attr.s
-class OutputDatasetFacet(BaseFacet):
+class OutputDatabaseDatasetFacet(BaseFacet):
     """
     Facet that represents output dataset Facets for load file
     :param metadata: metadata of the table.
@@ -41,15 +41,11 @@ class OutputDatasetFacet(BaseFacet):
     """
 
     metadata: Metadata = attr.ib()
-    columns: Column = attr.ib()
-    schema: str = attr.ib()
+    columns: List[Column[Any]] = attr.ib()
+    schema: Optional[str] = attr.ib()
     used_native_path: bool = attr.ib(default=False)
     enabled_native_fallback: Optional[bool] = attr.ib(default=False)
     native_support_arguments: Dict = attr.ib(default=None)
     description: Optional[str] = attr.ib(default=None)
 
     _do_not_redact = ["metadata", "columns"]
-
-    @staticmethod
-    def _get_schema() -> str:
-        return SCHEMA_URI + "#/definitions/SchemaDatasetFacet"

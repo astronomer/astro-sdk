@@ -4,7 +4,7 @@ from openlineage.client.run import Dataset as OpenlineageDataset
 
 from astro.constants import FileType
 from astro.extractors.extractor import PythonSDKExtractor
-from astro.extractors.facets import InputDatasetFacet, OutputDatasetFacet
+from astro.extractors.facets import InputFileDatasetFacet, OutputDatabaseDatasetFacet
 from astro.files import File
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import Metadata, Table
@@ -19,7 +19,7 @@ INPUT_STATS = [
     OpenlineageDataset(
         namespace=TEST_INPUT_DATASET_NAMESPACE,
         name=TEST_INPUT_DATASET_NAME,
-        facets=InputDatasetFacet(
+        facets=InputFileDatasetFacet(
             file_size=-1,
             number_of_files=1,
             file_type=FileType.CSV,
@@ -34,7 +34,7 @@ OUTPUT_STATS = [
     OpenlineageDataset(
         namespace=TEST_OUTPUT_DATASET_NAMESPACE,
         name=TEST_OUTPUT_DATASET_NAME,
-        facets=OutputDatasetFacet(
+        facets=OutputDatabaseDatasetFacet(
             metadata=Metadata(schema="astro", database=None),
             columns=[],
             schema="astro",
