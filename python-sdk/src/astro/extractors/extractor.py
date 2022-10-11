@@ -38,7 +38,7 @@ class PythonSDKExtractor(BaseExtractor):
         return None
 
     def extract_on_complete(
-        self, task_instance: TaskInstance
+        self, task_instance: TaskInstance  # skipcq: PYL-W0613,  PYL-R0201
     ) -> Optional[TaskMetadata]:  # skipcq: PYL-R0201, PYL-W0613
         """
         Callback on ``get_openlineage_facets(ti)`` task completion to fetch metadata extraction details that are to be
