@@ -22,7 +22,7 @@ def _load_yaml_connections(environment: str) -> list[dict[str, Any]]:
         )
 
     with open(config_file) as connections_file:
-        connections = yaml.safe_load(connections_file)["connections"]
+        connections: list[dict[str, Any]] = yaml.safe_load(connections_file)["connections"]
 
     return connections
 
