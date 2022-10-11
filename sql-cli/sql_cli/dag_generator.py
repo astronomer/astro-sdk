@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 from networkx import DiGraph, depth_first_search, find_cycle, is_directed_acyclic_graph
+
 from sql_cli.exceptions import DagCycle
 from sql_cli.sql_directory_parser import SqlFile
 
