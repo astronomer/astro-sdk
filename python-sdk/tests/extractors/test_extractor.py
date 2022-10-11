@@ -32,7 +32,12 @@ OUTPUT_STATS = [
     OpenlineageDataset(
         namespace=TEST_OUTPUT_DATASET_NAMESPACE,
         name=TEST_OUTPUT_DATASET_NAME,
-        facets={"metadata": Metadata(schema="astro", database=None), "columns": [], "schema": "astro"},
+        facets={
+            "metadata": Metadata(schema="astro", database=None),
+            "columns": [],
+            "schema": "astro",
+            "used_native_path": False,
+        },
     )
 ]
 
