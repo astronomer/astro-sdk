@@ -15,10 +15,8 @@ except ImportError:
     from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
-from astro import settings
 from astro.constants import ColumnCapitalization
 from astro.databases import create_database
-from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable, Table
@@ -190,8 +188,6 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             )
             return self.output_table
         else:
-            if not settings.IS_CUSTOM_XCOM_BACKEND and not settings.STORE_DATA_LOCAL_DEV:
-                raise IllegalLoadToDatabaseException()
             return function_output
 
     @staticmethod
