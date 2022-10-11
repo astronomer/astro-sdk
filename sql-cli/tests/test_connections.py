@@ -20,6 +20,15 @@ def test_validate_connections(caplog):
     assert added_connection_log in caplog.text
 
 
+def test_specific_connection(caplog):
+    sqlite_conn_id = "sqlite_conn"
+    validate_connections(connection=sqlite_conn_id)
+
+    sqlite_conn_id_formatted_string = sqlite_conn_id + " " * (25 - len(sqlite_conn_id))
+    added_connection_log = f"Validating connection {sqlite_conn_id_formatted_string} PASSED"
+    assert added_connection_log in caplog.text
+
+
 def test_validate_connections_config_file_not_found_exception():
     with pytest.raises(FileNotFoundError):
         validate_connections(environment="UnknownEnvironment")
