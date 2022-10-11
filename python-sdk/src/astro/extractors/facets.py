@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 import attr
 from openlineage.client.facet import BaseFacet
@@ -41,7 +41,7 @@ class OutputDatabaseDatasetFacet(BaseFacet):
     """
 
     metadata: Metadata = attr.ib()
-    columns: List[Column[Any]] = attr.ib()
+    columns: List[Column] = attr.ib()
     schema: Optional[str] = attr.ib()
     used_native_path: bool = attr.ib(default=False)
     enabled_native_fallback: Optional[bool] = attr.ib(default=False)
