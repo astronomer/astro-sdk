@@ -9,6 +9,7 @@ from airflow.api_connexion.schemas.connection_schema import connection_schema
 from airflow.models import Connection
 from airflow.utils.session import create_session
 from marshmallow.exceptions import ValidationError
+
 from sql_cli.settings import SQL_CLI_PROJECT_DIRECTORY
 
 
@@ -20,7 +21,9 @@ def _load_yaml_connections(environment: str) -> list[dict[str, Any]]:
             f"Config file configuration.yaml does not exist for environment {environment}"
         )
 
-    connections = yaml.safe_load(open(config_file))["connections"]
+    with open(config_file) as connections_file:
+        connections = yaml.safe_load(connections_file)["connections"]
+
     return connections
 
 
