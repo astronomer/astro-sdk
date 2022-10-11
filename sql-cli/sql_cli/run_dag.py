@@ -60,6 +60,12 @@ def run_dag(
         conf=run_conf,
     )
 
+    if conn_file_path or variable_file_path:
+        local_secrets = LocalFilesystemBackend(
+            variables_file_path=variable_file_path, connections_file_path=conn_file_path
+        )
+        secrets_backend_list.insert(0, local_secrets)
+
     tasks = dag.task_dict
     dag.log.debug("starting dagrun")
     # Instead of starting a scheduler, we run the minimal loop possible to check
@@ -74,12 +80,6 @@ def run_dag(
     if conn_file_path or variable_file_path:
         # Remove the local variables we have added to the secrets_backend_list
         secrets_backend_list.pop(0)
-
-    if conn_file_path or variable_file_path:
-        local_secrets = LocalFilesystemBackend(
-            variables_file_path=variable_file_path, connections_file_path=conn_file_path
-        )
-        secrets_backend_list.insert(0, local_secrets)
 
 
 def add_logger_if_needed(dag: DAG, ti: TaskInstance) -> None:

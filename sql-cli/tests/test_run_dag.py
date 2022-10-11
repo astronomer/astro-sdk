@@ -38,3 +38,9 @@ def test_run_dag(caplog):
     dag = get_dag(dag_id="example_dataframe", subdir=f"{CWD}/test_dag")
     run_dag(dag)
     assert "The worst month was 2020-05" in caplog.text
+
+
+def test_run_dag_with_conn_id(caplog):
+    dag = get_dag(dag_id="example_sqlite_load_transform", subdir=f"{CWD}/test_dag")
+    run_dag(dag, conn_file_path=f"{CWD}/test_conn.yaml")
+    assert "top movie:" in caplog.text
