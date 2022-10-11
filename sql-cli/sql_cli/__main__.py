@@ -1,12 +1,12 @@
+import logging
 from pathlib import Path
+from typing import Optional
 
 from rich import print as rprint
 from typer import Typer
-import logging
-from typing import Optional
 
-from sql_cli.connections import validate_connections
 from sql_cli import __version__
+from sql_cli.connections import validate_connections
 from sql_cli.dag_generator import generate_dag
 
 app = Typer(add_completion=False)
