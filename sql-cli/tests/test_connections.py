@@ -1,11 +1,13 @@
+import logging
 import os
 
 import pytest
 
-from sql_cli.connections import _load_yaml_connections, validate_connections
+from sql_cli.connections import SQL_CLI_PROJECT_DIRECTORY, _load_yaml_connections, validate_connections
 
 
 def test_validate_connections(caplog):
+    logging.info("SQL_CLI_PROJECT_DIRECTORY Is %s", SQL_CLI_PROJECT_DIRECTORY)
     os.system("echo 'y' | airflow db reset")
     validate_connections()
 
