@@ -38,6 +38,7 @@ def test(session: nox.Session, airflow) -> None:
     session.run("pip3", "freeze")
     AIRFLOW_HOME = f"~/airflow-{airflow}-{session.python}"
     session.run("airflow", "db", "init", env={"AIRFLOW_HOME": AIRFLOW_HOME})
+    # Since pytest is not installed in the nox session directly, we need to set `external=true`.
     session.run("pytest", *session.posargs, env={"AIRFLOW_HOME": AIRFLOW_HOME}, external=True)
 
 
