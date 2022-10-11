@@ -148,6 +148,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             op_kwargs=self.op_kwargs,
             python_callable=self.python_callable,
             parameters=self.parameters or {},  # type: ignore
+            context=context,
         )
         if first_table:
             self.conn_id = self.conn_id or first_table.conn_id  # type: ignore

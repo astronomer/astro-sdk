@@ -53,3 +53,6 @@ sql-cli/tests/_target/*
 
 # Airflow
 **/.airflowignore
+
+sql-cli/build/
+*.egg-info/

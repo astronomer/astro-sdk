@@ -192,9 +192,6 @@ def test_transform_with_templated_table_name(database_table_fixture, sample_dag)
 )
 def test_transform_with_file(database_table_fixture, sample_dag):
     """Test table creation via select statement in a SQL file"""
-    import pathlib  # skipcq: PYL-W0404
-
-    cwd = pathlib.Path(__file__).parent
     database, imdb_table = database_table_fixture
 
     @aql.dataframe
@@ -204,8 +201,9 @@ def test_transform_with_file(database_table_fixture, sample_dag):
     with sample_dag:
         target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="sqlite_default")
         table_from_query = aql.transform_file(
-            file_path=str(pathlib.Path(cwd).parents[0]) + "/transform/test.sql",
-            parameters={"input_table": imdb_table, "output_table": target_table},
+            file_path="tests/sql/operators/transform/test.sql",
+            parameters={"input_table": imdb_table},
+            op_kwargs={"output_table": target_table},
         )
         validate(table_from_query)
     test_utils.run_dag(sample_dag)
