@@ -1,3 +1,4 @@
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -89,3 +90,11 @@ def sql_files_dag_with_cycle(sql_file_with_cycle):
         start_date=datetime(2022, 10, 4),
         sql_files=[sql_file_with_cycle],
     )
+
+
+@pytest.fixture()
+def empty_cwd(request, monkeypatch):
+    temp_dir = tempfile.TemporaryDirectory()
+    monkeypatch.chdir(temp_dir.name)
+    yield temp_dir.name
+    temp_dir.cleanup()

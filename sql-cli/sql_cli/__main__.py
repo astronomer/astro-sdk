@@ -1,20 +1,18 @@
 import logging
+import os
 from pathlib import Path
 from typing import Optional
 
-from dotenv import load_dotenv
+import typer 
 from rich import print as rprint
-from typer import Typer
 
 from sql_cli import __version__
 from sql_cli.connections import validate_connections
 from sql_cli.dag_generator import generate_dag
+from sql_cli.project import Project
 
-load_dotenv()
-app = Typer(add_completion=False)
 
-for name in logging.root.manager.loggerDict:
-    logging.getLogger(name).setLevel(logging.ERROR)
+app = typer.Typer(add_completion=False)
 
 
 @app.command()
@@ -22,7 +20,7 @@ def version() -> None:
     """
     Print the SQL CLI version.
     """
-    rprint("Astro SQL CLI", __version__)
+    rprint(f"Astro SQL CLI {sql_cli.__version__}")
 
 
 @app.command()
@@ -51,5 +49,20 @@ def validate(environment: str = "default", connection: Optional[str] = None) -> 
     validate_connections(environment=environment, connection_id=connection)
 
 
+@app.command()
+def init(target_dir: Optional[str] = typer.Argument(None)) -> None:
+    """
+    Initialises a SQL CLI project.
+    """
+    if target_dir is None:
+        target_dir = os.getcwd()
+
+    Project.initialise(Path(target_dir))
+    rprint(f"Initialized an Astro SQL project at {target_dir}")
+
+
 if __name__ == "__main__":  # pragma: no cover
-    app()
+    for name in logging.root.manager.loggerDict:
+        logging.getLogger(name).setLevel(logging.ERROR)
+
+   app()
