@@ -2,6 +2,7 @@
 coverage.xml
 .env
 .coverage
+.python-version
 python-sdk/integration-tests/test_data*
 python-sdk/test-connections.yaml
 .idea
