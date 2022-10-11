@@ -1,4 +1,3 @@
-import logging
 from typing import Dict, List, Optional
 
 from airflow.models.taskinstance import TaskInstance
@@ -38,7 +37,9 @@ class PythonSDKExtractor(BaseExtractor):
         """Empty extract implementation for the abstractmethod of the ``BaseExtractor`` class."""
         return None
 
-    def extract_on_complete(self, task_instance: TaskInstance) -> Optional[TaskMetadata]:  # skipcq: PYL-R0201
+    def extract_on_complete(
+        self, task_instance: TaskInstance
+    ) -> Optional[TaskMetadata]:  # skipcq: PYL-R0201, PYL-W0613
         """
         Callback on ``get_openlineage_facets(ti)`` task completion to fetch metadata extraction details that are to be
         pushed to the Lineage server.
