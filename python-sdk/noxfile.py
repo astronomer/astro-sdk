@@ -36,8 +36,9 @@ def test(session: nox.Session, airflow) -> None:
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
     session.run("pip3", "freeze")
-    session.run("airflow", "db", "init")
-    session.run("pytest", *session.posargs)
+    AIRFLOW_HOME = f"~/airflow-{airflow}-{session.python}"
+    session.run("airflow", "db", "init", env={"AIRFLOW_HOME": AIRFLOW_HOME})
+    session.run("pytest", *session.posargs, env={"AIRFLOW_HOME": AIRFLOW_HOME}, external=True)
 
 
 @nox.session(python=["3.8"])
@@ -68,7 +69,7 @@ def test_examples_by_dependency(session: nox.Session, extras):
     session.install("-e", ".[tests]")
     session.run("airflow", "db", "init")
 
-    session.run("pytest", "tests/test_example_dags.py", *pytest_args, *session.posargs)
+    session.run("pytest", "tests/test_example_dags.py", *pytest_args, *session.posargs, external=True)
 
 
 @nox.session()
