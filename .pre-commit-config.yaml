@@ -102,7 +102,7 @@ repos:
       hooks:
       - id: mypy
         name: mypy-python-sdk
-        additional_dependencies: [types-PyYAML, types-attrs, attrs, types-requests]
+        additional_dependencies: [types-PyYAML, types-attrs, attrs, types-requests, types-python-dateutil]
         files: "^python-sdk/"
       - id: mypy
         name: mypy-sql-cli
