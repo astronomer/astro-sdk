@@ -30,7 +30,7 @@ def _load_yaml_connections(environment: str) -> list[dict[str, Any]]:
 def _test_connection(conn_obj: Connection) -> bool:
     """Tests whether connection is established successfully with the given data."""
     try:
-        status, message = conn_obj.test_connection()
+        status, _ = conn_obj.test_connection()
         if not status:
             return False
 
