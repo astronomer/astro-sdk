@@ -1,3 +1,5 @@
+import os
+
 from typer.testing import CliRunner
 
 from sql_cli import __version__
@@ -46,5 +48,6 @@ def test_generate(root_directory, target_directory, dags_directory):
 
 
 def test_validate():
+    os.system("airflow db init")
     result = runner.invoke(app, ["validate"])
     assert result.exit_code == 0
