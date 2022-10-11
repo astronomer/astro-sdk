@@ -1,9 +1,26 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from airflow.models.taskinstance import TaskInstance
 from openlineage.airflow.extractors import TaskMetadata
 from openlineage.airflow.extractors.base import BaseExtractor
 from openlineage.airflow.utils import get_job_name
+from openlineage.client.facet import BaseFacet
+from openlineage.client.run import Dataset as OpenlineageDataset
+import logging
+
+
+class OpenLineageFacets:
+    def __init__(
+            self,
+            inputs: List[OpenlineageDataset],
+            outputs: List[OpenlineageDataset],
+            run_facets: Dict[str, BaseFacet],
+            job_facets: Dict[str, BaseFacet]
+    ):
+        self.inputs = inputs
+        self.outputs = outputs
+        self.run_facets = run_facets
+        self.job_facets = job_facets
 
 
 class PythonSDKExtractor(BaseExtractor):
@@ -22,25 +39,18 @@ class PythonSDKExtractor(BaseExtractor):
         return None
 
     def extract_on_complete(
-        self, task_instance: TaskInstance
+            self, task_instance: TaskInstance
     ) -> Optional[TaskMetadata]:  # skipcq: PYL-R0201
         """
         Callback on ``get_openlineage_facets(ti)`` task completion to fetch metadata extraction details that are to be
         pushed to the Lineage server.
         """
-        self.log.debug("extract_on_complete on")
-        self.log.debug(task_instance)
-        try:
-            input_dataset, output_dataset = self.operator.get_openlineage_facets()
-        except ValueError:
-            return TaskMetadata(
-                name=get_job_name(task=self.operator),
-                inputs=[],
-                outputs=[],
-            )
+        open_lineage_facets:OpenLineageFacets = self.operator.get_openlineage_facets()
 
         return TaskMetadata(
             name=get_job_name(task=self.operator),
-            inputs=input_dataset,
-            outputs=output_dataset,
+            inputs=open_lineage_facets.inputs,
+            outputs=open_lineage_facets.outputs,
+            run_facets=open_lineage_facets.run_facets,
+            job_facets=open_lineage_facets.job_facets
         )
