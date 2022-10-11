@@ -32,9 +32,7 @@ def test(session: nox.Session) -> None:
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
     session.run("pip3", "freeze")
-    session.run(
-        "pytest", *session.posargs, "--cov=sql_cli", "--cov-report=xml", "--cov-branch"
-    )
+    session.run("pytest", *session.posargs, "--cov=sql_cli", "--cov-report=xml", "--cov-branch")
 
 
 @nox.session(python=["3.8"])

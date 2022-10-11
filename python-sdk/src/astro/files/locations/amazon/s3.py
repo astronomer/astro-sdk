@@ -4,6 +4,7 @@ import os
 from urllib.parse import urlparse, urlunparse
 
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+
 from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
 
@@ -37,9 +38,7 @@ class S3Location(BaseFileLocation):
         bucket_name = url.netloc
         prefix = url.path[1:]
         prefixes = self.hook.list_keys(bucket_name=bucket_name, prefix=prefix)
-        paths = [
-            urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in prefixes
-        ]
+        paths = [urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in prefixes]
         return paths
 
     @property

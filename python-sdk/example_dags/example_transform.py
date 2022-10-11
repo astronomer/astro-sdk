@@ -2,6 +2,7 @@ from datetime import datetime
 
 import pandas as pd
 from airflow import DAG
+
 from astro import sql as aql
 from astro.files import File
 from astro.table import Table
@@ -56,9 +57,7 @@ def union_top_and_last(first_table: Table, second_table: Table):  # skipcq: PYL-
 
 # [START transform_example_4]
 @aql.transform
-def union_table_and_dataframe(
-    input_table: Table, input_dataframe: pd.DataFrame  # skipcq: PYL-W0613
-):
+def union_table_and_dataframe(input_table: Table, input_dataframe: pd.DataFrame):  # skipcq: PYL-W0613
     """Union `union_table` table and `input_dataframe` dataframe to create a simple dataset."""
     return """
             SELECT title, rating from {{input_table}}

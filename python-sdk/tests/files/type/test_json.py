@@ -2,11 +2,10 @@ import pathlib
 import tempfile
 
 import pandas as pd
+
 from astro.files.types import JSONFileType
 
-sample_file = pathlib.Path(
-    pathlib.Path(__file__).parent.parent.parent, "data/sample.json"
-)
+sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent.parent, "data/sample.json")
 
 
 def test_read_json_file():

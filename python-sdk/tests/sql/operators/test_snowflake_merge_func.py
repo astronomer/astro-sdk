@@ -1,7 +1,6 @@
 import os
 import unittest
 
-# Import Operator
 from astro.databases import create_database
 from astro.databases.snowflake import SnowflakeDatabase, is_valid_snow_identifier
 from astro.table import Metadata, Table
@@ -30,12 +29,8 @@ class TestSnowflakeMerge(unittest.TestCase):
         )
         self.snowflake_db: SnowflakeDatabase = create_database(conn_id="snowflake_conn")
 
-        self.target_table_full_name = self.snowflake_db.get_table_qualified_name(
-            self.target_table
-        )
-        self.source_table_full_name = self.snowflake_db.get_table_qualified_name(
-            self.source_table
-        )
+        self.target_table_full_name = self.snowflake_db.get_table_qualified_name(self.target_table)
+        self.source_table_full_name = self.snowflake_db.get_table_qualified_name(self.source_table)
 
     def test_merge_func(self):
         sql, parameters = self.snowflake_db._build_merge_sql(
@@ -47,8 +42,7 @@ class TestSnowflakeMerge(unittest.TestCase):
         )
 
         assert (
-            sql
-            == "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
+            sql == "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
             "on Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0) "
             f"when matched then UPDATE SET {self.target_table_name}.sell={self.source_table_name}.sell "
             f"when not matched then insert({self.target_table_name}.sell) values ({self.source_table_name}.sell)"
@@ -74,8 +68,7 @@ class TestSnowflakeMerge(unittest.TestCase):
         )
 
         assert (
-            sql
-            == "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
+            sql == "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
             "on Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0) AND "
             "Identifier(:merge_clause_target_1)=Identifier(:merge_clause_source_1) "
             f"when matched then UPDATE SET {self.target_table_name}.list={self.source_table_name}.list,"
@@ -104,8 +97,7 @@ class TestSnowflakeMerge(unittest.TestCase):
         )
 
         assert (
-            sql
-            == "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
+            sql == "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
             "on Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0) "
             f"when not matched then insert({self.target_table_name}.sell) values ({self.source_table_name}.sell)"
         )

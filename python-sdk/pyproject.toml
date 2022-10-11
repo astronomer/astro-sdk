@@ -129,3 +129,7 @@ warn_redundant_casts = true
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
+
+[tool.black]
+line-length = 110
+target-version = ['py37', 'py38', 'py39', 'py310']

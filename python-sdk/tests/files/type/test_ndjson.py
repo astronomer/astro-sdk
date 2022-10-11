@@ -3,11 +3,10 @@ import pathlib
 import tempfile
 
 import pandas as pd
+
 from astro.files.types import NDJSONFileType
 
-sample_file = pathlib.Path(
-    pathlib.Path(__file__).parent.parent.parent, "data/sample.ndjson"
-)
+sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent.parent, "data/sample.ndjson")
 
 
 def test_read_ndjson_file():
@@ -41,9 +40,7 @@ def test_write_ndjson_file():
 
 
 def test_ndjson_file_nrows():
-    sample_file = pathlib.Path(
-        pathlib.Path(__file__).parent.parent.parent, "data/sample.ndjson"
-    )
+    sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent.parent, "data/sample.ndjson")
 
     file = NDJSONFileType(sample_file)
     # Case 1 : when the file have sufficient rows
@@ -66,18 +63,14 @@ def test_the_order_of_rows_getting_loaded_ndjson_file_nrows():
     """
     Verify that the rows of a dataframe loaded from a file are top n rows.
     """
-    sample_file = pathlib.Path(
-        pathlib.Path(__file__).parent.parent.parent, "data/order_check_nrows.ndjson"
-    )
+    sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent.parent, "data/order_check_nrows.ndjson")
     file = NDJSONFileType(sample_file)
     with open(sample_file) as stream:
         df = file.export_to_dataframe(stream, nrows=5)
         df = df.sort_values(by="id")
         assert (df["id"] == [1, 2, 3, 4, 5]).all()
 
-    sample_file = pathlib.Path(
-        pathlib.Path(__file__).parent.parent.parent, "data/sample.ndjson"
-    )
+    sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent.parent, "data/sample.ndjson")
     file = NDJSONFileType(sample_file)
     with open(sample_file) as stream:
         df = file.export_to_dataframe(stream, nrows=5)

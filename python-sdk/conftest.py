@@ -6,11 +6,11 @@ import uuid
 
 import pytest
 import yaml
-from airflow.models import DAG, Connection, DagRun
-from airflow.models import TaskInstance as TI
+from airflow.models import DAG, Connection, DagRun, TaskInstance as TI
 from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import create_session, provide_session
+
 from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
 from astro.table import MAX_TABLE_NAME_LENGTH, Table
@@ -134,9 +134,7 @@ def database_table_fixture(request):
     conn_id = DATABASE_NAME_TO_CONN_ID[database_name]
     database = create_database(conn_id)
 
-    table = params.get(
-        "table", Table(conn_id=conn_id, metadata=database.default_metadata)
-    )
+    table = params.get("table", Table(conn_id=conn_id, metadata=database.default_metadata))
     table.conn_id = table.conn_id or conn_id
     if table.metadata.is_empty():
         table.metadata = database.default_metadata
@@ -233,9 +231,9 @@ def remote_files_fixture(request):
     if provider == "google":
         for object_prefix in object_prefix_list:
             # if an object doesn't exist, GCSHook.delete fails:
-            hook.exists(  # skipcq: PYL-W0106
+            hook.exists(bucket_name, object_prefix) and hook.delete(  # skipcq: PYL-W0106
                 bucket_name, object_prefix
-            ) and hook.delete(bucket_name, object_prefix)
+            )
     elif provider == "amazon":
         for object_prefix in object_prefix_list:
             hook.delete_objects(bucket_name, object_prefix)
@@ -256,9 +254,9 @@ def _upload_or_delete_remote_file(file_create, object_prefix, provider, source_p
             hook.upload(bucket_name, object_prefix, source_path)
         else:
             # if an object doesn't exist, GCSHook.delete fails:
-            hook.exists(  # skipcq: PYL-W0106
+            hook.exists(bucket_name, object_prefix) and hook.delete(  # skipcq: PYL-W0106
                 bucket_name, object_prefix
-            ) and hook.delete(bucket_name, object_prefix)
+            )
     elif provider == "amazon":
         from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
@@ -320,8 +318,6 @@ def locations_method_map_fixture(request):
             val = synonyms[val]
         return FileLocation(val)
 
-    result = method_map_fixture(
-        method=method, classes=classes, base_path=base_path, get=get_location_type
-    )
+    result = method_map_fixture(method=method, classes=classes, base_path=base_path, get=get_location_type)
     result[FileLocation("https")] = result[FileLocation("http")]
     yield result

@@ -10,6 +10,7 @@ from airflow.models.baseoperator import BaseOperator
 from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstance
 from airflow.utils.state import State
+
 from astro.databases import create_database
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
@@ -75,9 +76,7 @@ class CleanupOperator(AstroSQLBaseOperator):
         self.run_immediately = run_sync_mode
         task_id = task_id or get_unique_task_id("cleanup")
 
-        super().__init__(
-            task_id=task_id, retries=retries, retry_delay=retry_delay, **kwargs
-        )
+        super().__init__(task_id=task_id, retries=retries, retry_delay=retry_delay, **kwargs)
 
     def execute(self, context: Context) -> None:
         self.log.info("Execute Cleanup")
@@ -192,9 +191,7 @@ class CleanupOperator(AstroSQLBaseOperator):
         task_outputs = self.resolve_tables_from_tasks(tasks=tasks, context=context)
         return task_outputs
 
-    def resolve_tables_from_tasks(
-        self, tasks: list[BaseOperator], context: Context
-    ) -> list[BaseTable]:
+    def resolve_tables_from_tasks(self, tasks: list[BaseOperator], context: Context) -> list[BaseTable]:
         """
         For the moment, these are the only two classes that create temporary tables.
         This function allows us to only resolve xcom for those objects
@@ -208,9 +205,7 @@ class CleanupOperator(AstroSQLBaseOperator):
         """
         res = []
         for task in tasks:
-            if isinstance(
-                task, (DataframeOperator, BaseSQLDecoratedOperator, LoadFileOperator)
-            ):
+            if isinstance(task, (DataframeOperator, BaseSQLDecoratedOperator, LoadFileOperator)):
                 try:
                     t = task.output.resolve(context)
                     if isinstance(t, BaseTable):
@@ -224,9 +219,7 @@ class CleanupOperator(AstroSQLBaseOperator):
         return res
 
 
-def cleanup(
-    tables_to_cleanup: list[BaseTable] | None = None, **kwargs
-) -> CleanupOperator:
+def cleanup(tables_to_cleanup: list[BaseTable] | None = None, **kwargs) -> CleanupOperator:
     """
     Clean up temporary tables once either the DAG or upstream tasks are done
 

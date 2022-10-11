@@ -54,9 +54,7 @@ def get_dict_with_module_names_to_dot_notations(
     module_name_to_dot_notation = {}
     for module_path in base_path.parent.rglob("*.py"):
         if module_path.name not in ["__init__.py", "base.py"]:
-            module_name_to_dot_notation[module_path.stem] = get_module_dot_notation(
-                module_path
-            )
+            module_name_to_dot_notation[module_path.stem] = get_module_dot_notation(module_path)
     return module_name_to_dot_notation
 
 

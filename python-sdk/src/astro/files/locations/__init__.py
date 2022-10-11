@@ -6,9 +6,7 @@ from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
 from astro.utils.path import get_class_name, get_dict_with_module_names_to_dot_notations
 
-DEFAULT_CONN_TYPE_TO_MODULE_PATH = get_dict_with_module_names_to_dot_notations(
-    Path(__file__)
-)
+DEFAULT_CONN_TYPE_TO_MODULE_PATH = get_dict_with_module_names_to_dot_notations(Path(__file__))
 DEFAULT_CONN_TYPE_TO_MODULE_PATH["https"] = DEFAULT_CONN_TYPE_TO_MODULE_PATH["http"]
 DEFAULT_CONN_TYPE_TO_MODULE_PATH["gs"] = DEFAULT_CONN_TYPE_TO_MODULE_PATH["gcs"]
 

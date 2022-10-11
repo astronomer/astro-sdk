@@ -44,10 +44,10 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
     ```shell
     export AIRFLOW_HOME=`pwd`
-    export AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
+    export AIRFLOW__CORE__XCOM_BACKEND=astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
     airflow db init
     ```
-   > **Note:** `AIRFLOW__CORE__ENABLE_XCOM_PICKLING` needs to be enabled for `astro-sdk-python`.
+   > **Note:** `AIRFLOW__CORE__ENABLE_XCOM_PICKLING` no longer needs to be enabled for `astro-sdk-python`. This functionality is now deprecated as our custom xcom backend handles serialization.
 
     Currently, custom XCom backends are limited to data types that are json serializable. Since Dataframes are not json serializable, we need to enable XCom pickling to store dataframes.
 

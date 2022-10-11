@@ -13,6 +13,7 @@ from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import TaskInstance
 from airflow.utils import timezone
 from airflow.utils.session import provide_session
+
 from astro.databases import create_database
 from astro.table import Metadata, Table
 
@@ -100,16 +101,12 @@ def profile(func, *args, **kwargs):  # noqa: C901
 
             profile = {
                 "duration": get_load_task_duration(dag=dag),
-                "memory_full_info": subtract(
-                    memory_full_info_after, memory_full_info_before
-                ),
+                "memory_full_info": subtract(memory_full_info_after, memory_full_info_before),
                 "cpu_time": subtract(cpu_time_after, cpu_time_before),
                 "disk_usage": disk_usage_after - disk_usage_before,
             }
             if sys.platform == "linux":
-                profile["io_counters"] = (
-                    subtract(io_counters_after, io_counters_before),
-                )
+                profile["io_counters"] = (subtract(io_counters_after, io_counters_before),)
 
             profile = {**profile, **kwargs, "error": "False", "error_context": None}
 

@@ -3,6 +3,7 @@ from datetime import datetime
 
 import pytest
 from airflow import DAG
+
 from astro.sql import get_value_list
 from astro.table import Metadata, Table, TempTable
 
@@ -126,9 +127,7 @@ def test_table_to_datasets_uri(table, dataset_uri):
 
 def test_table_to_datasets_extra():
     """Verify that extra is set"""
-    table = Table(
-        name="test_table", conn_id="test_conn", metadata=Metadata(schema="schema")
-    )
+    table = Table(name="test_table", conn_id="test_conn", metadata=Metadata(schema="schema"))
     assert table.extra == {}
 
 

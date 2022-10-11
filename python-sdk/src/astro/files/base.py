@@ -6,16 +6,18 @@ from typing import Any
 
 import pandas as pd
 import smart_open
+from airflow.utils.log.logging_mixin import LoggingMixin
+from attr import define, field
+
 from astro import constants
 from astro.airflow.datasets import Dataset
 from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
 from astro.files.types import FileType, create_file_type
-from attr import define, field
 
 
 @define
-class File(Dataset):
+class File(LoggingMixin, Dataset):
     """
     Handle all file operations, and abstract away the details related to location and file types.
     Intended to be used within library.
@@ -30,6 +32,8 @@ class File(Dataset):
     conn_id: str | None = None
     filetype: constants.FileType | None = None
     normalize_config: dict | None = None
+    is_dataframe: bool = False
+    is_bytes: bool = False
 
     uri: str = field(init=False)
     extra: dict | None = field(init=False, factory=dict)
@@ -78,14 +82,15 @@ class File(Dataset):
         """
         return not pathlib.PosixPath(self.path).suffix
 
-    def create_from_dataframe(self, df: pd.DataFrame) -> None:
+    def create_from_dataframe(self, df: pd.DataFrame, store_as_dataframe: bool = True) -> None:
         """Create a file in the desired location using the values of a dataframe.
 
+        :param store_as_dataframe: Whether the data should later be deserialized as a dataframe or as a file containing
+            delimited data (e.g. csv, parquet, etc.).
         :param df: pandas dataframe
         """
-        with smart_open.open(
-            self.path, mode="wb", transport_params=self.location.transport_params
-        ) as stream:
+        self.is_dataframe = store_as_dataframe
+        with smart_open.open(self.path, mode="wb", transport_params=self.location.transport_params) as stream:
             self.type.create_from_dataframe(stream=stream, df=df)
 
     @property
@@ -107,9 +112,7 @@ class File(Dataset):
     def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes."""
         mode = "rb" if self.is_binary() else "r"
-        with smart_open.open(
-            self.path, mode=mode, transport_params=self.location.transport_params
-        ) as stream:
+        with smart_open.open(self.path, mode=mode, transport_params=self.location.transport_params) as stream:
             return self.type.export_to_dataframe(stream, **kwargs)
 
     def _convert_remote_file_to_byte_stream(self) -> io.IOBase:
@@ -125,9 +128,7 @@ class File(Dataset):
 
         mode = "rb" if self.is_binary() else "r"
         remote_obj_buffer = io.BytesIO() if self.is_binary() else io.StringIO()
-        with smart_open.open(
-            self.path, mode=mode, transport_params=self.location.transport_params
-        ) as stream:
+        with smart_open.open(self.path, mode=mode, transport_params=self.location.transport_params) as stream:
             remote_obj_buffer.write(stream.read())
         remote_obj_buffer.seek(0)
         return remote_obj_buffer
@@ -139,9 +140,7 @@ class File(Dataset):
         before exporting to a dataframe. We've found a sizable speed improvement with this optimization.
         """
 
-        return self.type.export_to_dataframe(
-            self._convert_remote_file_to_byte_stream(), **kwargs
-        )
+        return self.type.export_to_dataframe(self._convert_remote_file_to_byte_stream(), **kwargs)
 
     def exists(self) -> bool:
         """Check if the file exists or not"""
@@ -179,6 +178,31 @@ class File(Dataset):
             query=urlencode(extra),
         )
         return new_parsed_url.geturl()
+
+    def to_json(self):
+        self.log.debug("converting file %s into json", self.path)
+        filetype = self.filetype.value if self.filetype else None
+        return {
+            "class": "File",
+            "conn_id": self.conn_id,
+            "path": self.path,
+            "filetype": filetype,
+            "normalize_config": self.normalize_config,
+            "is_dataframe": self.is_dataframe,
+        }
+
+    @classmethod
+    def from_json(cls, serialized_object: dict):
+        filetype = (
+            constants.FileType(serialized_object["filetype"]) if serialized_object.get("filetype") else None
+        )
+        return File(
+            conn_id=serialized_object["conn_id"],
+            path=serialized_object["path"],
+            filetype=filetype,
+            normalize_config=serialized_object["normalize_config"],
+            is_dataframe=serialized_object["is_dataframe"],
+        )
 
 
 def resolve_file_path_pattern(

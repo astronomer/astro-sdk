@@ -6,11 +6,12 @@ from unittest.mock import mock_open, patch
 import pandas as pd
 import pytest
 from airflow import DAG
+from botocore.client import BaseClient
+from google.cloud.storage import Client
+
 from astro import constants
 from astro.constants import SUPPORTED_FILE_TYPES, FileType
 from astro.files import File, get_file_list, resolve_file_path_pattern
-from botocore.client import BaseClient
-from google.cloud.storage import Client
 
 sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent, "data/sample.csv")
 sample_filepaths_per_filetype = [
@@ -90,9 +91,7 @@ def test_exists(mocked_smart_open, files):
     assert files["path"] == args[0]
 
 
-@pytest.mark.parametrize(
-    "type_method_map_fixture", [{"method": "create_from_dataframe"}], indirect=True
-)
+@pytest.mark.parametrize("type_method_map_fixture", [{"method": "create_from_dataframe"}], indirect=True)
 @pytest.mark.parametrize(
     "locations",
     [
@@ -113,9 +112,7 @@ def test_exists(mocked_smart_open, files):
 )
 @pytest.mark.parametrize("filetype", SUPPORTED_FILE_TYPES)
 @patch("astro.files.base.smart_open.open")
-def test_create_from_dataframe(
-    mocked_smart_open, filetype, locations, type_method_map_fixture
-):
+def test_create_from_dataframe(mocked_smart_open, filetype, locations, type_method_map_fixture):
     """Test create_from_dataframe() for all locations and filetypes"""
     data = {"id": [1, 2, 3], "name": ["First", "Second", "Third with unicode पांचाल"]}
     df = pd.DataFrame(data=data)
@@ -128,18 +125,14 @@ def test_create_from_dataframe(
         kwargs = mocked_smart_open.call_args.kwargs
         args = mocked_smart_open.call_args.args
         if kwargs["transport_params"]:
-            assert isinstance(
-                kwargs["transport_params"]["client"], locations["instance"]
-            )
+            assert isinstance(kwargs["transport_params"]["client"], locations["instance"])
         assert path == args[0]
 
         mocked_write.assert_called()
         mocked_write.stop()
 
 
-@pytest.mark.parametrize(
-    "type_method_map_fixture", [{"method": "export_to_dataframe"}], indirect=True
-)
+@pytest.mark.parametrize("type_method_map_fixture", [{"method": "export_to_dataframe"}], indirect=True)
 @pytest.mark.parametrize(
     "locations",
     [
@@ -176,16 +169,12 @@ def test_export_to_dataframe(filetype, locations, type_method_map_fixture):
         kwargs = mocked_smart_open.call_args.kwargs
         args = mocked_smart_open.call_args.args
         if kwargs["transport_params"]:
-            assert isinstance(
-                kwargs["transport_params"]["client"], locations["instance"]
-            )
+            assert isinstance(kwargs["transport_params"]["client"], locations["instance"])
         assert path == args[0]
         mocked_read.assert_called()
 
 
-@pytest.mark.parametrize(
-    "type_method_map_fixture", [{"method": "export_to_dataframe"}], indirect=True
-)
+@pytest.mark.parametrize("type_method_map_fixture", [{"method": "export_to_dataframe"}], indirect=True)
 @pytest.mark.parametrize(
     "locations",
     [
@@ -217,16 +206,12 @@ def test_read_with_explicit_valid_type(filetype, locations, type_method_map_fixt
 
         path = locations["path"]
 
-        File(path=path, filetype=FileType(filetype)).export_to_dataframe(
-            normalize_config=None
-        )
+        File(path=path, filetype=FileType(filetype)).export_to_dataframe(normalize_config=None)
         mocked_smart_open.assert_called()
         kwargs = mocked_smart_open.call_args.kwargs
         args = mocked_smart_open.call_args.args
         if kwargs["transport_params"]:
-            assert isinstance(
-                kwargs["transport_params"]["client"], locations["instance"]
-            )
+            assert isinstance(kwargs["transport_params"]["client"], locations["instance"])
         assert path == args[0]
         mocked_read.assert_called()
 
@@ -317,19 +302,11 @@ def test_file_hash():
             "astro+gs://test_conn@bucket/object/path?filetype=csv",
         ),
         (
-            File(
-                path=str(
-                    pathlib.Path(
-                        pathlib.Path(__file__).parent.parent, "data/sample.csv"
-                    )
-                )
-            ),
+            File(path=str(pathlib.Path(pathlib.Path(__file__).parent.parent, "data/sample.csv"))),
             f"astro+file:{str(pathlib.Path(pathlib.Path(__file__).parent.parent, 'data/sample.csv'))}",
         ),
         (
-            File(
-                path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
-            ),
+            File(path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"),
             "astro+https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv",
         ),
     ],
@@ -369,9 +346,7 @@ def test_smart_open_file_stream_only_conveted_to_BytesIO_buffer_for_parquet(file
      is only applied in case of parquet files
     """
     file = files["path"]
-    _convert_remote_file_to_byte_stream_called = files[
-        "_convert_remote_file_to_byte_stream"
-    ]
+    _convert_remote_file_to_byte_stream_called = files["_convert_remote_file_to_byte_stream"]
     path = str(pathlib.Path(pathlib.Path(__file__).parent.parent, file))
     sample_file_object = File(path)
     with patch(
