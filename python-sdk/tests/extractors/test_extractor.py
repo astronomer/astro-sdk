@@ -19,14 +19,16 @@ INPUT_STATS = [
     OpenlineageDataset(
         namespace=TEST_INPUT_DATASET_NAMESPACE,
         name=TEST_INPUT_DATASET_NAME,
-        facets=InputFileDatasetFacet(
-            file_size=-1,
-            number_of_files=1,
-            file_type=FileType.CSV,
-            description=None,
-            is_pattern=True,
-            files=["gs://astro-sdk/workspace/sample_pattern.csv"],
-        ),
+        facets={
+            "input_file_facet": InputFileDatasetFacet(
+                file_size=-1,
+                number_of_files=1,
+                file_type=FileType.CSV,
+                description=None,
+                is_pattern=True,
+                files=["gs://astro-sdk/workspace/sample_pattern.csv"],
+            )
+        },
     )
 ]
 
@@ -34,15 +36,17 @@ OUTPUT_STATS = [
     OpenlineageDataset(
         namespace=TEST_OUTPUT_DATASET_NAMESPACE,
         name=TEST_OUTPUT_DATASET_NAME,
-        facets=OutputDatabaseDatasetFacet(
-            metadata=Metadata(schema="astro", database=None),
-            columns=[],
-            schema="astro",
-            used_native_path=False,
-            enabled_native_fallback=True,
-            native_support_arguments={},
-            description=None,
-        ),
+        facets={
+            "output_database_facet": OutputDatabaseDatasetFacet(
+                metadata=Metadata(schema="astro", database=None),
+                columns=[],
+                schema="astro",
+                used_native_path=False,
+                enabled_native_fallback=True,
+                native_support_arguments={},
+                description=None,
+            )
+        },
     )
 ]
 

@@ -199,13 +199,15 @@ class LoadFileOperator(AstroSQLBaseOperator):
             OpenlineageDataset(
                 namespace=self.input_file.openlineage_dataset_namespace,
                 name=self.input_file.openlineage_dataset_name,
-                facets=InputFileDatasetFacet(
-                    file_size=self.input_file.size,
-                    is_pattern=self.input_file.is_pattern(),
-                    files=[file.path for file in input_files],
-                    number_of_files=len(input_files),
-                    file_type=self.input_file.type.name,
-                ),
+                facets={
+                    "input_file_facet": InputFileDatasetFacet(
+                        file_size=self.input_file.size,
+                        is_pattern=self.input_file.is_pattern(),
+                        files=[file.path for file in input_files],
+                        number_of_files=len(input_files),
+                        file_type=self.input_file.type.name,
+                    )
+                },
             )
         ]
 
@@ -216,14 +218,16 @@ class LoadFileOperator(AstroSQLBaseOperator):
                 OpenlineageDataset(
                     namespace=output_database.openlineage_dataset_namespace(),
                     name=output_database.openlineage_dataset_name(table=self.output_table),
-                    facets=OutputDatabaseDatasetFacet(
-                        metadata=self.output_table.metadata,
-                        columns=self.output_table.columns,
-                        schema=self.output_table.sqlalchemy_metadata.schema,
-                        used_native_path=self.use_native_support,
-                        enabled_native_fallback=self.enable_native_fallback,
-                        native_support_arguments=self.native_support_kwargs,
-                    ),
+                    facets={
+                        "output_database_facet": OutputDatabaseDatasetFacet(
+                            metadata=self.output_table.metadata,
+                            columns=self.output_table.columns,
+                            schema=self.output_table.sqlalchemy_metadata.schema,
+                            used_native_path=self.use_native_support,
+                            enabled_native_fallback=self.enable_native_fallback,
+                            native_support_arguments=self.native_support_kwargs,
+                        )
+                    },
                 )
             ]
 
