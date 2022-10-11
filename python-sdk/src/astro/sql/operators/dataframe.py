@@ -18,8 +18,8 @@ except ImportError:
 from astro import settings
 from astro.constants import ColumnCapitalization
 from astro.databases import create_database
-from astro.files import File
 from astro.exceptions import IllegalLoadToDatabaseException
+from astro.files import File
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable, Table
 from astro.utils.dataframe import convert_columns_names_capitalization, convert_to_file
@@ -174,9 +174,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             columns_names_capitalization=self.columns_names_capitalization,
         )
         if self.output_table:
-            self.log.debug(
-                "Output table found, converting function output to SQL table"
-            )
+            self.log.debug("Output table found, converting function output to SQL table")
             if not isinstance(function_output, pd.DataFrame):
                 raise ValueError(
                     "Astro can only turn a single dataframe into a table. Please change your "
@@ -192,17 +190,12 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             )
             return self.output_table
         else:
-            if (
-                not settings.IS_CUSTOM_XCOM_BACKEND
-                and not settings.ALLOW_UNSAFE_DF_STORAGE
-            ):
+            if not settings.IS_CUSTOM_XCOM_BACKEND and not settings.ALLOW_UNSAFE_DF_STORAGE:
                 raise IllegalLoadToDatabaseException()
             return function_output
 
     @staticmethod
-    def _convert_column_capitalization_for_output(
-        function_output, columns_names_capitalization
-    ):
+    def _convert_column_capitalization_for_output(function_output, columns_names_capitalization):
         """Handles column capitalization for single outputs, lists, and dictionaries"""
         if isinstance(function_output, (list, tuple)):
             function_output = [

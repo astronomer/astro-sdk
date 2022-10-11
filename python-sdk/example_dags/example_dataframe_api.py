@@ -5,6 +5,7 @@ from typing import List
 import pandas as pd
 import requests
 from airflow import DAG
+
 from astro import sql as aql
 
 START_DATE = datetime(2000, 1, 1)
@@ -17,9 +18,7 @@ API hooks. By requesting the expected data and returning it as a dataframe, our 
 
 
 def _load_covid_data():
-    raw_data = requests.get(
-        "https://data.covid19india.org/csv/latest/case_time_series.csv"
-    )
+    raw_data = requests.get("https://data.covid19india.org/csv/latest/case_time_series.csv")
     str_reader = StringIO()
     str_reader.write(raw_data.text)
     str_reader.seek(0)
@@ -34,9 +33,7 @@ def load_and_group_covid_data():
     :return: A list of dataframes for each month of the pandemic
     """
     covid_df = _load_covid_data()
-    covid_df["Date_YMD"] = covid_df["Date_YMD"].apply(
-        lambda d: datetime.strptime(d, "%Y-%m-%d")
-    )
+    covid_df["Date_YMD"] = covid_df["Date_YMD"].apply(lambda d: datetime.strptime(d, "%Y-%m-%d"))
     return list(covid_df.groupby(covid_df.Date_YMD.dt.month))
 
 

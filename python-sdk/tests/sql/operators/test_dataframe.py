@@ -228,9 +228,7 @@ test_df = pandas.DataFrame({"numbers": [1, 2, 3], "Colors": ["red", "white", "bl
 test_df_2 = pandas.DataFrame({"Numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
 
 
-def _validate_dataframe(
-    original: pandas.DataFrame, df: pandas.DataFrame, capital_settings: dict
-):
+def _validate_dataframe(original: pandas.DataFrame, df: pandas.DataFrame, capital_settings: dict):
     cols = list(df)
     assert len(df) == len(original)
     assert all(getattr(x, capital_settings["function"]) for x in cols)
