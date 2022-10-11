@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any
 
 import yaml
@@ -16,6 +17,9 @@ from sql_cli.settings import SQL_CLI_PROJECT_DIRECTORY
 def _load_yaml_connections(environment: str) -> list[dict[str, Any]]:
     """Gets the configuration yaml for the given environment and loads the connections from it into a dictionary"""
     config_file = SQL_CLI_PROJECT_DIRECTORY / "config" / environment / "configuration.yaml"
+    logging.info("Config file %s", config_file)
+    logging.info(os.system("echo $PWD"))
+    logging.info(os.system("echo $PYTHONPATH"))
     if not config_file.exists():
         raise FileNotFoundError(
             f"Config file configuration.yaml does not exist for environment {environment}"
