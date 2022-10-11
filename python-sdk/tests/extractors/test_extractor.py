@@ -4,6 +4,7 @@ from openlineage.client.run import Dataset as OpenlineageDataset
 
 from astro.constants import FileType
 from astro.extractors.extractor import PythonSDKExtractor
+from astro.extractors.facets import InputDatasetFacet, OutputDatasetFacet
 from astro.files import File
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import Metadata, Table
@@ -18,26 +19,30 @@ INPUT_STATS = [
     OpenlineageDataset(
         namespace=TEST_INPUT_DATASET_NAMESPACE,
         name=TEST_INPUT_DATASET_NAME,
-        facets={
-            "file_size": -1,
-            "is_pattern": True,
-            "files": ["gs://astro-sdk/workspace/sample_pattern.csv"],
-            "number_of_files": 1,
-        },
+        facets=InputDatasetFacet(
+            file_size=-1,
+            number_of_files=1,
+            file_type=FileType.CSV,
+            description=None,
+            is_pattern=True,
+            files=["gs://astro-sdk/workspace/sample_pattern.csv"],
+        ),
     )
 ]
-
 
 OUTPUT_STATS = [
     OpenlineageDataset(
         namespace=TEST_OUTPUT_DATASET_NAMESPACE,
         name=TEST_OUTPUT_DATASET_NAME,
-        facets={
-            "metadata": Metadata(schema="astro", database=None),
-            "columns": [],
-            "schema": "astro",
-            "used_native_path": False,
-        },
+        facets=OutputDatasetFacet(
+            metadata=Metadata(schema="astro", database=None),
+            columns=[],
+            schema="astro",
+            used_native_path=False,
+            enabled_native_fallback=True,
+            native_support_arguments={},
+            description=None,
+        ),
     )
 ]
 
@@ -52,7 +57,7 @@ def test_python_sdk_load_file_extract_on_complete():
     load_file_operator = LoadFileOperator(
         task_id=task_id,
         input_file=File(
-            "gs://astro-sdk/workspace/sample_pattern",
+            TEST_FILE_LOCATION,
             conn_id="bigquery",
             filetype=FileType.CSV,
         ),

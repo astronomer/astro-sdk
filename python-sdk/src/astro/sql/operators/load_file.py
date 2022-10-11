@@ -13,6 +13,7 @@ from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistS
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.extractors.extractor import OpenLineageFacets
+from astro.extractors.facets import InputDatasetFacet, OutputDatasetFacet
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
@@ -198,12 +199,13 @@ class LoadFileOperator(AstroSQLBaseOperator):
             OpenlineageDataset(
                 namespace=self.input_file.openlineage_dataset_namespace,
                 name=self.input_file.openlineage_dataset_name,
-                facets={
-                    "file_size": self.input_file.size,
-                    "is_pattern": self.input_file.is_pattern(),
-                    "files": [file.path for file in input_files],
-                    "number_of_files": len(input_files),
-                },
+                facets=InputDatasetFacet(
+                    file_size=self.input_file.size,
+                    is_pattern=self.input_file.is_pattern(),
+                    files=[file.path for file in input_files],
+                    number_of_files=len(input_files),
+                    file_type=self.input_file.type.name,
+                ),
             )
         ]
 
@@ -214,12 +216,14 @@ class LoadFileOperator(AstroSQLBaseOperator):
                 OpenlineageDataset(
                     namespace=output_database.openlineage_dataset_namespace(),
                     name=output_database.openlineage_dataset_name(table=self.output_table),
-                    facets={
-                        "metadata": self.output_table.metadata,
-                        "columns": self.output_table.columns,
-                        "schema": self.output_table.sqlalchemy_metadata.schema,
-                        "used_native_path": self.use_native_support,
-                    },
+                    facets=OutputDatasetFacet(
+                        metadata=self.output_table.metadata,
+                        columns=self.output_table.columns,
+                        schema=self.output_table.sqlalchemy_metadata.schema,
+                        used_native_path=self.use_native_support,
+                        enabled_native_fallback=self.enable_native_fallback,
+                        native_support_arguments=self.native_support_kwargs,
+                    ),
                 )
             ]
 
