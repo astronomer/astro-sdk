@@ -207,18 +207,21 @@ class LoadFileOperator(AstroSQLBaseOperator):
             )
         ]
 
-        output_database = create_database(self.output_table.conn_id)
-        output_dataset: list[OpenlineageDataset] = [
-            OpenlineageDataset(
-                namespace=output_database.openlineage_dataset_namespace(),
-                name=output_database.openlineage_dataset_name(table=self.output_table),
-                facets={
-                    "metadata": self.output_table.metadata,
-                    "columns": self.output_table.columns,
-                    "schema": self.output_table.sqlalchemy_metadata.schema,
-                },
-            )
-        ]
+        output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
+        if self.output_table:
+            output_database = create_database(self.output_table.conn_id)
+            output_dataset = [
+                OpenlineageDataset(
+                    namespace=output_database.openlineage_dataset_namespace(),
+                    name=output_database.openlineage_dataset_name(table=self.output_table),
+                    facets={
+                        "metadata": self.output_table.metadata,
+                        "columns": self.output_table.columns,
+                        "schema": self.output_table.sqlalchemy_metadata.schema,
+                        "used_native_path": self.use_native_support,
+                    },
+                )
+            ]
 
         run_facets: dict[str, BaseFacet] = {}
         job_facets: dict[str, BaseFacet] = {}
