@@ -2,6 +2,7 @@ from pathlib import Path
 
 from rich import print as rprint
 from typer import Typer
+import logging
 from typing import Optional
 
 from sql_cli.connections import validate_connections
@@ -9,6 +10,10 @@ from sql_cli import __version__
 from sql_cli.dag_generator import generate_dag
 
 app = Typer(add_completion=False)
+
+NON_SQL_CLI_LOGGERS = [logging.getLogger(name) for name in logging.root.manager.loggerDict]
+for logger in NON_SQL_CLI_LOGGERS:
+    logger.setLevel(logging.ERROR)
 
 
 @app.command()

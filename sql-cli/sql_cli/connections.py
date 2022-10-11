@@ -24,41 +24,36 @@ def _load_yaml_connections(environment: str) -> list[dict[str, Any]]:
     return connections
 
 
-def _test_connection(conn_obj: Connection, environment: str) -> bool:
+def _test_connection(conn_obj: Connection) -> bool:
     """Tests whether connection is established successfully with the given data."""
-    conn_id = conn_obj.conn_id
     try:
         status, message = conn_obj.test_connection()
         if not status:
-            logging.info(
-                "Connection %s failed in %s environment with error %s",
-                conn_id,
-                environment,
-                message,
-            )
             return False
-        logging.info("Connection %s tested successfully in %s environment", conn_id, environment)
+
         return True
     except ValidationError as err:
         raise BadRequest(detail=str(err.messages))
 
 
-def _create_or_replace_connection(conn_obj: Connection, environment: str) -> None:
+def _create_or_replace_connection(conn_obj: Connection) -> str:
     """Creates a new or replaces existing connection in the Airflow DB with the given connection object."""
     conn_id = conn_obj.conn_id
+    connection_replaced = False
     with create_session() as session:
         db_connection = session.query(Connection).filter_by(conn_id=conn_id).one_or_none()
         if db_connection:
             session.delete(db_connection)
             session.commit()
-            logging.info(
-                "Existing connection %s deleted successfully in %s environment",
-                conn_id,
-                environment,
-            )
+            connection_replaced = True
         session.add(conn_obj)
         session.commit()
-        logging.info("Connection %s added successfully in %s environment", conn_id, environment)
+
+    if connection_replaced:
+        log = "Validating connection %25s PASSED and REPLACED\n" % conn_id
+    else:
+        log = "Validating connection %25s PASSED and ADDED\n" % conn_id
+    return log
 
 
 def validate_connections(environment: str = "default", connection: str | None = None) -> None:
@@ -68,6 +63,7 @@ def validate_connections(environment: str = "default", connection: str | None = 
     """
     config_file_contains_connection = False
     connections = _load_yaml_connections(environment)
+    logs = f"\nValidating connection(s) for environment '{environment}'\n"
     for conn in connections:
         conn_id = conn["conn_id"]
         conn["connection_id"] = conn_id
@@ -79,10 +75,15 @@ def validate_connections(environment: str = "default", connection: str | None = 
             config_file_contains_connection = True
         conn_obj = Connection(**data)
 
-        if not _test_connection(conn_obj, environment):
+        log = _create_or_replace_connection(conn_obj)
+
+        if not _test_connection(conn_obj):
+            logs += "Validating connection %25s FAILED\n" % conn_id
             continue
 
-        _create_or_replace_connection(conn_obj, environment)
+        logs += log
+
+    logging.info(logs)
 
     if connection and not config_file_contains_connection:
         logging.info("Config file does not contain given connection %s", connection)
