@@ -190,7 +190,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             )
             return self.output_table
         else:
-            if not settings.IS_CUSTOM_XCOM_BACKEND and not settings.ALLOW_UNSAFE_DF_STORAGE:
+            if not settings.IS_CUSTOM_XCOM_BACKEND and not settings.STORE_DATA_LOCAL_DEV:
                 raise IllegalLoadToDatabaseException()
             return function_output
 
