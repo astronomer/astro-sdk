@@ -1,8 +1,4 @@
-from astro.constants import (
-    SUPPORTED_DATABASES,
-    SUPPORTED_FILE_LOCATIONS,
-    SUPPORTED_FILE_TYPES,
-)
+from astro.constants import SUPPORTED_DATABASES, SUPPORTED_FILE_LOCATIONS, SUPPORTED_FILE_TYPES
 
 
 def test_supported_file_locations():

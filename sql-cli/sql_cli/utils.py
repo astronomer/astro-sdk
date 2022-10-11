@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from jinja2.environment import Environment
 from jinja2.loaders import FileSystemLoader
@@ -26,7 +27,7 @@ def find_template_variables(file_path: Path) -> set[str]:
     return find_undeclared_variables(parsed_content)  # type: ignore
 
 
-def render_jinja(context: dict, output_file: Path) -> None:
+def render_jinja(context: dict[str, Any], output_file: Path) -> None:
     """
     Render the context to a file.
 

@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 import pandas as pd
 import pytest
 import sqlalchemy
+
 from astro.constants import Database, FileType
 from astro.databases import create_database
 from astro.databases.aws.redshift import RedshiftDatabase
@@ -79,9 +80,7 @@ def test_inexistent_table_returns_false_on_table_exists_check():
                 metadata=Metadata(schema=SCHEMA),
                 columns=[
                     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
-                    sqlalchemy.Column(
-                        "name", sqlalchemy.String(60), nullable=False, key="name"
-                    ),
+                    sqlalchemy.Column("name", sqlalchemy.String(60), nullable=False, key="name"),
                 ],
             ),
         }
@@ -93,9 +92,7 @@ def test_redshift_create_table_with_columns(database_table_fixture):
     """Test table creation with columns data"""
     database, table = database_table_fixture
 
-    statement = (
-        f"SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name='{table.name}'"
-    )
+    statement = f"SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name='{table.name}'"
     response = database.run_sql(statement)
     assert response.first() is None
 
@@ -252,9 +249,7 @@ def test_export_table_to_file_overrides_existing_file(database_table_fixture):
     """
     filepath = "/tmp/file_to_override.csv"
 
-    previous_dataframe = pd.DataFrame(
-        [{"id": 1, "name": "xyz"}, {"id": 2, "name": "abc"}]
-    )
+    previous_dataframe = pd.DataFrame([{"id": 1, "name": "xyz"}, {"id": 2, "name": "abc"}])
     previous_dataframe.to_csv(filepath)
 
     df = test_utils.load_to_dataframe(filepath, "csv").sort_values(by="id")
@@ -323,9 +318,7 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     indirect=True,
     ids=["amazon_s3"],
 )
-def test_export_table_to_file_in_the_cloud(
-    database_table_fixture, remote_files_fixture
-):
+def test_export_table_to_file_in_the_cloud(database_table_fixture, remote_files_fixture):
     """Test export_table_to_file_file() where end file location is in cloud object stores"""
     object_path = remote_files_fixture[0]
     database, populated_table = database_table_fixture

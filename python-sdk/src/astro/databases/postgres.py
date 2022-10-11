@@ -7,12 +7,13 @@ from contextlib import closing
 import pandas as pd
 import sqlalchemy
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+from psycopg2 import sql as postgres_sql
+
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.settings import POSTGRES_SCHEMA
 from astro.table import BaseTable, Metadata
-from psycopg2 import sql as postgres_sql
 
 DEFAULT_CONN_ID = PostgresHook.default_conn_name
 
@@ -157,7 +158,9 @@ class PostgresDatabase(BaseDatabase):
             schema = table.metadata.schema
             return (schema, table.name) if schema else (table.name,)
 
-        statement = "INSERT INTO {target_table} ({target_columns}) SELECT {source_columns} FROM {source_table}"
+        statement = (
+            "INSERT INTO {target_table} ({target_columns}) SELECT {source_columns} FROM {source_table}"
+        )
 
         source_columns = list(source_to_target_columns_map.keys())
         target_columns = list(source_to_target_columns_map.values())

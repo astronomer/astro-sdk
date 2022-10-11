@@ -6,6 +6,8 @@ from typing import Any, cast
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
+from sqlalchemy.sql.functions import Function
+
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
@@ -13,7 +15,6 @@ from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
 from astro.table import BaseTable, Table
 from astro.utils.table import find_first_table
 from astro.utils.typing_compat import Context
-from sqlalchemy.sql.functions import Function
 
 
 class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
@@ -103,9 +104,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         the output table with necessary metadata.
         """
         self.output_table.conn_id = self.output_table.conn_id or self.conn_id
-        self.output_table = self.database_impl.populate_table_metadata(
-            self.output_table
-        )
+        self.output_table = self.database_impl.populate_table_metadata(self.output_table)
         self.log.info("Returning table %s", self.output_table)
 
     def read_sql_from_function(self) -> None:
@@ -169,9 +168,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                 (
                     jinja_table_identifier,
                     jinja_table_parameter_value,
-                ) = self.database_impl.get_sqlalchemy_template_table_identifier_and_parameter(
-                    v, k
-                )
+                ) = self.database_impl.get_sqlalchemy_template_table_identifier_and_parameter(v, k)
                 context[k] = jinja_table_identifier
                 self.parameters[k] = jinja_table_parameter_value
             else:
@@ -182,9 +179,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             self.sql = self.render_template(self.sql, context)
 
 
-def load_op_arg_dataframes_into_sql(
-    conn_id: str, op_args: tuple, target_table: BaseTable
-) -> tuple:
+def load_op_arg_dataframes_into_sql(conn_id: str, op_args: tuple, target_table: BaseTable) -> tuple:
     """
     Identify dataframes in op_args and load them to the table.
 
@@ -197,9 +192,7 @@ def load_op_arg_dataframes_into_sql(
     database = create_database(conn_id=conn_id)
     for arg in op_args:
         if isinstance(arg, pd.DataFrame):
-            database.load_pandas_dataframe_to_table(
-                source_dataframe=arg, target_table=target_table
-            )
+            database.load_pandas_dataframe_to_table(source_dataframe=arg, target_table=target_table)
             final_args.append(target_table)
         elif isinstance(arg, BaseTable):
             arg = database.populate_table_metadata(arg)
@@ -209,9 +202,7 @@ def load_op_arg_dataframes_into_sql(
     return tuple(final_args)
 
 
-def load_op_kwarg_dataframes_into_sql(
-    conn_id: str, op_kwargs: dict, target_table: BaseTable
-) -> dict:
+def load_op_kwarg_dataframes_into_sql(conn_id: str, op_kwargs: dict, target_table: BaseTable) -> dict:
     """
     Identify dataframes in op_kwargs and load them to a table.
 
@@ -225,9 +216,7 @@ def load_op_kwarg_dataframes_into_sql(
     for key, value in op_kwargs.items():
         if isinstance(value, pd.DataFrame):
             df_table = cast(BaseTable, target_table.create_similar_table())
-            database.load_pandas_dataframe_to_table(
-                source_dataframe=value, target_table=df_table
-            )
+            database.load_pandas_dataframe_to_table(source_dataframe=value, target_table=df_table)
             final_kwargs[key] = df_table
         elif isinstance(value, BaseTable):
             value = database.populate_table_metadata(value)

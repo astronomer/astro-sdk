@@ -7,9 +7,7 @@ from astro.utils.path import get_class_name, get_dict_with_module_names_to_dot_n
 if TYPE_CHECKING:
     from astro.databases.base import BaseDatabase
 
-DEFAULT_CONN_TYPE_TO_MODULE_PATH = get_dict_with_module_names_to_dot_notations(
-    Path(__file__)
-)
+DEFAULT_CONN_TYPE_TO_MODULE_PATH = get_dict_with_module_names_to_dot_notations(Path(__file__))
 CUSTOM_CONN_TYPE_TO_MODULE_PATH = {
     "gcpbigquery": DEFAULT_CONN_TYPE_TO_MODULE_PATH["bigquery"],
     "google_cloud_platform": DEFAULT_CONN_TYPE_TO_MODULE_PATH["bigquery"],

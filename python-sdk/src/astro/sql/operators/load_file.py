@@ -5,15 +5,15 @@ from typing import Any
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
-from astro import settings
+
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
-from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
-from astro.table import BaseTable, Table
+from astro.table import BaseTable
+from astro.utils.dataframe import convert_to_file
 from astro.utils.typing_compat import Context
 
 
@@ -69,7 +69,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         self.columns_names_capitalization = columns_names_capitalization
         self.enable_native_fallback = enable_native_fallback
 
-    def execute(self, context: Context) -> Table | pd.DataFrame:  # skipcq: PYL-W0613
+    def execute(self, context: Context) -> BaseTable | File:  # skipcq: PYL-W0613
         """
         Load an existing dataset from a supported file into a SQL table or a Dataframe.
         """
@@ -78,18 +78,13 @@ class LoadFileOperator(AstroSQLBaseOperator):
 
         return self.load_data(input_file=self.input_file)
 
-    def load_data(self, input_file: File) -> Table | pd.DataFrame:
+    def load_data(self, input_file: File) -> BaseTable | File:
 
         self.log.info("Loading %s into %s ...", self.input_file.path, self.output_table)
         if self.output_table:
             return self.load_data_to_table(input_file)
         else:
-            if (
-                not settings.IS_CUSTOM_XCOM_BACKEND
-                and not settings.ALLOW_UNSAFE_DF_STORAGE
-            ):
-                raise IllegalLoadToDatabaseException()
-            return self.load_data_to_dataframe(input_file)
+            return convert_to_file(self.load_data_to_dataframe(input_file))
 
     def load_data_to_table(self, input_file: File) -> BaseTable:
         """
@@ -97,9 +92,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         Infers SQL database type based on connection then loads table to db.
         """
         if not isinstance(self.output_table, BaseTable):
-            raise ValueError(
-                "Please pass a valid Table instance in 'output_table' parameter"
-            )
+            raise ValueError("Please pass a valid Table instance in 'output_table' parameter")
         database = create_database(self.output_table.conn_id)
         self.output_table = database.populate_table_metadata(self.output_table)
         normalize_config = self._populate_normalize_config(
@@ -142,9 +135,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
                     ]
                 )
             else:
-                df = file.export_to_dataframe(
-                    columns_names_capitalization=self.columns_names_capitalization
-                )
+                df = file.export_to_dataframe(columns_names_capitalization=self.columns_names_capitalization)
 
         self.log.info("Completed loading the data into dataframe.")
         return df
@@ -185,9 +176,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         normalize_config["record_prefix"] = replace_illegal_columns_chars(
             normalize_config["record_prefix"], database
         )
-        normalize_config["sep"] = replace_illegal_columns_chars(
-            normalize_config["sep"], database
-        )
+        normalize_config["sep"] = replace_illegal_columns_chars(normalize_config["sep"], database)
 
         return normalize_config
 

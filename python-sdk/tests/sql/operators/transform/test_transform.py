@@ -3,6 +3,7 @@ import pathlib
 import pandas as pd
 import pytest
 from airflow.decorators import task
+
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
@@ -40,9 +41,7 @@ def test_dataframe_transform(database_table_fixture, sample_dag):
     def validate_dataframe(df: pd.DataFrame):
         df.columns = df.columns.str.lower()
         df = df.sort_values(by=df.columns.tolist()).reset_index(drop=True)
-        assert df.equals(
-            pd.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
-        )
+        assert df.equals(pd.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}))
 
     with sample_dag:
         my_df = get_dataframe(output_table=test_table)
@@ -109,7 +108,13 @@ def test_raw_sql(database_table_fixture, sample_dag):
         return "SELECT * FROM {{my_input_table}} LIMIT {{num_rows}}"
 
     @task
-    def validate_raw_sql(cur):
+    def validate_raw_sql(cur: pd.DataFrame):
+        from sqlalchemy.engine.row import LegacyRow
+
+        # Note: It's a broken feature on the main branch that this is return in a list of lists. Problem reported here:
+        # https://github.com/astronomer/astro-sdk/issues/1035
+        for c in cur[0]:
+            assert isinstance(c, LegacyRow)
         print(cur)
 
     with sample_dag:
@@ -211,9 +216,7 @@ def test_transform_with_file(database_table_fixture, sample_dag):
     assert not database.table_exists(expected_target_table)
 
 
-@pytest.mark.skipif(
-    not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
-)
+@pytest.mark.skipif(not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
 def test_inlets_outlets_supported_ds():
     """Test Datasets are set as inlets and outlets"""
     imdb_table = (Table(name="imdb", conn_id="sqlite_default"),)
@@ -227,9 +230,7 @@ def test_inlets_outlets_supported_ds():
     assert task.operator.outlets == [output_table]
 
 
-@pytest.mark.skipif(
-    DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
-)
+@pytest.mark.skipif(DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
 def test_inlets_outlets_non_supported_ds():
     """Test inlets and outlets are not set if Datasets are not supported"""
     imdb_table = (Table(name="imdb", conn_id="sqlite_default"),)

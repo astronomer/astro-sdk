@@ -2,11 +2,12 @@ import pathlib
 from datetime import datetime, timedelta
 
 from airflow.models import DAG
+from pandas import DataFrame
+from sqlalchemy import Column, types
+
 from astro import sql as aql
 from astro.files import File
 from astro.table import Metadata, Table
-from pandas import DataFrame
-from sqlalchemy import Column, types
 
 CWD = pathlib.Path(__file__).parent
 DATA_DIR = str(CWD) + "/../tests/data/"

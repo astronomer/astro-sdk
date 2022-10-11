@@ -7,23 +7,16 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 import sqlalchemy
+from sqlalchemy.exc import ProgrammingError
+
 from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
-from astro.databases.snowflake import (
-    SnowflakeDatabase,
-    SnowflakeFileFormat,
-    SnowflakeStage,
-)
+from astro.databases.snowflake import SnowflakeDatabase, SnowflakeFileFormat, SnowflakeStage
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File
-from astro.settings import (
-    SCHEMA,
-    SNOWFLAKE_STORAGE_INTEGRATION_AMAZON,
-    SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE,
-)
+from astro.settings import SCHEMA, SNOWFLAKE_STORAGE_INTEGRATION_AMAZON, SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE
 from astro.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
-from sqlalchemy.exc import ProgrammingError
 from tests.sql.operators import utils as test_utils
 
 DEFAULT_CONN_ID = "snowflake_default"
@@ -34,12 +27,8 @@ CWD = pathlib.Path(__file__).parent
 TEST_TABLE = Table()
 
 
-SNOWFLAKE_STORAGE_INTEGRATION_AMAZON = (
-    SNOWFLAKE_STORAGE_INTEGRATION_AMAZON or "aws_int_python_sdk"
-)
-SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE = (
-    SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE or "gcs_int_python_sdk"
-)
+SNOWFLAKE_STORAGE_INTEGRATION_AMAZON = SNOWFLAKE_STORAGE_INTEGRATION_AMAZON or "aws_int_python_sdk"
+SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE = SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE or "gcs_int_python_sdk"
 
 
 @pytest.mark.parametrize("conn_id", SUPPORTED_CONN_IDS)
@@ -76,9 +65,7 @@ def test_table_exists_raises_exception():
                 metadata=Metadata(schema=SCHEMA),
                 columns=[
                     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
-                    sqlalchemy.Column(
-                        "name", sqlalchemy.String(60), nullable=False, key="name"
-                    ),
+                    sqlalchemy.Column("name", sqlalchemy.String(60), nullable=False, key="name"),
                 ],
             ),
         }
@@ -211,15 +198,11 @@ def test_if_exist_param_of__load_pandas_dataframe_to_table(database_table_fixtur
 
     with mock.patch("snowflake.connector.pandas_tools.write_pandas"):
         with mock.patch("astro.databases.base.BaseDatabase.create_table") as method:
-            database.load_pandas_dataframe_to_table(
-                pandas_dataframe, table, if_exists="replace"
-            )
+            database.load_pandas_dataframe_to_table(pandas_dataframe, table, if_exists="replace")
             method.assert_called_with(table, dataframe=pandas_dataframe)
 
         with mock.patch("astro.databases.base.BaseDatabase.create_table") as method:
-            database.load_pandas_dataframe_to_table(
-                pandas_dataframe, table, if_exists="append"
-            )
+            database.load_pandas_dataframe_to_table(pandas_dataframe, table, if_exists="append")
             assert not method.called
 
 
@@ -241,9 +224,7 @@ def test_load_file_to_table(database_table_fixture):
     filepath = str(pathlib.Path(CWD.parent, "data/sub_folder/"))
     database.load_file_to_table(File(filepath, filetype=FileType.CSV), target_table, {})
 
-    df = database.hook.get_pandas_df(
-        f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
-    )
+    df = database.hook.get_pandas_df(f"SELECT * FROM {database.get_table_qualified_name(target_table)}")
     assert len(df) == 3
     expected = pd.DataFrame(
         [
@@ -276,9 +257,7 @@ def test_load_file_from_cloud_to_table(database_table_fixture):
         {},
     )
 
-    df = database.hook.get_pandas_df(
-        f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
-    )
+    df = database.hook.get_pandas_df(f"SELECT * FROM {database.get_table_qualified_name(target_table)}")
     assert len(df) == 3
     expected = pd.DataFrame(
         [
@@ -343,9 +322,7 @@ def test_build_merge_sql(mock_is_valid_snow_identifier, database_table_fixture):
     database, target_table = database_table_fixture
     with pytest.raises(DatabaseCustomError):
         database._build_merge_sql(
-            source_table=Table(
-                name="source_test_table", metadata=Metadata(schema=SCHEMA)
-            ),
+            source_table=Table(name="source_test_table", metadata=Metadata(schema=SCHEMA)),
             target_table=target_table,
             source_to_target_columns_map={"list": "val"},
             target_conflict_columns=["target"],
@@ -462,9 +439,7 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     indirect=True,
     ids=["google"],
 )
-def test_export_table_to_file_in_the_cloud(
-    database_table_fixture, remote_files_fixture
-):
+def test_export_table_to_file_in_the_cloud(database_table_fixture, remote_files_fixture):
     """Test export_table_to_file_file() where end file location is in cloud object stores"""
     object_path = remote_files_fixture[0]
     database, populated_table = database_table_fixture
@@ -506,15 +481,11 @@ def test_create_table_from_select_statement(database_table_fixture):
     """Test table creation via select statement"""
     database, original_table = database_table_fixture
 
-    statement = "SELECT * FROM {} WHERE id = 1;".format(
-        database.get_table_qualified_name(original_table)
-    )
+    statement = f"SELECT * FROM {database.get_table_qualified_name(original_table)} WHERE id = 1;"
     target_table = Table(metadata=Metadata(schema=SCHEMA))
     database.create_table_from_select_statement(statement, target_table)
 
-    df = database.hook.get_pandas_df(
-        f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
-    )
+    df = database.hook.get_pandas_df(f"SELECT * FROM {database.get_table_qualified_name(target_table)}")
     assert len(df) == 1
     expected = pd.DataFrame([{"id": 1, "name": "First"}])
     test_utils.assert_dataframes_are_equal(df, expected)
@@ -568,9 +539,7 @@ def test_create_stage_succeeds_with_storage_integration(remote_files_fixture):
         storage_integration = SNOWFLAKE_STORAGE_INTEGRATION_AMAZON
 
     database = SnowflakeDatabase(conn_id=CUSTOM_CONN_ID)
-    stage = database.create_stage(
-        file=file_fixture, storage_integration=storage_integration
-    )
+    stage = database.create_stage(file=file_fixture, storage_integration=storage_integration)
     assert database.stage_exists(stage)
     database.drop_stage(stage)
 
@@ -596,9 +565,7 @@ def test_create_stage_google_fails_due_to_no_storage_integration():
     database = SnowflakeDatabase(conn_id="fake-conn")
     with pytest.raises(ValueError) as exc_info:
         database.create_stage(file=File("gs://some-bucket/some-file.csv"))
-    expected_msg = (
-        "In order to create an stage for GCS, `storage_integration` is required."
-    )
+    expected_msg = "In order to create an stage for GCS, `storage_integration` is required."
     assert exc_info.match(expected_msg)
 
 
@@ -615,9 +582,7 @@ def test_create_stage_amazon_fails_due_to_no_credentials(get_credentials):
     database = SnowflakeDatabase(conn_id="fake-conn")
     with pytest.raises(ValueError) as exc_info:
         database.create_stage(file=File("s3://some-bucket/some-file.csv"))
-    expected_msg = (
-        "In order to create an stage for S3, one of the following is required"
-    )
+    expected_msg = "In order to create an stage for S3, one of the following is required"
     assert exc_info.match(expected_msg)
 
 
@@ -642,9 +607,7 @@ def test_load_file_to_table_natively(remote_files_fixture, database_table_fixtur
     """Load a file to a Snowflake table using the native optimisation."""
     filepath = remote_files_fixture[0]
     database, target_table = database_table_fixture
-    database.load_file_to_table(
-        File(filepath), target_table, {}, use_native_support=True
-    )
+    database.load_file_to_table(File(filepath), target_table, {}, use_native_support=True)
 
     df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
     assert len(df) == 3
