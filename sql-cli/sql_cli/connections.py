@@ -9,15 +9,12 @@ from airflow.api_connexion.schemas.connection_schema import connection_schema
 from airflow.models import Connection
 from airflow.utils.session import create_session
 from marshmallow.exceptions import ValidationError
-
 from sql_cli.settings import SQL_CLI_PROJECT_DIRECTORY
 
 
 def _load_yaml_connections(environment: str) -> list[dict[str, Any]]:
     """Gets the configuration yaml for the given environment and loads the connections from it into a dictionary"""
-    config_file = (
-        SQL_CLI_PROJECT_DIRECTORY / "config" / environment / "configuration.yaml"
-    )
+    config_file = SQL_CLI_PROJECT_DIRECTORY / "config" / environment / "configuration.yaml"
     if not config_file.exists():
         raise FileNotFoundError(
             f"Config file configuration.yaml does not exist for environment {environment}"
@@ -40,9 +37,7 @@ def _test_connection(conn_obj: Connection, environment: str) -> bool:
                 message,
             )
             return False
-        logging.info(
-            "Connection %s tested successfully in %s environment", conn_id, environment
-        )
+        logging.info("Connection %s tested successfully in %s environment", conn_id, environment)
         return True
     except ValidationError as err:
         raise BadRequest(detail=str(err.messages))
@@ -52,9 +47,7 @@ def _create_or_replace_connection(conn_obj: Connection, environment: str) -> Non
     """Creates a new or replaces existing connection in the Airflow DB with the given connection object."""
     conn_id = conn_obj.conn_id
     with create_session() as session:
-        db_connection = (
-            session.query(Connection).filter_by(conn_id=conn_id).one_or_none()
-        )
+        db_connection = session.query(Connection).filter_by(conn_id=conn_id).one_or_none()
         if db_connection:
             session.delete(db_connection)
             session.commit()
@@ -65,14 +58,10 @@ def _create_or_replace_connection(conn_obj: Connection, environment: str) -> Non
             )
         session.add(conn_obj)
         session.commit()
-        logging.info(
-            "Connection %s added successfully in %s environment", conn_id, environment
-        )
+        logging.info("Connection %s added successfully in %s environment", conn_id, environment)
 
 
-def validate_connections(
-    environment: str = "default", connection: str | None = None
-) -> None:
+def validate_connections(environment: str = "default", connection: str | None = None) -> None:
     """
     Validates that the given connections are valid and registers them to Airflow with replace policy for existing
     connections.
