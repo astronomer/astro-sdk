@@ -43,3 +43,17 @@ def test_generate(root_directory, target_directory, dags_directory):
     result_stdout = get_stdout(result)
     assert result_stdout.startswith("The DAG file ")
     assert result_stdout.endswith(" has been successfully generated. 🎉")
+
+
+def test_run_dag(root_directory_dags):
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            "example_dataframe",
+            root_directory_dags.as_posix(),
+        ],
+    )
+    assert result.exit_code == 0
+    result_stdout = get_stdout(result)
+    assert "The worst month was 2020-05" in result_stdout

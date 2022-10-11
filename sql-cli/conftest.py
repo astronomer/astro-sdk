@@ -33,6 +33,11 @@ def root_directory_symlink():
 
 
 @pytest.fixture()
+def root_directory_dags():
+    return Path.cwd() / "test_dag"
+
+
+@pytest.fixture()
 def target_directory():
     return Path.cwd() / "tests" / "_target"
 
