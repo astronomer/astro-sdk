@@ -233,7 +233,7 @@ class BaseDatabase(ABC):
         table: BaseTable,
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
-        columns_names_capitalization: ColumnCapitalization = "lower",  # skipcq
+        columns_names_capitalization: ColumnCapitalization = "original",  # skipcq
     ) -> None:
         """
         Create a SQL table, automatically inferring the schema using the given file.

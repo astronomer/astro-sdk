@@ -480,7 +480,7 @@ class SnowflakeDatabase(BaseDatabase):
         table: BaseTable,
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
-        columns_names_capitalization: ColumnCapitalization = "lower",
+        columns_names_capitalization: ColumnCapitalization = "original",
     ) -> None:
         """
         Create a SQL table, automatically inferring the schema using the given file.
@@ -492,8 +492,6 @@ class SnowflakeDatabase(BaseDatabase):
 
         # Snowflake don't expect mixed case col names like - 'Title' or 'Category'
         # we explicitly convert them to lower case, if not provided by user
-        if columns_names_capitalization not in ["lower", "upper"]:
-            columns_names_capitalization = "lower"
 
         if file:
             dataframe = file.export_to_dataframe(
@@ -585,11 +583,11 @@ class SnowflakeDatabase(BaseDatabase):
         pandas_tools.write_pandas(
             conn=self.hook.get_conn(),
             df=source_dataframe,
-            table_name=target_table.name,
+            table_name=target_table.name.upper(),
             schema=target_table.metadata.schema,
             database=target_table.metadata.database,
             chunk_size=chunk_size,
-            quote_identifiers=False,
+            quote_identifiers=True,
         )
 
     def get_sqlalchemy_template_table_identifier_and_parameter(

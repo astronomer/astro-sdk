@@ -1068,3 +1068,30 @@ def test_tables_creation_if_they_dont_exist(database_table_fixture, if_exists):
 
     database_df = db.export_table_to_pandas_dataframe(test_table)
     assert database_df.shape == (3, 9)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SNOWFLAKE,
+        }
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+def test_load_file_col_cap(sample_dag, database_table_fixture):
+    db, test_table = database_table_fixture
+    path = str(CWD) + "/../../data/homes_upper.csv"
+    with sample_dag:
+        load_file(
+            input_file=File(path),
+            output_table=test_table,
+        )
+    test_utils.run_dag(sample_dag)
+
+    df = db.export_table_to_pandas_dataframe(test_table)
+    cols = list(df.columns)
+    cols.sort()
+    assert cols == ["Acres", "Age", "Baths", "Beds", "List", "Living", "Rooms", "Sell", "Taxes"]
