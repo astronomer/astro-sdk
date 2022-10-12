@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Optional
 
+import typer
 from airflow.utils.cli import get_dag
 from rich import print as rprint
 from typer import Typer
@@ -43,16 +44,29 @@ def generate(
 
 @app.command()
 def run(
-    dag_id: str, subdir: str, conn_file_path: Optional[str] = None, variable_file_path: Optional[str] = None
+    dag_id: str = typer.Argument("dag_id", help="ID of the DAG you want to run", show_default=False),
+    subdir: str = typer.Argument(
+        "subdir",
+        help="the subdirectory or filepath for the DAG. "
+        "The more precise this is the faster the local runner will run as we won't need to parse as many DAGs",
+        show_default=False,
+    ),
+    conn_file_path: Optional[str] = typer.Argument(
+        help="path to connections yaml or json file", default=None
+    ),
+    variable_file_path: Optional[str] = typer.Argument(
+        help="path to variables yaml or json file", default=None
+    ),
 ) -> None:
     """
     Run a DAG locally. This task assumes that there is a local airflow DB (can be a SQLite file), that has been
     initialized with Airflow tables. Users can also add paths to a connections or variable yaml file which will override
     existing connections for the test run.
 
+    \b
     Example of a connections.yaml file:
 
-    ```
+    \b
     my_sqlite_conn:
         conn_id: my_sqlite_conn
         conn_type: sqlite
@@ -61,7 +75,7 @@ def run(
         conn_id: my_postgres_conn
         conn_type: postgres
         ...
-    ```
+
 
     :param dag_id: ID of the DAG you want to run
     :param subdir: the subdirectory or filepath for the DAG. The more precise this is the faster the local runner
