@@ -15,11 +15,11 @@ def test_sql_files_dag_raises_exception(sql_files_dag_with_cycle):
         assert sql_files_dag_with_cycle.sorted_sql_files()
 
 
-@pytest.mark.freeze_time("2022-09-28")
 def test_generate_dag(root_directory, target_directory, dags_directory):
     """Test that the whole DAG generation process including sql files parsing works."""
-    generate_dag(
+    dag_file = generate_dag(
         directory=root_directory,
         target_directory=target_directory,
         dags_directory=dags_directory,
     )
+    assert dag_file
