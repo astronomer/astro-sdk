@@ -32,6 +32,7 @@ class InputFileDatasetFacet(BaseFacet):
 class OutputDatabaseDatasetFacet(BaseFacet):
     """
     Facet that represents output dataset Facets for load file
+
     :param metadata: metadata of the table.
     :param columns: columns defined in table
     :param schema: schema used.
