@@ -128,7 +128,7 @@ class SqliteDatabase(BaseDatabase):
         """
         return SqlaTable(table.name, SqlaMetaData(), autoload_with=self.sqlalchemy_engine)
 
-    def openlineage_dataset_name(self, table: BaseTable = None) -> str:
+    def openlineage_dataset_name(self, table: BaseTable) -> str:
         """
         Returns the open lineage dataset name as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md

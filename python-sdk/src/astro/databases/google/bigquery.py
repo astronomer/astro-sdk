@@ -429,7 +429,7 @@ class BigqueryDatabase(BaseDatabase):
             )
         job.result()
 
-    def openlineage_dataset_name(self, table: BaseTable = None) -> str:
+    def openlineage_dataset_name(self, table: BaseTable) -> str:
         """
         Returns the open lineage dataset namespace as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md

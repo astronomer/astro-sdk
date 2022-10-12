@@ -200,7 +200,7 @@ class PostgresDatabase(BaseDatabase):
         """
         return file.export_to_dataframe_via_byte_stream()
 
-    def openlineage_dataset_name(self, table: BaseTable = None):
+    def openlineage_dataset_name(self, table: BaseTable) -> str:
         """
         Returns the open lineage dataset name as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
@@ -209,7 +209,7 @@ class PostgresDatabase(BaseDatabase):
         schema = self.hook.get_connection(self.conn_id).schema or "public"
         return f"{schema}.{table.name}"
 
-    def openlineage_dataset_namespace(self):
+    def openlineage_dataset_namespace(self) -> str:
         """
         Returns the open lineage dataset namespace as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md

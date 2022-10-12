@@ -385,7 +385,7 @@ class RedshiftDatabase(BaseDatabase):
         """
         return "SELECT 1 + 1"
 
-    def openlineage_dataset_name(self, table: BaseTable = None) -> str:
+    def openlineage_dataset_name(self, table: BaseTable) -> str:
         """
         Returns the open lineage dataset name as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md

@@ -766,7 +766,7 @@ class SnowflakeDatabase(BaseDatabase):
         }
         return statement, params
 
-    def openlineage_dataset_name(self, table: BaseTable = None) -> str:
+    def openlineage_dataset_name(self, table: BaseTable) -> str:
         """
         Returns the open lineage dataset name as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
