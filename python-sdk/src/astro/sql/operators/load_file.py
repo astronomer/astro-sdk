@@ -14,7 +14,7 @@ from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.lineage.extractor import OpenLineageFacets
-from astro.lineage.facets import InputFileDatasetFacet, OutputDatabaseDatasetFacet
+from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
 from astro.utils.dataframe import convert_dataframe_to_file
@@ -203,11 +203,16 @@ class LoadFileOperator(AstroSQLBaseOperator):
                 name=self.input_file.openlineage_dataset_name,
                 facets={
                     "input_file_facet": InputFileDatasetFacet(
-                        file_size=self.input_file.size,
                         is_pattern=self.input_file.is_pattern(),
-                        files=[file.path for file in input_files],
                         number_of_files=len(input_files),
-                        file_type=self.input_file.type.name,
+                        files=[
+                            InputFileFacet(
+                                filepath=file.path,
+                                file_size=file.size,
+                                file_type=file.type.name,
+                            )
+                            for file in input_files
+                        ],
                     )
                 },
             )

@@ -8,6 +8,22 @@ from astro.table import Column, Metadata
 
 
 @attr.define
+class InputFileFacet(BaseFacet):
+    """
+    Facet that represents input file for load file
+
+    :param filepath: path of each file.
+    :param file_size: size of the file.
+    :param file_type: type of the file.
+    """
+
+    filepath: str
+    file_size: int | None
+    file_type: FileType
+    description: str | None = None
+
+
+@attr.define
 class InputFileDatasetFacet(BaseFacet):
     """
     Facet that represents input file dataset Facets for load file
@@ -20,12 +36,10 @@ class InputFileDatasetFacet(BaseFacet):
     :param files: list of filepaths to be loaded from dataset.
     """
 
-    file_size: int | None
     number_of_files: int | None
-    file_type: FileType
     description: str | None = None
     is_pattern: bool = False
-    files: list[str] = []
+    files: list[InputFileFacet] = []
 
 
 @attr.define

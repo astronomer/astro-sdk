@@ -5,7 +5,7 @@ from openlineage.client.run import Dataset as OpenlineageDataset
 from astro.constants import FileType
 from astro.files import File
 from astro.lineage.extractor import PythonSDKExtractor
-from astro.lineage.facets import InputFileDatasetFacet, OutputDatabaseDatasetFacet
+from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import Metadata, Table
 
@@ -21,12 +21,16 @@ INPUT_STATS = [
         name=TEST_INPUT_DATASET_NAME,
         facets={
             "input_file_facet": InputFileDatasetFacet(
-                file_size=-1,
                 number_of_files=1,
-                file_type=FileType.CSV,
                 description=None,
                 is_pattern=True,
-                files=["gs://astro-sdk/workspace/sample_pattern.csv"],
+                files=[
+                    InputFileFacet(
+                        filepath="gs://astro-sdk/workspace/sample_pattern.csv",
+                        file_size=-1,
+                        file_type=FileType.CSV,
+                    )
+                ],
             )
         },
     )
