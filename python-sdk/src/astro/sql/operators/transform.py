@@ -9,7 +9,9 @@ except ImportError:
     from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
+from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
+from sqlalchemy.sql.functions import Function
 
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 from astro.utils.typing_compat import Context
@@ -20,6 +22,33 @@ class TransformOperator(BaseSQLDecoratedOperator):
     Given a SQL statement and (optional) tables, execute the SQL statement and output
     the result into a SQL table.
     """
+
+    def __init__(
+        self,
+        conn_id: str | None = None,
+        parameters: dict | None = None,
+        handler: Function | None = None,
+        database: str | None = None,
+        schema: str | None = None,
+        response_limit: int = -1,
+        response_size: int = -1,
+        sql: str = "",
+        task_id: str = "",
+        **kwargs: Any,
+    ):
+        task_id = task_id or get_unique_task_id("transform")
+        super().__init__(
+            conn_id=conn_id,
+            parameters=parameters,
+            handler=handler,
+            database=database,
+            schema=schema,
+            response_limit=response_limit,
+            response_size=response_size,
+            sql=sql,
+            task_id=task_id,
+            **kwargs,
+        )
 
     def execute(self, context: Context):
         super().execute(context)
@@ -104,7 +133,7 @@ def transform(
 def transform_file(
     file_path: str,
     conn_id: str = "",
-    parameters: Mapping | Iterable | None = None,
+    parameters: dict | None = None,
     database: str | None = None,
     schema: str | None = None,
     **kwargs: Any,
@@ -129,14 +158,19 @@ def transform_file(
         or will overwrite a table given in the `output_table` parameter.
     """
 
-    @transform(
+    kwargs.update(
+        {
+            "op_kwargs": kwargs.get("op_kwargs", {}),
+            "op_args": kwargs.get("op_args", {}),
+        }
+    )
+    return TransformOperator(
         conn_id=conn_id,
         parameters=parameters,
+        handler=None,
         database=database,
         schema=schema,
+        sql=file_path,
+        python_callable=lambda: (file_path, parameters),
         **kwargs,
-    )
-    def transform_file_func(file_path: str):
-        return file_path
-
-    return transform_file_func(file_path)
+    ).output
