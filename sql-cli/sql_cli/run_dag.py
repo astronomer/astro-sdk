@@ -86,8 +86,7 @@ def add_logger_if_needed(dag: DAG, ti: TaskInstance) -> None:
     Add a formatted logger to the taskinstance so all logs are surfaced to the command line instead
     of into a task file. Since this is a local test run, it is much better for the user to see logs
     in the command line, rather than needing to search for a log file.
-    Args:
-        ti: The taskinstance that will receive a logger
+    :param ti: The taskinstance that will receive a logger
 
     """
     logging_format = logging.Formatter("[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s")
@@ -106,8 +105,7 @@ def _run_task(ti: TaskInstance, session: Session) -> None:
     extra steps used in `task.run` to keep our local running as fast as possible
     This function is only meant for the `dag.test` function as a helper function.
 
-    Args:
-        ti: TaskInstance to run
+    :param ti: TaskInstance to run
     """
     log.info("*****************************************************")
     if hasattr(ti, "map_index") and ti.map_index > 0:
@@ -140,7 +138,7 @@ def _get_or_create_dagrun(
     :param execution_date: execution_date for finding the dagrun
     :param run_id: run_id to pass to new dagrun
     :param session: sqlalchemy session
-    :return:
+    :return: the Dagrun object needed to run tasks.
     """
     log.info("dagrun id: %s", dag.dag_id)
     dr: DagRun = (
