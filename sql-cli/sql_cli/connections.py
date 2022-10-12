@@ -4,11 +4,9 @@ import logging
 from typing import Any
 
 import yaml
-from airflow.api_connexion.exceptions import BadRequest
 from airflow.api_connexion.schemas.connection_schema import connection_schema
 from airflow.models import Connection
 from airflow.utils.session import create_session
-from marshmallow.exceptions import ValidationError
 
 from sql_cli.settings import SQL_CLI_PROJECT_DIRECTORY
 
@@ -25,18 +23,6 @@ def _load_yaml_connections(environment: str) -> list[dict[str, Any]]:
         connections: list[dict[str, Any]] = yaml.safe_load(connections_file)["connections"]
 
     return connections
-
-
-def _test_connection(conn_obj: Connection) -> bool:
-    """Tests whether connection is established successfully with the given data."""
-    try:
-        status, _ = conn_obj.test_connection()
-        if not status:
-            return False
-
-        return True
-    except ValidationError as err:
-        raise BadRequest(detail=str(err.messages))
 
 
 def _create_or_replace_connection(conn_obj: Connection) -> None:
@@ -72,7 +58,8 @@ def validate_connections(environment: str = "default", connection: str | None = 
 
         _create_or_replace_connection(conn_obj)
 
-        if not _test_connection(conn_obj):
+        success_status, _ = conn_obj.test_connection()
+        if not success_status:
             logs += f"Validating connection {conn_id:25} FAILED\n"
             continue
 
