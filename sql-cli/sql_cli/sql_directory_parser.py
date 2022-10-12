@@ -5,7 +5,7 @@ from typing import Iterable
 
 import frontmatter
 
-from sql_cli.utils import JinjaUtils
+from sql_cli.utils.jinja import find_template_variables
 
 
 class SqlFile:
@@ -62,7 +62,7 @@ class SqlFile:
 
         :returns: declared parameters for the sql query.
         """
-        return sorted(JinjaUtils.find_template_variables(self.path))
+        return sorted(find_template_variables(self.path))
 
     def has_sub_directory(self) -> bool:
         """

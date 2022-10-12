@@ -8,7 +8,7 @@ from networkx import DiGraph, depth_first_search, find_cycle, is_directed_acycli
 
 from sql_cli.exceptions import DagCycle
 from sql_cli.sql_directory_parser import SqlFile, get_sql_files
-from sql_cli.utils import JinjaUtils
+from sql_cli.utils.jinja import render
 
 
 @dataclass
@@ -97,7 +97,7 @@ def generate_dag(directory: Path, target_directory: Path, dags_directory: Path) 
         sql_files=sql_files,
     )
     output_file = dags_directory / f"{sql_files_dag.dag_id}.py"
-    JinjaUtils.render(
+    render(
         template_file=Path("templates/dag.py.jinja2"),
         context={"dag": sql_files_dag},
         output_file=output_file,
