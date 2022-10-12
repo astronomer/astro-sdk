@@ -6,7 +6,6 @@ from datetime import datetime
 from typing import Any
 
 from airflow.configuration import secrets_backend_list
-from airflow.exceptions import AirflowSkipException
 from airflow.models.dag import DAG
 from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstance
@@ -119,8 +118,6 @@ def _run_task(ti: TaskInstance, session: Session) -> None:
         ti._run_raw_task(session=session)
         session.flush()
         log.info("%s ran successfully!", ti.task_id)
-    except AirflowSkipException:
-        log.info("Task Skipped, continuing")
     except AstroCleanupException:
         log.info("aql.cleanup async, continuing", exc_info=True)
     log.info("*****************************************************")

@@ -3,6 +3,7 @@ from unittest import mock
 
 from airflow.decorators import task
 from airflow.utils.cli import get_dag
+from airflow.utils.trigger_rule import TriggerRule
 
 from astro import sql as aql
 from sql_cli.run_dag import _run_task, run_dag
@@ -54,24 +55,26 @@ def test_run_dag_dynamic_task(sample_dag, caplog):
 def test_run_dag_with_skip(sample_dag, caplog):
     @task.branch
     def who_is_prettiest():
-        return "snow_white"
+        return "snow_white_wins"
 
     @task
-    def snow_white():
+    def snow_white_wins():
         return "the witch is mad"
 
     @task
-    def witch():
+    def witch_wins():
         return "the witch is happy"
 
-    @task
+    @task(trigger_rule=TriggerRule.NONE_FAILED_MIN_ONE_SUCCESS)
     def movie_ends():
         return "movie ends"
 
     with sample_dag:
-        who_is_prettiest() >> [snow_white(), witch()] >> movie_ends()
+        who_is_prettiest() >> [snow_white_wins(), witch_wins()] >> movie_ends()
     run_dag(sample_dag)
-    assert "Task Skipped, continuing" in caplog.text
+    assert "witch_wins ran successfully!" not in caplog.text
+    assert "snow_white_wins ran successfully!" in caplog.text
+    assert "movie_ends ran successfully!" in caplog.text
 
 
 def test_run_dag(caplog):
