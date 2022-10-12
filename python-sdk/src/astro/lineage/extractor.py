@@ -11,6 +11,11 @@ from openlineage.client.run import Dataset as OpenlineageDataset
 
 @attr.define
 class OpenLineageFacets:
+    """
+    OpenLineageFacets are pieces of metadata that can be attached to the core entities: Run,
+    Job and Dataset as per https://github.com/OpenLineage/OpenLineage/blob/main/spec/OpenLineage.md#facets
+    """
+
     inputs: list[OpenlineageDataset]
     outputs: list[OpenlineageDataset]
     run_facets: dict[str, BaseFacet]

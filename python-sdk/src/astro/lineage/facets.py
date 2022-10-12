@@ -10,7 +10,7 @@ from astro.table import Column, Metadata
 @attr.define
 class InputFileDatasetFacet(BaseFacet):
     """
-    Facet that represents input dataset Facets for load file
+    Facet that represents input file dataset Facets for load file
 
     :param file_size: size of the file.
     :param number_of_files: number of files to be loaded.
@@ -31,7 +31,7 @@ class InputFileDatasetFacet(BaseFacet):
 @attr.define
 class OutputDatabaseDatasetFacet(BaseFacet):
     """
-    Facet that represents output dataset Facets for load file
+    Facet that represents output database dataset Facets for load file
 
     :param metadata: metadata of the table.
     :param columns: columns defined in table
