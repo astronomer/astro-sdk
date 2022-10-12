@@ -766,14 +766,24 @@ class SnowflakeDatabase(BaseDatabase):
         }
         return statement, params
 
-    def openlineage_dataset_name(self, table: BaseTable = None):
+    def openlineage_dataset_name(self, table: BaseTable = None) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: db_name.schema_name.table_name
+        """
         conn = self.hook.get_connection(self.conn_id)
         conn_extra = conn.extra_dejson
         schema = conn_extra.get("schema") or conn.schema
         db = conn_extra.get("database")
         return f"{db}.{schema}.{table.name}"
 
-    def openlineage_dataset_namespace(self):
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: snowflake://ACCOUNT
+        """
         account = self.hook.get_connection(self.conn_id).extra_dejson.get("account")
         return f"{self.sql_type}://{account}"
 

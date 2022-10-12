@@ -385,10 +385,20 @@ class RedshiftDatabase(BaseDatabase):
         """
         return "SELECT 1 + 1"
 
-    def openlineage_dataset_name(self, table: BaseTable = None):
+    def openlineage_dataset_name(self, table: BaseTable = None) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: schema_name.table_name
+        """
         conn = self.hook.get_connection(self.conn_id)
         return f"{conn.schema}.{table.name}"
 
-    def openlineage_dataset_namespace(self):
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: redshift://cluster:5439
+        """
         conn = self.hook.conn
         return f"{self.sql_type}://{conn.host}:{conn.port}"

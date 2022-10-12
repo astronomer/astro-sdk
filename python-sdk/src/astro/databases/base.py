@@ -183,21 +183,6 @@ class BaseDatabase(ABC):
         """
         raise NotImplementedError
 
-    def openlineage_dataset_namespace(self) -> str:
-        """
-        Returns the open lineage dataset namespace as per
-        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
-        """
-        airflow_conn = self.hook.get_connection(self.conn_id)
-        return f"{self.sql_type}://{airflow_conn.host}"
-
-    def openlineage_dataset_name(self, table: BaseTable) -> str:
-        """
-        Returns the open lineage dataset name as per
-        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
-        """
-        return self.get_table_qualified_name(table)
-
     def populate_table_metadata(self, table: BaseTable) -> BaseTable:
         """
         Given a table, check if the table has metadata.
@@ -790,8 +775,16 @@ class BaseDatabase(ABC):
         )
         return is_file_pattern_based_schema_autodetection_supported
 
-    def openlineage_dataset_name(self, table: BaseTable):
+    def openlineage_dataset_name(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
         raise NotImplementedError
 
-    def openlineage_dataset_namespace(self):
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
         raise NotImplementedError

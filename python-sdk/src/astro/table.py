@@ -146,11 +146,19 @@ class BaseTable:
             conn_id=obj["conn_id"],
         )
 
-    def openlineage_dataset_name(self):
+    def openlineage_dataset_name(self) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
         database = create_database(self.conn_id)
         return database.openlineage_dataset_name(table=self)
 
-    def openlineage_dataset_namespace(self):
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
         database = create_database(self.conn_id)
         return database.openlineage_dataset_namespace()
 
