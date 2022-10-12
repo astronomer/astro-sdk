@@ -1,6 +1,7 @@
 import pathlib
 from unittest import mock
 
+from airflow.decorators import task
 from airflow.utils.cli import get_dag
 
 from astro import sql as aql
@@ -32,6 +33,45 @@ def test_run_task_cleanup_log(sample_dag, caplog):
         aql.cleanup()
     run_dag(sample_dag)
     assert "aql.cleanup async, continuing" in caplog.text
+
+
+def test_run_dag_dynamic_task(sample_dag, caplog):
+    @task
+    def get_list():
+        return [1, 2, 3]
+
+    @task
+    def print_val(v):
+        print(v)
+
+    with sample_dag:
+        print_val.expand(v=get_list())
+    run_dag(sample_dag)
+    for i in [1, 2]:
+        assert f"Running task print_val index {i}" in caplog.text
+
+
+def test_run_dag_with_skip(sample_dag, caplog):
+    @task.branch
+    def who_is_prettiest():
+        return "snow_white"
+
+    @task
+    def snow_white():
+        return "the witch is mad"
+
+    @task
+    def witch():
+        return "the witch is happy"
+
+    @task
+    def movie_ends():
+        return "movie ends"
+
+    with sample_dag:
+        who_is_prettiest() >> [snow_white(), witch()] >> movie_ends()
+    run_dag(sample_dag)
+    assert "Task Skipped, continuing" in caplog.text
 
 
 def test_run_dag(caplog):
