@@ -2,9 +2,11 @@ from typer.testing import CliRunner
 
 from sql_cli import __version__
 from sql_cli.__main__ import app
+import pathlib
 
 runner = CliRunner()
 
+CWD = pathlib.Path(__file__).parent
 
 def get_stdout(result) -> str:
     """
@@ -52,6 +54,27 @@ def test_run_dag(root_directory_dags):
             "run",
             "example_dataframe",
             root_directory_dags.as_posix(),
+        ],
+    )
+    assert result.exit_code == 0
+    result_stdout = get_stdout(result)
+    assert "The worst month was 2020-05" in result_stdout
+
+def test_run_sql_project(root_directory, target_directory, dags_directory):
+    args = [
+            "run",
+            "generate",
+            root_directory.as_posix(),
+            f"{CWD}/test_conn.yaml"
+        ]
+    print(" ".join(args))
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            "root",
+            root_directory.as_posix(),
+            f"{CWD}/test_conn.yaml"
         ],
     )
     assert result.exit_code == 0

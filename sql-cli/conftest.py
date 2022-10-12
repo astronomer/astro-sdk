@@ -19,32 +19,32 @@ UNIQUE_HASH_SIZE = 16
 
 @pytest.fixture()
 def root_directory():
-    return Path.cwd() / "tests" / "sql_files"
+    return Path.cwd() / "sql_files"
 
 
 @pytest.fixture()
 def root_directory_cycle():
-    return Path.cwd() / "tests" / "sql_files_cycle"
+    return Path.cwd() / "sql_files_cycle"
 
 
 @pytest.fixture()
 def root_directory_symlink():
-    return Path.cwd() / "tests" / "sql_files_symlink"
+    return Path.cwd() / "sql_files_symlink"
 
 
 @pytest.fixture()
 def root_directory_dags():
-    return Path.cwd() / "tests" / "test_dag"
+    return Path.cwd() / "test_dag"
 
 
 @pytest.fixture()
 def target_directory():
-    return Path.cwd() / "tests" / "_target"
+    return Path.cwd() / "_target"
 
 
 @pytest.fixture()
 def dags_directory():
-    return Path.cwd() / "tests" / "_dags"
+    return Path.cwd() / "_dags"
 
 
 @pytest.fixture()
