@@ -5,7 +5,7 @@ from typing import Iterable
 
 import frontmatter
 
-from sql_cli.utils import find_template_variables
+from sql_cli.utils import JinjaUtils
 
 
 class SqlFile:
@@ -62,7 +62,7 @@ class SqlFile:
 
         :returns: declared parameters for the sql query.
         """
-        return sorted(find_template_variables(self.path))
+        return sorted(JinjaUtils.find_template_variables(self.path))
 
     def has_sub_directory(self) -> bool:
         """
@@ -122,5 +122,5 @@ def get_sql_files(directory: Path, target_directory: Path) -> set[SqlFile]:
     return {
         SqlFile(root_directory=directory, path=child, target_directory=target_directory)
         for child in directory.rglob("*.sql")
-        if child.is_file and not child.is_symlink()
+        if child.is_file() and not child.is_symlink()
     }
