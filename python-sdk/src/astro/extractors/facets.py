@@ -11,6 +11,7 @@ from astro.table import Column, Metadata
 class InputFileDatasetFacet(BaseFacet):
     """
     Facet that represents input dataset Facets for load file
+
     :param file_size: size of the file.
     :param number_of_files: number of files to be loaded.
     :param type: type of the file.
