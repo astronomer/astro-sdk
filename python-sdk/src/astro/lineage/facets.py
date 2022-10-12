@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from __future__ import annotations
 
 import attr
 from openlineage.client.facet import BaseFacet
@@ -7,28 +7,28 @@ from astro.constants import FileType
 from astro.table import Column, Metadata
 
 
-@attr.s
+@attr.define
 class InputFileDatasetFacet(BaseFacet):
     """
     Facet that represents input dataset Facets for load file
 
     :param file_size: size of the file.
     :param number_of_files: number of files to be loaded.
-    :param type: type of the file.
+    :param file_type: type of the file.
     :param description: description of the dataset.
-    :param is_pattern: True when file path is a pattern(eg. s3://bucket/folder or /folder/sample_* etc).
+    :param is_pattern: True when file path is a pattern(eg. ``s3://bucket/folder`` or ``/folder/sample_*`` etc).
     :param files: list of filepaths to be loaded from dataset.
     """
 
-    file_size: Optional[int] = attr.ib()
-    number_of_files: Optional[int] = attr.ib()
-    file_type: FileType = attr.ib()
-    description: Optional[str] = attr.ib(default=None)
-    is_pattern: bool = attr.ib(default=False)
-    files: List[str] = attr.ib(default=[])
+    file_size: int | None
+    number_of_files: int | None
+    file_type: FileType
+    description: str | None = None
+    is_pattern: bool = False
+    files: list[str] = []
 
 
-@attr.s
+@attr.define
 class OutputDatabaseDatasetFacet(BaseFacet):
     """
     Facet that represents output dataset Facets for load file
@@ -42,12 +42,12 @@ class OutputDatabaseDatasetFacet(BaseFacet):
     :param description: description of the dataset.
     """
 
-    metadata: Metadata = attr.ib()
-    columns: List[Column] = attr.ib()
-    schema: Optional[str] = attr.ib()
-    used_native_path: bool = attr.ib(default=False)
-    enabled_native_fallback: Optional[bool] = attr.ib(default=False)
-    native_support_arguments: Dict = attr.ib(default=None)
-    description: Optional[str] = attr.ib(default=None)
+    metadata: Metadata
+    columns: list[Column]
+    schema: str | None
+    used_native_path: bool
+    enabled_native_fallback: bool = False
+    native_support_arguments: dict | None = None
+    description: str | None = None
 
     _do_not_redact = ["metadata", "columns"]

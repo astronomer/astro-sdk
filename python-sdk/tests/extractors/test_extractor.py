@@ -3,9 +3,9 @@ from airflow.models.taskinstance import TaskInstance
 from openlineage.client.run import Dataset as OpenlineageDataset
 
 from astro.constants import FileType
-from astro.extractors.extractor import PythonSDKExtractor
-from astro.extractors.facets import InputFileDatasetFacet, OutputDatabaseDatasetFacet
 from astro.files import File
+from astro.lineage.extractor import PythonSDKExtractor
+from astro.lineage.facets import InputFileDatasetFacet, OutputDatabaseDatasetFacet
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import Metadata, Table
 

@@ -12,9 +12,9 @@ from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
-from astro.extractors.extractor import OpenLineageFacets
-from astro.extractors.facets import InputFileDatasetFacet, OutputDatabaseDatasetFacet
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
+from astro.lineage.extractor import OpenLineageFacets
+from astro.lineage.facets import InputFileDatasetFacet, OutputDatabaseDatasetFacet
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
 from astro.utils.dataframe import convert_dataframe_to_file
@@ -188,6 +188,8 @@ class LoadFileOperator(AstroSQLBaseOperator):
         """
         Returns the lineage data
         """
+        # if the input_file is a folder or pattern, it needs to be resolved to
+        # list the files
         input_files = resolve_file_path_pattern(
             self.input_file.path,
             self.input_file.conn_id,

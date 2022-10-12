@@ -55,7 +55,7 @@ class BaseFileLocation(ABC):
 
     @property
     @abstractmethod
-    def openlineage_dataset_namespace(self):
+    def openlineage_dataset_namespace(self) -> str:
         """
         Returns the open lineage dataset namespace as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
@@ -64,7 +64,7 @@ class BaseFileLocation(ABC):
 
     @property
     @abstractmethod
-    def openlineage_dataset_name(self):
+    def openlineage_dataset_name(self) -> str:
         """
         Returns the open lineage dataset name as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md

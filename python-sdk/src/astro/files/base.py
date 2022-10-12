@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import io
 import pathlib
-from typing import Any
 
 import pandas as pd
 import smart_open
@@ -94,7 +93,7 @@ class File(LoggingMixin, Dataset):
             self.type.create_from_dataframe(stream=stream, df=df)
 
     @property
-    def openlineage_dataset_namespace(self) -> Any:
+    def openlineage_dataset_namespace(self) -> str:
         """
         Returns the open lineage dataset namespace as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
@@ -102,7 +101,7 @@ class File(LoggingMixin, Dataset):
         return self.location.openlineage_dataset_namespace
 
     @property
-    def openlineage_dataset_name(self) -> Any:
+    def openlineage_dataset_name(self) -> str:
         """
         Returns the open lineage dataset name as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md

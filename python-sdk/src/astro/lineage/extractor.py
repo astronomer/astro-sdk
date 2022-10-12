@@ -1,5 +1,6 @@
-from typing import Dict, List, Optional
+from __future__ import annotations
 
+import attr
 from airflow.models.taskinstance import TaskInstance
 from openlineage.airflow.extractors import TaskMetadata
 from openlineage.airflow.extractors.base import BaseExtractor
@@ -8,18 +9,12 @@ from openlineage.client.facet import BaseFacet
 from openlineage.client.run import Dataset as OpenlineageDataset
 
 
+@attr.define
 class OpenLineageFacets:
-    def __init__(
-        self,
-        inputs: List[OpenlineageDataset],
-        outputs: List[OpenlineageDataset],
-        run_facets: Dict[str, BaseFacet],
-        job_facets: Dict[str, BaseFacet],
-    ):
-        self.inputs = inputs
-        self.outputs = outputs
-        self.run_facets = run_facets
-        self.job_facets = job_facets
+    inputs: list[OpenlineageDataset]
+    outputs: list[OpenlineageDataset]
+    run_facets: dict[str, BaseFacet]
+    job_facets: dict[str, BaseFacet]
 
 
 class PythonSDKExtractor(BaseExtractor):
@@ -30,16 +25,16 @@ class PythonSDKExtractor(BaseExtractor):
     """
 
     @classmethod
-    def get_operator_classnames(cls) -> List[str]:
+    def get_operator_classnames(cls) -> list[str]:
         return ["LoadFileOperator"]
 
-    def extract(self) -> Optional[TaskMetadata]:  # skipcq: PYL-R0201
+    def extract(self) -> TaskMetadata | None:  # skipcq: PYL-R0201
         """Empty extract implementation for the abstractmethod of the ``BaseExtractor`` class."""
         return None
 
     def extract_on_complete(
         self, task_instance: TaskInstance  # skipcq: PYL-W0613,  PYL-R0201
-    ) -> Optional[TaskMetadata]:  # skipcq: PYL-R0201, PYL-W0613
+    ) -> TaskMetadata | None:  # skipcq: PYL-R0201, PYL-W0613
         """
         Callback on ``get_openlineage_facets(ti)`` task completion to fetch metadata extraction details that are to be
         pushed to the Lineage server.
