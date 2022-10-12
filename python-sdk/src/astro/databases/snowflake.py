@@ -583,7 +583,7 @@ class SnowflakeDatabase(BaseDatabase):
         pandas_tools.write_pandas(
             conn=self.hook.get_conn(),
             df=source_dataframe,
-            table_name=target_table.name.upper(),
+            table_name=target_table.name,
             schema=target_table.metadata.schema,
             database=target_table.metadata.database,
             chunk_size=chunk_size,
