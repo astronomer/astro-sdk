@@ -23,6 +23,7 @@ from astro.utils.typing_compat import Context
 
 class LoadFileOperator(AstroSQLBaseOperator):
     """Load S3/local file into either a database or a pandas dataframe
+
     :param input_file: File path and conn_id for object stores
     :param output_table: Table to create
     :param ndjson_normalize_sep: separator used to normalize nested ndjson.
@@ -33,6 +34,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
     :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
+
     :return: If ``output_table`` is passed this operator returns a Table object. If not
         passed, returns a dataframe.
     """
@@ -150,6 +152,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         """
         Validate pandas json_normalize() parameter for databases, since default params result in
         invalid column name. Default parameter result in the columns name containing '.' char.
+
         :param ndjson_normalize_sep: separator used to normalize nested ndjson.
             https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html
         :param database: supported database
@@ -256,6 +259,7 @@ def load_file(
     **kwargs: Any,
 ) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.
+
     :param input_file: File path and conn_id for object stores
     :param output_table: Table to create
     :param task_id: task id, optional

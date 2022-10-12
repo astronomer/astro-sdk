@@ -20,6 +20,7 @@ class File(LoggingMixin, Dataset):
     """
     Handle all file operations, and abstract away the details related to location and file types.
     Intended to be used within library.
+
     :param path: Path to a file in the filesystem/Object stores
     :param conn_id: Airflow connection ID
     :param filetype: constant to provide an explicit file type
@@ -57,6 +58,7 @@ class File(LoggingMixin, Dataset):
     def size(self) -> int:
         """
         Return the size in bytes of the given file.
+
         :return: File size in bytes
         """
         size: int = self.location.size
@@ -65,6 +67,7 @@ class File(LoggingMixin, Dataset):
     def is_binary(self) -> bool:
         """
         Return a constants.FileType given the filepath. Uses a naive strategy, using the file extension.
+
         :return: True or False
         """
         result: bool = self.type.name == constants.FileType.PARQUET
@@ -73,12 +76,14 @@ class File(LoggingMixin, Dataset):
     def is_pattern(self) -> bool:
         """
         Returns True when file path is a pattern(eg. s3://bucket/folder or /folder/sample_* etc)
+
         :return: True or False
         """
         return not pathlib.PosixPath(self.path).suffix
 
     def create_from_dataframe(self, df: pd.DataFrame, store_as_dataframe: bool = True) -> None:
         """Create a file in the desired location using the values of a dataframe.
+
         :param store_as_dataframe: Whether the data should later be deserialized as a dataframe or as a file containing
             delimited data (e.g. csv, parquet, etc.).
         :param df: pandas dataframe
@@ -116,6 +121,7 @@ class File(LoggingMixin, Dataset):
         Due to noted issues with using smart_open with pandas (like
         https://github.com/RaRe-Technologies/smart_open/issues/524), we create a BytesIO or StringIO buffer
         before exporting to a dataframe. We've found a sizable speed improvement with this optimization
+
         :returns: an io object that can be streamed into a dataframe (or other object)
         """
 
@@ -208,6 +214,7 @@ def resolve_file_path_pattern(
     path_pattern can be
     1. local location - glob pattern
     2. s3/gcs location - prefix
+
     :param path_pattern: path/pattern to a file in the filesystem/Object stores,
         supports glob and prefix pattern for object stores
     :param conn_id: Airflow connection ID
