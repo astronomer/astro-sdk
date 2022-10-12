@@ -33,3 +33,19 @@ class LocalLocation(BaseFileLocation):
         """
         path = pathlib.Path(self.path)
         return os.path.getsize(path)
+
+    @property
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return os.path.basename(self.path)
+
+    @property
+    def openlineage_dataset_name(self) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return urlparse(self.path).path
