@@ -31,7 +31,7 @@ class PythonSDKExtractor(BaseExtractor):
 
     @classmethod
     def get_operator_classnames(cls) -> list[str]:
-        return ["LoadFileOperator"]
+        return ["LoadFileOperator", "AppendOperator"]
 
     def extract(self) -> TaskMetadata | None:  # skipcq: PYL-R0201
         """Empty extract implementation for the abstractmethod of the ``BaseExtractor`` class."""
