@@ -75,12 +75,13 @@ def test__load_yaml_connections_expand_vars():
     connections = _load_yaml_connections(environment="default")
     connection_found = False
     for connection in connections:
-        if connection["conn_id"] == "redshift_conn":
-            connection_found = True
-            assert connection["schema"] == REDSHIFT_CONNECTION_ENV_VARS["REDSHIFT_DATABASE"]
-            assert connection["host"] == REDSHIFT_CONNECTION_ENV_VARS["REDSHIFT_HOST"]
-            assert connection["login"] == REDSHIFT_CONNECTION_ENV_VARS["REDSHIFT_USERNAME"]
-            assert connection["password"] == REDSHIFT_CONNECTION_ENV_VARS["REDSHIFT_PASSWORD"]
+        if connection["conn_id"] != "redshift_conn":
+            continue
+        connection_found = True
+        assert connection["schema"] == REDSHIFT_CONNECTION_ENV_VARS["REDSHIFT_DATABASE"]
+        assert connection["host"] == REDSHIFT_CONNECTION_ENV_VARS["REDSHIFT_HOST"]
+        assert connection["login"] == REDSHIFT_CONNECTION_ENV_VARS["REDSHIFT_USERNAME"]
+        assert connection["password"] == REDSHIFT_CONNECTION_ENV_VARS["REDSHIFT_PASSWORD"]
 
     if not connection_found:
         raise ValueError("Connection with environment variables not found in config.")
