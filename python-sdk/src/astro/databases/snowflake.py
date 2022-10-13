@@ -23,7 +23,7 @@ from snowflake.connector.errors import (
     RequestTimeoutError,
     ServiceUnavailableError,
 )
-from sqlalchemy import Column, insert, select
+from sqlalchemy import column, insert, select
 
 from astro import settings
 from astro.constants import (
@@ -792,15 +792,21 @@ class SnowflakeDatabase(BaseDatabase):
         target_table_sqla = self.get_sqla_table(target_table)
         source_table_sqla = self.get_sqla_table(source_table)
 
-        target_columns: list[Column]
-        source_columns: list[Column]
+        target_columns: list[column]
+        source_columns: list[column]
 
         if not source_to_target_columns_map:
-            target_columns = [Column(col, quote=True) for col in target_table_sqla.c.keys()]
+            target_columns = [
+                column(text='"' + col + '"', is_literal=True) for col in target_table_sqla.c.keys()
+            ]
             source_columns = target_columns
         else:
-            target_columns = [Column(col, quote=True) for col in source_to_target_columns_map.values()]
-            source_columns = [Column(col, quote=True) for col in source_to_target_columns_map.keys()]
+            target_columns = [
+                column(text='"' + col + '"', is_literal=True) for col in source_to_target_columns_map.values()
+            ]
+            source_columns = [
+                column(text='"' + col + '"', is_literal=True) for col in source_to_target_columns_map.keys()
+            ]
 
         sel = select(source_columns).select_from(source_table_sqla)
         # TODO: We should fix the following Type Error
