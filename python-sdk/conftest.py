@@ -13,7 +13,7 @@ from airflow.utils.session import create_session, provide_session
 
 from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
-from astro.table import MAX_TABLE_NAME_LENGTH, Table
+from astro.table import MAX_TABLE_NAME_LENGTH, Table, TempTable
 from tests.sql.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -146,6 +146,32 @@ def database_table_fixture(request):
     yield database, table
 
     database.drop_table(table)
+
+
+@pytest.fixture
+def database_temp_table_fixture(request):
+    """
+    Given request.param in the format:
+        {
+            "database": Database.SQLITE,  # mandatory, may be any supported database
+        }
+    This fixture yields the following during setup:
+        (database, temp_table)
+    Example:
+        (astro.databases.sqlite.SqliteDatabase(), TempTable())
+    """
+    params = request.param
+
+    database_name = params["database"]
+    conn_id = DATABASE_NAME_TO_CONN_ID[database_name]
+    database = create_database(conn_id)
+
+    temp_table = TempTable(conn_id=conn_id, metadata=database.default_metadata)
+    database.create_schema_if_needed(temp_table.metadata.schema)
+
+    yield database, temp_table
+
+    database.drop_table(temp_table)
 
 
 @pytest.fixture

@@ -17,41 +17,37 @@ from airflow.utils.state import State
 from airflow.utils.timezone import datetime
 
 import astro.sql as aql
-from astro.constants import Database
+from astro.constants import SUPPORTED_DATABASES, Database
 from astro.files import File
 from astro.sql.operators.cleanup import CleanupOperator
+from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import Table
 from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
 
 DEFAULT_FILEPATH = str(pathlib.Path(CWD.parent.parent, "data/sample.csv").absolute())
-SQLITE_ONLY = [
-    {"database": Database.SQLITE, "file": File(DEFAULT_FILEPATH)},
+SUPPORTED_DATABASES_OBJECTS = [
+    {
+        "database": database,
+    }
+    for database in Database
 ]
-SUPPORTED_DATABASES = [
+SUPPORTED_DATABASES_OBJECTS_WITH_FILE = [
     {
-        "database": Database.SQLITE,
-    },
-    {
-        "database": Database.POSTGRES,
-    },
-    {
-        "database": Database.BIGQUERY,
-    },
-    {
-        "database": Database.SNOWFLAKE,
-    },
+        "database": database,
+        "file": File(DEFAULT_FILEPATH),
+    }
+    for database in Database
 ]
-SUPPORTED_DATABASES_WITH_FILE = [dict(x, **{"file": File(DEFAULT_FILEPATH)}) for x in SUPPORTED_DATABASES]
 
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
-    SQLITE_ONLY,
+    SUPPORTED_DATABASES_OBJECTS_WITH_FILE,
     indirect=True,
-    ids=["sqlite"],
+    ids=SUPPORTED_DATABASES,
 )
 def test_cleanup_one_table(database_table_fixture):
     db, test_table = database_table_fixture
@@ -63,9 +59,9 @@ def test_cleanup_one_table(database_table_fixture):
 
 @pytest.mark.parametrize(
     "database_table_fixture",
-    SQLITE_ONLY,
+    SUPPORTED_DATABASES_OBJECTS_WITH_FILE,
     indirect=True,
-    ids=["sqlite"],
+    ids=SUPPORTED_DATABASES,
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
@@ -102,9 +98,9 @@ def test_cleanup_non_temp_table(database_table_fixture, multiple_tables_fixture)
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
-    SQLITE_ONLY,
+    SUPPORTED_DATABASES_OBJECTS_WITH_FILE,
     indirect=True,
-    ids=["sqlite"],
+    ids=SUPPORTED_DATABASES,
 )
 def test_cleanup_non_table(database_table_fixture):
     db, test_table = database_table_fixture
@@ -122,9 +118,9 @@ def test_cleanup_non_table(database_table_fixture):
 
 @pytest.mark.parametrize(
     "database_table_fixture",
-    SQLITE_ONLY,
+    SUPPORTED_DATABASES_OBJECTS_WITH_FILE,
     indirect=True,
-    ids=["sqlite"],
+    ids=SUPPORTED_DATABASES,
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
@@ -164,9 +160,9 @@ def test_cleanup_multiple_table(database_table_fixture, multiple_tables_fixture)
 
 @pytest.mark.parametrize(
     "database_table_fixture",
-    SQLITE_ONLY,
+    SUPPORTED_DATABASES_OBJECTS_WITH_FILE,
     indirect=True,
-    ids=["sqlite"],
+    ids=SUPPORTED_DATABASES,
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
@@ -186,17 +182,72 @@ def test_cleanup_multiple_table(database_table_fixture, multiple_tables_fixture)
     ids=["two_tables"],
 )
 def test_cleanup_default_all_tables(sample_dag, database_table_fixture, multiple_tables_fixture):
-    @aql.transform
+    @aql.transform()
     def foo(input_table: Table):
         return "SELECT * FROM {{input_table}}"
 
+    db, _ = database_table_fixture
     table_1, table_2 = multiple_tables_fixture
-    with sample_dag:
-        foo(table_1)
-        foo(table_2)
+    assert db.table_exists(table_1)
+    assert db.table_exists(table_2)
 
-        aql.cleanup([])
+    with sample_dag:
+        foo(table_1, output_table=table_2)
+
+        aql.cleanup()
     test_utils.run_dag(sample_dag)
+
+    assert not db.table_exists(table_2)
+
+
+@pytest.mark.parametrize(
+    "database_temp_table_fixture",
+    SUPPORTED_DATABASES_OBJECTS,
+    indirect=True,
+    ids=SUPPORTED_DATABASES,
+)
+def test_cleanup_mapped_task(sample_dag, database_temp_table_fixture):
+    db, temp_table = database_temp_table_fixture
+
+    with sample_dag:
+        load_file_mapped = LoadFileOperator.partial(task_id="load_file_mapped").expand_kwargs(
+            [
+                {
+                    "input_file": File(path=(CWD.parent.parent / "data/sample.csv").as_posix()),
+                    "output_table": temp_table,
+                }
+            ]
+        )
+
+        aql.cleanup(upstream_tasks=[load_file_mapped])
+    test_utils.run_dag(sample_dag)
+
+    assert not db.table_exists(temp_table)
+
+
+@pytest.mark.parametrize(
+    "database_temp_table_fixture",
+    SUPPORTED_DATABASES_OBJECTS,
+    indirect=True,
+    ids=SUPPORTED_DATABASES,
+)
+def test_cleanup_default_all_tables_mapped_task(sample_dag, database_temp_table_fixture):
+    db, temp_table = database_temp_table_fixture
+
+    with sample_dag:
+        LoadFileOperator.partial(task_id="load_file_mapped").expand_kwargs(
+            [
+                {
+                    "input_file": File(path=(CWD.parent.parent / "data/sample.csv").as_posix()),
+                    "output_table": temp_table,
+                }
+            ]
+        )
+
+        aql.cleanup()
+    test_utils.run_dag(sample_dag)
+
+    assert not db.table_exists(temp_table)
 
 
 def test_is_dag_running():

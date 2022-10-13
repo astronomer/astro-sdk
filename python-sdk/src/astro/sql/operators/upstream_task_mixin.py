@@ -1,5 +1,5 @@
 from airflow.exceptions import AirflowException
-from airflow.models.baseoperator import BaseOperator
+from airflow.models.abstractoperator import AbstractOperator
 from airflow.models.xcom_arg import XComArg
 
 
@@ -12,7 +12,7 @@ class UpstreamTaskMixin:
         for task in upstream_tasks:
             if isinstance(task, XComArg):
                 self.set_upstream(task.operator)
-            elif isinstance(task, BaseOperator):
+            elif isinstance(task, AbstractOperator):
                 self.set_upstream(task)
             else:
                 raise AirflowException(
