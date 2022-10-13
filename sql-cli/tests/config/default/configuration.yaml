@@ -1,44 +1,10 @@
 connections:
-  - conn_id: postgres_conn
-    conn_type: postgres
-    host: localhost
-    schema:
-    login: postgres
-    password: postgres
-    port: 5432
-    extra:
-  - conn_id: postgres_conn_pagila
-    conn_type: postgres
-    host: localhost
-    schema: pagila
-    login: postg
-    password: postgres
-    port: 5432
-    extra:
-  - conn_id: bigquery
-    conn_type: bigquery
-    description: null
-    extra:
-      project: "astronomer-dag-authoring"
-    host: null
-    login: null
-    password: null
-    port: null
-    schema: null
   - conn_id: sqlite_conn
     conn_type: sqlite
     host: /tmp/sqlite.db
     schema:
     login:
     password:
-  - conn_id: gcp_conn
-    conn_type: google_cloud_platform
-    description: null
-    extra: null
-  - conn_id: aws_conn
-    conn_type: aws
-    description: null
-    extra: null
   - conn_id: redshift_conn
     conn_type: redshift
     schema: $REDSHIFT_DATABASE

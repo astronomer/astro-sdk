@@ -48,6 +48,7 @@ def generate(
 
 @app.command()
 def validate(environment: str = "default", connection: Optional[str] = None) -> None:
+    """Validate Airflow connection(s) provided in the configuration file for the given environment"""
     validate_connections(environment=environment, connection_id=connection)
 
 

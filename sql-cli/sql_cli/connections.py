@@ -11,6 +11,8 @@ from airflow.utils.session import create_session
 
 from sql_cli.settings import SQL_CLI_PROJECT_DIRECTORY
 
+CONNECTION_ID_OUTPUT_STRING_WIDTH = 25
+
 
 def _load_yaml_connections(environment: str) -> list[dict[str, Any]]:
     """Gets the configuration yaml for the given environment and loads the connections from it into a dictionary"""
@@ -61,10 +63,10 @@ def validate_connections(environment: str = "default", connection_id: str | None
 
         success_status, _ = conn_obj.test_connection()
         if not success_status:
-            logs += f"Validating connection {conn_id:25} FAILED\n"
+            logs += f"Validating connection {conn_id:{CONNECTION_ID_OUTPUT_STRING_WIDTH}} FAILED\n"
             continue
 
-        logs += f"Validating connection {conn_id:25} PASSED\n"
+        logs += f"Validating connection {conn_id:{CONNECTION_ID_OUTPUT_STRING_WIDTH}} PASSED\n"
 
     logging.info(logs)
 

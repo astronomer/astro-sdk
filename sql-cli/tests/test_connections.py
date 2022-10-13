@@ -1,27 +1,47 @@
+import os
+from unittest import mock
+
 import pytest
 
-from sql_cli.connections import _load_yaml_connections, validate_connections
+from sql_cli.connections import (
+    CONNECTION_ID_OUTPUT_STRING_WIDTH,
+    _load_yaml_connections,
+    validate_connections,
+)
+
+REDSHIFT_CONNECTION_ENV_VARS = {
+    "REDSHIFT_DATABASE": "fake_database",
+    "REDSHIFT_HOST": "fake.redshift.amazonaws.com",
+    "REDSHIFT_USERNAME": "fake_user",
+    "REDSHIFT_PASSWORD": "fake_password",
+}
 
 
-def test_validate_connections(caplog):
+@pytest.mark.parametrize(
+    "conn_id, test_connection_output",
+    [
+        ("redshift_conn", (False, "test connection failed")),
+        ("sqlite_conn", (True, "test_connection passed")),
+    ],
+)
+@mock.patch("sql_cli.connections.Connection.test_connection")
+def test_validate_connections(mock_test_connection, conn_id, test_connection_output, caplog):
+    mock_test_connection.return_value = test_connection_output
     validate_connections()
 
-    postgres_conn_id = "postgres_conn"
-    postgres_conn_id_formatted_string = postgres_conn_id + " " * (25 - len(postgres_conn_id))
-    failed_connection_log = f"Validating connection {postgres_conn_id_formatted_string} FAILED"
-    assert failed_connection_log in caplog.text
+    conn_id_formatted_string = conn_id + " " * (CONNECTION_ID_OUTPUT_STRING_WIDTH - len(conn_id))
+    validation_status_string = "PASSED" if test_connection_output[0] else "FAILED"
+    connection_log = f"Validating connection {conn_id_formatted_string} {validation_status_string}"
+    assert connection_log in caplog.text
 
+
+def test_specific_connection(caplog):
     sqlite_conn_id = "sqlite_conn"
-    sqlite_conn_id_formatted_string = sqlite_conn_id + " " * (25 - len(sqlite_conn_id))
-    added_connection_log = f"Validating connection {sqlite_conn_id_formatted_string} PASSED"
-    assert added_connection_log in caplog.text
+    validate_connections(connection_id=sqlite_conn_id)
 
-
-def test_specific_connection_with_env_vars_in_config(caplog):
-    redshift_conn_id = "redshift_conn"
-    validate_connections(connection_id=redshift_conn_id)
-
-    sqlite_conn_id_formatted_string = redshift_conn_id + " " * (25 - len(redshift_conn_id))
+    sqlite_conn_id_formatted_string = sqlite_conn_id + " " * (
+        CONNECTION_ID_OUTPUT_STRING_WIDTH - len(sqlite_conn_id)
+    )
     added_connection_log = f"Validating connection {sqlite_conn_id_formatted_string} PASSED"
     assert added_connection_log in caplog.text
 
@@ -48,3 +68,19 @@ def test__load_yaml_connections():
         "password": None,
     }
     assert sqlite_conn_dict in connections
+
+
+@mock.patch.dict(os.environ, REDSHIFT_CONNECTION_ENV_VARS, clear=True)
+def test__load_yaml_connections_expand_vars():
+    connections = _load_yaml_connections(environment="default")
+    connection_found = False
+    for connection in connections:
+        if connection["conn_id"] == "redshift_conn":
+            connection_found = True
+            assert connection["schema"] == REDSHIFT_CONNECTION_ENV_VARS["REDSHIFT_DATABASE"]
+            assert connection["host"] == REDSHIFT_CONNECTION_ENV_VARS["REDSHIFT_HOST"]
+            assert connection["login"] == REDSHIFT_CONNECTION_ENV_VARS["REDSHIFT_USERNAME"]
+            assert connection["password"] == REDSHIFT_CONNECTION_ENV_VARS["REDSHIFT_PASSWORD"]
+
+    if not connection_found:
+        raise ValueError("Connection with environment variables not found in config.")
