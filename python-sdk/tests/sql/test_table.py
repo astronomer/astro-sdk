@@ -158,7 +158,7 @@ def test_if_table_object_can_be_pickled():
     "connection,name,namespace",
     [
         (
-            Connection(conn_id="test_conn", conn_type="gcpbigquery", extra={"project": "astro-sdk"}),
+            Connection(conn_id="test_conn", conn_type="gcpbigquery", extra={"project": "astronomer-dag-authoring"}),
             "astro-sdk.dataset.test_tb",
             "bigquery",
         ),
@@ -218,7 +218,7 @@ def test_if_table_object_can_be_pickled():
 @mock.patch("airflow.hooks.base.BaseHook.get_connection")
 def test_openlineage_dataset(mock_get_connection, gcp_cred, connection, name, namespace):
     mock_get_connection.return_value = connection
-    gcp_cred.return_value = "astro-sdk", "astro-sdk"
+    gcp_cred.return_value = "astronomer-dag-authoring", "astronomer-dag-authoring"
     tb = Table(conn_id="test_conn", name="test_tb", metadata=Metadata(schema="dataset"))
 
     assert tb.openlineage_dataset_name() == name

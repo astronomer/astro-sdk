@@ -13,8 +13,8 @@ TEST_FILE_LOCATION = "gs://astro-sdk/workspace/sample_pattern"
 TEST_TABLE = "test-table"
 TEST_INPUT_DATASET_NAMESPACE = "gs://astro-sdk"
 TEST_INPUT_DATASET_NAME = "/workspace/sample_pattern"
-TEST_OUTPUT_DATASET_NAMESPACE = "bigquery://None"
-TEST_OUTPUT_DATASET_NAME = "astro.test-extractor"
+TEST_OUTPUT_DATASET_NAMESPACE = "bigquery"
+TEST_OUTPUT_DATASET_NAME = "astronomer-dag-authoring.astro.test-extractor"
 INPUT_STATS = [
     OpenlineageDataset(
         namespace=TEST_INPUT_DATASET_NAMESPACE,
