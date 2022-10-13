@@ -23,7 +23,7 @@ repos:
       - id: debug-statements
       - id: end-of-file-fixer
         # Exclude auto-generated example files from being changed
-        exclude: ^sql-cli/examples/_dags/|^sql-cli/examples/_target/
+        exclude: ^sql-cli/examples/.airflow/dags
       - id: mixed-line-ending
       - id: trailing-whitespace
       - id: pretty-format-json
@@ -51,7 +51,7 @@ repos:
     hooks:
       - id: black
         # Exclude auto-generated example files from being changed
-        exclude: ^sql-cli/examples/_dags/
+        exclude: ^sql-cli/examples/.airflow/dags
         args: ["--config", "./python-sdk/pyproject.toml"]
 
   - repo: https://github.com/asottile/blacken-docs
@@ -79,7 +79,7 @@ repos:
       - id: isort
         name: Run isort
         # Exclude auto-generated example files from being changed
-        exclude: ^sql-cli/examples/_dags/
+        exclude: ^sql-cli/examples/.airflow/dags
         args:
           # These options are duplicated to known_first_party in .isort.cfg,
           # Please keep these in sync for now. (See comments there for details.)
@@ -115,7 +115,7 @@ repos:
       -   id: pyupgrade
           args: [--py37-plus]
           # Exclude auto-generated example files from being changed
-          exclude: ^sql-cli/examples/_dags/
+          exclude: ^sql-cli/examples/.airflow/dags
 
   - repo: local
     hooks:

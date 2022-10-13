@@ -9,27 +9,27 @@ from sql_cli.sql_directory_parser import SqlFile
 
 @pytest.fixture()
 def root_directory():
-    return Path.cwd() / "tests" / "sql_files"
+    return Path.cwd() / "tests" / "workflows" / "sql_files"
 
 
 @pytest.fixture()
 def root_directory_cycle():
-    return Path.cwd() / "tests" / "sql_files_cycle"
+    return Path.cwd() / "tests" / "workflows" / "sql_files_cycle"
 
 
 @pytest.fixture()
 def root_directory_symlink():
-    return Path.cwd() / "tests" / "sql_files_symlink"
-
-
-@pytest.fixture()
-def target_directory():
-    return Path.cwd() / "tests" / "_target"
+    return Path.cwd() / "tests" / "workflows" / "sql_files_symlink"
 
 
 @pytest.fixture()
 def dags_directory():
-    return Path.cwd() / "tests" / "_dags"
+    return Path.cwd() / "tests" / ".airflow" / "dags"
+
+
+@pytest.fixture()
+def target_directory():
+    return Path.cwd() / "tests" / ".airflow" / "dags" / ".sql"
 
 
 @pytest.fixture()
