@@ -25,17 +25,18 @@ def test_initialise_project_with_dirname():
         new_dir_files_list = ls(dir_name)
         src_dir_files_list = ls(BASE_SOURCE_DIR)
         assert new_dir_files_list == src_dir_files_list
-        assert len(new_dir_files_list) == 6
+        assert len(new_dir_files_list) == 16
 
 
-def initialise_project_in_previously_initialised_dir():
+def test_initialise_project_in_previously_initialised_dir():
     with tempfile.TemporaryDirectory() as dir_name:
         assert not os.listdir(dir_name)
         Project().initialise(target_dir=dir_name)
         new_dir_files_list = ls(dir_name)
         src_dir_files_list = ls(BASE_SOURCE_DIR)
         assert new_dir_files_list == src_dir_files_list
-        assert len(new_dir_files_list) == 6
+        assert len(new_dir_files_list) == 16
         Project().initialise(target_dir=dir_name)
         assert new_dir_files_list == src_dir_files_list
-        assert len(new_dir_files_list) == 6
+        assert len(new_dir_files_list) == 16
+        # TODO: make sure we did not override the content of existing files!
