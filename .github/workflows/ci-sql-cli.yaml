@@ -92,6 +92,7 @@ jobs:
           name: coverage
           path: ./sql-cli/.coverage
 
+
   Code-Coverage:
     if: github.event.action != 'labeled'
     needs:
