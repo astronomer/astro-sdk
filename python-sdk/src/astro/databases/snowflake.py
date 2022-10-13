@@ -580,7 +580,7 @@ class SnowflakeDatabase(BaseDatabase):
         """
 
         auto_create_table = False
-        if if_exists == "replace":
+        if if_exists == "replace" or not self.table_exists(target_table):
             auto_create_table = True
 
         pandas_tools.write_pandas(
