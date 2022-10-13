@@ -26,7 +26,7 @@ from astro.utils.typing_compat import Context
 
 
 def _get_dataframe(
-    table: BaseTable, columns_names_capitalization: ColumnCapitalization = "lower"
+    table: BaseTable, columns_names_capitalization: ColumnCapitalization = "original"
 ) -> pd.DataFrame:
     """
     Exports records from a SQL table and converts it into a pandas dataframe
@@ -118,7 +118,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         conn_id: str | None = None,
         database: str | None = None,
         schema: str | None = None,
-        columns_names_capitalization: ColumnCapitalization = "lower",
+        columns_names_capitalization: ColumnCapitalization = "original",
         **kwargs,
     ):
         self.conn_id: str = conn_id or ""
@@ -222,7 +222,7 @@ def dataframe(
     conn_id: str = "",
     database: str | None = None,
     schema: str | None = None,
-    columns_names_capitalization: ColumnCapitalization = "lower",
+    columns_names_capitalization: ColumnCapitalization = "original",
     **kwargs: Any,
 ) -> TaskDecorator:
     """
