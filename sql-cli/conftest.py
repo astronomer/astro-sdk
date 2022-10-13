@@ -70,9 +70,7 @@ def sql_file_with_cycle(root_directory_cycle, target_directory):
 
 @pytest.fixture()
 def sql_files_dag(sql_file):
-    return SqlFilesDAG(
-        dag_id="sql_files_dag", start_date=datetime(2022, 10, 4), sql_files=[sql_file]
-    )
+    return SqlFilesDAG(dag_id="sql_files_dag", start_date=datetime(2022, 10, 4), sql_files=[sql_file])
 
 
 @pytest.fixture()

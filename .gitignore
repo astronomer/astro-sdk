@@ -2,6 +2,7 @@
 coverage.xml
 .env
 .coverage
+**/.python-version
 python-sdk/integration-tests/test_data*
 python-sdk/test-connections.yaml
 .idea
@@ -52,3 +53,6 @@ sql-cli/tests/_target/*
 
 # Airflow
 **/.airflowignore
+
+sql-cli/build/
+*.egg-info/

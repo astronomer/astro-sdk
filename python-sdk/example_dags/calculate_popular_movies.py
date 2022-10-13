@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from airflow import DAG
+
 from astro import sql as aql
 from astro.files import File
 from astro.table import Table
@@ -24,9 +25,7 @@ with DAG(
     catchup=False,
 ) as dag:
     imdb_movies = aql.load_file(
-        File(
-            "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
-        ),
+        File("https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"),
         output_table=Table(conn_id="sqlite_default"),
     )
     top_five_animations(

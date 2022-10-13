@@ -1,6 +1,7 @@
 import tempfile
 
 from airflow.configuration import conf
+
 from astro.constants import DEFAULT_SCHEMA
 
 SCHEMA = conf.get("astro_sdk", "sql_schema", fallback=DEFAULT_SCHEMA)
@@ -9,11 +10,8 @@ BIGQUERY_SCHEMA = conf.get("astro_sdk", "bigquery_default_schema", fallback=SCHE
 SNOWFLAKE_SCHEMA = conf.get("astro_sdk", "snowflake_default_schema", fallback=SCHEMA)
 REDSHIFT_SCHEMA = conf.get("astro_sdk", "redshift_default_schema", fallback=SCHEMA)
 
-
 DATAFRAME_STORAGE_CONN_ID = conf.get("astro_sdk", "xcom_storage_conn_id", fallback=None)
-DATAFRAME_STORAGE_URL = conf.get(
-    "astro_sdk", "xcom_storage_url", fallback=tempfile.gettempdir()
-)
+DATAFRAME_STORAGE_URL = conf.get("astro_sdk", "xcom_storage_url", fallback=tempfile.gettempdir())
 STORE_DATA_LOCAL_DEV = conf.get("astro_sdk", "store_data_local_dev", fallback=False)
 XCOM_BACKEND = conf.get("core", "xcom_backend")
 IS_CUSTOM_XCOM_BACKEND = XCOM_BACKEND not in [
@@ -38,12 +36,8 @@ LOAD_TABLE_AUTODETECT_ROWS_COUNT = conf.getint(
 
 
 #: Reduce responses sizes returned by aql.run_raw_sql to avoid trashing the Airflow DB if the BaseXCom is used.
-RAW_SQL_MAX_RESPONSE_SIZE = conf.getint(
-    section="astro_sdk", key="run_raw_sql_response_size", fallback=-1
-)
+RAW_SQL_MAX_RESPONSE_SIZE = conf.getint(section="astro_sdk", key="run_raw_sql_response_size", fallback=-1)
 
 # Temp changes
 # Should Astro SDK automatically add inlets/outlets to take advantage of Airflow 2.4 Data-aware scheduling
-AUTO_ADD_INLETS_OUTLETS = conf.getboolean(
-    "astro_sdk", "auto_add_inlets_outlets", fallback=True
-)
+AUTO_ADD_INLETS_OUTLETS = conf.getboolean("astro_sdk", "auto_add_inlets_outlets", fallback=True)

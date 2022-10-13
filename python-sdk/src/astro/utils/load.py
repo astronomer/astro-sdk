@@ -35,9 +35,7 @@ def copy_remote_file_to_local(
         target_filepath = tmp_file.name
 
     with open(target_filepath, write_mode) as fp_out:
-        with smart_open.open(
-            source_filepath, mode=read_mode, transport_params=transport_params
-        ) as fp_in:
+        with smart_open.open(source_filepath, mode=read_mode, transport_params=transport_params) as fp_in:
             content = fp_in.read()
             fp_out.write(content)
 

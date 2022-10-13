@@ -6,12 +6,13 @@ import pathlib
 import pandas as pd
 import smart_open
 from airflow.utils.log.logging_mixin import LoggingMixin
+from attr import define, field
+
 from astro import constants
 from astro.airflow.datasets import Dataset
 from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
 from astro.files.types import FileType, create_file_type
-from attr import define, field
 
 
 @define
@@ -80,9 +81,7 @@ class File(LoggingMixin, Dataset):
         """
         return not pathlib.PosixPath(self.path).suffix
 
-    def create_from_dataframe(
-        self, df: pd.DataFrame, store_as_dataframe: bool = True
-    ) -> None:
+    def create_from_dataframe(self, df: pd.DataFrame, store_as_dataframe: bool = True) -> None:
         """Create a file in the desired location using the values of a dataframe.
 
         :param store_as_dataframe: Whether the data should later be deserialized as a dataframe or as a file containing
@@ -90,17 +89,29 @@ class File(LoggingMixin, Dataset):
         :param df: pandas dataframe
         """
         self.is_dataframe = store_as_dataframe
-        with smart_open.open(
-            self.path, mode="wb", transport_params=self.location.transport_params
-        ) as stream:
+        with smart_open.open(self.path, mode="wb", transport_params=self.location.transport_params) as stream:
             self.type.create_from_dataframe(stream=stream, df=df)
+
+    @property
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return self.location.openlineage_dataset_namespace
+
+    @property
+    def openlineage_dataset_name(self) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return self.location.openlineage_dataset_name
 
     def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes."""
         mode = "rb" if self.is_binary() else "r"
-        with smart_open.open(
-            self.path, mode=mode, transport_params=self.location.transport_params
-        ) as stream:
+        with smart_open.open(self.path, mode=mode, transport_params=self.location.transport_params) as stream:
             return self.type.export_to_dataframe(stream, **kwargs)
 
     def _convert_remote_file_to_byte_stream(self) -> io.IOBase:
@@ -116,9 +127,7 @@ class File(LoggingMixin, Dataset):
 
         mode = "rb" if self.is_binary() else "r"
         remote_obj_buffer = io.BytesIO() if self.is_binary() else io.StringIO()
-        with smart_open.open(
-            self.path, mode=mode, transport_params=self.location.transport_params
-        ) as stream:
+        with smart_open.open(self.path, mode=mode, transport_params=self.location.transport_params) as stream:
             remote_obj_buffer.write(stream.read())
         remote_obj_buffer.seek(0)
         return remote_obj_buffer
@@ -130,9 +139,7 @@ class File(LoggingMixin, Dataset):
         before exporting to a dataframe. We've found a sizable speed improvement with this optimization.
         """
 
-        return self.type.export_to_dataframe(
-            self._convert_remote_file_to_byte_stream(), **kwargs
-        )
+        return self.type.export_to_dataframe(self._convert_remote_file_to_byte_stream(), **kwargs)
 
     def exists(self) -> bool:
         """Check if the file exists or not"""
@@ -186,9 +193,7 @@ class File(LoggingMixin, Dataset):
     @classmethod
     def from_json(cls, serialized_object: dict):
         filetype = (
-            constants.FileType(serialized_object["filetype"])
-            if serialized_object.get("filetype")
-            else None
+            constants.FileType(serialized_object["filetype"]) if serialized_object.get("filetype") else None
         )
         return File(
             conn_id=serialized_object["conn_id"],

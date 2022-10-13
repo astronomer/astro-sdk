@@ -8,6 +8,12 @@ from typing import Any, Callable, Mapping
 import pandas as pd
 import sqlalchemy
 from airflow.hooks.dbapi import DbApiHook
+from pandas.io.sql import SQLDatabase
+from sqlalchemy import column, insert, select
+from sqlalchemy.sql import ClauseElement
+from sqlalchemy.sql.elements import ColumnClause
+from sqlalchemy.sql.schema import Table as SqlaTable
+
 from astro.constants import (
     DEFAULT_CHUNK_SIZE,
     ColumnCapitalization,
@@ -23,11 +29,6 @@ from astro.files.types import create_file_type
 from astro.files.types.base import FileType as FileTypeConstants
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.table import BaseTable, Metadata
-from pandas.io.sql import SQLDatabase
-from sqlalchemy import column, insert, select
-from sqlalchemy.sql import ClauseElement
-from sqlalchemy.sql.elements import ColumnClause
-from sqlalchemy.sql.schema import Table as SqlaTable
 
 
 class BaseDatabase(ABC):
@@ -57,9 +58,7 @@ class BaseDatabase(ABC):
     NATIVE_PATHS: dict[Any, Any] = {}
     NATIVE_LOAD_EXCEPTIONS: Any = DatabaseCustomError
     DEFAULT_SCHEMA = SCHEMA
-    NATIVE_AUTODETECT_SCHEMA_CONFIG: Mapping[
-        FileLocation, Mapping[str, list[FileType] | Callable]
-    ] = {}
+    NATIVE_AUTODETECT_SCHEMA_CONFIG: Mapping[FileLocation, Mapping[str, list[FileType] | Callable]] = {}
     FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = set()
 
     def __init__(self, conn_id: str):
@@ -131,8 +130,7 @@ class BaseDatabase(ABC):
         """
         sqla_table = self.get_sqla_table(table)
         return all(
-            any(sqla_column.name == column for sqla_column in sqla_table.columns)
-            for column in columns
+            any(sqla_column.name == column for sqla_column in sqla_table.columns) for column in columns
         )
 
     def table_exists(self, table: BaseTable) -> bool:
@@ -185,6 +183,21 @@ class BaseDatabase(ABC):
         """
         raise NotImplementedError
 
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        airflow_conn = self.hook.get_connection(self.conn_id)
+        return f"{self.sql_type}://{airflow_conn.host}"
+
+    def openlineage_dataset_name(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return self.get_table_qualified_name(table)
+
     def populate_table_metadata(self, table: BaseTable) -> BaseTable:
         """
         Given a table, check if the table has metadata.
@@ -228,9 +241,7 @@ class BaseDatabase(ABC):
         :param table: The table to be created.
         :param file: File used to infer the new table columns.
         """
-        raise NotImplementedError(
-            "Missing implementation of native schema autodetection."
-        )
+        raise NotImplementedError("Missing implementation of native schema autodetection.")
 
     def create_table_using_schema_autodetection(
         self,
@@ -255,9 +266,7 @@ class BaseDatabase(ABC):
                 )
             source_dataframe = dataframe
         else:
-            source_dataframe = file.export_to_dataframe(
-                nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT
-            )
+            source_dataframe = file.export_to_dataframe(nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT)
 
         db = SQLDatabase(engine=self.sqlalchemy_engine)
         db.prep_table(
@@ -301,9 +310,7 @@ class BaseDatabase(ABC):
         elif file and self.is_native_autodetect_schema_available(file):
             self.create_table_using_native_schema_autodetection(table, file)
         else:
-            self.create_table_using_schema_autodetection(
-                table, file, dataframe, columns_names_capitalization
-            )
+            self.create_table_using_schema_autodetection(table, file, dataframe, columns_names_capitalization)
 
     def create_table_from_select_statement(
         self,
@@ -329,9 +336,7 @@ class BaseDatabase(ABC):
 
         :param table: The table to be deleted.
         """
-        statement = self._drop_table_statement.format(
-            self.get_table_qualified_name(table)
-        )
+        statement = self._drop_table_statement.format(self.get_table_qualified_name(table))
         self.run_sql(statement)
 
     # ---------------------------------------------------------
@@ -356,21 +361,13 @@ class BaseDatabase(ABC):
         :param if_exists:  Overwrite file if exists
         :param use_native_support: Use native support for data transfer if available on the destination
         """
-        is_schema_autodetection_supported = (
-            self.check_schema_autodetection_is_supported(source_file=file)
-        )
+        is_schema_autodetection_supported = self.check_schema_autodetection_is_supported(source_file=file)
         is_file_pattern_based_schema_autodetection_supported = (
-            self.check_file_pattern_based_schema_autodetection_is_supported(
-                source_file=file
-            )
+            self.check_file_pattern_based_schema_autodetection_is_supported(source_file=file)
         )
         if if_exists == "replace":
             self.drop_table(table)
-        if (
-            use_native_support
-            and is_schema_autodetection_supported
-            and not file.is_pattern()
-        ):
+        if use_native_support and is_schema_autodetection_supported and not file.is_pattern():
             return
         if (
             use_native_support
@@ -588,12 +585,8 @@ class BaseDatabase(ABC):
             target_columns = [column(col) for col in target_table_sqla.c.keys()]
             source_columns = target_columns
         else:
-            target_columns = [
-                column(col) for col in source_to_target_columns_map.values()
-            ]
-            source_columns = [
-                column(col) for col in source_to_target_columns_map.keys()
-            ]
+            target_columns = [column(col) for col in source_to_target_columns_map.values()]
+            source_columns = [column(col) for col in source_to_target_columns_map.keys()]
 
         sel = select(source_columns).select_from(source_table_sqla)
         # TODO: We should fix the following Type Error
@@ -650,14 +643,10 @@ class BaseDatabase(ABC):
 
         if self.table_exists(source_table):
             sqla_table = self.get_sqla_table(source_table)
-            return pd.read_sql(
-                sql=sqla_table.select(**select_kwargs), con=self.sqlalchemy_engine
-            )
+            return pd.read_sql(sql=sqla_table.select(**select_kwargs), con=self.sqlalchemy_engine)
 
         table_qualified_name = self.get_table_qualified_name(source_table)
-        raise NonExistentTableException(
-            f"The table {table_qualified_name} does not exist"
-        )
+        raise NonExistentTableException(f"The table {table_qualified_name} does not exist")
 
     def export_table_to_file(
         self,
@@ -772,9 +761,7 @@ class BaseDatabase(ABC):
 
         :param source_file: File from which we need to transfer data
         """
-        filetype_supported = self.NATIVE_AUTODETECT_SCHEMA_CONFIG.get(
-            source_file.location.location_type
-        )
+        filetype_supported = self.NATIVE_AUTODETECT_SCHEMA_CONFIG.get(source_file.location.location_type)
 
         source_filetype = (
             source_file
@@ -791,9 +778,7 @@ class BaseDatabase(ABC):
         location_type = self.NATIVE_PATHS.get(source_file.location.location_type)
         return bool(location_type and is_source_filetype_supported)
 
-    def check_file_pattern_based_schema_autodetection_is_supported(
-        self, source_file: File
-    ) -> bool:
+    def check_file_pattern_based_schema_autodetection_is_supported(self, source_file: File) -> bool:
         """
         Checks if schema autodetection is handled natively by the database for file
         patterns and prefixes.
@@ -801,7 +786,6 @@ class BaseDatabase(ABC):
         :param source_file: File from which we need to transfer data
         """
         is_file_pattern_based_schema_autodetection_supported = (
-            source_file.location.location_type
-            in self.FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED
+            source_file.location.location_type in self.FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED
         )
         return is_file_pattern_based_schema_autodetection_supported

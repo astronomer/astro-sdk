@@ -2,7 +2,6 @@ import os
 import pathlib
 from unittest import mock
 
-import astro.sql as aql
 import pandas
 import pytest
 from airflow import DAG, AirflowException
@@ -16,6 +15,8 @@ from airflow.operators.bash import BashOperator
 from airflow.settings import Session
 from airflow.utils.state import State
 from airflow.utils.timezone import datetime
+
+import astro.sql as aql
 from astro.constants import Database
 from astro.files import File
 from astro.sql.operators.cleanup import CleanupOperator
@@ -42,9 +43,7 @@ SUPPORTED_DATABASES = [
         "database": Database.SNOWFLAKE,
     },
 ]
-SUPPORTED_DATABASES_WITH_FILE = [
-    dict(x, **{"file": File(DEFAULT_FILEPATH)}) for x in SUPPORTED_DATABASES
-]
+SUPPORTED_DATABASES_WITH_FILE = [dict(x, **{"file": File(DEFAULT_FILEPATH)}) for x in SUPPORTED_DATABASES]
 
 
 @pytest.mark.integration
@@ -186,9 +185,7 @@ def test_cleanup_multiple_table(database_table_fixture, multiple_tables_fixture)
     indirect=True,
     ids=["two_tables"],
 )
-def test_cleanup_default_all_tables(
-    sample_dag, database_table_fixture, multiple_tables_fixture
-):
+def test_cleanup_default_all_tables(sample_dag, database_table_fixture, multiple_tables_fixture):
     @aql.transform
     def foo(input_table: Table):
         return "SELECT * FROM {{input_table}}"
@@ -236,9 +233,7 @@ def test_error_raised_with_blocking_op_executors(
     mock_is_dag_running.side_effect = [True, False]
     mock_is_single_worker_mode.return_value = single_worker_mode
 
-    dag = DAG(
-        "test_error_raised_with_blocking_op_executors", start_date=datetime(2022, 1, 1)
-    )
+    dag = DAG("test_error_raised_with_blocking_op_executors", start_date=datetime(2022, 1, 1))
     cleanup_task = CleanupOperator(dag=dag)
     dr = DagRun(dag_id=dag.dag_id)
 

@@ -23,36 +23,18 @@ def kwargs_with_datasets(
     from astro import settings
 
     kwargs = kwargs or {}
-    if (
-        "inlets" in kwargs
-        or DATASET_SUPPORT
-        and settings.AUTO_ADD_INLETS_OUTLETS
-        and input_datasets
-    ):
+    if "inlets" in kwargs or DATASET_SUPPORT and settings.AUTO_ADD_INLETS_OUTLETS and input_datasets:
         # Remove non-dataset objects like Temp tables (unless passed by user)
-        input_datasets = (
-            input_datasets if isinstance(input_datasets, list) else [input_datasets]
-        )
-        input_datasets = [
-            input_ds for input_ds in input_datasets if isinstance(input_ds, Dataset)
-        ]
+        input_datasets = input_datasets if isinstance(input_datasets, list) else [input_datasets]
+        input_datasets = [input_ds for input_ds in input_datasets if isinstance(input_ds, Dataset)]
 
         inlets = kwargs.get("inlets", input_datasets)
         kwargs.update({"inlets": inlets})
 
-    if (
-        "outlets" in kwargs
-        or DATASET_SUPPORT
-        and settings.AUTO_ADD_INLETS_OUTLETS
-        and output_datasets
-    ):
+    if "outlets" in kwargs or DATASET_SUPPORT and settings.AUTO_ADD_INLETS_OUTLETS and output_datasets:
         # Remove non-dataset objects like Temp tables (unless passed by user)
-        output_datasets = (
-            output_datasets if isinstance(output_datasets, list) else [output_datasets]
-        )
-        output_datasets = [
-            output_ds for output_ds in output_datasets if isinstance(output_ds, Dataset)
-        ]
+        output_datasets = output_datasets if isinstance(output_datasets, list) else [output_datasets]
+        output_datasets = [output_ds for output_ds in output_datasets if isinstance(output_ds, Dataset)]
 
         outlets = kwargs.get("outlets", output_datasets)
         kwargs.update({"outlets": outlets})

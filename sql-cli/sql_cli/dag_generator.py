@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 
 from networkx import DiGraph, depth_first_search, find_cycle, is_directed_acyclic_graph
 
 from sql_cli.exceptions import DagCycle
-from sql_cli.sql_directory_parser import SqlFile
+from sql_cli.sql_directory_parser import SqlFile, get_sql_files
+from sql_cli.utils.jinja import render
 
 
 @dataclass
@@ -31,9 +33,7 @@ class SqlFilesDAG:
 
         :returns: True if there is any SQL file with the given variable name.
         """
-        return any(
-            sql_file.get_variable_name() == variable_name for sql_file in self.sql_files
-        )
+        return any(sql_file.get_variable_name() == variable_name for sql_file in self.sql_files)
 
     def find_sql_file(self, variable_name: str) -> SqlFile:
         """
@@ -45,9 +45,7 @@ class SqlFilesDAG:
         """
         try:
             return next(
-                sql_file
-                for sql_file in self.sql_files
-                if sql_file.get_variable_name() == variable_name
+                sql_file for sql_file in self.sql_files if sql_file.get_variable_name() == variable_name
             )
         except StopIteration:
             raise ValueError("No sql file has been found for variable name!")
@@ -75,12 +73,33 @@ class SqlFilesDAG:
 
         if not is_directed_acyclic_graph(graph):
             cycle_edges = " and ".join(
-                " and ".join(edge.get_variable_name() for edge in edges)
-                for edges in find_cycle(graph)
+                " and ".join(edge.get_variable_name() for edge in edges) for edges in find_cycle(graph)
             )
-            raise DagCycle(
-                "Could not generate DAG!"
-                f" A cycle between {cycle_edges} has been detected!"
-            )
+            raise DagCycle("Could not generate DAG!" f" A cycle between {cycle_edges} has been detected!")
 
         return list(depth_first_search.dfs_postorder_nodes(graph))
+
+
+def generate_dag(directory: Path, target_directory: Path, dags_directory: Path) -> Path:
+    """
+    Generate a DAG from SQL files.
+
+    :params directory: The directory containing the raw sql files.
+    :params target_directory: The directory containing the executable sql files.
+    :params dags_directory: The directory containing the generated DAG.
+
+    :returns: the path to the DAG file.
+    """
+    sql_files = sorted(get_sql_files(directory, target_directory))
+    sql_files_dag = SqlFilesDAG(
+        dag_id=directory.name,
+        start_date=datetime(2020, 1, 1),
+        sql_files=sql_files,
+    )
+    output_file = dags_directory / f"{sql_files_dag.dag_id}.py"
+    render(
+        template_file=Path("templates/dag.py.jinja2"),
+        context={"dag": sql_files_dag},
+        output_file=output_file,
+    )
+    return output_file

@@ -6,6 +6,7 @@ import pandas as pd
 
 # Uses data from https://www.kaggle.com/c/shelter-animal-outcomes
 from airflow.decorators import dag
+
 from astro import sql as aql
 from astro.files import File
 from astro.table import Metadata, Table
@@ -27,9 +28,7 @@ def clean_data(input_table: Table):
 # [START dataframe_example_1]
 @aql.dataframe(columns_names_capitalization="original")
 def aggregate_data(df: pd.DataFrame):
-    new_df = df.pivot_table(
-        index="date", values="name", columns=["type"], aggfunc="count"
-    ).reset_index()
+    new_df = df.pivot_table(index="date", values="name", columns=["type"], aggfunc="count").reset_index()
     new_df.columns = new_df.columns.str.lower()
     return new_df
 

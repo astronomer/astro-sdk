@@ -5,7 +5,7 @@ from typing import Iterable
 
 import frontmatter
 
-from sql_cli.utils import find_template_variables
+from sql_cli.utils.jinja import find_template_variables
 
 
 class SqlFile:
@@ -17,9 +17,7 @@ class SqlFile:
     :param target_directory: The target directory path for the executable sql.
     """
 
-    def __init__(
-        self, root_directory: Path, path: Path, target_directory: Path
-    ) -> None:
+    def __init__(self, root_directory: Path, path: Path, target_directory: Path) -> None:
         self.root_directory = root_directory
         self.path = path
         self.target_directory = target_directory
@@ -37,9 +35,7 @@ class SqlFile:
         :returns: True if this sql file is equal to the other one.
         """
         if isinstance(other, SqlFile):
-            return (
-                self.root_directory == other.root_directory and self.path == other.path
-            )
+            return self.root_directory == other.root_directory and self.path == other.path
         return False
 
     def __gt__(self, other: SqlFile) -> bool:
@@ -103,9 +99,7 @@ class SqlFile:
 
         :returns: the path where sql files without any headers are being placed.
         """
-        target_full_directory = self.target_directory / "/".join(
-            self.get_sub_directories()
-        )
+        target_full_directory = self.target_directory / "/".join(self.get_sub_directories())
         target_full_directory.mkdir(parents=True, exist_ok=True)
 
         target_path = target_full_directory / self.path.name
@@ -128,5 +122,5 @@ def get_sql_files(directory: Path, target_directory: Path) -> set[SqlFile]:
     return {
         SqlFile(root_directory=directory, path=child, target_directory=target_directory)
         for child in directory.rglob("*.sql")
-        if child.is_file and not child.is_symlink()
+        if child.is_file() and not child.is_symlink()
     }

@@ -20,14 +20,13 @@ Pre-requisites:
 from datetime import datetime
 
 from airflow import DAG
+
 from astro import sql as aql
 from astro.files import File
 from astro.table import Table
 
 # [START dataset_file]
-input_file = File(
-    path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
-)
+input_file = File(path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv")
 # [END dataset_file]
 
 # [START dataset_table]

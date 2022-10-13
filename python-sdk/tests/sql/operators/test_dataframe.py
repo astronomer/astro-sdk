@@ -2,11 +2,12 @@ import os
 import pathlib
 from unittest import mock
 
-import astro.sql as aql
 import pandas
 import pytest
 from airflow.models.xcom import BaseXCom
 from airflow.utils import timezone
+
+import astro.sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.custom_backend.astro_custom_backend import AstroCustomXcomBackend as XCom
@@ -59,10 +60,7 @@ def test_dataframe_from_sql_basic(sample_dag, database_table_fixture):
 
     test_utils.run_dag(sample_dag)
 
-    assert (
-        XCom.get_one(execution_date=DEFAULT_DATE, key=f.key, task_id=f.operator.task_id)
-        == 5
-    )
+    assert XCom.get_one(execution_date=DEFAULT_DATE, key=f.key, task_id=f.operator.task_id) == 5
 
 
 @pytest.mark.parametrize(
@@ -153,12 +151,7 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, database_table_fixture):
         res = my_df_func(test_table)
     test_utils.run_dag(sample_dag)
 
-    assert (
-        XCom.get_one(
-            execution_date=DEFAULT_DATE, key=res.key, task_id=res.operator.task_id
-        )
-        == 5
-    )
+    assert XCom.get_one(execution_date=DEFAULT_DATE, key=res.key, task_id=res.operator.task_id) == 5
 
 
 @pytest.mark.parametrize(
@@ -206,12 +199,7 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(
         res = my_df_func(test_table, df_2=test_table)
     test_utils.run_dag(sample_dag)
 
-    assert (
-        XCom.get_one(
-            execution_date=DEFAULT_DATE, key=res.key, task_id=res.operator.task_id
-        )
-        == 10
-    )
+    assert XCom.get_one(execution_date=DEFAULT_DATE, key=res.key, task_id=res.operator.task_id) == 10
 
 
 def test_postgres_dataframe_without_table_arg(sample_dag):
@@ -223,9 +211,7 @@ def test_postgres_dataframe_without_table_arg(sample_dag):
 
     @aql.dataframe
     def sample_df():  # skipcq: PY-D0003
-        return pandas.DataFrame(
-            {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
-        )
+        return pandas.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
 
     @aql.transform
     def sample_pg(input_table: Table):  # skipcq: PY-D0003
@@ -233,57 +219,109 @@ def test_postgres_dataframe_without_table_arg(sample_dag):
 
     with sample_dag:
         plain_df = sample_df()
-        pg_df = sample_pg(
-            conn_id="postgres_conn", database="pagila", input_table=plain_df
-        )
+        pg_df = sample_pg(conn_id="postgres_conn", database="pagila", input_table=plain_df)
         validate_result(pg_df)
     test_utils.run_dag(sample_dag)
 
 
-def test_columns_names_capitalization(sample_dag):
-    """Test dataframe operator with columns_names_capitalization param"""
+test_df = pandas.DataFrame({"numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
+test_df_2 = pandas.DataFrame({"Numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
 
-    @aql.dataframe(columns_names_capitalization="lower")
-    def sample_df_1():  # skipcq: PY-D0003
-        return pandas.DataFrame(
-            {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
-        )
 
-    @aql.dataframe(columns_names_capitalization="upper")
-    def sample_df_2():  # skipcq: PY-D0003
-        return pandas.DataFrame(
-            {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
-        )
+def _validate_dataframe(original: pandas.DataFrame, df: pandas.DataFrame, capital_settings: dict):
+    cols = list(df)
+    assert len(df) == len(original)
+    assert all(getattr(x, capital_settings["function"]) for x in cols)
 
-    @aql.dataframe(columns_names_capitalization="original")
-    def sample_df_3():  # skipcq: PY-D0003
-        return pandas.DataFrame(
-            {"numbers": [1, 2, 3], "COLORS": ["red", "white", "blue"]}
-        )
+
+def _validate_list(original: list, function_output: list, capital_settings: dict):
+    assert len(original) == len(function_output)
+    for pre, post in zip(function_output, original):
+        assert isinstance(pre, pandas.DataFrame) == isinstance(post, pandas.DataFrame)
+        if isinstance(pre, pandas.DataFrame):
+            _validate_dataframe(pre, post, capital_settings)
+
+
+def _validate_dict(x: dict, function_output: dict, capital_settings: dict):
+    assert x.keys() == function_output.keys()
+    for key in function_output.keys():
+        post = x[key]
+        pre = function_output[key]
+        assert isinstance(pre, pandas.DataFrame) == isinstance(post, pandas.DataFrame)
+        if isinstance(pre, pandas.DataFrame):
+            _validate_dataframe(pre, post, capital_settings)
+
+
+def _find_validator(function_output):
+    if isinstance(function_output, list):
+        return _validate_list
+    elif isinstance(function_output, dict):
+        return _validate_dict
+    else:
+        return _validate_dataframe
+
+
+@pytest.mark.parametrize(
+    "capital_settings",
+    [
+        {"column_setting": "upper", "function": "isupper"},
+        {"column_setting": "lower", "function": "islower"},
+        {"column_setting": "original", "function": "__eq__"},
+    ],
+    ids=["upper", "lower", "original"],
+)
+@pytest.mark.parametrize(
+    "function_output",
+    [
+        [1, 2, test_df],
+        [test_df, test_df_2],
+        [test_df],
+        {"foo": 1, "bar": 2, "baz": test_df},
+        {"foo": test_df, "bar": test_df_2},
+        {"foo": test_df},
+        test_df,
+        test_df_2,
+    ],
+    ids=[
+        "mixed_list",
+        "two_df_list",
+        "single_df_list",
+        "mixed_dict",
+        "two_df_dict",
+        "single_df_dict",
+        "single_df",
+        "single_df_mixed",
+    ],
+)
+def test_columns_name_cap_multi_output(sample_dag, capital_settings, function_output):
+
+    validator = _find_validator(function_output)
+
+    @aql.dataframe(columns_names_capitalization=capital_settings["column_setting"])
+    def make_df():
+        return function_output
+
+    @aql.dataframe()
+    def validate(x):
+        validator(x, function_output, capital_settings)
 
     with sample_dag:
-        res_1 = sample_df_1()
-        res_2 = sample_df_2()
-        res_3 = sample_df_3()
+        validate(make_df())
     test_utils.run_dag(sample_dag)
 
-    columns = XCom.get_one(
-        execution_date=DEFAULT_DATE, key=res_1.key, task_id=res_1.operator.task_id
-    )
-    assert all(x.islower() for x in columns)
 
-    columns = XCom.get_one(
-        execution_date=DEFAULT_DATE, key=res_2.key, task_id=res_2.operator.task_id
-    )
-    assert all(x.isupper() for x in columns)
+def test_pass_table_multi_df(sample_dag):
+    @aql.dataframe()
+    def make_df():
+        return [test_df, test_df_2]
 
-    columns = XCom.get_one(
-        execution_date=DEFAULT_DATE, key=res_3.key, task_id=res_3.operator.task_id
-    )
-    cols = list(columns.columns)
-    cols.sort()
-    assert cols[1].islower()
-    assert cols[0].isupper()
+    with pytest.raises(
+        ValueError,
+        match="Astro can only turn a single dataframe into a table. Please change your function output.",
+    ):
+        with sample_dag:
+            make_df(output_table=Table())
+        test_utils.run_dag(sample_dag)
 
 
 @pytest.mark.parametrize(
@@ -295,43 +333,33 @@ def test_pass_kwargs_to_base_operator(kwargs):
 
     @aql.dataframe(**kwargs)
     def sample_df_1():  # skipcq: PY-D0003
-        return pandas.DataFrame(
-            {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
-        )
+        return pandas.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
 
     task1 = sample_df_1()
     assert all(getattr(task1.operator, k) == v for k, v in kwargs.items())
 
 
-@pytest.mark.skipif(
-    not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
-)
+@pytest.mark.skipif(not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
 def test_inlets_outlets_supported_ds():
     """Test Datasets are set as inlets and outlets"""
     output_table = Table("test_name")
 
     @aql.dataframe()
     def sample_df_1(**kwargs):
-        return pandas.DataFrame(
-            {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
-        )
+        return pandas.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
 
     task = sample_df_1(output_table=output_table)
     assert task.operator.outlets == [output_table]
 
 
-@pytest.mark.skipif(
-    DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
-)
+@pytest.mark.skipif(DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
 def test_inlets_outlets_non_supported_ds():
     """Test inlets and outlets are not set if Datasets are not supported"""
     output_table = Table("test_name")
 
     @aql.dataframe()
     def sample_df_1(**kwargs):
-        return pandas.DataFrame(
-            {"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}
-        )
+        return pandas.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
 
     task = sample_df_1(output_table=output_table)
     assert task.operator.outlets == []
@@ -388,7 +416,4 @@ def test_dataframe_no_storage_option_raises_warning(mock_warning, sample_dag):
             count_df(validate_file(df=File(path=str(CWD) + "/../../data/homes2.csv")))
         test_utils.run_dag(sample_dag)
     mock_warning.assert_called()
-    assert (
-        "Since you have not provided a remote object storage conn_id"
-        in mock_warning.call_args[0][0]
-    )
+    assert "Since you have not provided a remote object storage conn_id" in mock_warning.call_args[0][0]
