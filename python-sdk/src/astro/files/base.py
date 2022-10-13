@@ -92,6 +92,22 @@ class File(LoggingMixin, Dataset):
         with smart_open.open(self.path, mode="wb", transport_params=self.location.transport_params) as stream:
             self.type.create_from_dataframe(stream=stream, df=df)
 
+    @property
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return self.location.openlineage_dataset_namespace
+
+    @property
+    def openlineage_dataset_name(self) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return self.location.openlineage_dataset_name
+
     def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes."""
         mode = "rb" if self.is_binary() else "r"

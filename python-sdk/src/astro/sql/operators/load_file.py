@@ -5,12 +5,16 @@ from typing import Any
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
+from openlineage.client.facet import BaseFacet
+from openlineage.client.run import Dataset as OpenlineageDataset
 
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
+from astro.lineage.extractor import OpenLineageFacets
+from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
 from astro.utils.dataframe import convert_dataframe_to_file
@@ -179,6 +183,67 @@ class LoadFileOperator(AstroSQLBaseOperator):
         normalize_config["sep"] = replace_illegal_columns_chars(normalize_config["sep"], database)
 
         return normalize_config
+
+    def get_openlineage_facets(self) -> OpenLineageFacets:
+        """
+        Returns the lineage data
+        """
+        # if the input_file is a folder or pattern, it needs to be resolved to
+        # list the files
+        input_files = resolve_file_path_pattern(
+            self.input_file.path,
+            self.input_file.conn_id,
+            normalize_config={},
+            filetype=self.input_file.type.name,
+        )
+
+        input_dataset: list[OpenlineageDataset] = [
+            OpenlineageDataset(
+                namespace=self.input_file.openlineage_dataset_namespace,
+                name=self.input_file.openlineage_dataset_name,
+                facets={
+                    "input_file_facet": InputFileDatasetFacet(
+                        is_pattern=self.input_file.is_pattern(),
+                        number_of_files=len(input_files),
+                        files=[
+                            InputFileFacet(
+                                filepath=file.path,
+                                file_size=file.size,
+                                file_type=file.type.name,
+                            )
+                            for file in input_files
+                        ],
+                    )
+                },
+            )
+        ]
+
+        output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
+        if self.output_table:
+            output_database = create_database(self.output_table.conn_id)
+            output_dataset = [
+                OpenlineageDataset(
+                    namespace=output_database.openlineage_dataset_namespace(),
+                    name=output_database.openlineage_dataset_name(table=self.output_table),
+                    facets={
+                        "output_database_facet": OutputDatabaseDatasetFacet(
+                            metadata=self.output_table.metadata,
+                            columns=self.output_table.columns,
+                            schema=self.output_table.sqlalchemy_metadata.schema,
+                            used_native_path=self.use_native_support,
+                            enabled_native_fallback=self.enable_native_fallback,
+                            native_support_arguments=self.native_support_kwargs,
+                        )
+                    },
+                )
+            ]
+
+        run_facets: dict[str, BaseFacet] = {}
+        job_facets: dict[str, BaseFacet] = {}
+
+        return OpenLineageFacets(
+            inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
+        )
 
 
 def load_file(

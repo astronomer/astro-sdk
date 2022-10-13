@@ -7,7 +7,8 @@ from astro.constants import FileLocation
 from astro.files.locations import create_file_location, get_class_name
 from astro.files.locations.local import LocalLocation
 
-LOCAL_FILEPATH = f"/tmp/{uuid.uuid4()}"
+LOCAL_FILENAME = str(uuid.uuid4())
+LOCAL_FILEPATH = f"/tmp/{LOCAL_FILENAME}"
 
 sample_filepaths_per_location = [
     (FileLocation.LOCAL, LOCAL_FILEPATH),
@@ -44,6 +45,44 @@ def test_get_class_name_method_valid_name():
             pass
 
     assert get_class_name(Test) == "TestLocation"
+
+
+@pytest.mark.parametrize(
+    "file_location,filepath,namespace",
+    [
+        (FileLocation.LOCAL, LOCAL_FILEPATH, LOCAL_FILENAME),
+        (FileLocation.HTTP, "http://domain/some-file", "http://domain"),
+        (FileLocation.HTTPS, "https://domain/some-file", "https://domain"),
+        (FileLocation.S3, "s3://bucket/some-file", "s3://bucket"),
+        (FileLocation.GS, "gs://bucket/some-file", "gs://bucket"),
+    ],
+)
+def test_openlineage_file_dataset_namespace(file_location, filepath, namespace):
+    """
+    Test the open lineage dataset namespace as per
+    https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+    """
+    location = create_file_location(filepath)
+    assert location.openlineage_dataset_namespace == namespace
+
+
+@pytest.mark.parametrize(
+    "file_location,filepath,dataset_name",
+    [
+        (FileLocation.LOCAL, LOCAL_FILEPATH, LOCAL_FILEPATH),
+        (FileLocation.HTTP, "http://domain/some-file", "/some-file"),
+        (FileLocation.HTTPS, "https://domain/some-file", "/some-file"),
+        (FileLocation.S3, "s3://bucket/some-file", "/some-file"),
+        (FileLocation.GS, "gs://bucket/some-file", "/some-file"),
+    ],
+)
+def test_openlineage_file_dataset_name(file_location, filepath, dataset_name):
+    """
+    Test the open lineage dataset names as per
+    https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+    """
+    location = create_file_location(filepath)
+    assert location.openlineage_dataset_name == dataset_name
 
 
 def test_get_class_name_method_invalid_name():
