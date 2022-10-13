@@ -43,3 +43,8 @@ def test_generate(root_directory, target_directory, dags_directory):
     result_stdout = get_stdout(result)
     assert result_stdout.startswith("The DAG file ")
     assert result_stdout.endswith(" has been successfully generated. 🎉")
+
+
+def test_validate():
+    result = runner.invoke(app, ["validate"])
+    assert result.exit_code == 0
