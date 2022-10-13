@@ -20,11 +20,12 @@ def test_generate_dag(root_directory, dags_directory):
     dag_file = generate_dag(directory=root_directory, dags_directory=dags_directory)
     assert dag_file
 
+
 def test_with_temp_dirs(root_directory):
+    import os
+    import shutil
     import tempfile
     from pathlib import Path
-    import shutil
-    import os
 
     with tempfile.TemporaryDirectory() as tmp_dir:
         shutil.copytree(root_directory, tmp_dir + "/root")
@@ -34,7 +35,6 @@ def test_with_temp_dirs(root_directory):
         generate_dag(
             Path(tmp_dir) / "root",
             target_directory=Path(tmp_dir) / "target",
-            dags_directory=Path(tmp_dir) / "dag"
+            dags_directory=Path(tmp_dir) / "dag",
         )
         print(tmp_dir)
-
