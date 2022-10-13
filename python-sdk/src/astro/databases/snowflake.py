@@ -583,6 +583,12 @@ class SnowflakeDatabase(BaseDatabase):
         if if_exists == "replace" or not self.table_exists(target_table):
             auto_create_table = True
 
+        if target_table.metadata.schema:
+            target_table.metadata.schema.upper()
+
+        if target_table.metadata.database:
+            target_table.metadata.database.upper()
+
         pandas_tools.write_pandas(
             conn=self.hook.get_conn(),
             df=source_dataframe,
