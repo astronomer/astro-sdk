@@ -43,7 +43,7 @@ def _attempt_to_serialize_unknown_object(obj: object):
     try:
         return json.dumps(obj)
     except TypeError:
-        return pickle.dumps(obj).hex()
+        return obj
 
 
 def _is_serialized_astro_object(obj) -> bool:
@@ -87,12 +87,5 @@ def _attempt_to_deser_unknown_object(obj: str):
         log.debug("Attempting to deserialize object %s into a json object", obj)
         return json.loads(obj)
     except JSONDecodeError:
-        try:
-            log.debug(
-                "Json debugging failed for object %s, attempting to pickle deserialize",
-                obj,
-            )
-            return pickle.loads(bytes.fromhex(obj))
-        except UnpicklingError:
-            log.debug("unpickling failed for object %s, returning raw object", obj)
-            return obj
+        log.debug("Json deserializing failed for object %s, returning raw object", obj)
+        return obj
