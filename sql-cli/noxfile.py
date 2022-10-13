@@ -23,7 +23,8 @@ def dev(session: nox.Session) -> None:
 
 
 @nox.session(python=["3.7", "3.8", "3.9"])
-def test(session: nox.Session) -> None:
+@nox.parametrize("airflow", ["2.2.5", "2.4"])
+def test(session: nox.Session, airflow: str) -> None:
     """Run both unit and integration tests."""
     session.install("-e", "../python-sdk/.[all]")
     session.install("-e", "../python-sdk/.[tests]")
@@ -32,6 +33,8 @@ def test(session: nox.Session) -> None:
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
     session.run("pip3", "freeze")
+    airflow_home = f"~/airflow-{airflow}-{session.python}"
+    session.run("airflow", "db", "init", env={"AIRFLOW_HOME": airflow_home})
     session.run("pytest", *session.posargs, "--cov=sql_cli", "--cov-report=xml", "--cov-branch")
 
 
