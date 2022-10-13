@@ -80,17 +80,16 @@ class SqlFilesDAG:
         return list(depth_first_search.dfs_postorder_nodes(graph))
 
 
-def generate_dag(directory: Path, target_directory: Path, dags_directory: Path) -> Path:
+def generate_dag(directory: Path, dags_directory: Path) -> Path:
     """
     Generate a DAG from SQL files.
 
     :params directory: The directory containing the raw sql files.
-    :params target_directory: The directory containing the executable sql files.
     :params dags_directory: The directory containing the generated DAG.
 
     :returns: the path to the DAG file.
     """
-    sql_files = sorted(get_sql_files(directory, target_directory))
+    sql_files = sorted(get_sql_files(directory, target_directory=dags_directory / ".sql"))
     sql_files_dag = SqlFilesDAG(
         dag_id=directory.name,
         start_date=datetime(2020, 1, 1),

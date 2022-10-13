@@ -29,13 +29,12 @@ def test_version():
     assert f"Astro SQL CLI {__version__}" == get_stdout(result)
 
 
-def test_generate(root_directory, target_directory, dags_directory):
+def test_generate(root_directory, dags_directory):
     result = runner.invoke(
         app,
         [
             "generate",
             root_directory.as_posix(),
-            target_directory.as_posix(),
             dags_directory.as_posix(),
         ],
     )
@@ -43,3 +42,8 @@ def test_generate(root_directory, target_directory, dags_directory):
     result_stdout = get_stdout(result)
     assert result_stdout.startswith("The DAG file ")
     assert result_stdout.endswith(" has been successfully generated. 🎉")
+
+
+def test_validate():
+    result = runner.invoke(app, ["validate"])
+    assert result.exit_code == 0
