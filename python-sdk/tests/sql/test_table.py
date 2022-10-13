@@ -159,7 +159,7 @@ def test_if_table_object_can_be_pickled():
     [
         (
             Connection(conn_id="test_conn", conn_type="gcpbigquery", extra={"project": "astronomer-dag-authoring"}),
-            "astro-sdk.dataset.test_tb",
+            "astronomer-dag-authoring.dataset.test_tb",
             "bigquery",
         ),
         (
