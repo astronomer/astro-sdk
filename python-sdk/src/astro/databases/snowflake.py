@@ -23,6 +23,7 @@ from snowflake.connector.errors import (
     RequestTimeoutError,
     ServiceUnavailableError,
 )
+from sqlalchemy import Column, insert, select
 
 from astro import settings
 from astro.constants import (
@@ -773,6 +774,39 @@ class SnowflakeDatabase(BaseDatabase):
             "target_table": target_table_param,
         }
         return statement, params
+
+    def append_table(
+        self,
+        source_table: BaseTable,
+        target_table: BaseTable,
+        source_to_target_columns_map: dict[str, str],
+    ) -> None:
+        """
+        Append the source table rows into a destination table.
+        The argument `if_conflicts` allows the user to define how to handle conflicts.
+
+        :param source_table: Contains the rows to be appended to the target_table
+        :param target_table: Contains the destination table in which the rows will be appended
+        :param source_to_target_columns_map: Dict of source_table columns names to target_table columns names
+        """
+        target_table_sqla = self.get_sqla_table(target_table)
+        source_table_sqla = self.get_sqla_table(source_table)
+
+        target_columns: list[Column]
+        source_columns: list[Column]
+
+        if not source_to_target_columns_map:
+            target_columns = [Column(col, quote=True) for col in target_table_sqla.c.keys()]
+            source_columns = target_columns
+        else:
+            target_columns = [Column(col, quote=True) for col in source_to_target_columns_map.values()]
+            source_columns = [Column(col, quote=True) for col in source_to_target_columns_map.keys()]
+
+        sel = select(source_columns).select_from(source_table_sqla)
+        # TODO: We should fix the following Type Error
+        # incompatible type List[ColumnClause[<nothing>]]; expected List[Column[Any]]
+        sql = insert(target_table_sqla).from_select(target_columns, sel)  # type: ignore[arg-type]
+        self.run_sql(sql=sql)
 
 
 def wrap_identifier(inp: str) -> str:
