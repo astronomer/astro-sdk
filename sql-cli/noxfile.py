@@ -35,7 +35,15 @@ def test(session: nox.Session, airflow: str) -> None:
     session.run("pip3", "freeze")
     airflow_home = f"~/airflow-{airflow}-{session.python}"
     session.run("airflow", "db", "init", env={"AIRFLOW_HOME": airflow_home})
-    session.run("pytest", *session.posargs, "--cov=sql_cli", "--cov-report=xml", "--cov-branch")
+    session.run(
+        "pytest",
+        *session.posargs,
+        "--cov=sql_cli",
+        "--cov-report=xml",
+        "--cov-branch",
+        env={"AIRFLOW_HOME": airflow_home},
+        external=True,
+    )
 
 
 @nox.session(python=["3.8"])
