@@ -1,6 +1,6 @@
 {% macro define_task(sql_file, dag) -%}
 {{ sql_file.get_variable_name() }} = aql.transform_file(
-    file_path=f"{DAGS_DIRECTORY}/{{ sql_file.get_relative_target_path() }}",
+    file_path=f"{PROJECT_DIRECTORY}/{{ sql_file.get_relative_target_path() }}",
     parameters={
         {%- for parameter in sql_file.get_parameters() %}
         {%- if dag.has_sql_file(parameter) %}

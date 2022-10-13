@@ -15,13 +15,9 @@ def test_sql_files_dag_raises_exception(sql_files_dag_with_cycle):
         assert sql_files_dag_with_cycle.sorted_sql_files()
 
 
-def test_generate_dag(root_directory, target_directory, dags_directory):
+def test_generate_dag(root_directory, dags_directory):
     """Test that the whole DAG generation process including sql files parsing works."""
-    dag_file = generate_dag(
-        directory=root_directory,
-        target_directory=target_directory,
-        dags_directory=dags_directory,
-    )
+    dag_file = generate_dag(directory=root_directory, dags_directory=dags_directory)
     assert dag_file
 
 def test_with_temp_dirs(root_directory):
