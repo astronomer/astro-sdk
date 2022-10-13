@@ -23,7 +23,7 @@ from snowflake.connector.errors import (
     RequestTimeoutError,
     ServiceUnavailableError,
 )
-from sqlalchemy import column, insert, select
+from sqlalchemy import Column, column, insert, select
 
 from astro import settings
 from astro.constants import (
@@ -783,17 +783,11 @@ class SnowflakeDatabase(BaseDatabase):
         source_columns: list[column]
 
         if not source_to_target_columns_map:
-            target_columns = [
-                column(text='"' + col + '"', is_literal=True) for col in target_table_sqla.c.keys()
-            ]
+            target_columns = [Column(name=col, quote=True) for col in target_table_sqla.c.keys()]
             source_columns = target_columns
         else:
-            target_columns = [
-                column(text='"' + col + '"', is_literal=True) for col in source_to_target_columns_map.values()
-            ]
-            source_columns = [
-                column(text='"' + col + '"', is_literal=True) for col in source_to_target_columns_map.keys()
-            ]
+            target_columns = [Column(name=col, quote=True) for col in source_to_target_columns_map.values()]
+            source_columns = [Column(name=col, quote=True) for col in source_to_target_columns_map.keys()]
 
         sel = select(source_columns).select_from(source_table_sqla)
         # TODO: We should fix the following Type Error
@@ -808,7 +802,7 @@ class SnowflakeDatabase(BaseDatabase):
         it agnostic to database.
         """
         constraints = ",".join([f'"{p}"' for p in parameters])
-        sql = f"ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE ({constraints})"
+        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (%s)" % constraints
         return sql
 
 
