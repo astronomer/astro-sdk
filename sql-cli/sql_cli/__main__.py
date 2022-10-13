@@ -3,14 +3,13 @@ import os
 from pathlib import Path
 from typing import Optional
 
-import typer 
+import typer
 from rich import print as rprint
 
 from sql_cli import __version__
 from sql_cli.connections import validate_connections
 from sql_cli.dag_generator import generate_dag
 from sql_cli.project import Project
-
 
 app = typer.Typer(add_completion=False)
 
@@ -50,15 +49,51 @@ def validate(environment: str = "default", connection: Optional[str] = None) -> 
 
 
 @app.command()
-def init(target_dir: Optional[str] = typer.Argument(None)) -> None:
+def init(project_dir: Optional[str] = typer.Argument(None)) -> None:
     """
-    Initialises a SQL CLI project.
-    """
-    if target_dir is None:
-        target_dir = os.getcwd()
+    Initialise a SQL CLI project structure.
 
-    Project.initialise(Path(target_dir))
-    rprint(f"Initialized an Astro SQL project at {target_dir}")
+    By default, this includes:
+
+    \b\n
+    ├── config
+    \b\n
+    │   ├── default
+    \b\n
+    │   │   └── configuration.yml
+    \b\n
+    │   └── dev
+    \b\n
+    │       └── configuration.yml
+    \b\n
+    ├── data
+    \b\n
+    │   ├── movies.db
+    \b\n
+    │   └── retail.db
+    \b\n
+    └── workflows
+    \b\n
+    ├── example_basic_transform
+    \b\n
+    │   └── top_animations.sql
+    \b\n
+    └── example_templating
+    \b\n
+        ├── filtered_orders.sql
+    \b\n
+        └── joint_orders_customers.sql
+
+    \b\n
+    Update the file `config/default/configuration.yaml` to declare your databases.
+    \b\n
+    Create SQL workflows within the `workflows` folder.
+    """
+    if project_dir is None:
+        project_dir = os.getcwd()
+
+    Project.initialise(Path(project_dir))
+    rprint(f"Initialized an Astro SQL project at {project_dir}")
 
 
 if __name__ == "__main__":  # pragma: no cover
