@@ -29,7 +29,7 @@ def test(session: nox.Session, airflow: str) -> None:
     session.install("-e", "../python-sdk/.[all]")
     session.install("-e", "../python-sdk/.[tests]")
     session.install("poetry")
-    session.run("poetry", "install", "--with", "apache_airflow_providers_amazon")
+    session.run("poetry", "install")
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
     session.run("pip3", "freeze")
