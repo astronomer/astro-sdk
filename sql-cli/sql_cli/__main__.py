@@ -34,15 +34,14 @@ def about() -> None:
 
 
 @app.command()
-def generate(
-    directory: Path,
-    target_directory: Path,
-    dags_directory: Path,
-) -> None:
+def generate(directory: Path, dags_directory: Path) -> None:
     """
     Generate the Airflow DAG from a directory of SQL files.
+
+    :params directory: The directory containing the raw sql files.
+    :params dags_directory: The directory containing the generated DAG.
     """
-    dag_file = generate_dag(directory, target_directory, dags_directory)
+    dag_file = generate_dag(directory, dags_directory)
     rprint("The DAG file", dag_file.resolve(), "has been successfully generated. 🎉")
 
 
