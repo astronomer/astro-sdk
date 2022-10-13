@@ -10,6 +10,7 @@ from openlineage.client.run import Dataset as OpenlineageDataset
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
 from astro.lineage.extractor import OpenLineageFacets
+from astro.lineage.facets import TableDatasetFacet
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
 from astro.utils.typing_compat import Context
@@ -30,12 +31,12 @@ class AppendOperator(AstroSQLBaseOperator):
     template_fields = ("source_table", "target_table")
 
     def __init__(
-        self,
-        source_table: BaseTable,
-        target_table: BaseTable,
-        columns: list[str] | tuple[str] | dict[str, str] | None = None,
-        task_id: str = "",
-        **kwargs: Any,
+            self,
+            source_table: BaseTable,
+            target_table: BaseTable,
+            columns: list[str] | tuple[str] | dict[str, str] | None = None,
+            task_id: str = "",
+            **kwargs: Any,
     ) -> None:
         self.source_table = source_table
         self.target_table = target_table
@@ -71,11 +72,12 @@ class AppendOperator(AstroSQLBaseOperator):
                 namespace=self.source_table.openlineage_dataset_namespace(),
                 name=self.source_table.openlineage_dataset_name(),
                 facets={
-                    "table_name": self.source_table.name,
-                    "row_affected": 0,  # FixMe
-                    "columns": self.columns,
-                    "metadata": self.target_table.metadata,
-                },
+                    "input_table_facet": TableDatasetFacet(
+                        table_name=self.source_table.name,
+                        row_affected=0,  # FixMe
+                        columns=self.columns,
+                        metadata=self.source_table.metadata,
+                    )},
             )
         ]
 
@@ -84,11 +86,12 @@ class AppendOperator(AstroSQLBaseOperator):
                 namespace=self.target_table.openlineage_dataset_namespace(),
                 name=self.target_table.openlineage_dataset_name(),
                 facets={
-                    "table_name": self.target_table.name,
-                    "row_affected": 0,  # FixMe
-                    "columns": self.columns,
-                    "metadata": self.target_table.metadata,
-                },
+                    "output_table_facet": TableDatasetFacet(
+                        table_name=self.target_table.name,
+                        row_affected=0,  # FixMe
+                        columns=self.columns,
+                        metadata=self.target_table.metadata,
+                    )},
             )
         ]
 
@@ -101,11 +104,11 @@ class AppendOperator(AstroSQLBaseOperator):
 
 
 def append(
-    *,
-    source_table: BaseTable,
-    target_table: BaseTable,
-    columns: list[str] | tuple[str] | dict[str, str] | None = None,
-    **kwargs: Any,
+        *,
+        source_table: BaseTable,
+        target_table: BaseTable,
+        columns: list[str] | tuple[str] | dict[str, str] | None = None,
+        **kwargs: Any,
 ) -> XComArg:
     """
     Append the source table rows into a destination table.
