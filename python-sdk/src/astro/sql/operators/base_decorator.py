@@ -232,6 +232,9 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
 
         run_facets: dict[str, BaseFacet] = {}
         job_facets: dict[str, BaseFacet] = {"sql": SqlJobFacet(query=self.sql)}
+
+        print("========================================")
+        print(self.sql)
         return OpenLineageFacets(
             inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
