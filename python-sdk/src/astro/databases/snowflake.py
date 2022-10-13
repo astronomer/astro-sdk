@@ -484,7 +484,7 @@ class SnowflakeDatabase(BaseDatabase):
         columns_names_capitalization: ColumnCapitalization = "original",
     ) -> None:
         """
-        Dummy function. We are inferring schema and creating table in `load_pandas_dataframe_to_table`.
+        A dummy function is required to override the default behavior. We are inferring schema and creating a table in `load_pandas_dataframe_to_table`.
 
         :param table: The table to be created.
         :param file: File used to infer the new table columns.
