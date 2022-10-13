@@ -90,10 +90,13 @@ def test_python_sdk_load_file_extract_on_complete():
 
 @pytest.mark.integration
 def test_append_op_extract_on_complete():
+    """
+    Test extractor ``extract_on_complete`` get called and collect lineage for append operator
+    """
     task_id = "append_table"
     op = AppendOperator(
-        source_table=Table(conn_id="bigquery", name="test-extractor"),
-        target_table=Table(conn_id="bigquery", name="test-extractor"),
+        source_table=Table(conn_id="bigquery", name="test-extractor", metadata=Metadata(schema="astro")),
+        target_table=Table(conn_id="bigquery", name="test-extractor", metadata=Metadata(schema="astro")),
     )
 
     task_instance = TaskInstance(task=op)
@@ -101,10 +104,11 @@ def test_append_op_extract_on_complete():
     python_sdk_extractor = PythonSDKExtractor(op)
     task_meta_extract = python_sdk_extractor.extract()
     assert task_meta_extract is None
-    task_meta = python_sdk_extractor.extract_on_complete(task_instance)
 
+    task_meta = python_sdk_extractor.extract_on_complete(task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
-    assert task_meta.inputs[0] == INPUT_STATS[0]
-    assert task_meta.outputs[0] == OUTPUT_STATS[0]
+    assert task_meta.inputs[0].name == "astronomer-dag-authoring.astro.test-extractor"
+    assert task_meta.inputs[0].namespace == "bigquery"
+    assert task_meta.inputs[0].facets is not None
     assert task_meta.job_facets == {}
     assert task_meta.run_facets == {}
