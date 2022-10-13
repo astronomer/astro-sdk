@@ -3,6 +3,7 @@ from pathlib import Path
 
 from airflow import DAG
 from airflow.utils import timezone
+
 from astro import sql as aql
 from astro.table import Table
 
@@ -15,8 +16,7 @@ with DAG(
 ) as dag:
     a = aql.transform_file(
         file_path=f"{DAGS_DIRECTORY}/_target/a.sql",
-        parameters={
-        },
+        parameters={},
         conn_id="my_test_sqlite",
         op_kwargs={
             "output_table": Table(
