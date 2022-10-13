@@ -821,7 +821,7 @@ class SnowflakeDatabase(BaseDatabase):
         it agnostic to database.
         """
         constraints = ",".join([f'"{p}"' for p in parameters])
-        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (%s)" % constraints
+        sql = f"ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE ({constraints})"
         return sql
 
 
