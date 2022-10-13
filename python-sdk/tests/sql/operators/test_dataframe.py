@@ -417,3 +417,22 @@ def test_dataframe_no_storage_option_raises_warning(mock_warning, sample_dag):
         test_utils.run_dag(sample_dag)
     mock_warning.assert_called()
     assert "Since you have not provided a remote object storage conn_id" in mock_warning.call_args[0][0]
+
+
+def test_col_case_is_preserved(sample_dag):
+    """Test that column case is preserved"""
+
+    @aql.dataframe()
+    def sample_df_1():  # skipcq: PY-D0003
+        return pandas.DataFrame({"Numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
+
+    @aql.dataframe()
+    def validate(df):  # skipcq: PY-D0003
+        cols = list(df.columns)
+        cols.sort()
+        return df.columns == ["Colors", "Numbers"]
+
+    with sample_dag:
+        task1 = sample_df_1()
+        validate(task1)
+    test_utils.run_dag(sample_dag)
