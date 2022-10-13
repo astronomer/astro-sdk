@@ -31,12 +31,12 @@ class AppendOperator(AstroSQLBaseOperator):
     template_fields = ("source_table", "target_table")
 
     def __init__(
-            self,
-            source_table: BaseTable,
-            target_table: BaseTable,
-            columns: list[str] | tuple[str] | dict[str, str] | None = None,
-            task_id: str = "",
-            **kwargs: Any,
+        self,
+        source_table: BaseTable,
+        target_table: BaseTable,
+        columns: list[str] | tuple[str] | dict[str, str] | None = None,
+        task_id: str = "",
+        **kwargs: Any,
     ) -> None:
         self.source_table = source_table
         self.target_table = target_table
@@ -77,7 +77,8 @@ class AppendOperator(AstroSQLBaseOperator):
                         row_affected=0,  # FixMe
                         columns=self.columns,
                         metadata=self.source_table.metadata,
-                    )},
+                    )
+                },
             )
         ]
 
@@ -91,7 +92,8 @@ class AppendOperator(AstroSQLBaseOperator):
                         row_affected=0,  # FixMe
                         columns=self.columns,
                         metadata=self.target_table.metadata,
-                    )},
+                    )
+                },
             )
         ]
 
@@ -104,11 +106,11 @@ class AppendOperator(AstroSQLBaseOperator):
 
 
 def append(
-        *,
-        source_table: BaseTable,
-        target_table: BaseTable,
-        columns: list[str] | tuple[str] | dict[str, str] | None = None,
-        **kwargs: Any,
+    *,
+    source_table: BaseTable,
+    target_table: BaseTable,
+    columns: list[str] | tuple[str] | dict[str, str] | None = None,
+    **kwargs: Any,
 ) -> XComArg:
     """
     Append the source table rows into a destination table.

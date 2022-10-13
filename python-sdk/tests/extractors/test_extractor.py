@@ -93,7 +93,7 @@ def test_append_op_extract_on_complete():
     task_id = "append_op"
     op = AppendOperator(
         source_table=Table(conn_id="bigquery", name="test-extractor"),
-        target_table=Table(conn_id="bigquery", name="test-extractor")
+        target_table=Table(conn_id="bigquery", name="test-extractor"),
     )
 
     task_instance = TaskInstance(task=op)

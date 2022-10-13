@@ -158,7 +158,9 @@ def test_if_table_object_can_be_pickled():
     "connection,name,namespace",
     [
         (
-            Connection(conn_id="test_conn", conn_type="gcpbigquery", extra={"project": "astronomer-dag-authoring"}),
+            Connection(
+                conn_id="test_conn", conn_type="gcpbigquery", extra={"project": "astronomer-dag-authoring"}
+            ),
             "astronomer-dag-authoring.dataset.test_tb",
             "bigquery",
         ),
