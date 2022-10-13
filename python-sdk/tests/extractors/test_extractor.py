@@ -90,7 +90,7 @@ def test_python_sdk_load_file_extract_on_complete():
 
 @pytest.mark.integration
 def test_append_op_extract_on_complete():
-    task_id = "append_op"
+    task_id = "append_table"
     op = AppendOperator(
         source_table=Table(conn_id="bigquery", name="test-extractor"),
         target_table=Table(conn_id="bigquery", name="test-extractor"),
