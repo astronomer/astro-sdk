@@ -489,19 +489,20 @@ class SnowflakeDatabase(BaseDatabase):
         :param file: File used to infer the new table columns.
         :param dataframe: Dataframe used to infer the new table columns if there is no file
         """
+        pass
 
         # Snowflake don't expect mixed case col names like - 'Title' or 'Category'
         # we explicitly convert them to lower case, if not provided by user
 
-        if file:
-            dataframe = file.export_to_dataframe(
-                nrows=settings.LOAD_TABLE_AUTODETECT_ROWS_COUNT,
-                columns_names_capitalization=columns_names_capitalization,
-            )
+        # if file:
+        #     dataframe = file.export_to_dataframe(
+        #         nrows=settings.LOAD_TABLE_AUTODETECT_ROWS_COUNT,
+        #         columns_names_capitalization=columns_names_capitalization,
+        #     )
 
         # Snowflake doesn't handle well mixed capitalisation of column name chars
         # we are handling this more gracefully in a separate PR
-        super().create_table_using_schema_autodetection(table, dataframe=dataframe)
+        # super().create_table_using_schema_autodetection(table, dataframe=dataframe)
 
     def is_native_load_file_available(self, source_file: File, target_table: BaseTable) -> bool:
         """
@@ -577,17 +578,20 @@ class SnowflakeDatabase(BaseDatabase):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
+
+        auto_create_table = False
         if if_exists == "replace":
-            self.create_table(target_table, dataframe=source_dataframe)
+            auto_create_table = True
 
         pandas_tools.write_pandas(
             conn=self.hook.get_conn(),
             df=source_dataframe,
-            table_name=target_table.name,
+            table_name=target_table.name.upper(),
             schema=target_table.metadata.schema,
             database=target_table.metadata.database,
             chunk_size=chunk_size,
             quote_identifiers=True,
+            auto_create_table=auto_create_table,
         )
 
     def get_sqlalchemy_template_table_identifier_and_parameter(
