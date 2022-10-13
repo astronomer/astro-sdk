@@ -5,8 +5,9 @@ from typing import Any
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
-from openlineage.client.run import Dataset as OpenlineageDataset
 from openlineage.client.facet import BaseFacet
+from openlineage.client.run import Dataset as OpenlineageDataset
+
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
 from astro.lineage.extractor import OpenLineageFacets
@@ -74,7 +75,7 @@ class AppendOperator(AstroSQLBaseOperator):
                     "table_name": self.source_table.name,
                     "row_affected": 0,  # FixMe
                     "columns": self.columns,
-                    "metadata": self.target_table.metadata
+                    "metadata": self.target_table.metadata,
                 },
             )
         ]
@@ -87,7 +88,7 @@ class AppendOperator(AstroSQLBaseOperator):
                     "table_name": self.target_table.name,
                     "row_affected": 0,  # FixMe
                     "columns": self.columns,
-                    "metadata": self.target_table.metadata
+                    "metadata": self.target_table.metadata,
                 },
             )
         ]
