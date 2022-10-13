@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
 from openlineage.client.run import Dataset as OpenlineageDataset
-
+from openlineage.client.facet import BaseFacet
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
+from astro.lineage.extractor import OpenLineageFacets
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
 from astro.utils.typing_compat import Context
@@ -63,8 +65,8 @@ class AppendOperator(AstroSQLBaseOperator):
 
         return self.target_table
 
-    def get_openlineage_facets(self):
-        input_dataset = [
+    def get_openlineage_facets(self) -> OpenLineageFacets:
+        input_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(
                 namespace=self.source_table.openlineage_dataset_namespace(),
                 name=self.source_table.openlineage_dataset_name(),
@@ -72,11 +74,12 @@ class AppendOperator(AstroSQLBaseOperator):
                     "table_name": self.source_table.name,
                     "row_affected": 0,  # FixMe
                     "columns": self.columns,
+                    "metadata": self.target_table.metadata
                 },
             )
         ]
 
-        output_dataset = [
+        output_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(
                 namespace=self.target_table.openlineage_dataset_namespace(),
                 name=self.target_table.openlineage_dataset_name(),
@@ -84,11 +87,17 @@ class AppendOperator(AstroSQLBaseOperator):
                     "table_name": self.target_table.name,
                     "row_affected": 0,  # FixMe
                     "columns": self.columns,
+                    "metadata": self.target_table.metadata
                 },
             )
         ]
 
-        return input_dataset, output_dataset
+        run_facets: dict[str, BaseFacet] = {}
+        job_facets: dict[str, BaseFacet] = {}
+
+        return OpenLineageFacets(
+            inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
+        )
 
 
 def append(
