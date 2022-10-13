@@ -1,12 +1,9 @@
-import os
-
 import pytest
 
 from sql_cli.connections import _load_yaml_connections, validate_connections
 
 
 def test_validate_connections(caplog):
-    os.system("airflow db init")
     validate_connections()
 
     postgres_conn_id = "postgres_conn"
