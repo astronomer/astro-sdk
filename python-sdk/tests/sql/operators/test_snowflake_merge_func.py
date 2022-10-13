@@ -44,12 +44,12 @@ class TestSnowflakeMerge(unittest.TestCase):
         assert (
             sql == "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
             "on Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0) "
-            f"when matched then UPDATE SET {self.target_table_name}.sell={self.source_table_name}.sell "
-            f"when not matched then insert({self.target_table_name}.sell) values ({self.source_table_name}.sell)"
+            f'when matched then UPDATE SET {self.target_table_name}."sell"={self.source_table_name}."sell" '
+            f'when not matched then insert({self.target_table_name}."sell") values ({self.source_table_name}."sell")'
         )
         assert parameters == {
-            "merge_clause_target_0": f"{self.target_table_name}.sell",
-            "merge_clause_source_0": f"{self.source_table_name}.sell",
+            "merge_clause_target_0": f'{self.target_table_name}."sell"',
+            "merge_clause_source_0": f'{self.source_table_name}."sell"',
             "target_table": self.target_table_full_name,
             "source_table": self.source_table_full_name,
         }
@@ -71,18 +71,18 @@ class TestSnowflakeMerge(unittest.TestCase):
             sql == "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
             "on Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0) AND "
             "Identifier(:merge_clause_target_1)=Identifier(:merge_clause_source_1) "
-            f"when matched then UPDATE SET {self.target_table_name}.list={self.source_table_name}.list,"
-            f"{self.target_table_name}.sell={self.source_table_name}.sell,"
-            f"{self.target_table_name}.taxes={self.source_table_name}.age "
+            f'when matched then UPDATE SET {self.target_table_name}."list"={self.source_table_name}."list",'
+            f'{self.target_table_name}."sell"={self.source_table_name}."sell",'
+            f'{self.target_table_name}."taxes"={self.source_table_name}."age" '
             f"when not matched then "
-            f"insert({self.target_table_name}.list,{self.target_table_name}.sell,{self.target_table_name}.taxes) "
-            f"values ({self.source_table_name}.list,{self.source_table_name}.sell,{self.source_table_name}.age)"
+            f'insert({self.target_table_name}."list",{self.target_table_name}."sell",{self.target_table_name}."taxes") '
+            f'values ({self.source_table_name}."list",{self.source_table_name}."sell",{self.source_table_name}."age")'
         )
         assert parameters == {
-            "merge_clause_source_0": f"{self.source_table_name}.list",
-            "merge_clause_source_1": f"{self.source_table_name}.sell",
-            "merge_clause_target_0": f"{self.target_table_name}.list",
-            "merge_clause_target_1": f"{self.target_table_name}.sell",
+            "merge_clause_source_0": f'{self.source_table_name}."list"',
+            "merge_clause_source_1": f'{self.source_table_name}."sell"',
+            "merge_clause_target_0": f'{self.target_table_name}."list"',
+            "merge_clause_target_1": f'{self.target_table_name}."sell"',
             "target_table": self.target_table_full_name,
             "source_table": self.source_table_full_name,
         }
@@ -99,11 +99,11 @@ class TestSnowflakeMerge(unittest.TestCase):
         assert (
             sql == "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
             "on Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0) "
-            f"when not matched then insert({self.target_table_name}.sell) values ({self.source_table_name}.sell)"
+            f'when not matched then insert({self.target_table_name}."sell") values ({self.source_table_name}."sell")'
         )
         assert parameters == {
-            "merge_clause_target_0": f"{self.target_table_name}.sell",
-            "merge_clause_source_0": f"{self.source_table_name}.sell",
+            "merge_clause_target_0": f'{self.target_table_name}."sell"',
+            "merge_clause_source_0": f'{self.source_table_name}."sell"',
             "target_table": self.target_table_full_name,
             "source_table": self.source_table_full_name,
         }
