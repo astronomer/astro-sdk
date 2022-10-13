@@ -1,13 +1,12 @@
 import logging
+import os
+import shutil
 from pathlib import Path
 from typing import Optional
 
-from dotenv import load_dotenv
-import shutil
-import os
 import typer
-import tempfile
 from airflow.utils.cli import get_dag
+from dotenv import load_dotenv
 from rich import print as rprint
 from typer import Typer
 
@@ -66,15 +65,12 @@ def run(
         "The more precise this is the faster the local runner will run as we won't need to parse as many DAGs",
         show_default=False,
     ),
-    conn_file_path: Optional[str] = typer.Argument(
-        help="path to connections yaml or json file", default=None
-    ),
-    variable_file_path: Optional[str] = typer.Argument(
+    dags_directory: Optional[str] = typer.Option(help="path to connections yaml or json file", default=None),
+    conn_file_path: Optional[str] = typer.Option(help="path to connections yaml or json file", default=None),
+    variable_file_path: Optional[str] = typer.Option(
         help="path to variables yaml or json file", default=None
     ),
-    is_sql: bool =  typer.Argument(
-        help="Whether this DAG is a sql_cli directory", default=True
-    ),
+    is_sql: bool = typer.Option(help="Whether this DAG is a sql_cli directory", default=True),
 ) -> None:
     """
     Run a workflow locally. This task assumes that there is a local airflow DB (can be a SQLite file), that has been
@@ -95,6 +91,7 @@ def run(
         ...
 
 
+    :param dags_directory:
     :param dag_id: ID of the DAG you want to run
     :param subdir: the subdirectory or filepath for the DAG. The more precise this is the faster the local runner
     will run as we won't need to parse as many DAGs
@@ -102,26 +99,19 @@ def run(
     :param variable_file_path: path to variables yaml or json file
     :param is_sql:
     """
-    dag_file_or_dir = subdir
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        if is_sql:
-            dag_file_or_dir = str(generate_temp_dag(root_directory=dag_file_or_dir, tmp_dir=tmp_dir))
+    if is_sql:
+        generate_dag(Path(subdir), dags_directory=Path(dags_directory))  # type: ignore
 
-        dag = get_dag(dag_id=dag_id, subdir=dag_file_or_dir)
-        run_dag(dag=dag, conn_file_path=conn_file_path, variable_file_path=variable_file_path)
+    dag = get_dag(dag_id=dag_id, subdir=dags_directory or subdir)
+    run_dag(dag=dag, conn_file_path=conn_file_path, variable_file_path=variable_file_path)
 
 
 def generate_temp_dag(root_directory, tmp_dir):
-
-
     shutil.copytree(root_directory, tmp_dir + "/root")
     os.mkdir(Path(tmp_dir) / "target")
     os.mkdir(Path(tmp_dir) / "dag")
     print(tmp_dir)
-    return generate_dag(
-        Path(tmp_dir) / "root",
-        dags_directory=Path(tmp_dir) / "dag"
-    )
+    return generate_dag(Path(tmp_dir) / "root", dags_directory=Path(tmp_dir) / "dag")
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -1,12 +1,14 @@
+import pathlib
+
 from typer.testing import CliRunner
 
 from sql_cli import __version__
 from sql_cli.__main__ import app
-import pathlib
 
 runner = CliRunner()
 
 CWD = pathlib.Path(__file__).parent
+
 
 def get_stdout(result) -> str:
     """
@@ -54,33 +56,26 @@ def test_validate():
 def test_run_dag(root_directory_dags):
     result = runner.invoke(
         app,
-        [
-            "run",
-            "example_dataframe",
-            root_directory_dags.as_posix(),
-        ],
+        ["run", "example_dataframe", root_directory_dags.as_posix(), "--no-is-sql"],
     )
     assert result.exit_code == 0
     result_stdout = get_stdout(result)
     assert "The worst month was 2020-05" in result_stdout
 
-def test_run_sql_project(root_directory, target_directory, dags_directory):
-    args = [
-            "run",
-            "generate",
-            root_directory.as_posix(),
-            f"{CWD}/test_conn.yaml"
-        ]
-    print(" ".join(args))
+
+def test_run_sql_project(root_directory, target_directory, dags_directory, caplog):
     result = runner.invoke(
         app,
         [
             "run",
-            "root",
+            "sql_files",
             root_directory.as_posix(),
-            f"{CWD}/test_conn.yaml"
+            "--dags-directory",
+            dags_directory.as_posix(),
+            "--conn-file-path",
+            f"{CWD}/test_conn.yaml",
         ],
     )
     assert result.exit_code == 0
     result_stdout = get_stdout(result)
-    assert "The worst month was 2020-05" in result_stdout
+    assert "Dagrun sql_files final state: success" in result_stdout

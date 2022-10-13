@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import sys
+import warnings
 from datetime import datetime
 from typing import Any
 
@@ -14,11 +15,13 @@ from airflow.utils import timezone
 from airflow.utils.session import NEW_SESSION, provide_session
 from airflow.utils.state import DagRunState, State
 from airflow.utils.types import DagRunType
+from rich import print as pprint
 from sqlalchemy.orm.session import Session
 
 from astro.sql.operators.cleanup import AstroCleanupException
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 
 @provide_session
@@ -76,6 +79,7 @@ def run_dag(
             add_logger_if_needed(dag, ti)
             ti.task = tasks[ti.task_id]
             _run_task(ti, session=session)
+    pprint(f"Dagrun {dr.dag_id} final state: {dr.state}")
     if conn_file_path or variable_file_path:
         # Remove the local variables we have added to the secrets_backend_list
         secrets_backend_list.pop(0)
@@ -107,18 +111,20 @@ def _run_task(ti: TaskInstance, session: Session) -> None:
 
     :param ti: TaskInstance to run
     """
-    log.info("*****************************************************")
+    pprint("[bold green]*****************************************************[/bold green]")
     if hasattr(ti, "map_index") and ti.map_index > 0:
-        log.info("Running task %s index %d", ti.task_id, ti.map_index)
+        pprint("Running task %s index %d", ti.task_id, ti.map_index)
     else:
-        log.info("Running task %s", ti.task_id)
+        pprint(f"Running task [bold red]{ti.task_id}[/bold red]")
     try:
+        warnings.filterwarnings(action="ignore")
         ti._run_raw_task(session=session)
         session.flush()
-        log.info("%s ran successfully!", ti.task_id)
+        session.commit()
+        pprint(f"[bold red]{ti.task_id}[/bold red] ran successfully!")
     except AstroCleanupException:
-        log.info("aql.cleanup async, continuing", exc_info=True)
-    log.info("*****************************************************")
+        pprint("aql.cleanup async, continuing", exc_info=True)
+    pprint("[bold green]*****************************************************[/bold green]")
 
 
 def _get_or_create_dagrun(
@@ -157,5 +163,5 @@ def _get_or_create_dagrun(
         session=session,
         conf=conf,  # type: ignore
     )
-    log.info("created dagrun %s", str(dr))
+    pprint(f"Created dagrun [bold blue]{str(dr)}[/bold blue]", str(dr))
     return dr

@@ -36,6 +36,7 @@ def root_directory_symlink():
 def root_directory_dags():
     return Path.cwd() / "tests" / "test_dag"
 
+
 @pytest.fixture()
 def dags_directory():
     return Path.cwd() / "tests" / ".airflow" / "dags"
@@ -105,6 +106,15 @@ def sql_files_dag_with_cycle(sql_file_with_cycle):
     )
 
 
+@pytest.fixture
+def sample_dag():
+    dag_id = create_unique_table_name(UNIQUE_HASH_SIZE)
+    yield DAG(dag_id, start_date=DEFAULT_DATE)
+    with create_session() as session_:
+        session_.query(DagRun).delete()
+        session_.query(TI).delete()
+
+
 def create_unique_table_name(length: int = MAX_TABLE_NAME_LENGTH) -> str:
     """
     Create a unique table name of the requested size, which is compatible with all supported databases.
@@ -116,12 +126,3 @@ def create_unique_table_name(length: int = MAX_TABLE_NAME_LENGTH) -> str:
         random.choice(string.ascii_lowercase + string.digits) for _ in range(length - 1)
     )
     return unique_id
-
-
-@pytest.fixture
-def sample_dag():
-    dag_id = create_unique_table_name(UNIQUE_HASH_SIZE)
-    yield DAG(dag_id, start_date=DEFAULT_DATE)
-    with create_session() as session_:
-        session_.query(DagRun).delete()
-        session_.query(TI).delete()
