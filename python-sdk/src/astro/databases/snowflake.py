@@ -726,11 +726,11 @@ class SnowflakeDatabase(BaseDatabase):
         )
 
         merge_target_dict = {
-            f"merge_clause_target_{i}": f"{target_table_name}.{x}"
+            f"merge_clause_target_{i}": f'{target_table_name}."{x}"'
             for i, x in enumerate(target_conflict_columns)
         }
         merge_source_dict = {
-            f"merge_clause_source_{i}": f"{source_table_name}.{x}"
+            f"merge_clause_source_{i}": f'{source_table_name}."{x}"'
             for i, x in enumerate(target_conflict_columns)
         }
         statement = statement.replace(
@@ -753,7 +753,7 @@ class SnowflakeDatabase(BaseDatabase):
             statement += " when matched then UPDATE SET {merge_vals}"
             merge_statement = ",".join(
                 [
-                    f"{target_table_name}.{t}={source_table_name}.{s}"
+                    f'{target_table_name}."{t}"={source_table_name}."{s}"'
                     for s, t in source_to_target_columns_map.items()
                 ]
             )
@@ -761,11 +761,11 @@ class SnowflakeDatabase(BaseDatabase):
         statement += " when not matched then insert({target_columns}) values ({append_columns})"
         statement = statement.replace(
             "{target_columns}",
-            ",".join(f"{target_table_name}.{t}" for t in target_cols),
+            ",".join(f'{target_table_name}."{t}"' for t in target_cols),
         )
         statement = statement.replace(
             "{append_columns}",
-            ",".join(f"{source_table_name}.{s}" for s in source_cols),
+            ",".join(f'{source_table_name}."{s}"' for s in source_cols),
         )
         params = {
             **merge_target_dict,
@@ -807,6 +807,16 @@ class SnowflakeDatabase(BaseDatabase):
         # incompatible type List[ColumnClause[<nothing>]]; expected List[Column[Any]]
         sql = insert(target_table_sqla).from_select(target_columns, sel)  # type: ignore[arg-type]
         self.run_sql(sql=sql)
+
+    @staticmethod
+    def get_merge_initialization_query(parameters: tuple) -> str:
+        """
+        Handles database-specific logic to handle constraints, keeping
+        it agnostic to database.
+        """
+        constraints = ",".join([f'"{p}"' for p in parameters])
+        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (%s)" % constraints
+        return sql
 
 
 def wrap_identifier(inp: str) -> str:
