@@ -123,7 +123,7 @@ def _run_task(ti: TaskInstance, session: Session) -> None:
         session.commit()
         pprint(f"[bold red]{ti.task_id}[/bold red] ran successfully!")
     except AstroCleanupException:
-        pprint("aql.cleanup async, continuing", exc_info=True)
+        pprint("aql.cleanup async, continuing")
     pprint("[bold green]*****************************************************[/bold green]")
 
 
