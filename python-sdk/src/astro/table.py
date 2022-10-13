@@ -145,6 +145,14 @@ class BaseTable:
             conn_id=obj["conn_id"],
         )
 
+    def get_rows(self):
+        # db_connection = create_engine(self.conn_id)
+        # db_metadata = MetaData(bind=db_connection, reflect=True)
+        # sqlalchemy_table = db_metadata.tables[self.name]
+        # with Session(db_connection) as session:
+        #     return session.query(sqlalchemy_table).count()
+        return 0
+
 
 @define(slots=False)
 class TempTable(BaseTable):
