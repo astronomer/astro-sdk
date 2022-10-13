@@ -6,6 +6,7 @@ from astro.constants import FileType
 from astro.files import File
 from astro.lineage.extractor import PythonSDKExtractor
 from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
+from astro.sql import AppendOperator
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import Metadata, Table
 
@@ -80,6 +81,28 @@ def test_python_sdk_load_file_extract_on_complete():
     assert task_meta_extract is None
 
     task_meta = python_sdk_extractor.extract_on_complete(task_instance)
+    assert task_meta.name == f"adhoc_airflow.{task_id}"
+    assert task_meta.inputs[0] == INPUT_STATS[0]
+    assert task_meta.outputs[0] == OUTPUT_STATS[0]
+    assert task_meta.job_facets == {}
+    assert task_meta.run_facets == {}
+
+
+@pytest.mark.integration
+def test_append_op_extract_on_complete():
+    task_id = "append_op"
+    op = AppendOperator(
+        source_table=Table(conn_id="bigquery", name="test-extractor"),
+        target_table=Table(conn_id="bigquery", name="test-extractor")
+    )
+
+    task_instance = TaskInstance(task=op)
+
+    python_sdk_extractor = PythonSDKExtractor(op)
+    task_meta_extract = python_sdk_extractor.extract()
+    assert task_meta_extract is None
+    task_meta = python_sdk_extractor.extract_on_complete(task_instance)
+
     assert task_meta.name == f"adhoc_airflow.{task_id}"
     assert task_meta.inputs[0] == INPUT_STATS[0]
     assert task_meta.outputs[0] == OUTPUT_STATS[0]
