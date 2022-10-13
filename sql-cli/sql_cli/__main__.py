@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+from dotenv import load_dotenv
 from rich import print as rprint
 from typer import Typer
 
@@ -9,11 +10,11 @@ from sql_cli import __version__
 from sql_cli.connections import validate_connections
 from sql_cli.dag_generator import generate_dag
 
+load_dotenv()
 app = Typer(add_completion=False)
 
-NON_SQL_CLI_LOGGERS = [logging.getLogger(name) for name in logging.root.manager.loggerDict]
-for logger in NON_SQL_CLI_LOGGERS:
-    logger.setLevel(logging.ERROR)
+for name in logging.root.manager.loggerDict:
+    logging.getLogger(name).setLevel(logging.ERROR)
 
 
 @app.command()
@@ -47,7 +48,7 @@ def generate(
 
 @app.command()
 def validate(environment: str = "default", connection: Optional[str] = None) -> None:
-    validate_connections(environment=environment, connection=connection)
+    validate_connections(environment=environment, connection_id=connection)
 
 
 if __name__ == "__main__":  # pragma: no cover

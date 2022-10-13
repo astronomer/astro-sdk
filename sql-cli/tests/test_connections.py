@@ -20,11 +20,11 @@ def test_validate_connections(caplog):
     assert added_connection_log in caplog.text
 
 
-def test_specific_connection(caplog):
-    sqlite_conn_id = "sqlite_conn"
-    validate_connections(connection=sqlite_conn_id)
+def test_specific_connection_with_env_vars_in_config(caplog):
+    redshift_conn_id = "redshift_conn"
+    validate_connections(connection_id=redshift_conn_id)
 
-    sqlite_conn_id_formatted_string = sqlite_conn_id + " " * (25 - len(sqlite_conn_id))
+    sqlite_conn_id_formatted_string = redshift_conn_id + " " * (25 - len(redshift_conn_id))
     added_connection_log = f"Validating connection {sqlite_conn_id_formatted_string} PASSED"
     assert added_connection_log in caplog.text
 
@@ -36,7 +36,7 @@ def test_validate_connections_config_file_not_found_exception():
 
 def test_validate_connections_config_file_does_not_contain_connection(caplog):
     unknown_connection_id = "UnknownConnection"
-    validate_connections(connection=unknown_connection_id)
+    validate_connections(connection_id=unknown_connection_id)
     assert f"Config file does not contain given connection {unknown_connection_id}" in caplog.text
 
 

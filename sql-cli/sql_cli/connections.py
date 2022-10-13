@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any
 
 import yaml
@@ -19,9 +20,9 @@ def _load_yaml_connections(environment: str) -> list[dict[str, Any]]:
             f"Config file configuration.yaml does not exist for environment {environment}"
         )
 
-    with open(config_file) as connections_file:
-        connections: list[dict[str, Any]] = yaml.safe_load(connections_file)["connections"]
-
+    with open(config_file) as fp:
+        yaml_with_env = os.path.expandvars(fp.read())
+        connections: list[dict[str, Any]] = yaml.safe_load(yaml_with_env)["connections"]
     return connections
 
 
@@ -37,7 +38,7 @@ def _create_or_replace_connection(conn_obj: Connection) -> None:
         session.commit()
 
 
-def validate_connections(environment: str = "default", connection: str | None = None) -> None:
+def validate_connections(environment: str = "default", connection_id: str | None = None) -> None:
     """
     Validates that the given connections are valid and registers them to Airflow with replace policy for existing
     connections.
@@ -50,9 +51,9 @@ def validate_connections(environment: str = "default", connection: str | None = 
         conn["connection_id"] = conn_id
         conn.pop("conn_id")
         data = connection_schema.load(conn)
-        if connection and conn_id != connection:
+        if connection_id and conn_id != connection_id:
             continue
-        if connection:
+        if connection_id:
             config_file_contains_connection = True
         conn_obj = Connection(**data)
 
@@ -67,5 +68,5 @@ def validate_connections(environment: str = "default", connection: str | None = 
 
     logging.info(logs)
 
-    if connection and not config_file_contains_connection:
-        logging.info("Config file does not contain given connection %s", connection)
+    if connection_id and not config_file_contains_connection:
+        logging.info("Config file does not contain given connection %s", connection_id)

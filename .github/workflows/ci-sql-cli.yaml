@@ -26,6 +26,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+# This list should only have non-sensitive environment variables.
+# Environment variables with secrets should be in the specific jobs.
+env:
+  REDSHIFT_DATABASE: dev
+  REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
+
 jobs:
   Type-Check:
     if: github.event.action != 'labeled'
@@ -91,7 +97,9 @@ jobs:
         with:
           name: coverage
           path: ./sql-cli/.coverage
-
+    env:
+      REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
+      REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
 
   Code-Coverage:
     if: github.event.action != 'labeled'
