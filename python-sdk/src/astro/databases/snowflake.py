@@ -484,26 +484,13 @@ class SnowflakeDatabase(BaseDatabase):
         columns_names_capitalization: ColumnCapitalization = "original",
     ) -> None:
         """
-        Create a SQL table, automatically inferring the schema using the given file.
+        Dummy function. We are inferring schema and creating table in `load_pandas_dataframe_to_table`.
 
         :param table: The table to be created.
         :param file: File used to infer the new table columns.
         :param dataframe: Dataframe used to infer the new table columns if there is no file
         """
         pass
-
-        # Snowflake don't expect mixed case col names like - 'Title' or 'Category'
-        # we explicitly convert them to lower case, if not provided by user
-
-        # if file:
-        #     dataframe = file.export_to_dataframe(
-        #         nrows=settings.LOAD_TABLE_AUTODETECT_ROWS_COUNT,
-        #         columns_names_capitalization=columns_names_capitalization,
-        #     )
-
-        # Snowflake doesn't handle well mixed capitalisation of column name chars
-        # we are handling this more gracefully in a separate PR
-        # super().create_table_using_schema_autodetection(table, dataframe=dataframe)
 
     def is_native_load_file_available(self, source_file: File, target_table: BaseTable) -> bool:
         """
