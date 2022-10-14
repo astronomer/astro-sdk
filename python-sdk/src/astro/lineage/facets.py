@@ -113,7 +113,7 @@ class TargetTableMergeDatasetFacet(BaseFacet):
     Facets that represent may be available for Target Table object in Merge Operator
 
     :param table_name: Name of the table
-    :param target_conflict_columns:List of cols where we expect to have a conflict while combining
+    :param target_conflict_columns: List of cols where we expect to have a conflict while combining
     :param columns: columns defined in table
     :param metadata: metadata of the table.
     """
