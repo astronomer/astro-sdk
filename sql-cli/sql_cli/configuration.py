@@ -35,7 +35,7 @@ class Config:
         """
         return self.project_dir / CONFIG_DIR / self.environment / CONFIG_FILENAME
 
-    def from_yaml_to_dict(self) -> dict[str, Any]:
+    def from_yaml_to_dict(self) -> dict[str, Any]:  # type: ignore
         """
         Return a dict with the content of the configuration.yaml.
 
