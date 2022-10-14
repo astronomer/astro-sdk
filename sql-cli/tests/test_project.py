@@ -40,3 +40,4 @@ def test_initialise_project_in_previously_initialised_dir(tmp_path):
     paths = list_dir(tmp_path.as_posix())
     assert all(base_path in paths for base_path in BASE_PATHS)
     # TODO: make sure we did not override the content of existing files!
+
