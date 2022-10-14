@@ -5,9 +5,14 @@ import logging
 from json import JSONDecodeError
 from typing import Any
 
+import airflow
 import numpy as np
 import pandas
-from sqlalchemy.engine.row import LegacyRow
+
+if airflow.__version__ >= "2.3":
+    from sqlalchemy.engine.row import LegacyRow
+else:
+    from sqlalchemy.engine.row import Row as LegacyRow
 
 from astro.files import File
 from astro.table import Table, TempTable
@@ -60,7 +65,7 @@ def _is_serialized_astro_object(obj) -> bool:
     return bool(obj.get("class") and obj["class"] in ["Table", "File", "string", "LegacyRow"])
 
 
-def deserialize(obj: dict | str | list) -> Table | File | Any:
+def deserialize(obj: dict | str | list) -> Table | File | Any:  # noqa
     """
     Deserialize json dictionaries into astro SDK objects (tables, files, dataframes, etc.)
 
