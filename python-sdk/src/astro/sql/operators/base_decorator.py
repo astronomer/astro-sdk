@@ -217,7 +217,9 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                 OpenlineageDataset(
                     namespace=output_database.openlineage_dataset_namespace(),
                     name=output_database.openlineage_dataset_name(table=self.output_table),
-                    facets={"stats": OutputStatisticsOutputDatasetFacet(rowCount=0)},
+                    facets={
+                        "stats": OutputStatisticsOutputDatasetFacet(rowCount=self.output_table.row_count)
+                    },
                 )
             ]
 
