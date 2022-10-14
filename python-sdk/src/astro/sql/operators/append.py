@@ -4,6 +4,13 @@ from typing import Any
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
+from openlineage.client.facet import (
+    BaseFacet,
+    OutputStatisticsOutputDatasetFacet,
+    SchemaDatasetFacet,
+    SchemaField,
+    SqlJobFacet,
+)
 from openlineage.client.run import Dataset as OpenlineageDataset
 
 from astro.airflow.datasets import kwargs_with_datasets
@@ -13,13 +20,6 @@ from astro.lineage.facets import TableDatasetFacet
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
 from astro.utils.typing_compat import Context
-from openlineage.client.facet import (
-    BaseFacet,
-    OutputStatisticsOutputDatasetFacet,
-    SchemaDatasetFacet,
-    SchemaField,
-    SqlJobFacet,
-)
 
 
 class AppendOperator(AstroSQLBaseOperator):
@@ -89,12 +89,13 @@ class AppendOperator(AstroSQLBaseOperator):
                         metadata=self.source_table.metadata,
                     ),
                     "schema_dataset_facet": SchemaDatasetFacet(
-                        fields=[SchemaField(
-                            name=self.source_table.metadata.schema,
-                            type=self.source_table.metadata.database
-                        )]
+                        fields=[
+                            SchemaField(
+                                name=self.source_table.metadata.schema,
+                                type=self.source_table.metadata.database,
+                            )
+                        ]
                     ),
-
                 },
             )
         ]
@@ -110,9 +111,7 @@ class AppendOperator(AstroSQLBaseOperator):
                         source_table_rows=source_table_rows,
                         metadata=self.target_table.metadata,
                     ),
-                    "output_stats": OutputStatisticsOutputDatasetFacet(
-                        rowCount=self.target_table.row_count
-                    )
+                    "output_stats": OutputStatisticsOutputDatasetFacet(rowCount=self.target_table.row_count),
                 },
             )
         ]

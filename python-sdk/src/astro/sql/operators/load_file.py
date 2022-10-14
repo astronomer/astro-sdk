@@ -184,7 +184,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
 
         return normalize_config
 
-    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets: # skipcq: PYL-W0613
+    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:  # skipcq: PYL-W0613
         """
         Returns the lineage data
         """
