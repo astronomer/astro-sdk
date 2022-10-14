@@ -83,7 +83,7 @@ class MergeOperator(AstroSQLBaseOperator):
             target_conflict_columns=self.target_conflict_columns,
             source_to_target_columns_map=self.columns,
         )
-        context["ti"].xcom_push(key="merge_query", value=db.sql)
+        context["ti"].xcom_push(key="merge_query", value=str(db.sql))
         return self.target_table
 
     def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:
