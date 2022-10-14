@@ -100,9 +100,9 @@ def test_append_op_extract_on_complete():
         source_table=Table(conn_id="bigquery", name="test-extractor", metadata=Metadata(schema="astro")),
         target_table=Table(conn_id="bigquery", name="test-extractor", metadata=Metadata(schema="astro")),
     )
-
     tzinfo = pendulum.timezone("UTC")
-    task_instance = TaskInstance(task=op, execution_date=timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo))
+    execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
+    task_instance = TaskInstance(task=op, run_id=execution_date)
 
     python_sdk_extractor = PythonSDKExtractor(op)
     task_meta_extract = python_sdk_extractor.extract()
