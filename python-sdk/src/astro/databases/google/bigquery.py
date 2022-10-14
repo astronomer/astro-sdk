@@ -106,7 +106,7 @@ class BigqueryDatabase(BaseDatabase):
         super().__init__(conn_id)
 
     @property
-    def sql_type(self):
+    def sql_type(self) -> str:
         return "bigquery"
 
     @property
@@ -428,6 +428,23 @@ class BigqueryDatabase(BaseDatabase):
                 destination=self.get_table_qualified_name(target_table),
             )
         job.result()
+
+    def openlineage_dataset_name(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: PROJECT.dataset_name.table_name
+        """
+        dataset = table.metadata.database or table.metadata.schema
+        return f"{self.hook.project_id}.{dataset}.{table.name}"
+
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: bigquery
+        """
+        return self.sql_type
 
 
 class S3ToBigqueryDataTransfer:
