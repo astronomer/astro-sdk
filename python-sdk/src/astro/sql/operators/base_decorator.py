@@ -6,11 +6,20 @@ from typing import Any, Sequence, cast
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
+from openlineage.client.facet import (
+    BaseFacet,
+    OutputStatisticsOutputDatasetFacet,
+    SchemaDatasetFacet,
+    SchemaField,
+    SqlJobFacet,
+)
+from openlineage.client.run import Dataset as OpenlineageDataset
 from sqlalchemy.sql.functions import Function
 
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
+from astro.lineage.extractor import OpenLineageFacets
 from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
 from astro.table import BaseTable, Table
 from astro.utils.table import find_first_table
@@ -97,9 +106,12 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         self.read_sql_from_function()
         self.move_function_params_into_sql_params(context)
         self.translate_jinja_to_sqlalchemy_template(context)
+
         # if there is no SQL to run we raise an error
         if self.sql == "" or not self.sql:
             raise AirflowException("There's no SQL to run")
+
+        context["ti"].xcom_push(key="base_sql_query", value=str(self.sql))
 
     def create_output_table_if_needed(self) -> None:
         """
@@ -180,6 +192,43 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         # Render templating in sql query
         if context:
             self.sql = self.render_template(self.sql, context)
+
+    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:
+        """
+        Returns the lineage data
+        """
+        input_dataset: list[OpenlineageDataset] = [
+            OpenlineageDataset(
+                namespace=self.output_table.openlineage_dataset_namespace(),
+                name=self.output_table.openlineage_dataset_name(),
+                facets={
+                    "schema_dataset_facet": SchemaDatasetFacet(
+                        fields=[SchemaField(name=self.schema, type=self.database)]
+                    ),
+                },
+            )
+        ]
+
+        output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
+        if self.output_table:
+            output_dataset = [
+                OpenlineageDataset(
+                    namespace=self.output_table.openlineage_dataset_namespace(),
+                    name=self.output_table.openlineage_dataset_name(),
+                    facets={
+                        "stats": OutputStatisticsOutputDatasetFacet(rowCount=self.output_table.row_count)
+                    },
+                )
+            ]
+
+        run_facets: dict[str, BaseFacet] = {}
+
+        base_sql_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="base_sql_query")
+        job_facets: dict[str, BaseFacet] = {"sql": SqlJobFacet(query=base_sql_query)}
+
+        return OpenLineageFacets(
+            inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
+        )
 
 
 def load_op_arg_dataframes_into_sql(conn_id: str, op_args: tuple, target_table: BaseTable) -> tuple:
