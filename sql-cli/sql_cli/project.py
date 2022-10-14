@@ -17,6 +17,8 @@ class Project:
     SQL CLI Project.
     """
 
+    workflows_directory = Path("workflows")
+
     def __init__(
         self,
         directory: Path,
