@@ -20,7 +20,7 @@ def test_run_task_successfully(mock_session, mock_task_instance):
     mock_session.flush.assert_called_once()
 
 
-def test_run_task_cleanup_log(sample_dag, caplog):
+def test_run_task_cleanup_log(sample_dag, capsys):
     @aql.dataframe
     def upstream_task():
         return 5
@@ -33,10 +33,11 @@ def test_run_task_cleanup_log(sample_dag, caplog):
         downstream_task(upstream_task())
         aql.cleanup()
     run_dag(sample_dag)
-    assert "aql.cleanup async, continuing" in caplog.text
+    captured = capsys.readouterr()
+    assert "aql.cleanup async, continuing" in captured.out
 
 
-def test_run_dag_dynamic_task(sample_dag, caplog):
+def test_run_dag_dynamic_task(sample_dag, capsys):
     @task
     def get_list():
         return [1, 2, 3]
@@ -48,11 +49,12 @@ def test_run_dag_dynamic_task(sample_dag, caplog):
     with sample_dag:
         print_val.expand(v=get_list())
     run_dag(sample_dag)
+    captured = capsys.readouterr()
     for i in [1, 2]:
-        assert f"Running task print_val index {i}" in caplog.text
+        assert f"Running task print_val index {i}" in captured.out
 
 
-def test_run_dag_with_skip(sample_dag, caplog):
+def test_run_dag_with_skip(sample_dag, capsys):
     @task.branch
     def who_is_prettiest():
         return "snow_white_wins"
@@ -72,18 +74,21 @@ def test_run_dag_with_skip(sample_dag, caplog):
     with sample_dag:
         who_is_prettiest() >> [snow_white_wins(), witch_wins()] >> movie_ends()  # skipcq: PYL-W0106
     run_dag(sample_dag)
-    assert "witch_wins ran successfully!" not in caplog.text
-    assert "snow_white_wins ran successfully!" in caplog.text
-    assert "movie_ends ran successfully!" in caplog.text
+    captured = capsys.readouterr()
+    assert "witch_wins ran successfully!" not in captured.out
+    assert "snow_white_wins ran successfully!" in captured.out
+    assert "movie_ends ran successfully!" in captured.out
 
 
-def test_run_dag(caplog):
+def test_run_dag(capsys):
     dag = get_dag(dag_id="example_dataframe", subdir=f"{CWD}/test_dag")
     run_dag(dag)
-    assert "The worst month was 2020-05" in caplog.text
+    captured = capsys.readouterr()
+    assert "The worst month was 2020-05" in captured.out
 
 
-def test_run_dag_with_conn_id(caplog):
+def test_run_dag_with_conn_id(capsys):
     dag = get_dag(dag_id="example_sqlite_load_transform", subdir=f"{CWD}/test_dag")
     run_dag(dag, conn_file_path=f"{CWD}/test_conn.yaml")
-    assert "top movie:" in caplog.text
+    captured = capsys.readouterr()
+    assert "top movie:" in captured.out
