@@ -63,7 +63,8 @@ OUTPUT_STATS = [
 def test_python_sdk_load_file_extract_on_complete():
     """
     Tests that  the custom PythonSDKExtractor is able to process the
-    operator's metadata that needs to be extracted as per OpenLineage.
+    operator's metadata that needs to be extracted as per OpenLineage
+    for LoadFileOperator.
     """
     task_id = "load_file"
     load_file_operator = LoadFileOperator(
@@ -125,7 +126,8 @@ def test_append_op_extract_on_complete():
 def test_python_sdk_transform_extract_on_complete():
     """
     Tests that  the custom PythonSDKExtractor is able to process the
-    operator's metadata that needs to be extracted as per OpenLineage.
+    operator's metadata that needs to be extracted as per OpenLineage
+    for TransformOperator.
     """
     imdb_table = (Table(name="imdb", conn_id="sqlite_default"),)
     output_table = Table(name="test_name", conn_id="sqlite_default")

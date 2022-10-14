@@ -197,11 +197,10 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         """
         Returns the lineage data
         """
-        output_database = create_database(self.output_table.conn_id)
         input_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(
-                namespace=output_database.openlineage_dataset_namespace(),
-                name=output_database.openlineage_dataset_name(table=self.output_table),
+                namespace=self.output_table.openlineage_dataset_namespace(),
+                name=self.output_table.openlineage_dataset_name(),
                 facets={
                     "schema_dataset_facet": SchemaDatasetFacet(
                         fields=[SchemaField(name=self.schema, type=self.database)]
@@ -212,11 +211,10 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
 
         output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
         if self.output_table:
-            output_database = create_database(self.output_table.conn_id)
             output_dataset = [
                 OpenlineageDataset(
-                    namespace=output_database.openlineage_dataset_namespace(),
-                    name=output_database.openlineage_dataset_name(table=self.output_table),
+                    namespace=self.output_table.openlineage_dataset_namespace(),
+                    name=self.output_table.openlineage_dataset_name(),
                     facets={
                         "stats": OutputStatisticsOutputDatasetFacet(rowCount=self.output_table.row_count)
                     },
