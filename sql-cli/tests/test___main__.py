@@ -47,9 +47,10 @@ def test_generate(root_directory, dags_directory):
     if result.exit_code != 0:
         print(result.output)
     assert result.exit_code == 0
-    result_stdout = get_stdout(result)
-    assert result_stdout.startswith("The DAG file ")
-    assert result_stdout.endswith(" has been successfully generated. 🎉")
+    assert (
+        f"The DAG file {dags_directory / root_directory.name}.py has been successfully generated. 🎉"
+        == get_stdout(result)
+    )
 
 
 def test_validate():
@@ -72,7 +73,7 @@ def test_run(root_directory, dags_directory):
         print(result.output)
     assert result.exit_code == 0
     result_stdout = get_stdout(result)
-    assert "Dagrun sql_files final state: success" in result_stdout
+    assert f"Dagrun {root_directory.name} final state: success" in result_stdout
 
 
 def test_init_with_directory():

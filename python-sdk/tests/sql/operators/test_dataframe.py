@@ -4,6 +4,7 @@ from unittest import mock
 
 import pandas
 import pytest
+from airflow.exceptions import AirflowException
 from airflow.models.xcom import BaseXCom
 from airflow.utils import timezone
 
@@ -399,8 +400,7 @@ def test_dataframe_from_file_xcom_pickling(mock_serde, sample_dag):
 
 
 @mock.patch("astro.settings.STORE_DATA_LOCAL_DEV", False)
-@mock.patch("warnings.warn")
-def test_dataframe_no_storage_option_raises_warning(mock_warning, sample_dag):
+def test_dataframe_no_storage_option_raises_exception(sample_dag):
     @aql.dataframe
     def validate_file(df: pandas.DataFrame):  # skipcq: PY-D0003
         assert len(df) == 5
@@ -411,12 +411,10 @@ def test_dataframe_no_storage_option_raises_warning(mock_warning, sample_dag):
     def count_df(df: pandas.DataFrame):
         return len(df)
 
-    with pytest.raises(TypeError):
+    with pytest.raises(AirflowException, match="Since you have not provided a remote object storage conn_id"):
         with sample_dag:
             count_df(validate_file(df=File(path=str(CWD) + "/../../data/homes2.csv")))
         test_utils.run_dag(sample_dag)
-    mock_warning.assert_called()
-    assert "Since you have not provided a remote object storage conn_id" in mock_warning.call_args[0][0]
 
 
 def test_col_case_is_preserved(sample_dag):

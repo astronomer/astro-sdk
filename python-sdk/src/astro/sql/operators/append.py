@@ -68,7 +68,7 @@ class AppendOperator(AstroSQLBaseOperator):
             target_table=self.target_table,
             source_to_target_columns_map=self.columns,
         )
-        context["ti"].xcom_push(key="append_query", value=db.sql)
+        context["ti"].xcom_push(key="append_query", value=str(db.sql))
         return self.target_table
 
     def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:
