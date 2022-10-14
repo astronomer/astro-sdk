@@ -1,8 +1,8 @@
 import warnings
 from typing import TYPE_CHECKING, Any
 
-from airflow.models.xcom import BaseXCom
 from airflow.exceptions import AirflowException
+from airflow.models.xcom import BaseXCom
 
 from astro.custom_backend.serializer import deserialize, serialize
 
