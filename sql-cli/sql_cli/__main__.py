@@ -13,6 +13,9 @@ from sql_cli.dag_generator import generate_dag
 
 app = typer.Typer(add_completion=False)
 
+for name in logging.root.manager.loggerDict:
+    logging.getLogger(name).setLevel(logging.ERROR)
+
 
 @app.command()
 def version() -> None:
@@ -103,7 +106,4 @@ def init(
 
 
 if __name__ == "__main__":  # pragma: no cover
-    for name in logging.root.manager.loggerDict:
-        logging.getLogger(name).setLevel(logging.ERROR)
-
-   app()
+    app()
