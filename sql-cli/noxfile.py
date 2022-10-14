@@ -24,7 +24,7 @@ def dev(session: nox.Session) -> None:
 def test(session: nox.Session) -> None:
     """Run both unit and integration tests."""
     session.install("poetry")
-    session.run("poetry", "install")
+    session.run("poetry", "install", "--with", "dev")
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
     session.run("pip3", "freeze")
@@ -45,7 +45,7 @@ def test(session: nox.Session) -> None:
 def type_check(session: nox.Session) -> None:
     """Run MyPy checks."""
     session.install("poetry")
-    session.run("poetry", "install")
+    session.run("poetry", "install", "mypy")
     session.run("mypy", "--version")
     session.run("mypy")
 
