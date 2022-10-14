@@ -131,11 +131,8 @@ class BaseTable:
         """
         Return the row count of table
         """
-        db = create_database(self.conn_id)
-        # TODO: Remove skipcq: BAN-B608
-        return db.run_sql(
-            f"select count(*) from {db.get_table_qualified_name(self)}"  # skipcq: BAN-B608
-        ).scalar()
+        # TODO: Implement this property
+        return 0
 
     def to_json(self):
         return {
