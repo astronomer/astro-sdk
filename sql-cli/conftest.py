@@ -23,17 +23,17 @@ UNIQUE_HASH_SIZE = 16
 
 @pytest.fixture()
 def root_directory():
-    return CWD / "tests" / "workflows" / "sql_files"
+    return CWD / "tests" / "workflows" / "basic"
 
 
 @pytest.fixture()
 def root_directory_cycle():
-    return CWD / "tests" / "workflows" / "sql_files_cycle"
+    return CWD / "tests" / "workflows" / "cycle"
 
 
 @pytest.fixture()
 def root_directory_symlink():
-    return CWD / "tests" / "workflows" / "sql_files_symlink"
+    return CWD / "tests" / "workflows" / "symlink"
 
 
 @pytest.fixture()
@@ -48,7 +48,7 @@ def dags_directory():
 
 @pytest.fixture()
 def target_directory():
-    return CWD / "tests" / ".airflow" / "dags" / ".sql"
+    return CWD / "tests" / ".airflow" / "dags" / "sql"
 
 
 @pytest.fixture()

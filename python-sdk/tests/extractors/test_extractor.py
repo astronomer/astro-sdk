@@ -4,6 +4,7 @@ from airflow.models.taskinstance import TaskInstance
 from airflow.utils import timezone
 from openlineage.client.run import Dataset as OpenlineageDataset
 
+from astro import sql as aql
 from astro.constants import FileType
 from astro.files import File
 from astro.lineage.extractor import PythonSDKExtractor
@@ -62,7 +63,8 @@ OUTPUT_STATS = [
 def test_python_sdk_load_file_extract_on_complete():
     """
     Tests that  the custom PythonSDKExtractor is able to process the
-    operator's metadata that needs to be extracted as per OpenLineage.
+    operator's metadata that needs to be extracted as per OpenLineage
+    for LoadFileOperator.
     """
     task_id = "load_file"
     load_file_operator = LoadFileOperator(
@@ -112,6 +114,7 @@ def test_append_op_extract_on_complete():
 
     task_meta = python_sdk_extractor.extract_on_complete(task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
+
     assert task_meta.inputs[0].name == f"astronomer-dag-authoring.astro.{src.name}"
     assert task_meta.inputs[0].namespace == "bigquery"
     assert task_meta.inputs[0].facets is not None
@@ -147,5 +150,34 @@ def test_merge_op_extract_on_complete():
     assert task_meta.inputs[0].name == f"astronomer-dag-authoring.astro.{src.name}"
     assert task_meta.inputs[0].namespace == "bigquery"
     assert task_meta.inputs[0].facets is not None
+    assert len(task_meta.job_facets) > 0
+    assert task_meta.run_facets == {}
+
+@pytest.mark.integration
+def test_python_sdk_transform_extract_on_complete():
+    """
+    Tests that  the custom PythonSDKExtractor is able to process the
+    operator's metadata that needs to be extracted as per OpenLineage
+    for TransformOperator.
+    """
+    imdb_table = (Table(name="imdb", conn_id="sqlite_default"),)
+    output_table = Table(name="test_name", conn_id="sqlite_default")
+    task_id = "top_five_animations"
+
+    @aql.transform
+    def top_five_animations(input_table: Table) -> str:
+        return "SELECT title, rating FROM {{ input_table }} LIMIT 5;"
+
+    task = top_five_animations(input_table=imdb_table, output_table=output_table)
+
+    tzinfo = pendulum.timezone("UTC")
+    execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
+    task_instance = TaskInstance(task=task.operator, run_id=execution_date)
+
+    python_sdk_extractor = PythonSDKExtractor(task.operator)
+    assert type(python_sdk_extractor.get_operator_classnames()) is list
+    task_meta = python_sdk_extractor.extract_on_complete(task_instance)
+    assert task_meta.name == f"adhoc_airflow.{task_id}"
+    assert task_meta.outputs[0].facets["stats"].size is None
     assert len(task_meta.job_facets) > 0
     assert task_meta.run_facets == {}
