@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-from functools import singledispatch
 from json import JSONDecodeError
 from typing import Any
 
@@ -15,7 +14,7 @@ from astro.table import Table, TempTable
 log = logging.getLogger("astro.utils.serializer")
 
 
-def serialize(obj: Table | File | Any) -> dict | Any:
+def serialize(obj: Table | File | Any) -> dict | Any:  # noqa
     """
     Serialize astro SDK objects (tables, files and dataframes) into json safe dictionary
 
@@ -28,6 +27,17 @@ def serialize(obj: Table | File | Any) -> dict | Any:
         return obj.to_json()
     elif isinstance(obj, list):
         return [serialize(o) for o in obj]
+    elif isinstance(obj, pandas.DataFrame):
+        from astro.utils.dataframe import convert_dataframe_to_file
+
+        file = convert_dataframe_to_file(obj)
+        return serialize(file)
+    elif isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return np.float64(obj)
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
     elif isinstance(obj, str):
         return {"class": "string", "value": obj}
     else:
@@ -36,7 +46,7 @@ def serialize(obj: Table | File | Any) -> dict | Any:
 
 def _attempt_to_serialize_unknown_object(obj: object):
     try:
-        return json.dumps(obj, default=to_serializable)
+        return json.dumps(obj)
     except TypeError:
         return obj
 
@@ -84,30 +94,3 @@ def _attempt_to_deser_unknown_object(obj: str):
     except JSONDecodeError:
         log.debug("Json deserializing failed for object %s, returning raw object", obj)
         return obj
-
-
-@singledispatch
-def to_serializable(val):
-    """Used by default."""
-    return str(val)
-
-
-@to_serializable.register(np.float32)
-def ts_float32(val):
-    """Used if *val* is an instance of numpy.float32."""
-    return np.float64(val)
-
-
-@to_serializable.register(np.int64)
-def ts_integer(val):
-    """Used if *val* is an instance of numpy.int64."""
-    return int(val)
-
-
-@to_serializable.register(pandas.DataFrame)
-def ts_dataframe(val):
-    """Used if *val* is an instance of pandas.Dataframe."""
-    from astro.utils.dataframe import convert_dataframe_to_file
-
-    file = convert_dataframe_to_file(val)
-    return serialize(file)

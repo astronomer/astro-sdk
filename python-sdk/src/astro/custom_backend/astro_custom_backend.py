@@ -1,4 +1,3 @@
-import warnings
 from typing import TYPE_CHECKING, Any
 
 from airflow.exceptions import AirflowException
