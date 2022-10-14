@@ -485,14 +485,25 @@ class SnowflakeDatabase(BaseDatabase):
         columns_names_capitalization: ColumnCapitalization = "original",
     ) -> None:
         """
-        A dummy function is required to override the default behavior. We are inferring schema and creating a table in
-        `load_pandas_dataframe_to_table`.
+        Create a SQL table, automatically inferring the schema using the given file.
+        Overriding default behaviour and not using the `prep_table` since it doesn't allow the adding quotes.
 
         :param table: The table to be created.
         :param file: File used to infer the new table columns.
         :param dataframe: Dataframe used to infer the new table columns if there is no file
         """
-        pass
+
+        pandas_tools.write_pandas(
+            conn=self.hook.get_conn(),
+            df=dataframe,
+            table_name=table.name.upper(),
+            schema=table.metadata.schema,
+            database=table.metadata.database,
+            chunk_size=DEFAULT_CHUNK_SIZE,
+            quote_identifiers=True,
+            auto_create_table=True,
+        )
+        self.truncate_table(table)
 
     def is_native_load_file_available(self, source_file: File, target_table: BaseTable) -> bool:
         """
@@ -832,6 +843,10 @@ class SnowflakeDatabase(BaseDatabase):
         """
         account = self.hook.get_connection(self.conn_id).extra_dejson.get("account")
         return f"{self.sql_type}://{account}"
+
+    def truncate_table(self, table):
+        """Truncate table"""
+        self.run_sql(f"TRUNCATE TABLE {self.get_table_qualified_name(table)}")
 
 
 def wrap_identifier(inp: str) -> str:
