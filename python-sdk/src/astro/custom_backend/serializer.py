@@ -7,6 +7,7 @@ from typing import Any
 
 import numpy as np
 import pandas
+from sqlalchemy.engine.row import LegacyRow
 
 from astro.files import File
 from astro.table import Table, TempTable
@@ -28,7 +29,7 @@ def serialize(obj: Table | File | Any) -> dict | Any:  # noqa
     elif isinstance(obj, (list, tuple)):
         return [serialize(o) for o in obj]
     elif isinstance(obj, dict):
-        return {k: serialize(v) for k,v in obj.items()}
+        return {k: serialize(v) for k, v in obj.items()}
     elif isinstance(obj, pandas.DataFrame):
         from astro.utils.dataframe import convert_dataframe_to_file
 
@@ -38,8 +39,10 @@ def serialize(obj: Table | File | Any) -> dict | Any:  # noqa
         return int(obj)
     elif isinstance(obj, np.floating):
         return np.float64(obj)
-    if isinstance(obj, np.ndarray):
+    elif isinstance(obj, np.ndarray):
         return obj.tolist()
+    elif isinstance(obj, LegacyRow):
+        return {"class": "LegacyRow", "key_map": obj._keymap, "data": obj._data, "key_style": obj._key_style}
     elif isinstance(obj, str):
         return {"class": "string", "value": obj}
     else:
@@ -54,7 +57,7 @@ def _attempt_to_serialize_unknown_object(obj: object):
 
 
 def _is_serialized_astro_object(obj) -> bool:
-    return bool(obj.get("class") and obj["class"] in ["Table", "File", "string"])
+    return bool(obj.get("class") and obj["class"] in ["Table", "File", "string", "LegacyRow"])
 
 
 def deserialize(obj: dict | str | list) -> Table | File | Any:
@@ -73,10 +76,12 @@ def deserialize(obj: dict | str | list) -> Table | File | Any:
         elif obj["class"] == "File":
             log.debug("Found file dictionary %s, will attempt to deserialize", obj)
             return _deserialize_file(obj)
+        elif obj["class"] == "LegacyRow":
+            return LegacyRow(None, None, obj["key_map"], obj["key_style"], obj["data"])
         else:
             return obj["value"]
     elif isinstance(obj, dict):
-        return {k: deserialize(v) for k,v in obj.items()}
+        return {k: deserialize(v) for k, v in obj.items()}
     elif isinstance(obj, str):
         log.debug("Found string, will attempt to deserialize")
         return _attempt_to_deser_unknown_object(obj)

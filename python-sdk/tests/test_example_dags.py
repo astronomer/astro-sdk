@@ -78,11 +78,7 @@ def get_dag_bag() -> DagBag:
 
 @pytest.mark.parametrize(
     "dag",
-    [
-        pytest.param(dag, id=dag_id)
-        for dag_id, dag in get_dag_bag().dags.items()
-        if dag_id == "example_dataframe"
-    ],
+    [pytest.param(dag, id=dag_id) for dag_id, dag in get_dag_bag().dags.items()],
 )
 def test_example_dag(session, dag: DAG):
     wrapper_run_dag(dag)

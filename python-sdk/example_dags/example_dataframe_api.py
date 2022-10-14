@@ -26,7 +26,7 @@ def _load_covid_data():
 
 
 # [START dataframe_api]
-@aql.dataframe
+@aql.dataframe(columns_names_capitalization="original")
 def load_and_group_covid_data():
     """
     Loads data from a COVID data REST API and then groups values based on the months.
@@ -37,7 +37,7 @@ def load_and_group_covid_data():
     return [x for _, x in covid_df.groupby(covid_df.Date_YMD.dt.month)]
 
 
-@aql.dataframe
+@aql.dataframe(columns_names_capitalization="original")
 def find_worst_covid_month(dfs: List[pd.DataFrame]):
     """
     Takes a list of dataframes and then finds the month with the worst covid outbreak
