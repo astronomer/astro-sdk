@@ -17,7 +17,7 @@ with DAG(
         file_path=f"{PROJECT_DIRECTORY}/.airflow/dags/.sql/simple/imdb_movies.sql",
         parameters={
         },
-        conn_id="postgres_conn",
+        conn_id="sqlite_default",
         op_kwargs={
             "output_table": Table(
                 name="imdb_movies",
