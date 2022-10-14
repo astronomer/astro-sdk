@@ -3,7 +3,7 @@ connections:
 ## Example of SQLite connection
   - conn_id: sqlite_conn
     conn_type: sqlite
-    host: $PWD/../../data/imdb.db
+    host: $PWD/data/retail.db
     schema:
     login:
     password:

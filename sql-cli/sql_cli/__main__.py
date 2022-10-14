@@ -6,10 +6,10 @@ from typing import Optional
 import typer
 from rich import print as rprint
 
-from sql_cli import __version__
+import sql_cli
+from sql_cli import configuration, project
 from sql_cli.connections import validate_connections
 from sql_cli.dag_generator import generate_dag
-from sql_cli.project import Project
 
 app = typer.Typer(add_completion=False)
 
@@ -19,7 +19,7 @@ def version() -> None:
     """
     Print the SQL CLI version.
     """
-    rprint(f"Astro SQL CLI {sql_cli.__version__}")
+    rprint("Astro SQL CLI", sql_cli.__version__)
 
 
 @app.command()
@@ -49,51 +49,57 @@ def validate(environment: str = "default", connection: Optional[str] = None) -> 
 
 
 @app.command()
-def init(project_dir: Optional[str] = typer.Argument(None)) -> None:
+def init(
+    project_dir: Optional[Path] = typer.Argument(
+        None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
+    ),
+    airflow_home: Optional[Path] = typer.Option(
+        None,
+        dir_okay=True,
+        help=f"(Optional) Set the Airflow Home. Default: {configuration.DEFAULT_AIRFLOW_HOME}",
+        show_default=False,
+    ),
+    airflow_dags_folder: Optional[Path] = typer.Option(
+        None,
+        dir_okay=True,
+        help=f"(Optional) Set the DAGs Folder. Default: {configuration.DEFAULT_DAGS_FOLDER}",
+        show_default=False,
+    ),
+) -> None:
     """
-    Initialise a SQL CLI project structure.
-
-    By default, this includes:
+    Initialise a project structure to write workflows using SQL files.
 
     \b\n
-    ├── config
+    Examples of usage:
     \b\n
-    │   ├── default
+    $ flow init
     \b\n
-    │   │   └── configuration.yml
+    $ flow init .
     \b\n
-    │   └── dev
-    \b\n
-    │       └── configuration.yml
-    \b\n
-    ├── data
-    \b\n
-    │   ├── movies.db
-    \b\n
-    │   └── retail.db
-    \b\n
-    └── workflows
-    \b\n
-    ├── example_basic_transform
-    \b\n
-    │   └── top_animations.sql
-    \b\n
-    └── example_templating
-    \b\n
-        ├── filtered_orders.sql
-    \b\n
-        └── joint_orders_customers.sql
+    $ flow init project_name
+
 
     \b\n
-    Update the file `config/default/configuration.yaml` to declare your databases.
+    By default, the project structure includes:
+
+    ├── config: withholds configuration, e.g. database connections, within each environment directory
     \b\n
-    Create SQL workflows within the `workflows` folder.
+    ├── data: directory which contains datasets, including SQLite databases used by the examples
+    \b\n
+    └── workflows: directory where SQL workflows are declared, by default has two examples of workflow
+
+    \b\n
+    Next steps:
+    \b\n
+    * Update the file `config/default/configuration.yaml` to declare database connections.
+    \b\n
+    * Create SQL workflows within the `workflows` folder.
     """
-    if project_dir is None:
-        project_dir = os.getcwd()
+    project_dir = project_dir or Path(os.getcwd())
 
-    Project.initialise(Path(project_dir))
-    rprint(f"Initialized an Astro SQL project at {project_dir}")
+    proj = project.Project(project_dir)
+    proj.initialise(airflow_home, airflow_dags_folder)
+    rprint("Initialized an Astro SQL project at", project_dir)
 
 
 if __name__ == "__main__":  # pragma: no cover
