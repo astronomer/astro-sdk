@@ -38,7 +38,7 @@ from astro.constants import (
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
-from astro.settings import SNOWFLAKE_SCHEMA
+from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SNOWFLAKE_SCHEMA
 from astro.table import BaseTable, Metadata
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
@@ -492,10 +492,18 @@ class SnowflakeDatabase(BaseDatabase):
         :param file: File used to infer the new table columns.
         :param dataframe: Dataframe used to infer the new table columns if there is no file
         """
+        if file is None:
+            if dataframe is None:
+                raise ValueError(
+                    "File or Dataframe is required for creating table using schema autodetection"
+                )
+            source_dataframe = dataframe
+        else:
+            source_dataframe = file.export_to_dataframe(nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT)
 
         pandas_tools.write_pandas(
             conn=self.hook.get_conn(),
-            df=dataframe,
+            df=source_dataframe,
             table_name=table.name.upper(),
             schema=table.metadata.schema,
             database=table.metadata.database,
@@ -846,7 +854,7 @@ class SnowflakeDatabase(BaseDatabase):
 
     def truncate_table(self, table):
         """Truncate table"""
-        self.run_sql(f"TRUNCATE TABLE {self.get_table_qualified_name(table)}")
+        self.run_sql(f"TRUNCATE {self.get_table_qualified_name(table)}")
 
 
 def wrap_identifier(inp: str) -> str:

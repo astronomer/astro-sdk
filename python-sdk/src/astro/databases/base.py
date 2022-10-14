@@ -115,7 +115,9 @@ class BaseDatabase(ABC):
             sql = kwargs.get("sql_statement")  # type: ignore
 
         if isinstance(sql, str):
-            result = self.connection.execute(sqlalchemy.text(sql), parameters)
+            result = self.connection.execute(
+                sqlalchemy.text(sql).execution_options(autocommit=True), parameters
+            )
         else:
             result = self.connection.execute(sql, parameters)
         return result
