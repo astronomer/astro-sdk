@@ -49,6 +49,13 @@ mypy = "^0.982"
 types-pyyaml = ">5.4.1"
 astro-sdk-python = {path = "../python-sdk", extras = ["tests"]}
 
+[tool.poetry.group.type_check]
+optional = true
+
+[tool.poetry.group.type_check.dependencies]
+mypy = "^0.982"
+types-pyyaml = ">5.4.1"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
