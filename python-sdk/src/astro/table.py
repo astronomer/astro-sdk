@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import random
 import string
+from typing import Any
 
 from attr import define, field, fields_dict
 from sqlalchemy import Column, MetaData
 
 from astro.airflow.datasets import Dataset
+from astro.databases import create_database
 
 MAX_TABLE_NAME_LENGTH = 62
 TEMP_PREFIX = "_tmp_"
@@ -124,6 +126,14 @@ class BaseTable:
             self._name = value
             self.temp = False
 
+    @property
+    def row_count(self) -> Any:
+        """
+        Return the row count of table
+        """
+        # TODO: Implement this property
+        return 0
+
     def to_json(self):
         return {
             "class": "Table",
@@ -144,14 +154,22 @@ class BaseTable:
             temp=obj["temp"],
             conn_id=obj["conn_id"],
         )
+        
+    def openlineage_dataset_name(self) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        database = create_database(self.conn_id)
+        return database.openlineage_dataset_name(table=self)
 
-    def get_rows(self):
-        # db_connection = create_engine(self.conn_id)
-        # db_metadata = MetaData(bind=db_connection, reflect=True)
-        # sqlalchemy_table = db_metadata.tables[self.name]
-        # with Session(db_connection) as session:
-        #     return session.query(sqlalchemy_table).count()
-        return 0
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        database = create_database(self.conn_id)
+        return database.openlineage_dataset_namespace()
 
 
 @define(slots=False)

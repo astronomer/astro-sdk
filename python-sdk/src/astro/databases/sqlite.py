@@ -127,3 +127,21 @@ class SqliteDatabase(BaseDatabase):
         :param table: Astro Table to be converted to SQLAlchemy table instance
         """
         return SqlaTable(table.name, SqlaMetaData(), autoload_with=self.sqlalchemy_engine)
+
+    def openlineage_dataset_name(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: /tmp/local.db.table_name
+        """
+        conn = self.hook.get_connection(self.conn_id)
+        return f"{conn.host}.{table.name}"
+
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: /tmp/local.db
+        """
+        conn = self.hook.get_connection(self.conn_id)
+        return f"{conn.host}"

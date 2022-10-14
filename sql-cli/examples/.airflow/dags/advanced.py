@@ -6,7 +6,7 @@ from airflow.utils import timezone
 from astro import sql as aql
 from astro.table import Table
 
-DAGS_DIRECTORY = Path(__file__).parent.as_posix()
+PROJECT_DIRECTORY = Path(__file__).parent.parent.parent.as_posix()
 
 with DAG(
     dag_id="advanced",
@@ -14,7 +14,7 @@ with DAG(
     schedule_interval=None,
 ) as dag:
     source__imdb_movies = aql.transform_file(
-        file_path=f"{DAGS_DIRECTORY}/_target/advanced/source/imdb_movies.sql",
+        file_path=f"{PROJECT_DIRECTORY}/.airflow/dags/.sql/advanced/source/imdb_movies.sql",
         parameters={
         },
         conn_id="postgres_conn",
@@ -26,7 +26,7 @@ with DAG(
         task_id="source__imdb_movies",
     )
     source__last_five_animations = aql.transform_file(
-        file_path=f"{DAGS_DIRECTORY}/_target/advanced/source/last_five_animations.sql",
+        file_path=f"{PROJECT_DIRECTORY}/.airflow/dags/.sql/advanced/source/last_five_animations.sql",
         parameters={
             "source__imdb_movies": source__imdb_movies,
         },
@@ -39,7 +39,7 @@ with DAG(
         task_id="source__last_five_animations",
     )
     source__top_five_animations = aql.transform_file(
-        file_path=f"{DAGS_DIRECTORY}/_target/advanced/source/top_five_animations.sql",
+        file_path=f"{PROJECT_DIRECTORY}/.airflow/dags/.sql/advanced/source/top_five_animations.sql",
         parameters={
             "source__imdb_movies": source__imdb_movies,
         },
@@ -51,7 +51,7 @@ with DAG(
         task_id="source__top_five_animations",
     )
     mart__union_top_and_last = aql.transform_file(
-        file_path=f"{DAGS_DIRECTORY}/_target/advanced/mart/union_top_and_last.sql",
+        file_path=f"{PROJECT_DIRECTORY}/.airflow/dags/.sql/advanced/mart/union_top_and_last.sql",
         parameters={
             "source__last_five_animations": source__last_five_animations,
             "source__top_five_animations": source__top_five_animations,
