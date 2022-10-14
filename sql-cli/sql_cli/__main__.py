@@ -4,16 +4,16 @@ from pathlib import Path
 import typer
 from airflow.utils.cli import get_dag
 from dotenv import load_dotenv
-from rich import print as rprint
-from typer import Typer
 
-from sql_cli import __version__
+from rich import print as rprint
+
+import sql_cli
+from sql_cli import configuration, project
 from sql_cli.connections import validate_connections
 from sql_cli.dag_generator import generate_dag
 from sql_cli.run_dag import run_dag
 
-load_dotenv()
-app = Typer(add_completion=False)
+app = typer.Typer(add_completion=False)
 
 for name in logging.root.manager.loggerDict:
     logging.getLogger(name).setLevel(logging.ERROR)
@@ -115,6 +115,60 @@ def run(
         conn_file_path=connection_file.as_posix() if connection_file else None,
         variable_file_path=variable_file.as_posix() if variable_file else None,
     )
+
+
+@app.command()
+def init(
+    project_dir: Optional[Path] = typer.Argument(
+        None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
+    ),
+    airflow_home: Optional[Path] = typer.Option(
+        None,
+        dir_okay=True,
+        help=f"(Optional) Set the Airflow Home. Default: {configuration.DEFAULT_AIRFLOW_HOME}",
+        show_default=False,
+    ),
+    airflow_dags_folder: Optional[Path] = typer.Option(
+        None,
+        dir_okay=True,
+        help=f"(Optional) Set the DAGs Folder. Default: {configuration.DEFAULT_DAGS_FOLDER}",
+        show_default=False,
+    ),
+) -> None:
+    """
+    Initialise a project structure to write workflows using SQL files.
+
+    \b\n
+    Examples of usage:
+    \b\n
+    $ flow init
+    \b\n
+    $ flow init .
+    \b\n
+    $ flow init project_name
+
+
+    \b\n
+    By default, the project structure includes:
+
+    ├── config: withholds configuration, e.g. database connections, within each environment directory
+    \b\n
+    ├── data: directory which contains datasets, including SQLite databases used by the examples
+    \b\n
+    └── workflows: directory where SQL workflows are declared, by default has two examples of workflow
+
+    \b\n
+    Next steps:
+    \b\n
+    * Update the file `config/default/configuration.yaml` to declare database connections.
+    \b\n
+    * Create SQL workflows within the `workflows` folder.
+    """
+    project_dir = project_dir or Path.cwd()
+
+    proj = project.Project(project_dir, airflow_home, airflow_dags_folder)
+    proj.initialise()
+    rprint("Initialized an Astro SQL project at", project_dir)
 
 
 if __name__ == "__main__":  # pragma: no cover
