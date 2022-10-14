@@ -31,7 +31,7 @@ pre-commit:  # Run pre-commit
 flow:  # Build and run the latest version of flow
 
 test:  # Run tests
-	@poetry run pytest -s --cov --cov-branch --cov-report=term-missing
+	@PYTHONWARNINGS="ignore" poetry run pytest -s --cov --cov-branch --cov-report=term-missing
 
 release:  # Build a package
 	@echo -e "If this is your first time, please, manually follow these two steps: \n" \

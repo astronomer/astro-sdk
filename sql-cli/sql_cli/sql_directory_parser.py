@@ -99,7 +99,9 @@ class SqlFile:
 
         :returns: the path where sql files without any headers are being placed.
         """
-        target_full_directory = self.target_directory / "/".join(self.get_sub_directories())
+        target_full_directory = (
+            self.target_directory / self.root_directory.name / "/".join(self.get_sub_directories())
+        )
         target_full_directory.mkdir(parents=True, exist_ok=True)
 
         target_path = target_full_directory / self.path.name
@@ -107,7 +109,7 @@ class SqlFile:
         with open(target_path, "w") as file:
             file.write(f"{self.content}\n")
 
-        return target_path.relative_to(self.root_directory.parent).as_posix()
+        return target_path.relative_to(self.root_directory.parent.parent).as_posix()
 
 
 def get_sql_files(directory: Path, target_directory: Path) -> set[SqlFile]:
