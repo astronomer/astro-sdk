@@ -184,7 +184,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
 
         return normalize_config
 
-    def get_openlineage_facets(self) -> OpenLineageFacets:
+    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:
         """
         Returns the lineage data
         """

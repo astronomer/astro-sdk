@@ -110,5 +110,5 @@ def test_append_op_extract_on_complete():
     assert task_meta.inputs[0].name == "astronomer-dag-authoring.astro.test-extractor"
     assert task_meta.inputs[0].namespace == "bigquery"
     assert task_meta.inputs[0].facets is not None
-    assert task_meta.job_facets == {}
+    assert len(task_meta.job_facets) > 0
     assert task_meta.run_facets == {}

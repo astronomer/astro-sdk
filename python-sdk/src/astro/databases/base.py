@@ -63,6 +63,7 @@ class BaseDatabase(ABC):
 
     def __init__(self, conn_id: str):
         self.conn_id = conn_id
+        self.sql = ""
 
     def __repr__(self):
         return f'{self.__class__.__name__}(conn_id="{self.conn_id})'
@@ -576,8 +577,8 @@ class BaseDatabase(ABC):
         sel = select(source_columns).select_from(source_table_sqla)
         # TODO: We should fix the following Type Error
         # incompatible type List[ColumnClause[<nothing>]]; expected List[Column[Any]]
-        sql = insert(target_table_sqla).from_select(target_columns, sel)  # type: ignore[arg-type]
-        self.run_sql(sql=sql)
+        self.sql = insert(target_table_sqla).from_select(target_columns, sel)  # type: ignore[arg-type]
+        self.run_sql(sql=self.sql)
 
     def merge_table(
         self,

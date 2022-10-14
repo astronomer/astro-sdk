@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import random
 import string
-
+from sqlalchemy.orm import Session
 from attr import define, field, fields_dict
 from sqlalchemy import Column, MetaData
 
@@ -115,6 +115,14 @@ class BaseTable:
         if self.temp and not self._name:
             self._name = self._create_unique_table_name(TEMP_PREFIX)
         return self._name
+
+    @property
+    def row_count(self) -> int:
+        """
+        Return the row count of table
+        """
+        db = create_database(self.conn_id)
+        return db.run_sql(f"select count(*) from {db.get_table_qualified_name(self)}").scalar()
 
     @name.setter
     def name(self, value: str) -> None:

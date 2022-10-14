@@ -74,13 +74,13 @@ class TableDatasetFacet(BaseFacet):
 
     :param table_name: Name of the table
     :param columns: columns defined in table
-    :param row_affected: Total rows affected on table
+    :param source_table_rows: Total rows in source table
     :param metadata: metadata of the table.
     """
 
     table_name: str
     columns: list[str] | tuple[str] | dict[str, str] | None = None
-    row_affected: int = 0
+    source_table_rows: int = 0
     metadata: Metadata | None = None
 
     _do_not_redact = ["metadata", "columns"]
