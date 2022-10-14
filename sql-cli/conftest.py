@@ -1,4 +1,3 @@
-import pathlib
 import random
 import string
 import tempfile
@@ -14,7 +13,7 @@ from astro.table import MAX_TABLE_NAME_LENGTH
 from sql_cli.dag_generator import SqlFilesDAG
 from sql_cli.sql_directory_parser import SqlFile
 
-CWD = pathlib.Path(__file__).parent
+CWD = Path(__file__).parent
 
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -49,7 +48,7 @@ def dags_directory():
 
 @pytest.fixture()
 def target_directory():
-    return Path.cwd() / "tests" / ".airflow" / "dags" / ".sql"
+    return CWD / "tests" / ".airflow" / "dags" / ".sql"
 
 
 @pytest.fixture()
