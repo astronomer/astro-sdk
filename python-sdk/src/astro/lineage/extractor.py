@@ -31,7 +31,7 @@ class PythonSDKExtractor(BaseExtractor):
 
     @classmethod
     def get_operator_classnames(cls) -> list[str]:
-        return ["LoadFileOperator"]
+        return ["LoadFileOperator", "AppendOperator"]
 
     def extract(self) -> TaskMetadata | None:  # skipcq: PYL-R0201
         """Empty extract implementation for the abstractmethod of the ``BaseExtractor`` class."""
@@ -44,7 +44,7 @@ class PythonSDKExtractor(BaseExtractor):
         Callback on ``get_openlineage_facets(ti)`` task completion to fetch metadata extraction details that are to be
         pushed to the Lineage server.
         """
-        open_lineage_facets: OpenLineageFacets = self.operator.get_openlineage_facets()
+        open_lineage_facets: OpenLineageFacets = self.operator.get_openlineage_facets(task_instance)
 
         return TaskMetadata(
             name=get_job_name(task=self.operator),
