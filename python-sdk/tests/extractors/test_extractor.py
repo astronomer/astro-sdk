@@ -153,6 +153,7 @@ def test_merge_op_extract_on_complete():
     assert len(task_meta.job_facets) > 0
     assert task_meta.run_facets == {}
 
+
 @pytest.mark.integration
 def test_python_sdk_transform_extract_on_complete():
     """
