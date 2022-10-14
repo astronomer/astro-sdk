@@ -24,6 +24,7 @@ from snowflake.connector.errors import (
     ServiceUnavailableError,
 )
 from sqlalchemy import Column, column, insert, select
+from sqlalchemy.types import VARCHAR
 
 from astro import settings
 from astro.constants import (
@@ -781,11 +782,19 @@ class SnowflakeDatabase(BaseDatabase):
         source_columns: list[column]
 
         if not source_to_target_columns_map:
-            target_columns = [Column(name=col, quote=True) for col in target_table_sqla.c.keys()]
+            target_columns = [
+                Column(name=col.name, quote=True, type_=col.type) for col in target_table_sqla.c.values()
+            ]
             source_columns = target_columns
         else:
-            target_columns = [Column(name=col, quote=True) for col in source_to_target_columns_map.values()]
-            source_columns = [Column(name=col, quote=True) for col in source_to_target_columns_map.keys()]
+            # We are adding the VARCHAR in Column(name=col, quote=True, type_=VARCHAR) as a placeholder since the
+            # Column object requires it. It has no effect on the final query generated.
+            target_columns = [
+                Column(name=col, quote=True, type_=VARCHAR) for col in source_to_target_columns_map.keys()
+            ]
+            source_columns = [
+                Column(name=col, quote=True, type_=VARCHAR) for col in source_to_target_columns_map.keys()
+            ]
 
         sel = select(source_columns).select_from(source_table_sqla)
         # TODO: We should fix the following Type Error
