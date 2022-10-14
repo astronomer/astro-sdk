@@ -484,7 +484,8 @@ class SnowflakeDatabase(BaseDatabase):
         columns_names_capitalization: ColumnCapitalization = "original",
     ) -> None:
         """
-        A dummy function is required to override the default behavior. We are inferring schema and creating a table in `load_pandas_dataframe_to_table`.
+        A dummy function is required to override the default behavior. We are inferring schema and creating a table in
+        `load_pandas_dataframe_to_table`.
 
         :param table: The table to be created.
         :param file: File used to infer the new table columns.
@@ -570,12 +571,6 @@ class SnowflakeDatabase(BaseDatabase):
         auto_create_table = False
         if if_exists == "replace" or not self.table_exists(target_table):
             auto_create_table = True
-
-        if target_table.metadata.schema:
-            target_table.metadata.schema = target_table.metadata.schema.upper()
-
-        if target_table.metadata.database:
-            target_table.metadata.database = target_table.metadata.database.upper()
 
         pandas_tools.write_pandas(
             conn=self.hook.get_conn(),
