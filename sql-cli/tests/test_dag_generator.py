@@ -19,18 +19,3 @@ def test_generate_dag(root_directory, dags_directory):
     """Test that the whole DAG generation process including sql files parsing works."""
     dag_file = generate_dag(directory=root_directory, dags_directory=dags_directory)
     assert dag_file
-
-
-def test_with_temp_dirs(root_directory):
-    import os
-    import shutil
-    import tempfile
-    from pathlib import Path
-
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        shutil.copytree(root_directory, tmp_dir + "/root")
-        os.mkdir(Path(tmp_dir) / "target")
-        os.mkdir(Path(tmp_dir) / "dag")
-        print(tmp_dir)
-        generate_dag(Path(tmp_dir) / "root", dags_directory=Path(tmp_dir) / "dag")
-        print(tmp_dir)
