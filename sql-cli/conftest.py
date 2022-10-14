@@ -1,3 +1,4 @@
+import pathlib
 import random
 import string
 import tempfile
@@ -13,6 +14,9 @@ from astro.table import MAX_TABLE_NAME_LENGTH
 from sql_cli.dag_generator import SqlFilesDAG
 from sql_cli.sql_directory_parser import SqlFile
 
+CWD = pathlib.Path(__file__).parent
+
+
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 UNIQUE_HASH_SIZE = 16
@@ -20,27 +24,27 @@ UNIQUE_HASH_SIZE = 16
 
 @pytest.fixture()
 def root_directory():
-    return Path.cwd() / "tests" / "workflows" / "sql_files"
+    return CWD / "tests" / "workflows" / "sql_files"
 
 
 @pytest.fixture()
 def root_directory_cycle():
-    return Path.cwd() / "tests" / "workflows" / "sql_files_cycle"
+    return CWD / "tests" / "workflows" / "sql_files_cycle"
 
 
 @pytest.fixture()
 def root_directory_symlink():
-    return Path.cwd() / "tests" / "workflows" / "sql_files_symlink"
+    return CWD / "tests" / "workflows" / "sql_files_symlink"
 
 
 @pytest.fixture()
 def root_directory_dags():
-    return Path.cwd() / "tests" / "test_dag"
+    return CWD / "tests" / "test_dag"
 
 
 @pytest.fixture()
 def dags_directory():
-    return Path.cwd() / "tests" / ".airflow" / "dags"
+    return CWD / "tests" / ".airflow" / "dags"
 
 
 @pytest.fixture()
