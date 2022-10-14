@@ -1,5 +1,7 @@
 import pytest
+import pendulum
 from airflow.models.taskinstance import TaskInstance
+from airflow.utils import timezone
 from openlineage.client.run import Dataset as OpenlineageDataset
 
 from astro.constants import FileType
@@ -99,7 +101,8 @@ def test_append_op_extract_on_complete():
         target_table=Table(conn_id="bigquery", name="test-extractor", metadata=Metadata(schema="astro")),
     )
 
-    task_instance = TaskInstance(task=op)
+    tzinfo = pendulum.timezone("UTC")
+    task_instance = TaskInstance(task=op, execution_date=timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo))
 
     python_sdk_extractor = PythonSDKExtractor(op)
     task_meta_extract = python_sdk_extractor.extract()
