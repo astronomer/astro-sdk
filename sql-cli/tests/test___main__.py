@@ -53,27 +53,15 @@ def test_validate():
     assert result.exit_code == 0
 
 
-def test_run_dag(root_directory_dags):
-    result = runner.invoke(
-        app,
-        ["run", "example_dataframe", root_directory_dags.as_posix(), "--no-is-sql"],
-    )
-    assert result.exit_code == 0
-    result_stdout = get_stdout(result)
-    assert "The worst month was 2020-05" in result_stdout
-
-
-def test_run_sql_project(root_directory, target_directory, dags_directory, caplog):
+def test_run(root_directory, dags_directory):
     result = runner.invoke(
         app,
         [
             "run",
-            "sql_files",
             root_directory.as_posix(),
-            "--dags-directory",
             dags_directory.as_posix(),
-            "--conn-file-path",
-            f"{CWD}/test_conn.yaml",
+            "--connection-file",
+            (CWD / "test_conn.yaml").as_posix(),
         ],
     )
     assert result.exit_code == 0

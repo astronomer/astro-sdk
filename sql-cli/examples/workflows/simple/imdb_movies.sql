@@ -1,5 +1,5 @@
 ---
-conn_id: postgres_conn
+conn_id: sqlite_default
 ---
 SELECT 'Biography' as genre1, '12 Years a Slave (2013)' as title, '8.1' as rating
 UNION
