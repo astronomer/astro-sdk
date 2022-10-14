@@ -144,6 +144,12 @@ def test_python_sdk_transform_extract_on_complete():
     task_instance = TaskInstance(task=task.operator, run_id=execution_date)
 
     python_sdk_extractor = PythonSDKExtractor(task.operator)
+    python_sdk_extractor.get_operator_classnames() == [
+        "AppendOperator",
+        "BaseSQLDecoratedOperator",
+        "LoadFileOperator",
+        "TransformOperator",
+    ]
     task_meta = python_sdk_extractor.extract_on_complete(task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
     assert task_meta.outputs[0].facets["stats"].size is None

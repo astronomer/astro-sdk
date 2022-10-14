@@ -111,7 +111,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         if self.sql == "" or not self.sql:
             raise AirflowException("There's no SQL to run")
 
-        context["ti"].xcom_push(key="base_sql_query", value=self.sql)
+        context["ti"].xcom_push(key="base_sql_query", value=str(self.sql))
 
     def create_output_table_if_needed(self) -> None:
         """
