@@ -36,8 +36,8 @@ class AstroCustomXcomBackend(BaseXCom):
                 "Since you have not provided a remote object storage conn_id, we are defaulting to "
                 "storing your data in the Metadata DB. This does not scale well and can cause degradation to "
                 "your airflow DB. Please set the AIRFLOW__ASTRO_SDK__XCOM_STORAGE_CONN_ID and "
-                "AIRFLOW__ASTRO_SDK__XCOM_STORAGE_URL variables (or you can set AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV "
-                "for local development"
+                "AIRFLOW__ASTRO_SDK__XCOM_STORAGE_URL variables "
+                "(or you can set AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV for local development"
             )
         return BaseXCom.serialize_value(value, **kwargs)
 
