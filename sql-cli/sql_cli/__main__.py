@@ -17,7 +17,7 @@ load_dotenv()
 app = typer.Typer(add_completion=False)
 
 
-def set_logger_level(log_level: int):
+def set_logger_level(log_level: int) -> None:
     for name in logging.root.manager.loggerDict:
         logging.getLogger(name).setLevel(log_level)
 
