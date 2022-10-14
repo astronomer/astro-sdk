@@ -34,7 +34,7 @@ python-frontmatter = "^1.0.0"
 PyYAML = ">5.4.1"
 apache-airflow = ">2.0"
 python-dotenv = "^0.21.0"
-astro-sdk-python = {extras = ["all"], version = "^1.1.1"}
+astro-sdk-python = {path = "../python-sdk", extras = ["all"]}
 
 [tool.poetry.scripts]
 flow = "sql_cli.__main__:app"

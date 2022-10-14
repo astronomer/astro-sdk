@@ -517,11 +517,12 @@ python-versions = "*"
 
 [[package]]
 name = "astro-sdk-python"
-version = "1.1.1"
+version = "1.2.0.dev1"
 description = "Astro SDK allows rapid and clean development of {Extract, Load, Transform} workflows using Python and SQL, powered by Apache Airflow."
 category = "main"
 optional = false
 python-versions = ">=3.7"
+develop = false
 
 [package.dependencies]
 apache-airflow = ">=2.0"
@@ -530,6 +531,7 @@ apache-airflow-providers-google = {version = ">=6.4.0", optional = true, markers
 apache-airflow-providers-postgres = {version = "*", optional = true, markers = "extra == \"all\""}
 apache-airflow-providers-snowflake = {version = "*", optional = true, markers = "extra == \"all\""}
 attrs = ">=20.0"
+openlineage-airflow = {version = ">=0.15.1", optional = true, markers = "extra == \"all\""}
 pandas = ">=1.3.4,<2.0.0"
 protobuf = {version = "<=3.20", optional = true, markers = "extra == \"all\""}
 pyarrow = "*"
@@ -545,13 +547,18 @@ SQLAlchemy = ">=1.3.18"
 sqlalchemy-bigquery = {version = ">=1.3.0", optional = true, markers = "extra == \"all\""}
 
 [package.extras]
-all = ["apache-airflow-providers-amazon", "apache-airflow-providers-google (>=6.4.0)", "apache-airflow-providers-postgres", "apache-airflow-providers-snowflake", "protobuf (<=3.20)", "s3fs", "smart-open[all] (>=5.2.1)", "snowflake-connector-python[pandas]", "snowflake-sqlalchemy (>=1.2.0,<=1.2.4)", "sqlalchemy-bigquery (>=1.3.0)"]
+all = ["apache-airflow-providers-amazon", "apache-airflow-providers-google (>=6.4.0)", "apache-airflow-providers-postgres", "apache-airflow-providers-snowflake", "openlineage-airflow (>=0.15.1)", "protobuf (<=3.20)", "s3fs", "smart-open[all] (>=5.2.1)", "snowflake-connector-python[pandas]", "snowflake-sqlalchemy (>=1.2.0,<=1.2.4)", "sqlalchemy-bigquery (>=1.3.0)"]
 amazon = ["apache-airflow-providers-amazon", "s3fs", "smart-open[s3] (>=5.2.1)"]
 doc = ["myst-parser (>=0.17)", "sphinx (>=4.4.0)", "sphinx-autoapi (>=2.0.0)", "sphinx-rtd-theme"]
 google = ["apache-airflow-providers-google (>=6.4.0)", "protobuf (<=3.20)", "smart-open[gcs] (>=5.2.1)", "sqlalchemy-bigquery (>=1.3.0)"]
+openlineage = ["openlineage-airflow (>=0.15.1)"]
 postgres = ["apache-airflow-providers-postgres"]
 snowflake = ["apache-airflow-providers-snowflake", "snowflake-connector-python[pandas]", "snowflake-sqlalchemy (>=1.2.0,<=1.2.4)"]
-tests = ["click (==8.0.0)", "mypy", "pytest (>=6.0)", "pytest-cov", "pytest-describe", "pytest-dotenv", "pytest-split", "requests-mock", "sqlalchemy-stubs"]
+tests = ["mypy", "openlineage-airflow (>=0.15.1)", "pytest (>=6.0)", "pytest-cov", "pytest-describe", "pytest-dotenv", "pytest-split", "requests-mock", "sqlalchemy-stubs"]
+
+[package.source]
+type = "directory"
+url = "../python-sdk"
 
 [[package]]
 name = "async-timeout"
@@ -2569,6 +2576,77 @@ signals = ["blinker (>=1.4.0)"]
 signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
 
 [[package]]
+name = "openlineage-airflow"
+version = "0.15.1"
+description = "OpenLineage integration with Airflow"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+attrs = ">=19.3"
+openlineage-integration-common = {version = "0.15.1", extras = ["sql"]}
+openlineage-python = "0.15.1"
+requests = ">=2.20.0"
+
+[package.extras]
+airflow-1 = ["airflow-provider-great-expectations (==0.0.8)", "apache-airflow[gcp-api,google,mysql,postgres] (==1.10.15)"]
+airflow-2 = ["airflow-provider-great-expectations (==0.1.4)", "apache-airflow-providers-amazon (>=3.1.1)", "apache-airflow-providers-google (>=5.0.0)", "apache-airflow-providers-mysql (>=2.0.0)", "apache-airflow-providers-postgres (>=2.0.0)", "apache-airflow-providers-snowflake (>=2.1.0)", "great-expectations (<=0.15.23)", "protobuf (>=3.20.0,<3.21.0)"]
+dev = ["Flask-SQLAlchemy", "SQLAlchemy", "flake8", "mock", "mypy (>=0.9.6)", "pandas-gbq (==0.14.1)", "pytest", "pytest-cov", "snowflake-connector-python"]
+python-sql = ["sqlparse (>=0.3.1)"]
+tests = ["Flask-SQLAlchemy", "SQLAlchemy", "flake8", "mock", "mypy (>=0.9.6)", "pandas-gbq (==0.14.1)", "pytest", "pytest-cov", "snowflake-connector-python"]
+
+[[package]]
+name = "openlineage-integration-common"
+version = "0.15.1"
+description = "OpenLineage common python library for integrations"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+attrs = ">=19.3.0"
+openlineage-python = "0.15.1"
+openlineage-sql = {version = "0.15.1", optional = true, markers = "extra == \"sql\""}
+
+[package.extras]
+bigquery = ["google-api-core (>=1.26.3)", "google-auth (>=1.30.0)", "google-cloud-bigquery (>=2.15.0,<3.0.0)", "google-cloud-core (>=1.6.0)", "google-crc32c (>=1.1.2)"]
+dbt = ["dbt-core (>=0.20.0)", "pyyaml (>=5.3.1)"]
+dev = ["boto3 (>=1.15.0)", "dbt-core (>=0.20.0)", "flake8", "google-api-core (>=1.26.3)", "google-auth (>=1.30.0)", "google-cloud-bigquery (>=2.15.0,<3.0.0)", "google-cloud-core (>=1.6.0)", "google-crc32c (>=1.1.2)", "great-expectations (>=0.13.26,<=0.15.19)", "jinja2", "mock", "mypy (>=0.9.6)", "openlineage-sql (==0.15.1)", "pandas", "pytest", "pytest-cov", "python-dateutil", "pyyaml (>=5.3.1)", "sqlalchemy (>=1.3.24)", "sqlparse (>=0.3.1)", "types-PyYAML", "types-python-dateutil"]
+dev-no-parser = ["boto3 (>=1.15.0)", "dbt-core (>=0.20.0)", "flake8", "google-api-core (>=1.26.3)", "google-auth (>=1.30.0)", "google-cloud-bigquery (>=2.15.0,<3.0.0)", "google-cloud-core (>=1.6.0)", "google-crc32c (>=1.1.2)", "great-expectations (>=0.13.26,<=0.15.19)", "jinja2", "mock", "mypy (>=0.9.6)", "pandas", "pytest", "pytest-cov", "python-dateutil", "pyyaml (>=5.3.1)", "sqlalchemy (>=1.3.24)", "sqlparse (>=0.3.1)", "types-PyYAML", "types-python-dateutil"]
+great-expectations = ["great-expectations (>=0.13.26,<=0.15.19)", "sqlalchemy (>=1.3.24)"]
+python-sql = ["sqlparse (>=0.3.1)"]
+redshift = ["boto3 (>=1.15.0)"]
+sql = ["openlineage-sql (==0.15.1)"]
+tests = ["flake8", "jinja2", "mock", "mypy (>=0.9.6)", "pandas", "pytest", "pytest-cov", "python-dateutil", "types-PyYAML", "types-python-dateutil"]
+
+[[package]]
+name = "openlineage-python"
+version = "0.15.1"
+description = "OpenLineage Python Client"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+attrs = ">=19.3.0"
+pyyaml = ">=5.1.0"
+requests = ">=2.20.0"
+
+[package.extras]
+dev = ["confluent-kafka", "flake8", "mock", "mypy (>=0.9.6)", "pytest", "pytest-cov", "pyyaml", "requests", "types-PyYAML", "types-requests"]
+kafka = ["confluent-kafka"]
+tests = ["flake8", "mock", "mypy (>=0.9.6)", "pytest", "pytest-cov", "pyyaml", "requests", "types-PyYAML", "types-requests"]
+
+[[package]]
+name = "openlineage-sql"
+version = "0.15.1"
+description = "Library extracting source and destination tables from sql statements"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "oscrypto"
 version = "1.3.0"
 description = "TLS (SSL) sockets, key generation, encryption, decryption, signing, verification and KDFs using the OS crypto libraries. Does not require a compiler, and relies on the OS for patching. Works on Windows, OS X and Linux/BSD."
@@ -2600,10 +2678,10 @@ python-versions = ">=3.8"
 
 [package.dependencies]
 numpy = [
-    {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
     {version = ">=1.18.5", markers = "platform_machine != \"aarch64\" and platform_machine != \"arm64\" and python_version < \"3.10\""},
     {version = ">=1.19.2", markers = "platform_machine == \"aarch64\" and python_version < \"3.10\""},
     {version = ">=1.20.0", markers = "platform_machine == \"arm64\" and python_version < \"3.10\""},
+    {version = ">=1.21.0", markers = "python_version >= \"3.10\""},
 ]
 python-dateutil = ">=2.8.1"
 pytz = ">=2020.1"
@@ -3599,7 +3677,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "94af3b815ffa37913cb8cd468dd17bb51320bdd963a416b88df2b615e7558693"
+content-hash = "399aa45a9f79570a022d65d8952053fc1fa2810f9c5d5f16aa1f83e78e2acbc6"
 
 [metadata.files]
 aiofiles = [
@@ -3763,10 +3841,7 @@ asn1crypto = [
     {file = "asn1crypto-1.5.1-py2.py3-none-any.whl", hash = "sha256:db4e40728b728508912cbb3d44f19ce188f218e9eba635821bb4b68564f8fd67"},
     {file = "asn1crypto-1.5.1.tar.gz", hash = "sha256:13ae38502be632115abf8a24cbe5f4da52e3b5231990aff31123c805306ccb9c"},
 ]
-astro-sdk-python = [
-    {file = "astro-sdk-python-1.1.1.tar.gz", hash = "sha256:89622eb477770d2705e98386b7c0a803e35ae1ec65e7b360cf76180ade6998ee"},
-    {file = "astro_sdk_python-1.1.1-py3-none-any.whl", hash = "sha256:a927a3b0c228a6856e0b05cb695fc5dec618f28f4ed24806a5f455e424d1ce00"},
-]
+astro-sdk-python = []
 async-timeout = [
     {file = "async-timeout-4.0.2.tar.gz", hash = "sha256:2163e1640ddb52b7a8c80d0a67a08587e5d245cc9c553a74a847056bc2976b15"},
     {file = "async_timeout-4.0.2-py3-none-any.whl", hash = "sha256:8ca1e4fcf50d07413d66d1a5e416e42cfdf5851c981d679a09851a6853383b3c"},
@@ -4956,6 +5031,25 @@ numpy = [
 oauthlib = [
     {file = "oauthlib-3.2.1-py3-none-any.whl", hash = "sha256:88e912ca1ad915e1dcc1c06fc9259d19de8deacd6fd17cc2df266decc2e49066"},
     {file = "oauthlib-3.2.1.tar.gz", hash = "sha256:1565237372795bf6ee3e5aba5e2a85bd5a65d0e2aa5c628b9a97b7d7a0da3721"},
+]
+openlineage-airflow = [
+    {file = "openlineage-airflow-0.15.1.tar.gz", hash = "sha256:7d858356d3b672e810f2278a48d12ddfa29bd5ba2386b3856d34ffcc60d46adc"},
+    {file = "openlineage_airflow-0.15.1-py3-none-any.whl", hash = "sha256:67b424f4ddab8a046f09705be0755051088c7b078d8623d41ad223fabcbbb304"},
+]
+openlineage-integration-common = [
+    {file = "openlineage-integration-common-0.15.1.tar.gz", hash = "sha256:48e9fb78f465bc26234ee4e8fad2cada9b1da40c4bfbf4e9c7076dee45fe2935"},
+    {file = "openlineage_integration_common-0.15.1-py3-none-any.whl", hash = "sha256:9e169ffd2ebb514a4fce8b54954ec88d0ef54a4f9b98521a8599293129a1f769"},
+]
+openlineage-python = [
+    {file = "openlineage-python-0.15.1.tar.gz", hash = "sha256:762f1ae5e3cbdc42b2e89c36f25e5ed6c3290a4d09e9ed537ac307e9b62afc6f"},
+    {file = "openlineage_python-0.15.1-py3-none-any.whl", hash = "sha256:6adb487f2e58fc6a2611bcc7ab4d4e29b2842b03c2ebf2941c6e2cbf7721b48f"},
+]
+openlineage-sql = [
+    {file = "openlineage_sql-0.15.1-cp37-abi3-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:3a016b59a03895d69b401aed0dc5db1ef220702a96bd1cb6eeaec0bd00c184c1"},
+    {file = "openlineage_sql-0.15.1-cp37-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d94e6bfa974541a0871b2b1d2789eba720714e42da5474a58744f901a9050022"},
+    {file = "openlineage_sql-0.15.1-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a317c570be1e996a4f4a52a9741b4354785f7f5195dcd39c2b8c003adb2e6a2f"},
+    {file = "openlineage_sql-0.15.1-cp37-abi3-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:f6cd81b2a9503e8ff0c9624fdf46dcee6523a491ff5b5dee7a758eabf753f4dc"},
+    {file = "openlineage_sql-0.15.1.tar.gz", hash = "sha256:edf6b981ad39f8f2c0d99fd52949c9e948fbc702630aaeb2ca326cce452a6128"},
 ]
 oscrypto = [
     {file = "oscrypto-1.3.0-py2.py3-none-any.whl", hash = "sha256:2b2f1d2d42ec152ca90ccb5682f3e051fb55986e1b170ebde472b133713e7085"},
