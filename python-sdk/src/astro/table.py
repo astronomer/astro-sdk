@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import random
 import string
-from sqlalchemy.orm import Session
+from typing import Any
+
 from attr import define, field, fields_dict
 from sqlalchemy import Column, MetaData
 
@@ -117,7 +118,7 @@ class BaseTable:
         return self._name
 
     @property
-    def row_count(self) -> int:
+    def row_count(self) -> Any:
         """
         Return the row count of table
         """
