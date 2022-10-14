@@ -6,13 +6,15 @@ import pickle
 from json import JSONDecodeError
 from pickle import UnpicklingError
 from typing import Any
-
+import numpy as np
 import pandas
 
 from astro.files import File
 from astro.table import Table, TempTable
 
 log = logging.getLogger("astro.utils.serializer")
+
+from functools import singledispatch
 
 
 def serialize(obj: Table | File | Any) -> dict | Any:
@@ -26,9 +28,6 @@ def serialize(obj: Table | File | Any) -> dict | Any:
 
     if isinstance(obj, (Table, TempTable)):
         return obj.to_json()
-    elif isinstance(obj, pandas.DataFrame):
-        file = convert_dataframe_to_file(obj)
-        return serialize(file)
     elif isinstance(obj, File):
         return obj.to_json()
     elif isinstance(obj, list):
@@ -41,7 +40,7 @@ def serialize(obj: Table | File | Any) -> dict | Any:
 
 def _attempt_to_serialize_unknown_object(obj: object):
     try:
-        return json.dumps(obj)
+        return json.dumps(obj, default=to_serializable)
     except TypeError:
         return obj
 
@@ -89,3 +88,28 @@ def _attempt_to_deser_unknown_object(obj: str):
     except JSONDecodeError:
         log.debug("Json deserializing failed for object %s, returning raw object", obj)
         return obj
+
+@singledispatch
+def to_serializable(val):
+    """Used by default."""
+    return str(val)
+
+@to_serializable.register(np.float32)
+def ts_float32(val):
+    """Used if *val* is an instance of numpy.float32."""
+    return np.float64(val)
+
+@to_serializable.register(np.float32)
+def ts_float32(val):
+    """Used if *val* is an instance of numpy.float32."""
+    return np.float64(val)
+
+@to_serializable.register(np.int64)
+def ts_integer(val):
+    """Used if *val* is an instance of numpy.float32."""
+    return int(val)
+
+@to_serializable.register(pandas.DataFrame)
+def ts_dataframe(val):
+    file = convert_dataframe_to_file(obj)
+    return serialize(file)
