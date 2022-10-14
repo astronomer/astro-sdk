@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from typing import Optional
 
 import typer
 from airflow.utils.cli import get_dag
@@ -12,6 +13,7 @@ from sql_cli.connections import validate_connections
 from sql_cli.dag_generator import generate_dag
 from sql_cli.run_dag import run_dag
 
+load_dotenv()
 app = typer.Typer(add_completion=False)
 
 for name in logging.root.manager.loggerDict:
@@ -20,7 +22,7 @@ for name in logging.root.manager.loggerDict:
 
 @app.command(help="Print the SQL CLI version.")
 def version() -> None:
-    rprint("Astro SQL CLI", __version__)
+    rprint("Astro SQL CLI", sql_cli.__version__)
 
 
 @app.command(help="Print additional information about the project.")
