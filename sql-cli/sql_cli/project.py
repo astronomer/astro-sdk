@@ -14,11 +14,14 @@ class Project:
     """
 
     def __init__(
-        self, directory: Path, airflow_dags_folder: Optional[Path] = None, airflow_home: Optional[Path] = None
+        self,
+        directory: Path,
+        airflow_home: Optional[Path] = None,
+        airflow_dags_folder: Optional[Path] = None,
     ) -> None:
         self.directory = directory
-        self._airflow_dags_folder = airflow_dags_folder
-        self._airflow_home = airflow_home
+        self.airflow_home = airflow_home
+        self.airflow_dags_folder = airflow_dags_folder
 
     def _delete_temporary_files(self) -> None:
         """
@@ -30,7 +33,7 @@ class Project:
         for file_ in gitkeep_files:
             file_.unlink()
 
-    def _update_config(self, airflow_home: Optional[Path], airflow_dags_folder: Optional[Path]) -> None:
+    def _update_config(self) -> None:
         """
         Sets custom Airflow configuration in case the user is not using the default values.
 
@@ -38,14 +41,12 @@ class Project:
         :param airflow_dags_folder: Custom user-defined Airflow DAGs folder
         """
         config = Config(environment=DEFAULT_ENVIRONMENT, project_dir=self.directory)
-        if airflow_home is not None:
-            config.write_value_to_yaml("airflow", "home", str(airflow_home))
-        if airflow_dags_folder is not None:
-            config.write_value_to_yaml("airflow", "dags_folder", str(airflow_dags_folder))
+        if self.airflow_home is not None:
+            config.write_value_to_yaml("airflow", "home", str(self.airflow_home))
+        if self.airflow_dags_folder is not None:
+            config.write_value_to_yaml("airflow", "dags_folder", str(self.airflow_dags_folder))
 
-    def initialise(
-        self, airflow_home: Optional[Path] = None, airflow_dags_folder: Optional[Path] = None
-    ) -> None:
+    def initialise(self) -> None:
         """
         Initialise a SQL CLI project, creating expected directories and files.
 
@@ -54,4 +55,4 @@ class Project:
         """
         shutil.copytree(src=BASE_SOURCE_DIR, dst=self.directory, dirs_exist_ok=True)
         self._delete_temporary_files()
-        self._update_config(airflow_home, airflow_dags_folder)
+        self._update_config()

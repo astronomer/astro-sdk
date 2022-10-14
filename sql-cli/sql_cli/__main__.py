@@ -100,8 +100,8 @@ def init(
     """
     project_dir = project_dir or Path(os.getcwd())
 
-    proj = project.Project(project_dir)
-    proj.initialise(airflow_home, airflow_dags_folder)
+    proj = project.Project(project_dir, airflow_home, airflow_dags_folder)
+    proj.initialise()
     rprint("Initialized an Astro SQL project at", project_dir)
 
 
