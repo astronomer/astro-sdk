@@ -70,7 +70,7 @@ def test_run_dag_with_skip(sample_dag, caplog):
         return "movie ends"
 
     with sample_dag:
-        who_is_prettiest() >> [snow_white_wins(), witch_wins()] >> movie_ends()
+        who_is_prettiest() >> [snow_white_wins(), witch_wins()] >> movie_ends()  # skipcq: PYL-W0106
     run_dag(sample_dag)
     assert "witch_wins ran successfully!" not in caplog.text
     assert "snow_white_wins ran successfully!" in caplog.text
