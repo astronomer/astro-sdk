@@ -96,9 +96,11 @@ def test_append_op_extract_on_complete():
     Test extractor ``extract_on_complete`` get called and collect lineage for append operator
     """
     task_id = "append_table"
+    src = Table(conn_id="bigquery", metadata=Metadata(schema="astro"))
+    target = Table(conn_id="bigquery", metadata=Metadata(schema="astro"))
     op = AppendOperator(
-        source_table=Table(conn_id="bigquery", name="test-extractor", metadata=Metadata(schema="astro")),
-        target_table=Table(conn_id="bigquery", name="test-extractor", metadata=Metadata(schema="astro")),
+        source_table=src,
+        target_table=target,
     )
     tzinfo = pendulum.timezone("UTC")
     execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
@@ -110,7 +112,7 @@ def test_append_op_extract_on_complete():
 
     task_meta = python_sdk_extractor.extract_on_complete(task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
-    assert task_meta.inputs[0].name == "astronomer-dag-authoring.astro.test-extractor"
+    assert task_meta.inputs[0].name == f"astronomer-dag-authoring.astro.{src.name}"
     assert task_meta.inputs[0].namespace == "bigquery"
     assert task_meta.inputs[0].facets is not None
     assert len(task_meta.job_facets) > 0
