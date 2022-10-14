@@ -28,7 +28,7 @@ def serialize(obj: Table | File | Any) -> dict | Any:  # noqa
     elif isinstance(obj, (list, tuple)):
         return [serialize(o) for o in obj]
     elif isinstance(obj, dict):
-        return {k: serialize(v) for k,v in obj.items()}
+        return {k: serialize(v) for k, v in obj.items()}
     elif isinstance(obj, pandas.DataFrame):
         from astro.utils.dataframe import convert_dataframe_to_file
 
@@ -76,7 +76,7 @@ def deserialize(obj: dict | str | list) -> Table | File | Any:
         else:
             return obj["value"]
     elif isinstance(obj, dict):
-        return {k: deserialize(v) for k,v in obj.items()}
+        return {k: deserialize(v) for k, v in obj.items()}
     elif isinstance(obj, str):
         log.debug("Found string, will attempt to deserialize")
         return _attempt_to_deser_unknown_object(obj)
