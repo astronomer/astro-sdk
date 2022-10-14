@@ -16,8 +16,6 @@ def dev(session: nox.Session) -> None:
     development environment to ``.nox/dev``.
     """
     session.install("nox")
-    session.install("-e", "../python-sdk/.[all]")
-    session.install("-e", "../python-sdk/.[tests]")
     session.install("poetry")
     session.run("poetry", "install")
 
@@ -25,8 +23,6 @@ def dev(session: nox.Session) -> None:
 @nox.session(python=["3.7", "3.8", "3.9"])
 def test(session: nox.Session) -> None:
     """Run both unit and integration tests."""
-    session.install("-e", "../python-sdk/.[all]")
-    session.install("-e", "../python-sdk/.[tests]")
     session.install("poetry")
     session.run("poetry", "install")
     # Log all the installed dependencies
