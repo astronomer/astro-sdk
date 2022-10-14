@@ -184,7 +184,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
 
         return normalize_config
 
-    def get_openlineage_facets(self) -> OpenLineageFacets:
+    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:  # skipcq: PYL-W0613
         """
         Returns the lineage data
         """
@@ -220,11 +220,10 @@ class LoadFileOperator(AstroSQLBaseOperator):
 
         output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
         if self.output_table:
-            output_database = create_database(self.output_table.conn_id)
             output_dataset = [
                 OpenlineageDataset(
-                    namespace=output_database.openlineage_dataset_namespace(),
-                    name=output_database.openlineage_dataset_name(table=self.output_table),
+                    namespace=self.output_table.openlineage_dataset_namespace(),
+                    name=self.output_table.openlineage_dataset_name(),
                     facets={
                         "output_database_facet": OutputDatabaseDatasetFacet(
                             metadata=self.output_table.metadata,

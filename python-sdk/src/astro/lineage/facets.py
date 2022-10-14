@@ -65,3 +65,22 @@ class OutputDatabaseDatasetFacet(BaseFacet):
     description: str | None = None
 
     _do_not_redact = ["metadata", "columns"]
+
+
+@attr.define
+class TableDatasetFacet(BaseFacet):
+    """
+    Facets that represent may be available for Table object
+
+    :param table_name: Name of the table
+    :param columns: columns defined in table
+    :param source_table_rows: Total rows in source table
+    :param metadata: metadata of the table.
+    """
+
+    table_name: str
+    columns: list[str] | tuple[str] | dict[str, str] | None = None
+    source_table_rows: int = 0
+    metadata: Metadata | None = None
+
+    _do_not_redact = ["metadata", "columns"]

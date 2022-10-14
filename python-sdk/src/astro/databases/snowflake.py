@@ -803,6 +803,27 @@ class SnowflakeDatabase(BaseDatabase):
         sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (%s)" % constraints
         return sql
 
+    def openlineage_dataset_name(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: db_name.schema_name.table_name
+        """
+        conn = self.hook.get_connection(self.conn_id)
+        conn_extra = conn.extra_dejson
+        schema = conn_extra.get("schema") or conn.schema
+        db = conn_extra.get("database")
+        return f"{db}.{schema}.{table.name}"
+
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: snowflake://ACCOUNT
+        """
+        account = self.hook.get_connection(self.conn_id).extra_dejson.get("account")
+        return f"{self.sql_type}://{account}"
+
 
 def wrap_identifier(inp: str) -> str:
     return f"Identifier(:{inp})"
