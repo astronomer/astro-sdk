@@ -48,7 +48,12 @@ def serialize(obj: Table | File | Any) -> dict | Any:  # noqa
         return obj.tolist()
     elif isinstance(obj, SQLAlcRow):
         if airflow.__version__ >= "2.3":
-            return {"class": "SQLAlcRow", "key_map": obj._keymap, "data": obj._data, "key_style": obj._key_style}
+            return {
+                "class": "SQLAlcRow",
+                "key_map": obj._keymap,
+                "data": obj._data,
+                "key_style": obj._key_style,
+            }
         else:
             return {"class": "SQLAlcRow", "key_map": obj._keymap, "key_style": obj._key_style}
 
