@@ -44,6 +44,8 @@ def test_generate(root_directory, dags_directory):
             dags_directory.as_posix(),
         ],
     )
+    if result.exit_code != 0:
+        print(result.output)
     assert result.exit_code == 0
     result_stdout = get_stdout(result)
     assert result_stdout.startswith("The DAG file ")
@@ -66,6 +68,8 @@ def test_run(root_directory, dags_directory):
             (CWD / "test_conn.yaml").as_posix(),
         ],
     )
+    if result.exit_code != 0:
+        print(result.output)
     assert result.exit_code == 0
     result_stdout = get_stdout(result)
     assert "Dagrun sql_files final state: success" in result_stdout
