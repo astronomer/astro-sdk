@@ -1,5 +1,4 @@
 import logging
-import os
 from pathlib import Path
 from typing import Optional
 
@@ -98,7 +97,7 @@ def init(
     \b\n
     * Create SQL workflows within the `workflows` folder.
     """
-    project_dir = project_dir or Path(os.getcwd())
+    project_dir = project_dir or Path.cwd()
 
     proj = project.Project(project_dir, airflow_home, airflow_dags_folder)
     proj.initialise()
