@@ -28,7 +28,7 @@ jobs:
       POSTGRES_PORT: 5432
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AIRFLOW__ASTRO_SDK__SQL_SCHEMA: astroflow_ci
+      AIRFLOW__ASTRO_SDK__SQL_SCHEMA: ASTROFLOW_CI
       REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
       REDSHIFT_DATABASE: dev
       REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
