@@ -26,7 +26,7 @@ def _load_covid_data():
 
 
 # [START dataframe_api]
-@aql.dataframe
+@aql.dataframe(columns_names_capitalization="original")
 def load_and_group_covid_data():
     """
     Loads data from a COVID data REST API and then groups values based on the months.
@@ -34,17 +34,17 @@ def load_and_group_covid_data():
     """
     covid_df = _load_covid_data()
     covid_df["Date_YMD"] = covid_df["Date_YMD"].apply(lambda d: datetime.strptime(d, "%Y-%m-%d"))
-    return list(covid_df.groupby(covid_df.Date_YMD.dt.month))
+    return [x for _, x in covid_df.groupby(covid_df.Date_YMD.dt.month)]
 
 
-@aql.dataframe
+@aql.dataframe(columns_names_capitalization="original")
 def find_worst_covid_month(dfs: List[pd.DataFrame]):
     """
     Takes a list of dataframes and then finds the month with the worst covid outbreak
     :param dfs: a list of DFs containing COVID data
     """
     res = {}
-    for _, covid_month_data in dfs:
+    for covid_month_data in dfs:
         covid_month = covid_month_data.Date_YMD.iloc[0].__format__("%Y-%m")
         num_deceased = covid_month_data["Daily Deceased"].sum()
         res[covid_month] = num_deceased
