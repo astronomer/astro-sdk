@@ -772,6 +772,9 @@ class SnowflakeDatabase(BaseDatabase):
         Append the source table rows into a destination table.
         The argument `if_conflicts` allows the user to define how to handle conflicts.
 
+        Overriding the base method since we need to add quotes around the identifiers for
+         snowflake to preserver case of cols - Column(name=col, quote=True)
+
         :param source_table: Contains the rows to be appended to the target_table
         :param target_table: Contains the destination table in which the rows will be appended
         :param source_to_target_columns_map: Dict of source_table columns names to target_table columns names
