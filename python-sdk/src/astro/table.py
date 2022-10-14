@@ -134,8 +134,8 @@ class BaseTable:
         db = create_database(self.conn_id)
         # TODO: Remove skipcq: BAN-B608
         return db.run_sql(
-            f"select count(*) from {db.get_table_qualified_name(self)}"
-        ).scalar()  # skipcq: BAN-B608
+            f"select count(*) from {db.get_table_qualified_name(self)}"  # skipcq: BAN-B608
+        ).scalar()
 
     def to_json(self):
         return {
