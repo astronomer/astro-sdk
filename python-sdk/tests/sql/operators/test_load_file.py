@@ -1096,3 +1096,35 @@ def test_load_file_col_cap(sample_dag, database_table_fixture):
     cols = list(df.columns)
     cols.sort()
     assert cols == ["Acres", "Age", "Baths", "Beds", "List", "Living", "Rooms", "Sell", "Taxes"]
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SNOWFLAKE,
+        }
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+def test_load_file_col_cap_native_path(sample_dag, database_table_fixture):
+    db, test_table = database_table_fixture
+    path = str(CWD) + "/../../data/homes_upper.csv"
+    with sample_dag:
+        load_file(
+            input_file=File(path),
+            output_table=test_table,
+            native_support_kwargs={
+                "snowflake_storage_integration_google": "gcs_int_python_sdk",
+                "storage_integration": "gcs_int_python_sdk",
+            },
+            enable_native_fallback=False,
+        )
+    test_utils.run_dag(sample_dag)
+
+    df = db.export_table_to_pandas_dataframe(test_table)
+    cols = list(df.columns)
+    cols.sort()
+    assert cols == ["Acres", "Age", "Baths", "Beds", "List", "Living", "Rooms", "Sell", "Taxes"]
