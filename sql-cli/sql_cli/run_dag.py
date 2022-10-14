@@ -118,7 +118,7 @@ def _run_task(ti: TaskInstance, session: Session) -> None:
         pprint(f"Running task [bold red]{ti.task_id}[/bold red]")
     try:
         warnings.filterwarnings(action="ignore")
-        ti._run_raw_task(session=session)
+        ti._run_raw_task(session=session)  # skipcq: PYL-W0212
         session.flush()
         session.commit()
         pprint(f"[bold red]{ti.task_id}[/bold red] ran successfully!")
