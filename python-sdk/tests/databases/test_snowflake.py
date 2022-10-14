@@ -14,7 +14,11 @@ from astro.databases import create_database
 from astro.databases.snowflake import SnowflakeDatabase, SnowflakeFileFormat, SnowflakeStage
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File
-from astro.settings import SCHEMA, SNOWFLAKE_STORAGE_INTEGRATION_AMAZON, SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE
+from astro.settings import (
+    SNOWFLAKE_SCHEMA,
+    SNOWFLAKE_STORAGE_INTEGRATION_AMAZON,
+    SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE,
+)
 from astro.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
 from tests.sql.operators import utils as test_utils
@@ -51,7 +55,7 @@ def test_snowflake_run_sql():
 def test_table_exists_raises_exception():
     """Test if table exists in snowflake database"""
     database = SnowflakeDatabase(conn_id=CUSTOM_CONN_ID)
-    table = Table(name="inexistent-table", metadata=Metadata(schema=SCHEMA))
+    table = Table(name="inexistent-table", metadata=Metadata(schema=SNOWFLAKE_SCHEMA))
     assert not database.table_exists(table)
 
 
@@ -62,7 +66,7 @@ def test_table_exists_raises_exception():
         {
             "database": Database.SNOWFLAKE,
             "table": Table(
-                metadata=Metadata(schema=SCHEMA),
+                metadata=Metadata(schema=SNOWFLAKE_SCHEMA),
                 columns=[
                     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
                     sqlalchemy.Column("name", sqlalchemy.String(60), nullable=False, key="name"),
@@ -121,7 +125,7 @@ def test_snowflake_create_table_with_columns(database_table_fixture):
         {
             "database": Database.SNOWFLAKE,
             "table": Table(
-                metadata=Metadata(schema=SCHEMA),
+                metadata=Metadata(schema=SNOWFLAKE_SCHEMA),
             ),
         }
     ],
@@ -155,7 +159,7 @@ def test_snowflake_create_table_using_native_schema_autodetection(
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(metadata=Metadata(schema=SNOWFLAKE_SCHEMA)),
         },
     ],
     indirect=True,
@@ -183,7 +187,7 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(metadata=Metadata(schema=SNOWFLAKE_SCHEMA)),
         },
     ],
     indirect=True,
@@ -230,7 +234,7 @@ def test_if_exist_param_of__load_pandas_dataframe_to_table(database_table_fixtur
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(metadata=Metadata(schema=SNOWFLAKE_SCHEMA)),
         },
     ],
     indirect=True,
@@ -260,7 +264,7 @@ def test_load_file_to_table(database_table_fixture):
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(metadata=Metadata(schema=SNOWFLAKE_SCHEMA)),
         },
     ],
     indirect=True,
@@ -293,7 +297,7 @@ def test_load_file_from_cloud_to_table(database_table_fixture):
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(metadata=Metadata(schema=SNOWFLAKE_SCHEMA)),
         },
     ],
     indirect=True,
@@ -327,7 +331,7 @@ def test_load_file_to_table_natively_for_fallback_raises_exception_if_not_enable
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(name="test_table", metadata=Metadata(schema=SCHEMA)),
+            "table": Table(name="test_table", metadata=Metadata(schema=SNOWFLAKE_SCHEMA)),
         },
     ],
     indirect=True,
@@ -340,7 +344,7 @@ def test_build_merge_sql(mock_is_valid_snow_identifier, database_table_fixture):
     database, target_table = database_table_fixture
     with pytest.raises(DatabaseCustomError):
         database._build_merge_sql(
-            source_table=Table(name="source_test_table", metadata=Metadata(schema=SCHEMA)),
+            source_table=Table(name="source_test_table", metadata=Metadata(schema=SNOWFLAKE_SCHEMA)),
             target_table=target_table,
             source_to_target_columns_map={"list": "val"},
             target_conflict_columns=["target"],
@@ -352,7 +356,7 @@ def test_build_merge_sql(mock_is_valid_snow_identifier, database_table_fixture):
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(metadata=Metadata(schema=SNOWFLAKE_SCHEMA)),
         },
     ],
     indirect=True,
@@ -382,7 +386,7 @@ def test_export_table_to_file_file_already_exists_raises_exception(
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
             "table": Table(
                 metadata=Metadata(
-                    schema=os.getenv("SNOWFLAKE_SCHEMA", SCHEMA),
+                    schema=os.getenv("SNOWFLAKE_SCHEMA", SNOWFLAKE_SCHEMA),
                     database=os.getenv("SNOWFLAKE_DATABASE", "snowflake"),
                 )
             ),
@@ -419,7 +423,7 @@ def test_export_table_to_file_overrides_existing_file(database_table_fixture):
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(metadata=Metadata(schema=SNOWFLAKE_SCHEMA)),
         }
     ],
     indirect=True,
@@ -444,7 +448,7 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(metadata=Metadata(schema=SNOWFLAKE_SCHEMA)),
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
         }
     ],
@@ -488,7 +492,7 @@ def test_export_table_to_file_in_the_cloud(database_table_fixture, remote_files_
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(metadata=Metadata(schema=SNOWFLAKE_SCHEMA)),
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
         }
     ],
@@ -500,7 +504,7 @@ def test_create_table_from_select_statement(database_table_fixture):
     database, original_table = database_table_fixture
 
     statement = f'SELECT * FROM {database.get_table_qualified_name(original_table)} WHERE "id" = 1;'
-    target_table = Table(metadata=Metadata(schema=SCHEMA))
+    target_table = Table(metadata=Metadata(schema=SNOWFLAKE_SCHEMA))
     database.create_table_from_select_statement(statement, target_table)
 
     df = database.hook.get_pandas_df(f"SELECT * FROM {database.get_table_qualified_name(target_table)}")
