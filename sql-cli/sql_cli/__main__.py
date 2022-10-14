@@ -4,7 +4,6 @@ from pathlib import Path
 import typer
 from airflow.utils.cli import get_dag
 from dotenv import load_dotenv
-
 from rich import print as rprint
 
 import sql_cli
