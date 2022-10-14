@@ -9,11 +9,6 @@ import airflow
 import numpy as np
 import pandas
 
-if airflow.__version__ >= "2.3":
-    from sqlalchemy.engine.row import LegacyRow
-else:
-    from sqlalchemy.engine.row import Row as LegacyRow
-
 from astro.files import File
 from astro.table import Table, TempTable
 
@@ -27,6 +22,10 @@ def serialize(obj: Table | File | Any) -> dict | Any:  # noqa
     :param obj: object to serialize
     :return:
     """
+    if airflow.__version__ >= "2.3":
+        from sqlalchemy.engine.row import LegacyRow
+    else:
+        from sqlalchemy.engine.row import Row as LegacyRow
     if isinstance(obj, (Table, TempTable)):
         return obj.to_json()
     elif isinstance(obj, File):
@@ -72,6 +71,11 @@ def deserialize(obj: dict | str | list) -> Table | File | Any:  # noqa
     :param obj: serialized object to deserialize
     :return:
     """
+    if airflow.__version__ >= "2.3":
+        from sqlalchemy.engine.row import LegacyRow
+    else:
+        from sqlalchemy.engine.row import Row as LegacyRow
+
     if isinstance(obj, (list, tuple)):
         return [deserialize(o) for o in obj]
     if isinstance(obj, dict) and _is_serialized_astro_object(obj):
