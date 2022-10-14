@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import logging
-
 import attr
 from airflow.models.taskinstance import TaskInstance
 from openlineage.airflow.extractors import TaskMetadata

@@ -60,7 +60,6 @@ class TransformOperator(BaseSQLDecoratedOperator):
             target_table=self.output_table,
             parameters=self.parameters,
         )
-        print("In transform execute ", self.sql)
         return self.output_table
 
 

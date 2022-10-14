@@ -8,7 +8,6 @@ from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
 from openlineage.client.facet import (
     BaseFacet,
-    DataSourceDatasetFacet,
     OutputStatisticsOutputDatasetFacet,
     SchemaDatasetFacet,
     SchemaField,
@@ -112,6 +111,8 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         if self.sql == "" or not self.sql:
             raise AirflowException("There's no SQL to run")
 
+        context["ti"].xcom_push(key="base_sql_query", value=self.sql)
+
     def create_output_table_if_needed(self) -> None:
         """
         If the user has not supplied an output table, this function creates one from scratch, otherwise populates
@@ -192,24 +193,16 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         if context:
             self.sql = self.render_template(self.sql, context)
 
-    def get_openlineage_facets(self) -> OpenLineageFacets:
+    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:
         """
         Returns the lineage data
         """
         output_database = create_database(self.output_table.conn_id)
-        uri = (
-            output_database.openlineage_dataset_namespace()
-            + "/"
-            + output_database.openlineage_dataset_name(table=self.output_table)
-        )
         input_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(
                 namespace=output_database.openlineage_dataset_namespace(),
                 name=output_database.openlineage_dataset_name(table=self.output_table),
                 facets={
-                    "data_source_dataset": DataSourceDatasetFacet(
-                        name=output_database.openlineage_dataset_name(table=self.output_table), uri=uri
-                    ),
                     "schema_dataset_facet": SchemaDatasetFacet(
                         fields=[SchemaField(name=self.schema, type=self.database)]
                     ),
@@ -224,17 +217,15 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                 OpenlineageDataset(
                     namespace=output_database.openlineage_dataset_namespace(),
                     name=output_database.openlineage_dataset_name(table=self.output_table),
-                    facets={
-                        "stats": OutputStatisticsOutputDatasetFacet(rowCount=self.output_table.get_rows())
-                    },
+                    facets={"stats": OutputStatisticsOutputDatasetFacet(rowCount=0)},
                 )
             ]
 
         run_facets: dict[str, BaseFacet] = {}
-        job_facets: dict[str, BaseFacet] = {"sql": SqlJobFacet(query=self.sql)}
 
-        print("========================================")
-        print(self.sql)
+        base_sql_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="base_sql_query")
+        job_facets: dict[str, BaseFacet] = {"sql": SqlJobFacet(query=base_sql_query)}
+
         return OpenLineageFacets(
             inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
