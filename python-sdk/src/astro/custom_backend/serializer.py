@@ -10,9 +10,9 @@ import numpy as np
 import pandas
 
 if airflow.__version__ >= "2.3":
-    from sqlalchemy.engine.row import LegacyRow
+    from sqlalchemy.engine.row import LegacyRow as SQLAlcRow
 else:
-    from sqlalchemy.engine.result import RowProxy as LegacyRow
+    from sqlalchemy.engine.result import RowProxy as SQLAlcRow
 
 from astro.files import File
 from astro.table import Table, TempTable
@@ -46,8 +46,12 @@ def serialize(obj: Table | File | Any) -> dict | Any:  # noqa
         return np.float64(obj)
     elif isinstance(obj, np.ndarray):
         return obj.tolist()
-    elif isinstance(obj, LegacyRow):
-        return {"class": "LegacyRow", "key_map": obj._keymap, "data": obj._data, "key_style": obj._key_style}
+    elif isinstance(obj, SQLAlcRow):
+        if airflow.__version__ >= "2.3":
+            return {"class": "SQLAlcRow", "key_map": obj._keymap, "data": obj._data, "key_style": obj._key_style}
+        else:
+            return {"class": "SQLAlcRow", "key_map": obj._keymap, "key_style": obj._key_style}
+
     elif isinstance(obj, str):
         return {"class": "string", "value": obj}
     else:
@@ -62,7 +66,7 @@ def _attempt_to_serialize_unknown_object(obj: object):
 
 
 def _is_serialized_astro_object(obj) -> bool:
-    return bool(obj.get("class") and obj["class"] in ["Table", "File", "string", "LegacyRow"])
+    return bool(obj.get("class") and obj["class"] in ["Table", "File", "string", "SQLAlcRow"])
 
 
 def deserialize(obj: dict | str | list) -> Table | File | Any:  # noqa
@@ -81,8 +85,11 @@ def deserialize(obj: dict | str | list) -> Table | File | Any:  # noqa
         elif obj["class"] == "File":
             log.debug("Found file dictionary %s, will attempt to deserialize", obj)
             return _deserialize_file(obj)
-        elif obj["class"] == "LegacyRow":
-            return LegacyRow(None, None, obj["key_map"], obj["key_style"], obj["data"])
+        elif obj["class"] == "SQLAlcRow":
+            if airflow.__version__ >= "2.3":
+                return SQLAlcRow(None, None, obj["key_map"], obj["key_style"], obj["data"])
+            else:
+                return SQLAlcRow(None, None, obj["key_map"], obj["key_style"])
         else:
             return obj["value"]
     elif isinstance(obj, dict):
