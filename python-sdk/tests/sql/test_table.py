@@ -219,6 +219,9 @@ def test_if_table_object_can_be_pickled():
 @mock.patch("airflow.providers.google.cloud.utils.credentials_provider.get_credentials_and_project_id")
 @mock.patch("airflow.hooks.base.BaseHook.get_connection")
 def test_openlineage_dataset(mock_get_connection, gcp_cred, connection, name, namespace):
+    """
+    Test that name and namespace for lineage is correct for databases
+    """
     mock_get_connection.return_value = connection
     gcp_cred.return_value = "astronomer-dag-authoring", "astronomer-dag-authoring"
     tb = Table(conn_id="test_conn", name="test_tb", metadata=Metadata(schema="dataset"))

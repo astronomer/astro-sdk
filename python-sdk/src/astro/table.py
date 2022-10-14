@@ -117,14 +117,6 @@ class BaseTable:
             self._name = self._create_unique_table_name(TEMP_PREFIX)
         return self._name
 
-    @property
-    def row_count(self) -> Any:
-        """
-        Return the row count of table
-        """
-        db = create_database(self.conn_id)
-        return db.run_sql(f"select count(*) from {db.get_table_qualified_name(self)}").scalar()
-
     @name.setter
     def name(self, value: str) -> None:
         """
@@ -133,6 +125,14 @@ class BaseTable:
         if not isinstance(value, property) and value != self._name:
             self._name = value
             self.temp = False
+
+    @property
+    def row_count(self) -> Any:
+        """
+        Return the row count of table
+        """
+        db = create_database(self.conn_id)
+        return db.run_sql(f"select count(*) from {db.get_table_qualified_name(self)}").scalar()
 
     def to_json(self):
         return {

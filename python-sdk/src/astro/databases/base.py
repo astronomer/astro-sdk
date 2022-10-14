@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import warnings
 from abc import ABC
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Mapping, Union
 
 import pandas as pd
 import sqlalchemy
@@ -63,7 +63,7 @@ class BaseDatabase(ABC):
 
     def __init__(self, conn_id: str):
         self.conn_id = conn_id
-        self.sql = None
+        self.sql: Union[str, ClauseElement] = ""
 
     def __repr__(self):
         return f'{self.__class__.__name__}(conn_id="{self.conn_id})'
