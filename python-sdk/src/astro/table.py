@@ -154,7 +154,7 @@ class BaseTable:
             temp=obj["temp"],
             conn_id=obj["conn_id"],
         )
-        
+
     def openlineage_dataset_name(self) -> str:
         """
         Returns the open lineage dataset name as per
