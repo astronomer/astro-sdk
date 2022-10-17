@@ -31,7 +31,13 @@ class PythonSDKExtractor(BaseExtractor):
 
     @classmethod
     def get_operator_classnames(cls) -> list[str]:
-        return ["AppendOperator", "BaseSQLDecoratedOperator", "LoadFileOperator", "TransformOperator"]
+        return [
+            "AppendOperator",
+            "BaseSQLDecoratedOperator",
+            "LoadFileOperator",
+            "MergeOperator",
+            "TransformOperator",
+        ]
 
     def extract(self) -> TaskMetadata | None:  # skipcq: PYL-R0201
         """Empty extract implementation for the abstractmethod of the ``BaseExtractor`` class."""

@@ -9,7 +9,7 @@ from astro.constants import FileType
 from astro.files import File
 from astro.lineage.extractor import PythonSDKExtractor
 from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
-from astro.sql import AppendOperator
+from astro.sql import AppendOperator, MergeOperator
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import Metadata, Table
 
@@ -115,6 +115,38 @@ def test_append_op_extract_on_complete():
     task_meta = python_sdk_extractor.extract_on_complete(task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
 
+    assert task_meta.inputs[0].name == f"astronomer-dag-authoring.astro.{src.name}"
+    assert task_meta.inputs[0].namespace == "bigquery"
+    assert task_meta.inputs[0].facets is not None
+    assert len(task_meta.job_facets) > 0
+    assert task_meta.run_facets == {}
+
+
+@pytest.mark.integration
+def test_merge_op_extract_on_complete():
+    """
+    Test extractor ``extract_on_complete`` get called and collect lineage for merge operator
+    """
+    task_id = "merge"
+    src = Table(conn_id="bigquery", metadata=Metadata(schema="astro"))
+    target = Table(conn_id="bigquery", metadata=Metadata(schema="astro"))
+    op = MergeOperator(
+        source_table=src,
+        target_table=target,
+        target_conflict_columns=["id"],
+        columns=["id", "name"],
+        if_conflicts="update",
+    )
+    tzinfo = pendulum.timezone("UTC")
+    execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
+    task_instance = TaskInstance(task=op, run_id=execution_date)
+
+    python_sdk_extractor = PythonSDKExtractor(op)
+    task_meta_extract = python_sdk_extractor.extract()
+    assert task_meta_extract is None
+
+    task_meta = python_sdk_extractor.extract_on_complete(task_instance)
+    assert task_meta.name == f"adhoc_airflow.{task_id}"
     assert task_meta.inputs[0].name == f"astronomer-dag-authoring.astro.{src.name}"
     assert task_meta.inputs[0].namespace == "bigquery"
     assert task_meta.inputs[0].facets is not None
