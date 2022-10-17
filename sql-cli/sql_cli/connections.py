@@ -9,6 +9,7 @@ from airflow.models import Connection
 from airflow.utils.session import create_session
 
 from sql_cli.project import Project
+from sql_cli.utils.airflow import retrieve_airflow_meta_database_conn
 
 CONNECTION_ID_OUTPUT_STRING_WIDTH = 25
 
@@ -34,7 +35,9 @@ def validate_connections(
     """
     config_file_contains_connection = False
 
-    os.environ["AIRFLOW__DATABASE__SQL_ALCHEMY_CONN"] = "sqlite:////tmp/daniel/.airflow/default/airflow.db"
+    airflow_meta_conn = retrieve_airflow_meta_database_conn(project.directory / project.airflow_home)
+    os.environ["AIRFLOW__DATABASE__SQL_ALCHEMY_CONN"] = airflow_meta_conn
+
     importlib.reload(airflow)
     importlib.reload(airflow.configuration)
     importlib.reload(airflow.models.base)
@@ -50,7 +53,6 @@ def validate_connections(
             continue
         if connection_id:
             config_file_contains_connection = True
-        # data["host"] = "/tmp/daniel/data/movies.db"
         conn_obj = Connection(**data)
         _create_or_replace_connection(conn_obj)
 
