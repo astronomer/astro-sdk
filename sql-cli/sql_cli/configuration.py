@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +18,7 @@ class Config:
 
     project_dir: Path
     environment: str
-    connections: list[dict[str, Any]] = []
+    connections: list[dict[str, Any]] = field(default_factory=list)
     airflow_home: str | None = None
     airflow_dags_folder: str | None = None
 
