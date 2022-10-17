@@ -33,15 +33,17 @@ def validate_connections(
     Validates that the given connections are valid and registers them to Airflow with replace policy for existing
     connections.
     """
-    config_file_contains_connection = False
+    project.load_config(environment=environment)
 
+    # Hack so we can set our own $AIRFLOW_HOME
     airflow_meta_conn = retrieve_airflow_meta_database_conn(project.directory / project.airflow_home)
     os.environ["AIRFLOW__DATABASE__SQL_ALCHEMY_CONN"] = airflow_meta_conn
-
     importlib.reload(airflow)
     importlib.reload(airflow.configuration)
     importlib.reload(airflow.models.base)
     importlib.reload(airflow.models.connection)
+
+    config_file_contains_connection = False
 
     logs = f"\nValidating connection(s) for environment '{environment}'\n"
     for conn in project.connections:

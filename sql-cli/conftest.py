@@ -11,6 +11,7 @@ from airflow.utils.session import create_session
 
 from astro.table import MAX_TABLE_NAME_LENGTH
 from sql_cli.dag_generator import SqlFilesDAG
+from sql_cli.project import Project
 from sql_cli.sql_directory_parser import SqlFile
 
 CWD = Path(__file__).parent
@@ -137,4 +138,13 @@ def empty_cwd(request, monkeypatch):
     temp_dir = tempfile.TemporaryDirectory()
     monkeypatch.chdir(temp_dir.name)
     yield temp_dir.name
+    temp_dir.cleanup()
+
+
+@pytest.fixture()
+def initialised_project():
+    temp_dir = tempfile.TemporaryDirectory()
+    proj = Project(Path(temp_dir.name))
+    proj.initialise()
+    yield proj
     temp_dir.cleanup()
