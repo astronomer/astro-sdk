@@ -2,14 +2,18 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
 from sql_cli.configuration import Config
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_ENVIRONMENT
 
 BASE_SOURCE_DIR = Path(os.path.realpath(__file__)).parent.parent / "include/base/"
 
-MANDATORY_PATHS = {Path("config/default/configuration.yml"), Path("workflows"), Path(".airflow/airflow.db")}
+MANDATORY_PATHS = {
+    Path("config/default/configuration.yml"),
+    Path("workflows"),
+    Path(".airflow/default/airflow.db"),
+}
 
 
 class Project:
@@ -28,6 +32,7 @@ class Project:
         self.directory = directory
         self._airflow_home = airflow_home
         self._airflow_dags_folder = airflow_dags_folder
+        self.connections: List[Dict[str, Any]] = []
 
     @property
     def airflow_home(self) -> Path:
@@ -61,10 +66,15 @@ class Project:
         :param airflow_dags_folder: Custom user-defined Airflow DAGs folder
         """
         config = Config(environment=DEFAULT_ENVIRONMENT, project_dir=self.directory)
+        config = config.from_yaml_to_config()
+
         if self._airflow_home is not None:
             config.write_value_to_yaml("airflow", "home", str(self._airflow_home))
         if self._airflow_dags_folder is not None:
             config.write_value_to_yaml("airflow", "dags_folder", str(self._airflow_dags_folder))
+
+        config.connections[0]["host"] = str(self.directory / config.connections[0]["host"])
+        config.write_config_to_yaml()
 
     def _initialise_airflow(self) -> None:
         """
@@ -126,5 +136,8 @@ class Project:
         if not self.is_valid_project():
             logging.exception("This is not a valid SQL project. Please, use `flow init`")
         config = Config(environment=environment, project_dir=self.directory).from_yaml_to_config()
-        self._airflow_home = Path(str(config.airflow_home))
-        self._airflow_dags_folder = Path(str(config.airflow_dags_folder))
+        if config.airflow_home:
+            self._airflow_home = Path(str(config.airflow_home))
+        if config.airflow_dags_folder:
+            self._airflow_dags_folder = Path(str(config.airflow_dags_folder))
+        self.connections = config.connections

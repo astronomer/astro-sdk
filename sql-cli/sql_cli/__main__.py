@@ -55,19 +55,29 @@ def generate(
 
 
 @app.command(
-    help="Validate Airflow connection(s) provided in the configuration file for the given environment."
+    help="""
+    Validate Airflow connection(s) provided in the configuration file for the given environment.
+    """
 )
 def validate(
-    environment: str = typer.Argument(
-        default="default",
-        help="environment to validate",
+    project_dir: Optional[Path] = typer.Argument(
+        None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
-    connection: str = typer.Argument(
+    environment: str = typer.Option(
+        default="default",
+        help="(Optional) Environment used to declare the connections to be validated",
+    ),
+    connection: str = typer.Option(
         default=None,
-        help="airflow connection id to validate",
+        help="(Optional) Identifier of the connection to be validated. By default checks all the env connections.",
     ),
 ) -> None:
-    validate_connections(environment=environment, connection_id=connection)
+
+    project_dir = project_dir or Path.cwd()
+    proj = project.Project(project_dir)
+    proj.load_config()
+
+    validate_connections(project=proj, environment=environment, connection_id=connection)
 
 
 @app.command(
@@ -123,25 +133,8 @@ def run(
     )
 
 
-@app.command()
-def init(
-    project_dir: Optional[Path] = typer.Argument(
-        None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
-    ),
-    airflow_home: Optional[Path] = typer.Option(
-        None,
-        dir_okay=True,
-        help=f"(Optional) Set the Airflow Home. Default: {configuration.DEFAULT_AIRFLOW_HOME}",
-        show_default=False,
-    ),
-    airflow_dags_folder: Optional[Path] = typer.Option(
-        None,
-        dir_okay=True,
-        help=f"(Optional) Set the DAGs Folder. Default: {configuration.DEFAULT_DAGS_FOLDER}",
-        show_default=False,
-    ),
-) -> None:
-    """
+@app.command(
+    help="""
     Initialise a project structure to write workflows using SQL files.
 
     \b\n
@@ -170,6 +163,24 @@ def init(
     \b\n
     * Create SQL workflows within the `workflows` folder.
     """
+)
+def init(
+    project_dir: Optional[Path] = typer.Argument(
+        None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
+    ),
+    airflow_home: Optional[Path] = typer.Option(
+        None,
+        dir_okay=True,
+        help=f"(Optional) Set the Airflow Home. Default: {configuration.DEFAULT_AIRFLOW_HOME}",
+        show_default=False,
+    ),
+    airflow_dags_folder: Optional[Path] = typer.Option(
+        None,
+        dir_okay=True,
+        help=f"(Optional) Set the DAGs Folder. Default: {configuration.DEFAULT_DAGS_FOLDER}",
+        show_default=False,
+    ),
+) -> None:
     project_dir = project_dir or Path.cwd()
 
     proj = project.Project(project_dir, airflow_home, airflow_dags_folder)

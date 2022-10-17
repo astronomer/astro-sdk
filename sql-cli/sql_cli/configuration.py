@@ -18,7 +18,7 @@ class Config:
 
     project_dir: Path
     environment: str
-    connections: list[dict[str, Any]] | None = None
+    connections: list[dict[str, Any]] = []
     airflow_home: str | None = None
     airflow_dags_folder: str | None = None
 
@@ -75,6 +75,28 @@ class Config:
         yaml_config.setdefault(section, {})
         yaml_config[section][key] = value
 
+        filepath = self.get_filepath()
+        with open(filepath, "w") as fp:
+            yaml.dump(yaml_config, fp)
+
+    def write_config_to_yaml(self) -> None:
+        """
+        Write a particular key/value to the desired configuration.yaml.
+
+        Example:
+        ```
+            [section]
+            - item1
+            - item2
+        ```
+
+        :param section: Section within the YAML file where the key/value will be recorded
+        :param values: List of items to be written to the YAML file
+        """
+        yaml_config = self.from_yaml_to_dict()
+        yaml_config["connections"] = self.connections
+        yaml_config["airflow_home"] = self.airflow_home
+        yaml_config["airflow_dags_folder"] = self.airflow_dags_folder
         filepath = self.get_filepath()
         with open(filepath, "w") as fp:
             yaml.dump(yaml_config, fp)
