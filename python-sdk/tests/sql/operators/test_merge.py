@@ -15,6 +15,7 @@ from astro.files import File
 from astro.sql import MergeOperator
 from astro.table import Metadata, Table
 from tests.sql.operators import utils as test_utils
+from tests.utils.airflow import create_context
 
 CWD = pathlib.Path(__file__).parent
 
@@ -294,7 +295,7 @@ def test_columns_params(test_columns, expected_columns):
         os.environ,
         {"AIRFLOW_CONN_TEST1": "sqlite://", "AIRFLOW_CONN_TEST2": "sqlite://"},
     ):
-        merge_task.execute({})
+        merge_task.execute(context=create_context(merge_task))
         mock_merge.assert_called_once_with(
             source_table=source_table,
             target_table=target_table,
