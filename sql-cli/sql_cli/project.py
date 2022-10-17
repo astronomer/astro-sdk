@@ -1,16 +1,11 @@
-import importlib
 import logging
 import os
 import shutil
 from pathlib import Path
 from typing import Optional
 
-import airflow
-from airflow.utils import db
-
 from sql_cli.configuration import Config
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_ENVIRONMENT
-from sql_cli.utils.airflow import env_vars
 
 BASE_SOURCE_DIR = Path(os.path.realpath(__file__)).parent.parent / "include/base/"
 
@@ -76,15 +71,25 @@ class Project:
         Create an Airflow database and configuration in the self.airflow_home folder, or upgrade them,
         if they already exist.
         """
-        overrides = {
-            "AIRFLOW_HOME": str(self.airflow_home),
-            "AIRFLOW__CORE__DAGS_FOLDER": str(self.airflow_dags_folder),
-            "AIRFLOW__CORE__LOAD_EXAMPLES": "False",
-            "AIRFLOW__CORE__LOGGING_LEVEL": "ERROR",
-        }
-        with env_vars(overrides):
-            importlib.reload(airflow)
-            db.upgradedb()  # this is not using the AIRFLOW_HOME we set up, it's using the default one
+        # TODO: In future we want to replace this by either:
+        # - python-native approach or
+        # - subprocess
+        os.system(
+            f"AIRFLOW_HOME={self.airflow_home}"
+            f"AIRFLOW__CORE__DAGS_FOLDER={self.airflow_dags_folder}"
+            "AIRFLOW__CORE__LOAD_EXAMPLES=False"
+            "airflow db init > /dev/null 2>&1"
+        )
+
+    def _remove_unnecessary_airflow_files(self) -> None:
+        """
+        Delete Airflow generated paths which are not necessary for the SQL CLI (scheduler & webserver-related).
+        """
+        logs_folder = self.airflow_home / "logs"
+        shutil.rmtree(logs_folder)
+
+        webserver_config = self.airflow_home / "webserver_config.py"
+        webserver_config.unlink()
 
     def initialise(self) -> None:
         """
@@ -101,6 +106,7 @@ class Project:
         )
         self._update_config()
         self._initialise_airflow()
+        self._remove_unnecessary_airflow_files()
 
     def is_valid_project(self) -> bool:
         """
