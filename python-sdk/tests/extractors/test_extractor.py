@@ -98,12 +98,24 @@ def test_append_op_extract_on_complete():
     Test extractor ``extract_on_complete`` get called and collect lineage for append operator
     """
     task_id = "append_table"
-    src = Table(conn_id="bigquery", metadata=Metadata(schema="astro"))
-    target = Table(conn_id="bigquery", metadata=Metadata(schema="astro"))
+
+    src_table = LoadFileOperator(
+        task_id="load_file",
+        input_file=File(path="gs://astro-sdk/workspace/sample_pattern", filetype=FileType.CSV),
+        output_table=Table(conn_id="gcp_conn"),
+    ).execute({})
+
+    target_table = LoadFileOperator(
+        task_id="load_file",
+        input_file=File(path="gs://astro-sdk/workspace/sample_pattern", filetype=FileType.CSV),
+        output_table=Table(conn_id="gcp_conn"),
+    ).execute({})
+
     op = AppendOperator(
-        source_table=src,
-        target_table=target,
+        source_table=src_table,
+        target_table=target_table,
     )
+
     tzinfo = pendulum.timezone("UTC")
     execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
     task_instance = TaskInstance(task=op, run_id=execution_date)
@@ -114,8 +126,7 @@ def test_append_op_extract_on_complete():
 
     task_meta = python_sdk_extractor.extract_on_complete(task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
-
-    assert task_meta.inputs[0].name == f"astronomer-dag-authoring.astro.{src.name}"
+    assert task_meta.inputs[0].name == f"astronomer-dag-authoring.astronomer-dag-authoring.{src_table.name}"
     assert task_meta.inputs[0].namespace == "bigquery"
     assert task_meta.inputs[0].facets is not None
     assert len(task_meta.job_facets) > 0
