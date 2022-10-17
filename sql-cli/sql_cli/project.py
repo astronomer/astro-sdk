@@ -74,7 +74,7 @@ class Project:
         # TODO: In future we want to replace this by either:
         # - python-native approach or
         # - subprocess
-        os.system(
+        os.system(  # skipcq:  BAN-B605
             f"AIRFLOW_HOME={self.airflow_home} "
             f"AIRFLOW__CORE__DAGS_FOLDER={self.airflow_dags_folder }"
             "AIRFLOW__CORE__LOAD_EXAMPLES=False "
