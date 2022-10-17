@@ -30,14 +30,23 @@ class Project:
         self._airflow_dags_folder = airflow_dags_folder
 
     @property
-    def airflow_home(self):
+    def airflow_home(self) -> Path:
         """
-        Where the Airflow DAGs are placed. Can be either user-defined, during initialisation, or the default one.
+        Folder which contains the Airflow database and configuration.
+        Can be either user-defined, during initialisation, or the default one.
+
+        :returns: The path to the Airflow home directory.
         """
         return self._airflow_home or Path(self.directory, DEFAULT_AIRFLOW_HOME)
 
     @property
-    def airflow_dags_folder(self):
+    def airflow_dags_folder(self) -> Path:
+        """
+        Folder which contains the Airflow DAG files.
+        Can be eitehr user-defined, during initialisation, or the default one.
+
+        :returns: The path to the Airflow DAGs directory.
+        """
         return self._airflow_dags_folder or Path(self.directory, DEFAULT_DAGS_FOLDER)
 
     def _update_config(self) -> None:
@@ -54,8 +63,15 @@ class Project:
             config.write_value_to_yaml("airflow", "dags_folder", str(self._airflow_dags_folder))
 
     def _initialise_airflow(self) -> None:
+        """
+        Create an Airflow database and configuration in the self.airflow_home folder, or upgrade them,
+        if they already exist.
+        """
         cmd = f'PYTHONWARNINGS="ignore" AIRFLOW__CORE__LOAD_EXAMPLES=False AIRFLOW_HOME={self.airflow_home} airflow db init'  # noqa: E501
         os.system(cmd)
+        # TODO: explore the possibility of accomplishing the same using Airflow
+        # from airflow.utils import db
+        # db.upgradedb()
         # replace by subprocess.run
 
     def initialise(self) -> None:
@@ -75,10 +91,20 @@ class Project:
         self._initialise_airflow()
 
     def is_valid_project(self) -> bool:
+        f"""
+        Check if self.directory contains the necessary paths which make it qualify as a valid SQL CLI project.
+
+        The mandatory paths are {MANDATORY_PATHS}
+        """
         existing_paths = {path.relative_to(self.directory) for path in Path(self.directory).rglob("*")}
         return MANDATORY_PATHS.issubset(existing_paths)
 
-    def load_config(self, environment: Optional[str] = DEFAULT_ENVIRONMENT):
+    def load_config(self, environment: Optional[str] = DEFAULT_ENVIRONMENT) -> None:
+        """
+        Given a self.directory and an environment, load to the configuration ad paths to the Project instance.
+
+        :param environment: string referencing the desired environment, uses "default" unless specified
+        """
         if not self.is_valid_project():
             logging.error("This is not a valid SQL project. Please, use `flow init`")
         config = Config(environment=DEFAULT_ENVIRONMENT, project_dir=self.directory).from_yaml_to_config()
