@@ -131,13 +131,12 @@ class BaseTable:
         """
         Return the row count of table.
         """
-        try:
-            db = create_database(self.conn_id)
-            return db.run_sql(
-                f"SELECT COUNT(*) from {db.get_table_qualified_name(self)}"  # skipcq: BAN-B608
-            ).scalar()
-        except Exception:
-            return 0
+        from sqlalchemy import select, func
+
+        db = create_database(self.conn_id)
+        tb = db.get_sqla_table(table=self)
+        query = select(func.count("*")).select_from(tb)
+        return db.run_sql(query).scalar()
 
     def to_json(self):
         return {
