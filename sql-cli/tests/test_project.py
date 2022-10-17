@@ -1,29 +1,42 @@
-import tempfile
+from pathlib import Path
 
-from sql_cli.project import BASE_SOURCE_DIR, Project
+from sql_cli.project import Project
 from tests.utils import list_dir
 
-BASE_PATHS_COUNT = 19
-BASE_PATHS = [obj for obj in list_dir(str(BASE_SOURCE_DIR)) if not obj.stem == ".gitkeep"]
+BASE_PATHS = [
+    Path(".airflow"),
+    Path(".airflow/dags"),
+    Path(".airflow/dags/sql"),
+    Path(".airflow/default"),
+    Path(".airflow/dev"),
+    Path("config"),
+    Path("config/default"),
+    Path("config/default/configuration.yml"),
+    Path("config/dev"),
+    Path("config/dev/configuration.yml"),
+    Path("data"),
+    Path("data/movies.db"),
+    Path("data/retail.db"),
+    Path("workflows"),
+    Path("workflows/example_basic_transform"),
+    Path("workflows/example_basic_transform/top_animations.sql"),
+    Path("workflows/example_templating"),
+    Path("workflows/example_templating/filtered_orders.sql"),
+    Path("workflows/example_templating/joint_orders_customers.sql"),
+]
 
 
-def test_initialise_project_with_dirname():
-    with tempfile.TemporaryDirectory() as dir_name:
-        assert not list_dir(dir_name)
-        Project(dir_name).initialise()
-        new_dir_files_list = list_dir(dir_name)
-        assert new_dir_files_list == BASE_PATHS
-        assert len(new_dir_files_list) == BASE_PATHS_COUNT
+def test_initialise_project_with_dirname(tmp_path):
+    Project(tmp_path).initialise()
+    paths = list_dir(tmp_path.as_posix())
+    assert all(base_path in paths for base_path in BASE_PATHS)
 
 
-def test_initialise_project_in_previously_initialised_dir():
-    with tempfile.TemporaryDirectory() as dir_name:
-        assert not list_dir(dir_name)
-        Project(dir_name).initialise()
-        new_dir_files_list = list_dir(dir_name)
-        assert new_dir_files_list == BASE_PATHS
-        assert len(new_dir_files_list) == BASE_PATHS_COUNT
-        Project(dir_name).initialise()
-        assert new_dir_files_list == BASE_PATHS
-        assert len(new_dir_files_list) == BASE_PATHS_COUNT
-        # TODO: make sure we did not override the content of existing files!
+def test_initialise_project_in_previously_initialised_dir(tmp_path):
+    Project(tmp_path).initialise()
+    paths = list_dir(tmp_path.as_posix())
+    assert all(base_path in paths for base_path in BASE_PATHS)
+    Project(tmp_path).initialise()
+    paths = list_dir(tmp_path.as_posix())
+    assert all(base_path in paths for base_path in BASE_PATHS)
+    # TODO: make sure we did not override the content of existing files!
