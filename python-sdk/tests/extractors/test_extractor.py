@@ -9,7 +9,7 @@ from astro.constants import FileType
 from astro.files import File
 from astro.lineage.extractor import PythonSDKExtractor
 from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
-from astro.sql import AppendOperator, MergeOperator, TransformOperator
+from astro.sql import AppendOperator, MergeOperator
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import Metadata, Table
 from tests.utils.airflow import create_context
