@@ -7,7 +7,7 @@ from typing import Any
 
 import yaml
 
-from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME, DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
+from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME
 
 
 @dataclass
@@ -52,8 +52,8 @@ class Config:
         return Config(
             project_dir=self.project_dir,
             environment=self.environment,
-            airflow_home=yaml_config.get("airflow", {}).get("home", DEFAULT_AIRFLOW_HOME),
-            airflow_dags_folder=yaml_config.get("airflow", {}).get("dags_folder", DEFAULT_DAGS_FOLDER),
+            airflow_home=yaml_config.get("airflow", {}).get("home"),
+            airflow_dags_folder=yaml_config.get("airflow", {}).get("dags_folder"),
             connections=yaml_config["connections"],
         )
 

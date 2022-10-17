@@ -7,9 +7,10 @@ from dotenv import load_dotenv
 from rich import print as rprint
 
 import sql_cli
-from sql_cli import configuration, project
 from sql_cli.connections import validate_connections
+from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
 from sql_cli.dag_generator import generate_dag
+from sql_cli.project import Project
 from sql_cli.run_dag import run_dag
 
 load_dotenv()
@@ -36,20 +37,19 @@ def about() -> None:
 
 @app.command(help="Generate the Airflow DAG from a directory of SQL files.")
 def generate(
-    directory: Path = typer.Argument(
+    workflow_directory: Path = typer.Argument(
         default=...,
         show_default=False,
         exists=True,
         help="directory containing the sql files.",
     ),
-    dags_directory: Path = typer.Argument(
-        default=...,
-        show_default=False,
-        exists=True,
-        help="directory for the generated DAGs.",
+    project_dir: Optional[Path] = typer.Argument(
+        None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
 ) -> None:
-    dag_file = generate_dag(directory, dags_directory)
+    project = Project(project_dir or Path.cwd())
+    project.load_config()
+    dag_file = generate_dag(workflow_directory, project.airflow_dags_folder)
     rprint("The DAG file", dag_file.resolve(), "has been successfully generated. 🎉")
 
 
@@ -98,17 +98,11 @@ def validate(
     """
 )
 def run(
-    directory: Path = typer.Argument(
+    workflow_directory: Path = typer.Argument(
         default=...,
         show_default=False,
         exists=True,
         help="directory containing the sql files.",
-    ),
-    dags_directory: Path = typer.Argument(
-        default=...,
-        show_default=False,
-        exists=True,
-        help="directory for the generated DAGs.",
     ),
     connection_file: Path = typer.Option(
         default=None,
@@ -120,9 +114,14 @@ def run(
         exists=True,
         help="path to variables yaml or json file",
     ),
+    project_dir: Optional[Path] = typer.Argument(
+        None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
+    ),
 ) -> None:
-    dag_file = generate_dag(directory, dags_directory=dags_directory)
-    dag = get_dag(dag_id=directory.name, subdir=dag_file.parent.as_posix())
+    project = Project(project_dir or Path.cwd())
+    project.load_config()
+    dag_file = generate_dag(workflow_directory, project.airflow_dags_folder)
+    dag = get_dag(dag_id=workflow_directory.name, subdir=dag_file.parent.as_posix())
     run_dag(
         dag=dag,
         conn_file_path=connection_file.as_posix() if connection_file else None,
@@ -182,7 +181,7 @@ def init(
     # Both of the following paths are currently absolute
     project_dir = project_dir.resolve() if project_dir else Path.cwd()
 
-    proj = project.Project(project_dir, airflow_home, airflow_dags_folder)
+    proj = Project(project_dir, airflow_home, airflow_dags_folder)
     proj.initialise()
     rprint("Initialized an Astro SQL project at", project_dir)
 

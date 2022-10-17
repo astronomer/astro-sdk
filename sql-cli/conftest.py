@@ -23,6 +23,16 @@ UNIQUE_HASH_SIZE = 16
 
 
 @pytest.fixture()
+def project_directory():
+    return CWD / "tests" / "example_project"
+
+
+@pytest.fixture()
+def workflow_directory():
+    return CWD / "tests" / "example_project" / "workflows" / "example_basic_transform"
+
+
+@pytest.fixture()
 def root_directory():
     return CWD / "tests" / "workflows" / "basic"
 

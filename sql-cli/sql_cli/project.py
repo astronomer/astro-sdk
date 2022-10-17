@@ -1,4 +1,3 @@
-import logging
 import os
 import shutil
 from pathlib import Path
@@ -86,7 +85,7 @@ class Project:
         # - subprocess
         os.system(  # skipcq:  BAN-B605
             f"AIRFLOW_HOME={self.airflow_home} "
-            f"AIRFLOW__CORE__DAGS_FOLDER={self.airflow_dags_folder }"
+            f"AIRFLOW__CORE__DAGS_FOLDER={self.airflow_dags_folder} "
             "AIRFLOW__CORE__LOAD_EXAMPLES=False "
             "airflow db init > /dev/null 2>&1"
         )
@@ -134,10 +133,9 @@ class Project:
         :param environment: string referencing the desired environment, uses "default" unless specified
         """
         if not self.is_valid_project():
-            logging.exception("This is not a valid SQL project. Please, use `flow init`")
+            raise Exception("This is not a valid SQL project. Please, use `flow init`")
         config = Config(environment=environment, project_dir=self.directory).from_yaml_to_config()
         if config.airflow_home:
-            self._airflow_home = Path(str(config.airflow_home))
+            self._airflow_home = Path(config.airflow_home)
         if config.airflow_dags_folder:
-            self._airflow_dags_folder = Path(str(config.airflow_dags_folder))
-        self.connections = config.connections
+            self._airflow_dags_folder = Path(config.airflow_dags_folder)
