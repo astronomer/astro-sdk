@@ -1,5 +1,4 @@
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 from sql_cli.project import Project
 from tests.utils import list_dir
@@ -27,19 +26,17 @@ BASE_PATHS = [
 ]
 
 
-def test_initialise_project_with_dirname():
-    with TemporaryDirectory() as dir_name:
-        Project(dir_name).initialise()
-        paths = list_dir(dir_name)
-        assert all(base_path in paths for base_path in BASE_PATHS)
+def test_initialise_project_with_dirname(tmp_path):
+    Project(tmp_path).initialise()
+    paths = list_dir(tmp_path.as_posix())
+    assert all(base_path in paths for base_path in BASE_PATHS)
 
 
-def test_initialise_project_in_previously_initialised_dir():
-    with TemporaryDirectory() as dir_name:
-        Project(dir_name).initialise()
-        paths = list_dir(dir_name)
-        assert all(base_path in paths for base_path in BASE_PATHS)
-        Project(dir_name).initialise()
-        paths = list_dir(dir_name)
-        assert all(base_path in paths for base_path in BASE_PATHS)
-        # TODO: make sure we did not override the content of existing files!
+def test_initialise_project_in_previously_initialised_dir(tmp_path):
+    Project(tmp_path).initialise()
+    paths = list_dir(tmp_path.as_posix())
+    assert all(base_path in paths for base_path in BASE_PATHS)
+    Project(tmp_path).initialise()
+    paths = list_dir(tmp_path.as_posix())
+    assert all(base_path in paths for base_path in BASE_PATHS)
+    # TODO: make sure we did not override the content of existing files!
