@@ -1,15 +1,11 @@
 from __future__ import annotations
 
-import importlib
-import os
-
-import airflow
 from airflow.api_connexion.schemas.connection_schema import connection_schema
 from airflow.models import Connection
 from airflow.utils.session import create_session
 
 from sql_cli.project import Project
-from sql_cli.utils.airflow import retrieve_airflow_meta_database_conn
+from sql_cli.utils.airflow import retrieve_airflow_database_conn_from_config, set_airflow_database_conn
 
 CONNECTION_ID_OUTPUT_STRING_WIDTH = 25
 
@@ -35,13 +31,11 @@ def validate_connections(
     """
     project.load_config(environment=environment)
 
-    # Hack so we can set our own $AIRFLOW_HOME
-    airflow_meta_conn = retrieve_airflow_meta_database_conn(project.directory / project.airflow_home)
-    os.environ["AIRFLOW__DATABASE__SQL_ALCHEMY_CONN"] = airflow_meta_conn
-    importlib.reload(airflow)
-    importlib.reload(airflow.configuration)
-    importlib.reload(airflow.models.base)
-    importlib.reload(airflow.models.connection)
+    # Since we are using the Airflow ORM to interact with connections, we need to tell Airflow to use our airflow.db
+    # The usual route is to set $AIRFLOW_HOME before Airflow is imported. However, in the context of the SQL CLI, we
+    # decide this during runtime, depending on the project path and SQL CLI configuration.
+    airflow_meta_conn = retrieve_airflow_database_conn_from_config(project.directory / project.airflow_home)
+    set_airflow_database_conn(airflow_meta_conn)
 
     config_file_contains_connection = False
 
