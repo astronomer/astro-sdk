@@ -75,7 +75,7 @@ def validate(
 
     project_dir = project_dir or Path.cwd()
     proj = project.Project(project_dir)
-    proj.load_config()
+    proj.load_config(environment=environment)
 
     validate_connections(project=proj, environment=environment, connection_id=connection)
 
