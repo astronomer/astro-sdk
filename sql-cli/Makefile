@@ -18,7 +18,7 @@ system:  ## Install system dependencies
 	@$(SYSTEM_PIP) install pre-commit
 
 install:  ## Create Python virtualenv and install python dependencies
-	@poetry install
+	@poetry install --with dev
 
 virtualenv:  ## Activate project virtualenv
 	@echo "The virtual env is:" $(shell poetry env info -p)
@@ -31,7 +31,7 @@ pre-commit:  # Run pre-commit
 flow:  # Build and run the latest version of flow
 
 test:  # Run tests
-	@PYTHONWARNINGS="ignore" poetry run pytest -s --cov --cov-branch --cov-report=term-missing
+	@PYTHONWARNINGS="ignore" poetry run pytest -s --cov --cov-branch --cov-report=term-missing tests
 
 release:  # Build a package
 	@echo -e "If this is your first time, please, manually follow these two steps: \n" \

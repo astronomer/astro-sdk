@@ -85,7 +85,7 @@ def test_init_with_directory(tmp_path):
 
 def test_init_with_custom_airflow_config(tmp_path):
     result = runner.invoke(
-        app, ["init", tmp_path.as_posix(), "--airflow-home", "/some/home", "--airflow-dags-folder", "/tmp"]
+        app, ["init", tmp_path.as_posix(), "--airflow-home", "/tmp", "--airflow-dags-folder", "/tmp"]
     )
     assert result.exit_code == 0
     expected_msg = f"Initialized an Astro SQL project at {tmp_path.as_posix()}"

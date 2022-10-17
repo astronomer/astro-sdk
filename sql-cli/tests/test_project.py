@@ -8,6 +8,8 @@ BASE_PATHS = [
     Path(".airflow/dags"),
     Path(".airflow/dags/sql"),
     Path(".airflow/default"),
+    Path(".airflow/default/airflow.cfg"),
+    Path(".airflow/default/airflow.db"),
     Path(".airflow/dev"),
     Path("config"),
     Path("config/default"),
@@ -29,14 +31,14 @@ BASE_PATHS = [
 def test_initialise_project_with_dirname(tmp_path):
     Project(tmp_path).initialise()
     paths = list_dir(tmp_path.as_posix())
-    assert all(base_path in paths for base_path in BASE_PATHS)
+    assert paths == sorted(BASE_PATHS)
 
 
 def test_initialise_project_in_previously_initialised_dir(tmp_path):
     Project(tmp_path).initialise()
     paths = list_dir(tmp_path.as_posix())
-    assert all(base_path in paths for base_path in BASE_PATHS)
+    assert paths == sorted(BASE_PATHS)
     Project(tmp_path).initialise()
     paths = list_dir(tmp_path.as_posix())
-    assert all(base_path in paths for base_path in BASE_PATHS)
+    assert paths == sorted(BASE_PATHS)
     # TODO: make sure we did not override the content of existing files!

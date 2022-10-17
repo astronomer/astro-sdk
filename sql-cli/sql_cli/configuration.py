@@ -7,12 +7,7 @@ from typing import Any
 
 import yaml
 
-CONFIG_DIR = "config"
-CONFIG_FILENAME = "configuration.yml"
-
-DEFAULT_ENVIRONMENT = "default"
-DEFAULT_AIRFLOW_HOME = f"./.airflow/{DEFAULT_ENVIRONMENT}"
-DEFAULT_DAGS_FOLDER = "./.airflow/.dags"
+from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME, DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
 
 
 @dataclass
