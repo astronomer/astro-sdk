@@ -49,6 +49,9 @@ python-sdk/docs/autoapi/
 sql-cli/tests/.airflow/dags/*
 !sql-cli/tests/.airflow/dags/sql/.gitkeep
 !sql-cli/tests/.airflow/dags/.gitkeep
+sql-cli/tests/example_project/.airflow/dags/*
+!sql-cli/tests/example_project/.airflow/dags/sql/.gitkeep
+!sql-cli/tests/example_project/.airflow/dags/.gitkeep
 
 # Generated examples
 sql-cli/include/base/.airflow/dags/*
