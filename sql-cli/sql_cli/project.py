@@ -1,9 +1,11 @@
+import importlib
 import logging
 import os
 import shutil
 from pathlib import Path
 from typing import Optional
 
+import airflow
 from airflow.utils import db
 
 from sql_cli.configuration import Config
@@ -75,12 +77,14 @@ class Project:
         if they already exist.
         """
         overrides = {
-            "AIRFLOW_HOME": self.airflow_home,
-            "AIRFLOW__CORE__DAGS_FOLDER": self.airflow_dags_folder,
-            "AIRFLOW__CORE__LOAD_EXAMPLES": False,
+            "AIRFLOW_HOME": str(self.airflow_home),
+            "AIRFLOW__CORE__DAGS_FOLDER": str(self.airflow_dags_folder),
+            "AIRFLOW__CORE__LOAD_EXAMPLES": "False",
+            "AIRFLOW__CORE__LOGGING_LEVEL": "ERROR",
         }
         with env_vars(overrides):
-            db.upgradedb()
+            importlib.reload(airflow)
+            db.upgradedb()  # this is not using the AIRFLOW_HOME we set up, it's using the default one
 
     def initialise(self) -> None:
         """

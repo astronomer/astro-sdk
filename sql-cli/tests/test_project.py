@@ -29,15 +29,14 @@ BASE_PATHS = [
 def test_initialise_project_with_dirname(tmp_path):
     Project(tmp_path).initialise()
     paths = list_dir(tmp_path.as_posix())
-    assert all(base_path in paths for base_path in BASE_PATHS)
+    assert sorted(paths) == sorted(BASE_PATHS)
 
 
 def test_initialise_project_in_previously_initialised_dir(tmp_path):
     Project(tmp_path).initialise()
     paths = list_dir(tmp_path.as_posix())
-    assert all(base_path in paths for base_path in BASE_PATHS)
+    assert sorted(paths) == BASE_PATHS
     Project(tmp_path).initialise()
     paths = list_dir(tmp_path.as_posix())
-    assert all(base_path in paths for base_path in BASE_PATHS)
+    assert sorted(paths) == BASE_PATHS
     # TODO: make sure we did not override the content of existing files!
-
