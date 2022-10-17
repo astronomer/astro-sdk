@@ -2,12 +2,17 @@ from __future__ import annotations
 
 import json
 import logging
-import pickle
 from json import JSONDecodeError
-from pickle import UnpicklingError
 from typing import Any
 
+import airflow
+import numpy as np
 import pandas
+
+if airflow.__version__ >= "2.3":
+    from sqlalchemy.engine.row import LegacyRow as SQLAlcRow
+else:
+    from sqlalchemy.engine.result import RowProxy as SQLAlcRow
 
 from astro.files import File
 from astro.table import Table, TempTable
@@ -15,24 +20,43 @@ from astro.table import Table, TempTable
 log = logging.getLogger("astro.utils.serializer")
 
 
-def serialize(obj: Table | File | Any) -> dict | Any:
+def serialize(obj: Table | File | Any) -> dict | Any:  # noqa
     """
     Serialize astro SDK objects (tables, files and dataframes) into json safe dictionary
 
     :param obj: object to serialize
     :return:
     """
-    from astro.utils.dataframe import convert_dataframe_to_file
-
     if isinstance(obj, (Table, TempTable)):
         return obj.to_json()
-    elif isinstance(obj, pandas.DataFrame):
-        file = convert_dataframe_to_file(obj)
-        return serialize(file)
     elif isinstance(obj, File):
         return obj.to_json()
-    elif isinstance(obj, list):
+    elif isinstance(obj, (list, tuple)):
         return [serialize(o) for o in obj]
+    elif isinstance(obj, dict):
+        return {k: serialize(v) for k, v in obj.items()}
+    elif isinstance(obj, pandas.DataFrame):
+        from astro.utils.dataframe import convert_dataframe_to_file
+
+        file = convert_dataframe_to_file(obj)
+        return serialize(file)
+    elif isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return np.float64(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, SQLAlcRow):
+        if airflow.__version__ >= "2.3":
+            return {
+                "class": "SQLAlcRow",
+                "key_map": obj._keymap,
+                "data": obj._data,
+                "key_style": obj._key_style,
+            }
+        else:
+            return {"class": "SQLAlcRow", "key_map": obj._keymap, "key_style": obj._key_style}
+
     elif isinstance(obj, str):
         return {"class": "string", "value": obj}
     else:
@@ -43,14 +67,14 @@ def _attempt_to_serialize_unknown_object(obj: object):
     try:
         return json.dumps(obj)
     except TypeError:
-        return pickle.dumps(obj).hex()
+        return obj
 
 
 def _is_serialized_astro_object(obj) -> bool:
-    return bool(obj.get("class") and obj["class"] in ["Table", "File", "string"])
+    return bool(obj.get("class") and obj["class"] in ["Table", "File", "string", "SQLAlcRow"])
 
 
-def deserialize(obj: dict | str | list) -> Table | File | Any:
+def deserialize(obj: dict | str | list) -> Table | File | Any:  # noqa
     """
     Deserialize json dictionaries into astro SDK objects (tables, files, dataframes, etc.)
 
@@ -66,8 +90,15 @@ def deserialize(obj: dict | str | list) -> Table | File | Any:
         elif obj["class"] == "File":
             log.debug("Found file dictionary %s, will attempt to deserialize", obj)
             return _deserialize_file(obj)
+        elif obj["class"] == "SQLAlcRow":
+            if airflow.__version__ >= "2.3":
+                return SQLAlcRow(None, None, obj["key_map"], obj["key_style"], obj["data"])
+            else:
+                return SQLAlcRow(None, None, obj["key_map"], obj["key_style"])
         else:
             return obj["value"]
+    elif isinstance(obj, dict):
+        return {k: deserialize(v) for k, v in obj.items()}
     elif isinstance(obj, str):
         log.debug("Found string, will attempt to deserialize")
         return _attempt_to_deser_unknown_object(obj)
@@ -87,12 +118,5 @@ def _attempt_to_deser_unknown_object(obj: str):
         log.debug("Attempting to deserialize object %s into a json object", obj)
         return json.loads(obj)
     except JSONDecodeError:
-        try:
-            log.debug(
-                "Json debugging failed for object %s, attempting to pickle deserialize",
-                obj,
-            )
-            return pickle.loads(bytes.fromhex(obj))
-        except UnpicklingError:
-            log.debug("unpickling failed for object %s, returning raw object", obj)
-            return obj
+        log.debug("Json deserializing failed for object %s, returning raw object", obj)
+        return obj
