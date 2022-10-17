@@ -75,9 +75,9 @@ class Project:
         # - python-native approach or
         # - subprocess
         os.system(
-            f"AIRFLOW_HOME={self.airflow_home}"
-            f"AIRFLOW__CORE__DAGS_FOLDER={self.airflow_dags_folder}"
-            "AIRFLOW__CORE__LOAD_EXAMPLES=False"
+            f"AIRFLOW_HOME={self.airflow_home} "
+            f"AIRFLOW__CORE__DAGS_FOLDER={self.airflow_dags_folder }"
+            "AIRFLOW__CORE__LOAD_EXAMPLES=False "
             "airflow db init > /dev/null 2>&1"
         )
 
