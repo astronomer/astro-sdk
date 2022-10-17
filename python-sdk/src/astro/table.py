@@ -129,10 +129,15 @@ class BaseTable:
     @property
     def row_count(self) -> Any:
         """
-        Return the row count of table
+        Return the row count of table.
         """
-        # TODO: Implement this property
-        return 0
+        try:
+            db = create_database(self.conn_id)
+            return db.run_sql(
+                f"SELECT COUNT(*) from {db.get_table_qualified_name(self)}"  # skipcq: BAN-B608
+            ).scalar()
+        except Exception:
+            return 0
 
     def to_json(self):
         return {
