@@ -58,9 +58,9 @@ class Project:
         """
         config = Config(environment=DEFAULT_ENVIRONMENT, project_dir=self.directory)
         if self._airflow_home is not None:
-            config.write_value_to_yaml("airflow", "home", str(self._airflow_home))
+            config.write_value_to_yaml("airflow", "home", self._airflow_home.as_posix())
         if self._airflow_dags_folder is not None:
-            config.write_value_to_yaml("airflow", "dags_folder", str(self._airflow_dags_folder))
+            config.write_value_to_yaml("airflow", "dags_folder", self._airflow_dags_folder.as_posix())
 
     def _initialise_airflow(self) -> None:
         """
@@ -106,7 +106,7 @@ class Project:
         :param environment: string referencing the desired environment, uses "default" unless specified
         """
         if not self.is_valid_project():
-            logging.error("This is not a valid SQL project. Please, use `flow init`")
+            logging.exception("This is not a valid SQL project. Please, use `flow init`")
         config = Config(environment=DEFAULT_ENVIRONMENT, project_dir=self.directory).from_yaml_to_config()
         self._airflow_home = Path(str(config.airflow_home))
         self._airflow_dags_folder = Path(str(config.airflow_dags_folder))
