@@ -65,9 +65,9 @@ class Project:
         """
         config = Config(environment=DEFAULT_ENVIRONMENT, project_dir=self.directory)
         if self._airflow_home is not None:
-            config.write_value_to_yaml("airflow", "home", self._airflow_home.as_posix())
+            config.write_value_to_yaml("airflow", "home", str(self._airflow_home))
         if self._airflow_dags_folder is not None:
-            config.write_value_to_yaml("airflow", "dags_folder", self._airflow_dags_folder.as_posix())
+            config.write_value_to_yaml("airflow", "dags_folder", str(self._airflow_dags_folder))
 
     def _initialise_airflow(self) -> None:
         """
