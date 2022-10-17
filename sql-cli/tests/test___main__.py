@@ -52,8 +52,10 @@ def test_generate(root_directory, dags_directory):
     )
 
 
-def test_validate():
-    result = runner.invoke(app, ["validate"])
+def test_validate_with_directory(tmp_path):
+    result = runner.invoke(app, ["init", tmp_path.as_posix()])
+    assert result.exit_code == 0
+    result = runner.invoke(app, ["validate", tmp_path.as_posix()])
     assert result.exit_code == 0
 
 
