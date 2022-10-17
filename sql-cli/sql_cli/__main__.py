@@ -91,7 +91,7 @@ def validate(
     """
 )
 def run(
-    workflow_directory: Path = typer.Argument(
+    workflow: str = typer.Argument(
         default=...,
         show_default=False,
         exists=True,
@@ -107,14 +107,18 @@ def run(
         exists=True,
         help="path to variables yaml or json file",
     ),
-    project_dir: Optional[Path] = typer.Argument(
+    project_dir: Optional[Path] = typer.Option(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
+    ),
+    env: str = typer.Option(
+        default="default",
+        help="environment to validate",
     ),
 ) -> None:
     project = Project(project_dir or Path.cwd())
-    project.load_config()
-    dag_file = generate_dag(workflow_directory, project.airflow_dags_folder)
-    dag = get_dag(dag_id=workflow_directory.name, subdir=dag_file.parent.as_posix())
+    project.load_config(environment=env)
+    dag_file = generate_dag(project.directory /  project.workflows_directory / workflow, project.airflow_dags_folder)
+    dag = get_dag(dag_id=workflow, subdir=dag_file.parent.as_posix())
     run_dag(
         dag=dag,
         conn_file_path=connection_file.as_posix() if connection_file else None,
