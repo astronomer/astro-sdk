@@ -23,16 +23,6 @@ class Project:
         self.airflow_home = airflow_home
         self.airflow_dags_folder = airflow_dags_folder
 
-    def _delete_temporary_files(self) -> None:
-        """
-        Delete files which should not be part of the user project directory structure.
-        An example are the .gitkeep files, which were added just so the default folder structure
-        can be added to Git (by default empty directories are not versioned).
-        """
-        gitkeep_files = Path(self.directory).rglob(".gitkeep")
-        for file_ in gitkeep_files:
-            file_.unlink()
-
     def _update_config(self) -> None:
         """
         Sets custom Airflow configuration in case the user is not using the default values.
@@ -53,6 +43,10 @@ class Project:
         :param airflow_home: Custom user-defined Airflow Home directory
         :param airflow_dags_folder: Custom user-defined Airflow DAGs folder
         """
-        shutil.copytree(src=BASE_SOURCE_DIR, dst=self.directory, dirs_exist_ok=True)
-        self._delete_temporary_files()
+        shutil.copytree(
+            src=BASE_SOURCE_DIR,
+            dst=self.directory,
+            ignore=shutil.ignore_patterns(".gitkeep"),
+            dirs_exist_ok=True,
+        )
         self._update_config()
