@@ -57,6 +57,9 @@ def test_validate_with_directory(tmp_path):
     assert result.exit_code == 0
     result = runner.invoke(app, ["validate", tmp_path.as_posix()])
     assert result.exit_code == 0
+    output = get_stdout(result)
+    assert "Validating connection(s) for environment 'default'" in output
+    assert "Validating connection sqlite_conn               PASSED" in output
 
 
 def test_run(root_directory, dags_directory):
