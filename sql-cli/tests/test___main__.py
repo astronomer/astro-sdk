@@ -1,5 +1,4 @@
 import pathlib
-import tempfile
 
 from typer.testing import CliRunner
 
@@ -76,24 +75,22 @@ def test_run(root_directory, dags_directory):
     assert f"Dagrun {root_directory.name} final state: success" in result_stdout
 
 
-def test_init_with_directory():
-    with tempfile.TemporaryDirectory() as dir_name:
-        result = runner.invoke(app, ["init", dir_name])
-        assert result.exit_code == 0
-        expected_msg = f"Initialized an Astro SQL project at {dir_name}"
-        assert expected_msg in get_stdout(result)
-        assert list_dir(dir_name)
+def test_init_with_directory(tmp_path):
+    result = runner.invoke(app, ["init", tmp_path.as_posix()])
+    assert result.exit_code == 0
+    expected_msg = f"Initialized an Astro SQL project at {tmp_path.as_posix()}"
+    assert expected_msg in get_stdout(result)
+    assert list_dir(tmp_path.as_posix())
 
 
-def test_init_with_custom_airflow_config():
-    with tempfile.TemporaryDirectory() as dir_name:
-        result = runner.invoke(
-            app, ["init", dir_name, "--airflow-home", "/some/home", "--airflow-dags-folder", "/tmp"]
-        )
-        assert result.exit_code == 0
-        expected_msg = f"Initialized an Astro SQL project at {dir_name}"
-        assert expected_msg in get_stdout(result)
-        assert list_dir(dir_name)
+def test_init_with_custom_airflow_config(tmp_path):
+    result = runner.invoke(
+        app, ["init", tmp_path.as_posix(), "--airflow-home", "/tmp", "--airflow-dags-folder", "/tmp"]
+    )
+    assert result.exit_code == 0
+    expected_msg = f"Initialized an Astro SQL project at {tmp_path.as_posix()}"
+    assert expected_msg in get_stdout(result)
+    assert list_dir(tmp_path.as_posix())
 
 
 def test_init_without_directory(empty_cwd):

@@ -3,7 +3,7 @@ from __future__ import annotations
 import attr
 from openlineage.client.facet import BaseFacet
 
-from astro.constants import FileType
+from astro.constants import FileType, MergeConflictStrategy
 from astro.table import Column, Metadata
 
 
@@ -81,6 +81,46 @@ class TableDatasetFacet(BaseFacet):
     table_name: str
     columns: list[str] | tuple[str] | dict[str, str] | None = None
     source_table_rows: int = 0
+    metadata: Metadata | None = None
+
+    _do_not_redact = ["metadata", "columns"]
+
+
+@attr.define
+class SourceTableMergeDatasetFacet(BaseFacet):
+    """
+    Facets that represent may be available for Source Table object in MergeOperator
+
+    :param table_name: Name of the table
+    :param if_conflicts: The strategy to be applied if there are conflicts.
+    :param columns: columns defined in table
+    :param source_table_rows: Total rows in source table
+    :param metadata: metadata of the table.
+    """
+
+    table_name: str
+    if_conflicts: MergeConflictStrategy
+    columns: list[str] | tuple[str] | dict[str, str] | None = None
+    source_table_rows: int = 0
+    metadata: Metadata | None = None
+
+    _do_not_redact = ["metadata", "columns"]
+
+
+@attr.define
+class TargetTableMergeDatasetFacet(BaseFacet):
+    """
+    Facets that represent may be available for Target Table object in Merge Operator
+
+    :param table_name: Name of the table
+    :param target_conflict_columns: List of cols where we expect to have a conflict while combining
+    :param columns: columns defined in table
+    :param metadata: metadata of the table.
+    """
+
+    table_name: str
+    target_conflict_columns: list[str]
+    columns: list[str] | tuple[str] | dict[str, str] | None = None
     metadata: Metadata | None = None
 
     _do_not_redact = ["metadata", "columns"]
