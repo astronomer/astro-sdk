@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from urllib.parse import urlparse
+
 import requests
 
 from astro.constants import FileLocation
@@ -21,7 +22,7 @@ class HTTPLocation(BaseFileLocation):
     def size(self) -> int:
         """Return file size for HTTP location"""
         response = requests.head(self.path, allow_redirects=True)
-        return int(response.headers.get('content-length', -1))
+        return int(response.headers.get("content-length", -1))
 
     @property
     def openlineage_dataset_namespace(self) -> str:
