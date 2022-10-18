@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from sql_cli.configuration import Config
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_ENVIRONMENT
+from sql_cli.exceptions import InvalidProject
 
 BASE_SOURCE_DIR = Path(os.path.realpath(__file__)).parent.parent / "include/base/"
 
@@ -133,7 +134,7 @@ class Project:
         :param environment: string referencing the desired environment, uses "default" unless specified
         """
         if not self.is_valid_project():
-            raise Exception("This is not a valid SQL project. Please, use `flow init`")
+            raise InvalidProject("This is not a valid SQL project. Please, use `flow init`")
         config = Config(environment=environment, project_dir=self.directory).from_yaml_to_config()
         if config.airflow_home:
             self._airflow_home = Path(config.airflow_home)
