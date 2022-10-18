@@ -1,10 +1,8 @@
 import random
-import shutil
 import string
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import pytest
 from airflow.models import DAG, DagRun, TaskInstance as TI
@@ -143,11 +141,8 @@ def empty_cwd(request, monkeypatch):
     temp_dir.cleanup()
 
 
-initialized_project = Project(Path(TemporaryDirectory().name))
-initialized_project.initialise()
-
-
 @pytest.fixture()
 def initialised_project(tmp_path):
-    shutil.copytree(initialized_project.directory, tmp_path / "test")
-    return initialized_project
+    proj = Project(tmp_path)
+    proj.initialise()
+    return proj

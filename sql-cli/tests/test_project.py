@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 
 from sql_cli.project import Project

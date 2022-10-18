@@ -28,8 +28,8 @@ def set_airflow_database_conn(airflow_meta_conn: str) -> None:
     :params airflow_db_conn: Similar to `sqlite:////tmp/project/airflow.db`
     """
     # This is a hacky approcah we managed to find to make thigs work with Airflow 2.4
-    # os.environ["AIRFLOW__DATABASE__SQL_ALCHEMY_CONN"] = airflow_meta_conn
-    # importlib.reload(airflow)
-    # importlib.reload(airflow.configuration)
-    # importlib.reload(airflow.models.base)
-    # importlib.reload(airflow.models.connection)
+    os.environ["AIRFLOW__DATABASE__SQL_ALCHEMY_CONN"] = airflow_meta_conn
+    importlib.reload(airflow)
+    importlib.reload(airflow.configuration)
+    importlib.reload(airflow.models.base)
+    importlib.reload(airflow.models.connection)
