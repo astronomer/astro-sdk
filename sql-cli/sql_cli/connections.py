@@ -21,6 +21,11 @@ def _create_or_replace_connection(conn_obj: Connection) -> None:
         session.add(conn_obj)
         session.commit()
 
+def convert_to_connection(conn):
+    c = conn.copy()
+    c["connection_id"] = c["conn_id"]
+    c.pop("conn_id")
+    return Connection(**connection_schema.load(c))
 
 def validate_connections(
     project: Project, environment: str = "default", connection_id: str | None = None

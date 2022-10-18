@@ -4,7 +4,8 @@ import logging
 import sys
 import warnings
 from datetime import datetime
-from typing import Any
+from typing import Any, List
+from airflow.models.connection import Connection
 
 from airflow.configuration import secrets_backend_list
 from airflow.models.dag import DAG
@@ -24,6 +25,21 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
+class AstroFilesystemBackend(LocalFilesystemBackend):
+    def __init__(
+        self, connections: dict[str, Connection]=None, variables_file_path: str | None = None, connections_file_path: str | None = None
+    ):
+        self._local_conns: dict[str, Connection] = connections or {}
+        super().__init__(variables_file_path=variables_file_path, connections_file_path=connections_file_path)
+
+    @property
+    def _local_connections(self) -> dict[str, Connection]:
+        conns = self._local_conns
+        conns.update(super()._local_connections)
+        return conns
+
+
+
 @provide_session
 def run_dag(
     dag: DAG,
@@ -31,6 +47,7 @@ def run_dag(
     run_conf: dict[str, Any] | None = None,
     conn_file_path: str | None = None,
     variable_file_path: str | None = None,
+    connections: dict[str, Connection] | None = None,
     session: Session = NEW_SESSION,
 ) -> None:
     """
@@ -62,9 +79,9 @@ def run_dag(
         conf=run_conf,
     )
 
-    if conn_file_path or variable_file_path:
-        local_secrets = LocalFilesystemBackend(
-            variables_file_path=variable_file_path, connections_file_path=conn_file_path
+    if conn_file_path or variable_file_path or connections:
+        local_secrets = AstroFilesystemBackend(
+            variables_file_path=variable_file_path, connections_file_path=conn_file_path, connections=connections
         )
         secrets_backend_list.insert(0, local_secrets)
 

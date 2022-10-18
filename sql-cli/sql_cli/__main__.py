@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from rich import print as rprint
 
 import sql_cli
-from sql_cli.connections import validate_connections
+from sql_cli.connections import convert_to_connection, validate_connections
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
 from sql_cli.dag_generator import generate_dag
 from sql_cli.project import Project
@@ -115,6 +115,7 @@ def run(
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
     project.load_config(environment)
+    connections = {c['conn_id']: convert_to_connection(c) for c in project.connections}
 
     # Since we are using the Airflow ORM to interact with connections, we need to tell Airflow to use our airflow.db
     # The usual route is to set $AIRFLOW_HOME before Airflow is imported. However, in the context of the SQL CLI, we
@@ -127,7 +128,7 @@ def run(
         dags_directory=project.airflow_dags_folder,
     )
     dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix())
-    run_dag(dag)
+    run_dag(dag, connections=connections)
 
 
 @app.command(
