@@ -113,10 +113,8 @@ def run(
         dags_directory=project.airflow_dags_folder,
     )
     dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix())
-    run_dag(
-        dag=dag,
-        conn_file_path=project.directory / "config" / environment / "configuration.yml",
-    )
+    conn_file_path = (project.directory / "config" / environment / "configuration.yml").as_posix()
+    run_dag(dag, conn_file_path=conn_file_path)
 
 
 @app.command()

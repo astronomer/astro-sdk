@@ -77,6 +77,7 @@ def test_run(workflow_name, initialised_project):
         [
             "run",
             workflow_name,
+            "default",
             initialised_project.directory.as_posix(),
         ],
     )
