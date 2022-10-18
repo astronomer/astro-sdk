@@ -8,6 +8,7 @@ import string
 from dataclasses import dataclass, field
 from typing import Any
 
+import pandas
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from snowflake.connector import pandas_tools
@@ -477,6 +478,26 @@ class SnowflakeDatabase(BaseDatabase):
             },
         )
 
+    @staticmethod
+    def get_cols_case(df: pandas.DataFrame):
+        result = []
+        for col in df.columns:
+            if col.isupper():
+                result.append(1)
+            elif col.islower():
+                result.append(0)
+            else:
+                return "mixed"
+
+        total = sum(result)
+        if total == 0:
+            return "lower"
+        elif total == len(df.columns):
+            return "upper"
+
+    def use_quotes(self, df: pandas.DataFrame):
+        return self.get_cols_case(df) in ["upper", "mixed"]
+
     def create_table_using_schema_autodetection(
         self,
         table: BaseTable,
@@ -508,7 +529,7 @@ class SnowflakeDatabase(BaseDatabase):
             schema=table.metadata.schema,
             database=table.metadata.database,
             chunk_size=DEFAULT_CHUNK_SIZE,
-            quote_identifiers=True,
+            quote_identifiers=self.use_quotes(source_dataframe),
             auto_create_table=True,
         )
         self.truncate_table(table)
@@ -599,7 +620,7 @@ class SnowflakeDatabase(BaseDatabase):
             schema=target_table.metadata.schema,
             database=target_table.metadata.database,
             chunk_size=chunk_size,
-            quote_identifiers=True,
+            quote_identifiers=self.use_quotes(source_dataframe),
             auto_create_table=auto_create_table,
         )
 

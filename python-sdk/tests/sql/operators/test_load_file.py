@@ -1073,6 +1073,20 @@ def test_tables_creation_if_they_dont_exist(database_table_fixture, if_exists):
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
+    "text_cases",
+    [
+        {
+            "path": "/../../data/homes_upper.csv",
+            "expected_result": ["Acres", "Age", "Baths", "Beds", "List", "Living", "Rooms", "Sell", "Taxes"],
+        },
+        {
+            "path": "/../../data/homes2.csv",
+            "expected_result": ["acres", "age", "baths", "beds", "list", "living", "rooms", "sell", "taxes"],
+        },
+    ],
+    ids=["Mixed/Upper", "Lower"],
+)
+@pytest.mark.parametrize(
     "database_table_fixture",
     [
         {
@@ -1082,9 +1096,10 @@ def test_tables_creation_if_they_dont_exist(database_table_fixture, if_exists):
     indirect=True,
     ids=["snowflake"],
 )
-def test_load_file_col_cap(sample_dag, database_table_fixture):
+def test_load_file_col_cap(sample_dag, database_table_fixture, text_cases):
     db, test_table = database_table_fixture
-    path = str(CWD) + "/../../data/homes_upper.csv"
+    # path = str(CWD) + "/../../data/homes_upper.csv"
+    path = str(CWD) + text_cases["path"]
     with sample_dag:
         load_file(
             input_file=File(path),
@@ -1095,7 +1110,7 @@ def test_load_file_col_cap(sample_dag, database_table_fixture):
     df = db.export_table_to_pandas_dataframe(test_table)
     cols = list(df.columns)
     cols.sort()
-    assert cols == ["Acres", "Age", "Baths", "Beds", "List", "Living", "Rooms", "Sell", "Taxes"]
+    assert cols == text_cases["expected_result"]
 
 
 @pytest.mark.integration
