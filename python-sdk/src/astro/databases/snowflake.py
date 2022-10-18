@@ -479,7 +479,7 @@ class SnowflakeDatabase(BaseDatabase):
         )
 
     @staticmethod
-    def get_cols_case(cols: list[str]):
+    def get_cols_case(cols: tuple[str]):
         result = []
         for col in cols:
             if col.isupper():
@@ -495,8 +495,9 @@ class SnowflakeDatabase(BaseDatabase):
         elif total == len(cols):
             return "upper"
 
-    def use_quotes(self, cols: list[str]):
-        return self.get_cols_case(cols) in ["upper", "mixed"]
+    @staticmethod
+    def use_quotes(cols: tuple[str]):
+        return SnowflakeDatabase.get_cols_case(cols) in ["upper", "mixed"]
 
     def create_table_using_schema_autodetection(
         self,
@@ -529,7 +530,7 @@ class SnowflakeDatabase(BaseDatabase):
             schema=table.metadata.schema,
             database=table.metadata.database,
             chunk_size=DEFAULT_CHUNK_SIZE,
-            quote_identifiers=self.use_quotes(source_dataframe),
+            quote_identifiers=SnowflakeDatabase.use_quotes(source_dataframe),
             auto_create_table=True,
         )
         self.truncate_table(table)
@@ -620,7 +621,7 @@ class SnowflakeDatabase(BaseDatabase):
             schema=target_table.metadata.schema,
             database=target_table.metadata.database,
             chunk_size=chunk_size,
-            quote_identifiers=self.use_quotes(source_dataframe),
+            quote_identifiers=SnowflakeDatabase.use_quotes(source_dataframe),
             auto_create_table=auto_create_table,
         )
 
@@ -734,6 +735,16 @@ class SnowflakeDatabase(BaseDatabase):
         source_cols = source_to_target_columns_map.keys()
         target_cols = source_to_target_columns_map.values()
 
+        target_table_sqla = self.get_sqla_table(target_table)
+        target_identifier_enclosure = ""
+        if SnowflakeDatabase.use_quotes(target_table_sqla.columns.keys()):
+            target_identifier_enclosure = '"'
+
+        source_table_sqla = self.get_sqla_table(source_table)
+        source_identifier_enclosure = ""
+        if SnowflakeDatabase.use_quotes(source_table_sqla.columns.keys()):
+            source_identifier_enclosure = '"'
+
         (
             source_table_identifier,
             source_table_param,
@@ -749,11 +760,13 @@ class SnowflakeDatabase(BaseDatabase):
         )
 
         merge_target_dict = {
-            f"merge_clause_target_{i}": f'{target_table_name}."{x}"'
+            f"merge_clause_target_{i}": f"{target_table_name}."
+            f"{target_identifier_enclosure}{x}{target_identifier_enclosure}"
             for i, x in enumerate(target_conflict_columns)
         }
         merge_source_dict = {
-            f"merge_clause_source_{i}": f'{source_table_name}."{x}"'
+            f"merge_clause_source_{i}": f"{source_table_name}."
+            f"{source_identifier_enclosure}{x}{source_identifier_enclosure}"
             for i, x in enumerate(target_conflict_columns)
         }
         statement = statement.replace(
@@ -776,7 +789,8 @@ class SnowflakeDatabase(BaseDatabase):
             statement += " when matched then UPDATE SET {merge_vals}"
             merge_statement = ",".join(
                 [
-                    f'{target_table_name}."{t}"={source_table_name}."{s}"'
+                    f"{target_table_name}.{target_identifier_enclosure}{t}{target_identifier_enclosure}="
+                    f"{source_table_name}.{source_identifier_enclosure}{s}{source_identifier_enclosure}"
                     for s, t in source_to_target_columns_map.items()
                 ]
             )
@@ -784,11 +798,17 @@ class SnowflakeDatabase(BaseDatabase):
         statement += " when not matched then insert({target_columns}) values ({append_columns})"
         statement = statement.replace(
             "{target_columns}",
-            ",".join(f'{target_table_name}."{t}"' for t in target_cols),
+            ",".join(
+                f"{target_table_name}.{target_identifier_enclosure}{t}{target_identifier_enclosure}"
+                for t in target_cols
+            ),
         )
         statement = statement.replace(
             "{append_columns}",
-            ",".join(f'{source_table_name}."{s}"' for s in source_cols),
+            ",".join(
+                f"{source_table_name}.{source_identifier_enclosure}{s}{source_identifier_enclosure}"
+                for s in source_cols
+            ),
         )
         params = {
             **merge_target_dict,
@@ -817,8 +837,8 @@ class SnowflakeDatabase(BaseDatabase):
         """
         target_table_sqla = self.get_sqla_table(target_table)
         source_table_sqla = self.get_sqla_table(source_table)
-        use_quotes_target_table = self.use_quotes(target_table_sqla.columns.keys())
-        use_quotes_source_table = self.use_quotes(source_table_sqla.columns.keys())
+        use_quotes_target_table = SnowflakeDatabase.use_quotes(target_table_sqla.columns.keys())
+        use_quotes_source_table = SnowflakeDatabase.use_quotes(source_table_sqla.columns.keys())
         target_columns: list[column]
         source_columns: list[column]
 
@@ -847,12 +867,16 @@ class SnowflakeDatabase(BaseDatabase):
         self.run_sql(sql=sql)
 
     @staticmethod
-    def get_merge_initialization_query(parameters: tuple) -> str:
+    def get_merge_initialization_query(parameters: tuple[str]) -> str:
         """
         Handles database-specific logic to handle constraints, keeping
         it agnostic to database.
         """
-        constraints = ",".join([f'"{p}"' for p in parameters])
+        identifier_enclosure = ""
+        if SnowflakeDatabase.use_quotes(parameters):
+            identifier_enclosure = '"'
+
+        constraints = ",".join([f"{identifier_enclosure}{p}{identifier_enclosure}" for p in parameters])
         sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (%s)" % constraints
         return sql
 

@@ -150,7 +150,7 @@ class BaseDatabase(ABC):
     # Table metadata
     # ---------------------------------------------------------
     @staticmethod
-    def get_merge_initialization_query(parameters: tuple) -> str:
+    def get_merge_initialization_query(parameters: tuple[str]) -> str:
         """
         Handles database-specific logic to handle constraints, keeping
         it agnostic to database.
