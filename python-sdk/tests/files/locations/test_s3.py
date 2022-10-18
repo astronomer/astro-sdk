@@ -1,7 +1,7 @@
 import os
-import pytest
 from unittest.mock import patch
 
+import pytest
 from botocore.client import BaseClient
 
 from astro.files.locations import create_file_location

@@ -1,4 +1,5 @@
 from unittest.mock import patch
+
 import pytest
 from google.cloud.storage import Client
 
