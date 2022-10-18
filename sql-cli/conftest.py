@@ -23,16 +23,6 @@ UNIQUE_HASH_SIZE = 16
 
 
 @pytest.fixture()
-def project_directory():
-    return CWD / "tests" / "example_project"
-
-
-@pytest.fixture()
-def workflow_directory():
-    return CWD / "tests" / "example_project" / "workflows" / "example_basic_transform"
-
-
-@pytest.fixture()
 def root_directory():
     return CWD / "tests" / "workflows" / "basic"
 
@@ -152,9 +142,7 @@ def empty_cwd(request, monkeypatch):
 
 
 @pytest.fixture()
-def initialised_project():
-    temp_dir = tempfile.TemporaryDirectory()
-    proj = Project(Path(temp_dir.name))
+def initialised_project(tmp_path):
+    proj = Project(tmp_path)
     proj.initialise()
-    yield proj
-    temp_dir.cleanup()
+    return proj

@@ -37,11 +37,10 @@ def about() -> None:
 
 @app.command(help="Generate the Airflow DAG from a directory of SQL files.")
 def generate(
-    workflow_directory: Path = typer.Argument(
+    workflow_name: str = typer.Argument(
         default=...,
         show_default=False,
-        exists=True,
-        help="directory containing the sql files.",
+        help="name of the workflow directory within workflows directory.",
     ),
     project_dir: Optional[Path] = typer.Argument(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
@@ -49,7 +48,10 @@ def generate(
 ) -> None:
     project = Project(project_dir or Path.cwd())
     project.load_config()
-    dag_file = generate_dag(workflow_directory, project.airflow_dags_folder)
+    dag_file = generate_dag(
+        directory=project.directory / project.workflows_directory / workflow_name,
+        dags_directory=project.airflow_dags_folder,
+    )
     rprint("The DAG file", dag_file.resolve(), "has been successfully generated. 🎉")
 
 
@@ -80,8 +82,8 @@ def validate(
 @app.command(
     help="""
     Run a workflow locally. This task assumes that there is a local airflow DB (can be a SQLite file), that has been
-    initialized with Airflow tables. Users can also add paths to a connections or variable yaml file which will override
-    existing connections for the test run.
+    initialized with Airflow tables. Users can also add paths to a connections yaml file which will override existing
+    connections for the test run.
 
     \b
     Example of a connections.yaml file:
@@ -98,21 +100,15 @@ def validate(
     """
 )
 def run(
-    workflow_directory: Path = typer.Argument(
+    workflow_name: str = typer.Argument(
         default=...,
         show_default=False,
-        exists=True,
-        help="directory containing the sql files.",
+        help="name of the workflow directory within workflows directory.",
     ),
     connection_file: Path = typer.Option(
         default=None,
         exists=True,
         help="path to connections yaml or json file",
-    ),
-    variable_file: Path = typer.Option(
-        default=None,
-        exists=True,
-        help="path to variables yaml or json file",
     ),
     project_dir: Optional[Path] = typer.Argument(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
@@ -120,12 +116,14 @@ def run(
 ) -> None:
     project = Project(project_dir or Path.cwd())
     project.load_config()
-    dag_file = generate_dag(workflow_directory, project.airflow_dags_folder)
-    dag = get_dag(dag_id=workflow_directory.name, subdir=dag_file.parent.as_posix())
+    dag_file = generate_dag(
+        directory=project.directory / project.workflows_directory / workflow_name,
+        dags_directory=project.airflow_dags_folder,
+    )
+    dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix())
     run_dag(
         dag=dag,
         conn_file_path=connection_file.as_posix() if connection_file else None,
-        variable_file_path=variable_file.as_posix() if variable_file else None,
     )
 
 
