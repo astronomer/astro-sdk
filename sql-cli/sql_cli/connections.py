@@ -10,13 +10,13 @@ from airflow.models import Connection
 from airflow.utils.session import create_session
 
 from sql_cli.settings import SQL_CLI_PROJECT_DIRECTORY
-
+from pathlib import Path
 CONNECTION_ID_OUTPUT_STRING_WIDTH = 25
 
 
-def _load_yaml_connections(environment: str) -> list[dict[str, Any]]:
+def _load_yaml_connections(environment: str, project_dir: Path | None = None) -> list[dict[str, Connection]]:
     """Gets the configuration yaml for the given environment and loads the connections from it into a dictionary"""
-    config_file = SQL_CLI_PROJECT_DIRECTORY / "config" / environment / "configuration.yml"
+    config_file = (project_dir or SQL_CLI_PROJECT_DIRECTORY) / "config" / environment / "configuration.yml"
     if not config_file.exists():
         raise FileNotFoundError(
             f"Config file configuration.yaml does not exist for environment {environment}"
@@ -24,7 +24,7 @@ def _load_yaml_connections(environment: str) -> list[dict[str, Any]]:
 
     with open(config_file) as fp:
         yaml_with_env = os.path.expandvars(fp.read())
-        connections: list[dict[str, Any]] = yaml.safe_load(yaml_with_env)["connections"]
+        connections: list[dict[str, Connection]] = yaml.safe_load(yaml_with_env)["connections"]
     return connections
 
 

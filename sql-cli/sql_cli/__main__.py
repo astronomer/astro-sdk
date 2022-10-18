@@ -6,6 +6,7 @@ import typer
 from airflow.utils.cli import get_dag
 from dotenv import load_dotenv
 from rich import print as rprint
+from sql_cli.connections import _load_yaml_connections
 
 import sql_cli
 from sql_cli.connections import validate_connections
@@ -97,16 +98,6 @@ def run(
         exists=True,
         help="directory containing the sql files.",
     ),
-    connection_file: Path = typer.Option(
-        default=None,
-        exists=True,
-        help="path to connections yaml or json file",
-    ),
-    variable_file: Path = typer.Option(
-        default=None,
-        exists=True,
-        help="path to variables yaml or json file",
-    ),
     project_dir: Optional[Path] = typer.Option(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
@@ -117,12 +108,15 @@ def run(
 ) -> None:
     project = Project(project_dir or Path.cwd())
     project.load_config(environment=env)
-    dag_file = generate_dag(project.directory /  project.workflows_directory / workflow, project.airflow_dags_folder)
+    dag_file = generate_dag(project.directory / project.workflows_directory / workflow, project.airflow_dags_folder)
     dag = get_dag(dag_id=workflow, subdir=dag_file.parent.as_posix())
+    connections = _load_yaml_connections(env, project_dir)
+
+    connections = {conn['conn_id']: conn for conn in connections}
+
     run_dag(
         dag=dag,
-        conn_file_path=connection_file.as_posix() if connection_file else None,
-        variable_file_path=variable_file.as_posix() if variable_file else None,
+        connections=connections,
     )
 
 

@@ -57,14 +57,15 @@ def test_validate():
 
 
 def test_run(workflow_directory, project_directory):
+    print("Sadfsdf")
+    print(project_directory)
     result = runner.invoke(
         app,
         [
             "run",
-            workflow_directory.as_posix(),
+            "example_templating",
+            "--project-dir",
             project_directory.as_posix(),
-            "--connection-file",
-            (CWD / "test_conn.yaml").as_posix(),
         ],
     )
     if result.exit_code != 0:
