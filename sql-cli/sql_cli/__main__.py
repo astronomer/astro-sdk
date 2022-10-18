@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-from typing import Optional
 
 import typer
 from airflow.utils.cli import get_dag
@@ -166,13 +165,13 @@ def init(
     project_dir: Path = typer.Argument(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
-    airflow_home: Optional[Path] = typer.Option(
+    airflow_home: Path = typer.Option(
         None,
         dir_okay=True,
         help=f"(Optional) Set the Airflow Home. Default: {configuration.DEFAULT_AIRFLOW_HOME}",
         show_default=False,
     ),
-    airflow_dags_folder: Optional[Path] = typer.Option(
+    airflow_dags_folder: Path = typer.Option(
         None,
         dir_okay=True,
         help=f"(Optional) Set the DAGs Folder. Default: {configuration.DEFAULT_DAGS_FOLDER}",
