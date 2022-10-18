@@ -5,9 +5,9 @@ import sys
 import warnings
 from datetime import datetime
 from typing import Any, List
-from airflow.models.connection import Connection
 
 from airflow.configuration import secrets_backend_list
+from airflow.models.connection import Connection
 from airflow.models.dag import DAG
 from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstance
@@ -27,7 +27,10 @@ log.setLevel(logging.INFO)
 
 class AstroFilesystemBackend(LocalFilesystemBackend):
     def __init__(
-        self, connections: dict[str, Connection]=None, variables_file_path: str | None = None, connections_file_path: str | None = None
+        self,
+        connections: dict[str, Connection] = None,
+        variables_file_path: str | None = None,
+        connections_file_path: str | None = None,
     ):
         self._local_conns: dict[str, Connection] = connections or {}
         super().__init__(variables_file_path=variables_file_path, connections_file_path=connections_file_path)
@@ -37,7 +40,6 @@ class AstroFilesystemBackend(LocalFilesystemBackend):
         conns = self._local_conns
         conns.update(super()._local_connections)
         return conns
-
 
 
 @provide_session
@@ -81,7 +83,9 @@ def run_dag(
 
     if conn_file_path or variable_file_path or connections:
         local_secrets = AstroFilesystemBackend(
-            variables_file_path=variable_file_path, connections_file_path=conn_file_path, connections=connections
+            variables_file_path=variable_file_path,
+            connections_file_path=conn_file_path,
+            connections=connections,
         )
         secrets_backend_list.insert(0, local_secrets)
 

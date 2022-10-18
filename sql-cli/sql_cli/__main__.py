@@ -115,7 +115,7 @@ def run(
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
     project.load_config(environment)
-    connections = {c['conn_id']: convert_to_connection(c) for c in project.connections}
+    connections = {c["conn_id"]: convert_to_connection(c) for c in project.connections}
 
     # Since we are using the Airflow ORM to interact with connections, we need to tell Airflow to use our airflow.db
     # The usual route is to set $AIRFLOW_HOME before Airflow is imported. However, in the context of the SQL CLI, we
