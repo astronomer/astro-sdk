@@ -26,7 +26,7 @@ def test_remote_object_store_prefix(remote_file):
 
 @pytest.mark.integration
 def test_size():
-    """Test get_size() of for local file."""
+    """Test get_size() of for GCS file."""
     path = "gs://astro-sdk/workspace/sample_pattern.csv"
     location = create_file_location(path)
     assert location.size > 0

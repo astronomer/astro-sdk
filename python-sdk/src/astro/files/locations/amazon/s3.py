@@ -47,7 +47,7 @@ class S3Location(BaseFileLocation):
         url = urlparse(self.path)
         bucket_name = url.netloc
         object_name = url.path
-        if object_name[0] == "/":
+        if object_name.startswith("/"):
             object_name = object_name[1:]
         return self.hook.head_object(key=object_name, bucket_name=bucket_name).get("ContentLength") or -1
 

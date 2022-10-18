@@ -39,7 +39,7 @@ class GCSLocation(BaseFileLocation):
         url = urlparse(self.path)
         bucket_name = url.netloc
         object_name = url.path
-        if object_name[0] == "/":
+        if object_name.startswith("/"):
             object_name = object_name[1:]
         return int(self.hook.get_size(bucket_name=bucket_name, object_name=object_name))
 
