@@ -6,7 +6,7 @@ import typer
 from airflow.utils.cli import get_dag
 from dotenv import load_dotenv
 from rich import print as rprint
-from sql_cli.connections import _load_yaml_connections
+from sql_cli.connections import _load_yaml_connections, convert_to_connection
 
 import sql_cli
 from sql_cli.connections import validate_connections
@@ -39,19 +39,25 @@ def about() -> None:
 
 @app.command(help="Generate the Airflow DAG from a directory of SQL files.")
 def generate(
-    workflow_directory: Path = typer.Argument(
+    workflow_name: str = typer.Argument(
         default=...,
         show_default=False,
-        exists=True,
-        help="directory containing the sql files.",
+        help="name of the workflow directory within workflows directory.",
+    ),
+    environment: str = typer.Argument(
+        default="default",
+        help="environment to run in",
     ),
     project_dir: Optional[Path] = typer.Argument(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
 ) -> None:
     project = Project(project_dir or Path.cwd())
-    project.load_config()
-    dag_file = generate_dag(workflow_directory, project.airflow_dags_folder)
+    project.load_config(environment)
+    dag_file = generate_dag(
+        directory=project.directory / project.workflows_directory / workflow_name,
+        dags_directory=project.airflow_dags_folder,
+    )
     rprint("The DAG file", dag_file.resolve(), "has been successfully generated. 🎉")
 
 
@@ -74,50 +80,34 @@ def validate(
 @app.command(
     help="""
     Run a workflow locally. This task assumes that there is a local airflow DB (can be a SQLite file), that has been
-    initialized with Airflow tables. Users can also add paths to a connections or variable yaml file which will override
-    existing connections for the test run.
-
-    \b
-    Example of a connections.yaml file:
-
-    \b
-    my_sqlite_conn:
-        conn_id: my_sqlite_conn
-        conn_type: sqlite
-        host: ...
-    my_postgres_conn:
-        conn_id: my_postgres_conn
-        conn_type: postgres
-        ...
+    initialized with Airflow tables.
     """
 )
 def run(
-    workflow: str = typer.Argument(
+    workflow_name: str = typer.Argument(
         default=...,
         show_default=False,
-        exists=True,
-        help="directory containing the sql files.",
+        help="name of the workflow directory within workflows directory.",
     ),
-    project_dir: Optional[Path] = typer.Option(
-        None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
-    ),
-    env: str = typer.Option(
+    environment: str = typer.Argument(
         default="default",
-        help="environment to validate",
+        help="environment to run in",
+    ),
+    project_dir: Optional[Path] = typer.Argument(
+        None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
 ) -> None:
     project = Project(project_dir or Path.cwd())
-    project.load_config(environment=env)
-    dag_file = generate_dag(project.directory / project.workflows_directory / workflow, project.airflow_dags_folder)
-    dag = get_dag(dag_id=workflow, subdir=dag_file.parent.as_posix())
-    connections = _load_yaml_connections(env, project_dir)
-
-    connections = {conn['conn_id']: conn for conn in connections}
-
-    run_dag(
-        dag=dag,
-        connections=connections,
+    project.load_config(environment)
+    dag_file = generate_dag(
+        directory=project.directory / project.workflows_directory / workflow_name,
+        dags_directory=project.airflow_dags_folder,
     )
+    connection_dicts = _load_yaml_connections(environment, project_dir)
+    connections = {x['conn_id']: convert_to_connection(x) for x in connection_dicts}
+
+    dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix())
+    run_dag(dag, connections=connections)
 
 
 @app.command()

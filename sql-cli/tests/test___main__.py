@@ -1,5 +1,6 @@
 import pathlib
 
+import pytest
 from typer.testing import CliRunner
 
 from sql_cli import __version__
@@ -34,13 +35,21 @@ def test_version():
     assert f"Astro SQL CLI {__version__}" == get_stdout(result)
 
 
-def test_generate(workflow_directory, project_directory):
+@pytest.mark.parametrize(
+    "workflow_name,environment",
+    [
+        ("example_basic_transform", "default"),
+        ("example_templating", "dev"),
+    ],
+)
+def test_generate(workflow_name, environment, initialised_project):
     result = runner.invoke(
         app,
         [
             "generate",
-            workflow_directory.as_posix(),
-            project_directory.as_posix(),
+            workflow_name,
+            environment,
+            initialised_project.directory.as_posix(),
         ],
     )
     if result.exit_code != 0:
@@ -48,7 +57,7 @@ def test_generate(workflow_directory, project_directory):
     assert result.exit_code == 0
     result_stdout = get_stdout(result)
     assert result_stdout.startswith("The DAG file ")
-    assert result_stdout.endswith(f"{workflow_directory.name}.py has been successfully generated. 🎉")
+    assert result_stdout.endswith(f"{workflow_name}.py has been successfully generated. 🎉")
 
 
 def test_validate():
@@ -56,23 +65,28 @@ def test_validate():
     assert result.exit_code == 0
 
 
-def test_run(workflow_directory, project_directory):
-    print("Sadfsdf")
-    print(project_directory)
+@pytest.mark.parametrize(
+    "workflow_name,environment",
+    [
+        ("example_basic_transform", "default"),
+        ("example_templating", "dev"),
+    ],
+)
+def test_run(workflow_name, environment, initialised_project):
     result = runner.invoke(
         app,
         [
             "run",
-            "example_templating",
-            "--project-dir",
-            project_directory.as_posix(),
+            workflow_name,
+            environment,
+            initialised_project.directory.as_posix(),
         ],
     )
     if result.exit_code != 0:
         print(result.output)
     assert result.exit_code == 0
     result_stdout = get_stdout(result)
-    assert f"Dagrun {workflow_directory.name} final state: success" in result_stdout
+    assert f"Dagrun {workflow_name} final state: success" in result_stdout
 
 
 def test_init_with_directory(tmp_path):

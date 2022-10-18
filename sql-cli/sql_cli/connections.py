@@ -14,7 +14,7 @@ from pathlib import Path
 CONNECTION_ID_OUTPUT_STRING_WIDTH = 25
 
 
-def _load_yaml_connections(environment: str, project_dir: Path | None = None) -> list[dict[str, Connection]]:
+def _load_yaml_connections(environment: str, project_dir: Path | None = None) -> list[dict[str, Any]]:
     """Gets the configuration yaml for the given environment and loads the connections from it into a dictionary"""
     config_file = (project_dir or SQL_CLI_PROJECT_DIRECTORY) / "config" / environment / "configuration.yml"
     if not config_file.exists():
@@ -24,8 +24,14 @@ def _load_yaml_connections(environment: str, project_dir: Path | None = None) ->
 
     with open(config_file) as fp:
         yaml_with_env = os.path.expandvars(fp.read())
-        connections: list[dict[str, Connection]] = yaml.safe_load(yaml_with_env)["connections"]
+        connections: list[dict[str, Any]] = yaml.safe_load(yaml_with_env)["connections"]
     return connections
+
+def convert_to_connection(conn):
+    conn["connection_id"] = conn['conn_id']
+    conn.pop("conn_id")
+    return Connection(connection_schema.load(conn))
+
 
 
 def _create_or_replace_connection(conn_obj: Connection) -> None:
