@@ -88,7 +88,8 @@ class Project:
             f"AIRFLOW_HOME={self.airflow_home} "
             f"AIRFLOW__CORE__DAGS_FOLDER={self.airflow_dags_folder} "
             "AIRFLOW__CORE__LOAD_EXAMPLES=False "
-            "airflow db init > /dev/null 2>&1"
+            f"AIRFLOW__CORE__SQL_ALCHEMY_CONN=sqlite:///{self.airflow_home}/airflow.db "
+            "airflow db init "
         )
 
     def _remove_unnecessary_airflow_files(self) -> None:
@@ -127,6 +128,10 @@ class Project:
         existing_paths = {path.relative_to(self.directory) for path in Path(self.directory).rglob("*")}
         return MANDATORY_PATHS.issubset(existing_paths)
 
+    def missing_files(self):
+        existing_paths = {path.relative_to(self.directory) for path in Path(self.directory).rglob("*")}
+        return MANDATORY_PATHS - existing_paths
+
     def load_config(self, environment: str = DEFAULT_ENVIRONMENT) -> None:
         """
         Given a self.directory and an environment, load to the configuration ad paths to the Project instance.
@@ -134,7 +139,7 @@ class Project:
         :param environment: string referencing the desired environment, uses "default" unless specified
         """
         if not self.is_valid_project():
-            raise InvalidProject("This is not a valid SQL project. Please, use `flow init`")
+            raise InvalidProject(f"This is not a valid SQL project. Please, use `flow init`. Missing files: {self.missing_files()}")
         config = Config(environment=environment, project_dir=self.directory).from_yaml_to_config()
         if config.airflow_home:
             self._airflow_home = Path(config.airflow_home)

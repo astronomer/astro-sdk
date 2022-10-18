@@ -1,0 +1,9 @@
+airflow_dags_folder: null
+airflow_home: null
+connections:
+- conn_id: sqlite_conn
+  conn_type: sqlite
+  host: /Users/danielimberman/code/astro-sdk/sql-cli/tests/example_project/data/imdb.db
+  login: null
+  password: null
+  schema: null

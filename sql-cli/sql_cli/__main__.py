@@ -178,7 +178,7 @@ def init(
         show_default=False,
     ),
 ) -> None:
-    project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
+    project_dir_absolute = project_dir if project_dir else Path.cwd()
     project = Project(project_dir_absolute, airflow_home, airflow_dags_folder)
     project.initialise()
     rprint("Initialized an Astro SQL project at", project.directory)
