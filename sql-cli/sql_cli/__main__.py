@@ -12,6 +12,7 @@ from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
 from sql_cli.dag_generator import generate_dag
 from sql_cli.project import Project
 from sql_cli.run_dag import run_dag
+from sql_cli.utils.airflow_utils import retrieve_airflow_database_conn_from_config, set_airflow_database_conn
 
 load_dotenv()
 app = typer.Typer(add_completion=False)
@@ -50,8 +51,16 @@ def generate(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
 ) -> None:
-    project = Project(project_dir or Path.cwd())
+    project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
+    project = Project(project_dir_absolute)
     project.load_config(environment)
+
+    # Since we are using the Airflow ORM to interact with connections, we need to tell Airflow to use our airflow.db
+    # The usual route is to set $AIRFLOW_HOME before Airflow is imported. However, in the context of the SQL CLI, we
+    # decide this during runtime, depending on the project path and SQL CLI configuration.
+    airflow_meta_conn = retrieve_airflow_database_conn_from_config(project.directory / project.airflow_home)
+    set_airflow_database_conn(airflow_meta_conn)
+
     dag_file = generate_dag(
         directory=project.directory / project.workflows_directory / workflow_name,
         dags_directory=project.airflow_dags_folder,
@@ -77,10 +86,10 @@ def validate(
         help="(Optional) Identifier of the connection to be validated. By default checks all the env connections.",
     ),
 ) -> None:
+    project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
+    project = Project(project_dir_absolute)
 
-    project_dir = project_dir.resolve() if project_dir else Path.cwd()
-    proj = Project(project_dir)
-    validate_connections(project=proj, environment=environment, connection_id=connection)
+    validate_connections(project=project, environment=environment, connection_id=connection)
 
 
 @app.command(
@@ -103,8 +112,16 @@ def run(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
 ) -> None:
-    project = Project(project_dir or Path.cwd())
+    project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
+    project = Project(project_dir_absolute)
     project.load_config(environment)
+
+    # Since we are using the Airflow ORM to interact with connections, we need to tell Airflow to use our airflow.db
+    # The usual route is to set $AIRFLOW_HOME before Airflow is imported. However, in the context of the SQL CLI, we
+    # decide this during runtime, depending on the project path and SQL CLI configuration.
+    airflow_meta_conn = retrieve_airflow_database_conn_from_config(project.directory / project.airflow_home)
+    set_airflow_database_conn(airflow_meta_conn)
+
     dag_file = generate_dag(
         directory=project.directory / project.workflows_directory / workflow_name,
         dags_directory=project.airflow_dags_folder,
@@ -161,13 +178,10 @@ def init(
         show_default=False,
     ),
 ) -> None:
-
-    # Both of the following paths are currently absolute
-    project_dir = project_dir.resolve() if project_dir else Path.cwd()
-
-    proj = Project(project_dir, airflow_home, airflow_dags_folder)
-    proj.initialise()
-    rprint("Initialized an Astro SQL project at", project_dir)
+    project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
+    project = Project(project_dir_absolute, airflow_home, airflow_dags_folder)
+    project.initialise()
+    rprint("Initialized an Astro SQL project at", project.directory)
 
 
 if __name__ == "__main__":  # pragma: no cover
