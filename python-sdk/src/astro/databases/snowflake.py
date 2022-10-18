@@ -479,9 +479,9 @@ class SnowflakeDatabase(BaseDatabase):
         )
 
     @staticmethod
-    def get_cols_case(df: pandas.DataFrame):
+    def get_cols_case(cols: list[str]):
         result = []
-        for col in df.columns:
+        for col in cols:
             if col.isupper():
                 result.append(1)
             elif col.islower():
@@ -492,11 +492,11 @@ class SnowflakeDatabase(BaseDatabase):
         total = sum(result)
         if total == 0:
             return "lower"
-        elif total == len(df.columns):
+        elif total == len(cols):
             return "upper"
 
-    def use_quotes(self, df: pandas.DataFrame):
-        return self.get_cols_case(df) in ["upper", "mixed"]
+    def use_quotes(self, cols: list[str]):
+        return self.get_cols_case(cols) in ["upper", "mixed"]
 
     def create_table_using_schema_autodetection(
         self,
@@ -817,23 +817,27 @@ class SnowflakeDatabase(BaseDatabase):
         """
         target_table_sqla = self.get_sqla_table(target_table)
         source_table_sqla = self.get_sqla_table(source_table)
-
+        use_quotes_target_table = self.use_quotes(target_table_sqla.columns.keys())
+        use_quotes_source_table = self.use_quotes(source_table_sqla.columns.keys())
         target_columns: list[column]
         source_columns: list[column]
 
         if not source_to_target_columns_map:
             target_columns = [
-                Column(name=col.name, quote=True, type_=col.type) for col in target_table_sqla.c.values()
+                Column(name=col.name, quote=use_quotes_target_table, type_=col.type)
+                for col in target_table_sqla.c.values()
             ]
             source_columns = target_columns
         else:
             # We are adding the VARCHAR in Column(name=col, quote=True, type_=VARCHAR) as a placeholder since the
             # Column object requires it. It has no effect on the final query generated.
             target_columns = [
-                Column(name=col, quote=True, type_=VARCHAR) for col in source_to_target_columns_map.keys()
+                Column(name=col, quote=use_quotes_target_table, type_=VARCHAR)
+                for col in source_to_target_columns_map.keys()
             ]
             source_columns = [
-                Column(name=col, quote=True, type_=VARCHAR) for col in source_to_target_columns_map.keys()
+                Column(name=col, quote=use_quotes_source_table, type_=VARCHAR)
+                for col in source_to_target_columns_map.keys()
             ]
 
         sel = select(source_columns).select_from(source_table_sqla)
