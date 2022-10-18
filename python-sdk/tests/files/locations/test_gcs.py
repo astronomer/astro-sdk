@@ -1,5 +1,5 @@
 from unittest.mock import patch
-
+import pytest
 from google.cloud.storage import Client
 
 from astro.files.locations import create_file_location
@@ -23,6 +23,7 @@ def test_remote_object_store_prefix(remote_file):
     assert sorted(location.paths) == sorted(["gs://tmp/house1.csv", "gs://tmp/house2.csv"])
 
 
+@pytest.mark.integration
 def test_size():
     """Test get_size() of for local file."""
     path = "gs://astro-sdk/workspace/sample_pattern.csv"

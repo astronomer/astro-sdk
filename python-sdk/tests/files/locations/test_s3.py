@@ -1,4 +1,5 @@
 import os
+import pytest
 from unittest.mock import patch
 
 from botocore.client import BaseClient
@@ -25,9 +26,10 @@ def test_remote_object_store_prefix(remote_file):
     assert sorted(location.paths) == sorted(["s3://tmp/house1.csv", "s3://tmp/house2.csv"])
 
 
+@pytest.mark.integration
 def test_size():
-    """Test get_size() of for local file."""
-    location = create_file_location("s3://tmp/house2.csv")
+    """Test get_size() of for s3 file."""
+    location = S3Location(path="s3://tmp/house2.csv", conn_id="aws_conn")
     assert location.size > 0
 
 

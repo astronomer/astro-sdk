@@ -46,6 +46,7 @@ def test_describe_get_paths(path):  # skipcq: PYL-W0612, PTC-W0065
     assert location.paths == [path]
 
 
+@pytest.mark.integration
 def test_size():
     """Test get_size() of for local file."""
     location = create_file_location(

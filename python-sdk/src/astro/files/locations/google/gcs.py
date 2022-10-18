@@ -41,7 +41,7 @@ class GCSLocation(BaseFileLocation):
         object_name = url.path
         if object_name[0] == "/":
             object_name = object_name[1:]
-        return self.hook.get_size(bucket_name=bucket_name, object_name=object_name)
+        return int(self.hook.get_size(bucket_name=bucket_name, object_name=object_name))
 
     @property
     def openlineage_dataset_namespace(self) -> str:

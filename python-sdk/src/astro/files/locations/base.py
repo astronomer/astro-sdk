@@ -49,7 +49,7 @@ class BaseFileLocation(ABC):
 
     @property
     @abstractmethod
-    def size(self):
+    def size(self) -> int:
         """Return the size in bytes of the given file"""
         raise NotImplementedError
 
