@@ -5,7 +5,7 @@ import pytest
 from astro.files import File
 from astro.sql import LoadFileOperator
 from astro.sql.operators.transform import TransformOperator
-from astro.table import BaseTable, Table, Metadata
+from astro.table import BaseTable, Metadata, Table
 from astro.utils.table import find_first_table
 
 
@@ -100,7 +100,9 @@ def test_row_count():
     """
     imdb_table = LoadFileOperator(
         task_id="load_file",
-        input_file=File(path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"),
+        input_file=File(
+            path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
+        ),
         output_table=Table(conn_id="gcp_conn", metadata=Metadata(schema="astro")),
     ).execute({})
 

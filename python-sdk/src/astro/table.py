@@ -5,7 +5,7 @@ import string
 from typing import Any
 
 from attr import define, field, fields_dict
-from sqlalchemy import Column, MetaData, select, func
+from sqlalchemy import Column, MetaData, func, select
 
 from astro.airflow.datasets import Dataset
 from astro.databases import create_database

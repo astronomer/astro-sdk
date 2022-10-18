@@ -184,7 +184,9 @@ def test_python_sdk_transform_extract_on_complete():
     """
     imdb_table = LoadFileOperator(
         task_id="load_file",
-        input_file=File(path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"),
+        input_file=File(
+            path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
+        ),
         output_table=Table(conn_id="gcp_conn", metadata=Metadata(schema="astro")),
     ).execute({})
 
