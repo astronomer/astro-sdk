@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from airflow.api_connexion.schemas.connection_schema import connection_schema
 from airflow.models import Connection
 from airflow.utils.session import create_session
@@ -22,7 +24,7 @@ def _create_or_replace_connection(conn_obj: Connection) -> None:
         session.commit()
 
 
-def convert_to_connection(conn):
+def convert_to_connection(conn: dict[str, Any]) -> Connection:
     c = conn.copy()
     c["connection_id"] = c["conn_id"]
     c.pop("conn_id")

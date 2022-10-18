@@ -4,7 +4,7 @@ import logging
 import sys
 import warnings
 from datetime import datetime
-from typing import Any, List
+from typing import Any
 
 from airflow.configuration import secrets_backend_list
 from airflow.models.connection import Connection
@@ -28,7 +28,7 @@ log.setLevel(logging.INFO)
 class AstroFilesystemBackend(LocalFilesystemBackend):
     def __init__(
         self,
-        connections: dict[str, Connection] = None,
+        connections: dict[str, Connection] | None = None,
         variables_file_path: str | None = None,
         connections_file_path: str | None = None,
     ):
