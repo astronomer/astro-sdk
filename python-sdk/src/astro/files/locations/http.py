@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import urllib
 from urllib.parse import urlparse
 
 from urllib.request import urlopen
@@ -21,8 +22,8 @@ class HTTPLocation(BaseFileLocation):
     @property
     def size(self) -> int:
         """Return file size for HTTP location"""
-        file = urlopen(self.path)
-        return file.length
+        file = urllib.request.urlopen(self.path)
+        return int(file.length)
 
     @property
     def openlineage_dataset_namespace(self) -> str:
