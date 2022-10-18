@@ -46,7 +46,10 @@ class S3Location(BaseFileLocation):
         """Return file size for S3 location"""
         url = urlparse(self.path)
         bucket_name = url.netloc
-        return self.hook.head_object(key=self.path, bucket_name=bucket_name).get("ContentLength") or -1
+        object_name = url.path
+        if object_name[0] == "/":
+            object_name = object_name[1:]
+        return self.hook.head_object(key=object_name, bucket_name=bucket_name).get("ContentLength") or -1
 
     @property
     def openlineage_dataset_namespace(self) -> str:
