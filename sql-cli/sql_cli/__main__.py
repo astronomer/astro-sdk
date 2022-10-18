@@ -72,7 +72,7 @@ def validate(
     ),
 ) -> None:
 
-    project_dir = project_dir and project_dir.resolve() or Path.cwd()
+    project_dir = project_dir.resolve() if project_dir else Path.cwd()
     proj = project.Project(project_dir)
     validate_connections(project=proj, environment=environment, connection_id=connection)
 
@@ -180,7 +180,7 @@ def init(
 ) -> None:
 
     # Both of the following paths are currently absolute
-    project_dir = project_dir and project_dir.resolve() or Path.cwd()
+    project_dir = project_dir.resolve() if project_dir else Path.cwd()
 
     proj = project.Project(project_dir, airflow_home, airflow_dags_folder)
     proj.initialise()
