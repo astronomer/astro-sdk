@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+from pathlib import Path
 from typing import Any
 
 import yaml
@@ -10,7 +11,7 @@ from airflow.models import Connection
 from airflow.utils.session import create_session
 
 from sql_cli.settings import SQL_CLI_PROJECT_DIRECTORY
-from pathlib import Path
+
 CONNECTION_ID_OUTPUT_STRING_WIDTH = 25
 
 
@@ -27,11 +28,11 @@ def _load_yaml_connections(environment: str, project_dir: Path | None = None) ->
         connections: list[dict[str, Any]] = yaml.safe_load(yaml_with_env)["connections"]
     return connections
 
+
 def convert_to_connection(conn):
-    conn["connection_id"] = conn['conn_id']
+    conn["connection_id"] = conn["conn_id"]
     conn.pop("conn_id")
     return Connection(connection_schema.load(conn))
-
 
 
 def _create_or_replace_connection(conn_obj: Connection) -> None:

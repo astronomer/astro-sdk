@@ -6,10 +6,9 @@ import typer
 from airflow.utils.cli import get_dag
 from dotenv import load_dotenv
 from rich import print as rprint
-from sql_cli.connections import _load_yaml_connections, convert_to_connection
 
 import sql_cli
-from sql_cli.connections import validate_connections
+from sql_cli.connections import _load_yaml_connections, convert_to_connection, validate_connections
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
 from sql_cli.dag_generator import generate_dag
 from sql_cli.project import Project
@@ -104,7 +103,7 @@ def run(
         dags_directory=project.airflow_dags_folder,
     )
     connection_dicts = _load_yaml_connections(environment, project_dir)
-    connections = {x['conn_id']: convert_to_connection(x) for x in connection_dicts}
+    connections = {x["conn_id"]: convert_to_connection(x) for x in connection_dicts}
 
     dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix())
     run_dag(dag, connections=connections)

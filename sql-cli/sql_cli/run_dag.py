@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Any
 
 from airflow.configuration import secrets_backend_list
+from airflow.models.connection import Connection
 from airflow.models.dag import DAG
 from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstance
@@ -19,15 +20,15 @@ from rich import print as pprint
 from sqlalchemy.orm.session import Session
 
 from astro.sql.operators.cleanup import AstroCleanupException
-from airflow.models.connection import Connection
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
 
 class AstroFilesystemBackend(LocalFilesystemBackend):
-
-    def __init__(self, connections, variables_file_path: str | None = None, connections_file_path: str | None = None):
+    def __init__(
+        self, connections, variables_file_path: str | None = None, connections_file_path: str | None = None
+    ):
         self._local_conns: dict[str, Connection] = connections
         super().__init__(variables_file_path=variables_file_path, connections_file_path=connections_file_path)
 
@@ -39,13 +40,13 @@ class AstroFilesystemBackend(LocalFilesystemBackend):
 
 @provide_session
 def run_dag(
-        dag: DAG,
-        execution_date: datetime | None = None,
-        run_conf: dict[str, Any] | None = None,
-        conn_file_path: str | None = None,
-        variable_file_path: str | None = None,
-        connections: dict[str, Connection] = None,
-        session: Session = NEW_SESSION,
+    dag: DAG,
+    execution_date: datetime | None = None,
+    run_conf: dict[str, Any] | None = None,
+    conn_file_path: str | None = None,
+    variable_file_path: str | None = None,
+    connections: dict[str, Connection] = None,
+    session: Session = NEW_SESSION,
 ) -> None:
     """
     Execute one single DagRun for a given DAG and execution date.
@@ -78,7 +79,9 @@ def run_dag(
 
     if conn_file_path or variable_file_path:
         local_secrets = AstroFilesystemBackend(
-            variables_file_path=variable_file_path, connections_file_path=conn_file_path, connections=connections
+            variables_file_path=variable_file_path,
+            connections_file_path=conn_file_path,
+            connections=connections,
         )
         secrets_backend_list.insert(0, local_secrets)
 
@@ -142,12 +145,12 @@ def _run_task(ti: TaskInstance, session: Session) -> None:
 
 
 def _get_or_create_dagrun(
-        dag: DAG,
-        conf: dict[Any, Any] | None,
-        start_date: datetime,
-        execution_date: datetime,
-        run_id: str,
-        session: Session,
+    dag: DAG,
+    conf: dict[Any, Any] | None,
+    start_date: datetime,
+    execution_date: datetime,
+    run_id: str,
+    session: Session,
 ) -> DagRun:
     """
     Create a DAGRun, but only after clearing the previous instance of said dagrun to prevent collisions.
