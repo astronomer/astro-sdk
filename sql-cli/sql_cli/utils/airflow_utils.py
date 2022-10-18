@@ -1,11 +1,14 @@
 import importlib
+import logging
 import os
 from configparser import ConfigParser
 from pathlib import Path
 
 import airflow
 from airflow.models.dag import DAG
-from airflow.utils.cli import AirflowException, _search_for_dag_file, logger, process_subdir, settings
+from airflow.utils.cli import AirflowException, process_subdir, settings
+
+logger = logging.getLogger(__name__)
 
 
 def retrieve_airflow_database_conn_from_config(airflow_home: Path) -> str:
@@ -51,6 +54,30 @@ def set_airflow_database_conn(airflow_meta_conn: str) -> None:
     importlib.reload(airflow.configuration)
     importlib.reload(airflow.models.base)
     importlib.reload(airflow.models.connection)
+
+
+# The following function was copied from Apache Airflow
+# https://github.com/apache/airflow/commit/ce071172e22fba018889db7dcfac4a4d0fc41cda
+# And we should replace by the upstream method once Airflow 2.5 is released
+# We are copying it so that we do not include examples
+# This helps silencing the SQL CLI output and also the speed of the run command
+def _search_for_dag_file(val: str) -> str:
+    """
+    Search for the file referenced at fileloc.
+    By the time we get to this function, we've already run this `val` through `process_subdir`
+    and loaded the DagBag there and came up empty.  So here, if `val` is a file path, we make
+    a last ditch effort to try and find a dag file with the same name in our dags folder. (This
+    avoids the unnecessary dag parsing that would occur if we just parsed the dags folder).
+    If `val` is a path to a file, this likely means that the serializing process had a dags_folder
+    equal to only the dag file in question. This prevents us from determining the relative location.
+    And if the paths are different between worker and dag processor / scheduler, then we won't find
+    the dag at the given location.
+    """
+    if val and Path(val).suffix in (".zip", ".py"):
+        matches = list(Path(settings.DAGS_FOLDER).rglob(Path(val).name))
+        if len(matches) == 1:
+            return matches[0].as_posix()
+    return ""
 
 
 # The following function was copied from Apache Airflow
