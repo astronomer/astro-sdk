@@ -60,7 +60,7 @@ def generate(
     """
 )
 def validate(
-    project_dir: Optional[Path] = typer.Argument(
+    project_dir: Path = typer.Argument(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
     environment: str = typer.Option(
@@ -163,7 +163,7 @@ def run(
     """
 )
 def init(
-    project_dir: Optional[Path] = typer.Argument(
+    project_dir: Path = typer.Argument(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
     airflow_home: Optional[Path] = typer.Option(
