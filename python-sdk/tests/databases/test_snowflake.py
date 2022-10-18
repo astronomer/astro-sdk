@@ -208,7 +208,7 @@ def test_if_exist_param_of__load_pandas_dataframe_to_table(database_table_fixtur
             schema=ANY,
             database=ANY,
             chunk_size=ANY,
-            quote_identifiers=True,
+            quote_identifiers=False,
             auto_create_table=True,
         )
 
@@ -223,7 +223,7 @@ def test_if_exist_param_of__load_pandas_dataframe_to_table(database_table_fixtur
                 schema=ANY,
                 database=ANY,
                 chunk_size=ANY,
-                quote_identifiers=True,
+                quote_identifiers=False,
                 auto_create_table=False,
             )
 
@@ -503,7 +503,7 @@ def test_create_table_from_select_statement(database_table_fixture):
     """Test table creation via select statement"""
     database, original_table = database_table_fixture
 
-    statement = f'SELECT * FROM {database.get_table_qualified_name(original_table)} WHERE "id" = 1;'
+    statement = f"SELECT * FROM {database.get_table_qualified_name(original_table)} WHERE id = 1;"
     target_table = Table(metadata=Metadata(schema=SNOWFLAKE_SCHEMA))
     database.create_table_from_select_statement(statement, target_table)
 
