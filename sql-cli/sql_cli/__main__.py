@@ -98,10 +98,9 @@ def run(
         show_default=False,
         help="name of the workflow directory within workflows directory.",
     ),
-    connection_file: Path = typer.Option(
-        default=None,
-        exists=True,
-        help="path to connections yaml or json file",
+    environment: str = typer.Argument(
+        default="default",
+        help="environment to run in",
     ),
     project_dir: Optional[Path] = typer.Argument(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
@@ -116,7 +115,7 @@ def run(
     dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix())
     run_dag(
         dag=dag,
-        conn_file_path=connection_file.as_posix() if connection_file else None,
+        conn_file_path=project.directory / "config" / environment / "configuration.yml",
     )
 
 
