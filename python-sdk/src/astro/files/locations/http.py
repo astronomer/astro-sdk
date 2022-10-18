@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import urllib
-from urllib.parse import urlparse
-
 from urllib.request import urlopen
+from urllib.parse import urlparse
 
 from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
@@ -22,7 +20,7 @@ class HTTPLocation(BaseFileLocation):
     @property
     def size(self) -> int:
         """Return file size for HTTP location"""
-        file = urllib.request.urlopen(self.path)
+        file = urlopen(self.path)   # skipcq BAN-B310
         return int(file.length)
 
     @property
