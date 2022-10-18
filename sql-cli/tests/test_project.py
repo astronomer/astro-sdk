@@ -17,7 +17,7 @@ BASE_PATHS = [
     Path("config/dev"),
     Path("config/dev/configuration.yml"),
     Path("data"),
-    Path("data/movies.db"),
+    Path("data/imdb.db"),
     Path("data/retail.db"),
     Path("workflows"),
     Path("workflows/example_basic_transform"),
