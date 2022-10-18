@@ -140,3 +140,4 @@ class Project:
             self._airflow_home = Path(config.airflow_home)
         if config.airflow_dags_folder:
             self._airflow_dags_folder = Path(config.airflow_dags_folder)
+        self.connections = config.connections
