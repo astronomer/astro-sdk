@@ -46,7 +46,7 @@ def generate(
         default="default",
         help="environment to run in",
     ),
-    project_dir: Optional[Path] = typer.Argument(
+    project_dir: Path = typer.Argument(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
 ) -> None:
@@ -79,7 +79,7 @@ def validate(
 ) -> None:
 
     project_dir = project_dir.resolve() if project_dir else Path.cwd()
-    proj = project.Project(project_dir)
+    proj = Project(project_dir)
     validate_connections(project=proj, environment=environment, connection_id=connection)
 
 
@@ -99,7 +99,7 @@ def run(
         default="default",
         help="environment to run in",
     ),
-    project_dir: Optional[Path] = typer.Argument(
+    project_dir: Path = typer.Argument(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
 ) -> None:
@@ -151,13 +151,13 @@ def init(
     airflow_home: Path = typer.Option(
         None,
         dir_okay=True,
-        help=f"(Optional) Set the Airflow Home. Default: {configuration.DEFAULT_AIRFLOW_HOME}",
+        help=f"(Optional) Set the Airflow Home. Default: {DEFAULT_AIRFLOW_HOME}",
         show_default=False,
     ),
     airflow_dags_folder: Path = typer.Option(
         None,
         dir_okay=True,
-        help=f"(Optional) Set the DAGs Folder. Default: {configuration.DEFAULT_DAGS_FOLDER}",
+        help=f"(Optional) Set the DAGs Folder. Default: {DEFAULT_DAGS_FOLDER}",
         show_default=False,
     ),
 ) -> None:
