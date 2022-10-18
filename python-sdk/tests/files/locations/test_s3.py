@@ -28,7 +28,7 @@ def test_remote_object_store_prefix(remote_file):
 def test_size():
     """Test get_size() of for local file."""
     location = create_file_location("s3://tmp/house2.csv")
-    assert location.size == -1
+    assert location.size > 0
 
 
 @patch.dict(

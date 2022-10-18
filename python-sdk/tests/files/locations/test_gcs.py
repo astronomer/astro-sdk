@@ -1,3 +1,4 @@
+import os
 from unittest.mock import patch
 
 from google.cloud.storage import Client
@@ -25,5 +26,6 @@ def test_remote_object_store_prefix(remote_file):
 
 def test_size():
     """Test get_size() of for local file."""
-    location = create_file_location("gs://tmp/house1.csv")
-    assert location.size == -1
+    path = "gs://astro-sdk/workspace/sample_pattern.csv"
+    location = create_file_location(path)
+    assert location.size > 0
