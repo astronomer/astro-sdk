@@ -43,12 +43,16 @@ def generate(
         show_default=False,
         help="name of the workflow directory within workflows directory.",
     ),
+    environment: str = typer.Argument(
+        default="default",
+        help="environment to run in",
+    ),
     project_dir: Optional[Path] = typer.Argument(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
 ) -> None:
     project = Project(project_dir or Path.cwd())
-    project.load_config()
+    project.load_config(environment)
     dag_file = generate_dag(
         directory=project.directory / project.workflows_directory / workflow_name,
         dags_directory=project.airflow_dags_folder,
@@ -75,21 +79,7 @@ def validate(
 @app.command(
     help="""
     Run a workflow locally. This task assumes that there is a local airflow DB (can be a SQLite file), that has been
-    initialized with Airflow tables. Users can also add paths to a connections yaml file which will override existing
-    connections for the test run.
-
-    \b
-    Example of a connections.yaml file:
-
-    \b
-    my_sqlite_conn:
-        conn_id: my_sqlite_conn
-        conn_type: sqlite
-        host: ...
-    my_postgres_conn:
-        conn_id: my_postgres_conn
-        conn_type: postgres
-        ...
+    initialized with Airflow tables.
     """
 )
 def run(
@@ -107,14 +97,13 @@ def run(
     ),
 ) -> None:
     project = Project(project_dir or Path.cwd())
-    project.load_config()
+    project.load_config(environment)
     dag_file = generate_dag(
         directory=project.directory / project.workflows_directory / workflow_name,
         dags_directory=project.airflow_dags_folder,
     )
     dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix())
-    conn_file_path = (project.directory / "config" / environment / "configuration.yml").as_posix()
-    run_dag(dag, conn_file_path=conn_file_path)
+    run_dag(dag)
 
 
 @app.command()

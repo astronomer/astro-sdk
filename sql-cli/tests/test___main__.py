@@ -36,18 +36,19 @@ def test_version():
 
 
 @pytest.mark.parametrize(
-    "workflow_name",
+    "workflow_name,environment",
     [
-        "example_basic_transform",
-        "example_templating",
+        ("example_basic_transform", "default"),
+        ("example_templating", "dev"),
     ],
 )
-def test_generate(workflow_name, initialised_project):
+def test_generate(workflow_name, environment, initialised_project):
     result = runner.invoke(
         app,
         [
             "generate",
             workflow_name,
+            environment,
             initialised_project.directory.as_posix(),
         ],
     )
@@ -65,19 +66,19 @@ def test_validate():
 
 
 @pytest.mark.parametrize(
-    "workflow_name",
+    "workflow_name,environment",
     [
-        "example_basic_transform",
-        "example_templating",
+        ("example_basic_transform", "default"),
+        ("example_templating", "dev"),
     ],
 )
-def test_run(workflow_name, initialised_project):
+def test_run(workflow_name, environment, initialised_project):
     result = runner.invoke(
         app,
         [
             "run",
             workflow_name,
-            "default",
+            environment,
             initialised_project.directory.as_posix(),
         ],
     )
