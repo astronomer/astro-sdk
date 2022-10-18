@@ -5,7 +5,7 @@ import string
 from typing import Any
 
 from attr import define, field, fields_dict
-from sqlalchemy import Column, MetaData
+from sqlalchemy import Column, MetaData, func, select
 
 from astro.airflow.datasets import Dataset
 from astro.databases import create_database
@@ -129,10 +129,12 @@ class BaseTable:
     @property
     def row_count(self) -> Any:
         """
-        Return the row count of table
+        Return the row count of table.
         """
-        # TODO: Implement this property
-        return 0
+        db = create_database(self.conn_id)
+        tb = db.get_sqla_table(table=self)
+        query = select(func.count("*")).select_from(tb)
+        return db.run_sql(query).scalar()
 
     def to_json(self):
         return {
