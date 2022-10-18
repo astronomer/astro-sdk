@@ -95,6 +95,9 @@ def test_find_first_table_with_xcom_arg(xcom_arg_resolve, kwargs, return_type):
 
 @pytest.mark.integration
 def test_row_count():
+    """
+    Load file in bigquery and test the row count of bigquery table
+    """
     imdb_table = LoadFileOperator(
         task_id="load_file",
         input_file=File(path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"),
