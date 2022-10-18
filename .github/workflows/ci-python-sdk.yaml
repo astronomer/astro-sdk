@@ -349,7 +349,7 @@ jobs:
       - Run-Unit-tests-Airflow-2-4
       - Run-Unit-tests-Airflow-2-2-5
       - Run-Optional-Packages-tests-python-sdk
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
