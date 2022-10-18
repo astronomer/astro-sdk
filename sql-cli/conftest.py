@@ -1,20 +1,20 @@
 import random
+import shutil
 import string
 import tempfile
 from datetime import datetime
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pytest
 from airflow.models import DAG, DagRun, TaskInstance as TI
 from airflow.utils import timezone
 from airflow.utils.session import create_session
-from tempfile import TemporaryDirectory
 
 from astro.table import MAX_TABLE_NAME_LENGTH
 from sql_cli.dag_generator import SqlFilesDAG
 from sql_cli.project import Project
 from sql_cli.sql_directory_parser import SqlFile
-import shutil
 
 CWD = Path(__file__).parent
 
@@ -22,6 +22,7 @@ CWD = Path(__file__).parent
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 UNIQUE_HASH_SIZE = 16
+
 
 @pytest.fixture()
 def root_directory():
@@ -141,8 +142,10 @@ def empty_cwd(request, monkeypatch):
     yield temp_dir.name
     temp_dir.cleanup()
 
+
 initialized_project = Project(Path(TemporaryDirectory().name))
 initialized_project.initialise()
+
 
 @pytest.fixture()
 def initialised_project(tmp_path):

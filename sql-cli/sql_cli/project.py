@@ -139,7 +139,9 @@ class Project:
         :param environment: string referencing the desired environment, uses "default" unless specified
         """
         if not self.is_valid_project():
-            raise InvalidProject(f"This is not a valid SQL project. Please, use `flow init`. Missing files: {self.missing_files()}")
+            raise InvalidProject(
+                f"This is not a valid SQL project. Please, use `flow init`. Missing files: {self.missing_files()}"
+            )
         config = Config(environment=environment, project_dir=self.directory).from_yaml_to_config()
         if config.airflow_home:
             self._airflow_home = Path(config.airflow_home)
