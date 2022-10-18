@@ -29,7 +29,7 @@ def test_remote_object_store_prefix(remote_file):
 @pytest.mark.integration
 def test_size():
     """Test get_size() of for s3 file."""
-    location = S3Location(path="s3://tmp/house2.csv", conn_id="aws_conn")
+    location = S3Location(path="s3://astro-sdk/imdb.csv", conn_id="aws_conn")
     assert location.size > 0
 
 
