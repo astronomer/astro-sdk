@@ -2,7 +2,7 @@
 ## 1.2.0b1
 
 ### Feature:
-* Remove dependency on AIRFLOW__CORE__ENABLE_XCOM_PICKLING . Environment variable AIRFLOW__ASTRO_SDK__DATAFRAME_STORAGE_CONN_ID introduced which points to an S3 or GCS  conn_id. This conn_id can be used by aql.dataframe to store dataframes in resulting URL xcom.[#795](https://github.com/astronomer/astro-sdk/issues/795), [#997](https://github.com/astronomer/astro-sdk/pull/997)
+* Remove dependency on `AIRFLOW__CORE__ENABLE_XCOM_PICKLING`. Users can set new environment variables, namely `AIRFLOW__ASTRO_SDK__XCOM_STORAGE_CONN_ID` and `AIRFLOW__ASTRO_SDK__XCOM_STORAGE_URL` and use a custom XCOM backend namely, `AstroCustomXcomBackend` which enables the XCOM data to be saved to an S3 or GCS location. [#795](https://github.com/astronomer/astro-sdk/issues/795), [#997](https://github.com/astronomer/astro-sdk/pull/997)
 * Added OpenLineage support for `LoadFileOperator` , `AppendOperator` , `TransformOperator` and `MergeOperator` [#898](https://github.com/astronomer/astro-sdk/issues/898), [#899](https://github.com/astronomer/astro-sdk/issues/899), [#902](https://github.com/astronomer/astro-sdk/issues/902), [#901](https://github.com/astronomer/astro-sdk/issues/901) and [#900](https://github.com/astronomer/astro-sdk/issues/900)
 * Add `TransformFileOperator` that
    - parses a SQL file with templating
