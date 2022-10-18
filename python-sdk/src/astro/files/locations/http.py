@@ -19,9 +19,8 @@ class HTTPLocation(BaseFileLocation):
 
     @property
     def size(self) -> int:
-        print("self.pathself.pathself.pathself.path", self.path)
+        """Return file size for HTTP location"""
         response = requests.head(self.path, allow_redirects=True)
-
         return int(response.headers.get('content-length', -1))
 
     @property

@@ -35,6 +35,7 @@ class GCSLocation(BaseFileLocation):
 
     @property
     def size(self) -> int:
+        """Return file size for GCS location"""
         url = urlparse(self.path)
         bucket_name = url.netloc
         object_name = url.path

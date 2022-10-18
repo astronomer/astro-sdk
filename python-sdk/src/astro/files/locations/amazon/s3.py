@@ -43,6 +43,7 @@ class S3Location(BaseFileLocation):
 
     @property
     def size(self) -> int:
+        """Return file size for S3 location"""
         url = urlparse(self.path)
         bucket_name = url.netloc
         return self.hook.head_object(key=self.path, bucket_name=bucket_name).get("ContentLength") or -1
