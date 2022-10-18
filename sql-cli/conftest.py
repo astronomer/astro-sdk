@@ -11,6 +11,7 @@ from airflow.utils.session import create_session
 
 from astro.table import MAX_TABLE_NAME_LENGTH
 from sql_cli.dag_generator import SqlFilesDAG
+from sql_cli.project import Project
 from sql_cli.sql_directory_parser import SqlFile
 
 CWD = Path(__file__).parent
@@ -19,16 +20,6 @@ CWD = Path(__file__).parent
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 UNIQUE_HASH_SIZE = 16
-
-
-@pytest.fixture()
-def project_directory():
-    return CWD / "tests" / "example_project"
-
-
-@pytest.fixture()
-def workflow_directory():
-    return CWD / "tests" / "example_project" / "workflows" / "example_basic_transform"
 
 
 @pytest.fixture()
@@ -148,3 +139,10 @@ def empty_cwd(request, monkeypatch):
     monkeypatch.chdir(temp_dir.name)
     yield temp_dir.name
     temp_dir.cleanup()
+
+
+@pytest.fixture()
+def initialised_project(tmp_path):
+    proj = Project(tmp_path)
+    proj.initialise()
+    return proj
