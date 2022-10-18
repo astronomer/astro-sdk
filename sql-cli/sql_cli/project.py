@@ -1,11 +1,13 @@
 import os
 import shutil
+from configparser import ConfigParser
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from sql_cli.configuration import Config
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_ENVIRONMENT
 from sql_cli.exceptions import InvalidProject
+from sql_cli.utils.airflow_utils import disable_examples
 
 BASE_SOURCE_DIR = Path(os.path.realpath(__file__)).parent.parent / "include/base/"
 
@@ -58,6 +60,18 @@ class Project:
         """
         return self._airflow_dags_folder or Path(self.directory, DEFAULT_DAGS_FOLDER)
 
+    @property
+    def airflow_config(self) -> Dict[str, Any]:
+        """
+        Retrieve the Airflow configuration for the currently set environment.
+
+        :returns: A Python dictionary containing the Airflow configuration.
+        """
+        filename = self.airflow_home / "airflow.cfg"
+        parser = ConfigParser()
+        parser.read(filename)
+        return {section: dict(parser.items(section)) for section in parser.sections()}
+
     def _update_config(self) -> None:
         """
         Sets custom Airflow configuration in case the user is not using the default values.
@@ -81,6 +95,7 @@ class Project:
         Create an Airflow database and configuration in the self.airflow_home folder, or upgrade them,
         if they already exist.
         """
+        os.environ.pop("AIRFLOW_HOME", None)
         os.environ.pop("AIRFLOW__DATABASE__SQL_ALCHEMY_CONN", None)
 
         # TODO: In future we want to replace this by either:
@@ -118,6 +133,7 @@ class Project:
         )
         self._update_config()
         self._initialise_airflow()
+        disable_examples(self.airflow_home)
         self._remove_unnecessary_airflow_files()
 
     def is_valid_project(self) -> bool:

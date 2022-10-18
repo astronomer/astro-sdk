@@ -2,7 +2,6 @@ import logging
 from pathlib import Path
 
 import typer
-from airflow.utils.cli import get_dag
 from dotenv import load_dotenv
 from rich import print as rprint
 
@@ -12,7 +11,11 @@ from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
 from sql_cli.dag_generator import generate_dag
 from sql_cli.project import Project
 from sql_cli.run_dag import run_dag
-from sql_cli.utils.airflow_utils import retrieve_airflow_database_conn_from_config, set_airflow_database_conn
+from sql_cli.utils.airflow_utils import (
+    get_dag,
+    retrieve_airflow_database_conn_from_config,
+    set_airflow_database_conn,
+)
 
 load_dotenv()
 app = typer.Typer(add_completion=False)
@@ -127,8 +130,8 @@ def run(
         directory=project.directory / project.workflows_directory / workflow_name,
         dags_directory=project.airflow_dags_folder,
     )
-    dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix())
-    run_dag(dag, connections=connections)
+    dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
+    run_dag(dag, run_conf=project.airflow_config, connections=connections)
 
 
 @app.command(
