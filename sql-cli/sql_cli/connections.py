@@ -5,6 +5,7 @@ from typing import Any
 from airflow.api_connexion.schemas.connection_schema import connection_schema
 from airflow.models import Connection
 from airflow.utils.session import create_session
+from rich import print as pprint
 
 from sql_cli.project import Project
 from sql_cli.utils.airflow_utils import retrieve_airflow_database_conn_from_config, set_airflow_database_conn
@@ -63,12 +64,12 @@ def validate_connections(
 
         success_status, _ = conn_obj.test_connection()
         if not success_status:
-            logs += f"Validating connection {conn_id:{CONNECTION_ID_OUTPUT_STRING_WIDTH}} FAILED\n"
+            logs += f"Validating connection {conn_id:{CONNECTION_ID_OUTPUT_STRING_WIDTH}} [bold red]FAILED[/bold red]\n"
             continue
 
-        logs += f"Validating connection {conn_id:{CONNECTION_ID_OUTPUT_STRING_WIDTH}} PASSED\n"
+        logs += f"Validating connection {conn_id:{CONNECTION_ID_OUTPUT_STRING_WIDTH}} [bold green]PASSED[/bold green]\n"
 
-    print(logs)
+    pprint(logs)
 
     if connection_id and not config_file_contains_connection:
         print("Error: Config file does not contain given connection", connection_id)
