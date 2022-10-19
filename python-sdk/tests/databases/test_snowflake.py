@@ -309,7 +309,7 @@ def test_load_file_to_table_natively_for_fallback_raises_exception_if_not_enable
     mock_stage.return_value = SnowflakeStage(
         name="mock_stage",
         url="gcs://bucket/prefix",
-        metadata=Metadata(database="SNOWFLAKE_DATABASE", schema="SCHEMA"),
+        metadata=Metadata(database="SNOWFLAKE_DATABASE", schema="SNOWFLAKE_SCHEMA"),
     )
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
@@ -382,7 +382,7 @@ def test_export_table_to_file_file_already_exists_raises_exception(
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
             "table": Table(
                 metadata=Metadata(
-                    schema=os.getenv("SCHEMA", SCHEMA),
+                    schema=os.getenv("SNOWFLAKE_SCHEMA", SCHEMA),
                     database=os.getenv("SNOWFLAKE_DATABASE", "snowflake"),
                 )
             ),
