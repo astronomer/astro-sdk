@@ -478,7 +478,7 @@ class SnowflakeDatabase(BaseDatabase):
         )
 
     @staticmethod
-    def use_quotes(cols: tuple[str, ...]):
+    def use_quotes(cols: tuple[str, ...]) -> bool:
         """
         With snowflake identifier we have two cases,
 
@@ -498,8 +498,7 @@ class SnowflakeDatabase(BaseDatabase):
         created as case sensitive using quotes (e.g. "TestDb"), all lowercase names should be used on the SQLAlchemy
         side.
 
-        :param cols:
-        :return:
+        :param cols: tuple of columns
         """
         return any(col for col in cols if not col.islower())
 
