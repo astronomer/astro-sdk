@@ -107,18 +107,22 @@ def run(
         show_default=False,
         help="name of the workflow directory within workflows directory.",
     ),
-    environment: str = typer.Argument(
+    env: str = typer.Option(
+        metavar="environment",
         default="default",
         help="environment to run in",
     ),
-    project_dir: Path = typer.Argument(
+    project_dir: Path = typer.Option(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
+    verbose: bool = typer.Option(
+        False, help="Whether to show airflow logs", show_default=True
+    )
 ) -> None:
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
-    project.update_config(environment=environment)
-    project.load_config(environment)
+    project.update_config(environment=env)
+    project.load_config(env)
 
     connections = {c["conn_id"]: convert_to_connection(c) for c in project.connections}
 
@@ -133,7 +137,7 @@ def run(
         dags_directory=project.airflow_dags_folder,
     )
     dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
-    run_dag(dag, run_conf=project.airflow_config, connections=connections)
+    run_dag(dag, run_conf=project.airflow_config, connections=connections, verbose=verbose)
 
 
 @app.command(

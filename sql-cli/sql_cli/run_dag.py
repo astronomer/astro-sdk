@@ -49,6 +49,7 @@ def run_dag(
     conn_file_path: str | None = None,
     variable_file_path: str | None = None,
     connections: dict[str, Connection] | None = None,
+    verbose: bool = False,
     session: Session = NEW_SESSION,
 ) -> None:
     """
@@ -99,7 +100,8 @@ def run_dag(
     while dr.state == State.RUNNING:
         schedulable_tis, _ = dr.update_state(session=session)
         for ti in schedulable_tis:
-            add_logger_if_needed(dag, ti)
+            if verbose:
+                add_logger_if_needed(dag, ti)
             ti.task = tasks[ti.task_id]
             _run_task(ti, session=session)
     pprint(f"Dagrun {dr.dag_id} final state: {dr.state}")
@@ -118,7 +120,7 @@ def add_logger_if_needed(dag: DAG, ti: TaskInstance) -> None:
     """
     logging_format = logging.Formatter("[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s")
     handler = logging.StreamHandler(sys.stdout)
-    handler.level = logging.INFO
+    handler.level = logging.DEBUG
     handler.setFormatter(logging_format)
     # only add log handler once
     if not any(isinstance(h, logging.StreamHandler) for h in ti.log.handlers):

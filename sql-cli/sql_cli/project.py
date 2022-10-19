@@ -72,7 +72,7 @@ class Project:
         parser.read(filename)
         return {section: dict(parser.items(section)) for section in parser.sections()}
 
-    def _update_config(self, environment: str = DEFAULT_ENVIRONMENT) -> None:
+    def update_config(self, environment: str = DEFAULT_ENVIRONMENT) -> None:
         """
         Sets custom Airflow configuration in case the user is not using the default values.
 
