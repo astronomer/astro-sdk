@@ -46,17 +46,17 @@ def generate(
         show_default=False,
         help="name of the workflow directory within workflows directory.",
     ),
-    environment: str = typer.Argument(
+    env: str = typer.Option(
         default="default",
         help="environment to run in",
     ),
-    project_dir: Path = typer.Argument(
+    project_dir: Path = typer.Option(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
 ) -> None:
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
-    project.load_config(environment)
+    project.load_config(env)
 
     # Since we are using the Airflow ORM to interact with connections, we need to tell Airflow to use our airflow.db
     # The usual route is to set $AIRFLOW_HOME before Airflow is imported. However, in the context of the SQL CLI, we
@@ -80,7 +80,7 @@ def validate(
     project_dir: Path = typer.Argument(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
-    environment: str = typer.Option(
+    env: str = typer.Option(
         default="default",
         help="(Optional) Environment used to declare the connections to be validated",
     ),
@@ -92,7 +92,7 @@ def validate(
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
 
-    validate_connections(project=project, environment=environment, connection_id=connection)
+    validate_connections(project=project, environment=env, connection_id=connection)
 
 
 @app.command(

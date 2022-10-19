@@ -48,7 +48,9 @@ def test_generate(workflow_name, environment, initialised_project):
         [
             "generate",
             workflow_name,
+            "--env",
             environment,
+            "--project-dir",
             initialised_project.directory.as_posix(),
         ],
     )
