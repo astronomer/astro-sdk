@@ -14,6 +14,7 @@ airflow_settings.yaml
 /build/
 /dist/
 **/dist/
+sql-cli/.nox/
 
 # Benchmark
 airflow.db

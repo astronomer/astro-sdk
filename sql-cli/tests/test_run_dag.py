@@ -13,11 +13,13 @@ CWD = pathlib.Path(__file__).parent
 
 @mock.patch("airflow.models.taskinstance.TaskInstance")
 @mock.patch("airflow.settings.SASession")
-def test_run_task_successfully(mock_session, mock_task_instance):
+def test_run_task_successfully(mock_session, mock_task_instance, capsys):
     mock_task_instance.map_index = 0
     _run_task(mock_task_instance, mock_session)
     mock_task_instance._run_raw_task.assert_called_once()
     mock_session.flush.assert_called_once()
+    captured = capsys.readouterr()
+    assert "ran successfully!" in captured.out
 
 
 def test_run_task_cleanup_log(sample_dag, capsys):

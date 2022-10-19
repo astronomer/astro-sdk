@@ -1,17 +1,21 @@
 import logging
 from pathlib import Path
-from typing import Optional
 
 import typer
-from airflow.utils.cli import get_dag
 from dotenv import load_dotenv
 from rich import print as rprint
 
 import sql_cli
-from sql_cli import configuration, project
-from sql_cli.connections import validate_connections
+from sql_cli.connections import convert_to_connection, validate_connections
+from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
 from sql_cli.dag_generator import generate_dag
+from sql_cli.project import Project
 from sql_cli.run_dag import run_dag
+from sql_cli.utils.airflow import (
+    get_dag,
+    retrieve_airflow_database_conn_from_config,
+    set_airflow_database_conn,
+)
 
 load_dotenv()
 app = typer.Typer(add_completion=False)
@@ -37,111 +41,99 @@ def about() -> None:
 
 @app.command(help="Generate the Airflow DAG from a directory of SQL files.")
 def generate(
-    directory: Path = typer.Argument(
+    workflow_name: str = typer.Argument(
         default=...,
         show_default=False,
-        exists=True,
-        help="directory containing the sql files.",
+        help="name of the workflow directory within workflows directory.",
     ),
-    dags_directory: Path = typer.Argument(
-        default=...,
-        show_default=False,
-        exists=True,
-        help="directory for the generated DAGs.",
+    env: str = typer.Option(
+        default="default",
+        help="environment to run in",
+    ),
+    project_dir: Path = typer.Option(
+        None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
 ) -> None:
-    dag_file = generate_dag(directory, dags_directory)
+    project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
+    project = Project(project_dir_absolute)
+    project.load_config(env)
+
+    dag_file = generate_dag(
+        directory=project.directory / project.workflows_directory / workflow_name,
+        dags_directory=project.airflow_dags_folder,
+    )
     rprint("The DAG file", dag_file.resolve(), "has been successfully generated. 🎉")
 
 
 @app.command(
-    help="Validate Airflow connection(s) provided in the configuration file for the given environment."
+    help="""
+    Validate Airflow connection(s) provided in the configuration file for the given environment.
+    """
 )
 def validate(
-    environment: str = typer.Argument(
-        default="default",
-        help="environment to validate",
+    project_dir: Path = typer.Argument(
+        None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
-    connection: str = typer.Argument(
+    env: str = typer.Option(
+        default="default",
+        help="(Optional) Environment used to declare the connections to be validated",
+    ),
+    connection: str = typer.Option(
         default=None,
-        help="airflow connection id to validate",
+        help="(Optional) Identifier of the connection to be validated. By default checks all the env connections.",
     ),
 ) -> None:
-    validate_connections(environment=environment, connection_id=connection)
+    project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
+    project = Project(project_dir_absolute)
+
+    validate_connections(project=project, environment=env, connection_id=connection)
 
 
 @app.command(
     help="""
     Run a workflow locally. This task assumes that there is a local airflow DB (can be a SQLite file), that has been
-    initialized with Airflow tables. Users can also add paths to a connections or variable yaml file which will override
-    existing connections for the test run.
-
-    \b
-    Example of a connections.yaml file:
-
-    \b
-    my_sqlite_conn:
-        conn_id: my_sqlite_conn
-        conn_type: sqlite
-        host: ...
-    my_postgres_conn:
-        conn_id: my_postgres_conn
-        conn_type: postgres
-        ...
+    initialized with Airflow tables.
     """
 )
 def run(
-    directory: Path = typer.Argument(
+    workflow_name: str = typer.Argument(
         default=...,
         show_default=False,
-        exists=True,
-        help="directory containing the sql files.",
+        help="name of the workflow directory within workflows directory.",
     ),
-    dags_directory: Path = typer.Argument(
-        default=...,
-        show_default=False,
-        exists=True,
-        help="directory for the generated DAGs.",
+    env: str = typer.Option(
+        metavar="environment",
+        default="default",
+        help="environment to run in",
     ),
-    connection_file: Path = typer.Option(
-        default=None,
-        exists=True,
-        help="path to connections yaml or json file",
-    ),
-    variable_file: Path = typer.Option(
-        default=None,
-        exists=True,
-        help="path to variables yaml or json file",
-    ),
-) -> None:
-    dag_file = generate_dag(directory, dags_directory=dags_directory)
-    dag = get_dag(dag_id=directory.name, subdir=dag_file.parent.as_posix())
-    run_dag(
-        dag=dag,
-        conn_file_path=connection_file.as_posix() if connection_file else None,
-        variable_file_path=variable_file.as_posix() if variable_file else None,
-    )
-
-
-@app.command()
-def init(
-    project_dir: Optional[Path] = typer.Argument(
+    project_dir: Path = typer.Option(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
-    airflow_home: Optional[Path] = typer.Option(
-        None,
-        dir_okay=True,
-        help=f"(Optional) Set the Airflow Home. Default: {configuration.DEFAULT_AIRFLOW_HOME}",
-        show_default=False,
-    ),
-    airflow_dags_folder: Optional[Path] = typer.Option(
-        None,
-        dir_okay=True,
-        help=f"(Optional) Set the DAGs Folder. Default: {configuration.DEFAULT_DAGS_FOLDER}",
-        show_default=False,
-    ),
+    verbose: bool = typer.Option(False, help="Whether to show airflow logs", show_default=True),
 ) -> None:
-    """
+    project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
+    project = Project(project_dir_absolute)
+    project.update_config(environment=env)
+    project.load_config(env)
+
+    connections = {c["conn_id"]: convert_to_connection(c) for c in project.connections}
+
+    # Since we are using the Airflow ORM to interact with connections, we need to tell Airflow to use our airflow.db
+    # The usual route is to set $AIRFLOW_HOME before Airflow is imported. However, in the context of the SQL CLI, we
+    # decide this during runtime, depending on the project path and SQL CLI configuration.
+    airflow_meta_conn = retrieve_airflow_database_conn_from_config(project.directory / project.airflow_home)
+    set_airflow_database_conn(airflow_meta_conn)
+
+    dag_file = generate_dag(
+        directory=project.directory / project.workflows_directory / workflow_name,
+        dags_directory=project.airflow_dags_folder,
+    )
+    dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
+    run_dag(dag, run_conf=project.airflow_config, connections=connections, verbose=verbose)
+
+
+@app.command(
+    help="""
     Initialise a project structure to write workflows using SQL files.
 
     \b\n
@@ -170,11 +162,28 @@ def init(
     \b\n
     * Create SQL workflows within the `workflows` folder.
     """
-    project_dir = project_dir or Path.cwd()
-
-    proj = project.Project(project_dir, airflow_home, airflow_dags_folder)
-    proj.initialise()
-    rprint("Initialized an Astro SQL project at", project_dir)
+)
+def init(
+    project_dir: Path = typer.Argument(
+        None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
+    ),
+    airflow_home: Path = typer.Option(
+        None,
+        dir_okay=True,
+        help=f"(Optional) Set the Airflow Home. Default: {DEFAULT_AIRFLOW_HOME}",
+        show_default=False,
+    ),
+    airflow_dags_folder: Path = typer.Option(
+        None,
+        dir_okay=True,
+        help=f"(Optional) Set the DAGs Folder. Default: {DEFAULT_DAGS_FOLDER}",
+        show_default=False,
+    ),
+) -> None:
+    project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
+    project = Project(project_dir_absolute, airflow_home, airflow_dags_folder)
+    project.initialise()
+    rprint("Initialized an Astro SQL project at", project.directory)
 
 
 if __name__ == "__main__":  # pragma: no cover

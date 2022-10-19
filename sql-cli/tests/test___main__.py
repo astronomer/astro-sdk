@@ -1,5 +1,6 @@
 import pathlib
 
+import pytest
 from typer.testing import CliRunner
 
 from sql_cli import __version__
@@ -34,45 +35,67 @@ def test_version():
     assert f"Astro SQL CLI {__version__}" == get_stdout(result)
 
 
-def test_generate(root_directory, dags_directory):
+@pytest.mark.parametrize(
+    "workflow_name,environment",
+    [
+        ("example_basic_transform", "default"),
+        ("example_templating", "dev"),
+    ],
+)
+def test_generate(workflow_name, environment, initialised_project):
     result = runner.invoke(
         app,
         [
             "generate",
-            root_directory.as_posix(),
-            dags_directory.as_posix(),
-        ],
-    )
-    if result.exit_code != 0:
-        print(result.output)
-    assert result.exit_code == 0
-    assert (
-        f"The DAG file {dags_directory / root_directory.name}.py has been successfully generated. 🎉"
-        == get_stdout(result)
-    )
-
-
-def test_validate():
-    result = runner.invoke(app, ["validate"])
-    assert result.exit_code == 0
-
-
-def test_run(root_directory, dags_directory):
-    result = runner.invoke(
-        app,
-        [
-            "run",
-            root_directory.as_posix(),
-            dags_directory.as_posix(),
-            "--connection-file",
-            (CWD / "test_conn.yaml").as_posix(),
+            workflow_name,
+            "--env",
+            environment,
+            "--project-dir",
+            initialised_project.directory.as_posix(),
         ],
     )
     if result.exit_code != 0:
         print(result.output)
     assert result.exit_code == 0
     result_stdout = get_stdout(result)
-    assert f"Dagrun {root_directory.name} final state: success" in result_stdout
+    assert result_stdout.startswith("The DAG file ")
+    assert result_stdout.endswith(f"{workflow_name}.py has been successfully generated. 🎉")
+
+
+def test_validate_with_directory(tmp_path):
+    result = runner.invoke(app, ["init", tmp_path.as_posix()])
+    assert result.exit_code == 0
+    result = runner.invoke(app, ["validate", tmp_path.as_posix()])
+    assert result.exit_code == 0
+    output = get_stdout(result)
+    assert "Validating connection(s) for environment 'default'" in output
+    assert "Validating connection sqlite_conn               PASSED" in output
+
+
+@pytest.mark.parametrize(
+    "workflow_name,environment",
+    [
+        ("example_basic_transform", "default"),
+        ("example_templating", "dev"),
+    ],
+)
+def test_run(workflow_name, environment, initialised_project):
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            workflow_name,
+            "--env",
+            environment,
+            "--project-dir",
+            initialised_project.directory.as_posix(),
+        ],
+    )
+    if result.exit_code != 0:
+        print(result.output)
+    assert result.exit_code == 0
+    result_stdout = get_stdout(result)
+    assert f"Dagrun {workflow_name} final state: success" in result_stdout
 
 
 def test_init_with_directory(tmp_path):
@@ -93,7 +116,7 @@ def test_init_with_custom_airflow_config(tmp_path):
     assert list_dir(tmp_path.as_posix())
 
 
-def test_init_without_directory(empty_cwd):
+def test_init_without_directory():
     # Creates a temporary directory and cd into it.
     # This isolates tests that affect the contents of the CWD to prevent them from interfering with each other.
     with runner.isolated_filesystem() as temp_dir:
