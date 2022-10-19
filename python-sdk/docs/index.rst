@@ -18,8 +18,9 @@ Welcome to astro-sdk-python's documentation!
    :caption: Guides
    :titlesonly:
 
-   concepts.rst
-   operators.rst
+   guides/concepts.rst
+   guides/operators.rst
+   guides/xcom_backend.rst
 
 .. toctree::
    :maxdepth: 1
