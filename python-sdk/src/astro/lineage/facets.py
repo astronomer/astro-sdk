@@ -119,7 +119,7 @@ class TargetTableMergeDatasetFacet(BaseFacet):
     """
 
     table_name: str
-    target_conflict_columns: tuple[str]
+    target_conflict_columns: list[str]
     columns: list[str] | tuple[str] | dict[str, str] | None = None
     metadata: Metadata | None = None
 

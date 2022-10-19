@@ -588,7 +588,7 @@ class BaseDatabase(ABC):
         source_table: BaseTable,
         target_table: BaseTable,
         source_to_target_columns_map: dict[str, str],
-        target_conflict_columns: tuple[str],
+        target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """

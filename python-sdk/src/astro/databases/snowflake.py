@@ -498,7 +498,7 @@ class SnowflakeDatabase(BaseDatabase):
         created as case sensitive using quotes (e.g. "TestDb"), all lowercase names should be used on the SQLAlchemy
         side.
 
-        :param cols: tuple of columns
+        :param cols: list of columns
         """
         return any(col for col in cols if not col.islower())
 
@@ -702,7 +702,7 @@ class SnowflakeDatabase(BaseDatabase):
         source_table: BaseTable,
         target_table: BaseTable,
         source_to_target_columns_map: dict[str, str],
-        target_conflict_columns: tuple[str],
+        target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """
@@ -729,7 +729,7 @@ class SnowflakeDatabase(BaseDatabase):
         source_table: BaseTable,
         target_table: BaseTable,
         source_to_target_columns_map: dict[str, str],
-        target_conflict_columns: tuple[str],
+        target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ):
         """Build the SQL statement for Merge operation"""
