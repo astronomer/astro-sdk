@@ -94,7 +94,7 @@ The parameter list passed to the decorated function is also added to the context
        :start-after: [START transform_example_3]
        :end-before: [END transform_example_3]
 
-More details can be found at `airflow templates reference <https://airflow.apache.org/docs/apache-airflow/stable/templates-ref.html>`_
+More details can be found at Airflow's :external+airflow:doc:`templates-ref`.
 
 .. _file_pattern:
 
@@ -174,7 +174,7 @@ Following is a view of dag dependencies on datasets
 
 .. image:: ./images/dag-dependencies-on-datasets.png
 
-More details can be found at `airflow datasets concept <https://airflow.apache.org/docs/apache-airflow/stable/concepts/datasets.html>`_
+More details can be found at Airflow's :external+airflow:doc:`concepts/dynamic-task-mapping`.
 
 .. Note::
     The concept of Datasets in astro-sdk is supported only from the **1.1.0** release ( and requires Airflow version **2.4.0** and above).
