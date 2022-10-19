@@ -114,7 +114,7 @@ def test_init_with_custom_airflow_config(tmp_path):
     assert list_dir(tmp_path.as_posix())
 
 
-def test_init_without_directory(empty_cwd):
+def test_init_without_directory():
     # Creates a temporary directory and cd into it.
     # This isolates tests that affect the contents of the CWD to prevent them from interfering with each other.
     with runner.isolated_filesystem() as temp_dir:

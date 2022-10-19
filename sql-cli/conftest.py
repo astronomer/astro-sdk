@@ -1,6 +1,5 @@
 import random
 import string
-import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -131,14 +130,6 @@ def create_unique_table_name(length: int = MAX_TABLE_NAME_LENGTH) -> str:
         random.choice(string.ascii_lowercase + string.digits) for _ in range(length - 1)
     )
     return unique_id
-
-
-@pytest.fixture()
-def empty_cwd(request, monkeypatch):
-    temp_dir = tempfile.TemporaryDirectory()
-    monkeypatch.chdir(temp_dir.name)
-    yield temp_dir.name
-    temp_dir.cleanup()
 
 
 @pytest.fixture()
