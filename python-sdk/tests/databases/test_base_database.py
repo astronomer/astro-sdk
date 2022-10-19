@@ -2,13 +2,14 @@ import pathlib
 from unittest import mock
 
 import pytest
+from pandas import DataFrame
+
 from astro.constants import Database, FileType
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.settings import SCHEMA
-from astro.sql.table import Metadata, Table
-from pandas import DataFrame
+from astro.table import Metadata, Table
 
 CWD = pathlib.Path(__file__).parent
 
@@ -38,9 +39,7 @@ def test_subclass_missing_not_implemented_methods_raise_exception():
 def test_create_table_using_native_schema_autodetection_not_implemented():
     db = DatabaseSubclass(conn_id="fake_conn_id")
     with pytest.raises(NotImplementedError):
-        db.create_table_using_native_schema_autodetection(
-            table=Table(), file=File(path="s3://bucket/key")
-        )
+        db.create_table_using_native_schema_autodetection(table=Table(), file=File(path="s3://bucket/key"))
 
 
 def test_subclass_missing_load_pandas_dataframe_to_table_raises_exception():
@@ -68,14 +67,10 @@ def test_check_schema_autodetection_is_supported():
         source_file=File(path="gs://bucket/prefix", filetype=FileType.CSV)
     )
 
-    assert db.check_schema_autodetection_is_supported(
-        source_file=File(path="gs://bucket/prefix/key.csv")
-    )
+    assert db.check_schema_autodetection_is_supported(source_file=File(path="gs://bucket/prefix/key.csv"))
 
     assert not (
-        db.check_schema_autodetection_is_supported(
-            source_file=File(path="s3://bucket/prefix/key.csv")
-        )
+        db.check_schema_autodetection_is_supported(source_file=File(path="s3://bucket/prefix/key.csv"))
     )
 
 
@@ -117,9 +112,7 @@ def is_dict_subset(superset: dict, subset: dict) -> bool:
     indirect=True,
     ids=["bigquery"],
 )
-def test_load_file_to_table_natively(
-    sample_dag, database_table_fixture, remote_files_fixture
-):
+def test_load_file_to_table_natively(sample_dag, database_table_fixture, remote_files_fixture):
     """
     Verify the correct method is getting called for specific source and destination.
     """
@@ -160,9 +153,7 @@ def test_load_file_to_table_natively(
             source_file=file,
             target_table=test_table,
         )
-        assert database.is_native_load_file_available(
-            source_file=file, target_table=test_table
-        )
+        assert database.is_native_load_file_available(source_file=file, target_table=test_table)
         assert method.called
         assert is_dict_subset(superset=method.call_args.kwargs, subset=expected_kwargs)
         assert method.call_args.args == expected_args
@@ -171,9 +162,7 @@ def test_load_file_to_table_natively(
 @mock.patch("astro.databases.base.BaseDatabase.drop_table")
 @mock.patch("astro.databases.base.BaseDatabase.create_schema_if_needed")
 @mock.patch("astro.databases.base.BaseDatabase.create_table")
-@mock.patch(
-    "astro.databases.base.BaseDatabase.load_file_to_table_natively_with_fallback"
-)
+@mock.patch("astro.databases.base.BaseDatabase.load_file_to_table_natively_with_fallback")
 @mock.patch("astro.databases.base.resolve_file_path_pattern")
 def test_load_file_calls_resolve_file_path_pattern_with_filetype(
     resolve_file_path_pattern,

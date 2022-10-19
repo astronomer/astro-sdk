@@ -1,27 +1,59 @@
-name: Build and test astro
+name: Build and test astro Python SDK
 on:
   push:
     branches: [ 'main', 'release-**' ]
     paths:
       - 'python-sdk/**'
       - '.github/workflows/ci-python-sdk.yaml'
-      - '*'
   pull_request:
-    branches: [ 'main', 'release-**', 'labeled' ]
+    branches: [ 'main', 'release-**' ]
     paths:
       - 'python-sdk/**'
       - '.github/workflows/ci-python-sdk.yaml'
       - '*'
-    types: ['labeled', 'opened', 'synchronize']
   # Run on PRs from forks
   pull_request_target:
     branches: [ 'main' ]
     types: ['labeled']
+    paths:
+      - 'python-sdk/**'
+      - '.github/workflows/ci-python-sdk.yaml'
+      - '*'
   release:
     types: [ 'created' ]
 defaults:
   run:
     working-directory: python-sdk
+
+# This allows a subsequently queued workflow run to interrupt and cancel previous runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# This list should only have non-sensitive env vars
+# Env vars with secrets should be in the specific jobs
+env:
+  SETUPTOOLS_USE_DISTUTILS: stdlib
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: 5432
+  AIRFLOW__ASTRO_SDK__SQL_SCHEMA: astroflow_ci
+  REDSHIFT_DATABASE: dev
+  REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
+  SNOWFLAKE_SCHEMA: ASTROFLOW_CI
+  SNOWFLAKE_DATABASE: SANDBOX
+  SNOWFLAKE_WAREHOUSE: DEMO
+  SNOWFLAKE_HOST: https://gp21411.us-east-1.snowflakecomputing.com
+  SNOWFLAKE_ACCOUNT: gp21411
+  SNOWFLAKE_REGION: us-east-1
+  SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
+  AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
+  AIRFLOW_VAR_FOO: templated_file_name
+  AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
+  AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
+  AWS_BUCKET: tmp9
+  GOOGLE_BUCKET: dag-authoring
+  FORCE_COLOR: "true"
+
 jobs:
   Markdown-link-check:
     if: github.event.action != 'labeled'
@@ -131,34 +163,17 @@ jobs:
           name: coverage${{ matrix.group }}
           path: ./python-sdk/.coverage
     env:
-      SETUPTOOLS_USE_DISTUTILS: stdlib
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AIRFLOW__ASTRO_SDK__SQL_SCHEMA: astroflow_ci
       REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
-      REDSHIFT_DATABASE: dev
-      REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
       REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
       REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-      SNOWFLAKE_SCHEMA: ASTROFLOW_CI
-      SNOWFLAKE_DATABASE: SANDBOX
-      SNOWFLAKE_WAREHOUSE: DEMO
-      SNOWFLAKE_HOST: https://gp21411.us-east-1.snowflakecomputing.com
-      SNOWFLAKE_ACCOUNT: gp21411
-      SNOWFLAKE_REGION: us-east-1
-      SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
-      AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
-      AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
-      AIRFLOW_VAR_FOO: templated_file_name
-      AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE: True
-      FORCE_COLOR: "true"
-  Run-Unit-tests-Airflow-2-3:
+
+  Run-Unit-tests-Airflow-2-4:
     if: >-
       github.event_name == 'push' ||
       (
@@ -214,40 +229,22 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.3')" -- --splits 12 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-3.8(airflow='2.4')" -- --splits 12 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
           name: coverage${{ matrix.group }}
           path: ./python-sdk/.coverage
     env:
-      AWS_BUCKET: tmp9
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
-      GOOGLE_BUCKET: dag-authoring
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AIRFLOW__ASTRO_SDK__SQL_SCHEMA: astroflow_ci
       REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
-      REDSHIFT_DATABASE: dev
-      REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
       REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
       REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-      SNOWFLAKE_SCHEMA: ASTROFLOW_CI
-      SNOWFLAKE_DATABASE: SANDBOX
-      SNOWFLAKE_WAREHOUSE: DEMO
-      SNOWFLAKE_HOST: https://gp21411.us-east-1.snowflakecomputing.com
-      SNOWFLAKE_ACCOUNT: gp21411
-      SNOWFLAKE_REGION: us-east-1
-      SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
-      AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
-      AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
-      AIRFLOW_VAR_FOO: templated_file_name
-      AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE: True
 
   Run-Unit-tests-Airflow-2-2-5:
     if: >-
@@ -264,8 +261,6 @@ jobs:
         github.event_name == 'release'
       )
     runs-on: ubuntu-latest
-    needs:
-      - Run-Unit-tests-Airflow-2-3
     services:
       postgres:
         # Docker Hub image
@@ -306,38 +301,20 @@ jobs:
       - run: pip3 install nox
       - run: nox -s "test-3.8(airflow='2.2.5')" -- "tests/test_example_dags.py" "tests/integration_test_dag.py"
     env:
-      AWS_BUCKET: tmp9
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
-      GOOGLE_BUCKET: dag-authoring
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AIRFLOW__ASTRO_SDK__SQL_SCHEMA: astroflow_ci
       REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
-      REDSHIFT_DATABASE: dev
-      REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
       REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
       REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-      SNOWFLAKE_SCHEMA: ASTROFLOW_CI
-      SNOWFLAKE_DATABASE: SANDBOX
-      SNOWFLAKE_WAREHOUSE: DEMO
-      SNOWFLAKE_HOST: https://gp21411.us-east-1.snowflakecomputing.com
-      SNOWFLAKE_ACCOUNT: gp21411
-      SNOWFLAKE_REGION: us-east-1
-      SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
-      AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
-      AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
-      AIRFLOW_VAR_FOO: templated_file_name
-      AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE: True
 
   Code-Coverage:
     if: github.event.action != 'labeled'
     needs:
-      - Run-Unit-tests-Airflow-2-3
+      - Run-Unit-tests-Airflow-2-4
       - Run-Optional-Packages-tests-python-sdk
     runs-on: ubuntu-latest
     steps:
@@ -369,9 +346,10 @@ jobs:
     if: github.event_name == 'release'
     name: Build and publish Python 🐍 distributions 📦 to PyPI
     needs:
-      - Run-Unit-tests-Airflow-2-3
+      - Run-Unit-tests-Airflow-2-4
+      - Run-Unit-tests-Airflow-2-2-5
       - Run-Optional-Packages-tests-python-sdk
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
@@ -388,42 +366,3 @@ jobs:
     env:
       TWINE_USERNAME: __token__
       TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-
-  Run-Benchmark:
-    if: github.event.label.name == 'run_benchmark'
-    runs-on: ubuntu-latest
-    env:
-      SETUPTOOLS_USE_DISTUTILS: stdlib
-      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
-      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
-      POSTGRES_HOST: 0.0.0.0
-      POSTGRES_PORT: 5432
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AIRFLOW__ASTRO_SDK__SQL_SCHEMA: astroflow_ci
-      REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
-      REDSHIFT_DATABASE: dev
-      REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
-      REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
-      REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
-      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
-      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-      SNOWFLAKE_SCHEMA: ASTROFLOW_CI
-      SNOWFLAKE_DATABASE: SANDBOX
-      SNOWFLAKE_WAREHOUSE: DEMO
-      SNOWFLAKE_HOST: https://gp21411.us-east-1.snowflakecomputing.com
-      SNOWFLAKE_ACCOUNT: gp21411
-      SNOWFLAKE_REGION: us-east-1
-      SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
-      AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
-      AIRFLOW__CORE__ENABLE_XCOM_PICKLING: True
-      AIRFLOW_VAR_FOO: templated_file_name
-      AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE: True
-      FORCE_COLOR: "true"
-      ASTRO_PUBLISH_BENCHMARK_DATA: True
-    steps:
-      - uses: actions/checkout@v2
-      - run: rm -f test-connections.yaml
-      - run: ( echo "cat <<EOF >test-connections.yaml"; cat ../.github/ci-test-connections.yaml; ) >test-connections.yaml && . test-connections.yaml
-      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
-      - run: cd tests/benchmark && make

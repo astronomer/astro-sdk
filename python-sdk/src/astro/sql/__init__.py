@@ -1,6 +1,7 @@
 from airflow.configuration import conf
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
+
 from astro.sql.operators.append import AppendOperator, append
 from astro.sql.operators.cleanup import CleanupOperator, cleanup
 from astro.sql.operators.dataframe import DataframeOperator, dataframe
@@ -10,7 +11,7 @@ from astro.sql.operators.load_file import LoadFileOperator, load_file
 from astro.sql.operators.merge import MergeOperator, merge
 from astro.sql.operators.raw_sql import RawSQLOperator, run_raw_sql
 from astro.sql.operators.transform import TransformOperator, transform, transform_file
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 
 
 def get_value_list(sql: str, conn_id: str, **kwargs) -> XComArg:
@@ -38,9 +39,5 @@ def get_value_list(sql: str, conn_id: str, **kwargs) -> XComArg:
     )
     kwargs.update({"task_id": task_id})
     return RawSQLOperator(
-        sql=sql,
-        conn_id=conn_id,
-        op_kwargs=op_kwargs,
-        python_callable=(lambda *args: None),
-        **kwargs
+        sql=sql, conn_id=conn_id, op_kwargs=op_kwargs, python_callable=(lambda *args: None), **kwargs
     ).output

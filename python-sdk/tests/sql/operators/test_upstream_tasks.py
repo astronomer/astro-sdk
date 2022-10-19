@@ -1,10 +1,11 @@
 import pathlib
 
 import pytest
+
 from astro import sql as aql
 from astro.constants import Database
 from astro.files import File
-from astro.sql.table import Table
+from astro.table import Table
 from tests.sql.operators import utils as test_utils
 
 cwd = pathlib.Path(__file__).parent
@@ -50,15 +51,11 @@ def test_raw_sql_chained_queries(database_table_fixture, sample_dag):
         last_task = homes_file
         for _ in range(5):
             n_table = test_table.create_similar_table()
-            n_task = raw_sql_no_deps(
-                new_table=n_table, t_table=test_table, upstream_tasks=[last_task]
-            )
+            n_task = raw_sql_no_deps(new_table=n_table, t_table=test_table, upstream_tasks=[last_task])
             generated_tables.append(n_table)
             last_task = n_task
 
-        validated = validate(
-            df1=test_table, df2=generated_tables[-1], upstream_tasks=[last_task]
-        )
+        validated = validate(df1=test_table, df2=generated_tables[-1], upstream_tasks=[last_task])
         for table in generated_tables:
             aql.drop_table(table, upstream_tasks=[validated])
 

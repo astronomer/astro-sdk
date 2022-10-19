@@ -14,12 +14,12 @@ import pathlib
 import tempfile
 from pathlib import Path
 
-import astro.sql as aql
 import boto3
 import pandas as pd
 import pytest
-from airflow.exceptions import BackfillUnfinished
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
+
+import astro.sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import SUPPORTED_FILE_TYPES, Database
 from astro.files import File
@@ -27,7 +27,7 @@ from astro.settings import SCHEMA
 
 # Import Operator
 from astro.sql.operators.export_file import export_file
-from astro.sql.table import Table
+from astro.table import Table
 from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
@@ -63,9 +63,7 @@ def test_save_dataframe_to_local(sample_dag):
     assert df.equals(pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]}))
 
 
-@pytest.mark.parametrize(
-    "database_table_fixture", [{"database": Database.SQLITE}], indirect=True
-)
+@pytest.mark.parametrize("database_table_fixture", [{"database": Database.SQLITE}], indirect=True)
 def test_save_temp_table_to_local(sample_dag, database_table_fixture):
     _, test_table = database_table_fixture
     data_path = str(CWD) + "/../../data/homes.csv"
@@ -83,9 +81,7 @@ def test_save_temp_table_to_local(sample_dag, database_table_fixture):
     assert input_df.equals(output_df)
 
 
-@pytest.mark.parametrize(
-    "database_table_fixture", [{"database": Database.SQLITE}], indirect=True
-)
+@pytest.mark.parametrize("database_table_fixture", [{"database": Database.SQLITE}], indirect=True)
 def test_save_returns_output_file(sample_dag, database_table_fixture):
     _, test_table = database_table_fixture
 
@@ -240,21 +236,16 @@ def test_save_all_db_tables_to_gcs(sample_dag, database_table_fixture):
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
-def test_save_all_db_tables_to_local_file_exists_overwrite_false(
-    sample_dag, database_table_fixture, caplog
-):
+def test_save_all_db_tables_to_local_file_exists_overwrite_false(sample_dag, database_table_fixture):
     _, test_table = database_table_fixture
-    with tempfile.NamedTemporaryFile(suffix=".csv") as temp_file:
-        with pytest.raises(BackfillUnfinished):
-            with sample_dag:
-                export_file(
-                    input_data=test_table,
-                    output_file=File(path=temp_file.name),
-                    if_exists="exception",
-                )
-            test_utils.run_dag(sample_dag)
-        expected_error = f"{temp_file.name} file already exists."
-        assert expected_error in caplog.text
+    with tempfile.NamedTemporaryFile(suffix=".csv") as temp_file, pytest.raises(FileExistsError):
+        with sample_dag:
+            export_file(
+                input_data=test_table,
+                output_file=File(path=temp_file.name),
+                if_exists="exception",
+            )
+        test_utils.run_dag(sample_dag)
 
 
 @pytest.mark.parametrize(
@@ -291,10 +282,10 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(
     ids=["google", "amazon"],
 )
 def test_save_table_remote_file_exists_overwrite_false(
-    sample_dag, database_table_fixture, remote_files_fixture, caplog
+    sample_dag, database_table_fixture, remote_files_fixture
 ):
     _, test_table = database_table_fixture
-    with pytest.raises(BackfillUnfinished):
+    with pytest.raises(FileExistsError):
         with sample_dag:
             export_file(
                 input_data=test_table,
@@ -302,9 +293,6 @@ def test_save_table_remote_file_exists_overwrite_false(
                 if_exists="exception",
             )
         test_utils.run_dag(sample_dag)
-
-    expected_error = f"{remote_files_fixture[0]} file already exists."
-    assert expected_error in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -438,9 +426,7 @@ def test_populate_table_metadata(sample_dag, database_table_fixture):
     test_utils.run_dag(sample_dag)
 
 
-@pytest.mark.skipif(
-    not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
-)
+@pytest.mark.skipif(not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
 def test_inlets_outlets_supported_ds():
     """Test Datasets are set as inlets and outlets"""
     input_data = Table("test_name")
@@ -453,9 +439,7 @@ def test_inlets_outlets_supported_ds():
     assert task.operator.outlets == [output_file]
 
 
-@pytest.mark.skipif(
-    DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
-)
+@pytest.mark.skipif(DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
 def test_inlets_outlets_non_supported_ds():
     """Test inlets and outlets are not set if Datasets are not supported"""
     input_data = Table("test_name")

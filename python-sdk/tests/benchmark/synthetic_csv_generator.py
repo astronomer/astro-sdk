@@ -8,7 +8,6 @@ from faker import Faker
 
 
 def generate_data(row_size, file_name):
-    row_size = 11000000
 
     faked_obj: object = Faker("en_GB")
 
@@ -20,7 +19,7 @@ def generate_data(row_size, file_name):
             (
                 i + 1,
                 faked_obj.name(),
-                faked_obj.address(),
+                str(faked_obj.address()).replace("\n", " "),
                 random.choice(["psg", "sona", "amirta", "anna university"]),
                 random.choice(["CTS", "INFY", "HTC"]),
                 (
@@ -34,4 +33,16 @@ def generate_data(row_size, file_name):
     file_obj.close()
 
 
-generate_data(11000000, "one_gb.csv")
+generate_data(125, "/fake_dataset/csv/ten_kb.csv")
+generate_data(1100, "/fake_dataset/csv/hundred_kb.csv")
+generate_data(107430, "/fake_dataset/csv/ten_mb.csv")
+generate_data(1074300, "/fake_dataset/csv/hundred_mb.csv")
+generate_data(11000000, "/fake_dataset/csv/one_gb.csv")
+generate_data(11000000 * 2, "/fake_dataset/csv/two_gb.csv")
+generate_data(11000000 * 5, "/fake_dataset/csv/five_gb.csv")
+generate_data(11000000 * 2, "/fake_dataset/csv/five_gb/second.csv")
+generate_data(11000000 * 2, "/fake_dataset/csv/five_gb/first.csv")
+generate_data(11000000, "/fake_dataset/csv/five_gb/third.csv")
+generate_data(11000000 * 2, "/fake_dataset/csv/ten_gb/second.csv")
+generate_data(11000000 * 2, "/fake_dataset/csv/ten_gb/first.csv")
+generate_data(11000000, "/fake_dataset/csv/ten_gb/third.csv")

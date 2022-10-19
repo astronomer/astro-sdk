@@ -14,12 +14,13 @@ Pre-requisites:
 """
 import os
 
-import astro.sql as aql
 import pandas as pd
 from airflow.models.dag import DAG
 from airflow.utils import timezone
+
+import astro.sql as aql
 from astro.files import File
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 
 with DAG(
     dag_id="example_google_bigquery_gcs_load_and_save",
@@ -32,9 +33,7 @@ with DAG(
         input_file=File(
             path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
         ),
-        output_table=Table(
-            name="imdb_movies", conn_id="bigquery", metadata=Metadata(schema="astro")
-        ),
+        output_table=Table(name="imdb_movies", conn_id="bigquery", metadata=Metadata(schema="astro")),
     )
     # [END load_file_http_example]
 
@@ -42,9 +41,9 @@ with DAG(
     @aql.dataframe(columns_names_capitalization="original")
     def extract_top_5_movies(input_df: pd.DataFrame):
         print(f"Total Number of records: {len(input_df)}")
-        top_5_movies = input_df.sort_values(by="rating", ascending=False)[
-            ["title", "rating", "genre1"]
-        ].head(5)
+        top_5_movies = input_df.sort_values(by="rating", ascending=False)[["title", "rating", "genre1"]].head(
+            5
+        )
         print(f"Top 5 Movies: {top_5_movies}")
         return top_5_movies
 

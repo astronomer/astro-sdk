@@ -1,9 +1,11 @@
 import os
 from unittest.mock import patch
 
+import pytest
+from botocore.client import BaseClient
+
 from astro.files.locations import create_file_location
 from astro.files.locations.amazon.s3 import S3Location
-from botocore.client import BaseClient
 
 
 def test_get_transport_params_with_s3():  # skipcq: PYL-W0612
@@ -21,15 +23,14 @@ def test_get_transport_params_with_s3():  # skipcq: PYL-W0612
 def test_remote_object_store_prefix(remote_file):
     """with remote filepath having prefix"""
     location = create_file_location("s3://tmp/house")
-    assert sorted(location.paths) == sorted(
-        ["s3://tmp/house1.csv", "s3://tmp/house2.csv"]
-    )
+    assert sorted(location.paths) == sorted(["s3://tmp/house1.csv", "s3://tmp/house2.csv"])
 
 
+@pytest.mark.integration
 def test_size():
-    """Test get_size() of for local file."""
-    location = create_file_location("s3://tmp/house2.csv")
-    assert location.size == -1
+    """Test get_size() of for S3 file."""
+    location = S3Location(path="s3://astro-sdk/imdb.csv", conn_id="aws_conn")
+    assert location.size > 0
 
 
 @patch.dict(

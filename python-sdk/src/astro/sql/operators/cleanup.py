@@ -10,17 +10,30 @@ from airflow.models.baseoperator import BaseOperator
 from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstance
 from airflow.utils.state import State
+
 from astro.databases import create_database
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.load_file import LoadFileOperator
-from astro.sql.table import BaseTable, TempTable
+from astro.table import BaseTable, TempTable
 from astro.utils.typing_compat import Context
 
 
 def filter_for_temp_tables(task_outputs: list[Any]) -> list[TempTable]:
     return [t for t in task_outputs if isinstance(t, TempTable) and t.temp]
+
+
+class AstroCleanupException(AirflowException):
+    msg = (
+        "When using a synchronous executor (e.g. SequentialExecutor and DebugExecutor), "
+        "the first run of this task will fail on purpose, "
+        "so the single worker thread is unblocked to execute other tasks. "
+        "The task is set up for retry and eventually works."
+    )
+
+    def __init__(self):
+        super().__init__(self.msg)
 
 
 class CleanupOperator(AstroSQLBaseOperator):
@@ -63,9 +76,7 @@ class CleanupOperator(AstroSQLBaseOperator):
         self.run_immediately = run_sync_mode
         task_id = task_id or get_unique_task_id("cleanup")
 
-        super().__init__(
-            task_id=task_id, retries=retries, retry_delay=retry_delay, **kwargs
-        )
+        super().__init__(task_id=task_id, retries=retries, retry_delay=retry_delay, **kwargs)
 
     def execute(self, context: Context) -> None:
         self.log.info("Execute Cleanup")
@@ -138,12 +149,7 @@ class CleanupOperator(AstroSQLBaseOperator):
             dag_is_running = self._is_dag_running(current_dagrun.get_task_instances())
             if dag_is_running:
                 if single_worker_mode:
-                    raise AirflowException(
-                        "When using a synchronous executor (e.g. SequentialExecutor and DebugExecutor), "
-                        "the first run of this task will fail on purpose, "
-                        "so the single worker thread is unblocked to execute other tasks. "
-                        "The task is set up for retry and eventually works."
-                    )
+                    raise AstroCleanupException()
                 self.log.warning(
                     "You are currently running the 'waiting mode', where the task will wait "
                     "for all other tasks to complete. Please note that for asynchronous executors (e.g. "
@@ -185,9 +191,7 @@ class CleanupOperator(AstroSQLBaseOperator):
         task_outputs = self.resolve_tables_from_tasks(tasks=tasks, context=context)
         return task_outputs
 
-    def resolve_tables_from_tasks(
-        self, tasks: list[BaseOperator], context: Context
-    ) -> list[BaseTable]:
+    def resolve_tables_from_tasks(self, tasks: list[BaseOperator], context: Context) -> list[BaseTable]:
         """
         For the moment, these are the only two classes that create temporary tables.
         This function allows us to only resolve xcom for those objects
@@ -201,9 +205,7 @@ class CleanupOperator(AstroSQLBaseOperator):
         """
         res = []
         for task in tasks:
-            if isinstance(
-                task, (DataframeOperator, BaseSQLDecoratedOperator, LoadFileOperator)
-            ):
+            if isinstance(task, (DataframeOperator, BaseSQLDecoratedOperator, LoadFileOperator)):
                 try:
                     t = task.output.resolve(context)
                     if isinstance(t, BaseTable):
@@ -217,9 +219,7 @@ class CleanupOperator(AstroSQLBaseOperator):
         return res
 
 
-def cleanup(
-    tables_to_cleanup: list[BaseTable] | None = None, **kwargs
-) -> CleanupOperator:
+def cleanup(tables_to_cleanup: list[BaseTable] | None = None, **kwargs) -> CleanupOperator:
     """
     Clean up temporary tables once either the DAG or upstream tasks are done
 

@@ -44,10 +44,10 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
     ```shell
     export AIRFLOW_HOME=`pwd`
-    export AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
+    export AIRFLOW__CORE__XCOM_BACKEND=astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
     airflow db init
     ```
-   > **Note:** `AIRFLOW__CORE__ENABLE_XCOM_PICKLING` needs to be enabled for `astro-sdk-python`.
+   > **Note:** `AIRFLOW__CORE__ENABLE_XCOM_PICKLING` no longer needs to be enabled for `astro-sdk-python`. This functionality is now deprecated as our custom xcom backend handles serialization.
 
     Currently, custom XCom backends are limited to data types that are json serializable. Since Dataframes are not json serializable, we need to enable XCom pickling to store dataframes.
 
@@ -71,7 +71,7 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
     from airflow import DAG
     from astro import sql as aql
     from astro.files import File
-    from astro.sql.table import Table
+    from astro.table import Table
 
     @aql.transform()
     def top_five_animations(input_table: Table):
@@ -163,7 +163,7 @@ For a full list of available operators, see the [SDK reference documentation](ht
 
 The documentation is a work in progress--we aim to follow the [Diátaxis](https://diataxis.fr/) system:
 
-- **[Getting Started](./docs/getting-started/GETTING_STARTED.md)**: A hands-on introduction to the Astro Python SDK
+- **[Getting Started Tutorial](https://docs.astronomer.io/tutorials/astro-python-sdk)**: A hands-on introduction to the Astro Python SDK
 - **How-to guides**: Simple step-by-step user guides to accomplish specific tasks
 - **[Reference guide](https://astro-sdk-python.readthedocs.io/)**: Commands, modules, classes and methods
 - **Explanation**: Clarification and discussion of key decisions when designing the project

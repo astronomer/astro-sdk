@@ -135,7 +135,7 @@ For a full list of available operators, see the [SDK reference documentation](ht
 
 The documentation is a work in progress--we aim to follow the [Diátaxis](https://diataxis.fr/) system:
 
-- **[Getting Started](python-sdk/docs/getting-started/GETTING_STARTED.md)**: A hands-on introduction to the Astro Python SDK
+- **[Getting Started Tutorial](https://docs.astronomer.io/tutorials/astro-python-sdk)**: A hands-on introduction to the Astro Python SDK
 - **How-to guides**: Simple step-by-step user guides to accomplish specific tasks
 - **[Reference guide](https://astro-sdk-python.readthedocs.io/)**: Commands, modules, classes and methods
 - **Explanation**: Clarification and discussion of key decisions when designing the project

@@ -6,12 +6,13 @@ import pandas as pd
 import pytest
 import sqlalchemy
 from airflow.hooks.base import BaseHook
+
 from astro.constants import Database
 from astro.databases import create_database
 from astro.databases.sqlite import SqliteDatabase
 from astro.exceptions import NonExistentTableException
 from astro.files import File
-from astro.sql.table import Table
+from astro.table import Table
 from astro.utils.load import copy_remote_file_to_local
 from tests.sql.operators import utils as test_utils
 
@@ -93,9 +94,7 @@ def test_table_exists_raises_exception():
             "table": Table(
                 columns=[
                     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
-                    sqlalchemy.Column(
-                        "name", sqlalchemy.String(60), nullable=False, key="name"
-                    ),
+                    sqlalchemy.Column("name", sqlalchemy.String(60), nullable=False, key="name"),
                 ]
             ),
         }
@@ -160,9 +159,7 @@ def test_sqlite_create_table_autodetection_without_file(database_table_fixture):
 
     with pytest.raises(ValueError) as exc_info:
         database.create_table(table)
-    assert exc_info.match(
-        "File or Dataframe is required for creating table using schema autodetection"
-    )
+    assert exc_info.match("File or Dataframe is required for creating table using schema autodetection")
 
 
 @pytest.mark.integration
@@ -306,9 +303,7 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     indirect=True,
     ids=["google"],
 )
-def test_export_table_to_file_in_the_cloud(
-    database_table_fixture, remote_files_fixture
-):
+def test_export_table_to_file_in_the_cloud(database_table_fixture, remote_files_fixture):
     """Export a SQL tale to a file in the cloud"""
     object_path = remote_files_fixture[0]
     database, populated_table = database_table_fixture
@@ -349,9 +344,7 @@ def test_create_table_from_select_statement(database_table_fixture):
     """Create a table given a SQL select statement"""
     database, original_table = database_table_fixture
 
-    statement = "SELECT * FROM {} WHERE id = 1;".format(
-        database.get_table_qualified_name(original_table)
-    )
+    statement = f"SELECT * FROM {database.get_table_qualified_name(original_table)} WHERE id = 1;"
     target_table = Table()
     database.create_table_from_select_statement(statement, target_table)
 

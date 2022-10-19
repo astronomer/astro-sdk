@@ -16,28 +16,36 @@ def dev(session: nox.Session) -> None:
     development environment to ``.nox/dev``.
     """
     session.install("nox")
-    session.install("-e", ".[all]")
-    session.install("-e", ".[tests]")
+    session.install("-e", ".[all,tests]")
 
 
 @nox.session(python=["3.7", "3.8", "3.9"])
-@nox.parametrize("airflow", ["2.2.5", "2.3"])
+@nox.parametrize("airflow", ["2.2.5", "2.4"])
 def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
-    session.install("-e", ".[all]")
-    session.install("-e", ".[tests]")
+    # 2.2.5 requires a certain version of pandas and sqlalchemy
+    # Otherwise it fails with
+    # Pandas requires version '1.4.0' or newer of 'sqlalchemy' (version '1.3.24' currently installed).
+    constraints_url = (
+        "https://raw.githubusercontent.com/apache/airflow/"
+        f"constraints-{airflow}/constraints-{session.python}.txt"
+    )
+    constraints = ["-c", constraints_url] if airflow == "2.2.5" else []
+    session.install(f"apache-airflow=={airflow}", *constraints)
+    session.install("-e", ".[all,tests]", *constraints)
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
     session.run("pip3", "freeze")
-    session.run("airflow", "db", "init")
-    session.run("pytest", *session.posargs)
+    AIRFLOW_HOME = f"~/airflow-{airflow}-{session.python}"
+    session.run("airflow", "db", "init", env={"AIRFLOW_HOME": AIRFLOW_HOME})
+    # Since pytest is not installed in the nox session directly, we need to set `external=true`.
+    session.run("pytest", *session.posargs, env={"AIRFLOW_HOME": AIRFLOW_HOME}, external=True)
 
 
 @nox.session(python=["3.8"])
 def type_check(session: nox.Session) -> None:
     """Run MyPy checks."""
-    session.install("-e", ".[all]")
-    session.install("-e", ".[tests]")
+    session.install("-e", ".[all,tests]")
     session.run("mypy", "--version")
     session.run("mypy")
 
@@ -62,7 +70,8 @@ def test_examples_by_dependency(session: nox.Session, extras):
     session.install("-e", ".[tests]")
     session.run("airflow", "db", "init")
 
-    session.run("pytest", "tests/test_example_dags.py", *pytest_args, *session.posargs)
+    # Since pytest is not installed in the nox session directly, we need to set `external=true`.
+    session.run("pytest", "tests/test_example_dags.py", *pytest_args, *session.posargs, external=True)
 
 
 @nox.session()

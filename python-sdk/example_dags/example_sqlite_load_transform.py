@@ -2,10 +2,11 @@ import time
 from datetime import datetime
 
 from airflow import DAG
+
 from astro import sql as aql
 from astro.files import File
 from astro.sql import drop_table
-from astro.sql.table import Table
+from astro.table import Table
 
 START_DATE = datetime(2000, 1, 1)
 
@@ -47,9 +48,7 @@ with DAG(
     )
     # Note - Using persistent table just to showcase drop_table operator.
     # [START drop_table_example]
-    truncate_results = drop_table(
-        table=Table(name=imdb_movies_name, conn_id="sqlite_default")
-    )
+    truncate_results = drop_table(table=Table(name=imdb_movies_name, conn_id="sqlite_default"))
     # [END drop_table_example]
     truncate_results.set_upstream(top_five_animations)
     aql.cleanup()

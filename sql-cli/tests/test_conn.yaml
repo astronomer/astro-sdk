@@ -1,0 +1,7 @@
+my_test_sqlite:
+  conn_id: my_test_sqlite
+  conn_type: sqlite
+  host: /tmp/sqlite.db
+  schema:
+  login:
+  password:

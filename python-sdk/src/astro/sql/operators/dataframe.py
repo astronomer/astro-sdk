@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import inspect
+import logging
 from typing import Any, Callable
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
+
 from astro.airflow.datasets import kwargs_with_datasets
 
 try:
@@ -13,10 +15,9 @@ except ImportError:
     from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
-from astro import settings
 from astro.constants import ColumnCapitalization
 from astro.databases import create_database
-from astro.exceptions import IllegalLoadToDatabaseException
+from astro.files import File
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable, Table
 from astro.utils.dataframe import convert_columns_names_capitalization
@@ -43,6 +44,7 @@ def load_op_arg_table_into_dataframe(
     op_args: tuple,
     python_callable: Callable,
     columns_names_capitalization: ColumnCapitalization,
+    log: logging.Logger,
 ) -> tuple:
     """For dataframe based functions, takes any Table objects from the op_args
     and converts them into local dataframes that can be handled in the python context"""
@@ -51,16 +53,18 @@ def load_op_arg_table_into_dataframe(
     ret_args = []
     # We check if the type annotation is of type dataframe to determine that the user actually WANTS
     # this table to be converted into a dataframe, rather that passed in as a table
+    log.debug("retrieving op_args")
+
     for arg in op_args_list:
         current_arg = full_spec.args.pop(0)
-        if full_spec.annotations[current_arg] == pd.DataFrame and isinstance(
-            arg, BaseTable
+        if full_spec.annotations.get(current_arg) == pd.DataFrame and isinstance(arg, BaseTable):
+            log.debug("Found SQL table, retrieving dataframe from table %s", arg.name)
+            ret_args.append(_get_dataframe(arg, columns_names_capitalization=columns_names_capitalization))
+        elif isinstance(arg, File) and (
+            full_spec.annotations.get(current_arg) == pd.DataFrame or arg.is_dataframe
         ):
-            ret_args.append(
-                _get_dataframe(
-                    arg, columns_names_capitalization=columns_names_capitalization
-                )
-            )
+            log.debug("Found dataframe file, retrieving dataframe from file %s", arg.path)
+            ret_args.append(arg.export_to_dataframe())
         else:
             ret_args.append(arg)
     return tuple(ret_args)
@@ -70,18 +74,26 @@ def load_op_kwarg_table_into_dataframe(
     op_kwargs: dict,
     python_callable: Callable,
     columns_names_capitalization: ColumnCapitalization,
+    log: logging.Logger,
 ) -> dict:
     """For dataframe based functions, takes any Table objects from the op_kwargs
     and converts them into local dataframes that can be handled in the python context"""
     param_types = inspect.signature(python_callable).parameters
     # We check if the type annotation is of type dataframe to determine that the user actually WANTS
     # this table to be converted into a dataframe, rather that passed in as a table
-    return {
-        k: _get_dataframe(v, columns_names_capitalization=columns_names_capitalization)
-        if param_types.get(k).annotation is pd.DataFrame and isinstance(v, BaseTable)  # type: ignore
-        else v
-        for k, v in op_kwargs.items()
-    }
+    out_dict = {}
+    log.debug("retrieving op_kwargs")
+
+    for k, v in op_kwargs.items():
+        if param_types.get(k).annotation is pd.DataFrame and isinstance(v, BaseTable):  # type: ignore
+            log.debug("Found SQL table, retrieving dataframe from table %s", v.name)
+            out_dict[k] = _get_dataframe(v, columns_names_capitalization=columns_names_capitalization)
+        elif isinstance(v, File) and (param_types.get(k).annotation is pd.DataFrame or v.is_dataframe):  # type: ignore
+            log.debug("Found dataframe file, retrieving dataframe from file %s", v.path)
+            out_dict[k] = v.export_to_dataframe()
+        else:
+            out_dict[k] = v
+    return out_dict
 
 
 class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
@@ -130,46 +142,78 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             **kwargs_with_datasets(kwargs=kwargs, output_datasets=self.output_table),
         )
 
-    def execute(self, context: Context) -> Table | pd.DataFrame:
+    def execute(self, context: Context) -> Table | pd.DataFrame | list:
         first_table = find_first_table(
             op_args=self.op_args,  # type: ignore
             op_kwargs=self.op_kwargs,
             python_callable=self.python_callable,
             parameters=self.parameters or {},  # type: ignore
+            context=context,
         )
         if first_table:
             self.conn_id = self.conn_id or first_table.conn_id  # type: ignore
             self.database = self.database or first_table.metadata.database  # type: ignore
             self.schema = self.schema or first_table.metadata.schema  # type: ignore
         self.op_args = load_op_arg_table_into_dataframe(
-            self.op_args, self.python_callable, self.columns_names_capitalization
+            self.op_args,
+            self.python_callable,
+            self.columns_names_capitalization,
+            self.log,
         )
         self.op_kwargs = load_op_kwarg_table_into_dataframe(
-            self.op_kwargs, self.python_callable, self.columns_names_capitalization
+            self.op_kwargs,
+            self.python_callable,
+            self.columns_names_capitalization,
+            self.log,
         )
 
-        pandas_dataframe = self.python_callable(*self.op_args, **self.op_kwargs)
-        pandas_dataframe = convert_columns_names_capitalization(
-            df=pandas_dataframe,
+        function_output = self.python_callable(*self.op_args, **self.op_kwargs)
+        function_output = self._convert_column_capitalization_for_output(
+            function_output=function_output,
             columns_names_capitalization=self.columns_names_capitalization,
         )
         if self.output_table:
+            self.log.debug("Output table found, converting function output to SQL table")
+            if not isinstance(function_output, pd.DataFrame):
+                raise ValueError(
+                    "Astro can only turn a single dataframe into a table. Please change your "
+                    "function output."
+                )
             self.output_table.conn_id = self.output_table.conn_id or self.conn_id
             db = create_database(self.output_table.conn_id)
             self.output_table = db.populate_table_metadata(self.output_table)
             db.load_pandas_dataframe_to_table(
-                source_dataframe=pandas_dataframe,
+                source_dataframe=function_output,
                 target_table=self.output_table,
                 if_exists="replace",
             )
             return self.output_table
         else:
-            if (
-                not settings.IS_CUSTOM_XCOM_BACKEND
-                and not settings.ALLOW_UNSAFE_DF_STORAGE
-            ):
-                raise IllegalLoadToDatabaseException()
-            return pandas_dataframe
+            return function_output
+
+    @staticmethod
+    def _convert_column_capitalization_for_output(function_output, columns_names_capitalization):
+        """Handles column capitalization for single outputs, lists, and dictionaries"""
+        if isinstance(function_output, (list, tuple)):
+            function_output = [
+                convert_columns_names_capitalization(
+                    df=f, columns_names_capitalization=columns_names_capitalization
+                )
+                for f in function_output
+            ]
+        elif isinstance(function_output, dict):
+            function_output = {
+                k: convert_columns_names_capitalization(
+                    df=v, columns_names_capitalization=columns_names_capitalization
+                )
+                for k, v in function_output.items()
+            }
+        else:
+            function_output = convert_columns_names_capitalization(
+                df=function_output,
+                columns_names_capitalization=columns_names_capitalization,
+            )
+        return function_output
 
 
 def dataframe(

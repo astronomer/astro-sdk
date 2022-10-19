@@ -5,12 +5,13 @@ from typing import Any
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
+
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import ExportExistsStrategy
 from astro.databases import create_database
 from astro.files import File
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
-from astro.sql.table import BaseTable, Table
+from astro.table import BaseTable, Table
 from astro.utils.typing_compat import Context
 
 
@@ -53,12 +54,10 @@ class ExportFileOperator(AstroSQLBaseOperator):
         elif isinstance(self.input_data, pd.DataFrame):
             df = self.input_data
         else:
-            raise ValueError(
-                f"Expected input_table to be Table or dataframe. Got {type(self.input_data)}"
-            )
+            raise ValueError(f"Expected input_table to be Table or dataframe. Got {type(self.input_data)}")
         # Write file if overwrite == True or if file doesn't exist.
         if self.if_exists == "replace" or not self.output_file.exists():
-            self.output_file.create_from_dataframe(df)
+            self.output_file.create_from_dataframe(df, store_as_dataframe=False)
             return self.output_file
         else:
             raise FileExistsError(f"{self.output_file.path} file already exists.")

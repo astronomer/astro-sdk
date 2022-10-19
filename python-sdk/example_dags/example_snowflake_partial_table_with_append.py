@@ -13,9 +13,10 @@ from datetime import datetime
 
 import pandas as pd
 from airflow.decorators import dag
+
 from astro.files import File
 from astro.sql import append, cleanup, dataframe, load_file, run_raw_sql, transform
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 
 SNOWFLAKE_CONN_ID = "snowflake_conn"
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -39,9 +40,7 @@ def extract_data(homes1: Table, homes2: Table):
 @dataframe
 def transform_data(df: pd.DataFrame):
     df.columns = df.columns.str.lower()
-    melted_df = df.melt(
-        id_vars=["sell", "list"], value_vars=["living", "rooms", "beds", "baths", "age"]
-    )
+    melted_df = df.melt(id_vars=["sell", "list"], value_vars=["living", "rooms", "beds", "baths", "age"])
 
     return melted_df
 
@@ -73,9 +72,7 @@ def create_table(table: Table):
 @dag(start_date=datetime(2021, 12, 1), schedule_interval="@daily", catchup=False)
 def example_snowflake_partial_table_with_append():
     homes_reporting = Table(conn_id=SNOWFLAKE_CONN_ID)
-    create_results_table = create_table(
-        table=homes_reporting, conn_id=SNOWFLAKE_CONN_ID
-    )
+    create_results_table = create_table(table=homes_reporting, conn_id=SNOWFLAKE_CONN_ID)
     # [END howto_run_raw_sql_snowflake_1]
 
     # Initial load of homes data csv's into Snowflake
@@ -108,9 +105,7 @@ def example_snowflake_partial_table_with_append():
         output_table=Table(name="combined_homes_data"),
     )
 
-    transformed_data = transform_data(
-        df=extracted_data, output_table=Table(name="homes_data_long")
-    )
+    transformed_data = transform_data(df=extracted_data, output_table=Table(name="homes_data_long"))
 
     filtered_data = filter_data(
         homes_long=transformed_data,

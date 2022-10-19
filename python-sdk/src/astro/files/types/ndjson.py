@@ -4,8 +4,8 @@ import io
 import json
 
 import pandas as pd
-from astro.constants import DEFAULT_CHUNK_SIZE
-from astro.constants import FileType as FileTypeConstants
+
+from astro.constants import DEFAULT_CHUNK_SIZE, FileType as FileTypeConstants
 from astro.files.types.base import FileType
 from astro.utils.dataframe import convert_columns_names_capitalization
 
@@ -13,9 +13,7 @@ from astro.utils.dataframe import convert_columns_names_capitalization
 class NDJSONFileType(FileType):
     """Concrete implementation to handle NDJSON file type"""
 
-    def export_to_dataframe(
-        self, stream, columns_names_capitalization="original", **kwargs
-    ):
+    def export_to_dataframe(self, stream, columns_names_capitalization="original", **kwargs):
         """read ndjson file from one of the supported locations and return dataframe
 
         :param stream: file stream object
@@ -41,9 +39,7 @@ class NDJSONFileType(FileType):
         return FileTypeConstants.NDJSON
 
     @staticmethod
-    def flatten(
-        normalize_config: dict | None, stream: io.TextIOWrapper, **kwargs
-    ) -> pd.DataFrame:
+    def flatten(normalize_config: dict | None, stream: io.TextIOWrapper, **kwargs) -> pd.DataFrame:
         """
         Flatten the nested ndjson/json.
 
@@ -76,9 +72,7 @@ class NDJSONFileType(FileType):
             else:
                 extra_rows = []
 
-            df = pd.json_normalize(
-                [json.loads(row) for row in rows], **normalize_config
-            )
+            df = pd.json_normalize([json.loads(row) for row in rows], **normalize_config)
             result_df.append(df)
 
             row_count = row_count + df.shape[0]

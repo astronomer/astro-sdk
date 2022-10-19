@@ -2,9 +2,10 @@ import pathlib
 from datetime import datetime, timedelta
 
 from airflow.models import DAG
+
 from astro import sql as aql
 from astro.files import File
-from astro.sql.table import Table
+from astro.table import Table
 
 CWD = pathlib.Path(__file__).parent
 
@@ -41,9 +42,7 @@ with dag:
     # [END append_example]
 
     # [START append_example_col_dict]
-    aql.append(
-        target_table=load_main, source_table=load_append, columns={"beds": "baths"}
-    )
+    aql.append(target_table=load_main, source_table=load_append, columns={"beds": "baths"})
     # [END append_example_col_dict]
 
     aql.cleanup()

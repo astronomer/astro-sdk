@@ -3,11 +3,12 @@ import pathlib
 import pandas as pd
 import pytest
 from airflow.decorators import task
+
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.files import File
-from astro.sql.table import Table
+from astro.table import Table
 from tests.sql.operators import utils as test_utils
 
 cwd = pathlib.Path(__file__).parent
@@ -40,9 +41,7 @@ def test_dataframe_transform(database_table_fixture, sample_dag):
     def validate_dataframe(df: pd.DataFrame):
         df.columns = df.columns.str.lower()
         df = df.sort_values(by=df.columns.tolist()).reset_index(drop=True)
-        assert df.equals(
-            pd.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]})
-        )
+        assert df.equals(pd.DataFrame({"numbers": [1, 2, 3], "colors": ["red", "white", "blue"]}))
 
     with sample_dag:
         my_df = get_dataframe(output_table=test_table)
@@ -109,7 +108,13 @@ def test_raw_sql(database_table_fixture, sample_dag):
         return "SELECT * FROM {{my_input_table}} LIMIT {{num_rows}}"
 
     @task
-    def validate_raw_sql(cur):
+    def validate_raw_sql(cur: pd.DataFrame):
+        from sqlalchemy.engine.row import LegacyRow
+
+        # Note: It's a broken feature on the main branch that this is return in a list of lists. Problem reported here:
+        # https://github.com/astronomer/astro-sdk/issues/1035
+        for c in cur[0]:
+            assert isinstance(c, LegacyRow)
         print(cur)
 
     with sample_dag:
@@ -187,9 +192,6 @@ def test_transform_with_templated_table_name(database_table_fixture, sample_dag)
 )
 def test_transform_with_file(database_table_fixture, sample_dag):
     """Test table creation via select statement in a SQL file"""
-    import pathlib  # skipcq: PYL-W0404
-
-    cwd = pathlib.Path(__file__).parent
     database, imdb_table = database_table_fixture
 
     @aql.dataframe
@@ -199,8 +201,9 @@ def test_transform_with_file(database_table_fixture, sample_dag):
     with sample_dag:
         target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="sqlite_default")
         table_from_query = aql.transform_file(
-            file_path=str(pathlib.Path(cwd).parents[0]) + "/transform/test.sql",
-            parameters={"input_table": imdb_table, "output_table": target_table},
+            file_path="tests/sql/operators/transform/test.sql",
+            parameters={"input_table": imdb_table},
+            op_kwargs={"output_table": target_table},
         )
         validate(table_from_query)
     test_utils.run_dag(sample_dag)
@@ -211,9 +214,7 @@ def test_transform_with_file(database_table_fixture, sample_dag):
     assert not database.table_exists(expected_target_table)
 
 
-@pytest.mark.skipif(
-    not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
-)
+@pytest.mark.skipif(not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
 def test_inlets_outlets_supported_ds():
     """Test Datasets are set as inlets and outlets"""
     imdb_table = (Table(name="imdb", conn_id="sqlite_default"),)
@@ -227,9 +228,7 @@ def test_inlets_outlets_supported_ds():
     assert task.operator.outlets == [output_table]
 
 
-@pytest.mark.skipif(
-    DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
-)
+@pytest.mark.skipif(DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
 def test_inlets_outlets_non_supported_ds():
     """Test inlets and outlets are not set if Datasets are not supported"""
     imdb_table = (Table(name="imdb", conn_id="sqlite_default"),)

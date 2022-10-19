@@ -1,11 +1,12 @@
 import os
 
-# Import Operator
-import astro.sql as aql
 from airflow.decorators import dag
 from airflow.utils import timezone
+
+# Import Operator
+import astro.sql as aql
 from astro.files import File
-from astro.sql.table import Table
+from astro.table import Table
 
 default_args = {
     "owner": "airflow",
@@ -37,6 +38,4 @@ def example_amazon_s3_postgres_load_and_save():
     aql.cleanup()
 
 
-example_amazon_s3_postgres_load_and_save_dag = (
-    example_amazon_s3_postgres_load_and_save()
-)
+example_amazon_s3_postgres_load_and_save_dag = example_amazon_s3_postgres_load_and_save()

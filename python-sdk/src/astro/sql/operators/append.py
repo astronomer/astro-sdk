@@ -4,10 +4,21 @@ from typing import Any
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
+from openlineage.client.facet import (
+    BaseFacet,
+    OutputStatisticsOutputDatasetFacet,
+    SchemaDatasetFacet,
+    SchemaField,
+    SqlJobFacet,
+)
+from openlineage.client.run import Dataset as OpenlineageDataset
+
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
+from astro.lineage.extractor import OpenLineageFacets
+from astro.lineage.facets import TableDatasetFacet
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
-from astro.sql.table import BaseTable
+from astro.table import BaseTable
 from astro.utils.typing_compat import Context
 
 
@@ -43,12 +54,9 @@ class AppendOperator(AstroSQLBaseOperator):
             )
         self.columns = columns or {}
         task_id = task_id or get_unique_task_id("append_table")
-
         super().__init__(
             task_id=task_id,
-            **kwargs_with_datasets(
-                kwargs=kwargs, input_datasets=source_table, output_datasets=target_table
-            ),
+            **kwargs_with_datasets(kwargs=kwargs, input_datasets=source_table, output_datasets=target_table),
         )
 
     def execute(self, context: Context) -> BaseTable:  # skipcq: PYL-W0613
@@ -60,7 +68,60 @@ class AppendOperator(AstroSQLBaseOperator):
             target_table=self.target_table,
             source_to_target_columns_map=self.columns,
         )
+        context["ti"].xcom_push(key="append_query", value=str(db.sql))
         return self.target_table
+
+    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:
+        """
+        Collect the input, output, job and run facets for append operator
+        """
+        append_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="append_query")
+        source_table_rows = self.source_table.row_count
+        input_dataset: list[OpenlineageDataset] = [
+            OpenlineageDataset(
+                namespace=self.source_table.openlineage_dataset_namespace(),
+                name=self.source_table.openlineage_dataset_name(),
+                facets={
+                    "input_table_facet": TableDatasetFacet(
+                        table_name=self.source_table.name,
+                        source_table_rows=source_table_rows,
+                        columns=self.columns,
+                        metadata=self.source_table.metadata,
+                    ),
+                    "schema_dataset_facet": SchemaDatasetFacet(
+                        fields=[
+                            SchemaField(
+                                name=self.source_table.metadata.schema,
+                                type=self.source_table.metadata.database,
+                            )
+                        ]
+                    ),
+                },
+            )
+        ]
+
+        output_dataset: list[OpenlineageDataset] = [
+            OpenlineageDataset(
+                namespace=self.target_table.openlineage_dataset_namespace(),
+                name=self.target_table.openlineage_dataset_name(),
+                facets={
+                    "output_table_facet": TableDatasetFacet(
+                        table_name=self.target_table.name,
+                        columns=self.columns,
+                        source_table_rows=source_table_rows,
+                        metadata=self.target_table.metadata,
+                    ),
+                    "output_stats": OutputStatisticsOutputDatasetFacet(rowCount=self.target_table.row_count),
+                },
+            )
+        ]
+
+        run_facets: dict[str, BaseFacet] = {}
+        job_facets: dict[str, BaseFacet] = {"sql": SqlJobFacet(query=str(append_query))}
+
+        return OpenLineageFacets(
+            inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
+        )
 
 
 def append(

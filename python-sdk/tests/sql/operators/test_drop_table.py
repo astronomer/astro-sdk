@@ -2,13 +2,14 @@
 
 import pathlib
 
-import astro.sql as aql
 import pandas
 import pytest
 from airflow.decorators import task
+
+import astro.sql as aql
 from astro.constants import Database
 from astro.files import File
-from astro.sql.table import Table
+from astro.table import Table
 from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent

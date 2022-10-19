@@ -14,11 +14,12 @@ from datetime import datetime
 
 from airflow import DAG
 from airflow.decorators import task
+
 from astro import sql as aql
 from astro.files import get_file_list
 from astro.sql import get_value_list
 from astro.sql.operators.load_file import LoadFileOperator as LoadFile
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 
 GCS_BUCKET = os.getenv("GCS_BUCKET", "gs://dag-authoring/dynamic_task/")
 ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_default")
@@ -33,6 +34,7 @@ with DAG(
     schedule_interval=None,
     start_date=datetime(2022, 1, 1),
     catchup=False,
+    tags=["airflow_version:2.3.0"],
 ) as dag:
     LoadFile.partial(
         task_id="load_gcs_to_bq",
@@ -61,9 +63,7 @@ with DAG(
         rating_list = [val for val in rating_list if val]
         return sum(rating_list) / len(rating_list)
 
-    rating = custom_task.expand(
-        rating_val=get_value_list(sql=QUERY_STATEMENT, conn_id=ASTRO_GCP_CONN_ID)
-    )
+    rating = custom_task.expand(rating_val=get_value_list(sql=QUERY_STATEMENT, conn_id=ASTRO_GCP_CONN_ID))
 
     print(avg_rating(rating))
     # [END howto_operator_get_value_list]

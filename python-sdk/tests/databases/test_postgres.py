@@ -6,13 +6,14 @@ from urllib.parse import urlparse
 import pandas as pd
 import pytest
 import sqlalchemy
+
 from astro.constants import Database
 from astro.databases import create_database
 from astro.databases.postgres import PostgresDatabase
 from astro.exceptions import NonExistentTableException
 from astro.files import File
 from astro.settings import SCHEMA
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
 from tests.sql.operators import utils as test_utils
 
@@ -75,9 +76,7 @@ def test_table_exists_raises_exception():
                 metadata=Metadata(schema=SCHEMA),
                 columns=[
                     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
-                    sqlalchemy.Column(
-                        "name", sqlalchemy.String(60), nullable=False, key="name"
-                    ),
+                    sqlalchemy.Column("name", sqlalchemy.String(60), nullable=False, key="name"),
                 ],
             ),
         }
@@ -89,9 +88,7 @@ def test_postgres_create_table_with_columns(database_table_fixture):
     """Test table creation with columns data"""
     database, table = database_table_fixture
 
-    statement = (
-        f"SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name='{table.name}'"
-    )
+    statement = f"SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name='{table.name}'"
     response = database.run_sql(statement)
     assert response.first() is None
 
@@ -153,9 +150,7 @@ def test_load_file_to_table(database_table_fixture):
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     database.load_file_to_table(File(filepath), target_table, {})
 
-    df = database.hook.get_pandas_df(
-        f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
-    )
+    df = database.hook.get_pandas_df(f"SELECT * FROM {database.get_table_qualified_name(target_table)}")
     assert len(df) == 3
     expected = pd.DataFrame(
         [
@@ -262,9 +257,7 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     indirect=True,
     ids=["google"],
 )
-def test_export_table_to_file_in_the_cloud(
-    database_table_fixture, remote_files_fixture
-):
+def test_export_table_to_file_in_the_cloud(database_table_fixture, remote_files_fixture):
     """Test export_table_to_file_file() where end file location is in cloud object stores"""
     object_path = remote_files_fixture[0]
     database, populated_table = database_table_fixture
@@ -305,15 +298,11 @@ def test_create_table_from_select_statement(database_table_fixture):
     """Test table creation via select statement"""
     database, original_table = database_table_fixture
 
-    statement = "SELECT * FROM {} WHERE id = 1;".format(
-        database.get_table_qualified_name(original_table)
-    )
+    statement = f"SELECT * FROM {database.get_table_qualified_name(original_table)} WHERE id = 1;"
     target_table = original_table.create_similar_table()
     database.create_table_from_select_statement(statement, target_table)
 
-    df = database.hook.get_pandas_df(
-        f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
-    )
+    df = database.hook.get_pandas_df(f"SELECT * FROM {database.get_table_qualified_name(target_table)}")
     assert len(df) == 1
     expected = pd.DataFrame([{"id": 1, "name": "First"}])
     test_utils.assert_dataframes_are_equal(df, expected)

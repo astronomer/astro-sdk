@@ -1,23 +1,35 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, cast
+from typing import Any, Sequence, cast
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
+from openlineage.client.facet import (
+    BaseFacet,
+    OutputStatisticsOutputDatasetFacet,
+    SchemaDatasetFacet,
+    SchemaField,
+    SqlJobFacet,
+)
+from openlineage.client.run import Dataset as OpenlineageDataset
+from sqlalchemy.sql.functions import Function
+
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
+from astro.lineage.extractor import OpenLineageFacets
 from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
-from astro.sql.table import BaseTable, Table
+from astro.table import BaseTable, Table
 from astro.utils.table import find_first_table
 from astro.utils.typing_compat import Context
-from sqlalchemy.sql.functions import Function
 
 
 class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
     """Handles all decorator classes that can return a SQL function"""
+
+    template_fields: Sequence[str] = ("parameters", "op_args", "op_kwargs")
 
     database_impl: BaseDatabase
 
@@ -62,6 +74,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             op_kwargs=self.op_kwargs,
             python_callable=self.python_callable,
             parameters=self.parameters,  # type: ignore
+            context=context,
         )
         if first_table:
             self.conn_id = self.conn_id or first_table.conn_id  # type: ignore
@@ -93,9 +106,12 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         self.read_sql_from_function()
         self.move_function_params_into_sql_params(context)
         self.translate_jinja_to_sqlalchemy_template(context)
+
         # if there is no SQL to run we raise an error
         if self.sql == "" or not self.sql:
             raise AirflowException("There's no SQL to run")
+
+        context["ti"].xcom_push(key="base_sql_query", value=str(self.sql))
 
     def create_output_table_if_needed(self) -> None:
         """
@@ -103,9 +119,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         the output table with necessary metadata.
         """
         self.output_table.conn_id = self.output_table.conn_id or self.conn_id
-        self.output_table = self.database_impl.populate_table_metadata(
-            self.output_table
-        )
+        self.output_table = self.database_impl.populate_table_metadata(self.output_table)
         self.log.info("Returning table %s", self.output_table)
 
     def read_sql_from_function(self) -> None:
@@ -169,9 +183,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                 (
                     jinja_table_identifier,
                     jinja_table_parameter_value,
-                ) = self.database_impl.get_sqlalchemy_template_table_identifier_and_parameter(
-                    v, k
-                )
+                ) = self.database_impl.get_sqlalchemy_template_table_identifier_and_parameter(v, k)
                 context[k] = jinja_table_identifier
                 self.parameters[k] = jinja_table_parameter_value
             else:
@@ -181,10 +193,45 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         if context:
             self.sql = self.render_template(self.sql, context)
 
+    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:
+        """
+        Returns the lineage data
+        """
+        input_dataset: list[OpenlineageDataset] = [
+            OpenlineageDataset(
+                namespace=self.output_table.openlineage_dataset_namespace(),
+                name=self.output_table.openlineage_dataset_name(),
+                facets={
+                    "schema_dataset_facet": SchemaDatasetFacet(
+                        fields=[SchemaField(name=self.schema, type=self.database)]
+                    ),
+                },
+            )
+        ]
 
-def load_op_arg_dataframes_into_sql(
-    conn_id: str, op_args: tuple, target_table: BaseTable
-) -> tuple:
+        output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
+        if self.output_table:
+            output_dataset = [
+                OpenlineageDataset(
+                    namespace=self.output_table.openlineage_dataset_namespace(),
+                    name=self.output_table.openlineage_dataset_name(),
+                    facets={
+                        "stats": OutputStatisticsOutputDatasetFacet(rowCount=self.output_table.row_count)
+                    },
+                )
+            ]
+
+        run_facets: dict[str, BaseFacet] = {}
+
+        base_sql_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="base_sql_query")
+        job_facets: dict[str, BaseFacet] = {"sql": SqlJobFacet(query=base_sql_query)}
+
+        return OpenLineageFacets(
+            inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
+        )
+
+
+def load_op_arg_dataframes_into_sql(conn_id: str, op_args: tuple, target_table: BaseTable) -> tuple:
     """
     Identify dataframes in op_args and load them to the table.
 
@@ -197,9 +244,7 @@ def load_op_arg_dataframes_into_sql(
     database = create_database(conn_id=conn_id)
     for arg in op_args:
         if isinstance(arg, pd.DataFrame):
-            database.load_pandas_dataframe_to_table(
-                source_dataframe=arg, target_table=target_table
-            )
+            database.load_pandas_dataframe_to_table(source_dataframe=arg, target_table=target_table)
             final_args.append(target_table)
         elif isinstance(arg, BaseTable):
             arg = database.populate_table_metadata(arg)
@@ -209,9 +254,7 @@ def load_op_arg_dataframes_into_sql(
     return tuple(final_args)
 
 
-def load_op_kwarg_dataframes_into_sql(
-    conn_id: str, op_kwargs: dict, target_table: BaseTable
-) -> dict:
+def load_op_kwarg_dataframes_into_sql(conn_id: str, op_kwargs: dict, target_table: BaseTable) -> dict:
     """
     Identify dataframes in op_kwargs and load them to a table.
 
@@ -225,9 +268,7 @@ def load_op_kwarg_dataframes_into_sql(
     for key, value in op_kwargs.items():
         if isinstance(value, pd.DataFrame):
             df_table = cast(BaseTable, target_table.create_similar_table())
-            database.load_pandas_dataframe_to_table(
-                source_dataframe=value, target_table=df_table
-            )
+            database.load_pandas_dataframe_to_table(source_dataframe=value, target_table=df_table)
             final_kwargs[key] = df_table
         elif isinstance(value, BaseTable):
             value = database.populate_table_metadata(value)

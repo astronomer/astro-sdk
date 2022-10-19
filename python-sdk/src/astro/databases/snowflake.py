@@ -10,20 +10,6 @@ from typing import Any
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
-from astro import settings
-from astro.constants import (
-    DEFAULT_CHUNK_SIZE,
-    ColumnCapitalization,
-    FileLocation,
-    FileType,
-    LoadExistStrategy,
-    MergeConflictStrategy,
-)
-from astro.databases.base import BaseDatabase
-from astro.exceptions import DatabaseCustomError
-from astro.files import File
-from astro.settings import SNOWFLAKE_SCHEMA
-from astro.sql.table import BaseTable, Metadata
 from snowflake.connector import pandas_tools
 from snowflake.connector.errors import (
     DatabaseError,
@@ -37,6 +23,21 @@ from snowflake.connector.errors import (
     RequestTimeoutError,
     ServiceUnavailableError,
 )
+
+from astro import settings
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    ColumnCapitalization,
+    FileLocation,
+    FileType,
+    LoadExistStrategy,
+    MergeConflictStrategy,
+)
+from astro.databases.base import BaseDatabase
+from astro.exceptions import DatabaseCustomError
+from astro.files import File
+from astro.settings import SNOWFLAKE_SCHEMA
+from astro.table import BaseTable, Metadata
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
 
@@ -99,9 +100,7 @@ class SnowflakeFileFormat:
         return (
             "file_format_"
             + random.choice(string.ascii_lowercase)
-            + "".join(
-                random.choice(string.ascii_lowercase + string.digits) for _ in range(7)
-            )
+            + "".join(random.choice(string.ascii_lowercase + string.digits) for _ in range(7))
         )
 
     def set_file_type_from_file(self, file: File) -> None:
@@ -172,9 +171,7 @@ class SnowflakeStage:
         return (
             "stage_"
             + random.choice(string.ascii_lowercase)
-            + "".join(
-                random.choice(string.ascii_lowercase + string.digits) for _ in range(7)
-            )
+            + "".join(random.choice(string.ascii_lowercase + string.digits) for _ in range(7))
         )
 
     def set_url_from_file(self, file: File) -> None:
@@ -322,9 +319,7 @@ class SnowflakeDatabase(BaseDatabase):
     # ---------------------------------------------------------
 
     @staticmethod
-    def _create_stage_auth_sub_statement(
-        file: File, storage_integration: str | None = None
-    ) -> str:
+    def _create_stage_auth_sub_statement(file: File, storage_integration: str | None = None) -> str:
         """
         Create authentication-related line for the Snowflake CREATE STAGE.
         Raise an exception if it is not defined.
@@ -380,9 +375,7 @@ class SnowflakeDatabase(BaseDatabase):
             `Snowflake official documentation on stage creation
             <https://docs.snowflake.com/en/sql-reference/sql/create-stage.html>`_
         """
-        auth = self._create_stage_auth_sub_statement(
-            file=file, storage_integration=storage_integration
-        )
+        auth = self._create_stage_auth_sub_statement(file=file, storage_integration=storage_integration)
 
         metadata = metadata or self.default_metadata
         stage = SnowflakeStage(metadata=metadata)
@@ -415,9 +408,7 @@ class SnowflakeDatabase(BaseDatabase):
         try:
             self.hook.run(sql_statement)
         except ProgrammingError:
-            logging.error(
-                "Stage '%s' does not exist or not authorized.", stage.qualified_name
-            )
+            logging.error("Stage '%s' does not exist or not authorized.", stage.qualified_name)
             return False
         return True
 
@@ -443,12 +434,9 @@ class SnowflakeDatabase(BaseDatabase):
         :param file: File used to check the file type of to decide
             whether there is a native auto detection available for it.
         """
-        is_file_type_supported = (
-            file.type.name in NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES
-        )
+        is_file_type_supported = file.type.name in NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES
         is_file_location_supported = (
-            file.location.location_type
-            in NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS
+            file.location.location_type in NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS
         )
         return is_file_type_supported and is_file_location_supported
 
@@ -517,18 +505,14 @@ class SnowflakeDatabase(BaseDatabase):
         # we are handling this more gracefully in a separate PR
         super().create_table_using_schema_autodetection(table, dataframe=dataframe)
 
-    def is_native_load_file_available(
-        self, source_file: File, target_table: BaseTable
-    ) -> bool:
+    def is_native_load_file_available(self, source_file: File, target_table: BaseTable) -> bool:
         """
         Check if there is an optimised path for source to destination.
 
         :param source_file: File from which we need to transfer data
         :param target_table: Table that needs to be populated with file data
         """
-        is_file_type_supported = (
-            source_file.type.name in NATIVE_LOAD_SUPPORTED_FILE_TYPES
-        )
+        is_file_type_supported = source_file.type.name in NATIVE_LOAD_SUPPORTED_FILE_TYPES
         is_file_location_supported = (
             source_file.location.location_type in NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS
         )
@@ -568,15 +552,11 @@ class SnowflakeDatabase(BaseDatabase):
         """
         native_support_kwargs = native_support_kwargs or {}
         storage_integration = native_support_kwargs.get("storage_integration")
-        stage = self.create_stage(
-            file=source_file, storage_integration=storage_integration
-        )
+        stage = self.create_stage(file=source_file, storage_integration=storage_integration)
 
         table_name = self.get_table_qualified_name(target_table)
         file_path = os.path.basename(source_file.path) or ""
-        sql_statement = (
-            f"COPY INTO {table_name} FROM @{stage.qualified_name}/{file_path}"
-        )
+        sql_statement = f"COPY INTO {table_name} FROM @{stage.qualified_name}/{file_path}"
         try:
             self.hook.run(sql_statement)
         except (ValueError, AttributeError) as exe:
@@ -725,20 +705,15 @@ class SnowflakeDatabase(BaseDatabase):
         (
             source_table_identifier,
             source_table_param,
-        ) = self.get_sqlalchemy_template_table_identifier_and_parameter(
-            source_table, "source_table"
-        )
+        ) = self.get_sqlalchemy_template_table_identifier_and_parameter(source_table, "source_table")
 
         (
             target_table_identifier,
             target_table_param,
-        ) = self.get_sqlalchemy_template_table_identifier_and_parameter(
-            target_table, "target_table"
-        )
+        ) = self.get_sqlalchemy_template_table_identifier_and_parameter(target_table, "target_table")
 
         statement = (
-            f"merge into {target_table_identifier} using {source_table_identifier} "
-            + "on {merge_clauses}"
+            f"merge into {target_table_identifier} using {source_table_identifier} " + "on {merge_clauses}"
         )
 
         merge_target_dict = {
@@ -774,9 +749,7 @@ class SnowflakeDatabase(BaseDatabase):
                 ]
             )
             statement = statement.replace("{merge_vals}", merge_statement)
-        statement += (
-            " when not matched then insert({target_columns}) values ({append_columns})"
-        )
+        statement += " when not matched then insert({target_columns}) values ({append_columns})"
         statement = statement.replace(
             "{target_columns}",
             ",".join(f"{target_table_name}.{t}" for t in target_cols),
@@ -792,6 +765,27 @@ class SnowflakeDatabase(BaseDatabase):
             "target_table": target_table_param,
         }
         return statement, params
+
+    def openlineage_dataset_name(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: db_name.schema_name.table_name
+        """
+        conn = self.hook.get_connection(self.conn_id)
+        conn_extra = conn.extra_dejson
+        schema = conn_extra.get("schema") or conn.schema
+        db = conn_extra.get("database")
+        return f"{db}.{schema}.{table.name}"
+
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: snowflake://ACCOUNT
+        """
+        account = self.hook.get_connection(self.conn_id).extra_dejson.get("account")
+        return f"{self.sql_type}://{account}"
 
 
 def wrap_identifier(inp: str) -> str:

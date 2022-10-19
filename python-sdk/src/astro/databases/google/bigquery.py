@@ -6,30 +6,14 @@ from typing import Any, Callable, Mapping
 
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
-from airflow.providers.google.cloud.hooks.bigquery_dts import (
-    BiqQueryDataTransferServiceHook,
-)
-from astro.constants import (
-    DEFAULT_CHUNK_SIZE,
-    FileLocation,
-    FileType,
-    LoadExistStrategy,
-    MergeConflictStrategy,
-)
-from astro.databases.base import BaseDatabase
-from astro.exceptions import DatabaseCustomError
-from astro.files import File
-from astro.settings import BIGQUERY_SCHEMA
-from astro.sql.table import BaseTable, Metadata
+from airflow.providers.google.cloud.hooks.bigquery_dts import BiqQueryDataTransferServiceHook
 from google.api_core.exceptions import (
     ClientError,
     Conflict,
     Forbidden,
     GoogleAPIError,
     InvalidArgument,
-)
-from google.api_core.exceptions import NotFound as GoogleNotFound
-from google.api_core.exceptions import (
+    NotFound as GoogleNotFound,
     ResourceExhausted,
     RetryError,
     ServerError,
@@ -50,6 +34,19 @@ from google.resumable_media import InvalidResponse
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
 from tenacity import retry, stop_after_attempt
+
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    FileLocation,
+    FileType,
+    LoadExistStrategy,
+    MergeConflictStrategy,
+)
+from astro.databases.base import BaseDatabase
+from astro.exceptions import DatabaseCustomError
+from astro.files import File
+from astro.settings import BIGQUERY_SCHEMA
+from astro.table import BaseTable, Metadata
 
 DEFAULT_CONN_ID = BigQueryHook.default_conn_name
 NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
@@ -73,9 +70,7 @@ class BigqueryDatabase(BaseDatabase):
         FileLocation.LOCAL: "load_local_file_to_table",
     }
 
-    NATIVE_AUTODETECT_SCHEMA_CONFIG: Mapping[
-        FileLocation, Mapping[str, list[FileType] | Callable]
-    ] = {
+    NATIVE_AUTODETECT_SCHEMA_CONFIG: Mapping[FileLocation, Mapping[str, list[FileType] | Callable]] = {
         FileLocation.GS: {
             "filetype": [FileType.CSV, FileType.NDJSON, FileType.PARQUET],
             "method": lambda table, file: None,
@@ -111,7 +106,7 @@ class BigqueryDatabase(BaseDatabase):
         super().__init__(conn_id)
 
     @property
-    def sql_type(self):
+    def sql_type(self) -> str:
         return "bigquery"
 
     @property
@@ -210,9 +205,7 @@ class BigqueryDatabase(BaseDatabase):
         target_table_name = self.get_table_qualified_name(target_table)
         source_table_name = self.get_table_qualified_name(source_table)
 
-        insert_statement = (
-            f"INSERT ({', '.join(target_columns)}) VALUES ({', '.join(source_columns)})"
-        )
+        insert_statement = f"INSERT ({', '.join(target_columns)}) VALUES ({', '.join(source_columns)})"
         merge_statement = (
             f"MERGE {target_table_name} T USING {source_table_name} S"
             f" ON {' AND '.join(f'T.{col}=S.{col}' for col in target_conflict_columns)}"
@@ -220,17 +213,12 @@ class BigqueryDatabase(BaseDatabase):
         )
         if if_conflicts == "update":
             update_statement_map = ", ".join(
-                f"T.{col}=S.{source_columns[idx]}"
-                for idx, col in enumerate(target_columns)
+                f"T.{col}=S.{source_columns[idx]}" for idx, col in enumerate(target_columns)
             )
             if not self.columns_exist(source_table, source_columns):
-                raise ValueError(
-                    f"Not all the columns provided exist for {source_table_name}!"
-                )
+                raise ValueError(f"Not all the columns provided exist for {source_table_name}!")
             if not self.columns_exist(target_table, target_columns):
-                raise ValueError(
-                    f"Not all the columns provided exist for {target_table_name}!"
-                )
+                raise ValueError(f"Not all the columns provided exist for {target_table_name}!")
             # Note: Ignoring below sql injection warning, as we validate that the table columns exist beforehand.
             update_statement = f"UPDATE SET {update_statement_map}"  # skipcq BAN-B608
             merge_statement += f" WHEN MATCHED THEN {update_statement}"
@@ -245,9 +233,7 @@ class BigqueryDatabase(BaseDatabase):
         :param file: File used to check the file type of to decide
             whether there is a native auto detection available for it.
         """
-        supported_config = self.NATIVE_AUTODETECT_SCHEMA_CONFIG.get(
-            file.location.location_type
-        )
+        supported_config = self.NATIVE_AUTODETECT_SCHEMA_CONFIG.get(file.location.location_type)
         if supported_config and file.type.name in supported_config["filetype"]:  # type: ignore
             return True
         return False
@@ -263,14 +249,10 @@ class BigqueryDatabase(BaseDatabase):
         :param table: The table to be created.
         :param file: File used to infer the new table columns.
         """
-        supported_config = self.NATIVE_AUTODETECT_SCHEMA_CONFIG.get(
-            file.location.location_type
-        )
+        supported_config = self.NATIVE_AUTODETECT_SCHEMA_CONFIG.get(file.location.location_type)
         return supported_config["method"](table=table, file=file)  # type: ignore
 
-    def is_native_load_file_available(
-        self, source_file: File, target_table: BaseTable
-    ) -> bool:
+    def is_native_load_file_available(self, source_file: File, target_table: BaseTable) -> bool:
         """
         Check if there is an optimised path for source to destination.
 
@@ -402,9 +384,7 @@ class BigqueryDatabase(BaseDatabase):
         try:
             return str(self.hook.project_id)
         except AttributeError as exe:
-            raise DatabaseCustomError(
-                f"conn_id {target_table.conn_id} has no project id"
-            ) from exe
+            raise DatabaseCustomError(f"conn_id {target_table.conn_id} has no project id") from exe
 
     def load_local_file_to_table(
         self,
@@ -448,6 +428,23 @@ class BigqueryDatabase(BaseDatabase):
                 destination=self.get_table_qualified_name(target_table),
             )
         job.result()
+
+    def openlineage_dataset_name(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: PROJECT.dataset_name.table_name
+        """
+        dataset = table.metadata.database or table.metadata.schema
+        return f"{self.hook.project_id}.{dataset}.{table.name}"
+
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: bigquery
+        """
+        return self.sql_type
 
 
 class S3ToBigqueryDataTransfer:
@@ -497,18 +494,14 @@ class S3ToBigqueryDataTransfer:
             run_id = self.run_transfer_now(transfer_config_id)
 
             # Poll Bigquery for status of transfer job
-            run_info = self.get_transfer_info(
-                run_id=run_id, transfer_config_id=transfer_config_id
-            )
+            run_info = self.get_transfer_info(run_id=run_id, transfer_config_id=transfer_config_id)
 
             # Note - Super set of states that indicate the job is running.
             # This needs to be a super set as this if we miss on any running state, code will go into infinite loop.
             running_states = [TransferState.PENDING, TransferState.RUNNING]
 
             while run_info.state in running_states:
-                run_info = self.get_transfer_info(
-                    run_id=run_id, transfer_config_id=transfer_config_id
-                )
+                run_info = self.get_transfer_info(run_id=run_id, transfer_config_id=transfer_config_id)
                 time.sleep(self.poll_duration)
 
             if run_info.state != TransferState.SUCCEEDED:
@@ -581,6 +574,4 @@ class S3ToBigqueryDataTransfer:
     @retry(stop=stop_after_attempt(3))
     def get_transfer_info(self, run_id: str, transfer_config_id: str):
         """Get transfer job info"""
-        return self.client.get_transfer_run(
-            run_id=run_id, transfer_config_id=transfer_config_id
-        )
+        return self.client.get_transfer_run(run_id=run_id, transfer_config_id=transfer_config_id)

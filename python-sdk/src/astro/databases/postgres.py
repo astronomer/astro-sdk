@@ -7,12 +7,13 @@ from contextlib import closing
 import pandas as pd
 import sqlalchemy
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+from psycopg2 import sql as postgres_sql
+
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.settings import POSTGRES_SCHEMA
-from astro.sql.table import BaseTable, Metadata
-from psycopg2 import sql as postgres_sql
+from astro.table import BaseTable, Metadata
 
 DEFAULT_CONN_ID = PostgresHook.default_conn_name
 
@@ -41,15 +42,16 @@ class PostgresDatabase(BaseDatabase):
 
     @property
     def default_metadata(self) -> Metadata:
-        """
-        Fill in default metadata values for table objects addressing Postgres databases.
+        """Fill in default metadata values for table objects addressing Postgres databases.
 
-        Currently, Schema is not being fetched from airflow connection for Postgres because, in Postgres, databases and
-        schema are different concepts: https://www.postgresql.org/docs/current/ddl-schemas.html
+        Currently, Schema is not being fetched from airflow connection for Postgres because, in Postgres,
+        databases and schema are different concepts: https://www.postgresql.org/docs/current/ddl-schemas.html
+
         The PostgresHook only exposes schema:
-        https://airflow.apache.org/docs/apache-airflow-providers-postgres/stable/_api/airflow/providers/postgres/hooks/postgres/index.html
-        However, implementation-wise, it seems that if the PostgresHook receives a schema during initialization,
-        but it uses it as a database in the connection to Postgres:
+        :external+airflow-postgres:py:class:`airflow.providers.postgres.hooks.postgres.PostgresHook`
+
+        However, implementation-wise, it seems that if the PostgresHook receives a schema during
+        initialization, but it uses it as a database in the connection to Postgres:
         https://github.com/apache/airflow/blob/main/airflow/providers/postgres/hooks/postgres.py#L96
         """
         # TODO: Change airflow PostgresHook to fetch database and schema separately
@@ -157,7 +159,9 @@ class PostgresDatabase(BaseDatabase):
             schema = table.metadata.schema
             return (schema, table.name) if schema else (table.name,)
 
-        statement = "INSERT INTO {target_table} ({target_columns}) SELECT {source_columns} FROM {source_table}"
+        statement = (
+            "INSERT INTO {target_table} ({target_columns}) SELECT {source_columns} FROM {source_table}"
+        )
 
         source_columns = list(source_to_target_columns_map.keys())
         target_columns = list(source_to_target_columns_map.values())
@@ -196,3 +200,21 @@ class PostgresDatabase(BaseDatabase):
         :param file: File path and conn_id for object stores
         """
         return file.export_to_dataframe_via_byte_stream()
+
+    def openlineage_dataset_name(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: schema_name.table_name
+        """
+        schema = self.hook.get_connection(self.conn_id).schema or "public"
+        return f"{schema}.{table.name}"
+
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: postgresql://localhost:5432
+        """
+        conn = self.hook.get_connection(self.conn_id)
+        return f"{self.sql_type}://{conn.host}:{conn.port}"

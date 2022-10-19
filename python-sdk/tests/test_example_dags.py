@@ -1,17 +1,17 @@
-import os
+from __future__ import annotations
+
+from pathlib import Path
 
 import airflow
 import pytest
+from airflow.models import DAG
 from airflow.models.dagbag import DagBag
 from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import provide_session
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_exponential,
-)
+from packaging.version import Version
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+
 from tests.sql.operators import utils as test_utils
 
 RETRY_ON_EXCEPTIONS = []
@@ -47,48 +47,44 @@ def session():
     return get_session()
 
 
-@pytest.mark.parametrize(
-    "dag_id",
-    [
-        "example_amazon_s3_postgres",
-        "example_amazon_s3_postgres_load_and_save",
-        "example_amazon_s3_snowflake_transform",
-        "example_google_bigquery_gcs_load_and_save",
-        "example_snowflake_partial_table_with_append",
-        "example_sqlite_load_transform",
-        "example_append",
-        "example_load_file",
-        "example_transform",
-        "example_merge_bigquery",
-        "example_transform_file",
-        "calculate_popular_movies",
-    ],
-)
-def test_example_dag(session, dag_id):
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    db = DagBag(dir_path + "/../example_dags")
-    dag = db.get_dag(dag_id)
+MIN_VER_DAG_FILE: dict[str, list[str]] = {
+    "2.3": ["example_dynamic_task_template.py", "example_bigquery_dynamic_map_task.py"],
+    "2.4": ["example_datasets.py"],
+}
 
-    if dag is None:
-        raise NameError(f"The DAG with dag_id: {dag_id} was not found")
+# Sort descending based on Versions and convert string to an actual version
+MIN_VER_DAG_FILE_VER: dict[Version, list[str]] = {
+    Version(version): MIN_VER_DAG_FILE[version]
+    for version in sorted(MIN_VER_DAG_FILE, key=Version, reverse=True)
+}
+
+
+def get_dag_bag() -> DagBag:
+    """Create a DagBag by adding the files that are not supported to .airflowignore"""
+    example_dags_dir = Path(__file__).parent.parent / "example_dags"
+    airflow_ignore_file = example_dags_dir / ".airflowignore"
+
+    with open(airflow_ignore_file, "w+") as file:
+        for min_version, files in MIN_VER_DAG_FILE_VER.items():
+            if Version(airflow.__version__) < min_version:
+                print(f"Adding {files} to .airflowignore")
+                file.writelines([f"{file}\n" for file in files])
+
+    print(".airflowignore contents: ")
+    print(airflow_ignore_file.read_text())
+    dag_bag = DagBag(example_dags_dir, include_examples=False)
+    return dag_bag
+
+
+@pytest.mark.parametrize(
+    "dag",
+    [pytest.param(dag, id=dag_id) for dag_id, dag in get_dag_bag().dags.items()],
+)
+def test_example_dag(session, dag: DAG):
     wrapper_run_dag(dag)
 
 
-@pytest.mark.skipif(
-    airflow.__version__ < "2.3.0", reason="Require Airflow version >= 2.3.0"
-)
-@pytest.mark.parametrize(
-    "dag_id",
-    [
-        "example_dynamic_map_task",
-        "example_dynamic_task_template",
-    ],
-)
-def test_example_dynamic_task_map_dag(session, dag_id):
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    db = DagBag(dir_path + "/../example_dags")
-    dag = db.get_dag(dag_id)
-
-    if dag is None:
-        raise NameError(f"The DAG with dag_id: {dag_id} was not found")
-    wrapper_run_dag(dag)
+def test_example_dags_loaded_with_no_errors():
+    dag_bag = get_dag_bag()
+    assert dag_bag.dags
+    assert not dag_bag.import_errors

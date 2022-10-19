@@ -1,10 +1,12 @@
 import pickle
 from datetime import datetime
+from unittest import mock
 
 import pytest
-from airflow import DAG
+from airflow.models import DAG, Connection
+
 from astro.sql import get_value_list
-from astro.sql.table import Metadata, Table, TempTable
+from astro.table import Metadata, Table, TempTable
 
 
 def test_table_with_explicit_name():
@@ -126,9 +128,7 @@ def test_table_to_datasets_uri(table, dataset_uri):
 
 def test_table_to_datasets_extra():
     """Verify that extra is set"""
-    table = Table(
-        name="test_table", conn_id="test_conn", metadata=Metadata(schema="schema")
-    )
+    table = Table(name="test_table", conn_id="test_conn", metadata=Metadata(schema="schema"))
     assert table.extra == {}
 
 
@@ -152,3 +152,79 @@ def test_if_table_object_can_be_pickled():
     """Verify if we can pickle Table object"""
     table = Table()
     assert pickle.loads(pickle.dumps(table)) == table
+
+
+@pytest.mark.parametrize(
+    "connection,name,namespace",
+    [
+        (
+            Connection(
+                conn_id="test_conn", conn_type="gcpbigquery", extra={"project": "astronomer-dag-authoring"}
+            ),
+            "astronomer-dag-authoring.dataset.test_tb",
+            "bigquery",
+        ),
+        (
+            Connection(
+                conn_id="test_conn",
+                conn_type="redshift",
+                schema="astro",
+                host="local",
+                port=5439,
+                login="astro-sdk",
+                password="",
+            ),
+            "astro.test_tb",
+            "redshift://local:5439",
+        ),
+        (
+            Connection(
+                conn_id="test_conn",
+                conn_type="postgres",
+                login="postgres",
+                password="postgres",
+                host="postgres",
+                port=5432,
+            ),
+            "public.test_tb",
+            "postgresql://postgres:5432",
+        ),
+        (
+            Connection(
+                conn_id="test_conn",
+                conn_type="snowflake",
+                host="local",
+                port=443,
+                login="astro-sdk",
+                password="",
+                schema="ci",
+                extra={
+                    "account": "astro-sdk",
+                    "region": "us-east-1",
+                    "role": "TEST_USER",
+                    "warehouse": "TEST_ASTRO",
+                    "database": "TEST_ASTRO",
+                },
+            ),
+            "TEST_ASTRO.ci.test_tb",
+            "snowflake://astro-sdk",
+        ),
+        (
+            Connection(conn_id="test_conn", conn_type="sqlite", host="/tmp/sqlite.db"),
+            "/tmp/sqlite.db.test_tb",
+            "/tmp/sqlite.db",
+        ),
+    ],
+)
+@mock.patch("airflow.providers.google.cloud.utils.credentials_provider.get_credentials_and_project_id")
+@mock.patch("airflow.hooks.base.BaseHook.get_connection")
+def test_openlineage_dataset(mock_get_connection, gcp_cred, connection, name, namespace):
+    """
+    Test that name and namespace for lineage is correct for databases
+    """
+    mock_get_connection.return_value = connection
+    gcp_cred.return_value = "astronomer-dag-authoring", "astronomer-dag-authoring"
+    tb = Table(conn_id="test_conn", name="test_tb", metadata=Metadata(schema="dataset"))
+
+    assert tb.openlineage_dataset_name() == name
+    assert tb.openlineage_dataset_namespace() == namespace

@@ -1,0 +1,60 @@
+connections:
+
+## Example of SQLite connection
+  - conn_id: sqlite_conn
+    conn_type: sqlite
+    host: data/imdb.db
+    schema:
+    login:
+    password:
+
+## Example of Bigquery connection
+#  - conn_id: bigquery_conn
+#    conn_type: bigquery
+#    description: null
+#    extra:
+#      project: "my-gcp-project"
+#    host: null
+#    login: null
+#    password: null
+#    port: null
+#    schema: null
+
+
+## Example of Postgres connection
+#  - conn_id: postgres_conn
+#    conn_type: postgres
+#    host: localhost
+#    schema:
+#    login: postgres
+#    password: postgres
+#    port: 5432
+#    extra:
+
+## Example of Redshift connection
+## To use this, either set the corresponding environment variables or
+## replace the values started by $ inline
+#  - conn_id: redshift_conn
+#    conn_type: redshift
+#    schema: $REDSHIFT_DATABASE
+#    host: $REDSHIFT_HOST
+#    port: 5439
+#    login: $REDSHIFT_USERNAME
+#    password: $REDSHIFT_PASSWORD
+
+## Example of Snowflake connection
+## To use this, either set the corresponding environment variables or
+## replace the values started by $ inline
+#  - conn_id: snowflake_conn
+#    conn_type: snowflake
+#    host: https://gp00000.us-east-1.snowflakecomputing.com
+#    port: 443
+#    login: $SNOWFLAKE_ACCOUNT_NAME
+#    password: $SNOWFLAKE_PASSWORD
+#    schema: $SNOWFLAKE_SCHEMA
+#    extra:
+#      account: "gp00000"
+#      region: "us-east-1"
+#      role: $SNOWFLAKE_ROLE
+#      warehouse: $SNOWFLAKE_WAREHOUSE
+#      database: $SNOWFLAKE_DATABASE

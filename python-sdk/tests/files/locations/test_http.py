@@ -1,6 +1,7 @@
 import pathlib
 
 import pytest
+
 from astro.constants import FileLocation
 from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
@@ -20,17 +21,13 @@ sample_filepaths_ids = [items[0].value for items in sample_filepaths_per_locatio
     sample_filepaths_per_location,
     ids=sample_filepaths_ids,
 )  # skipcq: PTC-W0065
-def test_get_location_type_with_supported_location(
-    expected_location, filepath
-):  # skipcq: PTC-W0065
+def test_get_location_type_with_supported_location(expected_location, filepath):  # skipcq: PTC-W0065
     """test get_location_type() with all the supported locations"""
     location = BaseFileLocation.get_location_type(filepath)
     assert location == expected_location
 
 
-@pytest.mark.parametrize(
-    "path", ["http://domain/file", "https://domain/file"], ids=["http", "https"]
-)
+@pytest.mark.parametrize("path", ["http://domain/file", "https://domain/file"], ids=["http", "https"])
 def test_get_transport_params(path):  # skipcq: PYL-W0612, PTC-W0065
     """test get_transport_params() with API endpoint"""
     location = create_file_location(path)
@@ -49,7 +46,10 @@ def test_describe_get_paths(path):  # skipcq: PYL-W0612, PTC-W0065
     assert location.paths == [path]
 
 
+@pytest.mark.integration
 def test_size():
-    """Test get_size() of for local file."""
-    location = create_file_location("http://tmp/house2.csv")
-    assert location.size == -1
+    """Test get_size() of for HTTP file."""
+    location = create_file_location(
+        "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
+    )
+    assert location.size > 0

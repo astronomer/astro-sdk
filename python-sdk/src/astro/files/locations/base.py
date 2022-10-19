@@ -7,6 +7,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import smart_open
+
 from astro.constants import FileLocation
 
 
@@ -48,8 +49,26 @@ class BaseFileLocation(ABC):
 
     @property
     @abstractmethod
-    def size(self):
+    def size(self) -> int:
         """Return the size in bytes of the given file"""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def openlineage_dataset_name(self) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
         raise NotImplementedError
 
     @staticmethod
@@ -68,11 +87,7 @@ class BaseFileLocation(ABC):
             result = urlparse(path)
 
             if not (
-                (
-                    result.scheme
-                    and result.netloc
-                    and (result.port or result.port is None)
-                )
+                (result.scheme and result.netloc and (result.port or result.port is None))
                 or os.path.isfile(path)
                 or BaseFileLocation.check_non_existing_local_file_path(path)
                 or glob.glob(result.path)
@@ -106,17 +121,13 @@ class BaseFileLocation(ABC):
             try:
                 location = FileLocation(file_scheme)
             except ValueError:
-                raise ValueError(
-                    f"Unsupported scheme '{file_scheme}' from path '{path}'"
-                )
+                raise ValueError(f"Unsupported scheme '{file_scheme}' from path '{path}'")
         return location
 
     def exists(self) -> bool:
         """Check if the file exists or not"""
         try:
-            with smart_open.open(
-                self.path, mode="r", transport_params=self.transport_params
-            ):
+            with smart_open.open(self.path, mode="r", transport_params=self.transport_params):
                 return True
         except OSError:
             return False

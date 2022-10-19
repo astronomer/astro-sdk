@@ -9,10 +9,11 @@ from urllib.parse import urlparse
 
 import pandas as pd
 import settings as benchmark_settings
-from astro.databases import create_database
-from astro.sql.table import Metadata, Table
 from google.cloud import storage
 from sqlalchemy import text
+
+from astro.databases import create_database
+from astro.table import Metadata, Table
 
 SUMMARY_FIELDS = [
     "database",
@@ -119,9 +120,7 @@ def import_profile_data_to_bq(
     return db.export_table_to_pandas_dataframe(
         table,
         select_kwargs={
-            "whereclause": text(
-                f'{benchmark_settings.publish_benchmarks_table_grouping_col}="{bq_git_sha}"'
-            )
+            "whereclause": text(f'{benchmark_settings.publish_benchmarks_table_grouping_col}="{bq_git_sha}"')
         },
     )
 
@@ -136,27 +135,19 @@ def analyse_results(df: pd.DataFrame, output_filepath: str = None):
     mean_by_dag = df.groupby("dag_id", as_index=False).mean()
 
     # format data
-    mean_by_dag["database"] = mean_by_dag.dag_id.apply(
-        lambda text: text.split("into_")[-1]
-    )
+    mean_by_dag["database"] = mean_by_dag.dag_id.apply(lambda text: text.split("into_")[-1])
     mean_by_dag["dataset"] = mean_by_dag.dag_id.apply(
         lambda text: text.split("load_file_")[-1].split("_into")[0]
     )
 
-    mean_by_dag["memory_rss"] = mean_by_dag.memory_full_info_rss.apply(
-        lambda value: format_bytes(value)
-    )
+    mean_by_dag["memory_rss"] = mean_by_dag.memory_full_info_rss.apply(lambda value: format_bytes(value))
     if sys.platform == "linux":
-        mean_by_dag["memory_pss"] = mean_by_dag.memory_full_info_pss.apply(
-            lambda value: format_bytes(value)
-        )
+        mean_by_dag["memory_pss"] = mean_by_dag.memory_full_info_pss.apply(lambda value: format_bytes(value))
         mean_by_dag["memory_shared"] = mean_by_dag.memory_full_info_shared.apply(
             lambda value: format_bytes(value)
         )
 
-    mean_by_dag["total_time"] = mean_by_dag["duration"].apply(
-        lambda ms_time: format_time(ms_time)
-    )
+    mean_by_dag["total_time"] = mean_by_dag["duration"].apply(lambda ms_time: format_time(ms_time))
 
     mean_by_dag["cpu_time_system"] = (
         mean_by_dag["cpu_time_system"] + mean_by_dag["cpu_time_children_system"]
@@ -179,9 +170,7 @@ def get_content(summary):
     # print Markdown tables per database
     for database_name in summary["database"].unique().tolist():
         content = content + f"\n\n### Database: {database_name}\n"
-        content = content + str(
-            summary[summary["database"] == database_name].to_markdown(index=False)
-        )
+        content = content + str(summary[summary["database"] == database_name].to_markdown(index=False))
     return content
 
 

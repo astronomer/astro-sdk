@@ -37,7 +37,7 @@ release = __version__
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.autodoc", "autoapi.extension", "myst_parser"]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.intersphinx", "autoapi.extension", "myst_parser"]
 autodoc_typehints = "description"
 
 myst_all_links_external = True
@@ -62,6 +62,12 @@ templates_path = ["_autoapi_templates"]
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "*.txt"]
+
+# Mapping to inter-sphinx linking.
+intersphinx_mapping = {
+    "airflow": ("https://airflow.apache.org/docs/apache-airflow/stable", None),
+    "airflow-postgres": ("https://airflow.apache.org/docs/apache-airflow-providers-postgres/stable", None),
+}
 
 # -- Options for HTML output -------------------------------------------------
 

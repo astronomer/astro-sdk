@@ -1,7 +1,9 @@
 from unittest.mock import patch
 
-from astro.files.locations import create_file_location
+import pytest
 from google.cloud.storage import Client
+
+from astro.files.locations import create_file_location
 
 
 def test_get_transport_params_for_gcs():  # skipcq: PYL-W0612, PTC-W0065
@@ -19,12 +21,12 @@ def test_get_transport_params_for_gcs():  # skipcq: PYL-W0612, PTC-W0065
 def test_remote_object_store_prefix(remote_file):
     """with remote filepath having prefix"""
     location = create_file_location("gs://tmp/house")
-    assert sorted(location.paths) == sorted(
-        ["gs://tmp/house1.csv", "gs://tmp/house2.csv"]
-    )
+    assert sorted(location.paths) == sorted(["gs://tmp/house1.csv", "gs://tmp/house2.csv"])
 
 
+@pytest.mark.integration
 def test_size():
-    """Test get_size() of for local file."""
-    location = create_file_location("gs://tmp/house1.csv")
-    assert location.size == -1
+    """Test get_size() of for GCS file."""
+    path = "gs://astro-sdk/workspace/sample_pattern.csv"
+    location = create_file_location(path)
+    assert location.size > 0

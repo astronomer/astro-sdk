@@ -11,10 +11,11 @@ from datetime import datetime
 
 from airflow import DAG
 from airflow.decorators import task
+
 from astro import sql as aql
 from astro.files import File
 from astro.sql import Table
-from astro.sql.table import Metadata
+from astro.table import Metadata
 
 ASTRO_BIGQUERY_DATASET = os.getenv("ASTRO_BIGQUERY_DATASET", "dag_authoring")
 ASTRO_GCP_CONN_ID = os.getenv("ASTRO_GCP_CONN_ID", "google_cloud_default")
@@ -36,6 +37,7 @@ with DAG(
     schedule_interval=None,
     start_date=datetime(2022, 1, 1),
     catchup=False,
+    tags=["airflow_version:2.3.0"],
 ) as dag:
 
     @aql.run_raw_sql(handler=handle_result)

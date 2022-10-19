@@ -9,25 +9,24 @@ Run test:
     python3 -m unittest tests.operators.test_load_file.TestLoadFile.test_aql_local_file_to_postgres
 
 """
-import importlib
 import os
 import pathlib
 from unittest import mock
 
 import pandas as pd
 import pytest
-from airflow.exceptions import BackfillUnfinished
+from airflow.exceptions import AirflowNotFoundException
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
+from pandas.testing import assert_frame_equal
+
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database, FileType
-from astro.exceptions import IllegalLoadToDatabaseException
 from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
-from astro.sql.table import Metadata, Table
-from pandas.testing import assert_frame_equal
+from astro.table import Metadata, Table
 from tests.sql.operators import utils as test_utils
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("load_file_test_table")
@@ -72,22 +71,6 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
     assert df.shape == (3, 9)
 
 
-@mock.patch.dict(
-    os.environ, {"AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE": "False"}
-)
-def test_unsafe_loading_of_dataframe(sample_dag):
-    from astro import settings
-
-    importlib.reload(settings)
-
-    with pytest.raises(IllegalLoadToDatabaseException):
-        load_file(
-            input_file=File(
-                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/homes_main.csv"
-            ),
-        ).operator.execute({})
-
-
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "remote_files_fixture",
@@ -117,16 +100,12 @@ def test_unsafe_loading_of_dataframe(sample_dag):
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
-def test_aql_load_remote_file_to_dbs(
-    sample_dag, database_table_fixture, remote_files_fixture
-):
+def test_aql_load_remote_file_to_dbs(sample_dag, database_table_fixture, remote_files_fixture):
     db, test_table = database_table_fixture
     file_uri = remote_files_fixture[0]
 
     with sample_dag:
-        load_file(
-            input_file=File(file_uri), output_table=test_table, use_native_support=False
-        )
+        load_file(input_file=File(file_uri), output_table=test_table, use_native_support=False)
     test_utils.run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
@@ -228,9 +207,7 @@ def test_unique_task_id_for_same_path(sample_dag):
         for index in range(4):
             params = {
                 "input_file": File(path=str(CWD) + "/../../data/homes.csv"),
-                "output_table": Table(
-                    conn_id="postgres_conn", metadata=Metadata(database="pagila")
-                ),
+                "output_table": Table(conn_id="postgres_conn", metadata=Metadata(database="pagila")),
             }
             if index == 3:
                 params["task_id"] = "task_id"
@@ -260,9 +237,7 @@ def test_load_file_templated_filename(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
     with sample_dag:
         load_file(
-            input_file=File(
-                path=str(CWD) + "/../../data/{{ var.value.foo }}/example.csv"
-            ),
+            input_file=File(path=str(CWD) + "/../../data/{{ var.value.foo }}/example.csv"),
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
@@ -288,9 +263,7 @@ def test_load_file_templated_filename(sample_dag, database_table_fixture):
     indirect=True,
     ids=["sqlite"],
 )
-def test_aql_load_file_pattern(
-    remote_files_fixture, sample_dag, database_table_fixture
-):
+def test_aql_load_file_pattern(remote_files_fixture, sample_dag, database_table_fixture):
     remote_object_uri = remote_files_fixture[0]
     filename = pathlib.Path(CWD.parent, "../data/sample.csv")
     db, test_table = database_table_fixture
@@ -327,9 +300,7 @@ def test_aql_load_file_local_file_pattern(sample_dag, database_table_fixture):
 
     with sample_dag:
         load_file(
-            input_file=File(
-                path=str(CWD.parent) + "/../data/homes_pattern_*", filetype=FileType.CSV
-            ),
+            input_file=File(path=str(CWD.parent) + "/../data/homes_pattern_*", filetype=FileType.CSV),
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
@@ -358,9 +329,7 @@ def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
 
     with sample_dag:
         loaded_df = load_file(
-            input_file=File(
-                path=str(CWD.parent) + "/../data/homes_pattern_*", filetype=FileType.CSV
-            ),
+            input_file=File(path=str(CWD.parent) + "/../data/homes_pattern_*", filetype=FileType.CSV),
         )
         validate(loaded_df)
 
@@ -384,9 +353,7 @@ def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
     indirect=True,
     ids=["google", "amazon"],
 )
-def test_load_file_using_file_connection(
-    sample_dag, remote_files_fixture, database_table_fixture
-):
+def test_load_file_using_file_connection(sample_dag, remote_files_fixture, database_table_fixture):
     db, test_table = database_table_fixture
     file_uri = remote_files_fixture[0]
     if file_uri.startswith("s3"):
@@ -414,9 +381,7 @@ def test_load_file_using_file_connection(
     indirect=True,
     ids=["postgresql"],
 )
-def test_load_file_using_file_connection_fails_nonexistent_conn(
-    caplog, sample_dag, database_table_fixture
-):
+def test_load_file_using_file_connection_fails_nonexistent_conn(sample_dag, database_table_fixture):
     database_name = "postgres"
     file_conn_id = "fake_conn"
     file_uri = "s3://fake-bucket/fake-object.csv"
@@ -427,13 +392,10 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(
         "input_file": File(path=file_uri, conn_id=file_conn_id),
         "output_table": Table(name=OUTPUT_TABLE_NAME, **sql_server_params),
     }
-    with pytest.raises(BackfillUnfinished):
+    with pytest.raises(AirflowNotFoundException, match=r"The conn_id `fake_conn` isn't defined"):
         with sample_dag:
             load_file(**task_params)
         test_utils.run_dag(sample_dag)
-
-    expected_error = "Failed to execute task: The conn_id `fake_conn` isn't defined."
-    assert expected_error in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -466,9 +428,7 @@ def test_load_file(sample_dag, database_table_fixture, file_type):
     # used requires other optional params by local to Bigquery native path.
     with sample_dag:
         load_file(
-            input_file=File(
-                path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))
-            ),
+            input_file=File(path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))),
             output_table=test_table,
             use_native_support=False,
         )
@@ -518,9 +478,7 @@ def test_load_file_with_named_schema(sample_dag, database_table_fixture, file_ty
 
     with sample_dag:
         load_file(
-            input_file=File(
-                path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))
-            ),
+            input_file=File(path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))),
             output_table=test_table,
         )
     test_utils.run_dag(sample_dag)
@@ -575,9 +533,7 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
     with mock.patch(chunk_function) as mock_chunk_function:
         with sample_dag:
             load_file(
-                input_file=File(
-                    path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))
-                ),
+                input_file=File(path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))),
                 output_table=test_table,
                 use_native_support=False,
             )
@@ -609,18 +565,14 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
-def test_aql_nested_ndjson_file_with_default_sep_param(
-    sample_dag, database_table_fixture
-):
+def test_aql_nested_ndjson_file_with_default_sep_param(sample_dag, database_table_fixture):
     """Test the flattening of single level nested ndjson, with default separator '_'."""
     db, test_table = database_table_fixture
     with sample_dag:
         # Using the use_native_support=False here since the dataset
         # used requires other optional params by local to Bigquery native path.
         load_file(
-            input_file=File(
-                path=str(CWD) + "/../../data/github_single_level_nested.ndjson"
-            ),
+            input_file=File(path=str(CWD) + "/../../data/github_single_level_nested.ndjson"),
             output_table=test_table,
             use_native_support=False,
         )
@@ -644,18 +596,14 @@ def test_aql_nested_ndjson_file_with_default_sep_param(
     indirect=True,
     ids=["bigquery", "redshift"],
 )
-def test_aql_nested_ndjson_file_to_database_explicit_sep_params(
-    sample_dag, database_table_fixture
-):
+def test_aql_nested_ndjson_file_to_database_explicit_sep_params(sample_dag, database_table_fixture):
     """Test the flattening of single level nested ndjson, with explicit separator '___'."""
     db, test_table = database_table_fixture
     with sample_dag:
         # Using the use_native_support=False here since the dataset
         # used requires other optional params by local to Bigquery native path.
         load_file(
-            input_file=File(
-                path=str(CWD) + "/../../data/github_single_level_nested.ndjson"
-            ),
+            input_file=File(path=str(CWD) + "/../../data/github_single_level_nested.ndjson"),
             output_table=test_table,
             use_native_support=False,
             ndjson_normalize_sep="___",
@@ -683,9 +631,7 @@ def test_aql_nested_ndjson_file_to_database_explicit_sep_params(
         "redshift",
     ],
 )
-def test_aql_nested_ndjson_file_to_database_explicit_illegal_sep_params(
-    sample_dag, database_table_fixture
-):
+def test_aql_nested_ndjson_file_to_database_explicit_illegal_sep_params(sample_dag, database_table_fixture):
     """Test the flattening of single level nested ndjson, with explicit separator illegal '.',
     since '.' is not acceptable in col names in bigquery.
     """
@@ -694,9 +640,7 @@ def test_aql_nested_ndjson_file_to_database_explicit_illegal_sep_params(
         # Using the use_native_support=False here since the dataset
         # used requires other optional params by local to Bigquery native path.
         load_file(
-            input_file=File(
-                path=str(CWD) + "/../../data/github_single_level_nested.ndjson"
-            ),
+            input_file=File(path=str(CWD) + "/../../data/github_single_level_nested.ndjson"),
             output_table=test_table,
             ndjson_normalize_sep=".",
             use_native_support=False,
@@ -733,21 +677,19 @@ def test_populate_table_metadata(sample_dag):
         "/tmp/cklcdklscdksl/*.csv",
     ],
 )
-def test_load_file_should_fail_loudly(sample_dag, invalid_path, caplog):
+def test_load_file_should_fail_loudly(sample_dag, invalid_path):
     """
     load_file() operator is expected to fail for files which don't exist and 'if_file_doesnt_exist' is having exception
     strategy selected.
     """
 
-    with pytest.raises(BackfillUnfinished):
+    with pytest.raises(FileNotFoundError):
         with sample_dag:
             _ = load_file(
                 input_file=File(path=invalid_path),
                 output_table=Table(conn_id="postgres_conn_pagila"),
             )
         test_utils.run_dag(sample_dag)
-    expected_error = f"File(s) not found for path/pattern '{invalid_path}'"
-    assert expected_error in caplog.text
 
 
 def is_dict_subset(superset: dict, subset: dict) -> bool:
@@ -780,9 +722,7 @@ def is_dict_subset(superset: dict, subset: dict) -> bool:
     indirect=True,
     ids=["bigquery"],
 )
-def test_aql_load_file_optimized_path_method_called(
-    sample_dag, database_table_fixture, remote_files_fixture
-):
+def test_aql_load_file_optimized_path_method_called(sample_dag, database_table_fixture, remote_files_fixture):
     """
     Verify the correct method is getting called for specific source and destination.
     """
@@ -927,9 +867,7 @@ def test_aql_load_file_optimized_path_method_is_not_called(
     indirect=["database_table_fixture"],
     ids=["Bigquery", "Redshift"],
 )
-def test_aql_load_file_s3_native_path(
-    sample_dag, database_table_fixture, native_support_kwargs
-):
+def test_aql_load_file_s3_native_path(sample_dag, database_table_fixture, native_support_kwargs):
     """
     Verify that the optimised path method is skipped in case use_native_support is set to False.
     """
@@ -984,6 +922,7 @@ def test_loading_local_file_to_database(database_table_fixture):
 
 def test_aql_load_file_columns_names_capitalization_dataframe(sample_dag):
     filename = str(CWD.parent) + "/../data/homes_pattern_1.csv"
+
     from airflow.decorators import task
 
     @task
@@ -1030,9 +969,7 @@ def test_aql_load_file_columns_names_capitalization_dataframe(sample_dag):
     indirect=["database_table_fixture"],
     ids=["redshift"],
 )
-def test_aql_load_column_name_mixed_case_json_file_to_dbs(
-    database_table_fixture, native_support_kwargs
-):
+def test_aql_load_column_name_mixed_case_json_file_to_dbs(database_table_fixture, native_support_kwargs):
     """Test that json with mixed column name case loads fine natively to the database."""
     db, test_table = database_table_fixture
 
@@ -1050,9 +987,7 @@ def test_aql_load_column_name_mixed_case_json_file_to_dbs(
     assert df.shape == (2, 2)
 
 
-@pytest.mark.skipif(
-    not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
-)
+@pytest.mark.skipif(not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
 def test_inlets_outlets_supported_ds():
     """Test Datasets are set as inlets and outlets"""
     input_file = File("gs://bucket/object.csv")
@@ -1065,9 +1000,7 @@ def test_inlets_outlets_supported_ds():
     assert task.operator.outlets == [output_table]
 
 
-@pytest.mark.skipif(
-    DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
-)
+@pytest.mark.skipif(DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
 def test_inlets_outlets_non_supported_ds():
     """Test inlets and outlets are not set if Datasets are not supported"""
     input_file = File("gs://bucket/object.csv")
@@ -1112,3 +1045,26 @@ def test_loading_gcs_file_to_database(database_table_fixture, file):
 
     database_df = db.export_table_to_pandas_dataframe(test_table)
     assert database_df.shape == (3, 2)
+
+
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SQLITE,
+        },
+    ],
+    indirect=True,
+    ids=["Sqlite"],
+)
+@pytest.mark.parametrize("if_exists", ["replace", "append"])
+def test_tables_creation_if_they_dont_exist(database_table_fixture, if_exists):
+    """
+    Verify creation of new tables in case we pass if_exists=replace/append if they don't exists.
+    """
+    path = str(CWD) + "/../../data/homes_main.csv"
+    db, test_table = database_table_fixture
+    load_file(input_file=File(path), output_table=test_table, if_exists=if_exists).operator.execute({})
+
+    database_df = db.export_table_to_pandas_dataframe(test_table)
+    assert database_df.shape == (3, 9)

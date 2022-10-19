@@ -1,12 +1,12 @@
-import astro.sql as aql
 import pandas as pd
 import pytest
-from airflow.models import DAG, DagRun
-from airflow.models import TaskInstance as TI
+from airflow.models import DAG, DagRun, TaskInstance as TI
 from airflow.utils import timezone
 from airflow.utils.session import create_session
+
+import astro.sql as aql
 from astro.constants import Database
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 from tests.sql.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
@@ -83,11 +83,11 @@ def pg_query_result(request):
     if query_name == "semicolon":
         return "SELECT * FROM {{input_table}} WHERE last_name LIKE 'G%%';   "
     if query_name == "with_param":
-        return "SELECT * FROM {{input_table}} WHERE last_name LIKE {{last_name}}", {
-            "last_name": "G%%"
-        }
+        return "SELECT * FROM {{input_table}} WHERE last_name LIKE {{last_name}}", {"last_name": "G%%"}
     if query_name == "with_jinja":
-        return "SELECT * FROM {{input_table}} WHERE last_update > '{{execution_date}}' AND last_name LIKE 'G%%'"
+        return (
+            "SELECT * FROM {{input_table}} WHERE last_update > '{{execution_date}}' AND last_name LIKE 'G%%'"
+        )
     if query_name == "with_jinja_template_params":
         return (
             "SELECT * FROM {{input_table}} WHERE last_update > {{r_date}} AND last_name LIKE 'G%%'",
@@ -147,12 +147,8 @@ def test_postgres_join(sample_dag, database_table_fixture):
 
     with sample_dag:
         ret = sample_pg(
-            actor=Table(
-                name="actor", conn_id="postgres_conn_pagila", metadata=Metadata()
-            ),
-            film_actor_join=Table(
-                name="film_actor", metadata=Metadata(schema="public")
-            ),
+            actor=Table(name="actor", conn_id="postgres_conn_pagila", metadata=Metadata()),
+            film_actor_join=Table(name="film_actor", metadata=Metadata(schema="public")),
             unsafe_parameter="G%%",
             output_table=test_table,
         )

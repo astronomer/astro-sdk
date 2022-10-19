@@ -7,19 +7,20 @@ from urllib.parse import urlparse
 import pandas as pd
 import pytest
 import sqlalchemy
+from google.cloud.bigquery_datatransfer_v1.types import (
+    StartManualTransferRunsResponse,
+    TransferConfig,
+    TransferRun,
+)
+
 from astro.constants import Database
 from astro.databases import create_database
 from astro.databases.google.bigquery import BigqueryDatabase, S3ToBigqueryDataTransfer
 from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File
 from astro.settings import SCHEMA
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
-from google.cloud.bigquery_datatransfer_v1.types import (
-    StartManualTransferRunsResponse,
-    TransferConfig,
-    TransferRun,
-)
 from tests.sql.operators import utils as test_utils
 
 DEFAULT_CONN_ID = "google_cloud_default"
@@ -47,9 +48,7 @@ def test_create_database(conn_id):
     ],
     ids=SUPPORTED_CONN_IDS,
 )
-@mock.patch(
-    "astro.databases.google.bigquery.BigQueryHook.provide_gcp_credential_file_as_context"
-)
+@mock.patch("astro.databases.google.bigquery.BigQueryHook.provide_gcp_credential_file_as_context")
 def test_bigquery_sqlalchemy_engine(mock_credentials, conn_id, expected_uri):
     """Test getting a bigquery based sqla engine."""
     database = BigqueryDatabase(conn_id)
@@ -87,9 +86,7 @@ def test_table_exists_raises_exception():
                 metadata=Metadata(schema=SCHEMA),
                 columns=[
                     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
-                    sqlalchemy.Column(
-                        "name", sqlalchemy.String(60), nullable=False, key="name"
-                    ),
+                    sqlalchemy.Column("name", sqlalchemy.String(60), nullable=False, key="name"),
                 ],
             ),
         }
@@ -163,15 +160,9 @@ def test_is_native_autodetect_schema_available():
     Test if native autodetect schema is available for S3 and GCS.
     """
     db = BigqueryDatabase(conn_id="fake_conn_id")
-    assert (
-        db.is_native_autodetect_schema_available(file=File(path="s3://bucket/key.csv"))
-        is False
-    )
+    assert db.is_native_autodetect_schema_available(file=File(path="s3://bucket/key.csv")) is False
 
-    assert (
-        db.is_native_autodetect_schema_available(file=File(path="gs://bucket/key.csv"))
-        is True
-    )
+    assert db.is_native_autodetect_schema_available(file=File(path="gs://bucket/key.csv")) is True
 
 
 @pytest.mark.integration
@@ -192,9 +183,7 @@ def test_load_file_to_table(database_table_fixture):
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     database.load_file_to_table(File(filepath), target_table, {})
 
-    df = database.hook.get_pandas_df(
-        f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
-    )
+    df = database.hook.get_pandas_df(f"SELECT * FROM {database.get_table_qualified_name(target_table)}")
     assert len(df) == 3
     expected = pd.DataFrame(
         [
@@ -238,19 +227,13 @@ def test_load_file_to_table_natively_for_not_optimised_path(database_table_fixtu
     indirect=True,
     ids=["bigquery"],
 )
-@mock.patch(
-    "astro.databases.google.bigquery.BigqueryDatabase.load_file_to_table_natively"
-)
-def test_load_file_to_table_natively_for_fallback(
-    mock_load_file, database_table_fixture
-):
+@mock.patch("astro.databases.google.bigquery.BigqueryDatabase.load_file_to_table_natively")
+def test_load_file_to_table_natively_for_fallback(mock_load_file, database_table_fixture):
     """Test loading on files to bigquery natively for fallback."""
     mock_load_file.side_effect = DatabaseCustomError
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
-    response = database.load_file_to_table_natively_with_fallback(
-        File(filepath), target_table
-    )
+    response = database.load_file_to_table_natively_with_fallback(File(filepath), target_table)
     assert response is None
 
 
@@ -417,9 +400,7 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     indirect=True,
     ids=["google"],
 )
-def test_export_table_to_file_in_the_cloud(
-    database_table_fixture, remote_files_fixture
-):
+def test_export_table_to_file_in_the_cloud(database_table_fixture, remote_files_fixture):
     """Test export_table_to_file_file() where end file location is in cloud object stores"""
     object_path = remote_files_fixture[0]
     database, populated_table = database_table_fixture
@@ -461,15 +442,11 @@ def test_create_table_from_select_statement(database_table_fixture):
     """Test table creation via select statement"""
     database, original_table = database_table_fixture
 
-    statement = "SELECT * FROM {} WHERE id = 1;".format(
-        database.get_table_qualified_name(original_table)
-    )
+    statement = f"SELECT * FROM {database.get_table_qualified_name(original_table)} WHERE id = 1;"
     target_table = Table(metadata=Metadata(schema=SCHEMA))
     database.create_table_from_select_statement(statement, target_table)
 
-    df = database.hook.get_pandas_df(
-        f"SELECT * FROM {database.get_table_qualified_name(target_table)}"
-    )
+    df = database.hook.get_pandas_df(f"SELECT * FROM {database.get_table_qualified_name(target_table)}")
     assert len(df) == 1
     expected = pd.DataFrame([{"id": 1, "name": "First"}])
     test_utils.assert_dataframes_are_equal(df, expected)
@@ -479,10 +456,7 @@ def test_create_table_from_select_statement(database_table_fixture):
 def test_get_transfer_config_id():
     config = TransferConfig()
     config.name = "projects/103191871648/locations/us/transferConfigs/6302bf19-0000-26cf-a568-94eb2c0a61ee"
-    assert (
-        S3ToBigqueryDataTransfer.get_transfer_config_id(config)
-        == "6302bf19-0000-26cf-a568-94eb2c0a61ee"
-    )
+    assert S3ToBigqueryDataTransfer.get_transfer_config_id(config) == "6302bf19-0000-26cf-a568-94eb2c0a61ee"
 
 
 def test_get_run_id():
@@ -493,10 +467,7 @@ def test_get_run_id():
         "62d38894-0000-239c-a4d8-089e08325b54/runs/62d6a4df-0000-2fad-8752-d4f547e68ef4"
     )
     config.runs.append(run)
-    assert (
-        S3ToBigqueryDataTransfer.get_run_id(config)
-        == "62d6a4df-0000-2fad-8752-d4f547e68ef4"
-    )
+    assert S3ToBigqueryDataTransfer.get_run_id(config) == "62d6a4df-0000-2fad-8752-d4f547e68ef4"
 
 
 @pytest.mark.integration
@@ -512,9 +483,7 @@ def test_get_run_id():
     ids=["bigquery"],
 )
 @mock.patch("astro.databases.google.bigquery.pd.DataFrame")
-def test_load_pandas_dataframe_to_table_with_service_account(
-    mock_df, database_table_fixture
-):
+def test_load_pandas_dataframe_to_table_with_service_account(mock_df, database_table_fixture):
     """Test loading a pandas dataframe to a table with service account authentication."""
     database, target_table = database_table_fixture
     # Skip running _get_credentials. We assume we always will get a Credentials object back.

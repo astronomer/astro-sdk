@@ -4,18 +4,6 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 import sqlalchemy
 from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
-from astro.constants import (
-    DEFAULT_CHUNK_SIZE,
-    FileLocation,
-    FileType,
-    LoadExistStrategy,
-    MergeConflictStrategy,
-)
-from astro.databases.base import BaseDatabase
-from astro.exceptions import DatabaseCustomError
-from astro.files import File
-from astro.settings import REDSHIFT_SCHEMA
-from astro.sql.table import BaseTable, Metadata, Table
 from redshift_connector.error import (
     ArrayContentNotHomogenousError,
     ArrayContentNotSupportedError,
@@ -30,6 +18,19 @@ from redshift_connector.error import (
 )
 from sqlalchemy import create_engine
 from sqlalchemy.engine.base import Engine
+
+from astro.constants import (
+    DEFAULT_CHUNK_SIZE,
+    FileLocation,
+    FileType,
+    LoadExistStrategy,
+    MergeConflictStrategy,
+)
+from astro.databases.base import BaseDatabase
+from astro.exceptions import DatabaseCustomError
+from astro.files import File
+from astro.settings import REDSHIFT_SCHEMA
+from astro.table import BaseTable, Metadata, Table
 
 DEFAULT_CONN_ID = RedshiftSQLHook.default_conn_name
 NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
@@ -117,11 +118,7 @@ class RedshiftDatabase(BaseDatabase):
         :param table: Details of the table we want to check that exists
         """
         inspector = sqlalchemy.inspect(self.sqlalchemy_engine)
-        return bool(
-            inspector.dialect.has_table(
-                self.connection, table.name, schema=table.metadata.schema
-            )
-        )
+        return bool(inspector.dialect.has_table(self.connection, table.name, schema=table.metadata.schema))
 
     def load_pandas_dataframe_to_table(
         self,
@@ -195,15 +192,15 @@ class RedshiftDatabase(BaseDatabase):
                 source_to_target_map_source_columns[1:],
                 source_to_target_map_target_columns[1:],
             ):
-                update_statement += (
-                    f", {target_column}={source_table_name}.{source_column} "
-                )
+                update_statement += f", {target_column}={source_table_name}.{source_column} "
             update_statement += (
                 f"FROM {source_table_name} "
                 f"WHERE {stage_table_name}.{conflict_column}={source_table_name}.{conflict_column} "
             )
             for conflict_col in target_conflict_columns[1:]:
-                update_statement += f"AND {stage_table_name}.{conflict_col}={source_table_name}.{conflict_col} "
+                update_statement += (
+                    f"AND {stage_table_name}.{conflict_col}={source_table_name}.{conflict_col} "
+                )
             conflict_statements = [update_statement, insert_statement]
 
         return conflict_statements
@@ -231,9 +228,7 @@ class RedshiftDatabase(BaseDatabase):
         stage_table_name = self.get_table_qualified_name(Table())
 
         source_to_target_map_source_columns = list(source_to_target_columns_map.keys())
-        source_to_target_map_target_columns = list(
-            source_to_target_columns_map.values()
-        )
+        source_to_target_map_target_columns = list(source_to_target_columns_map.values())
         source_table_all_columns = self.hook.run(
             f"select col_name from pg_get_cols('{source_table_name}') "
             f"cols(view_schema name, view_name name, col_name name, col_type varchar, col_num int);",
@@ -244,24 +239,15 @@ class RedshiftDatabase(BaseDatabase):
             f"cols(view_schema name, view_name name, col_name name, col_type varchar, col_num int);",
             handler=lambda x: [y[0] for y in x.fetchall()],
         )
-        target_table_all_columns_string = ",".join(
-            map(str, source_to_target_map_target_columns)
-        )
-        source_table_all_columns_string = ",".join(
-            map(str, source_to_target_map_source_columns)
-        )
+        target_table_all_columns_string = ",".join(map(str, source_to_target_map_target_columns))
+        source_table_all_columns_string = ",".join(map(str, source_to_target_map_source_columns))
         for column in target_table_all_columns:
-            if (
-                column not in source_to_target_map_target_columns
-                and column in source_table_all_columns
-            ):
+            if column not in source_to_target_map_target_columns and column in source_table_all_columns:
                 target_table_all_columns_string += f",{column}"
                 source_table_all_columns_string += f",{column}"
 
         begin_transaction = "BEGIN TRANSACTION"
-        create_temp_table = (
-            f"CREATE TEMP TABLE {stage_table_name} (LIKE {target_table_name})"
-        )
+        create_temp_table = f"CREATE TEMP TABLE {stage_table_name} (LIKE {target_table_name})"
         insert_into_stage_table = (
             f"INSERT INTO {stage_table_name}({target_table_all_columns_string}) "
             f"SELECT {target_table_all_columns_string} FROM {target_table_name}"
@@ -277,9 +263,7 @@ class RedshiftDatabase(BaseDatabase):
             target_conflict_columns,
         )
         truncate_target_table = f"TRUNCATE {target_table_name}"
-        insert_into_target_table = (
-            f"INSERT INTO {target_table_name} SELECT * FROM {stage_table_name}"
-        )
+        insert_into_target_table = f"INSERT INTO {target_table_name} SELECT * FROM {stage_table_name}"
         drop_stage_table = f"DROP TABLE {stage_table_name}"
         end_transaction = "END TRANSACTION"
 
@@ -299,9 +283,7 @@ class RedshiftDatabase(BaseDatabase):
             for statement in statements:
                 cursor.execute(statement)
 
-    def is_native_load_file_available(
-        self, source_file: File, target_table: BaseTable
-    ) -> bool:
+    def is_native_load_file_available(self, source_file: File, target_table: BaseTable) -> bool:
         """
         Check if there is an optimised path for source to destination.
 
@@ -402,3 +384,21 @@ class RedshiftDatabase(BaseDatabase):
         for Redshift.
         """
         return "SELECT 1 + 1"
+
+    def openlineage_dataset_name(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: schema_name.table_name
+        """
+        conn = self.hook.get_connection(self.conn_id)
+        return f"{conn.schema}.{table.name}"
+
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: redshift://cluster:5439
+        """
+        conn = self.hook.conn
+        return f"{self.sql_type}://{conn.host}:{conn.port}"

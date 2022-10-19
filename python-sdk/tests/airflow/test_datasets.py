@@ -4,8 +4,9 @@ from unittest import mock
 import airflow
 import pytest
 from airflow.models.dagbag import DagBag
+
 from astro.airflow.datasets import kwargs_with_datasets
-from astro.sql.table import Table
+from astro.table import Table
 
 
 @pytest.mark.parametrize(
@@ -72,9 +73,7 @@ from astro.sql.table import Table
         ),
     ],
 )
-def test_kwargs_with_datasets(
-    kwargs, input_datasets, output_datasets, dataset_support, expected_kwargs
-):
+def test_kwargs_with_datasets(kwargs, input_datasets, output_datasets, dataset_support, expected_kwargs):
     """
     Test that:
       1. we can extract inlets and outlets from kwargs if users pass it
@@ -82,15 +81,10 @@ def test_kwargs_with_datasets(
       3. if dataset is not supported (Airflow <2.4), we do not set inlets/outlets unless user specifies it
     """
     with mock.patch("astro.airflow.datasets.DATASET_SUPPORT", new=dataset_support):
-        assert (
-            kwargs_with_datasets(kwargs, input_datasets, output_datasets)
-            == expected_kwargs
-        )
+        assert kwargs_with_datasets(kwargs, input_datasets, output_datasets) == expected_kwargs
 
 
-@pytest.mark.skipif(
-    airflow.__version__ < "2.4.0", reason="Require Airflow version >= 2.4.0"
-)
+@pytest.mark.skipif(airflow.__version__ < "2.4.0", reason="Require Airflow version >= 2.4.0")
 def test_kwargs_with_temp_table():
     """Test that temp tables are not passed to inlets and outlets"""
     assert kwargs_with_datasets(
@@ -107,9 +101,7 @@ def test_kwargs_with_temp_table():
     }
 
 
-@pytest.mark.skipif(
-    airflow.__version__ < "2.4.0", reason="Require Airflow version >= 2.4.0"
-)
+@pytest.mark.skipif(airflow.__version__ < "2.4.0", reason="Require Airflow version >= 2.4.0")
 def test_example_dataset_dag():
     from airflow.datasets import Dataset
     from airflow.models.dataset import DatasetModel
@@ -125,9 +117,7 @@ def test_example_dataset_dag():
     # Test that dataset_triggers is only set if all the instances passed to the DAG object are Datasets
     assert consumer_dag.dataset_triggers == outlets
     assert outlets[0].uri == "astro://sqlite_default@?table=imdb_movies"
-    assert DatasetModel.from_public(outlets[0]) == Dataset(
-        "astro://sqlite_default@?table=imdb_movies"
-    )
+    assert DatasetModel.from_public(outlets[0]) == Dataset("astro://sqlite_default@?table=imdb_movies")
 
 
 def test_disable_auto_inlets_outlets():

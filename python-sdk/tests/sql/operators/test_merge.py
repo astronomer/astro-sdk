@@ -6,14 +6,16 @@ from unittest import mock
 import pandas as pd
 import pytest
 from airflow.decorators import task_group
+
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.databases import create_database
 from astro.files import File
 from astro.sql import MergeOperator
-from astro.sql.table import Metadata, Table
+from astro.table import Metadata, Table
 from tests.sql.operators import utils as test_utils
+from tests.utils.airflow import create_context
 
 CWD = pathlib.Path(__file__).parent
 
@@ -124,25 +126,15 @@ def run_merge(target_table: Table, source_table: Table, merge_parameters, mode):
     [
         {
             "items": [
-                {
-                    "file": File(
-                        str(pathlib.Path(CWD.parent.parent, "data/homes_merge_1.csv"))
-                    )
-                },
-                {
-                    "file": File(
-                        str(pathlib.Path(CWD.parent.parent, "data/homes_merge_2.csv"))
-                    )
-                },
+                {"file": File(str(pathlib.Path(CWD.parent.parent, "data/homes_merge_1.csv")))},
+                {"file": File(str(pathlib.Path(CWD.parent.parent, "data/homes_merge_2.csv")))},
             ]
         }
     ],
     indirect=True,
     ids=["two_tables_same_schema"],
 )
-def test_merge(
-    database_table_fixture, multiple_tables_fixture, sample_dag, merge_parameters
-):
+def test_merge(database_table_fixture, multiple_tables_fixture, sample_dag, merge_parameters):
     target_table, merge_table = multiple_tables_fixture
     merge_params, mode = merge_parameters
     with sample_dag:
@@ -172,20 +164,14 @@ def test_merge(
         {
             "items": [
                 {"file": File(str(pathlib.Path(CWD.parent.parent, "data/sample.csv")))},
-                {
-                    "file": File(
-                        str(pathlib.Path(CWD.parent.parent, "data/sample_part2.csv"))
-                    )
-                },
+                {"file": File(str(pathlib.Path(CWD.parent.parent, "data/sample_part2.csv")))},
             ]
         }
     ],
     indirect=True,
     ids=["two_tables_same_schema"],
 )
-def test_merge_with_the_same_schema(
-    database_table_fixture, multiple_tables_fixture, sample_dag
-):
+def test_merge_with_the_same_schema(database_table_fixture, multiple_tables_fixture, sample_dag):
     """
     Validate that the output of merge is what we expect.
     """
@@ -233,18 +219,14 @@ def test_merge_with_the_same_schema(
                         conn_id="bigquery",
                         metadata=Metadata(schema="first_table_schema"),
                     ),
-                    "file": File(
-                        str(pathlib.Path(CWD.parent.parent, "data/sample.csv"))
-                    ),
+                    "file": File(str(pathlib.Path(CWD.parent.parent, "data/sample.csv"))),
                 },
                 {
                     "table": Table(
                         conn_id="bigquery",
                         metadata=Metadata(schema="second_table_schema"),
                     ),
-                    "file": File(
-                        str(pathlib.Path(CWD.parent.parent, "data/sample_part2.csv"))
-                    ),
+                    "file": File(str(pathlib.Path(CWD.parent.parent, "data/sample_part2.csv"))),
                 },
             ]
         }
@@ -252,9 +234,7 @@ def test_merge_with_the_same_schema(
     indirect=True,
     ids=["two_tables"],
 )
-def test_merge_with_different_schemas(
-    database_table_fixture, multiple_tables_fixture, sample_dag
-):
+def test_merge_with_different_schemas(database_table_fixture, multiple_tables_fixture, sample_dag):
     """
     Validate that the output of merge is what we expect.
     """
@@ -301,12 +281,8 @@ def test_columns_params(test_columns, expected_columns):
     Test that the columns param in MergeOperator takes list/tuple/dict and converts them to dict
     before sending over to db.merge_table()
     """
-    source_table = Table(
-        name="source_table", conn_id="test1", metadata=Metadata(schema="test")
-    )
-    target_table = Table(
-        name="target_table", conn_id="test2", metadata=Metadata(schema="test")
-    )
+    source_table = Table(name="source_table", conn_id="test1", metadata=Metadata(schema="test"))
+    target_table = Table(name="target_table", conn_id="test2", metadata=Metadata(schema="test"))
     merge_task = MergeOperator(
         source_table=source_table,
         target_table=target_table,
@@ -315,13 +291,11 @@ def test_columns_params(test_columns, expected_columns):
         columns=test_columns,
     )
     assert merge_task.columns == expected_columns
-    with mock.patch(
-        "astro.databases.sqlite.SqliteDatabase.merge_table"
-    ) as mock_merge, mock.patch.dict(
+    with mock.patch("astro.databases.sqlite.SqliteDatabase.merge_table") as mock_merge, mock.patch.dict(
         os.environ,
         {"AIRFLOW_CONN_TEST1": "sqlite://", "AIRFLOW_CONN_TEST2": "sqlite://"},
     ):
-        merge_task.execute({})
+        merge_task.execute(context=create_context(merge_task))
         mock_merge.assert_called_once_with(
             source_table=source_table,
             target_table=target_table,
@@ -333,12 +307,8 @@ def test_columns_params(test_columns, expected_columns):
 
 def test_invalid_columns_param():
     """Test that an error is raised when an invalid columns type is passed"""
-    source_table = Table(
-        name="source_table", conn_id="test1", metadata=Metadata(schema="test")
-    )
-    target_table = Table(
-        name="target_table", conn_id="test2", metadata=Metadata(schema="test")
-    )
+    source_table = Table(name="source_table", conn_id="test1", metadata=Metadata(schema="test"))
+    target_table = Table(name="target_table", conn_id="test2", metadata=Metadata(schema="test"))
     with pytest.raises(ValueError) as exec_info:
         MergeOperator(
             source_table=source_table,
@@ -353,17 +323,11 @@ def test_invalid_columns_param():
     )
 
 
-@pytest.mark.skipif(
-    not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
-)
+@pytest.mark.skipif(not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
 def test_inlets_outlets_supported_ds():
     """Test Datasets are set as inlets and outlets"""
-    source_table = Table(
-        name="source_table", conn_id="test1", metadata=Metadata(schema="test")
-    )
-    target_table = Table(
-        name="target_table", conn_id="test2", metadata=Metadata(schema="test")
-    )
+    source_table = Table(name="source_table", conn_id="test1", metadata=Metadata(schema="test"))
+    target_table = Table(name="target_table", conn_id="test2", metadata=Metadata(schema="test"))
     task = aql.merge(
         source_table=source_table,
         target_table=target_table,
@@ -375,17 +339,11 @@ def test_inlets_outlets_supported_ds():
     assert task.operator.outlets == [target_table]
 
 
-@pytest.mark.skipif(
-    DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4"
-)
+@pytest.mark.skipif(DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
 def test_inlets_outlets_non_supported_ds():
     """Test inlets and outlets are not set if Datasets are not supported"""
-    source_table = Table(
-        name="source_table", conn_id="test1", metadata=Metadata(schema="test")
-    )
-    target_table = Table(
-        name="target_table", conn_id="test2", metadata=Metadata(schema="test")
-    )
+    source_table = Table(name="source_table", conn_id="test1", metadata=Metadata(schema="test"))
+    target_table = Table(name="target_table", conn_id="test2", metadata=Metadata(schema="test"))
     task = aql.merge(
         source_table=source_table,
         target_table=target_table,

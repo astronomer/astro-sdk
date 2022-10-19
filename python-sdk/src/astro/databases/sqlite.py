@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
-from astro.constants import MergeConflictStrategy
-from astro.databases.base import BaseDatabase
-from astro.sql.table import BaseTable, Metadata
-from sqlalchemy import MetaData as SqlaMetaData
-from sqlalchemy import create_engine
+from sqlalchemy import MetaData as SqlaMetaData, create_engine
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.sql.schema import Table as SqlaTable
+
+from astro.constants import MergeConflictStrategy
+from astro.databases.base import BaseDatabase
+from astro.table import BaseTable, Metadata
 
 DEFAULT_CONN_ID = SqliteHook.default_conn_name
 
@@ -107,9 +107,7 @@ class SqliteDatabase(BaseDatabase):
 
         append_column_names = list(source_to_target_columns_map.keys())
         target_column_names = list(source_to_target_columns_map.values())
-        update_statements = [
-            f"{col_name}=EXCLUDED.{col_name}" for col_name in target_column_names
-        ]
+        update_statements = [f"{col_name}=EXCLUDED.{col_name}" for col_name in target_column_names]
 
         query = statement.format(
             target_columns=",".join(target_column_names),
@@ -128,6 +126,22 @@ class SqliteDatabase(BaseDatabase):
 
         :param table: Astro Table to be converted to SQLAlchemy table instance
         """
-        return SqlaTable(
-            table.name, SqlaMetaData(), autoload_with=self.sqlalchemy_engine
-        )
+        return SqlaTable(table.name, SqlaMetaData(), autoload_with=self.sqlalchemy_engine)
+
+    def openlineage_dataset_name(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: /tmp/local.db.table_name
+        """
+        conn = self.hook.get_connection(self.conn_id)
+        return f"{conn.host}.{table.name}"
+
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset name as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        Example: /tmp/local.db
+        """
+        conn = self.hook.get_connection(self.conn_id)
+        return f"{conn.host}"
