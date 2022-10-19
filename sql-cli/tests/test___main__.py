@@ -83,7 +83,9 @@ def test_run(workflow_name, environment, initialised_project):
         [
             "run",
             workflow_name,
+            "--env",
             environment,
+            "--project-dir",
             initialised_project.directory.as_posix(),
         ],
     )
