@@ -1,6 +1,5 @@
 import random
 import string
-from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -89,14 +88,18 @@ def sql_file_with_cycle(root_directory_cycle, target_directory):
 
 @pytest.fixture()
 def sql_files_dag(sql_file):
-    return SqlFilesDAG(dag_id="sql_files_dag", start_date=datetime(2022, 10, 4), sql_files=[sql_file])
+    return SqlFilesDAG(
+        dag_id="sql_files_dag",
+        start_date=DEFAULT_DATE,
+        sql_files=[sql_file],
+    )
 
 
 @pytest.fixture()
 def sql_files_dag_with_parameters(sql_file_with_parameters):
     return SqlFilesDAG(
         dag_id="sql_files_dag_with_parameters",
-        start_date=datetime(2022, 10, 4),
+        start_date=DEFAULT_DATE,
         sql_files=[sql_file_with_parameters],
     )
 
@@ -105,7 +108,7 @@ def sql_files_dag_with_parameters(sql_file_with_parameters):
 def sql_files_dag_with_cycle(sql_file_with_cycle):
     return SqlFilesDAG(
         dag_id="sql_files_dag_with_cycle",
-        start_date=datetime(2022, 10, 4),
+        start_date=DEFAULT_DATE,
         sql_files=[sql_file_with_cycle],
     )
 

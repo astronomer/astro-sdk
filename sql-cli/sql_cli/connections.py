@@ -8,7 +8,7 @@ from airflow.utils.session import create_session
 from rich import print as pprint
 
 from sql_cli.project import Project
-from sql_cli.utils.airflow_utils import retrieve_airflow_database_conn_from_config, set_airflow_database_conn
+from sql_cli.utils.airflow import retrieve_airflow_database_conn_from_config, set_airflow_database_conn
 
 CONNECTION_ID_OUTPUT_STRING_WIDTH = 25
 

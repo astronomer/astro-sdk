@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 from sql_cli.configuration import Config
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_ENVIRONMENT
 from sql_cli.exceptions import InvalidProject
-from sql_cli.utils.airflow_utils import disable_examples
+from sql_cli.utils.airflow import disable_examples
 
 BASE_SOURCE_DIR = Path(os.path.realpath(__file__)).parent.parent / "include/base/"
 

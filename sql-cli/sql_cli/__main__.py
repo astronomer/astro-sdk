@@ -11,7 +11,7 @@ from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
 from sql_cli.dag_generator import generate_dag
 from sql_cli.project import Project
 from sql_cli.run_dag import run_dag
-from sql_cli.utils.airflow_utils import (
+from sql_cli.utils.airflow import (
     get_dag,
     retrieve_airflow_database_conn_from_config,
     set_airflow_database_conn,
