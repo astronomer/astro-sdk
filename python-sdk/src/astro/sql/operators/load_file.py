@@ -5,7 +5,13 @@ from typing import Any
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
-from openlineage.client.facet import BaseFacet
+from openlineage.client.facet import (  # OutputStatisticsOutputDatasetFacet,
+    BaseFacet,
+    DataQualityMetricsInputDatasetFacet,
+    DataSourceDatasetFacet,
+    SchemaDatasetFacet,
+    SchemaField,
+)
 from openlineage.client.run import Dataset as OpenlineageDataset
 
 from astro.airflow.datasets import kwargs_with_datasets
@@ -197,6 +203,9 @@ class LoadFileOperator(AstroSQLBaseOperator):
             filetype=self.input_file.type.name,
         )
 
+        input_uri = (
+            self.input_file.openlineage_dataset_namespace + "://" + self.input_file.openlineage_dataset_name
+        )
         input_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(
                 namespace=self.input_file.openlineage_dataset_namespace,
@@ -213,13 +222,21 @@ class LoadFileOperator(AstroSQLBaseOperator):
                             )
                             for file in input_files
                         ],
-                    )
+                    ),
+                    "dataSource": DataSourceDatasetFacet(
+                        name=self.input_file.openlineage_dataset_name, uri=input_uri
+                    ),
                 },
             )
         ]
 
         output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
         if self.output_table:
+            output_uri = (
+                self.output_table.openlineage_dataset_namespace()
+                + "://"
+                + self.output_table.openlineage_dataset_name()
+            )
             output_dataset = [
                 OpenlineageDataset(
                     namespace=self.output_table.openlineage_dataset_namespace(),
@@ -232,7 +249,21 @@ class LoadFileOperator(AstroSQLBaseOperator):
                             used_native_path=self.use_native_support,
                             enabled_native_fallback=self.enable_native_fallback,
                             native_support_arguments=self.native_support_kwargs,
-                        )
+                        ),
+                        # "outputStatistics":OutputStatisticsOutputDatasetFacet(rowCount=self.output_table.row_count),
+                        "schema": SchemaDatasetFacet(
+                            fields=[
+                                SchemaField(
+                                    name=self.output_table.metadata.schema,
+                                    type=self.output_table.metadata.database,
+                                )
+                            ]
+                        ),
+                        "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=output_uri),
+                        "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(
+                            # rowCount=self.output_table.row_count,
+                            columnMetrics={}
+                        ),
                     },
                 )
             ]

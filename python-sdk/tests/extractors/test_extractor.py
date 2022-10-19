@@ -2,6 +2,7 @@ import pendulum
 import pytest
 from airflow.models.taskinstance import TaskInstance
 from airflow.utils import timezone
+from openlineage.airflow.extractors import TaskMetadata
 from openlineage.client.run import Dataset as OpenlineageDataset
 
 from astro import sql as aql
@@ -83,7 +84,7 @@ def test_python_sdk_load_file_extract_on_complete():
 
     python_sdk_extractor = PythonSDKExtractor(load_file_operator)
     task_meta_extract = python_sdk_extractor.extract()
-    assert task_meta_extract is None
+    assert isinstance(task_meta_extract, TaskMetadata)
 
     task_meta = python_sdk_extractor.extract_on_complete(task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
@@ -123,7 +124,7 @@ def test_append_op_extract_on_complete():
 
     python_sdk_extractor = PythonSDKExtractor(op)
     task_meta_extract = python_sdk_extractor.extract()
-    assert task_meta_extract is None
+    assert isinstance(task_meta_extract, TaskMetadata)
 
     task_meta = python_sdk_extractor.extract_on_complete(task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
@@ -164,7 +165,7 @@ def test_merge_op_extract_on_complete():
 
     python_sdk_extractor = PythonSDKExtractor(op)
     task_meta_extract = python_sdk_extractor.extract()
-    assert task_meta_extract is None
+    assert isinstance(task_meta_extract, TaskMetadata)
 
     task_meta = python_sdk_extractor.extract_on_complete(task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
@@ -208,6 +209,6 @@ def test_python_sdk_transform_extract_on_complete():
     assert type(python_sdk_extractor.get_operator_classnames()) is list
     task_meta = python_sdk_extractor.extract_on_complete(task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
-    assert task_meta.outputs[0].facets["stats"].size is None
+    assert task_meta.outputs[0].facets["outputStatistics"].size is None
     assert len(task_meta.job_facets) > 0
     assert task_meta.run_facets == {}
