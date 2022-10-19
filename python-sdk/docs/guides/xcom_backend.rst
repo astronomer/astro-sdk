@@ -7,7 +7,7 @@ XCom Backend
 The custom XCom backend adds special handling to Astro's custom constructs (see :ref:`concepts`) so they can
 be used without enabling XCom picking (the ``xcom_pickling`` configuration). When the custom constructs are
 not accessed, this is simply a wrapper around Airflow's default XCom backend, so a migration from the default
-backend is seamless and fully compatibility.
+backend is seamless and fully compatible.
 
 .. seealso::
 
