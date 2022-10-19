@@ -2,15 +2,6 @@ import pytest
 
 from sql_cli.connections import CONNECTION_ID_OUTPUT_STRING_WIDTH, validate_connections
 
-ENVIRONMENT = "default"
-
-REDSHIFT_CONNECTION_ENV_VARS = {
-    "REDSHIFT_DATABASE": "fake_database",
-    "REDSHIFT_HOST": "fake.redshift.amazonaws.com",
-    "REDSHIFT_USERNAME": "fake_user",
-    "REDSHIFT_PASSWORD": "fake_password",
-}
-
 
 def test_specific_connection(initialised_project, capsys):
     sqlite_conn_id = "sqlite_conn"
