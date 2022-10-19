@@ -6,7 +6,7 @@ import os
 import random
 import string
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Sequence
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -478,7 +478,7 @@ class SnowflakeDatabase(BaseDatabase):
         )
 
     @classmethod
-    def use_quotes(cls, cols: tuple[str, ...]) -> bool:
+    def use_quotes(cls, cols: Sequence[str]) -> bool:
         """
         With snowflake identifier we have two cases,
 
@@ -741,11 +741,11 @@ class SnowflakeDatabase(BaseDatabase):
         target_cols = source_to_target_columns_map.values()
 
         target_identifier_enclosure = ""
-        if self.use_quotes(tuple(target_cols)):
+        if self.use_quotes(list(target_cols)):
             target_identifier_enclosure = '"'
 
         source_identifier_enclosure = ""
-        if self.use_quotes(tuple(source_cols)):
+        if self.use_quotes(list(source_cols)):
             source_identifier_enclosure = '"'
 
         (
@@ -869,7 +869,7 @@ class SnowflakeDatabase(BaseDatabase):
         self.run_sql(sql=sql)
 
     @classmethod
-    def get_merge_initialization_query(cls, parameters: tuple[str]) -> str:
+    def get_merge_initialization_query(cls, parameters: list[str]) -> str:
         """
         Handles database-specific logic to handle constraints, keeping
         it agnostic to database.
