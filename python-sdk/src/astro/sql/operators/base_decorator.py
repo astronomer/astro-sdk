@@ -8,6 +8,8 @@ from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
 from openlineage.client.facet import (
     BaseFacet,
+    DataQualityMetricsInputDatasetFacet,
+    DataSourceDatasetFacet,
     OutputStatisticsOutputDatasetFacet,
     SchemaDatasetFacet,
     SchemaField,
@@ -197,18 +199,25 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         """
         Returns the lineage data
         """
+        input_uri = (
+            f"{self.output_table.openlineage_dataset_namespace()}"
+            f"://{self.output_table.openlineage_dataset_name()}"
+        )
         input_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(
                 namespace=self.output_table.openlineage_dataset_namespace(),
                 name=self.output_table.openlineage_dataset_name(),
                 facets={
-                    "schema_dataset_facet": SchemaDatasetFacet(
-                        fields=[SchemaField(name=self.schema, type=self.database)]
-                    ),
+                    "schema": SchemaDatasetFacet(fields=[SchemaField(name=self.schema, type=self.database)]),
+                    "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=input_uri),
                 },
             )
         ]
 
+        output_uri = (
+            f"{self.output_table.openlineage_dataset_namespace()}"
+            f"://{self.output_table.openlineage_dataset_name()}"
+        )
         output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
         if self.output_table:
             output_dataset = [
@@ -216,7 +225,13 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                     namespace=self.output_table.openlineage_dataset_namespace(),
                     name=self.output_table.openlineage_dataset_name(),
                     facets={
-                        "stats": OutputStatisticsOutputDatasetFacet(rowCount=self.output_table.row_count)
+                        "outputStatistics": OutputStatisticsOutputDatasetFacet(
+                            rowCount=self.output_table.row_count
+                        ),
+                        "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=output_uri),
+                        "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(
+                            rowCount=self.output_table.row_count, columnMetrics={}
+                        ),
                     },
                 )
             ]

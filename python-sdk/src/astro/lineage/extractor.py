@@ -39,9 +39,15 @@ class PythonSDKExtractor(BaseExtractor):
             "TransformOperator",
         ]
 
-    def extract(self) -> TaskMetadata | None:  # skipcq: PYL-R0201
+    def extract(self) -> TaskMetadata:
         """Empty extract implementation for the abstractmethod of the ``BaseExtractor`` class."""
-        return None
+        return TaskMetadata(
+            name=get_job_name(task=self.operator),
+            inputs=[],
+            outputs=[],
+            run_facets={},
+            job_facets={},
+        )
 
     def extract_on_complete(
         self, task_instance: TaskInstance  # skipcq: PYL-W0613,  PYL-R0201

@@ -60,7 +60,7 @@ class OutputDatabaseDatasetFacet(BaseFacet):
     columns: list[Column]
     schema: str | None
     used_native_path: bool
-    enabled_native_fallback: bool = False
+    enabled_native_fallback: bool | None = False
     native_support_arguments: dict | None = None
     description: str | None = None
 
