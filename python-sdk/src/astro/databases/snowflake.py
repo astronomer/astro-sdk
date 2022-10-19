@@ -8,7 +8,6 @@ import string
 from dataclasses import dataclass, field
 from typing import Any
 
-import pandas
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
 from snowflake.connector import pandas_tools
@@ -479,25 +478,30 @@ class SnowflakeDatabase(BaseDatabase):
         )
 
     @staticmethod
-    def get_cols_case(cols: tuple[str, ...]):
-        result = []
-        for col in cols:
-            if col.isupper():
-                result.append(1)
-            elif col.islower():
-                result.append(0)
-            else:
-                return "mixed"
-
-        total = sum(result)
-        if total == 0:
-            return "lower"
-        elif total == len(cols):
-            return "upper"
-
-    @staticmethod
     def use_quotes(cols: tuple[str, ...]):
-        return SnowflakeDatabase.get_cols_case(cols) in ["upper", "mixed"]
+        """
+        With snowflake identifier we have two cases,
+
+        1. When Upper/Mixed case col names are used
+            We are required to preserver the text casing of the col names. By adding the quotes around identifier.
+        2. When lower case col names are used
+            We can use them as is
+
+        This is done to be in sync with Snowflake SQLAlchemy dialect.
+        https://docs.snowflake.com/en/user-guide/sqlalchemy.html#object-name-case-handling
+
+        Snowflake stores all case-insensitive object names in uppercase text. In contrast, SQLAlchemy considers all
+        lowercase object names to be case-insensitive. Snowflake SQLAlchemy converts the object name case during
+        schema-level communication (i.e. during table and index reflection). If you use uppercase object names,
+        SQLAlchemy assumes they are case-sensitive and encloses the names with quotes. This behavior will cause
+        mismatches against data dictionary data received from Snowflake, so unless identifier names have been truly
+        created as case sensitive using quotes (e.g. "TestDb"), all lowercase names should be used on the SQLAlchemy
+        side.
+
+        :param cols:
+        :return:
+        """
+        return any(col for col in cols if not col.islower())
 
     def create_table_using_schema_autodetection(
         self,
@@ -530,7 +534,7 @@ class SnowflakeDatabase(BaseDatabase):
             schema=table.metadata.schema,
             database=table.metadata.database,
             chunk_size=DEFAULT_CHUNK_SIZE,
-            quote_identifiers=SnowflakeDatabase.use_quotes(source_dataframe),
+            quote_identifiers=self.use_quotes(source_dataframe),
             auto_create_table=True,
         )
         self.truncate_table(table)
@@ -621,7 +625,7 @@ class SnowflakeDatabase(BaseDatabase):
             schema=target_table.metadata.schema,
             database=target_table.metadata.database,
             chunk_size=chunk_size,
-            quote_identifiers=SnowflakeDatabase.use_quotes(source_dataframe),
+            quote_identifiers=self.use_quotes(source_dataframe),
             auto_create_table=auto_create_table,
         )
 
@@ -736,11 +740,11 @@ class SnowflakeDatabase(BaseDatabase):
         target_cols = source_to_target_columns_map.values()
 
         target_identifier_enclosure = ""
-        if SnowflakeDatabase.use_quotes(tuple(target_cols)):
+        if self.use_quotes(tuple(target_cols)):
             target_identifier_enclosure = '"'
 
         source_identifier_enclosure = ""
-        if SnowflakeDatabase.use_quotes(tuple(source_cols)):
+        if self.use_quotes(tuple(source_cols)):
             source_identifier_enclosure = '"'
 
         (
@@ -835,8 +839,8 @@ class SnowflakeDatabase(BaseDatabase):
         """
         target_table_sqla = self.get_sqla_table(target_table)
         source_table_sqla = self.get_sqla_table(source_table)
-        use_quotes_target_table = SnowflakeDatabase.use_quotes(target_table_sqla.columns.keys())
-        use_quotes_source_table = SnowflakeDatabase.use_quotes(source_table_sqla.columns.keys())
+        use_quotes_target_table = self.use_quotes(target_table_sqla.columns.keys())
+        use_quotes_source_table = self.use_quotes(source_table_sqla.columns.keys())
         target_columns: list[column]
         source_columns: list[column]
 

@@ -1098,7 +1098,6 @@ def test_tables_creation_if_they_dont_exist(database_table_fixture, if_exists):
 )
 def test_load_file_col_cap(sample_dag, database_table_fixture, text_cases):
     db, test_table = database_table_fixture
-    # path = str(CWD) + "/../../data/homes_upper.csv"
     path = str(CWD) + text_cases["path"]
     with sample_dag:
         load_file(
