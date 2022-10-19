@@ -6,7 +6,6 @@ import warnings
 from datetime import datetime
 from typing import Any
 
-from airflow.configuration import secrets_backend_list
 from airflow.models.connection import Connection
 from airflow.models.dag import DAG
 from airflow.models.dagrun import DagRun
@@ -82,6 +81,9 @@ def run_dag(
     )
 
     if conn_file_path or variable_file_path or connections:
+        # To get around the fact that we reload certain modules, we need to import here
+        from airflow.configuration import secrets_backend_list
+
         local_secrets = AstroFilesystemBackend(
             variables_file_path=variable_file_path,
             connections_file_path=conn_file_path,
@@ -101,9 +103,9 @@ def run_dag(
             ti.task = tasks[ti.task_id]
             _run_task(ti, session=session)
     pprint(f"Dagrun {dr.dag_id} final state: {dr.state}")
-    if conn_file_path or variable_file_path:
+    if conn_file_path or variable_file_path or connections:
         # Remove the local variables we have added to the secrets_backend_list
-        secrets_backend_list.pop(0)
+        secrets_backend_list.pop(0)  # noqa
 
 
 def add_logger_if_needed(dag: DAG, ti: TaskInstance) -> None:

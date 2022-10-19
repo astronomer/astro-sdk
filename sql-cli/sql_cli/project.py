@@ -72,14 +72,14 @@ class Project:
         parser.read(filename)
         return {section: dict(parser.items(section)) for section in parser.sections()}
 
-    def _update_config(self) -> None:
+    def _update_config(self, environment: str=DEFAULT_ENVIRONMENT) -> None:
         """
         Sets custom Airflow configuration in case the user is not using the default values.
 
         :param airflow_home: Custom user-defined Airflow Home directory
         :param airflow_dags_folder: Custom user-defined Airflow DAGs folder
         """
-        config = Config(environment=DEFAULT_ENVIRONMENT, project_dir=self.directory)
+        config = Config(environment=environment, project_dir=self.directory)
         config = config.from_yaml_to_config()
 
         if self._airflow_home is not None:
