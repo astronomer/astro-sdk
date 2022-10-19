@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import importlib
 import logging
 import os
@@ -88,7 +90,7 @@ def _search_for_dag_file(val: str) -> str:
 # And we should replace by the upstream method once Airflow 2.5 is released
 # We are copying it so that we do not include examples
 # This helps silencing the SQL CLI output and also the speed of the run command
-def get_dag(subdir: str, dag_id: str, include_examples: bool = False) -> "DAG":
+def get_dag(subdir: str, dag_id: str, include_examples: bool = False) -> DAG:
     """
     Returns DAG of a given dag_id
     First it we'll try to use the given subdir.  If that doesn't work, we'll try to

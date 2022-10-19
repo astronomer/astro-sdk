@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import os
 import shutil
 from configparser import ConfigParser
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from sql_cli.configuration import Config
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_ENVIRONMENT
@@ -28,13 +30,13 @@ class Project:
     def __init__(
         self,
         directory: Path,
-        airflow_home: Optional[Path] = None,
-        airflow_dags_folder: Optional[Path] = None,
+        airflow_home: Path | None = None,
+        airflow_dags_folder: Path | None = None,
     ) -> None:
         self.directory = directory
         self._airflow_home = airflow_home
         self._airflow_dags_folder = airflow_dags_folder
-        self.connections: List[Dict[str, Any]] = []
+        self.connections: list[dict[str, Any]] = []
 
     @property
     def airflow_home(self) -> Path:
@@ -61,7 +63,7 @@ class Project:
         return self._airflow_dags_folder or Path(self.directory, DEFAULT_DAGS_FOLDER)
 
     @property
-    def airflow_config(self) -> Dict[str, Any]:
+    def airflow_config(self) -> dict[str, Any]:
         """
         Retrieve the Airflow configuration for the currently set environment.
 
