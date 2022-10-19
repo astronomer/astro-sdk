@@ -21,8 +21,6 @@ def _create_or_replace_connection(conn_obj: Connection) -> None:
         session.commit()
 
 
-
-
 def validate_connections(connections: list[Connection], connection_id: str | None = None) -> None:
     """
     Validates that the given connections are valid and registers them to Airflow with replace policy for existing

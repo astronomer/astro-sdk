@@ -6,12 +6,12 @@ from configparser import ConfigParser
 from pathlib import Path
 from typing import Any
 
-from sql_cli.configuration import Config
+from airflow.models.connection import Connection
+
+from sql_cli.configuration import Config, convert_to_connection
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_ENVIRONMENT
 from sql_cli.exceptions import InvalidProject
 from sql_cli.utils.airflow import disable_examples
-from airflow.models.connection import Connection
-from sql_cli.configuration import convert_to_connection
 
 BASE_SOURCE_DIR = Path(os.path.realpath(__file__)).parent.parent / "include/base/"
 

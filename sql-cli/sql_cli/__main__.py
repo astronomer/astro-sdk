@@ -87,7 +87,6 @@ def validate(
     project = Project(project_dir_absolute)
     project.load_config(environment=env)
 
-
     # Since we are using the Airflow ORM to interact with connections, we need to tell Airflow to use our airflow.db
     # The usual route is to set $AIRFLOW_HOME before Airflow is imported. However, in the context of the SQL CLI, we
     # decide this during runtime, depending on the project path and SQL CLI configuration.
@@ -125,7 +124,6 @@ def run(
     project.update_config(environment=env)
     project.load_config(env)
 
-
     # Since we are using the Airflow ORM to interact with connections, we need to tell Airflow to use our airflow.db
     # The usual route is to set $AIRFLOW_HOME before Airflow is imported. However, in the context of the SQL CLI, we
     # decide this during runtime, depending on the project path and SQL CLI configuration.
@@ -137,7 +135,12 @@ def run(
         dags_directory=project.airflow_dags_folder,
     )
     dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
-    run_dag(dag, run_conf=project.airflow_config, connections={c.conn_id: c for c in project.connections}, verbose=verbose)
+    run_dag(
+        dag,
+        run_conf=project.airflow_config,
+        connections={c.conn_id: c for c in project.connections},
+        verbose=verbose,
+    )
 
 
 @app.command(

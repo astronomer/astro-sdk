@@ -6,12 +6,12 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from airflow.api_connexion.schemas.connection_schema import connection_schema
+from airflow.models.connection import Connection
 
 from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME
-from airflow.models.connection import Connection
-from typing import Any
 
-from airflow.api_connexion.schemas.connection_schema import connection_schema
+
 def convert_to_connection(conn: dict[str, Any]) -> Connection:
     """
     Convert the SQL CLI connection dictionary into an Airflow Connection instance.
