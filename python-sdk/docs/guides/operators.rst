@@ -7,5 +7,5 @@ Operators
 .. toctree::
    :glob:
 
-   astro/sql/operators/*
-   astro/files/operators/*
+   ../astro/sql/operators/*
+   ../astro/files/operators/*
