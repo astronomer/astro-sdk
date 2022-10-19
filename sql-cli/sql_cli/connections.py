@@ -26,6 +26,12 @@ def _create_or_replace_connection(conn_obj: Connection) -> None:
 
 
 def convert_to_connection(conn: dict[str, Any]) -> Connection:
+    """
+    Convert the SQL CLI connection dictionary into an Airflow Connection instance.
+    
+    :param conn: SQL CLI connection dictionary
+    :returns: Connection object
+    """
     c = conn.copy()
     c["connection_id"] = c["conn_id"]
     c.pop("conn_id")

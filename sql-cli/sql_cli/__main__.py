@@ -58,12 +58,6 @@ def generate(
     project = Project(project_dir_absolute)
     project.load_config(env)
 
-    # Since we are using the Airflow ORM to interact with connections, we need to tell Airflow to use our airflow.db
-    # The usual route is to set $AIRFLOW_HOME before Airflow is imported. However, in the context of the SQL CLI, we
-    # decide this during runtime, depending on the project path and SQL CLI configuration.
-    airflow_meta_conn = retrieve_airflow_database_conn_from_config(project.directory / project.airflow_home)
-    set_airflow_database_conn(airflow_meta_conn)
-
     dag_file = generate_dag(
         directory=project.directory / project.workflows_directory / workflow_name,
         dags_directory=project.airflow_dags_folder,
