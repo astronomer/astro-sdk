@@ -8,6 +8,21 @@ from typing import Any
 import yaml
 
 from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME
+from airflow.models.connection import Connection
+from typing import Any
+
+from airflow.api_connexion.schemas.connection_schema import connection_schema
+def convert_to_connection(conn: dict[str, Any]) -> Connection:
+    """
+    Convert the SQL CLI connection dictionary into an Airflow Connection instance.
+
+    :param conn: SQL CLI connection dictionary
+    :returns: Connection object
+    """
+    c = conn.copy()
+    c["connection_id"] = c["conn_id"]
+    c.pop("conn_id")
+    return Connection(**connection_schema.load(c))
 
 
 @dataclass
@@ -18,7 +33,8 @@ class Config:
 
     project_dir: Path
     environment: str
-    connections: list[dict[str, Any]] = field(default_factory=list)
+
+    connections: list[dict[str, Connection]] = field(default_factory=list)
     airflow_home: str | None = None
     airflow_dags_folder: str | None = None
 

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from rich import print as rprint
 
 import sql_cli
-from sql_cli.connections import convert_to_connection, validate_connections
+from sql_cli.connections import validate_connections
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
 from sql_cli.dag_generator import generate_dag
 from sql_cli.project import Project
@@ -87,7 +87,6 @@ def validate(
     project = Project(project_dir_absolute)
     project.load_config(environment=env)
 
-    connections = [convert_to_connection(c) for c in project.connections]
 
     # Since we are using the Airflow ORM to interact with connections, we need to tell Airflow to use our airflow.db
     # The usual route is to set $AIRFLOW_HOME before Airflow is imported. However, in the context of the SQL CLI, we
@@ -96,7 +95,7 @@ def validate(
     set_airflow_database_conn(airflow_meta_conn)
 
     rprint(f"Validating connection(s) for environment '{env}'")
-    validate_connections(connections=connections, connection_id=connection)
+    validate_connections(connections=project.connections, connection_id=connection)
 
 
 @app.command(
@@ -126,7 +125,6 @@ def run(
     project.update_config(environment=env)
     project.load_config(env)
 
-    connections = {c["conn_id"]: convert_to_connection(c) for c in project.connections}
 
     # Since we are using the Airflow ORM to interact with connections, we need to tell Airflow to use our airflow.db
     # The usual route is to set $AIRFLOW_HOME before Airflow is imported. However, in the context of the SQL CLI, we
@@ -139,7 +137,7 @@ def run(
         dags_directory=project.airflow_dags_folder,
     )
     dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
-    run_dag(dag, run_conf=project.airflow_config, connections=connections, verbose=verbose)
+    run_dag(dag, run_conf=project.airflow_config, connections={c.conn_id: c for c in project.connections}, verbose=verbose)
 
 
 @app.command(

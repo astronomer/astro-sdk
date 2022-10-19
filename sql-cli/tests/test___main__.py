@@ -82,6 +82,8 @@ def test_validate(env, connection, status, initialised_project_with_test_config)
             connection,
         ],
     )
+    if not result.exit_code ==0:
+        print(result.exception)
     assert result.exit_code == 0
     output = get_stdout(result)
     assert f"Validating connection(s) for environment '{env}'" in output

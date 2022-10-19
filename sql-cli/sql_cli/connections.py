@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
 
-from airflow.api_connexion.schemas.connection_schema import connection_schema
 from airflow.models import Connection
 from airflow.utils.session import create_session
 from rich import print as rprint
@@ -23,17 +21,6 @@ def _create_or_replace_connection(conn_obj: Connection) -> None:
         session.commit()
 
 
-def convert_to_connection(conn: dict[str, Any]) -> Connection:
-    """
-    Convert the SQL CLI connection dictionary into an Airflow Connection instance.
-
-    :param conn: SQL CLI connection dictionary
-    :returns: Connection object
-    """
-    c = conn.copy()
-    c["connection_id"] = c["conn_id"]
-    c.pop("conn_id")
-    return Connection(**connection_schema.load(c))
 
 
 def validate_connections(connections: list[Connection], connection_id: str | None = None) -> None:
