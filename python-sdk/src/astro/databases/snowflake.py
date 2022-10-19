@@ -479,7 +479,7 @@ class SnowflakeDatabase(BaseDatabase):
         )
 
     @staticmethod
-    def get_cols_case(cols: tuple[str]):
+    def get_cols_case(cols: tuple[str, ...]):
         result = []
         for col in cols:
             if col.isupper():
@@ -496,7 +496,7 @@ class SnowflakeDatabase(BaseDatabase):
             return "upper"
 
     @staticmethod
-    def use_quotes(cols: tuple[str]):
+    def use_quotes(cols: tuple[str, ...]):
         return SnowflakeDatabase.get_cols_case(cols) in ["upper", "mixed"]
 
     def create_table_using_schema_autodetection(
@@ -697,7 +697,7 @@ class SnowflakeDatabase(BaseDatabase):
         source_table: BaseTable,
         target_table: BaseTable,
         source_to_target_columns_map: dict[str, str],
-        target_conflict_columns: list[str],
+        target_conflict_columns: tuple[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """
@@ -724,7 +724,7 @@ class SnowflakeDatabase(BaseDatabase):
         source_table: BaseTable,
         target_table: BaseTable,
         source_to_target_columns_map: dict[str, str],
-        target_conflict_columns: list[str],
+        target_conflict_columns: tuple[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ):
         """Build the SQL statement for Merge operation"""
@@ -735,14 +735,12 @@ class SnowflakeDatabase(BaseDatabase):
         source_cols = source_to_target_columns_map.keys()
         target_cols = source_to_target_columns_map.values()
 
-        target_table_sqla = self.get_sqla_table(target_table)
         target_identifier_enclosure = ""
-        if SnowflakeDatabase.use_quotes(target_table_sqla.columns.keys()):
+        if SnowflakeDatabase.use_quotes(tuple(target_cols)):
             target_identifier_enclosure = '"'
 
-        source_table_sqla = self.get_sqla_table(source_table)
         source_identifier_enclosure = ""
-        if SnowflakeDatabase.use_quotes(source_table_sqla.columns.keys()):
+        if SnowflakeDatabase.use_quotes(tuple(source_cols)):
             source_identifier_enclosure = '"'
 
         (
