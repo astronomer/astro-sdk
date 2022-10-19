@@ -126,7 +126,7 @@ def test_run(workflow_name, environment, initialised_project):
         print(result.output)
     assert result.exit_code == 0
     result_stdout = get_stdout(result)
-    assert f"Dagrun {workflow_name} final state: success" in result_stdout
+    assert f"Completed running the workflow {workflow_name}: [SUCCESS]" in result_stdout
 
 
 def test_init_with_directory(tmp_path):

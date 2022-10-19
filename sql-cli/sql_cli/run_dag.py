@@ -104,7 +104,9 @@ def run_dag(
                 add_logger_if_needed(dag, ti)
             ti.task = tasks[ti.task_id]
             _run_task(ti, session=session)
-    pprint(f"Dagrun {dr.dag_id} final state: {dr.state}")
+    pprint(f"Completed running the workflow {dr.dag_id}: [bold yellow][{dr.state.upper()}][/bold yellow]")
+    elapsed_seconds = (dr.end_date - dr.start_date).microseconds / 10**6
+    pprint(f"Total elapsed time: [bold blue]{elapsed_seconds:.2}s[/bold blue]")
     if conn_file_path or variable_file_path or connections:
         # Remove the local variables we have added to the secrets_backend_list
         secrets_backend_list.pop(0)  # noqa
@@ -136,20 +138,19 @@ def _run_task(ti: TaskInstance, session: Session) -> None:
 
     :param ti: TaskInstance to run
     """
-    pprint("[bold green]*****************************************************[/bold green]")
-    if hasattr(ti, "map_index") and ti.map_index > 0:
-        pprint("Running task %s index %d", ti.task_id, ti.map_index)
+    if ti.map_index >= 0:
+        pprint(f"Processing [bold yellow]{ti.task_id}[/bold yellow][{ti.map_index}]...", end=" ")
     else:
-        pprint(f"Running task [bold red]{ti.task_id}[/bold red]")
+        pprint(f"Processing [bold yellow]{ti.task_id}[/bold yellow]...", end=" ")
+
     try:
         warnings.filterwarnings(action="ignore")
         ti._run_raw_task(session=session)  # skipcq: PYL-W0212
         session.flush()
         session.commit()
-        pprint(f"[bold red]{ti.task_id}[/bold red] ran successfully!")
+        pprint("[bold green]SUCCESS[/bold green]")
     except AstroCleanupException:
         pprint("aql.cleanup async, continuing")
-    pprint("[bold green]*****************************************************[/bold green]")
 
 
 def _get_or_create_dagrun(
@@ -188,5 +189,5 @@ def _get_or_create_dagrun(
         session=session,
         conf=conf,  # type: ignore
     )
-    pprint(f"Created dagrun [bold blue]{str(dr)}[/bold blue]", str(dr))
+    pprint(f"\nRunning the workflow [bold blue]{dag.dag_id}[/bold blue]\n")
     return dr

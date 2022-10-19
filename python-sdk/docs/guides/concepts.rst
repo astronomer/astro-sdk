@@ -1,3 +1,5 @@
+.. _concepts:
+
 ========
 Concepts
 ========
@@ -15,7 +17,7 @@ There are two types of tables:
 
     These are tables that are of some importance to users and will we persist in a database even after a DAG run is finished and won't be deleted by :ref:`cleanup_operator`. Users can still drop them by using :ref:`drop_table_operator`. You can create these tables by passing in a ``name`` parameter while creating a ``astro.sql.table.Table`` object.
 
-    .. literalinclude:: ../example_dags/example_amazon_s3_postgres_load_and_save.py
+    .. literalinclude:: ../../example_dags/example_amazon_s3_postgres_load_and_save.py
        :language: python
        :start-after: [START named_table_example]
        :end-before: [END named_table_example]
@@ -29,7 +31,7 @@ There are two types of tables:
     #. Explicit: instantiate a ``astro.sql.table.Table`` using the argument  `temp=True`
     #. Implicit: instantiate a ``astro.sql.table.Table`` without giving it a name, and without specifying the `temp` argument
 
-        .. literalinclude:: ../example_dags/example_amazon_s3_postgres.py
+        .. literalinclude:: ../../example_dags/example_amazon_s3_postgres.py
            :language: python
            :start-after: [START temp_table_example]
            :end-before: [END temp_table_example]
@@ -39,7 +41,7 @@ Metadata
 Metadata is used to give additional information to access a SQL Table.
 For example, a user can detail the Snowflake schema and database for a table, whereas a BigQuery user can specify the namespace and dataset. Although these parameters can change name depending on the database, we have normalised the :class:`~astro.sql.table.Metadata` class to name their schema and database.
 
-.. literalinclude:: ../example_dags/example_amazon_s3_snowflake_transform.py
+.. literalinclude:: ../../example_dags/example_amazon_s3_snowflake_transform.py
    :language: python
    :start-after: [START metadata_example_snowflake]
    :end-before: [END metadata_example_snowflake]
@@ -89,12 +91,12 @@ Templating is a powerful concept in Airflow to pass dynamic information into tas
 
 The parameter list passed to the decorated function is also added to the context which is used to render template. For example:
 
-.. literalinclude:: ../example_dags/example_transform.py
+.. literalinclude:: ../../example_dags/example_transform.py
        :language: python
        :start-after: [START transform_example_3]
        :end-before: [END transform_example_3]
 
-More details can be found at `airflow templates reference <https://airflow.apache.org/docs/apache-airflow/stable/templates-ref.html>`_
+More details can be found at Airflow's :external+airflow:doc:`templates-ref`.
 
 .. _file_pattern:
 
@@ -126,14 +128,14 @@ Astro SDK uses following URIs as datasets across its operators.
 
 #. :ref:`table` as a Dataset
 
-    .. literalinclude:: ../example_dags/example_datasets.py
+    .. literalinclude:: ../../example_dags/example_datasets.py
            :language: python
            :start-after: [START dataset_table]
            :end-before: [END dataset_table]
 
 #. File as a Dataset
 
-    .. literalinclude:: ../example_dags/example_datasets.py
+    .. literalinclude:: ../../example_dags/example_datasets.py
            :language: python
            :start-after: [START dataset_file]
            :end-before: [END dataset_file]
@@ -142,14 +144,14 @@ Following examples show how to produce and use datasets for scheduling.
 
 #. **Dataset Producer** - Produces output dataset ``imdb_movies_table`` as a Table.
 
-    .. literalinclude:: ../example_dags/example_datasets.py
+    .. literalinclude:: ../../example_dags/example_datasets.py
            :language: python
            :start-after: [START dataset_producer]
            :end-before: [END dataset_producer]
 
 #. **Dataset Consumer** - DAG gets scheduled post input dataset Table ``imdb_movies_table`` is produced by the upstream DAG above.
 
-    .. literalinclude:: ../example_dags/example_datasets.py
+    .. literalinclude:: ../../example_dags/example_datasets.py
            :language: python
            :start-after: [START dataset_consumer]
            :end-before: [END dataset_consumer]
@@ -172,9 +174,9 @@ or by setting the below environment variable in your deployment
 
 Following is a view of dag dependencies on datasets
 
-.. image:: ./images/dag-dependencies-on-datasets.png
+.. image:: ../images/dag-dependencies-on-datasets.png
 
-More details can be found at `airflow datasets concept <https://airflow.apache.org/docs/apache-airflow/stable/concepts/datasets.html>`_
+More details can be found at Airflow's :external+airflow:doc:`concepts/dynamic-task-mapping`.
 
 .. Note::
     The concept of Datasets in astro-sdk is supported only from the **1.1.0** release ( and requires Airflow version **2.4.0** and above).
