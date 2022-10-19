@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from urllib.parse import urlparse
+from urllib.request import urlopen
 
 from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
@@ -18,7 +19,9 @@ class HTTPLocation(BaseFileLocation):
 
     @property
     def size(self) -> int:
-        return -1
+        """Return file size for HTTP location"""
+        file = urlopen(self.path)  # skipcq BAN-B310
+        return int(file.length)
 
     @property
     def openlineage_dataset_namespace(self) -> str:

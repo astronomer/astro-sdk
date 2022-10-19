@@ -46,7 +46,10 @@ def test_describe_get_paths(path):  # skipcq: PYL-W0612, PTC-W0065
     assert location.paths == [path]
 
 
+@pytest.mark.integration
 def test_size():
-    """Test get_size() of for local file."""
-    location = create_file_location("http://tmp/house2.csv")
-    assert location.size == -1
+    """Test get_size() of for HTTP file."""
+    location = create_file_location(
+        "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
+    )
+    assert location.size > 0

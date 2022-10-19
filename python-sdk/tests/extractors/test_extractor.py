@@ -32,7 +32,7 @@ INPUT_STATS = [
                 files=[
                     InputFileFacet(
                         filepath="gs://astro-sdk/workspace/sample_pattern.csv",
-                        file_size=-1,
+                        file_size=65,
                         file_type=FileType.CSV,
                     )
                 ],
