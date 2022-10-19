@@ -538,6 +538,8 @@ class SnowflakeDatabase(BaseDatabase):
             quote_identifiers=self.use_quotes(source_dataframe),
             auto_create_table=True,
         )
+        # We are truncating since we only expect table to be created with required schema.
+        # Since this method is used by both native and pandas path we cannot skip this step.
         self.truncate_table(table)
 
     def is_native_load_file_available(self, source_file: File, target_table: BaseTable) -> bool:
@@ -619,6 +621,8 @@ class SnowflakeDatabase(BaseDatabase):
         if if_exists == "replace" or not self.table_exists(target_table):
             auto_create_table = True
 
+        # We are changing the case of table name to ease out on the requirements to add quotes in raw queries.
+        # ToDO - Currently, we cannot to append using load_file to a table name which is having name in lower case.
         pandas_tools.write_pandas(
             conn=self.hook.get_conn(),
             df=source_dataframe,
