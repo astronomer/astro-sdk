@@ -72,7 +72,7 @@ class Project:
         parser.read(filename)
         return {section: dict(parser.items(section)) for section in parser.sections()}
 
-    def _update_config(self, environment: str=DEFAULT_ENVIRONMENT) -> None:
+    def update_config(self, environment: str=DEFAULT_ENVIRONMENT) -> None:
         """
         Sets custom Airflow configuration in case the user is not using the default values.
 
@@ -131,7 +131,7 @@ class Project:
             ignore=shutil.ignore_patterns(".gitkeep"),
             dirs_exist_ok=True,
         )
-        self._update_config()
+        self.update_config()
         self._initialise_airflow()
         disable_examples(self.airflow_home)
         self._remove_unnecessary_airflow_files()

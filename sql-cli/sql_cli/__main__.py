@@ -117,7 +117,7 @@ def run(
 ) -> None:
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
-    project._update_config(environment=environment)
+    project.update_config(environment=environment)
     project.load_config(environment)
 
     connections = {c["conn_id"]: convert_to_connection(c) for c in project.connections}
