@@ -93,9 +93,8 @@ class MergeOperator(AstroSQLBaseOperator):
         Collect the input, output, job and run facets for merge operator
         """
         input_uri = (
-            self.source_table.openlineage_dataset_namespace()
-            + "://"
-            + self.source_table.openlineage_dataset_name()
+            f"{self.source_table.openlineage_dataset_namespace()}"
+            f"://{self.source_table.openlineage_dataset_name()}"
         )
         input_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(
@@ -126,9 +125,8 @@ class MergeOperator(AstroSQLBaseOperator):
         ]
 
         output_uri = (
-            self.target_table.openlineage_dataset_namespace()
-            + "://"
-            + self.target_table.openlineage_dataset_name()
+            f"{self.target_table.openlineage_dataset_namespace()}"
+            f"://{self.target_table.openlineage_dataset_name()}"
         )
         output_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(

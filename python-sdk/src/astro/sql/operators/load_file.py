@@ -198,7 +198,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         )
 
         input_uri = (
-            self.input_file.openlineage_dataset_namespace + "://" + self.input_file.openlineage_dataset_name
+            f"{self.input_file.openlineage_dataset_namespace}://{self.input_file.openlineage_dataset_name}"
         )
         input_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(
@@ -227,9 +227,8 @@ class LoadFileOperator(AstroSQLBaseOperator):
         output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
         if self.output_table:
             output_uri = (
-                self.output_table.openlineage_dataset_namespace()
-                + "://"
-                + self.output_table.openlineage_dataset_name()
+                f"{self.output_table.openlineage_dataset_namespace()}"
+                f"://{self.output_table.openlineage_dataset_name()}"
             )
             output_dataset = [
                 OpenlineageDataset(

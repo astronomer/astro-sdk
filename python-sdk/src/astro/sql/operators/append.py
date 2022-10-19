@@ -80,9 +80,8 @@ class AppendOperator(AstroSQLBaseOperator):
         append_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="append_query")
         source_table_rows = self.source_table.row_count
         input_uri = (
-            self.source_table.openlineage_dataset_namespace()
-            + "://"
-            + self.source_table.openlineage_dataset_name()
+            f"{self.source_table.openlineage_dataset_namespace()}"
+            f"://{self.source_table.openlineage_dataset_name()}"
         )
         input_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(
@@ -112,9 +111,8 @@ class AppendOperator(AstroSQLBaseOperator):
         ]
 
         output_uri = (
-            self.target_table.openlineage_dataset_namespace()
-            + "://"
-            + self.target_table.openlineage_dataset_name()
+            f"{self.target_table.openlineage_dataset_namespace()}"
+            f"://{self.target_table.openlineage_dataset_name()}"
         )
         output_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(

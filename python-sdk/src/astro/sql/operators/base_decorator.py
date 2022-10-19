@@ -200,9 +200,8 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         Returns the lineage data
         """
         input_uri = (
-            self.output_table.openlineage_dataset_namespace()
-            + "://"
-            + self.output_table.openlineage_dataset_name()
+            f"{self.output_table.openlineage_dataset_namespace()}"
+            f"://{self.output_table.openlineage_dataset_name()}"
         )
         input_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(
@@ -216,9 +215,8 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         ]
 
         output_uri = (
-            self.output_table.openlineage_dataset_namespace()
-            + "://"
-            + self.output_table.openlineage_dataset_name()
+            f"{self.output_table.openlineage_dataset_namespace()}"
+            f"://{self.output_table.openlineage_dataset_name()}"
         )
         output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
         if self.output_table:
