@@ -170,21 +170,27 @@ Supported native transfers
    * - File Location
      - Database
      - native_support_kwargs params
+     - Permission
    * - S3
      - Bigquery
      - https://cloud.google.com/bigquery-transfer/docs/s3-transfer#bq
+     - https://cloud.google.com/bigquery/docs/s3-transfer#required_permissions and ``bigquery.jobs.create``
    * - GCS
      - Bigquery
      - https://cloud.google.com/bigquery-transfer/docs/cloud-storage-transfer#bq
+     - https://cloud.google.com/bigquery/docs/cloud-storage-transfer#required_permissions and ``bigquery.jobs.create``
    * - S3
      - Snowflake
      - https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html
+     - https://docs.snowflake.com/en/user-guide/data-load-s3.html
    * - GCS
      - Snowflake
      - https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html
+     - https://docs.snowflake.com/en/user-guide/data-load-gcs-config.html
    * - S3
      - Redshift
      - https://docs.aws.amazon.com/redshift/latest/dg/r_COPY.html
+     - https://docs.aws.amazon.com/redshift/latest/dg/c-getting-started-using-spectrum-create-role.html
 
 .. note::
    For loading from S3 to Redshift database, although Redshift allows the below two options for authorization, **we
