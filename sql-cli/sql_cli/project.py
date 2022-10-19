@@ -1,15 +1,23 @@
-import logging
+from __future__ import annotations
+
 import os
 import shutil
+from configparser import ConfigParser
 from pathlib import Path
-from typing import Optional
+from typing import Any
 
 from sql_cli.configuration import Config
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_ENVIRONMENT
+from sql_cli.exceptions import InvalidProject
+from sql_cli.utils.airflow import disable_examples
 
 BASE_SOURCE_DIR = Path(os.path.realpath(__file__)).parent.parent / "include/base/"
 
-MANDATORY_PATHS = {Path("config/default/configuration.yml"), Path("workflows"), Path(".airflow/airflow.db")}
+MANDATORY_PATHS = {
+    Path("config/default/configuration.yml"),
+    Path("workflows"),
+    Path(".airflow/default/airflow.db"),
+}
 
 
 class Project:
@@ -22,12 +30,13 @@ class Project:
     def __init__(
         self,
         directory: Path,
-        airflow_home: Optional[Path] = None,
-        airflow_dags_folder: Optional[Path] = None,
+        airflow_home: Path | None = None,
+        airflow_dags_folder: Path | None = None,
     ) -> None:
         self.directory = directory
         self._airflow_home = airflow_home
         self._airflow_dags_folder = airflow_dags_folder
+        self.connections: list[dict[str, Any]] = []
 
     @property
     def airflow_home(self) -> Path:
@@ -53,30 +62,50 @@ class Project:
         """
         return self._airflow_dags_folder or Path(self.directory, DEFAULT_DAGS_FOLDER)
 
-    def _update_config(self) -> None:
+    @property
+    def airflow_config(self) -> dict[str, Any]:
+        """
+        Retrieve the Airflow configuration for the currently set environment.
+
+        :returns: A Python dictionary containing the Airflow configuration.
+        """
+        filename = self.airflow_home / "airflow.cfg"
+        parser = ConfigParser()
+        parser.read(filename)
+        return {section: dict(parser.items(section)) for section in parser.sections()}
+
+    def update_config(self, environment: str = DEFAULT_ENVIRONMENT) -> None:
         """
         Sets custom Airflow configuration in case the user is not using the default values.
 
         :param airflow_home: Custom user-defined Airflow Home directory
         :param airflow_dags_folder: Custom user-defined Airflow DAGs folder
         """
-        config = Config(environment=DEFAULT_ENVIRONMENT, project_dir=self.directory)
+        config = Config(environment=environment, project_dir=self.directory)
+        config = config.from_yaml_to_config()
+
         if self._airflow_home is not None:
             config.write_value_to_yaml("airflow", "home", str(self._airflow_home))
         if self._airflow_dags_folder is not None:
             config.write_value_to_yaml("airflow", "dags_folder", str(self._airflow_dags_folder))
+
+        config.connections[0]["host"] = str(self.directory / config.connections[0]["host"])
+        config.write_config_to_yaml()
 
     def _initialise_airflow(self) -> None:
         """
         Create an Airflow database and configuration in the self.airflow_home folder, or upgrade them,
         if they already exist.
         """
+        os.environ.pop("AIRFLOW_HOME", None)
+        os.environ.pop("AIRFLOW__DATABASE__SQL_ALCHEMY_CONN", None)
+
         # TODO: In future we want to replace this by either:
         # - python-native approach or
         # - subprocess
-        os.system(  # skipcq:  BAN-B605
+        os.system(  # skipcq: BAN-B605
             f"AIRFLOW_HOME={self.airflow_home} "
-            f"AIRFLOW__CORE__DAGS_FOLDER={self.airflow_dags_folder }"
+            f"AIRFLOW__CORE__DAGS_FOLDER={self.airflow_dags_folder} "
             "AIRFLOW__CORE__LOAD_EXAMPLES=False "
             "airflow db init > /dev/null 2>&1"
         )
@@ -104,8 +133,9 @@ class Project:
             ignore=shutil.ignore_patterns(".gitkeep"),
             dirs_exist_ok=True,
         )
-        self._update_config()
+        self.update_config()
         self._initialise_airflow()
+        disable_examples(self.airflow_home)
         self._remove_unnecessary_airflow_files()
 
     def is_valid_project(self) -> bool:
@@ -124,7 +154,10 @@ class Project:
         :param environment: string referencing the desired environment, uses "default" unless specified
         """
         if not self.is_valid_project():
-            logging.exception("This is not a valid SQL project. Please, use `flow init`")
+            raise InvalidProject("This is not a valid SQL project. Please, use `flow init`")
         config = Config(environment=environment, project_dir=self.directory).from_yaml_to_config()
-        self._airflow_home = Path(str(config.airflow_home))
-        self._airflow_dags_folder = Path(str(config.airflow_dags_folder))
+        if config.airflow_home:
+            self._airflow_home = Path(config.airflow_home)
+        if config.airflow_dags_folder:
+            self._airflow_dags_folder = Path(config.airflow_dags_folder)
+        self.connections = config.connections

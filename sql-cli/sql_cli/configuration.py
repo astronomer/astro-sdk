@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 import yaml
 
-from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME, DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
+from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME
 
 
 @dataclass
@@ -18,7 +18,7 @@ class Config:
 
     project_dir: Path
     environment: str
-    connections: list[dict[str, Any]] | None = None
+    connections: list[dict[str, Any]] = field(default_factory=list)
     airflow_home: str | None = None
     airflow_dags_folder: str | None = None
 
@@ -52,8 +52,8 @@ class Config:
         return Config(
             project_dir=self.project_dir,
             environment=self.environment,
-            airflow_home=yaml_config.get("airflow", {}).get("home", DEFAULT_AIRFLOW_HOME),
-            airflow_dags_folder=yaml_config.get("airflow", {}).get("dags_folder", DEFAULT_DAGS_FOLDER),
+            airflow_home=yaml_config.get("airflow", {}).get("home"),
+            airflow_dags_folder=yaml_config.get("airflow", {}).get("dags_folder"),
             connections=yaml_config["connections"],
         )
 
@@ -75,6 +75,28 @@ class Config:
         yaml_config.setdefault(section, {})
         yaml_config[section][key] = value
 
+        filepath = self.get_filepath()
+        with open(filepath, "w") as fp:
+            yaml.dump(yaml_config, fp)
+
+    def write_config_to_yaml(self) -> None:
+        """
+        Write a particular key/value to the desired configuration.yaml.
+
+        Example:
+        ```
+            [section]
+            - item1
+            - item2
+        ```
+
+        :param section: Section within the YAML file where the key/value will be recorded
+        :param values: List of items to be written to the YAML file
+        """
+        yaml_config = self.from_yaml_to_dict()
+        yaml_config["connections"] = self.connections
+        yaml_config["airflow_home"] = self.airflow_home
+        yaml_config["airflow_dags_folder"] = self.airflow_dags_folder
         filepath = self.get_filepath()
         with open(filepath, "w") as fp:
             yaml.dump(yaml_config, fp)

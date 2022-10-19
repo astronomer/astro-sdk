@@ -1,4 +1,23 @@
 # Changelog
+## 1.2.0b1
+
+### Feature:
+* Remove dependency on `AIRFLOW__CORE__ENABLE_XCOM_PICKLING`. Users can set new environment variables, namely `AIRFLOW__ASTRO_SDK__XCOM_STORAGE_CONN_ID` and `AIRFLOW__ASTRO_SDK__XCOM_STORAGE_URL` and use a custom XCOM backend namely, `AstroCustomXcomBackend` which enables the XCOM data to be saved to an S3 or GCS location. [#795](https://github.com/astronomer/astro-sdk/issues/795), [#997](https://github.com/astronomer/astro-sdk/pull/997)
+* Added OpenLineage support for `LoadFileOperator` , `AppendOperator` , `TransformOperator` and `MergeOperator` [#898](https://github.com/astronomer/astro-sdk/issues/898), [#899](https://github.com/astronomer/astro-sdk/issues/899), [#902](https://github.com/astronomer/astro-sdk/issues/902), [#901](https://github.com/astronomer/astro-sdk/issues/901) and [#900](https://github.com/astronomer/astro-sdk/issues/900)
+* Add `TransformFileOperator` that
+   - parses a SQL file with templating
+   - applies all needed parameters
+   - runs the SQL to return a table object to keep the `aql.transform_file` function, the function can return `TransformFileOperator().output` in a similar fashion to the merge operator. [#892](https://github.com/astronomer/astro-sdk/issues/892)
+* Add the implementation for row count for `BaseTable`. [#1073](https://github.com/astronomer/astro-sdk/issues/1073)
+
+### Improvement:
+* Fix `transform_file` to not depend on `transform` decorator [#1004](https://github.com/astronomer/astro-sdk/pull/1004)
+* Set the CI to run and publish benchmark reports once a week [#443](https://github.com/astronomer/astro-sdk/issues/443)
+* Fix cyclic dependency and improve import time. Reduces the import time for `astro/databases/__init__.py` from 23.254 seconds to 0.062 seconds [#1013](https://github.com/astronomer/astro-sdk/pull/1013)
+
+### Docs
+* Create GETTING_STARTED.md [#1036](https://github.com/astronomer/astro-sdk/pull/1036)
+
 ## 1.1.1
 
 ### Improvements

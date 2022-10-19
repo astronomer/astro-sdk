@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "astro-sql-cli"
-version = "0.0.0"
+version = "0.0.6"
 description = "Empower analysts to build workflows to transform data using SQL"
 authors = [
     "Astronomer <humans@astronomer.io>",
@@ -20,6 +20,9 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
 ]
+include=[
+   { path = 'include', format = 'wheel' }
+]
 
 [project.urls]
 Home = "https://astronomer.io/"
@@ -34,7 +37,7 @@ python-frontmatter = "^1.0.0"
 PyYAML = ">5.4.1"
 apache-airflow = ">2.0"
 python-dotenv = "^0.21.0"
-astro-sdk-python = {path = "../python-sdk", extras = ["all"]}
+astro-sdk-python = {extras = ["all"], version = ">=1.2.0b1"}
 
 [tool.poetry.scripts]
 flow = "sql_cli.__main__:app"
@@ -47,7 +50,6 @@ pytest = "^7.1.3"
 pytest-cov = "^4.0.0"
 mypy = "^0.982"
 types-pyyaml = ">5.4.1"
-astro-sdk-python = {path = "../python-sdk", extras = ["tests"]}
 
 [tool.poetry.group.type_check]
 optional = true

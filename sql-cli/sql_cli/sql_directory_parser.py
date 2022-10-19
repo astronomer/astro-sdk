@@ -106,8 +106,7 @@ class SqlFile:
 
         target_path = target_full_directory / self.path.name
 
-        with open(target_path, "w") as file:
-            file.write(f"{self.content}\n")
+        target_path.write_text(self.content)
 
         return target_path.relative_to(self.root_directory.parent.parent).as_posix()
 
