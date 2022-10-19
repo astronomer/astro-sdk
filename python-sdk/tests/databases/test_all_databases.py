@@ -7,7 +7,7 @@ import pytest
 
 from astro.constants import Database
 from astro.files import File
-from astro.settings import SCHEMA, SNOWFLAKE_SCHEMA
+from astro.settings import SCHEMA
 from astro.table import Metadata, Table
 
 CWD = pathlib.Path(__file__).parent
@@ -35,7 +35,7 @@ CWD = pathlib.Path(__file__).parent
         {
             "database": Database.SNOWFLAKE,
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
-            "table": Table(metadata=Metadata(schema=SNOWFLAKE_SCHEMA)),
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
         },
         {
             "database": Database.SQLITE,
