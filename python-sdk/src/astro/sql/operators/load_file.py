@@ -5,13 +5,7 @@ from typing import Any
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
-from openlineage.client.facet import (  # OutputStatisticsOutputDatasetFacet,
-    BaseFacet,
-    DataQualityMetricsInputDatasetFacet,
-    DataSourceDatasetFacet,
-    SchemaDatasetFacet,
-    SchemaField,
-)
+from openlineage.client.facet import BaseFacet, DataSourceDatasetFacet, SchemaDatasetFacet, SchemaField
 from openlineage.client.run import Dataset as OpenlineageDataset
 
 from astro.airflow.datasets import kwargs_with_datasets
@@ -250,7 +244,6 @@ class LoadFileOperator(AstroSQLBaseOperator):
                             enabled_native_fallback=self.enable_native_fallback,
                             native_support_arguments=self.native_support_kwargs,
                         ),
-                        # "outputStatistics":OutputStatisticsOutputDatasetFacet(rowCount=self.output_table.row_count),
                         "schema": SchemaDatasetFacet(
                             fields=[
                                 SchemaField(
@@ -260,10 +253,6 @@ class LoadFileOperator(AstroSQLBaseOperator):
                             ]
                         ),
                         "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=output_uri),
-                        "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(
-                            # rowCount=self.output_table.row_count,
-                            columnMetrics={}
-                        ),
                     },
                 )
             ]

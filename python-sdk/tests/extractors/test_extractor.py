@@ -76,7 +76,9 @@ def test_python_sdk_load_file_extract_on_complete():
             conn_id="bigquery",
             filetype=FileType.CSV,
         ),
-        output_table=Table(conn_id="bigquery", name="test-extractor", metadata=Metadata(schema="astro")),
+        output_table=Table(
+            conn_id="sqlite_default", name="test-extractor", metadata=Metadata(schema="astro")
+        ),
         use_native_support=False,
     )
 
@@ -88,8 +90,11 @@ def test_python_sdk_load_file_extract_on_complete():
 
     task_meta = python_sdk_extractor.extract_on_complete(task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
-    assert task_meta.inputs[0] == INPUT_STATS[0]
-    assert task_meta.outputs[0] == OUTPUT_STATS[0]
+    assert task_meta.inputs[0].facets["input_file_facet"] == INPUT_STATS[0].facets["input_file_facet"]
+    assert (
+        task_meta.outputs[0].facets["output_database_facet"]
+        == OUTPUT_STATS[0].facets["output_database_facet"]
+    )
     assert task_meta.job_facets == {}
     assert task_meta.run_facets == {}
 
