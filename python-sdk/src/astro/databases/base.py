@@ -557,7 +557,6 @@ class BaseDatabase(ABC):
     ) -> None:
         """
         Append the source table rows into a destination table.
-        The argument `if_conflicts` allows the user to define how to handle conflicts.
 
         :param source_table: Contains the rows to be appended to the target_table
         :param target_table: Contains the destination table in which the rows will be appended

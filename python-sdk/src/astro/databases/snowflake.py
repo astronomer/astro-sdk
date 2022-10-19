@@ -827,7 +827,6 @@ class SnowflakeDatabase(BaseDatabase):
     ) -> None:
         """
         Append the source table rows into a destination table.
-        The argument `if_conflicts` allows the user to define how to handle conflicts.
 
         Overriding the base method since we need to add quotes around the identifiers for
          snowflake to preserve case of cols - Column(name=col, quote=True)
