@@ -827,7 +827,7 @@ class SnowflakeDatabase(BaseDatabase):
         The argument `if_conflicts` allows the user to define how to handle conflicts.
 
         Overriding the base method since we need to add quotes around the identifiers for
-         snowflake to preserver case of cols - Column(name=col, quote=True)
+         snowflake to preserve case of cols - Column(name=col, quote=True)
 
         :param source_table: Contains the rows to be appended to the target_table
         :param target_table: Contains the destination table in which the rows will be appended
