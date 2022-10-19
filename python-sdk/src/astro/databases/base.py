@@ -114,6 +114,8 @@ class BaseDatabase(ABC):
             )
             sql = kwargs.get("sql_statement")  # type: ignore
 
+        # We need to autocommit=True to make sure the query runs. This is done exclusively for SnowflakeDatabase's
+        # truncate method to reflect changes.
         if isinstance(sql, str):
             result = self.connection.execute(
                 sqlalchemy.text(sql).execution_options(autocommit=True), parameters

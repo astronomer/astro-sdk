@@ -526,6 +526,8 @@ class SnowflakeDatabase(BaseDatabase):
         else:
             source_dataframe = file.export_to_dataframe(nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT)
 
+        # We are changing the case of table name to ease out on the requirements to add quotes in raw queries.
+        # ToDO - Currently, we cannot to append using load_file to a table name which is having name in lower case.
         pandas_tools.write_pandas(
             conn=self.hook.get_conn(),
             df=source_dataframe,
