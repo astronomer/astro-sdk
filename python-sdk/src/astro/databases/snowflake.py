@@ -869,7 +869,7 @@ class SnowflakeDatabase(BaseDatabase):
         self.run_sql(sql=sql)
 
     @classmethod
-    def get_merge_initialization_query(cls, parameters: list[str]) -> str:
+    def get_merge_initialization_query(cls, parameters: tuple) -> str:
         """
         Handles database-specific logic to handle constraints, keeping
         it agnostic to database.

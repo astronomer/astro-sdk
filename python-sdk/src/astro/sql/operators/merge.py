@@ -46,7 +46,7 @@ class MergeOperator(AstroSQLBaseOperator):
         source_table: BaseTable,
         columns: list[str] | tuple[str] | dict[str, str],
         if_conflicts: MergeConflictStrategy,
-        target_conflict_columns: tuple[str],
+        target_conflict_columns: list[str],
         task_id: str = "",
         **kwargs: Any,
     ):
@@ -145,7 +145,7 @@ def merge(
     target_table: BaseTable,
     source_table: BaseTable,
     columns: list[str] | tuple[str] | dict[str, str],
-    target_conflict_columns: tuple[str],
+    target_conflict_columns: list[str],
     if_conflicts: MergeConflictStrategy,
     **kwargs: Any,
 ) -> XComArg:
