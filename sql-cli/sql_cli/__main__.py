@@ -85,8 +85,18 @@ def validate(
 ) -> None:
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
+    project.load_config(environment=env)
 
-    validate_connections(project=project, environment=env, connection_id=connection)
+    connections = [convert_to_connection(c) for c in project.connections]
+
+    # Since we are using the Airflow ORM to interact with connections, we need to tell Airflow to use our airflow.db
+    # The usual route is to set $AIRFLOW_HOME before Airflow is imported. However, in the context of the SQL CLI, we
+    # decide this during runtime, depending on the project path and SQL CLI configuration.
+    airflow_meta_conn = retrieve_airflow_database_conn_from_config(project.directory / project.airflow_home)
+    set_airflow_database_conn(airflow_meta_conn)
+
+    rprint(f"Validating connection(s) for environment '{env}'")
+    validate_connections(connections=connections, connection_id=connection)
 
 
 @app.command(

@@ -1,9 +1,10 @@
 import random
+import shutil
 import string
 from pathlib import Path
 
 import pytest
-from airflow.models import DAG, DagRun, TaskInstance as TI
+from airflow.models import DAG, Connection, DagRun, TaskInstance as TI
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 
@@ -140,3 +141,19 @@ def initialised_project(tmp_path):
     proj = Project(tmp_path)
     proj.initialise()
     return proj
+
+
+@pytest.fixture()
+def initialised_project_with_test_config(initialised_project: Project):
+    shutil.copytree(
+        src=CWD / "tests" / "config" / "test",
+        dst=initialised_project.directory / "config" / "test",
+    )
+    return initialised_project
+
+
+@pytest.fixture()
+def connections():
+    return [
+        Connection(conn_id="sqlite_conn", conn_type="sqlite", host="data/imdb.db"),
+    ]
