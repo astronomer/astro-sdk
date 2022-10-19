@@ -1097,6 +1097,10 @@ def test_tables_creation_if_they_dont_exist(database_table_fixture, if_exists):
     ids=["snowflake"],
 )
 def test_load_file_col_cap(sample_dag, database_table_fixture, text_cases):
+    """
+    Test that loading a file using load_file and then converting table to dataframe keep the column case intact.
+    We use pandas path for this.
+    """
     db, test_table = database_table_fixture
     path = str(CWD) + text_cases["path"]
     with sample_dag:
@@ -1124,6 +1128,10 @@ def test_load_file_col_cap(sample_dag, database_table_fixture, text_cases):
     ids=["snowflake"],
 )
 def test_load_file_col_cap_native_path(sample_dag, database_table_fixture):
+    """
+    Test that loading a file using load_file and then converting table to dataframe keep the column case intact.
+    We use native path for this.
+    """
     db, test_table = database_table_fixture
     path = str(CWD) + "/../../data/homes_upper.csv"
     with sample_dag:
