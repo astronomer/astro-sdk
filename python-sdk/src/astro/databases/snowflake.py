@@ -477,8 +477,8 @@ class SnowflakeDatabase(BaseDatabase):
             },
         )
 
-    @staticmethod
-    def use_quotes(cols: tuple[str, ...]) -> bool:
+    @classmethod
+    def use_quotes(cls, cols: tuple[str, ...]) -> bool:
         """
         With snowflake identifier we have two cases,
 
@@ -866,14 +866,14 @@ class SnowflakeDatabase(BaseDatabase):
         sql = insert(target_table_sqla).from_select(target_columns, sel)  # type: ignore[arg-type]
         self.run_sql(sql=sql)
 
-    @staticmethod
-    def get_merge_initialization_query(parameters: tuple[str]) -> str:
+    @classmethod
+    def get_merge_initialization_query(cls, parameters: tuple[str]) -> str:
         """
         Handles database-specific logic to handle constraints, keeping
         it agnostic to database.
         """
         identifier_enclosure = ""
-        if SnowflakeDatabase.use_quotes(parameters):
+        if cls.use_quotes(parameters):
             identifier_enclosure = '"'
 
         constraints = ",".join([f"{identifier_enclosure}{p}{identifier_enclosure}" for p in parameters])
