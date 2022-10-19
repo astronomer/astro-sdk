@@ -49,7 +49,7 @@ def set_airflow_database_conn(airflow_meta_conn: str) -> None:
     """
     # This is a hacky approcah we managed to find to make thigs work with Airflow 2.4
     os.environ["AIRFLOW__DATABASE__SQL_ALCHEMY_CONN"] = airflow_meta_conn
-    import airflow
+    import airflow  # skipcq: PYL-W0406
 
     importlib.reload(airflow)
     importlib.reload(airflow.configuration)
