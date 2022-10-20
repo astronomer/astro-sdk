@@ -157,3 +157,12 @@ def connections():
     return [
         Connection(conn_id="sqlite_conn", conn_type="sqlite", host="data/imdb.db"),
     ]
+
+
+@pytest.fixture()
+def initialised_project_with_empty_workflow(initialised_project: Project):
+    shutil.copytree(
+        src=CWD / "tests" / "workflows" / "empty",
+        dst=initialised_project.directory / "workflows" / "empty",
+    )
+    return initialised_project
