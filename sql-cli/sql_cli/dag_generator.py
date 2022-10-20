@@ -25,7 +25,7 @@ class SqlFilesDAG:
     start_date: datetime
     sql_files: list[SqlFile]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if not self.sql_files:
             raise EmptyDag("Missing SQL files!")
 

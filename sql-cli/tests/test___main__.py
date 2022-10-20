@@ -64,6 +64,28 @@ def test_generate(workflow_name, environment, initialised_project):
 
 
 @pytest.mark.parametrize(
+    "workflow_name,message",
+    [
+        ("empty", "The workflow does not have any SQL files!"),
+        ("foo", "A workflow with the given name does not exist!"),
+    ],
+)
+def test_generate_fails(workflow_name, message, initialised_project_with_empty_workflow):
+    result = runner.invoke(
+        app,
+        [
+            "generate",
+            workflow_name,
+            "--project-dir",
+            initialised_project_with_empty_workflow.directory.as_posix(),
+        ],
+    )
+    assert result.exit_code == 1
+    result_stdout = get_stdout(result)
+    assert result_stdout == message
+
+
+@pytest.mark.parametrize(
     "env,connection,status",
     [
         ("default", "sqlite_conn", "PASSED"),
@@ -127,6 +149,28 @@ def test_run(workflow_name, environment, initialised_project):
     assert result.exit_code == 0
     result_stdout = get_stdout(result)
     assert f"Completed running the workflow {workflow_name}: [SUCCESS]" in result_stdout
+
+
+@pytest.mark.parametrize(
+    "workflow_name,message",
+    [
+        ("empty", "The workflow does not have any SQL files!"),
+        ("foo", "A workflow with the given name does not exist!"),
+    ],
+)
+def test_run_fails(workflow_name, message, initialised_project_with_empty_workflow):
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            workflow_name,
+            "--project-dir",
+            initialised_project_with_empty_workflow.directory.as_posix(),
+        ],
+    )
+    assert result.exit_code == 1
+    result_stdout = get_stdout(result)
+    assert result_stdout == message
 
 
 def test_init_with_directory(tmp_path):
