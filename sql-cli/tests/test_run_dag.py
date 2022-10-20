@@ -1,9 +1,11 @@
 import pathlib
+import sqlite3
 from unittest import mock
 
 from airflow.decorators import task
 from airflow.utils.cli import get_dag
 from airflow.utils.trigger_rule import TriggerRule
+from sqlalchemy.exc import OperationalError
 
 from astro import sql as aql
 from sql_cli.run_dag import _run_task, run_dag
@@ -20,6 +22,27 @@ def test_run_task_successfully(mock_session, mock_task_instance, capsys):
     mock_session.flush.assert_called_once()
     captured = capsys.readouterr()
     assert "SUCCESS" in captured.out
+
+
+@mock.patch("airflow.models.taskinstance.TaskInstance")
+@mock.patch("airflow.settings.SASession")
+def test_run_task_failed(mock_session, mock_task_instance, capsys):
+    mock_task_instance.task.conn_id = "sqlite_conn"
+    mock_task_instance._run_raw_task.side_effect = OperationalError(
+        statement=mock.ANY,
+        params=mock.ANY,
+        orig=sqlite3.OperationalError("no such table: orders"),
+    )
+    mock_task_instance.map_index = 0
+    _run_task(mock_task_instance, mock_session)
+    mock_task_instance._run_raw_task.assert_called_once()
+    mock_session.flush.assert_not_called()
+    captured = capsys.readouterr()
+    assert "FAILED" in captured.out
+    assert (
+        f"  Error {mock_task_instance._run_raw_task.side_effect.orig.args[0]}"
+        f" using connection {mock_task_instance.task.conn_id}." in captured.out
+    )
 
 
 def test_run_task_cleanup_log(sample_dag, capsys):
