@@ -250,13 +250,20 @@ class SnowflakeDatabase(BaseDatabase):
     )
     DEFAULT_SCHEMA = SNOWFLAKE_SCHEMA
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID):
+    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable = None):
         super().__init__(conn_id)
+        self.table = table
 
     @property
     def hook(self) -> SnowflakeHook:
         """Retrieve Airflow hook to interface with the snowflake database."""
-        return SnowflakeHook(snowflake_conn_id=self.conn_id)
+        kwargs = {}
+        if self.table and self.table.metadata:
+            kwargs = {
+                "schema": self.table.metadata.schema,
+                "database": self.table.metadata.database
+            }
+        return SnowflakeHook(snowflake_conn_id=self.conn_id, **kwargs)
 
     @property
     def sql_type(self) -> str:

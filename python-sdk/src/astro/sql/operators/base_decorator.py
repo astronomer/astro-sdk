@@ -85,7 +85,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         else:
             if not self.conn_id:
                 raise ValueError("You need to provide a table or a connection id")
-        self.database_impl = create_database(self.conn_id)
+        self.database_impl = create_database(self.conn_id, self.output_table)
 
         # Find and load dataframes from op_arg and op_kwarg into Table
         self.create_output_table_if_needed()

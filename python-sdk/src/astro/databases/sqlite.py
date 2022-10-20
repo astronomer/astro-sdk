@@ -18,7 +18,7 @@ class SqliteDatabase(BaseDatabase):
     logic in other parts of our code-base.
     """
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID):
+    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable = None):
         super().__init__(conn_id)
 
     @property
