@@ -500,7 +500,7 @@ class SnowflakeDatabase(BaseDatabase):
 
         :param cols: list of columns
         """
-        return any(col for col in cols if not col.islower())
+        return any(col for col in cols if not col.islower() and not col.isupper())
 
     def create_table_using_schema_autodetection(
         self,

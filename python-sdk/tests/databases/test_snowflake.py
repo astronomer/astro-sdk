@@ -650,17 +650,17 @@ def test_snowflake_file_format_create_unique_name():
 @pytest.mark.parametrize(
     "cols_eval",
     [
-        {"cols": ["SELL", "LIST"], "expected_result": True},
+        # {"cols": ["SELL", "LIST"], "expected_result": False},
         {"cols": ["Sell", "list"], "expected_result": True},
         {"cols": ["sell", "List"], "expected_result": True},
         {"cols": ["sell", "lIst"], "expected_result": True},
         {"cols": ["sEll", "list"], "expected_result": True},
-        {"cols": ["sell", "LIST"], "expected_result": True},
+        {"cols": ["sell", "LIST"], "expected_result": False},
         {"cols": ["sell", "list"], "expected_result": False},
     ],
 )
 def test_use_quotes(cols_eval):
     """
-    Verify the quotes addition only in case where we are having upper/mixed case col names
+    Verify the quotes addition only in case where we are having mixed case col names
     """
     assert SnowflakeDatabase.use_quotes(cols_eval["cols"]) == cols_eval["expected_result"]

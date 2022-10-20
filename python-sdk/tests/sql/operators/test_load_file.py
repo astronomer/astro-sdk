@@ -1078,13 +1078,36 @@ def test_tables_creation_if_they_dont_exist(database_table_fixture, if_exists):
         {
             "path": "/../../data/homes_upper.csv",
             "expected_result": ["Acres", "Age", "Baths", "Beds", "List", "Living", "Rooms", "Sell", "Taxes"],
+            "sql": 'SELECT "Age" From <table_name>',
         },
         {
             "path": "/../../data/homes2.csv",
             "expected_result": ["acres", "age", "baths", "beds", "list", "living", "rooms", "sell", "taxes"],
+            "sql": "SELECT age From <table_name>",
+        },
+        {
+            "path": "/../../data/homes2.csv",
+            "expected_result": ["acres", "age", "baths", "beds", "list", "living", "rooms", "sell", "taxes"],
+            "sql": "SELECT AGE From <table_name>",
+        },
+        {
+            "path": "/../../data/homes_uppercase.csv",
+            "expected_result": ["acres", "age", "baths", "beds", "list", "living", "rooms", "sell", "taxes"],
+            "sql": "SELECT age From <table_name>",
+        },
+        {
+            "path": "/../../data/homes_uppercase.csv",
+            "expected_result": ["acres", "age", "baths", "beds", "list", "living", "rooms", "sell", "taxes"],
+            "sql": "SELECT AGE From <table_name>",
         },
     ],
-    ids=["Mixed/Upper", "Lower"],
+    ids=[
+        "Mixed",
+        "Lower-sql:lower_identifier",
+        "Lower-sql:upper_identifier",
+        "Upper-sql:lower_identifier",
+        "Upper-sql:upper_identifier",
+    ],
 )
 @pytest.mark.parametrize(
     "database_table_fixture",
@@ -1103,11 +1126,19 @@ def test_load_file_col_cap(sample_dag, database_table_fixture, text_cases):
     """
     db, test_table = database_table_fixture
     path = str(CWD) + text_cases["path"]
+
+    @aql.run_raw_sql()
+    def validate_run_raw_sql(table):
+        sql = text_cases["sql"]
+        return sql.replace("<table_name>", table.name)
+
     with sample_dag:
-        load_file(
+        table = load_file(
             input_file=File(path),
             output_table=test_table,
         )
+        validate_run_raw_sql(table)
+
     test_utils.run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
