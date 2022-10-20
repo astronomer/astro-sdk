@@ -26,7 +26,7 @@ def set_logger_level(log_level: int) -> None:
         logging.getLogger(name).setLevel(log_level)
 
 
-set_logger_level(logging.ERROR)
+set_logger_level(logging.CRITICAL)
 
 
 @app.command(help="Print the SQL CLI version.")
@@ -135,12 +135,16 @@ def run(
         dags_directory=project.airflow_dags_folder,
     )
     dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
-    run_dag(
+    rprint(f"\nRunning the workflow [bold blue]{dag.dag_id}[/bold blue] for [bold]{env}[/bold] environment\n")
+    dr = run_dag(
         dag,
         run_conf=project.airflow_config,
         connections={c.conn_id: c for c in project.connections},
         verbose=verbose,
     )
+    rprint(f"Completed running the workflow {dr.dag_id}: [bold yellow][{dr.state.upper()}][/bold yellow]")
+    elapsed_seconds = (dr.end_date - dr.start_date).microseconds / 10**6
+    rprint(f"Total elapsed time: [bold blue]{elapsed_seconds:.2}s[/bold blue]")
 
 
 @app.command(

@@ -1,4 +1,5 @@
 import pathlib
+from tempfile import gettempdir
 
 import pytest
 from typer.testing import CliRunner
@@ -104,13 +105,14 @@ def test_validate_all(initialised_project_with_test_config):
 
 
 @pytest.mark.parametrize(
-    "workflow_name,environment",
+    "workflow_name,environment,status",
     [
-        ("example_basic_transform", "default"),
-        ("example_templating", "dev"),
+        ("example_basic_transform", "default", "SUCCESS"),
+        ("example_templating", "dev", "SUCCESS"),
+        ("example_templating", "default", "FAILED"),
     ],
 )
-def test_run(workflow_name, environment, initialised_project):
+def test_run(workflow_name, environment, status, initialised_project):
     result = runner.invoke(
         app,
         [
@@ -126,7 +128,7 @@ def test_run(workflow_name, environment, initialised_project):
         print(result.output)
     assert result.exit_code == 0
     result_stdout = get_stdout(result)
-    assert f"Completed running the workflow {workflow_name}: [SUCCESS]" in result_stdout
+    assert f"Completed running the workflow {workflow_name}: [{status}]" in result_stdout
 
 
 def test_init_with_directory(tmp_path):
@@ -138,8 +140,9 @@ def test_init_with_directory(tmp_path):
 
 
 def test_init_with_custom_airflow_config(tmp_path):
+    tmp_dir = gettempdir()
     result = runner.invoke(
-        app, ["init", tmp_path.as_posix(), "--airflow-home", "/tmp", "--airflow-dags-folder", "/tmp"]
+        app, ["init", tmp_path.as_posix(), "--airflow-home", tmp_dir, "--airflow-dags-folder", tmp_dir]
     )
     assert result.exit_code == 0
     expected_msg = f"Initialized an Astro SQL project at {tmp_path.as_posix()}"
