@@ -19,7 +19,7 @@ from sql_cli.utils.airflow import (
 )
 
 load_dotenv()
-app = typer.Typer(add_completion=False)
+app = typer.Typer(add_completion=False, context_settings={"help_option_names": ["-h", "--help"]})
 
 
 def set_logger_level(log_level: int) -> None:
