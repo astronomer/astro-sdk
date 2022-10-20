@@ -4,7 +4,6 @@ import importlib
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-#from astro.table import BaseTable
 from astro.utils.path import get_class_name, get_dict_with_module_names_to_dot_notations
 
 if TYPE_CHECKING:
