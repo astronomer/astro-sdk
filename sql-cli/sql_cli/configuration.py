@@ -111,8 +111,10 @@ class Config:
         """
         yaml_config = self.from_yaml_to_dict()
         yaml_config["connections"] = self.connections
-        yaml_config["airflow_home"] = self.airflow_home
-        yaml_config["airflow_dags_folder"] = self.airflow_dags_folder
+        if self.airflow_home:
+            yaml_config["airflow"]["home"] = self.airflow_home
+        if self.airflow_dags_folder:
+            yaml_config["airflow"]["dags_folder"] = self.airflow_dags_folder
         filepath = self.get_filepath()
         with open(filepath, "w") as fp:
             yaml.dump(yaml_config, fp)

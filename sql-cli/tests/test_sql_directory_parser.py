@@ -26,8 +26,8 @@ def test_sql_file_get_variable_name(sql_file, sql_file_in_sub_directory):
 
 def test_sql_file_get_relative_target_path(sql_file, sql_file_in_sub_directory):
     """Test that relative target path can be retrieved."""
-    assert sql_file.get_relative_target_path() == ".airflow/dags/sql/basic/a.sql"
-    assert sql_file_in_sub_directory.get_relative_target_path() == ".airflow/dags/sql/basic/sub_dir/a.sql"
+    assert sql_file.get_relative_target_path() == "sql/basic/a.sql"
+    assert sql_file_in_sub_directory.get_relative_target_path() == "sql/basic/sub_dir/a.sql"
 
 
 def test_get_sql_files(root_directory, dags_directory):

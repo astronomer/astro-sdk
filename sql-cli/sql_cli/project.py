@@ -87,9 +87,9 @@ class Project:
         config = config.from_yaml_to_config()
 
         if self._airflow_home is not None:
-            config.write_value_to_yaml("airflow", "home", str(self._airflow_home))
+            config.write_value_to_yaml("airflow", "home", str(self._airflow_home.resolve()))
         if self._airflow_dags_folder is not None:
-            config.write_value_to_yaml("airflow", "dags_folder", str(self._airflow_dags_folder))
+            config.write_value_to_yaml("airflow", "dags_folder", str(self._airflow_dags_folder.resolve()))
 
         config.connections[0]["host"] = str(self.directory / config.connections[0]["host"])
         config.write_config_to_yaml()
@@ -159,7 +159,7 @@ class Project:
             raise InvalidProject("This is not a valid SQL project. Please, use `flow init`")
         config = Config(environment=environment, project_dir=self.directory).from_yaml_to_config()
         if config.airflow_home:
-            self._airflow_home = Path(config.airflow_home)
+            self._airflow_home = Path(config.airflow_home).resolve()
         if config.airflow_dags_folder:
-            self._airflow_dags_folder = Path(config.airflow_dags_folder)
+            self._airflow_dags_folder = Path(config.airflow_dags_folder).resolve()
         self.connections = [convert_to_connection(c) for c in config.connections]
