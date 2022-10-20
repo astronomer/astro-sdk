@@ -114,8 +114,12 @@ class BaseDatabase(ABC):
             )
             sql = kwargs.get("sql_statement")  # type: ignore
 
+        # We need to autocommit=True to make sure the query runs. This is done exclusively for SnowflakeDatabase's
+        # truncate method to reflect changes.
         if isinstance(sql, str):
-            result = self.connection.execute(sqlalchemy.text(sql), parameters)
+            result = self.connection.execute(
+                sqlalchemy.text(sql).execution_options(autocommit=True), parameters
+            )
         else:
             result = self.connection.execute(sql, parameters)
         return result
@@ -234,7 +238,7 @@ class BaseDatabase(ABC):
         table: BaseTable,
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
-        columns_names_capitalization: ColumnCapitalization = "lower",  # skipcq
+        columns_names_capitalization: ColumnCapitalization = "original",  # skipcq
     ) -> None:
         """
         Create a SQL table, automatically inferring the schema using the given file.
@@ -555,7 +559,6 @@ class BaseDatabase(ABC):
     ) -> None:
         """
         Append the source table rows into a destination table.
-        The argument `if_conflicts` allows the user to define how to handle conflicts.
 
         :param source_table: Contains the rows to be appended to the target_table
         :param target_table: Contains the destination table in which the rows will be appended

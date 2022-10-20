@@ -415,3 +415,22 @@ def test_dataframe_no_storage_option_raises_exception(sample_dag):
         with sample_dag:
             count_df(validate_file(df=File(path=str(CWD) + "/../../data/homes2.csv")))
         test_utils.run_dag(sample_dag)
+
+
+def test_col_case_is_preserved(sample_dag):
+    """Test that column case is preserved"""
+
+    @aql.dataframe()
+    def sample_df_1():  # skipcq: PY-D0003
+        return pandas.DataFrame({"Numbers": [1, 2, 3], "Colors": ["red", "white", "blue"]})
+
+    @aql.dataframe()
+    def validate(df):  # skipcq: PY-D0003
+        cols = list(df.columns)
+        cols.sort()
+        return df.columns == ["Colors", "Numbers"]
+
+    with sample_dag:
+        task1 = sample_df_1()
+        validate(task1)
+    test_utils.run_dag(sample_dag)
