@@ -5,6 +5,7 @@ from typer.testing import CliRunner
 
 from sql_cli import __version__
 from sql_cli.__main__ import app
+from sql_cli.connections import CONNECTION_ID_OUTPUT_STRING_WIDTH
 from tests.utils import list_dir
 
 runner = CliRunner()
@@ -62,14 +63,44 @@ def test_generate(workflow_name, environment, initialised_project):
     assert result_stdout.endswith(f"{workflow_name}.py has been successfully generated. 🎉")
 
 
-def test_validate_with_directory(tmp_path):
-    result = runner.invoke(app, ["init", tmp_path.as_posix()])
-    assert result.exit_code == 0
-    result = runner.invoke(app, ["validate", tmp_path.as_posix()])
+@pytest.mark.parametrize(
+    "env,connection,status",
+    [
+        ("default", "sqlite_conn", "PASSED"),
+        ("test", "sqlite_conn_invalid", "FAILED"),
+    ],
+)
+def test_validate(env, connection, status, initialised_project_with_test_config):
+    result = runner.invoke(
+        app,
+        [
+            "validate",
+            initialised_project_with_test_config.directory.as_posix(),
+            "--env",
+            env,
+            "--connection",
+            connection,
+        ],
+    )
+    if not result.exit_code == 0:
+        print(result.exception)
     assert result.exit_code == 0
     output = get_stdout(result)
-    assert "Validating connection(s) for environment 'default'" in output
-    assert "Validating connection sqlite_conn               PASSED" in output
+    assert f"Validating connection(s) for environment '{env}'" in output
+    assert f"Validating connection {connection:{CONNECTION_ID_OUTPUT_STRING_WIDTH}} {status}" in output
+
+
+def test_validate_all(initialised_project_with_test_config):
+    result = runner.invoke(
+        app,
+        [
+            "validate",
+            initialised_project_with_test_config.directory.as_posix(),
+        ],
+    )
+    assert result.exit_code == 0
+    output = get_stdout(result)
+    assert output.startswith("Validating connection(s)")
 
 
 @pytest.mark.parametrize(
@@ -95,7 +126,7 @@ def test_run(workflow_name, environment, initialised_project):
         print(result.output)
     assert result.exit_code == 0
     result_stdout = get_stdout(result)
-    assert f"Dagrun {workflow_name} final state: success" in result_stdout
+    assert f"Completed running the workflow {workflow_name}: [SUCCESS]" in result_stdout
 
 
 def test_init_with_directory(tmp_path):

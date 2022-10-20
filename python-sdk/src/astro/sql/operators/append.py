@@ -6,6 +6,8 @@ from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
 from openlineage.client.facet import (
     BaseFacet,
+    DataQualityMetricsInputDatasetFacet,
+    DataSourceDatasetFacet,
     OutputStatisticsOutputDatasetFacet,
     SchemaDatasetFacet,
     SchemaField,
@@ -77,6 +79,10 @@ class AppendOperator(AstroSQLBaseOperator):
         """
         append_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="append_query")
         source_table_rows = self.source_table.row_count
+        input_uri = (
+            f"{self.source_table.openlineage_dataset_namespace()}"
+            f"://{self.source_table.openlineage_dataset_name()}"
+        )
         input_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(
                 namespace=self.source_table.openlineage_dataset_namespace(),
@@ -88,7 +94,7 @@ class AppendOperator(AstroSQLBaseOperator):
                         columns=self.columns,
                         metadata=self.source_table.metadata,
                     ),
-                    "schema_dataset_facet": SchemaDatasetFacet(
+                    "schema": SchemaDatasetFacet(
                         fields=[
                             SchemaField(
                                 name=self.source_table.metadata.schema,
@@ -96,10 +102,18 @@ class AppendOperator(AstroSQLBaseOperator):
                             )
                         ]
                     ),
+                    "dataSource": DataSourceDatasetFacet(name=self.source_table.name, uri=input_uri),
+                    "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(
+                        rowCount=self.source_table.row_count, columnMetrics={}
+                    ),
                 },
             )
         ]
 
+        output_uri = (
+            f"{self.target_table.openlineage_dataset_namespace()}"
+            f"://{self.target_table.openlineage_dataset_name()}"
+        )
         output_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(
                 namespace=self.target_table.openlineage_dataset_namespace(),
@@ -111,7 +125,13 @@ class AppendOperator(AstroSQLBaseOperator):
                         source_table_rows=source_table_rows,
                         metadata=self.target_table.metadata,
                     ),
-                    "output_stats": OutputStatisticsOutputDatasetFacet(rowCount=self.target_table.row_count),
+                    "outputStatistics": OutputStatisticsOutputDatasetFacet(
+                        rowCount=self.target_table.row_count
+                    ),
+                    "dataSource": DataSourceDatasetFacet(name=self.target_table.name, uri=output_uri),
+                    "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(
+                        rowCount=self.target_table.row_count, columnMetrics={}
+                    ),
                 },
             )
         ]

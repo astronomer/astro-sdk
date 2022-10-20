@@ -19,7 +19,7 @@ def test_run_task_successfully(mock_session, mock_task_instance, capsys):
     mock_task_instance._run_raw_task.assert_called_once()
     mock_session.flush.assert_called_once()
     captured = capsys.readouterr()
-    assert "ran successfully!" in captured.out
+    assert "SUCCESS" in captured.out
 
 
 def test_run_task_cleanup_log(sample_dag, capsys):
@@ -53,7 +53,7 @@ def test_run_dag_dynamic_task(sample_dag, capsys):
     run_dag(sample_dag)
     captured = capsys.readouterr()
     for i in [1, 2]:
-        assert f"Running task %s index %d print_val {i}" in captured.out
+        assert f"Processing print_val[{i}]..." in captured.out
 
 
 def test_run_dag_with_skip(sample_dag, capsys):
@@ -77,9 +77,9 @@ def test_run_dag_with_skip(sample_dag, capsys):
         who_is_prettiest() >> [snow_white_wins(), witch_wins()] >> movie_ends()  # skipcq: PYL-W0106
     run_dag(sample_dag)
     captured = capsys.readouterr()
-    assert "witch_wins ran successfully!" not in captured.out
-    assert "snow_white_wins ran successfully!" in captured.out
-    assert "movie_ends ran successfully!" in captured.out
+    assert "Processing witch_wins... SUCCESS" not in captured.out
+    assert "Processing snow_white_wins... SUCCESS" in captured.out
+    assert "Processing movie_ends... SUCCESS" in captured.out
 
 
 def test_run_dag(capsys):

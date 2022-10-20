@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from rich import print as rprint
 
 import sql_cli
-from sql_cli.connections import convert_to_connection, validate_connections
+from sql_cli.connections import validate_connections
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
 from sql_cli.dag_generator import generate_dag
 from sql_cli.project import Project
@@ -85,8 +85,16 @@ def validate(
 ) -> None:
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
+    project.load_config(environment=env)
 
-    validate_connections(project=project, environment=env, connection_id=connection)
+    # Since we are using the Airflow ORM to interact with connections, we need to tell Airflow to use our airflow.db
+    # The usual route is to set $AIRFLOW_HOME before Airflow is imported. However, in the context of the SQL CLI, we
+    # decide this during runtime, depending on the project path and SQL CLI configuration.
+    airflow_meta_conn = retrieve_airflow_database_conn_from_config(project.directory / project.airflow_home)
+    set_airflow_database_conn(airflow_meta_conn)
+
+    rprint(f"Validating connection(s) for environment '{env}'")
+    validate_connections(connections=project.connections, connection_id=connection)
 
 
 @app.command(
@@ -116,8 +124,6 @@ def run(
     project.update_config(environment=env)
     project.load_config(env)
 
-    connections = {c["conn_id"]: convert_to_connection(c) for c in project.connections}
-
     # Since we are using the Airflow ORM to interact with connections, we need to tell Airflow to use our airflow.db
     # The usual route is to set $AIRFLOW_HOME before Airflow is imported. However, in the context of the SQL CLI, we
     # decide this during runtime, depending on the project path and SQL CLI configuration.
@@ -129,7 +135,12 @@ def run(
         dags_directory=project.airflow_dags_folder,
     )
     dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
-    run_dag(dag, run_conf=project.airflow_config, connections=connections, verbose=verbose)
+    run_dag(
+        dag,
+        run_conf=project.airflow_config,
+        connections={c.conn_id: c for c in project.connections},
+        verbose=verbose,
+    )
 
 
 @app.command(
