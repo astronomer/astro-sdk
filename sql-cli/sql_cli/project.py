@@ -6,7 +6,9 @@ from configparser import ConfigParser
 from pathlib import Path
 from typing import Any
 
-from sql_cli.configuration import Config
+from airflow.models.connection import Connection
+
+from sql_cli.configuration import Config, convert_to_connection
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_ENVIRONMENT
 from sql_cli.exceptions import InvalidProject
 from sql_cli.utils.airflow import disable_examples
@@ -36,7 +38,7 @@ class Project:
         self.directory = directory
         self._airflow_home = airflow_home
         self._airflow_dags_folder = airflow_dags_folder
-        self.connections: list[dict[str, Any]] = []
+        self.connections: list[Connection] = []
 
     @property
     def airflow_home(self) -> Path:
@@ -160,4 +162,4 @@ class Project:
             self._airflow_home = Path(config.airflow_home)
         if config.airflow_dags_folder:
             self._airflow_dags_folder = Path(config.airflow_dags_folder)
-        self.connections = config.connections
+        self.connections = [convert_to_connection(c) for c in config.connections]
