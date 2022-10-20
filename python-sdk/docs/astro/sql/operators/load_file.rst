@@ -263,10 +263,6 @@ Users can also load data from an HTTP API:
 
 Default Datasets
 ~~~~~~~~~~~~~~~~
-* Input dataset - Source file for the operator.
-* Output dataset - Target table of the operator.
-
-
 If you are using the Astro Python SDK version 1.1 or later, you do not need to make any code
 updates to use  `Datasets <https://github.com/astronomer/astro-sdk/blob/main/python-sdk/docs/concepts.rst#datasets>`_
 
