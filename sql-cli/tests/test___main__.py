@@ -56,9 +56,7 @@ def test_generate(workflow_name, environment, initialised_project):
             initialised_project.directory.as_posix(),
         ],
     )
-    if result.exit_code != 0:
-        print(result.output)
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
     result_stdout = get_stdout(result)
     assert result_stdout.startswith("The DAG file ")
     assert result_stdout.endswith(f"{workflow_name}.py has been successfully generated. 🎉")
@@ -105,9 +103,7 @@ def test_validate(env, connection, status, initialised_project_with_test_config)
             connection,
         ],
     )
-    if not result.exit_code == 0:
-        print(result.exception)
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.exception
     output = get_stdout(result)
     assert f"Validating connection(s) for environment '{env}'" in output
     assert f"Validating connection {connection:{CONNECTION_ID_OUTPUT_STRING_WIDTH}} {status}" in output
@@ -146,9 +142,7 @@ def test_run(workflow_name, environment, status, initialised_project):
             initialised_project.directory.as_posix(),
         ],
     )
-    if result.exit_code != 0:
-        print(result.output)
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
     result_stdout = get_stdout(result)
     assert f"Completed running the workflow {workflow_name}: [{status}]" in result_stdout
 
