@@ -93,14 +93,14 @@ class SqlFile:
             return f"{'__'.join(self.get_sub_directories())}__{self.path.stem}"
         return self.path.stem
 
-    def get_relative_target_path(self) -> str:
+    def get_relative_target_path(self) -> Path:
         """
         Get the relative path to the executable sql file within the DAGs folder.
 
         :returns: the path where SQL files without any headers are being placed.
         """
         target_full_directory = (
-            self.target_directory / self.root_directory.name / "/".join(self.get_sub_directories())
+            self.target_directory / "sql" / self.root_directory.name / "/".join(self.get_sub_directories())
         )
         target_full_directory.mkdir(parents=True, exist_ok=True)
 
@@ -108,9 +108,7 @@ class SqlFile:
 
         target_path.write_text(self.content)
 
-        target_path_str = str(target_path)
-        index_after_dags_folder = target_path_str.rfind("dags") + len("dags/")
-        return Path(target_path_str[index_after_dags_folder:]).as_posix()
+        return target_path.relative_to(self.target_directory)
 
 
 def get_sql_files(directory: Path, target_directory: Path) -> set[SqlFile]:
