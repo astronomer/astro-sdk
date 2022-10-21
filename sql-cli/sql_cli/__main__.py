@@ -41,8 +41,8 @@ def generate(
     ),
 ) -> None:
     from sql_cli.dag_generator import generate_dag
-    from sql_cli.project import Project
     from sql_cli.exceptions import EmptyDag, SqlFilesDirectoryNotFound
+    from sql_cli.project import Project
 
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
@@ -121,6 +121,7 @@ def run(
     verbose: bool = typer.Option(False, help="Whether to show airflow logs", show_default=True),
 ) -> None:
     from sql_cli.dag_generator import generate_dag
+    from sql_cli.exceptions import EmptyDag, SqlFilesDirectoryNotFound
     from sql_cli.project import Project
     from sql_cli.run_dag import run_dag
     from sql_cli.utils.airflow import (
@@ -128,7 +129,6 @@ def run(
         retrieve_airflow_database_conn_from_config,
         set_airflow_database_conn,
     )
-    from sql_cli.exceptions import EmptyDag, SqlFilesDirectoryNotFound
 
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
