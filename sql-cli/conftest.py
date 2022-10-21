@@ -155,9 +155,10 @@ def connections():
 
 
 @pytest.fixture()
-def initialised_project_with_empty_workflow(initialised_project: Project):
+def initialised_project_with_tests_workflows(initialised_project: Project):
     shutil.copytree(
-        src=CWD / "tests" / "workflows" / "empty",
-        dst=initialised_project.directory / "workflows" / "empty",
+        src=CWD / "tests" / "workflows",
+        dst=initialised_project.directory / "workflows",
+        dirs_exist_ok=True,
     )
     return initialised_project
