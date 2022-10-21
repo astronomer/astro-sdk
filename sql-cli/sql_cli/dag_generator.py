@@ -95,7 +95,7 @@ def generate_dag(directory: Path, dags_directory: Path) -> Path:
     """
     if not directory.exists():
         raise SqlFilesDirectoryNotFound("The directory does not exist!")
-    sql_files = sorted(get_sql_files(directory, target_directory=dags_directory / "sql"))
+    sql_files = sorted(get_sql_files(directory, target_directory=dags_directory))
     sql_files_dag = SqlFilesDAG(
         dag_id=directory.name,
         start_date=datetime(2020, 1, 1),
