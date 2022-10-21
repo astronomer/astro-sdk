@@ -138,7 +138,7 @@ def _run_task(ti: TaskInstance, session: Session) -> None:
 
     :param ti: TaskInstance to run
     """
-    if ti.map_index >= 0:
+    if hasattr(ti, "map_index") and ti.map_index >= 0:
         pprint(f"Processing [bold yellow]{ti.task_id}[/bold yellow][{ti.map_index}]...", end=" ")
     else:
         pprint(f"Processing [bold yellow]{ti.task_id}[/bold yellow]...", end=" ")
