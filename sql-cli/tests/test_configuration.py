@@ -1,12 +1,11 @@
 from pathlib import Path
+from tempfile import gettempdir
 from unittest.mock import patch
 from uuid import uuid4
 
 import yaml
 
 from sql_cli.configuration import Config
-
-unique_config_file = "/tmp/" + str(uuid4())
 
 
 def test_from_yaml_to_config():
@@ -24,16 +23,18 @@ def test_from_yaml_to_config():
     "sql_cli.configuration.Config.from_yaml_to_dict",
     return_value={"airflow": {"home": "", "dags_folder": ""}},
 )
-@patch("sql_cli.configuration.Config.get_filepath", return_value=unique_config_file)
-def test_write_config_to_yaml(mock_to_dict, mock_get_path, tmp_path):
+@patch("sql_cli.configuration.Config.get_filepath")
+def test_write_config_to_yaml(mock_get_filepath, mock_from_yaml_to_dict, tmp_path):
+    tmp_dir = gettempdir()
+    mock_get_filepath.return_value = f"{tmp_dir}/{uuid4().hex}"
     config = Config(
         project_dir=tmp_path,
         environment="neverland",
-        airflow_home="/tmp/home",
-        airflow_dags_folder="/tmp/dags",
+        airflow_home=f"{tmp_dir}/home",
+        airflow_dags_folder=f"{tmp_dir}/dags",
     )
     config.write_config_to_yaml()
-    with open(unique_config_file) as fp:
+    with open(mock_get_filepath.return_value) as fp:
         yaml_config = yaml.safe_load(fp.read())
-    assert yaml_config["airflow"]["home"] == "/tmp/home"
-    assert yaml_config["airflow"]["dags_folder"] == "/tmp/dags"
+    assert yaml_config["airflow"]["home"] == f"{tmp_dir}/home"
+    assert yaml_config["airflow"]["dags_folder"] == f"{tmp_dir}/dags"
