@@ -50,7 +50,7 @@ jobs:
       FORCE_COLOR: "true"
       ASTRO_PUBLISH_BENCHMARK_DATA: True
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: rm -f python-sdk/test-connections.yaml
       - run: ls -la
       - run: ( echo "cat <<EOF >python-sdk/test-connections.yaml"; cat .github/ci-test-connections.yaml; ) >python-sdk/test-connections.yaml && . python-sdk/test-connections.yaml
