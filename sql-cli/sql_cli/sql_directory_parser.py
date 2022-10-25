@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Dict, Optional
 from typing import Iterable
 
 import frontmatter
+from airflow.decorators.base import get_unique_task_id
+from astro.sql.operators.transform import TransformOperator
+from astro.sql.table import BaseTable
 
 from sql_cli.utils.jinja import find_template_variables
 
@@ -109,6 +113,17 @@ class SqlFile:
         target_path.write_text(self.content)
 
         return target_path.relative_to(self.target_directory)
+
+    def to_transform_operator(self):
+        return TransformOperator(
+            conn_id=self.metadata.get("conn_id"),
+            parameters=None,
+            handler=None,
+            database=self.metadata.get("database"),
+            schema=self.metadata.get("schema"),
+            python_callable=lambda: (str(self.path), None),
+            sql=self.content,
+        )
 
 
 def get_sql_files(directory: Path, target_directory: Path) -> set[SqlFile]:

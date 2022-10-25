@@ -2,7 +2,9 @@ import random
 import shutil
 import string
 from pathlib import Path
-
+from airflow.utils.db import merge_conn
+import os
+from tempfile import gettempdir
 import pytest
 from airflow.models import DAG, Connection, DagRun, TaskInstance as TI
 from airflow.utils import timezone
@@ -161,3 +163,14 @@ def initialised_project_with_empty_workflow(initialised_project: Project):
         dst=initialised_project.directory / "workflows" / "empty",
     )
     return initialised_project
+
+@pytest.fixture()
+def test_connections():
+
+    merge_conn(
+        Connection(
+            conn_id="my_test_sqlite",
+            conn_type="sqlite",
+            host=os.path.join(gettempdir(), "sqlite_default.db"),
+        )
+    )
