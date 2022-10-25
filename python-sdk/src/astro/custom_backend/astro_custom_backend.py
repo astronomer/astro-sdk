@@ -4,6 +4,7 @@ from airflow.exceptions import AirflowException
 from airflow.models.xcom import BaseXCom
 
 from astro.custom_backend.serializer import deserialize, serialize
+from astro.spark.file import DeltaFile
 
 if TYPE_CHECKING:
     from airflow.models.xcom import XCom

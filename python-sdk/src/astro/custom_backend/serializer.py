@@ -16,7 +16,9 @@ else:
 
 from astro.files import File
 from astro.table import Table, TempTable
-
+from pyspark.sql.dataframe import DataFrame as SparkDF
+from astro.spark.file import DeltaFile
+from astro.spark.table import DeltaTable
 log = logging.getLogger("astro.utils.serializer")
 
 
@@ -31,6 +33,14 @@ def serialize(obj: Table | File | Any) -> dict | Any:  # noqa
         return obj.to_json()
     elif isinstance(obj, File):
         return obj.to_json()
+    elif isinstance(obj, DeltaFile):
+        return obj.to_json()
+    elif isinstance(obj, DeltaTable):
+        return obj.to_json()
+    elif isinstance(obj, SparkDF):
+        from astro.spark.file import convert_dataframe_to_file as convert_delta
+        delta_file = convert_delta(obj)
+        return serialize(delta_file)
     elif isinstance(obj, (list, tuple)):
         return [serialize(o) for o in obj]
     elif isinstance(obj, dict):
@@ -71,7 +81,7 @@ def _attempt_to_serialize_unknown_object(obj: object):
 
 
 def _is_serialized_astro_object(obj) -> bool:
-    return bool(obj.get("class") and obj["class"] in ["Table", "File", "string", "SQLAlcRow"])
+    return bool(obj.get("class") and obj["class"] in ["Table", "File", "string", "SQLAlcRow", "DeltaFile", "DeltaTable"])
 
 
 def deserialize(obj: dict | str | list) -> Table | File | Any:  # noqa
@@ -95,6 +105,10 @@ def deserialize(obj: dict | str | list) -> Table | File | Any:  # noqa
                 return SQLAlcRow(None, None, obj["key_map"], obj["key_style"], obj["data"])
             else:
                 return SQLAlcRow(None, None, obj["key_map"], obj["key_style"])
+        elif obj["class"] == "DeltaFile":
+            return _deserialize_delta_file(obj)
+        elif obj["class"] == "DeltaTable":
+            return DeltaTable.from_json(obj)
         else:
             return obj["value"]
     elif isinstance(obj, dict):
@@ -111,6 +125,13 @@ def _deserialize_file(obj):
     if file.is_dataframe:
         return file.export_to_dataframe()
     return file
+
+def _deserialize_delta_file(obj):
+    file = DeltaFile.from_json(obj)
+    if file.is_dataframe:
+        return file.export_to_dataframe()
+    return file
+
 
 
 def _attempt_to_deser_unknown_object(obj: str):

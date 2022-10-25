@@ -11,7 +11,7 @@ from astro.files.locations.amazon.s3 import S3Location
 def test_get_transport_params_with_s3():  # skipcq: PYL-W0612
     """test get_transport_params() method with S3 filepath"""
     path = "s3://bucket/some-file"
-    location = create_file_location(path)
+    location = create_file_location(path, conn_id="s3_conn_benchmark")
     credentials = location.transport_params
     assert isinstance(credentials["client"], BaseClient)
 

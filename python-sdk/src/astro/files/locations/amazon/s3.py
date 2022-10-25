@@ -50,6 +50,25 @@ class S3Location(BaseFileLocation):
         if object_name.startswith("/"):
             object_name = object_name[1:]
         return self.hook.head_object(key=object_name, bucket_name=bucket_name).get("ContentLength") or -1
+    
+    def spark_config(self):
+        configs = {'spark.hadoop.fs.s3a.access.key': self.hook.conn_config.aws_access_key_id,
+                   'spark.hadoop.fs.s3a.secret.key': self.hook.conn_config.aws_secret_access_key,
+                   'spark.hadoop.fs.s3a.impl':  'org.apache.hadoop.fs.s3a.S3AFileSystem'}
+        if self.hook.conn_config.aws_session_token:
+            configs[
+                'spark.hadoop.fs.s3a.aws.credentials.provider'] = 'org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider'
+            configs['spark.hadoop.fs.s3a.session.token'] = self.hook.conn_config.aws_session_token
+        else:
+            configs[
+                'spark.hadoop.fs.s3a.aws.credentials.provider'] = 'org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider'
+
+        configs["spark.sql.extensions"] = "io.delta.sql.DeltaSparkSessionExtension"
+        configs['spark.jars.packages'] = 'org.apache.hadoop:hadoop-aws:3.2.0'
+        return configs
+
+    def spark_packages(self):
+        return ["org.apache.hadoop:hadoop-aws:3.3.1"]
 
     @property
     def openlineage_dataset_namespace(self) -> str:

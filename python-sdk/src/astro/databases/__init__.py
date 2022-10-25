@@ -11,6 +11,7 @@ DEFAULT_CONN_TYPE_TO_MODULE_PATH = get_dict_with_module_names_to_dot_notations(P
 CUSTOM_CONN_TYPE_TO_MODULE_PATH = {
     "gcpbigquery": DEFAULT_CONN_TYPE_TO_MODULE_PATH["bigquery"],
     "google_cloud_platform": DEFAULT_CONN_TYPE_TO_MODULE_PATH["bigquery"],
+    "delta": "astro.spark.delta"
 }
 CONN_TYPE_TO_MODULE_PATH = {
     **DEFAULT_CONN_TYPE_TO_MODULE_PATH,

@@ -119,6 +119,8 @@ class BaseFileLocation(ABC):
             location = FileLocation.LOCAL
         else:
             try:
+                if file_scheme == "s3a":
+                    file_scheme = "s3"
                 location = FileLocation(file_scheme)
             except ValueError:
                 raise ValueError(f"Unsupported scheme '{file_scheme}' from path '{path}'")
@@ -131,6 +133,12 @@ class BaseFileLocation(ABC):
                 return True
         except OSError:
             return False
+
+    def spark_config(self):
+        raise NotImplementedError()
+
+    def spark_packages(self):
+        raise NotImplementedError()
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}(path="{self.path}",conn_id="{self.conn_id}")'
