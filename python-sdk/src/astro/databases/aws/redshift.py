@@ -86,9 +86,11 @@ class RedshiftDatabase(BaseDatabase):
     def hook(self) -> RedshiftSQLHook:
         """Retrieve Airflow hook to interface with the Redshift database."""
         kwargs = {}
-        if self.table and self.table.metadata and self.table.metadata.database:
+        _hook = RedshiftSQLHook(redshift_conn_id=self.conn_id, use_legacy_sql=False)
+        database = _hook.conn.schema
+        if (database is None) and (self.table and self.table.metadata and self.table.metadata.database):
             kwargs.update({"schema": self.table.metadata.database})
-        return RedshiftSQLHook(redshift_conn_id=self.conn_id, use_legacy_sql=False)
+        return RedshiftSQLHook(redshift_conn_id=self.conn_id, use_legacy_sql=False, **kwargs)
 
     @property
     def sqlalchemy_engine(self) -> Engine:
