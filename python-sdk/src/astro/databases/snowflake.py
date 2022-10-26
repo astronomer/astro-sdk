@@ -100,9 +100,9 @@ class SnowflakeFileFormat:
         :return: unique file format name
         """
         return (
-                "file_format_"
-                + random.choice(string.ascii_lowercase)
-                + "".join(random.choice(string.ascii_lowercase + string.digits) for _ in range(7))
+            "file_format_"
+            + random.choice(string.ascii_lowercase)
+            + "".join(random.choice(string.ascii_lowercase + string.digits) for _ in range(7))
         )
 
     def set_file_type_from_file(self, file: File) -> None:
@@ -171,9 +171,9 @@ class SnowflakeStage:
         :return: unique stage name
         """
         return (
-                "stage_"
-                + random.choice(string.ascii_lowercase)
-                + "".join(random.choice(string.ascii_lowercase + string.digits) for _ in range(7))
+            "stage_"
+            + random.choice(string.ascii_lowercase)
+            + "".join(random.choice(string.ascii_lowercase + string.digits) for _ in range(7))
         )
 
     def set_url_from_file(self, file: File) -> None:
@@ -361,10 +361,10 @@ class SnowflakeDatabase(BaseDatabase):
         return auth
 
     def create_stage(
-            self,
-            file: File,
-            storage_integration: str | None = None,
-            metadata: Metadata | None = None,
+        self,
+        file: File,
+        storage_integration: str | None = None,
+        metadata: Metadata | None = None,
     ) -> SnowflakeStage:
         """
         Creates a new named external stage to use for loading data from files into Snowflake
@@ -436,7 +436,7 @@ class SnowflakeDatabase(BaseDatabase):
     # ---------------------------------------------------------
 
     def is_native_autodetect_schema_available(  # skipcq: PYL-R0201
-            self, file: File  # skipcq: PYL-W0613
+        self, file: File  # skipcq: PYL-W0613
     ) -> bool:
         """
         Check if native auto detection of schema is available.
@@ -446,14 +446,14 @@ class SnowflakeDatabase(BaseDatabase):
         """
         is_file_type_supported = file.type.name in NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES
         is_file_location_supported = (
-                file.location.location_type in NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS
+            file.location.location_type in NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS
         )
         return is_file_type_supported and is_file_location_supported
 
     def create_table_using_native_schema_autodetection(
-            self,
-            table: BaseTable,
-            file: File,
+        self,
+        table: BaseTable,
+        file: File,
     ) -> None:
         """
         Create a SQL table, automatically inferring the schema using the given file via native database support.
@@ -511,11 +511,11 @@ class SnowflakeDatabase(BaseDatabase):
         return any(col for col in cols if not col.islower() and not col.isupper())
 
     def create_table_using_schema_autodetection(
-            self,
-            table: BaseTable,
-            file: File | None = None,
-            dataframe: pd.DataFrame | None = None,
-            columns_names_capitalization: ColumnCapitalization = "original",
+        self,
+        table: BaseTable,
+        file: File | None = None,
+        dataframe: pd.DataFrame | None = None,
+        columns_names_capitalization: ColumnCapitalization = "original",
     ) -> None:
         """
         Create a SQL table, automatically inferring the schema using the given file.
@@ -559,17 +559,17 @@ class SnowflakeDatabase(BaseDatabase):
         """
         is_file_type_supported = source_file.type.name in NATIVE_LOAD_SUPPORTED_FILE_TYPES
         is_file_location_supported = (
-                source_file.location.location_type in NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS
+            source_file.location.location_type in NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS
         )
         return is_file_type_supported and is_file_location_supported
 
     def load_file_to_table_natively(
-            self,
-            source_file: File,
-            target_table: BaseTable,
-            if_exists: LoadExistStrategy = "replace",
-            native_support_kwargs: dict | None = None,
-            **kwargs,
+        self,
+        source_file: File,
+        target_table: BaseTable,
+        if_exists: LoadExistStrategy = "replace",
+        native_support_kwargs: dict | None = None,
+        **kwargs,
     ):
         """
         Load the content of a file to an existing Snowflake table natively by:
@@ -609,11 +609,11 @@ class SnowflakeDatabase(BaseDatabase):
         self.drop_stage(stage)
 
     def load_pandas_dataframe_to_table(
-            self,
-            source_dataframe: pd.DataFrame,
-            target_table: BaseTable,
-            if_exists: LoadExistStrategy = "replace",
-            chunk_size: int = DEFAULT_CHUNK_SIZE,
+        self,
+        source_dataframe: pd.DataFrame,
+        target_table: BaseTable,
+        if_exists: LoadExistStrategy = "replace",
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
     ) -> None:
         """
         Create a table with the dataframe's contents.
@@ -643,7 +643,7 @@ class SnowflakeDatabase(BaseDatabase):
         )
 
     def get_sqlalchemy_template_table_identifier_and_parameter(
-            self, table: BaseTable, jinja_table_identifier: str
+        self, table: BaseTable, jinja_table_identifier: str
     ) -> tuple[str, str]:
         """
         During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
@@ -710,12 +710,12 @@ class SnowflakeDatabase(BaseDatabase):
         return len(created_schemas) == 1
 
     def merge_table(
-            self,
-            source_table: BaseTable,
-            target_table: BaseTable,
-            source_to_target_columns_map: dict[str, str],
-            target_conflict_columns: list[str],
-            if_conflicts: MergeConflictStrategy = "exception",
+        self,
+        source_table: BaseTable,
+        target_table: BaseTable,
+        source_to_target_columns_map: dict[str, str],
+        target_conflict_columns: list[str],
+        if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """
         Merge the source table rows into a destination table.
@@ -737,12 +737,12 @@ class SnowflakeDatabase(BaseDatabase):
         self.run_sql(sql=statement, parameters=params)
 
     def _build_merge_sql(
-            self,
-            source_table: BaseTable,
-            target_table: BaseTable,
-            source_to_target_columns_map: dict[str, str],
-            target_conflict_columns: list[str],
-            if_conflicts: MergeConflictStrategy = "exception",
+        self,
+        source_table: BaseTable,
+        target_table: BaseTable,
+        source_to_target_columns_map: dict[str, str],
+        target_conflict_columns: list[str],
+        if_conflicts: MergeConflictStrategy = "exception",
     ):
         """Build the SQL statement for Merge operation"""
         # TODO: Simplify this function
@@ -771,17 +771,17 @@ class SnowflakeDatabase(BaseDatabase):
         ) = self.get_sqlalchemy_template_table_identifier_and_parameter(target_table, "target_table")
 
         statement = (
-                f"merge into {target_table_identifier} using {source_table_identifier} " + "on {merge_clauses}"
+            f"merge into {target_table_identifier} using {source_table_identifier} " + "on {merge_clauses}"
         )
 
         merge_target_dict = {
             f"merge_clause_target_{i}": f"{target_table_name}."
-                                        f"{target_identifier_enclosure}{x}{target_identifier_enclosure}"
+            f"{target_identifier_enclosure}{x}{target_identifier_enclosure}"
             for i, x in enumerate(target_conflict_columns)
         }
         merge_source_dict = {
             f"merge_clause_source_{i}": f"{source_table_name}."
-                                        f"{source_identifier_enclosure}{x}{source_identifier_enclosure}"
+            f"{source_identifier_enclosure}{x}{source_identifier_enclosure}"
             for i, x in enumerate(target_conflict_columns)
         }
         statement = statement.replace(
@@ -834,10 +834,10 @@ class SnowflakeDatabase(BaseDatabase):
         return statement, params
 
     def append_table(
-            self,
-            source_table: BaseTable,
-            target_table: BaseTable,
-            source_to_target_columns_map: dict[str, str],
+        self,
+        source_table: BaseTable,
+        target_table: BaseTable,
+        source_to_target_columns_map: dict[str, str],
     ) -> None:
         """
         Append the source table rows into a destination table.

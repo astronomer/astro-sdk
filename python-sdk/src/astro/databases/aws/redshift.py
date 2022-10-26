@@ -70,8 +70,8 @@ class RedshiftDatabase(BaseDatabase):
         FileLocation.S3: "load_s3_file_to_table",
     }
 
-    illegal_column_name_chars: List[str] = ["."]
-    illegal_column_name_chars_replacement: List[str] = ["_"]
+    illegal_column_name_chars: list[str] = ["."]
+    illegal_column_name_chars_replacement: list[str] = ["_"]
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
         super().__init__(conn_id)
@@ -158,12 +158,12 @@ class RedshiftDatabase(BaseDatabase):
         if_conflicts: MergeConflictStrategy,
         stage_table_name: str,
         source_table_name: str,
-        source_to_target_map_source_columns: List[str],
-        source_to_target_map_target_columns: List[str],
+        source_to_target_map_source_columns: list[str],
+        source_to_target_map_target_columns: list[str],
         source_table_all_columns_string: str,
         target_table_all_columns_string: str,
-        target_conflict_columns: List[str],
-    ) -> Optional[List[str]]:
+        target_conflict_columns: list[str],
+    ) -> list[str] | None:
         """
         Builds conflict SQL statement to be applied while merging.
 
@@ -217,8 +217,8 @@ class RedshiftDatabase(BaseDatabase):
         self,
         source_table: BaseTable,
         target_table: BaseTable,
-        source_to_target_columns_map: Dict[str, str],
-        target_conflict_columns: List[str],
+        source_to_target_columns_map: dict[str, str],
+        target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """
@@ -260,7 +260,7 @@ class RedshiftDatabase(BaseDatabase):
             f"INSERT INTO {stage_table_name}({target_table_all_columns_string}) "
             f"SELECT {target_table_all_columns_string} FROM {target_table_name}"
         )
-        conflict_statements: Optional[List[str]] = self._get_conflict_statements(
+        conflict_statements: list[str] | None = self._get_conflict_statements(
             if_conflicts,
             stage_table_name,
             source_table_name,
@@ -307,7 +307,7 @@ class RedshiftDatabase(BaseDatabase):
         source_file: File,
         target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
-        native_support_kwargs: Optional[Dict] = None,
+        native_support_kwargs: dict | None = None,
         **kwargs,
     ):
         """
@@ -339,7 +339,7 @@ class RedshiftDatabase(BaseDatabase):
         self,
         source_file: File,
         target_table: BaseTable,
-        native_support_kwargs: Optional[Dict] = None,
+        native_support_kwargs: dict | None = None,
         **kwargs,
     ):
         """
