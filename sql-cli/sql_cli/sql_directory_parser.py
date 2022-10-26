@@ -114,7 +114,13 @@ class SqlFile:
 
         return target_path.relative_to(self.target_directory)
 
-    def to_transform_operator(self):
+    def to_transform_operator(self) -> TransformOperator:
+        """
+        Converts SQLFile into a TransformOperator that can be added to a DAG.
+        Any relevant metadata from the file frontmatter will be passed to the TransformOperator,
+        though we do not pass parameter dependencies at this stage.
+        :return: a TransformOperator
+        """
         return TransformOperator(
             conn_id=self.metadata.get("conn_id"),
             parameters=None,
