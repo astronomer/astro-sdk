@@ -88,7 +88,7 @@ class SqlFilesDAG:
 
         return list(depth_first_search.dfs_postorder_nodes(graph))
 
-    def to_transform_task_list(self) -> list[TranformOperator]:
+    def to_transform_task_list(self) -> list[TransformOperator]:
         """
         Converts the list of SQL Files into a list of TranformOperator tasks
         that all have proper dependencies set.
