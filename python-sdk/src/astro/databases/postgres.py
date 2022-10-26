@@ -30,6 +30,7 @@ class PostgresDatabase(BaseDatabase):
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable = None):
         super().__init__(conn_id)
+        self.table = table
 
     @property
     def sql_type(self) -> str:
@@ -38,7 +39,11 @@ class PostgresDatabase(BaseDatabase):
     @property
     def hook(self) -> PostgresHook:
         """Retrieve Airflow hook to interface with the Postgres database."""
-        return PostgresHook(postgres_conn_id=self.conn_id)
+        kwargs = {}
+        if self.table and self.table.metadata:
+            if self.table.metadata.schema:
+                kwargs.update({"schema": self.table.metadata.schema})
+        return PostgresHook(postgres_conn_id=self.conn_id, **kwargs)
 
     @property
     def default_metadata(self) -> Metadata:

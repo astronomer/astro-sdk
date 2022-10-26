@@ -259,7 +259,10 @@ class SnowflakeDatabase(BaseDatabase):
         """Retrieve Airflow hook to interface with the snowflake database."""
         kwargs = {}
         if self.table and self.table.metadata:
-            kwargs = {"schema": self.table.metadata.schema, "database": self.table.metadata.database}
+            if self.table.metadata.database:
+                kwargs.update({"database": self.table.metadata.database})
+            if self.table.metadata.schema:
+                kwargs = {"schema": self.table.metadata.schema}
         return SnowflakeHook(snowflake_conn_id=self.conn_id, **kwargs)
 
     @property

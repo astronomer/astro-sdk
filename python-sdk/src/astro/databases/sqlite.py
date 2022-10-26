@@ -20,6 +20,7 @@ class SqliteDatabase(BaseDatabase):
 
     def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable = None):
         super().__init__(conn_id)
+        self.table = table
 
     @property
     def sql_type(self) -> str:

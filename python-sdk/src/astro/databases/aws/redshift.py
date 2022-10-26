@@ -74,6 +74,7 @@ class RedshiftDatabase(BaseDatabase):
     def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable = None):
         super().__init__(conn_id)
         self._create_table_statement: str = "CREATE TABLE {} AS {}"
+        self.table = table
 
     @property
     def sql_type(self):
@@ -82,6 +83,10 @@ class RedshiftDatabase(BaseDatabase):
     @property
     def hook(self) -> RedshiftSQLHook:
         """Retrieve Airflow hook to interface with the Redshift database."""
+        kwargs = {}
+        if self.table and self.table.metadata:
+            if self.table.metadata.database:
+                kwargs.update({"schema": self.table.metadata.database})
         return RedshiftSQLHook(redshift_conn_id=self.conn_id, use_legacy_sql=False)
 
     @property
