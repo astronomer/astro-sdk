@@ -8,7 +8,7 @@ from rich import print as rprint
 import sql_cli
 from sql_cli.connections import validate_connections
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
-from sql_cli.dag_generator import generate_dag
+from sql_cli.dag_generator import generate_dag, render_dag
 from sql_cli.exceptions import EmptyDag, SqlFilesDirectoryNotFound
 from sql_cli.project import Project
 from sql_cli.run_dag import run_dag
@@ -125,6 +125,9 @@ def run(
     project_dir: Path = typer.Option(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
+    gen_dag: bool = typer.Option(
+        False, metavar="generate_dag", help="whether to generate a DAG file"
+    ),
     verbose: bool = typer.Option(False, help="Whether to show airflow logs", show_default=True),
 ) -> None:
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
@@ -139,17 +142,20 @@ def run(
     set_airflow_database_conn(airflow_meta_conn)
 
     try:
-        dag_file = generate_dag(
-            directory=project.directory / project.workflows_directory / workflow_name,
-            dags_directory=project.airflow_dags_folder,
-        )
+        if gen_dag:
+            dag_file = generate_dag(
+                directory=project.directory / project.workflows_directory / workflow_name,
+                dags_directory=project.airflow_dags_folder,
+            )
+            dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
+        else:
+            dag = render_dag(directory=project_dir / "workflows" / workflow_name, workflow_name=workflow_name)
     except EmptyDag:
         rprint("[bold red]The workflow does not have any SQL files![/bold red]")
         raise typer.Exit(code=1)
     except SqlFilesDirectoryNotFound:
         rprint("[bold red]A workflow with the given name does not exist![/bold red]")
         raise typer.Exit(code=1)
-    dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
     rprint(f"\nRunning the workflow [bold blue]{dag.dag_id}[/bold blue] for [bold]{env}[/bold] environment\n")
     dr = run_dag(
         dag,

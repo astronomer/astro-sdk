@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-
+from airflow.models.dag import DAG
 from networkx import DiGraph, depth_first_search, find_cycle, is_directed_acyclic_graph
 
 from sql_cli.exceptions import DagCycle, EmptyDag, SqlFilesDirectoryNotFound
@@ -84,15 +84,15 @@ class SqlFilesDAG:
         return list(depth_first_search.dfs_postorder_nodes(graph))
 
     def to_transform_dag(self):
-        param_dict = {s.get_variable_name(): s.to_transform_operator() for s in self.sql_files}
+        param_dict = {s.path.stem: s.to_transform_operator() for s in self.sql_files}
         for s in self.sql_files:
             for p in s.get_parameters():
-                param_dict[s.get_variable_name()].parameters[p] = param_dict[p].output
-                param_dict[s.get_variable_name()].set_upstream(param_dict[p])
+                param_dict[s.path.stem].parameters[p] = param_dict[p].output
+                param_dict[s.path.stem].set_upstream(param_dict[p])
         return list(param_dict.values())
 
 
-def render_dag(directory: Path):
+def render_dag(directory: Path, workflow_name: str):
     if not directory.exists():
         raise SqlFilesDirectoryNotFound("The directory does not exist!")
     sql_files = sorted(get_sql_files(directory, target_directory=None))
@@ -101,7 +101,13 @@ def render_dag(directory: Path):
         start_date=datetime(2020, 1, 1),
         sql_files=sql_files,
     )
-    return sql_files_dag.to_transform_dag()
+    dag = DAG(
+        dag_id=workflow_name,
+        start_date=datetime(2020,1,1)
+    )
+    with dag:
+        sql_files_dag.to_transform_dag()
+    return dag
 
 
 def generate_dag(directory: Path, dags_directory: Path = None) -> Path:
