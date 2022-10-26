@@ -139,7 +139,7 @@ def get_sql_files(directory: Path, target_directory: Path | None) -> set[SqlFile
     :returns: the sql files found in the directory.
     """
     return {
-        SqlFile(root_directory=directory, path=child, target_directory=target_directory)
+        SqlFile(root_directory=directory, path=child, target_directory=target_directory)  # type: ignore
         for child in directory.rglob("*.sql")
         if child.is_file() and not child.is_symlink()
     }

@@ -102,7 +102,7 @@ class SqlFilesDAG:
         return list(param_dict.values())
 
 
-def render_dag(directory: Path, workflow_name: str, start_date=datetime(2020, 1, 1)) -> DAG:
+def render_dag(directory: Path, workflow_name: str, start_date: datetime = datetime(2020, 1, 1)) -> DAG:
     """
     render_dag allows a user to take any directory and turn it into a runnable
     Airflow DAG. This function will read all SQL files, and set dependencies based
