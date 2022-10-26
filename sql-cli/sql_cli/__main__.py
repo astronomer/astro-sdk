@@ -125,9 +125,7 @@ def run(
     project_dir: Path = typer.Option(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
-    gen_dag: bool = typer.Option(
-        default=False, help="whether to generate a DAG file", show_default=True
-    ),
+    gen_dag: bool = typer.Option(default=False, help="whether to generate a DAG file", show_default=True),
     verbose: bool = typer.Option(False, help="Whether to show airflow logs", show_default=True),
 ) -> None:
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()

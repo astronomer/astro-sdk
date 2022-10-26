@@ -3,13 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
+
 from airflow.models.dag import DAG
 from networkx import DiGraph, depth_first_search, find_cycle, is_directed_acyclic_graph
 
 from sql_cli.exceptions import DagCycle, EmptyDag, SqlFilesDirectoryNotFound
 from sql_cli.sql_directory_parser import SqlFile, get_sql_files
 from sql_cli.utils.jinja import render
-from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from astro.sql.operators.transform import TransformOperator
 
@@ -86,7 +88,7 @@ class SqlFilesDAG:
 
         return list(depth_first_search.dfs_postorder_nodes(graph))
 
-    def to_transform_task_list(self) -> list["TranformOperator"]:
+    def to_transform_task_list(self) -> list[TranformOperator]:
         """
         Converts the list of SQL Files into a list of TranformOperator tasks
         that all have proper dependencies set.
@@ -100,7 +102,7 @@ class SqlFilesDAG:
         return list(param_dict.values())
 
 
-def render_dag(directory: Path, workflow_name: str, start_date=datetime(2020,1,1)) -> DAG:
+def render_dag(directory: Path, workflow_name: str, start_date=datetime(2020, 1, 1)) -> DAG:
     """
     render_dag allows a user to take any directory and turn it into a runnable
     Airflow DAG. This function will read all SQL files, and set dependencies based
@@ -120,10 +122,7 @@ def render_dag(directory: Path, workflow_name: str, start_date=datetime(2020,1,1
         start_date=datetime(2020, 1, 1),
         sql_files=sql_files,
     )
-    dag = DAG(
-        dag_id=workflow_name,
-        start_date=start_date
-    )
+    dag = DAG(dag_id=workflow_name, start_date=start_date)
     with dag:
         sql_files_dag.to_transform_task_list()
     return dag

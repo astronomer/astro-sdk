@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import Iterable
 
 import frontmatter
-from astro.sql.operators.transform import TransformOperator
 
+from astro.sql.operators.transform import TransformOperator
 from sql_cli.utils.jinja import find_template_variables
 
 

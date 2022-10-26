@@ -1,13 +1,14 @@
+import os
 import random
 import shutil
 import string
 from pathlib import Path
-from airflow.utils.db import merge_conn
-import os
 from tempfile import gettempdir
+
 import pytest
 from airflow.models import DAG, Connection, DagRun, TaskInstance as TI
 from airflow.utils import timezone
+from airflow.utils.db import merge_conn
 from airflow.utils.session import create_session
 
 from astro.table import MAX_TABLE_NAME_LENGTH
@@ -163,6 +164,7 @@ def initialised_project_with_empty_workflow(initialised_project: Project):
         dst=initialised_project.directory / "workflows" / "empty",
     )
     return initialised_project
+
 
 @pytest.fixture()
 def test_connections():
