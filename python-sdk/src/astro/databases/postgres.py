@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import io
 from contextlib import closing
-from typing import Optional
 
 import pandas as pd
 import sqlalchemy

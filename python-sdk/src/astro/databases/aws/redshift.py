@@ -1,4 +1,6 @@
 """AWS Redshift table implementation."""
+from __future__ import annotations
+
 from typing import Any, Dict, List, Optional
 
 import pandas as pd
@@ -71,7 +73,7 @@ class RedshiftDatabase(BaseDatabase):
     illegal_column_name_chars: List[str] = ["."]
     illegal_column_name_chars_replacement: List[str] = ["_"]
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: Optional[BaseTable] = None):
+    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
         super().__init__(conn_id)
         self._create_table_statement: str = "CREATE TABLE {} AS {}"
         self.table = table

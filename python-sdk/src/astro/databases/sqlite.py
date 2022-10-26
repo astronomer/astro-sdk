@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from sqlalchemy import MetaData as SqlaMetaData, create_engine
 from sqlalchemy.engine.base import Engine

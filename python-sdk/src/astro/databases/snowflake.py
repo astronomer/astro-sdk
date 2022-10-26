@@ -6,7 +6,7 @@ import os
 import random
 import string
 from dataclasses import dataclass, field
-from typing import Any, Optional, Sequence
+from typing import Any, Sequence
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
