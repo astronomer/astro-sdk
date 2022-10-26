@@ -33,10 +33,8 @@ def test_generate_dag(root_directory, dags_directory):
 
 
 def test_generate_dag_render(test_connections, root_directory, sample_dag):
-    with sample_dag:
-        render_dag(directory=root_directory)
-    run_dag(sample_dag)
-    # sample_dag.run()
+    dag = render_dag(directory=root_directory, workflow_name=sample_dag.dag_id)
+    run_dag(dag)
 
 
 def test_generate_dag_invalid_directory(root_directory, dags_directory):

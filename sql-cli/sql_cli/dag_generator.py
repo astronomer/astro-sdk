@@ -9,6 +9,9 @@ from networkx import DiGraph, depth_first_search, find_cycle, is_directed_acycli
 from sql_cli.exceptions import DagCycle, EmptyDag, SqlFilesDirectoryNotFound
 from sql_cli.sql_directory_parser import SqlFile, get_sql_files
 from sql_cli.utils.jinja import render
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from astro.sql.operators.transform import TransformOperator
 
 
 @dataclass(frozen=True)
@@ -83,7 +86,12 @@ class SqlFilesDAG:
 
         return list(depth_first_search.dfs_postorder_nodes(graph))
 
-    def to_transform_dag(self):
+    def to_transform_task_list(self) -> list["TranformOperator"]:
+        """
+        Converts the list of SQL Files into a list of TranformOperator tasks
+        that all have proper dependencies set.
+        :return:
+        """
         param_dict = {s.path.stem: s.to_transform_operator() for s in self.sql_files}
         for s in self.sql_files:
             for p in s.get_parameters():
@@ -92,10 +100,21 @@ class SqlFilesDAG:
         return list(param_dict.values())
 
 
-def render_dag(directory: Path, workflow_name: str):
+def render_dag(directory: Path, workflow_name: str, start_date=datetime(2020,1,1)) -> DAG:
+    """
+    render_dag allows a user to take any directory and turn it into a runnable
+    Airflow DAG. This function will read all SQL files, and set dependencies based
+    on jinja template-based variables.
+    :param directory: Base directory for SQL files. We will recursively parse
+        subdirectories as well.
+    :param workflow_name: the name of the Workflow you would like to run
+    :param start_date: (Optional) the start date you would like to set for your run.
+        defaults to 2020-01-01
+    :return: a DAG that can be run by any airflow
+    """
     if not directory.exists():
         raise SqlFilesDirectoryNotFound("The directory does not exist!")
-    sql_files = sorted(get_sql_files(directory, target_directory=None))
+    sql_files: list[SqlFile] = list(get_sql_files(directory, target_directory=None))
     sql_files_dag = SqlFilesDAG(
         dag_id=directory.name,
         start_date=datetime(2020, 1, 1),
@@ -103,10 +122,10 @@ def render_dag(directory: Path, workflow_name: str):
     )
     dag = DAG(
         dag_id=workflow_name,
-        start_date=datetime(2020,1,1)
+        start_date=start_date
     )
     with dag:
-        sql_files_dag.to_transform_dag()
+        sql_files_dag.to_transform_task_list()
     return dag
 
 
