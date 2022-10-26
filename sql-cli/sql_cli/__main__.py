@@ -126,7 +126,7 @@ def run(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
     gen_dag: bool = typer.Option(
-        False, metavar="generate_dag", help="whether to generate a DAG file"
+        default=False, help="whether to generate a DAG file", show_default=True
     ),
     verbose: bool = typer.Option(False, help="Whether to show airflow logs", show_default=True),
 ) -> None:

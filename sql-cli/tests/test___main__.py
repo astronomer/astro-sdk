@@ -130,7 +130,10 @@ def test_validate_all(initialised_project_with_test_config):
         ("example_templating", "default", "FAILED"),
     ],
 )
-def test_run(workflow_name, environment, status, initialised_project):
+@pytest.mark.parametrize(
+    "gen_dag", ['--gen-dag', '--no-gen-dag']
+)
+def test_run(workflow_name, environment, status, initialised_project, gen_dag):
     result = runner.invoke(
         app,
         [
@@ -140,6 +143,7 @@ def test_run(workflow_name, environment, status, initialised_project):
             environment,
             "--project-dir",
             initialised_project.directory.as_posix(),
+            gen_dag
         ],
     )
     assert result.exit_code == 0, result.output
