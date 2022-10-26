@@ -1,13 +1,10 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, Optional
 from typing import Iterable
 
 import frontmatter
-from airflow.decorators.base import get_unique_task_id
 from astro.sql.operators.transform import TransformOperator
-from astro.sql.table import BaseTable
 
 from sql_cli.utils.jinja import find_template_variables
 
@@ -132,7 +129,7 @@ class SqlFile:
         )
 
 
-def get_sql_files(directory: Path, target_directory: Path) -> set[SqlFile]:
+def get_sql_files(directory: Path, target_directory: Path | None) -> set[SqlFile]:
     """
     Get all sql files within a directory.
 

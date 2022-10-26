@@ -114,7 +114,7 @@ def render_dag(directory: Path, workflow_name: str, start_date=datetime(2020,1,1
     """
     if not directory.exists():
         raise SqlFilesDirectoryNotFound("The directory does not exist!")
-    sql_files: list[SqlFile] = list(get_sql_files(directory, target_directory=None))
+    sql_files: list[SqlFile] = sorted(get_sql_files(directory, target_directory=None))
     sql_files_dag = SqlFilesDAG(
         dag_id=directory.name,
         start_date=datetime(2020, 1, 1),
@@ -129,7 +129,7 @@ def render_dag(directory: Path, workflow_name: str, start_date=datetime(2020,1,1
     return dag
 
 
-def generate_dag(directory: Path, dags_directory: Path = None) -> Path:
+def generate_dag(directory: Path, dags_directory: Path) -> Path:
     """
     Generate a DAG from SQL files.
 
