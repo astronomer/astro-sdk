@@ -38,53 +38,6 @@ def test_version():
 
 
 @pytest.mark.parametrize(
-    "workflow_name,environment",
-    [
-        ("example_basic_transform", "default"),
-        ("example_templating", "dev"),
-    ],
-)
-def test_generate(workflow_name, environment, initialised_project):
-    result = runner.invoke(
-        app,
-        [
-            "generate",
-            workflow_name,
-            "--env",
-            environment,
-            "--project-dir",
-            initialised_project.directory.as_posix(),
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    result_stdout = get_stdout(result)
-    assert result_stdout.startswith("The DAG file ")
-    assert result_stdout.endswith(f"{workflow_name}.py has been successfully generated. 🎉")
-
-
-@pytest.mark.parametrize(
-    "workflow_name,message",
-    [
-        ("empty", "The workflow does not have any SQL files!"),
-        ("foo", "A workflow with the given name does not exist!"),
-    ],
-)
-def test_generate_fails(workflow_name, message, initialised_project_with_empty_workflow):
-    result = runner.invoke(
-        app,
-        [
-            "generate",
-            workflow_name,
-            "--project-dir",
-            initialised_project_with_empty_workflow.directory.as_posix(),
-        ],
-    )
-    assert result.exit_code == 1
-    result_stdout = get_stdout(result)
-    assert result_stdout == message
-
-
-@pytest.mark.parametrize(
     "env,connection,status",
     [
         ("default", "sqlite_conn", "PASSED"),

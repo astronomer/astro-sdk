@@ -1,15 +1,32 @@
 from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, Optional
-from typing import Iterable
 
 import frontmatter
-from airflow.decorators.base import get_unique_task_id
 from astro.sql.operators.transform import TransformOperator
-from astro.sql.table import BaseTable
+from jinja2.environment import Environment
+from jinja2.loaders import FileSystemLoader
+from jinja2.meta import find_undeclared_variables
+from jinja2.runtime import StrictUndefined
 
-from sql_cli.utils.jinja import find_template_variables
+
+def find_template_variables(file_path: Path) -> set[str]:
+    """
+    Find template variables in given file path which needed to be declared when rendering.
+
+    :param file_path: The file path to check for variables.
+
+    :returns: all undeclared variables.
+    """
+    env = Environment(
+        loader=FileSystemLoader(file_path.parent),
+        undefined=StrictUndefined,
+        autoescape=True,
+    )
+    template_source = env.loader.get_source(env, file_path.name)
+    parsed_content = env.parse(template_source)
+    return find_undeclared_variables(parsed_content)  # type: ignore
 
 
 class SqlFile:
@@ -67,52 +84,6 @@ class SqlFile:
         :returns: declared parameters for the sql query.
         """
         return sorted(find_template_variables(self.path))
-
-    def has_sub_directory(self) -> bool:
-        """
-        Check if sql file is in a sub directory.
-
-        :returns: True if it's not in the parent root directory.
-        """
-        return self.path.parent != self.root_directory
-
-    def get_sub_directories(self) -> Iterable[str]:
-        """
-        Get the directory names between root and sql file path.
-
-        :yields: a sub directory name.
-        """
-        for parent in self.path.parents:
-            if parent == self.root_directory:
-                break
-            yield parent.name
-
-    def get_variable_name(self) -> str:
-        """
-        Get the variable name used as a unique identifier as a python variable.
-
-        :returns: the file name without suffix.
-        """
-        if self.has_sub_directory():
-            return f"{'__'.join(self.get_sub_directories())}__{self.path.stem}"
-        return self.path.stem
-
-    def get_relative_target_path(self) -> Path:
-        """
-        Get the relative path to the executable sql file within the DAGs folder.
-
-        :returns: the path where SQL files without any headers are being placed.
-        """
-        target_full_directory = (
-            self.target_directory / "sql" / self.root_directory.name / "/".join(self.get_sub_directories())
-        )
-        target_full_directory.mkdir(parents=True, exist_ok=True)
-
-        target_path = target_full_directory / self.path.name
-
-        target_path.write_text(self.content)
-
-        return target_path.relative_to(self.target_directory)
 
     def to_transform_operator(self):
         return TransformOperator(
