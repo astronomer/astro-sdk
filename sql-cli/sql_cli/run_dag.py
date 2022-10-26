@@ -178,7 +178,7 @@ def _get_or_create_dagrun(
 
     :return: the Dagrun object needed to run tasks.
     """
-    log.info("dagrun id: %s", dag.dag_id)
+    log.debug("dagrun id: %s", dag.dag_id)
     dr: DagRun = (
         session.query(DagRun)
         .filter(DagRun.dag_id == dag.dag_id, DagRun.execution_date == execution_date)

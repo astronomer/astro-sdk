@@ -6,28 +6,13 @@ from dotenv import load_dotenv
 from rich import print as rprint
 
 import sql_cli
-from sql_cli.connections import validate_connections
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
-from sql_cli.dag_generator import generate_dag
-from sql_cli.exceptions import EmptyDag, SqlFilesDirectoryNotFound
-from sql_cli.project import Project
-from sql_cli.run_dag import run_dag
-from sql_cli.utils.airflow import (
-    get_dag,
-    retrieve_airflow_database_conn_from_config,
-    set_airflow_database_conn,
-)
 
 load_dotenv()
 app = typer.Typer(add_completion=False, context_settings={"help_option_names": ["-h", "--help"]})
 
 
-def set_logger_level(log_level: int) -> None:
-    for name in logging.root.manager.loggerDict:
-        logging.getLogger(name).setLevel(log_level)
-
-
-set_logger_level(logging.CRITICAL)
+logging.getLogger("airflow").setLevel(logging.CRITICAL)
 
 
 @app.command(help="Print the SQL CLI version.")
@@ -55,6 +40,10 @@ def generate(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
 ) -> None:
+    from sql_cli.dag_generator import generate_dag
+    from sql_cli.exceptions import EmptyDag, SqlFilesDirectoryNotFound
+    from sql_cli.project import Project
+
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
     project.load_config(env)
@@ -91,6 +80,10 @@ def validate(
         help="(Optional) Identifier of the connection to be validated. By default checks all the env connections.",
     ),
 ) -> None:
+    from sql_cli.connections import validate_connections
+    from sql_cli.project import Project
+    from sql_cli.utils.airflow import retrieve_airflow_database_conn_from_config, set_airflow_database_conn
+
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
     project.load_config(environment=env)
@@ -127,6 +120,16 @@ def run(
     ),
     verbose: bool = typer.Option(False, help="Whether to show airflow logs", show_default=True),
 ) -> None:
+    from sql_cli.dag_generator import generate_dag
+    from sql_cli.exceptions import EmptyDag, SqlFilesDirectoryNotFound
+    from sql_cli.project import Project
+    from sql_cli.run_dag import run_dag
+    from sql_cli.utils.airflow import (
+        get_dag,
+        retrieve_airflow_database_conn_from_config,
+        set_airflow_database_conn,
+    )
+
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
     project.update_config(environment=env)
@@ -210,6 +213,8 @@ def init(
         show_default=False,
     ),
 ) -> None:
+    from sql_cli.project import Project
+
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute, airflow_home, airflow_dags_folder)
     project.initialise()
