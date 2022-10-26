@@ -29,7 +29,7 @@ class PostgresDatabase(BaseDatabase):
     illegal_column_name_chars: list[str] = ["."]
     illegal_column_name_chars_replacement: list[str] = ["_"]
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: Optional[BaseTable] = None):
+    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
         super().__init__(conn_id)
         self.table = table
 
