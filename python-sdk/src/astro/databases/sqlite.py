@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from sqlalchemy import MetaData as SqlaMetaData, create_engine
 from sqlalchemy.engine.base import Engine
@@ -18,7 +20,7 @@ class SqliteDatabase(BaseDatabase):
     logic in other parts of our code-base.
     """
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable = None):
+    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: Optional[BaseTable] = None):
         super().__init__(conn_id)
         self.table = table
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import io
 from contextlib import closing
+from typing import Optional
 
 import pandas as pd
 import sqlalchemy
@@ -28,7 +29,7 @@ class PostgresDatabase(BaseDatabase):
     illegal_column_name_chars: list[str] = ["."]
     illegal_column_name_chars_replacement: list[str] = ["_"]
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable = None):
+    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: Optional[BaseTable] = None):
         super().__init__(conn_id)
         self.table = table
 

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import time
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Mapping, Optional
 
 import pandas as pd
 from airflow.providers.google.cloud.hooks.bigquery import BigQueryHook
@@ -102,7 +102,7 @@ class BigqueryDatabase(BaseDatabase):
         DatabaseCustomError,
     )
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable = None):
+    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: Optional[BaseTable] = None):
         super().__init__(conn_id)
         self.table = table
 
