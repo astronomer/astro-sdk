@@ -28,6 +28,8 @@ class S3Location(BaseFileLocation):
         Get connections extras based on connection definition of AWS/S3:
         https://airflow.apache.org/docs/apache-airflow-providers-amazon/6.0.0/connections/aws.html
         """
+        if self.conn_id is None:
+            return {}
         conn = self.hook.get_connection(conn_id=self.conn_id)
         keys = [
             "region_name",
