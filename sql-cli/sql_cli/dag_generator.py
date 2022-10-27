@@ -79,7 +79,7 @@ class SqlFilesDAG:
             cycle_edges = " and ".join(
                 " and ".join(edge.get_variable_name() for edge in edges) for edges in find_cycle(graph)
             )
-            raise DagCycle("Could not generate DAG!" f" A cycle between {cycle_edges} has been detected!")
+            raise DagCycle(f"A cycle between {cycle_edges} has been detected!")
 
         return list(depth_first_search.dfs_postorder_nodes(graph))
 
@@ -95,7 +95,7 @@ def generate_dag(directory: Path, dags_directory: Path) -> Path:
     """
     if not directory.exists():
         raise SqlFilesDirectoryNotFound("The directory does not exist!")
-    sql_files = sorted(get_sql_files(directory, target_directory=dags_directory / "sql"))
+    sql_files = sorted(get_sql_files(directory, target_directory=dags_directory))
     sql_files_dag = SqlFilesDAG(
         dag_id=directory.name,
         start_date=datetime(2020, 1, 1),

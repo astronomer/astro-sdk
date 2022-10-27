@@ -47,43 +47,38 @@ def dags_directory():
 
 
 @pytest.fixture()
-def target_directory():
-    return CWD / "tests" / ".airflow" / "dags" / "sql"
-
-
-@pytest.fixture()
-def sql_file(root_directory, target_directory):
+def sql_file(root_directory, dags_directory):
     return SqlFile(
         root_directory=root_directory,
         path=root_directory / "a.sql",
-        target_directory=target_directory,
+        target_directory=dags_directory,
     )
 
 
 @pytest.fixture()
-def sql_file_with_parameters(root_directory, target_directory):
+def sql_file_with_parameters(root_directory, dags_directory):
     return SqlFile(
         root_directory=root_directory,
         path=root_directory / "c.sql",
-        target_directory=target_directory,
+        target_directory=dags_directory,
     )
 
 
 @pytest.fixture()
-def sql_file_in_sub_directory(root_directory, target_directory):
+def sql_file_in_sub_directory(root_directory, dags_directory):
     return SqlFile(
         root_directory=root_directory,
         path=root_directory / "sub_dir" / "a.sql",
-        target_directory=target_directory,
+        target_directory=dags_directory,
     )
 
 
 @pytest.fixture()
-def sql_file_with_cycle(root_directory_cycle, target_directory):
+def sql_file_with_cycle(root_directory_cycle, dags_directory):
     return SqlFile(
         root_directory=root_directory_cycle,
         path=root_directory_cycle / "d.sql",
-        target_directory=target_directory,
+        target_directory=dags_directory,
     )
 
 
@@ -160,9 +155,10 @@ def connections():
 
 
 @pytest.fixture()
-def initialised_project_with_empty_workflow(initialised_project: Project):
+def initialised_project_with_tests_workflows(initialised_project: Project):
     shutil.copytree(
-        src=CWD / "tests" / "workflows" / "empty",
-        dst=initialised_project.directory / "workflows" / "empty",
+        src=CWD / "tests" / "workflows",
+        dst=initialised_project.directory / "workflows",
+        dirs_exist_ok=True,
     )
     return initialised_project

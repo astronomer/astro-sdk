@@ -20,6 +20,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.session import Session
 
 from astro.sql.operators.cleanup import AstroCleanupException
+from sql_cli.exceptions import ConnectionFailed
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -138,7 +139,7 @@ def _run_task(ti: TaskInstance, session: Session) -> None:
 
     :param ti: TaskInstance to run
     """
-    if ti.map_index >= 0:
+    if hasattr(ti, "map_index") and ti.map_index >= 0:
         pprint(f"Processing [bold yellow]{ti.task_id}[/bold yellow][{ti.map_index}]...", end=" ")
     else:
         pprint(f"Processing [bold yellow]{ti.task_id}[/bold yellow]...", end=" ")
@@ -151,10 +152,14 @@ def _run_task(ti: TaskInstance, session: Session) -> None:
         pprint("[bold green]SUCCESS[/bold green]")
     except OperationalError as operational_exception:
         pprint("[bold red]FAILED[/bold red]")
-        original_message = operational_exception.orig.args[0]
-        pprint(f"  Error [red]{original_message}[/red] using connection [bold]{ti.task.conn_id}[/bold].")
+        orig_exception = operational_exception.orig
+        orig_message = orig_exception.args[0]
+        raise ConnectionFailed(orig_message, conn_id=ti.task.conn_id) from orig_exception
     except AstroCleanupException:
         pprint("aql.cleanup async, continuing")
+    except Exception:
+        pprint("[bold red]FAILED[/bold red]")
+        raise
 
 
 def _get_or_create_dagrun(
@@ -178,7 +183,7 @@ def _get_or_create_dagrun(
 
     :return: the Dagrun object needed to run tasks.
     """
-    log.info("dagrun id: %s", dag.dag_id)
+    log.debug("dagrun id: %s", dag.dag_id)
     dr: DagRun = (
         session.query(DagRun)
         .filter(DagRun.dag_id == dag.dag_id, DagRun.execution_date == execution_date)
