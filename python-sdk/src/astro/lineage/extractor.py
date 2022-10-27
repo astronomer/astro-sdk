@@ -37,6 +37,7 @@ class PythonSDKExtractor(BaseExtractor):
             "LoadFileOperator",
             "MergeOperator",
             "TransformOperator",
+            "ExportFileOperator",
         ]
 
     def extract(self) -> TaskMetadata:
