@@ -173,6 +173,6 @@ def test_connections():
         Connection(
             conn_id="my_test_sqlite",
             conn_type="sqlite",
-            host=os.path.join(gettempdir(), "sqlite_default.db"),
+            host=(tmp_path / "sqlite_default.db").as_posix(),
         )
     )
