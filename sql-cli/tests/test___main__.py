@@ -58,30 +58,38 @@ def test_generate(workflow_name, environment, initialised_project):
     )
     assert result.exit_code == 0, result.output
     result_stdout = get_stdout(result)
-    assert result_stdout.startswith("The DAG file ")
-    assert result_stdout.endswith(f"{workflow_name}.py has been successfully generated. 🎉")
+    assert (
+        f"The DAG file {initialised_project.airflow_dags_folder}/{workflow_name}.py has been successfully generated. 🎉"
+        in result_stdout
+    )
 
 
 @pytest.mark.parametrize(
     "workflow_name,message",
     [
-        ("empty", "The workflow does not have any SQL files!"),
-        ("foo", "A workflow with the given name does not exist!"),
+        ("non_existing", "The workflow non_existing does not exist!"),
+        ("cycle", "The workflow cycle contains a cycle! A cycle between d and d has been detected!"),
+        ("empty", "The workflow empty does not have any SQL files!"),
+    ],
+    ids=[
+        "non_existing",
+        "cycle",
+        "empty",
     ],
 )
-def test_generate_fails(workflow_name, message, initialised_project_with_empty_workflow):
+def test_generate_invalid(workflow_name, message, initialised_project_with_tests_workflows):
     result = runner.invoke(
         app,
         [
             "generate",
             workflow_name,
             "--project-dir",
-            initialised_project_with_empty_workflow.directory.as_posix(),
+            initialised_project_with_tests_workflows.directory.as_posix(),
         ],
     )
     assert result.exit_code == 1
     result_stdout = get_stdout(result)
-    assert result_stdout == message
+    assert message in result_stdout
 
 
 @pytest.mark.parametrize(
@@ -123,14 +131,13 @@ def test_validate_all(initialised_project_with_test_config):
 
 
 @pytest.mark.parametrize(
-    "workflow_name,environment,status",
+    "workflow_name,environment",
     [
-        ("example_basic_transform", "default", "SUCCESS"),
-        ("example_templating", "dev", "SUCCESS"),
-        ("example_templating", "default", "FAILED"),
+        ("example_basic_transform", "default"),
+        ("example_templating", "dev"),
     ],
 )
-def test_run(workflow_name, environment, status, initialised_project):
+def test_run(workflow_name, environment, initialised_project):
     result = runner.invoke(
         app,
         [
@@ -144,29 +151,41 @@ def test_run(workflow_name, environment, status, initialised_project):
     )
     assert result.exit_code == 0, result.output
     result_stdout = get_stdout(result)
-    assert f"Completed running the workflow {workflow_name}: [{status}]" in result_stdout
+    assert f"Completed running the workflow {workflow_name}. 🚀" in result_stdout
 
 
 @pytest.mark.parametrize(
     "workflow_name,message",
     [
-        ("empty", "The workflow does not have any SQL files!"),
-        ("foo", "A workflow with the given name does not exist!"),
+        ("non_existing", "The workflow non_existing does not exist!"),
+        ("cycle", "The workflow cycle contains a cycle! A cycle between d and d has been detected!"),
+        ("empty", "The workflow empty does not have any SQL files!"),
+        ("undefined_variable", "'foo' is undefined"),
+        ("missing_table_or_conn_id", "You need to provide a table or a connection id"),
+        ("example_templating", "no such table: orders using connection sqlite_conn"),
+    ],
+    ids=[
+        "non_existing",
+        "cycle",
+        "empty",
+        "undefined_variable",
+        "missing_table_or_conn_id",
+        "example_templating",
     ],
 )
-def test_run_fails(workflow_name, message, initialised_project_with_empty_workflow):
+def test_run_invalid(workflow_name, message, initialised_project_with_tests_workflows):
     result = runner.invoke(
         app,
         [
             "run",
             workflow_name,
             "--project-dir",
-            initialised_project_with_empty_workflow.directory.as_posix(),
+            initialised_project_with_tests_workflows.directory.as_posix(),
         ],
     )
     assert result.exit_code == 1
     result_stdout = get_stdout(result)
-    assert result_stdout == message
+    assert message in result_stdout
 
 
 def test_init_with_directory(tmp_path):
