@@ -48,38 +48,6 @@ def test_parse_s3_env_var():
     ["minio_conn_1", "minio_conn_2"],
     ids=["host", "endpoint_url"],
 )
-def test_get_connection_extras(minio_conn_id):
-    """Test get_connection_extras() return correct extras"""
-    location = S3Location(path="s3://astro-sdk/imdb.csv", conn_id=minio_conn_id)
-    extras = location.get_connection_extras()
-    assert extras == {
-        "aws_access_key_id": "ROOTNAME",
-        "aws_secret_access_key": "CHANGEME123",
-        "endpoint_url": "http://127.0.0.1:9000",
-    }
-
-
-@pytest.mark.parametrize(
-    "minio_conn_id",
-    ["minio_conn_1", "minio_conn_2"],
-    ids=["host", "endpoint_url"],
-)
-def test_transport_params_is_calling_get_connection_extras(minio_conn_id):
-    """
-    Test that get_connection_extras() is called when getting transport_params
-    """
-    with patch("astro.files.locations.amazon.s3.S3Location.get_connection_extras") as get_connection_extras:
-        get_connection_extras.return_value = {}
-        location = S3Location(path="s3://astro-sdk/imdb.csv", conn_id=minio_conn_id)
-        _ = location.transport_params
-        get_connection_extras.assert_called()
-
-
-@pytest.mark.parametrize(
-    "minio_conn_id",
-    ["minio_conn_1", "minio_conn_2"],
-    ids=["host", "endpoint_url"],
-)
 def test_transport_params_calls_with_correct_kwargs(minio_conn_id):
     """
     Test that we pass correct arguments to session.client()

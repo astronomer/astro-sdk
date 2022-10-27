@@ -23,39 +23,12 @@ class S3Location(BaseFileLocation):
         """Return S3 ID/KEY pair from environment vars"""
         return os.environ["AWS_ACCESS_KEY_ID"], os.environ["AWS_SECRET_ACCESS_KEY"]
 
-    def get_connection_extras(self) -> dict:
-        """
-        Get connections extras based on connection definition of AWS/S3:
-        https://airflow.apache.org/docs/apache-airflow-providers-amazon/6.0.0/connections/aws.html
-        """
-        if self.conn_id is None:
-            return {}
-        conn = self.hook.get_connection(conn_id=self.conn_id)
-        keys = [
-            "region_name",
-            "verify",
-            "endpoint_url",
-            "aws_access_key_id",
-            "aws_secret_access_key",
-            "aws_session_token",
-        ]
-        kwargs = {key: conn.extra_dejson.get(key) for key in keys if conn.extra_dejson.get(key)}
-        # We want to support older version of airflow which has `host` instead of `endpoint_url` in extra field.
-        if "endpoint_url" not in kwargs:
-            kwargs["endpoint_url"] = conn.extra_dejson.get("host")
-        return kwargs
-
     @property
     def transport_params(self) -> dict:
         """Structure s3fs credentials from Airflow connection.
         s3fs enables pandas to write to s3
         """
-        session = self.hook.get_session()
-        # Collecting extras from connection if user wants to override the defaults. Useful when using S3 replacements
-        # like minio.
-        kwargs = self.get_connection_extras()
-        kwargs["service_name"] = "s3"
-        return {"client": session.client(**kwargs)}
+        return {"client": self.hook.conn}
 
     @property
     def paths(self) -> list[str]:
