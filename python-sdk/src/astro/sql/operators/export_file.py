@@ -85,8 +85,10 @@ class ExportFileOperator(AstroSQLBaseOperator):
             )
         ]
         if isinstance(self.input_data, BaseTable):
-            input_uri = f"{self.input_data.openlineage_dataset_namespace()}"
-            f"://{self.input_data.openlineage_dataset_name()}"
+            input_uri = (
+                f"{self.input_data.openlineage_dataset_namespace()}"
+                f"://{self.input_data.openlineage_dataset_name()}"
+            )
             input_dataset = [
                 OpenlineageDataset(
                     namespace=self.input_data.openlineage_dataset_namespace(),
@@ -177,6 +179,7 @@ def export_file(
     """
 
     task_id = task_id or get_unique_task_id("export_file")
+
     return ExportFileOperator(
         task_id=task_id,
         output_file=output_file,
