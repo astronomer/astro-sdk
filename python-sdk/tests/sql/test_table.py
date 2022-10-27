@@ -211,8 +211,8 @@ def test_if_table_object_can_be_pickled():
         ),
         (
             Connection(conn_id="test_conn", conn_type="sqlite", host="/tmp/sqlite.db"),
-            "/tmp/sqlite.db.test_tb",
-            "/tmp/sqlite.db",
+            "tmp/sqlite.db.test_tb",
+            "sqlite://tmp/sqlite.db",
         ),
     ],
 )
