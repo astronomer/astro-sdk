@@ -19,8 +19,9 @@ from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
 from astro.lineage.extractor import OpenLineageFacets
 from astro.lineage.facets import TableDatasetFacet
+from astro.settings import OPENLINEAGE_EMIT_TEMP_TABLE_EVENT
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
-from astro.table import BaseTable
+from astro.table import BaseTable, TempTable
 from astro.utils.typing_compat import Context
 
 
@@ -79,62 +80,72 @@ class AppendOperator(AstroSQLBaseOperator):
         """
         append_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="append_query")
         source_table_rows = self.source_table.row_count
-        input_uri = (
-            f"{self.source_table.openlineage_dataset_namespace()}"
-            f"://{self.source_table.openlineage_dataset_name()}"
-        )
-        input_dataset: list[OpenlineageDataset] = [
-            OpenlineageDataset(
-                namespace=self.source_table.openlineage_dataset_namespace(),
-                name=self.source_table.openlineage_dataset_name(),
-                facets={
-                    "input_table_facet": TableDatasetFacet(
-                        table_name=self.source_table.name,
-                        source_table_rows=source_table_rows,
-                        columns=self.columns,
-                        metadata=self.source_table.metadata,
-                    ),
-                    "schema": SchemaDatasetFacet(
-                        fields=[
-                            SchemaField(
-                                name=self.source_table.metadata.schema,
-                                type=self.source_table.metadata.database,
-                            )
-                        ]
-                    ),
-                    "dataSource": DataSourceDatasetFacet(name=self.source_table.name, uri=input_uri),
-                    "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(
-                        rowCount=self.source_table.row_count, columnMetrics={}
-                    ),
-                },
+        input_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
+        output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
+        if (
+                (not isinstance(self.source_table, TempTable))
+                or (isinstance(self.source_table, TempTable) and OPENLINEAGE_EMIT_TEMP_TABLE_EVENT)
+        ):
+            input_uri = (
+                f"{self.source_table.openlineage_dataset_namespace()}"
+                f"://{self.source_table.openlineage_dataset_name()}"
             )
-        ]
+            input_dataset = [
+                OpenlineageDataset(
+                    namespace=self.source_table.openlineage_dataset_namespace(),
+                    name=self.source_table.openlineage_dataset_name(),
+                    facets={
+                        "input_table_facet": TableDatasetFacet(
+                            table_name=self.source_table.name,
+                            source_table_rows=source_table_rows,
+                            columns=self.columns,
+                            metadata=self.source_table.metadata,
+                        ),
+                        "schema": SchemaDatasetFacet(
+                            fields=[
+                                SchemaField(
+                                    name=self.source_table.metadata.schema,
+                                    type=self.source_table.metadata.database,
+                                )
+                            ]
+                        ),
+                        "dataSource": DataSourceDatasetFacet(name=self.source_table.name, uri=input_uri),
+                        "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(
+                            rowCount=self.source_table.row_count, columnMetrics={}
+                        ),
+                    },
+                )
+            ]
 
-        output_uri = (
-            f"{self.target_table.openlineage_dataset_namespace()}"
-            f"://{self.target_table.openlineage_dataset_name()}"
-        )
-        output_dataset: list[OpenlineageDataset] = [
-            OpenlineageDataset(
-                namespace=self.target_table.openlineage_dataset_namespace(),
-                name=self.target_table.openlineage_dataset_name(),
-                facets={
-                    "output_table_facet": TableDatasetFacet(
-                        table_name=self.target_table.name,
-                        columns=self.columns,
-                        source_table_rows=source_table_rows,
-                        metadata=self.target_table.metadata,
-                    ),
-                    "outputStatistics": OutputStatisticsOutputDatasetFacet(
-                        rowCount=self.target_table.row_count
-                    ),
-                    "dataSource": DataSourceDatasetFacet(name=self.target_table.name, uri=output_uri),
-                    "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(
-                        rowCount=self.target_table.row_count, columnMetrics={}
-                    ),
-                },
+        if (
+                (not isinstance(self.source_table, TempTable))
+                or (isinstance(self.source_table, TempTable) and OPENLINEAGE_EMIT_TEMP_TABLE_EVENT)
+        ):
+            output_uri = (
+                f"{self.target_table.openlineage_dataset_namespace()}"
+                f"://{self.target_table.openlineage_dataset_name()}"
             )
-        ]
+            output_dataset = [
+                OpenlineageDataset(
+                    namespace=self.target_table.openlineage_dataset_namespace(),
+                    name=self.target_table.openlineage_dataset_name(),
+                    facets={
+                        "output_table_facet": TableDatasetFacet(
+                            table_name=self.target_table.name,
+                            columns=self.columns,
+                            source_table_rows=source_table_rows,
+                            metadata=self.target_table.metadata,
+                        ),
+                        "outputStatistics": OutputStatisticsOutputDatasetFacet(
+                            rowCount=self.target_table.row_count
+                        ),
+                        "dataSource": DataSourceDatasetFacet(name=self.target_table.name, uri=output_uri),
+                        "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(
+                            rowCount=self.target_table.row_count, columnMetrics={}
+                        ),
+                    },
+                )
+            ]
 
         run_facets: dict[str, BaseFacet] = {}
         job_facets: dict[str, BaseFacet] = {"sql": SqlJobFacet(query=str(append_query))}

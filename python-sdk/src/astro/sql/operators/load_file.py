@@ -15,8 +15,9 @@ from astro.databases.base import BaseDatabase
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.lineage.extractor import OpenLineageFacets
 from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
+from astro.settings import OPENLINEAGE_EMIT_TEMP_TABLE_EVENT
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
-from astro.table import BaseTable
+from astro.table import BaseTable, TempTable
 from astro.utils.dataframe import convert_dataframe_to_file
 from astro.utils.typing_compat import Context
 
@@ -225,7 +226,10 @@ class LoadFileOperator(AstroSQLBaseOperator):
         ]
 
         output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
-        if self.output_table:
+        if (
+                (not isinstance(self.output_table, TempTable))
+                or (isinstance(self.output_table, TempTable) and OPENLINEAGE_EMIT_TEMP_TABLE_EVENT)
+        ):
             output_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
                 f"://{self.output_table.openlineage_dataset_name()}"

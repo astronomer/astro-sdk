@@ -22,8 +22,9 @@ from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.lineage.extractor import OpenLineageFacets
+from astro.settings import OPENLINEAGE_EMIT_TEMP_TABLE_EVENT
 from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
-from astro.table import BaseTable, Table
+from astro.table import BaseTable, Table, TempTable
 from astro.utils.table import find_first_table
 from astro.utils.typing_compat import Context
 
@@ -199,27 +200,35 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         """
         Returns the lineage data
         """
-        input_uri = (
-            f"{self.output_table.openlineage_dataset_namespace()}"
-            f"://{self.output_table.openlineage_dataset_name()}"
-        )
-        input_dataset: list[OpenlineageDataset] = [
-            OpenlineageDataset(
-                namespace=self.output_table.openlineage_dataset_namespace(),
-                name=self.output_table.openlineage_dataset_name(),
-                facets={
-                    "schema": SchemaDatasetFacet(fields=[SchemaField(name=self.schema, type=self.database)]),
-                    "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=input_uri),
-                },
-            )
-        ]
-
-        output_uri = (
-            f"{self.output_table.openlineage_dataset_namespace()}"
-            f"://{self.output_table.openlineage_dataset_name()}"
-        )
+        input_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
         output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
-        if self.output_table:
+        if (
+                (not isinstance(self.output_table, TempTable))
+                or (isinstance(self.output_table, TempTable) and OPENLINEAGE_EMIT_TEMP_TABLE_EVENT)
+        ):
+            input_uri = (
+                f"{self.output_table.openlineage_dataset_namespace()}"
+                f"://{self.output_table.openlineage_dataset_name()}"
+            )
+            input_dataset = [
+                OpenlineageDataset(
+                    namespace=self.output_table.openlineage_dataset_namespace(),
+                    name=self.output_table.openlineage_dataset_name(),
+                    facets={
+                        "schema": SchemaDatasetFacet(fields=[SchemaField(name=self.schema, type=self.database)]),
+                        "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=input_uri),
+                    },
+                )
+            ]
+
+        if (
+                (not isinstance(self.output_table, TempTable))
+                or (isinstance(self.output_table, TempTable) and OPENLINEAGE_EMIT_TEMP_TABLE_EVENT)
+        ):
+            output_uri = (
+                f"{self.output_table.openlineage_dataset_namespace()}"
+                f"://{self.output_table.openlineage_dataset_name()}"
+            )
             output_dataset = [
                 OpenlineageDataset(
                     namespace=self.output_table.openlineage_dataset_namespace(),
