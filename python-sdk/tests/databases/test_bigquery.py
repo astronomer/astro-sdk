@@ -263,7 +263,6 @@ def test_load_file_to_table_natively_for_fallback_wrong_file_location_with_enabl
         database.load_file_to_table_natively_with_fallback(
             source_file=File(filepath),
             target_table=target_table,
-            enable_native_fallback=False,
         )
 
 

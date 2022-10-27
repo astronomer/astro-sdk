@@ -30,7 +30,7 @@ from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File, resolve_file_path_pattern
 from astro.files.types import create_file_type
 from astro.files.types.base import FileType as FileTypeConstants
-from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
+from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA, ENABLE_NATIVE_FALLBACK
 from astro.table import BaseTable, Metadata
 
 
@@ -395,7 +395,6 @@ class BaseDatabase(ABC):
         use_native_support: bool = True,
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
-        enable_native_fallback: bool | None = True,
         **kwargs,
     ):
         """
@@ -411,7 +410,6 @@ class BaseDatabase(ABC):
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
-        :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         """
         normalize_config = normalize_config or {}
 
@@ -433,7 +431,7 @@ class BaseDatabase(ABC):
                 if_exists="append",
                 normalize_config=normalize_config,
                 native_support_kwargs=native_support_kwargs,
-                enable_native_fallback=enable_native_fallback,
+                enable_native_fallback=ENABLE_NATIVE_FALLBACK,
                 chunk_size=chunk_size,
             )
         else:
@@ -488,7 +486,6 @@ class BaseDatabase(ABC):
         if_exists: LoadExistStrategy = "replace",
         normalize_config: dict | None = None,
         native_support_kwargs: dict | None = None,
-        enable_native_fallback: bool | None = True,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         **kwargs,
     ):
@@ -500,7 +497,6 @@ class BaseDatabase(ABC):
         :param if_exists: Overwrite file if exists
         :param chunk_size: Specify the number of records in each batch to be written at a time
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
-        :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer.
         :param normalize_config: pandas json_normalize params config
         """
 
@@ -518,7 +514,7 @@ class BaseDatabase(ABC):
                 "Loading files failed with Native Support. Falling back to Pandas-based load",
                 exc_info=True,
             )
-            if enable_native_fallback:
+            if ENABLE_NATIVE_FALLBACK:
                 self.load_file_to_table_using_pandas(
                     input_file=source_file,
                     output_table=target_table,
