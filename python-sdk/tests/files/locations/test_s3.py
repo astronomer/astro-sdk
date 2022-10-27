@@ -71,7 +71,8 @@ def test_transport_params_calls_with_correct_kwargs():
     """
 
     class Dummy:
-        def client(self, **kwargs):
+        @staticmethod
+        def client(**kwargs):
             assert kwargs == {
                 "aws_access_key_id": "ROOTNAME",
                 "aws_secret_access_key": "CHANGEME123",
