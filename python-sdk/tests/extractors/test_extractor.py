@@ -122,6 +122,11 @@ def test_python_sdk_load_file_extract_on_complete():
 
 @pytest.mark.integration
 def test_python_sdk_export_file_extract_on_complete():
+    """
+    Tests that  the custom PythonSDKExtractor is able to process the
+    operator's metadata that needs to be extracted as per OpenLineage
+    for ExportFileOperator.
+    """
     LoadFileOperator(
         task_id="load_file",
         input_file=File(
