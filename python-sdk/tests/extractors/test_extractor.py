@@ -38,7 +38,7 @@ OUTPUT_STATS_FOR_EXPORT_FILE = [
         namespace=TEST_OUTPUT_DATASET_NAMESPACE,
         name=TEST_OUTPUT_DATASET_NAME,
         facets={
-            "outputStatistics": OutputStatisticsOutputDatasetFacet(rowCount=117, size=None),
+            "outputStatistics": OutputStatisticsOutputDatasetFacet(rowCount=117, size=65),
         },
     )
 ]
