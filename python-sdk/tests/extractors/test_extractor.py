@@ -3,19 +3,14 @@ import pytest
 from airflow.models.taskinstance import TaskInstance
 from airflow.utils import timezone
 from openlineage.airflow.extractors import TaskMetadata
-from openlineage.client.facet import DataQualityMetricsInputDatasetFacet
+from openlineage.client.facet import DataQualityMetricsInputDatasetFacet, OutputStatisticsOutputDatasetFacet
 from openlineage.client.run import Dataset as OpenlineageDataset
 
 from astro import sql as aql
 from astro.constants import FileType
 from astro.files import File
 from astro.lineage.extractor import PythonSDKExtractor
-from astro.lineage.facets import (
-    ExportFileFacet,
-    InputFileDatasetFacet,
-    InputFileFacet,
-    OutputDatabaseDatasetFacet,
-)
+from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
 from astro.sql import AppendOperator, MergeOperator
 from astro.sql.operators.export_file import ExportFileOperator
 from astro.sql.operators.load_file import LoadFileOperator
@@ -43,12 +38,7 @@ OUTPUT_STATS_FOR_EXPORT_FILE = [
         namespace=TEST_OUTPUT_DATASET_NAMESPACE,
         name=TEST_OUTPUT_DATASET_NAME,
         facets={
-            "output_file_facet": ExportFileFacet(
-                filepath="/tmp/saved_df.csv",
-                file_size=0,
-                file_type=FileType.CSV,
-                if_exists="replace",
-            )
+            "outputStatistics": OutputStatisticsOutputDatasetFacet(rowCount=117, size=None),
         },
     )
 ]
@@ -145,7 +135,8 @@ def test_python_sdk_export_file_extract_on_complete():
         task_id=task_id,
         input_data=Table(conn_id="sqlite_conn", name="test_extractor"),
         output_file=File(
-            path="/tmp/saved_df.csv",
+            path="gs://astro-sdk/workspace/sample_pattern.csv",
+            conn_id="bigquery",
             filetype=FileType.CSV,
         ),
         if_exists="replace",
@@ -164,8 +155,8 @@ def test_python_sdk_export_file_extract_on_complete():
         == INPUT_STATS_FOR_EXPORT_FILE[0].facets["dataQualityMetrics"]
     )
     assert (
-        task_meta.outputs[0].facets["output_file_facet"]
-        == OUTPUT_STATS_FOR_EXPORT_FILE[0].facets["output_file_facet"]
+        task_meta.outputs[0].facets["outputStatistics"]
+        == OUTPUT_STATS_FOR_EXPORT_FILE[0].facets["outputStatistics"]
     )
     assert task_meta.job_facets == {}
     assert task_meta.run_facets == {}
