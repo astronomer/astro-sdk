@@ -211,7 +211,9 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                     namespace=self.output_table.openlineage_dataset_namespace(),
                     name=self.output_table.openlineage_dataset_name(),
                     facets={
-                        "schema": SchemaDatasetFacet(fields=[SchemaField(name=self.schema, type=self.database)]),
+                        "schema": SchemaDatasetFacet(
+                            fields=[SchemaField(name=self.schema, type=self.database)]
+                        ),
                         "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=input_uri),
                     },
                 )

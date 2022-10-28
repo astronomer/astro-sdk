@@ -177,7 +177,7 @@ class BaseTable:
 
     def openlineage_emit_temp_table_event(self):
         return (not isinstance(self, TempTable)) or (
-                isinstance(self, TempTable) and OPENLINEAGE_EMIT_TEMP_TABLE_EVENT
+            isinstance(self, TempTable) and OPENLINEAGE_EMIT_TEMP_TABLE_EVENT
         )
 
 
