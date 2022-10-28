@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import typing
 from typing import Any
 
 import pandas as pd
@@ -184,6 +185,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
 
         return normalize_config
 
+    @typing.no_type_check
     def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:  # skipcq: PYL-W0613
         """
         Returns the lineage data
