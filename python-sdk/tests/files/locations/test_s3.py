@@ -41,3 +41,15 @@ def test_parse_s3_env_var():
     key, secret = S3Location._parse_s3_env_var()
     assert key == "abcd"
     assert secret == "@#$%@$#ASDH@Ksd23%SD546"
+
+
+def test_transport_params_is_created_with_correct_endpoint():
+    """
+    Test that client is created with correct endpoint.
+
+    Note: if this testcase is failing upgrade your apache-airflow-providers-amazon >= 5.0.0
+    https://airflow.apache.org/docs/apache-airflow-providers-amazon/stable/index.html#id5
+    """
+    location = S3Location(path="s3://astro-sdk/imdb.csv", conn_id="minio_conn")
+    tp = location.transport_params["client"]
+    assert tp.meta.endpoint_url == "http://127.0.0.1:9000"
