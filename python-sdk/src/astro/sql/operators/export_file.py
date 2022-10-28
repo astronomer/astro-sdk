@@ -75,7 +75,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
 
     def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:  # skipcq: PYL-W0613
         """
-        Returns the lineage data
+        Collect the input, output, job and run facets for export file operator
         """
         input_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(

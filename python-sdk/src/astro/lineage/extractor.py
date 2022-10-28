@@ -34,10 +34,10 @@ class PythonSDKExtractor(BaseExtractor):
         return [
             "AppendOperator",
             "BaseSQLDecoratedOperator",
+            "ExportFileOperator",
             "LoadFileOperator",
             "MergeOperator",
             "TransformOperator",
-            "ExportFileOperator",
         ]
 
     def extract(self) -> TaskMetadata:
