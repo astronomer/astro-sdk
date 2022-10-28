@@ -8,7 +8,8 @@ from rich import print as rprint
 import sql_cli
 from sql_cli.connections import validate_connections
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
-from sql_cli.dag_generator import generate_dag, render_dag
+from sql_cli.dag_generator import generate_dag
+from sql_cli.dag_render import render_tasks
 from sql_cli.exceptions import EmptyDag, SqlFilesDirectoryNotFound
 from sql_cli.project import Project
 from sql_cli.run_dag import run_dag
@@ -147,7 +148,11 @@ def run(
             )
             dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
         else:
-            dag = render_dag(directory=project_dir / "workflows" / workflow_name, workflow_name=workflow_name)
+            from airflow.models.dag import DAG
+            from airflow.utils.timezone import datetime as airflow_datetime
+            dag = DAG(dag_id=workflow_name, start_date=airflow_datetime(2020,1,1))
+            with dag:
+                render_tasks(directory=project_dir / "workflows" / workflow_name)
     except EmptyDag:
         rprint("[bold red]The workflow does not have any SQL files![/bold red]")
         raise typer.Exit(code=1)

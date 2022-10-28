@@ -3,7 +3,8 @@ from pathlib import Path
 import pytest
 from conftest import DEFAULT_DATE
 
-from sql_cli.dag_generator import SqlFilesDAG, generate_dag, render_dag
+from sql_cli.dag_generator import SqlFilesDAG, generate_dag
+from sql_cli.dag_render import render_tasks
 from sql_cli.exceptions import DagCycle, EmptyDag, SqlFilesDirectoryNotFound
 from sql_cli.run_dag import run_dag
 
@@ -33,8 +34,7 @@ def test_generate_dag(root_directory, dags_directory):
 
 
 def test_generate_dag_render(test_connections, root_directory, sample_dag):
-    dag = render_dag(directory=root_directory, workflow_name=sample_dag.dag_id)
-    run_dag(dag)
+    tasks = render_tasks(directory=root_directory)
 
 
 def test_generate_dag_invalid_directory(root_directory, dags_directory):
