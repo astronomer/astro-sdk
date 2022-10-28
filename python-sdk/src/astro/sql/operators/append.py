@@ -19,9 +19,8 @@ from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
 from astro.lineage.extractor import OpenLineageFacets
 from astro.lineage.facets import TableDatasetFacet
-from astro.settings import OPENLINEAGE_EMIT_TEMP_TABLE_EVENT
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
-from astro.table import BaseTable, TempTable
+from astro.table import BaseTable
 from astro.utils.typing_compat import Context
 
 

@@ -176,8 +176,8 @@ class BaseTable:
         return database.openlineage_dataset_namespace()
 
     def openlineage_emit_temp_table_event(self):
-        return (not isinstance(self.source_table, TempTable)) or (
-                isinstance(self.source_table, TempTable) and OPENLINEAGE_EMIT_TEMP_TABLE_EVENT
+        return (not isinstance(self, TempTable)) or (
+                isinstance(self, TempTable) and OPENLINEAGE_EMIT_TEMP_TABLE_EVENT
         )
 
 
