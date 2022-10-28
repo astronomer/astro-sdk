@@ -233,7 +233,10 @@ def test_load_file_to_table_natively_for_fallback(mock_load_file, database_table
     mock_load_file.side_effect = DatabaseCustomError
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
-    response = database.load_file_to_table_natively_with_fallback(File(filepath), target_table)
+    response = database.load_file_to_table_natively_with_fallback(
+        File(filepath), target_table,
+        enable_native_fallback=True,
+    )
     assert response is None
 
 

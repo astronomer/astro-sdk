@@ -411,7 +411,7 @@ class BaseDatabase(ABC):
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
-        :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer.
+        :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         """
         normalize_config = normalize_config or {}
 
