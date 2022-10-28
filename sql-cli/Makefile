@@ -6,7 +6,7 @@ SYSTEM_PIP := pip
 
 clean:  ## Remove temporary files
 	@echo "Removing cached and temporary files from current directory"
-	@rm -rf logs
+	@rm -rf logs dist
 	@find . -name "*.pyc" -delete
 	@find . -type d -name "__pycache__" -exec rm -rf {} +
 	@find . -name "*.sw[a-z]" -delete
