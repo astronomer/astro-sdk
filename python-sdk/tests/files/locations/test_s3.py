@@ -43,27 +43,13 @@ def test_parse_s3_env_var():
     assert secret == "@#$%@$#ASDH@Ksd23%SD546"
 
 
-@pytest.mark.parametrize(
-    "minio_conn_id",
-    ["minio_conn_1", "minio_conn_2"],
-    ids=["host", "endpoint_url"],
-)
-def test_transport_params_calls_with_correct_kwargs(minio_conn_id):
+def test_transport_params_is_created_with_correct_endpoint():
     """
-    Test that we pass correct arguments to session.client()
+    Test that client is created with correct endpoint.
+
+    Note: if this testcase is failing upgrade your apache-airflow-providers-amazon >= 5.0.0
+    https://airflow.apache.org/docs/apache-airflow-providers-amazon/stable/index.html#id5
     """
-
-    class Dummy:
-        @staticmethod
-        def client(**kwargs):
-            assert kwargs == {
-                "aws_access_key_id": "ROOTNAME",
-                "aws_secret_access_key": "CHANGEME123",
-                "endpoint_url": "http://127.0.0.1:9000",
-                "service_name": "s3",
-            }
-
-    with patch("airflow.providers.amazon.aws.hooks.s3.S3Hook.get_session") as session:
-        session.return_value = Dummy()
-        location = S3Location(path="s3://astro-sdk/imdb.csv", conn_id=minio_conn_id)
-        _ = location.transport_params
+    location = S3Location(path="s3://astro-sdk/imdb.csv", conn_id="minio_conn")
+    tp = location.transport_params["client"]
+    assert tp.meta.endpoint_url == "http://127.0.0.1:9000"
