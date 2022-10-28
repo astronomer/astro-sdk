@@ -29,7 +29,7 @@ INPUT_STATS = [
             "input_file_facet": InputFileDatasetFacet(
                 number_of_files=1,
                 description=None,
-                is_pattern=True,
+                is_pattern=False,
                 files=[
                     InputFileFacet(
                         filepath="gs://astro-sdk/workspace/sample_pattern.csv",
