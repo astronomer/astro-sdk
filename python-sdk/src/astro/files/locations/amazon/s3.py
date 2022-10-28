@@ -28,8 +28,7 @@ class S3Location(BaseFileLocation):
         """Structure s3fs credentials from Airflow connection.
         s3fs enables pandas to write to s3
         """
-        session = self.hook.get_session()
-        return {"client": session.client("s3")}
+        return {"client": self.hook.conn}
 
     @property
     def paths(self) -> list[str]:
