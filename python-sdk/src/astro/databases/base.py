@@ -30,7 +30,7 @@ from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File, resolve_file_path_pattern
 from astro.files.types import create_file_type
 from astro.files.types.base import FileType as FileTypeConstants
-from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA, LOAD_FILE_ENABLE_NATIVE_FALLBACK
+from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK, LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.table import BaseTable, Metadata
 
 
