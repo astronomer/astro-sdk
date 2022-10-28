@@ -34,7 +34,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
     :param native_support_kwargs: kwargs to be used by method involved in native support flow
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
-    :param enable_native_fallback: (deprecated) Use enable_native_fallback=True to fall back to default transfer
+    :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
 
     :return: If ``output_table`` is passed this operator returns a Table object. If not
         passed, returns a dataframe.
@@ -52,6 +52,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         use_native_support: bool = True,
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
+        enable_native_fallback: bool | None = ENABLE_NATIVE_FALLBACK,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -71,16 +72,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         self.use_native_support = use_native_support
         self.native_support_kwargs: dict[str, Any] = native_support_kwargs or {}
         self.columns_names_capitalization = columns_names_capitalization
-        if "enable_native_fallback" in kwargs:
-            warnings.warn(
-                "`enable_native_fallback` as param is deprecated and will be removed in future release"
-                "Please use Airflow config  `AIRFLOW__ASTRO_SDK__ENABLE_NATIVE_FALLBACK` instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            self.enable_native_fallback = kwargs.get("enable_native_fallback")
-        else:
-            self.enable_native_fallback = ENABLE_NATIVE_FALLBACK
+        self.enable_native_fallback = enable_native_fallback
 
     def execute(self, context: Context) -> BaseTable | File:  # skipcq: PYL-W0613
         """
@@ -297,7 +289,7 @@ def load_file(
     :param native_support_kwargs: kwargs to be used by method involved in native support flow
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
         in the resulting dataframe
-    :param enable_native_fallback: (deprecated) Use enable_native_fallback=True to fall back to default transfer
+    :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
     """
 
     # Note - using path for task id is causing issues as it's a pattern and
