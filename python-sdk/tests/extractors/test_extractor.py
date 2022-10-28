@@ -52,7 +52,7 @@ OUTPUT_STATS = [
                 columns=[],
                 schema="astro",
                 used_native_path=False,
-                enabled_native_fallback=True,
+                enabled_native_fallback=False,
                 native_support_arguments={},
                 description=None,
             )
