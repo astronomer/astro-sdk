@@ -16,8 +16,6 @@ def dev(session: nox.Session) -> None:
     development environment to ``.nox/dev``.
     """
     session.install("nox")
-    session.install("-e", "../python-sdk/.[all]")
-    session.install("-e", "../python-sdk/.[tests]")
     session.install("poetry")
     session.run("poetry", "install")
 
@@ -25,21 +23,29 @@ def dev(session: nox.Session) -> None:
 @nox.session(python=["3.7", "3.8", "3.9"])
 def test(session: nox.Session) -> None:
     """Run both unit and integration tests."""
-    session.install("-e", "../python-sdk/.[all]")
-    session.install("-e", "../python-sdk/.[tests]")
     session.install("poetry")
-    session.run("poetry", "install")
+    session.run("poetry", "install", "--with", "dev")
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
     session.run("pip3", "freeze")
-    session.run("pytest", *session.posargs, "--cov=sql_cli", "--cov-report=xml", "--cov-branch")
+    airflow_home = f"~/airflow-latest-{session.python}"
+    session.run("airflow", "db", "init", env={"AIRFLOW_HOME": airflow_home})
+    session.run(
+        "pytest",
+        *session.posargs,
+        "--cov=sql_cli",
+        "--cov-report=xml",
+        "--cov-branch",
+        env={"AIRFLOW_HOME": airflow_home},
+        external=True,
+    )
 
 
 @nox.session(python=["3.8"])
 def type_check(session: nox.Session) -> None:
     """Run MyPy checks."""
     session.install("poetry")
-    session.run("poetry", "install")
+    session.run("poetry", "install", "--with", "type_check")
     session.run("mypy", "--version")
     session.run("mypy")
 

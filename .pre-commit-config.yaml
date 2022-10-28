@@ -23,7 +23,7 @@ repos:
       - id: debug-statements
       - id: end-of-file-fixer
         # Exclude auto-generated example files from being changed
-        exclude: ^sql-cli/examples/_dags/|^sql-cli/examples/_target/
+        exclude: ^sql-cli/include/base/.airflow/dags
       - id: mixed-line-ending
       - id: trailing-whitespace
       - id: pretty-format-json
@@ -51,7 +51,7 @@ repos:
     hooks:
       - id: black
         # Exclude auto-generated example files from being changed
-        exclude: ^sql-cli/examples/_dags/
+        exclude: ^sql-cli/include/base/.airflow/dags
         args: ["--config", "./python-sdk/pyproject.toml"]
 
   - repo: https://github.com/asottile/blacken-docs
@@ -79,7 +79,7 @@ repos:
       - id: isort
         name: Run isort
         # Exclude auto-generated example files from being changed
-        exclude: ^sql-cli/examples/_dags/
+        exclude: ^sql-cli/include/base/.airflow/dags
         args:
           # These options are duplicated to known_first_party in .isort.cfg,
           # Please keep these in sync for now. (See comments there for details.)
@@ -90,13 +90,13 @@ repos:
           - -p=tests
           - -p=sql_cli
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.1
+    rev: v2.2.2
     hooks:
       - id: codespell
         name: Run codespell to check for common misspellings in files
         language: python
         types: [text]
-        exclude: ^mk/.*\.mk$|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$
+        exclude: ^mk/.*\.mk$|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$|^sql-cli/poetry.lock$
   -   repo: https://github.com/pre-commit/mirrors-mypy
       rev: 'v0.982'
       hooks:
@@ -110,12 +110,12 @@ repos:
         files: "^sql-cli/"
 
   -   repo: https://github.com/asottile/pyupgrade
-      rev: v3.0.0
+      rev: v3.1.0
       hooks:
       -   id: pyupgrade
           args: [--py37-plus]
           # Exclude auto-generated example files from being changed
-          exclude: ^sql-cli/examples/_dags/
+          exclude: ^sql-cli/include/base/.airflow/dags
 
   - repo: local
     hooks:

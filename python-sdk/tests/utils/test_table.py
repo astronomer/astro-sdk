@@ -2,8 +2,10 @@ from unittest import mock
 
 import pytest
 
+from astro.files import File
+from astro.sql import LoadFileOperator
 from astro.sql.operators.transform import TransformOperator
-from astro.table import BaseTable, Table
+from astro.table import BaseTable, Metadata, Table
 from astro.utils.table import find_first_table
 
 
@@ -89,3 +91,19 @@ def test_find_first_table(kwargs, return_type):
 @mock.patch("airflow.models.xcom_arg.PlainXComArg.resolve", return_value=Table())
 def test_find_first_table_with_xcom_arg(xcom_arg_resolve, kwargs, return_type):
     assert isinstance(find_first_table(context={}, **kwargs), return_type)
+
+
+@pytest.mark.integration
+def test_row_count():
+    """
+    Load file in bigquery and test the row count of bigquery table
+    """
+    imdb_table = LoadFileOperator(
+        task_id="load_file",
+        input_file=File(
+            path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
+        ),
+        output_table=Table(conn_id="gcp_conn", metadata=Metadata(schema="astro")),
+    ).execute({})
+
+    assert imdb_table.row_count > 0

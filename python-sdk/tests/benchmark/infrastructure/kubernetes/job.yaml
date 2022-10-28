@@ -14,10 +14,15 @@ spec:
         command: ["./run.sh"]
         resources:
           requests:
-            memory: 50Gi
+            memory: 16Gi
           limits:
-            memory: 64Gi
+            memory: 32Gi
       # Do not restart containers after they exit
       restartPolicy: Never
+
+      volumes:
+        - name: nfs
+          persistentVolumeClaim:
+            claimName: nfs
   # of retries before marking as failed.
   backoffLimit: 1

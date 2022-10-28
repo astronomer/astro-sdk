@@ -63,6 +63,7 @@ class BaseDatabase(ABC):
 
     def __init__(self, conn_id: str):
         self.conn_id = conn_id
+        self.sql: str | ClauseElement = ""
 
     def __repr__(self):
         return f'{self.__class__.__name__}(conn_id="{self.conn_id})'
@@ -113,8 +114,12 @@ class BaseDatabase(ABC):
             )
             sql = kwargs.get("sql_statement")  # type: ignore
 
+        # We need to autocommit=True to make sure the query runs. This is done exclusively for SnowflakeDatabase's
+        # truncate method to reflect changes.
         if isinstance(sql, str):
-            result = self.connection.execute(sqlalchemy.text(sql), parameters)
+            result = self.connection.execute(
+                sqlalchemy.text(sql).execution_options(autocommit=True), parameters
+            )
         else:
             result = self.connection.execute(sql, parameters)
         return result
@@ -183,21 +188,6 @@ class BaseDatabase(ABC):
         """
         raise NotImplementedError
 
-    def openlineage_dataset_namespace(self) -> str:
-        """
-        Returns the open lineage dataset namespace as per
-        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
-        """
-        airflow_conn = self.hook.get_connection(self.conn_id)
-        return f"{self.sql_type}://{airflow_conn.host}"
-
-    def openlineage_dataset_name(self, table: BaseTable) -> str:
-        """
-        Returns the open lineage dataset name as per
-        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
-        """
-        return self.get_table_qualified_name(table)
-
     def populate_table_metadata(self, table: BaseTable) -> BaseTable:
         """
         Given a table, check if the table has metadata.
@@ -248,7 +238,7 @@ class BaseDatabase(ABC):
         table: BaseTable,
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
-        columns_names_capitalization: ColumnCapitalization = "lower",  # skipcq
+        columns_names_capitalization: ColumnCapitalization = "original",  # skipcq
     ) -> None:
         """
         Create a SQL table, automatically inferring the schema using the given file.
@@ -569,7 +559,6 @@ class BaseDatabase(ABC):
     ) -> None:
         """
         Append the source table rows into a destination table.
-        The argument `if_conflicts` allows the user to define how to handle conflicts.
 
         :param source_table: Contains the rows to be appended to the target_table
         :param target_table: Contains the destination table in which the rows will be appended
@@ -591,8 +580,8 @@ class BaseDatabase(ABC):
         sel = select(source_columns).select_from(source_table_sqla)
         # TODO: We should fix the following Type Error
         # incompatible type List[ColumnClause[<nothing>]]; expected List[Column[Any]]
-        sql = insert(target_table_sqla).from_select(target_columns, sel)  # type: ignore[arg-type]
-        self.run_sql(sql=sql)
+        self.sql = insert(target_table_sqla).from_select(target_columns, sel)  # type: ignore[arg-type]
+        self.run_sql(sql=self.sql)
 
     def merge_table(
         self,
@@ -789,3 +778,17 @@ class BaseDatabase(ABC):
             source_file.location.location_type in self.FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED
         )
         return is_file_pattern_based_schema_autodetection_supported
+
+    def openlineage_dataset_name(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        raise NotImplementedError
+
+    def openlineage_dataset_namespace(self) -> str:
+        """
+        Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        raise NotImplementedError

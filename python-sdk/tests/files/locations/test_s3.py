@@ -1,6 +1,7 @@
 import os
 from unittest.mock import patch
 
+import pytest
 from botocore.client import BaseClient
 
 from astro.files.locations import create_file_location
@@ -25,10 +26,11 @@ def test_remote_object_store_prefix(remote_file):
     assert sorted(location.paths) == sorted(["s3://tmp/house1.csv", "s3://tmp/house2.csv"])
 
 
+@pytest.mark.integration
 def test_size():
-    """Test get_size() of for local file."""
-    location = create_file_location("s3://tmp/house2.csv")
-    assert location.size == -1
+    """Test get_size() of for S3 file."""
+    location = S3Location(path="s3://astro-sdk/imdb.csv", conn_id="aws_conn")
+    assert location.size > 0
 
 
 @patch.dict(
@@ -39,3 +41,15 @@ def test_parse_s3_env_var():
     key, secret = S3Location._parse_s3_env_var()
     assert key == "abcd"
     assert secret == "@#$%@$#ASDH@Ksd23%SD546"
+
+
+def test_transport_params_is_created_with_correct_endpoint():
+    """
+    Test that client is created with correct endpoint.
+
+    Note: if this testcase is failing upgrade your apache-airflow-providers-amazon >= 5.0.0
+    https://airflow.apache.org/docs/apache-airflow-providers-amazon/stable/index.html#id5
+    """
+    location = S3Location(path="s3://astro-sdk/imdb.csv", conn_id="minio_conn")
+    tp = location.transport_params["client"]
+    assert tp.meta.endpoint_url == "http://127.0.0.1:9000"

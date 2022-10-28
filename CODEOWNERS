@@ -1,1 +1,6 @@
-*       @dimberman @tatiana @utkarsharma2 @sunank200 @pankajastro @pankajkoti @feluelle
+# Order is important; the last matching pattern takes the most
+# precedence.
+
+*               @pankajastro @feluelle @tatiana @kaxil @utkarsharma2
+python-sdk/     @dimberman @tatiana @utkarsharma2 @sunank200 @pankajastro @pankajkoti @feluelle
+sql-cli/        @dimberman @tatiana @pankajastro @pankajkoti @feluelle

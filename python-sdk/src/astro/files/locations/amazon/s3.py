@@ -28,8 +28,7 @@ class S3Location(BaseFileLocation):
         """Structure s3fs credentials from Airflow connection.
         s3fs enables pandas to write to s3
         """
-        session = self.hook.get_session()
-        return {"client": session.client("s3")}
+        return {"client": self.hook.conn}
 
     @property
     def paths(self) -> list[str]:
@@ -43,7 +42,13 @@ class S3Location(BaseFileLocation):
 
     @property
     def size(self) -> int:
-        return -1
+        """Return file size for S3 location"""
+        url = urlparse(self.path)
+        bucket_name = url.netloc
+        object_name = url.path
+        if object_name.startswith("/"):
+            object_name = object_name[1:]
+        return self.hook.head_object(key=object_name, bucket_name=bucket_name).get("ContentLength") or -1
 
     @property
     def openlineage_dataset_namespace(self) -> str:

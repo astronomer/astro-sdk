@@ -20,5 +20,5 @@ We can use ``get_value_list`` when you want to execute a SQL query on a database
 Related references
 ~~~~~~~~~~~~~~~~~~
 
-- `Dynamic task mapping - Apache Airflow <https://airflow.apache.org/docs/apache-airflow/2.3.0/concepts/dynamic-task-mapping.html>`_
+- :external+airflow:doc:`Dynamic task mapping - Apache Airflow <concepts/dynamic-task-mapping>`
 - `Dynamic tasks - Astronomer <https://www.astronomer.io/guides/dynamic-tasks/>`_

@@ -2,7 +2,7 @@
 import os
 import pathlib
 from unittest import mock
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pandas as pd
 import pytest
@@ -156,7 +156,6 @@ def test_snowflake_create_table_using_native_schema_autodetection(
         {
             "database": Database.SNOWFLAKE,
             "table": Table(metadata=Metadata(schema=SCHEMA)),
-            "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
         },
     ],
     indirect=True,
@@ -196,14 +195,33 @@ def test_if_exist_param_of__load_pandas_dataframe_to_table(database_table_fixtur
 
     pandas_dataframe = pd.DataFrame(data={"id": [1, 2]})
 
-    with mock.patch("snowflake.connector.pandas_tools.write_pandas"):
-        with mock.patch("astro.databases.base.BaseDatabase.create_table") as method:
-            database.load_pandas_dataframe_to_table(pandas_dataframe, table, if_exists="replace")
-            method.assert_called_with(table, dataframe=pandas_dataframe)
+    with mock.patch("snowflake.connector.pandas_tools.write_pandas") as method:
+        database.load_pandas_dataframe_to_table(pandas_dataframe, table, if_exists="replace")
+        method.assert_called_with(
+            conn=ANY,
+            df=ANY,
+            table_name=ANY,
+            schema=ANY,
+            database=ANY,
+            chunk_size=ANY,
+            quote_identifiers=False,
+            auto_create_table=True,
+        )
 
-        with mock.patch("astro.databases.base.BaseDatabase.create_table") as method:
+    with mock.patch("astro.databases.base.BaseDatabase.table_exists") as table_exists:
+        table_exists.return_value = True
+        with mock.patch("snowflake.connector.pandas_tools.write_pandas") as method:
             database.load_pandas_dataframe_to_table(pandas_dataframe, table, if_exists="append")
-            assert not method.called
+            method.assert_called_with(
+                conn=ANY,
+                df=ANY,
+                table_name=ANY,
+                schema=ANY,
+                database=ANY,
+                chunk_size=ANY,
+                quote_identifiers=False,
+                auto_create_table=False,
+            )
 
 
 @pytest.mark.integration
@@ -627,3 +645,22 @@ def test_snowflake_file_format_create_unique_name():
     """
     snowflake_file_format = SnowflakeFileFormat(name="file_format", file_type="PARQUET")
     assert snowflake_file_format.name == "file_format"
+
+
+@pytest.mark.parametrize(
+    "cols_eval",
+    [
+        # {"cols": ["SELL", "LIST"], "expected_result": False},
+        {"cols": ["Sell", "list"], "expected_result": True},
+        {"cols": ["sell", "List"], "expected_result": True},
+        {"cols": ["sell", "lIst"], "expected_result": True},
+        {"cols": ["sEll", "list"], "expected_result": True},
+        {"cols": ["sell", "LIST"], "expected_result": False},
+        {"cols": ["sell", "list"], "expected_result": False},
+    ],
+)
+def test_use_quotes(cols_eval):
+    """
+    Verify the quotes addition only in case where we are having mixed case col names
+    """
+    assert SnowflakeDatabase.use_quotes(cols_eval["cols"]) == cols_eval["expected_result"]

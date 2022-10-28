@@ -87,7 +87,7 @@ class TestSnowflakeMerge(unittest.TestCase):
             "source_table": self.source_table_full_name,
         }
 
-    def test_merge_fun_ignore(self):
+    def test_merge_fun_ignore_with_lower_case(self):
         sql, parameters = self.snowflake_db._build_merge_sql(
             source_table=self.source_table,
             target_table=self.target_table,
@@ -104,6 +104,27 @@ class TestSnowflakeMerge(unittest.TestCase):
         assert parameters == {
             "merge_clause_target_0": f"{self.target_table_name}.sell",
             "merge_clause_source_0": f"{self.source_table_name}.sell",
+            "target_table": self.target_table_full_name,
+            "source_table": self.source_table_full_name,
+        }
+
+    def test_merge_fun_ignore_with_mixed_case(self):
+        sql, parameters = self.snowflake_db._build_merge_sql(
+            source_table=self.source_table,
+            target_table=self.target_table,
+            source_to_target_columns_map={"Sell": "Sell"},
+            target_conflict_columns=["Sell"],
+            if_conflicts="ignore",
+        )
+
+        assert (
+            sql == "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
+            "on Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0) "
+            f'when not matched then insert({self.target_table_name}."Sell") values ({self.source_table_name}."Sell")'
+        )
+        assert parameters == {
+            "merge_clause_target_0": f'{self.target_table_name}."Sell"',
+            "merge_clause_source_0": f'{self.source_table_name}."Sell"',
             "target_table": self.target_table_full_name,
             "source_table": self.source_table_full_name,
         }
