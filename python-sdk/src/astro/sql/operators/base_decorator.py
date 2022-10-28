@@ -202,10 +202,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         """
         input_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
         output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
-        if (
-                (not isinstance(self.output_table, TempTable))
-                or (isinstance(self.output_table, TempTable) and OPENLINEAGE_EMIT_TEMP_TABLE_EVENT)
-        ):
+        if self.output_table.openlineage_emit_temp_table_event():
             input_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
                 f"://{self.output_table.openlineage_dataset_name()}"
@@ -220,11 +217,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                     },
                 )
             ]
-
-        if (
-                (not isinstance(self.output_table, TempTable))
-                or (isinstance(self.output_table, TempTable) and OPENLINEAGE_EMIT_TEMP_TABLE_EVENT)
-        ):
+        if self.output_table.openlineage_emit_temp_table_event():
             output_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
                 f"://{self.output_table.openlineage_dataset_name()}"

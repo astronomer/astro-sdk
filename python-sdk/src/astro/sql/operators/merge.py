@@ -95,10 +95,7 @@ class MergeOperator(AstroSQLBaseOperator):
         """
         input_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
         output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
-        if (
-                (not isinstance(self.source_table, TempTable))
-                or (isinstance(self.source_table, TempTable) and OPENLINEAGE_EMIT_TEMP_TABLE_EVENT)
-        ):
+        if self.source_table.openlineage_emit_temp_table_event():
             input_uri = (
                 f"{self.source_table.openlineage_dataset_namespace()}"
                 f"://{self.source_table.openlineage_dataset_name()}"
@@ -131,10 +128,7 @@ class MergeOperator(AstroSQLBaseOperator):
                 )
             ]
 
-        if (
-                (not isinstance(self.target_table, TempTable))
-                or (isinstance(self.target_table, TempTable) and OPENLINEAGE_EMIT_TEMP_TABLE_EVENT)
-        ):
+        if self.target_table.openlineage_emit_temp_table_event():
             output_uri = (
                 f"{self.target_table.openlineage_dataset_namespace()}"
                 f"://{self.target_table.openlineage_dataset_name()}"
