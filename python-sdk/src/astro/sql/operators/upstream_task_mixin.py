@@ -1,5 +1,12 @@
 from airflow.exceptions import AirflowException
-from airflow.models.abstractoperator import AbstractOperator
+
+try:
+    # Airflow >= 2.3
+    from airflow.models.abstractoperator import AbstractOperator
+except ImportError:
+    # Airflow < 2.3
+    from airflow.models.baseoperator import BaseOperator as AbstractOperator
+
 from airflow.models.xcom_arg import XComArg
 
 
