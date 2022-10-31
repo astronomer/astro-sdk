@@ -44,10 +44,9 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
     ```shell
     export AIRFLOW_HOME=`pwd`
-    export AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
+    export AIRFLOW__CORE__XCOM_BACKEND=astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
     airflow db init
     ```
-
    > **Note:** `AIRFLOW__CORE__ENABLE_XCOM_PICKLING` no longer needs to be enabled for `astro-sdk-python`. This functionality is now deprecated as our custom xcom backend handles serialization.
 
     Currently, custom XCom backends are limited to data types that are json serializable. Since Dataframes are not json serializable, we need to enable XCom pickling to store dataframes.
@@ -146,21 +145,13 @@ The documentation is a work in progress--we aim to follow the [Diátaxis](https:
 - **[Reference guide](https://astro-sdk-python.readthedocs.io/)**: Commands, modules, classes and methods
 - **Explanation**: Clarification and discussion of key decisions when designing the project
 
-## Changelog
-
-The Astro Python SDK follows semantic versioning for releases. Check the [changelog](python-sdk/docs/CHANGELOG.md) for the latest changes.
-
-## Release managements
-
-To learn more about our release philosophy and steps, see [Managing Releases](python-sdk/docs/development/RELEASE.md).
-
 ## Contribution guidelines
 
 All contributions, bug reports, bug fixes, documentation improvements, enhancements, and ideas are welcome.
 
-Read the [Contribution Guideline](python-sdk/docs/development/CONTRIBUTING.md) for a detailed overview on how to contribute.
+Read the [Contribution Guideline](CONTRIBUTING.md) for a detailed overview on how to contribute.
 
-Contributors and maintainers should abide by the [Contributor Code of Conduct](python-sdk/docs/development/CODE_OF_CONDUCT.md).
+Contributors and maintainers should abide by the [Contributor Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
 

@@ -2,12 +2,12 @@
 
 Hi there! We're thrilled that you'd like to contribute to this project. Your help is essential for keeping it great.
 
-Please note that this project is released with a [Contributor Code of Conduct](./CODE_OF_CONDUCT.md).
+Please note that this project is released with a [Contributor Code of Conduct](CODE_OF_CONDUCT.md).
 By participating in this project you agree to abide by its terms.
 
 # Security
 
-If you found a security vulnerability, please, follow the [security guidelines](../getting-started/SECURITY.md).
+If you found a security vulnerability, please, follow the [security guidelines](SECURITY.md).
 
 # Issues, PRs & Discussions
 
@@ -22,7 +22,7 @@ If you have other questions, use [Github Discussions](https://github.com/astrono
 
 # Creating a local development
 
-Follow the steps described in [development](DEVELOPMENT.md).
+Follow the steps described in [development](python-sdk/docs/development/DEVELOPMENT.md).
 
 
 # Prepare PR
