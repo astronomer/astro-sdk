@@ -2,6 +2,7 @@ import os
 import pathlib
 from unittest import mock
 
+import airflow
 import pandas
 import pytest
 from airflow import DAG, AirflowException
@@ -200,6 +201,7 @@ def test_cleanup_default_all_tables(sample_dag, database_table_fixture, multiple
     assert not db.table_exists(table_2)
 
 
+@pytest.mark.skipif(airflow.__version__ < "2.3.0", reason="Require Airflow version >= 2.3.0")
 @pytest.mark.parametrize(
     "database_temp_table_fixture",
     SUPPORTED_DATABASES_OBJECTS,
@@ -225,6 +227,7 @@ def test_cleanup_mapped_task(sample_dag, database_temp_table_fixture):
     assert not db.table_exists(temp_table)
 
 
+@pytest.mark.skipif(airflow.__version__ < "2.3.0", reason="Require Airflow version >= 2.3.0")
 @pytest.mark.parametrize(
     "database_temp_table_fixture",
     SUPPORTED_DATABASES_OBJECTS,
