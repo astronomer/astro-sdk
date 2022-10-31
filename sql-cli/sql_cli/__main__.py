@@ -12,7 +12,9 @@ load_dotenv()
 app = typer.Typer(add_completion=False, context_settings={"help_option_names": ["-h", "--help"]})
 
 
-logging.getLogger("airflow").setLevel(logging.CRITICAL)
+airflow_logger = logging.getLogger("airflow")
+airflow_logger.setLevel(logging.CRITICAL)
+airflow_logger.propagate = False
 
 
 @app.command(help="Print the SQL CLI version.")
