@@ -113,9 +113,17 @@ def test_run_dag_with_skip(sample_dag, capsys):
     assert "Processing movie_ends... SUCCESS" in captured.out
 
 
-def test_run_dag(capsys):
+def test_run_dag(capsys, caplog):
     dag = get_dag(dag_id="example_dataframe", subdir=f"{CWD}/test_dag")
     run_dag(dag)
+    captured = capsys.readouterr()
+    assert "The worst month was" in captured.out
+    assert not any(record.name == "airflow.task" for record in caplog.records)
+
+
+def test_run_dag_verbose(capsys):
+    dag = get_dag(dag_id="example_dataframe", subdir=f"{CWD}/test_dag")
+    run_dag(dag, verbose=True)
     captured = capsys.readouterr()
     assert "The worst month was" in captured.out
 
