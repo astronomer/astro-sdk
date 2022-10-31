@@ -8,7 +8,15 @@ from airflow.decorators.base import get_unique_task_id
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.dagrun import DagRun
-from airflow.models.mappedoperator import MappedOperator
+
+try:
+    # Airflow >= 2.3
+    from airflow.models.mappedoperator import MappedOperator
+except ImportError:
+    # Airflow < 2.3
+    MappedOperator = None
+
+
 from airflow.models.taskinstance import TaskInstance
 from airflow.utils.state import State
 
@@ -213,7 +221,11 @@ class CleanupOperator(AstroSQLBaseOperator):
                     t = task.output.resolve(context)
                     if isinstance(t, BaseTable):
                         res.append(t)
-                elif isinstance(task, MappedOperator) and task.operator_class is LoadFileOperator:
+                elif (
+                    MappedOperator
+                    and isinstance(task, MappedOperator)
+                    and task.operator_class is LoadFileOperator
+                ):
                     for t in task.output.resolve(context):
                         if isinstance(t, BaseTable):
                             res.append(t)
