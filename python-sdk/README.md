@@ -60,42 +60,18 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
     ```shell
     # The sqlite_default connection has different host for MAC vs. Linux
-    export SQL_TABLE_NAME=`airflow connections get sqlite_default -o     yaml | grep host | awk '{print $2}'`
+    export SQL_TABLE_NAME=`airflow connections get sqlite_default -o yaml | grep host | awk '{print $2}'`
     sqlite3 "$SQL_TABLE_NAME" "VACUUM;"
     ```
 
 3. Copy the following workflow into a file named `calculate_popular_movies.py` and add it to the `dags` directory of your Airflow project:
 
-    ```Python
-    from datetime import datetime
-    from airflow import DAG
-    from astro import sql as aql
-    from astro.files import File
-    from astro.table import Table
+   https://github.com/astronomer/astro-sdk/blob/d5aa768b2d4bca72ef98f8d533fe3f99624b172f/example_dags/calculate_popular_movies.py#L1-L37
 
-    @aql.transform()
-    def top_five_animations(input_table: Table):
-        return """
-            SELECT title, rating
-            FROM {{input_table}}
-            WHERE genre1=='Animation'
-            ORDER BY rating desc
-            LIMIT 5;
-        """
-
-    with DAG(
-        "calculate_popular_movies",
-        schedule_interval=None,
-        start_date=datetime(2000, 1, 1),
-        catchup=False,
-    ) as dag:
-        imdb_src = File("https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv")
-        imdb_movies = Table(name="imdb_movies", conn_id="sqlite_default")
-        imdb_movies = aql.load_file(imdb_src, imdb_movies)
-
-        top_animations = Table(name="top_animation")
-        top_animations = top_five_animations(input_table=imdb_movies, output_table=top_animations)
-    ```
+   Alternatively, you can download `calculate_popular_movies.py`
+   ```shell
+    curl -O https://raw.githubusercontent.com/astronomer/astro-sdk/main/example_dags/calculate_popular_movies.py
+   ```
 
 4. Run the example DAG:
 
@@ -128,6 +104,7 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 | Postgres        |
 | Snowflake       |
 | SQLite          |
+| Amazon Redshift |
 
 | File types |
 |------------|
@@ -146,16 +123,16 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
 The following are some key functions available in the SDK:
 
-- `load_file`: Load a given file into a SQL table
-- `transform`: Applies a SQL select statement to a source table and saves the result to a destination table
-- `drop_table`: Drops a SQL table
-- `run_raw_sql`: Run any SQL statement without handling its output
-- `append`: Insert rows from the source SQL table into the destination SQL table, if there are no conflicts
-- `merge`: Insert rows from the source SQL table into the destination SQL table, depending on conflicts:
+- [`load_file`](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/load_file.html): Load a given file into a SQL table
+- [`transform`](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/transform.html): Applies a SQL select statement to a source table and saves the result to a destination table
+- [`drop_table`](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/drop_table.html): Drops a SQL table
+- [`run_raw_sql`](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/raw_sql.html): Run any SQL statement without handling its output
+- [`append`](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/append.html): Insert rows from the source SQL table into the destination SQL table, if there are no conflicts
+- [`merge`](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/merge.html): Insert rows from the source SQL table into the destination SQL table, depending on conflicts:
   - `ignore`: Do not add rows that already exist
   - `update`: Replace existing rows with new ones
-- `export_file`: Export SQL table rows into a destination file
-- `dataframe`: Export given SQL table into in-memory Pandas data-frame
+- [`export_file`](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/export.html): Export SQL table rows into a destination file
+- [`dataframe`](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/dataframe.html): Export given SQL table into in-memory Pandas data-frame
 
 For a full list of available operators, see the [SDK reference documentation](https://astro-sdk-python.readthedocs.io/en/stable/operators.html).
 
@@ -182,8 +159,8 @@ All contributions, bug reports, bug fixes, documentation improvements, enhanceme
 
 Read the [Contribution Guideline](./docs/development/CONTRIBUTING.md) for a detailed overview on how to contribute.
 
-Contributors and maintainers should abide by the [Contributor Code of Conduct](docs/development/CODE_OF_CONDUCT.md).
+Contributors and maintainers should abide by the [Contributor Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## License
 
-[Apache Licence 2.0](../LICENSE)
+[Apache Licence 2.0](LICENSE)
