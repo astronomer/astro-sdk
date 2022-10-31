@@ -121,7 +121,7 @@ def test_run_dag(capsys, caplog):
     assert not any(record.name == "airflow.task" for record in caplog.records)
 
 
-def test_run_dag_verbose(capsys, caplog):
+def test_run_dag_verbose(capsys):
     dag = get_dag(dag_id="example_dataframe", subdir=f"{CWD}/test_dag")
     run_dag(dag, verbose=True)
     captured = capsys.readouterr()
