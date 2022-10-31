@@ -91,7 +91,7 @@ with dag:
     aql.load_file(
         input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
         output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
-        use_native_support=False,
+        enable_native_fallback=False,
     )
     # [END load_file_example_7]
 
@@ -135,7 +135,7 @@ with dag:
     aql.load_file(
         input_file=File("s3://astro-sdk/sample_pattern", conn_id="aws_conn", filetype=FileType.CSV),
         output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
-        use_native_support=False,
+        enable_native_fallback=False,
     )
     # [END load_file_example_11]
 
@@ -147,7 +147,7 @@ with dag:
             filetype=FileType.CSV,
         ),
         output_table=Table(conn_id="bigquery", metadata=Metadata(schema="astro")),
-        use_native_support=False,
+        enable_native_fallback=False,
     )
     # [END load_file_example_12]
 
@@ -159,7 +159,7 @@ with dag:
             filetype=FileType.CSV,
         ),
         output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
-        use_native_support=False,
+        enable_native_fallback=False,
     )
     # [END load_file_example_13]
 
@@ -171,7 +171,7 @@ with dag:
             filetype=FileType.CSV,
         ),
         output_table=Table(conn_id="redshift_conn", metadata=Metadata(schema="astro")),
-        use_native_support=False,
+        enable_native_fallback=False,
     )
     # [END load_file_example_14]
 
@@ -211,7 +211,7 @@ with dag:
             "allow_jagged_rows": True,
             "skip_leading_rows": "1",
         },
-        enable_native_fallback=True,
+        enable_native_fallback=False,
     )
     # [END load_file_example_17]
 
