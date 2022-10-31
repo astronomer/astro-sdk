@@ -1,4 +1,5 @@
 import argparse
+import gc
 import inspect
 import json
 import os
@@ -200,3 +201,4 @@ if __name__ == "__main__":
         path=args.path,
         skip=args.skip,
     )
+    gc.collect()
