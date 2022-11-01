@@ -29,7 +29,7 @@ DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
 @retry(
     stop=stop_after_attempt(3),
-    retry=retry_if_exception_type(RETRY_ON_EXCEPTIONS),
+    retry=retry_if_exception_type(tuple(RETRY_ON_EXCEPTIONS)),
     wait=wait_exponential(multiplier=10, min=10, max=60),  # values in seconds
 )
 def wrapper_run_dag(dag):
