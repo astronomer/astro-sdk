@@ -184,7 +184,7 @@ def test_run_invalid(workflow_name, message, initialised_project_with_tests_work
             workflow_name,
             "--project-dir",
             initialised_project_with_tests_workflows.directory.as_posix(),
-            gen_dag
+            gen_dag,
         ],
     )
     assert result.exit_code == 1
