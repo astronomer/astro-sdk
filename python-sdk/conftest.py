@@ -3,6 +3,7 @@ import pathlib
 import random
 import string
 import uuid
+from copy import deepcopy
 
 import pytest
 import yaml
@@ -111,7 +112,28 @@ def schemas_fixture(request, database_table_fixture):
 
 
 @pytest.fixture
-def database_table_fixture(request):
+def database_fixture(request):
+    """
+    Given request.param in the format:
+        {
+            "database": Database.SQLITE,  # mandatory, may be any supported database
+        }
+    This fixture returns the following during setup:
+        database
+    Example:
+        astro.databases.sqlite.SqliteDatabase()
+    """
+    params = request.param
+
+    database_name = params["database"]
+    conn_id = DATABASE_NAME_TO_CONN_ID[database_name]
+    database = create_database(conn_id)
+
+    return database
+
+
+@pytest.fixture
+def database_table_fixture(request, database_fixture):
     """
     Given request.param in the format:
         {
@@ -127,55 +149,41 @@ def database_table_fixture(request):
     If the table exists, it is deleted during the tests setup and tear down.
     The table will only be created during setup if request.param contains the `file` parameter.
     """
-    params = request.param
-    file = params.get("file", None)
+    database = database_fixture
+    # We deepcopy the request param dictionary as we modify the table item directly.
+    params = deepcopy(request.param)
 
-    database_name = params["database"]
-    conn_id = DATABASE_NAME_TO_CONN_ID[database_name]
-    database = create_database(conn_id)
+    table = params.get("table", Table(conn_id=database.conn_id, metadata=database.default_metadata))
+    file = params.get("file")
 
-    table = params.get("table", Table(conn_id=conn_id, metadata=database.default_metadata))
-    table.conn_id = table.conn_id or conn_id
-    if table.metadata.is_empty():
-        table.metadata = database.default_metadata
+    database.populate_table_metadata(table)
     database.create_schema_if_needed(table.metadata.schema)
-
-    database.drop_table(table)
     if file:
-        database.load_file_to_table(file, table, {})
+        database.load_file_to_table(file, table)
     yield database, table
-
     database.drop_table(table)
 
 
 @pytest.fixture
-def database_temp_table_fixture(request):
+def database_temp_table_fixture(database_fixture):
     """
-    Given request.param in the format:
-        {
-            "database": Database.SQLITE,  # mandatory, may be any supported database
-        }
     This fixture yields the following during setup:
         (database, temp_table)
     Example:
         (astro.databases.sqlite.SqliteDatabase(), TempTable())
     """
-    params = request.param
+    database = database_fixture
 
-    database_name = params["database"]
-    conn_id = DATABASE_NAME_TO_CONN_ID[database_name]
-    database = create_database(conn_id)
+    temp_table = TempTable(conn_id=database.conn_id)
 
-    temp_table = TempTable(conn_id=conn_id, metadata=database.default_metadata)
+    database.populate_table_metadata(temp_table)
     database.create_schema_if_needed(temp_table.metadata.schema)
-
     yield database, temp_table
-
     database.drop_table(temp_table)
 
 
 @pytest.fixture
-def multiple_tables_fixture(request, database_table_fixture):
+def multiple_tables_fixture(request, database_fixture):
     """
     Given request.param in the format:
     {
@@ -191,21 +199,26 @@ def multiple_tables_fixture(request, database_table_fixture):
     For each table in the list, if the table exists, it is deleted during the tests setup and tear down.
     The table will only be created during setup if the item contains the "file" to be loaded to the table.
     """
-    database, _ = database_table_fixture
-    items = request.param.get("items", [])
-    tables_list = []
+    database = database_fixture
+    # We deepcopy the request param dictionary as we modify the table item directly.
+    params = deepcopy(request.param)
+
+    items = params.get("items", [])
+    tables = []
+
     for item in items:
         table = item.get("table", Table(conn_id=database.conn_id))
-        table = database.populate_table_metadata(table)
-        file = item.get("file", None)
-        database.drop_table(table)
+        file = item.get("file")
+
+        database.populate_table_metadata(table)
+        database.create_schema_if_needed(table.metadata.schema)
         if file:
-            database.load_file_to_table(file, table, {})
-        tables_list.append(table)
+            database.load_file_to_table(file, table)
+        tables.append(table)
 
-    yield tables_list if len(tables_list) > 1 else tables_list[0]
+    yield tables if len(tables) > 1 else tables[0]
 
-    for table in tables_list:
+    for table in tables:
         database.drop_table(table)
 
 

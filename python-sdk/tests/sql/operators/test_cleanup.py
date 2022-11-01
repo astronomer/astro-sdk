@@ -59,8 +59,8 @@ def test_cleanup_one_table(database_table_fixture):
 
 
 @pytest.mark.parametrize(
-    "database_table_fixture",
-    SUPPORTED_DATABASES_OBJECTS_WITH_FILE,
+    "database_fixture",
+    SUPPORTED_DATABASES_OBJECTS,
     indirect=True,
     ids=SUPPORTED_DATABASES,
 )
@@ -83,8 +83,8 @@ def test_cleanup_one_table(database_table_fixture):
     indirect=True,
     ids=["named_table"],
 )
-def test_cleanup_non_temp_table(database_table_fixture, multiple_tables_fixture):
-    db, _ = database_table_fixture
+def test_cleanup_non_temp_table(database_fixture, multiple_tables_fixture):
+    db = database_fixture
     test_table, test_temp_table = multiple_tables_fixture
     assert db.table_exists(test_table)
     assert db.table_exists(test_temp_table)

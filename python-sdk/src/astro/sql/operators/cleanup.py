@@ -28,6 +28,12 @@ from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import BaseTable, TempTable
 from astro.utils.typing_compat import Context
 
+OPERATOR_CLASSES_WITH_TABLE_OUTPUT = (
+    DataframeOperator,
+    BaseSQLDecoratedOperator,
+    LoadFileOperator,
+)
+
 
 def filter_for_temp_tables(task_outputs: list[Any]) -> list[TempTable]:
     return [t for t in task_outputs if isinstance(t, TempTable) and t.temp]
@@ -217,14 +223,14 @@ class CleanupOperator(AstroSQLBaseOperator):
         res = []
         for task in tasks:
             try:
-                if isinstance(task, (DataframeOperator, BaseSQLDecoratedOperator, LoadFileOperator)):
+                if isinstance(task, OPERATOR_CLASSES_WITH_TABLE_OUTPUT):
                     t = task.output.resolve(context)
                     if isinstance(t, BaseTable):
                         res.append(t)
                 elif (
                     MappedOperator
                     and isinstance(task, MappedOperator)
-                    and task.operator_class is LoadFileOperator
+                    and issubclass(task.operator_class, OPERATOR_CLASSES_WITH_TABLE_OUTPUT)
                 ):
                     for t in task.output.resolve(context):
                         if isinstance(t, BaseTable):
