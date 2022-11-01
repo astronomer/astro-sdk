@@ -130,4 +130,4 @@ def test_row_count(database_table_fixture):
         output_table=test_table,
     ).execute({})
 
-    assert imdb_table.row_count > 0
+    assert imdb_table.row_count == 117
