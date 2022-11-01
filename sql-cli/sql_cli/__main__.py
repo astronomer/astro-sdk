@@ -136,6 +136,47 @@ def run(
 
 @app.command(
     help="""
+    Run a workflow locally. This task assumes that there is a local airflow DB (can be a SQLite file), that has been
+    initialized with Airflow tables.
+    """
+)
+def test_dag(
+    dag_file: str = typer.Argument(
+        default=...,
+        show_default=False,
+        help="path to DAG file or directory",
+    ),
+    dag_id: str = typer.Argument(
+        default=...,
+        show_default=False,
+        help="file where the dag is",
+    ),
+) -> None:
+    from sql_cli.utils.airflow import (
+        get_dag,
+    )
+    from sql_cli.run_dag import run_dag
+    from sql_cli.exceptions import ConnectionFailed
+    from typer import Exit
+
+    dag = get_dag(dag_id=dag_id, subdir=dag_file, include_examples=False)
+    try:
+        dr = run_dag(dag)
+    except ConnectionFailed as connection_failed:
+        rprint(
+            f"  [bold red]{connection_failed}[/bold red] using connection [bold]{connection_failed.conn_id}[/bold]"
+        )
+        raise Exit(code=1)
+    except Exception as exception:
+        rprint(f"  [bold red]{exception}[/bold red]")
+        raise Exit(code=1)
+    rprint(f"Completed running the workflow {dr.dag_id}. 🚀")
+    elapsed_seconds = (dr.end_date - dr.start_date).microseconds / 10**6
+    rprint(f"Total elapsed time: [bold blue]{elapsed_seconds:.2}s[/bold blue]")
+
+
+@app.command(
+    help="""
     Initialise a project structure to write workflows using SQL files.
 
     \b\n
