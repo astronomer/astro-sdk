@@ -259,7 +259,7 @@ def load_op_arg_dataframes_into_sql(conn_id: str, op_args: tuple, target_table: 
     :return: New op_args, in which dataframes are replaced by tables
     """
     final_args = []
-    database = create_database(conn_id=conn_id)
+    database = create_database(conn_id=conn_id, table=target_table)
     for arg in op_args:
         if isinstance(arg, pd.DataFrame):
             database.load_pandas_dataframe_to_table(source_dataframe=arg, target_table=target_table)
@@ -282,7 +282,7 @@ def load_op_kwarg_dataframes_into_sql(conn_id: str, op_kwargs: dict, target_tabl
     :return: New op_kwargs, in which dataframes are replaced by tables
     """
     final_kwargs = {}
-    database = create_database(conn_id=conn_id)
+    database = create_database(conn_id=conn_id, table=target_table)
     for key, value in op_kwargs.items():
         if isinstance(value, pd.DataFrame):
             df_table = cast(BaseTable, target_table.create_similar_table())

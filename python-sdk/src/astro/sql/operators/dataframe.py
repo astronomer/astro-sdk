@@ -31,7 +31,7 @@ def _get_dataframe(
     """
     Exports records from a SQL table and converts it into a pandas dataframe
     """
-    database = create_database(table.conn_id)
+    database = create_database(table.conn_id, table=table)
     df = database.export_table_to_pandas_dataframe(source_table=table)
     df = convert_columns_names_capitalization(
         df=df, columns_names_capitalization=columns_names_capitalization
@@ -180,7 +180,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                     "function output."
                 )
             self.output_table.conn_id = self.output_table.conn_id or self.conn_id
-            db = create_database(self.output_table.conn_id)
+            db = create_database(self.output_table.conn_id, table=self.output_table)
             self.output_table = db.populate_table_metadata(self.output_table)
             db.load_pandas_dataframe_to_table(
                 source_dataframe=function_output,

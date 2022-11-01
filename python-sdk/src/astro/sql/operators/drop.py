@@ -31,7 +31,7 @@ class DropTableOperator(AstroSQLBaseOperator):
 
     def execute(self, context: Context) -> BaseTable:  # skipcq: PYL-W0613
         """Method run when the Airflow runner calls the operator."""
-        database = create_database(self.table.conn_id)
+        database = create_database(self.table.conn_id, self.table)
         self.table = database.populate_table_metadata(self.table)
         database.drop_table(self.table)
         return self.table
