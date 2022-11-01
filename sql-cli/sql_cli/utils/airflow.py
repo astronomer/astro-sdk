@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from airflow.models.dag import DAG
-from airflow.utils.cli import AirflowException, process_subdir, settings
 
 logger = logging.getLogger(__name__)
 
@@ -78,6 +77,8 @@ def _search_for_dag_file(val: str) -> str:
     And if the paths are different between worker and dag processor / scheduler, then we won't find
     the dag at the given location.
     """
+    from airflow import settings
+
     if val and Path(val).suffix in (".zip", ".py"):
         matches = list(Path(settings.DAGS_FOLDER).rglob(Path(val).name))
         if len(matches) == 1:
@@ -97,7 +98,10 @@ def get_dag(subdir: str, dag_id: str, include_examples: bool = False) -> DAG:
     find the correct path (assuming it's a file) and failing that, use the configured
     dags folder.
     """
+    from airflow import settings
+    from airflow.exceptions import AirflowException
     from airflow.models import DagBag
+    from airflow.utils.cli import process_subdir
 
     first_path = process_subdir(subdir)
     dagbag = DagBag(first_path, include_examples=include_examples)

@@ -16,9 +16,11 @@ from airflow.utils.session import NEW_SESSION, provide_session
 from airflow.utils.state import DagRunState, State
 from airflow.utils.types import DagRunType
 from rich import print as pprint
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.session import Session
 
 from astro.sql.operators.cleanup import AstroCleanupException
+from sql_cli.exceptions import ConnectionFailed
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
@@ -51,7 +53,7 @@ def run_dag(
     connections: dict[str, Connection] | None = None,
     verbose: bool = False,
     session: Session = NEW_SESSION,
-) -> None:
+) -> DagRun:
     """
     Execute one single DagRun for a given DAG and execution date.
 
@@ -61,8 +63,9 @@ def run_dag(
     :param conn_file_path: file path to a connection file in either yaml or json
     :param variable_file_path: file path to a variable file in either yaml or json
     :param session: database connection (optional)
-    """
 
+    :return: the dag run object
+    """
     execution_date = execution_date or timezone.utcnow()
     dag.log.debug("Clearing existing task instances for execution date %s", execution_date)
     dag.clear(
@@ -104,12 +107,10 @@ def run_dag(
                 add_logger_if_needed(dag, ti)
             ti.task = tasks[ti.task_id]
             _run_task(ti, session=session)
-    pprint(f"Completed running the workflow {dr.dag_id}: [bold yellow][{dr.state.upper()}][/bold yellow]")
-    elapsed_seconds = (dr.end_date - dr.start_date).microseconds / 10**6
-    pprint(f"Total elapsed time: [bold blue]{elapsed_seconds:.2}s[/bold blue]")
     if conn_file_path or variable_file_path or connections:
         # Remove the local variables we have added to the secrets_backend_list
         secrets_backend_list.pop(0)  # noqa
+    return dr
 
 
 def add_logger_if_needed(dag: DAG, ti: TaskInstance) -> None:
@@ -117,8 +118,8 @@ def add_logger_if_needed(dag: DAG, ti: TaskInstance) -> None:
     Add a formatted logger to the taskinstance so all logs are surfaced to the command line instead
     of into a task file. Since this is a local test run, it is much better for the user to see logs
     in the command line, rather than needing to search for a log file.
-    :param ti: The taskinstance that will receive a logger
 
+    :param ti: The taskinstance that will receive a logger
     """
     logging_format = logging.Formatter("[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s")
     handler = logging.StreamHandler(sys.stdout)
@@ -138,7 +139,7 @@ def _run_task(ti: TaskInstance, session: Session) -> None:
 
     :param ti: TaskInstance to run
     """
-    if ti.map_index >= 0:
+    if hasattr(ti, "map_index") and ti.map_index >= 0:
         pprint(f"Processing [bold yellow]{ti.task_id}[/bold yellow][{ti.map_index}]...", end=" ")
     else:
         pprint(f"Processing [bold yellow]{ti.task_id}[/bold yellow]...", end=" ")
@@ -149,8 +150,16 @@ def _run_task(ti: TaskInstance, session: Session) -> None:
         session.flush()
         session.commit()
         pprint("[bold green]SUCCESS[/bold green]")
+    except OperationalError as operational_exception:
+        pprint("[bold red]FAILED[/bold red]")
+        orig_exception = operational_exception.orig
+        orig_message = orig_exception.args[0]
+        raise ConnectionFailed(orig_message, conn_id=ti.task.conn_id) from orig_exception
     except AstroCleanupException:
         pprint("aql.cleanup async, continuing")
+    except Exception:
+        pprint("[bold red]FAILED[/bold red]")
+        raise
 
 
 def _get_or_create_dagrun(
@@ -164,15 +173,17 @@ def _get_or_create_dagrun(
     """
     Create a DAGRun, but only after clearing the previous instance of said dagrun to prevent collisions.
     This function is only meant for the `dag.test` function as a helper function.
+
     :param dag: Dag to be used to find dagrun
     :param conf: configuration to pass to newly created dagrun
     :param start_date: start date of new dagrun, defaults to execution_date
     :param execution_date: execution_date for finding the dagrun
     :param run_id: run_id to pass to new dagrun
     :param session: sqlalchemy session
+
     :return: the Dagrun object needed to run tasks.
     """
-    log.info("dagrun id: %s", dag.dag_id)
+    log.debug("dagrun id: %s", dag.dag_id)
     dr: DagRun = (
         session.query(DagRun)
         .filter(DagRun.dag_id == dag.dag_id, DagRun.execution_date == execution_date)
@@ -189,5 +200,4 @@ def _get_or_create_dagrun(
         session=session,
         conf=conf,  # type: ignore
     )
-    pprint(f"\nRunning the workflow [bold blue]{dag.dag_id}[/bold blue]\n")
     return dr

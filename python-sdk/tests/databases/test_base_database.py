@@ -9,13 +9,31 @@ from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.settings import SCHEMA
-from astro.table import Metadata, Table
+from astro.table import BaseTable, Metadata, Table
 
 CWD = pathlib.Path(__file__).parent
 
 
 class DatabaseSubclass(BaseDatabase):
     pass
+
+
+def test_openlineage_database_dataset_namespace():
+    """
+    Test the open lineage dataset namespace for base class
+    """
+    db = DatabaseSubclass(conn_id="fake_conn_id")
+    with pytest.raises(NotImplementedError):
+        db.openlineage_dataset_namespace()
+
+
+def test_openlineage_database_dataset_name():
+    """
+    Test the open lineage dataset names for the base class
+    """
+    db = DatabaseSubclass(conn_id="fake_conn_id")
+    with pytest.raises(NotImplementedError):
+        db.openlineage_dataset_name(table=BaseTable)
 
 
 def test_subclass_missing_not_implemented_methods_raise_exception():

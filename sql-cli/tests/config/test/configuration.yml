@@ -1,0 +1,7 @@
+connections:
+  - conn_id: sqlite_conn_invalid
+    conn_type: sqlite
+    host: data/imdb2.db
+    login:
+    password:
+    schema:

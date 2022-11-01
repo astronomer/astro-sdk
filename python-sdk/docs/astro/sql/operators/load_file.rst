@@ -260,6 +260,7 @@ Users can also load data from an HTTP API:
    :start-after: [START load_file_http_example]
    :end-before: [END load_file_http_example]
 
+
 Default Datasets
 ~~~~~~~~~~~~~~~~
 If you are using the Astro Python SDK version 1.1 or later, you do not need to make any code
@@ -278,3 +279,71 @@ For ``load_file`` operator,
 * Output Dataset - Target table of the operator.
 
 These Datasets can be used by Airflow 2.4 and above to show data dependencies between DAGs.
+
+
+Snowflake Identifier
+~~~~~~~~~~~~~~~~~~~~
+
+Table
+=====
+We are creating tables in uppercase. This has an impact when we run raw SQL queries. For example, if we create a table with the name ``customer`` or ``Customer`` or ``CUSTOMER``, in the query we have to use the uppercase or lowercase name ``CUSTOMER`` or ``customer`` without quotes. Example ``Select * from CUSTOMER`` or ``Select * from customer``.
+
+
+Columns
+=======
+
+When loading data to the snowflake table from a file there are three cases concerning column names
+
+* Uppercase: When all your column names are in uppercase
+* Lowercase: When all your column names are in uppercase
+* Mixed case: When your column names are like - ``List`` etc.
+
+Mixed
+-----
+* Run raw SQL
+
+    .. warning::
+        When we load data we are preserving the case by adding quotes to column names. We need to be aware of this behavior while running raw SQL queries.
+        With mixed columns, you will have to add quotes for all the column names. Like ``select "Name" from customer``.
+
+        Example -
+        if we try to load a below mentioned CSV File with load_file():
+
+        .. list-table::
+           :widths: auto
+
+           * - Name
+             - Age
+           * - John
+             - 20
+           * - Sam
+             - 30
+
+        When we run a SQL query we have to preserve the casing by passing the identifier in quotes. For example - ``SELECT "Name", "Age" FROM <table_name>``
+
+* Dataframes
+
+    There is no impact when we try to convert the table into a dataframe.
+
+Upper/Lower
+-----------
+* Run raw SQL
+
+    For upper or lowercase we don't have an impact, we can simply run queries without adding quotes around column names.
+
+* Dataframe
+
+    .. warning::
+       We will have lowercase col names even for uppercase names in the file. For example, if you have below mentioned file, which we load via ``load_file()`` operator.
+
+       .. list-table::
+          :widths: auto
+
+          * - NAME
+            - AGE
+          * - John
+            - 20
+          * - Sam
+            - 30
+
+       When we load this into a dataframe, you will get columns in lowercase - ``name`` and ``age``

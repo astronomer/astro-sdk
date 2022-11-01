@@ -7,7 +7,7 @@ from airflow.utils import timezone
 from astro import sql as aql
 from astro.table import Table
 
-PROJECT_DIRECTORY = Path(__file__).parent.parent.parent.as_posix()
+DAGS_FOLDER = Path(__file__).parent.as_posix()
 
 with DAG(
     dag_id="{{ dag.dag_id }}",

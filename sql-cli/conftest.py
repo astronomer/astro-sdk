@@ -1,9 +1,10 @@
 import random
+import shutil
 import string
 from pathlib import Path
 
 import pytest
-from airflow.models import DAG, DagRun, TaskInstance as TI
+from airflow.models import DAG, Connection, DagRun, TaskInstance as TI
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 
@@ -46,43 +47,38 @@ def dags_directory():
 
 
 @pytest.fixture()
-def target_directory():
-    return CWD / "tests" / ".airflow" / "dags" / "sql"
-
-
-@pytest.fixture()
-def sql_file(root_directory, target_directory):
+def sql_file(root_directory, dags_directory):
     return SqlFile(
         root_directory=root_directory,
         path=root_directory / "a.sql",
-        target_directory=target_directory,
+        target_directory=dags_directory,
     )
 
 
 @pytest.fixture()
-def sql_file_with_parameters(root_directory, target_directory):
+def sql_file_with_parameters(root_directory, dags_directory):
     return SqlFile(
         root_directory=root_directory,
         path=root_directory / "c.sql",
-        target_directory=target_directory,
+        target_directory=dags_directory,
     )
 
 
 @pytest.fixture()
-def sql_file_in_sub_directory(root_directory, target_directory):
+def sql_file_in_sub_directory(root_directory, dags_directory):
     return SqlFile(
         root_directory=root_directory,
         path=root_directory / "sub_dir" / "a.sql",
-        target_directory=target_directory,
+        target_directory=dags_directory,
     )
 
 
 @pytest.fixture()
-def sql_file_with_cycle(root_directory_cycle, target_directory):
+def sql_file_with_cycle(root_directory_cycle, dags_directory):
     return SqlFile(
         root_directory=root_directory_cycle,
         path=root_directory_cycle / "d.sql",
-        target_directory=target_directory,
+        target_directory=dags_directory,
     )
 
 
@@ -140,3 +136,29 @@ def initialised_project(tmp_path):
     proj = Project(tmp_path)
     proj.initialise()
     return proj
+
+
+@pytest.fixture()
+def initialised_project_with_test_config(initialised_project: Project):
+    shutil.copytree(
+        src=CWD / "tests" / "config" / "test",
+        dst=initialised_project.directory / "config" / "test",
+    )
+    return initialised_project
+
+
+@pytest.fixture()
+def connections():
+    return [
+        Connection(conn_id="sqlite_conn", conn_type="sqlite", host="data/imdb.db"),
+    ]
+
+
+@pytest.fixture()
+def initialised_project_with_tests_workflows(initialised_project: Project):
+    shutil.copytree(
+        src=CWD / "tests" / "workflows",
+        dst=initialised_project.directory / "workflows",
+        dirs_exist_ok=True,
+    )
+    return initialised_project

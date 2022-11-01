@@ -1,11 +1,15 @@
 import pathlib
+import sqlite3
 from unittest import mock
 
+import pytest
 from airflow.decorators import task
 from airflow.utils.cli import get_dag
 from airflow.utils.trigger_rule import TriggerRule
+from sqlalchemy.exc import OperationalError
 
 from astro import sql as aql
+from sql_cli.exceptions import ConnectionFailed
 from sql_cli.run_dag import _run_task, run_dag
 
 CWD = pathlib.Path(__file__).parent
@@ -20,6 +24,33 @@ def test_run_task_successfully(mock_session, mock_task_instance, capsys):
     mock_session.flush.assert_called_once()
     captured = capsys.readouterr()
     assert "SUCCESS" in captured.out
+
+
+@pytest.mark.parametrize(
+    "side_effect,exception",
+    [
+        (
+            OperationalError(
+                statement=mock.ANY,
+                params=mock.ANY,
+                orig=sqlite3.OperationalError("no such table: orders"),
+            ),
+            ConnectionFailed,
+        ),
+    ],
+)
+@mock.patch("airflow.models.taskinstance.TaskInstance")
+@mock.patch("airflow.settings.SASession")
+def test_run_task_failed(mock_session, mock_task_instance, capsys, side_effect, exception):
+    mock_task_instance.task.conn_id = "sqlite_conn"
+    mock_task_instance._run_raw_task.side_effect = side_effect
+    mock_task_instance.map_index = 0
+    with pytest.raises(exception):
+        _run_task(mock_task_instance, mock_session)
+    mock_task_instance._run_raw_task.assert_called_once()
+    mock_session.flush.assert_not_called()
+    captured = capsys.readouterr()
+    assert "FAILED" in captured.out
 
 
 def test_run_task_cleanup_log(sample_dag, capsys):
@@ -82,9 +113,17 @@ def test_run_dag_with_skip(sample_dag, capsys):
     assert "Processing movie_ends... SUCCESS" in captured.out
 
 
-def test_run_dag(capsys):
+def test_run_dag(capsys, caplog):
     dag = get_dag(dag_id="example_dataframe", subdir=f"{CWD}/test_dag")
     run_dag(dag)
+    captured = capsys.readouterr()
+    assert "The worst month was" in captured.out
+    assert not any(record.name == "airflow.task" for record in caplog.records)
+
+
+def test_run_dag_verbose(capsys):
+    dag = get_dag(dag_id="example_dataframe", subdir=f"{CWD}/test_dag")
+    run_dag(dag, verbose=True)
     captured = capsys.readouterr()
     assert "The worst month was" in captured.out
 

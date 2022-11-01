@@ -144,4 +144,4 @@ class SqliteDatabase(BaseDatabase):
         Example: /tmp/local.db
         """
         conn = self.hook.get_connection(self.conn_id)
-        return f"{conn.host}"
+        return f"{self.sql_type}://{conn.host}"

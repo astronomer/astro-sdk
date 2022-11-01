@@ -1,5 +1,6 @@
 # Changelog
-## 1.2.0b1
+
+## 1.2.0
 
 ### Feature:
 * Remove dependency on `AIRFLOW__CORE__ENABLE_XCOM_PICKLING`. Users can set new environment variables, namely `AIRFLOW__ASTRO_SDK__XCOM_STORAGE_CONN_ID` and `AIRFLOW__ASTRO_SDK__XCOM_STORAGE_URL` and use a custom XCOM backend namely, `AstroCustomXcomBackend` which enables the XCOM data to be saved to an S3 or GCS location. [#795](https://github.com/astronomer/astro-sdk/issues/795), [#997](https://github.com/astronomer/astro-sdk/pull/997)
@@ -11,12 +12,21 @@
 * Add the implementation for row count for `BaseTable`. [#1073](https://github.com/astronomer/astro-sdk/issues/1073)
 
 ### Improvement:
+* Improved handling of snowflake identifiers for smooth experience with `dataframe` and `run_raw_sql` and `load_file` operators. [#917](https://github.com/astronomer/astro-sdk/issues/917), [#1098](https://github.com/astronomer/astro-sdk/issues/1098)
 * Fix `transform_file` to not depend on `transform` decorator [#1004](https://github.com/astronomer/astro-sdk/pull/1004)
 * Set the CI to run and publish benchmark reports once a week [#443](https://github.com/astronomer/astro-sdk/issues/443)
 * Fix cyclic dependency and improve import time. Reduces the import time for `astro/databases/__init__.py` from 23.254 seconds to 0.062 seconds [#1013](https://github.com/astronomer/astro-sdk/pull/1013)
 
 ### Docs
 * Create GETTING_STARTED.md [#1036](https://github.com/astronomer/astro-sdk/pull/1036)
+* Document the Open Lineage facets published by Astro Python SDK. [#1086](https://github.com/astronomer/astro-sdk/issues/1086)
+* Documentation changes to specify permissions needed for running BigQuery jobs. [#896](https://github.com/astronomer/astro-sdk/issues/896)
+* Document the details on custom XCOM. [#1100](https://github.com/astronomer/astro-sdk/issues/1100)
+* Document the benchmarking process. [#1017](https://github.com/astronomer/astro-sdk/issues/1017)
+* Include a detailed description on the default Dataset concept in Astro Python SDK. [#1092](https://github.com/astronomer/astro-sdk/pull/1092)
+
+### Misc
+- NFS volume mount in Kubernetes to test benchmarking from local to databases. [#883](https://github.com/astronomer/astro-sdk/issues/883)
 
 ## 1.1.1
 

@@ -6,7 +6,7 @@ import os
 import random
 import string
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Sequence
 
 import pandas as pd
 from airflow.providers.snowflake.hooks.snowflake import SnowflakeHook
@@ -23,6 +23,8 @@ from snowflake.connector.errors import (
     RequestTimeoutError,
     ServiceUnavailableError,
 )
+from sqlalchemy import Column, column, insert, select
+from sqlalchemy.types import VARCHAR
 
 from astro import settings
 from astro.constants import (
@@ -36,7 +38,7 @@ from astro.constants import (
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
-from astro.settings import SNOWFLAKE_SCHEMA
+from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SNOWFLAKE_SCHEMA
 from astro.table import BaseTable, Metadata
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
@@ -475,35 +477,70 @@ class SnowflakeDatabase(BaseDatabase):
             },
         )
 
+    @classmethod
+    def use_quotes(cls, cols: Sequence[str]) -> bool:
+        """
+        With snowflake identifier we have two cases,
+
+        1. When Upper/Mixed case col names are used
+            We are required to preserver the text casing of the col names. By adding the quotes around identifier.
+        2. When lower case col names are used
+            We can use them as is
+
+        This is done to be in sync with Snowflake SQLAlchemy dialect.
+        https://docs.snowflake.com/en/user-guide/sqlalchemy.html#object-name-case-handling
+
+        Snowflake stores all case-insensitive object names in uppercase text. In contrast, SQLAlchemy considers all
+        lowercase object names to be case-insensitive. Snowflake SQLAlchemy converts the object name case during
+        schema-level communication (i.e. during table and index reflection). If you use uppercase object names,
+        SQLAlchemy assumes they are case-sensitive and encloses the names with quotes. This behavior will cause
+        mismatches against data dictionary data received from Snowflake, so unless identifier names have been truly
+        created as case sensitive using quotes (e.g. "TestDb"), all lowercase names should be used on the SQLAlchemy
+        side.
+
+        :param cols: list of columns
+        """
+        return any(col for col in cols if not col.islower() and not col.isupper())
+
     def create_table_using_schema_autodetection(
         self,
         table: BaseTable,
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
-        columns_names_capitalization: ColumnCapitalization = "lower",
+        columns_names_capitalization: ColumnCapitalization = "original",
     ) -> None:
         """
         Create a SQL table, automatically inferring the schema using the given file.
+        Overriding default behaviour and not using the `prep_table` since it doesn't allow the adding quotes.
 
         :param table: The table to be created.
         :param file: File used to infer the new table columns.
         :param dataframe: Dataframe used to infer the new table columns if there is no file
         """
+        if file is None:
+            if dataframe is None:
+                raise ValueError(
+                    "File or Dataframe is required for creating table using schema autodetection"
+                )
+            source_dataframe = dataframe
+        else:
+            source_dataframe = file.export_to_dataframe(nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT)
 
-        # Snowflake don't expect mixed case col names like - 'Title' or 'Category'
-        # we explicitly convert them to lower case, if not provided by user
-        if columns_names_capitalization not in ["lower", "upper"]:
-            columns_names_capitalization = "lower"
-
-        if file:
-            dataframe = file.export_to_dataframe(
-                nrows=settings.LOAD_TABLE_AUTODETECT_ROWS_COUNT,
-                columns_names_capitalization=columns_names_capitalization,
-            )
-
-        # Snowflake doesn't handle well mixed capitalisation of column name chars
-        # we are handling this more gracefully in a separate PR
-        super().create_table_using_schema_autodetection(table, dataframe=dataframe)
+        # We are changing the case of table name to ease out on the requirements to add quotes in raw queries.
+        # ToDO - Currently, we cannot to append using load_file to a table name which is having name in lower case.
+        pandas_tools.write_pandas(
+            conn=self.hook.get_conn(),
+            df=source_dataframe,
+            table_name=table.name.upper(),
+            schema=table.metadata.schema,
+            database=table.metadata.database,
+            chunk_size=DEFAULT_CHUNK_SIZE,
+            quote_identifiers=self.use_quotes(source_dataframe),
+            auto_create_table=True,
+        )
+        # We are truncating since we only expect table to be created with required schema.
+        # Since this method is used by both native and pandas path we cannot skip this step.
+        self.truncate_table(table)
 
     def is_native_load_file_available(self, source_file: File, target_table: BaseTable) -> bool:
         """
@@ -579,17 +616,22 @@ class SnowflakeDatabase(BaseDatabase):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
-        if if_exists == "replace":
-            self.create_table(target_table, dataframe=source_dataframe)
 
+        auto_create_table = False
+        if if_exists == "replace" or not self.table_exists(target_table):
+            auto_create_table = True
+
+        # We are changing the case of table name to ease out on the requirements to add quotes in raw queries.
+        # ToDO - Currently, we cannot to append using load_file to a table name which is having name in lower case.
         pandas_tools.write_pandas(
             conn=self.hook.get_conn(),
             df=source_dataframe,
-            table_name=target_table.name,
+            table_name=target_table.name.upper(),
             schema=target_table.metadata.schema,
             database=target_table.metadata.database,
             chunk_size=chunk_size,
-            quote_identifiers=False,
+            quote_identifiers=self.use_quotes(source_dataframe),
+            auto_create_table=auto_create_table,
         )
 
     def get_sqlalchemy_template_table_identifier_and_parameter(
@@ -702,6 +744,14 @@ class SnowflakeDatabase(BaseDatabase):
         source_cols = source_to_target_columns_map.keys()
         target_cols = source_to_target_columns_map.values()
 
+        target_identifier_enclosure = ""
+        if self.use_quotes(list(target_cols)):
+            target_identifier_enclosure = '"'
+
+        source_identifier_enclosure = ""
+        if self.use_quotes(list(source_cols)):
+            source_identifier_enclosure = '"'
+
         (
             source_table_identifier,
             source_table_param,
@@ -717,11 +767,13 @@ class SnowflakeDatabase(BaseDatabase):
         )
 
         merge_target_dict = {
-            f"merge_clause_target_{i}": f"{target_table_name}.{x}"
+            f"merge_clause_target_{i}": f"{target_table_name}."
+            f"{target_identifier_enclosure}{x}{target_identifier_enclosure}"
             for i, x in enumerate(target_conflict_columns)
         }
         merge_source_dict = {
-            f"merge_clause_source_{i}": f"{source_table_name}.{x}"
+            f"merge_clause_source_{i}": f"{source_table_name}."
+            f"{source_identifier_enclosure}{x}{source_identifier_enclosure}"
             for i, x in enumerate(target_conflict_columns)
         }
         statement = statement.replace(
@@ -744,7 +796,8 @@ class SnowflakeDatabase(BaseDatabase):
             statement += " when matched then UPDATE SET {merge_vals}"
             merge_statement = ",".join(
                 [
-                    f"{target_table_name}.{t}={source_table_name}.{s}"
+                    f"{target_table_name}.{target_identifier_enclosure}{t}{target_identifier_enclosure}="
+                    f"{source_table_name}.{source_identifier_enclosure}{s}{source_identifier_enclosure}"
                     for s, t in source_to_target_columns_map.items()
                 ]
             )
@@ -752,11 +805,17 @@ class SnowflakeDatabase(BaseDatabase):
         statement += " when not matched then insert({target_columns}) values ({append_columns})"
         statement = statement.replace(
             "{target_columns}",
-            ",".join(f"{target_table_name}.{t}" for t in target_cols),
+            ",".join(
+                f"{target_table_name}.{target_identifier_enclosure}{t}{target_identifier_enclosure}"
+                for t in target_cols
+            ),
         )
         statement = statement.replace(
             "{append_columns}",
-            ",".join(f"{source_table_name}.{s}" for s in source_cols),
+            ",".join(
+                f"{source_table_name}.{source_identifier_enclosure}{s}{source_identifier_enclosure}"
+                for s in source_cols
+            ),
         )
         params = {
             **merge_target_dict,
@@ -765,6 +824,67 @@ class SnowflakeDatabase(BaseDatabase):
             "target_table": target_table_param,
         }
         return statement, params
+
+    def append_table(
+        self,
+        source_table: BaseTable,
+        target_table: BaseTable,
+        source_to_target_columns_map: dict[str, str],
+    ) -> None:
+        """
+        Append the source table rows into a destination table.
+
+        Overriding the base method since we need to add quotes around the identifiers for
+         snowflake to preserve case of cols - Column(name=col, quote=True)
+
+        :param source_table: Contains the rows to be appended to the target_table
+        :param target_table: Contains the destination table in which the rows will be appended
+        :param source_to_target_columns_map: Dict of source_table columns names to target_table columns names
+        """
+        target_table_sqla = self.get_sqla_table(target_table)
+        source_table_sqla = self.get_sqla_table(source_table)
+        use_quotes_target_table = self.use_quotes(target_table_sqla.columns.keys())
+        use_quotes_source_table = self.use_quotes(source_table_sqla.columns.keys())
+        target_columns: list[column]
+        source_columns: list[column]
+
+        if not source_to_target_columns_map:
+            target_columns = [
+                Column(name=col.name, quote=use_quotes_target_table, type_=col.type)
+                for col in target_table_sqla.c.values()
+            ]
+            source_columns = target_columns
+        else:
+            # We are adding the VARCHAR in Column(name=col, quote=True, type_=VARCHAR) as a placeholder since the
+            # Column object requires it. It has no effect on the final query generated.
+            target_columns = [
+                Column(name=col, quote=use_quotes_target_table, type_=VARCHAR)
+                for col in source_to_target_columns_map.keys()
+            ]
+            source_columns = [
+                Column(name=col, quote=use_quotes_source_table, type_=VARCHAR)
+                for col in source_to_target_columns_map.keys()
+            ]
+
+        sel = select(source_columns).select_from(source_table_sqla)
+        # TODO: We should fix the following Type Error
+        # incompatible type List[ColumnClause[<nothing>]]; expected List[Column[Any]]
+        sql = insert(target_table_sqla).from_select(target_columns, sel)  # type: ignore[arg-type]
+        self.run_sql(sql=sql)
+
+    @classmethod
+    def get_merge_initialization_query(cls, parameters: tuple) -> str:
+        """
+        Handles database-specific logic to handle constraints, keeping
+        it agnostic to database.
+        """
+        identifier_enclosure = ""
+        if cls.use_quotes(parameters):
+            identifier_enclosure = '"'
+
+        constraints = ",".join([f"{identifier_enclosure}{p}{identifier_enclosure}" for p in parameters])
+        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (%s)" % constraints
+        return sql
 
     def openlineage_dataset_name(self, table: BaseTable) -> str:
         """
@@ -786,6 +906,10 @@ class SnowflakeDatabase(BaseDatabase):
         """
         account = self.hook.get_connection(self.conn_id).extra_dejson.get("account")
         return f"{self.sql_type}://{account}"
+
+    def truncate_table(self, table):
+        """Truncate table"""
+        self.run_sql(f"TRUNCATE {self.get_table_qualified_name(table)}")
 
 
 def wrap_identifier(inp: str) -> str:

@@ -6,8 +6,24 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from airflow.models.connection import Connection
 
 from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME
+
+
+def convert_to_connection(conn: dict[str, Any]) -> Connection:
+    """
+    Convert the SQL CLI connection dictionary into an Airflow Connection instance.
+
+    :param conn: SQL CLI connection dictionary
+    :returns: Connection object
+    """
+    from airflow.api_connexion.schemas.connection_schema import connection_schema
+
+    c = conn.copy()
+    c["connection_id"] = c["conn_id"]
+    c.pop("conn_id")
+    return Connection(**connection_schema.load(c))
 
 
 @dataclass
@@ -18,7 +34,8 @@ class Config:
 
     project_dir: Path
     environment: str
-    connections: list[dict[str, Any]] = field(default_factory=list)
+
+    connections: list[dict[str, Connection]] = field(default_factory=list)
     airflow_home: str | None = None
     airflow_dags_folder: str | None = None
 
@@ -95,8 +112,10 @@ class Config:
         """
         yaml_config = self.from_yaml_to_dict()
         yaml_config["connections"] = self.connections
-        yaml_config["airflow_home"] = self.airflow_home
-        yaml_config["airflow_dags_folder"] = self.airflow_dags_folder
+        if self.airflow_home:
+            yaml_config["airflow"]["home"] = self.airflow_home
+        if self.airflow_dags_folder:
+            yaml_config["airflow"]["dags_folder"] = self.airflow_dags_folder
         filepath = self.get_filepath()
         with open(filepath, "w") as fp:
             yaml.dump(yaml_config, fp)
