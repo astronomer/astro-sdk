@@ -1,8 +1,8 @@
 from pathlib import Path
 
 import pytest
-
 from conftest import DEFAULT_DATE
+
 from sql_cli.dag_generator import SqlFilesDAG, generate_dag
 from sql_cli.exceptions import DagCycle, EmptyDag, SqlFilesDirectoryNotFound
 

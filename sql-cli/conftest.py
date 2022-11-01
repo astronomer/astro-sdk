@@ -7,8 +7,8 @@ import pytest
 from airflow.models import DAG, Connection, DagRun, TaskInstance as TI
 from airflow.utils import timezone
 from airflow.utils.session import create_session
-from astro.table import MAX_TABLE_NAME_LENGTH
 
+from astro.table import MAX_TABLE_NAME_LENGTH
 from sql_cli.dag_generator import SqlFilesDAG
 from sql_cli.project import Project
 from sql_cli.sql_directory_parser import SqlFile
@@ -162,4 +162,3 @@ def initialised_project_with_tests_workflows(initialised_project: Project):
         dirs_exist_ok=True,
     )
     return initialised_project
-
