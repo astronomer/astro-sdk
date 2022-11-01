@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from astro.sql.operators.transform import TransformOperator
 
 
-def to_transform_task_list(sql_files: list[SqlFile]) -> list[TransformOperator]:
+def to_task_list(sql_files: list[SqlFile]) -> list[TransformOperator]:
     """
     Converts the list of SQL Files into a list of TranformOperator tasks
     that all have proper dependencies set.
@@ -41,4 +41,4 @@ def render_tasks(directory: Path) -> list[TransformOperator]:
     if not directory.exists():
         raise SqlFilesDirectoryNotFound("The directory does not exist!")
     sql_files: list[SqlFile] = sorted(get_sql_files(directory, target_directory=None))
-    return to_transform_task_list(sql_files)
+    return to_task_list(sql_files)

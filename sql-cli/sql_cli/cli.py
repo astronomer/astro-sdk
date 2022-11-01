@@ -17,22 +17,13 @@ from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, SqlFilesDir
 from sql_cli.project import Project
 
 
-def generate_dag(project: Project, env: str, workflow_name: str, gen_dag: bool = False) -> Path:
+def generate_dag(project: Project, env: str, workflow_name: str, generate_tasks: bool = False) -> Path:
     rprint(
         f"\nGenerating the DAG file from workflow [bold blue]{workflow_name}[/bold blue]"
         f" for [bold]{env}[/bold] environment..\n"
     )
     try:
-        if not gen_dag:
-            dag_file = dag_generator.generate_render_dag(
-                directory=project.directory / project.workflows_directory / workflow_name,
-                dags_directory=project.airflow_dags_folder,
-            )
-        else:
-            dag_file = dag_generator.generate_dag(
-                directory=project.directory / project.workflows_directory / workflow_name,
-                dags_directory=project.airflow_dags_folder,
-            )
+        dag_file = _generate_dag_file(generate_tasks, project, workflow_name)
     except EmptyDag:
         rprint(f"[bold red]The workflow {workflow_name} does not have any SQL files![/bold red]")
         raise Exit(code=1)
@@ -48,6 +39,20 @@ def generate_dag(project: Project, env: str, workflow_name: str, gen_dag: bool =
         all_errors = "\n\n".join(list(import_errors.values()))
         rprint(f"[bold red]Workflow failed to render[/bold red]\n errors found:\n\n {all_errors}")
         raise Exit(code=1)
+    return dag_file
+
+
+def _generate_dag_file(generate_tasks, project, workflow_name):
+    if not generate_tasks:
+        dag_file = dag_generator.generate_render_dag(
+            directory=project.directory / project.workflows_directory / workflow_name,
+            dags_directory=project.airflow_dags_folder,
+        )
+    else:
+        dag_file = dag_generator.generate_dag(
+            directory=project.directory / project.workflows_directory / workflow_name,
+            dags_directory=project.airflow_dags_folder,
+        )
     return dag_file
 
 

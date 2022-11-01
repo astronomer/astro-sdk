@@ -108,7 +108,9 @@ def run(
     project_dir: Path = typer.Option(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
-    gen_dag: bool = typer.Option(default=False, help="whether to generate a DAG file", show_default=True),
+    generate_tasks: bool = typer.Option(default=False, help="whether to explicitly generate the tasks in your SQL CLI "
+                                                            "DAG. By default we will keep the DAGs smaller and read SQL"
+                                                            "files at runtime", show_default=True),
     verbose: bool = typer.Option(False, help="Whether to show airflow logs", show_default=True),
 ) -> None:
     from sql_cli import cli
@@ -133,7 +135,7 @@ def run(
         project=project,
         workflow_name=workflow_name,
         env=env,
-        gen_dag=gen_dag,
+        generate_tasks=generate_tasks,
     )
     dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
     rprint(f"\nRunning the workflow [bold blue]{dag.dag_id}[/bold blue] for [bold]{env}[/bold] environment\n")
