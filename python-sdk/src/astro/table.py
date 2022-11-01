@@ -176,6 +176,10 @@ class BaseTable:
         return database.openlineage_dataset_namespace()
 
     def openlineage_emit_temp_table_event(self):
+        """
+        Based on airflow config ```OPENLINEAGE_EMIT_TEMP_TABLE_EVENT``` value and table type
+        check whether to emit temp table event in openlineage or not
+        """
         return (not isinstance(self, TempTable)) or (
             isinstance(self, TempTable) and OPENLINEAGE_EMIT_TEMP_TABLE_EVENT
         )

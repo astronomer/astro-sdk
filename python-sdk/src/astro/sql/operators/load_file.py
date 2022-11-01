@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import typing
 from typing import Any
 
 import pandas as pd
@@ -185,7 +184,6 @@ class LoadFileOperator(AstroSQLBaseOperator):
 
         return normalize_config
 
-    @typing.no_type_check
     def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:  # skipcq: PYL-W0613
         """
         Returns the lineage data
@@ -227,7 +225,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         ]
 
         output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
-        if self.output_table.openlineage_emit_temp_table_event():
+        if self.output_table is not None and self.output_table.openlineage_emit_temp_table_event():
             output_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
                 f"://{self.output_table.openlineage_dataset_name()}"
