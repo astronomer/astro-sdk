@@ -27,7 +27,7 @@ from astro.table import Metadata
 
 log = logging.getLogger(__name__)
 
-DEFAULT_DATE = timezone.datetime(2016, 1, 1)
+DEFAULT_DATE = timezone.utcnow()
 
 SQL_SERVER_HOOK_PARAMETERS = {
     "snowflake": {
