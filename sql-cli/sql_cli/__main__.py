@@ -148,23 +148,12 @@ def run(
         raise typer.Exit(code=1)
     dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
     rprint(f"\nRunning the workflow [bold blue]{dag.dag_id}[/bold blue] for [bold]{env}[/bold] environment\n")
-    dr = run_dag(
-        dag,
-        run_conf=project.airflow_config,
-        connections={c.conn_id: c for c in project.connections},
+    cli.run_dag(
+        project=project,
+        env=env,
+        dag=dag,
         verbose=verbose,
     )
-    rprint(f"Completed running the workflow {dr.dag_id}. 🚀")
-    final_state = None
-    if dr.state == State.SUCCESS:
-        final_state = "[bold green]SUCCESS[/bold green]"
-    elif final_state == State.FAILED:
-        final_state = "[bold red]FAILED[/bold red]"
-    else:
-        final_state = dr.state
-    rprint(f"Final state: {final_state}")
-    elapsed_seconds = (dr.end_date - dr.start_date).microseconds / 10**6
-    rprint(f"Total elapsed time: [bold blue]{elapsed_seconds:.2}s[/bold blue]")
 
 
 @app.command(

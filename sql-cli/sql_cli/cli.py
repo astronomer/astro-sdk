@@ -12,6 +12,9 @@ from typer import Exit
 from sql_cli import dag_generator, run_dag as dag_runner
 from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, SqlFilesDirectoryNotFound
 from sql_cli.project import Project
+from airflow.utils.state import State
+from airflow.models.dagbag import DagBag
+from airflow.utils.cli import process_subdir
 
 
 def generate_dag(project: Project, env: str, workflow_name: str, gen_dag: bool = False) -> Path:
@@ -40,6 +43,11 @@ def generate_dag(project: Project, env: str, workflow_name: str, gen_dag: bool =
         rprint(f"[bold red]The workflow {workflow_name} contains a cycle! {dag_cycle}[/bold red]")
         raise Exit(code=1)
     rprint("The DAG file", dag_file.resolve(), "has been successfully generated. 🎉")
+    import_errors = DagBag(process_subdir(str(dag_file))).import_errors
+    if import_errors:
+        all_errors = "\n\n".join(list(import_errors.values()))
+        rprint(f"[bold red]Workflow failed to render[/bold red]\n errors found:\n\n {all_errors}")
+        raise Exit(code=1)
     return dag_file
 
 
@@ -63,5 +71,16 @@ def run_dag(project: Project, env: str, dag: DAG, verbose: bool) -> None:
         rprint(f"  [bold red]{exception}[/bold red]")
         raise Exit(code=1)
     rprint(f"Completed running the workflow {dr.dag_id}. 🚀")
+    final_state = None
+    if dr.state == State.SUCCESS:
+        final_state = "[bold green]SUCCESS[/bold green]"
+    elif final_state == State.FAILED:
+        final_state = "[bold red]FAILED[/bold red]"
+    else:
+        final_state = dr.state
+    rprint(f"Final state: {final_state}")
+    elapsed_seconds = (dr.end_date - dr.start_date).microseconds / 10**6
+    rprint(f"Total elapsed time: [bold blue]{elapsed_seconds:.2}s[/bold blue]")
+
     elapsed_seconds = (dr.end_date - dr.start_date).microseconds / 10**6
     rprint(f"Total elapsed time: [bold blue]{elapsed_seconds:.2}s[/bold blue]")

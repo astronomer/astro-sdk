@@ -22,6 +22,8 @@ def to_transform_task_list(sql_files: list[SqlFile]) -> list[TransformOperator]:
     param_dict = {s.path.stem: s.to_transform_operator() for s in sql_files}
     for s in sql_files:
         for p in s.get_parameters():
+            if not param_dict.get(p):
+                raise ValueError(f"variable '{p}' is undefined in file {s.path.stem}")
             param_dict[s.path.stem].parameters[p] = param_dict[p].output
             param_dict[s.path.stem].set_upstream(param_dict[p])
     return list(param_dict.values())

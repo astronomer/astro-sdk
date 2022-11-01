@@ -175,7 +175,8 @@ def test_run(workflow_name, environment, initialised_project, gen_dag):
         "example_templating",
     ],
 )
-def test_run_invalid(workflow_name, message, initialised_project_with_tests_workflows):
+@pytest.mark.parametrize("gen_dag", ["--gen-dag", "--no-gen-dag"])
+def test_run_invalid(workflow_name, message, initialised_project_with_tests_workflows, gen_dag):
     result = runner.invoke(
         app,
         [
@@ -183,6 +184,7 @@ def test_run_invalid(workflow_name, message, initialised_project_with_tests_work
             workflow_name,
             "--project-dir",
             initialised_project_with_tests_workflows.directory.as_posix(),
+            gen_dag
         ],
     )
     assert result.exit_code == 1
