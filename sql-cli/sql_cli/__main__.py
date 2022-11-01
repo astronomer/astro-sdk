@@ -133,19 +133,12 @@ def run(
     # decide this during runtime, depending on the project path and SQL CLI configuration.
     airflow_meta_conn = retrieve_airflow_database_conn_from_config(project.directory / project.airflow_home)
     set_airflow_database_conn(airflow_meta_conn)
-    try:
-        dag_file = cli.generate_dag(
-            project=project,
-            workflow_name=workflow_name,
-            env=env,
-            gen_dag=gen_dag,
-        )
-    except EmptyDag:
-        rprint("[bold red]The workflow does not have any SQL files![/bold red]")
-        raise typer.Exit(code=1)
-    except SqlFilesDirectoryNotFound:
-        rprint(f"[bold red]The workflow {workflow_name} does not exist![/bold red]")
-        raise typer.Exit(code=1)
+    dag_file = cli.generate_dag(
+        project=project,
+        workflow_name=workflow_name,
+        env=env,
+        gen_dag=gen_dag,
+    )
     dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
     rprint(f"\nRunning the workflow [bold blue]{dag.dag_id}[/bold blue] for [bold]{env}[/bold] environment\n")
     cli.run_dag(
