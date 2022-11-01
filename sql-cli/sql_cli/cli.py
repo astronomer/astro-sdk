@@ -6,15 +6,15 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from airflow.models import DAG  # pragma: no cover
 
+from airflow.models.dagbag import DagBag
+from airflow.utils.cli import process_subdir
+from airflow.utils.state import State
 from rich import print as rprint
 from typer import Exit
 
 from sql_cli import dag_generator, run_dag as dag_runner
 from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, SqlFilesDirectoryNotFound
 from sql_cli.project import Project
-from airflow.utils.state import State
-from airflow.models.dagbag import DagBag
-from airflow.utils.cli import process_subdir
 
 
 def generate_dag(project: Project, env: str, workflow_name: str, gen_dag: bool = False) -> Path:
