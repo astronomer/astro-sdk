@@ -143,3 +143,21 @@ or by updating Airflow's configuration
 
    [astro_sdk]
    openlineage_emit_temp_table_event = True
+
+
+Configuring the native fallback mechanism
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Astro SDK ``LoadFileOperator`` have a fallback mechanism to load data in database using dataframe.
+By default, We have disabled this feature. This can override at task level using ``enable_native_fallback`` param.
+This might be inconvenient for some users who do want to leverage it. Such users can set the following config to ``True`` to enable it at global level.
+
+.. code:: ini
+
+   LOAD_FILE_ENABLE_NATIVE_FALLBACK = False
+
+or by updating Airflow's configuration
+
+.. code:: ini
+
+   [astro_sdk]
+   load_file_enable_native_fallback = False
