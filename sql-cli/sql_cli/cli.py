@@ -14,16 +14,22 @@ from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, SqlFilesDir
 from sql_cli.project import Project
 
 
-def generate_dag(project: Project, env: str, workflow_name: str) -> Path:
+def generate_dag(project: Project, env: str, workflow_name: str, gen_dag: bool=False) -> Path:
     rprint(
         f"\nGenerating the DAG file from workflow [bold blue]{workflow_name}[/bold blue]"
         f" for [bold]{env}[/bold] environment..\n"
     )
     try:
-        dag_file = dag_generator.generate_dag(
-            directory=project.directory / project.workflows_directory / workflow_name,
-            dags_directory=project.airflow_dags_folder,
-        )
+        if not gen_dag:
+            dag_file = dag_generator.generate_render_dag(
+                directory=project.directory / project.workflows_directory / workflow_name,
+                dags_directory=project.airflow_dags_folder,
+            )
+        else:
+            dag_file = dag_generator.generate_dag(
+                directory=project.directory / project.workflows_directory / workflow_name,
+                dags_directory=project.airflow_dags_folder,
+            )
     except EmptyDag:
         rprint(f"[bold red]The workflow {workflow_name} does not have any SQL files![/bold red]")
         raise Exit(code=1)

@@ -108,3 +108,23 @@ def generate_dag(directory: Path, dags_directory: Path) -> Path:
         output_file=output_file,
     )
     return output_file
+
+
+def generate_render_dag(directory: Path, dags_directory: Path) -> Path:
+    """
+    Generate a DAG from SQL files.
+
+    :params directory: The directory containing the raw sql files.
+    :params dags_directory: The directory containing the generated DAG.
+
+    :returns: the path to the DAG file.
+    """
+    if not directory.exists():
+        raise SqlFilesDirectoryNotFound("The directory does not exist!")
+    output_file = dags_directory / f"{directory.name}.py"
+    render(
+        template_file=Path("templates/render_dag.py.jinja2"),
+        context={"dag_id": directory.name, "start_date": datetime(2020, 1, 1), "project_path": directory},
+        output_file=output_file,
+    )
+    return output_file

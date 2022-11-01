@@ -114,10 +114,13 @@ def run(
     from sql_cli import cli
     from sql_cli.project import Project
     from sql_cli.utils.airflow import (
-        get_dag,
         retrieve_airflow_database_conn_from_config,
         set_airflow_database_conn,
     )
+    from sql_cli.exceptions import EmptyDag, SqlFilesDirectoryNotFound
+    from sql_cli.run_dag import run_dag
+    from airflow.utils.state import State
+    from sql_cli.utils.airflow import get_dag
 
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
@@ -129,31 +132,36 @@ def run(
     # decide this during runtime, depending on the project path and SQL CLI configuration.
     airflow_meta_conn = retrieve_airflow_database_conn_from_config(project.directory / project.airflow_home)
     set_airflow_database_conn(airflow_meta_conn)
-
     try:
-        if gen_dag:
-            dag_file = cli.generate_dag(project, env, workflow_name)
-            dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
-        else:
-            from airflow.models.dag import DAG
-            from airflow.utils.timezone import datetime as airflow_datetime
-            dag = DAG(dag_id=workflow_name, start_date=airflow_datetime(2020,1,1))
-            with dag:
-                cli.render_tasks(directory=project_dir / "workflows" / workflow_name)
+        dag_file = cli.generate_dag(
+            project=project,
+            workflow_name=workflow_name,
+            env=env,
+            gen_dag=gen_dag,
+        )
     except EmptyDag:
         rprint("[bold red]The workflow does not have any SQL files![/bold red]")
         raise typer.Exit(code=1)
     except SqlFilesDirectoryNotFound:
-        rprint("[bold red]A workflow with the given name does not exist![/bold red]")
+        rprint(f"[bold red]The workflow {workflow_name} does not exist![/bold red]")
         raise typer.Exit(code=1)
+    dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
     rprint(f"\nRunning the workflow [bold blue]{dag.dag_id}[/bold blue] for [bold]{env}[/bold] environment\n")
-    dr = cli.run_dag(
+    dr = run_dag(
         dag,
         run_conf=project.airflow_config,
         connections={c.conn_id: c for c in project.connections},
         verbose=verbose,
     )
-    rprint(f"Completed running the workflow {dr.dag_id}: [bold yellow][{dr.state.upper()}][/bold yellow]")
+    rprint(f"Completed running the workflow {dr.dag_id}. 🚀")
+    final_state = None
+    if dr.state == State.SUCCESS:
+        final_state = "[bold green]SUCCESS[/bold green]"
+    elif final_state == State.FAILED:
+        final_state = "[bold red]FAILED[/bold red]"
+    else:
+        final_state = dr.state
+    rprint(f"Final state: {final_state}")
     elapsed_seconds = (dr.end_date - dr.start_date).microseconds / 10**6
     rprint(f"Total elapsed time: [bold blue]{elapsed_seconds:.2}s[/bold blue]")
 
