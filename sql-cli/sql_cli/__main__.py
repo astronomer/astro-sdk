@@ -6,29 +6,15 @@ from dotenv import load_dotenv
 from rich import print as rprint
 
 import sql_cli
-from sql_cli.connections import validate_connections
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
-from sql_cli.dag_generator import generate_dag
-from sql_cli.dag_render import render_tasks
-from sql_cli.exceptions import EmptyDag, SqlFilesDirectoryNotFound
-from sql_cli.project import Project
-from sql_cli.run_dag import run_dag
-from sql_cli.utils.airflow import (
-    get_dag,
-    retrieve_airflow_database_conn_from_config,
-    set_airflow_database_conn,
-)
 
 load_dotenv()
 app = typer.Typer(add_completion=False, context_settings={"help_option_names": ["-h", "--help"]})
 
 
-def set_logger_level(log_level: int) -> None:
-    for name in logging.root.manager.loggerDict:
-        logging.getLogger(name).setLevel(log_level)
-
-
-set_logger_level(logging.CRITICAL)
+airflow_logger = logging.getLogger("airflow")
+airflow_logger.setLevel(logging.CRITICAL)
+airflow_logger.propagate = False
 
 
 @app.command(help="Print the SQL CLI version.")
@@ -56,22 +42,14 @@ def generate(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
 ) -> None:
+    from sql_cli import cli
+    from sql_cli.project import Project
+
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
     project.load_config(env)
 
-    try:
-        dag_file = generate_dag(
-            directory=project.directory / project.workflows_directory / workflow_name,
-            dags_directory=project.airflow_dags_folder,
-        )
-    except EmptyDag:
-        rprint("[bold red]The workflow does not have any SQL files![/bold red]")
-        raise typer.Exit(code=1)
-    except SqlFilesDirectoryNotFound:
-        rprint("[bold red]A workflow with the given name does not exist![/bold red]")
-        raise typer.Exit(code=1)
-    rprint("The DAG file", dag_file.resolve(), "has been successfully generated. 🎉")
+    cli.generate_dag(project, env, workflow_name)
 
 
 @app.command(
@@ -92,6 +70,10 @@ def validate(
         help="(Optional) Identifier of the connection to be validated. By default checks all the env connections.",
     ),
 ) -> None:
+    from sql_cli.connections import validate_connections
+    from sql_cli.project import Project
+    from sql_cli.utils.airflow import retrieve_airflow_database_conn_from_config, set_airflow_database_conn
+
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
     project.load_config(environment=env)
@@ -129,6 +111,14 @@ def run(
     gen_dag: bool = typer.Option(default=False, help="whether to generate a DAG file", show_default=True),
     verbose: bool = typer.Option(False, help="Whether to show airflow logs", show_default=True),
 ) -> None:
+    from sql_cli import cli
+    from sql_cli.project import Project
+    from sql_cli.utils.airflow import (
+        get_dag,
+        retrieve_airflow_database_conn_from_config,
+        set_airflow_database_conn,
+    )
+
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
     project.update_config(environment=env)
@@ -142,17 +132,14 @@ def run(
 
     try:
         if gen_dag:
-            dag_file = generate_dag(
-                directory=project.directory / project.workflows_directory / workflow_name,
-                dags_directory=project.airflow_dags_folder,
-            )
+            dag_file = cli.generate_dag(project, env, workflow_name)
             dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
         else:
             from airflow.models.dag import DAG
             from airflow.utils.timezone import datetime as airflow_datetime
             dag = DAG(dag_id=workflow_name, start_date=airflow_datetime(2020,1,1))
             with dag:
-                render_tasks(directory=project_dir / "workflows" / workflow_name)
+                cli.render_tasks(directory=project_dir / "workflows" / workflow_name)
     except EmptyDag:
         rprint("[bold red]The workflow does not have any SQL files![/bold red]")
         raise typer.Exit(code=1)
@@ -160,7 +147,7 @@ def run(
         rprint("[bold red]A workflow with the given name does not exist![/bold red]")
         raise typer.Exit(code=1)
     rprint(f"\nRunning the workflow [bold blue]{dag.dag_id}[/bold blue] for [bold]{env}[/bold] environment\n")
-    dr = run_dag(
+    dr = cli.run_dag(
         dag,
         run_conf=project.airflow_config,
         connections={c.conn_id: c for c in project.connections},
@@ -219,6 +206,8 @@ def init(
         show_default=False,
     ),
 ) -> None:
+    from sql_cli.project import Project
+
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute, airflow_home, airflow_dags_folder)
     project.initialise()

@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from airflow.api_connexion.schemas.connection_schema import connection_schema
 from airflow.models.connection import Connection
 
 from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME
@@ -19,6 +18,8 @@ def convert_to_connection(conn: dict[str, Any]) -> Connection:
     :param conn: SQL CLI connection dictionary
     :returns: Connection object
     """
+    from airflow.api_connexion.schemas.connection_schema import connection_schema
+
     c = conn.copy()
     c["connection_id"] = c["conn_id"]
     c.pop("conn_id")

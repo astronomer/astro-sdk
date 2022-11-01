@@ -79,7 +79,7 @@ class SqlFilesDAG:
             cycle_edges = " and ".join(
                 " and ".join(edge.get_variable_name() for edge in edges) for edges in find_cycle(graph)
             )
-            raise DagCycle("Could not generate DAG!" f" A cycle between {cycle_edges} has been detected!")
+            raise DagCycle(f"A cycle between {cycle_edges} has been detected!")
 
         return list(depth_first_search.dfs_postorder_nodes(graph))
 
