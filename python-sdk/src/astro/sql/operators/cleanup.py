@@ -8,6 +8,15 @@ from airflow.decorators.base import get_unique_task_id
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.dagrun import DagRun
+
+try:
+    # Airflow >= 2.3
+    from airflow.models.mappedoperator import MappedOperator
+except ImportError:
+    # Airflow < 2.3
+    MappedOperator = None
+
+
 from airflow.models.taskinstance import TaskInstance
 from airflow.utils.state import State
 
@@ -18,6 +27,12 @@ from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import BaseTable, TempTable
 from astro.utils.typing_compat import Context
+
+OPERATOR_CLASSES_WITH_TABLE_OUTPUT = (
+    DataframeOperator,
+    BaseSQLDecoratedOperator,
+    LoadFileOperator,
+)
 
 
 def filter_for_temp_tables(task_outputs: list[Any]) -> list[TempTable]:
@@ -55,8 +70,8 @@ class CleanupOperator(AstroSQLBaseOperator):
         Very relevant if using a synchronous executor. The default is 3.
     :param retry_delay: Delay between running retries. Very relevant if using a synchronous executor.
         The default is 10s.
-    :param run_sync_mode: Whether to wait for the DAG to finish or not. Set to False if you want
-        to immediately clean all DAGs. Note that if you supply anything to `tables_to_cleanup`
+    :param run_sync_mode: Whether to wait for the DAG to finish or not. Set to True if you want
+        to immediately clean all tables. Note that if you supply anything to `tables_to_cleanup`
         this argument is ignored.
     """
 
@@ -191,7 +206,9 @@ class CleanupOperator(AstroSQLBaseOperator):
         task_outputs = self.resolve_tables_from_tasks(tasks=tasks, context=context)
         return task_outputs
 
-    def resolve_tables_from_tasks(self, tasks: list[BaseOperator], context: Context) -> list[BaseTable]:
+    def resolve_tables_from_tasks(  # noqa: C901
+        self, tasks: list[BaseOperator], context: Context
+    ) -> list[BaseTable]:
         """
         For the moment, these are the only two classes that create temporary tables.
         This function allows us to only resolve xcom for those objects
@@ -205,16 +222,24 @@ class CleanupOperator(AstroSQLBaseOperator):
         """
         res = []
         for task in tasks:
-            if isinstance(task, (DataframeOperator, BaseSQLDecoratedOperator, LoadFileOperator)):
-                try:
+            try:
+                if isinstance(task, OPERATOR_CLASSES_WITH_TABLE_OUTPUT):
                     t = task.output.resolve(context)
                     if isinstance(t, BaseTable):
                         res.append(t)
-                except AirflowException:
-                    self.log.info(
-                        "xcom output for %s not found. Will not clean up this task",
-                        task.task_id,
-                    )
+                elif (
+                    MappedOperator
+                    and isinstance(task, MappedOperator)
+                    and issubclass(task.operator_class, OPERATOR_CLASSES_WITH_TABLE_OUTPUT)
+                ):
+                    for t in task.output.resolve(context):
+                        if isinstance(t, BaseTable):
+                            res.append(t)
+            except AirflowException:
+                self.log.info(
+                    "xcom output for %s not found. Will not clean up this task",
+                    task.task_id,
+                )
 
         return res
 

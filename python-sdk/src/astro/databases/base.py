@@ -3,13 +3,16 @@ from __future__ import annotations
 import logging
 import warnings
 from abc import ABC
-from typing import Any, Callable, Mapping
+from typing import TYPE_CHECKING, Any, Callable, Mapping
 
 import pandas as pd
 import sqlalchemy
 from airflow.hooks.dbapi import DbApiHook
 from pandas.io.sql import SQLDatabase
 from sqlalchemy import column, insert, select
+
+if TYPE_CHECKING:
+    from sqlalchemy.engine.cursor import CursorResult
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
@@ -92,7 +95,7 @@ class BaseDatabase(ABC):
         sql: str | ClauseElement = "",
         parameters: dict | None = None,
         **kwargs,
-    ):
+    ) -> CursorResult:
         """
         Return the results to running a SQL statement.
 
