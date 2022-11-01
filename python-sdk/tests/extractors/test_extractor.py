@@ -10,6 +10,7 @@ from astro.constants import FileType
 from astro.files import File
 from astro.lineage.extractor import PythonSDKExtractor
 from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
+from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
 from astro.sql import AppendOperator, MergeOperator
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import Metadata, Table
@@ -52,7 +53,7 @@ OUTPUT_STATS = [
                 columns=[],
                 schema="astro",
                 used_native_path=False,
-                enabled_native_fallback=False,
+                enabled_native_fallback=LOAD_FILE_ENABLE_NATIVE_FALLBACK,
                 native_support_arguments={},
                 description=None,
             )
