@@ -27,8 +27,6 @@ from astro.table import Metadata
 
 log = logging.getLogger(__name__)
 
-DEFAULT_DATE = timezone.datetime(2016, 1, 1)
-
 SQL_SERVER_HOOK_PARAMETERS = {
     "snowflake": {
         "snowflake_conn_id": "snowflake_conn",
@@ -63,18 +61,8 @@ def get_table_name(prefix):
     return prefix + "_" + str(int(time.time()))
 
 
-def run_dag(dag: DAG, account_for_cleanup_failure=False):
-    """
-
-    :param dag: DAG
-    :param account_for_cleanup_failure: Since our cleanup task fails on purpose when running in 'single thread mode'
-    we account for this by running the backfill one more time if the cleanup task is the ONLY failed task. Otherwise
-    we just passthrough the exception.
-    :return:
-    """
-    dag.clear(start_date=DEFAULT_DATE, end_date=DEFAULT_DATE, dag_run_state=State.NONE)
-
-    test_dag(dag=dag, execution_date=DEFAULT_DATE)
+def run_dag(dag: DAG) -> DagRun:
+    return test_dag(dag=dag)
 
 
 def load_to_dataframe(filepath, file_type):
@@ -108,7 +96,7 @@ def test_dag(
     conn_file_path: str | None = None,
     variable_file_path: str | None = None,
     session: Session = NEW_SESSION,
-) -> None:
+) -> DagRun:
     """
     Execute one single DagRun for a given DAG and execution date.
 
@@ -157,6 +145,8 @@ def test_dag(
             variables_file_path=variable_file_path, connections_file_path=conn_file_path
         )
         secrets_backend_list.insert(0, local_secrets)
+
+    return dr
 
 
 def add_logger_if_needed(dag: DAG, ti: TaskInstance):

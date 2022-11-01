@@ -131,4 +131,4 @@ def test_full_dag(database_table_fixture, sample_dag):
             if_exists="replace",
         )
         aql.cleanup()
-    test_utils.run_dag(sample_dag, account_for_cleanup_failure=True)
+    test_utils.run_dag(sample_dag)
