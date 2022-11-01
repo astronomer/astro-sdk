@@ -140,7 +140,7 @@ def test_python_sdk_export_file_extract_on_complete():
         task_id=task_id,
         input_data=Table(conn_id="sqlite_conn", name="test_extractor"),
         output_file=File(
-            path="gs://astro-sdk/workspace/sample_pattern.csv",
+            path="gs://astro-sdk/workspace/openlineage_export_file.csv",
             conn_id="bigquery",
             filetype=FileType.CSV,
         ),

@@ -38,7 +38,6 @@ class ExportFileFacet(BaseFacet):
     file_size: int | None
     file_type: FileType
     if_exists: ExportExistsStrategy
-    description: str | None = None
 
 
 @attr.define
