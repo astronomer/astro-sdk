@@ -22,7 +22,7 @@ class SqlFile:
         self.root_directory = root_directory
         self.path = path
         self.target_directory = target_directory
-        self.raw_content = open(self.path, 'r').read()
+        self.raw_content = open(self.path).read()
 
         post = frontmatter.load(self.path)
         self.content = post.content
@@ -121,6 +121,7 @@ class SqlFile:
         target_path = target_full_directory / self.path.name
 
         target_path.write_text(self.raw_content)
+
     def to_transform_operator(self) -> TransformOperator:
         """
         Converts SQLFile into a TransformOperator that can be added to a DAG.

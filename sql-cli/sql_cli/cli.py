@@ -14,7 +14,7 @@ from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, SqlFilesDir
 from sql_cli.project import Project
 
 
-def generate_dag(project: Project, env: str, workflow_name: str, gen_dag: bool=False) -> Path:
+def generate_dag(project: Project, env: str, workflow_name: str, gen_dag: bool = False) -> Path:
     rprint(
         f"\nGenerating the DAG file from workflow [bold blue]{workflow_name}[/bold blue]"
         f" for [bold]{env}[/bold] environment..\n"

@@ -130,7 +130,12 @@ def generate_render_dag(directory: Path, dags_directory: Path) -> Path:
     )
     render(
         template_file=Path("templates/render_dag.py.jinja2"),
-        context={"dag": sql_files_dag, "dag_id": directory.name, "start_date": datetime(2020, 1, 1), "project_path": directory},
+        context={
+            "dag": sql_files_dag,
+            "dag_id": directory.name,
+            "start_date": datetime(2020, 1, 1),
+            "project_path": directory,
+        },
         output_file=output_file,
     )
     return output_file
