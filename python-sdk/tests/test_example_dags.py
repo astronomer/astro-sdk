@@ -6,13 +6,12 @@ import airflow
 import pytest
 from airflow.models import DAG
 from airflow.models.dagbag import DagBag
-from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import provide_session
 from packaging.version import Version
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
-from tests.sql.operators import utils as test_utils
+from .sql.operators import utils as test_utils
 
 RETRY_ON_EXCEPTIONS = []
 try:
@@ -24,16 +23,13 @@ except ModuleNotFoundError:
     pass
 
 
-DEFAULT_DATE = timezone.datetime(2016, 1, 1)
-
-
 @retry(
     stop=stop_after_attempt(3),
     retry=retry_if_exception_type(tuple(RETRY_ON_EXCEPTIONS)),
     wait=wait_exponential(multiplier=10, min=10, max=60),  # values in seconds
 )
 def wrapper_run_dag(dag):
-    test_utils.run_dag(dag, account_for_cleanup_failure=True)
+    test_utils.run_dag(dag)
 
 
 @provide_session
