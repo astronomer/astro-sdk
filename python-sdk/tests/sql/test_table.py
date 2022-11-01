@@ -241,6 +241,6 @@ def test_openlineage_emit_temp_table_event():
     tb = Table(name="test")
     assert tb.openlineage_emit_temp_table_event() is True
 
-    # with mock.patch("astro.settings.OPENLINEAGE_EMIT_TEMP_TABLE_EVENT", new=False):
-    #     tb = TempTable(name="_tmp_xyz")
-    #     assert tb.openlineage_emit_temp_table_event() is False
+    with mock.patch("astro.table.OPENLINEAGE_EMIT_TEMP_TABLE_EVENT", new=False):
+        tb = TempTable(name="_tmp_xyz")
+        assert tb.openlineage_emit_temp_table_event() is False
