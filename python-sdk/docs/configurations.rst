@@ -133,13 +133,13 @@ By default, we emit the temporary tables event in openlienage.
 
 This might be not that useful for some users who do not want to emit such event in openlienage. Such users can set the following config to ``False`` to disable it.
 
-.. code-block:::: shell
+.. code-block:: shell
 
    AIRFLOW__ASTRO_SDK__OPENLINEAGE_EMIT_TEMP_TABLE_EVENT = True
 
 or by updating Airflow's configuration
 
-.. code-block:::: ini
+.. code-block:: ini
 
    [astro_sdk]
    openlineage_emit_temp_table_event = True
