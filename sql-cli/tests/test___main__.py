@@ -137,8 +137,8 @@ def test_validate_all(initialised_project_with_test_config):
         ("example_templating", "dev"),
     ],
 )
-@pytest.mark.parametrize("gen_dag", ["--gen-dag", "--no-gen-dag"])
-def test_run(workflow_name, environment, initialised_project, gen_dag):
+@pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
+def test_run(workflow_name, environment, initialised_project, generate_tasks):
     result = runner.invoke(
         app,
         [
@@ -148,7 +148,7 @@ def test_run(workflow_name, environment, initialised_project, gen_dag):
             environment,
             "--project-dir",
             initialised_project.directory.as_posix(),
-            gen_dag,
+            generate_tasks,
         ],
     )
     assert result.exit_code == 0, result.output
@@ -175,8 +175,8 @@ def test_run(workflow_name, environment, initialised_project, gen_dag):
         "example_templating",
     ],
 )
-@pytest.mark.parametrize("gen_dag", ["--gen-dag", "--no-gen-dag"])
-def test_run_invalid(workflow_name, message, initialised_project_with_tests_workflows, gen_dag):
+@pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
+def test_run_invalid(workflow_name, message, initialised_project_with_tests_workflows, generate_tasks):
     result = runner.invoke(
         app,
         [
@@ -184,7 +184,7 @@ def test_run_invalid(workflow_name, message, initialised_project_with_tests_work
             workflow_name,
             "--project-dir",
             initialised_project_with_tests_workflows.directory.as_posix(),
-            gen_dag,
+            generate_tasks,
         ],
     )
     assert result.exit_code == 1
