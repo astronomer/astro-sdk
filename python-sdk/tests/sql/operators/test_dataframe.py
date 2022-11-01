@@ -14,7 +14,8 @@ from astro.constants import Database
 from astro.custom_backend.astro_custom_backend import AstroCustomXcomBackend as XCom
 from astro.files import File
 from astro.table import Table
-from tests.sql.operators import utils as test_utils
+
+from ..operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 CWD = pathlib.Path(__file__).parent
@@ -59,9 +60,9 @@ def test_dataframe_from_sql_basic(sample_dag, database_table_fixture):
     with sample_dag:
         f = my_df_func(df=test_table)
 
-    test_utils.run_dag(sample_dag)
+    dr = test_utils.run_dag(sample_dag)
 
-    assert XCom.get_one(execution_date=DEFAULT_DATE, key=f.key, task_id=f.operator.task_id) == 5
+    assert XCom.get_one(run_id=dr.run_id, key=f.key, task_id=f.operator.task_id) == 5
 
 
 @pytest.mark.parametrize(
@@ -150,9 +151,9 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, database_table_fixture):
 
     with sample_dag:
         res = my_df_func(test_table)
-    test_utils.run_dag(sample_dag)
+    dr = test_utils.run_dag(sample_dag)
 
-    assert XCom.get_one(execution_date=DEFAULT_DATE, key=res.key, task_id=res.operator.task_id) == 5
+    assert XCom.get_one(run_id=dr.run_id, key=res.key, task_id=res.operator.task_id) == 5
 
 
 @pytest.mark.parametrize(
@@ -198,9 +199,9 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(
 
     with sample_dag:
         res = my_df_func(test_table, df_2=test_table)
-    test_utils.run_dag(sample_dag)
+    dr = test_utils.run_dag(sample_dag)
 
-    assert XCom.get_one(execution_date=DEFAULT_DATE, key=res.key, task_id=res.operator.task_id) == 10
+    assert XCom.get_one(run_id=dr.run_id, key=res.key, task_id=res.operator.task_id) == 10
 
 
 def test_postgres_dataframe_without_table_arg(sample_dag):

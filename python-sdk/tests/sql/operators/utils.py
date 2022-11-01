@@ -61,8 +61,8 @@ def get_table_name(prefix):
     return prefix + "_" + str(int(time.time()))
 
 
-def run_dag(dag: DAG, account_for_cleanup_failure=False):
-    test_dag(dag=dag)
+def run_dag(dag: DAG) -> DagRun:
+    return test_dag(dag=dag)
 
 
 def load_to_dataframe(filepath, file_type):
@@ -96,7 +96,7 @@ def test_dag(
     conn_file_path: str | None = None,
     variable_file_path: str | None = None,
     session: Session = NEW_SESSION,
-) -> None:
+) -> DagRun:
     """
     Execute one single DagRun for a given DAG and execution date.
 
@@ -145,6 +145,8 @@ def test_dag(
             variables_file_path=variable_file_path, connections_file_path=conn_file_path
         )
         secrets_backend_list.insert(0, local_secrets)
+
+    return dr
 
 
 def add_logger_if_needed(dag: DAG, ti: TaskInstance):
