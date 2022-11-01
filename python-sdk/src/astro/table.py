@@ -133,8 +133,8 @@ class BaseTable:
         """
         db = create_database(self.conn_id)
         result = db.run_sql(
-            f"select count(*) from {db.get_table_qualified_name(self)}"
-        ).scalar()  # skipcq: BAN-B608
+            f"select count(*) from {db.get_table_qualified_name(self)}"  # skipcq: BAN-B608
+        ).scalar()
         return result
 
     def to_json(self):
