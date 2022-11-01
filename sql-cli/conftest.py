@@ -1,17 +1,14 @@
-import os
 import random
 import shutil
 import string
 from pathlib import Path
-from tempfile import gettempdir
 
 import pytest
 from airflow.models import DAG, Connection, DagRun, TaskInstance as TI
 from airflow.utils import timezone
-from airflow.utils.db import merge_conn
 from airflow.utils.session import create_session
-
 from astro.table import MAX_TABLE_NAME_LENGTH
+
 from sql_cli.dag_generator import SqlFilesDAG
 from sql_cli.project import Project
 from sql_cli.sql_directory_parser import SqlFile
@@ -166,14 +163,3 @@ def initialised_project_with_tests_workflows(initialised_project: Project):
     )
     return initialised_project
 
-
-@pytest.fixture()
-def test_connections():
-
-    merge_conn(
-        Connection(
-            conn_id="my_test_sqlite",
-            conn_type="sqlite",
-            host=(tmp_path / "sqlite_default.db").as_posix(),
-        )
-    )

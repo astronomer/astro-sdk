@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
-
-from airflow.models.dag import DAG
 
 from sql_cli.exceptions import SqlFilesDirectoryNotFound
 from sql_cli.sql_directory_parser import SqlFile, get_sql_files

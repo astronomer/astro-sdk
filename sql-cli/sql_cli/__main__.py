@@ -111,12 +111,8 @@ def run(
     gen_dag: bool = typer.Option(default=False, help="whether to generate a DAG file", show_default=True),
     verbose: bool = typer.Option(False, help="Whether to show airflow logs", show_default=True),
 ) -> None:
-    from airflow.utils.state import State
-
     from sql_cli import cli
-    from sql_cli.exceptions import EmptyDag, SqlFilesDirectoryNotFound
     from sql_cli.project import Project
-    from sql_cli.run_dag import run_dag
     from sql_cli.utils.airflow import (
         get_dag,
         retrieve_airflow_database_conn_from_config,

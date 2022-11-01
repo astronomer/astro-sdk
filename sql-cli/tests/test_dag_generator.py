@@ -1,12 +1,10 @@
 from pathlib import Path
 
 import pytest
-from conftest import DEFAULT_DATE
 
+from conftest import DEFAULT_DATE
 from sql_cli.dag_generator import SqlFilesDAG, generate_dag
-from sql_cli.dag_render import render_tasks
 from sql_cli.exceptions import DagCycle, EmptyDag, SqlFilesDirectoryNotFound
-from sql_cli.run_dag import run_dag
 
 
 def test_sql_files_dag(sql_files_dag, sql_files_dag_with_parameters, sql_file, sql_file_with_parameters):

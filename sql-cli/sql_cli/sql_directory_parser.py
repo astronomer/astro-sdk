@@ -112,7 +112,13 @@ class SqlFile:
 
         return target_path.relative_to(self.target_directory)
 
-    def write_raw_content_to_target_path(self) -> Path:
+    def write_raw_content_to_target_path(self) -> None:
+        """
+        Writes both content and headers to the target directory.
+        This is because with the "render" function, we will still need
+        the headers for creating proper TransformOperators
+        :return:
+        """
         target_full_directory = (
             self.target_directory / "sql" / self.root_directory.name / "/".join(self.get_sub_directories())
         )
