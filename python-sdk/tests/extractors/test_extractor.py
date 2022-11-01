@@ -316,7 +316,7 @@ def test_python_sdk_dataframe_op_extract_on_complete():
                     schema=test_schema_name,
                     database=test_db_name,
                 ),
-                conn_id="sqlite_conn",
+                conn_id="sqlite_default",
             ),
         ),
     )
