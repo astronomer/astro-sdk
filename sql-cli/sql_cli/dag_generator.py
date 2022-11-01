@@ -122,9 +122,15 @@ def generate_render_dag(directory: Path, dags_directory: Path) -> Path:
     if not directory.exists():
         raise SqlFilesDirectoryNotFound("The directory does not exist!")
     output_file = dags_directory / f"{directory.name}.py"
+    sql_files = sorted(get_sql_files(directory, target_directory=dags_directory))
+    sql_files_dag = SqlFilesDAG(
+        dag_id=directory.name,
+        start_date=datetime(2020, 1, 1),
+        sql_files=sql_files,
+    )
     render(
         template_file=Path("templates/render_dag.py.jinja2"),
-        context={"dag_id": directory.name, "start_date": datetime(2020, 1, 1), "project_path": directory},
+        context={"dag": sql_files_dag, "dag_id": directory.name, "start_date": datetime(2020, 1, 1), "project_path": directory},
         output_file=output_file,
     )
     return output_file

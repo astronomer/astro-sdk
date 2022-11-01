@@ -33,10 +33,6 @@ def test_generate_dag(root_directory, dags_directory):
     assert dag_file
 
 
-def test_generate_dag_render(test_connections, root_directory, sample_dag):
-    tasks = render_tasks(directory=root_directory)
-
-
 def test_generate_dag_invalid_directory(root_directory, dags_directory):
     """Test that an exception is being raised when the directory does not exist."""
     with pytest.raises(SqlFilesDirectoryNotFound):
