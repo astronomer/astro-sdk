@@ -59,8 +59,5 @@ sql-cli/include/base/.airflow/dags/*
 !sql-cli/include/base/.airflow/dags/sql/.gitkeep
 !sql-cli/include/base/.airflow/dags/.gitkeep
 
-# Airflow
-**/.airflowignore
-
 sql-cli/build/
 *.egg-info/
