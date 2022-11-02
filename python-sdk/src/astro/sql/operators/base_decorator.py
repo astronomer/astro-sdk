@@ -115,7 +115,6 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
 
         context["ti"].xcom_push(key="base_sql_query", value=str(self.sql))
 
-
     def create_output_table_if_needed(self) -> None:
         """
         If the user has not supplied an output table, this function creates one from scratch, otherwise populates
@@ -224,7 +223,9 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                 f"{self.output_table.openlineage_dataset_namespace()}"
                 f"://{self.output_table.openlineage_dataset_name()}"
             )
-            output_table_row_count = task_instance.xcom_pull(task_ids=task_instance.task_id, key="output_table_row_count")
+            output_table_row_count = task_instance.xcom_pull(
+                task_ids=task_instance.task_id, key="output_table_row_count"
+            )
             output_dataset = [
                 OpenlineageDataset(
                     namespace=self.output_table.openlineage_dataset_namespace(),
