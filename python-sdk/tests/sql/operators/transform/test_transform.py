@@ -120,11 +120,11 @@ def test_raw_sql(database_table_fixture, sample_dag):
             output_table=test_table,
         )
         raw_sql_result = raw_sql_query(
-                my_input_table=homes_file,
-                created_table=test_table,
-                num_rows=5,
-                handler=lambda cur: cur.fetchall(),
-            )
+            my_input_table=homes_file,
+            created_table=test_table,
+            num_rows=5,
+            handler=lambda cur: cur.fetchall(),
+        )
         validate_raw_sql(raw_sql_result)
     test_utils.run_dag(sample_dag)
 
