@@ -1,9 +1,9 @@
 import pickle
+import socket
 from datetime import datetime
 from unittest import mock
 
 import pytest
-import socket
 from airflow.models import DAG, Connection
 
 from astro.sql import get_value_list
