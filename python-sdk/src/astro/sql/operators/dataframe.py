@@ -225,7 +225,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             )
         return function_output
 
-    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:
+    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:  # skipcq: PYL-W0613
         """
         Collect the input, output, job and run facets for DataframeOperator
         """
