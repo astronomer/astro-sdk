@@ -225,7 +225,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         ]
 
         output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
-        if self.output_table:
+        if self.output_table is not None and self.output_table.openlineage_emit_temp_table_event():
             output_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
                 f"://{self.output_table.openlineage_dataset_name()}"

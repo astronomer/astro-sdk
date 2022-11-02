@@ -86,11 +86,11 @@ def pg_query_result(request):
         return "SELECT * FROM {{input_table}} WHERE last_name LIKE {{last_name}}", {"last_name": "G%%"}
     if query_name == "with_jinja":
         return (
-            "SELECT * FROM {{input_table}} WHERE last_update > '{{execution_date}}' AND last_name LIKE 'G%%'"
+            "SELECT * FROM {{input_table}} WHERE last_update < '{{execution_date}}' AND last_name LIKE 'G%%'"
         )
     if query_name == "with_jinja_template_params":
         return (
-            "SELECT * FROM {{input_table}} WHERE last_update > {{r_date}} AND last_name LIKE 'G%%'",
+            "SELECT * FROM {{input_table}} WHERE last_update < {{r_date}} AND last_name LIKE 'G%%'",
             {"r_date": "{{ execution_date }}"},
         )
 
