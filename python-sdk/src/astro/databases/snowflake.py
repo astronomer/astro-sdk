@@ -263,7 +263,7 @@ class SnowflakeDatabase(BaseDatabase):
             if _hook.database is None and self.table.metadata.database:
                 kwargs.update({"database": self.table.metadata.database})
             if _hook.schema is None and self.table.metadata.schema:
-                kwargs = {"schema": self.table.metadata.schema}
+                kwargs.update({"schema": self.table.metadata.schema})
         return SnowflakeHook(snowflake_conn_id=self.conn_id, **kwargs)
 
     @property
