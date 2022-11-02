@@ -23,10 +23,5 @@ spec:
             mountPath: "/data"
       # Do not restart containers after they exit
       restartPolicy: Never
-
-      volumes:
-        - name: nfs
-          persistentVolumeClaim:
-            claimName: nfs
   # of retries before marking as failed.
   backoffLimit: 1
