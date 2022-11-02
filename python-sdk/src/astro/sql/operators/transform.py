@@ -60,6 +60,7 @@ class TransformOperator(BaseSQLDecoratedOperator):
             target_table=self.output_table,
             parameters=self.parameters,
         )
+        context["ti"].xcom_push(key="output_table_row_count", value=str(self.output_table.row_count))
         return self.output_table
 
 
