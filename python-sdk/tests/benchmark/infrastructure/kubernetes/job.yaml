@@ -17,10 +17,6 @@ spec:
             memory: 16Gi
           limits:
             memory: 32Gi
-        volumeMounts:
-          # mount the nfs volume for local files
-          - name: nfs
-            mountPath: "/data"
       # Do not restart containers after they exit
       restartPolicy: Never
   # of retries before marking as failed.
