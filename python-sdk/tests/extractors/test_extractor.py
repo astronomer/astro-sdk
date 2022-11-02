@@ -334,4 +334,5 @@ def test_python_sdk_dataframe_op_extract_on_complete():
     assert task_meta.outputs[0].facets["schema"].fields[0].name == test_schema_name
     assert task_meta.outputs[0].facets["schema"].fields[0].type == test_db_name
     assert task_meta.outputs[0].facets["dataSource"].name == test_tbl_name
+    assert task_meta.outputs[0].facets["outputStatistics"].rowCount == len(test_list)
     assert task_meta.run_facets == {}

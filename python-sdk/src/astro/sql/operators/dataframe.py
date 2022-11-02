@@ -15,37 +15,28 @@ except ImportError:
     from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
+from openlineage.client.facet import (
+    BaseFacet,
+    DataSourceDatasetFacet,
+    OutputStatisticsOutputDatasetFacet,
+    SchemaDatasetFacet,
+    SchemaField,
+)
+from openlineage.client.run import Dataset as OpenlineageDataset
+
 from astro.constants import ColumnCapitalization
 from astro.databases import create_database
 from astro.files import File
+from astro.lineage.extractor import OpenLineageFacets
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable, Table
 from astro.utils.dataframe import convert_columns_names_capitalization
 from astro.utils.table import find_first_table
 from astro.utils.typing_compat import Context
-import attr
-from openlineage.client.run import Dataset as OpenlineageDataset
-from openlineage.client.facet import BaseFacet, DataSourceDatasetFacet
-from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet, TableDatasetFacet
-from openlineage.client.facet import BaseFacet, DataSourceDatasetFacet, SchemaDatasetFacet, SchemaField,\
-    DataQualityMetricsInputDatasetFacet,OutputStatisticsOutputDatasetFacet
-
-
-@attr.define
-class OpenLineageFacets:
-    """
-    OpenLineageFacets are pieces of metadata that can be attached to the core entities: Run,
-    Job and Dataset as per https://github.com/OpenLineage/OpenLineage/blob/main/spec/OpenLineage.md#facets
-    """
-
-    inputs: list[OpenlineageDataset]
-    outputs: list[OpenlineageDataset]
-    run_facets: dict[str, BaseFacet]
-    job_facets: dict[str, BaseFacet]
 
 
 def _get_dataframe(
-        table: BaseTable, columns_names_capitalization: ColumnCapitalization = "original"
+    table: BaseTable, columns_names_capitalization: ColumnCapitalization = "original"
 ) -> pd.DataFrame:
     """
     Exports records from a SQL table and converts it into a pandas dataframe
@@ -60,10 +51,10 @@ def _get_dataframe(
 
 
 def load_op_arg_table_into_dataframe(
-        op_args: tuple,
-        python_callable: Callable,
-        columns_names_capitalization: ColumnCapitalization,
-        log: logging.Logger,
+    op_args: tuple,
+    python_callable: Callable,
+    columns_names_capitalization: ColumnCapitalization,
+    log: logging.Logger,
 ) -> tuple:
     """For dataframe based functions, takes any Table objects from the op_args
     and converts them into local dataframes that can be handled in the python context"""
@@ -80,7 +71,7 @@ def load_op_arg_table_into_dataframe(
             log.debug("Found SQL table, retrieving dataframe from table %s", arg.name)
             ret_args.append(_get_dataframe(arg, columns_names_capitalization=columns_names_capitalization))
         elif isinstance(arg, File) and (
-                full_spec.annotations.get(current_arg) == pd.DataFrame or arg.is_dataframe
+            full_spec.annotations.get(current_arg) == pd.DataFrame or arg.is_dataframe
         ):
             log.debug("Found dataframe file, retrieving dataframe from file %s", arg.path)
             ret_args.append(arg.export_to_dataframe())
@@ -90,10 +81,10 @@ def load_op_arg_table_into_dataframe(
 
 
 def load_op_kwarg_table_into_dataframe(
-        op_kwargs: dict,
-        python_callable: Callable,
-        columns_names_capitalization: ColumnCapitalization,
-        log: logging.Logger,
+    op_kwargs: dict,
+    python_callable: Callable,
+    columns_names_capitalization: ColumnCapitalization,
+    log: logging.Logger,
 ) -> dict:
     """For dataframe based functions, takes any Table objects from the op_kwargs
     and converts them into local dataframes that can be handled in the python context"""
@@ -133,12 +124,12 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
     """
 
     def __init__(
-            self,
-            conn_id: str | None = None,
-            database: str | None = None,
-            schema: str | None = None,
-            columns_names_capitalization: ColumnCapitalization = "original",
-            **kwargs,
+        self,
+        conn_id: str | None = None,
+        database: str | None = None,
+        schema: str | None = None,
+        columns_names_capitalization: ColumnCapitalization = "original",
+        **kwargs,
     ):
         self.conn_id: str = conn_id or ""
         self.database = database
@@ -238,7 +229,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         """
         Collect the input, output, job and run facets for DataframeOperator
         """
-        input_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
+        input_dataset: list[OpenlineageDataset] = []
 
         output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
         if self.output_table:
@@ -247,42 +238,44 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                 f"/{self.output_table.openlineage_dataset_name()}"
             )
 
-            output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(
-                namespace=self.output_table.openlineage_dataset_namespace(),
-                name=self.output_table.openlineage_dataset_name(),
-                facets={
-                    "schema": SchemaDatasetFacet(
-                        fields=[
-                            SchemaField(
-                                name=self.schema if self.schema else self.output_table.metadata.schema,
-                                type=self.database if self.database else self.output_table.metadata.database,
-                            )
-                        ]
-                    ),
-                    "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=output_uri),
-                    # Enable the below lines after fixing https://github.com/astronomer/astro-sdk/issues/1145
-                    # "outputStatistics": OutputStatisticsOutputDatasetFacet(
-                    #     rowCount=self.output_table.row_count,
-                    # ),
-                }),
+            output_dataset = [
+                OpenlineageDataset(
+                    namespace=self.output_table.openlineage_dataset_namespace(),
+                    name=self.output_table.openlineage_dataset_name(),
+                    facets={
+                        "schema": SchemaDatasetFacet(
+                            fields=[
+                                SchemaField(
+                                    name=self.schema if self.schema else self.output_table.metadata.schema,
+                                    type=self.database
+                                    if self.database
+                                    else self.output_table.metadata.database,
+                                )
+                            ]
+                        ),
+                        "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=output_uri),
+                        "outputStatistics": OutputStatisticsOutputDatasetFacet(
+                            rowCount=self.output_table.row_count,
+                        ),
+                    },
+                ),
             ]
 
-            run_facets: dict[str, BaseFacet] = {}
-            job_facets: dict[str, BaseFacet] = {}
-
-            return OpenLineageFacets(
-                inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
-            )
+        run_facets: dict[str, BaseFacet] = {}
+        job_facets: dict[str, BaseFacet] = {}
+        return OpenLineageFacets(
+            inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
+        )
 
 
 def dataframe(
-        python_callable: Callable | None = None,
-        multiple_outputs: bool | None = None,
-        conn_id: str = "",
-        database: str | None = None,
-        schema: str | None = None,
-        columns_names_capitalization: ColumnCapitalization = "original",
-        **kwargs: Any,
+    python_callable: Callable | None = None,
+    multiple_outputs: bool | None = None,
+    conn_id: str = "",
+    database: str | None = None,
+    schema: str | None = None,
+    columns_names_capitalization: ColumnCapitalization = "original",
+    **kwargs: Any,
 ) -> TaskDecorator:
     """
     This decorator will allow users to write python functions while treating SQL tables as dataframes
