@@ -8,7 +8,6 @@ from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
 from openlineage.client.facet import (
     BaseFacet,
-    DataQualityMetricsInputDatasetFacet,
     DataSourceDatasetFacet,
     OutputStatisticsOutputDatasetFacet,
     SchemaDatasetFacet,
