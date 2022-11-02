@@ -15,6 +15,9 @@ airflow_settings.yaml
 /dist/
 **/dist/
 sql-cli/.nox/
+venv
+dumps
+.vscode
 
 # Benchmark
 airflow.db
