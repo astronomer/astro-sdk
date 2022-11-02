@@ -111,25 +111,20 @@ def test_raw_sql(database_table_fixture, sample_dag):
     def validate_raw_sql(cur: pd.DataFrame):
         from sqlalchemy.engine.row import LegacyRow
 
-        # Note: It's a broken feature on the main branch that this is return in a list of lists. Problem reported here:
-        # https://github.com/astronomer/astro-sdk/issues/1035
-        for c in cur[0]:
+        for c in cur:
             assert isinstance(c, LegacyRow)
-        print(cur)
 
     with sample_dag:
         homes_file = aql.load_file(
             input_file=File(path=str(cwd) + "/../../../data/homes.csv"),
             output_table=test_table,
         )
-        raw_sql_result = (
-            raw_sql_query(
+        raw_sql_result = raw_sql_query(
                 my_input_table=homes_file,
                 created_table=test_table,
                 num_rows=5,
                 handler=lambda cur: cur.fetchall(),
-            ),
-        )
+            )
         validate_raw_sql(raw_sql_result)
     test_utils.run_dag(sample_dag)
 
