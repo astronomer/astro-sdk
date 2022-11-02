@@ -13,6 +13,9 @@ REDSHIFT_SCHEMA = conf.get("astro_sdk", "redshift_default_schema", fallback=SCHE
 DATAFRAME_STORAGE_CONN_ID = conf.get("astro_sdk", "xcom_storage_conn_id", fallback=None)
 DATAFRAME_STORAGE_URL = conf.get("astro_sdk", "xcom_storage_url", fallback=tempfile.gettempdir())
 STORE_DATA_LOCAL_DEV = conf.get("astro_sdk", "store_data_local_dev", fallback=False)
+OPENLINEAGE_EMIT_TEMP_TABLE_EVENT = conf.getboolean(
+    "astro_sdk", "openlineage_emit_temp_table_event", fallback=True
+)
 XCOM_BACKEND = conf.get("core", "xcom_backend")
 IS_CUSTOM_XCOM_BACKEND = XCOM_BACKEND not in [
     "airflow.models.xcom.BaseXCom",
