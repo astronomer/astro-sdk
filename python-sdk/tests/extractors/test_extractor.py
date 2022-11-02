@@ -99,7 +99,9 @@ def test_python_sdk_load_file_extract_on_complete():
             conn_id="bigquery",
             filetype=FileType.CSV,
         ),
-        output_table=Table(conn_id="sqlite_conn", name="test-extractor", metadata=Metadata(schema="astro")),
+        output_table=Table(
+            conn_id="sqlite_default", name="test-extractor", metadata=Metadata(schema="astro")
+        ),
         use_native_support=False,
     )
 
