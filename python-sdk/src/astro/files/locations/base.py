@@ -14,6 +14,9 @@ from astro.constants import FileLocation
 class BaseFileLocation(ABC):
     """Base Location abstract class"""
 
+    location_type: FileLocation
+    """Property to identify location type"""
+
     template_fields = ("path", "conn_id")
 
     def __init__(self, path: str, conn_id: str | None = None):
@@ -28,12 +31,6 @@ class BaseFileLocation(ABC):
 
     @property
     def hook(self):
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def location_type(self):
-        """Property to identify location type"""
         raise NotImplementedError
 
     @property
