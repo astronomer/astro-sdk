@@ -9,6 +9,7 @@ from sqlalchemy import Column, MetaData
 
 from astro.airflow.datasets import Dataset
 from astro.databases import create_database
+from astro.settings import OPENLINEAGE_EMIT_TEMP_TABLE_EVENT
 
 MAX_TABLE_NAME_LENGTH = 62
 TEMP_PREFIX = "_tmp_"
@@ -173,6 +174,15 @@ class BaseTable:
         """
         database = create_database(self.conn_id)
         return database.openlineage_dataset_namespace()
+
+    def openlineage_emit_temp_table_event(self):
+        """
+        Based on airflow config ```OPENLINEAGE_EMIT_TEMP_TABLE_EVENT``` value and table type
+        check whether to emit temp table event in openlineage or not
+        """
+        return (not isinstance(self, TempTable)) or (
+            isinstance(self, TempTable) and OPENLINEAGE_EMIT_TEMP_TABLE_EVENT
+        )
 
 
 @define(slots=False)
