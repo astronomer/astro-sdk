@@ -1,8 +1,8 @@
 .. _openlineage:
 
-============
-OpenLineage
-============
+=========================
+Open Lineage Integration
+=========================
 
 OpenLineage is an open-source framework for data lineage collection and analysis. At its core is an extensible
 specification that systems can use to interoperate with lineage metadata.
