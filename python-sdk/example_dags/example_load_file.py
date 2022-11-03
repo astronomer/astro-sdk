@@ -118,7 +118,6 @@ with dag:
             "allow_jagged_rows": True,
             "skip_leading_rows": "1",
         },
-        enable_native_fallback=False,
     )
     # [END load_file_example_9]
 
