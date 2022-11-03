@@ -4,19 +4,18 @@
 OpenLineage
 ============
 
-OpenLineage is an open framework for data lineage collection and analysis. At its core is an extensible
-specification that systems can use to interoperate with lineage metadata. Astro SDK operators needs a
-wrapper around openlineage extractors to show the events on the UI.
+OpenLineage is an open-source framework for data lineage collection and analysis. At its core is an extensible
+specification that systems can use to interoperate with lineage metadata.
 
 .. seealso::
 
     `Enabling OpenLineage in Apache Airflow <https://openlineage.io/integration/apache-airflow/>`__
 
 
-Configure the Openlineage
-==========================
+Configure the OpenLineage and Astro Python SDK Integration
+===========================================================
 
-We'll need to specify where we want Airflow to send OpenLineage events. openlineage-airflow will use the
+We'll need to specify where we want Astro Python SDK operators to send OpenLineage events. openlineage-airflow will use the
 ``OPENLINEAGE_URL`` environment variable to send OpenLineage events to Marquez. Optionally, we can also
 specify a namespace where the lineage events will be stored using the ``OPENLINEAGE_NAMESPACE`` environment variable.
 
@@ -28,17 +27,15 @@ For example, to send OpenLineage events to a local instance of Marquez with the 
     OPENLINEAGE_URL=http://localhost:5000
     OPENLINEAGE_NAMESPACE="dev"
 
-If you want to use the Astro SDK extractors to get openlineage events, then set the environment variable
+If you want to use the Astro Python SDK extractors to generate OpenLineage events, then set the environment variable
 
 .. code-block:: ini
 
     OPENLINEAGE_EXTRACTORS="astro.lineage.extractor.PythonSDKExtractor"
 
 
-Example DAG and Lineage events
-===============================
-
-
+When you run the example DAG given below, by setting the environment variables described above,
+ 
 .. code-block:: python
 
     import os
@@ -84,6 +81,6 @@ Example DAG and Lineage events
             ),
         )
 
-Sample Openlineage events shown on Marquez UI
+Then you would see the Openlineage facets on Marquez/OpenLineage UI
 
 .. image:: img/openlineage/openlineage_facets.png
