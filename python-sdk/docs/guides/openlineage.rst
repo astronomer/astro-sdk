@@ -35,7 +35,7 @@ If you want to use the Astro Python SDK extractors to generate OpenLineage event
 
 
 When you run the example DAG given below, by setting the environment variables described above,
- 
+
 .. code-block:: python
 
     import os
