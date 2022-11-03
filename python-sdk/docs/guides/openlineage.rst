@@ -23,11 +23,11 @@ specify a namespace where the lineage events will be stored using the ``OPENLINE
 .. code-block:: ini
 
     AIRFLOW__LINEAGE__BACKEND=openlineage.lineage_backend.OpenLineageBackend
-    OPENLINEAGE_URL=<url here>
-    OPENLINEAGE_NAMESPACE=<namespace here>
+    OPENLINEAGE_URL=http://host.docker.internal:5050/
+    OPENLINEAGE_NAMESPACE=astro
 
 If you want to use the Astro SDK extractors to get openlineage events, then set the environment variable
 
 .. code-block:: ini
 
-    OPENLINEAGE_EXTRACTORS="astro_sdk.src.astro.lineage.extractor.PythonSDKExtractor"
+    OPENLINEAGE_EXTRACTORS="python_sdk.src.astro.lineage.extractor.PythonSDKExtractor"
