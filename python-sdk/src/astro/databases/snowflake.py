@@ -66,6 +66,8 @@ NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS = (FileLocation.GS, FileLocation.S3)
 NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES = {FileType.PARQUET}
 NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS = {FileLocation.GS, FileLocation.S3}
 
+COPY_INTO_COMMAND_FAIL_STATUS = "LOAD_FAILED"
+
 
 @dataclass
 class SnowflakeFileFormat:
@@ -595,10 +597,19 @@ class SnowflakeDatabase(BaseDatabase):
         file_path = os.path.basename(source_file.path) or ""
         sql_statement = f"COPY INTO {table_name} FROM @{stage.qualified_name}/{file_path}"
         try:
-            self.hook.run(sql_statement)
+            self.hook.run(sql_statement, handler=self.check_for_error)
         except (ValueError, AttributeError) as exe:
             raise DatabaseCustomError from exe
         self.drop_stage(stage)
+
+    @staticmethod
+    def check_for_error(cur):
+        """
+        Handler to check the error state returned by snowflake when running `copy into` query.
+        """
+        results = cur.fetchall()
+        if any([True for result in results if result["status"] == COPY_INTO_COMMAND_FAIL_STATUS]):
+            raise DatabaseCustomError(results)
 
     def load_pandas_dataframe_to_table(
         self,
