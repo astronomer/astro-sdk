@@ -1173,7 +1173,6 @@ def test_load_file_col_cap_native_path(sample_dag, database_table_fixture):
                 "snowflake_storage_integration_google": "gcs_int_python_sdk",
                 "storage_integration": "gcs_int_python_sdk",
             },
-            enable_native_fallback=False,
         )
     test_utils.run_dag(sample_dag)
 
