@@ -231,37 +231,34 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         """
         output_dataset: list[OpenlineageDataset] = []
 
-        if self.output_table:
-            if self.output_table.openlineage_emit_temp_table_event():
-                output_uri = (
-                    f"{self.output_table.openlineage_dataset_namespace()}"
-                    f"/{self.output_table.openlineage_dataset_name()}"
-                )
+        if self.output_table and self.output_table.openlineage_emit_temp_table_event():
+            output_uri = (
+                f"{self.output_table.openlineage_dataset_namespace()}"
+                f"/{self.output_table.openlineage_dataset_name()}"
+            )
 
-                output_dataset = [
-                    OpenlineageDataset(
-                        namespace=self.output_table.openlineage_dataset_namespace(),
-                        name=self.output_table.openlineage_dataset_name(),
-                        facets={
-                            "schema": SchemaDatasetFacet(
-                                fields=[
-                                    SchemaField(
-                                        name=self.schema
-                                        if self.schema
-                                        else self.output_table.metadata.schema,
-                                        type=self.database
-                                        if self.database
-                                        else self.output_table.metadata.database,
-                                    )
-                                ]
-                            ),
-                            "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=output_uri),
-                            "outputStatistics": OutputStatisticsOutputDatasetFacet(
-                                rowCount=self.output_table.row_count,
-                            ),
-                        },
-                    ),
-                ]
+            output_dataset = [
+                OpenlineageDataset(
+                    namespace=self.output_table.openlineage_dataset_namespace(),
+                    name=self.output_table.openlineage_dataset_name(),
+                    facets={
+                        "schema": SchemaDatasetFacet(
+                            fields=[
+                                SchemaField(
+                                    name=self.schema if self.schema else self.output_table.metadata.schema,
+                                    type=self.database
+                                    if self.database
+                                    else self.output_table.metadata.database,
+                                )
+                            ]
+                        ),
+                        "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=output_uri),
+                        "outputStatistics": OutputStatisticsOutputDatasetFacet(
+                            rowCount=self.output_table.row_count,
+                        ),
+                    },
+                ),
+            ]
 
         run_facets: dict[str, BaseFacet] = {}
         job_facets: dict[str, BaseFacet] = {}
