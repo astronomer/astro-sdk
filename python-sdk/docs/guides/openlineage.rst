@@ -30,4 +30,4 @@ If you want to use the Astro SDK extractors to get openlineage events, then set 
 
 .. code-block:: ini
 
-    OPENLINEAGE_EXTRACTORS="python_sdk.src.astro.lineage.extractor.PythonSDKExtractor"
+    OPENLINEAGE_EXTRACTORS="astro.lineage.extractor.PythonSDKExtractor"
