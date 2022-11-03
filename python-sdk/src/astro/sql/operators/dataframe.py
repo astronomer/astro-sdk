@@ -230,8 +230,8 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         Collect the input, output, job and run facets for DataframeOperator
         """
         input_dataset: list[OpenlineageDataset] = []
+        output_dataset: list[OpenlineageDataset] = []
 
-        output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
         if self.output_table:
             output_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
