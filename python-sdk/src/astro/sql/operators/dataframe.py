@@ -11,7 +11,7 @@ from astro.airflow.datasets import kwargs_with_datasets
 
 try:
     from airflow.decorators.base import TaskDecorator, task_decorator_factory
-except ImportError:
+except ImportError:  # pragma: nocover
     from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
@@ -229,7 +229,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         """
         Collect the input, output, job and run facets for DataframeOperator
         """
-        input_dataset: list[OpenlineageDataset] = []
+        # input_dataset: list[OpenlineageDataset] = []
         output_dataset: list[OpenlineageDataset] = []
 
         if self.output_table:
@@ -264,7 +264,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         run_facets: dict[str, BaseFacet] = {}
         job_facets: dict[str, BaseFacet] = {}
         return OpenLineageFacets(
-            inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
+            inputs=[], outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
 
 
