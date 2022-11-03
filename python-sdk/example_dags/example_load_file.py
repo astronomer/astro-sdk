@@ -118,7 +118,6 @@ with dag:
             "allow_jagged_rows": True,
             "skip_leading_rows": "1",
         },
-        enable_native_fallback=False,
     )
     # [END load_file_example_9]
 
@@ -142,7 +141,7 @@ with dag:
     # [START load_file_example_12]
     aql.load_file(
         input_file=File(
-            "gs://astro-sdk/workspace/sample_pattern",
+            "gs://astro-sdk/workspace/sample_pattern.csv",
             conn_id="bigquery",
             filetype=FileType.CSV,
         ),
@@ -166,7 +165,7 @@ with dag:
     # [START load_file_example_14]
     aql.load_file(
         input_file=File(
-            "gs://astro-sdk/workspace/sample_pattern",
+            "gs://astro-sdk/workspace/sample_pattern.csv",
             conn_id="bigquery",
             filetype=FileType.CSV,
         ),
@@ -200,7 +199,7 @@ with dag:
     # [START load_file_example_17]
     aql.load_file(
         input_file=File(
-            "gs://astro-sdk/workspace/sample_pattern",
+            "gs://astro-sdk/workspace/sample_pattern.csv",
             conn_id="bigquery",
             filetype=FileType.CSV,
         ),

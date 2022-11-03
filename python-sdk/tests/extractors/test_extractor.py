@@ -10,12 +10,13 @@ from astro.constants import FileType
 from astro.files import File
 from astro.lineage.extractor import PythonSDKExtractor
 from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
+from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
 from astro.sql import AppendOperator, MergeOperator
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import Metadata, Table
 from tests.utils.airflow import create_context
 
-TEST_FILE_LOCATION = "gs://astro-sdk/workspace/sample_pattern"
+TEST_FILE_LOCATION = "gs://astro-sdk/workspace/sample_pattern.csv"
 TEST_TABLE = "test-table"
 TEST_INPUT_DATASET_NAMESPACE = "gs://astro-sdk"
 TEST_INPUT_DATASET_NAME = "/workspace/sample_pattern"
@@ -29,7 +30,7 @@ INPUT_STATS = [
             "input_file_facet": InputFileDatasetFacet(
                 number_of_files=1,
                 description=None,
-                is_pattern=True,
+                is_pattern=False,
                 files=[
                     InputFileFacet(
                         filepath="gs://astro-sdk/workspace/sample_pattern.csv",
@@ -52,7 +53,7 @@ OUTPUT_STATS = [
                 columns=[],
                 schema="astro",
                 used_native_path=False,
-                enabled_native_fallback=True,
+                enabled_native_fallback=LOAD_FILE_ENABLE_NATIVE_FALLBACK,
                 native_support_arguments={},
                 description=None,
             )
@@ -108,13 +109,13 @@ def test_append_op_extract_on_complete():
 
     src_table = LoadFileOperator(
         task_id="load_file",
-        input_file=File(path="gs://astro-sdk/workspace/sample_pattern", filetype=FileType.CSV),
+        input_file=File(path="gs://astro-sdk/workspace/sample_pattern.csv", filetype=FileType.CSV),
         output_table=Table(conn_id="gcp_conn"),
     ).execute({})
 
     target_table = LoadFileOperator(
         task_id="load_file",
-        input_file=File(path="gs://astro-sdk/workspace/sample_pattern", filetype=FileType.CSV),
+        input_file=File(path="gs://astro-sdk/workspace/sample_pattern.csv", filetype=FileType.CSV),
         output_table=Table(conn_id="gcp_conn"),
     ).execute({})
 
@@ -148,13 +149,13 @@ def test_merge_op_extract_on_complete():
     task_id = "merge"
     src_table = LoadFileOperator(
         task_id="load_file",
-        input_file=File(path="gs://astro-sdk/workspace/sample_pattern", filetype=FileType.CSV),
+        input_file=File(path="gs://astro-sdk/workspace/sample_pattern.csv", filetype=FileType.CSV),
         output_table=Table(conn_id="gcp_conn", metadata=Metadata(schema="astro")),
     ).execute({})
 
     target_table = LoadFileOperator(
         task_id="load_file",
-        input_file=File(path="gs://astro-sdk/workspace/sample_pattern", filetype=FileType.CSV),
+        input_file=File(path="gs://astro-sdk/workspace/sample_pattern.csv", filetype=FileType.CSV),
         output_table=Table(conn_id="gcp_conn", metadata=Metadata(schema="astro")),
     ).execute({})
     op = MergeOperator(

@@ -199,27 +199,30 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         """
         Returns the lineage data
         """
-        input_uri = (
-            f"{self.output_table.openlineage_dataset_namespace()}"
-            f"://{self.output_table.openlineage_dataset_name()}"
-        )
-        input_dataset: list[OpenlineageDataset] = [
-            OpenlineageDataset(
-                namespace=self.output_table.openlineage_dataset_namespace(),
-                name=self.output_table.openlineage_dataset_name(),
-                facets={
-                    "schema": SchemaDatasetFacet(fields=[SchemaField(name=self.schema, type=self.database)]),
-                    "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=input_uri),
-                },
-            )
-        ]
-
-        output_uri = (
-            f"{self.output_table.openlineage_dataset_namespace()}"
-            f"://{self.output_table.openlineage_dataset_name()}"
-        )
+        input_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
         output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
-        if self.output_table:
+        if self.output_table.openlineage_emit_temp_table_event():
+            input_uri = (
+                f"{self.output_table.openlineage_dataset_namespace()}"
+                f"://{self.output_table.openlineage_dataset_name()}"
+            )
+            input_dataset = [
+                OpenlineageDataset(
+                    namespace=self.output_table.openlineage_dataset_namespace(),
+                    name=self.output_table.openlineage_dataset_name(),
+                    facets={
+                        "schema": SchemaDatasetFacet(
+                            fields=[SchemaField(name=self.schema, type=self.database)]
+                        ),
+                        "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=input_uri),
+                    },
+                )
+            ]
+        if self.output_table.openlineage_emit_temp_table_event():
+            output_uri = (
+                f"{self.output_table.openlineage_dataset_namespace()}"
+                f"://{self.output_table.openlineage_dataset_name()}"
+            )
             output_dataset = [
                 OpenlineageDataset(
                     namespace=self.output_table.openlineage_dataset_namespace(),

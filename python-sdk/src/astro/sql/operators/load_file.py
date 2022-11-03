@@ -15,6 +15,7 @@ from astro.databases.base import BaseDatabase
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.lineage.extractor import OpenLineageFacets
 from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
+from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
 from astro.utils.dataframe import convert_dataframe_to_file
@@ -51,7 +52,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         use_native_support: bool = True,
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
-        enable_native_fallback: bool | None = True,
+        enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         **kwargs,
     ) -> None:
         super().__init__(
@@ -225,7 +226,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         ]
 
         output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
-        if self.output_table:
+        if self.output_table is not None and self.output_table.openlineage_emit_temp_table_event():
             output_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
                 f"://{self.output_table.openlineage_dataset_name()}"

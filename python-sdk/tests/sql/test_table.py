@@ -228,3 +228,19 @@ def test_openlineage_dataset(mock_get_connection, gcp_cred, connection, name, na
 
     assert tb.openlineage_dataset_name() == name
     assert tb.openlineage_dataset_namespace() == namespace
+
+
+def test_openlineage_emit_temp_table_event():
+    """
+    Based on airflow config ```OPENLINEAGE_EMIT_TEMP_TABLE_EVENT``` value and table type
+    check whether to emit temp table event in openlineage or not
+    """
+    tb = TempTable(name="_tmp_xyz")
+    assert tb.openlineage_emit_temp_table_event() is True
+
+    tb = Table(name="test")
+    assert tb.openlineage_emit_temp_table_event() is True
+
+    with mock.patch("astro.table.OPENLINEAGE_EMIT_TEMP_TABLE_EVENT", new=False):
+        tb = TempTable(name="_tmp_xyz")
+        assert tb.openlineage_emit_temp_table_event() is False

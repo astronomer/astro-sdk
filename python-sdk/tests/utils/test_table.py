@@ -2,10 +2,11 @@ from unittest import mock
 
 import pytest
 
+from astro.constants import Database
 from astro.files import File
 from astro.sql import LoadFileOperator
 from astro.sql.operators.transform import TransformOperator
-from astro.table import BaseTable, Metadata, Table
+from astro.table import BaseTable, Table
 from astro.utils.table import find_first_table
 
 
@@ -94,16 +95,39 @@ def test_find_first_table_with_xcom_arg(xcom_arg_resolve, kwargs, return_type):
 
 
 @pytest.mark.integration
-def test_row_count():
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SNOWFLAKE,
+        },
+        {
+            "database": Database.BIGQUERY,
+        },
+        {
+            "database": Database.POSTGRES,
+        },
+        {
+            "database": Database.SQLITE,
+        },
+        {
+            "database": Database.REDSHIFT,
+        },
+    ],
+    indirect=True,
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+)
+def test_row_count(database_table_fixture):
     """
     Load file in bigquery and test the row count of bigquery table
     """
+    _, test_table = database_table_fixture
     imdb_table = LoadFileOperator(
         task_id="load_file",
         input_file=File(
             path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
         ),
-        output_table=Table(conn_id="gcp_conn", metadata=Metadata(schema="astro")),
+        output_table=test_table,
     ).execute({})
 
-    assert imdb_table.row_count > 0
+    assert imdb_table.row_count == 117
