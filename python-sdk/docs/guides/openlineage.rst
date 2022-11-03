@@ -17,8 +17,8 @@ Configure the Openlineage
 ==========================
 
 We'll need to specify where we want Airflow to send OpenLineage events. openlineage-airflow will use the
-OPENLINEAGE_URL environment variable to send OpenLineage events to Marquez. Optionally, we can also
-specify a namespace where the lineage events will be stored using the OPENLINEAGE_NAMESPACE environment variable.
+``OPENLINEAGE_URL`` environment variable to send OpenLineage events to Marquez. Optionally, we can also
+specify a namespace where the lineage events will be stored using the ``OPENLINEAGE_NAMESPACE`` environment variable.
 
 .. code-block:: ini
 
