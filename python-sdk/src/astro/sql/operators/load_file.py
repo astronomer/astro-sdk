@@ -98,7 +98,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         """
         if not isinstance(self.output_table, BaseTable):
             raise ValueError("Please pass a valid Table instance in 'output_table' parameter")
-        database = create_database(self.output_table.conn_id)
+        database = create_database(self.output_table.conn_id, self.output_table)
         self.output_table = database.populate_table_metadata(self.output_table)
         normalize_config = self._populate_normalize_config(
             ndjson_normalize_sep=self.ndjson_normalize_sep,

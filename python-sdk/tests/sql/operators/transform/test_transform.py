@@ -235,3 +235,26 @@ def test_inlets_outlets_non_supported_ds():
 
     task = top_five_animations(input_table=imdb_table, output_table=output_table)
     assert task.operator.outlets == []
+
+
+def test_transform_using_table_metadata(sample_dag):
+    """
+    Test that load file and transform when database and schema is available in table metadata instead of conn
+    """
+    with sample_dag:
+        metadata = {"database": "SANDBOX", "schema": "ASTROFLOW_CI"}
+        test_table = Table(conn_id="snowflake_conn_1", metadata=metadata)
+        homes_file = aql.load_file(
+            input_file=File(path=str(cwd) + "/../../../data/homes.csv"),
+            output_table=test_table,
+        )
+
+        @aql.transform
+        def select(input_table: Table):
+            return "SELECT * FROM {{input_table}} LIMIT 4;"
+
+        select(
+            input_table=test_table,
+            output_table=Table(conn_id="snowflake_conn_1")
+        )
+    test_utils.run_dag(sample_dag)
