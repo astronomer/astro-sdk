@@ -86,4 +86,4 @@ Example DAG and Lineage events
 
 Sample Openlineage events shown on Marquez UI
 
-.. image:: img/openlineage/sample-dataset-event.png
+.. image:: img/openlineage/openlienage_dataset_event.jpeg
