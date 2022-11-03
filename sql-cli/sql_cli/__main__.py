@@ -151,6 +151,16 @@ def test_dag(
         show_default=False,
         help="file where the dag is",
     ),
+    connections_file_path: str = typer.Argument(
+        default=None,
+        show_default=False,
+        help="path to a file containing a list of connection objects",
+    ),
+    variables_file_path: str = typer.Argument(
+        default=None,
+        show_default=False,
+        help="path to a file containing a list of variable objects",
+    ),
 ) -> None:
     from sql_cli.utils.airflow import (
         get_dag,
@@ -158,10 +168,17 @@ def test_dag(
     from sql_cli.run_dag import run_dag
     from sql_cli.exceptions import ConnectionFailed
     from typer import Exit
+    from airflow.models.dagbag import DagBag
+    from airflow.utils.cli import process_subdir
 
+    import_errors = DagBag(process_subdir(str(dag_file))).import_errors
+    if import_errors:
+        all_errors = "\n\n".join(list(import_errors.values()))
+        rprint(f"[bold red]Workflow failed to render[/bold red]\n errors found:\n\n {all_errors}")
+        raise Exit(code=1)
     dag = get_dag(dag_id=dag_id, subdir=dag_file, include_examples=False)
     try:
-        dr = run_dag(dag)
+        dr = run_dag(dag, conn_file_path=connections_file_path, variable_file_path=variables_file_path)
     except ConnectionFailed as connection_failed:
         rprint(
             f"  [bold red]{connection_failed}[/bold red] using connection [bold]{connection_failed.conn_id}[/bold]"
