@@ -229,7 +229,6 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         """
         Collect the input, output, job and run facets for DataframeOperator
         """
-        # input_dataset: list[OpenlineageDataset] = []
         output_dataset: list[OpenlineageDataset] = []
 
         if self.output_table:
