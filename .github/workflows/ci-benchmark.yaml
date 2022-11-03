@@ -4,7 +4,7 @@ on:
     types:
       - labeled
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 0 * * MON'
 
 # This allows a subsequently queued workflow run to interrupt and cancel previous runs
 concurrency:
