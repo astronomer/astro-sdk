@@ -8,7 +8,6 @@ from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
 from openlineage.client.facet import (
     BaseFacet,
-    DataQualityMetricsInputDatasetFacet,
     DataSourceDatasetFacet,
     OutputStatisticsOutputDatasetFacet,
     SchemaDatasetFacet,
@@ -85,7 +84,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         else:
             if not self.conn_id:
                 raise ValueError("You need to provide a table or a connection id")
-        self.database_impl = create_database(self.conn_id)
+        self.database_impl = create_database(self.conn_id, first_table)
 
         # Find and load dataframes from op_arg and op_kwarg into Table
         self.create_output_table_if_needed()
@@ -199,9 +198,11 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         """
         Returns the lineage data
         """
-        input_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
-        output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
-        if self.output_table.openlineage_emit_temp_table_event():
+        input_dataset: list[OpenlineageDataset] = []
+        output_dataset: list[OpenlineageDataset] = []
+        if (
+            self.output_table.openlineage_emit_temp_table_event() and self.output_table.conn_id
+        ):  # pragma: no cover
             input_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
                 f"://{self.output_table.openlineage_dataset_name()}"
@@ -218,10 +219,15 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                     },
                 )
             ]
-        if self.output_table.openlineage_emit_temp_table_event():
+        if (
+            self.output_table.openlineage_emit_temp_table_event() and self.output_table.conn_id
+        ):  # pragma: no cover
             output_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
                 f"://{self.output_table.openlineage_dataset_name()}"
+            )
+            output_table_row_count = task_instance.xcom_pull(
+                task_ids=task_instance.task_id, key="output_table_row_count"
             )
             output_dataset = [
                 OpenlineageDataset(
@@ -229,12 +235,9 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                     name=self.output_table.openlineage_dataset_name(),
                     facets={
                         "outputStatistics": OutputStatisticsOutputDatasetFacet(
-                            rowCount=self.output_table.row_count
+                            rowCount=output_table_row_count
                         ),
                         "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=output_uri),
-                        "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(
-                            rowCount=self.output_table.row_count, columnMetrics={}
-                        ),
                     },
                 )
             ]
@@ -282,7 +285,7 @@ def load_op_kwarg_dataframes_into_sql(conn_id: str, op_kwargs: dict, target_tabl
     :return: New op_kwargs, in which dataframes are replaced by tables
     """
     final_kwargs = {}
-    database = create_database(conn_id=conn_id)
+    database = create_database(conn_id=conn_id, table=target_table)
     for key, value in op_kwargs.items():
         if isinstance(value, pd.DataFrame):
             df_table = cast(BaseTable, target_table.create_similar_table())

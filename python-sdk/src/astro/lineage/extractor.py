@@ -34,6 +34,8 @@ class PythonSDKExtractor(BaseExtractor):
         return [
             "AppendOperator",
             "BaseSQLDecoratedOperator",
+            "DataframeOperator",
+            "ExportFileOperator",
             "LoadFileOperator",
             "MergeOperator",
             "TransformOperator",

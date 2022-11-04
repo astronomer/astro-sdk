@@ -6,10 +6,18 @@ from dotenv import load_dotenv
 from rich import print as rprint
 
 import sql_cli
+from sql_cli.astro.command import AstroCommand
+from sql_cli.astro.group import AstroGroup
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
 
 load_dotenv()
-app = typer.Typer(add_completion=False, context_settings={"help_option_names": ["-h", "--help"]})
+app = typer.Typer(
+    name="flow",
+    cls=AstroGroup,
+    add_completion=False,
+    context_settings={"help_option_names": ["-h", "--help"]},
+    rich_markup_mode="rich",
+)
 
 
 airflow_logger = logging.getLogger("airflow")
@@ -17,17 +25,26 @@ airflow_logger.setLevel(logging.CRITICAL)
 airflow_logger.propagate = False
 
 
-@app.command(help="Print the SQL CLI version.")
+@app.command(
+    cls=AstroCommand,
+    help="Print the SQL CLI version.",
+)
 def version() -> None:
     rprint("Astro SQL CLI", sql_cli.__version__)
 
 
-@app.command(help="Print additional information about the project.")
+@app.command(
+    cls=AstroCommand,
+    help="Print additional information about the project.",
+)
 def about() -> None:
     rprint("Find out more: https://github.com/astronomer/astro-sdk/sql-cli")
 
 
-@app.command(help="Generate the Airflow DAG from a directory of SQL files.")
+@app.command(
+    cls=AstroCommand,
+    help="Generate the Airflow DAG from a directory of SQL files.",
+)
 def generate(
     workflow_name: str = typer.Argument(
         default=...,
@@ -53,9 +70,10 @@ def generate(
 
 
 @app.command(
+    cls=AstroCommand,
     help="""
     Validate Airflow connection(s) provided in the configuration file for the given environment.
-    """
+    """,
 )
 def validate(
     project_dir: Path = typer.Argument(
@@ -89,10 +107,11 @@ def validate(
 
 
 @app.command(
+    cls=AstroCommand,
     help="""
     Run a workflow locally. This task assumes that there is a local airflow DB (can be a SQLite file), that has been
     initialized with Airflow tables.
-    """
+    """,
 )
 def run(
     workflow_name: str = typer.Argument(
@@ -152,35 +171,24 @@ def run(
 
 
 @app.command(
+    cls=AstroCommand,
     help="""
     Initialise a project structure to write workflows using SQL files.
 
-    \b\n
     Examples of usage:
-    \b\n
     $ flow init
-    \b\n
     $ flow init .
-    \b\n
     $ flow init project_name
 
-
-    \b\n
     By default, the project structure includes:
-
     ├── config: withholds configuration, e.g. database connections, within each environment directory
-    \b\n
     ├── data: directory which contains datasets, including SQLite databases used by the examples
-    \b\n
     └── workflows: directory where SQL workflows are declared, by default has two examples of workflow
 
-    \b\n
     Next steps:
-    \b\n
     * Update the file `config/default/configuration.yaml` to declare database connections.
-    \b\n
     * Create SQL workflows within the `workflows` folder.
-    """
+    """,
 )
 def init(
     project_dir: Path = typer.Argument(

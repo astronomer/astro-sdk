@@ -94,6 +94,7 @@ jobs:
     env:
       AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
       AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
+      _TYPER_FORCE_DISABLE_TERMINAL: 1
 
 
   Code-Coverage:

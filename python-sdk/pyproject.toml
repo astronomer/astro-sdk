@@ -23,7 +23,10 @@ dependencies = [
     "pyarrow",
     "python-frontmatter",
     "smart-open",
-    "SQLAlchemy>=1.3.18"
+    "SQLAlchemy>=1.3.18,<1.4.42" # Pinning it to <1.4.42 because sqlalchemy 1.4.42
+    # has renamed all of the rfc 1738 stuff so imports like `from sqlalchemy.engine.url import _rfc_1738_quote` fails.
+    # which is breaking in snowflake-sqlalchemy and we cannot change the version of snowflake-sqlalchemy to anything
+    # other than 1.2.4 because airflow 2.2.5 has a constraint.
 ]
 
 keywords = ["airflow", "provider", "astronomer", "sql", "decorator", "task flow", "elt", "etl", "dag"]

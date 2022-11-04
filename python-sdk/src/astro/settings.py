@@ -10,6 +10,8 @@ BIGQUERY_SCHEMA = conf.get("astro_sdk", "bigquery_default_schema", fallback=SCHE
 SNOWFLAKE_SCHEMA = conf.get("astro_sdk", "snowflake_default_schema", fallback=SCHEMA)
 REDSHIFT_SCHEMA = conf.get("astro_sdk", "redshift_default_schema", fallback=SCHEMA)
 
+LOAD_FILE_ENABLE_NATIVE_FALLBACK = conf.get("astro_sdk", "load_file_enable_native_fallback", fallback=False)
+
 DATAFRAME_STORAGE_CONN_ID = conf.get("astro_sdk", "xcom_storage_conn_id", fallback=None)
 DATAFRAME_STORAGE_URL = conf.get("astro_sdk", "xcom_storage_url", fallback=tempfile.gettempdir())
 STORE_DATA_LOCAL_DEV = conf.get("astro_sdk", "store_data_local_dev", fallback=False)
