@@ -1194,7 +1194,7 @@ def test_load_file_col_cap_native_path(sample_dag, database_table_fixture):
     indirect=True,
     ids=["snowflake"],
 )
-def test_load_file_snowflake_error_out(sample_dag, database_table_fixture):
+def test_load_file_snowflake_error_out_provider_3_2_0(sample_dag, database_table_fixture):
     """
     Test that snowflake errors are bubbled up when the query fails. Loading in snowflake fails with
      `Numeric value 'id' is not recognized`
@@ -1212,3 +1212,36 @@ def test_load_file_snowflake_error_out(sample_dag, database_table_fixture):
                 native_support_kwargs={"storage_integration": "gcs_int_python_sdk"},
             )
         test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SNOWFLAKE,
+        }
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+def test_load_file_snowflake_error_out_provider_3_1_0(sample_dag, database_table_fixture):
+    """
+    Test that snowflake errors are bubbled up when the query fails. Loading in snowflake fails with
+     `Numeric value 'id' is not recognized`
+    """
+    _, test_table = database_table_fixture
+    with mock.patch("astro.databases.snowflake.SnowflakeDatabase.schema_exists") as schema_exists, mock.patch(
+        "airflow.providers.snowflake.hooks.snowflake.SnowflakeHook.run"
+    ) as run:
+        schema_exists.return_value = True
+        run.side_effect = AttributeError()
+        with pytest.raises(DatabaseCustomError):
+            with sample_dag:
+                load_file(
+                    input_file=File("gs://astro-sdk/workspace/sample.csv", conn_id="bigquery"),
+                    output_table=test_table,
+                    use_native_support=True,
+                    enable_native_fallback=False,
+                    native_support_kwargs={"storage_integration": "gcs_int_python_sdk"},
+                )
+            test_utils.run_dag(sample_dag)
