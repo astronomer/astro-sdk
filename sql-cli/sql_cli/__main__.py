@@ -66,7 +66,12 @@ def generate(
     project = Project(project_dir_absolute)
     project.load_config(env)
 
-    cli.generate_dag(project, env, workflow_name)
+    rprint(
+        f"\nGenerating the DAG file from workflow [bold blue]{workflow_name}[/bold blue]"
+        f" for [bold]{env}[/bold] environment..\n"
+    )
+    dag_file = cli.generate_dag(project, env, workflow_name)
+    rprint("The DAG file", dag_file.resolve(), "has been successfully generated. 🎉")
 
 
 @app.command(
@@ -150,7 +155,13 @@ def run(
 
     dag_file = cli.generate_dag(project, env, workflow_name)
     dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
-    cli.run_dag(project, env, dag, verbose)
+    rprint(
+        f"\nRunning the workflow [bold blue]{dag.dag_id}[/bold blue] for [bold]{env}[/bold] environment..\n"
+    )
+    dr = cli.run_dag(project, env, dag, verbose)
+    rprint(f"Completed running the workflow {dr.dag_id}. 🚀")
+    elapsed_seconds = (dr.end_date - dr.start_date).microseconds / 10**6
+    rprint(f"Total elapsed time: [bold blue]{elapsed_seconds:.2}s[/bold blue]")
 
 
 @app.command(
