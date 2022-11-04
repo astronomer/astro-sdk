@@ -128,10 +128,12 @@ def generate_render_dag(directory: Path, dags_directory: Path) -> Path:
         start_date=datetime(2020, 1, 1),
         sql_files=sql_files,
     )
+    for sql_file in sql_files_dag.sorted_sql_files():
+        sql_file.write_raw_content_to_target_path()
+
     render(
         template_file=Path("templates/render_dag.py.jinja2"),
         context={
-            "dag": sql_files_dag,
             "dag_id": directory.name,
             "start_date": datetime(2020, 1, 1),
             "project_path": directory,

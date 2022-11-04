@@ -34,12 +34,16 @@ def generate_dag(project: Project, env: str, workflow_name: str, generate_tasks:
         rprint(f"[bold red]The workflow {workflow_name} contains a cycle! {dag_cycle}[/bold red]")
         raise Exit(code=1)
     rprint("The DAG file", dag_file.resolve(), "has been successfully generated. 🎉")
+    _check_for_dag_import_errors(dag_file)
+    return dag_file
+
+
+def _check_for_dag_import_errors(dag_file):
     import_errors = DagBag(process_subdir(str(dag_file))).import_errors
     if import_errors:
         all_errors = "\n\n".join(list(import_errors.values()))
         rprint(f"[bold red]Workflow failed to render[/bold red]\n errors found:\n\n {all_errors}")
         raise Exit(code=1)
-    return dag_file
 
 
 def _generate_dag_file(generate_tasks, project, workflow_name):

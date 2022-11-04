@@ -22,7 +22,7 @@ class SqlFile:
         self.root_directory = root_directory
         self.path = path
         self.target_directory = target_directory
-        self.raw_content = open(self.path).read()
+        self.raw_content = self.path.read_text()
 
         post = frontmatter.load(self.path)
         self.content = post.content
@@ -156,7 +156,7 @@ def get_sql_files(directory: Path, target_directory: Path | None) -> set[SqlFile
     :returns: the sql files found in the directory.
     """
     return {
-        SqlFile(root_directory=directory, path=child, target_directory=target_directory)  # type: ignore
+        SqlFile(root_directory=directory, path=child, target_directory=target_directory)
         for child in directory.rglob("*.sql")
         if child.is_file() and not child.is_symlink()
     }
