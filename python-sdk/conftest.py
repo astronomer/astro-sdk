@@ -72,7 +72,6 @@ def sample_dag():
 def create_unique_table_name(length: int = MAX_TABLE_NAME_LENGTH) -> str:
     """
     Create a unique table name of the requested size, which is compatible with all supported databases.
-
     :return: Unique table name
     :rtype: str
     """
@@ -98,7 +97,6 @@ def schemas_fixture(request, database_table_fixture):
     """
     Given request.param in the format:
         "someschema"  # name of the schema to be created
-
     If the schema exists, it is deleted during the tests setup and tear down.
     """
     schema_name = request.param
@@ -124,7 +122,6 @@ def database_table_fixture(request):
         (database, table)
     Example:
         (astro.databases.sqlite.SqliteDatabase(), Table())
-
     If the table exists, it is deleted during the tests setup and tear down.
     The table will only be created during setup if request.param contains the `file` parameter.
     """
@@ -183,7 +180,6 @@ def multiple_tables_fixture(request, database_table_fixture):
         ]
     }
     If the table key is missing, the fixture creates a table using the database.conn_id.
-
     For each table in the list, if the table exists, it is deleted during the tests setup and tear down.
     The table will only be created during setup if the item contains the "file" to be loaded to the table.
     """
@@ -216,7 +212,6 @@ def remote_files_fixture(request):
     Return a list of remote object filenames.
     By default, this fixture also creates objects using sample.<filetype>, unless
     the user uses file_create=false.
-
     Given request.param in the format:
         {
             "provider": "google",  # mandatory, may be "google" or "amazon"
@@ -231,7 +226,6 @@ def remote_files_fixture(request):
             "gs://some-bucket/test/8df8aea0-9b2e-4671-b84e-2d48f42a182f0.csv",
             "gs://some-bucket/test/8df8aea0-9b2e-4671-b84e-2d48f42a182f1.csv"
         ]
-
     If the objects exist, they are deleted during the tests setup and tear down.
     """
     params = request.param

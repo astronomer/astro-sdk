@@ -36,6 +36,17 @@ connections:
       role: "AIRFLOW_TEST_USER"
       warehouse: ROBOTS
       database: SANDBOX
+  - conn_id: snowflake_conn_1
+    conn_type: snowflake
+    host: https://gp21411.us-east-1.snowflakecomputing.com
+    port: 443
+    login: $SNOWFLAKE_ACCOUNT_NAME
+    password: $SNOWFLAKE_PASSWORD
+    extra:
+      account: "gp21411"
+      region: "us-east-1"
+      role: "AIRFLOW_TEST_USER"
+      warehouse: ROBOTS
   - conn_id: bigquery
     conn_type: bigquery
     description: null
