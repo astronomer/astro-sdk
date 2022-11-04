@@ -231,7 +231,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         """
         output_dataset: list[OpenlineageDataset] = []
 
-        if self.output_table and self.output_table.openlineage_emit_temp_table_event():
+        if self.output_table and self.output_table.openlineage_emit_temp_table_event():  # pragma: no cover
             output_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
                 f"/{self.output_table.openlineage_dataset_name()}"
