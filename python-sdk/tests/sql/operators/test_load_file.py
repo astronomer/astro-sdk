@@ -1199,7 +1199,7 @@ def test_load_file_snowflake_error_out(sample_dag, database_table_fixture):
     Test that snowflake errors are bubbled up when the query fails. Loading in snowflake fails with
      `Numeric value 'id' is not recognized`
     """
-    db, test_table = database_table_fixture
+    _, test_table = database_table_fixture
     with pytest.raises(DatabaseCustomError):
         with sample_dag:
             load_file(
