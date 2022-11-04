@@ -3,7 +3,7 @@ from __future__ import annotations
 import attr
 from openlineage.client.facet import BaseFacet
 
-from astro.constants import FileType, MergeConflictStrategy
+from astro.constants import ExportExistsStrategy, FileType, MergeConflictStrategy
 from astro.table import Column, Metadata
 
 
@@ -21,6 +21,23 @@ class InputFileFacet(BaseFacet):
     file_size: int | None
     file_type: FileType
     description: str | None = None
+
+
+@attr.define
+class ExportFileFacet(BaseFacet):
+    """
+    Facet that represents output file for export file
+
+    :param filepath: path of each file.
+    :param file_size: size of the file.
+    :param file_type: type of the file.
+    :param if_exists: Overwrite file if exists.
+    """
+
+    filepath: str
+    file_size: int | None
+    file_type: FileType
+    if_exists: ExportExistsStrategy
 
 
 @attr.define

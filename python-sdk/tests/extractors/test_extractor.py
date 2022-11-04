@@ -3,6 +3,7 @@ import pytest
 from airflow.models.taskinstance import TaskInstance
 from airflow.utils import timezone
 from openlineage.airflow.extractors import TaskMetadata
+from openlineage.client.facet import DataQualityMetricsInputDatasetFacet, OutputStatisticsOutputDatasetFacet
 from openlineage.client.run import Dataset as OpenlineageDataset
 
 from astro import sql as aql
@@ -12,6 +13,7 @@ from astro.lineage.extractor import PythonSDKExtractor
 from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
 from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
 from astro.sql import AppendOperator, MergeOperator
+from astro.sql.operators.export_file import ExportFileOperator
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import Metadata, Table
 from tests.utils.airflow import create_context
@@ -22,6 +24,25 @@ TEST_INPUT_DATASET_NAMESPACE = "gs://astro-sdk"
 TEST_INPUT_DATASET_NAME = "/workspace/sample_pattern"
 TEST_OUTPUT_DATASET_NAMESPACE = "bigquery"
 TEST_OUTPUT_DATASET_NAME = "astronomer-dag-authoring.astro.test-extractor"
+INPUT_STATS_FOR_EXPORT_FILE = [
+    OpenlineageDataset(
+        namespace=TEST_INPUT_DATASET_NAMESPACE,
+        name=TEST_INPUT_DATASET_NAME,
+        facets={
+            "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(rowCount=117, columnMetrics={}),
+        },
+    )
+]
+
+OUTPUT_STATS_FOR_EXPORT_FILE = [
+    OpenlineageDataset(
+        namespace=TEST_OUTPUT_DATASET_NAMESPACE,
+        name=TEST_OUTPUT_DATASET_NAME,
+        facets={
+            "outputStatistics": OutputStatisticsOutputDatasetFacet(rowCount=117, size=65),
+        },
+    )
+]
 INPUT_STATS = [
     OpenlineageDataset(
         namespace=TEST_INPUT_DATASET_NAMESPACE,
@@ -95,6 +116,53 @@ def test_python_sdk_load_file_extract_on_complete():
     assert (
         task_meta.outputs[0].facets["output_database_facet"]
         == OUTPUT_STATS[0].facets["output_database_facet"]
+    )
+    assert task_meta.job_facets == {}
+    assert task_meta.run_facets == {}
+
+
+@pytest.mark.integration
+def test_python_sdk_export_file_extract_on_complete():
+    """
+    Tests that  the custom PythonSDKExtractor is able to process the
+    operator's metadata that needs to be extracted as per OpenLineage
+    for ExportFileOperator.
+    """
+    LoadFileOperator(
+        task_id="load_file",
+        input_file=File(
+            path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
+        ),
+        output_table=Table(conn_id="sqlite_conn", name="test_extractor"),
+    ).execute({})
+
+    task_id = "export_file"
+    export_file_operator = ExportFileOperator(
+        task_id=task_id,
+        input_data=Table(conn_id="sqlite_conn", name="test_extractor"),
+        output_file=File(
+            path="gs://astro-sdk/workspace/openlineage_export_file.csv",
+            conn_id="bigquery",
+            filetype=FileType.CSV,
+        ),
+        if_exists="replace",
+    )
+
+    task_instance = TaskInstance(task=export_file_operator)
+
+    python_sdk_extractor = PythonSDKExtractor(export_file_operator)
+    task_meta_extract = python_sdk_extractor.extract()
+    assert isinstance(task_meta_extract, TaskMetadata)
+
+    task_meta = python_sdk_extractor.extract_on_complete(task_instance)
+    assert task_meta.name == f"adhoc_airflow.{task_id}"
+    assert (
+        task_meta.inputs[0].facets["dataQualityMetrics"]
+        == INPUT_STATS_FOR_EXPORT_FILE[0].facets["dataQualityMetrics"]
+    )
+    assert (
+        task_meta.outputs[0].facets["outputStatistics"]
+        == OUTPUT_STATS_FOR_EXPORT_FILE[0].facets["outputStatistics"]
     )
     assert task_meta.job_facets == {}
     assert task_meta.run_facets == {}
