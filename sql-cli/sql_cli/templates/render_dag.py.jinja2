@@ -9,10 +9,6 @@ from sql_cli.dag_render import render_tasks
 
 DAGS_FOLDER = Path(__file__).parent.as_posix()
 
-{%- for sql_file in dag.sorted_sql_files() %}
-{{ sql_file.write_raw_content_to_target_path() }}
-{%- endfor %}
-
 with DAG(
     dag_id="{{ dag.dag_id }}",
     start_date=timezone.parse("{{ dag.start_date }}"),
