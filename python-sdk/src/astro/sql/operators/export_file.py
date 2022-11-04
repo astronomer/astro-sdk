@@ -78,7 +78,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
         Collect the input, output, job and run facets for export file operator
         """
         input_dataset: list[OpenlineageDataset] = []
-        if isinstance(self.input_data, BaseTable):
+        if isinstance(self.input_data, BaseTable) and self.input_data.openlineage_emit_temp_table_event():
             input_uri = (
                 f"{self.input_data.openlineage_dataset_namespace()}"
                 f"://{self.input_data.openlineage_dataset_name()}"
