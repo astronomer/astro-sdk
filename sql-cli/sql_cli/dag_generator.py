@@ -104,9 +104,9 @@ def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) ->
         sql_files=sql_files,
     )
     output_file = dags_directory / f"{sql_files_dag.dag_id}.py"
-    template_path = "templates/dag.py.jinja2" if generate_tasks else "templates/render_dag.py.jinja2"
+    template_dag_name = "gen_tasks_dag" if generate_tasks else "render_dag"
     render(
-        template_file=Path(template_path),
+        template_file=Path(f"templates/{template_dag_name}.py.jinja2"),
         context={"dag": sql_files_dag},
         output_file=output_file,
     )
