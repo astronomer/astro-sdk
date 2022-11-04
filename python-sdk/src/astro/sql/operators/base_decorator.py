@@ -200,7 +200,9 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         """
         input_dataset: list[OpenlineageDataset] = []
         output_dataset: list[OpenlineageDataset] = []
-        if self.output_table.openlineage_emit_temp_table_event() and self.output_table.conn_id:  # pragma: no cover
+        if (
+            self.output_table.openlineage_emit_temp_table_event() and self.output_table.conn_id
+        ):  # pragma: no cover
             input_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
                 f"://{self.output_table.openlineage_dataset_name()}"
@@ -217,7 +219,9 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                     },
                 )
             ]
-        if self.output_table.openlineage_emit_temp_table_event() and self.output_table.conn_id:  # pragma: no cover
+        if (
+            self.output_table.openlineage_emit_temp_table_event() and self.output_table.conn_id
+        ):  # pragma: no cover
             output_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
                 f"://{self.output_table.openlineage_dataset_name()}"
