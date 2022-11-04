@@ -11,13 +11,23 @@ from astro.airflow.datasets import kwargs_with_datasets
 
 try:
     from airflow.decorators.base import TaskDecorator, task_decorator_factory
-except ImportError:
+except ImportError:  # pragma: no cover
     from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
+
+from openlineage.client.facet import (
+    BaseFacet,
+    DataSourceDatasetFacet,
+    OutputStatisticsOutputDatasetFacet,
+    SchemaDatasetFacet,
+    SchemaField,
+)
+from openlineage.client.run import Dataset as OpenlineageDataset
 
 from astro.constants import ColumnCapitalization
 from astro.databases import create_database
 from astro.files import File
+from astro.lineage.extractor import OpenLineageFacets
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable, Table
 from astro.utils.dataframe import convert_columns_names_capitalization
@@ -214,6 +224,47 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                 columns_names_capitalization=columns_names_capitalization,
             )
         return function_output
+
+    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:  # skipcq: PYL-W0613
+        """
+        Collect the input, output, job and run facets for DataframeOperator
+        """
+        output_dataset: list[OpenlineageDataset] = []
+
+        if self.output_table and self.output_table.openlineage_emit_temp_table_event():  # pragma: no cover
+            output_uri = (
+                f"{self.output_table.openlineage_dataset_namespace()}"
+                f"/{self.output_table.openlineage_dataset_name()}"
+            )
+
+            output_dataset = [
+                OpenlineageDataset(
+                    namespace=self.output_table.openlineage_dataset_namespace(),
+                    name=self.output_table.openlineage_dataset_name(),
+                    facets={
+                        "schema": SchemaDatasetFacet(
+                            fields=[
+                                SchemaField(
+                                    name=self.schema if self.schema else self.output_table.metadata.schema,
+                                    type=self.database
+                                    if self.database
+                                    else self.output_table.metadata.database,
+                                )
+                            ]
+                        ),
+                        "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=output_uri),
+                        "outputStatistics": OutputStatisticsOutputDatasetFacet(
+                            rowCount=self.output_table.row_count,
+                        ),
+                    },
+                ),
+            ]
+
+        run_facets: dict[str, BaseFacet] = {}
+        job_facets: dict[str, BaseFacet] = {}
+        return OpenLineageFacets(
+            inputs=[], outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
+        )
 
 
 def dataframe(
