@@ -11,7 +11,7 @@ from astro.airflow.datasets import kwargs_with_datasets
 
 try:
     from airflow.decorators.base import TaskDecorator, task_decorator_factory
-except ImportError:  # pragma: nocover
+except ImportError:  # pragma: no cover
     from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
