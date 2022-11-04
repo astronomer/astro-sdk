@@ -1,3 +1,4 @@
+import os
 import pathlib
 
 import pandas as pd
@@ -8,7 +9,7 @@ from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.files import File
-from astro.table import Table
+from astro.table import Table, Metadata
 from tests.sql.operators import utils as test_utils
 
 cwd = pathlib.Path(__file__).parent
@@ -242,8 +243,13 @@ def test_transform_using_table_metadata(sample_dag):
     Test that load file and transform when database and schema is available in table metadata instead of conn
     """
     with sample_dag:
-        metadata = {"database": "SANDBOX", "schema": "ASTROFLOW_CI"}
-        test_table = Table(conn_id="snowflake_conn_1", metadata=metadata)
+        test_table = Table(
+            conn_id="snowflake_conn_1",
+            metadata=Metadata(
+                database=os.environ["SNOWFLAKE_DATABASE"],
+                schema=os.environ["SNOWFLAKE_SCHEMA"],
+            )
+        )
         homes_file = aql.load_file(
             input_file=File(path=str(cwd) + "/../../../data/homes.csv"),
             output_table=test_table,

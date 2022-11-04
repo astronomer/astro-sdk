@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from astro.utils.path import get_class_name, get_dict_with_module_names_to_dot_notations
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from astro.databases.base import BaseDatabase
     from astro.table import BaseTable
 
