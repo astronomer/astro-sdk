@@ -42,7 +42,7 @@ def generate_dag(project: Project, env: str, workflow_name: str, generate_tasks:
     return dag_file
 
 
-def _check_for_dag_import_errors(dag_file):
+def _check_for_dag_import_errors(dag_file: Path) -> None:
     import_errors = DagBag(process_subdir(str(dag_file))).import_errors
     if import_errors:
         all_errors = "\n\n".join(list(import_errors.values()))
