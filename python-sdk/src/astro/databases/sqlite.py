@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import socket
+
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from sqlalchemy import MetaData as SqlaMetaData, create_engine
 from sqlalchemy.engine.base import Engine
@@ -139,9 +141,8 @@ class SqliteDatabase(BaseDatabase):
 
     def openlineage_dataset_namespace(self) -> str:
         """
-        Returns the open lineage dataset name as per
+        Returns the open lineage dataset namespace as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
-        Example: /tmp/local.db
+        Example: sqlite://127.0.0.1
         """
-        conn = self.hook.get_connection(self.conn_id)
-        return f"{self.sql_type}://{conn.host}"
+        return f"{self.sql_type}://{socket.gethostbyname(socket.gethostname())}"
