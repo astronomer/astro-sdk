@@ -4,11 +4,9 @@ set -x  # print the shell command before being executed
 set -v  # run bash in verbose mode (echos each command before running it)
 set -e  # stop the execution instantly if a command returns a non-zero status
 
-
-repeat=${1:-3}  # how many times we want to repeat each DAG run (default: 3)
-
+config_file=${1:-"config-weekly.json"}
 benchmark_dir="$( cd -- "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
-config_path="${benchmark_dir}/config.json"
+config_path="${benchmark_dir}/${config_file}"
 runner_path="${benchmark_dir}/run.py"
 astro_dir="${benchmark_dir}/../../src"
 airflow_home="${AIRFLOW_HOME:-$benchmark_dir}"
@@ -36,7 +34,7 @@ export AIRFLOW__ASTRO_SDK__SQL_SCHEMA=postgres
 export AIRFLOW_HOME=$airflow_home
 export PYTHONWARNINGS="ignore"
 export PYTHONPATH=$astro_dir:$PYTHONPATH
-
+export CONFIG_PATH=$config_path
 
 parse_yaml_to_valid_airflow_config() {
   python3 -c "import yaml; import json; data = yaml.safe_load(open('$connections_file'))['connections']; print(json.dumps({item['conn_id']:item for item in data}))"
