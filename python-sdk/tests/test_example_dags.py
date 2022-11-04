@@ -72,9 +72,16 @@ def get_dag_bag() -> DagBag:
     return dag_bag
 
 
+# excluding the `example_dataset_consumer` since it is dependent on `example_dataset_producer` and we have to ensure
+# order, but there isn't enough ROI as we are testing Airflow's scheduling and Table and File datasets URI generation is
+# already tested in unitest cases.
 @pytest.mark.parametrize(
     "dag",
-    [pytest.param(dag, id=dag_id) for dag_id, dag in get_dag_bag().dags.items()],
+    [
+        pytest.param(dag, id=dag_id)
+        for dag_id, dag in get_dag_bag().dags.items()
+        if dag_id not in ("example_dataset_consumer")
+    ],
 )
 def test_example_dag(session, dag: DAG):
     wrapper_run_dag(dag)
