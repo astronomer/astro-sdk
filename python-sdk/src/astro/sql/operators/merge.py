@@ -74,7 +74,7 @@ class MergeOperator(AstroSQLBaseOperator):
         )
 
     def execute(self, context: Context) -> BaseTable:
-        db = create_database(self.target_table.conn_id)
+        db = create_database(self.target_table.conn_id, table=self.source_table)
         self.source_table = db.populate_table_metadata(self.source_table)
         self.target_table = db.populate_table_metadata(self.target_table)
 

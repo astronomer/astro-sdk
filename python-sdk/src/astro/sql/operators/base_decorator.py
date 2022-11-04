@@ -85,7 +85,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         else:
             if not self.conn_id:
                 raise ValueError("You need to provide a table or a connection id")
-        self.database_impl = create_database(self.conn_id)
+        self.database_impl = create_database(self.conn_id, first_table)
 
         # Find and load dataframes from op_arg and op_kwarg into Table
         self.create_output_table_if_needed()
@@ -282,7 +282,7 @@ def load_op_kwarg_dataframes_into_sql(conn_id: str, op_kwargs: dict, target_tabl
     :return: New op_kwargs, in which dataframes are replaced by tables
     """
     final_kwargs = {}
-    database = create_database(conn_id=conn_id)
+    database = create_database(conn_id=conn_id, table=target_table)
     for key, value in op_kwargs.items():
         if isinstance(value, pd.DataFrame):
             df_table = cast(BaseTable, target_table.create_similar_table())
