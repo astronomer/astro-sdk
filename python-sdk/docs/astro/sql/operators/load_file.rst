@@ -153,7 +153,7 @@ Refer to :ref:`load_file_working` for details on Native Path.
            :end-before: [END load_file_example_8]
 
 
-#. **enable_native_fallback**: When ``use_native_support`` is set to ``True``, ``load_file`` will attempt to use native transfer. If this fails, ``load_file`` will attempt to use the default path to load data and you will see a warning. If you want to change this behavior you can specify ``enable_native_fallback=False``.
+#. **enable_native_fallback**: When ``use_native_support`` is set to ``True``, ``load_file`` will attempt to use native transfer. If this fails, ``load_file`` task will fail unless you :ref:`configure_native_fallback`
 
         .. literalinclude:: ../../../../example_dags/example_load_file.py
            :language: python
@@ -227,6 +227,10 @@ Patterns in file path
        :language: python
        :start-after: [START load_file_example_12]
        :end-before: [END load_file_example_12]
+
+#. **GCS to Bigquery** - only applicable when using native path(for details check -:ref:`load_file_working`)
+
+    When loading data from ``GCS`` to ``Bigquery``, we by default use the native path, which is faster since the schema detection and pattern are processed directly by ``Bigquery``. We can also process multiple files by passing a pattern; for a valid pattern, check `Bigquery doc <https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#jobconfigurationload>`_ and look for the ``sourceUris`` field.
 
 
 Inferring file type

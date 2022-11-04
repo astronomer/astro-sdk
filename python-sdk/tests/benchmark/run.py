@@ -1,4 +1,5 @@
 import argparse
+import gc
 import inspect
 import json
 import os
@@ -34,9 +35,8 @@ def export_profile_data_to_bq(profile_data: dict, conn_id: str = "bigquery"):
     :param profile_data: profiling data collected
     :param conn_id: Airflow's connection id to be used to publish the profiling data
     """
-
     db = create_database(conn_id)
-    if sys.platform == "linux":
+    if profile_data.get("io_counters", False):
         del profile_data["io_counters"]
     df = pd.json_normalize(profile_data, sep="_")
     table = Table(
@@ -83,6 +83,7 @@ def profile(func, *args, **kwargs):  # noqa: C901
             "database": kwargs.get("database"),
             "filetype": kwargs.get("filetype"),
             "path": kwargs.get("path"),
+            "revision": kwargs.get("revision"),
             "dataset": kwargs.get("dataset"),
             "error": "False",
             "error_context": "Skipped",
@@ -200,3 +201,4 @@ if __name__ == "__main__":
         path=args.path,
         skip=args.skip,
     )
+    gc.collect()

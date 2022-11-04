@@ -2,11 +2,14 @@
 import os
 import pathlib
 import re
+from unittest import mock
 from urllib.parse import urlparse
 
 import pandas as pd
 import pytest
 import sqlalchemy
+from airflow.models import Connection
+from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
 
 from astro.constants import Database, FileType
 from astro.databases import create_database
@@ -371,3 +374,15 @@ def test_create_table_from_select_statement(database_table_fixture):
     expected = pd.DataFrame([{"id": 1, "name": "First"}]).sort_values(by="id")
     test_utils.assert_dataframes_are_equal(df, expected)
     database.drop_table(target_table)
+
+
+@mock.patch("redshift_connector.connect")
+@mock.patch("airflow.hooks.base.BaseHook.get_connection")
+def test_hook_with_db_from_table(mock_conn, redshift_conn):
+    mock_conn.return_value = Connection(conn_id="test_conn", extra={})
+    table = Table(conn_id="test", metadata=Metadata(database="dev"))
+    db = RedshiftDatabase(conn_id="test", table=table)
+    hook = db.hook
+    assert isinstance(hook, RedshiftSQLHook)
+    # TODO: Remove comment when RedshiftSQLHook in Airflow start using the kwargs
+    # redshift_conn.assert_called_once_with({"database": "dev"})

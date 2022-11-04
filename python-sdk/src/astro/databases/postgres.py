@@ -28,8 +28,9 @@ class PostgresDatabase(BaseDatabase):
     illegal_column_name_chars: list[str] = ["."]
     illegal_column_name_chars_replacement: list[str] = ["_"]
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID):
+    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
         super().__init__(conn_id)
+        self.table = table
 
     @property
     def sql_type(self) -> str:
@@ -38,7 +39,11 @@ class PostgresDatabase(BaseDatabase):
     @property
     def hook(self) -> PostgresHook:
         """Retrieve Airflow hook to interface with the Postgres database."""
-        return PostgresHook(postgres_conn_id=self.conn_id)
+        conn = PostgresHook(postgres_conn_id=self.conn_id).get_connection(self.conn_id)
+        kwargs = {}
+        if (conn.schema is None) and (self.table and self.table.metadata and self.table.metadata.schema):
+            kwargs.update({"database": self.table.metadata.schema})
+        return PostgresHook(postgres_conn_id=self.conn_id, **kwargs)
 
     @property
     def default_metadata(self) -> Metadata:

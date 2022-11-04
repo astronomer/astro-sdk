@@ -123,3 +123,44 @@ or by updating Airflow's configuration
 
    [astro_sdk]
    auto_add_inlets_outlets = True
+
+.. _configure_native_fallback:
+
+Configuring to emit temp table event in openlineage
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Astro SDK has ability to create temporary tables see: :ref:`table`.
+
+By default, we emit the temporary tables event in openlienage.
+
+This might be not that useful for some users who do not want to emit such event in openlienage. Such users can set the following config to ``False`` to disable it.
+
+.. code-block:: shell
+
+   AIRFLOW__ASTRO_SDK__OPENLINEAGE_EMIT_TEMP_TABLE_EVENT = True
+
+or by updating Airflow's configuration
+
+.. code-block:: ini
+
+   [astro_sdk]
+   openlineage_emit_temp_table_event = True
+
+
+Configuring the native fallback mechanism
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The ``LoadFileOperator`` has a fallback mechanism when loading data to the database from file storage as explained in :ref:`load_file_working`.
+
+This fallback can be configured at the task level using ``enable_native_fallback`` param.
+
+Users can also control this setting and override the default at a global level (for all tasks) by setting the following config. Set it to ``True`` to allow falling back to "pandas" path.
+
+.. code-block:: shell
+
+   AIRFLOW__ASTRO_SDK__LOAD_FILE_ENABLE_NATIVE_FALLBACK = False
+
+or by updating Airflow's configuration
+
+.. code-block:: ini
+
+   [astro_sdk]
+   load_file_enable_native_fallback = False

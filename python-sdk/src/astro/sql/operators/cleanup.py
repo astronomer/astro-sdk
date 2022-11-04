@@ -109,7 +109,7 @@ class CleanupOperator(AstroSQLBaseOperator):
             self.drop_table(table)
 
     def drop_table(self, table: BaseTable) -> None:
-        db = create_database(table.conn_id)
+        db = create_database(conn_id=table.conn_id, table=table)
         self.log.info("Dropping table %s", table.name)
         db.drop_table(table)
 

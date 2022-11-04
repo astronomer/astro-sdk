@@ -260,7 +260,7 @@ def test_load_file_to_table(database_table_fixture):
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(conn_id="snowflake_conn"),
         },
     ],
     indirect=True,
@@ -317,7 +317,6 @@ def test_load_file_to_table_natively_for_fallback_raises_exception_if_not_enable
         database.load_file_to_table_natively_with_fallback(
             source_file=File(filepath),
             target_table=target_table,
-            enable_native_fallback=False,
         )
 
 

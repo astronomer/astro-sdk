@@ -48,7 +48,8 @@ COPY . .
 COPY tests/benchmark/dags $AIRFLOW_HOME/dags
 COPY tests/benchmark/run.sh $AIRFLOW_HOME/
 COPY tests/benchmark/run.py $AIRFLOW_HOME/
-COPY tests/benchmark/config.json $AIRFLOW_HOME/config.json
+COPY tests/benchmark/config-weekly.json $AIRFLOW_HOME/config-weekly.json
+COPY tests/benchmark/config-ci.json $AIRFLOW_HOME/config-ci.json
 
 WORKDIR ./tests/benchmark/
 
