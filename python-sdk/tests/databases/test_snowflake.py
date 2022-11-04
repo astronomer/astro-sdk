@@ -260,7 +260,7 @@ def test_load_file_to_table(database_table_fixture):
     [
         {
             "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
+            "table": Table(conn_id="snowflake_conn"),
         },
     ],
     indirect=True,
