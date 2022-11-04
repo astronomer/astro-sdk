@@ -615,23 +615,17 @@ class SnowflakeDatabase(BaseDatabase):
                 rows = self.hook.run(sql_statement)
             except (AttributeError, ValueError) as exe:
                 raise DatabaseCustomError from exe
+        except ValueError as exe:
+            raise DatabaseCustomError from exe
+
         self.evaluate_results(rows)
         self.drop_stage(stage)
 
     @staticmethod
     def evaluate_results(rows):
         """check the error state returned by snowflake when running `copy into` query."""
-        if any(True for row in rows if row["status"] == COPY_INTO_COMMAND_FAIL_STATUS):
+        if any(row["status"] == COPY_INTO_COMMAND_FAIL_STATUS for row in rows):
             raise DatabaseCustomError(rows)
-
-    @staticmethod
-    def check_for_error(cur):
-        """
-        Handler to
-        """
-        cur.fetchall()
-
-        return cur
 
     def load_pandas_dataframe_to_table(
         self,
