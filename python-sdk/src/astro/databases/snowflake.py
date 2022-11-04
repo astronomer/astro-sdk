@@ -66,6 +66,8 @@ NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS = (FileLocation.GS, FileLocation.S3)
 NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES = {FileType.PARQUET}
 NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS = {FileLocation.GS, FileLocation.S3}
 
+COPY_INTO_COMMAND_FAIL_STATUS = "LOAD_FAILED"
+
 
 @dataclass
 class SnowflakeFileFormat:
@@ -602,11 +604,28 @@ class SnowflakeDatabase(BaseDatabase):
         table_name = self.get_table_qualified_name(target_table)
         file_path = os.path.basename(source_file.path) or ""
         sql_statement = f"COPY INTO {table_name} FROM @{stage.qualified_name}/{file_path}"
+
+        # Below code is added due to breaking change in apache-airflow-providers-snowflake==3.2.0,
+        # we need to pass handler param to get the rows. But in version apache-airflow-providers-snowflake==3.1.0
+        # if we pass the handler provider raises an exception AttributeError
         try:
-            self.hook.run(sql_statement)
-        except (ValueError, AttributeError) as exe:
+            rows = self.hook.run(sql_statement, handler=lambda cur: cur.fetchall())
+        except AttributeError:
+            try:
+                rows = self.hook.run(sql_statement)
+            except (AttributeError, ValueError) as exe:
+                raise DatabaseCustomError from exe
+        except ValueError as exe:
             raise DatabaseCustomError from exe
+
+        self.evaluate_results(rows)
         self.drop_stage(stage)
+
+    @staticmethod
+    def evaluate_results(rows):
+        """check the error state returned by snowflake when running `copy into` query."""
+        if any(row["status"] == COPY_INTO_COMMAND_FAIL_STATUS for row in rows):
+            raise DatabaseCustomError(rows)
 
     def load_pandas_dataframe_to_table(
         self,
