@@ -8,8 +8,8 @@ from urllib.parse import urlparse
 import pandas as pd
 import pytest
 import sqlalchemy
-from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
 from airflow.models import Connection
+from airflow.providers.amazon.aws.hooks.redshift_sql import RedshiftSQLHook
 
 from astro.constants import Database, FileType
 from astro.databases import create_database
