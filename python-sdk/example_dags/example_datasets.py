@@ -30,10 +30,10 @@ input_file = File(path="https://raw.githubusercontent.com/astronomer/astro-sdk/m
 # [END dataset_file]
 
 # [START dataset_table]
-imdb_movies_table = Table(name="imdb_movies", conn_id="postgres_conn")
+imdb_movies_table = Table(name="dataset_imdb_movies", conn_id="postgres_conn")
 # [END dataset_table]
 
-top_animations_table = Table(name="top_animation", conn_id="postgres_conn")
+top_animations_table = Table(name="dataset_top_animation", conn_id="postgres_conn")
 START_DATE = datetime(2016, 9, 1)
 
 
