@@ -228,6 +228,10 @@ Patterns in file path
        :start-after: [START load_file_example_12]
        :end-before: [END load_file_example_12]
 
+#. **GCS to Bigquery** - only applicable when using native support by passing ``use_native_support=True``
+
+    When loading data from ``GCS`` to ``Bigquery``, we by default use the native path, which is faster since the schema detection and pattern are processed directly by ``Bigquery``. We can also process multiple files by passing a pattern; for a valid pattern, check `Bigquery doc <https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#jobconfigurationload>`_ and look for the sourceUris filed.
+
 
 Inferring file type
 ~~~~~~~~~~~~~~~~~~~
