@@ -16,6 +16,7 @@ app = typer.Typer(
     cls=AstroGroup,
     add_completion=False,
     context_settings={"help_option_names": ["-h", "--help"]},
+    rich_markup_mode="rich",
 )
 
 
@@ -157,30 +158,18 @@ def run(
     help="""
     Initialise a project structure to write workflows using SQL files.
 
-    \b\n
     Examples of usage:
-    \b\n
     $ flow init
-    \b\n
     $ flow init .
-    \b\n
     $ flow init project_name
 
-
-    \b\n
     By default, the project structure includes:
-
     ├── config: withholds configuration, e.g. database connections, within each environment directory
-    \b\n
     ├── data: directory which contains datasets, including SQLite databases used by the examples
-    \b\n
     └── workflows: directory where SQL workflows are declared, by default has two examples of workflow
 
-    \b\n
     Next steps:
-    \b\n
     * Update the file `config/default/configuration.yaml` to declare database connections.
-    \b\n
     * Create SQL workflows within the `workflows` folder.
     """,
 )
