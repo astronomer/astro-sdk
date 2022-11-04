@@ -116,8 +116,8 @@ def test_example_dataset_dag():
     assert isinstance(outlets[0], Dataset)
     # Test that dataset_triggers is only set if all the instances passed to the DAG object are Datasets
     assert consumer_dag.dataset_triggers == outlets
-    assert outlets[0].uri == "astro://postgres_conn@?table=dataset_imdb_movies"
-    assert DatasetModel.from_public(outlets[0]) == Dataset("astro://postgres_conn@?table=dataset_imdb_movies")
+    assert outlets[0].uri == "astro://postgres_conn@?table=imdb_movies"
+    assert DatasetModel.from_public(outlets[0]) == Dataset("astro://postgres_conn@?table=imdb_movies")
 
 
 def test_disable_auto_inlets_outlets():
