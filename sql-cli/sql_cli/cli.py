@@ -26,7 +26,7 @@ def generate_dag(project: Project, env: str, workflow_name: str, generate_tasks:
         dag_file = dag_generator.generate_dag(
             directory=project.directory / project.workflows_directory / workflow_name,
             dags_directory=project.airflow_dags_folder,
-            generate_tasks=generate_tasks
+            generate_tasks=generate_tasks,
         )
     except EmptyDag:
         rprint(f"[bold red]The workflow {workflow_name} does not have any SQL files![/bold red]")
