@@ -3,8 +3,8 @@ class NonExistentTableException(Exception):
 
 
 class IllegalLoadToDatabaseException(Exception):
-    def __init__(self):
-        self.message = (  # pragma: no cover
+    def __init__(self):  # pragma: no cover
+        self.message = (
             "Failing this task because you do not have a custom xcom backend set up. If you use "
             "the default XCOM backend to store large dataframes, this can significantly degrade "
             "Airflow DB performance. Please set up a custom XCOM backend (info here "
