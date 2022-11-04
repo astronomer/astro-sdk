@@ -25,6 +25,34 @@ def get_stdout(result) -> str:
     return result.stdout.replace("\n", "")
 
 
+@pytest.mark.parametrize(
+    "args",
+    [
+        ["--help"],
+        ["version", "--help"],
+    ],
+    ids=[
+        "group",
+        "command",
+    ],
+)
+@pytest.mark.parametrize(
+    "env,usage",
+    [
+        ({}, "Usage: flow"),
+        ({"ASTRO_CLI": "Yes"}, "Usage: astro flow"),
+    ],
+    ids=[
+        "sql-cli",
+        "astro-cli",
+    ],
+)
+def test_usage(env, usage, args):
+    result = runner.invoke(app, args, env=env)
+    assert result.exit_code == 0
+    assert usage in get_stdout(result)
+
+
 def test_about():
     result = runner.invoke(app, ["about"])
     assert result.exit_code == 0
