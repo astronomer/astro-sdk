@@ -14,7 +14,7 @@ from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, SqlFilesDir
 from sql_cli.project import Project
 
 
-def generate_dag(project: Project, env: str, workflow_name: str) -> Path:
+def generate_dag(project: Project, workflow_name: str) -> Path:
     try:
         return dag_generator.generate_dag(
             directory=project.directory / project.workflows_directory / workflow_name,
@@ -31,7 +31,7 @@ def generate_dag(project: Project, env: str, workflow_name: str) -> Path:
         raise Exit(code=1)
 
 
-def run_dag(project: Project, env: str, dag: DAG, verbose: bool) -> DagRun:
+def run_dag(project: Project, dag: DAG, verbose: bool) -> DagRun:
     try:
         return dag_runner.run_dag(
             dag,
