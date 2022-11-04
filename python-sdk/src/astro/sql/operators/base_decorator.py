@@ -234,9 +234,6 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                             rowCount=output_table_row_count
                         ),
                         "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=output_uri),
-                        "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(
-                            rowCount=output_table_row_count, columnMetrics={}
-                        ),
                     },
                 )
             ]
