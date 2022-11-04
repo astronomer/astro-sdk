@@ -105,7 +105,8 @@ def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) ->
     )
     template_dag_name = "gen_tasks_dag"
     if generate_tasks:
-        [sql_file.write_raw_content_to_target_path() for sql_file in sql_files_dag.sorted_sql_files()]
+        for sql_file in sql_files_dag.sorted_sql_files():
+            sql_file.write_raw_content_to_target_path()
         template_dag_name = "render_dag"
 
     output_file = dags_directory / f"{sql_files_dag.dag_id}.py"
