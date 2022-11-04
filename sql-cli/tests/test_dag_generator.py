@@ -28,8 +28,11 @@ def test_sql_files_dag_without_sql_files():
 @pytest.mark.parametrize("generate_tasks", [True, False])
 def test_generate_dag(root_directory, dags_directory, generate_tasks):
     """Test that the whole DAG generation process including sql files parsing works."""
-    dag_file = generate_dag(directory=root_directory, dags_directory=dags_directory, generate_tasks=generate_tasks)
+    dag_file = generate_dag(
+        directory=root_directory, dags_directory=dags_directory, generate_tasks=generate_tasks
+    )
     assert dag_file
+
 
 @pytest.mark.parametrize("generate_tasks", [True, False])
 def test_generate_dag_invalid_directory(root_directory, dags_directory, generate_tasks):
