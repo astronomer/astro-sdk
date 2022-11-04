@@ -84,12 +84,14 @@ class SqlFilesDAG:
         return list(depth_first_search.dfs_postorder_nodes(graph))
 
 
-def generate_dag(directory: Path, dags_directory: Path) -> Path:
+def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) -> Path:
     """
     Generate a DAG from SQL files.
 
     :params directory: The directory containing the raw sql files.
     :params dags_directory: The directory containing the generated DAG.
+    :params generate_tasks: Whether the user wants to explicitly generate each task
+        of the airflow DAG or rely on a less verbose `render` function.
 
     :returns: the path to the DAG file.
     """
@@ -102,42 +104,10 @@ def generate_dag(directory: Path, dags_directory: Path) -> Path:
         sql_files=sql_files,
     )
     output_file = dags_directory / f"{sql_files_dag.dag_id}.py"
+    template_path = "templates/dag.py.jinja2" if generate_tasks else "templates/render_dag.py.jinja2"
     render(
-        template_file=Path("templates/dag.py.jinja2"),
+        template_file=Path(template_path),
         context={"dag": sql_files_dag},
-        output_file=output_file,
-    )
-    return output_file
-
-
-def generate_render_dag(directory: Path, dags_directory: Path) -> Path:
-    """
-    Generate a DAG from SQL files.
-
-    :params directory: The directory containing the raw sql files.
-    :params dags_directory: The directory containing the generated DAG.
-
-    :returns: the path to the DAG file.
-    """
-    if not directory.exists():
-        raise SqlFilesDirectoryNotFound("The directory does not exist!")
-    output_file = dags_directory / f"{directory.name}.py"
-    sql_files = sorted(get_sql_files(directory, target_directory=dags_directory))
-    sql_files_dag = SqlFilesDAG(
-        dag_id=directory.name,
-        start_date=datetime(2020, 1, 1),
-        sql_files=sql_files,
-    )
-    for sql_file in sql_files_dag.sorted_sql_files():
-        sql_file.write_raw_content_to_target_path()
-
-    render(
-        template_file=Path("templates/render_dag.py.jinja2"),
-        context={
-            "dag_id": directory.name,
-            "start_date": datetime(2020, 1, 1),
-            "project_path": directory,
-        },
         output_file=output_file,
     )
     return output_file

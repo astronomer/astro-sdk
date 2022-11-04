@@ -6,11 +6,16 @@ from airflow.utils import timezone
 from astro import sql as aql
 from astro.table import Table
 from sql_cli.dag_render import render_tasks
+
 DAGS_FOLDER = Path(__file__).parent.as_posix()
 
+{%- for sql_file in dag.sorted_sql_files() %}
+{{ sql_file.write_raw_content_to_target_path() }}
+{%- endfor %}
+
 with DAG(
-    dag_id="{{ dag_id }}",
-    start_date=timezone.parse("{{ start_date }}"),
+    dag_id="{{ dag.dag_id }}",
+    start_date=timezone.parse("{{ dag.start_date }}"),
     schedule_interval=None,
 ) as dag:
-    render_tasks(Path(f"{DAGS_FOLDER}/sql/{{ dag_id }}"))
+    render_tasks(Path(f"{DAGS_FOLDER}/sql/{{ dag.dag_id }}"))

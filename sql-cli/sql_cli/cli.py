@@ -23,7 +23,11 @@ def generate_dag(project: Project, env: str, workflow_name: str, generate_tasks:
         f" for [bold]{env}[/bold] environment..\n"
     )
     try:
-        dag_file = _generate_dag_file(generate_tasks, project, workflow_name)
+        dag_file = dag_generator.generate_dag(
+            directory=project.directory / project.workflows_directory / workflow_name,
+            dags_directory=project.airflow_dags_folder,
+            generate_tasks=generate_tasks
+        )
     except EmptyDag:
         rprint(f"[bold red]The workflow {workflow_name} does not have any SQL files![/bold red]")
         raise Exit(code=1)
@@ -44,20 +48,6 @@ def _check_for_dag_import_errors(dag_file):
         all_errors = "\n\n".join(list(import_errors.values()))
         rprint(f"[bold red]Workflow failed to render[/bold red]\n errors found:\n\n {all_errors}")
         raise Exit(code=1)
-
-
-def _generate_dag_file(generate_tasks, project, workflow_name):
-    if not generate_tasks:
-        dag_file = dag_generator.generate_render_dag(
-            directory=project.directory / project.workflows_directory / workflow_name,
-            dags_directory=project.airflow_dags_folder,
-        )
-    else:
-        dag_file = dag_generator.generate_dag(
-            directory=project.directory / project.workflows_directory / workflow_name,
-            dags_directory=project.airflow_dags_folder,
-        )
-    return dag_file
 
 
 def run_dag(project: Project, env: str, dag: DAG, verbose: bool) -> None:

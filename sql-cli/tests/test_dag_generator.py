@@ -25,13 +25,14 @@ def test_sql_files_dag_without_sql_files():
         SqlFilesDAG(dag_id="sql_files_dag_without_sql_files", start_date=DEFAULT_DATE, sql_files=[])
 
 
-def test_generate_dag(root_directory, dags_directory):
+@pytest.mark.parametrize("generate_tasks", [True, False])
+def test_generate_dag(root_directory, dags_directory, generate_tasks):
     """Test that the whole DAG generation process including sql files parsing works."""
-    dag_file = generate_dag(directory=root_directory, dags_directory=dags_directory)
+    dag_file = generate_dag(directory=root_directory, dags_directory=dags_directory, generate_tasks=generate_tasks)
     assert dag_file
 
-
-def test_generate_dag_invalid_directory(root_directory, dags_directory):
+@pytest.mark.parametrize("generate_tasks", [True, False])
+def test_generate_dag_invalid_directory(root_directory, dags_directory, generate_tasks):
     """Test that an exception is being raised when the directory does not exist."""
     with pytest.raises(SqlFilesDirectoryNotFound):
-        generate_dag(directory=Path("foo"), dags_directory=dags_directory)
+        generate_dag(directory=Path("foo"), dags_directory=dags_directory, generate_tasks=generate_tasks)
