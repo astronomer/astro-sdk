@@ -1,4 +1,4 @@
-from astro.utils .task_id_helper import get_task_id
+from astro.utils.task_id_helper import get_task_id
 
 
 def test_get_task_id():
