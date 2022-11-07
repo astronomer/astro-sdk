@@ -129,6 +129,22 @@ class RedshiftDatabase(BaseDatabase):
         inspector = sqlalchemy.inspect(self.sqlalchemy_engine)
         return bool(inspector.dialect.has_table(self.connection, table.name, schema=table.metadata.schema))
 
+    @staticmethod
+    def get_table_qualified_name(table: BaseTable) -> str:  # skipcq: PYL-R0201
+        """
+        Return table qualified name for redshift.
+
+        :param table: The table we want to retrieve the qualified name for.
+        """
+        # Initially this method belonged to the Table class.
+        # However, in order to have an agnostic table class implementation,
+        # we are keeping all methods which vary depending on the database within the Database class.
+        if table.metadata and table.metadata.schema:
+            qualified_name = f"'{table.metadata.schema}'.'{table.name}'"
+        else:
+            qualified_name = f"'{table.name}'"
+        return qualified_name
+
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,
@@ -272,7 +288,7 @@ class RedshiftDatabase(BaseDatabase):
             target_conflict_columns,
         )
         truncate_target_table = f"TRUNCATE {target_table_name}"
-        insert_into_target_table = f"INSERT INTO '{target_table_name}' SELECT * FROM '{stage_table_name}'"
+        insert_into_target_table = f"INSERT INTO {target_table_name} SELECT * FROM {stage_table_name}"
         drop_stage_table = f"DROP TABLE {stage_table_name}"
         end_transaction = "END TRANSACTION"
 
