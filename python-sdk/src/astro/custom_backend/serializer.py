@@ -59,7 +59,7 @@ def serialize(obj: Table | File | Any) -> dict | Any:  # noqa
         else:
             return {"class": "SQLAlcRow", "key_map": keymap, "key_style": key_style}
 
-    elif isinstance(obj, str):
+    elif isinstance(obj, str):  # pragma: no cover
         return {"class": "string", "value": obj}
     else:
         return _attempt_to_serialize_unknown_object(obj)
