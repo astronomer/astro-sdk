@@ -912,7 +912,7 @@ class SnowflakeDatabase(BaseDatabase):
             identifier_enclosure = '"'
 
         constraints = ",".join([f"{identifier_enclosure}{p}{identifier_enclosure}" for p in parameters])
-        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (%s)" % constraints
+        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (%s)" % constraints  # skipcq PYL-C0209
         return sql
 
     def openlineage_dataset_name(self, table: BaseTable) -> str:

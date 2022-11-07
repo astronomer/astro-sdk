@@ -82,7 +82,7 @@ class SqliteDatabase(BaseDatabase):
         """
         Handles database-specific logic to handle index for Sqlite.
         """
-        return "CREATE UNIQUE INDEX merge_index ON {{table}}(%s)" % ",".join(parameters)
+        return "CREATE UNIQUE INDEX merge_index ON {{table}}(%s)" % ",".join(parameters)  # skipcq PYL-C0209
 
     def merge_table(
         self,
