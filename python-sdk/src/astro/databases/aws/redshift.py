@@ -140,9 +140,9 @@ class RedshiftDatabase(BaseDatabase):
         # However, in order to have an agnostic table class implementation,
         # we are keeping all methods which vary depending on the database within the Database class.
         if table.metadata and table.metadata.schema:
-            qualified_name = f"\"{table.metadata.schema}\".\"{table.name}\""
+            qualified_name = f'"{table.metadata.schema}"."{table.name}"'
         else:
-            qualified_name = f"\"{table.name}\""
+            qualified_name = f'"{table.name}"'
         return qualified_name
 
     def load_pandas_dataframe_to_table(
