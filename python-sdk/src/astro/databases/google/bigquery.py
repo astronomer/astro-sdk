@@ -169,7 +169,7 @@ class BigqueryDatabase(BaseDatabase):
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
         try:
-            creds = self.hook._get_credentials()
+            creds = self.hook._get_credentials()  # skipcq PYL-W021
         except AttributeError:
             # Details: https://github.com/astronomer/astro-sdk/issues/703
             creds = self.hook.get_credentials()
