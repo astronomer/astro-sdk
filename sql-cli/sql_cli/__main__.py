@@ -38,7 +38,7 @@ def version() -> None:
     help="Print additional information about the project.",
 )
 def about() -> None:
-    rprint("Find out more: https://github.com/astronomer/astro-sdk/sql-cli")
+    rprint("Find out more: https://docs.astronomer.io/astro/cli/sql-cli")
 
 
 @app.command(
