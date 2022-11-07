@@ -518,7 +518,7 @@ class SnowflakeDatabase(BaseDatabase):
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
-    ) -> None:
+    ) -> None:  # skipcq PYL-W0613
         """
         Create a SQL table, automatically inferring the schema using the given file.
         Overriding default behaviour and not using the `prep_table` since it doesn't allow the adding quotes.
@@ -552,7 +552,9 @@ class SnowflakeDatabase(BaseDatabase):
         # Since this method is used by both native and pandas path we cannot skip this step.
         self.truncate_table(table)
 
-    def is_native_load_file_available(self, source_file: File, target_table: BaseTable) -> bool:
+    def is_native_load_file_available(
+        self, source_file: File, target_table: BaseTable  # skipcq PYL-W0613
+    ) -> bool:
         """
         Check if there is an optimised path for source to destination.
 
@@ -572,7 +574,7 @@ class SnowflakeDatabase(BaseDatabase):
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
         **kwargs,
-    ):
+    ):  # skipcq PYL-W0613
         """
         Load the content of a file to an existing Snowflake table natively by:
         - Creating a Snowflake external stage
