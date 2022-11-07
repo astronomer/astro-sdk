@@ -101,7 +101,7 @@ def find_first_table(
 
     if op_args:
         first_table = _find_first_table_from_op_args(op_args=op_args, context=context)
-    if not first_table and op_kwargs and python_callable:  # type ignore
+    if not first_table and op_kwargs and python_callable is not None:
         first_table = _find_first_table_from_op_kwargs(
             op_kwargs=op_kwargs,
             python_callable=python_callable,
