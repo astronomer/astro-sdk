@@ -136,9 +136,6 @@ class RedshiftDatabase(BaseDatabase):
 
         :param table: The table we want to retrieve the qualified name for.
         """
-        # Initially this method belonged to the Table class.
-        # However, in order to have an agnostic table class implementation,
-        # we are keeping all methods which vary depending on the database within the Database class.
         if table.metadata and table.metadata.schema:
             qualified_name = f'"{table.metadata.schema}"."{table.name}"'
         else:
