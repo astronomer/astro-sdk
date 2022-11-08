@@ -76,6 +76,7 @@ class PostgresDatabase(BaseDatabase):
         )
         return len(schema_result) > 0
 
+    # Require skipcq because method overriding we need param chunk_size
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,

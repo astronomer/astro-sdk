@@ -12,6 +12,7 @@ from astro.utils.dataframe import convert_columns_names_capitalization
 class JSONFileType(FileType):
     """Concrete implementation to handle JSON file type"""
 
+    # We need skipcq because it's a method overloading so we don't want to make it a static method
     def export_to_dataframe(
         self,
         stream: io.TextIOWrapper,
@@ -33,6 +34,7 @@ class JSONFileType(FileType):
         )
         return df
 
+    # We need skipcq because it's a method overloading so we don't want to make it a static method
     def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:  # skipcq PYL-R0201
         """Write json file to one of the supported locations
 

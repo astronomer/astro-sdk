@@ -88,6 +88,7 @@ source_suffix = {
 }
 
 
+# TODO: We should consider removing param start _
 def skip_util_classes(_app, _what, _name, obj, skip, _options):
     """This allows us skipping certain objects (including functions & methods) from docs"""
     if ":sphinx-autoapi-skip:" in obj.docstring:

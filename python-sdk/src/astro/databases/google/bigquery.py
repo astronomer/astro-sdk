@@ -253,6 +253,7 @@ class BigqueryDatabase(BaseDatabase):
         supported_config = self.NATIVE_AUTODETECT_SCHEMA_CONFIG.get(file.location.location_type)
         return supported_config["method"](table=table, file=file)  # type: ignore
 
+    # Require skipcq because method overriding we need param target_table
     def is_native_load_file_available(
         self, source_file: File, target_table: BaseTable  # skipcq PYL-W0613
     ) -> bool:
