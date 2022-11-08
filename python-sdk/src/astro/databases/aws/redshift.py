@@ -246,7 +246,7 @@ class RedshiftDatabase(BaseDatabase):
             handler=lambda x: [y[0] for y in x.fetchall()],
         )
         target_table_all_columns = self.hook.run(  # skipcq BAN-B608
-            f"select col_name from pg_get_cols('{source_table_name}') "
+            f"select col_name from pg_get_cols('{target_table_name}') "
             f"cols(view_schema name, view_name name, col_name name, col_type varchar, col_num int);",
             handler=lambda x: [y[0] for y in x.fetchall()],
         )
