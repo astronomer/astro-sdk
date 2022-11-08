@@ -52,7 +52,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
             datasets["input_datasets"] = input_data
         super().__init__(**kwargs_with_datasets(kwargs=kwargs, **datasets))
 
-    def execute(self, context: Context) -> File:
+    def execute(self, context: Context) -> File:  # skipcq PYL-W0613
         """Write SQL table to csv/parquet on local/S3/GCS.
 
         Infers SQL database type based on connection.

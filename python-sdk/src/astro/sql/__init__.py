@@ -13,6 +13,29 @@ from astro.sql.operators.raw_sql import RawSQLOperator, run_raw_sql
 from astro.sql.operators.transform import TransformOperator, transform, transform_file
 from astro.table import Metadata, Table
 
+__all__ = [
+    "AppendOperator",
+    "append",
+    "CleanupOperator",
+    "cleanup",
+    "DataframeOperator",
+    "dataframe",
+    "DropTableOperator",
+    "drop_table",
+    "ExportFileOperator",
+    "export_file",
+    "LoadFileOperator",
+    "load_file",
+    "MergeOperator",
+    "merge",
+    "Metadata",
+    "run_raw_sql",
+    "Table",
+    "TransformOperator",
+    "transform_file",
+    "transform",
+]
+
 
 def get_value_list(sql: str, conn_id: str, **kwargs) -> XComArg:
     """

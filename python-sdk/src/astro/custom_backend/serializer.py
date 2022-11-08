@@ -47,15 +47,14 @@ def serialize(obj: Table | File | Any) -> dict | Any:  # noqa
     elif isinstance(obj, np.ndarray):
         return obj.tolist()
     elif isinstance(obj, SQLAlcRow):
+        serialized_obj = {
+            "class": "SQLAlcRow",
+            "key_map": obj._keymap,  # skipcq PYL-W021
+            "key_style": obj._key_style,  # skipcq PYL-W021
+        }
         if airflow.__version__ >= "2.3":
-            return {
-                "class": "SQLAlcRow",
-                "key_map": obj._keymap,
-                "data": obj._data,
-                "key_style": obj._key_style,
-            }
-        else:
-            return {"class": "SQLAlcRow", "key_map": obj._keymap, "key_style": obj._key_style}
+            serialized_obj["data"] = obj._data  # skipcq PYL-W021
+        return serialized_obj
 
     elif isinstance(obj, str):
         return {"class": "string", "value": obj}
