@@ -129,7 +129,7 @@ class TestSnowflakeMerge(unittest.TestCase):
             "source_table": self.source_table_full_name,
         }
 
-    def test_is_valid_snow_identifier(self):
+    def test_is_valid_snow_identifier(self):  # skipcq PYL-R0201
         valid_strings = [
             "ValidName",
             "Valid_Name",

@@ -33,7 +33,7 @@ dag = models.DAG(
 )
 create_test_dataset = bash_operator.BashOperator(
     task_id="create_test_dataset",
-    bash_command="bq mk --force=true %s" % DATASET_NAME,
+    bash_command=f"bq mk --force=true {DATASET_NAME}",
     dag=dag,
 )
 

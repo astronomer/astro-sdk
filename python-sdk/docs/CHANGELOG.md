@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.2.1
+
+### Feature:
+* Add support for Minio [#750](https://github.com/astronomer/astro-sdk/issues/750)
+* Open Lineage support - Add Extractor for `ExportFileOperator`, `DataframeOperator` [#903](https://github.com/astronomer/astro-sdk/issues/903), [#1183](https://github.com/astronomer/astro-sdk/issues/1183)
+
+### Bug fixes
+* Add check for missing conn_id on transform operator. [#1152](https://github.com/astronomer/astro-sdk/issues/1152)
+* Raise error when `copy into` query fails in snowflake. [#890](https://github.com/astronomer/astro-sdk/issues/890)
+* Transform op - database/schema is not picked from table's metadata. [#1034](https://github.com/astronomer/astro-sdk/issues/1034)
+
+### Improvement:
+* Change the namespace for Open Lineage [#1179](https://github.com/astronomer/astro-sdk/issues/1179)
+* Add `LOAD_FILE_ENABLE_NATIVE_FALLBACK` config to globally disable native
+fallback [#1089](https://github.com/astronomer/astro-sdk/issues/1089)
+* Add `OPENLINEAGE_EMIT_TEMP_TABLE_EVENT` config to emit events for tmp table in Open Lineage. [#1121](https://github.com/astronomer/astro-sdk/issues/1121)
+* Fix issue with fetching table row count for snowflake [#1145](https://github.com/astronomer/astro-sdk/issues/1145)
+* Generate unique Open Lineage namespace for Sqlite based operations [#1141](https://github.com/astronomer/astro-sdk/issues/1141)
+
+### Docs
+* Include section in docs to cover file pattern for native path of GCS to Bigquery . [#800](https://github.com/astronomer/astro-sdk/issues/800)
+* Add guide for Open Lineage integration with Astro Python SDK [#1116](https://github.com/astronomer/astro-sdk/issues/1116)
+
+### Misc
+* Pin SQLAlchemy version to >=1.3.18,<1.4.42 [#1185](https://github.com/astronomer/astro-sdk/pull/1185)
+
+
 ## 1.2.0
 
 ### Feature:
@@ -186,7 +213,7 @@
   pre-requirements to work. To disable this mode, use the argument `use_native_support=False` in `aql.load_file`.
   [#557](https://github.com/astronomer/astro-sdk/issues/557), [#481](https://github.com/astronomer/astro-sdk/issues/481)
 * `aql.dataframe` will raise an exception if the default Airflow XCom backend is being used.
-  To solve this, either use an [external XCom backend, such as S3 or GCS](https://www.astronomer.io/guides/custom-xcom-backends)
+  To solve this, either use an [external XCom backend, such as S3 or GCS](https://docs.astronomer.io/learn/custom-xcom-backends)
   or set the configuration `AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE=True`. [#444](https://github.com/astronomer/astro-sdk/issues/444)
 * Change the declaration for the default Astro SDK temporary schema from using `AIRFLOW__ASTRO__SQL_SCHEMA`
   to `AIRFLOW__ASTRO_SDK__SQL_SCHEMA` [#503](https://github.com/astronomer/astro-sdk/issues/503)

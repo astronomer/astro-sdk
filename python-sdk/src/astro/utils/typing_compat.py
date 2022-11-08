@@ -8,9 +8,9 @@ from typing import Any, MutableMapping
 # TODO: Remove this once the repo has a minimum Apache Airflow requirement of 2.2.3+.
 try:
     from airflow.utils.context import Context
-except ModuleNotFoundError:
+except ModuleNotFoundError:  # pragma: no cover
 
-    class Context(MutableMapping[str, Any]):  # type: ignore[no-redef]
+    class Context(MutableMapping[str, Any]):  # type: ignore[no-redef] # skipcq PYL-W0223
         """Placeholder typing class for ``airflow.utils.context.Context``."""
 
 

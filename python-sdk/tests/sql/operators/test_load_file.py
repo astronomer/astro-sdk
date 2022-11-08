@@ -23,6 +23,7 @@ from pandas.testing import assert_frame_equal
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database, FileType
+from astro.exceptions import DatabaseCustomError
 from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
@@ -530,14 +531,15 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
         "redshift": "chunksize",
     }[db.sql_type]
 
-    with mock.patch("astro.databases.snowflake.SnowflakeDatabase.truncate_table"):
-        with mock.patch(chunk_function) as mock_chunk_function:
-            with sample_dag:
-                load_file(
-                    input_file=File(path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))),
-                    output_table=test_table,
-                    use_native_support=False,
-                )
+    with mock.patch("astro.databases.snowflake.SnowflakeDatabase.truncate_table"), mock.patch(
+        chunk_function
+    ) as mock_chunk_function:
+        with sample_dag:
+            load_file(
+                input_file=File(path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))),
+                output_table=test_table,
+                use_native_support=False,
+            )
             test_utils.run_dag(sample_dag)
 
     _, kwargs = mock_chunk_function.call_args
@@ -1173,7 +1175,6 @@ def test_load_file_col_cap_native_path(sample_dag, database_table_fixture):
                 "snowflake_storage_integration_google": "gcs_int_python_sdk",
                 "storage_integration": "gcs_int_python_sdk",
             },
-            enable_native_fallback=False,
         )
     test_utils.run_dag(sample_dag)
 
@@ -1181,3 +1182,92 @@ def test_load_file_col_cap_native_path(sample_dag, database_table_fixture):
     cols = list(df.columns)
     cols.sort()
     assert cols == ["Acres", "Age", "Baths", "Beds", "List", "Living", "Rooms", "Sell", "Taxes"]
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SNOWFLAKE,
+        }
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+def test_load_file_snowflake_error_out_provider_3_2_0(sample_dag, database_table_fixture):
+    """
+    Test that snowflake errors are bubbled up when the query fails. Loading in snowflake fails with
+     `Numeric value 'id' is not recognized`
+    """
+    _, test_table = database_table_fixture
+    with pytest.raises(DatabaseCustomError):
+        with sample_dag:
+            load_file(
+                input_file=File(
+                    "gs://astro-sdk/benchmark/synthetic-dataset/csv/ten_kb.csv", conn_id="bigquery"
+                ),
+                output_table=test_table,
+                use_native_support=True,
+                enable_native_fallback=False,
+                native_support_kwargs={"storage_integration": "gcs_int_python_sdk"},
+            )
+        test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SNOWFLAKE,
+        }
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+def test_load_file_snowflake_error_out_provider_3_1_0(sample_dag, database_table_fixture):
+    """
+    Test that snowflake errors are bubbled up when the query fails. Loading in snowflake fails with
+     `Numeric value 'id' is not recognized`
+    """
+    _, test_table = database_table_fixture
+    with mock.patch("astro.databases.snowflake.SnowflakeDatabase.schema_exists") as schema_exists, mock.patch(
+        "airflow.providers.snowflake.hooks.snowflake.SnowflakeHook.run"
+    ) as run:
+        schema_exists.return_value = True
+        run.side_effect = AttributeError()
+        with pytest.raises(DatabaseCustomError):
+            with sample_dag:
+                load_file(
+                    input_file=File("gs://astro-sdk/workspace/sample.csv", conn_id="bigquery"),
+                    output_table=test_table,
+                    use_native_support=True,
+                    enable_native_fallback=False,
+                    native_support_kwargs={"storage_integration": "gcs_int_python_sdk"},
+                )
+            test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+        }
+    ],
+    indirect=True,
+    ids=["bigquery"],
+)
+def test_load_file_bigquery_error_out(sample_dag, database_table_fixture):
+    """Test adding a file with jagged rows raises exception in bigquery."""
+    _, test_table = database_table_fixture
+    with pytest.raises(DatabaseCustomError):
+        with sample_dag:
+            load_file(
+                input_file=File("s3://astro-sdk/imdb.csv", conn_id="aws_conn"),
+                output_table=test_table,
+                use_native_support=True,
+                enable_native_fallback=False,
+            )
+        test_utils.run_dag(sample_dag)

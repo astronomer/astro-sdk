@@ -19,7 +19,7 @@ START_DATE = datetime(2000, 1, 1)
 
 
 def load_config():
-    config_path = Path(Path(__file__).parent.parent, "config.json").resolve()
+    config_path = Path(Path(__file__).parent.parent, os.getenv("CONFIG_PATH")).resolve()
     with open(config_path) as fp:
         return json.load(fp)
 
@@ -48,13 +48,13 @@ def get_location(path):
     return scheme
 
 
-def get_traceback(exc) -> str:
+def get_traceback(exc: BaseException) -> str:
     """
     Get traceback string from exception
     :param exc: Exception object
     """
     if sys.version_info >= (3, 10, 0):
-        tb = traceback.format_exception(exc, value=exc, tb=exc.__traceback__)
+        tb = traceback.format_exception(exc, value=exc, tb=exc.__traceback__)  # type: ignore
     else:
         tb = traceback.format_exception(type(exc), value=exc, tb=exc.__traceback__)
     return "".join(tb)
@@ -150,7 +150,7 @@ def create_dag(database_name, table_args, dataset, global_db_kwargs):
         :param context: Airflow taskinstance context
         """
 
-        exc = context["exception"]
+        exc: BaseException = context["exception"]
 
         exc_string = get_traceback(exc)
         profile = {

@@ -1,5 +1,7 @@
 """AWS Redshift table implementation."""
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
+
+from typing import Any
 
 import pandas as pd
 import sqlalchemy
@@ -68,12 +70,13 @@ class RedshiftDatabase(BaseDatabase):
         FileLocation.S3: "load_s3_file_to_table",
     }
 
-    illegal_column_name_chars: List[str] = ["."]
-    illegal_column_name_chars_replacement: List[str] = ["_"]
+    illegal_column_name_chars: list[str] = ["."]
+    illegal_column_name_chars_replacement: list[str] = ["_"]
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID):
+    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
         super().__init__(conn_id)
         self._create_table_statement: str = "CREATE TABLE {} AS {}"
+        self.table = table
 
     @property
     def sql_type(self):
@@ -82,7 +85,13 @@ class RedshiftDatabase(BaseDatabase):
     @property
     def hook(self) -> RedshiftSQLHook:
         """Retrieve Airflow hook to interface with the Redshift database."""
-        return RedshiftSQLHook(redshift_conn_id=self.conn_id, use_legacy_sql=False)
+        kwargs = {}
+        _hook = RedshiftSQLHook(redshift_conn_id=self.conn_id, use_legacy_sql=False)
+        database = _hook.conn.schema
+        # currently, kwargs might not get used because Airflow hook accept it but does not use it.
+        if (database is None) and (self.table and self.table.metadata and self.table.metadata.database):
+            kwargs.update({"schema": self.table.metadata.database})
+        return RedshiftSQLHook(redshift_conn_id=self.conn_id, use_legacy_sql=False, **kwargs)
 
     @property
     def sqlalchemy_engine(self) -> Engine:
@@ -150,12 +159,12 @@ class RedshiftDatabase(BaseDatabase):
         if_conflicts: MergeConflictStrategy,
         stage_table_name: str,
         source_table_name: str,
-        source_to_target_map_source_columns: List[str],
-        source_to_target_map_target_columns: List[str],
+        source_to_target_map_source_columns: list[str],
+        source_to_target_map_target_columns: list[str],
         source_table_all_columns_string: str,
         target_table_all_columns_string: str,
-        target_conflict_columns: List[str],
-    ) -> Optional[List[str]]:
+        target_conflict_columns: list[str],
+    ) -> list[str] | None:
         """
         Builds conflict SQL statement to be applied while merging.
 
@@ -209,8 +218,8 @@ class RedshiftDatabase(BaseDatabase):
         self,
         source_table: BaseTable,
         target_table: BaseTable,
-        source_to_target_columns_map: Dict[str, str],
-        target_conflict_columns: List[str],
+        source_to_target_columns_map: dict[str, str],
+        target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
         """
@@ -229,12 +238,14 @@ class RedshiftDatabase(BaseDatabase):
 
         source_to_target_map_source_columns = list(source_to_target_columns_map.keys())
         source_to_target_map_target_columns = list(source_to_target_columns_map.values())
-        source_table_all_columns = self.hook.run(
+        # Need skipcq because string concatenation in query,
+        # We should consider using parameterized if possible
+        source_table_all_columns = self.hook.run(  # skipcq BAN-B608
             f"select col_name from pg_get_cols('{source_table_name}') "
             f"cols(view_schema name, view_name name, col_name name, col_type varchar, col_num int);",
             handler=lambda x: [y[0] for y in x.fetchall()],
         )
-        target_table_all_columns = self.hook.run(
+        target_table_all_columns = self.hook.run(  # skipcq BAN-B608
             f"select col_name from pg_get_cols('{target_table_name}') "
             f"cols(view_schema name, view_name name, col_name name, col_type varchar, col_num int);",
             handler=lambda x: [y[0] for y in x.fetchall()],
@@ -252,7 +263,7 @@ class RedshiftDatabase(BaseDatabase):
             f"INSERT INTO {stage_table_name}({target_table_all_columns_string}) "
             f"SELECT {target_table_all_columns_string} FROM {target_table_name}"
         )
-        conflict_statements: Optional[List[str]] = self._get_conflict_statements(
+        conflict_statements: list[str] | None = self._get_conflict_statements(
             if_conflicts,
             stage_table_name,
             source_table_name,
@@ -283,7 +294,9 @@ class RedshiftDatabase(BaseDatabase):
             for statement in statements:
                 cursor.execute(statement)
 
-    def is_native_load_file_available(self, source_file: File, target_table: BaseTable) -> bool:
+    def is_native_load_file_available(
+        self, source_file: File, target_table: BaseTable  # skipcq PYL-W0613
+    ) -> bool:
         """
         Check if there is an optimised path for source to destination.
 
@@ -299,7 +312,7 @@ class RedshiftDatabase(BaseDatabase):
         source_file: File,
         target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
-        native_support_kwargs: Optional[Dict] = None,
+        native_support_kwargs: dict | None = None,
         **kwargs,
     ):
         """
@@ -331,7 +344,7 @@ class RedshiftDatabase(BaseDatabase):
         self,
         source_file: File,
         target_table: BaseTable,
-        native_support_kwargs: Optional[Dict] = None,
+        native_support_kwargs: dict | None = None,
         **kwargs,
     ):
         """
@@ -378,7 +391,7 @@ class RedshiftDatabase(BaseDatabase):
             raise DatabaseCustomError from exe
 
     @staticmethod
-    def get_merge_initialization_query(parameters: tuple) -> str:
+    def get_merge_initialization_query(parameters: tuple) -> str:  # skipcq PYL-W0613
         """
         Handles database-specific logic to handle constraints
         for Redshift.

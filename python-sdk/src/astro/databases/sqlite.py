@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import socket
+
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from sqlalchemy import MetaData as SqlaMetaData, create_engine
 from sqlalchemy.engine.base import Engine
@@ -18,8 +20,9 @@ class SqliteDatabase(BaseDatabase):
     logic in other parts of our code-base.
     """
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID):
+    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
         super().__init__(conn_id)
+        self.table = table
 
     @property
     def sql_type(self) -> str:
@@ -68,7 +71,7 @@ class SqliteDatabase(BaseDatabase):
         Since SQLite does not have schemas, we do not need to set a schema here.
         """
 
-    def schema_exists(self, schema: str) -> bool:
+    def schema_exists(self, schema: str) -> bool:  # skipcq PYL-W0613,PYL-R0201
         """
         Check if a schema exists. We return false for sqlite since sqlite does not have schemas
         """
@@ -79,7 +82,7 @@ class SqliteDatabase(BaseDatabase):
         """
         Handles database-specific logic to handle index for Sqlite.
         """
-        return "CREATE UNIQUE INDEX merge_index ON {{table}}(%s)" % ",".join(parameters)
+        return "CREATE UNIQUE INDEX merge_index ON {{table}}(%s)" % ",".join(parameters)  # skipcq PYL-C0209
 
     def merge_table(
         self,
@@ -139,9 +142,8 @@ class SqliteDatabase(BaseDatabase):
 
     def openlineage_dataset_namespace(self) -> str:
         """
-        Returns the open lineage dataset name as per
+        Returns the open lineage dataset namespace as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
-        Example: /tmp/local.db
+        Example: sqlite://127.0.0.1
         """
-        conn = self.hook.get_connection(self.conn_id)
-        return f"{conn.host}"
+        return f"{self.sql_type}://{socket.gethostbyname(socket.gethostname())}"

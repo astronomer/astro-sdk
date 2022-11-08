@@ -3,13 +3,16 @@ from __future__ import annotations
 import logging
 import warnings
 from abc import ABC
-from typing import Any, Callable, Mapping
+from typing import TYPE_CHECKING, Any, Callable, Mapping
 
 import pandas as pd
 import sqlalchemy
 from airflow.hooks.dbapi import DbApiHook
 from pandas.io.sql import SQLDatabase
 from sqlalchemy import column, insert, select
+
+if TYPE_CHECKING:  # pragma: no cover
+    from sqlalchemy.engine.cursor import CursorResult
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
@@ -27,7 +30,7 @@ from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File, resolve_file_path_pattern
 from astro.files.types import create_file_type
 from astro.files.types.base import FileType as FileTypeConstants
-from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
+from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK, LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.table import BaseTable, Metadata
 
 
@@ -92,7 +95,7 @@ class BaseDatabase(ABC):
         sql: str | ClauseElement = "",
         parameters: dict | None = None,
         **kwargs,
-    ):
+    ) -> CursorResult:
         """
         Return the results to running a SQL statement.
 
@@ -392,7 +395,7 @@ class BaseDatabase(ABC):
         use_native_support: bool = True,
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
-        enable_native_fallback: bool | None = True,
+        enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         **kwargs,
     ):
         """
@@ -485,7 +488,7 @@ class BaseDatabase(ABC):
         if_exists: LoadExistStrategy = "replace",
         normalize_config: dict | None = None,
         native_support_kwargs: dict | None = None,
-        enable_native_fallback: bool | None = True,
+        enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
         **kwargs,
     ):
@@ -497,7 +500,7 @@ class BaseDatabase(ABC):
         :param if_exists: Overwrite file if exists
         :param chunk_size: Specify the number of records in each batch to be written at a time
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
-        :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer.
+        :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         :param normalize_config: pandas json_normalize params config
         """
 
@@ -687,7 +690,7 @@ class BaseDatabase(ABC):
 
     def get_sqlalchemy_template_table_identifier_and_parameter(
         self, table: BaseTable, jinja_table_identifier: str
-    ) -> tuple[str, str]:
+    ) -> tuple[str, str]:  # skipcq PYL-W0613
         """
         During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
         convert a Jinja table identifier to a safe SQLAlchemy-compatible table identifier.

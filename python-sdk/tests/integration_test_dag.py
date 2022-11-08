@@ -100,7 +100,7 @@ def run_merge(output_table: Table):
         columns={"list": "list", "sell": "sell"},
         if_conflicts="ignore",
     )
-    con1 >> merged_table
+    con1 >> merged_table  # skipcq PYL-W0104
 
 
 @pytest.mark.parametrize(
@@ -131,4 +131,4 @@ def test_full_dag(database_table_fixture, sample_dag):
             if_exists="replace",
         )
         aql.cleanup()
-    test_utils.run_dag(sample_dag, account_for_cleanup_failure=True)
+    test_utils.run_dag(sample_dag)
