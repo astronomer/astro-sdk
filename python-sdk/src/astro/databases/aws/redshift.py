@@ -129,19 +129,6 @@ class RedshiftDatabase(BaseDatabase):
         inspector = sqlalchemy.inspect(self.sqlalchemy_engine)
         return bool(inspector.dialect.has_table(self.connection, table.name, schema=table.metadata.schema))
 
-    @staticmethod
-    def get_table_qualified_name(table: BaseTable) -> str:  # skipcq: PYL-R0201
-        """
-        Return table qualified name for redshift.
-
-        :param table: The table we want to retrieve the qualified name for.
-        """
-        if table.metadata and table.metadata.schema:
-            qualified_name = f'"{table.metadata.schema}"."{table.name}"'
-        else:
-            qualified_name = f'"{table.name}"'
-        return qualified_name
-
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,
