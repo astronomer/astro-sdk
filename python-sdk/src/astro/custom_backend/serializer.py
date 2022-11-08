@@ -15,7 +15,6 @@ else:
     from sqlalchemy.engine.result import RowProxy as SQLAlcRow
 
 from astro.files import File
-from astro.spark.table import DeltaTable
 from astro.table import Table, TempTable
 
 log = logging.getLogger("astro.utils.serializer")
@@ -31,8 +30,6 @@ def serialize(obj: Table | File | Any) -> dict | Any:  # noqa
     if isinstance(obj, (Table, TempTable)):
         return obj.to_json()
     elif isinstance(obj, File):
-        return obj.to_json()
-    elif isinstance(obj, DeltaTable):
         return obj.to_json()
     elif isinstance(obj, (list, tuple)):
         return [serialize(o) for o in obj]
@@ -97,8 +94,6 @@ def deserialize(obj: dict | str | list) -> Table | File | Any:  # noqa
                 return SQLAlcRow(None, None, obj["key_map"], obj["key_style"], obj["data"])
             else:
                 return SQLAlcRow(None, None, obj["key_map"], obj["key_style"])
-        elif obj["class"] == "DeltaTable":
-            return DeltaTable.from_json(obj)
         else:
             return obj["value"]
     elif isinstance(obj, dict):

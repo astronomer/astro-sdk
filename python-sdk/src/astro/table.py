@@ -133,6 +133,8 @@ class BaseTable:
         Return the row count of table.
         """
         db = create_database(self.conn_id)
+        if db.sql_type == "delta":
+            return db.row_count(self)
         result = db.run_sql(
             f"select count(*) from {db.get_table_qualified_name(self)}"  # skipcq: BAN-B608
         ).scalar()

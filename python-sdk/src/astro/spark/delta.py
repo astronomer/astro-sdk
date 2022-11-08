@@ -9,12 +9,35 @@ from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistS
 from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.spark.autoloader.autoloader_job import load_file_to_delta
-from astro.spark.table import DeltaTable as AstroDeltaTable
 from astro.table import BaseTable, Metadata
-
+from airflow.providers.databricks.hooks.databricks import DatabricksHook
+from databricks_cli.sdk.api_client import ApiClient
 
 class DeltaDatabase(BaseDatabase):
     _create_table_statement: str = "CREATE TABLE IF NOT EXISTS {} USING DELTA AS {} "
+
+    def __init__(self, conn_id: str, table: BaseTable | None = None):
+        super().__init__(conn_id)
+        self.table = table
+
+    def api_client(self):
+        conn = DatabricksHook(databricks_conn_id=self.conn_id).get_conn()
+        api_client = ApiClient(host=conn.host, token=conn.password)
+        return api_client
+
+    def row_count(self, table):
+        x = self.run_sql("SELECT COUNT(*) FROM {}".format(self.get_table_qualified_name(table)), handler=lambda x: x.fetchone())
+        return list(x[1].asDict().values())[0]  # please for the love of god let's find a better way to do this
+
+    def populate_table_metadata(self, table: BaseTable) -> BaseTable:
+        """
+        Since SQLite does not have a concept of databases or schemas, we just return the table as is,
+        without any modifications.
+        """
+        table.conn_id = table.conn_id or self.conn_id
+        if not table.metadata or table.metadata.is_empty():
+            table.metadata = self.table.metadata or self.default_metadata
+        return table
 
     @property
     def sql_type(self):
@@ -22,7 +45,7 @@ class DeltaDatabase(BaseDatabase):
 
     @property
     def hook(self) -> DbApiHook:
-        pass
+        return DatabricksSqlHook(databricks_conn_id=self.conn_id)
 
     @property
     def default_metadata(self) -> Metadata:
@@ -77,7 +100,7 @@ class DeltaDatabase(BaseDatabase):
         """
         load_file_to_delta(
             input_file=input_file,
-            delta_table=AstroDeltaTable(self.conn_id),
+            delta_table=output_table,
         )
 
     def openlineage_dataset_name(self, table: BaseTable) -> str:
@@ -101,14 +124,15 @@ class DeltaDatabase(BaseDatabase):
         self,
         sql: str | ClauseElement = "",
         parameters: dict | None = None,
+        handler=None,
         **kwargs,
     ):
         hook = DatabricksSqlHook(
             databricks_conn_id=self.conn_id,
         )
-        hook.run(sql, parameters=parameters)
+        return hook.run(sql, parameters=parameters, handler=handler)
 
     def export_table_to_pandas_dataframe(
-        self, source_table: AstroDeltaTable, select_kwargs: dict | None = None
+        self, source_table: BaseTable, select_kwargs: dict | None = None
     ) -> DataFrame:
-        raise NotImplementedError()
+        return self.hook.run(f"SELECT * FROM {source_table.name}", handler=lambda cur: cur.fetchall_arrow().to_pandas())[1]
