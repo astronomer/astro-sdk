@@ -130,7 +130,7 @@ def run(
     generate_tasks: bool = typer.Option(
         default=False,
         help="whether to explicitly generate the tasks in your SQL CLI "
-        "DAG. By default we will keep the DAGs smaller and read SQL"
+        "DAG. By default we will keep the DAGs smaller and read SQL "
         "files at runtime",
         show_default=True,
     ),

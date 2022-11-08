@@ -31,6 +31,7 @@ def render_tasks(directory: Path) -> list[TransformOperator]:
     render_dag allows a user to take any directory and turn it into a runnable
     Airflow DAG. This function will read all SQL files, and set dependencies based
     on jinja template-based variables.
+
     :param directory: Base directory for SQL files. We will recursively parse
         subdirectories as well.
     :param workflow_name: the name of the Workflow you would like to run

@@ -133,6 +133,7 @@ class SqlFile:
         Converts SQLFile into a TransformOperator that can be added to a DAG.
         Any relevant metadata from the file frontmatter will be passed to the TransformOperator,
         though we do not pass parameter dependencies at this stage.
+
         :return: a TransformOperator
         """
         return TransformOperator(
