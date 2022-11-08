@@ -41,8 +41,6 @@ def test(session: nox.Session, airflow: str) -> None:
         "poetry",
         "run",
         "pytest",
-        "-k",
-        "test_validate[test-sqlite_conn_invalid-FAILED]",
         *session.posargs,
         "--exitfirst",
         "--cov=sql_cli",
