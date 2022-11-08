@@ -25,7 +25,13 @@ def retrieve_airflow_database_conn_from_config(airflow_home: Path) -> str:
     parser = ConfigParser()
     parser.read(filename)
     confdict = {section: dict(parser.items(section)) for section in parser.sections()}
-    return confdict["database"]["sql_alchemy_conn"]
+    try:
+        # Airflow >= 2.3
+        sql_alchemy_conn = confdict["database"]["sql_alchemy_conn"]
+    except KeyError:
+        sql_alchemy_conn = confdict["core"]["sql_alchemy_conn"]
+
+    return sql_alchemy_conn
 
 
 def disable_examples(airflow_home: Path) -> None:
@@ -50,8 +56,11 @@ def set_airflow_database_conn(airflow_meta_conn: str) -> None:
 
     :params airflow_db_conn: Similar to `sqlite:////tmp/project/airflow.db`
     """
-    # This is a hacky approcah we managed to find to make thigs work with Airflow 2.4
+    # This is a hacky approach we managed to find to make things work with Airflow 2.4
     os.environ["AIRFLOW__DATABASE__SQL_ALCHEMY_CONN"] = airflow_meta_conn
+    # This is necessary for Airflow <= 2.2
+    os.environ["AIRFLOW__CORE__SQL_ALCHEMY_CONN"] = airflow_meta_conn
+
     import airflow  # skipcq: PYL-W0406
 
     importlib.reload(airflow)

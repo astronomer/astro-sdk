@@ -101,6 +101,7 @@ class Project:
         """
         os.environ.pop("AIRFLOW_HOME", None)
         os.environ.pop("AIRFLOW__DATABASE__SQL_ALCHEMY_CONN", None)
+        os.environ.pop("AIRFLOW__CORE__SQL_ALCHEMY_CONN", None)
 
         # TODO: In future we want to replace this by either:
         # - python-native approach or

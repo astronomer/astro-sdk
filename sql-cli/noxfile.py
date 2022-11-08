@@ -21,21 +21,35 @@ def dev(session: nox.Session) -> None:
 
 
 @nox.session(python=["3.7", "3.8", "3.9"])
-def test(session: nox.Session) -> None:
+@nox.parametrize("airflow", ["2.1", "2.2.0", "2.3", "2.4"])
+def test(session: nox.Session, airflow: str) -> None:
     """Run both unit and integration tests."""
     session.install("poetry")
     session.run("poetry", "install", "--with", "dev")
-    # Log all the installed dependencies
+    session.run("poetry", "add", f"apache-airflow=={airflow}")
     session.log("Installed Dependencies:")
-    session.run("pip3", "freeze")
-    airflow_home = f"~/airflow-latest-{session.python}"
+    session.run("poetry", "run", "pip3", "freeze")
+
+    # TODO: at the moment flow run depends on the Airflow global Airflow Home - we need to fix this
+    # Refactor so each test does this in their own sandboxed Airflow home
+    # From what I observed, the `run` command is the one using this, due to how the method
+    # utils.airflow.get_dag behaves under Airflow 2.2.0 (it defaults to $HOME/airflow)
+    airflow_home = f"~/airflow-latest-{session.python}-airflow-{airflow}"
     session.run("airflow", "db", "init", env={"AIRFLOW_HOME": airflow_home})
+
     session.run(
+        "poetry",
+        "run",
         "pytest",
+        "-k",
+        "test_validate[test-sqlite_conn_invalid-FAILED]",
         *session.posargs,
+        "--exitfirst",
         "--cov=sql_cli",
         "--cov-report=xml",
         "--cov-branch",
+        # TODO: remove the following line once we're handling Airflow config more gracefully
+        "-s",
         env={"AIRFLOW_HOME": airflow_home},
         external=True,
     )
