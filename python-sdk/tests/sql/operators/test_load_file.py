@@ -1246,3 +1246,28 @@ def test_load_file_snowflake_error_out_provider_3_1_0(sample_dag, database_table
                     native_support_kwargs={"storage_integration": "gcs_int_python_sdk"},
                 )
             test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.BIGQUERY,
+        }
+    ],
+    indirect=True,
+    ids=["bigquery"],
+)
+def test_load_file_bigquery_error_out(sample_dag, database_table_fixture):
+    """Test adding a file with jagged rows raises exception in bigquery."""
+    _, test_table = database_table_fixture
+    with pytest.raises(DatabaseCustomError):
+        with sample_dag:
+            load_file(
+                input_file=File("s3://astro-sdk/imdb.csv", conn_id="aws_conn"),
+                output_table=test_table,
+                use_native_support=True,
+                enable_native_fallback=False,
+            )
+        test_utils.run_dag(sample_dag)
