@@ -64,7 +64,6 @@ def create_job(
     new_cluster_specs=None,
 ):
     api_client = table.api_client()
-    hook = table.hook()
     jobs_api = JobsApi(api_client=api_client)
     json_info = {
         "name": "autloader Python job S3 " + str(datetime.datetime.now()),

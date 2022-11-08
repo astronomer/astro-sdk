@@ -21,7 +21,7 @@ class DeltaTable(BaseTable):
 
     def api_client(self):
         conn = DatabricksHook(databricks_conn_id=self.conn_id).get_conn()
-        api_client = ApiClient(host=conn.host, token=conn.extra_dejson["token"])
+        api_client = ApiClient(host=conn.host, token=conn.password)
         return api_client
 
     def to_json(self):
