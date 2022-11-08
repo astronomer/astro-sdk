@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from airflow.hooks.dbapi import DbApiHook
+from airflow.providers.databricks.hooks.databricks import DatabricksHook
 from airflow.providers.databricks.hooks.databricks_sql import DatabricksSqlHook
+from databricks_cli.sdk.api_client import ApiClient
 from pyspark.sql.dataframe import DataFrame
 from sqlalchemy.sql import ClauseElement
 
@@ -10,8 +12,7 @@ from astro.databases.base import BaseDatabase
 from astro.files import File
 from astro.spark.autoloader.autoloader_job import load_file_to_delta
 from astro.table import BaseTable, Metadata
-from airflow.providers.databricks.hooks.databricks import DatabricksHook
-from databricks_cli.sdk.api_client import ApiClient
+
 
 class DeltaDatabase(BaseDatabase):
     _create_table_statement: str = "CREATE TABLE IF NOT EXISTS {} USING DELTA AS {} "
@@ -26,8 +27,13 @@ class DeltaDatabase(BaseDatabase):
         return api_client
 
     def row_count(self, table):
-        x = self.run_sql("SELECT COUNT(*) FROM {}".format(self.get_table_qualified_name(table)), handler=lambda x: x.fetchone())
-        return list(x[1].asDict().values())[0]  # please for the love of god let's find a better way to do this
+        x = self.run_sql(
+            f"SELECT COUNT(*) FROM {self.get_table_qualified_name(table)}",
+            handler=lambda x: x.fetchone(),
+        )
+        return list(x[1].asDict().values())[
+            0
+        ]  # please for the love of god let's find a better way to do this
 
     def populate_table_metadata(self, table: BaseTable) -> BaseTable:
         """
@@ -135,4 +141,6 @@ class DeltaDatabase(BaseDatabase):
     def export_table_to_pandas_dataframe(
         self, source_table: BaseTable, select_kwargs: dict | None = None
     ) -> DataFrame:
-        return self.hook.run(f"SELECT * FROM {source_table.name}", handler=lambda cur: cur.fetchall_arrow().to_pandas())[1]
+        return self.hook.run(
+            f"SELECT * FROM {source_table.name}", handler=lambda cur: cur.fetchall_arrow().to_pandas()
+        )[1]
