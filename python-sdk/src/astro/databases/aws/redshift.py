@@ -251,16 +251,14 @@ class RedshiftDatabase(BaseDatabase):
 
         source_to_target_map_source_columns = list(source_to_target_columns_map.keys())
         source_to_target_map_target_columns = list(source_to_target_columns_map.values())
-        source_table_all_columns = self.hook.run(
-            "select col_name from pg_get_cols('%s') "
-            "cols(view_schema name, view_name name, col_name name, col_type varchar, col_num int);",
-            parameters=(source_table_name,),
+        source_table_all_columns = self.hook.run(  # skipcq BAN-B608
+            f"select col_name from pg_get_cols('{source_table_name}') "
+            f"cols(view_schema name, view_name name, col_name name, col_type varchar, col_num int);",
             handler=lambda x: [y[0] for y in x.fetchall()],
         )
-        target_table_all_columns = self.hook.run(
-            "select col_name from pg_get_cols('%s') "
-            "cols(view_schema name, view_name name, col_name name, col_type varchar, col_num int);",
-            parameters=(source_table_name,),
+        target_table_all_columns = self.hook.run(  # skipcq BAN-B608
+            f"select col_name from pg_get_cols('{source_table_name}') "
+            f"cols(view_schema name, view_name name, col_name name, col_type varchar, col_num int);",
             handler=lambda x: [y[0] for y in x.fetchall()],
         )
         target_table_all_columns_string = ",".join(map(str, source_to_target_map_target_columns))
