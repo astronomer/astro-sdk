@@ -238,12 +238,14 @@ class RedshiftDatabase(BaseDatabase):
 
         source_to_target_map_source_columns = list(source_to_target_columns_map.keys())
         source_to_target_map_target_columns = list(source_to_target_columns_map.values())
-        source_table_all_columns = self.hook.run(
+        # Need skipcq because string concatenation in query,
+        # We should consider using parameterized if possible
+        source_table_all_columns = self.hook.run(  # skipcq BAN-B608
             f"select col_name from pg_get_cols('{source_table_name}') "
             f"cols(view_schema name, view_name name, col_name name, col_type varchar, col_num int);",
             handler=lambda x: [y[0] for y in x.fetchall()],
         )
-        target_table_all_columns = self.hook.run(
+        target_table_all_columns = self.hook.run(  # skipcq BAN-B608
             f"select col_name from pg_get_cols('{target_table_name}') "
             f"cols(view_schema name, view_name name, col_name name, col_type varchar, col_num int);",
             handler=lambda x: [y[0] for y in x.fetchall()],
@@ -292,7 +294,9 @@ class RedshiftDatabase(BaseDatabase):
             for statement in statements:
                 cursor.execute(statement)
 
-    def is_native_load_file_available(self, source_file: File, target_table: BaseTable) -> bool:
+    def is_native_load_file_available(
+        self, source_file: File, target_table: BaseTable  # skipcq PYL-W0613
+    ) -> bool:
         """
         Check if there is an optimised path for source to destination.
 
@@ -387,7 +391,7 @@ class RedshiftDatabase(BaseDatabase):
             raise DatabaseCustomError from exe
 
     @staticmethod
-    def get_merge_initialization_query(parameters: tuple) -> str:
+    def get_merge_initialization_query(parameters: tuple) -> str:  # skipcq PYL-W0613
         """
         Handles database-specific logic to handle constraints
         for Redshift.

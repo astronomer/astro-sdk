@@ -38,7 +38,7 @@ def version() -> None:
     help="Print additional information about the project.",
 )
 def about() -> None:
-    rprint("Find out more: https://github.com/astronomer/astro-sdk/sql-cli")
+    rprint("Find out more: https://docs.astronomer.io/astro/cli/sql-cli")
 
 
 @app.command(
@@ -66,7 +66,12 @@ def generate(
     project = Project(project_dir_absolute)
     project.load_config(env)
 
-    cli.generate_dag(project, env, workflow_name)
+    rprint(
+        f"\nGenerating the DAG file from workflow [bold blue]{workflow_name}[/bold blue]"
+        f" for [bold]{env}[/bold] environment..\n"
+    )
+    dag_file = cli.generate_dag(project, workflow_name)
+    rprint("The DAG file", dag_file.resolve(), "has been successfully generated. 🎉")
 
 
 @app.command(
@@ -148,9 +153,15 @@ def run(
     airflow_meta_conn = retrieve_airflow_database_conn_from_config(project.directory / project.airflow_home)
     set_airflow_database_conn(airflow_meta_conn)
 
-    dag_file = cli.generate_dag(project, env, workflow_name)
+    dag_file = cli.generate_dag(project, workflow_name)
     dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
-    cli.run_dag(project, env, dag, verbose)
+    rprint(
+        f"\nRunning the workflow [bold blue]{dag.dag_id}[/bold blue] for [bold]{env}[/bold] environment..\n"
+    )
+    dr = cli.run_dag(project, dag, verbose)
+    rprint(f"Completed running the workflow {dr.dag_id}. 🚀")
+    elapsed_seconds = (dr.end_date - dr.start_date).microseconds / 10**6
+    rprint(f"Total elapsed time: [bold blue]{elapsed_seconds:.2}s[/bold blue]")
 
 
 @app.command(

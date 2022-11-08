@@ -71,7 +71,7 @@ class SqliteDatabase(BaseDatabase):
         Since SQLite does not have schemas, we do not need to set a schema here.
         """
 
-    def schema_exists(self, schema: str) -> bool:
+    def schema_exists(self, schema: str) -> bool:  # skipcq PYL-W0613,PYL-R0201
         """
         Check if a schema exists. We return false for sqlite since sqlite does not have schemas
         """
@@ -82,7 +82,7 @@ class SqliteDatabase(BaseDatabase):
         """
         Handles database-specific logic to handle index for Sqlite.
         """
-        return "CREATE UNIQUE INDEX merge_index ON {{table}}(%s)" % ",".join(parameters)
+        return "CREATE UNIQUE INDEX merge_index ON {{table}}(%s)" % ",".join(parameters)  # skipcq PYL-C0209
 
     def merge_table(
         self,
