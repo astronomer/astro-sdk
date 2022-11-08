@@ -8,10 +8,10 @@ from databricks_cli.dbfs.api import DbfsApi, DbfsPath
 from databricks_cli.jobs.api import JobsApi
 from databricks_cli.runs.api import RunsApi
 from databricks_cli.secrets.api import SecretApi
-from astro.spark.table import DeltaTable
 
 from astro.files import File
 from astro.spark.autoloader.autoloader_file_generator import render
+from astro.spark.table import DeltaTable
 
 cwd = pathlib.Path(__file__).parent
 
@@ -36,8 +36,12 @@ def create_secrets(scope_name, filesystem_secrets, api_client):
 def generate_file(data_source_path, table_name, source_type, load_options, output_file_path):
     render(
         Path("jinja_templates/autoload_file_to_delta.py.jinja2"),
-        {"source_type": source_type, "table_name": table_name,
-         "load_dict": load_options, "input_path": data_source_path},
+        {
+            "source_type": source_type,
+            "table_name": table_name,
+            "load_dict": load_options,
+            "input_path": data_source_path,
+        },
         output_file_path,
     )
     return output_file_path
@@ -54,7 +58,11 @@ def load_file_to_dbfs(local_file_path, api_client):
     )
 
 
-def create_job(table: DeltaTable, existing_cluster_id=None, new_cluster_specs=None, ):
+def create_job(
+    table: DeltaTable,
+    existing_cluster_id=None,
+    new_cluster_specs=None,
+):
     api_client = table.api_client()
     hook = table.hook()
     jobs_api = JobsApi(api_client=api_client)
@@ -93,9 +101,7 @@ def create_job(table: DeltaTable, existing_cluster_id=None, new_cluster_specs=No
 def load_file_to_delta(input_file: File, delta_table: DeltaTable):
     api_client = delta_table.api_client()
     create_secrets(
-        "my-scope",
-        filesystem_secrets=input_file.location.autoloader_config(),
-        api_client=api_client
+        "my-scope", filesystem_secrets=input_file.location.autoloader_config(), api_client=api_client
     )
 
     with tempfile.NamedTemporaryFile(suffix=".py") as tfile:

@@ -1,21 +1,16 @@
 from __future__ import annotations
 
 from airflow.hooks.dbapi import DbApiHook
-from astro.spark.autoloader.autoloader_job import load_file_to_delta
+from airflow.providers.databricks.hooks.databricks_sql import DatabricksSqlHook
 from pyspark.sql.dataframe import DataFrame
 from sqlalchemy.sql import ClauseElement
 
-from astro.constants import (
-    DEFAULT_CHUNK_SIZE,
-    ColumnCapitalization,
-    LoadExistStrategy,
-    MergeConflictStrategy,
-)
+from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.files import File
+from astro.spark.autoloader.autoloader_job import load_file_to_delta
 from astro.spark.table import DeltaTable as AstroDeltaTable
 from astro.table import BaseTable, Metadata
-from airflow.providers.databricks.hooks.databricks_sql import DatabricksSqlHook
 
 
 class DeltaDatabase(BaseDatabase):
@@ -108,7 +103,9 @@ class DeltaDatabase(BaseDatabase):
         parameters: dict | None = None,
         **kwargs,
     ):
-        hook = DatabricksSqlHook(databricks_conn_id=self.conn_id, )
+        hook = DatabricksSqlHook(
+            databricks_conn_id=self.conn_id,
+        )
         hook.run(sql, parameters=parameters)
 
     def export_table_to_pandas_dataframe(
