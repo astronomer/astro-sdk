@@ -4,7 +4,7 @@ from pyspark.sql.functions import input_file_name, current_timestamp
 
 src_events_path = "{{ input_path }}"
 username = spark.sql("SELECT regexp_replace(current_user(), '[^a-zA-Z0-9]', '_')").first()[0]
-table_name = f"{username}_etl_3_to_delta" # This can be generated based on task ID and dag ID or just entirely random
+table_name = f"{{ table_name }}" # This can be generated based on task ID and dag ID or just entirely random
 checkpoint_path = f"/tmp/{username}/_checkpoint/etl_3_quickstart"
 
 {%- if source_type == "s3" %}

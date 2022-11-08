@@ -17,6 +17,7 @@ from astro.spark.table import DeltaTable as AstroDeltaTable
 from astro.table import BaseTable, Metadata
 from airflow.providers.databricks.hooks.databricks_sql import DatabricksSqlHook
 
+
 class DeltaDatabase(BaseDatabase):
     _create_table_statement: str = "CREATE TABLE IF NOT EXISTS {} USING DELTA AS {} "
 

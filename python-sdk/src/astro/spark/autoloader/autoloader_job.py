@@ -7,7 +7,6 @@ from pathlib import Path
 from databricks_cli.dbfs.api import DbfsApi, DbfsPath
 from databricks_cli.jobs.api import JobsApi
 from databricks_cli.runs.api import RunsApi
-from databricks_cli.sdk.api_client import ApiClient
 from databricks_cli.secrets.api import SecretApi
 from astro.spark.table import DeltaTable
 
@@ -34,10 +33,11 @@ def create_secrets(scope_name, filesystem_secrets, api_client):
         secrets.put_secret(scope=scope_name, key=k, string_value=v, bytes_value=None)
 
 
-def generate_file(data_source_path, source_type, load_options, output_file_path):
+def generate_file(data_source_path, table_name, source_type, load_options, output_file_path):
     render(
         Path("jinja_templates/autoload_file_to_delta.py.jinja2"),
-        {"source_type": source_type, "load_dict": load_options, "input_path": data_source_path},
+        {"source_type": source_type, "table_name": table_name,
+         "load_dict": load_options, "input_path": data_source_path},
         output_file_path,
     )
     return output_file_path
@@ -101,6 +101,7 @@ def load_file_to_delta(input_file: File, delta_table: DeltaTable):
     with tempfile.NamedTemporaryFile(suffix=".py") as tfile:
         file_path = generate_file(
             data_source_path=input_file.path,
+            table_name=delta_table.name,
             source_type=str(input_file.location.location_type),
             load_options={
                 "cloudFiles.format": "csv",
