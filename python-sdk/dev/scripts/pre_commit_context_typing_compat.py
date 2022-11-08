@@ -27,14 +27,16 @@ class ImportCrawler(NodeVisitor):
             return
 
         for alias in node.names:
-            if f"{node.module}.{alias.name}" == "airflow.utils.context.Context":
-                if not self.has_incompatible_context_imports:
-                    self.has_incompatible_context_imports = True
+            if (
+                f"{node.module}.{alias.name}" == "airflow.utils.context.Context"
+                and not self.has_incompatible_context_imports
+            ):
+                self.has_incompatible_context_imports = True
 
 
 def get_all_provider_files() -> list[Path]:
     """Retrieve all eligible provider module files."""
-    provider_files = []
+    _provider_files = []
     for (root, _, file_names) in os.walk(ASTRO_ROOT):
         for file_name in file_names:
             file_path = Path(root, file_name)
@@ -43,9 +45,9 @@ def get_all_provider_files() -> list[Path]:
                 and file_path.name.endswith(".py")
                 and TYPING_COMPAT_PATH not in str(file_path)
             ):
-                provider_files.append(file_path)
+                _provider_files.append(file_path)
 
-    return provider_files
+    return _provider_files
 
 
 def find_incompatible_context_imports(file_paths: list[Path]) -> list[str]:

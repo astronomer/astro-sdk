@@ -76,13 +76,14 @@ class PostgresDatabase(BaseDatabase):
         )
         return len(schema_result) > 0
 
+    # Require skipcq because method overriding we need param chunk_size
     def load_pandas_dataframe_to_table(
         self,
         source_dataframe: pd.DataFrame,
         target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
-    ) -> None:
+    ) -> None:  # skipcq PYL-W0613
         """
         Create a table with the dataframe's contents.
         If the table already exists, append or replace the content, depending on the value of `if_exists`.
