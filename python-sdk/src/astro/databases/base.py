@@ -11,7 +11,7 @@ from airflow.hooks.dbapi import DbApiHook
 from pandas.io.sql import SQLDatabase
 from sqlalchemy import column, insert, select
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from sqlalchemy.engine.cursor import CursorResult
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
