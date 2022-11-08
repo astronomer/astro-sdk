@@ -134,6 +134,9 @@ class BaseFileLocation(ABC):
         except OSError:
             return False
 
+    def autoloader_config(self):
+        raise NotImplementedError()
+
     def spark_config(self):
         raise NotImplementedError()
 

@@ -1,24 +1,32 @@
 from __future__ import annotations
-from astro.table import BaseTable
-from attr import define, field, fields_dict
-from astro.table import Metadata
+
+from attr import define
+from airflow.providers.databricks.hooks.databricks import DatabricksHook
+
+from astro.table import BaseTable, Metadata
+from databricks_cli.sdk.api_client import ApiClient
 
 @define(slots=False)
 class DeltaTable(BaseTable):
-    spark_configs={}
-    path=""
-    conn_id=""
+    spark_configs = {}
+    conn_id = ""
 
-    def __init__(self, path, conn_id, **kwargs):
-        self.path = path
+    def __init__(self, conn_id, **kwargs):
         self.conn_id = conn_id
         super().__init__(conn_id=conn_id, **kwargs)
+
+    def hook(self):
+        return DatabricksHook(databricks_conn_id=self.conn_id)
+
+    def api_client(self):
+        conn = DatabricksHook(databricks_conn_id=self.conn_id).get_conn()
+        api_client = ApiClient(host=conn.host, token=conn.extra_dejson['token'])
+        return api_client
 
     def to_json(self):
         return {
             "class": "DeltaTable",
             "name": self.name,
-            "path": self.path,
             "metadata": {
                 "schema": self.metadata.schema,
                 "database": self.metadata.database,
@@ -31,9 +39,7 @@ class DeltaTable(BaseTable):
     def from_json(cls, obj: dict):
         return DeltaTable(
             name=obj["name"],
-            path=obj["path"],
             metadata=Metadata(**obj["metadata"]),
             temp=obj["temp"],
             conn_id=obj["conn_id"],
         )
-
