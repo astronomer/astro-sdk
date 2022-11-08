@@ -4,7 +4,6 @@ from pathlib import Path
 
 import airflow
 import pytest
-from airflow.models import DAG
 from airflow.models.dagbag import DagBag
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import provide_session
@@ -72,22 +71,28 @@ def get_dag_bag() -> DagBag:
     return dag_bag
 
 
-# excluding the `example_dataset_consumer` since it is dependent on `example_dataset_producer` and we have to ensure
-# order, but there isn't enough ROI as we are testing Airflow's scheduling and Table and File datasets URI generation is
-# already tested in unitest cases.
-@pytest.mark.parametrize(
-    "dag",
-    [
-        pytest.param(dag, id=dag_id)
-        for dag_id, dag in get_dag_bag().dags.items()
-        if dag_id not in ("example_dataset_consumer")
-    ],
-)
-def test_example_dag(session, dag: DAG):
+PRE_DEFINED_ORDER = [
+    "example_dataset_producer",
+    "example_dataset_consumer",
+]
+
+
+def order(dag_id: str) -> int:
+    try:
+        return PRE_DEFINED_ORDER.index(dag_id)
+    except ValueError:
+        return -1
+
+
+dag_bag = get_dag_bag()
+
+
+@pytest.mark.parametrize("dag_id", sorted(dag_bag.dag_ids, key=order))
+def test_example_dag(session, dag_id: str):
+    dag = dag_bag.get_dag(dag_id)
     wrapper_run_dag(dag)
 
 
 def test_example_dags_loaded_with_no_errors():
-    dag_bag = get_dag_bag()
     assert dag_bag.dags
     assert not dag_bag.import_errors
