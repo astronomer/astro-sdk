@@ -44,6 +44,7 @@ def test_aql_transform(sample_dag):
 
     @aql.dataframe
     def validate(df: pandas.DataFrame):
+        print(df)
         assert len(df) == 26
 
     @aql.transform
@@ -56,9 +57,3 @@ def test_aql_transform(sample_dag):
         validate(transformed_table)
         aql.cleanup()
     run_dag(sample_dag)
-    # hook = DatabricksSqlHook("my_databricks_conn")
-    # _, res = hook.run(
-    #     f"SELECT * FROM {delta_table.name}", handler=lambda cur: cur.fetchall_arrow().to_pandas()
-    # )
-    # print(res)
-    # assert len(res) == 26
