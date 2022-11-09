@@ -24,6 +24,13 @@ Welcome to astro-sdk-python's documentation!
    guides/openlineage.rst
 
 .. toctree::
+   :maxdepth: 2
+   :caption: Dependency
+   :titlesonly:
+
+   deps/dependency.rst
+
+.. toctree::
    :maxdepth: 1
    :caption: Reference
    :glob:
