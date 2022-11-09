@@ -5,6 +5,7 @@ from typing import Iterable
 
 import frontmatter
 
+from astro.sql.operators.transform import TransformOperator
 from sql_cli.utils.jinja import find_template_variables
 
 
@@ -21,6 +22,7 @@ class SqlFile:
         self.root_directory = root_directory
         self.path = path
         self.target_directory = target_directory
+        self.raw_content = self.path.read_text()
 
         post = frontmatter.load(self.path)
         self.content = post.content
@@ -110,8 +112,41 @@ class SqlFile:
 
         return target_path.relative_to(self.target_directory)
 
+    def write_raw_content_to_target_path(self) -> None:
+        """
+        Writes both content and headers to the target directory.
+        This is because with the "render" function, we will still need
+        the headers for creating proper TransformOperators
+        """
+        target_full_directory = (
+            self.target_directory / "sql" / self.root_directory.name / "/".join(self.get_sub_directories())
+        )
+        target_full_directory.mkdir(parents=True, exist_ok=True)
 
-def get_sql_files(directory: Path, target_directory: Path) -> set[SqlFile]:
+        target_path = target_full_directory / self.path.name
+
+        target_path.write_text(self.raw_content)
+
+    def to_transform_operator(self) -> TransformOperator:
+        """
+        Converts SQLFile into a TransformOperator that can be added to a DAG.
+        Any relevant metadata from the file frontmatter will be passed to the TransformOperator,
+        though we do not pass parameter dependencies at this stage.
+
+        :return: a TransformOperator
+        """
+        return TransformOperator(
+            conn_id=self.metadata.get("conn_id"),
+            parameters=None,
+            handler=None,
+            database=self.metadata.get("database"),
+            schema=self.metadata.get("schema"),
+            python_callable=lambda: (str(self.path), None),
+            sql=self.content,
+        )
+
+
+def get_sql_files(directory: Path, target_directory: Path | None) -> set[SqlFile]:
     """
     Get all sql files within a directory.
 
@@ -121,7 +156,7 @@ def get_sql_files(directory: Path, target_directory: Path) -> set[SqlFile]:
     :returns: the sql files found in the directory.
     """
     return {
-        SqlFile(root_directory=directory, path=child, target_directory=target_directory)
+        SqlFile(root_directory=directory, path=child, target_directory=target_directory)  # type: ignore
         for child in directory.rglob("*.sql")
         if child.is_file() and not child.is_symlink()
     }

@@ -4,8 +4,11 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from airflow.models import DAG, DagRun  # pragma: no cover
+    from airflow.models import DAG  # pragma: no cover
 
+from airflow.models.dagbag import DagBag
+from airflow.utils.cli import process_subdir
+from airflow.utils.state import State
 from rich import print as rprint
 from typer import Exit
 
@@ -14,11 +17,16 @@ from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, SqlFilesDir
 from sql_cli.project import Project
 
 
-def generate_dag(project: Project, workflow_name: str) -> Path:
+def generate_dag(project: Project, env: str, workflow_name: str, generate_tasks: bool = False) -> Path:
+    rprint(
+        f"\nGenerating the DAG file from workflow [bold blue]{workflow_name}[/bold blue]"
+        f" for [bold]{env}[/bold] environment..\n"
+    )
     try:
-        return dag_generator.generate_dag(
+        dag_file = dag_generator.generate_dag(
             directory=project.directory / project.workflows_directory / workflow_name,
             dags_directory=project.airflow_dags_folder,
+            generate_tasks=generate_tasks,
         )
     except EmptyDag:
         rprint(f"[bold red]The workflow {workflow_name} does not have any SQL files![/bold red]")
@@ -29,11 +37,25 @@ def generate_dag(project: Project, workflow_name: str) -> Path:
     except DagCycle as dag_cycle:
         rprint(f"[bold red]The workflow {workflow_name} contains a cycle! {dag_cycle}[/bold red]")
         raise Exit(code=1)
+    rprint("The DAG file", dag_file.resolve(), "has been successfully generated. 🎉")
+    _check_for_dag_import_errors(dag_file)
+    return dag_file
 
 
-def run_dag(project: Project, dag: DAG, verbose: bool) -> DagRun:
+def _check_for_dag_import_errors(dag_file: Path) -> None:
+    import_errors = DagBag(process_subdir(str(dag_file))).import_errors
+    if import_errors:
+        all_errors = "\n\n".join(list(import_errors.values()))
+        rprint(f"[bold red]Workflow failed to render[/bold red]\n errors found:\n\n {all_errors}")
+        raise Exit(code=1)
+
+
+def run_dag(project: Project, env: str, dag: DAG, verbose: bool) -> None:
+    rprint(
+        f"\nRunning the workflow [bold blue]{dag.dag_id}[/bold blue] for [bold]{env}[/bold] environment..\n"
+    )
     try:
-        return dag_runner.run_dag(
+        dr = dag_runner.run_dag(
             dag,
             run_conf=project.airflow_config,
             connections={c.conn_id: c for c in project.connections},
@@ -47,3 +69,14 @@ def run_dag(project: Project, dag: DAG, verbose: bool) -> DagRun:
     except Exception as exception:
         rprint(f"  [bold red]{exception}[/bold red]")
         raise Exit(code=1)
+    rprint(f"Completed running the workflow {dr.dag_id}. 🚀")
+    final_state = None
+    if dr.state == State.SUCCESS:
+        final_state = "[bold green]SUCCESS[/bold green]"
+    elif final_state == State.FAILED:
+        final_state = "[bold red]FAILED[/bold red]"
+    else:
+        final_state = dr.state
+    rprint(f"Final state: {final_state}")
+    elapsed_seconds = (dr.end_date - dr.start_date).microseconds / 10**6
+    rprint(f"Total elapsed time: [bold blue]{elapsed_seconds:.2}s[/bold blue]")
