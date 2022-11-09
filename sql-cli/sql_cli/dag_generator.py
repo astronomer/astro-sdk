@@ -103,15 +103,16 @@ def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) ->
         start_date=datetime(2020, 1, 1),
         sql_files=sql_files,
     )
-    template_dag_name = "gen_tasks_dag"
     if generate_tasks:
         for sql_file in sql_files_dag.sorted_sql_files():
             sql_file.write_raw_content_to_target_path()
-        template_dag_name = "render_dag"
+        template_file = Path("templates/render_dag.py.jinja2")
+    else:
+        template_file = Path("templates/gen_tasks_dag.py.jinja2")
 
     output_file = dags_directory / f"{sql_files_dag.dag_id}.py"
     render(
-        template_file=Path(f"templates/{template_dag_name}.py.jinja2"),
+        template_file=template_file,
         context={"dag": sql_files_dag},
         output_file=output_file,
     )

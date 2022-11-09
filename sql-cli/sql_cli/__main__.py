@@ -1,16 +1,18 @@
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import typer
 from dotenv import load_dotenv
 from rich import print as rprint
+from typer import Exit
 
 import sql_cli
 from sql_cli.astro.command import AstroCommand
 from sql_cli.astro.group import AstroGroup
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
 from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, SqlFilesDirectoryNotFound
-from typer import Exit
+
 load_dotenv()
 app = typer.Typer(
     name="flow",
@@ -20,10 +22,11 @@ app = typer.Typer(
     rich_markup_mode="rich",
 )
 
-
 airflow_logger = logging.getLogger("airflow")
 airflow_logger.setLevel(logging.CRITICAL)
 airflow_logger.propagate = False
+if TYPE_CHECKING:
+    from sql_cli.project import Project
 
 
 @app.command(
@@ -67,7 +70,6 @@ def generate(
         show_default=True,
     ),
 ) -> None:
-    from sql_cli import cli
     from sql_cli.project import Project
 
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
@@ -78,24 +80,7 @@ def generate(
         f"\nGenerating the DAG file from workflow [bold blue]{workflow_name}[/bold blue]"
         f" for [bold]{env}[/bold] environment..\n"
     )
-    try:
-        dag_file = cli.generate_dag(
-            project=project, env=env, workflow_name=workflow_name, generate_tasks=generate_tasks
-        )
-    except EmptyDag:
-        rprint(f"[bold red]The workflow {workflow_name} does not have any SQL files![/bold red]")
-        raise Exit(code=1)
-    except SqlFilesDirectoryNotFound:
-        rprint(f"[bold red]The workflow {workflow_name} does not exist![/bold red]")
-        raise Exit(code=1)
-    except DagCycle as dag_cycle:
-        rprint(f"[bold red]The workflow {workflow_name} contains a cycle! {dag_cycle}[/bold red]")
-        raise Exit(code=1)
-    import_errors = cli.check_for_dag_import_errors(dag_file)
-    if import_errors:
-        all_errors = "\n\n".join(list(import_errors.values()))
-        rprint(f"[bold red]Workflow failed to render[/bold red]\n errors found:\n\n {all_errors}")
-        raise Exit(code=1)
+    dag_file = _generate_dag(project=project, workflow_name=workflow_name, generate_tasks=generate_tasks)
     rprint("The DAG file", dag_file.resolve(), "has been successfully generated. 🎉")
 
 
@@ -166,6 +151,8 @@ def run(
     ),
     verbose: bool = typer.Option(False, help="Whether to show airflow logs", show_default=True),
 ) -> None:
+    from airflow.utils.state import State
+
     from sql_cli import cli
     from sql_cli.project import Project
     from sql_cli.utils.airflow import (
@@ -173,7 +160,6 @@ def run(
         retrieve_airflow_database_conn_from_config,
         set_airflow_database_conn,
     )
-    from airflow.utils.state import State
 
     project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
     project = Project(project_dir_absolute)
@@ -185,18 +171,12 @@ def run(
     # decide this during runtime, depending on the project path and SQL CLI configuration.
     airflow_meta_conn = retrieve_airflow_database_conn_from_config(project.directory / project.airflow_home)
     set_airflow_database_conn(airflow_meta_conn)
-    dag_file = cli.generate_dag(
-        project=project,
-        workflow_name=workflow_name,
-        env=env,
-        generate_tasks=generate_tasks,
-    )
+    dag_file = _generate_dag(project=project, workflow_name=workflow_name, generate_tasks=generate_tasks)
     dag = get_dag(dag_id=workflow_name, subdir=dag_file.parent.as_posix(), include_examples=False)
     rprint(f"\nRunning the workflow [bold blue]{dag.dag_id}[/bold blue] for [bold]{env}[/bold] environment\n")
     try:
         dr = cli.run_dag(
             project=project,
-            env=env,
             dag=dag,
             verbose=verbose,
         )
@@ -264,6 +244,32 @@ def init(
     project = Project(project_dir_absolute, airflow_home, airflow_dags_folder)
     project.initialise()
     rprint("Initialized an Astro SQL project at", project.directory)
+
+
+def _generate_dag(project: "Project", workflow_name: str, generate_tasks: bool):
+    from sql_cli import cli
+
+    try:
+        dag_file = cli.generate_dag(
+            project=project,
+            workflow_name=workflow_name,
+            generate_tasks=generate_tasks,
+        )
+    except EmptyDag:
+        rprint(f"[bold red]The workflow {workflow_name} does not have any SQL files![/bold red]")
+        raise Exit(code=1)
+    except SqlFilesDirectoryNotFound:
+        rprint(f"[bold red]The workflow {workflow_name} does not exist![/bold red]")
+        raise Exit(code=1)
+    except DagCycle as dag_cycle:
+        rprint(f"[bold red]The workflow {workflow_name} contains a cycle! {dag_cycle}[/bold red]")
+        raise Exit(code=1)
+    import_errors = cli.check_for_dag_import_errors(dag_file)
+    if import_errors:
+        all_errors = "\n\n".join(list(import_errors.values()))
+        rprint(f"[bold red]Workflow failed to render[/bold red]\n errors found:\n\n {all_errors}")
+        raise Exit(code=1)
+    return dag_file
 
 
 if __name__ == "__main__":  # pragma: no cover
