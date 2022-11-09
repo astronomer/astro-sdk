@@ -58,9 +58,6 @@ class S3Location(BaseFileLocation):
             "aws_session_token": credentials.token,
         }
 
-    def spark_packages(self):
-        return ["org.apache.hadoop:hadoop-aws:3.3.1"]
-
     @property
     def openlineage_dataset_namespace(self) -> str:
         """

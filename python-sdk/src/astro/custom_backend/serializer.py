@@ -70,7 +70,7 @@ def _attempt_to_serialize_unknown_object(obj: object):
 
 
 def _is_serialized_astro_object(obj) -> bool:
-    return bool(obj.get("class") and obj["class"] in ["Table", "File", "string", "SQLAlcRow", "DeltaTable"])
+    return bool(obj.get("class") and obj["class"] in ["Table", "File", "string", "SQLAlcRow"])
 
 
 def deserialize(obj: dict | str | list) -> Table | File | Any:  # noqa

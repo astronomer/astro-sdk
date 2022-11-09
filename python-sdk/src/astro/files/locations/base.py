@@ -137,12 +137,6 @@ class BaseFileLocation(ABC):
     def autoloader_config(self):
         raise NotImplementedError()
 
-    def spark_config(self):
-        raise NotImplementedError()
-
-    def spark_packages(self):
-        raise NotImplementedError()
-
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}(path="{self.path}",conn_id="{self.conn_id}")'
 
