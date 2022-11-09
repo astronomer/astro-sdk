@@ -14,7 +14,8 @@ def to_task_list(sql_files: list[SqlFile]) -> list[TransformOperator]:
     """
     Converts the list of SQL Files into a list of TranformOperator tasks
     that all have proper dependencies set.
-    :return:
+    :param sql_files: The list of SQL files with necessary metadata for us to
+        generate tasks with dependencies
     """
     param_dict = {s.path.stem: s.to_transform_operator() for s in sql_files}
     for s in sql_files:

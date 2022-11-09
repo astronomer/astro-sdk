@@ -117,7 +117,6 @@ class SqlFile:
         Writes both content and headers to the target directory.
         This is because with the "render" function, we will still need
         the headers for creating proper TransformOperators
-        :return:
         """
         target_full_directory = (
             self.target_directory / "sql" / self.root_directory.name / "/".join(self.get_sub_directories())
