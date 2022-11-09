@@ -11,7 +11,7 @@ from airflow.hooks.dbapi import DbApiHook
 from pandas.io.sql import SQLDatabase
 from sqlalchemy import column, insert, select
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from sqlalchemy.engine.cursor import CursorResult
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
@@ -690,7 +690,7 @@ class BaseDatabase(ABC):
 
     def get_sqlalchemy_template_table_identifier_and_parameter(
         self, table: BaseTable, jinja_table_identifier: str
-    ) -> tuple[str, str]:
+    ) -> tuple[str, str]:  # skipcq PYL-W0613
         """
         During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
         convert a Jinja table identifier to a safe SQLAlchemy-compatible table identifier.

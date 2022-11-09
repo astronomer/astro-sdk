@@ -94,7 +94,7 @@ def run_merge(target_table: Table, source_table: Table, merge_parameters, mode):
         source_table=source_table,
         **merge_parameters,
     )
-    con1 >> merged_table
+    con1 >> merged_table  # skipcq PYL-W0104
     validate_results(df=merged_table, mode=mode)
 
 

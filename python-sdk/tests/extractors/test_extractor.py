@@ -1,3 +1,4 @@
+import pandas as pd
 import pendulum
 import pytest
 from airflow.models.taskinstance import TaskInstance
@@ -285,4 +286,55 @@ def test_python_sdk_transform_extract_on_complete():
     assert task_meta.name == f"adhoc_airflow.{task_id}"
     assert task_meta.outputs[0].facets["outputStatistics"].size is None
     assert len(task_meta.job_facets) > 0
+    assert task_meta.run_facets == {}
+
+
+@pytest.mark.integration
+def test_python_sdk_dataframe_op_extract_on_complete():
+    """
+    Tests that  the custom PythonSDKExtractor is able to process the
+    operator's metadata that needs to be extracted as per OpenLineage
+    for DataframeOperator.
+    """
+
+    @aql.dataframe(columns_names_capitalization="original")
+    def aggregate_data(df: pd.DataFrame):
+        new_df = df
+        new_df.columns = new_df.columns.str.lower()
+        return new_df
+
+    test_list = [["a", "b", "c"], ["AA", "BB", "CC"]]
+    dfList = pd.DataFrame(test_list, columns=["COL_A", "COL_B", "COL_C"])
+    test_tbl_name = "test_tbl"
+    test_schema_name = "test_schema"
+    test_db_name = "test_db"
+
+    task = (
+        aggregate_data(
+            dfList,
+            output_table=Table(
+                name=test_tbl_name,
+                metadata=Metadata(
+                    schema=test_schema_name,
+                    database=test_db_name,
+                ),
+                conn_id="sqlite_default",
+            ),
+        ),
+    )
+
+    task[0].operator.execute(context=create_context(task[0].operator))
+
+    tzinfo = pendulum.timezone("UTC")
+    execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
+    task_instance = TaskInstance(task=task[0].operator, run_id=execution_date)
+    python_sdk_extractor = PythonSDKExtractor(task[0].operator)
+
+    assert type(python_sdk_extractor.get_operator_classnames()) is list
+    task_meta = python_sdk_extractor.extract_on_complete(task_instance)
+    assert task_meta.name == "adhoc_airflow.aggregate_data"
+    assert task_meta.outputs[0].facets["schema"].fields[0].name == test_schema_name
+    assert task_meta.outputs[0].facets["schema"].fields[0].type == test_db_name
+    assert task_meta.outputs[0].facets["dataSource"].name == test_tbl_name
+    assert task_meta.outputs[0].facets["outputStatistics"].rowCount == len(test_list)
     assert task_meta.run_facets == {}

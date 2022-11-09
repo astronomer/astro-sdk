@@ -2,6 +2,7 @@
 
 Empower analysts to build workflows to transform data using SQL.
 
+Find out more in the [docs](https://docs.astronomer.io/astro/cli/sql-cli).
 
 ## Getting started
 

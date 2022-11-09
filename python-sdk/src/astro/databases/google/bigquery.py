@@ -169,7 +169,7 @@ class BigqueryDatabase(BaseDatabase):
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
         try:
-            creds = self.hook._get_credentials()
+            creds = self.hook._get_credentials()  # skipcq PYL-W021
         except AttributeError:
             # Details: https://github.com/astronomer/astro-sdk/issues/703
             creds = self.hook.get_credentials()
@@ -253,7 +253,10 @@ class BigqueryDatabase(BaseDatabase):
         supported_config = self.NATIVE_AUTODETECT_SCHEMA_CONFIG.get(file.location.location_type)
         return supported_config["method"](table=table, file=file)  # type: ignore
 
-    def is_native_load_file_available(self, source_file: File, target_table: BaseTable) -> bool:
+    # Require skipcq because method overriding we need param target_table
+    def is_native_load_file_available(
+        self, source_file: File, target_table: BaseTable  # skipcq PYL-W0613
+    ) -> bool:
         """
         Check if there is an optimised path for source to destination.
 

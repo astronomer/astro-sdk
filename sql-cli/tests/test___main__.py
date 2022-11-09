@@ -56,7 +56,7 @@ def test_usage(env, usage, args):
 def test_about():
     result = runner.invoke(app, ["about"])
     assert result.exit_code == 0
-    assert "Find out more: https://github.com/astronomer/astro-sdk/sql-cli" == get_stdout(result)
+    assert "Find out more: https://docs.astronomer.io/astro/cli/sql-cli" == get_stdout(result)
 
 
 def test_version():
@@ -165,7 +165,8 @@ def test_validate_all(initialised_project_with_test_config):
         ("example_templating", "dev"),
     ],
 )
-def test_run(workflow_name, environment, initialised_project):
+@pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
+def test_run(workflow_name, environment, initialised_project, generate_tasks):
     result = runner.invoke(
         app,
         [
@@ -175,6 +176,7 @@ def test_run(workflow_name, environment, initialised_project):
             environment,
             "--project-dir",
             initialised_project.directory.as_posix(),
+            generate_tasks,
         ],
     )
     assert result.exit_code == 0, result.output
@@ -201,7 +203,8 @@ def test_run(workflow_name, environment, initialised_project):
         "example_templating",
     ],
 )
-def test_run_invalid(workflow_name, message, initialised_project_with_tests_workflows):
+@pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
+def test_run_invalid(workflow_name, message, initialised_project_with_tests_workflows, generate_tasks):
     result = runner.invoke(
         app,
         [
@@ -209,6 +212,7 @@ def test_run_invalid(workflow_name, message, initialised_project_with_tests_work
             workflow_name,
             "--project-dir",
             initialised_project_with_tests_workflows.directory.as_posix(),
+            generate_tasks,
         ],
     )
     assert result.exit_code == 1

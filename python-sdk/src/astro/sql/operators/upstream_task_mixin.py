@@ -3,7 +3,7 @@ from airflow.exceptions import AirflowException
 try:
     # Airflow >= 2.3
     from airflow.models.abstractoperator import AbstractOperator
-except ImportError:
+except ImportError:  # pragma: no cover
     # Airflow < 2.3
     from airflow.models.baseoperator import BaseOperator as AbstractOperator
 

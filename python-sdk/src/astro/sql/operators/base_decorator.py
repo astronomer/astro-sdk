@@ -8,7 +8,6 @@ from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
 from openlineage.client.facet import (
     BaseFacet,
-    DataQualityMetricsInputDatasetFacet,
     DataSourceDatasetFacet,
     OutputStatisticsOutputDatasetFacet,
     SchemaDatasetFacet,
@@ -199,9 +198,11 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         """
         Returns the lineage data
         """
-        input_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
-        output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
-        if self.output_table.openlineage_emit_temp_table_event():
+        input_dataset: list[OpenlineageDataset] = []
+        output_dataset: list[OpenlineageDataset] = []
+        if (
+            self.output_table.openlineage_emit_temp_table_event() and self.output_table.conn_id
+        ):  # pragma: no cover
             input_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
                 f"://{self.output_table.openlineage_dataset_name()}"
@@ -218,10 +219,15 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                     },
                 )
             ]
-        if self.output_table.openlineage_emit_temp_table_event():
+        if (
+            self.output_table.openlineage_emit_temp_table_event() and self.output_table.conn_id
+        ):  # pragma: no cover
             output_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
                 f"://{self.output_table.openlineage_dataset_name()}"
+            )
+            output_table_row_count = task_instance.xcom_pull(
+                task_ids=task_instance.task_id, key="output_table_row_count"
             )
             output_dataset = [
                 OpenlineageDataset(
@@ -229,12 +235,9 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                     name=self.output_table.openlineage_dataset_name(),
                     facets={
                         "outputStatistics": OutputStatisticsOutputDatasetFacet(
-                            rowCount=self.output_table.row_count
+                            rowCount=output_table_row_count
                         ),
                         "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=output_uri),
-                        "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(
-                            rowCount=self.output_table.row_count, columnMetrics={}
-                        ),
                     },
                 )
             ]
