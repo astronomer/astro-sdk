@@ -12,6 +12,7 @@ from databricks_cli.secrets.api import SecretApi
 from astro.files import File
 from astro.spark.autoloader.autoloader_file_generator import render
 from astro.table import BaseTable
+
 cwd = pathlib.Path(__file__).parent
 
 
@@ -96,9 +97,9 @@ def create_job(
     print(f"final state: {runs_api.get_run(run_id)['state']['result_state']}")
 
 
-
 def load_file_to_delta(input_file: File, delta_table: BaseTable):
     from astro.spark.delta import DeltaDatabase
+
     db = DeltaDatabase(conn_id=delta_table.conn_id)
     api_client = db.api_client()
     create_secrets(
