@@ -1,6 +1,7 @@
 import datetime
 import pathlib
 from tempfile import gettempdir
+from unittest import mock
 
 import pytest
 from typer.testing import CliRunner
@@ -183,9 +184,6 @@ def test_run(workflow_name, environment, initialised_project, generate_tasks):
     assert result.exit_code == 0, result.output
     result_stdout = get_stdout(result)
     assert f"Completed running the workflow {workflow_name}. 🚀" in result_stdout
-
-
-from unittest import TestCase, mock
 
 
 @pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
