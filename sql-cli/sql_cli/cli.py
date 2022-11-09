@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from airflow.models import DAG  # pragma: no cover
+    from airflow.models import DAG, DagRun  # pragma: no cover
 
 from airflow.models.dagbag import DagBag
 from airflow.utils.cli import process_subdir
@@ -78,8 +78,5 @@ def run_dag(project: Project, env: str, dag: DAG, verbose: bool) -> None:
     else:
         final_state = dr.state
     rprint(f"Final state: {final_state}")
-    elapsed_seconds = (dr.end_date - dr.start_date).microseconds / 10**6
-    rprint(f"Total elapsed time: [bold blue]{elapsed_seconds:.2}s[/bold blue]")
-
     elapsed_seconds = (dr.end_date - dr.start_date).microseconds / 10**6
     rprint(f"Total elapsed time: [bold blue]{elapsed_seconds:.2}s[/bold blue]")

@@ -12,7 +12,7 @@ from airflow.models.dagrun import DagRun
 try:
     # Airflow >= 2.3
     from airflow.models.mappedoperator import MappedOperator
-except ImportError:
+except ImportError:  # pragma: no cover
     # Airflow < 2.3
     MappedOperator = None
 
@@ -235,7 +235,7 @@ class CleanupOperator(AstroSQLBaseOperator):
                     for t in task.output.resolve(context):
                         if isinstance(t, BaseTable):
                             res.append(t)
-            except AirflowException:
+            except AirflowException:  # pragma: no cover
                 self.log.info(
                     "xcom output for %s not found. Will not clean up this task",
                     task.task_id,

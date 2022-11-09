@@ -56,7 +56,7 @@ def test_usage(env, usage, args):
 def test_about():
     result = runner.invoke(app, ["about"])
     assert result.exit_code == 0
-    assert "Find out more: https://github.com/astronomer/astro-sdk/sql-cli" == get_stdout(result)
+    assert "Find out more: https://docs.astronomer.io/astro/cli/sql-cli" == get_stdout(result)
 
 
 def test_version():

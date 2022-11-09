@@ -38,7 +38,7 @@ def version() -> None:
     help="Print additional information about the project.",
 )
 def about() -> None:
-    rprint("Find out more: https://github.com/astronomer/astro-sdk/sql-cli")
+    rprint("Find out more: https://docs.astronomer.io/astro/cli/sql-cli")
 
 
 @app.command(
@@ -58,6 +58,13 @@ def generate(
     project_dir: Path = typer.Option(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
+    generate_tasks: bool = typer.Option(
+        default=False,
+        help="whether to explicitly generate the tasks in your SQL CLI "
+             "DAG. By default we will keep the DAGs smaller and read SQL "
+             "files at runtime",
+        show_default=True,
+    ),
 ) -> None:
     from sql_cli import cli
     from sql_cli.project import Project
@@ -66,7 +73,12 @@ def generate(
     project = Project(project_dir_absolute)
     project.load_config(env)
 
-    cli.generate_dag(project, env, workflow_name)
+    rprint(
+        f"\nGenerating the DAG file from workflow [bold blue]{workflow_name}[/bold blue]"
+        f" for [bold]{env}[/bold] environment..\n"
+    )
+    dag_file = cli.generate_dag(project=project, env=env, workflow_name=workflow_name, generate_tasks=generate_tasks)
+    rprint("The DAG file", dag_file.resolve(), "has been successfully generated. 🎉")
 
 
 @app.command(

@@ -518,7 +518,7 @@ class SnowflakeDatabase(BaseDatabase):
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
-    ) -> None:
+    ) -> None:  # skipcq PYL-W0613
         """
         Create a SQL table, automatically inferring the schema using the given file.
         Overriding default behaviour and not using the `prep_table` since it doesn't allow the adding quotes.
@@ -552,7 +552,9 @@ class SnowflakeDatabase(BaseDatabase):
         # Since this method is used by both native and pandas path we cannot skip this step.
         self.truncate_table(table)
 
-    def is_native_load_file_available(self, source_file: File, target_table: BaseTable) -> bool:
+    def is_native_load_file_available(
+        self, source_file: File, target_table: BaseTable  # skipcq PYL-W0613, PYL-R0201
+    ) -> bool:
         """
         Check if there is an optimised path for source to destination.
 
@@ -572,7 +574,7 @@ class SnowflakeDatabase(BaseDatabase):
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
         **kwargs,
-    ):
+    ):  # skipcq PYL-W0613
         """
         Load the content of a file to an existing Snowflake table natively by:
         - Creating a Snowflake external stage
@@ -663,7 +665,7 @@ class SnowflakeDatabase(BaseDatabase):
 
     def get_sqlalchemy_template_table_identifier_and_parameter(
         self, table: BaseTable, jinja_table_identifier: str
-    ) -> tuple[str, str]:
+    ) -> tuple[str, str]:  # skipcq PYL-R0201
         """
         During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
         convert a Jinja table identifier to a safe SQLAlchemy-compatible table identifier.
@@ -910,7 +912,7 @@ class SnowflakeDatabase(BaseDatabase):
             identifier_enclosure = '"'
 
         constraints = ",".join([f"{identifier_enclosure}{p}{identifier_enclosure}" for p in parameters])
-        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (%s)" % constraints
+        sql = "ALTER TABLE {{table}} ADD CONSTRAINT airflow UNIQUE (%s)" % constraints  # skipcq PYL-C0209
         return sql
 
     def openlineage_dataset_name(self, table: BaseTable) -> str:

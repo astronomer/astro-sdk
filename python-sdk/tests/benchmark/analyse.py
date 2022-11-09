@@ -140,21 +140,42 @@ def analyse_results(df: pd.DataFrame, output_filepath: str = None):
         lambda text: text.split("load_file_")[-1].split("_into")[0]
     )
 
-    mean_by_dag["memory_rss"] = mean_by_dag.memory_full_info_rss.apply(lambda value: format_bytes(value))
+    # We should consider removing lambda function
+    # skipcq need because of lambda function
+    mean_by_dag["memory_rss"] = mean_by_dag.memory_full_info_rss.apply(
+        lambda value: format_bytes(value)  # skipcq PYL-W0108
+    )
+    # We should consider removing lambda function
+    # skipcq need because of lambda function
     if sys.platform == "linux":
-        mean_by_dag["memory_pss"] = mean_by_dag.memory_full_info_pss.apply(lambda value: format_bytes(value))
-        mean_by_dag["memory_shared"] = mean_by_dag.memory_full_info_shared.apply(
+        mean_by_dag["memory_pss"] = mean_by_dag.memory_full_info_pss.apply(
             lambda value: format_bytes(value)
+        )  # skipcq PYL-W0108
+        mean_by_dag["memory_shared"] = mean_by_dag.memory_full_info_shared.apply(
+            lambda value: format_bytes(value)  # skipcq PYL-W0108
         )
 
-    mean_by_dag["total_time"] = mean_by_dag["duration"].apply(lambda ms_time: format_time(ms_time))
+    # We should consider removing lambda function
+    # skipcq need because of lambda function
+    mean_by_dag["total_time"] = mean_by_dag["duration"].apply(
+        lambda ms_time: format_time(ms_time)  # skipcq PYL-W0108
+    )
 
+    # We should consider removing lambda function
+    # skipcq need because of lambda function
     mean_by_dag["cpu_time_system"] = (
         mean_by_dag["cpu_time_system"] + mean_by_dag["cpu_time_children_system"]
-    ).apply(lambda ms_time: format_time(ms_time))
+    ).apply(
+        lambda ms_time: format_time(ms_time)  # skipcq PYL-W0108
+    )
+
+    # We should consider removing lambda function
+    # skipcq need because of lambda function
     mean_by_dag["cpu_time_user"] = (
         mean_by_dag["cpu_time_user"] + mean_by_dag["cpu_time_children_user"]
-    ).apply(lambda ms_time: format_time(ms_time))
+    ).apply(
+        lambda ms_time: format_time(ms_time)  # skipcq PYL-W0108
+    )
 
     summary = mean_by_dag[SUMMARY_FIELDS]
     content = get_content(summary)

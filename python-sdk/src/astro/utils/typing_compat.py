@@ -10,7 +10,7 @@ try:
     from airflow.utils.context import Context
 except ModuleNotFoundError:  # pragma: no cover
 
-    class Context(MutableMapping[str, Any]):  # type: ignore[no-redef]
+    class Context(MutableMapping[str, Any]):  # type: ignore[no-redef] # skipcq PYL-W0223
         """Placeholder typing class for ``airflow.utils.context.Context``."""
 
 
