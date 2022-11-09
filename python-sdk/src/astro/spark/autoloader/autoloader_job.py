@@ -7,12 +7,13 @@ from pathlib import Path
 from databricks_cli.dbfs.api import DbfsApi, DbfsPath
 from databricks_cli.jobs.api import JobsApi
 from databricks_cli.runs.api import RunsApi
+from databricks_cli.sdk.api_client import ApiClient
 from databricks_cli.secrets.api import SecretApi
 
 from astro.files import File
 from astro.spark.autoloader.autoloader_file_generator import render
 from astro.table import BaseTable
-from databricks_cli.sdk.api_client import ApiClient
+
 cwd = pathlib.Path(__file__).parent
 
 
@@ -43,7 +44,13 @@ def create_secrets(scope_name: str, filesystem_secrets: dict[str, str], api_clie
         secrets.put_secret(scope=scope_name, key=k, string_value=v, bytes_value=None)
 
 
-def generate_file(data_source_path: str, table_name: str, source_type: str, load_options: dict[str, str], output_file_path: Path):
+def generate_file(
+    data_source_path: str,
+    table_name: str,
+    source_type: str,
+    load_options: dict[str, str],
+    output_file_path: Path,
+):
     """
     In order to run autoloader jobs in databricks, we need to generate a python file that creates a pyspark job.
     This function uses jinja templating to generate a file with all necessary user inputs
