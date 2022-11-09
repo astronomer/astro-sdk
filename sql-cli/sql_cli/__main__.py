@@ -246,7 +246,16 @@ def init(
     rprint("Initialized an Astro SQL project at", project.directory)
 
 
-def _generate_dag(project: "Project", workflow_name: str, generate_tasks: bool):
+def _generate_dag(project: "Project", workflow_name: str, generate_tasks: bool) -> Path:
+    """
+    Helper function for generating DAGs with proper exceptions. Moved here since this function is used by
+    multiple commands
+
+    :param project: project object containing project metadata
+    :param workflow_name: name of the workflow directory for this DAG
+    :param generate_tasks: whether to render each task individually or use the render function
+    :return: the path to the generated dag_file
+    """
     from sql_cli import cli
 
     try:
