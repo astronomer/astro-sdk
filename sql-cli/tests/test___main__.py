@@ -1,3 +1,4 @@
+import datetime
 import pathlib
 from tempfile import gettempdir
 
@@ -8,7 +9,7 @@ from sql_cli import __version__
 from sql_cli.__main__ import app
 from sql_cli.connections import CONNECTION_ID_OUTPUT_STRING_WIDTH
 from tests.utils import list_dir
-import datetime
+
 runner = CliRunner()
 
 CWD = pathlib.Path(__file__).parent
@@ -182,18 +183,27 @@ def test_run(workflow_name, environment, initialised_project, generate_tasks):
     assert result.exit_code == 0, result.output
     result_stdout = get_stdout(result)
     assert f"Completed running the workflow {workflow_name}. 🚀" in result_stdout
+
+
 from unittest import TestCase, mock
+
 
 @pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
 @mock.patch("sql_cli.cli.run_dag")
-@pytest.mark.parametrize("final_state,message", [
-    ("FAILED","Final state: FAILED"),
-    ("SKIPPED","Final state: SKIPPED")
-], ids=["failed", "skipped"])
+@pytest.mark.parametrize(
+    "final_state,message",
+    [("FAILED", "Final state: FAILED"), ("SKIPPED", "Final state: SKIPPED")],
+    ids=["failed", "skipped"],
+)
 def test_run_state(mock_run_dag, initialised_project, generate_tasks, final_state, message):
     workflow_name = "example_basic_transform"
-    environment="dev"
-    mock_run_dag.return_value = mock.MagicMock(state=final_state, dag_id=workflow_name, start_date=datetime.datetime(2020,1,1),  end_date=datetime.datetime(2020,1,1))
+    environment = "dev"
+    mock_run_dag.return_value = mock.MagicMock(
+        state=final_state,
+        dag_id=workflow_name,
+        start_date=datetime.datetime(2020, 1, 1),
+        end_date=datetime.datetime(2020, 1, 1),
+    )
 
     result = runner.invoke(
         app,
@@ -210,6 +220,7 @@ def test_run_state(mock_run_dag, initialised_project, generate_tasks, final_stat
     assert result.exit_code == 0, result.output
     result_stdout = get_stdout(result)
     assert message in result_stdout
+
 
 @pytest.mark.parametrize(
     "workflow_name,message",
