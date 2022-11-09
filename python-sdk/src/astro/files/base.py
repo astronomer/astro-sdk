@@ -25,6 +25,8 @@ class File(LoggingMixin, Dataset):
     :param conn_id: Airflow connection ID
     :param filetype: constant to provide an explicit file type
     :param normalize_config: parameters in dict format of pandas json_normalize() function.
+    :param pd_kw: The Pandas related kwargs as a dict.
+        This will be supplied to Pandas ``read_csv`` function etc.
     """
 
     path: str
