@@ -1,9 +1,9 @@
-from typing import Dict
 import datetime
 import pathlib
 import tempfile
 import time
 from pathlib import Path
+from typing import Dict
 
 from databricks_cli.dbfs.api import DbfsApi, DbfsPath
 from databricks_cli.jobs.api import JobsApi
