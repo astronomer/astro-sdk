@@ -33,6 +33,7 @@ class File(LoggingMixin, Dataset):
     normalize_config: dict | None = None
     is_dataframe: bool = False
     is_bytes: bool = False
+    pd_kw: dict = {}
 
     uri: str = field(init=False)
     extra: dict | None = field(init=False, factory=dict)
@@ -112,6 +113,7 @@ class File(LoggingMixin, Dataset):
         """Read file from all supported location and convert them into dataframes."""
         mode = "rb" if self.is_binary() else "r"
         with smart_open.open(self.path, mode=mode, transport_params=self.location.transport_params) as stream:
+            kwargs.update(self.pd_kw)
             return self.type.export_to_dataframe(stream, **kwargs)
 
     def _convert_remote_file_to_byte_stream(self) -> io.IOBase:
@@ -138,7 +140,7 @@ class File(LoggingMixin, Dataset):
         https://github.com/RaRe-Technologies/smart_open/issues/524), we create a BytesIO or StringIO buffer
         before exporting to a dataframe. We've found a sizable speed improvement with this optimization.
         """
-
+        kwargs.update(self.pd_kw)
         return self.type.export_to_dataframe(self._convert_remote_file_to_byte_stream(), **kwargs)
 
     def exists(self) -> bool:
