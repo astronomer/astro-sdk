@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from airflow.models import DAG, DagRun  # pragma: no cover
+    from airflow.models import DAG  # pragma: no cover
 
 from airflow.models.dagbag import DagBag
 from airflow.utils.cli import process_subdir

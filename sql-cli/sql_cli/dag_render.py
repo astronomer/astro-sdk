@@ -40,7 +40,5 @@ def render_tasks(directory: Path) -> list[TransformOperator]:
         defaults to 2020-01-01
     :return: a DAG that can be run by any airflow
     """
-    if not directory.exists():
-        raise SqlFilesDirectoryNotFound("The directory does not exist!")
     sql_files: list[SqlFile] = sorted(get_sql_files(directory, target_directory=None))
     return to_task_list(sql_files)
