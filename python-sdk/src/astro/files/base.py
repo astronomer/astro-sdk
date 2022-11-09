@@ -113,6 +113,7 @@ class File(LoggingMixin, Dataset):
         """Read file from all supported location and convert them into dataframes."""
         mode = "rb" if self.is_binary() else "r"
         with smart_open.open(self.path, mode=mode, transport_params=self.location.transport_params) as stream:
+            # Update kwargs with the pandas kwargs supplied by user in File object
             kwargs.update(self.pd_kw)
             return self.type.export_to_dataframe(stream, **kwargs)
 
@@ -140,6 +141,7 @@ class File(LoggingMixin, Dataset):
         https://github.com/RaRe-Technologies/smart_open/issues/524), we create a BytesIO or StringIO buffer
         before exporting to a dataframe. We've found a sizable speed improvement with this optimization.
         """
+        # Update kwargs with the pandas kwargs supplied by user in File object
         kwargs.update(self.pd_kw)
         return self.type.export_to_dataframe(self._convert_remote_file_to_byte_stream(), **kwargs)
 
