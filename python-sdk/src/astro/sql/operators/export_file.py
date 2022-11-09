@@ -63,7 +63,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
         else:
             raise FileExistsError(f"{self.output_file.path} file already exists.")
 
-    def get_openlineage_facets(self, task_instance):  # skipcq: PYL-W0613
+    def get_openlineage_facets_on_complete(self):  # skipcq: PYL-W0613
         """
         Collect the input, output, job and run facets for export file operator
         """
