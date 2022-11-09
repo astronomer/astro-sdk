@@ -76,7 +76,8 @@ amazon = [
 openlineage = ["openlineage-airflow>=0.15.1"]
 
 databricks = [
-    "apache-airflow-providers-databricks"
+    "apache-airflow-providers-databricks",
+    "databricks-cli"
 ]
 
 all = [
@@ -85,6 +86,7 @@ all = [
     "apache-airflow-providers-postgres",
     "apache-airflow-providers-snowflake",
     "apache-airflow-providers-databricks",
+    "databricks-cli",
     "smart-open[all]>=5.2.1",
     "snowflake-connector-python[pandas]",
     "snowflake-sqlalchemy>=1.2.0,<=1.2.4",
