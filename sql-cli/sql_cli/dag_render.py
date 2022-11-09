@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from sql_cli.exceptions import SqlFilesDirectoryNotFound
 from sql_cli.sql_directory_parser import SqlFile, get_sql_files
 
 if TYPE_CHECKING:
