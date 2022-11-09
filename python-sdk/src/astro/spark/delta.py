@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import pandas
 from airflow.hooks.dbapi import DbApiHook
 from airflow.providers.databricks.hooks.databricks import DatabricksHook
 from airflow.providers.databricks.hooks.databricks_sql import DatabricksSqlHook
 from databricks_cli.sdk.api_client import ApiClient
-from pyspark.sql.dataframe import DataFrame
 from sqlalchemy.sql import ClauseElement
 
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy, MergeConflictStrategy
@@ -140,7 +140,7 @@ class DeltaDatabase(BaseDatabase):
 
     def export_table_to_pandas_dataframe(
         self, source_table: BaseTable, select_kwargs: dict | None = None
-    ) -> DataFrame:
+    ) -> pandas.DataFrame:
         return self.hook.run(
             f"SELECT * FROM {source_table.name}", handler=lambda cur: cur.fetchall_arrow().to_pandas()
         )[1]
