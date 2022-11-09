@@ -5,6 +5,7 @@ from typing import Any
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
+from openlineage.airflow.extractors.base import OperatorLineage
 
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import ExportExistsStrategy
@@ -76,7 +77,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
             SchemaDatasetFacet,
             SchemaField,
         )
-        from astro.lineage.extractor import OpenLineageFacets
+        from openlineage.airflow.extractors.base import OperatorLineage
         from astro.lineage.facets import ExportFileFacet
 
         input_dataset: list[OpenlineageDataset] = []
@@ -136,7 +137,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
         run_facets: dict[str, BaseFacet] = {}
         job_facets: dict[str, BaseFacet] = {}
 
-        return OpenLineageFacets(
+        return OperatorLineage(
             inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
 

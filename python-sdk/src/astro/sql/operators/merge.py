@@ -83,7 +83,6 @@ class MergeOperator(AstroSQLBaseOperator):
         """
         Collect the input, output, job and run facets for merge operator
         """
-
         from astro.lineage import (
             BaseFacet,
             DataQualityMetricsInputDatasetFacet,
@@ -94,11 +93,10 @@ class MergeOperator(AstroSQLBaseOperator):
             SchemaField,
             SqlJobFacet,
         )
-        from astro.lineage.extractor import OpenLineageFacets
+        from openlineage.airflow.extractors.base import OperatorLineage
         from astro.lineage.facets import SourceTableMergeDatasetFacet, TargetTableMergeDatasetFacet
-
-        input_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
-        output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
+        input_dataset: list[OpenlineageDataset] = []
+        output_dataset: list[OpenlineageDataset] = []
         if self.source_table.openlineage_emit_temp_table_event():
             input_uri = (
                 f"{self.source_table.openlineage_dataset_namespace()}"
@@ -164,7 +162,7 @@ class MergeOperator(AstroSQLBaseOperator):
         merge_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="merge_query")
         job_facets: dict[str, BaseFacet] = {"sql": SqlJobFacet(query=str(merge_query))}
 
-        return OpenLineageFacets(
+        return OperatorLineage(
             inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
 

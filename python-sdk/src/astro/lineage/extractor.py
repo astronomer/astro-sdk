@@ -31,9 +31,6 @@ class PythonSDKExtractor(BaseExtractor):
         return [
             "AppendOperator",
             "BaseSQLDecoratedOperator",
-            "DataframeOperator",
-            "ExportFileOperator",
-            "LoadFileOperator",
             "MergeOperator",
             "TransformOperator",
         ]
@@ -55,7 +52,7 @@ class PythonSDKExtractor(BaseExtractor):
         Callback on ``get_openlineage_facets(ti)`` task completion to fetch metadata extraction details that are to be
         pushed to the Lineage server.
         """
-        open_lineage_facets: OpenLineageFacets = self.operator.get_openlineage_facets(task_instance)
+        open_lineage_facets: OperatorLineage = self.operator.get_openlineage_facets(task_instance)
 
         return TaskMetadata(
             name=get_job_name(task=self.operator),

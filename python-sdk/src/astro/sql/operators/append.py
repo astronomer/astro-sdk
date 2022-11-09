@@ -78,13 +78,13 @@ class AppendOperator(AstroSQLBaseOperator):
             SchemaField,
             SqlJobFacet,
         )
-        from astro.lineage.extractor import OpenLineageFacets
+        from openlineage.airflow.extractors.base import OperatorLineage
         from astro.lineage.facets import TableDatasetFacet
 
         append_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="append_query")
         source_table_rows = self.source_table.row_count
-        input_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
-        output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
+        input_dataset: list[OpenlineageDataset] = []
+        output_dataset: list[OpenlineageDataset] = []
         if self.source_table.openlineage_emit_temp_table_event():
             input_uri = (
                 f"{self.source_table.openlineage_dataset_namespace()}"
@@ -147,7 +147,7 @@ class AppendOperator(AstroSQLBaseOperator):
         run_facets: dict[str, BaseFacet] = {}
         job_facets: dict[str, BaseFacet] = {"sql": SqlJobFacet(query=str(append_query))}
 
-        return OpenLineageFacets(
+        return OperatorLineage(
             inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
 

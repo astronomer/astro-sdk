@@ -206,7 +206,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             SchemaField,
             SqlJobFacet,
         )
-        from astro.lineage.extractor import OpenLineageFacets
+        from openlineage.airflow.extractors.base import OperatorLineage
 
         input_dataset: list[OpenlineageDataset] = []
         output_dataset: list[OpenlineageDataset] = []
@@ -257,7 +257,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         base_sql_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="base_sql_query")
         job_facets: dict[str, BaseFacet] = {"sql": SqlJobFacet(query=base_sql_query)}
 
-        return OpenLineageFacets(
+        return OperatorLineage(
             inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
 

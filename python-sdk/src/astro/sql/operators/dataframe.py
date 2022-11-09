@@ -227,7 +227,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             SchemaDatasetFacet,
             SchemaField,
         )
-        from astro.lineage.extractor import OpenLineageFacets
+        from openlineage.airflow.extractors.base import OperatorLineage
 
         output_dataset: list[OpenlineageDataset] = []
 
@@ -262,7 +262,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
 
         run_facets: dict[str, BaseFacet] = {}
         job_facets: dict[str, BaseFacet] = {}
-        return OpenLineageFacets(
+        return OperatorLineage(
             inputs=[], outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
 

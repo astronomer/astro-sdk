@@ -181,9 +181,12 @@ class LoadFileOperator(AstroSQLBaseOperator):
         normalize_config["sep"] = replace_illegal_columns_chars(normalize_config["sep"], database)
 
         return normalize_config
+        
 
-    def get_openlineage_facets(self, task_instance):  # skipcq: PYL-W0613
-        """Returns the lineage data"""
+    def get_openlineage_facets_on_complete(self):  # skipcq: PYL-W0613
+        """
+        Returns the lineage data
+        """
         from astro.lineage import (
             BaseFacet,
             DataSourceDatasetFacet,
@@ -191,9 +194,8 @@ class LoadFileOperator(AstroSQLBaseOperator):
             SchemaDatasetFacet,
             SchemaField,
         )
-        from astro.lineage.extractor import OpenLineageFacets
+        from openlineage.airflow.extractors.base import OperatorLineage
         from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
-
         # if the input_file is a folder or pattern, it needs to be resolved to
         # list the files
         input_files = resolve_file_path_pattern(
@@ -230,7 +232,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
             )
         ]
 
-        output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
+        output_dataset: list[OpenlineageDataset] = []
         if self.output_table is not None and self.output_table.openlineage_emit_temp_table_event():
             output_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
@@ -265,7 +267,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         run_facets: dict[str, BaseFacet] = {}
         job_facets: dict[str, BaseFacet] = {}
 
-        return OpenLineageFacets(
+        return OperatorLineage(
             inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
 
