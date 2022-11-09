@@ -1,3 +1,4 @@
+from typing import Dict
 import datetime
 import pathlib
 import tempfile
@@ -17,7 +18,7 @@ from astro.table import BaseTable
 cwd = pathlib.Path(__file__).parent
 
 
-def create_secrets(scope_name: str, filesystem_secrets: dict[str, str], api_client: ApiClient):
+def create_secrets(scope_name: str, filesystem_secrets: Dict[str, str], api_client: ApiClient):
     """
     Before we can transfer data from external file sources (s3, GCS, etc.) we first need to upload the relevant
     secrets to databricks, so we can use them in the autoloader config. This allows us to perform ad-hoc queries
@@ -48,7 +49,7 @@ def generate_file(
     data_source_path: str,
     table_name: str,
     source_type: str,
-    load_options: dict[str, str],
+    load_options: Dict[str, str],
     output_file_path: Path,
 ):
     """
