@@ -59,7 +59,7 @@ def generate_file(
     :param source_type: the source location (e.g. s3)
     :param load_options: any additional load options the user would like to inject into their job
     :param output_file_path: where the generated file should be placed.
-    :return:
+    :return: output file path
     """
     render(
         Path("jinja_templates/autoload_file_to_delta.py.jinja2"),
@@ -80,7 +80,6 @@ def load_file_to_dbfs(local_file_path: Path, api_client: ApiClient):
 
     :param local_file_path: path of the file to upload
     :param api_client: Databricks API client
-    :return:
     """
     print("loading file " + str(local_file_path))
     dbfs = DbfsApi(api_client=api_client)
@@ -137,6 +136,11 @@ def create_and_run_job(
 
 
 def load_file_to_delta(input_file: File, delta_table: BaseTable):
+    """
+    Load a file object into a databricks delta table
+    :param input_file: File to load into delta
+    :param delta_table: a Table object with necessary metadata for accessing the cluster.
+    """
     from astro.spark.delta import DeltaDatabase
 
     db = DeltaDatabase(conn_id=delta_table.conn_id)
