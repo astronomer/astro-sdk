@@ -61,8 +61,8 @@ def generate(
     generate_tasks: bool = typer.Option(
         default=False,
         help="whether to explicitly generate the tasks in your SQL CLI "
-             "DAG. By default we will keep the DAGs smaller and read SQL "
-             "files at runtime",
+        "DAG. By default we will keep the DAGs smaller and read SQL "
+        "files at runtime",
         show_default=True,
     ),
 ) -> None:
@@ -77,7 +77,9 @@ def generate(
         f"\nGenerating the DAG file from workflow [bold blue]{workflow_name}[/bold blue]"
         f" for [bold]{env}[/bold] environment..\n"
     )
-    dag_file = cli.generate_dag(project=project, env=env, workflow_name=workflow_name, generate_tasks=generate_tasks)
+    dag_file = cli.generate_dag(
+        project=project, env=env, workflow_name=workflow_name, generate_tasks=generate_tasks
+    )
     rprint("The DAG file", dag_file.resolve(), "has been successfully generated. 🎉")
 
 
