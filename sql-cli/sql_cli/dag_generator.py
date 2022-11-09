@@ -84,12 +84,14 @@ class SqlFilesDAG:
         return list(depth_first_search.dfs_postorder_nodes(graph))
 
 
-def generate_dag(directory: Path, dags_directory: Path) -> Path:
+def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) -> Path:
     """
     Generate a DAG from SQL files.
 
     :params directory: The directory containing the raw sql files.
     :params dags_directory: The directory containing the generated DAG.
+    :params generate_tasks: Whether the user wants to explicitly generate each task
+        of the airflow DAG or rely on a less verbose `render` function.
 
     :returns: the path to the DAG file.
     """
@@ -101,9 +103,15 @@ def generate_dag(directory: Path, dags_directory: Path) -> Path:
         start_date=datetime(2020, 1, 1),
         sql_files=sql_files,
     )
+    template_dag_name = "gen_tasks_dag"
+    if generate_tasks:
+        for sql_file in sql_files_dag.sorted_sql_files():
+            sql_file.write_raw_content_to_target_path()
+        template_dag_name = "render_dag"
+
     output_file = dags_directory / f"{sql_files_dag.dag_id}.py"
     render(
-        template_file=Path("templates/dag.py.jinja2"),
+        template_file=Path(f"templates/{template_dag_name}.py.jinja2"),
         context={"dag": sql_files_dag},
         output_file=output_file,
     )
