@@ -42,6 +42,7 @@ PyYAML = ">5.4.1"
 apache-airflow = ">=2.1"
 python-dotenv = "^0.21.0"
 astro-sdk-python = {extras = ["all"], version = "^1.2.0"}
+markdown = "3.3.4"
 
 [tool.poetry.scripts]
 flow = "sql_cli.__main__:app"

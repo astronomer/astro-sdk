@@ -25,8 +25,8 @@ def dev(session: nox.Session) -> None:
 def test(session: nox.Session, airflow: str) -> None:
     """Run both unit and integration tests."""
     session.install("poetry")
-    session.run("poetry", "install", "--with", "dev")
     session.run("poetry", "add", f"apache-airflow=={airflow}")
+    session.run("poetry", "install", "--with", "dev")
     session.log("Installed Dependencies:")
     session.run("poetry", "run", "pip3", "freeze")
 
