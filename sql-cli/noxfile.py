@@ -46,8 +46,6 @@ def test(session: nox.Session, airflow: str) -> None:
         "--cov=sql_cli",
         "--cov-report=xml",
         "--cov-branch",
-        # TODO: remove the following line once we're handling Airflow config more gracefully
-        "-s",
         env={"AIRFLOW_HOME": airflow_home},
         external=True,
     )
