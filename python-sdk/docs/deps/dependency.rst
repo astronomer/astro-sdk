@@ -5,7 +5,7 @@ Dependencies
 ============
 
 
-.. list-table:: Airflow
+.. list-table:: installation compatibility with airflow constraints file
    :widths: 33 33 33
    :header-rows: 1
 
