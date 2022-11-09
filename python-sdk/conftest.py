@@ -133,7 +133,7 @@ def database_table_fixture(request):
     database = create_database(conn_id)
     table = params.get("table", Table(conn_id=database.conn_id, metadata=database.default_metadata))
     if not isinstance(table, TempTable):
-        # We add a unique suffix to the table name to make the name unique across runs
+        # We create a unique table name to make the name unique across runs
         table.name = create_unique_table_name(UNIQUE_HASH_SIZE)
     file = params.get("file")
 
@@ -196,7 +196,7 @@ def multiple_tables_fixture(request, database_table_fixture):
     for item in items:
         table = item.get("table", Table(conn_id=database.conn_id))
         if not isinstance(table, TempTable):
-            # We add a unique suffix to the table name to make the name unique across runs
+            # We create a unique table name to make the name unique across runs
             table.name = create_unique_table_name(UNIQUE_HASH_SIZE)
         file = item.get("file")
 
