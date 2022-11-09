@@ -24,11 +24,24 @@ def dev(session: nox.Session) -> None:
 @nox.parametrize("airflow", ["2.1", "2.2.0", "2.3", "2.4"])
 def test(session: nox.Session, airflow: str) -> None:
     """Run both unit and integration tests."""
-    session.install("poetry")
-    session.run("poetry", "add", f"apache-airflow=={airflow}")
-    session.run("poetry", "install", "--with", "dev")
+    # 2.2.5 requires a certain version of pandas and sqlalchemy
+    # Otherwise it fails with
+    # Pandas requires version '1.4.0' or newer of 'sqlalchemy' (version '1.3.24' currently installed).
+    constraints_url = (
+        "https://raw.githubusercontent.com/apache/airflow/"
+        f"constraints-{airflow}/constraints-{session.python}.txt"
+    )
+    constraints = ["-c", constraints_url] if airflow == "2.2.5" else []
+    session.install(f"apache-airflow=={airflow}", *constraints)
+    session.install("-e", ".[all,tests]", *constraints)
+
+    # session.install("poetry")
+    # session.run("poetry", "add", f"markdown==3.3.4")
+    # session.run("poetry", "add", "importlib-metadata@latest")
+    # session.run("poetry", "add", f"apache-airflow=={airflow}")
+    # session.run("poetry", "install", "--with", "dev")
     session.log("Installed Dependencies:")
-    session.run("poetry", "run", "pip3", "freeze")
+    session.run("pip3", "freeze")
 
     # TODO: at the moment flow run depends on the Airflow global Airflow Home - we need to fix this
     # Refactor so each test does this in their own sandboxed Airflow home
@@ -38,8 +51,6 @@ def test(session: nox.Session, airflow: str) -> None:
     session.run("airflow", "db", "init", env={"AIRFLOW_HOME": airflow_home})
 
     session.run(
-        "poetry",
-        "run",
         "pytest",
         *session.posargs,
         "--exitfirst",
