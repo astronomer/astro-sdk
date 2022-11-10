@@ -227,7 +227,7 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.5')" -- --splits 12 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-3.9(airflow='2.5')" -- --splits 12 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
@@ -244,7 +244,7 @@ jobs:
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
 
-  Run-Unit-tests-Airflow-2-4:
+  Run-Unit-tests-Airflow-backcompat:
     if: >-
       github.event_name == 'push' ||
       (
@@ -258,6 +258,12 @@ jobs:
       (
         github.event_name == 'release'
       )
+    strategy:
+      fail-fast: false
+      matrix:
+        airflow_version: ["2.4", "2.2.5"]
+        python_version: ["2.4", "2.2.5"]
+        group: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -292,79 +298,12 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: ${{ runner.os }}-2.2.5-${{ hashFiles('python-sdk/pyproject.toml') }}
+          key: ${{ runner.os }}-${{ airflow_version }}-${{ hashFiles('python-sdk/pyproject.toml') }}
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.2.5')" -- "tests/test_example_dags.py" "tests/integration_test_dag.py"
-    env:
-      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
-      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
-      REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
-      REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
-      AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
-      AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
-      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
-      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-
-  Run-Unit-tests-Airflow-2-2-5:
-    if: >-
-      github.event_name == 'push' ||
-      (
-        github.event_name == 'pull_request' &&
-        github.event.pull_request.head.repo.fork == false
-      ) ||
-      (
-        github.event_name == 'pull_request_target' &&
-        contains(github.event.pull_request.labels.*.name, 'safe to test')
-      )||
-      (
-        github.event_name == 'release'
-      )
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        # Docker Hub image
-        image: dimberman/pagila-test
-        env:
-          POSTGRES_PASSWORD: postgres
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    steps:
-      - uses: actions/checkout@v3
-        if: github.event_name != 'pull_request_target'
-
-      - name: Checkout pull/${{ github.event.number }}
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.pull_request.head.sha }}
-        if: github.event_name == 'pull_request_target'
-
-      - uses: actions/setup-python@v3
-        with:
-          python-version: '3.8'
-          architecture: 'x64'
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/pip
-            .nox
-          key: ${{ runner.os }}-2.2.5-${{ hashFiles('python-sdk/pyproject.toml') }}
-      - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
-      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
-      - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
-      - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.2.5')" -- "tests/test_example_dags.py" "tests/integration_test_dag.py"
+      - run: nox -s "test-3.8(airflow='${{ airflow_version }}')" -- "tests/test_example_dags.py" "tests/integration_test_dag.py"
     env:
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
