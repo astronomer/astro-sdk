@@ -10,6 +10,8 @@ from sql_cli.exceptions import DagCycle, EmptyDag, SqlFilesDirectoryNotFound
 from sql_cli.sql_directory_parser import SqlFile, get_sql_files
 from sql_cli.utils.jinja import render
 
+TEMPLATES_DIRECTORY = Path("templates")
+
 
 @dataclass(frozen=True)
 class SqlFilesDAG:
@@ -104,11 +106,11 @@ def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) ->
         sql_files=sql_files,
     )
     if generate_tasks:
-        template_file = Path("templates/gen_tasks_dag.py.jinja2")
+        template_file = TEMPLATES_DIRECTORY / "gen_tasks_dag.py.jinja2"
     else:
         for sql_file in sql_files_dag.sorted_sql_files():
             sql_file.write_raw_content_to_target_path()
-        template_file = Path("templates/render_dag.py.jinja2")
+        template_file = TEMPLATES_DIRECTORY / "render_dag.py.jinja2"
 
     output_file = dags_directory / f"{sql_files_dag.dag_id}.py"
     render(
