@@ -3,10 +3,8 @@ import pendulum
 import pytest
 from airflow.models.taskinstance import TaskInstance
 from airflow.utils import timezone
-from openlineage.airflow.extractors.base import (
-    DefaultExtractor,
-    TaskMetadata,
-)
+from openlineage.airflow.extractors import Extractors
+from openlineage.airflow.extractors.base import DefaultExtractor, TaskMetadata
 from openlineage.client.facet import DataQualityMetricsInputDatasetFacet, OutputStatisticsOutputDatasetFacet
 from openlineage.client.run import Dataset as OpenlineageDataset
 
@@ -16,8 +14,7 @@ from astro.files import File
 from astro.lineage.extractor import PythonSDKExtractor
 from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
 from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
-from astro.sql import AppendOperator, MergeOperator, DataframeOperator
-from openlineage.airflow.extractors import Extractors
+from astro.sql import AppendOperator, DataframeOperator, MergeOperator
 from astro.sql.operators.export_file import ExportFileOperator
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import Metadata, Table
@@ -125,6 +122,7 @@ def test_python_sdk_load_file_extract_on_complete():
     )
     assert task_meta.job_facets == {}
     assert task_meta.run_facets == {}
+
 
 @pytest.mark.integration
 def test_python_sdk_export_file_extract_on_complete():
