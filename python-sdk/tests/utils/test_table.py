@@ -1,14 +1,26 @@
+import json
 from unittest import mock
 
+import attr
 import pytest
+from airflow.utils.module_loading import import_string
 
 from astro.constants import Database
 from astro.files import File
 from astro.sql import LoadFileOperator
 from astro.sql.operators.transform import TransformOperator
-from astro.table import BaseTable, Table
+from astro.table import BaseTable, Table, Metadata
 from astro.utils.table import find_first_table
 
+try:
+    import numpy as np
+except ImportError:
+    np = None  # type: ignore
+
+try:
+    from kubernetes.client import models as k8s
+except ImportError:
+    k8s = None
 
 @pytest.mark.parametrize(
     "kwargs,return_type",
@@ -131,3 +143,63 @@ def test_row_count(database_table_fixture):
     ).execute({})
 
     assert imdb_table.row_count == 117
+
+class XComEncoder(json.JSONEncoder):
+    """This encoder allows serializes any object that has attr."""
+
+    def default(self, o: object) -> dict:
+        from airflow.serialization.serialized_objects import BaseSerialization
+
+        if attr.has(o.__class__):
+            classname = o.__module__ + '.' + o.__class__.__name__
+
+            version = getattr(o, "version", 0)
+            # Only include attributes which we can pass back to the classes constructor
+            data = attr.asdict(o, recurse=True, filter=lambda a, v: a.init)  # type: ignore[arg-type]
+            return {
+                "__classname": classname,
+                "__version": version,
+                "__source": None,
+                "__var": BaseSerialization.serialize(data),
+            }
+        else:
+            return super().default(o)
+
+
+class XComDecoder(json.JSONDecoder):
+    """
+    This decoder deserializes dicts to objects if they contain
+    the `__classname__` key otherwise it will return the dict
+    as is.
+    """
+
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(object_hook=self.object_hook, *args, **kwargs)
+
+    def object_hook(self, dct) -> object:
+        if '__classname' in dct:
+            from airflow.serialization.serialized_objects import BaseSerialization
+
+            cls = import_string(dct['__classname'])
+
+            version = getattr(cls, "version", 0)
+            if '__version' in dct and int(dct['__version']) < version:
+                raise TypeError(
+                    "serialized version of %s is newer than module version (%s > %s)",
+                    dct['__classname'],
+                    dct['__version'],
+                    version,
+                )
+
+            return cls(**BaseSerialization.deserialize(dct['__var']))
+
+        return dct
+def test_serde():
+
+    table = Table(name="foo", conn_id="bex", metadata=Metadata(schema="bar", database="baz"))
+    serialized = XComEncoder().encode(table)
+    print("\n\n\n")
+    print(serialized)
+    print("\n\n\n")
+    t = XComDecoder().decode(serialized)
+    print(t)

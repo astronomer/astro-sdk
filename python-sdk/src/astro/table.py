@@ -217,7 +217,11 @@ class Table(BaseTable, Dataset):
         name = kwargs.get("name") or args and args[0] or ""
         temp = kwargs.get("temp", False)
         if temp or (not name or name.startswith("_tmp")):
-            return TempTable(*args, **kwargs)
+            name = kwargs.pop("_name", None)
+            t = TempTable(*args, **kwargs)
+            if name:
+                t._name = name
+            return t
         return super().__new__(cls)
 
     @uri.default
