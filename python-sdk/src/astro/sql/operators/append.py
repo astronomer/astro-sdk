@@ -55,6 +55,9 @@ class AppendOperator(AstroSQLBaseOperator):
                 f"columns is not a valid type. Valid types: [tuple, list, dict], Passed: {type(columns)}"
             )
         self.columns = columns or {}
+        # currently, cross database operation is not supported
+        if self.source_table.sql_type != self.target_table.sql_type:
+            raise ValueError("source and target table must belongs from same datasource")
         task_id = task_id or get_unique_task_id("append_table")
         super().__init__(
             task_id=task_id,

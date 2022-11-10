@@ -131,3 +131,21 @@ def test_row_count(database_table_fixture):
     ).execute({})
 
     assert imdb_table.row_count == 117
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.BIGQUERY},
+        {"database": Database.POSTGRES},
+        {"database": Database.REDSHIFT},
+        {"database": Database.SNOWFLAKE},
+        {"database": Database.SQLITE},
+    ],
+    indirect=True,
+    ids=["bigquery", "postgresql",  "redshift", "snowflake", "sqlite"]
+)
+def test_sql_type(database_table_fixture, request):
+    _, test_table = database_table_fixture
+    assert test_table.sql_type == request.node.callspec.id
