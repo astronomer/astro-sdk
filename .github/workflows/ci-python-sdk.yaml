@@ -261,8 +261,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        airflow_version: ["2.4", "2.2.5"]
-        python_version: ["2.4", "2.2.5"]
+        airflow-version: ["2.4", "2.2.5"]
+        python-version: ["3.8", "3.9"]
         group: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
     runs-on: ubuntu-latest
     services:
@@ -298,12 +298,12 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: ${{ runner.os }}-${{ airflow_version }}-${{ hashFiles('python-sdk/pyproject.toml') }}
+          key: ${{ runner.os }}-${{ matrix.airflow-version }}-${{ hashFiles('python-sdk/pyproject.toml') }}
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='${{ airflow_version }}')" -- "tests/test_example_dags.py" "tests/integration_test_dag.py"
+      - run: nox -s "test-${{ matrix.python-version }}(airflow='${{ matrix.airflow-version }}')" -- "tests/test_example_dags.py" "tests/integration_test_dag.py"
     env:
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
