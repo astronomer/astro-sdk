@@ -320,7 +320,7 @@ jobs:
   Code-Coverage:
     if: github.event.action != 'labeled'
     needs:
-      - Run-Unit-tests-Airflow-2-4
+      - Run-Unit-tests-Airflow-backcompat
       - Run-Optional-Packages-tests-python-sdk
     runs-on: ubuntu-latest
     steps:
