@@ -352,8 +352,7 @@ jobs:
     if: github.event_name == 'release'
     name: Build and publish Python 🐍 distributions 📦 to PyPI
     needs:
-      - Run-Unit-tests-Airflow-2-4
-      - Run-Unit-tests-Airflow-2-2-5
+      - Run-Unit-tests-Airflow-backcompat
       - Run-Optional-Packages-tests-python-sdk
     runs-on: ubuntu-latest
     steps:
