@@ -144,7 +144,7 @@ def test_row_count(database_table_fixture):
         {"database": Database.SQLITE},
     ],
     indirect=True,
-    ids=["bigquery", "postgresql",  "redshift", "snowflake", "sqlite"]
+    ids=["bigquery", "postgresql", "redshift", "snowflake", "sqlite"],
 )
 def test_sql_type(database_table_fixture, request):
     _, test_table = database_table_fixture

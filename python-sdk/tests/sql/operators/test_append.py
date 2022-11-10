@@ -209,7 +209,4 @@ def test_cross_db_append_raise_exception():
             target_table=target_table,
             columns=["set_item_1", "set_item_2", "set_item_3"],
         )
-    assert (
-            exec_info.value.args[0] == "source and target table must belongs from same datasource"
-    )
-
+    assert exec_info.value.args[0] == "source and target table must belongs from same datasource"
