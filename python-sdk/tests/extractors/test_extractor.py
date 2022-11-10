@@ -3,7 +3,10 @@ import pendulum
 import pytest
 from airflow.models.taskinstance import TaskInstance
 from airflow.utils import timezone
-from openlineage.airflow.extractors import TaskMetadata
+from openlineage.airflow.extractors.base import (
+    DefaultExtractor,
+    TaskMetadata,
+)
 from openlineage.client.facet import DataQualityMetricsInputDatasetFacet, OutputStatisticsOutputDatasetFacet
 from openlineage.client.run import Dataset as OpenlineageDataset
 
@@ -13,7 +16,8 @@ from astro.files import File
 from astro.lineage.extractor import PythonSDKExtractor
 from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
 from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
-from astro.sql import AppendOperator, MergeOperator
+from astro.sql import AppendOperator, MergeOperator, DataframeOperator
+from openlineage.airflow.extractors import Extractors
 from astro.sql.operators.export_file import ExportFileOperator
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import Metadata, Table
@@ -106,12 +110,13 @@ def test_python_sdk_load_file_extract_on_complete():
     )
 
     task_instance = TaskInstance(task=load_file_operator)
+    python_sdk_extractor = Extractors().get_extractor_class(LoadFileOperator)
+    assert python_sdk_extractor is DefaultExtractor
 
-    python_sdk_extractor = PythonSDKExtractor(load_file_operator)
-    task_meta_extract = python_sdk_extractor.extract()
-    assert isinstance(task_meta_extract, TaskMetadata)
+    task_meta_extract = python_sdk_extractor(load_file_operator).extract()
+    assert task_meta_extract is None
 
-    task_meta = python_sdk_extractor.extract_on_complete(task_instance)
+    task_meta = python_sdk_extractor(load_file_operator).extract_on_complete(task_instance=task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
     assert task_meta.inputs[0].facets["input_file_facet"] == INPUT_STATS[0].facets["input_file_facet"]
     assert (
@@ -120,7 +125,6 @@ def test_python_sdk_load_file_extract_on_complete():
     )
     assert task_meta.job_facets == {}
     assert task_meta.run_facets == {}
-
 
 @pytest.mark.integration
 def test_python_sdk_export_file_extract_on_complete():
@@ -150,12 +154,11 @@ def test_python_sdk_export_file_extract_on_complete():
     )
 
     task_instance = TaskInstance(task=export_file_operator)
-
-    python_sdk_extractor = PythonSDKExtractor(export_file_operator)
-    task_meta_extract = python_sdk_extractor.extract()
-    assert isinstance(task_meta_extract, TaskMetadata)
-
-    task_meta = python_sdk_extractor.extract_on_complete(task_instance)
+    python_sdk_extractor = Extractors().get_extractor_class(ExportFileOperator)
+    assert python_sdk_extractor is DefaultExtractor
+    task_meta_extract = python_sdk_extractor(export_file_operator).extract()
+    assert task_meta_extract is None
+    task_meta = python_sdk_extractor(export_file_operator).extract_on_complete(task_instance=task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
     assert (
         task_meta.inputs[0].facets["dataQualityMetrics"]
@@ -328,10 +331,11 @@ def test_python_sdk_dataframe_op_extract_on_complete():
     tzinfo = pendulum.timezone("UTC")
     execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
     task_instance = TaskInstance(task=task[0].operator, run_id=execution_date)
-    python_sdk_extractor = PythonSDKExtractor(task[0].operator)
-
-    assert type(python_sdk_extractor.get_operator_classnames()) is list
-    task_meta = python_sdk_extractor.extract_on_complete(task_instance)
+    python_sdk_extractor = Extractors().get_extractor_class(DataframeOperator)
+    assert python_sdk_extractor is DefaultExtractor
+    task_meta_extract = python_sdk_extractor(task[0].operator).extract()
+    assert task_meta_extract is None
+    task_meta = python_sdk_extractor(task[0].operator).extract_on_complete(task_instance=task_instance)
     assert task_meta.name == "adhoc_airflow.aggregate_data"
     assert task_meta.outputs[0].facets["schema"].fields[0].name == test_schema_name
     assert task_meta.outputs[0].facets["schema"].fields[0].type == test_db_name
