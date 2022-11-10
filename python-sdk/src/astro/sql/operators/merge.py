@@ -62,9 +62,6 @@ class MergeOperator(AstroSQLBaseOperator):
                 f"columns is not a valid type. Valid types: [tuple, list, dict], Passed: {type(columns)}"
             )
         self.columns = columns or {}
-        # currently, cross database operation is not supported
-        if self.source_table.sql_type != self.target_table.sql_type:
-            raise ValueError("source and target table must belongs from same datasource")
         self.if_conflicts = if_conflicts
         task_id = task_id or get_unique_task_id("merge")
         super().__init__(
@@ -80,6 +77,10 @@ class MergeOperator(AstroSQLBaseOperator):
         db = create_database(self.target_table.conn_id, table=self.source_table)
         self.source_table = db.populate_table_metadata(self.source_table)
         self.target_table = db.populate_table_metadata(self.target_table)
+
+        # currently, cross database operation is not supported
+        if self.source_table.sql_type != self.target_table.sql_type:
+            raise ValueError("source and target table must belongs from same datasource")
 
         db.merge_table(
             source_table=self.source_table,
