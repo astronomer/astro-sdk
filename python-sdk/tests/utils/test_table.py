@@ -9,7 +9,7 @@ from astro.constants import Database
 from astro.files import File
 from astro.sql import LoadFileOperator
 from astro.sql.operators.transform import TransformOperator
-from astro.table import BaseTable, Table, Metadata
+from astro.table import BaseTable, Metadata, Table
 from astro.utils.table import find_first_table
 
 try:
@@ -21,6 +21,7 @@ try:
     from kubernetes.client import models as k8s
 except ImportError:
     k8s = None
+
 
 @pytest.mark.parametrize(
     "kwargs,return_type",
@@ -144,6 +145,7 @@ def test_row_count(database_table_fixture):
 
     assert imdb_table.row_count == 117
 
+
 class XComEncoder(json.JSONEncoder):
     """This encoder allows serializes any object that has attr."""
 
@@ -151,7 +153,7 @@ class XComEncoder(json.JSONEncoder):
         from airflow.serialization.serialized_objects import BaseSerialization
 
         if attr.has(o.__class__):
-            classname = o.__module__ + '.' + o.__class__.__name__
+            classname = o.__module__ + "." + o.__class__.__name__
 
             version = getattr(o, "version", 0)
             # Only include attributes which we can pass back to the classes constructor
@@ -177,23 +179,25 @@ class XComDecoder(json.JSONDecoder):
         super().__init__(object_hook=self.object_hook, *args, **kwargs)
 
     def object_hook(self, dct) -> object:
-        if '__classname' in dct:
+        if "__classname" in dct:
             from airflow.serialization.serialized_objects import BaseSerialization
 
-            cls = import_string(dct['__classname'])
+            cls = import_string(dct["__classname"])
 
             version = getattr(cls, "version", 0)
-            if '__version' in dct and int(dct['__version']) < version:
+            if "__version" in dct and int(dct["__version"]) < version:
                 raise TypeError(
                     "serialized version of %s is newer than module version (%s > %s)",
-                    dct['__classname'],
-                    dct['__version'],
+                    dct["__classname"],
+                    dct["__version"],
                     version,
                 )
 
-            return cls(**BaseSerialization.deserialize(dct['__var']))
+            return cls(**BaseSerialization.deserialize(dct["__var"]))
 
         return dct
+
+
 def test_serde():
 
     table = Table(name="foo", conn_id="bex", metadata=Metadata(schema="bar", database="baz"))
