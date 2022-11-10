@@ -114,3 +114,17 @@ def get_dag(subdir: str, dag_id: str, include_examples: bool = False) -> DAG:
                 f"Dag {dag_id!r} could not be found; either it does not exist or it failed to parse."
             )
     return dagbag.dags[dag_id]
+
+
+def check_for_dag_import_errors(dag_file: Path) -> dict[str, str]:
+    """
+    Check for import errors in DAG
+
+    :param dag_file: The path to the dag file.
+
+    :returns: the import errors found per DAG during processing the DagBag.
+    """
+    from airflow.models import DagBag
+    from airflow.utils.cli import process_subdir
+
+    return DagBag(process_subdir(str(dag_file))).import_errors
