@@ -78,10 +78,9 @@ PRE_DEFINED_ORDER = [
 
 
 def order(dag_id: str) -> int:
-    try:
+    if dag_id in PRE_DEFINED_ORDER:
         return PRE_DEFINED_ORDER.index(dag_id)
-    except ValueError:
-        return -1
+    return -1
 
 
 dag_bag = get_dag_bag()
