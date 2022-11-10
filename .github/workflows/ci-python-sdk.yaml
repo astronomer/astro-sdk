@@ -48,8 +48,6 @@ env:
   SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
   AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
   AIRFLOW_VAR_FOO: templated_file_name
-  AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
-  AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
   AWS_BUCKET: tmp9
   GOOGLE_BUCKET: dag-authoring
   FORCE_COLOR: "true"
@@ -242,6 +240,8 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
       REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
+      AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
+      AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
       REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
@@ -308,6 +308,8 @@ jobs:
       REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
       REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
       REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
+      AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
+      AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
 
