@@ -20,7 +20,7 @@ def dev(session: nox.Session) -> None:
 
 
 @nox.session(python=["3.7", "3.8", "3.9"])
-@nox.parametrize("airflow", ["2.2.5", "2.4"])
+@nox.parametrize("airflow", ["2.2.5", "2.4", "2.5"])
 def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
     # 2.2.5 requires a certain version of pandas and sqlalchemy
@@ -31,7 +31,10 @@ def test(session: nox.Session, airflow) -> None:
         f"constraints-{airflow}/constraints-{session.python}.txt"
     )
     constraints = ["-c", constraints_url] if airflow == "2.2.5" else []
-    session.install(f"apache-airflow=={airflow}", *constraints)
+    if airflow == "2.5":
+        session.install("git+https://github.com/bolkedebruin/airflow.git@taskflow_datasets")
+    else:
+        session.install(f"apache-airflow=={airflow}", *constraints)
     session.install("-e", ".[all,tests]", *constraints)
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
