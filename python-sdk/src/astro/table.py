@@ -4,7 +4,7 @@ import random
 import string
 from typing import Any
 
-import attrs
+import attr.setters
 from attr import define, field, fields_dict
 from sqlalchemy import Column, MetaData
 
@@ -55,7 +55,7 @@ class BaseTable:
     # TODO: discuss alternative names to this class, since it contains metadata as opposed to be the
     # SQL table itself
     # Some ideas: TableRef, TableMetadata, TableData, TableDataset
-    name: str = field(default="", on_setattr=attrs.setters.validate)
+    name: str = field(default="", on_setattr=attr.setters.validate)
     conn_id: str = field(default="")
     # Setting converter allows passing a dictionary to metadata arg
     metadata: Metadata = field(
