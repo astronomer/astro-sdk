@@ -1,9 +1,10 @@
-import datetime
 import pathlib
 from tempfile import gettempdir
 from unittest import mock
 
 import pytest
+from airflow.utils.state import State
+from conftest import DEFAULT_DATE
 from typer.testing import CliRunner
 
 from sql_cli import __version__
@@ -74,7 +75,8 @@ def test_version():
         ("example_templating", "dev"),
     ],
 )
-def test_generate(workflow_name, environment, initialised_project):
+@pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
+def test_generate(workflow_name, environment, initialised_project, generate_tasks):
     result = runner.invoke(
         app,
         [
@@ -84,6 +86,7 @@ def test_generate(workflow_name, environment, initialised_project):
             environment,
             "--project-dir",
             initialised_project.directory.as_posix(),
+            generate_tasks,
         ],
     )
     assert result.exit_code == 0, result.output
@@ -107,7 +110,8 @@ def test_generate(workflow_name, environment, initialised_project):
         "empty",
     ],
 )
-def test_generate_invalid(workflow_name, message, initialised_project_with_tests_workflows):
+@pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
+def test_generate_invalid(workflow_name, message, initialised_project_with_tests_workflows, generate_tasks):
     result = runner.invoke(
         app,
         [
@@ -115,6 +119,7 @@ def test_generate_invalid(workflow_name, message, initialised_project_with_tests
             workflow_name,
             "--project-dir",
             initialised_project_with_tests_workflows.directory.as_posix(),
+            generate_tasks,
         ],
     )
     assert result.exit_code == 1
@@ -183,24 +188,30 @@ def test_run(workflow_name, environment, initialised_project, generate_tasks):
     )
     assert result.exit_code == 0, result.output
     result_stdout = get_stdout(result)
-    assert f"Completed running the workflow {workflow_name}. 🚀" in result_stdout
+    assert f"Completed running the workflow {workflow_name}." in result_stdout
 
 
-@pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
-@mock.patch("sql_cli.cli.run_dag")
 @pytest.mark.parametrize(
-    "final_state,message",
-    [("FAILED", "Final state: FAILED"), ("SKIPPED", "Final state: SKIPPED")],
-    ids=["failed", "skipped"],
+    "dag_run_state,final_state",
+    [
+        (State.SUCCESS, "SUCCESS 🚀"),
+        (State.FAILED, "FAILED 💥"),
+    ],
+    ids=[
+        "success",
+        "failed",
+    ],
 )
-def test_run_state(mock_run_dag, initialised_project, generate_tasks, final_state, message):
+@pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
+@mock.patch("sql_cli.run_dag.run_dag")
+def test_run_state(mock_run_dag, initialised_project, generate_tasks, dag_run_state, final_state):
     workflow_name = "example_basic_transform"
     environment = "dev"
     mock_run_dag.return_value = mock.MagicMock(
-        state=final_state,
+        state=dag_run_state,
         dag_id=workflow_name,
-        start_date=datetime.datetime(2020, 1, 1),
-        end_date=datetime.datetime(2020, 1, 1),
+        start_date=DEFAULT_DATE,
+        end_date=DEFAULT_DATE,
     )
 
     result = runner.invoke(
@@ -217,7 +228,7 @@ def test_run_state(mock_run_dag, initialised_project, generate_tasks, final_stat
     )
     assert result.exit_code == 0, result.output
     result_stdout = get_stdout(result)
-    assert message in result_stdout
+    assert f"Final state: {final_state}" in result_stdout
 
 
 @pytest.mark.parametrize(
