@@ -66,7 +66,7 @@ class BaseTable:
     temp: bool = field(default=False)
 
     @name.validator
-    def _check_name(self, attr, value):
+    def _check_name(self, _, value):
         self.temp = not value or value.startswith(TEMP_PREFIX)
 
     def __attrs_post_init__(self) -> None:
