@@ -123,6 +123,7 @@ def test_python_sdk_load_file_extract_on_complete():
     assert task_meta.job_facets == {}
     assert task_meta.run_facets == {}
 
+
 @pytest.mark.integration
 def test_python_sdk_export_file_extract_on_complete():
     """
