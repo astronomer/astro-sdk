@@ -365,5 +365,5 @@ def test_cross_db_merge_raise_exception():
             if_conflicts="ignore",
             target_conflict_columns=["list"],
             columns=["set_item_1", "set_item_2", "set_item_3"],
-        )
+        ).execute({})
     assert exec_info.value.args[0] == "source and target table must belongs from same datasource"
