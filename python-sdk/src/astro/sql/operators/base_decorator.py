@@ -90,7 +90,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         first_table_sql_type = first_table.sql_type
         output_table_sql_type = self.output_table.sql_type
         if (first_table_sql_type and output_table_sql_type) and (
-                first_table.sql_type != self.output_table.sql_type
+            first_table.sql_type != self.output_table.sql_type
         ):
             raise ValueError("source and target table must belongs from same datasource")
 
