@@ -21,39 +21,51 @@ def dev(session: nox.Session) -> None:
 
 
 @nox.session(python=["3.7", "3.8", "3.9"])
-@nox.parametrize("airflow", ["2.1", "2.2.0", "2.3", "2.4"])
+@nox.parametrize("airflow", ["2.2.5", "2.3.4", "2.4.2"])
 def test(session: nox.Session, airflow: str) -> None:
     """Run both unit and integration tests."""
-    # 2.2.5 requires a certain version of pandas and sqlalchemy
-    # Otherwise it fails with
-    # Pandas requires version '1.4.0' or newer of 'sqlalchemy' (version '1.3.24' currently installed).
-    constraints_url = (
-        "https://raw.githubusercontent.com/apache/airflow/"
-        f"constraints-{airflow}/constraints-{session.python}.txt"
-    )
-    constraints = ["-c", constraints_url] if airflow == "2.2.5" else []
-    session.install(f"apache-airflow=={airflow}", *constraints)
-    session.install("-e", ".[all,tests]", *constraints)
 
-    # session.install("poetry")
-    # session.run("poetry", "add", f"markdown==3.3.4")
-    # session.run("poetry", "add", "importlib-metadata@latest")
-    # session.run("poetry", "add", f"apache-airflow=={airflow}")
-    # session.run("poetry", "install", "--with", "dev")
+    session.install("poetry")
+    if airflow.startswith("2.1") or airflow.startswith("2.2"):
+        # To install some versions of Airflow, we need constraints, due to issues like:
+        # https://github.com/apache/airflow/issues/19804
+        constraints_url = (
+            "https://raw.githubusercontent.com/apache/airflow/"
+            f"constraints-{airflow}/constraints-{session.python}.txt"
+        )
+        session.run("rm", "-rf", "dist", external=True)
+
+        # Poetry does not support constraints:
+        # https://github.com/python-poetry/poetry/issues/3225
+        # We attempted a few approaches to get this to work, but they were unsuccessful.
+        session.run("poetry", "build", "-f", "wheel")
+        session.install("dist/astro_sql_cli-0.1.1-py3-none-any.whl", "-c", constraints_url)
+
+        # We are duplicating the tests dependencies until we find a better solution.
+        # The solution might be to move out of poetry.
+        session.install("pytest")
+        session.install("pytest-cov")
+        session.install("mypy")
+        session.install("types-pyyaml")
+    else:
+        session.run("poetry", "install", "--with", "dev")
+        session.run("poetry", "run", "pip", "install", f"apache-airflow=={airflow}")
+
     session.log("Installed Dependencies:")
     session.run("pip3", "freeze")
 
-    # TODO: at the moment flow run depends on the Airflow global Airflow Home - we need to fix this
-    # Refactor so each test does this in their own sandboxed Airflow home
+    # At the moment flow run depends on the Airflow global Airflow Home - we need to fix this
+    # TODO: refactor so each test does this in their own sandboxed Airflow home
     # From what I observed, the `run` command is the one using this, due to how the method
     # utils.airflow.get_dag behaves under Airflow 2.2.0 (it defaults to $HOME/airflow)
-    airflow_home = f"~/airflow-latest-{session.python}-airflow-{airflow}"
-    session.run("airflow", "db", "init", env={"AIRFLOW_HOME": airflow_home})
+    airflow_home = f"~/sql-cli-python-{session.python}-airflow-{airflow}"
+    session.run(
+        "airflow", "db", "init", env={"AIRFLOW_HOME": airflow_home, "AIRFLOW__CORE__LOAD_EXAMPLES": "False"}
+    )
 
     session.run(
         "pytest",
         *session.posargs,
-        "--exitfirst",
         "--cov=sql_cli",
         "--cov-report=xml",
         "--cov-branch",

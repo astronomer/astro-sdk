@@ -44,6 +44,7 @@ jobs:
         with:
            path: |
              ~/.cache/pip
+             .nox
            key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
       - run: pip3 install nox
       - run: nox -s type_check
@@ -81,6 +82,7 @@ jobs:
         with:
           path: |
             ~/.cache/pip
+            .nox
           key: ${{ runner.os }}-2.3-${{ hashFiles('sql-cli/pyproject.toml') }}
       - run: pip3 install nox
       - run: nox -s "test-3.8"
