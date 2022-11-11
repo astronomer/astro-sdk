@@ -87,10 +87,8 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         self.database_impl = create_database(self.conn_id, first_table)
 
         # currently, cross database operation is not supported
-        first_table_sql_type = first_table.sql_type
-        output_table_sql_type = self.output_table.sql_type
-        if (first_table_sql_type and output_table_sql_type) and (
-            first_table.sql_type != self.output_table.sql_type
+        if (first_table and self.output_table) and (
+                first_table.sql_type != self.output_table.sql_type
         ):
             raise ValueError("source and target table must belongs from same datasource")
 
