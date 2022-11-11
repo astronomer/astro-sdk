@@ -140,7 +140,8 @@ class BaseTable:
 
     @property
     def sql_type(self) -> str:
-        return create_database(self.conn_id).sql_type
+        if self.conn_id:
+            return create_database(self.conn_id).sql_type
 
     def to_json(self):
         return {
