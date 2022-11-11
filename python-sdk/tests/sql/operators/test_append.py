@@ -4,7 +4,6 @@ from unittest import mock
 
 import pandas as pd
 import pytest
-from sqlalchemy.exc import NoSuchTableError
 
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
@@ -135,7 +134,7 @@ def test_invalid_columns_param():
     ],
     indirect=True,
 )
-def test_append(database_table_fixture, sample_dag, multiple_tables_fixture, append_params):
+def test_append(database_table_fixture, sample_dag, multiple_tables_fixture, append_params, conn):
     app_param, validate_append = append_params
     main_table, append_table = multiple_tables_fixture
     with sample_dag:
@@ -157,7 +156,7 @@ def test_append(database_table_fixture, sample_dag, multiple_tables_fixture, app
 def test_append_on_tables_on_different_db(sample_dag, database_table_fixture):
     test_table_1 = Table(conn_id="postgres_conn")
     test_table_2 = Table(conn_id="sqlite_conn")
-    with pytest.raises(NoSuchTableError):
+    with pytest.raises(ValueError) as exec_info:
         with sample_dag:
             load_main = aql.load_file(
                 input_file=File(path=str(CWD) + "/../../data/homes_main.csv"),
@@ -172,6 +171,7 @@ def test_append_on_tables_on_different_db(sample_dag, database_table_fixture):
                 source_table=load_append,
             )
         test_utils.run_dag(sample_dag)
+    assert exec_info.value.args[0] == "source and target table must belongs from same datasource"
 
 
 @pytest.mark.skipif(not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
@@ -198,15 +198,3 @@ def test_inlets_outlets_non_supported_ds():
     )
     assert task.operator.inlets == []
     assert task.operator.outlets == []
-
-
-def test_cross_db_append_raise_exception():
-    source_table = Table(conn_id="snowflake_conn", name="test1", metadata=Metadata(schema="test"))
-    target_table = Table(conn_id="bigquery", name="test2", metadata=Metadata(schema="test"))
-    with pytest.raises(ValueError) as exec_info:
-        AppendOperator(
-            source_table=source_table,
-            target_table=target_table,
-            columns=["set_item_1", "set_item_2", "set_item_3"],
-        )
-    assert exec_info.value.args[0] == "source and target table must belongs from same datasource"
