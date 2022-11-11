@@ -13,7 +13,7 @@ from astro.databases import create_database
 from astro.settings import OPENLINEAGE_EMIT_TEMP_TABLE_EVENT
 
 MAX_TABLE_NAME_LENGTH = 62
-TEMP_PREFIX = "_tmp_"
+TEMP_PREFIX = "_tmp"
 
 
 @define
@@ -71,7 +71,7 @@ class BaseTable:
 
     def __attrs_post_init__(self) -> None:
         if not self.name:
-            self.name = self._create_unique_table_name(TEMP_PREFIX)
+            self.name = self._create_unique_table_name(TEMP_PREFIX + "_")
 
     # We need this method to pickle Table object, without this we cannot push/pull this object from xcom.
     def __getstate__(self):
