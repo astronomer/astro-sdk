@@ -139,7 +139,7 @@ class BaseTable:
         return result
 
     @property
-    def sql_type(self) -> str:
+    def sql_type(self) -> Any:
         if self.conn_id:
             return create_database(self.conn_id).sql_type
 
