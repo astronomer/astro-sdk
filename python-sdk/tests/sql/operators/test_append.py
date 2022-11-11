@@ -134,7 +134,7 @@ def test_invalid_columns_param():
     ],
     indirect=True,
 )
-def test_append(database_table_fixture, sample_dag, multiple_tables_fixture, append_params, conn):
+def test_append(database_table_fixture, sample_dag, multiple_tables_fixture, append_params):
     app_param, validate_append = append_params
     main_table, append_table = multiple_tables_fixture
     with sample_dag:
