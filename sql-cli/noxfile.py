@@ -21,7 +21,7 @@ def dev(session: nox.Session) -> None:
 
 
 @nox.session(python=["3.7", "3.8", "3.9"])
-@nox.parametrize("airflow", ["2.2.5", "2.3.4", "2.4.2"])
+@nox.parametrize("airflow", ["2.1.4", "2.2.5", "2.3.4", "2.4.2"])
 def test(session: nox.Session, airflow: str) -> None:
     """Run both unit and integration tests."""
 
@@ -33,13 +33,10 @@ def test(session: nox.Session, airflow: str) -> None:
             "https://raw.githubusercontent.com/apache/airflow/"
             f"constraints-{airflow}/constraints-{session.python}.txt"
         )
-        session.run("rm", "-rf", "dist", external=True)
 
         # Poetry does not support constraints:
         # https://github.com/python-poetry/poetry/issues/3225
-        # We attempted a few approaches to get this to work, but they were unsuccessful.
-        session.run("poetry", "build", "-f", "wheel")
-        session.install("dist/astro_sql_cli-0.1.1-py3-none-any.whl", "-c", constraints_url)
+        session.install("-e", ".", f"apache-airflow=={airflow}", "-c", constraints_url)
 
         # We are duplicating the tests dependencies until we find a better solution.
         # The solution might be to move out of poetry.

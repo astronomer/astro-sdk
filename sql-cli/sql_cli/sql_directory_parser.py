@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Iterable
 
+import airflow
 import frontmatter
 
 from astro.sql.operators.transform import TransformOperator
@@ -135,15 +136,18 @@ class SqlFile:
 
         :return: a TransformOperator
         """
-        return TransformOperator(
-            conn_id=self.metadata.get("conn_id"),
-            parameters=None,
-            handler=None,
-            database=self.metadata.get("database"),
-            schema=self.metadata.get("schema"),
-            python_callable=lambda: (str(self.path), None),
-            sql=self.content,
-        )
+        kwargs = {
+            "conn_id": self.metadata.get("conn_id"),
+            "parameters": None,
+            "handler": None,
+            "database": self.metadata.get("database"),
+            "schema": self.metadata.get("schema"),
+            "python_callable": lambda: (str(self.path), None),
+            "sql": self.content,
+        }
+        if airflow.__version__.startswith("2.2"):
+            kwargs["op_args"] = []
+        return TransformOperator(**kwargs)
 
 
 def get_sql_files(directory: Path, target_directory: Path | None) -> set[SqlFile]:
