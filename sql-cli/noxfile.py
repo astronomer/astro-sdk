@@ -21,12 +21,12 @@ def dev(session: nox.Session) -> None:
 
 
 @nox.session(python=["3.7", "3.8", "3.9"])
-@nox.parametrize("airflow", ["2.1.4", "2.2.5", "2.3.4", "2.4.2"])
+@nox.parametrize("airflow", ["2.2.5", "2.3.4", "2.4.2"])
 def test(session: nox.Session, airflow: str) -> None:
     """Run both unit and integration tests."""
 
     session.install("poetry")
-    if airflow.startswith("2.1") or airflow.startswith("2.2"):
+    if airflow.startswith("2.2"):
         # To install some versions of Airflow, we need constraints, due to issues like:
         # https://github.com/apache/airflow/issues/19804
         constraints_url = (
