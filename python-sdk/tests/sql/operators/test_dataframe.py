@@ -3,6 +3,7 @@ import pathlib
 from unittest import mock
 
 import pandas
+import pandas as pd
 import pytest
 from airflow.exceptions import AirflowException
 from airflow.models.xcom import BaseXCom
@@ -435,3 +436,32 @@ def test_col_case_is_preserved(sample_dag):
         task1 = sample_df_1()
         validate(task1)
     test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.parametrize(
+    "conn_id",
+    [
+        "bigquery",
+        "postgres_conn",
+        "redshift_conn",
+        "snowflake_conn",
+        "sqlite_conn",
+    ]
+)
+def test_empty_dataframe(sample_dag, conn_id):
+    @aql.dataframe
+    def get_empty_dataframe():
+        empty_arr = []
+        return pd.DataFrame(empty_arr)
+
+    with sample_dag:
+        dataframe = get_empty_dataframe(
+            output_table=Table(
+                conn_id=conn_id,
+            )
+        )
+
+        aql.cleanup()
+    with pytest.raises(ValueError) as exec_info:
+        test_utils.run_dag(sample_dag)
+    assert exec_info.value.args[0] == "Can't load empty dataframe"
