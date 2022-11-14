@@ -449,7 +449,7 @@ def test_empty_dataframe_fail(sample_dag, conn_id):
     @aql.dataframe
     def get_empty_dataframe():
         empty_arr = []
-        return pd.DataFrame(empty_arr)
+        return pandas.DataFrame(empty_arr)
 
     with sample_dag:
         get_empty_dataframe(
