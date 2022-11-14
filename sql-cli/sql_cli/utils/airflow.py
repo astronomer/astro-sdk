@@ -13,7 +13,7 @@ from packaging.version import Version
 if TYPE_CHECKING:
     from airflow.models.dag import DAG  # pragma: no cover
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger("sql_cli")
 
 
 def version() -> Version:
@@ -45,8 +45,13 @@ def initialise(airflow_home: Path, airflow_dags_folder: Path) -> None:
 
     importlib.reload(configuration)
 
-    # Initialise the airflow database & hide all logs
-    os.system("airflow db init > /dev/null 2>&1")  # skipcq: BAN-B605,BAN-B607
+    if log.level == logging.DEBUG:
+        # Initialise the airflow database
+        exit_code = os.system("airflow db init")  # skipcq: BAN-B605,BAN-B607
+        log.debug("Airflow DB Initialization exited with %s", exit_code)
+    else:
+        # Initialise the airflow database & hide all logs
+        os.system("airflow db init > /dev/null 2>&1")  # skipcq: BAN-B605,BAN-B607
 
 
 def reload(airflow_home: Path) -> None:
@@ -124,7 +129,7 @@ def get_dag(subdir: str, dag_id: str, include_examples: bool = False) -> DAG:
     dagbag = DagBag(first_path, include_examples=include_examples)
     if dag_id not in dagbag.dags:
         fallback_path = _search_for_dag_file(subdir) or settings.DAGS_FOLDER
-        logger.warning("Dag %r not found in path %s; trying path %s", dag_id, first_path, fallback_path)
+        log.warning("Dag %r not found in path %s; trying path %s", dag_id, first_path, fallback_path)
         dagbag = DagBag(dag_folder=fallback_path, include_examples=include_examples)
         if dag_id not in dagbag.dags:
             raise AirflowException(

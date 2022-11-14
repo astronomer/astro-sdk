@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import sys
 import warnings
 from datetime import datetime
 from typing import Any, cast
@@ -16,6 +15,7 @@ from airflow.utils import timezone
 from airflow.utils.session import provide_session
 from airflow.utils.state import DagRunState, State
 from airflow.utils.types import DagRunType
+from rich.logging import RichHandler
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.session import Session
 
@@ -23,8 +23,7 @@ from astro.sql.operators.cleanup import AstroCleanupException
 from sql_cli.exceptions import ConnectionFailed
 from sql_cli.utils.rich import rprint
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
+log = logging.getLogger("sql_cli")
 
 # This was added to airflow.utils.session as part of Airflow 2.2.4, we're copying it here for backwwards
 # compatibility (currently we support Airflow 2.1 onwards)
@@ -73,14 +72,14 @@ def run_dag(
     :return: the dag run object
     """
     execution_date = execution_date or timezone.utcnow()
-    dag.log.debug("Clearing existing task instances for execution date %s", execution_date)
+    log.debug("Clearing existing task instances for execution date %s", execution_date)
     dag.clear(
         start_date=execution_date,
         end_date=execution_date,
         dag_run_state=False,  # type: ignore
         session=session,
     )
-    dag.log.debug("Getting dagrun for dag %s", dag.dag_id)
+    log.debug("Getting dagrun for dag %s", dag.dag_id)
     dr: DagRun = _get_or_create_dagrun(
         dag=dag,
         start_date=execution_date,
@@ -102,15 +101,14 @@ def run_dag(
         secrets_backend_list.insert(0, local_secrets)
 
     tasks = dag.task_dict
-    dag.log.debug("starting dagrun")
+    log.debug("starting dagrun")
     # Instead of starting a scheduler, we run the minimal loop possible to check
     # for task readiness and dependency management. This is notably faster
     # than creating a BackfillJob and allows us to surface logs to the user
     while dr.state == State.RUNNING:
         schedulable_tis, _ = dr.update_state(session=session)
         for ti in schedulable_tis:
-            if verbose:
-                add_logger_if_needed(dag, ti)
+            add_loghandler(ti, verbose)
             ti.task = tasks[ti.task_id]
             _run_task(ti, session=session)
     if conn_file_path or variable_file_path or connections:
@@ -119,22 +117,21 @@ def run_dag(
     return dr
 
 
-def add_logger_if_needed(dag: DAG, ti: TaskInstance) -> None:
+def add_loghandler(ti: TaskInstance, verbose: bool) -> None:
     """
     Add a formatted logger to the taskinstance so all logs are surfaced to the command line instead
     of into a task file. Since this is a local test run, it is much better for the user to see logs
     in the command line, rather than needing to search for a log file.
 
     :param ti: The taskinstance that will receive a logger
+    :param verbose: Whether to enable debug or critical logs
     """
-    logging_format = logging.Formatter("[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s")
-    handler = logging.StreamHandler(sys.stdout)
-    handler.level = logging.DEBUG
-    handler.setFormatter(logging_format)
-    # only add log handler once
-    if not any(isinstance(h, logging.StreamHandler) for h in ti.log.handlers):
-        dag.log.debug("Adding Streamhandler to taskinstance %s", ti.task_id)
-        ti.log.addHandler(handler)
+    log.debug("Adding RichHandler to taskinstance %s", ti.task_id)
+    if verbose:
+        ti.log.setLevel(logging.INFO)
+    else:
+        ti.log.setLevel(logging.CRITICAL)
+    ti.log.addHandler(RichHandler(markup=True))
 
 
 def _run_task(ti: TaskInstance, session: Session) -> None:

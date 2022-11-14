@@ -1,3 +1,4 @@
+import logging
 import pathlib
 from unittest import mock
 
@@ -165,7 +166,7 @@ def test_config_set_deploy(initialised_project):
     ],
 )
 @pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
-def test_generate(workflow_name, environment, initialised_project, generate_tasks):
+def test_generate(workflow_name, environment, initialised_project, generate_tasks, logger):
     result = runner.invoke(
         app,
         [
@@ -183,6 +184,7 @@ def test_generate(workflow_name, environment, initialised_project, generate_task
         f"The DAG file {initialised_project.airflow_dags_folder}/{workflow_name}.py has been successfully generated. 🎉"
         in result.stdout
     )
+    assert logger.level == logging.CRITICAL
 
 
 @pytest.mark.parametrize(
@@ -246,18 +248,50 @@ def test_generate_invalid(workflow_name, message, initialised_project_with_tests
 
 
 @pytest.mark.parametrize(
+    "workflow_name,exit_code",
+    [
+        ("example_basic_transform", 0),
+        ("non_existing", 1),
+        ("cycle", 1),
+        ("empty", 1),
+    ],
+    ids=[
+        "example_basic_transform",
+        "non_existing",
+        "cycle",
+        "empty",
+    ],
+)
+def test_generate_verbose(workflow_name, exit_code, initialised_project_with_tests_workflows, logger):
+    result = runner.invoke(
+        app,
+        [
+            "generate",
+            workflow_name,
+            "--project-dir",
+            initialised_project_with_tests_workflows.directory.as_posix(),
+            "--verbose",
+        ],
+    )
+    assert result.exit_code == exit_code
+    if result.exit_code != 0:
+        assert result.exception
+    assert logger.level == logging.DEBUG
+
+
+@pytest.mark.parametrize(
     "env,connection,status",
     [
         ("default", "sqlite_conn", "PASSED"),
         ("dev", "sqlite_conn", "PASSED"),
     ],
 )
-def test_validate(env, connection, status, initialised_project):
+def test_validate(env, connection, status, initialised_project_with_invalid_config, logger):
     result = runner.invoke(
         app,
         [
             "validate",
-            initialised_project.directory.as_posix(),
+            initialised_project_with_invalid_config.directory.as_posix(),
             "--env",
             env,
             "--connection",
@@ -267,24 +301,7 @@ def test_validate(env, connection, status, initialised_project):
     assert result.exit_code == 0, result.exception
     assert f"Validating connection(s) for environment '{env}'" in result.stdout
     assert f"Validating connection {connection:{CONNECTION_ID_OUTPUT_STRING_WIDTH}} {status}" in result.stdout
-
-
-def test_validate_sqlite_non_existent_host_path(
-    initialised_project_with_sqlite_non_existent_host_path_config,
-):
-    result = runner.invoke(
-        app,
-        [
-            "validate",
-            initialised_project_with_sqlite_non_existent_host_path_config.directory.as_posix(),
-            "--env",
-            "sqlite_non_existent_host_path",
-            "--connection",
-            "sqlite_conn_invalid",
-        ],
-    )
-    assert result.exit_code == 1
-    assert isinstance(result.exception, FileNotFoundError)
+    assert logger.level == logging.CRITICAL
 
 
 @pytest.mark.parametrize(
@@ -309,6 +326,56 @@ def test_validate_all(env, initialised_project_with_test_config):
 
 
 @pytest.mark.parametrize(
+    "env,connection",
+    [
+        ("invalid", "sqlite_non_existent_host_path"),
+    ],
+)
+def test_validate_invalid(env, connection, initialised_project_with_invalid_config, logger):
+    result = runner.invoke(
+        app,
+        [
+            "validate",
+            initialised_project_with_invalid_config.directory.as_posix(),
+            "--env",
+            env,
+            "--connection",
+            connection,
+        ],
+    )
+    assert result.exit_code == 0, result.exception
+    assert f"Validating connection(s) for environment '{env}'" in result.stdout
+    assert "Error: Config file does not contain given connection" in result.stdout
+
+
+@pytest.mark.parametrize(
+    "env,connection,status,message",
+    [
+        ("default", "sqlite_conn", "PASSED", "Connection successfully tested"),
+        ("dev", "sqlite_conn", "PASSED", "Connection successfully tested"),
+    ],
+)
+def test_validate_verbose(env, connection, status, message, initialised_project, logger):
+    result = runner.invoke(
+        app,
+        [
+            "validate",
+            initialised_project.directory.as_posix(),
+            "--env",
+            env,
+            "--connection",
+            connection,
+            "--verbose",
+        ],
+    )
+    assert result.exit_code == 0
+    assert f"Validating connection(s) for environment '{env}'" in result.stdout
+    assert f"Validating connection {connection:{CONNECTION_ID_OUTPUT_STRING_WIDTH}} {status}" in result.stdout
+    assert f"Connection Message: {message}" in result.stdout
+    assert logger.level == logging.DEBUG
+
+
+@pytest.mark.parametrize(
     "workflow_name,environment",
     [
         ("example_basic_transform", "default"),
@@ -317,7 +384,7 @@ def test_validate_all(env, initialised_project_with_test_config):
     ],
 )
 @pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
-def test_run(workflow_name, environment, initialised_project, generate_tasks):
+def test_run(workflow_name, environment, initialised_project, generate_tasks, logger):
     result = runner.invoke(
         app,
         [
@@ -332,6 +399,7 @@ def test_run(workflow_name, environment, initialised_project, generate_tasks):
     )
     assert result.exit_code == 0, result.output
     assert f"Completed running the workflow {workflow_name}." in result.stdout
+    assert logger.level == logging.CRITICAL
 
 
 @pytest.mark.parametrize(
@@ -408,6 +476,44 @@ def test_run_invalid(workflow_name, message, initialised_project_with_tests_work
     assert message in result.stdout
 
 
+@pytest.mark.parametrize(
+    "workflow_name,exit_code",
+    [
+        ("example_basic_transform", 0),
+        ("non_existing", 1),
+        ("cycle", 1),
+        ("empty", 1),
+        ("undefined_variable", 1),
+        ("missing_table_or_conn_id", 1),
+        ("example_templating", 1),
+    ],
+    ids=[
+        "example_basic_transform",
+        "non_existing",
+        "cycle",
+        "empty",
+        "undefined_variable",
+        "missing_table_or_conn_id",
+        "example_templating",
+    ],
+)
+def test_run_verbose(workflow_name, exit_code, initialised_project_with_tests_workflows, logger):
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            workflow_name,
+            "--project-dir",
+            initialised_project_with_tests_workflows.directory.as_posix(),
+            "--verbose",
+        ],
+    )
+    assert result.exit_code == exit_code
+    if result.exit_code != 0:
+        assert result.exception
+    assert logger.level == logging.DEBUG
+
+
 def test_init_with_directory(tmp_path):
     result = runner.invoke(app, ["init", tmp_path.as_posix()])
     assert result.exit_code == 0
@@ -453,3 +559,22 @@ def test_init_without_directory():
         assert "Initialized an Astro SQL project at" in result.stdout
         assert temp_dir in result.stdout
         assert list_dir(temp_path)
+
+
+@pytest.mark.parametrize(
+    "args,log_level",
+    [
+        (["version"], logging.CRITICAL),
+        (["--debug", "version"], logging.DEBUG),
+        (["--no-debug", "version"], logging.CRITICAL),
+    ],
+    ids=[
+        "default",
+        "debug",
+        "no-debug",
+    ],
+)
+def test_main_debug(args, log_level, ext_loggers):
+    result = runner.invoke(app, args)
+    assert result.exit_code == 0
+    assert all(logger.level == log_level for logger in ext_loggers)

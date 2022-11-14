@@ -1,3 +1,4 @@
+import logging
 import random
 import shutil
 import string
@@ -186,11 +187,10 @@ def initialised_project_with_test_config(initialised_project: Project):
 
 
 @pytest.fixture()
-def initialised_project_with_sqlite_non_existent_host_path_config(initialised_project: Project):
-    sqlite_non_existent_host_path = "sqlite_non_existent_host_path"
+def initialised_project_with_invalid_config(initialised_project: Project):
     shutil.copytree(
-        src=CWD / "tests" / "config" / sqlite_non_existent_host_path,
-        dst=initialised_project.directory / "config" / sqlite_non_existent_host_path,
+        src=CWD / "tests" / "config" / "invalid",
+        dst=initialised_project.directory / "config" / "invalid",
     )
     return initialised_project
 
@@ -210,3 +210,13 @@ def initialised_project_with_tests_workflows(initialised_project: Project):
         dirs_exist_ok=True,
     )
     return initialised_project
+
+
+@pytest.fixture()
+def logger():
+    return logging.getLogger("sql_cli")
+
+
+@pytest.fixture()
+def ext_loggers():
+    return [logging.getLogger(logger_name) for logger_name in ["airflow", "botocore", "snowflake"]]

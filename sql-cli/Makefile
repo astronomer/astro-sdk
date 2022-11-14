@@ -3,7 +3,6 @@
 SHELL := /bin/bash
 SYSTEM_PIP := pip
 
-
 clean:  ## Remove temporary files
 	@echo "Removing cached and temporary files from current directory"
 	@rm -rf logs dist
