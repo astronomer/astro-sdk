@@ -19,7 +19,7 @@ def airflow_version() -> Version:
     """
     Return the version of Airflow installed.
     """
-    import airflow
+    import airflow  # skipcq: PYL-W0406
 
     return Version(airflow.__version__)
 
