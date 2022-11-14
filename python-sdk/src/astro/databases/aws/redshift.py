@@ -145,6 +145,9 @@ class RedshiftDatabase(BaseDatabase):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
+        if source_dataframe.empty:
+            raise ValueError("Can't load empty dataframe")
+
         source_dataframe.to_sql(
             target_table.name,
             self.connection,
