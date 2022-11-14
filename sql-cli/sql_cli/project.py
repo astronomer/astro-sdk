@@ -7,11 +7,12 @@ from pathlib import Path
 from typing import Any
 
 from airflow.models.connection import Connection
+from packaging.version import Version
 
 from sql_cli.configuration import Config, convert_to_connection
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_ENVIRONMENT
 from sql_cli.exceptions import InvalidProject
-from sql_cli.utils.airflow import disable_examples
+from sql_cli.utils.airflow import airflow_version, disable_examples
 
 BASE_SOURCE_DIR = Path(os.path.realpath(__file__)).parent.parent / "include/base/"
 
@@ -100,8 +101,10 @@ class Project:
         if they already exist.
         """
         os.environ.pop("AIRFLOW_HOME", None)
-        os.environ.pop("AIRFLOW__DATABASE__SQL_ALCHEMY_CONN", None)
-        os.environ.pop("AIRFLOW__CORE__SQL_ALCHEMY_CONN", None)
+        if airflow_version() >= Version("2.3"):
+            os.environ.pop("AIRFLOW__DATABASE__SQL_ALCHEMY_CONN", None)
+        else:
+            os.environ.pop("AIRFLOW__CORE__SQL_ALCHEMY_CONN", None)
 
         # TODO: In future we want to replace this by either:
         # - python-native approach or
