@@ -127,4 +127,6 @@ def check_for_dag_import_errors(dag_file: Path) -> dict[str, str]:
     from airflow.models import DagBag
     from airflow.utils.cli import process_subdir
 
-    return DagBag(process_subdir(str(dag_file))).import_errors
+    dag_folder = process_subdir(str(dag_file))
+    dagbag = DagBag(dag_folder, include_examples=False)
+    return dagbag.import_errors
