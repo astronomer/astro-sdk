@@ -145,7 +145,7 @@ class SqlFile:
             "python_callable": lambda: (str(self.path), None),
             "sql": self.content,
         }
-        if airflow.__version__.startswith("2.2"):
+        if airflow.__version__.startswith("2.2."):
             kwargs["op_args"] = []
         return TransformOperator(**kwargs)
 
