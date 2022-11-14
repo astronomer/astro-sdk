@@ -4,15 +4,16 @@ import logging
 import sys
 import warnings
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
+from airflow import settings as airflow_settings
 from airflow.models.connection import Connection
 from airflow.models.dag import DAG
 from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstance
 from airflow.secrets.local_filesystem import LocalFilesystemBackend
 from airflow.utils import timezone
-from airflow.utils.session import NEW_SESSION, provide_session
+from airflow.utils.session import provide_session
 from airflow.utils.state import DagRunState, State
 from airflow.utils.types import DagRunType
 from rich import print as pprint
@@ -24,6 +25,11 @@ from sql_cli.exceptions import ConnectionFailed
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
+
+# This was added to airflow.utils.session as part of Airflow 2.2.4, we're copying it here for backwwards
+# compatibility (currently we support Airflow 2.1 onwards)
+# It seems like a hack to avoid MyPy complaining we're assigning None to a variable that should be an Airflow session
+NEW_SESSION = airflow_settings.SASession = cast(airflow_settings.SASession, None)
 
 
 class AstroFilesystemBackend(LocalFilesystemBackend):
