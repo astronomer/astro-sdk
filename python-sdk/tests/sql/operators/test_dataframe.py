@@ -3,7 +3,6 @@ import pathlib
 from unittest import mock
 
 import pandas
-import pandas as pd
 import pytest
 from airflow.exceptions import AirflowException
 from airflow.models.xcom import BaseXCom
@@ -476,7 +475,7 @@ def test_empty_dataframe_success(sample_dag, conn_id):
     @aql.dataframe
     def get_empty_dataframe():
         empty_arr = []
-        return pd.DataFrame(empty_arr)
+        return pandas.DataFrame(empty_arr)
 
     with sample_dag:
         get_empty_dataframe(
