@@ -23,7 +23,10 @@ class PythonSDKExtractor(BaseExtractor):
     """
     This extractor provides visibility on what different python-sdk operator does by
     extracting operator specific facets by calling get_openlineage_facets on each
-    operator
+    operator. Due to the bug https://github.com/OpenLineage/OpenLineage/issues/1256
+    we have the above class for getting lineage for AppendOperator, MergeOperator,
+    DataframeOperator and BaseSQLDecoratedOperator.
+    TODO once the above mentioned bug gets released we need to remove this.
     """
 
     @classmethod
