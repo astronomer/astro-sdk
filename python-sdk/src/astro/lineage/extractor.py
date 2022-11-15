@@ -1,12 +1,18 @@
 from __future__ import annotations
 
+import logging
+
 import attr
 from airflow.models.taskinstance import TaskInstance
-from openlineage.airflow.extractors import TaskMetadata
-from openlineage.airflow.extractors.base import BaseExtractor
-from openlineage.airflow.utils import get_job_name
-from openlineage.client.facet import BaseFacet
-from openlineage.client.run import Dataset as OpenlineageDataset
+
+try:
+    from openlineage.airflow.extractors import TaskMetadata
+    from openlineage.airflow.extractors.base import BaseExtractor
+    from openlineage.airflow.utils import get_job_name
+    from openlineage.client.facet import BaseFacet
+    from openlineage.client.run import Dataset as OpenlineageDataset
+except ImportError:
+    logging.warning("Install openlineage-airflow")
 
 
 @attr.define
