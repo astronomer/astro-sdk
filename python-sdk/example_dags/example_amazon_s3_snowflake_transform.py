@@ -86,18 +86,25 @@ def example_amazon_s3_snowflake_transform():
 
     cleaned_data = clean_data(combined_data)
     # [START dataframe_example_2]
-    aggregate_data(
-        cleaned_data,
-        output_table=Table(
+    snowflake_output_table = Table(
             name="aggregated_adoptions_" + str(int(time.time())),
             metadata=Metadata(
                 schema=os.environ["SNOWFLAKE_SCHEMA"],
                 database=os.environ["SNOWFLAKE_DATABASE"],
             ),
             conn_id="snowflake_conn",
-        ),
+        )
+    aggregate_results =aggregate_data(
+        cleaned_data,
+        output_table=snowflake_output_table,
     )
     # [END dataframe_example_2]
+    truncate_input_table_1 = aql.drop_table(table=input_table_1) 
+    truncate_input_table_1.set_upstream(aggregate_results)
+    truncate_input_table_2 = aql.drop_table(table=input_table_2) 
+    truncate_input_table_2.set_upstream(truncate_input_table_1)
+    truncate_snowflake_output_table= aql.drop_table(table=snowflake_output_table)
+    truncate_snowflake_output_table.set_upstream(truncate_input_table_2)
     aql.cleanup()
 
 
