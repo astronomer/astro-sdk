@@ -1,19 +1,24 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
-from openlineage.client.facet import (
-    BaseFacet,
-    DataQualityMetricsInputDatasetFacet,
-    DataSourceDatasetFacet,
-    OutputStatisticsOutputDatasetFacet,
-    SchemaDatasetFacet,
-    SchemaField,
-    SqlJobFacet,
-)
-from openlineage.client.run import Dataset as OpenlineageDataset
+
+try:
+    from openlineage.client.facet import (
+        BaseFacet,
+        DataQualityMetricsInputDatasetFacet,
+        DataSourceDatasetFacet,
+        OutputStatisticsOutputDatasetFacet,
+        SchemaDatasetFacet,
+        SchemaField,
+        SqlJobFacet,
+    )
+    from openlineage.client.run import Dataset as OpenlineageDataset
+except ImportError:
+    logging.warning("Install openlineage-airflow")
 
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database

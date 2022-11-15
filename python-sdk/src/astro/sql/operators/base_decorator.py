@@ -1,20 +1,26 @@
 from __future__ import annotations
 
 import inspect
+import logging
 from typing import Any, Sequence, cast
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
-from openlineage.client.facet import (
-    BaseFacet,
-    DataSourceDatasetFacet,
-    OutputStatisticsOutputDatasetFacet,
-    SchemaDatasetFacet,
-    SchemaField,
-    SqlJobFacet,
-)
-from openlineage.client.run import Dataset as OpenlineageDataset
+
+try:
+    from openlineage.client.facet import (
+        BaseFacet,
+        DataSourceDatasetFacet,
+        OutputStatisticsOutputDatasetFacet,
+        SchemaDatasetFacet,
+        SchemaField,
+        SqlJobFacet,
+    )
+    from openlineage.client.run import Dataset as OpenlineageDataset
+except ImportError:
+    logging.warning("Install openlineage-airflow")
+
 from sqlalchemy.sql.functions import Function
 
 from astro.airflow.datasets import kwargs_with_datasets

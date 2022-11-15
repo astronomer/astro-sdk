@@ -12,17 +12,20 @@ from astro.airflow.datasets import kwargs_with_datasets
 try:
     from airflow.decorators.base import TaskDecorator, task_decorator_factory
 except ImportError:  # pragma: no cover
-    from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
+    from airflow.decorators.base import task_decorator_factory
 
-from openlineage.client.facet import (
-    BaseFacet,
-    DataSourceDatasetFacet,
-    OutputStatisticsOutputDatasetFacet,
-    SchemaDatasetFacet,
-    SchemaField,
-)
-from openlineage.client.run import Dataset as OpenlineageDataset
+try:
+    from openlineage.client.facet import (
+        BaseFacet,
+        DataSourceDatasetFacet,
+        OutputStatisticsOutputDatasetFacet,
+        SchemaDatasetFacet,
+        SchemaField,
+    )
+    from openlineage.client.run import Dataset as OpenlineageDataset
+except ImportError:
+    logging.warning("Install openlineage-airflow")
 
 from astro.constants import ColumnCapitalization
 from astro.databases import create_database

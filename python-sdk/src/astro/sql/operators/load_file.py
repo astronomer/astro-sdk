@@ -1,12 +1,17 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
-from openlineage.client.facet import BaseFacet, DataSourceDatasetFacet, SchemaDatasetFacet, SchemaField
-from openlineage.client.run import Dataset as OpenlineageDataset
+
+try:
+    from openlineage.client.facet import BaseFacet, DataSourceDatasetFacet, SchemaDatasetFacet, SchemaField
+    from openlineage.client.run import Dataset as OpenlineageDataset
+except ImportError:
+    logging.warning("Install openlineage-airflow")
 
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
