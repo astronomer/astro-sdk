@@ -10,7 +10,7 @@ from airflow.utils.session import provide_session
 from packaging.version import Version
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
-from .sql.operators import utils as test_utils
+from astro.run_dag import run_dag
 
 RETRY_ON_EXCEPTIONS = []
 try:
@@ -28,7 +28,7 @@ except ModuleNotFoundError:
     wait=wait_exponential(multiplier=10, min=10, max=60),  # values in seconds
 )
 def wrapper_run_dag(dag):
-    test_utils.run_dag(dag)
+    run_dag(dag)
 
 
 @provide_session

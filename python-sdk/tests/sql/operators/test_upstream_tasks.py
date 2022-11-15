@@ -5,8 +5,8 @@ import pytest
 from astro import sql as aql
 from astro.constants import Database
 from astro.files import File
+from astro.run_dag import run_dag
 from astro.table import Table
-from tests.sql.operators import utils as test_utils
 
 cwd = pathlib.Path(__file__).parent
 
@@ -59,7 +59,7 @@ def test_raw_sql_chained_queries(database_table_fixture, sample_dag):
         for table in generated_tables:
             aql.drop_table(table, upstream_tasks=[validated])
 
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
     all_tasks = sample_dag.tasks
     for t in all_tasks[1:]:
         assert len(t.upstream_task_ids) == 1

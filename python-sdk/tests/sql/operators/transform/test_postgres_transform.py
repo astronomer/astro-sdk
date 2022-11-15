@@ -6,8 +6,8 @@ from airflow.utils.session import create_session
 
 import astro.sql as aql
 from astro.constants import Database
+from astro.run_dag import run_dag
 from astro.table import Metadata, Table
-from tests.sql.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
@@ -47,7 +47,7 @@ def test_postgres_to_dataframe_partial_output(output_table, dag):
             output_table=output_table,
         )
         validate(df=pg_output)
-    test_utils.run_dag(dag)
+    run_dag(dag)
 
 
 @pytest.mark.xfail
@@ -72,7 +72,7 @@ def test_with_invalid_dag_name(sample_dag):
             )
         )
         validate(pg_table)
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
 
 @pytest.fixture
@@ -114,7 +114,7 @@ def test_postgres(sample_dag, pg_query_result):
             )
         )
         validate(pg_table)
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
 
 @pytest.mark.parametrize(
@@ -167,4 +167,4 @@ def test_postgres_set_op_kwargs(sample_dag):
     with sample_dag:
         pg_df = sample_pg(conn_id="postgres_conn_pagila")
         validate_result(pg_df)
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)

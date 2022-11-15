@@ -9,8 +9,8 @@ from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.files import File
+from astro.run_dag import run_dag
 from astro.table import Metadata, Table
-from tests.sql.operators import utils as test_utils
 
 cwd = pathlib.Path(__file__).parent
 
@@ -48,7 +48,7 @@ def test_dataframe_transform(database_table_fixture, sample_dag):
         my_df = get_dataframe(output_table=test_table)
         pg_df = sample_pg(my_df)
         validate_dataframe(pg_df)
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
 
 @pytest.mark.parametrize(
@@ -86,7 +86,7 @@ def test_transform(database_table_fixture, sample_dag):
             input_table=first_model,
         )
         validate_table(inherit_model)
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
 
 @pytest.mark.parametrize(
@@ -127,7 +127,7 @@ def test_raw_sql(database_table_fixture, sample_dag):
             handler=lambda cur: cur.fetchall(),
         )
         validate_raw_sql(raw_sql_result)
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
 
 @pytest.mark.integration
@@ -163,7 +163,7 @@ def test_transform_with_templated_table_name(database_table_fixture, sample_dag)
         target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="sqlite_default")
 
         top_five_animations(input_table=imdb_table, output_table=target_table)
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     expected_target_table = target_table.create_similar_table()
     expected_target_table.name = "test_is_True"
@@ -202,7 +202,7 @@ def test_transform_with_file(database_table_fixture, sample_dag):
             op_kwargs={"output_table": target_table},
         )
         validate(table_from_query)
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     expected_target_table = target_table.create_similar_table()
     expected_target_table.name = "test_is_True"
@@ -260,4 +260,4 @@ def test_transform_using_table_metadata(sample_dag):
             return "SELECT * FROM {{input_table}} LIMIT 4;"
 
         select(input_table=homes_file, output_table=Table(conn_id="snowflake_conn_1"))
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)

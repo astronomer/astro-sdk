@@ -9,6 +9,7 @@ from astro import sql as aql
 from astro.constants import Database
 from astro.databases import create_database
 from astro.files import File
+from astro.run_dag import run_dag
 from astro.table import Table
 from tests.sql.operators import utils as test_utils
 
@@ -131,4 +132,4 @@ def test_full_dag(database_table_fixture, sample_dag):
             if_exists="replace",
         )
         aql.cleanup()
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)

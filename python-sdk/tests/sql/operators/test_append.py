@@ -10,9 +10,9 @@ from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.files import File
+from astro.run_dag import run_dag
 from astro.sql.operators.append import AppendOperator
 from astro.table import Metadata, Table
-from tests.sql.operators import utils as test_utils
 from tests.utils.airflow import create_context
 
 CWD = pathlib.Path(__file__).parent
@@ -145,7 +145,7 @@ def test_append(database_table_fixture, sample_dag, multiple_tables_fixture, app
             source_table=append_table,
         )
         validate_append(appended_table)
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
 
 @pytest.mark.parametrize(
@@ -171,7 +171,7 @@ def test_append_on_tables_on_different_db(sample_dag, database_table_fixture):
                 target_table=load_main,
                 source_table=load_append,
             )
-        test_utils.run_dag(sample_dag)
+        run_dag(sample_dag)
 
 
 @pytest.mark.skipif(not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")

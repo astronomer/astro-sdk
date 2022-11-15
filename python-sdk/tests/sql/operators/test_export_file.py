@@ -23,6 +23,7 @@ import astro.sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import SUPPORTED_FILE_TYPES, Database
 from astro.files import File
+from astro.run_dag import run_dag
 from astro.settings import SCHEMA
 
 # Import Operator
@@ -57,7 +58,7 @@ def test_save_dataframe_to_local(sample_dag):
             output_file=File(path="/tmp/saved_df.csv"),
             if_exists="replace",
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     df = pd.read_csv("/tmp/saved_df.csv")
     assert df.equals(pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]}))
@@ -74,7 +75,7 @@ def test_save_temp_table_to_local(sample_dag, database_table_fixture):
             output_file=File(path="/tmp/saved_df.csv"),
             if_exists="replace",
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     output_df = pd.read_csv("/tmp/saved_df.csv")
     input_df = pd.read_csv(data_path)
@@ -99,7 +100,7 @@ def test_save_returns_output_file(sample_dag, database_table_fixture):
         )
         res_df = aql.load_file(input_file=file)
         validate(res_df)
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     output_df = pd.read_csv("/tmp/saved_df.csv")
     input_df = pd.read_csv(data_path)
@@ -146,7 +147,7 @@ def test_save_all_db_tables_to_s3(sample_dag, database_table_fixture):
             output_file=File(path=output_file_path, conn_id="aws_default"),
             if_exists="replace",
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
     # # Read output CSV
@@ -200,7 +201,7 @@ def test_save_all_db_tables_to_gcs(sample_dag, database_table_fixture):
             output_file=File(path=output_file_path, conn_id="google_cloud_default"),
             if_exists="replace",
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
     df = database.export_table_to_pandas_dataframe(source_table=test_table)
 
     assert (df["sell"].sort_values() == [129, 138, 142, 175, 232]).all()
@@ -245,7 +246,7 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(sample_dag, dat
                 output_file=File(path=temp_file.name),
                 if_exists="exception",
             )
-        test_utils.run_dag(sample_dag)
+        run_dag(sample_dag)
 
 
 @pytest.mark.parametrize(
@@ -292,7 +293,7 @@ def test_save_table_remote_file_exists_overwrite_false(
                 output_file=File(path=remote_files_fixture[0], conn_id="aws_default"),
                 if_exists="exception",
             )
-        test_utils.run_dag(sample_dag)
+        run_dag(sample_dag)
 
 
 @pytest.mark.parametrize(
@@ -326,7 +327,7 @@ def test_unique_task_id_for_same_path(
                 params["task_id"] = "task_id"
             task = export_file(**params)
             tasks.append(task)
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     assert tasks[0].operator.task_id != tasks[1].operator.task_id
     assert tasks[0].operator.task_id == "export_file"
@@ -375,7 +376,7 @@ def test_export_file(sample_dag, database_table_fixture, file_type):
                 output_file=File(path=str(filepath)),
                 if_exists="exception",
             )
-        test_utils.run_dag(sample_dag)
+        run_dag(sample_dag)
 
         df = test_utils.load_to_dataframe(filepath, file_type)
         assert len(df) == 3
@@ -423,7 +424,7 @@ def test_populate_table_metadata(sample_dag, database_table_fixture):
         )
         validate(test_table)
 
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
 
 @pytest.mark.skipif(not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")

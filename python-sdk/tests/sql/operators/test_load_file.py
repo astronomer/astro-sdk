@@ -25,6 +25,7 @@ from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database, FileType
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
+from astro.run_dag import run_dag
 from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
 from astro.table import Metadata, Table
@@ -66,7 +67,7 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
             ),
             output_table=test_table,
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (3, 9)
@@ -107,7 +108,7 @@ def test_aql_load_remote_file_to_dbs(sample_dag, database_table_fixture, remote_
 
     with sample_dag:
         load_file(input_file=File(file_uri), output_table=test_table, use_native_support=False)
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
 
@@ -157,7 +158,7 @@ def test_aql_replace_existing_table(sample_dag, database_table_fixture):
         task_1 = load_file(input_file=File(data_path_1), output_table=test_table)
         task_2 = load_file(input_file=File(data_path_2), output_table=test_table)
         task_1 >> task_2  # skipcq: PYL-W0104
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
     data_df = pd.read_csv(data_path_2)
@@ -193,7 +194,7 @@ def test_aql_local_file_with_no_table_name(sample_dag, database_table_fixture):
     data_path = str(CWD) + "/../../data/homes.csv"
     with sample_dag:
         load_file(input_file=File(data_path), output_table=test_table)
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
     data_df = pd.read_csv(data_path)
@@ -216,7 +217,7 @@ def test_unique_task_id_for_same_path(sample_dag):
             task = load_file(**params)
             tasks.append(task)
 
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     assert tasks[0].operator.task_id != tasks[1].operator.task_id
     assert tasks[1].operator.task_id == "load_file__1"
@@ -241,7 +242,7 @@ def test_load_file_templated_filename(sample_dag, database_table_fixture):
             input_file=File(path=str(CWD) + "/../../data/{{ var.value.foo }}/example.csv"),
             output_table=test_table,
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
     assert len(df) == 3
@@ -274,7 +275,7 @@ def test_aql_load_file_pattern(remote_files_fixture, sample_dag, database_table_
             input_file=File(path=remote_object_uri[0:-5], filetype=FileType.CSV),
             output_table=test_table,
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
     test_df_rows = pd.read_csv(filename).shape[0]
@@ -304,7 +305,7 @@ def test_aql_load_file_local_file_pattern(sample_dag, database_table_fixture):
             input_file=File(path=str(CWD.parent) + "/../data/homes_pattern_*", filetype=FileType.CSV),
             output_table=test_table,
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     # Read table from db
     df = db.export_table_to_pandas_dataframe(test_table)
@@ -334,7 +335,7 @@ def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
         )
         validate(loaded_df)
 
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
 
 @pytest.mark.integration
@@ -366,7 +367,7 @@ def test_load_file_using_file_connection(sample_dag, remote_files_fixture, datab
             input_file=File(path=file_uri, conn_id=file_conn_id),
             output_table=test_table,
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
     assert len(df) == 3
@@ -396,7 +397,7 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(sample_dag, data
     with pytest.raises(AirflowNotFoundException, match=r"The conn_id `fake_conn` isn't defined"):
         with sample_dag:
             load_file(**task_params)
-        test_utils.run_dag(sample_dag)
+        run_dag(sample_dag)
 
 
 @pytest.mark.parametrize(
@@ -433,7 +434,7 @@ def test_load_file(sample_dag, database_table_fixture, file_type):
             output_table=test_table,
             use_native_support=False,
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
 
@@ -482,7 +483,7 @@ def test_load_file_with_named_schema(sample_dag, database_table_fixture, file_ty
             input_file=File(path=str(pathlib.Path(CWD.parent, f"../data/sample.{file_type}"))),
             output_table=test_table,
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
     df = db.export_table_to_pandas_dataframe(test_table)
     assert len(df) == 3
     expected = pd.DataFrame(
@@ -540,7 +541,7 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
                 output_table=test_table,
                 use_native_support=False,
             )
-            test_utils.run_dag(sample_dag)
+            run_dag(sample_dag)
 
     _, kwargs = mock_chunk_function.call_args
     assert kwargs[chunk_size_argument] == 1000000
@@ -579,7 +580,7 @@ def test_aql_nested_ndjson_file_with_default_sep_param(sample_dag, database_tabl
             output_table=test_table,
             use_native_support=False,
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (1, 36)
@@ -611,7 +612,7 @@ def test_aql_nested_ndjson_file_to_database_explicit_sep_params(sample_dag, data
             use_native_support=False,
             ndjson_normalize_sep="___",
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (1, 36)
@@ -648,7 +649,7 @@ def test_aql_nested_ndjson_file_to_database_explicit_illegal_sep_params(sample_d
             ndjson_normalize_sep=".",
             use_native_support=False,
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (1, 36)
@@ -670,7 +671,7 @@ def test_populate_table_metadata(sample_dag):
             output_table=Table(conn_id="postgres_conn_pagila"),
         )
         validate(output_table)
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
 
 @pytest.mark.parametrize(
@@ -692,7 +693,7 @@ def test_load_file_should_fail_loudly(sample_dag, invalid_path):
                 input_file=File(path=invalid_path),
                 output_table=Table(conn_id="postgres_conn_pagila"),
             )
-        test_utils.run_dag(sample_dag)
+        run_dag(sample_dag)
 
 
 def is_dict_subset(superset: dict, subset: dict) -> bool:
@@ -952,7 +953,7 @@ def test_aql_load_file_columns_names_capitalization_dataframe(sample_dag):
         )
         validate(loaded_df_1, loaded_df_2, loaded_df_3)
 
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
 
 @pytest.mark.parametrize(
@@ -1141,7 +1142,7 @@ def test_load_file_col_cap(sample_dag, database_table_fixture, text_cases):
         )
         validate_run_raw_sql(table)
 
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
     cols = list(df.columns)
@@ -1176,7 +1177,7 @@ def test_load_file_col_cap_native_path(sample_dag, database_table_fixture):
                 "storage_integration": "gcs_int_python_sdk",
             },
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
     cols = list(df.columns)
@@ -1212,7 +1213,7 @@ def test_load_file_snowflake_error_out_provider_3_2_0(sample_dag, database_table
                 enable_native_fallback=False,
                 native_support_kwargs={"storage_integration": "gcs_int_python_sdk"},
             )
-        test_utils.run_dag(sample_dag)
+        run_dag(sample_dag)
 
 
 @pytest.mark.parametrize(
@@ -1245,7 +1246,7 @@ def test_load_file_snowflake_error_out_provider_3_1_0(sample_dag, database_table
                     enable_native_fallback=False,
                     native_support_kwargs={"storage_integration": "gcs_int_python_sdk"},
                 )
-            test_utils.run_dag(sample_dag)
+            run_dag(sample_dag)
 
 
 @pytest.mark.integration
@@ -1270,4 +1271,4 @@ def test_load_file_bigquery_error_out(sample_dag, database_table_fixture):
                 use_native_support=True,
                 enable_native_fallback=False,
             )
-        test_utils.run_dag(sample_dag)
+        run_dag(sample_dag)

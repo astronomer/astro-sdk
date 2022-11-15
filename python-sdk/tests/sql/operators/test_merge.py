@@ -12,6 +12,7 @@ from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.databases import create_database
 from astro.files import File
+from astro.run_dag import run_dag
 from astro.sql import MergeOperator
 from astro.table import Metadata, Table
 from tests.sql.operators import utils as test_utils
@@ -144,7 +145,7 @@ def test_merge(database_table_fixture, multiple_tables_fixture, sample_dag, merg
             merge_parameters=merge_params,
             mode=mode,
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
 
 @pytest.mark.integration
@@ -187,7 +188,7 @@ def test_merge_with_the_same_schema(database_table_fixture, multiple_tables_fixt
             if_conflicts="update",
         )
 
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
     computed = database.export_table_to_pandas_dataframe(first_table)
     computed = computed.sort_values(by="id", ignore_index=True)
     expected = pd.DataFrame(
@@ -250,7 +251,7 @@ def test_merge_with_different_schemas(database_table_fixture, multiple_tables_fi
             if_conflicts="update",
         )
 
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
     computed = database.export_table_to_pandas_dataframe(first_table)
     computed = computed.sort_values(by="id", ignore_index=True)
     expected = pd.DataFrame(

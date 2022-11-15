@@ -7,7 +7,7 @@ from airflow.decorators import task
 from astro import sql as aql
 from astro.constants import Database
 from astro.files import File
-from tests.sql.operators import utils as test_utils
+from astro.run_dag import run_dag
 
 CWD = pathlib.Path(__file__).parent
 DATA_FILEPATH = pathlib.Path(CWD.parent.parent, "data/sample.csv")
@@ -44,7 +44,7 @@ def test_run_raw_sql_without_limit(caplog, sample_dag, database_table_fixture):
         )
         assert_num_rows(results)
 
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     expected_warning = "excessive amount of data being recorded to the Airflow metadata database"
     assert expected_warning in caplog.text
@@ -77,4 +77,4 @@ def test_run_raw_sql_with_limit(sample_dag, database_table_fixture):
         )
         assert_num_rows(results)
 
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)

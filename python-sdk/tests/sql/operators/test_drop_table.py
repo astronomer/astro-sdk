@@ -9,8 +9,8 @@ from airflow.decorators import task
 import astro.sql as aql
 from astro.constants import Database
 from astro.files import File
+from astro.run_dag import run_dag
 from astro.table import Table
-from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
 DEFAULT_FILEPATH = str(pathlib.Path(CWD.parent.parent, "data/sample.csv").absolute())
@@ -66,7 +66,7 @@ def test_drop_table_with_table_metadata(database_table_fixture, sample_dag):
         aql.drop_table(
             table=validated_table,
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     assert not database.table_exists(tmp_table)
 
@@ -98,6 +98,6 @@ def test_drop_table_without_table_metadata(database_table_fixture, sample_dag):
         aql.drop_table(
             table=test_table,
         )
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     assert not database.table_exists(test_table)

@@ -61,10 +61,6 @@ def get_table_name(prefix):
     return prefix + "_" + str(int(time.time()))
 
 
-def run_dag(dag: DAG) -> DagRun:
-    return test_dag(dag=dag)
-
-
 def load_to_dataframe(filepath, file_type):
     read = {
         "parquet": pd.read_parquet,

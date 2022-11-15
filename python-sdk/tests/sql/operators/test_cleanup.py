@@ -20,10 +20,10 @@ from airflow.utils.timezone import datetime
 import astro.sql as aql
 from astro.constants import SUPPORTED_DATABASES, Database
 from astro.files import File
+from astro.run_dag import run_dag
 from astro.sql.operators.cleanup import CleanupOperator
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import Table
-from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
 
@@ -196,7 +196,7 @@ def test_cleanup_default_all_tables(sample_dag, database_table_fixture, multiple
         foo(table_1, output_table=table_2)
 
         aql.cleanup()
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     assert not db.table_exists(table_2)
 
@@ -222,7 +222,7 @@ def test_cleanup_mapped_task(sample_dag, database_temp_table_fixture):
         )
 
         aql.cleanup(upstream_tasks=[load_file_mapped])
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     assert not db.table_exists(temp_table)
 
@@ -248,7 +248,7 @@ def test_cleanup_default_all_tables_mapped_task(sample_dag, database_temp_table_
         )
 
         aql.cleanup()
-    test_utils.run_dag(sample_dag)
+    run_dag(sample_dag)
 
     assert not db.table_exists(temp_table)
 

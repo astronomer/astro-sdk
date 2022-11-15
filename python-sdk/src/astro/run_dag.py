@@ -20,8 +20,8 @@ from rich import print as pprint
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.session import Session
 
-from astro.sql.operators.cleanup import AstroCleanupException
 from astro.exceptions import ConnectionFailed
+from astro.sql.operators.cleanup import AstroCleanupException
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
