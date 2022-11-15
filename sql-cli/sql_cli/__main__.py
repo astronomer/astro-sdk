@@ -13,7 +13,12 @@ import sql_cli
 from sql_cli.astro.command import AstroCommand
 from sql_cli.astro.group import AstroGroup
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
-from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, SqlFilesDirectoryNotFound
+
+try:
+    from astro.exceptions import ConnectionFailed
+except Exception:
+    from sql_cli.exceptions import ConnectionFailed
+from sql_cli.exceptions import DagCycle, EmptyDag, SqlFilesDirectoryNotFound
 
 if TYPE_CHECKING:
     from sql_cli.project import Project
@@ -163,7 +168,7 @@ def run(
 ) -> None:
     from airflow.utils.state import State
 
-    from sql_cli import run_dag as dag_runner
+    dag_runner = _import_run_command()
     from sql_cli.project import Project
     from sql_cli.utils.airflow import (
         get_dag,
@@ -209,6 +214,17 @@ def run(
     rprint(f"Completed running the workflow {dr.dag_id}. Final state: {final_state}")
     elapsed_seconds = (dr.end_date - dr.start_date).microseconds / 10**6
     rprint(f"Total elapsed time: [bold blue]{elapsed_seconds:.2}s[/bold blue]")
+
+
+def _import_run_command():
+    try:
+        from astro import run_dag as dag_runner
+    except ImportError:
+        import warnings
+
+        warnings.warn("Deprecation Warning: We will switch to astro.run_dag as of astro-python-sdk 1.3")
+        from sql_cli import run_dag as dag_runner  # type: ignore
+    return dag_runner
 
 
 @app.command(
