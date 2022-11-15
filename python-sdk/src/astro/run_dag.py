@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+from typing import Dict
 import logging
 import sys
 import warnings
@@ -207,3 +207,25 @@ def _get_or_create_dagrun(
         conf=conf,  # type: ignore
     )
     return dr
+
+def _convert_connections_yaml_to_airflow_objs(connections_yaml_path: str) -> Dict[str, Connection]:
+    import yaml
+    with open(connections_yaml_path) as yaml_stream:
+        conn_dict = yaml.safe_load(yaml_stream)
+        connections = {}
+        for i in conn_dict["connections"]:
+            connections[i['conn_id']] = Connection(**i)
+    return connections
+
+
+if __name__ == "__main__":
+    from argparse import ArgumentParser
+    from airflow.utils.cli import get_dag
+    parser = ArgumentParser()
+    parser.add_argument('dag_id')
+    parser.add_argument('-d', '--dags_file', default=None)
+    parser.add_argument('-c', '--connections-file')
+    args = parser.parse_args()
+    connections = _convert_connections_yaml_to_airflow_objs(args.connections_file)
+    dag = get_dag(args.dags_file, dag_id=args.dag_id)
+    run_dag(dag=dag, connections=connections)
