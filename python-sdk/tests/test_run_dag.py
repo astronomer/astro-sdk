@@ -11,8 +11,8 @@ from packaging.version import Version
 from sqlalchemy.exc import OperationalError
 
 from astro import sql as aql
-from sql_cli.exceptions import ConnectionFailed
-from sql_cli.run_dag import _run_task, run_dag
+from astro.exceptions import ConnectionFailed
+from astro.run_dag import _run_task, run_dag
 
 CWD = pathlib.Path(__file__).parent
 
