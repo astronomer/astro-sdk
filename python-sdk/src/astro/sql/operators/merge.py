@@ -1,30 +1,13 @@
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
 
-try:
-    from openlineage.client.facet import (
-        BaseFacet,
-        DataQualityMetricsInputDatasetFacet,
-        DataSourceDatasetFacet,
-        OutputStatisticsOutputDatasetFacet,
-        SchemaDatasetFacet,
-        SchemaField,
-        SqlJobFacet,
-    )
-    from openlineage.client.run import Dataset as OpenlineageDataset
-except ImportError:
-    logging.warning("Install openlineage-airflow")
-
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import MergeConflictStrategy
 from astro.databases import create_database
-from astro.lineage.extractor import OpenLineageFacets
-from astro.lineage.facets import SourceTableMergeDatasetFacet, TargetTableMergeDatasetFacet
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
 from astro.utils.typing_compat import Context
@@ -96,10 +79,24 @@ class MergeOperator(AstroSQLBaseOperator):
         context["ti"].xcom_push(key="merge_query", value=str(db.sql))
         return self.target_table
 
-    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:
+    def get_openlineage_facets(self, task_instance):
         """
         Collect the input, output, job and run facets for merge operator
         """
+
+        from astro.lineage import (
+            BaseFacet,
+            DataQualityMetricsInputDatasetFacet,
+            DataSourceDatasetFacet,
+            OpenlineageDataset,
+            OutputStatisticsOutputDatasetFacet,
+            SchemaDatasetFacet,
+            SchemaField,
+            SqlJobFacet,
+        )
+        from astro.lineage.extractor import OpenLineageFacets
+        from astro.lineage.facets import SourceTableMergeDatasetFacet, TargetTableMergeDatasetFacet
+
         input_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
         output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
         if self.source_table.openlineage_emit_temp_table_event():

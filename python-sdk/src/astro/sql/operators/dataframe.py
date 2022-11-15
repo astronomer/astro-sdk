@@ -15,22 +15,9 @@ except ImportError:  # pragma: no cover
     from airflow.decorators import _TaskDecorator as TaskDecorator
     from airflow.decorators.base import task_decorator_factory
 
-try:
-    from openlineage.client.facet import (
-        BaseFacet,
-        DataSourceDatasetFacet,
-        OutputStatisticsOutputDatasetFacet,
-        SchemaDatasetFacet,
-        SchemaField,
-    )
-    from openlineage.client.run import Dataset as OpenlineageDataset
-except ImportError:
-    logging.warning("Install openlineage-airflow")
-
 from astro.constants import ColumnCapitalization
 from astro.databases import create_database
 from astro.files import File
-from astro.lineage.extractor import OpenLineageFacets
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable, Table
 from astro.utils.dataframe import convert_columns_names_capitalization
@@ -228,10 +215,20 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             )
         return function_output
 
-    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:  # skipcq: PYL-W0613
+    def get_openlineage_facets(self, task_instance):  # skipcq: PYL-W0613
         """
         Collect the input, output, job and run facets for DataframeOperator
         """
+        from astro.lineage import (
+            BaseFacet,
+            DataSourceDatasetFacet,
+            OpenlineageDataset,
+            OutputStatisticsOutputDatasetFacet,
+            SchemaDatasetFacet,
+            SchemaField,
+        )
+        from astro.lineage.extractor import OpenLineageFacets
+
         output_dataset: list[OpenlineageDataset] = []
 
         if self.output_table and self.output_table.openlineage_emit_temp_table_event():  # pragma: no cover

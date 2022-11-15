@@ -7,3 +7,4 @@ ignore = A002,W503
 extend-ignore = E203
 per-file-ignores =
      python-sdk/src/astro/sql/__init__.py: F401
+     python-sdk/src/astro/lineage/__init__.py: F401

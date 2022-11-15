@@ -1,0 +1,23 @@
+import logging
+
+log = logging.getLogger(__name__)
+
+try:
+    from openlineage.airflow.extractors import TaskMetadata
+    from openlineage.airflow.extractors.base import BaseExtractor
+    from openlineage.airflow.utils import get_job_name
+    from openlineage.client.facet import (
+        BaseFacet,
+        DataQualityMetricsInputDatasetFacet,
+        DataSourceDatasetFacet,
+        OutputStatisticsOutputDatasetFacet,
+        SchemaDatasetFacet,
+        SchemaField,
+        SqlJobFacet,
+    )
+    from openlineage.client.run import Dataset as OpenlineageDataset
+
+    has_openlineage = True
+except ImportError:
+    has_openlineage = False
+    logging.debug("openlineage-airflow python dependency is missing")

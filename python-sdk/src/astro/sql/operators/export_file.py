@@ -1,31 +1,15 @@
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
 
-try:
-    from openlineage.client.facet import (
-        BaseFacet,
-        DataQualityMetricsInputDatasetFacet,
-        DataSourceDatasetFacet,
-        OutputStatisticsOutputDatasetFacet,
-        SchemaDatasetFacet,
-        SchemaField,
-    )
-    from openlineage.client.run import Dataset as OpenlineageDataset
-except ImportError:
-    logging.warning("Install openlineage-airflow")
-
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import ExportExistsStrategy
 from astro.databases import create_database
 from astro.files import File
-from astro.lineage.extractor import OpenLineageFacets
-from astro.lineage.facets import ExportFileFacet
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable, Table
 from astro.utils.typing_compat import Context
@@ -78,10 +62,23 @@ class ExportFileOperator(AstroSQLBaseOperator):
         else:
             raise FileExistsError(f"{self.output_file.path} file already exists.")
 
-    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:  # skipcq: PYL-W0613
+    def get_openlineage_facets(self, task_instance):  # skipcq: PYL-W0613
         """
         Collect the input, output, job and run facets for export file operator
         """
+
+        from astro.lineage import (
+            BaseFacet,
+            DataQualityMetricsInputDatasetFacet,
+            DataSourceDatasetFacet,
+            OpenlineageDataset,
+            OutputStatisticsOutputDatasetFacet,
+            SchemaDatasetFacet,
+            SchemaField,
+        )
+        from astro.lineage.extractor import OpenLineageFacets
+        from astro.lineage.facets import ExportFileFacet
+
         input_dataset: list[OpenlineageDataset] = []
         if isinstance(self.input_data, BaseTable) and self.input_data.openlineage_emit_temp_table_event():
             input_uri = (
