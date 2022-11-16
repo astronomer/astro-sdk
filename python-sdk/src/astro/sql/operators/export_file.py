@@ -76,7 +76,6 @@ class ExportFileOperator(AstroSQLBaseOperator):
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
-            OperatorLineage,
         )
         from astro.lineage.facets import ExportFileFacet
 

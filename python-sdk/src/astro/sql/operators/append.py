@@ -78,7 +78,6 @@ class AppendOperator(AstroSQLBaseOperator):
             SchemaDatasetFacet,
             SchemaField,
             SqlJobFacet,
-            OperatorLineage,
         )
         from astro.lineage.facets import TableDatasetFacet
 
