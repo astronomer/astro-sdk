@@ -51,6 +51,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         **kwargs,
     ) -> None:
+        kwargs.setdefault("task_id", get_unique_task_id("load_file"))
         super().__init__(
             **kwargs_with_datasets(
                 kwargs=kwargs,
