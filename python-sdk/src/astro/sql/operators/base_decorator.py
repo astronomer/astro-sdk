@@ -206,6 +206,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             SchemaDatasetFacet,
             SchemaField,
             SqlJobFacet,
+            OperatorLineage,
         )
 
         input_dataset: list[OpenlineageDataset] = []

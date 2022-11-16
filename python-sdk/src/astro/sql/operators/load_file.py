@@ -196,6 +196,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
             OperatorLineage,
             SchemaDatasetFacet,
             SchemaField,
+            OperatorLineage,
         )
         from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
         # if the input_file is a folder or pattern, it needs to be resolved to

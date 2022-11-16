@@ -96,6 +96,7 @@ class MergeOperator(AstroSQLBaseOperator):
             SchemaDatasetFacet,
             SchemaField,
             SqlJobFacet,
+            OperatorLineage,
         )
         from astro.lineage.facets import SourceTableMergeDatasetFacet, TargetTableMergeDatasetFacet
 

@@ -227,6 +227,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
+            OperatorLineage,
         )
 
         output_dataset: list[OpenlineageDataset] = []
