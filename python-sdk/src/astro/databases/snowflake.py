@@ -645,8 +645,8 @@ class SnowflakeDatabase(BaseDatabase):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
-        if source_dataframe.empty:
-            raise ValueError("Can't load empty dataframe")
+        self._assert_not_empty_df(source_dataframe)
+
         auto_create_table = False
         if if_exists == "replace" or not self.table_exists(target_table):
             auto_create_table = True

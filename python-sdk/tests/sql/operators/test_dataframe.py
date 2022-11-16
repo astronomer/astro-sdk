@@ -437,6 +437,7 @@ def test_col_case_is_preserved(sample_dag):
     test_utils.run_dag(sample_dag)
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "conn_id",
     [
