@@ -63,7 +63,7 @@ def test_create_table_using_native_schema_autodetection_not_implemented():
 def test_subclass_missing_load_pandas_dataframe_to_table_raises_exception():
     db = DatabaseSubclass(conn_id="fake_conn_id")
     table = Table()
-    df = DataFrame()
+    df = DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
     with pytest.raises(NotImplementedError):
         db.load_pandas_dataframe_to_table(df, table)
 
