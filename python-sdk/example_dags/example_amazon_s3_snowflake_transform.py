@@ -11,29 +11,43 @@ from astro import sql as aql
 from astro.files import File
 from astro.table import Metadata, Table
 
+dir_path = os.path.dirname(os.path.realpath(__file__))
 
-@aql.transform()
-def combine_data(center_1: Table, center_2: Table):
-    return """SELECT * FROM {{center_1}}
-    UNION SELECT * FROM {{center_2}}"""
+FILE_PATH = dir_path + "/data/"
 
-
-@aql.transform()
-def clean_data(input_table: Table):
-    return """SELECT *
-    FROM {{input_table}} WHERE type NOT LIKE 'Guinea Pig'
-    """
+# @aql.transform()
+# def combine_data(center_1: Table, center_2: Table):
+#     return """SELECT * FROM {{center_1}}
+#     UNION SELECT * FROM {{center_2}}"""
 
 
-# [START dataframe_example_1]
-@aql.dataframe(columns_names_capitalization="original")
-def aggregate_data(df: pd.DataFrame):
-    new_df = df.pivot_table(index="date", values="name", columns=["type"], aggfunc="count").reset_index()
-    new_df.columns = new_df.columns.str.lower()
-    return new_df
+# @aql.transform()
+# def clean_data(input_table: Table):
+#     return """SELECT *
+#     FROM {{input_table}} WHERE type NOT LIKE 'Guinea Pig'
+#     """
 
 
-# [END dataframe_example_1]
+# # [START dataframe_example_1]
+# @aql.dataframe(columns_names_capitalization="original")
+# def aggregate_data(df: pd.DataFrame):
+#     new_df = df.pivot_table(index="date", values="name", columns=["type"], aggfunc="count").reset_index()
+#     new_df.columns = new_df.columns.str.lower()
+#     return new_df
+
+
+# # [END dataframe_example_1]
+
+@aql.run_raw_sql()
+def raw_sql_query(table_name: Table):
+    return """DROP TABLE {{table_name}};"""
+
+def get_temp_tables():
+    with open(FILE_PATH + "delete_aggregated_tables.txt") as file_in:
+        lines = []
+        for line in file_in:
+            lines.append(line)
+    return lines
 
 
 @dag(
@@ -49,62 +63,68 @@ def aggregate_data(df: pd.DataFrame):
 )
 def example_amazon_s3_snowflake_transform():
 
-    s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
+    # s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
 
-    input_table_1 = Table(
-        name="ADOPTION_CENTER_1",
-        metadata=Metadata(
-            database=os.environ["SNOWFLAKE_DATABASE"],
-            schema=os.environ["SNOWFLAKE_SCHEMA"],
-        ),
-        conn_id="snowflake_conn",
-    )
-    # [START metadata_example_snowflake]
-    input_table_2 = Table(
-        name="ADOPTION_CENTER_2",
-        metadata=Metadata(
-            database=os.environ["SNOWFLAKE_DATABASE"],
-            schema=os.environ["SNOWFLAKE_SCHEMA"],
-        ),
-        conn_id="snowflake_conn",
-    )
-    # [END metadata_example_snowflake]
+    # input_table_1 = Table(
+    #     name="ADOPTION_CENTER_1",
+    #     metadata=Metadata(
+    #         database=os.environ["SNOWFLAKE_DATABASE"],
+    #         schema=os.environ["SNOWFLAKE_SCHEMA"],
+    #     ),
+    #     conn_id="snowflake_conn",
+    # )
+    # # [START metadata_example_snowflake]
+    # input_table_2 = Table(
+    #     name="ADOPTION_CENTER_2",
+    #     metadata=Metadata(
+    #         database=os.environ["SNOWFLAKE_DATABASE"],
+    #         schema=os.environ["SNOWFLAKE_SCHEMA"],
+    #     ),
+    #     conn_id="snowflake_conn",
+    # )
+    # # [END metadata_example_snowflake]
 
-    temp_table_1 = aql.load_file(
-        input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_1_unquoted.csv"),
-        output_table=input_table_1,
-    )
-    temp_table_2 = aql.load_file(
-        input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_2_unquoted.csv"),
-        output_table=input_table_2,
-    )
+    # temp_table_1 = aql.load_file(
+    #     input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_1_unquoted.csv"),
+    #     output_table=input_table_1,
+    # )
+    # temp_table_2 = aql.load_file(
+    #     input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_2_unquoted.csv"),
+    #     output_table=input_table_2,
+    # )
 
-    combined_data = combine_data(
-        center_1=temp_table_1,
-        center_2=temp_table_2,
-    )
+    # combined_data = combine_data(
+    #     center_1=temp_table_1,
+    #     center_2=temp_table_2,
+    # )
 
-    cleaned_data = clean_data(combined_data)
-    # [START dataframe_example_2]
-    snowflake_output_table = Table(
-            name="aggregated_adoptions_" + str(int(time.time())),
-            metadata=Metadata(
-                schema=os.environ["SNOWFLAKE_SCHEMA"],
-                database=os.environ["SNOWFLAKE_DATABASE"],
-            ),
-            conn_id="snowflake_conn",
-        )
-    aggregate_results =aggregate_data(
-        cleaned_data,
-        output_table=snowflake_output_table,
-    )
-    # [END dataframe_example_2]
-    truncate_input_table_1 = aql.drop_table(table=input_table_1) 
-    truncate_input_table_1.set_upstream(aggregate_results)
-    truncate_input_table_2 = aql.drop_table(table=input_table_2) 
-    truncate_input_table_2.set_upstream(truncate_input_table_1)
-    truncate_snowflake_output_table= aql.drop_table(table=snowflake_output_table)
-    truncate_snowflake_output_table.set_upstream(truncate_input_table_2)
+    # cleaned_data = clean_data(combined_data)
+    # # [START dataframe_example_2]
+    # snowflake_output_table = Table(
+    #         name="aggregated_adoptions_" + str(int(time.time())),
+    #         metadata=Metadata(
+    #             schema=os.environ["SNOWFLAKE_SCHEMA"],
+    #             database=os.environ["SNOWFLAKE_DATABASE"],
+    #         ),
+    #         conn_id="snowflake_conn",
+    #     )
+    # aggregate_results =aggregate_data(
+    #     cleaned_data,
+    #     output_table=snowflake_output_table,
+    # )
+    # # [END dataframe_example_2]
+    # truncate_input_table_1 = aql.drop_table(table=input_table_1) 
+    # truncate_input_table_1.set_upstream(aggregate_results)
+    # truncate_input_table_2 = aql.drop_table(table=input_table_2) 
+    # truncate_input_table_2.set_upstream(truncate_input_table_1)
+    # truncate_snowflake_output_table= aql.drop_table(table=snowflake_output_table)
+    # truncate_snowflake_output_table.set_upstream(truncate_input_table_2)
+
+    lines = get_temp_tables()
+    for i in lines:
+        temp_table = Table(name=i,conn_id="snowflake_conn")
+        result = raw_sql_query(temp_table)
+
     aql.cleanup()
 
 
