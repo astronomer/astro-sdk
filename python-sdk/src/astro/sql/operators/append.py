@@ -77,8 +77,8 @@ class AppendOperator(AstroSQLBaseOperator):
             SchemaDatasetFacet,
             SchemaField,
             SqlJobFacet,
+            OperatorLineage,
         )
-        from openlineage.airflow.extractors.base import OperatorLineage
         from astro.lineage.facets import TableDatasetFacet
 
         append_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="append_query")

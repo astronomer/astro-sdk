@@ -226,8 +226,8 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
+            OperatorLineage,
         )
-        from openlineage.airflow.extractors.base import OperatorLineage
 
         output_dataset: list[OpenlineageDataset] = []
 

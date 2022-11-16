@@ -1,22 +1,8 @@
 from __future__ import annotations
 
-import attr
 from airflow.models.taskinstance import TaskInstance
 
-from astro.lineage import BaseExtractor, BaseFacet, OpenlineageDataset, TaskMetadata, get_job_name
-
-
-@attr.define
-class OpenLineageFacets:
-    """
-    OpenLineageFacets are pieces of metadata that can be attached to the core entities: Run,
-    Job and Dataset as per https://github.com/OpenLineage/OpenLineage/blob/main/spec/OpenLineage.md#facets
-    """
-
-    inputs: list[OpenlineageDataset]
-    outputs: list[OpenlineageDataset]
-    run_facets: dict[str, BaseFacet]
-    job_facets: dict[str, BaseFacet]
+from astro.lineage import BaseExtractor, TaskMetadata, get_job_name, OperatorLineage
 
 
 class PythonSDKExtractor(BaseExtractor):

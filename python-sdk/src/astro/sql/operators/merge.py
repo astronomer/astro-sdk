@@ -95,8 +95,8 @@ class MergeOperator(AstroSQLBaseOperator):
             SchemaDatasetFacet,
             SchemaField,
             SqlJobFacet,
+            OperatorLineage,
         )
-        from openlineage.airflow.extractors.base import OperatorLineage
         from astro.lineage.facets import SourceTableMergeDatasetFacet, TargetTableMergeDatasetFacet
         input_dataset: list[OpenlineageDataset] = []
         output_dataset: list[OpenlineageDataset] = []

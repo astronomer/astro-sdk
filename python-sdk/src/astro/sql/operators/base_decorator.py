@@ -205,8 +205,8 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             SchemaDatasetFacet,
             SchemaField,
             SqlJobFacet,
+            OperatorLineage,
         )
-        from openlineage.airflow.extractors.base import OperatorLineage
 
         input_dataset: list[OpenlineageDataset] = []
         output_dataset: list[OpenlineageDataset] = []
