@@ -6,21 +6,11 @@ from typing import Any, Sequence, cast
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 from airflow.exceptions import AirflowException
-from openlineage.client.facet import (
-    BaseFacet,
-    DataSourceDatasetFacet,
-    OutputStatisticsOutputDatasetFacet,
-    SchemaDatasetFacet,
-    SchemaField,
-    SqlJobFacet,
-)
-from openlineage.client.run import Dataset as OpenlineageDataset
 from sqlalchemy.sql.functions import Function
 
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
-from astro.lineage.extractor import OpenLineageFacets
 from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
 from astro.table import BaseTable, Table
 from astro.utils.table import find_first_table
@@ -203,10 +193,21 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         if context:
             self.sql = self.render_template(self.sql, context)
 
-    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:
+    def get_openlineage_facets(self, task_instance):
         """
         Returns the lineage data
         """
+        from astro.lineage import (
+            BaseFacet,
+            DataSourceDatasetFacet,
+            OpenlineageDataset,
+            OutputStatisticsOutputDatasetFacet,
+            SchemaDatasetFacet,
+            SchemaField,
+            SqlJobFacet,
+        )
+        from astro.lineage.extractor import OpenLineageFacets
+
         input_dataset: list[OpenlineageDataset] = []
         output_dataset: list[OpenlineageDataset] = []
         if (

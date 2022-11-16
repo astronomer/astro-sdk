@@ -5,16 +5,12 @@ from typing import Any
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
-from openlineage.client.facet import BaseFacet, DataSourceDatasetFacet, SchemaDatasetFacet, SchemaField
-from openlineage.client.run import Dataset as OpenlineageDataset
 
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
-from astro.lineage.extractor import OpenLineageFacets
-from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
 from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
@@ -185,10 +181,18 @@ class LoadFileOperator(AstroSQLBaseOperator):
 
         return normalize_config
 
-    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:  # skipcq: PYL-W0613
-        """
-        Returns the lineage data
-        """
+    def get_openlineage_facets(self, task_instance):  # skipcq: PYL-W0613
+        """Returns the lineage data"""
+        from astro.lineage import (
+            BaseFacet,
+            DataSourceDatasetFacet,
+            OpenlineageDataset,
+            SchemaDatasetFacet,
+            SchemaField,
+        )
+        from astro.lineage.extractor import OpenLineageFacets
+        from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
+
         # if the input_file is a folder or pattern, it needs to be resolved to
         # list the files
         input_files = resolve_file_path_pattern(
