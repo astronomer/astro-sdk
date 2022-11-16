@@ -45,7 +45,7 @@ def raw_sql_query(table_name: Table):
 
 
 def get_temp_tables():
-    with open(FILE_PATH + "delete_aggregated_tables.txt") as file_in:
+    with open(FILE_PATH + "delete_tmp.txt") as file_in:
         lines = []
         for line in file_in:
             lines.append(line)
