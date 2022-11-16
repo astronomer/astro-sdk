@@ -491,7 +491,7 @@ def test_load_pandas_dataframe_to_table_with_service_account(mock_to_gbq, databa
     database, target_table = database_table_fixture
     # Skip running _get_credentials. We assume we always will get a Credentials object back.
     database.hook._get_credentials = mock.Mock()
-    df = pd.DataFrame(data={'col1': [1, 2], 'col2': [3, 4]})
+    df = pd.DataFrame(data={"col1": [1, 2], "col2": [3, 4]})
     database.load_pandas_dataframe_to_table(df, target_table)
 
     mock_to_gbq.assert_called_once()
