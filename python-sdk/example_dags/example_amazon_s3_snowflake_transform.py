@@ -122,8 +122,15 @@ def example_amazon_s3_snowflake_transform():
     # truncate_snowflake_output_table= aql.drop_table(table=snowflake_output_table)
     # truncate_snowflake_output_table.set_upstream(truncate_input_table_2)
 
-    lines = get_temp_tables()
-    for i in lines:
+    # lines = get_temp_tables()
+    for i in [
+        "AGGREGATED_ADOPTIONS_1664717423",
+        "AGGREGATED_ADOPTIONS_1664718779",
+        "AGGREGATED_ADOPTIONS_1664722733",
+        "AGGREGATED_ADOPTIONS_1664722781",
+        "AGGREGATED_ADOPTIONS_1664723885",
+        "AGGREGATED_ADOPTIONS_1664723999",
+    ]:
         temp_table = Table(name=i, conn_id="snowflake_conn")
         result = raw_sql_query(temp_table)
 
