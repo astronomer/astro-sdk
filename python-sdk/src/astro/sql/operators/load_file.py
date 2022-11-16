@@ -31,6 +31,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
     :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
+    :param task_id: ID of the task instance of the operator
 
     :return: If ``output_table`` is passed this operator returns a Table object. If not
         passed, returns a dataframe.
@@ -49,14 +50,17 @@ class LoadFileOperator(AstroSQLBaseOperator):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+        task_id: str | None = None,
         **kwargs,
     ) -> None:
+        task_id = task_id or get_unique_task_id("load_file")
         super().__init__(
+            task_id=task_id,
             **kwargs_with_datasets(
                 kwargs=kwargs,
                 input_datasets=input_file,
                 output_datasets=output_table,
-            )
+            ),
         )
         self.output_table = output_table
         self.input_file = input_file
