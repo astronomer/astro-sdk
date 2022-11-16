@@ -16,8 +16,5 @@ try:
         SqlJobFacet,
     )
     from openlineage.client.run import Dataset as OpenlineageDataset
-
-    has_openlineage = True
 except ImportError:
-    has_openlineage = False
     logging.debug("openlineage-airflow python dependency is missing")
