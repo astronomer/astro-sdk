@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import socket
 
-import pandas as pd
 from airflow.providers.sqlite.hooks.sqlite import SqliteHook
 from sqlalchemy import MetaData as SqlaMetaData, create_engine
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.sql.schema import Table as SqlaTable
 
-from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
+from astro.constants import MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.table import BaseTable, Metadata
 
