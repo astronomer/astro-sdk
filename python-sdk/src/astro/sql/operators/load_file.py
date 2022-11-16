@@ -181,7 +181,6 @@ class LoadFileOperator(AstroSQLBaseOperator):
         normalize_config["sep"] = replace_illegal_columns_chars(normalize_config["sep"], database)
 
         return normalize_config
-        
 
     def get_openlineage_facets_on_complete(self):  # skipcq: PYL-W0613
         """
@@ -191,11 +190,12 @@ class LoadFileOperator(AstroSQLBaseOperator):
             BaseFacet,
             DataSourceDatasetFacet,
             OpenlineageDataset,
+            OperatorLineage,
             SchemaDatasetFacet,
             SchemaField,
-            OperatorLineage,
         )
         from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
+
         # if the input_file is a folder or pattern, it needs to be resolved to
         # list the files
         input_files = resolve_file_path_pattern(

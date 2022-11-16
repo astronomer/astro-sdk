@@ -223,10 +223,10 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             BaseFacet,
             DataSourceDatasetFacet,
             OpenlineageDataset,
+            OperatorLineage,
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
-            OperatorLineage,
         )
 
         output_dataset: list[OpenlineageDataset] = []

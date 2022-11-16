@@ -201,11 +201,11 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             BaseFacet,
             DataSourceDatasetFacet,
             OpenlineageDataset,
+            OperatorLineage,
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
             SqlJobFacet,
-            OperatorLineage,
         )
 
         input_dataset: list[OpenlineageDataset] = []

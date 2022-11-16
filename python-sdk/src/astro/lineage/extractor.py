@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from airflow.models.taskinstance import TaskInstance
 
-from astro.lineage import BaseExtractor, TaskMetadata, get_job_name, OperatorLineage
+from astro.lineage import BaseExtractor, OperatorLineage, TaskMetadata, get_job_name
 
 
 class PythonSDKExtractor(BaseExtractor):

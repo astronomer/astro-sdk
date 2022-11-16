@@ -91,13 +91,14 @@ class MergeOperator(AstroSQLBaseOperator):
             DataQualityMetricsInputDatasetFacet,
             DataSourceDatasetFacet,
             OpenlineageDataset,
+            OperatorLineage,
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
             SqlJobFacet,
-            OperatorLineage,
         )
         from astro.lineage.facets import SourceTableMergeDatasetFacet, TargetTableMergeDatasetFacet
+
         input_dataset: list[OpenlineageDataset] = []
         output_dataset: list[OpenlineageDataset] = []
         if self.source_table.openlineage_emit_temp_table_event():

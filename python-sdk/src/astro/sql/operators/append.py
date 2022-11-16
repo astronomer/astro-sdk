@@ -73,11 +73,11 @@ class AppendOperator(AstroSQLBaseOperator):
             DataQualityMetricsInputDatasetFacet,
             DataSourceDatasetFacet,
             OpenlineageDataset,
+            OperatorLineage,
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
             SqlJobFacet,
-            OperatorLineage,
         )
         from astro.lineage.facets import TableDatasetFacet
 
