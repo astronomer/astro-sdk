@@ -440,6 +440,8 @@ def test_col_case_is_preserved(sample_dag):
 @pytest.mark.parametrize(
     "conn_id",
     [
+        "bigquery",
+        "postgres_conn",
         "redshift_conn",
         "snowflake_conn",
         "sqlite_conn",
@@ -462,27 +464,3 @@ def test_empty_dataframe_fail(sample_dag, conn_id):
     with pytest.raises(ValueError) as exec_info:
         test_utils.run_dag(sample_dag)
     assert exec_info.value.args[0] == "Can't load empty dataframe"
-
-
-@pytest.mark.parametrize(
-    "conn_id",
-    [
-        "bigquery",
-        "postgres_conn",
-    ],
-)
-def test_empty_dataframe_success(sample_dag, conn_id):
-    @aql.dataframe
-    def get_empty_dataframe():
-        empty_arr = []
-        return pandas.DataFrame(empty_arr)
-
-    with sample_dag:
-        get_empty_dataframe(
-            output_table=Table(
-                conn_id=conn_id,
-            )
-        )
-
-        aql.cleanup()
-    test_utils.run_dag(sample_dag)

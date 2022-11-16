@@ -85,26 +85,6 @@ class SqliteDatabase(BaseDatabase):
         """
         return "CREATE UNIQUE INDEX merge_index ON {{table}}(%s)" % ",".join(parameters)  # skipcq PYL-C0209
 
-    def load_pandas_dataframe_to_table(
-        self,
-        source_dataframe: pd.DataFrame,
-        target_table: BaseTable,
-        if_exists: LoadExistStrategy = "replace",
-        chunk_size: int = DEFAULT_CHUNK_SIZE,
-    ) -> None:
-        """
-        Create a table with the dataframe's contents.
-        If the table already exists, append or replace the content, depending on the value of `if_exists`.
-
-        :param source_dataframe: Local or remote filepath
-        :param target_table: Table in which the file will be loaded
-        :param if_exists: Strategy to be used in case the target table already exists.
-        :param chunk_size: Specify the number of rows in each batch to be written at a time.
-        """
-        if source_dataframe.empty:
-            raise ValueError("Can't load empty dataframe")
-        super().load_pandas_dataframe_to_table(source_dataframe, target_table, if_exists, chunk_size)
-
     def merge_table(
         self,
         source_table: BaseTable,

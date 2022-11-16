@@ -168,6 +168,9 @@ class BigqueryDatabase(BaseDatabase):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
+        if source_dataframe.empty:
+            raise ValueError("Can't load empty dataframe")
+
         try:
             creds = self.hook._get_credentials()  # skipcq PYL-W021
         except AttributeError:
