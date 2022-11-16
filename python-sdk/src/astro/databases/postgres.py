@@ -93,6 +93,8 @@ class PostgresDatabase(BaseDatabase):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
+        if source_dataframe.empty:
+            raise ValueError("Can't load empty dataframe")
 
         self.create_schema_if_needed(target_table.metadata.schema)
         if not self.table_exists(table=target_table) or if_exists == "replace":
