@@ -4,7 +4,6 @@ import random
 import string
 from typing import Any
 
-import attr.setters
 from attr import define, field, fields_dict
 from sqlalchemy import Column, MetaData
 
@@ -55,7 +54,7 @@ class BaseTable:
     # TODO: discuss alternative names to this class, since it contains metadata as opposed to be the
     # SQL table itself
     # Some ideas: TableRef, TableMetadata, TableData, TableDataset
-    name: str = field(default="", on_setattr=attr.setters.validate)
+    name: str = field(default="")
     conn_id: str = field(default="")
     # Setting converter allows passing a dictionary to metadata arg
     metadata: Metadata = field(
@@ -65,13 +64,12 @@ class BaseTable:
     columns: list[Column] = field(factory=list)
     temp: bool = field(default=False)
 
-    @name.validator
-    def _check_name(self, _attr, value):
-        self.temp = not value or value.startswith(TEMP_PREFIX)
-
     def __attrs_post_init__(self) -> None:
         if not self.name:
             self.name = self._create_unique_table_name(TEMP_PREFIX + "_")
+            self.temp = True
+        if self.name.startswith(TEMP_PREFIX):
+            self.temp = True
 
     # We need this method to pickle Table object, without this we cannot push/pull this object from xcom.
     def __getstate__(self):
