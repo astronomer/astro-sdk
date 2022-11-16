@@ -76,9 +76,7 @@ class MergeOperator(AstroSQLBaseOperator):
     def execute(self, context: Context) -> BaseTable:
         db = create_database(self.target_table.conn_id, table=self.source_table)
         # currently, cross database operation is not supported
-        if (self.source_table and self.target_table) and (
-            self.source_table.sql_type != self.target_table.sql_type
-        ):
+        if self.source_table.sql_type != self.target_table.sql_type:
             raise ValueError("source and target table must belongs from same datasource")
         self.source_table = db.populate_table_metadata(self.source_table)
         self.target_table = db.populate_table_metadata(self.target_table)
