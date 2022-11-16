@@ -38,9 +38,11 @@ FILE_PATH = dir_path + "/data/"
 
 # # [END dataframe_example_1]
 
+
 @aql.run_raw_sql()
 def raw_sql_query(table_name: Table):
     return """DROP TABLE {{table_name}};"""
+
 
 def get_temp_tables():
     with open(FILE_PATH + "delete_aggregated_tables.txt") as file_in:
@@ -113,17 +115,16 @@ def example_amazon_s3_snowflake_transform():
     #     output_table=snowflake_output_table,
     # )
     # # [END dataframe_example_2]
-    # truncate_input_table_1 = aql.drop_table(table=input_table_1) 
+    # truncate_input_table_1 = aql.drop_table(table=input_table_1)
     # truncate_input_table_1.set_upstream(aggregate_results)
-    # truncate_input_table_2 = aql.drop_table(table=input_table_2) 
+    # truncate_input_table_2 = aql.drop_table(table=input_table_2)
     # truncate_input_table_2.set_upstream(truncate_input_table_1)
     # truncate_snowflake_output_table= aql.drop_table(table=snowflake_output_table)
     # truncate_snowflake_output_table.set_upstream(truncate_input_table_2)
 
-    # lines = get_temp_tables()
-    for i in ["AGGREGATED_ADOPTIONS_1664717423","AGGREGATED_ADOPTIONS_1664718779","AGGREGATED_ADOPTIONS_1664722733",
-            "AGGREGATED_ADOPTIONS_1664722781","AGGREGATED_ADOPTIONS_1664723885","AGGREGATED_ADOPTIONS_1664723999"]:
-        temp_table = Table(name=i,conn_id="snowflake_conn")
+    lines = get_temp_tables()
+    for i in lines:
+        temp_table = Table(name=i, conn_id="snowflake_conn")
         result = raw_sql_query(temp_table)
 
     aql.cleanup()
