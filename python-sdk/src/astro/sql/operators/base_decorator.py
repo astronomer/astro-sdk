@@ -84,7 +84,6 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         else:
             if not self.conn_id:
                 raise ValueError("You need to provide a table or a connection id")
-        self.database_impl = create_database(self.conn_id, first_table)
 
         # currently, cross database operation is not supported
         if (
@@ -92,7 +91,9 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             and (first_table.sql_type and self.output_table.sql_type)
             and (first_table.sql_type != self.output_table.sql_type)
         ):
-            raise ValueError("source and target table must belongs from same datasource")
+            raise ValueError("source and target table must belong to the same datasource")
+
+        self.database_impl = create_database(self.conn_id, first_table)
 
         # Find and load dataframes from op_arg and op_kwarg into Table
         self.create_output_table_if_needed()
