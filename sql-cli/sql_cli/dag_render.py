@@ -3,21 +3,21 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from sql_cli.sql_directory_parser import SqlFile, get_sql_files
+from sql_cli.workflow_directory_parser import WorkflowFile, get_workflow_files
 
 if TYPE_CHECKING:
     from astro.sql.operators.transform import TransformOperator
 
 
-def to_task_list(sql_files: list[SqlFile]) -> list[TransformOperator]:
+def to_task_list(workflow_files: list[WorkflowFile]) -> list[TransformOperator]:
     """
     Converts the list of SQL Files into a list of TranformOperator tasks
     that all have proper dependencies set.
-    :param sql_files: The list of SQL files with necessary metadata for us to
+    :param workflow_files: The list of SQL files with necessary metadata for us to
         generate tasks with dependencies
     """
-    param_dict = {s.path.stem: s.to_transform_operator() for s in sql_files}
-    for s in sql_files:
+    param_dict = {s.path.stem: s.to_operator() for s in workflow_files}
+    for s in workflow_files:
         for p in s.get_parameters():
             if not param_dict.get(p):
                 raise ValueError(f"variable '{p}' is undefined in file {s.path.stem}")
@@ -39,5 +39,5 @@ def render_tasks(directory: Path) -> list[TransformOperator]:
         defaults to 2020-01-01
     :return: a DAG that can be run by any airflow
     """
-    sql_files: list[SqlFile] = sorted(get_sql_files(directory, target_directory=None))
-    return to_task_list(sql_files)
+    workflow_files: list[WorkflowFile] = sorted(get_workflow_files(directory, target_directory=None))
+    return to_task_list(workflow_files)
