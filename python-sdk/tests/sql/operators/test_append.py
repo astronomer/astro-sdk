@@ -171,7 +171,7 @@ def test_append_on_tables_on_different_db(sample_dag, database_table_fixture):
                 source_table=load_append,
             )
         test_utils.run_dag(sample_dag)
-    assert exec_info.value.args[0] == "source and target table must belongs from same datasource"
+    assert exec_info.value.args[0] == "source and target table must belong to the same datasource"
 
 
 @pytest.mark.skipif(not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
