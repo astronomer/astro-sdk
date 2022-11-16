@@ -33,8 +33,7 @@ def test_table_without_name():
 
 def test_table_without_name_and_schema():
     """Check that the table name is smaller when there is metadata associated to the table."""
-    table = Table(conn_id="some_connection")
-    table.metadata.schema = "abc"
+    table = Table(conn_id="some_connection", metadata=Metadata(schema="abc"))
     assert isinstance(table.name, str)
     assert len(table.name) == 59  # max length limit - len("abc.")
     assert table.temp
