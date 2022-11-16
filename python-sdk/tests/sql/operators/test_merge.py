@@ -353,3 +353,17 @@ def test_inlets_outlets_non_supported_ds():
     )
     assert task.operator.inlets == []
     assert task.operator.outlets == []
+
+
+def test_cross_db_merge_raise_exception():
+    source_table = Table(conn_id="snowflake_conn", name="test1", metadata=Metadata(schema="test"))
+    target_table = Table(conn_id="bigquery", name="test2", metadata=Metadata(schema="test"))
+    with pytest.raises(ValueError) as exec_info:
+        MergeOperator(
+            source_table=source_table,
+            target_table=target_table,
+            if_conflicts="ignore",
+            target_conflict_columns=["list"],
+            columns=["set_item_1", "set_item_2", "set_item_3"],
+        ).execute({})
+    assert exec_info.value.args[0] == "source and target table must belong to the same datasource"
