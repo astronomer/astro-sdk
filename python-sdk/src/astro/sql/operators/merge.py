@@ -83,9 +83,6 @@ class MergeOperator(AstroSQLBaseOperator):
         """
         Collect the input, output, job and run facets for merge operator
         """
-        """
-        Collect the input, output, job and run facets for merge operator
-        """
         from astro.lineage import (
             BaseFacet,
             DataQualityMetricsInputDatasetFacet,
