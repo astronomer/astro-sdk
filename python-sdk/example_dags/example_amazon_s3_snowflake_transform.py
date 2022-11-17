@@ -101,7 +101,7 @@ def example_amazon_s3_snowflake_transform():
         conn_id="snowflake_conn",
         temp=True,
     )
-    aggregate_results = aggregate_data(
+    aggregate_data(
         cleaned_data,
         output_table=snowflake_output_table,
     )
