@@ -1,11 +1,9 @@
 load_file:
   input_file:
-    path: "s3://tmp9/homes_main.csv"
-    conn_id: "aws_conn"
+    path: "gs://astro-sdk/workspace/sample_pattern.csv"
+    conn_id: "bigquery"
+    filetype: "csv"
   output_table:
-    conn_id: "redshift_conn"
+    conn_id: "bigquery"
     metadata:
       schema: "astro"
-      database: "dev"
-  normalize_config:
-  is_dataframe: False
