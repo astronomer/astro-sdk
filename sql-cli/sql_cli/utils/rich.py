@@ -49,7 +49,7 @@ def rprint(
     sep: str = " ",
     end: str = "\n",
     file: Optional[IO[str]] = None,
-    flush: bool = False,
+    flush: bool = False,  # skipcq: PYL-W0613
 ) -> None:
     r"""Print object(s) supplied via positional arguments.
     This function has an identical signature to the built-in print.
