@@ -102,10 +102,10 @@ def example_snowflake_partial_table_with_append():
     extracted_data = extract_data(
         homes1=homes_data1,
         homes2=homes_data2,
-        output_table=Table(name="combined_homes_data"),
+        output_table=Table(name="combined_homes_data", temp=True),
     )
 
-    transformed_data = transform_data(df=extracted_data, output_table=Table(name="homes_data_long"))
+    transformed_data = transform_data(df=extracted_data, output_table=Table(name="homes_data_long", temp=True))
 
     filtered_data = filter_data(
         homes_long=transformed_data,
