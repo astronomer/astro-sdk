@@ -112,8 +112,8 @@ def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) ->
     if generate_tasks:
         template_file = TEMPLATES_DIRECTORY / "gen_tasks_dag.py.jinja2"
     else:
-        for sql_file in workflow_files_dag.sorted_workflow_files():
-            sql_file.write_raw_content_to_target_path()
+        for workflow_file in workflow_files_dag.sorted_workflow_files():
+            workflow_file.write_raw_content_to_target_path()
         template_file = TEMPLATES_DIRECTORY / "render_dag.py.jinja2"
 
     output_file = dags_directory / f"{workflow_files_dag.dag_id}.py"

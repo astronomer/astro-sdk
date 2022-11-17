@@ -16,7 +16,7 @@ from sql_cli.constants import (
     SQL_FILE_TYPE,
     YAML_FILE_TYPE,
 )
-from sql_cli.operators.load_file import get_load_file_instance
+from sql_cli.operators.load_file import build_load_file_operator_content, get_load_file_instance
 from sql_cli.utils.jinja import find_template_variables
 
 
@@ -181,6 +181,7 @@ class SqlFile(WorkflowFile):
 
 class YamlFile(WorkflowFile):
     operator_instance_builder_callable_map = {LOAD_FILE_OPERATOR: get_load_file_instance}
+    operator_content_callable_map = {LOAD_FILE_OPERATOR: build_load_file_operator_content}
 
     def __init__(self, root_directory: Path, path: Path, target_directory: Path) -> None:
         super().__init__(root_directory, path, target_directory, YAML_FILE_TYPE)
@@ -195,9 +196,12 @@ class YamlFile(WorkflowFile):
             raise NotImplementedError(f"Operator support for {operator} not available")
         return operator
 
+    def get_yaml_content(self):
+        return self.yaml_content[self.operator]
+
     def to_operator(self) -> LoadFileOperator:
         return self.operator_instance_builder_callable_map[self.operator](
-            self.yaml_content[self.operator], self.yaml_file_name
+            self.get_yaml_content(), self.yaml_file_name
         )
 
 
