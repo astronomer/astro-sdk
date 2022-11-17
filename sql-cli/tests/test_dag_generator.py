@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 from conftest import DEFAULT_DATE
 
-from sql_cli.dag_generator import WorkflowFilesDAG, generate_dag
+from sql_cli.dag_generator import Workflow, generate_dag
 from sql_cli.exceptions import DagCycle, EmptyDag, SqlFilesDirectoryNotFound
 
 
@@ -22,7 +22,7 @@ def test_sql_files_dag_with_cycle(sql_files_dag_with_cycle):
 def test_sql_files_dag_without_sql_files():
     """Test that an exception is being raised when it does not have sql files."""
     with pytest.raises(EmptyDag):
-        WorkflowFilesDAG(dag_id="sql_files_dag_without_sql_files", start_date=DEFAULT_DATE, sql_files=[])
+        Workflow(dag_id="sql_files_dag_without_sql_files", start_date=DEFAULT_DATE, sql_files=[])
 
 
 @pytest.mark.parametrize("generate_tasks", [True, False])

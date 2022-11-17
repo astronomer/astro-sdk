@@ -4,12 +4,12 @@ import string
 from pathlib import Path
 
 import pytest
-from airflow.models import DAG, Connection, DagRun, TaskInstance as Ti
+from airflow.models import DAG, Connection, DagRun, TaskInstance as TI
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 
 from astro.table import MAX_TABLE_NAME_LENGTH
-from sql_cli.dag_generator import WorkflowFilesDAG
+from sql_cli.dag_generator import Workflow
 from sql_cli.project import Project
 from sql_cli.workflow_directory_parser import SqlFile
 
@@ -52,7 +52,6 @@ def sql_file(root_directory, dags_directory):
         root_directory=root_directory,
         path=root_directory / "a.sql",
         target_directory=dags_directory,
-        file_type="sql",
     )
 
 
@@ -62,7 +61,6 @@ def sql_file_with_parameters(root_directory, dags_directory):
         root_directory=root_directory,
         path=root_directory / "c.sql",
         target_directory=dags_directory,
-        file_type="sql",
     )
 
 
@@ -72,7 +70,6 @@ def sql_file_in_sub_directory(root_directory, dags_directory):
         root_directory=root_directory,
         path=root_directory / "sub_dir" / "a.sql",
         target_directory=dags_directory,
-        file_type="sql",
     )
 
 
@@ -82,13 +79,12 @@ def sql_file_with_cycle(root_directory_cycle, dags_directory):
         root_directory=root_directory_cycle,
         path=root_directory_cycle / "d.sql",
         target_directory=dags_directory,
-        file_type="sql",
     )
 
 
 @pytest.fixture()
 def sql_files_dag(sql_file):
-    return WorkflowFilesDAG(
+    return Workflow(
         dag_id="sql_files_dag",
         start_date=DEFAULT_DATE,
         workflow_files=[sql_file],
@@ -97,7 +93,7 @@ def sql_files_dag(sql_file):
 
 @pytest.fixture()
 def sql_files_dag_with_parameters(sql_file_with_parameters):
-    return WorkflowFilesDAG(
+    return Workflow(
         dag_id="sql_files_dag_with_parameters",
         start_date=DEFAULT_DATE,
         workflow_files=[sql_file_with_parameters],
@@ -106,7 +102,7 @@ def sql_files_dag_with_parameters(sql_file_with_parameters):
 
 @pytest.fixture()
 def sql_files_dag_with_cycle(sql_file_with_cycle):
-    return WorkflowFilesDAG(
+    return Workflow(
         dag_id="sql_files_dag_with_cycle",
         start_date=DEFAULT_DATE,
         workflow_files=[sql_file_with_cycle],
@@ -119,7 +115,7 @@ def sample_dag():
     yield DAG(dag_id, start_date=DEFAULT_DATE)
     with create_session() as session_:
         session_.query(DagRun).delete()
-        session_.query(Ti).delete()
+        session_.query(TI).delete()
 
 
 def create_unique_table_name(length: int = MAX_TABLE_NAME_LENGTH) -> str:

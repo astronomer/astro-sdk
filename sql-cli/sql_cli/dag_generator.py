@@ -14,7 +14,7 @@ TEMPLATES_DIRECTORY = Path("templates")
 
 
 @dataclass(frozen=True)
-class WorkflowFilesDAG:
+class Workflow:
     """
     A DAG of workflow files i.e. used for finding the right order to execute the files in.
 
@@ -104,7 +104,7 @@ def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) ->
     if not directory.exists():
         raise SqlFilesDirectoryNotFound("The directory does not exist!")
     workflow_files = sorted(get_workflow_files(directory, target_directory=dags_directory))
-    workflow_files_dag = WorkflowFilesDAG(
+    workflow_files_dag = Workflow(
         dag_id=directory.name,
         start_date=datetime(2020, 1, 1),
         workflow_files=workflow_files,

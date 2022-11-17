@@ -22,7 +22,7 @@ from sql_cli.utils.jinja import find_template_variables
 
 class WorkflowFile:
     """
-    A Workflow is equivalent to the corresponding sql operator in Astro SDK.
+    A Workflow is equivalent to a chain of corresponding operators in Astro SDK.
 
     :param root_directory: The root directory path of the project.
     :param path: The path to the workflow file.
@@ -204,39 +204,31 @@ class YamlFile(WorkflowFile):
         )
 
 
-def get_sql_files(directory: Path, target_directory: Path | None) -> set[SqlFile]:
-    """
-    Get all sql files within a directory.
+FILE_TYPE_CLASS_MAP = {SqlFile.file_type: SqlFile, YamlFile.file_type: YamlFile}
 
-    :param directory: The directory look in for sql files.
-    :param target_directory: The target directory path for the executable sql.
+
+def get_files_by_type(
+    directory: Path, file_type: str, target_directory: Path | None
+) -> set[SqlFile] | set[YamlFile]:
+    """
+    Get all files of the given file type within a directory.
+
+    :param directory: The directory look in for files.
+    :param file_type: The type of the files to look for.
+    :param target_directory: The target directory path for the executable workflow.
 
     :returns: the workflow files found in the directory.
     """
     return {
-        SqlFile(root_directory=directory, path=child, target_directory=target_directory)  # type: ignore
-        for child in directory.rglob(f"*.{SqlFile.file_type}")
-        if child.is_file() and not child.is_symlink()
-    }
-
-
-def get_yaml_files(directory: Path, target_directory: Path | None) -> set[YamlFile]:
-    """
-    Get all sql files within a directory.
-
-    :param directory: The directory look in for yaml files.
-    :param target_directory: The target directory path for the executable yaml workflow.
-
-    :returns: the workflow files found in the directory.
-    """
-    return {
-        YamlFile(root_directory=directory, path=child, target_directory=target_directory)  # type: ignore
-        for child in directory.rglob(f"*.{YamlFile.file_type}")
+        FILE_TYPE_CLASS_MAP[file_type](
+            root_directory=directory, path=child, target_directory=target_directory  # type: ignore
+        )
+        for child in directory.rglob(f"*.{file_type}")
         if child.is_file() and not child.is_symlink()
     }
 
 
 def get_workflow_files(directory: Path, target_directory: Path | None) -> set[WorkflowFile]:
-    sql_files: set[SqlFile] = get_sql_files(directory, target_directory=target_directory)
-    yaml_files: set[YamlFile] = get_yaml_files(directory, target_directory=target_directory)
+    sql_files = get_files_by_type(directory, SqlFile.file_type, target_directory=target_directory)
+    yaml_files = get_files_by_type(directory, YamlFile.file_type, target_directory=target_directory)
     return sql_files.union(yaml_files)
