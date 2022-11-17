@@ -154,10 +154,8 @@ class WorkflowFile:
 class SqlFile(WorkflowFile):
     """A SqlFile is equivalent to a transform step in the Astro SDK."""
 
-    file_type = SQL_FILE_TYPE
-
     def __init__(self, root_directory: Path, path: Path, target_directory: Path) -> None:
-        super().__init__(root_directory, path, target_directory, SqlFile.file_type)
+        super().__init__(root_directory, path, target_directory, SQL_FILE_TYPE)
 
     def to_operator(self) -> TransformOperator:
         """
@@ -182,11 +180,10 @@ class SqlFile(WorkflowFile):
 
 
 class YamlFile(WorkflowFile):
-    file_type = YAML_FILE_TYPE
     operator_instance_builder_callable_map = {LOAD_FILE_OPERATOR: get_load_file_instance}
 
     def __init__(self, root_directory: Path, path: Path, target_directory: Path) -> None:
-        super().__init__(root_directory, path, target_directory, YamlFile.file_type)
+        super().__init__(root_directory, path, target_directory, YAML_FILE_TYPE)
         with open(path) as yaml_file:
             self.yaml_content = yaml.load(yaml_file, Loader=yaml.Loader)
         self.operator = self._get_operator()
@@ -204,7 +201,7 @@ class YamlFile(WorkflowFile):
         )
 
 
-FILE_TYPE_CLASS_MAP = {SqlFile.file_type: SqlFile, YamlFile.file_type: YamlFile}
+FILE_TYPE_CLASS_MAP = {SQL_FILE_TYPE: SqlFile, YAML_FILE_TYPE: YamlFile}
 
 
 def get_files_by_type(
@@ -229,6 +226,6 @@ def get_files_by_type(
 
 
 def get_workflow_files(directory: Path, target_directory: Path | None) -> set[WorkflowFile]:
-    sql_files = get_files_by_type(directory, SqlFile.file_type, target_directory=target_directory)
-    yaml_files = get_files_by_type(directory, YamlFile.file_type, target_directory=target_directory)
+    sql_files = get_files_by_type(directory, SQL_FILE_TYPE, target_directory=target_directory)
+    yaml_files = get_files_by_type(directory, YAML_FILE_TYPE, target_directory=target_directory)
     return sql_files.union(yaml_files)
