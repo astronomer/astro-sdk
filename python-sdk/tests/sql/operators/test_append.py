@@ -144,6 +144,7 @@ def test_append(database_table_fixture, sample_dag, multiple_tables_fixture, app
             source_table=append_table,
         )
         validate_append(appended_table)
+        aql.cleanup()
     test_utils.run_dag(sample_dag)
 
 
