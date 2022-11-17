@@ -15,6 +15,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 FILE_PATH = dir_path + "/data/"
 
+
 @aql.transform()
 def combine_data(center_1: Table, center_2: Table):
     return """SELECT * FROM {{center_1}}
@@ -37,6 +38,7 @@ def aggregate_data(df: pd.DataFrame):
 
 
 # [END dataframe_example_1]
+
 
 @dag(
     start_date=datetime(2021, 1, 1),
@@ -91,20 +93,19 @@ def example_amazon_s3_snowflake_transform():
     cleaned_data = clean_data(combined_data)
     # [START dataframe_example_2]
     snowflake_output_table = Table(
-            name="aggregated_adoptions_" + str(int(time.time())),
-            metadata=Metadata(
-                schema=os.environ["SNOWFLAKE_SCHEMA"],
-                database=os.environ["SNOWFLAKE_DATABASE"],
-            ),
-            conn_id="snowflake_conn",
-            temp=True,
-        )
-    aggregate_results =aggregate_data(
+        name="aggregated_adoptions_" + str(int(time.time())),
+        metadata=Metadata(
+            schema=os.environ["SNOWFLAKE_SCHEMA"],
+            database=os.environ["SNOWFLAKE_DATABASE"],
+        ),
+        conn_id="snowflake_conn",
+        temp=True,
+    )
+    aggregate_results = aggregate_data(
         cleaned_data,
         output_table=snowflake_output_table,
     )
     # [END dataframe_example_2]
-
 
     aql.cleanup()
 
