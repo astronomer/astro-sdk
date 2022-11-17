@@ -41,7 +41,7 @@ FILE_PATH = dir_path + "/data/"
 
 @aql.run_raw_sql()
 def raw_sql_query(table_name: Table):
-    return """DROP TABLE {{table_name}};"""
+    return """DROP TABLE IF EXISTS {{table_name}};"""
 
 
 def get_temp_tables():
