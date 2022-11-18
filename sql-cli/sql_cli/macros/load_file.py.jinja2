@@ -1,5 +1,5 @@
 {% macro load_file(yaml_file, dag) -%}
-{% set yaml_content = yaml_file.get_yaml_content() %}
+{% set yaml_content = yaml_file.get_yaml_content() -%}
 {{ yaml_file.get_variable_name() }} = aql.load_file(
     input_file=File(
         path="{{ yaml_content.input_file.path }}",

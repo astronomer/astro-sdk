@@ -18,9 +18,9 @@ with DAG(
     schedule_interval=None,
 ) as dag:
     {%- for workflow_file in dag.sorted_workflow_files() %}
-    {% if workflow_file.operator == 'load_file'  %}
+    {%- if workflow_file.operator == 'load_file' %}
     {{ load_file(workflow_file, dag)|indent(width=4) }}
-    {% elif workflow_file.operator == 'transform_file'  %}
+    {%- elif workflow_file.operator == 'transform_file' %}
     {{ transform_file(workflow_file, dag)|indent(width=4) }}
-    {% endif %}
+    {%- endif %}
     {%- endfor %}
