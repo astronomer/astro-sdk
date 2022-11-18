@@ -7,7 +7,7 @@
         conn_id="{{ yaml_content.input_file.conn_id }}",
         {%- endif %}
         {%- if "filetype" in yaml_content.input_file %}
-        filetype="{{ yaml_content.input_file.filetype }}",
+        filetype=FileType("{{ yaml_content.input_file.filetype }}"),
         {%- endif %}
         {%- if "normalize_config" in yaml_content.input_file %}
         normalize_config={{ yaml_content.input_file.normalize_config }},
