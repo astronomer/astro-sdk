@@ -210,18 +210,16 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
 
         input_dataset: list[OpenlineageDataset] = []
         output_dataset: list[OpenlineageDataset] = []
-        
-        first_table = find_first_table(
-                op_args=self.op_args,  # type: ignore
-                op_kwargs=self.op_kwargs,
-                python_callable=self.python_callable,
-                parameters=self.parameters,  # type: ignore
-                context={},
-            )
 
-        if (
-            first_table.openlineage_emit_temp_table_event() and first_table.conn_id
-        ):  # pragma: no cover
+        first_table = find_first_table(
+            op_args=self.op_args,  # type: ignore
+            op_kwargs=self.op_kwargs,
+            python_callable=self.python_callable,
+            parameters=self.parameters,  # type: ignore
+            context={},
+        )
+
+        if first_table.openlineage_emit_temp_table_event() and first_table.conn_id:  # pragma: no cover
             input_uri = (
                 f"{first_table.openlineage_dataset_namespace()}"
                 f"://{first_table.openlineage_dataset_name()}"
@@ -239,8 +237,8 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                 )
             ]
         self.output_table.conn_id = task_instance.xcom_pull(
-                task_ids=task_instance.task_id, key="output_table_conn_id"
-            )
+            task_ids=task_instance.task_id, key="output_table_conn_id"
+        )
         if (
             self.output_table.openlineage_emit_temp_table_event() and self.output_table.conn_id
         ):  # pragma: no cover
