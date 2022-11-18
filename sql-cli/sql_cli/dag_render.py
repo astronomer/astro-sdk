@@ -16,13 +16,13 @@ def to_task_list(workflow_files: list[WorkflowFile]) -> list[TransformOperator]:
     :param workflow_files: The list of SQL files with necessary metadata for us to
         generate tasks with dependencies
     """
-    param_dict = {s.path.stem: s.to_operator() for s in workflow_files}
+    param_dict = {s.name: s.to_operator() for s in workflow_files}
     for s in workflow_files:
         for p in s.get_parameters():
             if not param_dict.get(p):
-                raise ValueError(f"variable '{p}' is undefined in file {s.path.stem}")
-            param_dict[s.path.stem].parameters[p] = param_dict[p].output
-            param_dict[s.path.stem].set_upstream(param_dict[p])
+                raise ValueError(f"variable '{p}' is undefined in file {s.name}")
+            param_dict[s.name].parameters[p] = param_dict[p].output
+            param_dict[s.name].set_upstream(param_dict[p])
     return list(param_dict.values())
 
 

@@ -1,7 +1,0 @@
-{% macro define_load_file_task(workflow_file, dag, yaml_content, yaml_file_name) -%}
-from sql_cli.operators.load_file import build_load_file_operator_content
-operator_content = build_load_file_operator_content({{yaml_content|safe}}, '{{yaml_file_name}}')
-{{ workflow_file.get_variable_name() }} = aql.load_file(
-    **operator_content
-)
-{%- endmacro -%}

@@ -66,6 +66,15 @@ class WorkflowFile:
         """
         return hash(self.root_directory) ^ hash(self.path)
 
+    @property
+    def name(self) -> str:
+        """
+        The file name of the workflow file.
+
+        :returns the file name without last suffix.
+        """
+        return self.path.stem
+
     def get_parameters(self) -> list[str]:
         """
         Get all parameters used for parameterized workflow files.
@@ -100,8 +109,8 @@ class WorkflowFile:
         :returns: the file name without suffix.
         """
         if self.has_sub_directory():
-            return f"{'__'.join(self.get_sub_directories())}__{self.path.stem}"
-        return self.path.stem
+            return f"{'__'.join(self.get_sub_directories())}__{self.name}"
+        return self.name
 
     def get_relative_target_path(self) -> Path:
         """
@@ -151,6 +160,7 @@ class SqlFile(WorkflowFile):
 
     def __init__(self, root_directory: Path, path: Path, target_directory: Path) -> None:
         super().__init__(root_directory, path, target_directory)
+        self.operator = "transform_file"
 
     def to_operator(self) -> TransformOperator:
         """
@@ -179,10 +189,8 @@ class YamlFile(WorkflowFile):
 
     def __init__(self, root_directory: Path, path: Path, target_directory: Path) -> None:
         super().__init__(root_directory, path, target_directory)
-        with path.open() as yaml_file:
-            self.yaml_content = yaml.safe_load(yaml_file)
+        self.yaml_content = yaml.safe_load(self.raw_content)
         self.operator = self._get_operator()
-        self.yaml_file_name = self.path.stem
 
     def _get_operator(self) -> str:
         top_level_keys = list(self.yaml_content.keys())
@@ -200,9 +208,7 @@ class YamlFile(WorkflowFile):
         return self.yaml_content[self.operator]
 
     def to_operator(self) -> LoadFileOperator:
-        return self.operator_instance_builder_callable_map[self.operator](
-            self.get_yaml_content(), self.yaml_file_name
-        )
+        return self.operator_instance_builder_callable_map[self.operator](self.get_yaml_content(), self.name)
 
 
 SUPPORTED_FILES = {"*.sql": SqlFile, "*.yaml": YamlFile, "*.yml": YamlFile}
