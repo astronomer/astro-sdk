@@ -193,7 +193,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         if context:
             self.sql = self.render_template(self.sql, context)
 
-    def get_openlineage_facets(self, task_instance):
+    def get_openlineage_facets_on_complete(self, task_instance):
         """
         Returns the lineage data
         """
@@ -210,25 +210,37 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
 
         input_dataset: list[OpenlineageDataset] = []
         output_dataset: list[OpenlineageDataset] = []
+        
+        first_table = find_first_table(
+                op_args=self.op_args,  # type: ignore
+                op_kwargs=self.op_kwargs,
+                python_callable=self.python_callable,
+                parameters=self.parameters,  # type: ignore
+                context={},
+            )
+
         if (
-            self.output_table.openlineage_emit_temp_table_event() and self.output_table.conn_id
+            first_table.openlineage_emit_temp_table_event() and first_table.conn_id
         ):  # pragma: no cover
             input_uri = (
-                f"{self.output_table.openlineage_dataset_namespace()}"
-                f"://{self.output_table.openlineage_dataset_name()}"
+                f"{first_table.openlineage_dataset_namespace()}"
+                f"://{first_table.openlineage_dataset_name()}"
             )
             input_dataset = [
                 OpenlineageDataset(
-                    namespace=self.output_table.openlineage_dataset_namespace(),
-                    name=self.output_table.openlineage_dataset_name(),
+                    namespace=first_table.openlineage_dataset_namespace(),
+                    name=first_table.openlineage_dataset_name(),
                     facets={
                         "schema": SchemaDatasetFacet(
                             fields=[SchemaField(name=self.schema, type=self.database)]
                         ),
-                        "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=input_uri),
+                        "dataSource": DataSourceDatasetFacet(name=first_table.name, uri=input_uri),
                     },
                 )
             ]
+        self.output_table.conn_id = task_instance.xcom_pull(
+                task_ids=task_instance.task_id, key="output_table_conn_id"
+            )
         if (
             self.output_table.openlineage_emit_temp_table_event() and self.output_table.conn_id
         ):  # pragma: no cover

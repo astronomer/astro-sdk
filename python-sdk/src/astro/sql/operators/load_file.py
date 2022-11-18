@@ -77,7 +77,8 @@ class LoadFileOperator(AstroSQLBaseOperator):
         """
         if self.input_file.conn_id:
             check_if_connection_exists(self.input_file.conn_id)
-
+        context["ti"].xcom_push(key="output_table_conn_id", value=str(self.output_table.conn_id))
+        context["ti"].xcom_push(key="output_table_name", value=str(self.output_table.name))
         return self.load_data(input_file=self.input_file)
 
     def load_data(self, input_file: File) -> BaseTable | File:
@@ -231,7 +232,12 @@ class LoadFileOperator(AstroSQLBaseOperator):
                 },
             )
         ]
-
+        self.output_table.conn_id = task_instance.xcom_pull(
+                task_ids=task_instance.task_id, key="output_table_conn_id"
+            )
+        self.output_table.name = task_instance.xcom_pull(
+                task_ids=task_instance.task_id, key="output_table_name"
+            )
         output_dataset: list[OpenlineageDataset] = []
         if self.output_table is not None and self.output_table.openlineage_emit_temp_table_event():
             output_uri = (
