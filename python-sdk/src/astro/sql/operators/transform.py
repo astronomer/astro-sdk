@@ -64,7 +64,6 @@ class TransformOperator(BaseSQLDecoratedOperator):
         context["ti"].xcom_push(key="output_table_conn_id", value=str(self.output_table.conn_id))
         return self.output_table
 
-
 def transform(
     python_callable: Callable | None = None,
     conn_id: str = "",
