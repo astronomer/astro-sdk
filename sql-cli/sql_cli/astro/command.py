@@ -2,7 +2,7 @@ import click
 import typer
 from typer.core import TyperCommand
 
-from sql_cli.wrappers.utils import resolve_command_path
+from sql_cli.astro.utils import resolve_command_path
 
 
 class AstroCommand(TyperCommand):
