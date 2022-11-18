@@ -35,6 +35,8 @@ def aggregate_data(df: pd.DataFrame):
     new_df = df.pivot_table(index="date", values="name", columns=["type"], aggfunc="count").reset_index()
     new_df.columns = new_df.columns.str.lower()
     return new_df
+
+
 # [END dataframe_example_1]
 
 
