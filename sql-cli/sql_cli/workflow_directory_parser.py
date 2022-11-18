@@ -75,6 +75,15 @@ class WorkflowFile:
         """
         return self.path.stem
 
+    @property
+    def operator_name(self) -> str:
+        """
+        The name of the aql function to run.
+
+        :returns: the function name of the operator in aql.
+        """
+        raise NotImplementedError("Operator name is not defined.")
+
     def get_parameters(self) -> list[str]:
         """
         Get all parameters used for parameterized workflow files.
@@ -158,6 +167,15 @@ class WorkflowFile:
 class SqlFile(WorkflowFile):
     """A SqlFile is equivalent to a transform step in the Astro SDK."""
 
+    @property
+    def operator_name(self) -> str:
+        """
+        The name of the aql function to run.
+
+        :returns: the function name of the operator in aql.
+        """
+        return "transform_file"
+
     def to_operator(self) -> TransformOperator:
         """
         Converts SQLFile into a TransformOperator that can be added to a DAG.
@@ -181,14 +199,27 @@ class SqlFile(WorkflowFile):
 
 
 class YamlFile(WorkflowFile):
+    """
+    A YamlFile, for example, could be a load_file step in the Astro SDK.
+
+    :param root_directory: The root directory path of the project.
+    :param path: The path to the yaml file.
+    :param target_directory: The target directory path for the executable yaml file.
+    """
+
     operator_instance_builder_callable_map = {LOAD_FILE_OPERATOR: get_load_file_instance}
 
     def __init__(self, root_directory: Path, path: Path, target_directory: Path) -> None:
         super().__init__(root_directory, path, target_directory)
         self.yaml_content = yaml.safe_load(self.raw_content)
-        self.operator = self._get_operator()
 
-    def _get_operator(self) -> str:
+    @property
+    def operator_name(self) -> str:
+        """
+        The name of the aql function to run.
+
+        :returns: the function name of the operator in aql.
+        """
         top_level_keys = list(self.yaml_content.keys())
         top_level_keys_count = len(top_level_keys)
         if top_level_keys_count > 1:
@@ -201,10 +232,22 @@ class YamlFile(WorkflowFile):
         return operator
 
     def get_yaml_content(self) -> dict[str, Any]:
-        return self.yaml_content[self.operator]
+        """
+        Get the yaml content for the operator.
+
+        :returns: the operator kwargs.
+        """
+        return self.yaml_content[self.operator_name]
 
     def to_operator(self) -> LoadFileOperator:
-        return self.operator_instance_builder_callable_map[self.operator](self.get_yaml_content(), self.name)
+        """
+        Deserialize the operator to an actual aql operator.
+
+        :returns: the aql operator.
+        """
+        return self.operator_instance_builder_callable_map[self.operator_name](
+            self.get_yaml_content(), self.name
+        )
 
 
 SUPPORTED_FILES = {"*.sql": SqlFile, "*.yaml": YamlFile, "*.yml": YamlFile}
@@ -232,6 +275,14 @@ def get_files_by_type(
 
 
 def get_workflow_files(directory: Path, target_directory: Path | None) -> set[WorkflowFile]:
+    """
+    Get all workflow files within a directory.
+
+    :param directory: The directory look in for files.
+    :param target_directory: The target directory path for the executable workflow.
+
+    :returns: a set of all the workflow files.
+    """
     workflow_files: set[WorkflowFile] = set()
     for file_type in SUPPORTED_FILES:
         files = get_files_by_type(directory, file_type, target_directory=target_directory)
