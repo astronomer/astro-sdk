@@ -6,7 +6,7 @@ from pathlib import Path
 
 from networkx import DiGraph, depth_first_search, find_cycle, is_directed_acyclic_graph
 
-from sql_cli.exceptions import DagCycle, EmptyDag, SqlFilesDirectoryNotFound
+from sql_cli.exceptions import DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
 from sql_cli.utils.jinja import render
 from sql_cli.workflow_directory_parser import WorkflowFile, get_workflow_files
 
@@ -102,7 +102,7 @@ def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) ->
     :returns: the path to the DAG file.
     """
     if not directory.exists():
-        raise SqlFilesDirectoryNotFound("The directory does not exist!")
+        raise WorkflowFilesDirectoryNotFound("The directory does not exist!")
     workflow_files = sorted(get_workflow_files(directory, target_directory=dags_directory))
     workflow_files_dag = Workflow(
         dag_id=directory.name,

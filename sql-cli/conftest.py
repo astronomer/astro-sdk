@@ -83,27 +83,27 @@ def sql_file_with_cycle(root_directory_cycle, dags_directory):
 
 
 @pytest.fixture()
-def sql_files_dag(sql_file):
+def workflow(sql_file):
     return Workflow(
-        dag_id="sql_files_dag",
+        dag_id="workflow",
         start_date=DEFAULT_DATE,
         workflow_files=[sql_file],
     )
 
 
 @pytest.fixture()
-def sql_files_dag_with_parameters(sql_file_with_parameters):
+def workflow_with_parameters(sql_file_with_parameters):
     return Workflow(
-        dag_id="sql_files_dag_with_parameters",
+        dag_id="workflow_with_parameters",
         start_date=DEFAULT_DATE,
         workflow_files=[sql_file_with_parameters],
     )
 
 
 @pytest.fixture()
-def sql_files_dag_with_cycle(sql_file_with_cycle):
+def workflow_with_cycle(sql_file_with_cycle):
     return Workflow(
-        dag_id="sql_files_dag_with_cycle",
+        dag_id="workflow_with_cycle",
         start_date=DEFAULT_DATE,
         workflow_files=[sql_file_with_cycle],
     )

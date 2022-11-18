@@ -11,7 +11,7 @@ from typer import Exit
 
 import sql_cli
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
-from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, SqlFilesDirectoryNotFound
+from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
 from sql_cli.wrappers.command import AstroCommand
 from sql_cli.wrappers.group import AstroGroup
 
@@ -278,7 +278,7 @@ def _generate_dag(project: Project, workflow_name: str, generate_tasks: bool) ->
     except EmptyDag:
         rprint(f"[bold red]The workflow {workflow_name} does not have any SQL files![/bold red]")
         raise Exit(code=1)
-    except SqlFilesDirectoryNotFound:
+    except WorkflowFilesDirectoryNotFound:
         rprint(f"[bold red]The workflow {workflow_name} does not exist![/bold red]")
         raise Exit(code=1)
     except DagCycle as dag_cycle:

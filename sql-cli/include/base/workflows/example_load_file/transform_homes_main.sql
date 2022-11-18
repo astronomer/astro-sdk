@@ -2,5 +2,5 @@
 conn_id: bigquery
 ---
 SELECT *
-FROM {{homes_main}}
+FROM {{load_homes_main}}
 LIMIT 5;

@@ -72,6 +72,7 @@ def test_version():
     "workflow_name,environment",
     [
         ("example_basic_transform", "default"),
+        ("example_load_file", "default"),
         ("example_templating", "dev"),
     ],
 )
@@ -169,6 +170,7 @@ def test_validate_all(initialised_project_with_test_config):
     "workflow_name,environment",
     [
         ("example_basic_transform", "default"),
+        ("example_load_file", "default"),
         ("example_templating", "dev"),
     ],
 )

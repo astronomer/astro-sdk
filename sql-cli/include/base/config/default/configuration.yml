@@ -10,14 +10,14 @@ connections:
 ## Example of Bigquery connection
   - conn_id: bigquery
     conn_type: bigquery
-    description: null
+    description:
     extra:
       project: astronomer-dag-authoring
-    host: null
-    login: null
-    password: null
-    port: null
-    schema: null
+    host:
+    login:
+    password:
+    port:
+    schema:
 
 ## Example of Postgres connection
 #  - conn_id: postgres_conn
