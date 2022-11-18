@@ -77,8 +77,9 @@ class LoadFileOperator(AstroSQLBaseOperator):
         """
         if self.input_file.conn_id:
             check_if_connection_exists(self.input_file.conn_id)
-        context["ti"].xcom_push(key="output_table_conn_id", value=str(self.output_table.conn_id))
-        context["ti"].xcom_push(key="output_table_name", value=str(self.output_table.name))
+        if self.output_table:
+            context["ti"].xcom_push(key="output_table_conn_id", value=str(self.output_table.conn_id))
+            context["ti"].xcom_push(key="output_table_name", value=str(self.output_table.name))
         return self.load_data(input_file=self.input_file)
 
     def load_data(self, input_file: File) -> BaseTable | File:
