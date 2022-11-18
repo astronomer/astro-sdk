@@ -89,6 +89,7 @@ jobs:
             ~/.cache/pip
             .nox
           key: ${{ runner.os }}-2.3-${{ hashFiles('sql-cli/pyproject.toml') }}
+      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: pip3 install nox
       - run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')"
       - name: Upload coverage
@@ -101,6 +102,7 @@ jobs:
       AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
       _TYPER_FORCE_DISABLE_TERMINAL: 1
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
       GOOGLE_CLOUD_PORJECT: "astronomer-dag-authoring"
 
 
