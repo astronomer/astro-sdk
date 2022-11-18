@@ -11,10 +11,6 @@ from astro import sql as aql
 from astro.files import File
 from astro.table import Metadata, Table
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-
-FILE_PATH = dir_path + "/data/"
-
 
 @aql.transform()
 def combine_data(center_1: Table, center_2: Table):
