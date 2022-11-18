@@ -79,7 +79,7 @@ class MergeOperator(AstroSQLBaseOperator):
         context["ti"].xcom_push(key="merge_query", value=str(db.sql))
         return self.target_table
 
-    def get_openlineage_facets(self, task_instance):
+    def get_openlineage_facets_on_complete(self, task_instance):
         """
         Collect the input, output, job and run facets for merge operator
         """
