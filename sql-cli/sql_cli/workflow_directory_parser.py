@@ -12,13 +12,8 @@ from yaml.scanner import ScannerError
 
 from astro.sql import LoadFileOperator
 from astro.sql.operators.transform import TransformOperator
-from sql_cli.constants import (
-    GENERATED_WORKFLOW_INCLUDE_DIRECTORY,
-    LOAD_FILE_OPERATOR,
-    SQL_FILE_TYPE,
-    YAML_FILE_TYPE,
-)
-from sql_cli.operators.load_file import build_load_file_operator_content, get_load_file_instance
+from sql_cli.constants import GENERATED_WORKFLOW_INCLUDE_DIRECTORY, LOAD_FILE_OPERATOR
+from sql_cli.operators.load_file import get_load_file_instance
 from sql_cli.utils.jinja import find_template_variables
 
 
@@ -28,16 +23,14 @@ class WorkflowFile:
 
     :param root_directory: The root directory path of the project.
     :param path: The path to the workflow file.
-    :param file_type: The type of the workflow file. e.g. sql or yaml
     :param target_directory: The target directory path for the executable workflow file.
     """
 
-    def __init__(self, root_directory: Path, path: Path, target_directory: Path, file_type: str) -> None:
+    def __init__(self, root_directory: Path, path: Path, target_directory: Path) -> None:
         self.root_directory = root_directory
         self.path = path
         self.target_directory = target_directory
         self.raw_content = self.path.read_text()
-        self.file_type = file_type
 
         post = frontmatter.load(self.path)
         self.content = post.content
@@ -157,7 +150,7 @@ class SqlFile(WorkflowFile):
     """A SqlFile is equivalent to a transform step in the Astro SDK."""
 
     def __init__(self, root_directory: Path, path: Path, target_directory: Path) -> None:
-        super().__init__(root_directory, path, target_directory, SQL_FILE_TYPE)
+        super().__init__(root_directory, path, target_directory)
 
     def to_operator(self) -> TransformOperator:
         """
@@ -183,10 +176,9 @@ class SqlFile(WorkflowFile):
 
 class YamlFile(WorkflowFile):
     operator_instance_builder_callable_map = {LOAD_FILE_OPERATOR: get_load_file_instance}
-    operator_content_callable_map = {LOAD_FILE_OPERATOR: build_load_file_operator_content}
 
     def __init__(self, root_directory: Path, path: Path, target_directory: Path) -> None:
-        super().__init__(root_directory, path, target_directory, YAML_FILE_TYPE)
+        super().__init__(root_directory, path, target_directory)
         with path.open() as yaml_file:
             self.yaml_content = yaml.safe_load(yaml_file)
         self.operator = self._get_operator()
@@ -199,7 +191,7 @@ class YamlFile(WorkflowFile):
             raise ScannerError(
                 f"Only one top level operator expected. Got {top_level_keys_count} operators: {top_level_keys}"
             )
-        operator = list(self.yaml_content.keys())[0]
+        operator = top_level_keys[0]
         if operator not in YamlFile.operator_instance_builder_callable_map:
             raise NotImplementedError(f"Operator support for {operator} not available")
         return operator
