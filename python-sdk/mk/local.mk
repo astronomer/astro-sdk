@@ -46,7 +46,7 @@ config:  ## Create sample configuration files related to Snowflake, Amazon and G
 	@cd .. && test -e test-connections.yaml && \
 		(echo "The file test-connections.yaml already exist. Skipping.") || \
 		(echo "Creating test-connections.yaml..." && \
-		cat .github/ci-test-connections.yaml > test-connections.yaml && \
+		cat ../.github/ci-test-connections.yaml > test-connections.yaml && \
 		echo "Please, update test-connections.yaml with your credentials")
 
 setup: config virtualenv install ## Setup a local development environment
