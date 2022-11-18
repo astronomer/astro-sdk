@@ -12,7 +12,7 @@ connections:
     conn_type: bigquery
     description:
     extra:
-      project: astronomer-dag-authoring
+      project: $GOOGLE_CLOUD_PROJECT
     host:
     login:
     password:
