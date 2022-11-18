@@ -161,7 +161,12 @@ class WorkflowFile:
 
     @abstractmethod
     def to_operator(self) -> BaseOperator:
-        raise NotImplementedError()
+        """
+        Deserialize the operator to an actual aql operator.
+
+        :returns: the aql operator.
+        """
+        raise NotImplementedError("aql operator not implemented!")
 
 
 class SqlFile(WorkflowFile):

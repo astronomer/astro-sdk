@@ -84,3 +84,9 @@ warn_redundant_casts = true
 #warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+addopts = "-s --cov=sql_cli --cov-report term-missing"
+testpaths = [
+    "tests",
+]

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 from sql_cli.workflow_directory_parser import WorkflowFile, get_workflow_files
 
 if TYPE_CHECKING:
-    from astro.sql.operators.transform import TransformOperator
+    from astro.sql.operators.transform import TransformOperator  # pragma: no cover
 
 
 def to_task_list(workflow_files: list[WorkflowFile]) -> list[TransformOperator]:

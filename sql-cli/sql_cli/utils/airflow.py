@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from packaging.version import Version
 
 if TYPE_CHECKING:
-    from airflow.models.dag import DAG
+    from airflow.models.dag import DAG  # pragma: no cover
 
 logger = logging.getLogger(__name__)
 

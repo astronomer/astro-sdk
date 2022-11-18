@@ -16,7 +16,7 @@ from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
 from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
 
 if TYPE_CHECKING:
-    from sql_cli.project import Project
+    from sql_cli.project import Project  # pragma: no cover
 
 load_dotenv()
 app = typer.Typer(
