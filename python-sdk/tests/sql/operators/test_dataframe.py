@@ -481,7 +481,7 @@ def test_empty_dataframe_fail(sample_dag, conn_id):
 def test_dataframe_replace_table_if_exist(sample_dag, conn_id):
     @aql.dataframe
     def get_empty_dataframe():
-        arr = {'col1': [1, 2]}
+        arr = {"col1": [1, 2]}
         return pandas.DataFrame(data=arr)
 
     output_tb = Table(
@@ -489,9 +489,7 @@ def test_dataframe_replace_table_if_exist(sample_dag, conn_id):
         conn_id=conn_id,
     )
     with sample_dag:
-        get_empty_dataframe(
-            output_table=output_tb
-        )
+        get_empty_dataframe(output_table=output_tb)
     test_utils.run_dag(sample_dag)
     assert output_tb.row_count == 2
     # re-run dag to and make sure it is replacing and appending
