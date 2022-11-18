@@ -647,8 +647,10 @@ class SnowflakeDatabase(BaseDatabase):
         """
         self._assert_not_empty_df(source_dataframe)
 
-        auto_create_table = True
-        if if_exists == "replace":
+        auto_create_table = False
+        if not self.table_exists(target_table):
+            auto_create_table = True
+        elif if_exists == "replace":
             self.create_table(target_table, dataframe=source_dataframe)
 
         # We are changing the case of table name to ease out on the requirements to add quotes in raw queries.
