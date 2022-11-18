@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 import airflow
 import frontmatter
@@ -158,10 +158,6 @@ class WorkflowFile:
 class SqlFile(WorkflowFile):
     """A SqlFile is equivalent to a transform step in the Astro SDK."""
 
-    def __init__(self, root_directory: Path, path: Path, target_directory: Path) -> None:
-        super().__init__(root_directory, path, target_directory)
-        self.operator = "transform_file"
-
     def to_operator(self) -> TransformOperator:
         """
         Converts SQLFile into a TransformOperator that can be added to a DAG.
@@ -204,7 +200,7 @@ class YamlFile(WorkflowFile):
             raise NotImplementedError(f"Operator support for {operator} not available")
         return operator
 
-    def get_yaml_content(self):
+    def get_yaml_content(self) -> dict[str, Any]:
         return self.yaml_content[self.operator]
 
     def to_operator(self) -> LoadFileOperator:
