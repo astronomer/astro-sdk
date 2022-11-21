@@ -11,8 +11,6 @@ connections:
   - conn_id: bigquery
     conn_type: bigquery
     description:
-    extra:
-      project: $GOOGLE_CLOUD_PROJECT
     host:
     login:
     password:
