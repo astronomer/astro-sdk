@@ -5,7 +5,8 @@ from airflow.configuration import conf
 from astro.constants import DEFAULT_SCHEMA
 
 SCHEMA = conf.get("astro_sdk", "sql_schema", fallback=DEFAULT_SCHEMA)
-# TODO: Add comments
+# Airflow hook does have option to set the postgres search path or schema's.
+# Let's set postgres_default_schema fallback to public
 POSTGRES_SCHEMA = conf.get("astro_sdk", "postgres_default_schema", fallback="public")
 BIGQUERY_SCHEMA = conf.get("astro_sdk", "bigquery_default_schema", fallback=SCHEMA)
 SNOWFLAKE_SCHEMA = conf.get("astro_sdk", "snowflake_default_schema", fallback=SCHEMA)
