@@ -41,7 +41,7 @@ class PostgresDatabase(BaseDatabase):
         """Retrieve Airflow hook to interface with the Postgres database."""
         conn = PostgresHook(postgres_conn_id=self.conn_id).get_connection(self.conn_id)
         kwargs = {}
-        if (conn.schema is None) and (self.table and self.table.metadata and self.table.metadata.schema):
+        if (conn.schema is None) and (self.table and self.table.metadata and self.table.metadata.database):
             kwargs.update({"database": self.table.metadata.schema})
         return PostgresHook(postgres_conn_id=self.conn_id, **kwargs)
 
