@@ -124,6 +124,7 @@ jobs:
         image: dimberman/pagila-test
         env:
           POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: airflow_ci
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -198,6 +199,7 @@ jobs:
         image: dimberman/pagila-test
         env:
           POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: airflow_ci
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
@@ -267,6 +269,7 @@ jobs:
         image: dimberman/pagila-test
         env:
           POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: airflow_ci
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
