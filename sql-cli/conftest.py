@@ -39,6 +39,16 @@ def root_directory_symlink():
 
 
 @pytest.fixture()
+def root_directory_multiple_operators():
+    return CWD / "tests" / "workflows" / "multiple_operators"
+
+
+@pytest.fixture()
+def root_directory_unsupported_operator():
+    return CWD / "tests" / "workflows" / "unsupported_operator"
+
+
+@pytest.fixture()
 def root_directory_dags():
     return CWD / "tests" / "test_dag"
 

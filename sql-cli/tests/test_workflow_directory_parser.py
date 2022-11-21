@@ -1,6 +1,13 @@
 from pathlib import Path
 
-from sql_cli.workflow_directory_parser import SqlFile, YamlFile, get_workflow_files
+import pytest
+from yaml.scanner import ScannerError
+
+from sql_cli.workflow_directory_parser import SqlFile, WorkflowFile, YamlFile, get_workflow_files
+
+
+class WorkflowFileSubClass(WorkflowFile):
+    pass
 
 
 def test_workflow_file_get_parameters(sql_file_with_parameters):
@@ -46,3 +53,52 @@ def test_get_workflow_files(root_directory, dags_directory):
 def test_get_workflow_files_with_symlink(root_directory_symlink, dags_directory):
     """Test that get_sql_files ignores symlinks."""
     assert not get_workflow_files(directory=root_directory_symlink, target_directory=dags_directory)
+
+
+def test_get_workflow_files_with_multiple_operators(root_directory_multiple_operators, dags_directory):
+    """Tests that a workflow containing a yaml file having multiple operators raises exception"""
+    workflow_files = get_workflow_files(
+        directory=root_directory_multiple_operators, target_directory=dags_directory
+    )
+    with pytest.raises(ScannerError):
+        for file in workflow_files:
+            _ = file.operator_name
+
+
+def test_get_workflows_files_with_unsupported_operator(root_directory_unsupported_operator, dags_directory):
+    """Tests that a workflow containing a yaml file having multiple operators raises exception"""
+    workflow_files = get_workflow_files(
+        directory=root_directory_unsupported_operator, target_directory=dags_directory
+    )
+    with pytest.raises(NotImplementedError):
+        for file in workflow_files:
+            _ = file.operator_name
+
+
+def test_subclass_missing_not_implemented_methods_raise_exception(root_directory, dags_directory):
+    workflow_file = WorkflowFileSubClass(
+        root_directory=root_directory, path=root_directory / "a.sql", target_directory=dags_directory
+    )
+
+    with pytest.raises(NotImplementedError):
+        _ = workflow_file.operator_name
+
+    with pytest.raises(NotImplementedError):
+        _ = workflow_file.to_operator()
+
+
+def test_workflow_file_equality_check(root_directory, dags_directory):
+    """Tests that the equality check operator verifies whether two WorkflowFile instances refer to the same file."""
+    workflow_file1 = WorkflowFile(
+        root_directory=root_directory, path=root_directory / "a.sql", target_directory=dags_directory
+    )
+    workflow_file2 = WorkflowFile(
+        root_directory=root_directory, path=root_directory / "a.sql", target_directory=dags_directory
+    )
+    workflow_file3 = WorkflowFile(
+        root_directory=root_directory, path=root_directory / "b.sql", target_directory=dags_directory
+    )
+
+    assert workflow_file1 == workflow_file2
+
+    assert workflow_file1 != workflow_file3
