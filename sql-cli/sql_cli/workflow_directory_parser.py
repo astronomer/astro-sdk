@@ -12,7 +12,7 @@ from yaml.scanner import ScannerError
 
 from astro.sql import LoadFileOperator
 from astro.sql.operators.transform import TransformOperator
-from sql_cli.constants import GENERATED_WORKFLOW_INCLUDE_DIRECTORY, LOAD_FILE_OPERATOR
+from sql_cli.constants import GENERATED_WORKFLOW_INCLUDE_DIRECTORY
 from sql_cli.operators.load_file import get_load_file_instance
 from sql_cli.utils.jinja import find_template_variables
 
@@ -31,10 +31,7 @@ class WorkflowFile:
         self.path = path
         self.target_directory = target_directory
         self.raw_content = self.path.read_text()
-
-        post = frontmatter.load(self.path)
-        self.content = post.content
-        self.metadata = post.metadata
+        self.metadata, self.content = frontmatter.parse(self.raw_content)
 
     def __eq__(self, other: object) -> bool:
         """
@@ -212,7 +209,7 @@ class YamlFile(WorkflowFile):
     :param target_directory: The target directory path for the executable yaml file.
     """
 
-    operator_instance_builder_callable_map = {LOAD_FILE_OPERATOR: get_load_file_instance}
+    SUPPORTED_OPERATORS = {"load_file": get_load_file_instance}
 
     def __init__(self, root_directory: Path, path: Path, target_directory: Path) -> None:
         super().__init__(root_directory, path, target_directory)
@@ -225,15 +222,17 @@ class YamlFile(WorkflowFile):
 
         :returns: the function name of the operator in aql.
         """
-        top_level_keys = list(self.yaml_content.keys())
-        top_level_keys_count = len(top_level_keys)
-        if top_level_keys_count > 1:
-            raise ScannerError(
-                f"Only one top level operator expected. Got {top_level_keys_count} operators: {top_level_keys}"
-            )
-        operator = top_level_keys[0]
-        if operator not in YamlFile.operator_instance_builder_callable_map:
-            raise NotImplementedError(f"Operator support for {operator} not available")
+        operators = list(self.yaml_content.keys())
+        operators_count = len(operators)
+
+        if operators_count != 1:
+            raise ScannerError(f"Exactly one operator expected. Got {operators_count} operators: {operators}")
+
+        operator = operators[0]
+
+        if operator not in self.SUPPORTED_OPERATORS:
+            raise NotImplementedError(f"Operator support for {operator} not available!")
+
         return operator
 
     def get_yaml_content(self) -> dict[str, Any]:
@@ -250,33 +249,10 @@ class YamlFile(WorkflowFile):
 
         :returns: the aql operator.
         """
-        return self.operator_instance_builder_callable_map[self.operator_name](
-            self.get_yaml_content(), self.name
-        )
+        return self.SUPPORTED_OPERATORS[self.operator_name](self.get_yaml_content(), self.name)
 
 
 SUPPORTED_FILES = {"*.sql": SqlFile, "*.yaml": YamlFile, "*.yml": YamlFile}
-
-
-def get_files_by_type(
-    directory: Path, file_type: str, target_directory: Path | None
-) -> set[SqlFile] | set[YamlFile]:
-    """
-    Get all files of the given file type within a directory.
-
-    :param directory: The directory look in for files.
-    :param file_type: The type of the files to look for.
-    :param target_directory: The target directory path for the executable workflow.
-
-    :returns: the workflow files found in the directory.
-    """
-    return {
-        SUPPORTED_FILES[file_type](
-            root_directory=directory, path=child, target_directory=target_directory  # type: ignore
-        )
-        for child in directory.rglob(file_type)
-        if child.is_file() and not child.is_symlink()
-    }
 
 
 def get_workflow_files(directory: Path, target_directory: Path | None) -> set[WorkflowFile]:
@@ -288,8 +264,13 @@ def get_workflow_files(directory: Path, target_directory: Path | None) -> set[Wo
 
     :returns: a set of all the workflow files.
     """
-    workflow_files: set[WorkflowFile] = set()
-    for file_type in SUPPORTED_FILES:
-        files = get_files_by_type(directory, file_type, target_directory=target_directory)
-        workflow_files = workflow_files.union(files)
-    return workflow_files
+    return {
+        SUPPORTED_FILES[file_type](
+            root_directory=directory,
+            path=child,
+            target_directory=target_directory,  # type: ignore
+        )
+        for file_type in SUPPORTED_FILES
+        for child in directory.rglob(file_type)
+        if child.is_file() and not child.is_symlink()
+    }
