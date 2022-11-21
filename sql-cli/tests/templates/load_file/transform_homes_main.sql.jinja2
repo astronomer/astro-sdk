@@ -1,0 +1,6 @@
+---
+conn_id: bigquery
+---
+SELECT *
+FROM {% raw %}{{{% endraw %} {{ output_table_name }} {% raw %}}}{% endraw %}
+LIMIT 5;

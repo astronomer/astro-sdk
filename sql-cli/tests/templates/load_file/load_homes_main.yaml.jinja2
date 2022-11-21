@@ -5,6 +5,6 @@ load_file:
     filetype: "csv"
   output_table:
     conn_id: "bigquery"
-    name: <output_table_name>
+    name: {{ output_table_name }}
     metadata:
       schema: "astro"

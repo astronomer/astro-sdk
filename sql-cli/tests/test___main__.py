@@ -200,7 +200,7 @@ def test_run(workflow_name, environment, initialised_project, generate_tasks):
 )
 @pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
 def test_run_load_file(
-    workflow_name, environment, initialised_project_with_unique_output_table, generate_tasks
+    workflow_name, environment, initialised_project_with_load_file_workflow, generate_tasks
 ):
     result = runner.invoke(
         app,
@@ -210,7 +210,7 @@ def test_run_load_file(
             "--env",
             environment,
             "--project-dir",
-            initialised_project_with_unique_output_table.directory.as_posix(),
+            initialised_project_with_load_file_workflow.directory.as_posix(),
             generate_tasks,
         ],
     )
