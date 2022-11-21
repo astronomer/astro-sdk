@@ -485,7 +485,7 @@ def test_dataframe_replace_table_if_exist(sample_dag, conn_id):
         return pandas.DataFrame(data=arr)
 
     output_tb = Table(
-        name="_tmp_df",
+        name="ci_df_replace_table",
         conn_id=conn_id,
     )
     with sample_dag:
@@ -495,4 +495,3 @@ def test_dataframe_replace_table_if_exist(sample_dag, conn_id):
     # re-run dag to and make sure it is replacing and appending
     test_utils.run_dag(sample_dag)
     assert output_tb.row_count == 2
-    aql.cleanup()
