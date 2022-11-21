@@ -233,14 +233,15 @@ class LoadFileOperator(AstroSQLBaseOperator):
                 },
             )
         ]
-        self.output_table.conn_id = task_instance.xcom_pull(
-            task_ids=task_instance.task_id, key="output_table_conn_id"
-        )
-        self.output_table.name = task_instance.xcom_pull(
-            task_ids=task_instance.task_id, key="output_table_name"
-        )
+
         output_dataset: list[OpenlineageDataset] = []
         if self.output_table is not None and self.output_table.openlineage_emit_temp_table_event():
+            self.output_table.conn_id = task_instance.xcom_pull(
+                task_ids=task_instance.task_id, key="output_table_conn_id"
+            )
+            self.output_table.name = task_instance.xcom_pull(
+                task_ids=task_instance.task_id, key="output_table_name"
+            )
             output_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
                 f"://{self.output_table.openlineage_dataset_name()}"
