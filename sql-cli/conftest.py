@@ -1,3 +1,4 @@
+import os
 import random
 import shutil
 import string
@@ -39,6 +40,11 @@ def root_directory_symlink():
 @pytest.fixture()
 def root_directory_dags():
     return CWD / "tests" / "test_dag"
+
+
+@pytest.fixture()
+def root_directory_load_file():
+    return CWD / "tests" / "workflows" / "load_file_unique_output_table"
 
 
 @pytest.fixture()
@@ -144,6 +150,31 @@ def initialised_project_with_test_config(initialised_project: Project):
         src=CWD / "tests" / "config" / "test",
         dst=initialised_project.directory / "config" / "test",
     )
+    return initialised_project
+
+
+@pytest.fixture()
+def initialised_project_with_unique_output_table(root_directory_load_file, initialised_project: Project):
+    output_table_name = create_unique_table_name(UNIQUE_HASH_SIZE)
+    load_homes_yaml = root_directory_load_file / "load_homes_main.yaml"
+    with open(load_homes_yaml) as file:
+        yaml_data = file.read()
+    yaml_data = yaml_data.replace("<output_table_name>", output_table_name)
+    dst_load_homes_yaml = (
+        initialised_project.directory / "workflows" / "example_load_file" / f"{output_table_name}.yaml"
+    )
+    with open(dst_load_homes_yaml, "w") as file:
+        file.write(yaml_data)
+    os.remove(initialised_project.directory / "workflows" / "example_load_file" / "load_homes_main.yaml")
+    transform_homes_sql = root_directory_load_file / "transform_homes_main.sql"
+    with open(transform_homes_sql) as file:
+        sql_data = file.read()
+    sql_data = sql_data.replace("<output_table_name>", output_table_name)
+    dst_transform_homes_sql = (
+        initialised_project.directory / "workflows" / "example_load_file" / "transform_homes_main.sql"
+    )
+    with open(dst_transform_homes_sql, "w") as file:
+        file.write(sql_data)
     return initialised_project
 
 
