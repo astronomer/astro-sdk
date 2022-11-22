@@ -41,8 +41,8 @@ class PostgresDatabase(BaseDatabase):
         """Retrieve Airflow hook to interface with the Postgres database."""
         conn = PostgresHook(postgres_conn_id=self.conn_id).get_connection(self.conn_id)
         kwargs = {}
-        if (conn.schema is None) and (self.table and self.table.metadata and self.table.metadata.schema):
-            kwargs.update({"database": self.table.metadata.schema})
+        if (conn.schema is None) and (self.table and self.table.metadata and self.table.metadata.database):
+            kwargs.update({"database": self.table.metadata.database})
         return PostgresHook(postgres_conn_id=self.conn_id, **kwargs)
 
     @property
@@ -93,6 +93,7 @@ class PostgresDatabase(BaseDatabase):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
+        self._assert_not_empty_df(source_dataframe)
 
         self.create_schema_if_needed(target_table.metadata.schema)
         if not self.table_exists(table=target_table) or if_exists == "replace":

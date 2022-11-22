@@ -7,10 +7,21 @@ from configparser import ConfigParser
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from packaging.version import Version
+
 if TYPE_CHECKING:
     from airflow.models.dag import DAG
 
 logger = logging.getLogger(__name__)
+
+
+def airflow_version() -> Version:
+    """
+    Return the version of Airflow installed.
+    """
+    import airflow  # skipcq: PYL-W0406
+
+    return Version(airflow.__version__)
 
 
 def retrieve_airflow_database_conn_from_config(airflow_home: Path) -> str:
@@ -25,7 +36,13 @@ def retrieve_airflow_database_conn_from_config(airflow_home: Path) -> str:
     parser = ConfigParser()
     parser.read(filename)
     confdict = {section: dict(parser.items(section)) for section in parser.sections()}
-    return confdict["database"]["sql_alchemy_conn"]
+
+    if airflow_version() >= Version("2.3"):
+        sql_alchemy_conn = confdict["database"]["sql_alchemy_conn"]
+    else:
+        sql_alchemy_conn = confdict["core"]["sql_alchemy_conn"]
+
+    return sql_alchemy_conn
 
 
 def disable_examples(airflow_home: Path) -> None:
@@ -50,8 +67,12 @@ def set_airflow_database_conn(airflow_meta_conn: str) -> None:
 
     :params airflow_db_conn: Similar to `sqlite:////tmp/project/airflow.db`
     """
-    # This is a hacky approcah we managed to find to make thigs work with Airflow 2.4
-    os.environ["AIRFLOW__DATABASE__SQL_ALCHEMY_CONN"] = airflow_meta_conn
+    if airflow_version() >= Version("2.3"):
+        # This is a hacky approach we managed to find to make things work with Airflow 2.4
+        os.environ["AIRFLOW__DATABASE__SQL_ALCHEMY_CONN"] = airflow_meta_conn
+    else:
+        os.environ["AIRFLOW__CORE__SQL_ALCHEMY_CONN"] = airflow_meta_conn
+
     import airflow  # skipcq: PYL-W0406
 
     importlib.reload(airflow)
@@ -127,4 +148,6 @@ def check_for_dag_import_errors(dag_file: Path) -> dict[str, str]:
     from airflow.models import DagBag
     from airflow.utils.cli import process_subdir
 
-    return DagBag(process_subdir(str(dag_file))).import_errors
+    dag_folder = process_subdir(str(dag_file))
+    dagbag = DagBag(dag_folder, include_examples=False)
+    return dagbag.import_errors

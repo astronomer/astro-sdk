@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.2
+
+### Bug fixes
+* Make `openlineage` an optional dependency [#1252](https://github.com/astronomer/astro-sdk/pull/1252)
+* Update snowflake-sqlalchemy version [#1228](https://github.com/astronomer/astro-sdk/pull/1228)
+* Raise error if dataframe is empty [#1238](https://github.com/astronomer/astro-sdk/pull/1238)
+* Raise error db mismatch of operation [#1233](https://github.com/astronomer/astro-sdk/pull/1233)
+* Pass `task_id` to be used for parent class on `LoadFileOperator` init [#1259](https://github.com/astronomer/astro-sdk/pull/1259)
+
 ## 1.2.1
 
 ### Feature:

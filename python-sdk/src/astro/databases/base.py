@@ -458,6 +458,15 @@ class BaseDatabase(ABC):
 
         return file.export_to_dataframe()
 
+    @staticmethod
+    def _assert_not_empty_df(df):
+        """Raise error if dataframe empty
+
+        param df: A dataframe
+        """
+        if df.empty:
+            raise ValueError("Can't load empty dataframe")
+
     def load_file_to_table_using_pandas(
         self,
         input_file: File,
@@ -545,6 +554,8 @@ class BaseDatabase(ABC):
         :param if_exists: Strategy to be used in case the target table already exists.
         :param chunk_size: Specify the number of rows in each batch to be written at a time.
         """
+        self._assert_not_empty_df(source_dataframe)
+
         source_dataframe.to_sql(
             self.get_table_qualified_name(target_table),
             con=self.sqlalchemy_engine,
