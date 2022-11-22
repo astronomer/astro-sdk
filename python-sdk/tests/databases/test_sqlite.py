@@ -196,6 +196,92 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
     indirect=True,
     ids=["sqlite"],
 )
+def test_load_pandas_dataframe_to_table_with_append(database_table_fixture):
+    """Load Pandas Dataframe to a SQL table with append strategy"""
+    database, table = database_table_fixture
+
+    pandas_dataframe = pd.DataFrame(data={"id": [1, 2]})
+    database.load_pandas_dataframe_to_table(
+        source_dataframe=pandas_dataframe,
+        target_table=table,
+        if_exists="append",
+    )
+
+    statement = f"SELECT * FROM {table.name};"
+    response = database.run_sql(statement)
+
+    rows = response.fetchall()
+    assert len(rows) == 2
+    assert rows[0] == (1,)
+    assert rows[1] == (2,)
+
+    database.load_pandas_dataframe_to_table(
+        source_dataframe=pandas_dataframe,
+        target_table=table,
+        if_exists="append",
+    )
+
+    statement = f"SELECT * FROM {table.name};"
+    response = database.run_sql(statement)
+    rows = response.fetchall()
+    assert len(rows) == 4
+    assert rows[0] == (1,)
+    assert rows[1] == (2,)
+    assert rows[2] == (1,)
+    assert rows[3] == (2,)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.SQLITE},
+    ],
+    indirect=True,
+    ids=["sqlite"],
+)
+def test_load_pandas_dataframe_to_table_with_replace(database_table_fixture):
+    """Load Pandas Dataframe to a SQL table with replace strategy"""
+    database, table = database_table_fixture
+
+    pandas_dataframe = pd.DataFrame(data={"id": [1, 2, 3]})
+    database.load_pandas_dataframe_to_table(
+        source_dataframe=pandas_dataframe,
+        target_table=table,
+        if_exists="append",
+    )
+
+    statement = f"SELECT * FROM {table.name};"
+    response = database.run_sql(statement)
+
+    rows = response.fetchall()
+    assert len(rows) == 3
+    assert rows[0] == (1,)
+    assert rows[1] == (2,)
+
+    pandas_dataframe = pd.DataFrame(data={"id": [3, 4]})
+    database.load_pandas_dataframe_to_table(
+        source_dataframe=pandas_dataframe,
+        target_table=table,
+    )
+
+    statement = f"SELECT * FROM {table.name};"
+    response = database.run_sql(statement)
+    rows = response.fetchall()
+    assert len(rows) == 2
+    assert rows[0] == (3,)
+    assert rows[1] == (4,)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.SQLITE},
+    ],
+    indirect=True,
+    ids=["sqlite"],
+)
 def test_load_file_to_table(database_table_fixture):
     """Load a file to a SQL table"""
     database, target_table = database_table_fixture
