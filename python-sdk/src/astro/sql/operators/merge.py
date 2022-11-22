@@ -77,7 +77,7 @@ class MergeOperator(AstroSQLBaseOperator):
             source_to_target_columns_map=self.columns,
         )
 
-        # To remove pushing to XCom once we update airflow version.
+        # TODO: remove pushing to XCom once we update the airflow version.
         context["ti"].xcom_push(key="merge_query", value=str(db.sql))
         return self.target_table
 
@@ -162,6 +162,7 @@ class MergeOperator(AstroSQLBaseOperator):
 
         run_facets: dict[str, BaseFacet] = {}
 
+        # TODO: remove pushing to XCom once we update the airflow version.
         merge_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="merge_query")
         job_facets: dict[str, BaseFacet] = {"sql": SqlJobFacet(query=str(merge_query))}
 

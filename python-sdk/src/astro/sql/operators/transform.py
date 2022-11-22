@@ -60,7 +60,7 @@ class TransformOperator(BaseSQLDecoratedOperator):
             target_table=self.output_table,
             parameters=self.parameters,
         )
-        # To remove pushing to XCom once we update airflow version.
+        # TODO: remove pushing to XCom once we update the airflow version.
         context["ti"].xcom_push(key="output_table_row_count", value=str(self.output_table.row_count))
         context["ti"].xcom_push(key="output_table_conn_id", value=str(self.output_table.conn_id))
         return self.output_table

@@ -61,7 +61,7 @@ class AppendOperator(AstroSQLBaseOperator):
             target_table=self.target_table,
             source_to_target_columns_map=self.columns,
         )
-        # To remove pushing to XCom once we update airflow version.
+        # TODO: remove pushing to XCom once we update the airflow version.
         context["ti"].xcom_push(key="append_query", value=str(db.sql))
         return self.target_table
 
@@ -82,7 +82,7 @@ class AppendOperator(AstroSQLBaseOperator):
         )
         from astro.lineage.facets import TableDatasetFacet
 
-        # To remove pushing to XCom once we update airflow version.
+        # TODO: remove pushing to XCom once we update the airflow version.
         append_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="append_query")
         source_table_rows = self.source_table.row_count
         input_dataset: list[OpenlineageDataset] = []
