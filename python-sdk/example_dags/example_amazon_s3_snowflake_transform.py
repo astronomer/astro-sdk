@@ -52,7 +52,7 @@ def example_amazon_s3_snowflake_transform():
     s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
 
     input_table_1 = Table(
-        name="ADOPTION_CENTER_1",
+        name="ADOPTION_CENTER_1_" + str(int(time.time())),
         metadata=Metadata(
             database=os.environ["SNOWFLAKE_DATABASE"],
             schema=os.environ["SNOWFLAKE_SCHEMA"],
@@ -62,7 +62,7 @@ def example_amazon_s3_snowflake_transform():
     )
     # [START metadata_example_snowflake]
     input_table_2 = Table(
-        name="ADOPTION_CENTER_2",
+        name="ADOPTION_CENTER_2_" + str(int(time.time())),
         metadata=Metadata(
             database=os.environ["SNOWFLAKE_DATABASE"],
             schema=os.environ["SNOWFLAKE_SCHEMA"],
