@@ -651,6 +651,7 @@ class SnowflakeDatabase(BaseDatabase):
         if not self.table_exists(target_table):
             auto_create_table = True
         elif if_exists == "replace":
+            self.drop_table(target_table)
             self.create_table(target_table, dataframe=source_dataframe)
 
         # We are changing the case of table name to ease out on the requirements to add quotes in raw queries.
