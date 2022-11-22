@@ -435,3 +435,66 @@ def test_col_case_is_preserved(sample_dag):
         task1 = sample_df_1()
         validate(task1)
     test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "conn_id",
+    [
+        "bigquery",
+        "postgres_conn",
+        "redshift_conn",
+        "snowflake_conn",
+        "sqlite_conn",
+    ],
+)
+def test_empty_dataframe_fail(sample_dag, conn_id):
+    @aql.dataframe
+    def get_empty_dataframe():
+        empty_arr = []
+        return pandas.DataFrame(empty_arr)
+
+    with sample_dag:
+        get_empty_dataframe(
+            output_table=Table(
+                conn_id=conn_id,
+            )
+        )
+
+        aql.cleanup()
+    with pytest.raises(ValueError) as exec_info:
+        test_utils.run_dag(sample_dag)
+    assert exec_info.value.args[0] == "Can't load empty dataframe"
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "conn_id",
+    [
+        "bigquery",
+        "postgres_conn",
+        "redshift_conn",
+        "snowflake_conn",
+        "sqlite_conn",
+    ],
+)
+def test_dataframe_replace_table_if_exist(sample_dag, conn_id):
+    @aql.dataframe
+    def get_empty_dataframe():
+        arr = {"col1": [1, 2]}
+        return pandas.DataFrame(data=arr)
+
+    output_tb = Table(conn_id=conn_id)
+    with sample_dag:
+        get_empty_dataframe(output_table=output_tb)
+
+    test_utils.run_dag(sample_dag)
+    assert output_tb.row_count == 2
+    # re-run dag to and make sure it is replacing table
+    test_utils.run_dag(sample_dag)
+    assert output_tb.row_count == 2
+
+    # drop the table to avoid issue with concurrent test run
+    with sample_dag:
+        aql.drop_table(table=output_tb)
+    test_utils.run_dag(sample_dag)

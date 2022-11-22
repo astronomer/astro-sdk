@@ -260,4 +260,28 @@ def test_transform_using_table_metadata(sample_dag):
             return "SELECT * FROM {{input_table}} LIMIT 4;"
 
         select(input_table=homes_file, output_table=Table(conn_id="snowflake_conn_1"))
+        aql.cleanup()
     test_utils.run_dag(sample_dag)
+
+
+def test_cross_db_transform_raise_exception(sample_dag):
+    """Test the transform operator raise exception if input and output is not for same database source"""
+
+    @aql.transform
+    def top_five_animations(input_table: Table) -> str:
+        return """
+            SELECT title, rating
+            FROM {{ input_table }}
+            WHERE genre1=='Animation'
+            ORDER BY rating desc
+            LIMIT 5;
+        """
+
+    with sample_dag:
+        input_table = Table(conn_id="snowflake_conn", name="test1", metadata=Metadata(schema="test"))
+        output_table = Table(conn_id="bigquery", name="test2", metadata=Metadata(schema="test"))
+
+        top_five_animations(input_table=input_table, output_table=output_table)
+    with pytest.raises(ValueError) as exec_info:
+        test_utils.run_dag(sample_dag)
+    assert exec_info.value.args[0] == "source and target table must belong to the same datasource"

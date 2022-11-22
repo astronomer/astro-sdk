@@ -4,7 +4,6 @@ from unittest import mock
 
 import pandas as pd
 import pytest
-from sqlalchemy.exc import NoSuchTableError
 
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
@@ -145,6 +144,7 @@ def test_append(database_table_fixture, sample_dag, multiple_tables_fixture, app
             source_table=append_table,
         )
         validate_append(appended_table)
+        aql.cleanup()
     test_utils.run_dag(sample_dag)
 
 
@@ -157,7 +157,7 @@ def test_append(database_table_fixture, sample_dag, multiple_tables_fixture, app
 def test_append_on_tables_on_different_db(sample_dag, database_table_fixture):
     test_table_1 = Table(conn_id="postgres_conn")
     test_table_2 = Table(conn_id="sqlite_conn")
-    with pytest.raises(NoSuchTableError):
+    with pytest.raises(ValueError) as exec_info:
         with sample_dag:
             load_main = aql.load_file(
                 input_file=File(path=str(CWD) + "/../../data/homes_main.csv"),
@@ -172,6 +172,7 @@ def test_append_on_tables_on_different_db(sample_dag, database_table_fixture):
                 source_table=load_append,
             )
         test_utils.run_dag(sample_dag)
+    assert exec_info.value.args[0] == "source and target table must belong to the same datasource"
 
 
 @pytest.mark.skipif(not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")

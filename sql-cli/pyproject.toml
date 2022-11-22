@@ -16,7 +16,6 @@ classifiers = [
     "Framework :: Apache Airflow",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
@@ -30,7 +29,7 @@ Home = "https://astronomer.io/"
 Source = "https://github.com/astronomer/astro-sdk/sql-cli"
 
 [tool.poetry.dependencies]
-python = ">=3.7.1,<3.11"
+python = ">=3.8,<3.11"
 typer = {extras = ["all"], version = "^0.6.1"}
 networkx = [
     {version = "^2.6.3", python = "<3.8"},
@@ -38,10 +37,11 @@ networkx = [
 ]
 Jinja2 = ">=2.10.1, <=3.1"
 python-frontmatter = "^1.0.0"
-PyYAML = ">5.4.1"
-apache-airflow = ">2.0"
+PyYAML = ">=5.4.1"
 python-dotenv = "^0.21.0"
-astro-sdk-python = {extras = ["all"], version = "^1.2.0"}
+# Set the minimum version to v1.2.2 as the load_file operator relies on PR #1259 which was added in that release.
+astro-sdk-python = {extras = ["all"], version = "^1.2.2"}
+apache-airflow = ">2.1"
 
 [tool.poetry.scripts]
 flow = "sql_cli.__main__:app"
@@ -85,3 +85,9 @@ warn_redundant_casts = true
 #warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+addopts = "-s --cov=sql_cli --cov-report term-missing"
+testpaths = [
+    "tests",
+]

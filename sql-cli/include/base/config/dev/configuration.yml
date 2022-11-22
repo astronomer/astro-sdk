@@ -7,19 +7,15 @@ connections:
     schema:
     login:
     password:
-
 ## Example of Bigquery connection
-#  - conn_id: bigquery_conn
-#    conn_type: bigquery
-#    description: null
-#    extra:
-#      project: "my-gcp-project"
-#    host: null
-#    login: null
-#    password: null
-#    port: null
-#    schema: null
-
+  - conn_id: bigquery
+    conn_type: bigquery
+    description:
+    host:
+    login:
+    password:
+    port:
+    schema:
 
 ## Example of Postgres connection
 #  - conn_id: postgres_conn

@@ -6,55 +6,61 @@ from pathlib import Path
 
 from networkx import DiGraph, depth_first_search, find_cycle, is_directed_acyclic_graph
 
-from sql_cli.exceptions import DagCycle, EmptyDag, SqlFilesDirectoryNotFound
-from sql_cli.sql_directory_parser import SqlFile, get_sql_files
+from sql_cli.exceptions import DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
 from sql_cli.utils.jinja import render
+from sql_cli.workflow_directory_parser import WorkflowFile, get_workflow_files
+
+TEMPLATES_DIRECTORY = Path("templates")
 
 
 @dataclass(frozen=True)
-class SqlFilesDAG:
+class Workflow:
     """
-    A DAG of sql files i.e. used for finding the right order to execute the sql files in.
+    A DAG of workflow files i.e. used for finding the right order to execute the files in.
 
     :param dag_id: The id of the DAG to generate.
     :param start_date: The start date of the DAG.
-    :param sql_files: The sql files to use for DAG generation.
+    :param workflow_files: The workflow files to use for DAG generation.
     """
 
     dag_id: str
     start_date: datetime
-    sql_files: list[SqlFile]
+    workflow_files: list[WorkflowFile]
 
     def __post_init__(self) -> None:
-        if not self.sql_files:
-            raise EmptyDag("Missing SQL files!")
+        if not self.workflow_files:
+            raise EmptyDag("Missing workflow files!")
 
-    def has_sql_file(self, variable_name: str) -> bool:
+    def has_workflow_file(self, variable_name: str) -> bool:
         """
-        Check whether the given variable name belongs to a real SQL file.
+        Check whether the given variable name belongs to a real workflow file.
 
-        :params variable_name: The variable name of the SQL file to check.
+        :params variable_name: The variable name of the workflow file to check.
 
-        :returns: True if there is any SQL file with the given variable name.
+        :returns: True if there is any workflow file with the given variable name.
         """
-        return any(sql_file.get_variable_name() == variable_name for sql_file in self.sql_files)
+        return any(
+            workflow_file.get_variable_name() == variable_name for workflow_file in self.workflow_files
+        )
 
-    def find_sql_file(self, variable_name: str) -> SqlFile:
+    def find_workflow_file(self, variable_name: str) -> WorkflowFile:
         """
         Find a SQL file with the given variable name.
 
-        :params variable_name: The variable name of the SQL file to find.
+        :params variable_name: The variable name of the workflow file to find.
 
-        :returns: if found a SQL file else raises an exception.
+        :returns: if found a workflow file else raises an exception.
         """
         try:
             return next(
-                sql_file for sql_file in self.sql_files if sql_file.get_variable_name() == variable_name
+                workflow_file
+                for workflow_file in self.workflow_files
+                if workflow_file.get_variable_name() == variable_name
             )
         except StopIteration:
-            raise ValueError("No sql file has been found for variable name!")
+            raise ValueError("No workflow file has been found for variable name!")
 
-    def sorted_sql_files(self) -> list[SqlFile]:
+    def sorted_workflow_files(self) -> list[WorkflowFile]:
         """
         Build, validate and sort the SQL files.
 
@@ -64,16 +70,16 @@ class SqlFilesDAG:
         # Create a graph based on all sql files and parameters
         graph = DiGraph(
             [
-                (sql_file, self.find_sql_file(parameter))
-                for sql_file in self.sql_files
-                for parameter in sql_file.get_parameters()
-                if self.has_sql_file(parameter)
+                (workflow_file, self.find_workflow_file(parameter))
+                for workflow_file in self.workflow_files
+                for parameter in workflow_file.get_parameters()
+                if self.has_workflow_file(parameter)
             ]
         )
 
         if not graph.nodes:
             # Add nodes without edges i.e. without any table references
-            graph.add_nodes_from(self.sql_files)
+            graph.add_nodes_from(self.workflow_files)
 
         if not is_directed_acyclic_graph(graph):
             cycle_edges = " and ".join(
@@ -88,7 +94,7 @@ def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) ->
     """
     Generate a DAG from SQL files.
 
-    :params directory: The directory containing the raw sql files.
+    :params directory: The directory containing the raw workflow files.
     :params dags_directory: The directory containing the generated DAG.
     :params generate_tasks: Whether the user wants to explicitly generate each task
         of the airflow DAG or rely on a less verbose `render` function.
@@ -96,23 +102,24 @@ def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) ->
     :returns: the path to the DAG file.
     """
     if not directory.exists():
-        raise SqlFilesDirectoryNotFound("The directory does not exist!")
-    sql_files = sorted(get_sql_files(directory, target_directory=dags_directory))
-    sql_files_dag = SqlFilesDAG(
+        raise WorkflowFilesDirectoryNotFound("The directory does not exist!")
+    workflow_files = sorted(get_workflow_files(directory, target_directory=dags_directory))
+    workflow_files_dag = Workflow(
         dag_id=directory.name,
         start_date=datetime(2020, 1, 1),
-        sql_files=sql_files,
+        workflow_files=workflow_files,
     )
-    template_dag_name = "gen_tasks_dag"
     if generate_tasks:
-        for sql_file in sql_files_dag.sorted_sql_files():
-            sql_file.write_raw_content_to_target_path()
-        template_dag_name = "render_dag"
+        template_file = TEMPLATES_DIRECTORY / "gen_tasks_dag.py.jinja2"
+    else:
+        for workflow_file in workflow_files_dag.sorted_workflow_files():
+            workflow_file.write_raw_content_to_target_path()
+        template_file = TEMPLATES_DIRECTORY / "render_dag.py.jinja2"
 
-    output_file = dags_directory / f"{sql_files_dag.dag_id}.py"
+    output_file = dags_directory / f"{workflow_files_dag.dag_id}.py"
     render(
-        template_file=Path(f"templates/{template_dag_name}.py.jinja2"),
-        context={"dag": sql_files_dag},
+        template_file=template_file,
+        context={"dag": workflow_files_dag},
         output_file=output_file,
     )
     return output_file

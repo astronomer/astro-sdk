@@ -4,26 +4,32 @@ import logging
 import sys
 import warnings
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 
+from airflow import settings as airflow_settings
 from airflow.models.connection import Connection
 from airflow.models.dag import DAG
 from airflow.models.dagrun import DagRun
 from airflow.models.taskinstance import TaskInstance
 from airflow.secrets.local_filesystem import LocalFilesystemBackend
 from airflow.utils import timezone
-from airflow.utils.session import NEW_SESSION, provide_session
+from airflow.utils.session import provide_session
 from airflow.utils.state import DagRunState, State
 from airflow.utils.types import DagRunType
-from rich import print as pprint
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.session import Session
 
 from astro.sql.operators.cleanup import AstroCleanupException
 from sql_cli.exceptions import ConnectionFailed
+from sql_cli.utils.rich import rprint
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
+
+# This was added to airflow.utils.session as part of Airflow 2.2.4, we're copying it here for backwwards
+# compatibility (currently we support Airflow 2.1 onwards)
+# It seems like a hack to avoid MyPy complaining we're assigning None to a variable that should be an Airflow session
+NEW_SESSION = airflow_settings.SASession = cast(airflow_settings.SASession, None)
 
 
 class AstroFilesystemBackend(LocalFilesystemBackend):
@@ -140,25 +146,25 @@ def _run_task(ti: TaskInstance, session: Session) -> None:
     :param ti: TaskInstance to run
     """
     if hasattr(ti, "map_index") and ti.map_index >= 0:
-        pprint(f"Processing [bold yellow]{ti.task_id}[/bold yellow][{ti.map_index}]...", end=" ")
+        rprint(f"Processing [bold yellow]{ti.task_id}[/bold yellow][{ti.map_index}]...", end=" ")
     else:
-        pprint(f"Processing [bold yellow]{ti.task_id}[/bold yellow]...", end=" ")
+        rprint(f"Processing [bold yellow]{ti.task_id}[/bold yellow]...", end=" ")
 
     try:
         warnings.filterwarnings(action="ignore")
         ti._run_raw_task(session=session)  # skipcq: PYL-W0212
         session.flush()
         session.commit()
-        pprint("[bold green]SUCCESS[/bold green]")
+        rprint("[bold green]SUCCESS[/bold green]")
     except OperationalError as operational_exception:
-        pprint("[bold red]FAILED[/bold red]")
+        rprint("[bold red]FAILED[/bold red]")
         orig_exception = operational_exception.orig
         orig_message = orig_exception.args[0]
         raise ConnectionFailed(orig_message, conn_id=ti.task.conn_id) from orig_exception
     except AstroCleanupException:
-        pprint("aql.cleanup async, continuing")
+        rprint("aql.cleanup async, continuing")
     except Exception:
-        pprint("[bold red]FAILED[/bold red]")
+        rprint("[bold red]FAILED[/bold red]")
         raise
 
 

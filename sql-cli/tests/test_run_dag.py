@@ -2,10 +2,12 @@ import pathlib
 import sqlite3
 from unittest import mock
 
+import airflow
 import pytest
 from airflow.decorators import task
 from airflow.utils.cli import get_dag
 from airflow.utils.trigger_rule import TriggerRule
+from packaging.version import Version
 from sqlalchemy.exc import OperationalError
 
 from astro import sql as aql
@@ -13,6 +15,16 @@ from sql_cli.exceptions import ConnectionFailed
 from sql_cli.run_dag import _run_task, run_dag
 
 CWD = pathlib.Path(__file__).parent
+
+
+def airflow_less_than(threshold: Version) -> bool:
+    """
+    Check if Airflow is less than a given threshold version.
+
+    :param threshold: version tuple (e.g. (2, 3)).
+    """
+    current_version = Version(airflow.__version__)
+    return current_version < threshold
 
 
 @mock.patch("airflow.models.taskinstance.TaskInstance")
@@ -70,6 +82,7 @@ def test_run_task_cleanup_log(sample_dag, capsys):
     assert "aql.cleanup async, continuing" in captured.out
 
 
+@pytest.mark.skipif(airflow_less_than(Version("2.3")), reason="Dynamic tasks were introduced in Airflow 2.3")
 def test_run_dag_dynamic_task(sample_dag, capsys):
     @task
     def get_list():
@@ -87,6 +100,7 @@ def test_run_dag_dynamic_task(sample_dag, capsys):
         assert f"Processing print_val[{i}]..." in captured.out
 
 
+@pytest.mark.skipif(airflow_less_than(Version("2.3")), reason="Dynamic tasks were introduced in Airflow 2.3")
 def test_run_dag_with_skip(sample_dag, capsys):
     @task.branch
     def who_is_prettiest():

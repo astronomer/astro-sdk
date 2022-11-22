@@ -1,0 +1,9 @@
+load_file:
+  input_file:
+    path: "gs://astro-sdk/workspace/sample_pattern.csv"
+    conn_id: "bigquery"
+    filetype: "csv"
+  output_table:
+    conn_id: "bigquery"
+    metadata:
+      schema: "astro"

@@ -1,21 +1,24 @@
+from unittest import mock
+
 import pandas as pd
 import pendulum
 import pytest
 from airflow.models.taskinstance import TaskInstance
 from airflow.utils import timezone
-from openlineage.airflow.extractors import TaskMetadata
+from openlineage.airflow.extractors import Extractors
+from openlineage.airflow.extractors.base import DefaultExtractor
 from openlineage.client.facet import DataQualityMetricsInputDatasetFacet, OutputStatisticsOutputDatasetFacet
 from openlineage.client.run import Dataset as OpenlineageDataset
 
 from astro import sql as aql
 from astro.constants import FileType
 from astro.files import File
-from astro.lineage.extractor import PythonSDKExtractor
 from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
 from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
-from astro.sql import AppendOperator, MergeOperator
+from astro.sql import AppendOperator, DataframeOperator, MergeOperator
 from astro.sql.operators.export_file import ExportFileOperator
 from astro.sql.operators.load_file import LoadFileOperator
+from astro.sql.operators.transform import TransformOperator
 from astro.table import Metadata, Table
 from tests.utils.airflow import create_context
 
@@ -85,7 +88,8 @@ OUTPUT_STATS = [
 
 
 @pytest.mark.integration
-def test_python_sdk_load_file_extract_on_complete():
+@mock.patch("airflow.models.TaskInstance.xcom_pull")
+def test_python_sdk_load_file_extract_on_complete(mock_xcom_pull):
     """
     Tests that  the custom PythonSDKExtractor is able to process the
     operator's metadata that needs to be extracted as per OpenLineage
@@ -100,24 +104,25 @@ def test_python_sdk_load_file_extract_on_complete():
             filetype=FileType.CSV,
         ),
         output_table=Table(
-            conn_id="sqlite_default", name="test-extractor", metadata=Metadata(schema="astro")
+            conn_id="postgres_conn",
+            name="test_extractor",
         ),
         use_native_support=False,
     )
+    mock_xcom_pull.return_value = "postgres_conn"
+    load_file_operator.execute(context=create_context(load_file_operator))
+    tzinfo = pendulum.timezone("UTC")
+    execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
+    task_instance = TaskInstance(task=load_file_operator, run_id=execution_date)
+    python_sdk_extractor = Extractors().get_extractor_class(LoadFileOperator)
+    assert python_sdk_extractor is DefaultExtractor
 
-    task_instance = TaskInstance(task=load_file_operator)
+    task_meta_extract = python_sdk_extractor(load_file_operator).extract()
+    assert task_meta_extract is None
 
-    python_sdk_extractor = PythonSDKExtractor(load_file_operator)
-    task_meta_extract = python_sdk_extractor.extract()
-    assert isinstance(task_meta_extract, TaskMetadata)
-
-    task_meta = python_sdk_extractor.extract_on_complete(task_instance)
+    task_meta = python_sdk_extractor(load_file_operator).extract_on_complete(task_instance=task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
     assert task_meta.inputs[0].facets["input_file_facet"] == INPUT_STATS[0].facets["input_file_facet"]
-    assert (
-        task_meta.outputs[0].facets["output_database_facet"]
-        == OUTPUT_STATS[0].facets["output_database_facet"]
-    )
     assert task_meta.job_facets == {}
     assert task_meta.run_facets == {}
 
@@ -129,13 +134,14 @@ def test_python_sdk_export_file_extract_on_complete():
     operator's metadata that needs to be extracted as per OpenLineage
     for ExportFileOperator.
     """
-    LoadFileOperator(
+    load_file = LoadFileOperator(
         task_id="load_file",
         input_file=File(
             path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
         ),
         output_table=Table(conn_id="sqlite_conn", name="test_extractor"),
-    ).execute({})
+    )
+    load_file.execute(context=create_context(load_file))
 
     task_id = "export_file"
     export_file_operator = ExportFileOperator(
@@ -150,12 +156,11 @@ def test_python_sdk_export_file_extract_on_complete():
     )
 
     task_instance = TaskInstance(task=export_file_operator)
-
-    python_sdk_extractor = PythonSDKExtractor(export_file_operator)
-    task_meta_extract = python_sdk_extractor.extract()
-    assert isinstance(task_meta_extract, TaskMetadata)
-
-    task_meta = python_sdk_extractor.extract_on_complete(task_instance)
+    python_sdk_extractor = Extractors().get_extractor_class(ExportFileOperator)
+    assert python_sdk_extractor is DefaultExtractor
+    task_meta_extract = python_sdk_extractor(export_file_operator).extract()
+    assert task_meta_extract is None
+    task_meta = python_sdk_extractor(export_file_operator).extract_on_complete(task_instance=task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
     assert (
         task_meta.inputs[0].facets["dataQualityMetrics"]
@@ -176,17 +181,19 @@ def test_append_op_extract_on_complete():
     """
     task_id = "append_table"
 
-    src_table = LoadFileOperator(
+    src_table_operator = LoadFileOperator(
         task_id="load_file",
         input_file=File(path="gs://astro-sdk/workspace/sample_pattern.csv", filetype=FileType.CSV),
         output_table=Table(conn_id="gcp_conn"),
-    ).execute({})
+    )
+    src_table = src_table_operator.execute(context=create_context(src_table_operator))
 
-    target_table = LoadFileOperator(
+    target_table_operator = LoadFileOperator(
         task_id="load_file",
         input_file=File(path="gs://astro-sdk/workspace/sample_pattern.csv", filetype=FileType.CSV),
         output_table=Table(conn_id="gcp_conn"),
-    ).execute({})
+    )
+    target_table = target_table_operator.execute(context=create_context(target_table_operator))
 
     op = AppendOperator(
         source_table=src_table,
@@ -196,12 +203,11 @@ def test_append_op_extract_on_complete():
     tzinfo = pendulum.timezone("UTC")
     execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
     task_instance = TaskInstance(task=op, run_id=execution_date)
-
-    python_sdk_extractor = PythonSDKExtractor(op)
-    task_meta_extract = python_sdk_extractor.extract()
-    assert isinstance(task_meta_extract, TaskMetadata)
-
-    task_meta = python_sdk_extractor.extract_on_complete(task_instance)
+    python_sdk_extractor = Extractors().get_extractor_class(AppendOperator)
+    assert python_sdk_extractor is DefaultExtractor
+    task_meta_extract = python_sdk_extractor(op).extract()
+    assert task_meta_extract is None
+    task_meta = python_sdk_extractor(op).extract_on_complete(task_instance=task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
     assert task_meta.inputs[0].name == f"astronomer-dag-authoring.astronomer-dag-authoring.{src_table.name}"
     assert task_meta.inputs[0].namespace == "bigquery"
@@ -216,17 +222,19 @@ def test_merge_op_extract_on_complete():
     Test extractor ``extract_on_complete`` get called and collect lineage for merge operator
     """
     task_id = "merge"
-    src_table = LoadFileOperator(
+    src_table_operator = LoadFileOperator(
         task_id="load_file",
         input_file=File(path="gs://astro-sdk/workspace/sample_pattern.csv", filetype=FileType.CSV),
         output_table=Table(conn_id="gcp_conn", metadata=Metadata(schema="astro")),
-    ).execute({})
+    )
+    src_table = src_table_operator.execute(context=create_context(src_table_operator))
 
-    target_table = LoadFileOperator(
+    target_table_operator = LoadFileOperator(
         task_id="load_file",
         input_file=File(path="gs://astro-sdk/workspace/sample_pattern.csv", filetype=FileType.CSV),
         output_table=Table(conn_id="gcp_conn", metadata=Metadata(schema="astro")),
-    ).execute({})
+    )
+    target_table = target_table_operator.execute(context=create_context(target_table_operator))
     op = MergeOperator(
         source_table=src_table,
         target_table=target_table,
@@ -238,11 +246,12 @@ def test_merge_op_extract_on_complete():
     execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
     task_instance = TaskInstance(task=op, run_id=execution_date)
 
-    python_sdk_extractor = PythonSDKExtractor(op)
-    task_meta_extract = python_sdk_extractor.extract()
-    assert isinstance(task_meta_extract, TaskMetadata)
+    python_sdk_extractor = Extractors().get_extractor_class(MergeOperator)
+    assert python_sdk_extractor is DefaultExtractor
+    task_meta_extract = python_sdk_extractor(op).extract()
+    assert task_meta_extract is None
+    task_meta = python_sdk_extractor(op).extract_on_complete(task_instance=task_instance)
 
-    task_meta = python_sdk_extractor.extract_on_complete(task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
     assert task_meta.inputs[0].name == f"astronomer-dag-authoring.astro.{src_table.name}"
     assert task_meta.inputs[0].namespace == "bigquery"
@@ -258,13 +267,14 @@ def test_python_sdk_transform_extract_on_complete():
     operator's metadata that needs to be extracted as per OpenLineage
     for TransformOperator.
     """
-    imdb_table = LoadFileOperator(
+    load_file = LoadFileOperator(
         task_id="load_file",
         input_file=File(
             path="https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
         ),
         output_table=Table(conn_id="gcp_conn", metadata=Metadata(schema="astro")),
-    ).execute({})
+    )
+    imdb_table = load_file.execute(context=create_context(load_file))
 
     output_table = Table(name="test_name", conn_id="gcp_conn", metadata=Metadata(schema="astro"))
     task_id = "top_five_animations"
@@ -280,11 +290,12 @@ def test_python_sdk_transform_extract_on_complete():
     execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
     task_instance = TaskInstance(task=task.operator, run_id=execution_date)
 
-    python_sdk_extractor = PythonSDKExtractor(task.operator)
-    assert type(python_sdk_extractor.get_operator_classnames()) is list
-    task_meta = python_sdk_extractor.extract_on_complete(task_instance)
+    python_sdk_extractor = Extractors().get_extractor_class(TransformOperator)
+    assert python_sdk_extractor is DefaultExtractor
+    task_meta_extract = python_sdk_extractor(task.operator).extract()
+    assert task_meta_extract is None
+    task_meta = python_sdk_extractor(task.operator).extract_on_complete(task_instance=task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
-    assert task_meta.outputs[0].facets["outputStatistics"].size is None
     assert len(task_meta.job_facets) > 0
     assert task_meta.run_facets == {}
 
@@ -328,10 +339,11 @@ def test_python_sdk_dataframe_op_extract_on_complete():
     tzinfo = pendulum.timezone("UTC")
     execution_date = timezone.datetime(2022, 1, 1, 1, 0, 0, tzinfo=tzinfo)
     task_instance = TaskInstance(task=task[0].operator, run_id=execution_date)
-    python_sdk_extractor = PythonSDKExtractor(task[0].operator)
-
-    assert type(python_sdk_extractor.get_operator_classnames()) is list
-    task_meta = python_sdk_extractor.extract_on_complete(task_instance)
+    python_sdk_extractor = Extractors().get_extractor_class(DataframeOperator)
+    assert python_sdk_extractor is DefaultExtractor
+    task_meta_extract = python_sdk_extractor(task[0].operator).extract()
+    assert task_meta_extract is None
+    task_meta = python_sdk_extractor(task[0].operator).extract_on_complete(task_instance=task_instance)
     assert task_meta.name == "adhoc_airflow.aggregate_data"
     assert task_meta.outputs[0].facets["schema"].fields[0].name == test_schema_name
     assert task_meta.outputs[0].facets["schema"].fields[0].type == test_db_name

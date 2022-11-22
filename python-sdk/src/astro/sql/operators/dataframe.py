@@ -12,22 +12,12 @@ from astro.airflow.datasets import kwargs_with_datasets
 try:
     from airflow.decorators.base import TaskDecorator, task_decorator_factory
 except ImportError:  # pragma: no cover
-    from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
-
-from openlineage.client.facet import (
-    BaseFacet,
-    DataSourceDatasetFacet,
-    OutputStatisticsOutputDatasetFacet,
-    SchemaDatasetFacet,
-    SchemaField,
-)
-from openlineage.client.run import Dataset as OpenlineageDataset
+    from airflow.decorators.base import task_decorator_factory
 
 from astro.constants import ColumnCapitalization
 from astro.databases import create_database
 from astro.files import File
-from astro.lineage.extractor import OpenLineageFacets
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable, Table
 from astro.utils.dataframe import convert_columns_names_capitalization
@@ -225,10 +215,20 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             )
         return function_output
 
-    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:  # skipcq: PYL-W0613
+    def get_openlineage_facets_on_complete(self, task_instance):  # skipcq: PYL-W0613
         """
         Collect the input, output, job and run facets for DataframeOperator
         """
+        from astro.lineage import (
+            BaseFacet,
+            DataSourceDatasetFacet,
+            OpenlineageDataset,
+            OperatorLineage,
+            OutputStatisticsOutputDatasetFacet,
+            SchemaDatasetFacet,
+            SchemaField,
+        )
+
         output_dataset: list[OpenlineageDataset] = []
 
         if self.output_table and self.output_table.openlineage_emit_temp_table_event():  # pragma: no cover
@@ -262,7 +262,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
 
         run_facets: dict[str, BaseFacet] = {}
         job_facets: dict[str, BaseFacet] = {}
-        return OpenLineageFacets(
+        return OperatorLineage(
             inputs=[], outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
 

@@ -4,22 +4,10 @@ from typing import Any
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
-from openlineage.client.facet import (
-    BaseFacet,
-    DataQualityMetricsInputDatasetFacet,
-    DataSourceDatasetFacet,
-    OutputStatisticsOutputDatasetFacet,
-    SchemaDatasetFacet,
-    SchemaField,
-    SqlJobFacet,
-)
-from openlineage.client.run import Dataset as OpenlineageDataset
 
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import MergeConflictStrategy
 from astro.databases import create_database
-from astro.lineage.extractor import OpenLineageFacets
-from astro.lineage.facets import SourceTableMergeDatasetFacet, TargetTableMergeDatasetFacet
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
 from astro.utils.typing_compat import Context
@@ -74,6 +62,9 @@ class MergeOperator(AstroSQLBaseOperator):
         )
 
     def execute(self, context: Context) -> BaseTable:
+        # currently, cross database operation is not supported
+        if self.source_table.sql_type != self.target_table.sql_type:
+            raise ValueError("source and target table must belong to the same datasource")
         db = create_database(self.target_table.conn_id, table=self.source_table)
         self.source_table = db.populate_table_metadata(self.source_table)
         self.target_table = db.populate_table_metadata(self.target_table)
@@ -85,15 +76,30 @@ class MergeOperator(AstroSQLBaseOperator):
             target_conflict_columns=self.target_conflict_columns,
             source_to_target_columns_map=self.columns,
         )
+
+        # TODO: remove pushing to XCom once we update the airflow version.
         context["ti"].xcom_push(key="merge_query", value=str(db.sql))
         return self.target_table
 
-    def get_openlineage_facets(self, task_instance) -> OpenLineageFacets:
+    def get_openlineage_facets_on_complete(self, task_instance):
         """
         Collect the input, output, job and run facets for merge operator
         """
-        input_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
-        output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
+        from astro.lineage import (
+            BaseFacet,
+            DataQualityMetricsInputDatasetFacet,
+            DataSourceDatasetFacet,
+            OpenlineageDataset,
+            OperatorLineage,
+            OutputStatisticsOutputDatasetFacet,
+            SchemaDatasetFacet,
+            SchemaField,
+            SqlJobFacet,
+        )
+        from astro.lineage.facets import SourceTableMergeDatasetFacet, TargetTableMergeDatasetFacet
+
+        input_dataset: list[OpenlineageDataset] = []
+        output_dataset: list[OpenlineageDataset] = []
         if self.source_table.openlineage_emit_temp_table_event():
             input_uri = (
                 f"{self.source_table.openlineage_dataset_namespace()}"
@@ -156,10 +162,11 @@ class MergeOperator(AstroSQLBaseOperator):
 
         run_facets: dict[str, BaseFacet] = {}
 
+        # TODO: remove pushing to XCom once we update the airflow version.
         merge_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="merge_query")
         job_facets: dict[str, BaseFacet] = {"sql": SqlJobFacet(query=str(merge_query))}
 
-        return OpenLineageFacets(
+        return OperatorLineage(
             inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
 
