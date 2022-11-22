@@ -186,6 +186,12 @@ def initialised_project_with_test_config(initialised_project: Project):
 def initialised_project_with_load_file_workflow(
     root_directory_templates_load_file, initialised_project: Project
 ):
+    # We use bigquery connection for the load_file operator example workflow. Although, we create isolated project
+    # directories, the workflow yaml file refer to the same output table name. And hence, upon running concurrent tests
+    # across Airflow versions and python versions, they try to access the same output table and conflict each other.
+    # We need to create unique output table name in the YAML and also modify the created workflow file name to use the
+    # same name as the output table name as the subsequent workflow SQL file needs to refer this YAML file.
+    # We would not need this fixture and the below manipulations once issue #1282 is addressed.
     output_table_name = create_unique_table_name(UNIQUE_HASH_SIZE)
     render_kwargs = {
         "context": {"output_table_name": output_table_name},
