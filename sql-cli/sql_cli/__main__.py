@@ -66,7 +66,7 @@ def generate(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
     generate_tasks: bool = typer.Option(
-        default=False,
+        default=True,
         help="whether to explicitly generate the tasks in your SQL CLI "
         "DAG. By default we will keep the DAGs smaller and read SQL "
         "files at runtime",
@@ -153,7 +153,7 @@ def run(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
     generate_tasks: bool = typer.Option(
-        default=False,
+        default=True,
         help="whether to explicitly generate the tasks in your SQL CLI "
         "DAG. By default we will keep the DAGs smaller and read SQL "
         "files at runtime",
