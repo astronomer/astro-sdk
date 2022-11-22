@@ -465,3 +465,33 @@ def test_empty_dataframe_fail(sample_dag, conn_id):
     with pytest.raises(ValueError) as exec_info:
         test_utils.run_dag(sample_dag)
     assert exec_info.value.args[0] == "Can't load empty dataframe"
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "conn_id",
+    [
+        "bigquery",
+        "postgres_conn",
+        "redshift_conn",
+        "snowflake_conn",
+        "sqlite_conn",
+    ],
+)
+def test_dataframe_replace_table_if_exist(sample_dag, conn_id):
+    @aql.dataframe
+    def get_empty_dataframe():
+        arr = {"col1": [1, 2]}
+        return pandas.DataFrame(data=arr)
+
+    output_tb = Table(
+        name="ci_df_replace_table",
+        conn_id=conn_id,
+    )
+    with sample_dag:
+        get_empty_dataframe(output_table=output_tb)
+    test_utils.run_dag(sample_dag)
+    assert output_tb.row_count == 2
+    # re-run dag to and make sure it is replacing table
+    test_utils.run_dag(sample_dag)
+    assert output_tb.row_count == 2

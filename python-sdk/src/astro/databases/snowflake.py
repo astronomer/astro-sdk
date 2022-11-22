@@ -648,8 +648,10 @@ class SnowflakeDatabase(BaseDatabase):
         self._assert_not_empty_df(source_dataframe)
 
         auto_create_table = False
-        if if_exists == "replace" or not self.table_exists(target_table):
+        if not self.table_exists(target_table):
             auto_create_table = True
+        elif if_exists == "replace":
+            self.create_table(target_table, dataframe=source_dataframe)
 
         # We are changing the case of table name to ease out on the requirements to add quotes in raw queries.
         # ToDO - Currently, we cannot to append using load_file to a table name which is having name in lower case.
