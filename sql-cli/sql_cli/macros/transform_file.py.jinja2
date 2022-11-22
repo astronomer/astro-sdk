@@ -17,6 +17,12 @@
     {%- if sql_file.metadata and "schema" in sql_file.metadata %}
     schema="{{ sql_file.metadata.schema }}",
     {%- endif %}
+    ## Note: Unfortunately, we cannot simply use **op_kwargs as some of the deserialized fields
+    ## such as Table contain invalid args for an __init__ call.
+    ## For example:
+    ##   `output_table={{ sql_file.output_table }}` won't work as the deserialized output table
+    ##   contains args such as `uri` which cannot be set,
+    ##   causing `output_table=Table(uri="...", ...)` to fail when parsed by python.
     op_kwargs={
         "output_table": Table(
             name="{{ sql_file.name }}",

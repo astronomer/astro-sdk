@@ -1,6 +1,12 @@
 {% macro load_file(yaml_file, dag) -%}
 {% set yaml_content = yaml_file.get_yaml_content() -%}
 {{ yaml_file.get_variable_name() }} = aql.load_file(
+    ## Note: Unfortunately, we cannot simply use **kwargs as some of the deserialized fields
+    ## such as File or Table contain invalid args for an __init__ call.
+    ## For example:
+    ##   `input_file={{ yaml_content.input_file }}` won't work as the deserialized input file
+    ##   contains args such as `_name` which cannot be set,
+    ##   causing `input_file=File(_name="...", ...)` to fail when parsed by python.
     input_file=File(
         path="{{ yaml_content.input_file.path }}",
         {%- if "conn_id" in yaml_content.input_file %}
