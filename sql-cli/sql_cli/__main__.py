@@ -66,10 +66,8 @@ def generate(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
     generate_tasks: bool = typer.Option(
-        default=False,
-        help="whether to explicitly generate the tasks in your SQL CLI "
-        "DAG. By default we will keep the DAGs smaller and read SQL "
-        "files at runtime",
+        default=True,
+        help="whether to explicitly generate the tasks in your SQL CLI DAG",
         show_default=True,
     ),
 ) -> None:
@@ -153,10 +151,8 @@ def run(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
     generate_tasks: bool = typer.Option(
-        default=False,
-        help="whether to explicitly generate the tasks in your SQL CLI "
-        "DAG. By default we will keep the DAGs smaller and read SQL "
-        "files at runtime",
+        default=True,
+        help="whether to explicitly generate the tasks in your SQL CLI DAG",
         show_default=True,
     ),
     verbose: bool = typer.Option(False, help="Whether to show airflow logs", show_default=True),
