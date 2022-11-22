@@ -4,7 +4,8 @@ from pathlib import Path
 
 from airflow.models import Connection
 from airflow.utils.session import create_session
-from rich import print as rprint
+
+from sql_cli.utils.rich import rprint
 
 CONNECTION_ID_OUTPUT_STRING_WIDTH = 25
 

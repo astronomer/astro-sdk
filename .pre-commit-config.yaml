@@ -98,7 +98,7 @@ repos:
         types: [text]
         exclude: ^mk/.*\.mk$|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile$|^sql-cli/poetry.lock$
   -   repo: https://github.com/pre-commit/mirrors-mypy
-      rev: 'v0.990'
+      rev: 'v0.991'
       hooks:
       - id: mypy
         name: mypy-python-sdk

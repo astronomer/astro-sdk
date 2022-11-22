@@ -77,7 +77,10 @@ class LoadFileOperator(AstroSQLBaseOperator):
         """
         if self.input_file.conn_id:
             check_if_connection_exists(self.input_file.conn_id)
-
+        # TODO: remove pushing to XCom once we update the airflow version.
+        if self.output_table:
+            context["ti"].xcom_push(key="output_table_conn_id", value=str(self.output_table.conn_id))
+            context["ti"].xcom_push(key="output_table_name", value=str(self.output_table.name))
         return self.load_data(input_file=self.input_file)
 
     def load_data(self, input_file: File) -> BaseTable | File:
@@ -182,16 +185,18 @@ class LoadFileOperator(AstroSQLBaseOperator):
 
         return normalize_config
 
-    def get_openlineage_facets(self, task_instance):  # skipcq: PYL-W0613
-        """Returns the lineage data"""
+    def get_openlineage_facets_on_complete(self, task_instance):  # skipcq: PYL-W0613
+        """
+        Returns the lineage data
+        """
         from astro.lineage import (
             BaseFacet,
             DataSourceDatasetFacet,
             OpenlineageDataset,
+            OperatorLineage,
             SchemaDatasetFacet,
             SchemaField,
         )
-        from astro.lineage.extractor import OpenLineageFacets
         from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
 
         # if the input_file is a folder or pattern, it needs to be resolved to
@@ -230,8 +235,15 @@ class LoadFileOperator(AstroSQLBaseOperator):
             )
         ]
 
-        output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
+        output_dataset: list[OpenlineageDataset] = []
         if self.output_table is not None and self.output_table.openlineage_emit_temp_table_event():
+            # TODO: remove pushing to XCom once we update the airflow version.
+            self.output_table.conn_id = task_instance.xcom_pull(
+                task_ids=task_instance.task_id, key="output_table_conn_id"
+            )
+            self.output_table.name = task_instance.xcom_pull(
+                task_ids=task_instance.task_id, key="output_table_name"
+            )
             output_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
                 f"://{self.output_table.openlineage_dataset_name()}"
@@ -265,7 +277,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         run_facets: dict[str, BaseFacet] = {}
         job_facets: dict[str, BaseFacet] = {}
 
-        return OpenLineageFacets(
+        return OperatorLineage(
             inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
 

@@ -31,7 +31,7 @@ pre-commit:  # Run pre-commit
 flow:  # Build and run the latest version of flow
 
 test:  # Run tests
-	@_TYPER_FORCE_DISABLE_TERMINAL=1 PYTHONWARNINGS="ignore" poetry run pytest
+	@TERMINAL_WIDTH=3000 _TYPER_FORCE_DISABLE_TERMINAL=1 PYTHONWARNINGS="ignore" poetry run pytest
 
 release:  # Build a package
 	@echo -e "If this is your first time, please, manually follow these two steps: \n" \

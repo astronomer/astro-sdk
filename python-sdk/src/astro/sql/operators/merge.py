@@ -76,29 +76,30 @@ class MergeOperator(AstroSQLBaseOperator):
             target_conflict_columns=self.target_conflict_columns,
             source_to_target_columns_map=self.columns,
         )
+
+        # TODO: remove pushing to XCom once we update the airflow version.
         context["ti"].xcom_push(key="merge_query", value=str(db.sql))
         return self.target_table
 
-    def get_openlineage_facets(self, task_instance):
+    def get_openlineage_facets_on_complete(self, task_instance):
         """
         Collect the input, output, job and run facets for merge operator
         """
-
         from astro.lineage import (
             BaseFacet,
             DataQualityMetricsInputDatasetFacet,
             DataSourceDatasetFacet,
             OpenlineageDataset,
+            OperatorLineage,
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
             SqlJobFacet,
         )
-        from astro.lineage.extractor import OpenLineageFacets
         from astro.lineage.facets import SourceTableMergeDatasetFacet, TargetTableMergeDatasetFacet
 
-        input_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
-        output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
+        input_dataset: list[OpenlineageDataset] = []
+        output_dataset: list[OpenlineageDataset] = []
         if self.source_table.openlineage_emit_temp_table_event():
             input_uri = (
                 f"{self.source_table.openlineage_dataset_namespace()}"
@@ -161,10 +162,11 @@ class MergeOperator(AstroSQLBaseOperator):
 
         run_facets: dict[str, BaseFacet] = {}
 
+        # TODO: remove pushing to XCom once we update the airflow version.
         merge_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="merge_query")
         job_facets: dict[str, BaseFacet] = {"sql": SqlJobFacet(query=str(merge_query))}
 
-        return OpenLineageFacets(
+        return OperatorLineage(
             inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
 
