@@ -67,9 +67,7 @@ def generate(
     ),
     generate_tasks: bool = typer.Option(
         default=True,
-        help="whether to explicitly generate the tasks in your SQL CLI "
-        "DAG. By default we will keep the DAGs smaller and read SQL "
-        "files at runtime",
+        help="whether to explicitly generate the tasks in your SQL CLI DAG",
         show_default=True,
     ),
 ) -> None:
@@ -154,9 +152,7 @@ def run(
     ),
     generate_tasks: bool = typer.Option(
         default=True,
-        help="whether to explicitly generate the tasks in your SQL CLI "
-        "DAG. By default we will keep the DAGs smaller and read SQL "
-        "files at runtime",
+        help="whether to explicitly generate the tasks in your SQL CLI DAG",
         show_default=True,
     ),
     verbose: bool = typer.Option(False, help="Whether to show airflow logs", show_default=True),
