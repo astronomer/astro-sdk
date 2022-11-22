@@ -12,7 +12,7 @@ from astro.databases import create_database
 from astro.settings import OPENLINEAGE_EMIT_TEMP_TABLE_EVENT
 
 MAX_TABLE_NAME_LENGTH = 62
-TEMP_PREFIX = "_tmp_"
+TEMP_PREFIX = "_tmp"
 
 
 def metadata_field_converter(val):
@@ -74,7 +74,7 @@ class BaseTable:
     # TODO: discuss alternative names to this class, since it contains metadata as opposed to be the
     # SQL table itself
     # Some ideas: TableRef, TableMetadata, TableData, TableDataset
-    _name: str = field(default="")
+    name: str = field(default="")
     conn_id: str = field(default="")
     # Setting converter allows passing a dictionary to metadata arg
     metadata: Metadata = field(
@@ -84,13 +84,16 @@ class BaseTable:
     columns: list[Column] = field(factory=list)
     temp: bool = field(default=False)
 
+    def __attrs_post_init__(self) -> None:
+        if not self.name:
+            self.name = self._create_unique_table_name(TEMP_PREFIX + "_")
+            self.temp = True
+        if self.name.startswith(TEMP_PREFIX):
+            self.temp = True
+
     # We need this method to pickle Table object, without this we cannot push/pull this object from xcom.
     def __getstate__(self):
         return self.__dict__
-
-    def __attrs_post_init__(self) -> None:
-        if not self._name or self._name.startswith("_tmp"):
-            self.temp = True
 
     def _create_unique_table_name(self, prefix: str = "") -> str:
         """
@@ -127,25 +130,6 @@ class BaseTable:
         else:
             alchemy_metadata = MetaData()
         return alchemy_metadata
-
-    @property
-    def name(self) -> str:
-        """
-        Return either the user-defined name or auto-generate one.
-        :sphinx-autoapi-skip:
-        """
-        if self.temp and not self._name:
-            self._name = self._create_unique_table_name(TEMP_PREFIX)
-        return self._name
-
-    @name.setter
-    def name(self, value: str) -> None:
-        """
-        Set the table name. Once this happens, the table is no longer considered temporary.
-        """
-        if not isinstance(value, property) and value != self._name:
-            self._name = value
-            self.temp = False
 
     @property
     def row_count(self) -> Any:
