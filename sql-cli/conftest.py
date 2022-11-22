@@ -13,7 +13,7 @@ from astro.table import MAX_TABLE_NAME_LENGTH
 from sql_cli.dag_generator import Workflow
 from sql_cli.project import Project
 from sql_cli.utils.jinja import render
-from sql_cli.workflow_directory_parser import SqlFile
+from sql_cli.workflow_directory_parser import SqlFile, WorkflowFile
 
 CWD = Path(__file__).parent
 
@@ -95,6 +95,24 @@ def sql_file_with_cycle(root_directory_cycle, dags_directory):
     return SqlFile(
         root_directory=root_directory_cycle,
         path=root_directory_cycle / "d.sql",
+        target_directory=dags_directory,
+    )
+
+
+@pytest.fixture()
+def workflow_file(root_directory, dags_directory):
+    return WorkflowFile(
+        root_directory=root_directory,
+        path=root_directory / "a.sql",
+        target_directory=dags_directory,
+    )
+
+
+@pytest.fixture()
+def workflow_file_with_parameters(root_directory, dags_directory):
+    return WorkflowFile(
+        root_directory=root_directory,
+        path=root_directory / "c.sql",
         target_directory=dags_directory,
     )
 

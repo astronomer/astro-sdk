@@ -1,13 +1,10 @@
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
 from yaml.scanner import ScannerError
 
 from sql_cli.workflow_directory_parser import SqlFile, WorkflowFile, YamlFile, get_workflow_files
-
-
-class WorkflowFileSubClass(WorkflowFile):
-    pass
 
 
 def test_workflow_file_get_parameters(sql_file_with_parameters):
@@ -45,9 +42,14 @@ def test_get_workflow_files(root_directory, dags_directory):
         "root_directory": root_directory,
         "target_directory": dags_directory,
     }
-    assert get_workflow_files(directory=root_directory, target_directory=dags_directory) == {
+    sql_files = {
         SqlFile(path=root_directory / path, **kwargs) for path in {"a.sql", "b.sql", "c.sql", "sub_dir/a.sql"}
-    }.union({YamlFile(path=root_directory / path, **kwargs) for path in {"a.yaml"}})
+    }
+    yaml_files = {YamlFile(path=root_directory / path, **kwargs) for path in {"a.yaml"}}
+    assert (
+        get_workflow_files(directory=root_directory, target_directory=dags_directory)
+        == sql_files | yaml_files
+    )
 
 
 def test_get_workflow_files_with_symlink(root_directory_symlink, dags_directory):
@@ -76,29 +78,41 @@ def test_get_workflows_files_with_unsupported_operator(root_directory_unsupporte
 
 
 def test_subclass_missing_not_implemented_methods_raise_exception(root_directory, dags_directory):
+    """Tests that non-overwritten abstract methods raise exceptions."""
+
+    class WorkflowFileSubClass(WorkflowFile):
+        pass
+
     workflow_file = WorkflowFileSubClass(
-        root_directory=root_directory, path=root_directory / "a.sql", target_directory=dags_directory
+        root_directory=root_directory,
+        path=root_directory / "a.sql",
+        target_directory=dags_directory,
     )
 
     with pytest.raises(NotImplementedError):
         _ = workflow_file.operator_name
 
     with pytest.raises(NotImplementedError):
-        _ = workflow_file.to_operator()
+        workflow_file.to_operator()
 
 
-def test_workflow_file_equality_check(root_directory, dags_directory):
-    """Tests that the equality check operator verifies whether two WorkflowFile instances refer to the same file."""
-    workflow_file1 = WorkflowFile(
-        root_directory=root_directory, path=root_directory / "a.sql", target_directory=dags_directory
+def test_workflow_file_equality(workflow_file, workflow_file_with_parameters):
+    """Tests that all workflow file equality checks."""
+
+    @dataclass
+    class FakeWorkflowFile:
+        root_directory: Path
+        path: Path
+        target_directory: Path
+
+    assert workflow_file != FakeWorkflowFile(
+        root_directory=workflow_file.root_directory,
+        path=workflow_file.path,
+        target_directory=workflow_file.target_directory,
     )
-    workflow_file2 = WorkflowFile(
-        root_directory=root_directory, path=root_directory / "a.sql", target_directory=dags_directory
+    assert workflow_file != workflow_file_with_parameters
+    assert workflow_file == WorkflowFile(
+        root_directory=workflow_file.root_directory,
+        path=workflow_file.path,
+        target_directory=workflow_file.target_directory,
     )
-    workflow_file3 = WorkflowFile(
-        root_directory=root_directory, path=root_directory / "b.sql", target_directory=dags_directory
-    )
-
-    assert workflow_file1 == workflow_file2
-
-    assert workflow_file1 != workflow_file3
