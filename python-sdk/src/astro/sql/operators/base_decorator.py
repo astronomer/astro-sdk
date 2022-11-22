@@ -111,6 +111,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         if self.sql == "" or not self.sql:
             raise AirflowException("There's no SQL to run")
 
+        # TODO: remove pushing to XCom once we update the airflow version.
         context["ti"].xcom_push(key="base_sql_query", value=str(self.sql))
 
     def create_output_table_if_needed(self) -> None:
@@ -193,7 +194,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         if context:
             self.sql = self.render_template(self.sql, context)
 
-    def get_openlineage_facets(self, task_instance):
+    def get_openlineage_facets_on_complete(self, task_instance):
         """
         Returns the lineage data
         """
@@ -201,34 +202,45 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             BaseFacet,
             DataSourceDatasetFacet,
             OpenlineageDataset,
+            OperatorLineage,
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
             SqlJobFacet,
         )
-        from astro.lineage.extractor import OpenLineageFacets
 
         input_dataset: list[OpenlineageDataset] = []
         output_dataset: list[OpenlineageDataset] = []
-        if (
-            self.output_table.openlineage_emit_temp_table_event() and self.output_table.conn_id
-        ):  # pragma: no cover
+
+        first_table = find_first_table(
+            op_args=self.op_args,  # type: ignore
+            op_kwargs=self.op_kwargs,
+            python_callable=self.python_callable,
+            parameters=self.parameters,  # type: ignore
+            context={},
+        )
+
+        if first_table.openlineage_emit_temp_table_event() and first_table.conn_id:  # pragma: no cover
             input_uri = (
-                f"{self.output_table.openlineage_dataset_namespace()}"
-                f"://{self.output_table.openlineage_dataset_name()}"
+                f"{first_table.openlineage_dataset_namespace()}"
+                f"://{first_table.openlineage_dataset_name()}"
             )
             input_dataset = [
                 OpenlineageDataset(
-                    namespace=self.output_table.openlineage_dataset_namespace(),
-                    name=self.output_table.openlineage_dataset_name(),
+                    namespace=first_table.openlineage_dataset_namespace(),
+                    name=first_table.openlineage_dataset_name(),
                     facets={
                         "schema": SchemaDatasetFacet(
                             fields=[SchemaField(name=self.schema, type=self.database)]
                         ),
-                        "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=input_uri),
+                        "dataSource": DataSourceDatasetFacet(name=first_table.name, uri=input_uri),
                     },
                 )
             ]
+        # TODO: remove pushing to XCom once we update the airflow version.
+        self.output_table.conn_id = task_instance.xcom_pull(
+            task_ids=task_instance.task_id, key="output_table_conn_id"
+        )
         if (
             self.output_table.openlineage_emit_temp_table_event() and self.output_table.conn_id
         ):  # pragma: no cover
@@ -257,7 +269,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         base_sql_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="base_sql_query")
         job_facets: dict[str, BaseFacet] = {"sql": SqlJobFacet(query=base_sql_query)}
 
-        return OpenLineageFacets(
+        return OperatorLineage(
             inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
 
