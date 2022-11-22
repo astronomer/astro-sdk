@@ -260,6 +260,7 @@ def test_transform_using_table_metadata(sample_dag):
             return "SELECT * FROM {{input_table}} LIMIT 4;"
 
         select(input_table=homes_file, output_table=Table(conn_id="snowflake_conn_1"))
+        aql.cleanup()
     test_utils.run_dag(sample_dag)
 
 
