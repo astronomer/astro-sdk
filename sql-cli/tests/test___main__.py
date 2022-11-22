@@ -216,8 +216,7 @@ def test_run_load_file(
         ],
     )
     assert result.exit_code == 0, result.output
-    result_stdout = get_stdout(result)
-    assert f"Completed running the workflow {workflow_name}." in result_stdout
+    assert f"Completed running the workflow {workflow_name}." in result.stdout
 
 
 @pytest.mark.parametrize(
