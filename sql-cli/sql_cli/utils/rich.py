@@ -1,4 +1,4 @@
-from typing import Union
+from typing import IO, Any, Optional, Union
 
 import click
 from rich.panel import Panel
@@ -39,3 +39,29 @@ def rich_format_error(self: click.ClickException) -> None:
             title_align=ALIGN_ERRORS_PANEL,
         )
     )
+
+
+def rprint(
+    *objects: Any,
+    sep: str = " ",
+    end: str = "\n",
+    file: Optional[IO[str]] = None,
+    flush: bool = False,  # skipcq: PYL-W0613
+) -> None:
+    r"""Print object(s) supplied via positional arguments.
+    This function has an identical signature to the built-in print.
+    For more advanced features, see the :class:`~rich.console.Console` class.
+
+    Args:
+        sep (str, optional): Separator between printed objects. Defaults to " ".
+        end (str, optional): Character to write at end of output. Defaults to "\\n".
+        file (IO[str], optional): File to write to, or None for stdout. Defaults to None.
+        flush (bool, optional): Has no effect as Rich always flushes output. Defaults to False.
+
+    """
+    from rich.console import Console
+
+    # We use the rich console from typer which allows us to set FORCE_TERMINAL & MAX_WIDTH
+    # both we use for consistent output locally (via Makefile) and in CI
+    write_console = _get_rich_console() if file is None else Console(file=file)
+    return write_console.print(*objects, sep=sep, end=end)
