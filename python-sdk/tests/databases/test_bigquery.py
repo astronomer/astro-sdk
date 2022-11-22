@@ -189,7 +189,7 @@ def test_load_pandas_dataframe_to_table_with_append(database_table_fixture):
         if_exists="append",
     )
 
-    statement = f"SELECT * FROM {table.name};"
+    statement = f"SELECT * FROM {database.get_table_qualified_name(table)};"
     response = database.run_sql(statement)
     rows = response.fetchall()
     assert len(rows) == 4
@@ -232,7 +232,7 @@ def test_load_pandas_dataframe_to_table_with_replace(database_table_fixture):
         target_table=table,
     )
 
-    statement = f"SELECT * FROM {table.name};"
+    statement = f"SELECT * FROM {database.get_table_qualified_name(table)};"
     response = database.run_sql(statement)
     rows = response.fetchall()
     assert len(rows) == 2
