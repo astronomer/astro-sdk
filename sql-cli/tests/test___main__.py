@@ -56,6 +56,23 @@ def test_usage(env, usage, args):
     assert usage in get_stdout(result)
 
 
+@pytest.mark.parametrize(
+    "env,try_message",
+    [
+        ({}, "Try 'flow"),
+        ({"ASTRO_CLI": "Yes"}, "Try 'astro flow"),
+    ],
+    ids=[
+        "sql-cli",
+        "astro-cli",
+    ],
+)
+def test_invalid_option(env, try_message):
+    result = runner.invoke(app, ["--foo"], env=env)
+    assert result.exit_code == 2
+    assert try_message in get_stdout(result)
+
+
 def test_about():
     result = runner.invoke(app, ["about"])
     assert result.exit_code == 0
