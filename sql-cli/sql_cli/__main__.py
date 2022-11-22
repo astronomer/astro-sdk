@@ -31,6 +31,10 @@ airflow_logger = logging.getLogger("airflow")
 airflow_logger.setLevel(logging.CRITICAL)
 airflow_logger.propagate = False
 
+astronomer_logger = logging.getLogger("astronomer")
+astronomer_logger.setLevel(logging.CRITICAL)
+astronomer_logger.propagate = False
+
 
 @app.command(
     cls=AstroCommand,
