@@ -2,11 +2,7 @@ from __future__ import annotations
 
 from airflow.utils.log.logging_mixin import LoggingMixin
 from attr import define, field
-
-# from astro.airflow.datasets import Dataset
-from uto.data_providers.base import DataProviders
 from uto.datasets.base import UniversalDataset
-from uto.utils import create_dataprovider
 
 
 @define
@@ -29,10 +25,6 @@ class Database(LoggingMixin, UniversalDataset):
         "path",
         "conn_id",
     )
-
-    @property
-    def data_provider(self) -> DataProviders:
-        return create_dataprovider(self)
 
     @property
     def sql_type(self):

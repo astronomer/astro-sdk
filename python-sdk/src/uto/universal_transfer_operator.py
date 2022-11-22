@@ -22,8 +22,10 @@ class UniversalTransferOperator(BaseOperator):
 
     :param source_dataset: Source dataset to be transferred.
     :param destination_dataset: Destination dataset to be transferred to.
+    :param extras: Extra arguments that may be passed for transfer operations.
     :param use_optimized_transfer: Use use_optimized_transfer for data transfer if available on the destination.
     :param optimization_params: kwargs to be used by method involved in optimized transfer flow.
+    :param ingestion_type: Use ingestion_type for methods involved in transfer using FiveTran.
     :param ingestion_config: kwargs to be used by methods involved in transfer using FiveTran.
     :param if_exists: Overwrite file if exists. Default False.
 
@@ -35,6 +37,7 @@ class UniversalTransferOperator(BaseOperator):
         *,
         source_dataset: Dataset,
         destination_dataset: Dataset,
+        extras: dict | None = {},
         use_optimized_transfer: bool = True,
         optimization_params: dict | None,
         ingestion_type: IngestorSupported | None = None,
@@ -46,6 +49,7 @@ class UniversalTransferOperator(BaseOperator):
         super().__init__(**kwargs)
         self.source_dataset = source_dataset
         self.destination_dataset = destination_dataset
+        self.extras = extras if extras else {}
         self.ingestion_type = ingestion_type
         self.use_optimized_transfer = use_optimized_transfer
         self.optimization_params = optimization_params
@@ -63,5 +67,10 @@ class UniversalTransferOperator(BaseOperator):
             transfer_integration = create_transfer_integration(self.ingestion_type, self.ingestion_config)
             return transfer_integration.transfer_job(self.source_dataset, self.destination_dataset)
 
-        destination_dataprovider = create_dataprovider(self.destination_dataset)
-        return destination_dataprovider.load_data_from_source(self.source_dataset)
+        destination_dataprovider = create_dataprovider(
+            dataset=self.destination_dataset,
+            extras=self.extras,
+            optimization_params=self.optimization_params,
+            use_optimized_transfer=self.use_optimized_transfer,
+        )
+        return destination_dataprovider.load_data_from_source(self.source_dataset, self.destination_dataset)
