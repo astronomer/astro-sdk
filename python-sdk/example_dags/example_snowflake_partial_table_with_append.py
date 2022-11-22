@@ -61,7 +61,7 @@ def filter_data(homes_long: Table):
 def create_table(table: Table):
     """Create the reporting data which will be the target of the append method"""
     return """
-    CREATE TABLE IF NOT EXISTS {{table}} (
+      CREATE OR REPLACE TABLE {{table}} (
       sell number,
       list number,
       variable varchar,
