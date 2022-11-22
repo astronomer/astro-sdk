@@ -29,6 +29,7 @@ from astro.settings import SCHEMA
 from astro.sql.operators.load_file import load_file
 from astro.table import Metadata, Table
 from tests.sql.operators import utils as test_utils
+from tests.utils.airflow import create_context
 
 OUTPUT_TABLE_NAME = test_utils.get_table_name("load_file_test_table")
 CWD = pathlib.Path(__file__).parent
@@ -777,10 +778,11 @@ def test_aql_load_file_optimized_path_method_called(sample_dag, database_table_f
     expected_args = optimised_path_to_method[(source, destination)]["expected_args"]
 
     with mock.patch(mock_path) as method:
-        load_file(
+        load_file_task = load_file(
             input_file=file,
             output_table=test_table,
-        ).operator.execute({})
+        )
+        load_file_task.operator.execute(context=create_context(load_file_task.operator))
         assert method.called
         assert is_dict_subset(superset=method.call_args.kwargs, subset=expected_kwargs)
         assert method.call_args.args == expected_args
@@ -836,9 +838,11 @@ def test_aql_load_file_optimized_path_method_is_not_called(
     mock_path = optimised_path_to_method[(source, destination)]["method_path"]
 
     with mock.patch(mock_path) as method:
-        load_file(
+        load_file_task = load_file(
             input_file=File(file_uri), output_table=test_table, use_native_support=False
-        ).operator.execute({})
+        )
+        load_file_task.operator.execute(context=create_context(load_file_task.operator))
+
         assert not method.called
 
 
@@ -879,12 +883,13 @@ def test_aql_load_file_s3_native_path(sample_dag, database_table_fixture, native
     # We are using a preexisting file for integration test, since the dynamically populating
     # file on S3 results in file not found, since that file is not propagated to all the servers/clusters,
     # and we might hit a server where the file in not yet populated, resulting in file not found issue.
-    load_file(
+    load_file_task = load_file(
         input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
         output_table=test_table,
         use_native_support=True,
         native_support_kwargs=native_support_kwargs,
-    ).operator.execute({})
+    )
+    load_file_task.operator.execute(context=create_context(load_file_task.operator))
 
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (3, 9)
@@ -910,14 +915,15 @@ def test_loading_local_file_to_database(database_table_fixture):
     """
     path = str(CWD) + "/../../data/homes_main.csv"
     db, test_table = database_table_fixture
-    load_file(
+    load_file_task = load_file(
         input_file=File(path),
         output_table=test_table,
         use_native_support=True,
         native_support_kwargs={
             "skip_leading_rows": "1",
         },
-    ).operator.execute({})
+    )
+    load_file_task.operator.execute(context=create_context(load_file_task.operator))
 
     database_df = db.export_table_to_pandas_dataframe(test_table)
     assert database_df.shape == (3, 9)
@@ -979,12 +985,13 @@ def test_aql_load_column_name_mixed_case_json_file_to_dbs(database_table_fixture
     # We are using a preexisting file for integration test, since the dynamically populating
     # file on S3 results in file not found, since that file is not propagated to all the servers/clusters,
     # and we might hit a server where the file in not yet populated, resulting in file not found issue.
-    load_file(
+    load_file_task = load_file(
         input_file=File("s3://astro-sdk/sample.ndjson", conn_id="aws_conn"),
         output_table=test_table,
         use_native_support=True,
         native_support_kwargs=native_support_kwargs,
-    ).operator.execute({})
+    )
+    load_file_task.operator.execute(context=create_context(load_file_task.operator))
 
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (2, 2)
@@ -1040,11 +1047,12 @@ def test_loading_gcs_file_to_database(database_table_fixture, file):
     Test working of optimised path method with autodetect for files in GCS
     """
     db, test_table = database_table_fixture
-    load_file(
+    load_file_task = load_file(
         input_file=file,
         output_table=test_table,
         use_native_support=True,
-    ).operator.execute({})
+    )
+    load_file_task.operator.execute(context=create_context(load_file_task.operator))
 
     database_df = db.export_table_to_pandas_dataframe(test_table)
     assert database_df.shape == (3, 2)
@@ -1067,7 +1075,8 @@ def test_tables_creation_if_they_dont_exist(database_table_fixture, if_exists):
     """
     path = str(CWD) + "/../../data/homes_main.csv"
     db, test_table = database_table_fixture
-    load_file(input_file=File(path), output_table=test_table, if_exists=if_exists).operator.execute({})
+    load_file_task = load_file(input_file=File(path), output_table=test_table, if_exists=if_exists)
+    load_file_task.operator.execute(context=create_context(load_file_task.operator))
 
     database_df = db.export_table_to_pandas_dataframe(test_table)
     assert database_df.shape == (3, 9)
