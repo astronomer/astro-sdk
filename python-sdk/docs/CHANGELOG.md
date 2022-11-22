@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.2.3
+
+### Bug fixes
+* Fix the dataframe operator behavior of appending to it's output table instead of replacing. When `if_exists` is set to `replace`, replace the table rather than append [#1260](https://github.com/astronomer/astro-sdk/issues/1260)
+* Previously, `PostgresHook` did not support `database` kwarg. After schema is renamed to database in airflow as per this [PR](https://github.com/apache/airflow/pull/26744), now the user needs to set database to the table's database. [#1276](https://github.com/astronomer/astro-sdk/pull/1276)
+
+### Improvement:
+* Use `DefaultExtractor` from OpenLineage. `OPENLINEAGE_EXTRACTORS` is not required to be set by user to use OpenLineage. [#1223](https://github.com/astronomer/astro-sdk/issues/1223)
+
+### Docs
+* Include description on pickling and usage of custom Xcom backend in README.md [#1203](https://github.com/astronomer/astro-sdk/issues/1203)
+
+### Misc
+* Investigate and fix the tests that is filling up Snowflake instances with tables as part of CI. [#738](https://github.com/astronomer/astro-sdk/issues/738)
+
+### Bug fixes
+
 ## 1.2.2
 
 ### Bug fixes
