@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from airflow.utils.log.logging_mixin import LoggingMixin
 from attr import define, field
-from uto.data_providers.base import DataProviders
-from uto.utils import create_dataprovider
 
 from astro.airflow.datasets import Dataset
 
@@ -27,7 +25,3 @@ class UniversalDataset(LoggingMixin, Dataset):
         "path",
         "conn_id",
     )
-
-    @property
-    def data_provider(self) -> DataProviders:
-        return create_dataprovider(self)

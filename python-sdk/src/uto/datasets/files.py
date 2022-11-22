@@ -7,9 +7,7 @@ import pandas as pd
 import smart_open
 from airflow.utils.log.logging_mixin import LoggingMixin
 from attr import define, field
-from uto.data_providers.base import DataProviders
 from uto.datasets.base import UniversalDataset
-from uto.utils import create_dataprovider
 
 from astro import constants
 from astro.files.locations import create_file_location
@@ -43,10 +41,6 @@ class File(LoggingMixin, UniversalDataset):
         "path",
         "conn_id",
     )
-
-    @property
-    def data_provider(self) -> DataProviders:
-        return create_dataprovider(self)
 
     @property
     def location(self) -> BaseFileLocation:
@@ -97,22 +91,6 @@ class File(LoggingMixin, UniversalDataset):
         self.is_dataframe = store_as_dataframe
         with smart_open.open(self.path, mode="wb", transport_params=self.location.transport_params) as stream:
             self.type.create_from_dataframe(stream=stream, df=df)
-
-    @property
-    def openlineage_dataset_namespace(self) -> str:
-        """
-        Returns the open lineage dataset namespace as per
-        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
-        """
-        return self.location.openlineage_dataset_namespace
-
-    @property
-    def openlineage_dataset_name(self) -> str:
-        """
-        Returns the open lineage dataset name as per
-        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
-        """
-        return self.location.openlineage_dataset_name
 
     def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes."""

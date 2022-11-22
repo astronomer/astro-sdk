@@ -5,7 +5,7 @@ from uto.datasets.base import UniversalDataset as Dataset
 from uto.integrations.base import TransferIntegrations
 
 
-class FiveTranIntegration(TransferIntegrations):
+class FivetranIntegration(TransferIntegrations):
     """
     Class for FiveTran.
 
