@@ -39,14 +39,6 @@ def test_table_without_name_and_schema():
     assert table.temp
 
 
-def test_table_name_set_after_initialization():
-    """Check that the table is no longer considered temp when the name is set after initialization."""
-    table = Table(conn_id="some_connection")
-    assert table.temp
-    table.name = "something"
-    assert not table.temp
-
-
 def test_table_name_with_temp_prefix():
     """Check that the table is no longer considered temp when the name is set after initialization."""
     table = Table(conn_id="some_connection")
