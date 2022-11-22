@@ -59,7 +59,7 @@ def test_usage(env, usage, args):
 def test_invalid_option(env, try_message):
     result = runner.invoke(app, ["--foo"], env=env)
     assert result.exit_code == 2
-    assert try_message in get_stdout(result)
+    assert try_message in result.stdout
 
 
 def test_about():
