@@ -1,4 +1,4 @@
-from typing import Union
+from typing import IO, Any, Optional, Union
 
 import click
 from rich.panel import Panel
@@ -39,9 +39,6 @@ def rich_format_error(self: click.ClickException) -> None:
             title_align=ALIGN_ERRORS_PANEL,
         )
     )
-from typing import IO, Any, Optional
-
-from typer.rich_utils import _get_rich_console
 
 
 def rprint(
