@@ -56,7 +56,7 @@ sql-cli/tests/.airflow/dags/*
 
 # Generated examples
 sql-cli/include/base/.airflow/dags/*
-!sql-cli/include/base/.airflow/dags/sql/.gitkeep
+!sql-cli/include/base/.airflow/dags/include/.gitkeep
 !sql-cli/include/base/.airflow/dags/.gitkeep
 
 # Airflow

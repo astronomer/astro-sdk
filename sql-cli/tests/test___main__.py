@@ -78,6 +78,7 @@ def test_version():
     "workflow_name,environment",
     [
         ("example_basic_transform", "default"),
+        ("example_load_file", "default"),
         ("example_templating", "dev"),
     ],
 )
@@ -185,6 +186,32 @@ def test_run(workflow_name, environment, initialised_project, generate_tasks):
             environment,
             "--project-dir",
             initialised_project.directory.as_posix(),
+            generate_tasks,
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert f"Completed running the workflow {workflow_name}." in result.stdout
+
+
+@pytest.mark.parametrize(
+    "workflow_name,environment",
+    [
+        ("example_load_file", "default"),
+    ],
+)
+@pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
+def test_run_load_file(
+    workflow_name, environment, initialised_project_with_load_file_workflow, generate_tasks
+):
+    result = runner.invoke(
+        app,
+        [
+            "run",
+            workflow_name,
+            "--env",
+            environment,
+            "--project-dir",
+            initialised_project_with_load_file_workflow.directory.as_posix(),
             generate_tasks,
         ],
     )

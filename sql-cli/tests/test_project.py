@@ -6,7 +6,7 @@ from tests.utils import list_dir
 BASE_PATHS = [
     Path(".airflow"),
     Path(".airflow/dags"),
-    Path(".airflow/dags/sql"),
+    Path(".airflow/dags/include"),
     Path(".airflow/default"),
     Path(".airflow/default/airflow.cfg"),
     Path(".airflow/default/airflow.db"),
@@ -22,6 +22,9 @@ BASE_PATHS = [
     Path("workflows"),
     Path("workflows/example_basic_transform"),
     Path("workflows/example_basic_transform/top_animations.sql"),
+    Path("workflows/example_load_file"),
+    Path("workflows/example_load_file/load_homes_main.yaml"),
+    Path("workflows/example_load_file/transform_homes_main.sql"),
     Path("workflows/example_templating"),
     Path("workflows/example_templating/filtered_orders.sql"),
     Path("workflows/example_templating/joint_orders_customers.sql"),

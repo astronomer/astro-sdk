@@ -12,11 +12,11 @@ import sql_cli
 from sql_cli.astro.command import AstroCommand
 from sql_cli.astro.group import AstroGroup
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
-from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, SqlFilesDirectoryNotFound
+from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
 from sql_cli.utils.rich import rprint
 
 if TYPE_CHECKING:
-    from sql_cli.project import Project
+    from sql_cli.project import Project  # pragma: no cover
 
 load_dotenv()
 app = typer.Typer(
@@ -278,7 +278,7 @@ def _generate_dag(project: Project, workflow_name: str, generate_tasks: bool) ->
     except EmptyDag:
         rprint(f"[bold red]The workflow {workflow_name} does not have any SQL files![/bold red]")
         raise Exit(code=1)
-    except SqlFilesDirectoryNotFound:
+    except WorkflowFilesDirectoryNotFound:
         rprint(f"[bold red]The workflow {workflow_name} does not exist![/bold red]")
         raise Exit(code=1)
     except DagCycle as dag_cycle:

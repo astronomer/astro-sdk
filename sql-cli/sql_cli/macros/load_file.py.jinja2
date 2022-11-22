@@ -1,0 +1,64 @@
+{% macro load_file(yaml_file, dag) -%}
+{% set yaml_content = yaml_file.get_yaml_content() -%}
+{{ yaml_file.get_variable_name() }} = aql.load_file(
+    {#- Note: Unfortunately, we cannot simply use **kwargs as some of the deserialized fields
+        such as File or Table contain invalid args for an __init__ call.
+        For example:
+          `input_file={{ yaml_content.input_file }}` won't work as the deserialized input file
+          contains args such as `_name` which cannot be set,
+          causing `input_file=File(_name="...", ...)` to fail when parsed by python. #}
+    input_file=File(
+        path="{{ yaml_content.input_file.path }}",
+        {%- if "conn_id" in yaml_content.input_file %}
+        conn_id="{{ yaml_content.input_file.conn_id }}",
+        {%- endif %}
+        {%- if "filetype" in yaml_content.input_file %}
+        filetype=FileType("{{ yaml_content.input_file.filetype }}"),
+        {%- endif %}
+        {%- if "normalize_config" in yaml_content.input_file %}
+        normalize_config={{ yaml_content.input_file.normalize_config }},
+        {%- endif %}
+        {%- if "is_dataframe" in yaml_content.input_file %}
+        is_dataframe={{ yaml_content.input_file.is_dataframe }},
+        {%- endif %}
+    ),
+    {%- if "output_table" in yaml_content %}
+    output_table=Table(
+        name="{{ yaml_content.output_table.get('name', yaml_file.name) }}",
+        conn_id="{{ yaml_content.output_table.conn_id }}",
+        {%- if "metadata" in yaml_content.output_table %}
+        metadata=Metadata(
+            {%- if "schema" in yaml_content.output_table.metadata %}
+            schema="{{ yaml_content.output_table.metadata.schema }}",
+            {%- endif %}
+            {%- if "database" in yaml_content.output_table.metadata %}
+            database="{{ yaml_content.output_table.metadata.database }}",
+            {%- endif %}
+        )
+        {%- endif %}
+    ),
+    {%- endif %}
+    {%- if "chunk_size" in yaml_content %}
+    chunk_size={{ yaml_content.chunk_size }},
+    {%- endif %}
+    {%- if "if_exists" in yaml_content %}
+    if_exists={{ yaml_content.if_exists }},
+    {%- endif %}
+    {%- if "ndjson_normalize_sep" in yaml_content %}
+    ndjson_normalize_sep="{{ yaml_content.ndjson_normalize_sep }}",
+    {%- endif %}
+    {%- if "use_native_support" in yaml_content %}
+    use_native_support={{ yaml_content.use_native_support }},
+    {%- endif %}
+    {%- if "native_support_kwargs" in yaml_content %}
+    native_support_kwargs={{ yaml_content.native_support_kwargs|safe }},
+    {%- endif %}
+    {%- if "columns_names_capitalization" in yaml_content %}
+    columns_names_capitalization="{{ yaml_content.columns_names_capitalization }}",
+    {%- endif %}
+    {%- if "enable_native_fallback" in yaml_content %}
+    enable_native_fallback={{ yaml_content.enable_native_fallback }},
+    {%- endif %}
+    task_id="{{ yaml_file.get_variable_name() }}",
+)
+{%- endmacro -%}

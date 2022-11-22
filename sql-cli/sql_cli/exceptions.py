@@ -10,8 +10,8 @@ class EmptyDag(Exception):
     """An exception raised when there are no SQL files within the DAG."""
 
 
-class SqlFilesDirectoryNotFound(Exception):
-    """An exception raised when the sql files directory does not exist."""
+class WorkflowFilesDirectoryNotFound(Exception):
+    """An exception raised when the workflow files directory does not exist."""
 
 
 class ConnectionFailed(Exception):

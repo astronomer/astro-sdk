@@ -1,3 +1,4 @@
+import os
 import random
 import shutil
 import string
@@ -9,9 +10,10 @@ from airflow.utils import timezone
 from airflow.utils.session import create_session
 
 from astro.table import MAX_TABLE_NAME_LENGTH
-from sql_cli.dag_generator import SqlFilesDAG
+from sql_cli.dag_generator import Workflow
 from sql_cli.project import Project
-from sql_cli.sql_directory_parser import SqlFile
+from sql_cli.utils.jinja import render
+from sql_cli.workflow_directory_parser import SqlFile, WorkflowFile
 
 CWD = Path(__file__).parent
 
@@ -37,8 +39,23 @@ def root_directory_symlink():
 
 
 @pytest.fixture()
+def root_directory_multiple_operators():
+    return CWD / "tests" / "workflows" / "multiple_operators"
+
+
+@pytest.fixture()
+def root_directory_unsupported_operator():
+    return CWD / "tests" / "workflows" / "unsupported_operator"
+
+
+@pytest.fixture()
 def root_directory_dags():
     return CWD / "tests" / "test_dag"
+
+
+@pytest.fixture()
+def root_directory_templates_load_file():
+    return CWD / "tests" / "templates" / "load_file"
 
 
 @pytest.fixture()
@@ -83,29 +100,47 @@ def sql_file_with_cycle(root_directory_cycle, dags_directory):
 
 
 @pytest.fixture()
-def sql_files_dag(sql_file):
-    return SqlFilesDAG(
-        dag_id="sql_files_dag",
-        start_date=DEFAULT_DATE,
-        sql_files=[sql_file],
+def workflow_file(root_directory, dags_directory):
+    return WorkflowFile(
+        root_directory=root_directory,
+        path=root_directory / "a.sql",
+        target_directory=dags_directory,
     )
 
 
 @pytest.fixture()
-def sql_files_dag_with_parameters(sql_file_with_parameters):
-    return SqlFilesDAG(
-        dag_id="sql_files_dag_with_parameters",
-        start_date=DEFAULT_DATE,
-        sql_files=[sql_file_with_parameters],
+def workflow_file_with_parameters(root_directory, dags_directory):
+    return WorkflowFile(
+        root_directory=root_directory,
+        path=root_directory / "c.sql",
+        target_directory=dags_directory,
     )
 
 
 @pytest.fixture()
-def sql_files_dag_with_cycle(sql_file_with_cycle):
-    return SqlFilesDAG(
-        dag_id="sql_files_dag_with_cycle",
+def workflow(sql_file):
+    return Workflow(
+        dag_id="workflow",
         start_date=DEFAULT_DATE,
-        sql_files=[sql_file_with_cycle],
+        workflow_files=[sql_file],
+    )
+
+
+@pytest.fixture()
+def workflow_with_parameters(sql_file_with_parameters):
+    return Workflow(
+        dag_id="workflow_with_parameters",
+        start_date=DEFAULT_DATE,
+        workflow_files=[sql_file_with_parameters],
+    )
+
+
+@pytest.fixture()
+def workflow_with_cycle(sql_file_with_cycle):
+    return Workflow(
+        dag_id="workflow_with_cycle",
+        start_date=DEFAULT_DATE,
+        workflow_files=[sql_file_with_cycle],
     )
 
 
@@ -144,6 +179,44 @@ def initialised_project_with_test_config(initialised_project: Project):
         src=CWD / "tests" / "config" / "test",
         dst=initialised_project.directory / "config" / "test",
     )
+    return initialised_project
+
+
+@pytest.fixture()
+def initialised_project_with_load_file_workflow(
+    root_directory_templates_load_file, initialised_project: Project
+):
+    # We use bigquery connection for the load_file operator example workflow. Although, we create isolated project
+    # directories, the workflow yaml file refer to the same output table name. And hence, upon running concurrent tests
+    # across Airflow versions and python versions, they try to access the same output table and conflict each other.
+    # We need to create unique output table name in the YAML and also modify the created workflow file name to use the
+    # same name as the output table name as the subsequent workflow SQL file needs to refer this YAML file.
+    # We would not need this fixture and the below manipulations once issue #1282 is addressed.
+    output_table_name = create_unique_table_name(UNIQUE_HASH_SIZE)
+    render_kwargs = {
+        "context": {"output_table_name": output_table_name},
+        "searchpath": root_directory_templates_load_file,
+    }
+
+    render(
+        template_file=Path("load_homes_main.yaml.jinja2"),
+        output_file=initialised_project.directory
+        / "workflows"
+        / "example_load_file"
+        / f"{output_table_name}.yaml",
+        **render_kwargs,
+    )
+    os.remove(initialised_project.directory / "workflows" / "example_load_file" / "load_homes_main.yaml")
+
+    render(
+        template_file=Path("transform_homes_main.sql.jinja2"),
+        output_file=initialised_project.directory
+        / "workflows"
+        / "example_load_file"
+        / "transform_homes_main.sql",
+        **render_kwargs,
+    )
+
     return initialised_project
 
 
