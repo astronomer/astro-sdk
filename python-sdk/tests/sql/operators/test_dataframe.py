@@ -492,6 +492,6 @@ def test_dataframe_replace_table_if_exist(sample_dag, conn_id):
         get_empty_dataframe(output_table=output_tb)
     test_utils.run_dag(sample_dag)
     assert output_tb.row_count == 2
-    # re-run dag to and make sure it is replacing and appending
+    # re-run dag to and make sure it is replacing table
     test_utils.run_dag(sample_dag)
     assert output_tb.row_count == 2
