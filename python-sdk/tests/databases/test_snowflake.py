@@ -2,7 +2,7 @@
 import os
 import pathlib
 from unittest import mock
-from unittest.mock import ANY, patch
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
