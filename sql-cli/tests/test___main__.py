@@ -18,6 +18,45 @@ CWD = pathlib.Path(__file__).parent
 
 
 @pytest.mark.parametrize(
+    "command,options",
+    [
+        (
+            "generate",
+            {
+                "--env": "default",
+                "--generate-tasks": "generate-tasks",
+            },
+        ),
+        (
+            "run",
+            {
+                "--env": "default",
+                "--generate-tasks": "generate-tasks",
+            },
+        ),
+        (
+            "validate",
+            {
+                "--env": "default",
+                "--connection": "None",
+            },
+        ),
+    ],
+    ids=[
+        "generate",
+        "run",
+        "validate",
+    ],
+)
+def test_defaults(command, options):
+    result = runner.invoke(app, [command, "--help"])
+    assert result.exit_code == 0
+    for name, value in options.items():
+        # We expect option name and option value to appear on the same line.
+        assert any(name in line and f"[default: {value}]" in line for line in result.stdout.splitlines())
+
+
+@pytest.mark.parametrize(
     "args",
     [
         ["--help"],
