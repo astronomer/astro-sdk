@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from logging import Logger
-from typing import TYPE_CHECKING, Sequence, Dict
+from typing import TYPE_CHECKING, Dict, Sequence
 
 from airflow.serialization.enums import DagAttributeTypes
 
@@ -10,22 +10,18 @@ if TYPE_CHECKING:
 import weakref
 from typing import Any
 
-from airflow.exceptions import (
-    DuplicateTaskIdFound,
-    TaskAlreadyInTaskGroup,
-)
-from airflow.models.taskmixin import DAGNode
-from airflow.exceptions import AirflowException
+from airflow.exceptions import AirflowException, DuplicateTaskIdFound, TaskAlreadyInTaskGroup
 from airflow.models.operator import BaseOperator
+from airflow.models.taskmixin import DAGNode
 from airflow.utils.task_group import TaskGroup, TaskGroupContext
-from astro.utils.typing_compat import Context
 from databricks_cli.dbfs.api import DbfsApi, DbfsPath
 from databricks_cli.jobs.api import JobsApi
-
 from databricks_cli.pipelines.api import PipelinesApi
 from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
 from databricks_cli.secrets.api import SecretApi
+
+from astro.utils.typing_compat import Context
 
 job_config = {
     "name": "airflow-job-test",
@@ -107,9 +103,14 @@ class DatabricksNotebookOperator(BaseOperator):
 class CreateDatabricksWorkflowOperator(BaseOperator):
     supported_operators = [DatabricksNotebookOperator]
 
-    def __init__(self, task_id, databricks_conn_id, job_cluster_json: dict[str, object] = None,
-                 tasks_to_convert: list[BaseOperator] = None,
-                 **kwargs):
+    def __init__(
+        self,
+        task_id,
+        databricks_conn_id,
+        job_cluster_json: dict[str, object] = None,
+        tasks_to_convert: list[BaseOperator] = None,
+        **kwargs,
+    ):
         self.job_cluster_key = job_cluster_json["job_cluster_key"]
         self.job_cluster_json = job_cluster_json
         self.tasks_to_convert = tasks_to_convert or []
@@ -120,7 +121,7 @@ class CreateDatabricksWorkflowOperator(BaseOperator):
     def add_task(self, task: BaseOperator):
         self.tasks_to_convert.append(task)
 
-    def _generate_task_json(self, task: BaseOperator) -> Dict[str, object]:
+    def _generate_task_json(self, task: BaseOperator) -> dict[str, object]:
         result = {
             "task_key": task.task_id,
             "depends_on": list([t for t in task.upstream_task_ids if t in self.relevant_upstreams]),
@@ -157,14 +158,21 @@ class CreateDatabricksWorkflowOperator(BaseOperator):
             "format": "MULTI_TASK",
         }
         import json
+
         db = DeltaDatabase(conn_id=self.databricks_conn_id)
         api_client = db.api_client()
         jobs_api = JobsApi(api_client=api_client)
         jobs_api.create_job(json=full_json)
-        run_id = jobs_api.run_now(job_id="airflow-job-test", jar_params=None, python_params=None, notebook_params=None,
-                                  spark_submit_params=None)
+        run_id = jobs_api.run_now(
+            job_id="airflow-job-test",
+            jar_params=None,
+            python_params=None,
+            notebook_params=None,
+            spark_submit_params=None,
+        )
         runs_api = RunsApi(api_client)
         import time
+
         while runs_api.get_run(run_id)["state"]["life_cycle_state"] == "PENDING":
             print("job pending")
             time.sleep(5)
@@ -177,7 +185,6 @@ class CreateDatabricksWorkflowOperator(BaseOperator):
 
 
 class DatabricksWorkflowTaskGroup(TaskGroup):
-
     def __init__(self, job_cluster_json, databricks_conn_id, **kwargs):
         self.databricks_conn_id = databricks_conn_id
         self.job_cluster_json = job_cluster_json
@@ -189,7 +196,8 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
             dag=self.dag,
             task_id="launch",
             databricks_conn_id=self.databricks_conn_id,
-            job_cluster_json=self.job_cluster_json)
+            job_cluster_json=self.job_cluster_json,
+        )
         for task in roots:
             create_databricks_workflow_task.set_upstream(task_or_task_list=list(task.upstream_list))
 

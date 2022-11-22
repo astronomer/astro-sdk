@@ -1,6 +1,7 @@
-from astro.spark.workflows.workflow_taskgroup import DatabricksWorkflowTaskGroup, DatabricksNotebookOperator
-from airflow.operators.python import PythonOperator
 from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import PythonOperator
+
+from astro.spark.workflows.workflow_taskgroup import DatabricksNotebookOperator, DatabricksWorkflowTaskGroup
 
 
 def test_basic_databricks_workflow(sample_dag):
@@ -31,15 +32,19 @@ def test_basic_databricks_workflow(sample_dag):
 
     with sample_dag:
         first_task = EmptyOperator(task_id="first_task")
-        db = DatabricksWorkflowTaskGroup(group_id="my-workflow",
-                                         job_cluster_json=job_cluster,
-                                         databricks_conn_id="my_databricks_conn")
+        db = DatabricksWorkflowTaskGroup(
+            group_id="my-workflow", job_cluster_json=job_cluster, databricks_conn_id="my_databricks_conn"
+        )
         with db:
             notebook = DatabricksNotebookOperator(task_id="bar", notebook_path="/foo/bar", source="WORKSPACE")
             first_task >> notebook
     print("\n\n\n")
     assert first_task.upstream_task_ids == set()
     assert sample_dag.get_task(task_id="my-workflow.launch").upstream_task_ids == {"first_task"}
-    assert sample_dag.get_task(task_id="my-workflow.bar").upstream_task_ids == {"my-workflow.launch", "first_task"}
+    assert sample_dag.get_task(task_id="my-workflow.bar").upstream_task_ids == {
+        "my-workflow.launch",
+        "first_task",
+    }
     from tests.sql.operators.utils import run_dag
+
     run_dag(sample_dag)
