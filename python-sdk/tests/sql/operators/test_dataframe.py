@@ -484,14 +484,17 @@ def test_dataframe_replace_table_if_exist(sample_dag, conn_id):
         arr = {"col1": [1, 2]}
         return pandas.DataFrame(data=arr)
 
-    output_tb = Table(
-        name="ci_df_replace_table",
-        conn_id=conn_id,
-    )
+    output_tb = Table(conn_id=conn_id)
     with sample_dag:
         get_empty_dataframe(output_table=output_tb)
+
     test_utils.run_dag(sample_dag)
     assert output_tb.row_count == 2
     # re-run dag to and make sure it is replacing table
     test_utils.run_dag(sample_dag)
     assert output_tb.row_count == 2
+
+    # drop the table to avoid issue with concurrent
+    with sample_dag:
+        aql.drop_table(table=output_tb)
+    test_utils.run_dag(sample_dag)
