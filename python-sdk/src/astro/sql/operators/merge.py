@@ -76,6 +76,8 @@ class MergeOperator(AstroSQLBaseOperator):
             target_conflict_columns=self.target_conflict_columns,
             source_to_target_columns_map=self.columns,
         )
+
+        # To remove pushing to XCom once we update airflow version.
         context["ti"].xcom_push(key="merge_query", value=str(db.sql))
         return self.target_table
 

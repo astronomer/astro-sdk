@@ -77,6 +77,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         """
         if self.input_file.conn_id:
             check_if_connection_exists(self.input_file.conn_id)
+        # To remove pushing to XCom once we update airflow version.
         if self.output_table:
             context["ti"].xcom_push(key="output_table_conn_id", value=str(self.output_table.conn_id))
             context["ti"].xcom_push(key="output_table_name", value=str(self.output_table.name))
@@ -236,6 +237,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
 
         output_dataset: list[OpenlineageDataset] = []
         if self.output_table is not None and self.output_table.openlineage_emit_temp_table_event():
+            # To remove pushing to XCom once we update airflow version.
             self.output_table.conn_id = task_instance.xcom_pull(
                 task_ids=task_instance.task_id, key="output_table_conn_id"
             )

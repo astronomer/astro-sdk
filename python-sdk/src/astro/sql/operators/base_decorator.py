@@ -111,6 +111,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         if self.sql == "" or not self.sql:
             raise AirflowException("There's no SQL to run")
 
+        # To remove pushing to XCom once we update airflow version.
         context["ti"].xcom_push(key="base_sql_query", value=str(self.sql))
 
     def create_output_table_if_needed(self) -> None:
@@ -236,6 +237,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                     },
                 )
             ]
+        # To remove pushing to XCom once we update airflow version.
         self.output_table.conn_id = task_instance.xcom_pull(
             task_ids=task_instance.task_id, key="output_table_conn_id"
         )
