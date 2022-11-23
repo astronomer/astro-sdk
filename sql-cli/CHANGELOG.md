@@ -6,7 +6,6 @@ A feature release containing the following major features:
 
 * load files to DB without Python
 * dynamic DAG generation
-* improve initialisation time or give visibility that it will take longer than expected
 
 ### Features
 
@@ -16,7 +15,7 @@ A feature release containing the following major features:
 
 ### Improvements
 
-* Fix error help for astro-cli
+* Fix error help for astro-cli by adding astro to the "Try 'flow -h' for help.'" output
 * Do not process example_dags in sql-cli check for import errors
 * Fix Airflow 2.2 issue #1162
 
