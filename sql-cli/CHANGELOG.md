@@ -25,7 +25,6 @@ A feature release containing the following major features:
 
 ### Misc
 
-* Spike: SQL CLI improve start time (building image/pulling)
 * Refactor cli tests to rely on large terminal
 * Change default to generate tasks in generate and run command
 * Use ReprHighlighter instead of OptionHighlighter in rprint messages
