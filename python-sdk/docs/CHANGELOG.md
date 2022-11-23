@@ -4,7 +4,7 @@
 
 ### Bug fixes
 * When `if_exists` is set to `replace` in Dataframe operator, replace the table rather than append. This change fixes a regression on the Dataframe operator which caused it to append content to an output table instead of replacing.  [#1260](https://github.com/astronomer/astro-sdk/issues/1260)
-* Support `database` kwarg in `PostgresHook`. Since schema is renamed to database in airflow as per this [PR](https://github.com/apache/airflow/pull/26744), users can now set database instead of schema. [#1276](https://github.com/astronomer/astro-sdk/pull/1276)
+* Pass the table metadata `database` value to the underlying airflow `PostgresHook` instead of `schema` as schema is renamed to database in airflow as per this [PR](https://github.com/apache/airflow/pull/26744). [#1276](https://github.com/astronomer/astro-sdk/pull/1276)
 
 ### Docs
 * Include description on pickling and usage of custom Xcom backend in README.md [#1203](https://github.com/astronomer/astro-sdk/issues/1203)
