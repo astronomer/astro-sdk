@@ -20,7 +20,6 @@ default_args = {
     "retries": 1,
     "retry_delay": 0,
 }
-data_url = "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data"  # URL for Iris data API
 
 dag = DAG(
     dag_id="example_load_file",
@@ -215,7 +214,7 @@ with dag:
     # [END load_file_example_17]
 
     # [START load_file_example_18]
-    dataframe = aql.load_file(input_file=File(path=data_url, filetype=FileType.CSV))
+    dataframe = aql.load_file(input_file=File(path="s3://astro-sdk/sample_csv.data", filetype=FileType.CSV))
     # [END load_file_example_18]
 
     aql.cleanup()
