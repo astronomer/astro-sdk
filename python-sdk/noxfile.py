@@ -111,6 +111,20 @@ def build_docs(session: nox.Session) -> None:
     session.run("make", "html")
 
 
+@nox.session(python=["3.7", "3.8", "3.9"])
+@nox.parametrize("airflow", ["2.2.5", "2.3.4", "2.4.2"])
+def generate_constraints(session: nox.Session, airflow) -> None:
+    """Generate constraints file"""
+    session.install("wheel")
+    session.install(f"apache-airflow=={airflow}", ".[all]")
+    # Log all the installed dependencies
+    session.log("Installed Dependencies:")
+    out = session.run("pip3", "list", "--format=freeze", external=True, silent=True)
+    pathlib.Path(f"constraints-{session.python}-{airflow}.txt").write_text(out)
+    print()
+    print(out)
+
+
 @nox.session()
 def release(session: nox.Session) -> None:
     """Publish a release."""
