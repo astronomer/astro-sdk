@@ -93,6 +93,7 @@ jobs:
         run: |
           echo $(ls -a .nox)
           echo $(ls -a .)
+          echo $(PWD)
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: pip3 install nox
       - run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')"
