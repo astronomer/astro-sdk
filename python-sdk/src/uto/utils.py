@@ -47,7 +47,7 @@ def check_if_connection_exists(conn_id: str) -> bool:
 
 def create_dataprovider(
     dataset: Dataset,
-    optimization_params: dict | None,
+    optimization_params: dict = {},
     extras: dict = {},
     use_optimized_transfer: bool = True,
     if_exists: LoadExistStrategy = "replace",
@@ -65,7 +65,7 @@ def create_dataprovider(
 
 
 def create_transfer_integration(
-    ingestion_type: IngestorSupported, ingestion_config: dict | None
+    ingestion_type: IngestorSupported, ingestion_config: dict = {}
 ) -> TransferIntegrations:
     """
     Given a ingestion_type and ingestion_config return the associated TransferIntegrations class.

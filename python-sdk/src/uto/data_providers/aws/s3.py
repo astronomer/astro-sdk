@@ -21,7 +21,7 @@ class S3DataProviders(DataProviders):
     def __init__(
         self,
         conn_id: str,
-        optimization_params: dict | None,
+        optimization_params: dict,
         extras: dict = {},
         use_optimized_transfer: bool = True,
         if_exists: LoadExistStrategy = "replace",
@@ -48,6 +48,13 @@ class S3DataProviders(DataProviders):
     def check_if_exists(self, dataset: Dataset) -> bool:
         """Return true if the dataset exists"""
         raise NotImplementedError
+
+    def check_if_transfer_supported(self, source_dataset: Dataset) -> bool:
+        """
+        Checks if the transfer is supported from source to destination based on source_dataset.
+        """
+        source_connection_type = get_dataset_connection_type(source_dataset)
+        return source_connection_type in self.transfer_mapping
 
     @abstractmethod
     def load_data_from_source(self, source_dataset: Dataset, destination_dataset: Dataset) -> None:

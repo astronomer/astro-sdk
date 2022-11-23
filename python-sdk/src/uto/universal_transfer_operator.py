@@ -52,9 +52,9 @@ class UniversalTransferOperator(BaseOperator):
         self.extras = extras if extras else {}
         self.ingestion_type = ingestion_type
         self.use_optimized_transfer = use_optimized_transfer
-        self.optimization_params = optimization_params
+        self.optimization_params = optimization_params if optimization_params else {}
         self.if_exists = if_exists
-        self.ingestion_config = ingestion_config
+        self.ingestion_config = ingestion_config if ingestion_config else {}
 
     def execute(self, context: Context) -> Any:
         if self.source_dataset.conn_id:
