@@ -33,7 +33,7 @@ dag = DAG(
 with dag:
     # [START load_file_example_1]
     my_homes_table = aql.load_file(
-        input_file=File(path="s3://astro-sdk/sample.csv"),
+        input_file=File(path="s3://astro-sdk/python_sdk/example_dags/data/sample.csv"),
         output_table=Table(
             conn_id="postgres_conn",
         ),
@@ -42,13 +42,13 @@ with dag:
 
     # [START load_file_example_2]
     dataframe = aql.load_file(
-        input_file=File(path="s3://astro-sdk/sample.csv"),
+        input_file=File(path="s3://astro-sdk/python_sdk/example_dags/data/sample.csv"),
     )
     # [END load_file_example_2]
 
     # [START load_file_example_3]
     sample_table = aql.load_file(
-        input_file=File(path="s3://astro-sdk/sample.ndjson"),
+        input_file=File(path="s3://astro-sdk/python_sdk/example_dags/data/sample.ndjson"),
         output_table=Table(
             conn_id="postgres_conn",
         ),
@@ -58,7 +58,7 @@ with dag:
 
     # [START load_file_example_4]
     new_table = aql.load_file(
-        input_file=File(path="s3://astro-sdk/sample.csv"),
+        input_file=File(path="s3://astro-sdk/python_sdk/example_dags/data/sample.csv"),
         output_table=Table(
             conn_id="postgres_conn",
         ),
@@ -68,7 +68,7 @@ with dag:
 
     # [START load_file_example_5]
     custom_schema_table = aql.load_file(
-        input_file=File(path="s3://astro-sdk/sample.csv"),
+        input_file=File(path="s3://astro-sdk/python_sdk/example_dags/data/sample.csv"),
         output_table=Table(
             conn_id="postgres_conn",
             columns=[
@@ -81,7 +81,7 @@ with dag:
 
     # [START load_file_example_6]
     dataframe = aql.load_file(
-        input_file=File(path="s3://astro-sdk/sample.csv"),
+        input_file=File(path="s3://astro-sdk/python_sdk/example_dags/data/sample.csv"),
         columns_names_capitalization="upper",
     )
     # [END load_file_example_6]
@@ -140,7 +140,7 @@ with dag:
     # [START load_file_example_12]
     aql.load_file(
         input_file=File(
-            "gs://astro-sdk/workspace/sample_pattern.csv",
+            "s3://astro-sdk/python_sdk/example_dags/data/sample_pattern.csv",
             conn_id="bigquery",
             filetype=FileType.CSV,
         ),
@@ -164,7 +164,7 @@ with dag:
     # [START load_file_example_14]
     aql.load_file(
         input_file=File(
-            "gs://astro-sdk/workspace/sample_pattern.csv",
+            "s3://astro-sdk/python_sdk/example_dags/data/sample_pattern.csv",
             conn_id="bigquery",
             filetype=FileType.CSV,
         ),
@@ -198,7 +198,7 @@ with dag:
     # [START load_file_example_17]
     aql.load_file(
         input_file=File(
-            "gs://astro-sdk/workspace/sample_pattern.csv",
+            "s3://astro-sdk/python_sdk/example_dags/data/sample_pattern.csv",
             conn_id="bigquery",
             filetype=FileType.CSV,
         ),
@@ -214,7 +214,11 @@ with dag:
     # [END load_file_example_17]
 
     # [START load_file_example_18]
-    dataframe = aql.load_file(input_file=File(path="s3://astro-sdk/sample_csv.data", filetype=FileType.CSV))
+    dataframe = aql.load_file(
+        input_file=File(
+            path="s3://astro-sdk/python_sdk/example_dags/data/sample_csv.data", filetype=FileType.CSV
+        )
+    )
     # [END load_file_example_18]
 
     aql.cleanup()
