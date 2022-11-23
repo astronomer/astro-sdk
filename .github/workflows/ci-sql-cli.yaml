@@ -87,7 +87,6 @@ jobs:
         with:
           path: |
             ~/.cache/pip
-            .nox
             sql-cli/.nox
           key: ${{ runner.os }}-2.3-${{ hashFiles('sql-cli/pyproject.toml') }}
       - name: Output results
