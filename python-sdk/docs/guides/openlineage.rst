@@ -27,12 +27,6 @@ For example, to send OpenLineage events to a local instance of Marquez with the 
     OPENLINEAGE_URL=http://localhost:5000
     OPENLINEAGE_NAMESPACE="dev"
 
-If you want to use the Astro Python SDK extractors to generate OpenLineage events, then set the environment variable
-
-.. code-block:: ini
-
-    OPENLINEAGE_EXTRACTORS="astro.lineage.extractor.PythonSDKExtractor"
-
 
 When you run the example DAG given below, by setting the environment variables described above,
 
