@@ -4,7 +4,7 @@
 
 A feature release containing the following major features:
 
-* load without Python
+* load files to DB without Python
 * dynamic DAG generation
 * improve initialisation time or give visibility that it will take longer than expected
 
