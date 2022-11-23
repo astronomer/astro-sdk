@@ -44,7 +44,7 @@ jobs:
         with:
            path: |
              ~/.cache/pip
-             .nox
+             sql-cli/.nox
            key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
       - run: pip3 install nox
       - run: nox -s type_check
@@ -89,11 +89,6 @@ jobs:
             ~/.cache/pip
             sql-cli/.nox
           key: ${{ runner.os }}-2.3-${{ hashFiles('sql-cli/pyproject.toml') }}
-      - name: Output results
-        run: |
-          echo $(ls -a .nox)
-          echo $(ls -a .)
-          echo $(PWD)
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: pip3 install nox
       - run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')"
