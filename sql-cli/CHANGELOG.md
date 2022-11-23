@@ -1,5 +1,39 @@
 # Changelog
 
+## 0.2.0
+
+A feature release containing the following major features:
+
+* load without Python
+* dynamic DAG generation
+* improve initialisation time or give visibility that it will take longer than expected
+
+### Features
+
+* Integrate load file operator together with generate and run in SQL CLI
+* Expose the dynamic DAG generation in the Astro CLI
+* Inform the progress to users when Astro CLI - SQL CLI command takes longer
+
+### Improvements
+
+* Fix error help for astro-cli
+* Do not process example_dags in sql-cli check for import errors
+* Fix Airflow 2.2 issue #1162
+
+### Docs
+
+* Verify docs has correct syntax for specifying connection
+
+### Misc
+
+* Spike: SQL CLI improve start time (building image/pulling)
+* Refactor cli tests to rely on large terminal
+* Change default to generate tasks in generate and run command
+* Use ReprHighlighter instead of OptionHighlighter in rprint messages
+* Refactor cli tests to rely on large terminal
+* Fix noxfile and pyproject
+* Remove duplicated print statements in sql-cli
+
 ## 0.1.1
 
 A patch release primarily focused on fixing bugs.

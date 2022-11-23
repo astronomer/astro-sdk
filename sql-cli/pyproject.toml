@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "astro-sql-cli"
-version = "0.2.0a0"
+version = "0.2.0"
 description = "Empower analysts to build workflows to transform data using SQL"
 authors = [
     "Astronomer <humans@astronomer.io>",
