@@ -230,6 +230,8 @@ def test_load_pandas_dataframe_to_table_with_append(database_table_fixture):
     assert rows[2] == (1,)
     assert rows[3] == (2,)
 
+    database.drop_table(table)
+
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
@@ -271,6 +273,8 @@ def test_load_pandas_dataframe_to_table_with_replace(database_table_fixture):
     assert len(rows) == 2
     assert rows[0] == (3,)
     assert rows[1] == (4,)
+
+    database.drop_table(table)
 
 
 @pytest.mark.integration
