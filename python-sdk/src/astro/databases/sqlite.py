@@ -144,6 +144,8 @@ class SqliteDatabase(BaseDatabase):
         """
         Returns the open lineage dataset namespace as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
-        Example: sqlite://127.0.0.1
+        Example: file://127.0.0.1:22
         """
-        return f"{self.sql_type}://{socket.gethostbyname(socket.gethostname())}"
+        conn = self.hook.get_connection(self.conn_id)
+        port = conn.port if conn.port else 22
+        return f"file://{socket.gethostbyname(socket.gethostname())}:{port}/"
