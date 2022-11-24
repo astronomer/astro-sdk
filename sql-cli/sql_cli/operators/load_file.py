@@ -20,6 +20,7 @@ def build_load_file_operator_content(
     """
     input_file_content = operator_content.pop("input_file")
     input_file_content["class"] = "File"
+    input_file_content.setdefault("conn_id", None)
     input_file_content.setdefault("is_dataframe", False)
     input_file_content.setdefault("normalize_config", None)
 
@@ -27,6 +28,7 @@ def build_load_file_operator_content(
 
     output_table_content = operator_content.pop("output_table")
     output_table_content["class"] = "Table"
+    output_table_content.setdefault("metadata", {})
     output_table_content.setdefault("name", operator_file_name)
     output_table_content.setdefault("temp", False)
 

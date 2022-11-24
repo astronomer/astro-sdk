@@ -1,6 +1,7 @@
 from typing import IO, Any, Optional, Union
 
 import click
+from rich.highlighter import ReprHighlighter
 from rich.panel import Panel
 from typer.rich_utils import (
     ALIGN_ERRORS_PANEL,
@@ -63,5 +64,10 @@ def rprint(
 
     # We use the rich console from typer which allows us to set FORCE_TERMINAL & MAX_WIDTH
     # both we use for consistent output locally (via Makefile) and in CI
-    write_console = _get_rich_console() if file is None else Console(file=file)
+    console = _get_rich_console()
+    # And we reset the hightlighter to the default highlighter,
+    # because the OptionHighlighter only makes sense for options e.g in help output
+    console.highlighter = ReprHighlighter()
+
+    write_console = console if file is None else Console(file=file)
     return write_console.print(*objects, sep=sep, end=end)

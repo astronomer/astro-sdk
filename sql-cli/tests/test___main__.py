@@ -18,6 +18,45 @@ CWD = pathlib.Path(__file__).parent
 
 
 @pytest.mark.parametrize(
+    "command,options",
+    [
+        (
+            "generate",
+            {
+                "--env": "default",
+                "--generate-tasks": "generate-tasks",
+            },
+        ),
+        (
+            "run",
+            {
+                "--env": "default",
+                "--generate-tasks": "generate-tasks",
+            },
+        ),
+        (
+            "validate",
+            {
+                "--env": "default",
+                "--connection": "None",
+            },
+        ),
+    ],
+    ids=[
+        "generate",
+        "run",
+        "validate",
+    ],
+)
+def test_defaults(command, options):
+    result = runner.invoke(app, [command, "--help"])
+    assert result.exit_code == 0
+    for name, value in options.items():
+        # We expect option name and option value to appear on the same line.
+        assert any(name in line and f"[default: {value}]" in line for line in result.stdout.splitlines())
+
+
+@pytest.mark.parametrize(
     "args",
     [
         ["--help"],
@@ -172,6 +211,7 @@ def test_validate_all(initialised_project_with_test_config):
     "workflow_name,environment",
     [
         ("example_basic_transform", "default"),
+        ("example_load_file", "default"),
         ("example_templating", "dev"),
     ],
 )
@@ -186,32 +226,6 @@ def test_run(workflow_name, environment, initialised_project, generate_tasks):
             environment,
             "--project-dir",
             initialised_project.directory.as_posix(),
-            generate_tasks,
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    assert f"Completed running the workflow {workflow_name}." in result.stdout
-
-
-@pytest.mark.parametrize(
-    "workflow_name,environment",
-    [
-        ("example_load_file", "default"),
-    ],
-)
-@pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
-def test_run_load_file(
-    workflow_name, environment, initialised_project_with_load_file_workflow, generate_tasks
-):
-    result = runner.invoke(
-        app,
-        [
-            "run",
-            workflow_name,
-            "--env",
-            environment,
-            "--project-dir",
-            initialised_project_with_load_file_workflow.directory.as_posix(),
             generate_tasks,
         ],
     )

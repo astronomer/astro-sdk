@@ -2,7 +2,7 @@
 import os
 import pathlib
 from unittest import mock
-from unittest.mock import ANY, patch
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
@@ -175,53 +175,6 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
     assert len(rows) == 2
     assert rows[0] == (1,)
     assert rows[1] == (2,)
-
-
-@pytest.mark.integration
-@pytest.mark.parametrize(
-    "database_table_fixture",
-    [
-        {
-            "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
-        },
-    ],
-    indirect=True,
-    ids=["snowflake"],
-)
-def test_if_exist_param_of__load_pandas_dataframe_to_table(database_table_fixture):
-    """Test if_exist parameter on load_pandas_dataframe_to_table against snowflake"""
-    database, table = database_table_fixture
-
-    pandas_dataframe = pd.DataFrame(data={"id": [1, 2]})
-
-    with mock.patch("snowflake.connector.pandas_tools.write_pandas") as method:
-        database.load_pandas_dataframe_to_table(pandas_dataframe, table, if_exists="replace")
-        method.assert_called_with(
-            conn=ANY,
-            df=ANY,
-            table_name=ANY,
-            schema=ANY,
-            database=ANY,
-            chunk_size=ANY,
-            quote_identifiers=False,
-            auto_create_table=True,
-        )
-
-    with mock.patch("astro.databases.base.BaseDatabase.table_exists") as table_exists:
-        table_exists.return_value = True
-        with mock.patch("snowflake.connector.pandas_tools.write_pandas") as method:
-            database.load_pandas_dataframe_to_table(pandas_dataframe, table, if_exists="append")
-            method.assert_called_with(
-                conn=ANY,
-                df=ANY,
-                table_name=ANY,
-                schema=ANY,
-                database=ANY,
-                chunk_size=ANY,
-                quote_identifiers=False,
-                auto_create_table=False,
-            )
 
 
 @pytest.mark.integration
