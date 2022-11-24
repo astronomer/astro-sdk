@@ -147,5 +147,5 @@ class SqliteDatabase(BaseDatabase):
         Example: file://127.0.0.1:22
         """
         conn = self.hook.get_connection(self.conn_id)
-        port = conn.port if conn.port else 22
+        port = conn.port or 22
         return f"file://{socket.gethostbyname(socket.gethostname())}:{port}/"
