@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from abc import abstractmethod
-
 from airflow.hooks.dbapi import DbApiHook
 from airflow.providers.google.cloud.hooks.gcs import GCSHook, _parse_gcs_url
 from uto.data_providers.base import DataProviders
@@ -11,7 +9,7 @@ from uto.utils import FileLocation, get_dataset_connection_type
 from astro.constants import LoadExistStrategy
 
 
-class GSDataProviders(DataProviders):
+class GCSDataProvider(DataProviders):
     """
     DataProviders interactions with GS Dataset.
     """
@@ -31,15 +29,20 @@ class GSDataProviders(DataProviders):
             use_optimized_transfer=use_optimized_transfer,
             if_exists=if_exists,
         )
-        self.transfer_mapping: set = {FileLocation.GS, FileLocation.S3}
+        self.transfer_mapping: set = {
+            FileLocation.GS,
+            FileLocation.S3,
+            FileLocation.AWS,
+            FileLocation.google_cloud_platform,
+        }
 
     @property
     def hook(self) -> DbApiHook:
         """Return an instance of the database-specific Airflow hook."""
         return GCSHook(
             gcp_conn_id=self.conn_id,
-            delegate_to=self.extras.get("delegate_to"),
-            impersonation_chain=self.extras.get("google_impersonation_chain"),
+            delegate_to=self.extras.get("delegate_to", None),
+            impersonation_chain=self.extras.get("google_impersonation_chain", None),
         )
 
     def check_if_exists(self, dataset: Dataset) -> bool:
@@ -50,7 +53,6 @@ class GSDataProviders(DataProviders):
         bucket_name, blob = _parse_gcs_url(gsurl=source_dataset.path)
         return bucket_name
 
-    @abstractmethod
     def load_data_from_source(self, source_dataset: Dataset, destination_dataset: Dataset) -> None:
         """
         Loads data from source dataset to the destination using data provider
@@ -58,7 +60,7 @@ class GSDataProviders(DataProviders):
         if not self.check_if_transfer_supported(source_dataset=source_dataset):
             raise ValueError("Transfer not supported yet.")
         source_connection_type = get_dataset_connection_type(source_dataset)
-        if source_connection_type == "gs":
+        if source_connection_type == "google_cloud_platform":
             return self.load_data_from_gcs(source_dataset, destination_dataset)
 
     def check_if_transfer_supported(self, source_dataset: Dataset) -> bool:
