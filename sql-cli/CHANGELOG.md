@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+A patch release containing the following change:
+
+* the `load_file` example now uses SQLite, like the other workflows
+
 ## 0.2.0
 
 A feature release containing the following major features:
