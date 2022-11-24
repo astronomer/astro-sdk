@@ -1,0 +1,5 @@
+load_file:
+  input_file:
+    path: "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb.csv"
+  output_table:
+    conn_id: "sqlite_conn"
