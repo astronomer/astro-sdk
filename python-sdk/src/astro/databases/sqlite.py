@@ -148,4 +148,4 @@ class SqliteDatabase(BaseDatabase):
         """
         conn = self.hook.get_connection(self.conn_id)
         port = conn.port or 22
-        return f"file://{socket.gethostbyname(socket.gethostname())}:{port}/"
+        return f"file://{socket.gethostbyname(socket.gethostname())}:{port}"
