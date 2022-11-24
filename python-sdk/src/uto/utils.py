@@ -9,11 +9,13 @@ from uto.integrations.base import TransferIntegrations
 from astro.constants import LoadExistStrategy
 from astro.utils.path import get_class_name
 
-CUSTOM_INGESTION_TYPE_TO_MODULE_PATH = {"fivetran": "uto.integrations.fiveTran"}
+CUSTOM_INGESTION_TYPE_TO_MODULE_PATH = {"Fivetran": "uto.integrations.fivetran"}
 
 DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = {
     "s3": "uto.data_providers.aws.s3",
+    "aws": "uto.data_providers.aws.s3",
     "gs": "uto.data_providers.google.cloud.gcs",
+    "google_cloud_platform": "uto.data_providers.google.cloud.gcs",
 }
 
 
@@ -22,14 +24,16 @@ class FileLocation(Enum):
     LOCAL = "local"
     HTTP = "http"
     HTTPS = "https"
-    GS = "gs"  # Google Cloud Storage
+    GS = "google_cloud_platform"  # Google Cloud Storage
+    google_cloud_platform = "google_cloud_platform"  # Google Cloud Storage
     S3 = "s3"  # Amazon S3
+    AWS = "aws"
     # [END filelocation]
 
 
 class IngestorSupported(Enum):
     # [START transferingestor]
-    FiveTran = "fivetran"
+    Fivetran = "fivetran"
     # [END transferingestor]
 
 
@@ -59,7 +63,11 @@ def create_dataprovider(
     module = importlib.import_module(module_path)
     class_name = get_class_name(module_ref=module, suffix="DataProvider")
     data_provider: DataProviders = getattr(module, class_name)(
-        dataset.conn_id, optimization_params, extras, use_optimized_transfer, if_exists
+        conn_id=dataset.conn_id,
+        optimization_params=optimization_params,
+        extras=extras,
+        use_optimized_transfer=use_optimized_transfer,
+        if_exists=if_exists,
     )
     return data_provider
 
