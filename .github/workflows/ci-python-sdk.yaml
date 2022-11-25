@@ -338,7 +338,7 @@ jobs:
       - run: pip3 list --format=freeze > constraints-${{ matrix.python }}-${{ matrix.airflow }}
       - run: cat constraints-${{ matrix.python }}-${{ matrix.airflow }}
       - name: Upload constraints
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: constraints-${{ matrix.python }}-${{ matrix.airflow }}
           path: ./python-sdk/constraints-${{ matrix.python }}-${{ matrix.airflow }}
