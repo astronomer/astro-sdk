@@ -1,25 +1,17 @@
 from __future__ import annotations
 
-from logging import Logger
-from typing import TYPE_CHECKING, Dict, Sequence
-
-from airflow.serialization.enums import DagAttributeTypes
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     pass
-import weakref
 from typing import Any
 
-from airflow.exceptions import AirflowException, DuplicateTaskIdFound, TaskAlreadyInTaskGroup
+import time
+from airflow.exceptions import AirflowException
 from airflow.models.operator import BaseOperator
-from airflow.models.taskmixin import DAGNode
-from airflow.utils.task_group import TaskGroup, TaskGroupContext
-from databricks_cli.dbfs.api import DbfsApi, DbfsPath
+from airflow.utils.task_group import TaskGroup
 from databricks_cli.jobs.api import JobsApi
-from databricks_cli.pipelines.api import PipelinesApi
 from databricks_cli.runs.api import RunsApi
-from databricks_cli.sdk.api_client import ApiClient
-from databricks_cli.secrets.api import SecretApi
 
 from astro.utils.typing_compat import Context
 
@@ -94,10 +86,38 @@ job_config = {
 
 
 class DatabricksNotebookOperator(BaseOperator):
-    def __init__(self, notebook_path: str, source: str, **kwargs):
+    template_fields = ("databricks_run_id")
+
+    def __init__(self, notebook_path: str, source: str, databricks_conn_id: str, databricks_run_id: str = "", **kwargs):
         self.notebook_path = notebook_path
         self.source = source
+        self.databricks_conn_id = databricks_conn_id
+        self.databricks_run_id = databricks_run_id
         super().__init__(**kwargs)
+
+    def execute(self, context: Context) -> Any:
+        from astro.spark.delta import DeltaDatabase
+
+        if not (hasattr(self.task_group, "is_databricks") and getattr(self.task_group, "is_databricks")):
+            raise AirflowException("Currently this operator only works in a databricks context")
+
+        db = DeltaDatabase(conn_id=self.databricks_conn_id)
+        api_client = db.api_client()
+        runs_api = RunsApi(api_client)
+        current_task = {x["task_key"]: x for x in runs_api.get_run(self.databricks_run_id)["tasks"]}[self.task_id.replace(".","__")]
+        while runs_api.get_run(current_task['run_id'])["state"]["life_cycle_state"] == "PENDING":
+            print("job pending")
+            time.sleep(5)
+
+        while runs_api.get_run(current_task['run_id'])["state"]["life_cycle_state"]  == "RUNNING":
+            print("job running")
+            time.sleep(5)
+
+        final_state = runs_api.get_run(current_task['run_id'])['state']
+        if final_state['result_state'] != "SUCCESS":
+            raise AirflowException("Task failed. Reason: %s", final_state["state_message"])
+
+
 
 
 class CreateDatabricksWorkflowOperator(BaseOperator):
@@ -116,6 +136,7 @@ class CreateDatabricksWorkflowOperator(BaseOperator):
         self.tasks_to_convert = tasks_to_convert or []
         self.relevant_upstreams = [task_id]
         self.databricks_conn_id = databricks_conn_id
+        self.databricks_run_id = None
         super().__init__(task_id=task_id, **kwargs)
 
     def add_task(self, task: BaseOperator):
@@ -123,8 +144,8 @@ class CreateDatabricksWorkflowOperator(BaseOperator):
 
     def _generate_task_json(self, task: BaseOperator) -> dict[str, object]:
         result = {
-            "task_key": task.task_id,
-            "depends_on": list([t for t in task.upstream_task_ids if t in self.relevant_upstreams]),
+            "task_key": task.task_id.replace(".", "__"),
+            "depends_on": list([{"task_key": t.replace(".", "__")} for t in task.upstream_task_ids if t in self.relevant_upstreams]),
             "job_cluster_key": self.job_cluster_key,
             "timeout_seconds": 0,
             "email_notifications": {},
@@ -157,34 +178,30 @@ class CreateDatabricksWorkflowOperator(BaseOperator):
             "job_clusters": [self.job_cluster_json],
             "format": "MULTI_TASK",
         }
-        import json
 
         db = DeltaDatabase(conn_id=self.databricks_conn_id)
         api_client = db.api_client()
         jobs_api = JobsApi(api_client=api_client)
-        jobs_api.create_job(json=full_json)
-        run_id = jobs_api.run_now(
-            job_id="airflow-job-test",
+        job_id = jobs_api.create_job(json=full_json)
+        run_info = jobs_api.run_now(
+            job_id=job_id["job_id"],
             jar_params=None,
             python_params=None,
             notebook_params=None,
             spark_submit_params=None,
         )
+        run_id = run_info["run_id"]
         runs_api = RunsApi(api_client)
         import time
 
         while runs_api.get_run(run_id)["state"]["life_cycle_state"] == "PENDING":
             print("job pending")
             time.sleep(5)
-
-        while runs_api.get_run(run_id)["state"]["life_cycle_state"] == "RUNNING":
-            print("job running")
-            time.sleep(3)
-
-        print(f"final state: {runs_api.get_run(run_id)['state']['result_state']}")
+        return run_id
 
 
 class DatabricksWorkflowTaskGroup(TaskGroup):
+    is_databricks = True
     def __init__(self, job_cluster_json, databricks_conn_id, **kwargs):
         self.databricks_conn_id = databricks_conn_id
         self.job_cluster_json = job_cluster_json
@@ -205,6 +222,7 @@ class DatabricksWorkflowTaskGroup(TaskGroup):
             if task_id != f"{self.group_id}.launch":
                 create_databricks_workflow_task.relevant_upstreams.append(task_id)
                 create_databricks_workflow_task.add_task(task)
+                task.databricks_run_id = create_databricks_workflow_task.output
 
         create_databricks_workflow_task.set_downstream(roots)
         super().__exit__(_type, _value, _tb)
