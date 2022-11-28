@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 
 from astro.constants import Database
+from astro.dataframes.pandas import PandasDataframe
 from astro.files import File
 from astro.settings import SCHEMA
 from astro.table import Metadata, Table
@@ -62,6 +63,7 @@ def test_export_table_to_pandas_dataframe(
         ]
     )
     assert df.rename(columns=str.lower).equals(expected)
+    assert isinstance(df, PandasDataframe)
 
 
 @pytest.mark.parametrize(

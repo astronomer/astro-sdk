@@ -23,6 +23,7 @@ from pandas.testing import assert_frame_equal
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database, FileType
+from astro.dataframes.pandas import PandasDataframe
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
 from astro.settings import SCHEMA
@@ -71,6 +72,7 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
 
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (3, 9)
+    assert isinstance(df, PandasDataframe)
 
 
 @pytest.mark.integration

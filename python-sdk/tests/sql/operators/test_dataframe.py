@@ -55,6 +55,9 @@ def test_dataframe_from_sql_basic(sample_dag, database_table_fixture):
 
     @aql.dataframe
     def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
+        from astro.dataframes.pandas import PandasDataframe
+
+        assert isinstance(df, PandasDataframe)
         return df.sell.count()
 
     with sample_dag:

@@ -11,6 +11,8 @@ from airflow.hooks.dbapi import DbApiHook
 from pandas.io.sql import SQLDatabase
 from sqlalchemy import column, insert, select
 
+from astro.dataframes.pandas import PandasDataframe
+
 if TYPE_CHECKING:  # pragma: no cover
     from sqlalchemy.engine.cursor import CursorResult
 from sqlalchemy.sql import ClauseElement
@@ -648,7 +650,8 @@ class BaseDatabase(ABC):
 
         if self.table_exists(source_table):
             sqla_table = self.get_sqla_table(source_table)
-            return pd.read_sql(sql=sqla_table.select(**select_kwargs), con=self.sqlalchemy_engine)
+            df = pd.read_sql(sql=sqla_table.select(**select_kwargs), con=self.sqlalchemy_engine)
+            return PandasDataframe.from_pandas_df(df)
 
         table_qualified_name = self.get_table_qualified_name(source_table)
         raise NonExistentTableException(f"The table {table_qualified_name} does not exist")
