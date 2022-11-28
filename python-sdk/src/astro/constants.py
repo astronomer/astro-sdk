@@ -44,6 +44,7 @@ class Database(Enum):
     POSTGRES = "postgres"
     POSTGRESQL = "postgres"
     SQLITE = "sqlite"
+    DELTA = "delta"
     BIGQUERY = "bigquery"
     SNOWFLAKE = "snowflake"
     REDSHIFT = "redshift"

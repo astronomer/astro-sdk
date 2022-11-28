@@ -71,6 +71,14 @@ class BaseFileLocation(ABC):
         """
         raise NotImplementedError
 
+    def autoloader_config(self):
+        """
+
+
+        :return:
+        """
+        raise NotImplementedError()
+
     @staticmethod
     def is_valid_path(path: str) -> bool:
         """
