@@ -83,7 +83,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
         if isinstance(self.input_data, BaseTable) and self.input_data.openlineage_emit_temp_table_event():
             input_uri = (
                 f"{self.input_data.openlineage_dataset_namespace()}"
-                f"://{self.input_data.openlineage_dataset_name()}"
+                f"{self.input_data.openlineage_dataset_name()}"
             )
             input_dataset = [
                 OpenlineageDataset(
@@ -108,8 +108,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
                 )
             ]
         output_uri = (
-            f"{self.output_file.openlineage_dataset_namespace}"
-            f"://{self.output_file.openlineage_dataset_name}"
+            f"{self.output_file.openlineage_dataset_namespace}" f"{self.output_file.openlineage_dataset_name}"
         )
         output_dataset = [
             OpenlineageDataset(

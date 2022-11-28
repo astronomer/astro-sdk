@@ -222,8 +222,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
 
         if first_table.openlineage_emit_temp_table_event() and first_table.conn_id:  # pragma: no cover
             input_uri = (
-                f"{first_table.openlineage_dataset_namespace()}"
-                f"://{first_table.openlineage_dataset_name()}"
+                f"{first_table.openlineage_dataset_namespace()}" f"{first_table.openlineage_dataset_name()}"
             )
             input_dataset = [
                 OpenlineageDataset(
@@ -246,7 +245,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         ):  # pragma: no cover
             output_uri = (
                 f"{self.output_table.openlineage_dataset_namespace()}"
-                f"://{self.output_table.openlineage_dataset_name()}"
+                f"{self.output_table.openlineage_dataset_name()}"
             )
             output_table_row_count = task_instance.xcom_pull(
                 task_ids=task_instance.task_id, key="output_table_row_count"
