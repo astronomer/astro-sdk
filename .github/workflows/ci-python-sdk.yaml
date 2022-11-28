@@ -311,6 +311,39 @@ jobs:
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
 
+  Generate-Constraints:
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [ 3.7, 3.8, 3.9 ]
+        airflow: [ 2.2.5, 2.3.4, 2.4.2 ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '${{ matrix.python }}'
+          architecture: 'x64'
+      - name: Get pip cache dir
+        id: pip-cache
+        run: |
+          echo "pip_cache_dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v3
+        with:
+          path: ${{ steps.pip-cache.outputs.pip_cache_dir }}
+          key: constraints-${{ matrix.python }}-${{ matrix.airflow }}-${{ hashFiles('python-sdk/pyproject.toml') }}
+      - run: pip3 install -U pip wheel build nox
+      - run: nox -s build
+      - run: pip3 install 'apache-airflow==${{ matrix.airflow }}' "$(ls dist/*.whl)[all]"
+      - run: pip3 list --format=freeze > constraints-${{ matrix.python }}-${{ matrix.airflow }}
+      - run: cat constraints-${{ matrix.python }}-${{ matrix.airflow }}
+      - name: Upload constraints
+        uses: actions/upload-artifact@v3
+        with:
+          name: constraints-${{ matrix.python }}-${{ matrix.airflow }}
+          path: ./python-sdk/constraints-${{ matrix.python }}-${{ matrix.airflow }}
+          if-no-files-found: error
+
   Code-Coverage:
     if: github.event.action != 'labeled'
     needs:
@@ -349,6 +382,7 @@ jobs:
       - Run-Unit-tests-Airflow-2-4
       - Run-Unit-tests-Airflow-2-2-5
       - Run-Optional-Packages-tests-python-sdk
+      - Generate-Constraints
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
