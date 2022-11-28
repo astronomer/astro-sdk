@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     pass
+import time
 from typing import Any
 
-import time
 from airflow.exceptions import AirflowException
 from airflow.models.operator import BaseOperator
 from airflow.utils.task_group import TaskGroup
@@ -86,9 +86,11 @@ job_config = {
 
 
 class DatabricksNotebookOperator(BaseOperator):
-    template_fields = ("databricks_run_id")
+    template_fields = "databricks_run_id"
 
-    def __init__(self, notebook_path: str, source: str, databricks_conn_id: str, databricks_run_id: str = "", **kwargs):
+    def __init__(
+        self, notebook_path: str, source: str, databricks_conn_id: str, databricks_run_id: str = "", **kwargs
+    ):
         self.notebook_path = notebook_path
         self.source = source
         self.databricks_conn_id = databricks_conn_id
@@ -104,20 +106,20 @@ class DatabricksNotebookOperator(BaseOperator):
         db = DeltaDatabase(conn_id=self.databricks_conn_id)
         api_client = db.api_client()
         runs_api = RunsApi(api_client)
-        current_task = {x["task_key"]: x for x in runs_api.get_run(self.databricks_run_id)["tasks"]}[self.task_id.replace(".","__")]
-        while runs_api.get_run(current_task['run_id'])["state"]["life_cycle_state"] == "PENDING":
+        current_task = {x["task_key"]: x for x in runs_api.get_run(self.databricks_run_id)["tasks"]}[
+            self.task_id.replace(".", "__")
+        ]
+        while runs_api.get_run(current_task["run_id"])["state"]["life_cycle_state"] == "PENDING":
             print("job pending")
             time.sleep(5)
 
-        while runs_api.get_run(current_task['run_id'])["state"]["life_cycle_state"]  == "RUNNING":
+        while runs_api.get_run(current_task["run_id"])["state"]["life_cycle_state"] == "RUNNING":
             print("job running")
             time.sleep(5)
 
-        final_state = runs_api.get_run(current_task['run_id'])['state']
-        if final_state['result_state'] != "SUCCESS":
+        final_state = runs_api.get_run(current_task["run_id"])["state"]
+        if final_state["result_state"] != "SUCCESS":
             raise AirflowException("Task failed. Reason: %s", final_state["state_message"])
-
-
 
 
 class CreateDatabricksWorkflowOperator(BaseOperator):
@@ -145,7 +147,13 @@ class CreateDatabricksWorkflowOperator(BaseOperator):
     def _generate_task_json(self, task: BaseOperator) -> dict[str, object]:
         result = {
             "task_key": task.task_id.replace(".", "__"),
-            "depends_on": list([{"task_key": t.replace(".", "__")} for t in task.upstream_task_ids if t in self.relevant_upstreams]),
+            "depends_on": list(
+                [
+                    {"task_key": t.replace(".", "__")}
+                    for t in task.upstream_task_ids
+                    if t in self.relevant_upstreams
+                ]
+            ),
             "job_cluster_key": self.job_cluster_key,
             "timeout_seconds": 0,
             "email_notifications": {},
@@ -202,6 +210,7 @@ class CreateDatabricksWorkflowOperator(BaseOperator):
 
 class DatabricksWorkflowTaskGroup(TaskGroup):
     is_databricks = True
+
     def __init__(self, job_cluster_json, databricks_conn_id, **kwargs):
         self.databricks_conn_id = databricks_conn_id
         self.job_cluster_json = job_cluster_json

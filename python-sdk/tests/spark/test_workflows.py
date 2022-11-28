@@ -36,8 +36,18 @@ def test_basic_databricks_workflow(sample_dag):
             group_id="my-workflow", job_cluster_json=job_cluster, databricks_conn_id="my_databricks_conn"
         )
         with db:
-            notebook = DatabricksNotebookOperator(task_id="first_db_task", notebook_path="/Users/daniel@astronomer.io/Test workflow", source="WORKSPACE", databricks_conn_id="my_databricks_conn")
-            notebook1 = DatabricksNotebookOperator(task_id="second_db_task", notebook_path="/Users/daniel@astronomer.io/Test workflow", source="WORKSPACE", databricks_conn_id="my_databricks_conn")
+            notebook = DatabricksNotebookOperator(
+                task_id="first_db_task",
+                notebook_path="/Users/daniel@astronomer.io/Test workflow",
+                source="WORKSPACE",
+                databricks_conn_id="my_databricks_conn",
+            )
+            notebook1 = DatabricksNotebookOperator(
+                task_id="second_db_task",
+                notebook_path="/Users/daniel@astronomer.io/Test workflow",
+                source="WORKSPACE",
+                databricks_conn_id="my_databricks_conn",
+            )
             notebook >> notebook1
             first_task >> notebook
     print("\n\n\n")
