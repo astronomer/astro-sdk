@@ -179,7 +179,7 @@ def test_if_table_object_can_be_pickled():
                 port=5432,
             ),
             "public.test_tb",
-            "postgresql://postgres:5432",
+            "postgresql://postgres:5432/",
         ),
         (
             Connection(
