@@ -90,7 +90,7 @@ class AppendOperator(AstroSQLBaseOperator):
         if self.source_table.openlineage_emit_temp_table_event():
             input_uri = (
                 f"{self.source_table.openlineage_dataset_namespace()}"
-                f"://{self.source_table.openlineage_dataset_name()}"
+                f"{self.source_table.openlineage_dataset_name()}"
             )
             input_dataset = [
                 OpenlineageDataset(
@@ -122,7 +122,7 @@ class AppendOperator(AstroSQLBaseOperator):
         if self.source_table.openlineage_emit_temp_table_event():
             output_uri = (
                 f"{self.target_table.openlineage_dataset_namespace()}"
-                f"://{self.target_table.openlineage_dataset_name()}"
+                f"{self.target_table.openlineage_dataset_name()}"
             )
             output_dataset = [
                 OpenlineageDataset(

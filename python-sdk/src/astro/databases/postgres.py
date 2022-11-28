@@ -224,4 +224,4 @@ class PostgresDatabase(BaseDatabase):
         Example: postgresql://localhost:5432
         """
         conn = self.hook.get_connection(self.conn_id)
-        return f"{self.sql_type}://{conn.host}:{conn.port}"
+        return f"{self.sql_type}://{conn.host}:{conn.port}/"
