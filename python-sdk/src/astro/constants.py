@@ -20,6 +20,7 @@ class FileLocation(Enum):
     HTTP = "http"
     HTTPS = "https"
     GS = "gs"  # Google Cloud Storage
+    GOOGLE_DRIVE = "gdrive"
     S3 = "s3"  # Amazon S3
     # [END filelocation]
 
