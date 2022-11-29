@@ -1,4 +1,3 @@
-import datetime
 import pathlib
 import time
 from pathlib import Path
@@ -72,7 +71,7 @@ def generate_file(
     return output_file_path
 
 
-def load_file_to_dbfs(local_file_path: Path, api_client: ApiClient):
+def load_file_to_dbfs(local_file_path: Path, file_name: str, api_client: ApiClient) -> Path:
     """
     Load a file into DBFS. Used to move a python file into DBFS so we can run the jobs as pyspark jobs
 
@@ -83,14 +82,14 @@ def load_file_to_dbfs(local_file_path: Path, api_client: ApiClient):
     dbfs = DbfsApi(api_client=api_client)
     file_path = DbfsPath("dbfs:/mnt/pyscripts/")
     dbfs.mkdirs(file_path)
-    dbfs.delete(file_path.join("autoload_file_to_delta.py"), recursive=False)
-    dbfs.put_file(
-        src_path=str(local_file_path), dbfs_path=file_path.join("autoload_file_to_delta.py"), overwrite=True
-    )
+    dbfs.delete(file_path.join(file_name), recursive=False)
+    dbfs.put_file(src_path=str(local_file_path), dbfs_path=file_path.join(file_name), overwrite=True)
+    return Path("dbfs:/mnt/pyscripts".join(file_name))
 
 
 def create_and_run_job(
     api_client,
+    file_to_run: str,
     existing_cluster_id=None,
     new_cluster_specs=None,
 ):
@@ -103,8 +102,8 @@ def create_and_run_job(
     """
     jobs_api = JobsApi(api_client=api_client)
     json_info = {
-        "name": "autloader Python job S3 " + str(datetime.datetime.now()),
-        "spark_python_task": {"python_file": "dbfs:/mnt/pyscripts/autoload_file_to_delta.py"},
+        "name": "autoloader Python job S3 " + file_to_run,
+        "spark_python_task": {"python_file": file_to_run},
     }
     if existing_cluster_id:
         json_info["existing_cluster_id"] = existing_cluster_id

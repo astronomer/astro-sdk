@@ -25,7 +25,9 @@ def load_file_to_delta(input_file: File, delta_table: BaseTable):
     db = DeltaDatabase(conn_id=delta_table.conn_id)
     api_client = db.api_client
     create_secrets(
-        "my-scope", filesystem_secrets=input_file.location.autoloader_config, api_client=api_client
+        f"secret-scope-{delta_table.name}",
+        filesystem_secrets=input_file.location.autoloader_config,
+        api_client=api_client,
     )
 
     with tempfile.NamedTemporaryFile(suffix=".py") as tfile:
@@ -40,6 +42,10 @@ def load_file_to_delta(input_file: File, delta_table: BaseTable):
             output_file_path=Path(tfile.name),
         )
 
-        load_file_to_dbfs(file_path, api_client=api_client)
+        dbfs_file_path = load_file_to_dbfs(
+            file_path, file_name=f"load_file_{delta_table.name}.py", api_client=api_client
+        )
 
-    create_and_run_job(api_client=api_client, existing_cluster_id="1028-033729-pgbj7n9x")
+    create_and_run_job(
+        api_client=api_client, existing_cluster_id="1028-033729-pgbj7n9x", file_to_run=str(dbfs_file_path)
+    )
