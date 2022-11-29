@@ -22,8 +22,7 @@ class DeltaDatabase(BaseDatabase):
 
     def populate_table_metadata(self, table: BaseTable) -> BaseTable:
         """
-        Since SQLite does not have a concept of databases or schemas, we just return the table as is,
-        without any modifications.
+        # TODO: Do we need default configurations for a delta table?
         """
         table.conn_id = table.conn_id or self.conn_id
         if not table.metadata or table.metadata.is_empty():
@@ -40,8 +39,9 @@ class DeltaDatabase(BaseDatabase):
     @property
     def hook(self) -> DbApiHook:
         """
+        Return the hook for the relevant databricks conn_id
 
-        :return: a DatabricksSqlHook with metadata on the
+        :return: a DatabricksSqlHook with metadata
         """
         return DatabricksSqlHook(databricks_conn_id=self.conn_id)
 
@@ -54,6 +54,7 @@ class DeltaDatabase(BaseDatabase):
         return Metadata()
 
     def create_table_using_native_schema_autodetection(self, table: BaseTable, file: File) -> None:
+        # TODO Do we need to implement this function? It seems like databricks will handle schemas for us
         pass
 
     def merge_table(
@@ -67,9 +68,11 @@ class DeltaDatabase(BaseDatabase):
         raise NotImplementedError("We do not yet support merge for databricks")
 
     def schema_exists(self, schema: str) -> bool:
+        # Schemas do not need to be created for delta, so we can assume this is true
         return True
 
     def create_schema_if_needed(self, schema: str | None) -> None:
+        # Schemas do not need to be created for delta, so we don't need to do anything here
         return None
 
     def load_file_to_table(
@@ -151,6 +154,9 @@ class DeltaDatabase(BaseDatabase):
     def table_exists(self, table: BaseTable) -> bool:
         """
         Queries databricks to check if a table exists.
+
+        Since the databricks SQL API returns an exception if the table does not exist
+        we look out for the relevant exception.
         :param table: Table that may or may not exist
         :return: True if the table exists, false if it does not
         """
@@ -169,7 +175,7 @@ class DeltaDatabase(BaseDatabase):
 
     def create_table_using_columns(self, table: BaseTable) -> None:
         """
-        Create a SQL table using the table columns.
+        Create a SQL table using the table columns provided by the user.
 
         :param table: The table to be created.
         """
