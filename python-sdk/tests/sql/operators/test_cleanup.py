@@ -43,8 +43,7 @@ SUPPORTED_DATABASES_OBJECTS_WITH_FILE = [
     for database in Database
     if database != Database.DELTA
 ]
-
-print(SUPPORTED_DATABASES_OBJECTS_WITH_FILE)
+SUPPORTED_DATABASES.pop(2)  # pop delta from this value for this class
 
 
 @pytest.mark.integration
