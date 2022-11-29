@@ -64,4 +64,3 @@ def test_load_to_dbfs(mock_api_client):
         ),
     ]
     mock_api_client.assert_has_calls(calls)
-    print(mock_api_client)

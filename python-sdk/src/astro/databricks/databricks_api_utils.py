@@ -26,16 +26,13 @@ def create_secrets(scope_name: str, filesystem_secrets: Dict[str, str], api_clie
     :param api_client: The databricks API client that has all necessary credentials
     """
     secrets = SecretApi(api_client)
-    try:
-        secrets.delete_scope(scope_name)
-        secrets.create_scope(
-            scope=scope_name,
-            initial_manage_principal=None,
-            backend_azure_keyvault=None,
-            scope_backend_type=None,
-        )
-    except Exception:
-        print("oh well it exists already")
+    secrets.delete_scope(scope_name)
+    secrets.create_scope(
+        scope=scope_name,
+        initial_manage_principal=None,
+        backend_azure_keyvault=None,
+        scope_backend_type=None,
+    )
 
     for k, v in filesystem_secrets.items():
         secrets.put_secret(scope=scope_name, key=k, string_value=v, bytes_value=None)
