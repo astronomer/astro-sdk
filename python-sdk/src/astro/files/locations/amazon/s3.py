@@ -50,14 +50,6 @@ class S3Location(BaseFileLocation):
             object_name = object_name[1:]
         return self.hook.head_object(key=object_name, bucket_name=bucket_name).get("ContentLength") or -1
 
-    def autoloader_config(self):
-        credentials = self.hook.get_credentials()
-        return {
-            "aws_access_key_id": credentials.access_key,
-            "aws_secret_access_key": credentials.secret_key,
-            "aws_session_token": credentials.token,
-        }
-
     @property
     def openlineage_dataset_namespace(self) -> str:
         """
