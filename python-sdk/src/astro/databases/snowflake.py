@@ -949,6 +949,13 @@ class SnowflakeDatabase(BaseDatabase):
         account = self.hook.get_connection(self.conn_id).extra_dejson.get("account")
         return f"{self.sql_type}://{account}"
 
+    def openlineage_dataset_uri(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset uri as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return f"{self.openlineage_dataset_namespace()}/{self.openlineage_dataset_name(table=table)}"
+
     def truncate_table(self, table):
         """Truncate table"""
         self.run_sql(f"TRUNCATE {self.get_table_qualified_name(table)}")

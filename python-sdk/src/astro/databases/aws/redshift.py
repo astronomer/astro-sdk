@@ -417,3 +417,10 @@ class RedshiftDatabase(BaseDatabase):
         """
         conn = self.hook.conn
         return f"{self.sql_type}://{conn.host}:{conn.port}"
+
+    def openlineage_dataset_uri(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset uri as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return f"{self.openlineage_dataset_namespace()}/{self.openlineage_dataset_name(table=table)}"
