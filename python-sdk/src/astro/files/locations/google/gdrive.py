@@ -51,12 +51,15 @@ def _find_contains(folder_id: str, pattern: str, *, conn: Any) -> Iterator[str]:
     """
     page_token = None
     while True:
-        command = conn.files().list(
-            q=f"name contains {_quote(pattern)} and {_quote(folder_id)} in parents ",
-            fields="nextPageToken, files(name,id, mimeType,webContentLink,size)",
-            pageToken=page_token,
+        response = (
+            conn.files()
+            .list(
+                q=f"name contains {_quote(pattern)} and {_quote(folder_id)} in parents ",
+                fields="nextPageToken, files(name,id, mimeType,webContentLink,size)",
+                pageToken=page_token,
+            )
+            .execute()
         )
-        response = command.execute()
         yield from (f["webContentLink"] for f in response["files"])
         page_token = response.get("nextPageToken", None)
         if page_token is None:
@@ -85,7 +88,8 @@ class GdriveLocation(BaseFileLocation):
         Returns the open lineage dataset namespace as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
-        return pathlib.PurePosixPath(urllib.parse.urlsplit(self.path).path).name
+        parsed_url = urllib.parse.urlsplit(self.path)
+        return f"{parsed_url.scheme}://{parsed_url.netloc}"
 
     @property
     def openlineage_dataset_name(self) -> str:
@@ -129,15 +133,18 @@ class GdriveLocation(BaseFileLocation):
         except FileNotFoundError:
             raise FileNotFoundError(self.path) from None
 
-        command = conn.files().list(
-            q=f"name contains {_quote(path_parts[-1])} and {_quote(folder_id)} in parents ",
-            fields="nextPageToken, files(name,id,size)",
+        response = (
+            conn.files()
+            .list(
+                q=f"name contains {_quote(path_parts[-1])} and {_quote(folder_id)} in parents ",
+                fields="files(name,id,size)",
+            )
+            .execute()
         )
-        response = command.execute()
         value: int = 0
         try:
             for f in response["files"]:
-                value = int(f["size"][0])
+                value = int(f["size"])
         except KeyError:
             raise IsADirectoryError(self.path) from None
         return value
