@@ -13,6 +13,7 @@ from astro.table import Metadata, Table
 # To create IAM role with needed permissions,
 # refer: https://www.dataliftoff.com/iam-roles-for-loading-data-from-s3-into-redshift/
 REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN = os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN")
+SNOWFLAKE_CONN_ID = "snowflake_conn"
 
 CWD = pathlib.Path(__file__).parent
 default_args = {
@@ -220,5 +221,16 @@ with dag:
         )
     )
     # [END load_file_example_18]
+
+    aql.load_file(
+        input_file=File(path="gdrive://test-google-drive-support/sample.csv", conn_id="gdrive_conn"),
+        output_table=Table(
+            conn_id=SNOWFLAKE_CONN_ID,
+            metadata=Metadata(
+                database=os.environ["SNOWFLAKE_DATABASE"],
+                schema=os.environ["SNOWFLAKE_SCHEMA"],
+            ),
+        ),
+    )
 
     aql.cleanup()
