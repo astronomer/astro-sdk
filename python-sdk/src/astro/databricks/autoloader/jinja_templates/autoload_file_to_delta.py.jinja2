@@ -1,0 +1,37 @@
+from pyspark.sql.functions import input_file_name, current_timestamp
+
+{% from 'jinja_templates/s3_settings.py.jinja2' import s3_settings -%}
+
+src_events_path = "{{ input_path }}"
+username = spark.sql("SELECT regexp_replace(current_user(), '[^a-zA-Z0-9]', '_')").first()[0]
+table_name = f"{{ table_name }}" # This can be generated based on task ID and dag ID or just entirely random
+checkpoint_path = f"/tmp/{username}/_checkpoint/etl_3_quickstart"
+
+{%- if source_type == "s3" %}
+{{ s3_settings() }}
+{%- endif %}
+
+# These options can also be user generated or we can take liberties based on what we know about the data
+load_options = {
+{%- for k,v in load_dict.items() %}
+    "{{ k }}": "{{ v }}",
+{%- endfor %}
+    "cloudFiles.schemaLocation": checkpoint_path
+}
+
+write_options = {
+    "checkpointLocation": checkpoint_path
+}
+
+
+spark.sql(f"DROP TABLE IF EXISTS {table_name}")
+dbutils.fs.rm(checkpoint_path, True)
+(spark.readStream
+  .format("cloudFiles")
+  .options(**load_options)
+  .load(src_events_path)
+  .select("*", input_file_name().alias("source_file"), current_timestamp().alias("processing_time"))
+  .writeStream
+  .options(**write_options)
+  .trigger(once=True)
+  .toTable(table_name))

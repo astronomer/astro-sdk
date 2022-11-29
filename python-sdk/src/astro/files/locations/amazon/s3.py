@@ -66,3 +66,16 @@ class S3Location(BaseFileLocation):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         return urlparse(self.path).path
+
+    @property
+    def autoloader_config(self) -> dict:
+        """
+
+        :return:
+        """
+        credentials = self.hook.get_credentials()
+        return {
+            "aws_access_key_id": credentials.access_key,
+            "aws_secret_access_key": credentials.secret_key,
+            "aws_session_token": credentials.token,
+        }

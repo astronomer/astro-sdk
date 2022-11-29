@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import pandas
-from airflow.hooks.dbapi import DbApiHook
+from airflow.providers.databricks.hooks.databricks import DatabricksHook
 from airflow.providers.databricks.hooks.databricks_sql import DatabricksSqlHook
 from databricks.sql.client import Cursor
+from databricks_cli.sdk.api_client import ApiClient
 from sqlalchemy.engine.base import Engine as SqlAlchemyEngine
 from sqlalchemy.sql import ClauseElement
 
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
+from astro.databricks.autoloader.autoloader_job import load_file_to_delta
 from astro.files import File
 from astro.table import BaseTable, Metadata
 
@@ -33,11 +35,19 @@ class DeltaDatabase(BaseDatabase):
         return table
 
     @property
+    def api_client(self):
+        conn = DatabricksHook(
+            databricks_conn_id=self.conn_id
+        ).get_conn()  # add this because DatabricksSqlHook does not expose password
+        api_client = ApiClient(host=conn.host, token=conn.password)
+        return api_client
+
+    @property
     def sql_type(self):
         return "delta"
 
     @property
-    def hook(self) -> DbApiHook:
+    def hook(self) -> DatabricksSqlHook:
         """
         Return the hook for the relevant databricks conn_id
 
@@ -103,7 +113,10 @@ class DeltaDatabase(BaseDatabase):
             in the resulting dataframe
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         """
-        raise NotImplementedError("Load is not yet implemented")
+        load_file_to_delta(
+            input_file=input_file,
+            delta_table=output_table,
+        )
 
     def openlineage_dataset_name(self, table: BaseTable) -> str:
         return ""
