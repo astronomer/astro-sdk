@@ -81,7 +81,6 @@ all = [
     "snowflake-sqlalchemy>=1.2.0",
     "sqlalchemy-bigquery>=1.3.0",
     "databricks-sql-connector==2.0.2",
-    "PyHive==0.6.5",
     "databricks-cli",
     "apache-airflow-providers-databricks",
     "s3fs",

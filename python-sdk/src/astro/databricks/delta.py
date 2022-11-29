@@ -5,7 +5,6 @@ from airflow.hooks.dbapi import DbApiHook
 from airflow.providers.databricks.hooks.databricks import DatabricksHook
 from airflow.providers.databricks.hooks.databricks_sql import DatabricksSqlHook
 from databricks_cli.sdk.api_client import ApiClient
-from sqlalchemy.engine import create_engine
 from sqlalchemy.engine.base import Engine as SqlAlchemyEngine
 from sqlalchemy.sql import ClauseElement
 
@@ -35,7 +34,7 @@ class DeltaDatabase(BaseDatabase):
         )
         return list(x[1].asDict().values())[
             0
-        ]  # please for the love of god let's find a better way to do this
+        ]  # TODO: please for the love of god let's find a better way to do this
 
     def populate_table_metadata(self, table: BaseTable) -> BaseTable:
         """
@@ -60,27 +59,7 @@ class DeltaDatabase(BaseDatabase):
 
     @property
     def sqlalchemy_engine(self) -> SqlAlchemyEngine:
-        hook = self.hook
-        c = hook.databricks_conn
-        url = f"databricks+connector://token:{c.password}@{self.hook.host}:443/default"
-
-        return create_engine(url, connect_args=c.extra_dejson)
-
-    def table_exists(self, table: BaseTable) -> bool:
-        """
-        Check if a table exists in the database.
-
-        :param table: Details of the table we want to check that exists
-        """
-        from databricks.sql.exc import ServerOperationError
-        from sqlalchemy.exc import DatabaseError
-
-        try:
-            return super().table_exists(table)
-        except DatabaseError as d:
-            if isinstance(d.orig, ServerOperationError) and "Table or view not found" in d.orig.message:
-                return False
-            raise d
+        raise NotImplementedError("We are not using sqlalchemy for databricks")
 
     @property
     def default_metadata(self) -> Metadata:
@@ -167,18 +146,19 @@ class DeltaDatabase(BaseDatabase):
         )
         return hook.run(sql, parameters=parameters, handler=handler)
 
-    # def table_exists(self, table: BaseTable) -> bool:
-    #     from databricks.sql.exc import ServerOperationError
-    #     try:
-    #         self.hook.run(
-    #             f"DESCRIBE TABLE {table.name}", handler=lambda cur: cur.fetchall_arrow().to_pandas()
-    #         )
-    #         return True
-    #     except ServerOperationError as s:
-    #         if "Table or view not found" in s.message:
-    #             return False
-    #         else:
-    #             raise s
+    def table_exists(self, table: BaseTable) -> bool:
+        from databricks.sql.exc import ServerOperationError
+
+        try:
+            self.hook.run(
+                f"DESCRIBE TABLE {table.name}", handler=lambda cur: cur.fetchall_arrow().to_pandas()
+            )
+            return True
+        except ServerOperationError as s:
+            if "Table or view not found" in s.message:
+                return False
+            else:
+                raise s
 
     def create_table_using_columns(self, table: BaseTable) -> None:
         """
