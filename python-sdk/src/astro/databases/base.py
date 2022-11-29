@@ -59,7 +59,6 @@ class BaseDatabase(ABC):
     illegal_column_name_chars: list[str] = []
     illegal_column_name_chars_replacement: list[str] = []
     NATIVE_PATHS: dict[Any, Any] = {}
-    NATIVE_LOAD_EXCEPTIONS: Any = DatabaseCustomError
     DEFAULT_SCHEMA = SCHEMA
     NATIVE_AUTODETECT_SCHEMA_CONFIG: Mapping[FileLocation, Mapping[str, list[FileType] | Callable]] = {}
     FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = set()
@@ -475,6 +474,7 @@ class BaseDatabase(ABC):
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
     ):
+        logging.info("Loading file(s) with Pandas...")
         input_files = resolve_file_path_pattern(
             input_file.path,
             input_file.conn_id,
@@ -514,6 +514,7 @@ class BaseDatabase(ABC):
         """
 
         try:
+            logging.info("Loading file(s) with Native Support...")
             self.load_file_to_table_natively(
                 source_file=source_file,
                 target_table=target_table,
@@ -521,13 +522,13 @@ class BaseDatabase(ABC):
                 native_support_kwargs=native_support_kwargs,
                 **kwargs,
             )
-        # Catching NATIVE_LOAD_EXCEPTIONS for fallback
-        except self.NATIVE_LOAD_EXCEPTIONS as load_exception:  # skipcq: PYL-W0703
+        except DatabaseCustomError:
             logging.warning(
-                "Loading files failed with Native Support. Falling back to Pandas-based load",
+                "Loading file(s) failed with Native Support.",
                 exc_info=True,
             )
             if enable_native_fallback:
+                logging.warning("Falling back to Pandas-based load...")
                 self.load_file_to_table_using_pandas(
                     input_file=source_file,
                     output_table=target_table,
@@ -536,7 +537,7 @@ class BaseDatabase(ABC):
                     chunk_size=chunk_size,
                 )
             else:
-                raise load_exception
+                raise
 
     def load_pandas_dataframe_to_table(
         self,
