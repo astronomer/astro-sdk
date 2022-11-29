@@ -2,7 +2,7 @@
 import os
 import pathlib
 from unittest import mock
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pandas as pd
 import pytest
@@ -258,7 +258,10 @@ def test_load_file_to_table_natively_for_fallback_raises_exception_if_not_enable
     mock_stage, mock_hook, database_table_fixture
 ):
     """Test loading on files to snowflake natively for fallback raise exception."""
-    mock_hook.run.side_effect = ValueError
+    mock_hook.run.side_effect = [
+        ValueError,  # 1st run call copies the data
+        None,  # 2nd run call drops the stage
+    ]
     mock_stage.return_value = SnowflakeStage(
         name="mock_stage",
         url="gcs://bucket/prefix",
@@ -271,6 +274,11 @@ def test_load_file_to_table_natively_for_fallback_raises_exception_if_not_enable
             source_file=File(filepath),
             target_table=target_table,
         )
+    mock_hook.run.assert_has_calls(
+        [
+            call(f"DROP STAGE IF EXISTS {mock_stage.return_value.qualified_name};", autocommit=True),
+        ]
+    )
 
 
 @pytest.mark.integration
