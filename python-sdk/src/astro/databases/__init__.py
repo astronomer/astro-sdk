@@ -15,6 +15,7 @@ CUSTOM_CONN_TYPE_TO_MODULE_PATH = {
     "gcpbigquery": DEFAULT_CONN_TYPE_TO_MODULE_PATH["bigquery"],
     "google_cloud_platform": DEFAULT_CONN_TYPE_TO_MODULE_PATH["bigquery"],
     "databricks": "astro.databricks.delta",
+    "delta": "astro.databricks.delta",
 }
 CONN_TYPE_TO_MODULE_PATH = {
     **DEFAULT_CONN_TYPE_TO_MODULE_PATH,
