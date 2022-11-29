@@ -244,10 +244,6 @@ class LoadFileOperator(AstroSQLBaseOperator):
             self.output_table.name = task_instance.xcom_pull(
                 task_ids=task_instance.task_id, key="output_table_name"
             )
-            output_uri = (
-                f"{self.output_table.openlineage_dataset_namespace()}"
-                f"{self.output_table.openlineage_dataset_name()}"
-            )
             output_dataset = [
                 OpenlineageDataset(
                     namespace=self.output_table.openlineage_dataset_namespace(),
@@ -269,7 +265,9 @@ class LoadFileOperator(AstroSQLBaseOperator):
                                 )
                             ]
                         ),
-                        "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=output_uri),
+                        "dataSource": DataSourceDatasetFacet(
+                            name=self.output_table.name, uri=self.output_table.openlingeage_dataset_uri()
+                        ),
                     },
                 )
             ]

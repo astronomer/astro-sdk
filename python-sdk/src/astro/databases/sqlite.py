@@ -149,3 +149,10 @@ class SqliteDatabase(BaseDatabase):
         conn = self.hook.get_connection(self.conn_id)
         port = conn.port or 22
         return f"file://{socket.gethostbyname(socket.gethostname())}:{port}"
+
+    def openlineage_dataset_uri(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset uri as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return f"{self.openlineage_dataset_namespace()}{self.openlineage_dataset_name(table=table)}"

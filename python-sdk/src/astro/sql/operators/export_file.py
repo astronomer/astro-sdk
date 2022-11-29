@@ -81,17 +81,14 @@ class ExportFileOperator(AstroSQLBaseOperator):
 
         input_dataset: list[OpenlineageDataset] = []
         if isinstance(self.input_data, BaseTable) and self.input_data.openlineage_emit_temp_table_event():
-            input_uri = (
-                f"{self.input_data.openlineage_dataset_namespace()}"
-                f"{self.input_data.openlineage_dataset_name()}"
-            )
             input_dataset = [
                 OpenlineageDataset(
                     namespace=self.input_data.openlineage_dataset_namespace(),
                     name=self.input_data.openlineage_dataset_name(),
                     facets={
                         "dataSource": DataSourceDatasetFacet(
-                            name=self.input_data.openlineage_dataset_name(), uri=input_uri
+                            name=self.input_data.openlineage_dataset_name(),
+                            uri=self.input_data.openlingeage_dataset_uri(),
                         ),
                         "schema": SchemaDatasetFacet(
                             fields=[

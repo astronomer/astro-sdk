@@ -101,10 +101,6 @@ class MergeOperator(AstroSQLBaseOperator):
         input_dataset: list[OpenlineageDataset] = []
         output_dataset: list[OpenlineageDataset] = []
         if self.source_table.openlineage_emit_temp_table_event():
-            input_uri = (
-                f"{self.source_table.openlineage_dataset_namespace()}"
-                f"{self.source_table.openlineage_dataset_name()}"
-            )
             input_dataset = [
                 OpenlineageDataset(
                     namespace=self.source_table.openlineage_dataset_namespace(),
@@ -125,7 +121,9 @@ class MergeOperator(AstroSQLBaseOperator):
                                 )
                             ]
                         ),
-                        "dataSource": DataSourceDatasetFacet(name=self.source_table.name, uri=input_uri),
+                        "dataSource": DataSourceDatasetFacet(
+                            name=self.source_table.name, uri=self.source_table.openlingeage_dataset_uri()
+                        ),
                         "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(
                             rowCount=self.source_table.row_count, columnMetrics={}
                         ),
@@ -134,10 +132,6 @@ class MergeOperator(AstroSQLBaseOperator):
             ]
 
         if self.target_table.openlineage_emit_temp_table_event():
-            output_uri = (
-                f"{self.target_table.openlineage_dataset_namespace()}"
-                f"{self.target_table.openlineage_dataset_name()}"
-            )
             output_dataset = [
                 OpenlineageDataset(
                     namespace=self.target_table.openlineage_dataset_namespace(),
@@ -152,7 +146,9 @@ class MergeOperator(AstroSQLBaseOperator):
                         "outputStatistics": OutputStatisticsOutputDatasetFacet(
                             rowCount=self.target_table.row_count
                         ),
-                        "dataSource": DataSourceDatasetFacet(name=self.target_table.name, uri=output_uri),
+                        "dataSource": DataSourceDatasetFacet(
+                            name=self.target_table.name, uri=self.target_table.openlingeage_dataset_uri()
+                        ),
                         "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(
                             rowCount=self.target_table.row_count, columnMetrics={}
                         ),

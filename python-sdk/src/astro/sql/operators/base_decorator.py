@@ -221,9 +221,6 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         )
 
         if first_table.openlineage_emit_temp_table_event() and first_table.conn_id:  # pragma: no cover
-            input_uri = (
-                f"{first_table.openlineage_dataset_namespace()}" f"{first_table.openlineage_dataset_name()}"
-            )
             input_dataset = [
                 OpenlineageDataset(
                     namespace=first_table.openlineage_dataset_namespace(),
@@ -232,7 +229,9 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                         "schema": SchemaDatasetFacet(
                             fields=[SchemaField(name=self.schema, type=self.database)]
                         ),
-                        "dataSource": DataSourceDatasetFacet(name=first_table.name, uri=input_uri),
+                        "dataSource": DataSourceDatasetFacet(
+                            name=first_table.name, uri=first_table.openlingeage_dataset_uri()
+                        ),
                     },
                 )
             ]
@@ -243,10 +242,6 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         if (
             self.output_table.openlineage_emit_temp_table_event() and self.output_table.conn_id
         ):  # pragma: no cover
-            output_uri = (
-                f"{self.output_table.openlineage_dataset_namespace()}"
-                f"{self.output_table.openlineage_dataset_name()}"
-            )
             output_table_row_count = task_instance.xcom_pull(
                 task_ids=task_instance.task_id, key="output_table_row_count"
             )
@@ -258,7 +253,9 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                         "outputStatistics": OutputStatisticsOutputDatasetFacet(
                             rowCount=output_table_row_count
                         ),
-                        "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=output_uri),
+                        "dataSource": DataSourceDatasetFacet(
+                            name=self.output_table.name, uri=self.output_table.openlingeage_dataset_uri()
+                        ),
                     },
                 )
             ]
