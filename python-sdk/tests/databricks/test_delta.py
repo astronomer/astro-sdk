@@ -84,6 +84,7 @@ def test_delta_create_table_with_columns(database_table_fixture):
     assert rows[1] == Row(col_name="name", data_type="varchar(60)", comment=None)
 
 
+@pytest.mark.xfail
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
