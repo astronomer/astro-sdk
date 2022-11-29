@@ -2,15 +2,13 @@ from __future__ import annotations
 
 import pandas
 from airflow.hooks.dbapi import DbApiHook
-from airflow.providers.databricks.hooks.databricks import DatabricksHook
 from airflow.providers.databricks.hooks.databricks_sql import DatabricksSqlHook
-from databricks_cli.sdk.api_client import ApiClient
+from databricks.sql.client import Cursor
 from sqlalchemy.engine.base import Engine as SqlAlchemyEngine
 from sqlalchemy.sql import ClauseElement
 
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
-from astro.databricks.utils import load_file_to_delta
 from astro.files import File
 from astro.table import BaseTable, Metadata
 
@@ -21,20 +19,6 @@ class DeltaDatabase(BaseDatabase):
     def __init__(self, conn_id: str, table: BaseTable | None = None):
         super().__init__(conn_id)
         self.table = table
-
-    def api_client(self):
-        conn = DatabricksHook(databricks_conn_id=self.conn_id).get_conn()
-        api_client = ApiClient(host=conn.host, token=conn.password)
-        return api_client
-
-    def row_count(self, table):
-        x = self.run_sql(
-            f"SELECT COUNT(*) FROM {self.get_table_qualified_name(table)}",
-            handler=lambda x: x.fetchone(),
-        )
-        return list(x[1].asDict().values())[
-            0
-        ]  # TODO: please for the love of god let's find a better way to do this
 
     def populate_table_metadata(self, table: BaseTable) -> BaseTable:
         """
@@ -55,6 +39,10 @@ class DeltaDatabase(BaseDatabase):
 
     @property
     def hook(self) -> DbApiHook:
+        """
+
+        :return: a DatabricksSqlHook with metadata on the
+        """
         return DatabricksSqlHook(databricks_conn_id=self.conn_id)
 
     @property
@@ -76,7 +64,7 @@ class DeltaDatabase(BaseDatabase):
         target_conflict_columns: list[str],
         if_conflicts: MergeConflictStrategy = "exception",
     ) -> None:
-        pass
+        raise NotImplementedError("We do not yet support merge for databricks")
 
     def schema_exists(self, schema: str) -> bool:
         return True
@@ -112,10 +100,7 @@ class DeltaDatabase(BaseDatabase):
             in the resulting dataframe
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         """
-        load_file_to_delta(
-            input_file=input_file,
-            delta_table=output_table,
-        )
+        raise NotImplementedError("Load is not yet implemented")
 
     def openlineage_dataset_name(self, table: BaseTable) -> str:
         return ""
@@ -129,6 +114,14 @@ class DeltaDatabase(BaseDatabase):
         target_table: BaseTable,
         parameters: dict | None = None,
     ) -> None:
+        """
+        Create a Delta table from a SQL SELECT statement.
+
+        :param statement: Statement that will return a table
+        :param target_table: The table which the result of the SQL statement will be placed
+        :param parameters: Parameters to pass to databricks
+        :return: None
+        """
         statement = self._create_table_statement.format(
             self.get_table_qualified_name(target_table), statement
         )
@@ -141,12 +134,26 @@ class DeltaDatabase(BaseDatabase):
         handler=None,
         **kwargs,
     ):
+        """
+        Run SQL against a delta table using spark SQL.
+
+        :param sql: SQL Query to run on delta table
+        :param parameters: parameters to pass to delta
+        :param handler: function that takes in a databricks cursor as an argument.
+        :param kwargs:
+        :return: None if there is no handler, otherwise return result of handler function
+        """
         hook = DatabricksSqlHook(
             databricks_conn_id=self.conn_id,
         )
         return hook.run(sql, parameters=parameters, handler=handler)
 
     def table_exists(self, table: BaseTable) -> bool:
+        """
+        Queries databricks to check if a table exists.
+        :param table: Table that may or may not exist
+        :return: True if the table exists, false if it does not
+        """
         from databricks.sql.exc import ServerOperationError
 
         try:
@@ -181,6 +188,17 @@ CREATE TABLE {table.name}
     def export_table_to_pandas_dataframe(
         self, source_table: BaseTable, select_kwargs: dict | None = None
     ) -> pandas.DataFrame:
-        return self.hook.run(
-            f"SELECT * FROM {source_table.name}", handler=lambda cur: cur.fetchall_arrow().to_pandas()
-        )[1]
+        """
+        Converts a delta table into a pandas dataframe that can be processed locally.
+
+        Please note that this is a local pandas dataframe and not a spark dataframe. Be careful
+        of the size of dataframe you return.
+        :param source_table: Delta table to convert to dataframe
+        :param select_kwargs: Unused in this function
+        :return:
+        """
+
+        def convert_delta_table_to_df(cur: Cursor) -> pandas.DataFrame:
+            return cur.fetchall_arrow().to_pandas()
+
+        return self.hook.run(f"SELECT * FROM {source_table.name}", handler=convert_delta_table_to_df)[1]
