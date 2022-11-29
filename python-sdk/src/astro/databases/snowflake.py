@@ -730,7 +730,7 @@ class SnowflakeDatabase(BaseDatabase):
                 parameters={"schema_name": schema.lower()},
             )
 
-        created_schemas = [x["SCHEMA_NAME"] for x in schemas]
+        created_schemas = [x[0]["SCHEMA_NAME"] for x in schemas]
         return len(created_schemas) == 1
 
     def merge_table(
