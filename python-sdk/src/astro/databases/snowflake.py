@@ -729,8 +729,12 @@ class SnowflakeDatabase(BaseDatabase):
                 "SELECT SCHEMA_NAME from information_schema.schemata WHERE LOWER(SCHEMA_NAME) = %(schema_name)s;",
                 parameters={"schema_name": schema.lower()},
             )
-
-        created_schemas = [x[0]["SCHEMA_NAME"] for x in schemas]
+        try:
+            # Handle case for apache-airflow-providers-snowflake<4.0.1
+            created_schemas = [x["SCHEMA_NAME"] for x in schemas]
+        except TypeError:
+            # Handle case for apache-airflow-providers-snowflake>=4.0.1
+            created_schemas = [x[0]["SCHEMA_NAME"] for x in schemas]
         return len(created_schemas) == 1
 
     def merge_table(
