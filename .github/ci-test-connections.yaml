@@ -70,8 +70,7 @@ connections:
   - conn_id: gdrive_conn
     conn_type: google_cloud_platform
     description: null
-    extra:
-      scope: "https://www.googleapis.com/auth/drive.readonly"
+    extra: '{"extra__google_cloud_platform__scope":"https://www.googleapis.com/auth/drive.readonly"}'
   - conn_id: aws_conn
     conn_type: aws
     description: null
