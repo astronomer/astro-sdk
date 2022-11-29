@@ -84,6 +84,30 @@ def test_delta_create_table_with_columns(database_table_fixture):
     assert rows[1] == Row(col_name="name", data_type="varchar(60)", comment=None)
 
 
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.DELTA,
+            "table": Table(
+                columns=[
+                    sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
+                    sqlalchemy.Column("name", sqlalchemy.String(60), nullable=False, key="name"),
+                ]
+            ),
+        }
+    ],
+    indirect=True,
+    ids=["delta"],
+)
+def test_existing_table_exists(database_table_fixture):
+    database, table = database_table_fixture
+    assert not database.table_exists(table)
+    database.create_table(table)
+    assert database.table_exists(table)
+
+
 @pytest.mark.xfail
 @pytest.mark.integration
 @pytest.mark.parametrize(
@@ -110,6 +134,42 @@ def test_create_table_from_select_statement(database_table_fixture):
     expected = pd.DataFrame([{"id": 1, "name": "First"}])
     test_utils.assert_dataframes_are_equal(df, expected)
     database.drop_table(target_table)
+
+
+def test_merge():
+    with pytest.raises(NotImplementedError):
+        database = DeltaDatabase(DEFAULT_CONN_ID)
+        database.merge_table(
+            source_table=Table(),
+            target_table=Table(),
+            source_to_target_columns_map={},
+            target_conflict_columns=[],
+        )
+
+
+def test_schema_exists():
+    database = DeltaDatabase(DEFAULT_CONN_ID)
+    assert database.schema_exists("")
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [{"database": Database.DELTA}],
+    indirect=True,
+    ids=["delta"],
+)
+def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
+    database_table_fixture,
+):
+    """Export table to a Pandas dataframe"""
+    database, non_existent_table = database_table_fixture
+    from databricks.sql.exc import ServerOperationError
+
+    with pytest.raises(ServerOperationError) as exc_info:
+        database.export_table_to_pandas_dataframe(non_existent_table)
+    error_message = exc_info.value.args[0]
+    assert error_message.startswith("Table or view not found:")
 
 
 # TODO: uncomment these tests as we add functions
@@ -262,24 +322,7 @@ def test_create_table_from_select_statement(database_table_fixture):
 #     assert df.rename(columns=str.lower).equals(expected)
 #
 #
-# @pytest.mark.integration
-# @pytest.mark.parametrize(
-#     "database_table_fixture",
-#     [{"database": Database.DELTA}],
-#     indirect=True,
-#     ids=["delta"],
-# )
-# def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
-#     database_table_fixture,
-# ):
-#     """Export table to a Pandas dataframe"""
-#     database, non_existent_table = database_table_fixture
-#
-#     with pytest.raises(NonExistentTableException) as exc_info:
-#         database.export_table_to_pandas_dataframe(non_existent_table)
-#     error_message = exc_info.value.args[0]
-#     assert error_message.startswith("The table")
-#     assert error_message.endswith("does not exist")
+
 #
 #
 # @pytest.mark.integration
