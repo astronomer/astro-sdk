@@ -1,6 +1,7 @@
 """Tests specific to the Sqlite Database implementation."""
 import pathlib
 
+import pandas as pd
 import pytest
 import sqlalchemy
 from databricks.sql.types import Row
@@ -8,7 +9,9 @@ from databricks.sql.types import Row
 from astro.constants import Database
 from astro.databases import create_database
 from astro.databricks.delta import DeltaDatabase
+from astro.files import File
 from astro.table import Table
+from tests.sql.operators import utils as test_utils
 
 DEFAULT_CONN_ID = "databricks_conn"
 CUSTOM_CONN_ID = "databricks_conn"
@@ -34,6 +37,7 @@ def test_delta_run_sql():
     assert response[1]["(1 + 1)"] == 2
 
 
+@pytest.mark.xfail
 @pytest.mark.integration
 def test_delta_run_sql_with_parameters():
     """Test running a SQL query using SQLAlchemy templating engine"""
@@ -80,6 +84,34 @@ def test_delta_create_table_with_columns(database_table_fixture):
     assert rows[1] == Row(col_name="name", data_type="varchar(60)", comment=None)
 
 
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.DELTA,
+            "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
+        }
+    ],
+    indirect=True,
+    ids=["delta"],
+)
+def test_create_table_from_select_statement(database_table_fixture):
+    """Create a table given a SQL select statement"""
+    database, original_table = database_table_fixture
+
+    statement = f"SELECT * FROM {database.get_table_qualified_name(original_table)} WHERE id = 1;"
+    target_table = Table()
+    database.create_table_from_select_statement(statement, target_table)
+
+    df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
+    assert len(df) == 1
+    expected = pd.DataFrame([{"id": 1, "name": "First"}])
+    test_utils.assert_dataframes_are_equal(df, expected)
+    database.drop_table(target_table)
+
+
+# TODO: uncomment these tests as we add functions
 # TODO: Do we need to support auto schema detection if we're using autoloader?
 # @pytest.mark.integration
 # @pytest.mark.parametrize(
@@ -292,28 +324,3 @@ def test_delta_create_table_with_columns(database_table_fixture):
 #     os.remove(filepath)
 #
 #
-# @pytest.mark.integration
-# @pytest.mark.parametrize(
-#     "database_table_fixture",
-#     [
-#         {
-#             "database": Database.DELTA,
-#             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
-#         }
-#     ],
-#     indirect=True,
-#     ids=["delta"],
-# )
-# def test_create_table_from_select_statement(database_table_fixture):
-#     """Create a table given a SQL select statement"""
-#     database, original_table = database_table_fixture
-#
-#     statement = f"SELECT * FROM {database.get_table_qualified_name(original_table)} WHERE id = 1;"
-#     target_table = Table()
-#     database.create_table_from_select_statement(statement, target_table)
-#
-#     df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
-#     assert len(df) == 1
-#     expected = pd.DataFrame([{"id": 1, "name": "First"}])
-#     test_utils.assert_dataframes_are_equal(df, expected)
-#     database.drop_table(target_table)

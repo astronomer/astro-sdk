@@ -33,6 +33,7 @@ SUPPORTED_DATABASES_OBJECTS = [
         "database": database,
     }
     for database in Database
+    if database != "delta"
 ]
 SUPPORTED_DATABASES_OBJECTS_WITH_FILE = [
     {
@@ -40,6 +41,7 @@ SUPPORTED_DATABASES_OBJECTS_WITH_FILE = [
         "file": File(DEFAULT_FILEPATH),
     }
     for database in Database
+    if database != "delta"
 ]
 
 
