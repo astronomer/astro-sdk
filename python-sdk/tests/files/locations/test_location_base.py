@@ -75,7 +75,7 @@ def test_openlineage_file_dataset_namespace(file_location, filepath, namespace):
         (FileLocation.HTTPS, "https://domain/some-file", "/some-file"),
         (FileLocation.S3, "s3://bucket/some-file", "/some-file"),
         (FileLocation.GS, "gs://bucket/some-file", "/some-file"),
-        (FileLocation.GS, "gdrive://bucket/some-file", "/some-file"),
+        (FileLocation.GOOGLE_DRIVE, "gdrive://bucket/some-file", "/some-file"),
     ],
 )
 def test_openlineage_file_dataset_name(file_location, filepath, dataset_name):
