@@ -246,6 +246,8 @@ jobs:
       REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
 
   Run-Unit-tests-Airflow-2-2-5:
     if: >-
@@ -311,6 +313,8 @@ jobs:
       REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
 
   Generate-Constraints:
     strategy:
