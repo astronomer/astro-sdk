@@ -5,9 +5,11 @@ import os
 
 from airflow.hooks.dbapi import DbApiHook
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-from uto.data_providers.base import DataProviders
-from uto.datasets.base import UniversalDataset as Dataset
-from uto.utils import FileLocation, create_dataprovider, get_dataset_connection_type
+from transfers.constants import FileLocation, TransferMode
+from transfers.data_providers import create_dataprovider
+from transfers.data_providers.base import DataProviders
+from transfers.datasets.base import UniversalDataset as Dataset
+from transfers.utils import get_dataset_connection_type
 
 from astro.constants import LoadExistStrategy
 
@@ -20,16 +22,16 @@ class S3DataProvider(DataProviders):
     def __init__(
         self,
         conn_id: str,
-        optimization_params: dict,
-        extras: dict = {},
-        use_optimized_transfer: bool = True,
+        extra: dict = {},
+        transfer_params: dict = {},
+        transfer_mode: TransferMode = TransferMode.NONNATIVE,
         if_exists: LoadExistStrategy = "replace",
     ):
         super().__init__(
             conn_id=conn_id,
-            extras=extras,
-            optimization_params=optimization_params,
-            use_optimized_transfer=use_optimized_transfer,
+            extra=extra,
+            transfer_params=transfer_params,
+            transfer_mode=transfer_mode,
             if_exists=if_exists,
         )
         self.transfer_mapping: set = {
@@ -44,9 +46,9 @@ class S3DataProvider(DataProviders):
         """Return an instance of the database-specific Airflow hook."""
         return S3Hook(
             aws_conn_id=self.conn_id,
-            verify=self.extras.get("verify", None),
-            transfer_config_args=self.extras.get("transfer_config_args", None),
-            extra_args=self.extras.get("s3_extra_args", {}),
+            verify=self.extra.get("verify", None),
+            transfer_config_args=self.extra.get("transfer_config_args", None),
+            extra_args=self.extra.get("s3_extra_args", {}),
         )
 
     def check_if_exists(self, dataset: Dataset) -> bool:
@@ -73,25 +75,29 @@ class S3DataProvider(DataProviders):
     def load_data_from_gcs(self, source_dataset: Dataset, destination_dataset: Dataset) -> None:
         source_dataprovider = create_dataprovider(
             dataset=source_dataset,
-            extras=self.extras,
-            optimization_params=self.optimization_params,
-            use_optimized_transfer=self.use_optimized_transfer,
+            transfer_params=self.transfer_params,
+            transfer_mode=self.transfer_mode,
+            if_exists=self.if_exists,
         )
         source_hook = source_dataprovider.hook
         logging.info(
             "Getting list of the files. Bucket: %s; Delimiter: %s; Prefix: %s",
             source_dataprovider.get_bucket_name(source_dataset),  # type: ignore
-            self.extras.get("delimiter", None),
-            self.extras.get("prefix", None),
+            source_dataset.extra.get("delimiter", None),
+            source_dataset.extra.get("prefix", None),
         )
         files = source_hook.list(
             bucket_name=source_dataprovider.get_bucket_name(source_dataset),  # type: ignore
-            prefix=self.extras.get("prefix", None),
-            delimiter=self.extras.get("delimiter", None),
+            prefix=source_dataset.extra.get("prefix", None),
+            delimiter=source_dataset.extra.get("delimiter", None),
         )
         dest_s3_key = destination_dataset.path
-        if not self.extras.get("keep_directory_structure", False) and self.extras.get("prefix", None):
-            dest_s3_key = os.path.join(self.get_s3_key(destination_dataset), self.extras.get("prefix", ""))
+        if not destination_dataset.extra.get(
+            "keep_directory_structure", False
+        ) and destination_dataset.extra.get("prefix", None):
+            dest_s3_key = os.path.join(
+                self.get_s3_key(destination_dataset), destination_dataset.extra.get("prefix", "")
+            )
 
         if self.if_exists != "replace":
             bucket_name, prefix = self.hook.parse_s3_url(dest_s3_key)
@@ -115,7 +121,7 @@ class S3DataProvider(DataProviders):
                         filename=local_tmp_file.name,
                         key=dest_key,
                         replace="replace",
-                        acl_policy=self.extras.get("s3_acl_policy", None),
+                        acl_policy=destination_dataset.extra.get("s3_acl_policy", None),
                     )
 
             logging.info("All done, uploaded %d files to S3", len(files))

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from airflow.utils.log.logging_mixin import LoggingMixin
 from attr import define, field
-from uto.datasets.base import UniversalDataset
+from transfers.datasets.base import UniversalDataset
 
 
 @define
@@ -19,12 +19,9 @@ class Database(LoggingMixin, UniversalDataset):
     conn_id: str
 
     uri: str = field(init=False)
-    extra: dict | None = field(init=False, factory=dict)
+    extra: dict = field(init=True, factory=dict)
 
-    template_fields = (
-        "path",
-        "conn_id",
-    )
+    template_fields = ("path", "conn_id", "extra")
 
     @property
     def sql_type(self):

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from airflow.hooks.dbapi import DbApiHook
-from uto.datasets.base import UniversalDataset as Dataset
-from uto.integrations.base import TransferIntegrations
+from transfers.datasets.base import UniversalDataset as Dataset
+from transfers.integrations.base import TransferIntegrations
 
 
 class FivetranIntegration(TransferIntegrations):
@@ -11,8 +11,8 @@ class FivetranIntegration(TransferIntegrations):
 
     """
 
-    def __init__(self, ingestion_config: dict):
-        self.ingestion_config = ingestion_config
+    def __init__(self, transfer_params: dict):
+        self.transfer_params = transfer_params
         self.transfer_mapping = {}
 
     def hook(self) -> DbApiHook:

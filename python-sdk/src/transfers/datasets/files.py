@@ -7,7 +7,7 @@ import pandas as pd
 import smart_open
 from airflow.utils.log.logging_mixin import LoggingMixin
 from attr import define, field
-from uto.datasets.base import UniversalDataset
+from transfers.datasets.base import UniversalDataset
 
 from astro import constants
 from astro.files.locations import create_file_location
@@ -35,12 +35,9 @@ class File(LoggingMixin, UniversalDataset):
     is_bytes: bool = False
 
     uri: str = field(init=False)
-    extra: dict | None = field(init=False, factory=dict)
+    extra: dict = field(init=True, factory=dict)
 
-    template_fields = (
-        "path",
-        "conn_id",
-    )
+    template_fields = ("path", "conn_id", "extra")
 
     @property
     def location(self) -> BaseFileLocation:

@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from airflow.hooks.dbapi import DbApiHook
 from airflow.providers.google.cloud.hooks.gcs import GCSHook, _parse_gcs_url
-from uto.data_providers.base import DataProviders
-from uto.datasets.base import UniversalDataset as Dataset
-from uto.utils import FileLocation, get_dataset_connection_type
+from transfers.constants import FileLocation, TransferMode
+from transfers.data_providers.base import DataProviders
+from transfers.datasets.base import UniversalDataset as Dataset
+from transfers.utils import get_dataset_connection_type
 
 from astro.constants import LoadExistStrategy
 
@@ -17,16 +18,16 @@ class GCSDataProvider(DataProviders):
     def __init__(
         self,
         conn_id: str,
-        optimization_params: dict,
-        extras: dict = {},
-        use_optimized_transfer: bool = True,
+        extra: dict = {},
+        transfer_params: dict = {},
+        transfer_mode: TransferMode = TransferMode.NONNATIVE,
         if_exists: LoadExistStrategy = "replace",
     ):
         super().__init__(
             conn_id=conn_id,
-            extras=extras,
-            optimization_params=optimization_params,
-            use_optimized_transfer=use_optimized_transfer,
+            extra=extra,
+            transfer_params=transfer_params,
+            transfer_mode=transfer_mode,
             if_exists=if_exists,
         )
         self.transfer_mapping: set = {
@@ -41,8 +42,8 @@ class GCSDataProvider(DataProviders):
         """Return an instance of the database-specific Airflow hook."""
         return GCSHook(
             gcp_conn_id=self.conn_id,
-            delegate_to=self.extras.get("delegate_to", None),
-            impersonation_chain=self.extras.get("google_impersonation_chain", None),
+            delegate_to=self.extra.get("delegate_to", None),
+            impersonation_chain=self.extra.get("google_impersonation_chain", None),
         )
 
     def check_if_exists(self, dataset: Dataset) -> bool:
