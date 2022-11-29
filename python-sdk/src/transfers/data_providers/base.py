@@ -4,11 +4,9 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from airflow.hooks.dbapi import DbApiHook
-from uto.datasets.base import UniversalDataset as Dataset
+from transfers.datasets.base import UniversalDataset as Dataset
 
 from astro.constants import LoadExistStrategy
-
-# from uto.utils import get_dataset_connection_type
 
 
 class DataProviders(ABC):
@@ -23,15 +21,15 @@ class DataProviders(ABC):
     def __init__(
         self,
         conn_id: str,
-        optimization_params: dict,
-        extras: dict = {},
-        use_optimized_transfer: bool = True,
+        transfer_mode,
+        extra: dict = {},
+        transfer_params: dict = {},
         if_exists: LoadExistStrategy = "replace",
     ):
         self.conn_id = conn_id
-        self.extras = extras
-        self.optimization_params = optimization_params
-        self.use_optimized_transfer = use_optimized_transfer
+        self.extra = extra
+        self.transfer_params = transfer_params
+        self.transfer_mode = transfer_mode
         self.if_exists = if_exists
         self.transfer_mapping: Any = {}
 

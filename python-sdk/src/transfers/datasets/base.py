@@ -19,9 +19,6 @@ class UniversalDataset(LoggingMixin, Dataset):
     path: str
     conn_id: str
     uri: str = field(init=False)
-    extra: dict | None = field(init=False, factory=dict)
+    extra: dict = field(init=True, factory=dict)
 
-    template_fields = (
-        "path",
-        "conn_id",
-    )
+    template_fields = ("path", "conn_id", "extra")

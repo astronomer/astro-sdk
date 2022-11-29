@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from airflow.hooks.dbapi import DbApiHook
-from uto.datasets.base import UniversalDataset as Dataset
+from transfers.datasets.base import UniversalDataset as Dataset
 
 
 class TransferIntegrations(ABC):
@@ -12,8 +12,8 @@ class TransferIntegrations(ABC):
 
     """
 
-    def __init__(self, ingestion_config: dict):
-        self.ingestion_config = ingestion_config
+    def __init__(self, transfer_params: dict):
+        self.transfer_params = transfer_params
         self.transfer_mapping: dict[str, str] = {}
 
     @property
