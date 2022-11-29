@@ -60,6 +60,7 @@ class BaseDatabase(ABC):
     illegal_column_name_chars_replacement: list[str] = []
     NATIVE_PATHS: dict[Any, Any] = {}
     DEFAULT_SCHEMA = SCHEMA
+    NATIVE_LOAD_EXCEPTIONS: Any = DatabaseCustomError
     NATIVE_AUTODETECT_SCHEMA_CONFIG: Mapping[FileLocation, Mapping[str, list[FileType] | Callable]] = {}
     FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = set()
 
@@ -522,7 +523,7 @@ class BaseDatabase(ABC):
                 native_support_kwargs=native_support_kwargs,
                 **kwargs,
             )
-        except DatabaseCustomError:
+        except self.NATIVE_LOAD_EXCEPTIONS as load_exception:  # skipcq: PYL-W0703
             logging.warning(
                 "Loading file(s) failed with Native Support.",
                 exc_info=True,
@@ -537,7 +538,7 @@ class BaseDatabase(ABC):
                     chunk_size=chunk_size,
                 )
             else:
-                raise
+                raise load_exception
 
     def load_pandas_dataframe_to_table(
         self,
