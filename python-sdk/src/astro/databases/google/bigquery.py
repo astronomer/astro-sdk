@@ -452,6 +452,13 @@ class BigqueryDatabase(BaseDatabase):
         """
         return self.sql_type
 
+    def openlineage_dataset_uri(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset uri as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return f"{self.openlineage_dataset_namespace()}:{self.openlineage_dataset_name(table=table)}"
+
 
 class S3ToBigqueryDataTransfer:
     """
