@@ -171,6 +171,7 @@ jobs:
       REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       # TODO: remove the following env vars after Airflow 2.5 is released
       AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
       AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
@@ -247,6 +248,7 @@ jobs:
       REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
       AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
 
@@ -314,6 +316,7 @@ jobs:
       REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
       AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
 

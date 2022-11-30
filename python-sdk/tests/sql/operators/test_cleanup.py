@@ -33,6 +33,7 @@ SUPPORTED_DATABASES_OBJECTS = [
         "database": database,
     }
     for database in Database
+    if database != Database.DELTA
 ]
 SUPPORTED_DATABASES_OBJECTS_WITH_FILE = [
     {
@@ -40,7 +41,9 @@ SUPPORTED_DATABASES_OBJECTS_WITH_FILE = [
         "file": File(DEFAULT_FILEPATH),
     }
     for database in Database
+    if database != Database.DELTA
 ]
+SUPPORTED_DATABASES.remove("delta")  # pop delta from this value for this class
 
 
 @pytest.mark.integration
