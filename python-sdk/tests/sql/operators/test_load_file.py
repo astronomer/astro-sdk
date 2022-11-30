@@ -23,6 +23,7 @@ from pandas.testing import assert_frame_equal
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database, FileType
+from astro.dataframes.pandas import PandasDataframe
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
 from astro.settings import SCHEMA
@@ -71,6 +72,7 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
 
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (3, 9)
+    assert isinstance(df, PandasDataframe)
 
 
 @pytest.mark.integration
@@ -1244,7 +1246,11 @@ def test_load_file_snowflake_error_out_provider_3_1_0(sample_dag, database_table
         "airflow.providers.snowflake.hooks.snowflake.SnowflakeHook.run"
     ) as run:
         schema_exists.return_value = True
-        run.side_effect = AttributeError()
+        run.side_effect = [
+            AttributeError,  # 1st run call copies the data with handler
+            ValueError,  # 2nd run call copies the data
+            None,  # 3rd run call drops the stage
+        ]
         with pytest.raises(DatabaseCustomError):
             with sample_dag:
                 load_file(

@@ -32,7 +32,7 @@ def test_delta_run_sql():
     statement = "SELECT 1 + 1;"
     database = DeltaDatabase(DEFAULT_CONN_ID)
     response = database.run_sql(statement, handler=lambda x: x.fetchone())
-    assert response[1]["(1 + 1)"] == 2
+    assert response.asDict()["(1 + 1)"] == 2
 
 
 @pytest.mark.xfail
@@ -76,7 +76,7 @@ def test_delta_create_table_with_columns(database_table_fixture):
     assert not database.table_exists(table)
     database.create_table(table)
     statement = f"DESCRIBE TABLE {table.name};"
-    rows = database.run_sql(statement, handler=lambda x: x.fetchall())[1]
+    rows = database.run_sql(statement, handler=lambda x: x.fetchall())
     assert len(rows) == 2
     assert rows[0] == Row(col_name="id", data_type="int", comment=None)
     assert rows[1] == Row(col_name="name", data_type="varchar(60)", comment=None)

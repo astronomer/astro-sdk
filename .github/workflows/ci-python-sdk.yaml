@@ -47,9 +47,8 @@ env:
   SNOWFLAKE_REGION: us-east-1
   SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
   AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
+  AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES: airflow.* astro.*
   AIRFLOW_VAR_FOO: templated_file_name
-  AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
-  AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
   AWS_BUCKET: tmp9
   GOOGLE_BUCKET: dag-authoring
   FORCE_COLOR: "true"
@@ -173,6 +172,9 @@ jobs:
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      # TODO: remove the following env vars after Airflow 2.5 is released
+      AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
+      AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
 
   Run-Unit-tests-Airflow-2-4:
     if: >-
@@ -247,7 +249,8 @@ jobs:
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-
+      AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
+      AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
 
   Run-Unit-tests-Airflow-2-2-5:
     if: >-
@@ -314,7 +317,8 @@ jobs:
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-
+      AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
+      AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
 
   Generate-Constraints:
     strategy:

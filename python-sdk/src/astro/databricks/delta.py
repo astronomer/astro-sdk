@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from textwrap import dedent
+
 import pandas
 from airflow.providers.databricks.hooks.databricks import DatabricksHook
 from airflow.providers.databricks.hooks.databricks_sql import DatabricksSqlHook
@@ -23,8 +25,13 @@ class DeltaDatabase(BaseDatabase):
         self.table = table
 
     def populate_table_metadata(self, table: BaseTable) -> BaseTable:
-        """
         # TODO: Do we need default configurations for a delta table?
+        """
+        Given a table, populates the "metadata" field with what we would consider as "defaults"
+
+        These defaults are determined based on environment variables and the connection settings.
+        :param table: table to be populated
+        :return:
         """
         table.conn_id = table.conn_id or self.conn_id
         if not table.metadata or table.metadata.is_empty():
@@ -65,7 +72,7 @@ class DeltaDatabase(BaseDatabase):
 
     def create_table_using_native_schema_autodetection(self, table: BaseTable, file: File) -> None:
         # TODO Do we need to implement this function? It seems like databricks will handle schemas for us
-        pass
+        raise NotImplementedError("Not implemented yet.")
 
     def merge_table(
         self,
@@ -196,12 +203,14 @@ class DeltaDatabase(BaseDatabase):
             raise ValueError("To use this method, table.columns must be defined")
         columns = "\n\t".join([f"{c.name} {c.type}," for c in table.columns])
         self.run_sql(
-            f"""
-CREATE TABLE {table.name}
-(
-    {columns[:-1]}
-);
-        """
+            dedent(
+                f"""
+            CREATE TABLE {table.name}
+            (
+                {columns[:-1]}
+            );
+            """
+            )
         )
 
     def export_table_to_pandas_dataframe(
