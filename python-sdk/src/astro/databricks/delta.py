@@ -3,7 +3,6 @@ from __future__ import annotations
 from textwrap import dedent
 
 import pandas
-from airflow.hooks.dbapi import DbApiHook
 from airflow.providers.databricks.hooks.databricks_sql import DatabricksSqlHook
 from databricks.sql.client import Cursor
 from sqlalchemy.engine.base import Engine as SqlAlchemyEngine
@@ -39,7 +38,7 @@ class DeltaDatabase(BaseDatabase):
         return "delta"
 
     @property
-    def hook(self) -> DbApiHook:
+    def hook(self) -> DatabricksSqlHook:
         """
         Return the hook for the relevant databricks conn_id
 

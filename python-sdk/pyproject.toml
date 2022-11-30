@@ -10,16 +10,16 @@ Astro SDK allows rapid and clean development of {Extract, Load, Transform} workf
 """
 
 authors = [
-    {name = "Astronomer", email = "humans@astronomer.io"},
+    { name = "Astronomer", email = "humans@astronomer.io" },
 ]
 readme = "README.md"
-license = {file = "LICENSE"}
+license = { file = "LICENSE" }
 
 requires-python = ">=3.7"
 dependencies = [
     "apache-airflow>=2.0",
     "attrs>=20.0",
-    "pandas>=1.3.4,<2.0.0",  # Pinning it to <2.0.0 to avoid breaking changes
+    "pandas>=1.3.4,<2.0.0", # Pinning it to <2.0.0 to avoid breaking changes
     "pyarrow",
     "python-frontmatter",
     "smart-open",
@@ -48,7 +48,7 @@ tests = [
     "pytest-cov",
     "pytest-describe",
     "mypy",
-    "sqlalchemy-stubs",  # Change when sqlalchemy is upgraded https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html
+    "sqlalchemy-stubs", # Change when sqlalchemy is upgraded https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html
 ]
 google = [
     "protobuf<=3.20", # Google bigquery client require protobuf <= 3.20.0. We can remove the limitation when this limitation is removed
@@ -71,6 +71,9 @@ amazon = [
 ]
 openlineage = ["openlineage-airflow>=0.17.0"]
 
+databricks = ["databricks-cli",
+    "apache-airflow-providers-databricks"]
+
 all = [
     "apache-airflow-providers-amazon",
     "apache-airflow-providers-google>=6.4.0",
@@ -80,7 +83,6 @@ all = [
     "snowflake-connector-python[pandas]",
     "snowflake-sqlalchemy>=1.2.0",
     "sqlalchemy-bigquery>=1.3.0",
-    "databricks-sql-connector==2.0.2",
     "databricks-cli",
     "apache-airflow-providers-databricks",
     "s3fs",
