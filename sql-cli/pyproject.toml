@@ -40,7 +40,6 @@ python-frontmatter = "^1.0.0"
 PyYAML = ">=5.4.1"
 python-dotenv = "^0.21.0"
 # Set the minimum version to v1.2.2 as the load_file operator relies on PR #1259 which was added in that release.
-astro-sdk-python = {extras = ["all"], version = "^1.2.2"}
 apache-airflow = ">2.1"
 
 [tool.poetry.scripts]

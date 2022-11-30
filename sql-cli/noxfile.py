@@ -20,8 +20,8 @@ def dev(session: nox.Session) -> None:
     session.run("poetry", "install")
 
 
-@nox.session(python=["3.7", "3.8", "3.9"])
-@nox.parametrize("airflow", ["2.1.4", "2.2.5", "2.3.4", "2.4.2"])
+@nox.session(python=["3.8"])
+@nox.parametrize("airflow", ["2.5.0rc2"])
 def test(session: nox.Session, airflow: str) -> None:
     """Run both unit and integration tests."""
 
@@ -47,6 +47,10 @@ def test(session: nox.Session, airflow: str) -> None:
         session.install("poetry")
         session.run("poetry", "install", "--with", "dev")
         session.run("poetry", "run", "pip", "install", f"apache-airflow=={airflow}")
+        if airflow.startswith("2.5"):
+            session.install("-e", "../python-sdk/.[all]")
+        else:
+            session.run("poetry", "add", "astro-sdk-python==^1.2.2")
 
     session.log("Installed Dependencies:")
     session.run("pip3", "freeze")
