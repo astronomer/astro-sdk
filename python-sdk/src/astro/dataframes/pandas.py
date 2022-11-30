@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import ClassVar
 
-from pandas import DataFrame, read_json
+from pandas import DataFrame
 
 from astro import settings
 
@@ -20,7 +20,7 @@ class PandasDataframe(DataFrame):
         df_size = self.memory_usage(deep=True).sum()
         if df_size < (settings.MAX_DATAFRAME_MEMORY_FOR_XCOM_DB * 1024):
             logger.info("Dataframe size: %s bytes. Storing it in Airflow's metadata DB", df_size)
-            return self.to_json()
+            return self.to_dict()
         else:
             # Avoid cyclic dependency
             from astro.utils.dataframe import convert_dataframe_to_file
@@ -34,7 +34,7 @@ class PandasDataframe(DataFrame):
             return convert_dataframe_to_file(self).to_json()
 
     @staticmethod
-    def deserialize(data: dict | str, version: int):
+    def deserialize(data: dict, version: int):
         if version > 1:
             raise TypeError(f"version > {PandasDataframe.version}")
         if isinstance(data, dict) and data.get("class") == "File":
@@ -45,8 +45,8 @@ class PandasDataframe(DataFrame):
             if file.is_dataframe:
                 logger.info("Retrieving file from %s using %s conn_id ", file.path, file.conn_id)
                 return file.export_to_dataframe()
-            return File
-        return PandasDataframe.from_pandas_df(read_json(data))
+            return file
+        return PandasDataframe.from_pandas_df(PandasDataframe.from_dict(data))
 
     @classmethod
     def from_pandas_df(cls, df: DataFrame) -> PandasDataframe:
