@@ -20,7 +20,7 @@ def dev(session: nox.Session) -> None:
     session.run("poetry", "install")
 
 
-@nox.session(python=["3.8"])
+@nox.session(python=["3.8", "3.9"])
 @nox.parametrize("airflow", ["2.5.0rc2"])
 def test(session: nox.Session, airflow: str) -> None:
     """Run both unit and integration tests."""
