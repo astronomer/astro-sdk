@@ -615,13 +615,13 @@ class SnowflakeDatabase(BaseDatabase):
         except AttributeError:
             try:
                 rows = self.hook.run(sql_statement)
-            except (AttributeError, ValueError) as exe:
+            except ValueError as exe:
                 raise DatabaseCustomError from exe
         except ValueError as exe:
             raise DatabaseCustomError from exe
-
+        finally:
+            self.drop_stage(stage)
         self.evaluate_results(rows)
-        self.drop_stage(stage)
 
     @staticmethod
     def evaluate_results(rows):
@@ -948,6 +948,13 @@ class SnowflakeDatabase(BaseDatabase):
         """
         account = self.hook.get_connection(self.conn_id).extra_dejson.get("account")
         return f"{self.sql_type}://{account}"
+
+    def openlineage_dataset_uri(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset uri as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return f"{self.openlineage_dataset_namespace()}/{self.openlineage_dataset_name(table=table)}"
 
     def truncate_table(self, table):
         """Truncate table"""
