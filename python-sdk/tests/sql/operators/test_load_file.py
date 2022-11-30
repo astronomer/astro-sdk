@@ -1244,7 +1244,11 @@ def test_load_file_snowflake_error_out_provider_3_1_0(sample_dag, database_table
         "airflow.providers.snowflake.hooks.snowflake.SnowflakeHook.run"
     ) as run:
         schema_exists.return_value = True
-        run.side_effect = AttributeError()
+        run.side_effect = [
+            AttributeError,  # 1st run call copies the data with handler
+            ValueError,  # 2nd run call copies the data
+            None,  # 3rd run call drops the stage
+        ]
         with pytest.raises(DatabaseCustomError):
             with sample_dag:
                 load_file(
