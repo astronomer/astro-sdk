@@ -1,3 +1,21 @@
+"""
+Pre-requisites for load_file_example_19:
+ - Install dependencies for Astro Python SDK with Google, refer to README.md
+ - You can either specify a service account key file and set `GOOGLE_APPLICATION_CREDENTIALS`
+    with the file path to the service account.
+ - In the connection we need to specfiy the scopes.
+    Connection variable is ``extra__google_cloud_platform__scope``
+    or in Airflow Connections UI ``Scopes (comma separated)``
+    For ex:- https://www.googleapis.com/auth/drive.readonly
+    Please refer to https://developers.google.com/identity/protocols/oauth2/scopes#drive for more details.
+ - In Google Cloud, for the project we need to enable the Google Drive API.
+    To enable the API please refer https://developers.google.com/drive/api/guides/enable-drive-api
+ - Create a Google Drive folder (or) use an existing folder with a file inside it,
+    and share the file with service account email id in order for it to be able to access those
+    folders/files. In this example DAG, we will load this file into Snowflake table.
+    For sharing a file/folder
+    please refer https://www.labnol.org/google-api-service-account-220404#4-share-a-drive-folder
+"""
 import os
 import pathlib
 from datetime import datetime, timedelta
@@ -13,6 +31,7 @@ from astro.table import Metadata, Table
 # To create IAM role with needed permissions,
 # refer: https://www.dataliftoff.com/iam-roles-for-loading-data-from-s3-into-redshift/
 REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN = os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN")
+SNOWFLAKE_CONN_ID = "snowflake_conn"
 
 CWD = pathlib.Path(__file__).parent
 default_args = {
@@ -220,5 +239,18 @@ with dag:
         )
     )
     # [END load_file_example_18]
+
+    # [START load_file_example_19]
+    aql.load_file(
+        input_file=File(path="gdrive://test-google-drive-support/sample.csv", conn_id="gdrive_conn"),
+        output_table=Table(
+            conn_id=SNOWFLAKE_CONN_ID,
+            metadata=Metadata(
+                database=os.environ["SNOWFLAKE_DATABASE"],
+                schema=os.environ["SNOWFLAKE_SCHEMA"],
+            ),
+        ),
+    )
+    # [END load_file_example_19]
 
     aql.cleanup()
