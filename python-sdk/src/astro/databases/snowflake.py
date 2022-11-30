@@ -615,13 +615,13 @@ class SnowflakeDatabase(BaseDatabase):
         except AttributeError:
             try:
                 rows = self.hook.run(sql_statement)
-            except (AttributeError, ValueError) as exe:
+            except ValueError as exe:
                 raise DatabaseCustomError from exe
         except ValueError as exe:
             raise DatabaseCustomError from exe
-
+        finally:
+            self.drop_stage(stage)
         self.evaluate_results(rows)
-        self.drop_stage(stage)
 
     @staticmethod
     def evaluate_results(rows):
