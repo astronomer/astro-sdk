@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from textwrap import dedent
+
 import pandas
 from airflow.hooks.dbapi import DbApiHook
 from airflow.providers.databricks.hooks.databricks_sql import DatabricksSqlHook
@@ -183,12 +185,14 @@ class DeltaDatabase(BaseDatabase):
             raise ValueError("To use this method, table.columns must be defined")
         columns = "\n\t".join([f"{c.name} {c.type}," for c in table.columns])
         self.run_sql(
-            f"""
-CREATE TABLE {table.name}
-(
-    {columns[:-1]}
-);
-        """
+            dedent(
+                f"""
+            CREATE TABLE {table.name}
+            (
+                {columns[:-1]}
+            );
+            """
+            )
         )
 
     def export_table_to_pandas_dataframe(
