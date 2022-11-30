@@ -626,8 +626,14 @@ class SnowflakeDatabase(BaseDatabase):
     @staticmethod
     def evaluate_results(rows):
         """check the error state returned by snowflake when running `copy into` query."""
-        if any(row["status"] == COPY_INTO_COMMAND_FAIL_STATUS for row in rows):
-            raise DatabaseCustomError(rows)
+        try:
+            # Handle case for apache-airflow-providers-snowflake<4.0.1
+            if any(row["status"] == COPY_INTO_COMMAND_FAIL_STATUS for row in rows):
+                raise DatabaseCustomError(rows)
+        except TypeError:
+            # Handle case for apache-airflow-providers-snowflake>=4.0.1
+            if any(row[0]["status"] == COPY_INTO_COMMAND_FAIL_STATUS for row in rows):
+                raise DatabaseCustomError(rows)
 
     def load_pandas_dataframe_to_table(
         self,
@@ -729,8 +735,12 @@ class SnowflakeDatabase(BaseDatabase):
                 "SELECT SCHEMA_NAME from information_schema.schemata WHERE LOWER(SCHEMA_NAME) = %(schema_name)s;",
                 parameters={"schema_name": schema.lower()},
             )
-
-        created_schemas = [x["SCHEMA_NAME"] for x in schemas]
+        try:
+            # Handle case for apache-airflow-providers-snowflake<4.0.1
+            created_schemas = [x["SCHEMA_NAME"] for x in schemas]
+        except TypeError:
+            # Handle case for apache-airflow-providers-snowflake>=4.0.1
+            created_schemas = [x[0]["SCHEMA_NAME"] for x in schemas]
         return len(created_schemas) == 1
 
     def merge_table(
@@ -938,6 +948,13 @@ class SnowflakeDatabase(BaseDatabase):
         """
         account = self.hook.get_connection(self.conn_id).extra_dejson.get("account")
         return f"{self.sql_type}://{account}"
+
+    def openlineage_dataset_uri(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset uri as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return f"{self.openlineage_dataset_namespace()}/{self.openlineage_dataset_name(table=table)}"
 
     def truncate_table(self, table):
         """Truncate table"""
