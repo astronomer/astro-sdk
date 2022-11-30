@@ -3,6 +3,7 @@ import tempfile
 
 import pandas as pd
 
+from astro.dataframes.pandas import PandasDataframe
 from astro.files.types import CSVFileType
 
 sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent.parent, "data/sample.csv")
@@ -15,6 +16,7 @@ def test_read_csv_file():
     with open(path) as file:
         df = csv_type.export_to_dataframe(file)
     assert df.shape == (3, 2)
+    assert isinstance(df, PandasDataframe)
 
 
 def test_write_csv_file():
