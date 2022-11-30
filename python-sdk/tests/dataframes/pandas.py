@@ -67,7 +67,7 @@ def test_serialize_deserialize_with_smaller_df():
     # Test that the serialize method will not serialize all the dataframe records to string
     # and instead create a file object and store the records in a file
     s_df = df.serialize()
-    assert s_df == '{"id":{"0":1},"name":{"0":"xyz"}}'
+    assert s_df == {"id": {0: 1}, "name": {0: "xyz"}}
 
     # assert df.equals(exported_file.export_to_dataframe())
     assert df.equals(PandasDataframe.deserialize(s_df, version=1))
