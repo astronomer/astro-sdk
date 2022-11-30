@@ -22,8 +22,13 @@ class DeltaDatabase(BaseDatabase):
         self.table = table
 
     def populate_table_metadata(self, table: BaseTable) -> BaseTable:
-        """
         # TODO: Do we need default configurations for a delta table?
+        """
+        Given a table, populates the "metadata" field with what we would consider as "defaults"
+
+        These defaults are determined based on environment variables and the connection settings.
+        :param table: table to be populated
+        :return:
         """
         table.conn_id = table.conn_id or self.conn_id
         if not table.metadata or table.metadata.is_empty():
@@ -56,7 +61,7 @@ class DeltaDatabase(BaseDatabase):
 
     def create_table_using_native_schema_autodetection(self, table: BaseTable, file: File) -> None:
         # TODO Do we need to implement this function? It seems like databricks will handle schemas for us
-        pass
+        raise NotImplementedError("Not implemented yet.")
 
     def merge_table(
         self,
