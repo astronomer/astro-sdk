@@ -51,15 +51,13 @@ def test_hook():
     assert isinstance(hook, GoogleDriveHook)
 
 
-@patch("airflow.providers.google.suite.hooks.drive.GoogleDriveHook.get_conn")
+@patch("astro.files.locations.google.gdrive.GdriveLocation._get_rel_path_parts")
 def test_remote_object_not_found(
-    mock_get_conn,
+    mock_get_path,
 ):
     """with remote filepath not found"""
-    mock_get_conn.return_value.files.return_value.list.return_value.execute.return_value = {
-        "files": [{"webContentLink": "ADOPTION_CENTER_1_unquoted.csv"}]
-    }
-    location = create_file_location("some random test")
+    mock_get_path.return_value = []
+    location = create_file_location("gdrive://bucket/some-file")
     assert location.paths == []
 
 
@@ -80,4 +78,18 @@ def test_size_exception(mock_folder_id):
     mock_folder_id.side_effect = FileNotFoundError()
     location = create_file_location("gdrive://data/ADOPTION_CENTER_1_unquoted.csv")
     with pytest.raises(FileNotFoundError):
+        location.size
+
+
+@patch("airflow.providers.google.suite.hooks.drive.GoogleDriveHook.get_conn")
+@patch("astro.files.locations.google.gdrive._find_item_id")
+def test_size_key_error(mock_folder_id, mock_get_conn):
+    """Test get_size() key error of for Google Drive file ."""
+    mock_get_conn.return_value.files.return_value.list.return_value.execute.return_value = {
+        "files": [{"sizes": "110"}]
+    }
+    mock_folder_id.return_value = "root"
+    path = "gdrive://data/ADOPTION_CENTER_1_unquoted.csv"
+    location = create_file_location(path)
+    with pytest.raises(IsADirectoryError):
         location.size
