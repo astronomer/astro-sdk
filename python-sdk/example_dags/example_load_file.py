@@ -1,3 +1,17 @@
+"""
+Pre-requisites for load_file_example_19:
+ - Install dependencies for Astro Python SDK with Google, refer to README.md
+ - You can either specify a service account key file and set `GOOGLE_APPLICATION_CREDENTIALS`
+    with the file path to the service account.
+ - In the connection we need to specfiy the scopes.
+    For ex:- https://www.googleapis.com/auth/drive.readonly
+    Please refer to https://developers.google.com/identity/protocols/oauth2/scopes#drive for more details.
+ - In the service account the Google Drive API must be enabled.
+    To enable the API please refer https://developers.google.com/drive/api/guides/enable-drive-api
+ - Share a drive folder/files and add the service account email id to access those folders/files.
+    For sharing a file/folder
+    please refer https://www.labnol.org/google-api-service-account-220404#4-share-a-drive-folder
+"""
 import os
 import pathlib
 from datetime import datetime, timedelta
@@ -222,6 +236,7 @@ with dag:
     )
     # [END load_file_example_18]
 
+    # [START load_file_example_19]
     aql.load_file(
         input_file=File(path="gdrive://test-google-drive-support/sample.csv", conn_id="gdrive_conn"),
         output_table=Table(
@@ -232,5 +247,6 @@ with dag:
             ),
         ),
     )
+    # [END load_file_example_19]
 
     aql.cleanup()
