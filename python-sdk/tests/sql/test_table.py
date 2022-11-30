@@ -147,7 +147,7 @@ def test_if_table_object_can_be_pickled():
 
 
 @pytest.mark.parametrize(
-    "connection,name,namespace",
+    "connection,name,namespace,uri",
     [
         (
             Connection(
@@ -155,6 +155,7 @@ def test_if_table_object_can_be_pickled():
             ),
             "astronomer-dag-authoring.dataset.test_tb",
             "bigquery",
+            "bigquery:astronomer-dag-authoring.dataset.test_tb",
         ),
         (
             Connection(
@@ -168,6 +169,7 @@ def test_if_table_object_can_be_pickled():
             ),
             "astro.test_tb",
             "redshift://local:5439",
+            "redshift://local:5439/astro.test_tb",
         ),
         (
             Connection(
@@ -180,6 +182,7 @@ def test_if_table_object_can_be_pickled():
             ),
             "public.test_tb",
             "postgresql://postgres:5432",
+            "postgresql://postgres:5432/public.test_tb",
         ),
         (
             Connection(
@@ -200,17 +203,19 @@ def test_if_table_object_can_be_pickled():
             ),
             "TEST_ASTRO.ci.test_tb",
             "snowflake://astro-sdk",
+            "snowflake://astro-sdk/TEST_ASTRO.ci.test_tb",
         ),
         (
-            Connection(conn_id="test_conn", conn_type="sqlite", host="tmp/sqlite.db"),
-            "tmp/sqlite.db.test_tb",
-            f"sqlite://{socket.gethostbyname(socket.gethostname())}",
+            Connection(conn_id="test_conn", conn_type="sqlite", host="/tmp/sqlite.db"),
+            "/tmp/sqlite.db.test_tb",
+            f"file://{socket.gethostbyname(socket.gethostname())}:22",
+            f"file://{socket.gethostbyname(socket.gethostname())}:22/tmp/sqlite.db.test_tb",
         ),
     ],
 )
 @mock.patch("airflow.providers.google.cloud.utils.credentials_provider.get_credentials_and_project_id")
 @mock.patch("airflow.hooks.base.BaseHook.get_connection")
-def test_openlineage_dataset(mock_get_connection, gcp_cred, connection, name, namespace):
+def test_openlineage_dataset(mock_get_connection, gcp_cred, connection, name, namespace, uri):
     """
     Test that name and namespace for lineage is correct for databases
     """
@@ -220,6 +225,7 @@ def test_openlineage_dataset(mock_get_connection, gcp_cred, connection, name, na
 
     assert tb.openlineage_dataset_name() == name
     assert tb.openlineage_dataset_namespace() == namespace
+    assert tb.openlingeage_dataset_uri() == uri
 
 
 def test_openlineage_emit_temp_table_event():

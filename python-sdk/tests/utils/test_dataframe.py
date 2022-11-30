@@ -1,5 +1,6 @@
 import pandas as pd
 
+from astro.dataframes.pandas import PandasDataframe
 from astro.utils.dataframe import convert_dataframe_to_file
 
 
@@ -11,3 +12,4 @@ def test_convert_to_file():
     f = convert_dataframe_to_file(df)
     out = f.export_to_dataframe()
     assert df.equals(out)
+    assert isinstance(out, PandasDataframe)

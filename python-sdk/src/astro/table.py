@@ -164,6 +164,14 @@ class BaseTable:
         database = create_database(self.conn_id)
         return database.openlineage_dataset_namespace()
 
+    def openlingeage_dataset_uri(self) -> str:
+        """
+        Returns the open lineage dataset uri as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        database = create_database(self.conn_id)
+        return f"{database.openlineage_dataset_uri(table=self)}"
+
     def openlineage_emit_temp_table_event(self):
         """
         Based on airflow config ```OPENLINEAGE_EMIT_TEMP_TABLE_EVENT``` value and table type

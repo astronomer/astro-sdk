@@ -8,6 +8,7 @@ import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 
 from astro.airflow.datasets import kwargs_with_datasets
+from astro.dataframes.pandas import PandasDataframe
 
 try:
     from airflow.decorators.base import TaskDecorator, task_decorator_factory
@@ -36,8 +37,7 @@ def _get_dataframe(
     df = convert_columns_names_capitalization(
         df=df, columns_names_capitalization=columns_names_capitalization
     )
-
-    return df
+    return PandasDataframe.from_pandas_df(df)
 
 
 def load_op_arg_table_into_dataframe(
@@ -232,11 +232,6 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         output_dataset: list[OpenlineageDataset] = []
 
         if self.output_table and self.output_table.openlineage_emit_temp_table_event():  # pragma: no cover
-            output_uri = (
-                f"{self.output_table.openlineage_dataset_namespace()}"
-                f"/{self.output_table.openlineage_dataset_name()}"
-            )
-
             output_dataset = [
                 OpenlineageDataset(
                     namespace=self.output_table.openlineage_dataset_namespace(),
@@ -252,7 +247,9 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                                 )
                             ]
                         ),
-                        "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=output_uri),
+                        "dataSource": DataSourceDatasetFacet(
+                            name=self.output_table.name, uri=self.output_table.openlingeage_dataset_uri()
+                        ),
                         "outputStatistics": OutputStatisticsOutputDatasetFacet(
                             rowCount=self.output_table.row_count,
                         ),

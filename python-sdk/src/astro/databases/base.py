@@ -11,6 +11,8 @@ from airflow.hooks.dbapi import DbApiHook
 from pandas.io.sql import SQLDatabase
 from sqlalchemy import column, insert, select
 
+from astro.dataframes.pandas import PandasDataframe
+
 if TYPE_CHECKING:  # pragma: no cover
     from sqlalchemy.engine.cursor import CursorResult
 from sqlalchemy.sql import ClauseElement
@@ -60,6 +62,7 @@ class BaseDatabase(ABC):
     illegal_column_name_chars_replacement: list[str] = []
     NATIVE_PATHS: dict[Any, Any] = {}
     DEFAULT_SCHEMA = SCHEMA
+    NATIVE_LOAD_EXCEPTIONS: Any = DatabaseCustomError
     NATIVE_AUTODETECT_SCHEMA_CONFIG: Mapping[FileLocation, Mapping[str, list[FileType] | Callable]] = {}
     FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = set()
 
@@ -522,7 +525,7 @@ class BaseDatabase(ABC):
                 native_support_kwargs=native_support_kwargs,
                 **kwargs,
             )
-        except DatabaseCustomError:
+        except self.NATIVE_LOAD_EXCEPTIONS as load_exception:  # skipcq: PYL-W0703
             logging.warning(
                 "Loading file(s) failed with Native Support.",
                 exc_info=True,
@@ -537,7 +540,7 @@ class BaseDatabase(ABC):
                     chunk_size=chunk_size,
                 )
             else:
-                raise
+                raise load_exception
 
     def load_pandas_dataframe_to_table(
         self,
@@ -647,7 +650,8 @@ class BaseDatabase(ABC):
 
         if self.table_exists(source_table):
             sqla_table = self.get_sqla_table(source_table)
-            return pd.read_sql(sql=sqla_table.select(**select_kwargs), con=self.sqlalchemy_engine)
+            df = pd.read_sql(sql=sqla_table.select(**select_kwargs), con=self.sqlalchemy_engine)
+            return PandasDataframe.from_pandas_df(df)
 
         table_qualified_name = self.get_table_qualified_name(source_table)
         raise NonExistentTableException(f"The table {table_qualified_name} does not exist")
@@ -804,6 +808,13 @@ class BaseDatabase(ABC):
     def openlineage_dataset_namespace(self) -> str:
         """
         Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        raise NotImplementedError
+
+    def openlineage_dataset_uri(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset uri as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         raise NotImplementedError
