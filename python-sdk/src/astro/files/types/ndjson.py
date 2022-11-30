@@ -6,6 +6,7 @@ import json
 import pandas as pd
 
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType as FileTypeConstants
+from astro.dataframes.pandas import PandasDataframe
 from astro.files.types.base import FileType
 from astro.utils.dataframe import convert_columns_names_capitalization
 
@@ -24,7 +25,7 @@ class NDJSONFileType(FileType):
         df = convert_columns_names_capitalization(
             df=df, columns_names_capitalization=columns_names_capitalization
         )
-        return df
+        return PandasDataframe.from_pandas_df(df)
 
     # We need skipcq because it's a method overloading so we don't want to make it a static method
     def create_from_dataframe(self, df: pd.DataFrame, stream: io.TextIOWrapper) -> None:  # skipcq PYL-R0201

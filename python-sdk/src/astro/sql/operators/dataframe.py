@@ -8,6 +8,7 @@ import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 
 from astro.airflow.datasets import kwargs_with_datasets
+from astro.dataframes.pandas import PandasDataframe
 
 try:
     from airflow.decorators.base import TaskDecorator, task_decorator_factory
@@ -36,8 +37,7 @@ def _get_dataframe(
     df = convert_columns_names_capitalization(
         df=df, columns_names_capitalization=columns_names_capitalization
     )
-
-    return df
+    return PandasDataframe.from_pandas_df(df)
 
 
 def load_op_arg_table_into_dataframe(
