@@ -4,11 +4,13 @@ Pre-requisites for load_file_example_19:
  - You can either specify a service account key file and set `GOOGLE_APPLICATION_CREDENTIALS`
     with the file path to the service account.
  - In the connection we need to specfiy the scopes.
+    Connection variable is ``extra__google_cloud_platform__scope``
+    or in Airflow Connections UI ``Scopes (comma separated)``
     For ex:- https://www.googleapis.com/auth/drive.readonly
     Please refer to https://developers.google.com/identity/protocols/oauth2/scopes#drive for more details.
  - In Google Cloud, for the project we need to enable the Google Drive API.
     To enable the API please refer https://developers.google.com/drive/api/guides/enable-drive-api
- - Create a  Google Drive folder (or) use an existing folder with a file inside it,
+ - Create a Google Drive folder (or) use an existing folder with a file inside it,
     and share the file with service account email id in order for it to be able to access those
     folders/files. In this example DAG, we will load this file into Snowflake table.
     For sharing a file/folder
