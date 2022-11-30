@@ -6,9 +6,11 @@ Pre-requisites for load_file_example_19:
  - In the connection we need to specfiy the scopes.
     For ex:- https://www.googleapis.com/auth/drive.readonly
     Please refer to https://developers.google.com/identity/protocols/oauth2/scopes#drive for more details.
- - In the service account the Google Drive API must be enabled.
+ - In Google Cloud, for the project we need to enable the Google Drive API.
     To enable the API please refer https://developers.google.com/drive/api/guides/enable-drive-api
- - Share a drive folder/files and add the service account email id to access those folders/files.
+ - Create a  Google Drive folder (or) use an existing folder with a file inside it,
+    and share the file with service account email id in order for it to be able to access those
+    folders/files. In this example DAG, we will load this file into Snowflake table.
     For sharing a file/folder
     please refer https://www.labnol.org/google-api-service-account-220404#4-share-a-drive-folder
 """
