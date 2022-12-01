@@ -50,6 +50,32 @@ def about() -> None:
 
 @app.command(
     cls=AstroCommand,
+    help="""
+    Gets the value of the configuration key set in the configuration file for the given environment.
+    """,
+)
+def config(
+    project_dir: Path = typer.Option(
+        None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
+    ),
+    env: str = typer.Option(
+        default="default",
+        help="(Optional) Environment used to fetch the configuration key from.",
+    ),
+    key: str = typer.Option(
+        default=None,
+        help="(Optional) Key from the configuration whose value needs to be fetched.",
+    ),
+) -> None:
+    from sql_cli.configuration import Config
+
+    project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
+    project_config = Config(environment=env, project_dir=project_dir_absolute).from_yaml_to_config()
+    print(getattr(project_config, key))
+
+
+@app.command(
+    cls=AstroCommand,
     help="Generate the Airflow DAG from a directory of SQL files.",
 )
 def generate(
