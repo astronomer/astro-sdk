@@ -3,6 +3,7 @@
 ## 1.3.0
 
 ### Feature:
+- Remove the need to use a custom Xcom backend for storing dataframes when Xcom pickling is disabled. [#1334](https://github.com/astronomer/astro-sdk/pull/1334), [#1331](https://github.com/astronomer/astro-sdk/pull/1331),[#1319](https://github.com/astronomer/astro-sdk/pull/1319)
 - Add support to Google Drive to be used as `FileLocation` . Example to load file from Google Drive to Snowflake [#1044](https://github.com/astronomer/astro-sdk/issues/1044)
 
   ```python
