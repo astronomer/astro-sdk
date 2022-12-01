@@ -3,7 +3,7 @@
 ## 1.3.0
 
 ### Feature:
-- Add support to `FileLocation` as Google Drive. Example usage to load file from Google Drive to Snowflake [#1044](https://github.com/astronomer/astro-sdk/issues/1044)
+- Add support to Google Drive to be used as `FileLocation` . Example to load file from Google Drive to Snowflake [#1044](https://github.com/astronomer/astro-sdk/issues/1044)
 
   ```python
   aql.load_file(
