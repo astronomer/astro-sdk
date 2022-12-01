@@ -99,7 +99,7 @@ class Config:
         yaml_config.setdefault(section, {})
         yaml_config[section][key] = value
 
-        with open(filepath, "w") as fp:
+        with filepath.open(mode="w") as fp:
             yaml.dump(yaml_config, fp)
 
     def write_config_to_yaml(self) -> None:
