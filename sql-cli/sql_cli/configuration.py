@@ -8,7 +8,7 @@ from typing import Any
 import yaml
 from airflow.models.connection import Connection
 
-from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME
+from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME, GLOBAL_CONFIG_DIRECTORY
 
 
 def convert_to_connection(conn: dict[str, Any]) -> Connection:
@@ -39,7 +39,7 @@ class Config:
     airflow_home: str | None = None
     airflow_dags_folder: str | None = None
 
-    def get_filepath(self) -> Path:
+    def get_env_config_filepath(self) -> Path:
         """
         Return configuration.yaml filepath.
 
@@ -47,13 +47,23 @@ class Config:
         """
         return self.project_dir / CONFIG_DIR / self.environment / CONFIG_FILENAME
 
-    def from_yaml_to_dict(self) -> dict[str, Any]:
+    def get_global_config_filepath(self) -> Path:
         """
-        Return a dict with the content of the configuration.yaml.
+        Return global configuration.yaml filepath which is shared across environments.
+
+        :return: The path to the desired global YAML configuration file
+        """
+        return self.project_dir / CONFIG_DIR / GLOBAL_CONFIG_DIRECTORY / CONFIG_FILENAME
+
+    @staticmethod
+    def from_yaml_to_dict(filepath: Path) -> dict[str, Any]:
+        """
+        Return a dict with the contents of the given configuration.yaml.
+
+        :param filepath: Path of the desired configuration.yaml to read contents from.
 
         :returns: Content of the YAML configuration file as a python dictionary.
         """
-        filepath = self.get_filepath()
         with open(filepath) as fp:
             yaml_with_env = os.path.expandvars(fp.read())
             yaml_config = yaml.safe_load(yaml_with_env)
@@ -65,16 +75,17 @@ class Config:
 
         :returns: Contents of the YAML configuration file.
         """
-        yaml_config = self.from_yaml_to_dict()
+        env_yaml_config = self.from_yaml_to_dict(self.get_env_config_filepath())
+        global_yaml_config = self.from_yaml_to_dict(self.get_global_config_filepath()) or {}
         return Config(
             project_dir=self.project_dir,
             environment=self.environment,
-            airflow_home=yaml_config.get("airflow", {}).get("home"),
-            airflow_dags_folder=yaml_config.get("airflow", {}).get("dags_folder"),
-            connections=yaml_config["connections"],
+            airflow_home=global_yaml_config.get("airflow", {}).get("home"),
+            airflow_dags_folder=global_yaml_config.get("airflow", {}).get("dags_folder"),
+            connections=env_yaml_config["connections"],
         )
 
-    def write_value_to_yaml(self, section: str, key: str, value: str) -> None:
+    def write_value_to_yaml(self, section: str, key: str, value: str, filepath: Path) -> None:
         """
         Write a particular key/value to the desired configuration.yaml.
 
@@ -88,11 +99,10 @@ class Config:
         :param key: Key within the YAML file associated to the value to be recorded.
         :param value: Value associated to the key in the YAML file.
         """
-        yaml_config = self.from_yaml_to_dict()
+        yaml_config = self.from_yaml_to_dict(filepath)
         yaml_config.setdefault(section, {})
         yaml_config[section][key] = value
 
-        filepath = self.get_filepath()
         with open(filepath, "w") as fp:
             yaml.dump(yaml_config, fp)
 
@@ -110,12 +120,17 @@ class Config:
         :param section: Section within the YAML file where the key/value will be recorded
         :param values: List of items to be written to the YAML file
         """
-        yaml_config = self.from_yaml_to_dict()
-        yaml_config["connections"] = self.connections
+        env_config_filepath = self.get_env_config_filepath()
+        env_yaml_config = self.from_yaml_to_dict(env_config_filepath)
+        env_yaml_config["connections"] = self.connections
+        with open(env_config_filepath, "w") as fp:
+            yaml.dump(env_yaml_config, fp)
+
+        global_config_filepath = self.get_global_config_filepath()
+        global_yaml_config = self.from_yaml_to_dict(global_config_filepath)
         if self.airflow_home:
-            yaml_config["airflow"]["home"] = self.airflow_home
+            global_yaml_config["airflow"]["home"] = self.airflow_home
         if self.airflow_dags_folder:
-            yaml_config["airflow"]["dags_folder"] = self.airflow_dags_folder
-        filepath = self.get_filepath()
-        with open(filepath, "w") as fp:
-            yaml.dump(yaml_config, fp)
+            global_yaml_config["airflow"]["dags_folder"] = self.airflow_dags_folder
+        with open(global_config_filepath, "w") as fp:
+            yaml.dump(global_yaml_config, fp)

@@ -18,6 +18,7 @@ BASE_SOURCE_DIR = Path(os.path.realpath(__file__)).parent.parent / "include/base
 
 MANDATORY_PATHS = {
     Path("config/default/configuration.yml"),
+    Path("config/global/configuration.yml"),
     Path("workflows"),
     Path(".airflow/default/airflow.db"),
 }
@@ -37,8 +38,8 @@ class Project:
         airflow_dags_folder: Path | None = None,
     ) -> None:
         self.directory = directory
-        self._airflow_home = airflow_home
-        self._airflow_dags_folder = airflow_dags_folder
+        self._airflow_home = airflow_home or Path(self.directory, DEFAULT_AIRFLOW_HOME)
+        self._airflow_dags_folder = airflow_dags_folder or Path(self.directory, DEFAULT_DAGS_FOLDER)
         self.connections: list[Connection] = []
 
     @property
@@ -51,7 +52,7 @@ class Project:
 
         :returns: The path to the Airflow home directory.
         """
-        return self._airflow_home or Path(self.directory, DEFAULT_AIRFLOW_HOME)
+        return self._airflow_home
 
     @property
     def airflow_dags_folder(self) -> Path:
@@ -63,7 +64,7 @@ class Project:
 
         :returns: The path to the Airflow DAGs directory.
         """
-        return self._airflow_dags_folder or Path(self.directory, DEFAULT_DAGS_FOLDER)
+        return self._airflow_dags_folder
 
     @property
     def airflow_config(self) -> dict[str, Any]:
@@ -81,16 +82,20 @@ class Project:
         """
         Sets custom Airflow configuration in case the user is not using the default values.
 
-        :param airflow_home: Custom user-defined Airflow Home directory
-        :param airflow_dags_folder: Custom user-defined Airflow DAGs folder
+        :param environment: the environment for which the configuration has to be updated
         """
         config = Config(environment=environment, project_dir=self.directory)
         config = config.from_yaml_to_config()
 
+        global_env_filepath = config.get_global_config_filepath()
         if self._airflow_home is not None:
-            config.write_value_to_yaml("airflow", "home", str(self._airflow_home.resolve()))
+            config.write_value_to_yaml(
+                "airflow", "home", str(self._airflow_home.resolve()), global_env_filepath
+            )
         if self._airflow_dags_folder is not None:
-            config.write_value_to_yaml("airflow", "dags_folder", str(self._airflow_dags_folder.resolve()))
+            config.write_value_to_yaml(
+                "airflow", "dags_folder", str(self._airflow_dags_folder.resolve()), global_env_filepath
+            )
 
         config.connections[0]["host"] = str(self.directory / config.connections[0]["host"])
         config.write_config_to_yaml()
