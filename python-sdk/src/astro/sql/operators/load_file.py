@@ -14,7 +14,6 @@ from astro.files import File, check_if_connection_exists, resolve_file_path_patt
 from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
-from astro.utils.dataframe import convert_dataframe_to_file
 from astro.utils.typing_compat import Context
 
 
@@ -83,13 +82,13 @@ class LoadFileOperator(AstroSQLBaseOperator):
             context["ti"].xcom_push(key="output_table_name", value=str(self.output_table.name))
         return self.load_data(input_file=self.input_file)
 
-    def load_data(self, input_file: File) -> BaseTable | File:
+    def load_data(self, input_file: File) -> BaseTable | pd.DataFrame:
 
         self.log.info("Loading %s into %s ...", self.input_file.path, self.output_table)
         if self.output_table:
             return self.load_data_to_table(input_file)
         else:
-            return convert_dataframe_to_file(self.load_data_to_dataframe(input_file))
+            return self.load_data_to_dataframe(input_file)
 
     def load_data_to_table(self, input_file: File) -> BaseTable:
         """
