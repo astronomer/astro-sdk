@@ -16,6 +16,8 @@ BASE_PATHS = [
     Path("config/default/configuration.yml"),
     Path("config/dev"),
     Path("config/dev/configuration.yml"),
+    Path("config/global"),
+    Path("config/global/configuration.yml"),
     Path("data"),
     Path("data/imdb.db"),
     Path("data/retail.db"),

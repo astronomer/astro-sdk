@@ -114,6 +114,28 @@ def test_version():
 
 
 @pytest.mark.parametrize(
+    "key,value",
+    [
+        ("airflow_home", "airflow_home"),
+        ("airflow_dags_folder", "airflow_home/dags"),
+    ],
+)
+def test_config(key, value, initialised_project_with_custom_airflow_config):
+    result = runner.invoke(
+        app,
+        [
+            "config",
+            "--project-dir",
+            initialised_project_with_custom_airflow_config.directory.as_posix(),
+            "--key",
+            key,
+        ],
+    )
+    assert result.exit_code == 0
+    assert value in result.stdout
+
+
+@pytest.mark.parametrize(
     "workflow_name,environment",
     [
         ("example_basic_transform", "default"),

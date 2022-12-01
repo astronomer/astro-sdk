@@ -41,7 +41,7 @@ class Config:
 
     def get_env_config_filepath(self) -> Path:
         """
-        Return configuration.yaml filepath.
+        Return environment specific configuration.yaml filepath.
 
         :returns: The path to the desired YAML configuration file
         """
@@ -58,7 +58,7 @@ class Config:
     @staticmethod
     def from_yaml_to_dict(filepath: Path) -> dict[str, Any]:
         """
-        Return a dict with the contents of the given configuration.yaml.
+        Return a dict with the contents of the given configuration.yaml
 
         :param filepath: Path of the desired configuration.yaml to read contents from.
 
@@ -70,11 +70,7 @@ class Config:
         return yaml_config
 
     def from_yaml_to_config(self) -> Config:
-        """
-        Return a Config instance with the content of the configuration.yaml.
-
-        :returns: Contents of the YAML configuration file.
-        """
+        """Returns a Config instance with the contents of the environment specific and global configuration.yaml"""
         env_yaml_config = self.from_yaml_to_dict(self.get_env_config_filepath())
         global_yaml_config = self.from_yaml_to_dict(self.get_global_config_filepath()) or {}
         return Config(
@@ -107,19 +103,7 @@ class Config:
             yaml.dump(yaml_config, fp)
 
     def write_config_to_yaml(self) -> None:
-        """
-        Write a particular key/value to the desired configuration.yaml.
-
-        Example:
-        ```
-            [section]
-            - item1
-            - item2
-        ```
-
-        :param section: Section within the YAML file where the key/value will be recorded
-        :param values: List of items to be written to the YAML file
-        """
+        """Write Config instance's key-values to respective environment specific and global configuration.yml."""
         env_config_filepath = self.get_env_config_filepath()
         env_yaml_config = self.from_yaml_to_dict(env_config_filepath)
         env_yaml_config["connections"] = self.connections
