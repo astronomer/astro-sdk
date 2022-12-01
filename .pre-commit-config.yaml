@@ -28,7 +28,16 @@ repos:
       - id: trailing-whitespace
       - id: pretty-format-json
         args: ['--autofix']
-
+      - id: name-tests-test
+        args: ['--pytest-test-first']
+        exclude: |
+          (?x)
+          ^python-sdk/tests/benchmark/.*|
+          ^python-sdk/tests/utils/.*|
+          ^python-sdk/tests/sql/operators/utils.py|
+          ^python-sdk/tests/integration_test_dag.py|
+          ^sql-cli/tests/test_dag/.*$|
+          ^sql-cli/tests/utils.py
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.9.0
     hooks:
