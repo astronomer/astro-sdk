@@ -1,5 +1,43 @@
 # Changelog
 
+## 1.3.0
+
+### Feature:
+- Remove the need to use a custom Xcom backend for storing dataframes when Xcom pickling is disabled. [#1334](https://github.com/astronomer/astro-sdk/pull/1334), [#1331](https://github.com/astronomer/astro-sdk/pull/1331),[#1319](https://github.com/astronomer/astro-sdk/pull/1319)
+- Add support to Google Drive to be used as `FileLocation` . Example to load file from Google Drive to Snowflake [#1044](https://github.com/astronomer/astro-sdk/issues/1044)
+
+  ```python
+  aql.load_file(
+      input_file=File(
+          path="gdrive://sample-google-drive/sample.csv", conn_id="gdrive_conn"
+      ),
+      output_table=Table(
+          conn_id=SNOWFLAKE_CONN_ID,
+          metadata=Metadata(
+              database=os.environ["SNOWFLAKE_DATABASE"],
+              schema=os.environ["SNOWFLAKE_SCHEMA"],
+          ),
+      ),
+  )
+  ```
+
+### Improvements
+- Use `DefaultExtractor` from OpenLineage. Users need not set environment variable `OPENLINEAGE_EXTRACTORS` to use OpenLineage. [#1223](https://github.com/astronomer/astro-sdk/issues/1223), [#1292](https://github.com/astronomer/astro-sdk/issues/1292)
+- Generate constraints file for multiple Python and Airflow version that display the set of "installable" constraints for a particular Python (3.7, 3.8, 3.9) and Airflow version (2.2.5, 2.3.4, 2.4.2) [#1226](https://github.com/astronomer/astro-sdk/issues/1226)
+- Improve the logs in case native transfers fallbacks to Pandas as well as fallback indication in `LoadFileOperator`. [#1263](https://github.com/astronomer/astro-sdk/issues/1263)
+
+### Bug fixes
+- Temporary tables should be cleaned up, even with mapped tasks via `aql.cleanup()` [#963](https://github.com/astronomer/astro-sdk/issues/963)
+- Update the name and namespace as per Open Lineage new conventions introduced [here](https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md#local-file-system). [#1281](https://github.com/astronomer/astro-sdk/issues/1281)
+- Delete the Snowflake stage when `LoadFileOperator` fails. [#1262](https://github.com/astronomer/astro-sdk/issues/1262)
+
+### Docs
+- Update the documentation for Google Drive support. [#1044](https://github.com/astronomer/astro-sdk/issues/1044)
+- Update the documentation to remove the environment variable `OPENLINEAGE_EXTRACTORS` to use OpenLineage. [#1292](https://github.com/astronomer/astro-sdk/issues/1292)
+
+## Misc
+- Fix the GCS path in `aql.export_file` in the example DAGs. [#1339](https://github.com/astronomer/astro-sdk/issues/1339)
+
 ## 1.2.3
 
 ### Bug fixes
