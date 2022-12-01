@@ -8,15 +8,26 @@ from databricks_cli.jobs.api import JobsApi
 from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
 from databricks_cli.secrets.api import SecretApi
-from requests.exceptions import HTTPError
 
 from astro.databricks.autoloader.autoloader_file_generator import render
 
 cwd = pathlib.Path(__file__).parent
 
 
-def create_secrets(scope_name: str, filesystem_secrets: Dict[str, str], api_client: ApiClient):
+def delete_secret_scope(scope_name: str, api_client: ApiClient) -> None:
     """
+    Delete the scope we created to prevent littering the databricks secret store with one-time scopes.
+
+    :param scope_name: name of scope to delete
+    :param api_client: populated databricks client
+    """
+    secrets = SecretApi(api_client)
+    secrets.delete_scope(scope_name)
+
+
+def create_secrets(scope_name: str, filesystem_secrets: Dict[str, str], api_client: ApiClient) -> None:
+    """
+    Uploads secrets to a scope
     Before we can transfer data from external file sources (s3, GCS, etc.) we first need to upload the relevant
     secrets to databricks, so we can use them in the autoloader config. This allows us to perform ad-hoc queries
     that are not dependent on existing settings.
@@ -27,13 +38,6 @@ def create_secrets(scope_name: str, filesystem_secrets: Dict[str, str], api_clie
     :param api_client: The databricks API client that has all necessary credentials
     """
     secrets = SecretApi(api_client)
-    try:
-        secrets.delete_scope(scope_name)
-    except HTTPError as h:
-        # We expect a "resource does not exist if the scope has not been created. otherwise throw error
-        if not h.response.json()["error_code"] == "RESOURCE_DOES_NOT_EXIST":
-            raise h
-
     secrets.create_scope(
         scope=scope_name,
         initial_manage_principal=None,
@@ -76,11 +80,15 @@ def generate_file(
 
 
 def load_file_to_dbfs(local_file_path: Path, file_name: str, api_client: ApiClient) -> Path:
+    # TODO we should allow arbitrary dbfs paths set by env vars/users
     """
-    Load a file into DBFS. Used to move a python file into DBFS so we can run the jobs as pyspark jobs
+    Load a file into DBFS. Used to move a python file into DBFS, so we can run the jobs as pyspark jobs.
+
+    Currently saves the file to dbfs:/mnt/pyscripts/, but will eventually support more locations.
 
     :param local_file_path: path of the file to upload
     :param api_client: Databricks API client
+    :return: path to the file in DBFS
     """
     print("loading file " + str(local_file_path))
     dbfs = DbfsApi(api_client=api_client)
@@ -96,7 +104,7 @@ def create_and_run_job(
     file_to_run: str,
     existing_cluster_id=None,
     new_cluster_specs=None,
-):
+) -> None:
     """
     Creates a databricks job and runs it to completion.
     :param api_client: databricks API client
