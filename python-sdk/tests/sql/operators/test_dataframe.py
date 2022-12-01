@@ -432,7 +432,7 @@ def test_col_case_is_preserved(sample_dag):
     def validate(df):  # skipcq: PY-D0003
         cols = list(df.columns)
         cols.sort()
-        return df.columns == ["Colors", "Numbers"]
+        return cols == ["Colors", "Numbers"]
 
     with sample_dag:
         task1 = sample_df_1()
