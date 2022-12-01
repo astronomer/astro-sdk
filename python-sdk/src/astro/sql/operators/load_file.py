@@ -10,6 +10,7 @@ from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
+from astro.dataframes.pandas import PandasDataframe
 from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
 from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
@@ -140,6 +141,9 @@ class LoadFileOperator(AstroSQLBaseOperator):
                 )
             else:
                 df = file.export_to_dataframe(columns_names_capitalization=self.columns_names_capitalization)
+
+        if not isinstance(df, PandasDataframe):
+            PandasDataframe.from_pandas_df(df)
 
         self.log.info("Completed loading the data into dataframe.")
         return df
