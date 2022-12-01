@@ -118,6 +118,7 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 | Amazon S3   |
 | Filesystem  |
 | Google GCS  |
+| Google Drive|
 
 ## Available operations
 
