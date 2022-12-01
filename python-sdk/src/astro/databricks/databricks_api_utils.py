@@ -8,6 +8,7 @@ from databricks_cli.jobs.api import JobsApi
 from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
 from databricks_cli.secrets.api import SecretApi
+from requests.exceptions import HTTPError
 
 from astro.databricks.autoloader.autoloader_file_generator import render
 
@@ -26,7 +27,13 @@ def create_secrets(scope_name: str, filesystem_secrets: Dict[str, str], api_clie
     :param api_client: The databricks API client that has all necessary credentials
     """
     secrets = SecretApi(api_client)
-    secrets.delete_scope(scope_name)
+    try:
+        secrets.delete_scope(scope_name)
+    except HTTPError as h:
+        # We expect a "resource does not exist if the scope has not been created. otherwise throw error
+        if not h.response.json()["error_code"] == "RESOURCE_DOES_NOT_EXIST":
+            raise h
+
     secrets.create_scope(
         scope=scope_name,
         initial_manage_principal=None,
@@ -81,7 +88,7 @@ def load_file_to_dbfs(local_file_path: Path, file_name: str, api_client: ApiClie
     dbfs.mkdirs(file_path)
     dbfs.delete(file_path.join(file_name), recursive=False)
     dbfs.put_file(src_path=str(local_file_path), dbfs_path=file_path.join(file_name), overwrite=True)
-    return Path("dbfs:/mnt/pyscripts".join(file_name))
+    return Path("dbfs:/mnt/pyscripts") / file_name
 
 
 def create_and_run_job(
