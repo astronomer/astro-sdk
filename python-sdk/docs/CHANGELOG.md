@@ -26,7 +26,7 @@
 - Generate constraints file for multiple Python and Airflow version that display the set of "installable" constraints for a particular Python (3.7, 3.8, 3.9) and Airflow version (2.2.5, 2.3.4, 2.4.2) [#1226](https://github.com/astronomer/astro-sdk/issues/1226)
 - Improve the logs in case native transfers fallbacks to Pandas as well as fallback indication in `LoadFileOperator`. [#1263](https://github.com/astronomer/astro-sdk/issues/1263)
 
-### Big fixes
+### Bug fixes
 - Temporary tables should be cleaned up, even with mapped tasks via `aql.cleanup()` [#963](https://github.com/astronomer/astro-sdk/issues/963)
 - Update the name and namespace as per Open Lineage new conventions introduced [here](https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md#local-file-system). [#1281](https://github.com/astronomer/astro-sdk/issues/1281)
 - Delete the Snowflake stage when `LoadFileOperator` fails. [#1262](https://github.com/astronomer/astro-sdk/issues/1262)
