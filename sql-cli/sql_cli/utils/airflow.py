@@ -44,24 +44,8 @@ def initialise(airflow_home: Path, airflow_dags_folder: Path) -> None:
 
     importlib.reload(configuration)
 
-    if version() >= Version("2.4"):
-        # Initialise Airflow settings which is normally being done in __init__
-        from airflow import settings
-
-        importlib.reload(settings)
-        settings.initialize()
-
-        # Initialise the airflow database & hide all logs
-        import logging
-
-        logging.disable()
-        from airflow.utils import db
-
-        importlib.reload(db)
-        db.initdb()
-    else:
-        # Initialise the airflow database & hide all logs
-        os.system("airflow db init &> /dev/null")  # skipcq: BAN-B605
+    # Initialise the airflow database & hide all logs
+    os.system("airflow db init &> /dev/null")  # skipcq: BAN-B605
 
 
 def reload(airflow_home: Path) -> None:
@@ -86,17 +70,10 @@ def reload(airflow_home: Path) -> None:
 
     importlib.reload(configuration)
 
-    if version() >= Version("2.4"):
-        # Initialise airflow settings
-        from airflow import settings
+    # Re-initialise airflow settings
+    import airflow
 
-        importlib.reload(settings)
-        settings.initialize()
-    else:
-        # Re-initialise airflow settings
-        import airflow
-
-        importlib.reload(airflow)
+    importlib.reload(airflow)
 
 
 # The following function was copied from Apache Airflow
