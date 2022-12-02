@@ -34,6 +34,10 @@ def initialise(airflow_home: Path, airflow_dags_folder: Path) -> None:
     # Set airflow environment variables prior to database initialization
     os.environ["AIRFLOW_HOME"] = airflow_home.as_posix()
     os.environ["AIRFLOW__CORE__DAGS_FOLDER"] = airflow_dags_folder.as_posix()
+    if version() >= Version("2.3"):
+        os.environ.pop("AIRFLOW__DATABASE__SQL_ALCHEMY_CONN", None)
+    else:
+        os.environ.pop("AIRFLOW__CORE__SQL_ALCHEMY_CONN", None)
 
     # Reload airflow configuration after setting environment variables
     from airflow import configuration
