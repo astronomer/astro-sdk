@@ -43,32 +43,20 @@ def test(session: nox.Session, airflow: str) -> None:
         session.install("pytest-cov")
         session.install("mypy")
         session.install("types-pyyaml")
+
+        session.log("Installed Dependencies:")
+        session.run("pip3", "freeze")
+
+        session.run("pytest")
     else:
         session.install("poetry")
         session.run("poetry", "install", "--with", "dev")
         session.run("poetry", "run", "pip", "install", f"apache-airflow=={airflow}")
 
-    session.log("Installed Dependencies:")
-    session.run("pip3", "freeze")
+        session.log("Installed Dependencies:")
+        session.run("pip3", "freeze")
 
-    # At the moment flow run depends on the Airflow global Airflow Home - we need to fix this
-    # TODO: refactor so each test does this in their own sandboxed Airflow home
-    # From what I observed, the `run` command is the one using this, due to how the method
-    # utils.airflow.get_dag behaves under Airflow 2.2.0 (it defaults to $HOME/airflow)
-    airflow_home = f"~/sql-cli-python-{session.python}-airflow-{airflow}"
-    session.run(
-        "airflow", "db", "init", env={"AIRFLOW_HOME": airflow_home, "AIRFLOW__CORE__LOAD_EXAMPLES": "False"}
-    )
-
-    session.run(
-        "pytest",
-        *session.posargs,
-        "--cov=sql_cli",
-        "--cov-report=xml",
-        "--cov-branch",
-        env={"AIRFLOW_HOME": airflow_home},
-        external=True,
-    )
+        session.run("poetry", "run", "pytest")
 
 
 @nox.session(python=["3.8"])
