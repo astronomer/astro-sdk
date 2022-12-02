@@ -45,7 +45,7 @@ def initialise(airflow_home: Path, airflow_dags_folder: Path) -> None:
     importlib.reload(configuration)
 
     # Initialise the airflow database & hide all logs
-    os.system("airflow db init &> /dev/null")  # skipcq: BAN-B605
+    os.system("airflow db init > /dev/null 2>&1")  # skipcq: BAN-B605
 
 
 def reload(airflow_home: Path) -> None:
