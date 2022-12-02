@@ -7,12 +7,11 @@ from pathlib import Path
 from typing import Any
 
 from airflow.models.connection import Connection
-from packaging.version import Version
 
 from sql_cli.configuration import Config, convert_to_connection
 from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_ENVIRONMENT
 from sql_cli.exceptions import InvalidProject
-from sql_cli.utils.airflow import airflow_version, disable_examples
+from sql_cli.utils.airflow import initialise as initialise_airflow, reload as reload_airflow
 
 BASE_SOURCE_DIR = Path(os.path.realpath(__file__)).parent.parent / "include/base/"
 
@@ -95,27 +94,6 @@ class Project:
         config.connections[0]["host"] = str(self.directory / config.connections[0]["host"])
         config.write_config_to_yaml()
 
-    def _initialise_airflow(self) -> None:
-        """
-        Create an Airflow database and configuration in the self.airflow_home folder, or upgrade them,
-        if they already exist.
-        """
-        os.environ.pop("AIRFLOW_HOME", None)
-        if airflow_version() >= Version("2.3"):
-            os.environ.pop("AIRFLOW__DATABASE__SQL_ALCHEMY_CONN", None)
-        else:
-            os.environ.pop("AIRFLOW__CORE__SQL_ALCHEMY_CONN", None)
-
-        # TODO: In future we want to replace this by either:
-        # - python-native approach or
-        # - subprocess
-        os.system(  # skipcq: BAN-B605
-            f"AIRFLOW_HOME={self.airflow_home} "
-            f"AIRFLOW__CORE__DAGS_FOLDER={self.airflow_dags_folder} "
-            "AIRFLOW__CORE__LOAD_EXAMPLES=False "
-            "airflow db init > /dev/null 2>&1"
-        )
-
     def _remove_unnecessary_airflow_files(self) -> None:
         """
         Delete Airflow generated paths which are not necessary for the SQL CLI (scheduler & webserver-related).
@@ -140,8 +118,7 @@ class Project:
             dirs_exist_ok=True,
         )
         self.update_config()
-        self._initialise_airflow()
-        disable_examples(self.airflow_home)
+        initialise_airflow(self.airflow_home, self.airflow_dags_folder)
         self._remove_unnecessary_airflow_files()
 
     def is_valid_project(self) -> bool:
@@ -166,4 +143,5 @@ class Project:
             self._airflow_home = Path(config.airflow_home).resolve()
         if config.airflow_dags_folder:
             self._airflow_dags_folder = Path(config.airflow_dags_folder).resolve()
+        reload_airflow(self.airflow_home)
         self.connections = [convert_to_connection(c) for c in config.connections]

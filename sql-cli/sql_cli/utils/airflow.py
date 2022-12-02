@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def airflow_version() -> Version:
+def version() -> Version:
     """
     Return the version of Airflow installed.
     """
@@ -24,61 +24,75 @@ def airflow_version() -> Version:
     return Version(airflow.__version__)
 
 
-def retrieve_airflow_database_conn_from_config(airflow_home: Path) -> str:
+def initialise(airflow_home: Path, airflow_dags_folder: Path) -> None:
     """
-    Retrieve the path to the Airflow metadata database connection.
+    Create an Airflow database and configure airflow via environment variables.
 
-    :params airfow_home: Path to where Airflow was initialized ($AIRFLOW_HOME).
-    :returns: Airflow metadata database connection URI
+    :params airflow_home: The airflow home to set
+    :params airflow_dags_folder: The airflow dags folder to set
     """
-    os.environ["AIRFLOW_HOME"] = str(airflow_home.resolve())
-    filename = airflow_home / "airflow.cfg"
-    parser = ConfigParser()
-    parser.read(filename)
-    confdict = {section: dict(parser.items(section)) for section in parser.sections()}
+    # Set airflow environment variables prior to database initialization
+    os.environ["AIRFLOW_HOME"] = airflow_home.as_posix()
+    os.environ["AIRFLOW__CORE__DAGS_FOLDER"] = airflow_dags_folder.as_posix()
 
-    if airflow_version() >= Version("2.3"):
-        sql_alchemy_conn = confdict["database"]["sql_alchemy_conn"]
+    # Reload airflow configuration after setting environment variables
+    from airflow import configuration
+
+    importlib.reload(configuration)
+
+    if version() >= Version("2.4"):
+        # Initialise Airflow settings which is normally being done in __init__
+        from airflow import settings
+
+        importlib.reload(settings)
+        settings.initialize()
+
+        # Initialise the airflow database & hide all logs
+        import logging
+
+        logging.disable()
+        from airflow.utils import db
+
+        importlib.reload(db)
+        db.initdb()
     else:
-        sql_alchemy_conn = confdict["core"]["sql_alchemy_conn"]
+        # Initialise the airflow database & hide all logs
+        os.system("airflow db init &> /dev/null")  # skipcq: BAN-B605
 
-    return sql_alchemy_conn
 
-
-def disable_examples(airflow_home: Path) -> None:
+def reload(airflow_home: Path) -> None:
     """
-    Disable Airflow examples in the configuration file available at the given airflow_home directory.
+    Given a desired Airflow home, refresh Airflow settings so
+    that Airflow ORM uses the correct database as metadata store.
 
-    :params airflow_home: Path to where Airflow was initialised ($AIRFLOW_HOME)
+    :params airflow_home: The airflow home to set
     """
-    filename = airflow_home / "airflow.cfg"
+    # Set airflow environment variables
+    os.environ["AIRFLOW_HOME"] = airflow_home.as_posix()
+    # ..from config
     parser = ConfigParser()
-    parser.read(filename)
-    parser["core"]["load_examples"] = "False"
-    parser["core"]["logging_level"] = "WARN"
-    with open(filename, "w") as out_fp:
-        parser.write(out_fp)
-
-
-def set_airflow_database_conn(airflow_meta_conn: str) -> None:
-    """
-    Given a desired Airflow DB connection string, refresh Airflow settings so
-    that Airflow ORM uses this database as metadata store.
-
-    :params airflow_db_conn: Similar to `sqlite:////tmp/project/airflow.db`
-    """
-    if airflow_version() >= Version("2.3"):
-        # This is a hacky approach we managed to find to make things work with Airflow 2.4
-        os.environ["AIRFLOW__DATABASE__SQL_ALCHEMY_CONN"] = airflow_meta_conn
+    parser.read(airflow_home / "airflow.cfg")
+    if version() >= Version("2.3"):
+        os.environ["AIRFLOW__DATABASE__SQL_ALCHEMY_CONN"] = parser.get("database", "sql_alchemy_conn")
     else:
-        os.environ["AIRFLOW__CORE__SQL_ALCHEMY_CONN"] = airflow_meta_conn
+        os.environ["AIRFLOW__CORE__SQL_ALCHEMY_CONN"] = parser.get("core", "sql_alchemy_conn")
 
-    import airflow  # skipcq: PYL-W0406
+    # Reload airflow configuration after setting environment variables
+    from airflow import configuration
 
-    importlib.reload(airflow)
-    importlib.reload(airflow.configuration)
-    importlib.reload(airflow.models.base)
-    importlib.reload(airflow.models.connection)
+    importlib.reload(configuration)
+
+    if version() >= Version("2.4"):
+        # Initialise airflow settings
+        from airflow import settings
+
+        importlib.reload(settings)
+        settings.initialize()
+    else:
+        # Re-initialise airflow settings
+        import airflow
+
+        importlib.reload(airflow)
 
 
 # The following function was copied from Apache Airflow
