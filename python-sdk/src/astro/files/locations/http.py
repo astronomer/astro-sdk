@@ -38,4 +38,5 @@ class HTTPLocation(BaseFileLocation):
         Returns the open lineage dataset name as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
+        print("test message")
         return urlparse(self.path).path
