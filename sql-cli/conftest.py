@@ -170,6 +170,7 @@ def initialised_project(tmp_path):
 def initialised_project_with_custom_airflow_config(tmp_path):
     airflow_home_dir = tmp_path / "airflow_home"
     dags_dir = airflow_home_dir / "dags"
+    dags_dir.mkdir(parents=True, exist_ok=True)
     proj = Project(tmp_path, airflow_home=airflow_home_dir, airflow_dags_folder=dags_dir)
     proj.initialise()
     return proj

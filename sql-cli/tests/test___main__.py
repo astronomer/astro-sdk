@@ -165,6 +165,37 @@ def test_generate(workflow_name, environment, initialised_project, generate_task
 
 
 @pytest.mark.parametrize(
+    "workflow_name,environment",
+    [
+        # ("example_basic_transform", "default"),
+        # ("example_load_file", "default"),
+        ("example_templating", "dev"),
+    ],
+)
+@pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
+def test_generate_custom_airflow_config(
+    workflow_name, environment, initialised_project_with_custom_airflow_config, generate_tasks
+):
+    result = runner.invoke(
+        app,
+        [
+            "generate",
+            workflow_name,
+            "--env",
+            environment,
+            "--project-dir",
+            initialised_project_with_custom_airflow_config.directory.as_posix(),
+            generate_tasks,
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert (
+        f"The DAG file {initialised_project_with_custom_airflow_config.airflow_dags_folder}/{workflow_name}.py "
+        f"has been successfully generated. 🎉" in result.stdout
+    )
+
+
+@pytest.mark.parametrize(
     "workflow_name,message",
     [
         ("non_existing", "The workflow non_existing does not exist!"),

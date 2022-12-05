@@ -8,7 +8,7 @@ from typing import Any
 import yaml
 from airflow.models.connection import Connection
 
-from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME, GLOBAL_CONFIG_DIRECTORY
+from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME, GLOBAL_CONFIG
 
 
 def convert_to_connection(conn: dict[str, Any]) -> Connection:
@@ -53,7 +53,7 @@ class Config:
 
         :return: The path to the desired global YAML configuration file
         """
-        return self.project_dir / CONFIG_DIR / GLOBAL_CONFIG_DIRECTORY / CONFIG_FILENAME
+        return self.project_dir / CONFIG_DIR / GLOBAL_CONFIG / CONFIG_FILENAME
 
     @staticmethod
     def from_yaml_to_dict(filepath: Path) -> dict[str, Any]:
@@ -103,7 +103,19 @@ class Config:
             yaml.dump(yaml_config, fp)
 
     def write_config_to_yaml(self) -> None:
-        """Write Config instance's key-values to respective environment specific and global configuration.yml."""
+        """
+        Write Config instance's key-values to respective environment specific and global configuration.yml.
+
+        It may happen that some method wishes to transform the config instance's values and wants to persist them back
+        to the configuration files. This method serves as a utility method that can be used to write back the Config
+        instances' environment specific keys to the environment configuration.yml and global keys to the global
+        configuration.yml file.
+
+        E.g. When a project is initialised, the example workflow containing SQLite connection refer to the database
+        using relative paths. However, for the connection to be established successfully, it needs absolute path, so the
+        project initialisation flow reads the default yaml into config instance, transforms the config instance to
+        expand those relative paths to absolute paths and then calls this utility to persists the transformed instance.
+        """
         env_config_filepath = self.get_env_config_filepath()
         env_yaml_config = self.from_yaml_to_dict(env_config_filepath)
         env_yaml_config["connections"] = self.connections

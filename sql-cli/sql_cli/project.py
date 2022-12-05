@@ -10,7 +10,13 @@ from airflow.models.connection import Connection
 from packaging.version import Version
 
 from sql_cli.configuration import Config, convert_to_connection
-from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_ENVIRONMENT
+from sql_cli.constants import (
+    DEFAULT_AIRFLOW_HOME,
+    DEFAULT_DAGS_FOLDER,
+    DEFAULT_ENVIRONMENT,
+    GLOBAL_CONFIG,
+    SQLITE_CONN_TYPE,
+)
 from sql_cli.exceptions import InvalidProject
 from sql_cli.utils.airflow import airflow_version, disable_examples
 
@@ -20,7 +26,6 @@ MANDATORY_PATHS = {
     Path("config/default/configuration.yml"),
     Path("config/global/configuration.yml"),
     Path("workflows"),
-    Path(".airflow/default/airflow.db"),
 }
 
 
@@ -78,26 +83,34 @@ class Project:
         parser.read(filename)
         return {section: dict(parser.items(section)) for section in parser.sections()}
 
-    def update_config(self, environment: str = DEFAULT_ENVIRONMENT) -> None:
+    def _initialise_global_config(self) -> None:
         """
-        Sets custom Airflow configuration in case the user is not using the default values.
+        Initialises global config file that includes configuration to be shared across environments including the
+        airflow config.
+        """
+        config = Config(environment=GLOBAL_CONFIG, project_dir=self.directory)
+        global_env_filepath = config.get_global_config_filepath()
+        config.write_value_to_yaml("airflow", "home", str(self._airflow_home.resolve()), global_env_filepath)
+        if not Path.exists(self._airflow_dags_folder):
+            raise FileNotFoundError(f"Specified DAGs directory {self._airflow_dags_folder} does not exist.")
+        config.write_value_to_yaml(
+            "airflow", "dags_folder", str(self._airflow_dags_folder.resolve()), global_env_filepath
+        )
+
+    def transform_env_config(self, environment: str = DEFAULT_ENVIRONMENT) -> None:
+        """
+        Transforms environment specific configurations post project initialisation.
+
+        E.g. the example workflows have relative paths for the host URLs for SQLite connections. They need to be
+        converted to absolute paths once the project directory is initialised so that the connections work successfully.
 
         :param environment: the environment for which the configuration has to be updated
         """
         config = Config(environment=environment, project_dir=self.directory)
         config = config.from_yaml_to_config()
-
-        global_env_filepath = config.get_global_config_filepath()
-        if self._airflow_home is not None:
-            config.write_value_to_yaml(
-                "airflow", "home", str(self._airflow_home.resolve()), global_env_filepath
-            )
-        if self._airflow_dags_folder is not None:
-            config.write_value_to_yaml(
-                "airflow", "dags_folder", str(self._airflow_dags_folder.resolve()), global_env_filepath
-            )
-
-        config.connections[0]["host"] = str(self.directory / config.connections[0]["host"])
+        for connection in config.connections:
+            if connection["conn_type"] == SQLITE_CONN_TYPE and not os.path.isabs(connection["host"]):
+                connection["host"] = str(self.directory / connection["host"])
         config.write_config_to_yaml()
 
     def _initialise_airflow(self) -> None:
@@ -144,7 +157,8 @@ class Project:
             ignore=shutil.ignore_patterns(".gitkeep"),
             dirs_exist_ok=True,
         )
-        self.update_config()
+        self._initialise_global_config()
+        self.transform_env_config()
         self._initialise_airflow()
         disable_examples(self.airflow_home)
         self._remove_unnecessary_airflow_files()

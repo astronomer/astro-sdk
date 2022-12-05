@@ -11,6 +11,7 @@ BASE_PATHS = [
     Path(".airflow/default/airflow.cfg"),
     Path(".airflow/default/airflow.db"),
     Path(".airflow/dev"),
+    Path(".airflow/global"),
     Path("config"),
     Path("config/default"),
     Path("config/default/configuration.yml"),
