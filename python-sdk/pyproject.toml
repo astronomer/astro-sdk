@@ -69,6 +69,10 @@ amazon = [
     "s3fs",
     "smart-open[s3]>=5.2.1",
 ]
+sftp = [
+    "apache-airflow-providers-sftp",
+    "smart-open[ssh]>=5.2.1",
+]
 openlineage = ["openlineage-airflow>=0.17.0"]
 
 databricks = ["databricks-cli",
@@ -79,6 +83,7 @@ all = [
     "apache-airflow-providers-google>=6.4.0",
     "apache-airflow-providers-postgres",
     "apache-airflow-providers-snowflake",
+    "apache-airflow-providers-sftp",
     "smart-open[all]>=5.2.1",
     "snowflake-connector-python[pandas]",
     "snowflake-sqlalchemy>=1.2.0",

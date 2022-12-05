@@ -22,6 +22,7 @@ class FileLocation(Enum):
     GS = "gs"  # Google Cloud Storage
     GOOGLE_DRIVE = "gdrive"
     S3 = "s3"  # Amazon S3
+    SFTP = "sftp"  # Remote file location
     # [END filelocation]
 
     def __str__(self) -> str:
