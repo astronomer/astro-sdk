@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
+from black import FileMode, format_str
 from networkx import DiGraph, depth_first_search, find_cycle, is_directed_acyclic_graph
 
 from sql_cli.exceptions import DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
@@ -122,4 +123,11 @@ def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) ->
         context={"dag": workflow_files_dag},
         output_file=output_file,
     )
+
+    # format DAG to be black compliant
+    with open(output_file, "r+") as file:
+        output_str = format_str(file.read(), mode=FileMode())
+        file.seek(0)
+        file.write(output_str)
+        file.truncate()
     return output_file
