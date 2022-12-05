@@ -321,6 +321,7 @@ def test_aql_load_file_local_file_pattern_dataframe(sample_dag):
     test_df = pd.read_csv(filename)
     test_df_2 = pd.read_csv(filename_2)
     test_df = pd.concat([test_df, test_df_2])
+    test_df.reset_index(drop=True, inplace=True)
 
     from airflow.decorators import task
 
