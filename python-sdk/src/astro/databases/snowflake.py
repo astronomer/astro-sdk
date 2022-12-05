@@ -632,7 +632,7 @@ class SnowflakeDatabase(BaseDatabase):
                 raise DatabaseCustomError(rows)
         except TypeError:
             # Handle case for apache-airflow-providers-snowflake>=4.0.1
-            if any(row[0]["status"] == COPY_INTO_COMMAND_FAIL_STATUS for row in rows):
+            if any(row[0] == COPY_INTO_COMMAND_FAIL_STATUS for row in rows):
                 raise DatabaseCustomError(rows)
 
     def load_pandas_dataframe_to_table(
