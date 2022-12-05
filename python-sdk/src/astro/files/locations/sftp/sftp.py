@@ -46,11 +46,9 @@ class SFTPLocation(BaseFileLocation):
     def size(self) -> int:
         """Return file size for SFTP location"""
         url = urlparse(self.path)
-        bucket_name = url.netloc
-        object_name = url.path
-        if object_name.startswith("/"):
-            object_name = object_name[1:]
-        return int(self.hook.get_size(bucket_name=bucket_name, object_name=object_name))
+        conn = self.hook.get_conn()
+        stat = conn.stat(url.path).st_size
+        return int(stat) or -1
 
     @property
     def openlineage_dataset_namespace(self) -> str:
