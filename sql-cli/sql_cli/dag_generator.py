@@ -128,7 +128,7 @@ def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) ->
     return output_file
 
 
-def _black_format_generated_file(output_file):
+def _black_format_generated_file(output_file: Path) -> None:
     with output_file.open("r+") as file:
         output_str = format_str(file.read(), mode=FileMode())
         file.seek(0)
