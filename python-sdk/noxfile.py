@@ -82,12 +82,25 @@ def test_examples_by_dependency(session: nox.Session, extras):
     pytest_options = " and not ".join([pytest_options, *extras.get("exclude", [])])
     pytest_args = ["-k", pytest_options]
 
+    env = {
+        "AIRFLOW_HOME": f"~/airflow-latest-{session.python}",
+    }
+
+    env["AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES"] = "airflow.* astro.*"
+
     session.install("-e", f".[{pypi_deps}]")
     session.install("-e", ".[tests]")
-    session.run("airflow", "db", "init")
+
+    # Log all the installed dependencies
+    session.log("Installed Dependencies:")
+    session.run("pip3", "freeze")
+
+    session.run("airflow", "db", "init", env=env)
 
     # Since pytest is not installed in the nox session directly, we need to set `external=true`.
-    session.run("pytest", "tests/test_example_dags.py", *pytest_args, *session.posargs, external=True)
+    session.run(
+        "pytest", "tests/test_example_dags.py", *pytest_args, *session.posargs, env=env, external=True
+    )
 
 
 @nox.session()
