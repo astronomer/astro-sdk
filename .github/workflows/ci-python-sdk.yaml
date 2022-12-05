@@ -47,7 +47,6 @@ env:
   SNOWFLAKE_REGION: us-east-1
   SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
   AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
-  AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES: airflow.* astro.*
   AIRFLOW_VAR_FOO: templated_file_name
   AWS_BUCKET: tmp9
   GOOGLE_BUCKET: dag-authoring
@@ -176,7 +175,7 @@ jobs:
       AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
       AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
 
-  Run-Unit-tests-Airflow-2-4:
+  Run-Unit-tests-Airflow-2-5:
     if: >-
       github.event_name == 'push' ||
       (
@@ -227,12 +226,12 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: ${{ runner.os }}-2.3-${{ hashFiles('python-sdk/pyproject.toml') }}
+          key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.4')" -- --splits 12 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-3.8(airflow='2.5.0')" -- --splits 12 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
@@ -249,8 +248,6 @@ jobs:
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
-      AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
-      AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
 
   Run-Unit-tests-Airflow-2-2-5:
     if: >-
@@ -325,7 +322,7 @@ jobs:
       fail-fast: false
       matrix:
         python: [ 3.7, 3.8, 3.9 ]
-        airflow: [ 2.2.5, 2.3.4, 2.4.2 ]
+        airflow: [ 2.2.5, 2.3.4, 2.4.2, 2.5.0 ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -356,7 +353,7 @@ jobs:
   Code-Coverage:
     if: github.event.action != 'labeled'
     needs:
-      - Run-Unit-tests-Airflow-2-4
+      - Run-Unit-tests-Airflow-2-5
       - Run-Optional-Packages-tests-python-sdk
     runs-on: ubuntu-latest
     steps:
@@ -388,7 +385,7 @@ jobs:
     if: github.event_name == 'release'
     name: Build and publish Python 🐍 distributions 📦 to PyPI
     needs:
-      - Run-Unit-tests-Airflow-2-4
+      - Run-Unit-tests-Airflow-2-5
       - Run-Unit-tests-Airflow-2-2-5
       - Run-Optional-Packages-tests-python-sdk
       - Generate-Constraints

@@ -20,7 +20,7 @@ def dev(session: nox.Session) -> None:
 
 
 @nox.session(python=["3.7", "3.8", "3.9"])
-@nox.parametrize("airflow", ["2.2.5", "2.4"])
+@nox.parametrize("airflow", ["2.2.5", "2.4", "2.5.0"])
 def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
     # 2.2.5 requires a certain version of pandas and sqlalchemy
@@ -37,9 +37,26 @@ def test(session: nox.Session, airflow) -> None:
     session.log("Installed Dependencies:")
     session.run("pip3", "freeze")
     AIRFLOW_HOME = f"~/airflow-{airflow}-{session.python}"
-    session.run("airflow", "db", "init", env={"AIRFLOW_HOME": AIRFLOW_HOME})
+    AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES = "airflow.* astro.*"
+    session.run(
+        "airflow",
+        "db",
+        "init",
+        env={
+            "AIRFLOW_HOME": AIRFLOW_HOME,
+            "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES,
+        },
+    )
     # Since pytest is not installed in the nox session directly, we need to set `external=true`.
-    session.run("pytest", *session.posargs, env={"AIRFLOW_HOME": AIRFLOW_HOME}, external=True)
+    session.run(
+        "pytest",
+        *session.posargs,
+        env={
+            "AIRFLOW_HOME": AIRFLOW_HOME,
+            "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES,
+        },
+        external=True,
+    )
 
 
 @nox.session(python=["3.8"])
