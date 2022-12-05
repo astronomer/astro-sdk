@@ -1195,37 +1195,6 @@ def test_load_file_col_cap_native_path(sample_dag, database_table_fixture):
     assert cols == ["Acres", "Age", "Baths", "Beds", "List", "Living", "Rooms", "Sell", "Taxes"]
 
 
-@pytest.mark.integration
-@pytest.mark.parametrize(
-    "database_table_fixture",
-    [
-        {
-            "database": Database.SNOWFLAKE,
-        }
-    ],
-    indirect=True,
-    ids=["snowflake"],
-)
-def test_load_file_snowflake_error_out_provider_3_2_0(sample_dag, database_table_fixture):
-    """
-    Test that snowflake errors are bubbled up when the query fails. Loading in snowflake fails with
-     `Numeric value 'id' is not recognized`
-    """
-    _, test_table = database_table_fixture
-    with pytest.raises(DatabaseCustomError):
-        with sample_dag:
-            load_file(
-                input_file=File(
-                    "gs://astro-sdk/benchmark/synthetic-dataset/csv/ten_kb.csv", conn_id="bigquery"
-                ),
-                output_table=test_table,
-                use_native_support=True,
-                enable_native_fallback=False,
-                native_support_kwargs={"storage_integration": "gcs_int_python_sdk"},
-            )
-        test_utils.run_dag(sample_dag)
-
-
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
