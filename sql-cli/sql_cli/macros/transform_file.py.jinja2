@@ -8,14 +8,12 @@
         {%- endif %}
         {%- endfor %}
     },
-    {%- if sql_file.metadata and "conn_id" in sql_file.metadata %}
-    conn_id="{{ sql_file.metadata.conn_id }}",
+    {%- if sql_file.metadata %}
+    {%- for param_k, param_v in sql_file.metadata.items() %}
+    {%- if param_k in ["conn_id", "database", "schema"] %}
+    {{ param_k }}="{{ param_v }}",
     {%- endif %}
-    {%- if sql_file.metadata and "database" in sql_file.metadata %}
-    database="{{ sql_file.metadata.database }}",
-    {%- endif %}
-    {%- if sql_file.metadata and "schema" in sql_file.metadata %}
-    schema="{{ sql_file.metadata.schema }}",
+    {%- endfor %}
     {%- endif %}
     {#- Note: Unfortunately, we cannot simply use **op_kwargs as some of the deserialized fields
         such as Table contain invalid args for an __init__ call.
