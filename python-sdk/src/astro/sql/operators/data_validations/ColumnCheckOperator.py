@@ -1,6 +1,7 @@
 from typing import Any, Dict, Optional, Union
 
 import pandas
+from airflow.models.xcom_arg import XComArg
 from airflow.providers.common.sql.operators.sql import SQLColumnCheckOperator
 
 from astro.databases import create_database
@@ -58,7 +59,7 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
         self.kwargs = kwargs
         self.df = None
         if type(dataset) == BaseTable:
-            db = create_database(conn_id=self.dataset.conn_id)
+            db = create_database(conn_id=self.dataset.conn_id)  # type: ignore
             super().__init__(
                 table=db.get_table_qualified_name(table=self.dataset),
                 column_mapping=self.column_mapping,
@@ -70,8 +71,8 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
     def execute(self, context: "Context"):
         if type(self.dataset) == BaseTable:
             return super().execute(context=context)
-        elif type(self.dataset) == File:
-            self.df = self.dataset.export_to_dataframe()
+        # elif type(self.dataset) == File:
+        #     self.df = self.dataset.export_to_dataframe()
         elif type(self.dataset) == pandas.DataFrame:
             self.df = self.dataset
         else:
@@ -107,27 +108,27 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
             # )
 
     def col_null_check(self, column_name: str) -> list:
-        if self.df and self.df[column_name]:
+        if self.df is not None and column_name in self.df.columns:
             return self.df[column_name].isnull().values.any()
         return []
 
     def col_distinct_check(self, column_name: str) -> list:
-        if self.df and self.df[column_name]:
+        if self.df is not None and column_name in self.df.columns:
             return self.df[column_name].unique()
         return []
 
     def col_unique_check(self, column_name: str) -> Optional[bool]:
-        if self.df and self.df[column_name]:
+        if self.df is not None and column_name in self.df.columns:
             return len(self.df[column_name].unique()) == 1
         return None
 
     def col_max(self, column_name: str) -> Optional[float]:
-        if self.df and self.df[column_name]:
+        if self.df is not None and column_name in self.df.columns:
             return self.df[column_name].max()
         return None
 
     def col_min(self, column_name: str) -> Optional[float]:
-        if self.df and self.df[column_name]:
+        if self.df is not None and column_name in self.df.columns:
             return self.df[column_name].min()
         return None
 
@@ -144,3 +145,47 @@ def _get_failed_checks(checks, col=None):
         for check, check_values in checks.items()
         if not check_values["success"]
     ]
+
+
+def column_check(
+    dataset: Union[BaseTable, pandas.DataFrame, File],
+    column_mapping: Dict[str, Dict[str, Any]],
+    partition_clause: Optional[str] = None,
+    **kwargs,
+) -> XComArg:
+    """
+    Performs one or more of the templated checks in the column_checks dictionary.
+    Checks are performed on a per-column basis specified by the column_mapping.
+    Each check can take one or more of the following options:
+    - equal_to: an exact value to equal, cannot be used with other comparison options
+    - greater_than: value that result should be strictly greater than
+    - less_than: value that results should be strictly less than
+    - geq_to: value that results should be greater than or equal to
+    - leq_to: value that results should be less than or equal to
+    - tolerance: the percentage that the result may be off from the expected value
+
+    :param table: the table to run checks on
+    :param column_mapping: the dictionary of columns and their associated checks, e.g.
+
+    .. code-block:: python
+
+        {
+            "col_name": {
+                "null_check": {
+                    "equal_to": 0,
+                },
+                "min": {
+                    "greater_than": 5,
+                    "leq_to": 10,
+                    "tolerance": 0.2,
+                },
+                "max": {"less_than": 1000, "geq_to": 10, "tolerance": 0.01},
+            }
+        }
+    """
+    return ColumnCheckOperator(
+        dataset=dataset,
+        column_mapping=column_mapping,
+        partition_clause=partition_clause,
+        kwargs=kwargs,
+    ).output
