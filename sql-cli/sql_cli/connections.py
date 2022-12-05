@@ -18,7 +18,7 @@ def validate_connections(connections: list[Connection], connection_id: str | Non
     config_file_contains_connection = False
 
     for connection in connections:
-        if connection.id == connection_id:
+        if connection.conn_id == connection_id:
             config_file_contains_connection = True
         # Create connection using Environment Variable
         os.environ[f"AIRFLOW_CONN_{connection.conn_id.upper()}"] = connection.get_uri()
