@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from urllib.parse import urlparse
+import os
+from urllib.parse import urlparse, urlunparse
 
 from airflow.providers.sftp.hooks.sftp import SFTPHook
 
@@ -31,14 +32,14 @@ class SFTPLocation(BaseFileLocation):
     def paths(self) -> list[str]:
         """Resolve SFTP file paths with prefix"""
         url = urlparse(self.path)
-        prefix = url.path[1:]
-        print(prefix)
-        url = urlparse(self.path)
-        if self.hook.isdir(self.path):
-            paths = self.hook.list_directory(self.path)
+        if self.hook.isdir(url.path):
+            prefixes = self.hook.list_directory(url.path)
+            paths = [
+                urlunparse((url.scheme, url.netloc, os.path.join(url.path, keys), "", "", ""))
+                for keys in prefixes
+            ]
         else:
             paths = [self.path]
-        print(paths)
         return paths
 
     @property
