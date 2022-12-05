@@ -62,11 +62,9 @@ with DAG(
         file_path=f"{DAGS_FOLDER}/include/basic/a.sql",
         parameters={},
         conn_id="my_test_sqlite",
-        op_kwargs={
-            "output_table": Table(
-                name="a",
-            ),
-        },
+        output_table=Table(
+            name="a",
+        ),
         task_id="a",
     )
     b = aql.transform_file(
@@ -74,11 +72,9 @@ with DAG(
         parameters={
             "a": a,
         },
-        op_kwargs={
-            "output_table": Table(
-                name="b",
-            ),
-        },
+        output_table=Table(
+            name="b",
+        ),
         task_id="b",
     )
     c = aql.transform_file(
@@ -87,11 +83,9 @@ with DAG(
             "a": a,
             "b": b,
         },
-        op_kwargs={
-            "output_table": Table(
-                name="c",
-            ),
-        },
+        output_table=Table(
+            name="c",
+        ),
         task_id="c",
     )
 """
