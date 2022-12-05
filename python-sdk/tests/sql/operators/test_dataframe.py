@@ -4,6 +4,7 @@ from unittest import mock
 
 import pandas
 import pytest
+from airflow.configuration import conf
 from airflow.exceptions import AirflowException
 from airflow.models.xcom import BaseXCom
 from airflow.utils import timezone
@@ -403,6 +404,10 @@ def test_dataframe_from_file_xcom_pickling(mock_serde, sample_dag):
     mock_serde.deserialize.assert_not_called()
 
 
+@pytest.mark.skipif(
+    conf.get("core", "xcom_backend") != "astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend",
+    reason="AstroCustomXcomBackend is required to run this test",
+)
 @mock.patch("astro.settings.STORE_DATA_LOCAL_DEV", False)
 def test_dataframe_no_storage_option_raises_exception(sample_dag):
     @aql.dataframe
@@ -432,7 +437,7 @@ def test_col_case_is_preserved(sample_dag):
     def validate(df):  # skipcq: PY-D0003
         cols = list(df.columns)
         cols.sort()
-        return df.columns == ["Colors", "Numbers"]
+        return cols == ["Colors", "Numbers"]
 
     with sample_dag:
         task1 = sample_df_1()
