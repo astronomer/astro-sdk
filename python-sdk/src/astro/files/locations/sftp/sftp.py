@@ -24,8 +24,8 @@ class SFTPLocation(BaseFileLocation):
         client = self.hook.get_connection(self.conn_id)
         extra_options = client.extra_dejson
         if "key_file" in extra_options:
-            self.key_file = extra_options.get("key_file")
-            return {"connect_kwargs": {"key_filename": self.key_file}}
+            key_file = extra_options.get("key_file")
+            return {"connect_kwargs": {"key_filename": key_file}}
         return {}
 
     @property
