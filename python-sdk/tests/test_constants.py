@@ -12,5 +12,5 @@ def test_supported_file_types():
 
 
 def test_supported_databases():
-    expected = ["bigquery", "postgres", "redshift", "snowflake", "sqlite"]
+    expected = ["bigquery", "postgres", "redshift", "snowflake", "sqlite", "mssql"]
     assert sorted(SUPPORTED_DATABASES) == expected

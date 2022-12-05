@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+    # Database instance
+    mssql:
+      image: mcr.microsoft.com/azure-sql-edge:latest
+      volumes:
+        - events_mssql:/var/opt/mssql
+      ports:
+        - 1433:1433
+      environment:
+        - ACCEPT_EULA=1
+        - MSSQL_SA_PASSWORD=Passw@rd
+
+volumes:
+    events_mssql:

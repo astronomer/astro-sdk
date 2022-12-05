@@ -18,14 +18,16 @@ cwd = pathlib.Path(__file__).parent
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SNOWFLAKE},
-        {"database": Database.BIGQUERY},
-        {"database": Database.POSTGRES},
-        {"database": Database.SQLITE},
-        {"database": Database.REDSHIFT},
+        # {"database": Database.SNOWFLAKE},
+        # {"database": Database.BIGQUERY},
+        # {"database": Database.POSTGRES},
+        # {"database": Database.SQLITE},
+        # {"database": Database.REDSHIFT},
+        {"database": Database.MSSQL},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    # ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["mssql"],
 )
 def test_dataframe_transform(database_table_fixture, sample_dag):
     _, test_table = database_table_fixture
@@ -92,21 +94,61 @@ def test_transform(database_table_fixture, sample_dag):
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SNOWFLAKE},
-        {"database": Database.BIGQUERY},
-        {"database": Database.POSTGRES},
-        {"database": Database.SQLITE},
-        {"database": Database.REDSHIFT},
+        {"database": Database.MSSQL},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["mssql"],
+)
+def test_transform_mssql(database_table_fixture, sample_dag):
+    _, test_table = database_table_fixture
+
+    @aql.transform
+    def sample_function(input_table: Table):
+        return "SELECT TOP 10 * FROM {{input_table}}"
+
+    @aql.dataframe
+    def validate_table(df: pd.DataFrame):
+        assert len(df) == 10
+
+    with sample_dag:
+        homes_file = aql.load_file(
+            input_file=File(path=str(cwd) + "/../../../data/homes.csv"),
+            output_table=test_table,
+        )
+        first_model = sample_function(
+            input_table=homes_file,
+        )
+        inherit_model = sample_function(
+            input_table=first_model,
+        )
+        validate_table(inherit_model)
+    test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        # {"database": Database.SNOWFLAKE},
+        # {"database": Database.BIGQUERY},
+        # {"database": Database.POSTGRES},
+        # {"database": Database.SQLITE},
+        # {"database": Database.REDSHIFT},
+        {"database": Database.MSSQL}
+    ],
+    indirect=True,
+    ids=["mssql"],
 )
 def test_raw_sql(database_table_fixture, sample_dag):
     _, test_table = database_table_fixture
 
     @aql.run_raw_sql
-    def raw_sql_query(my_input_table: Table, created_table: Table, num_rows: int):
-        return "SELECT * FROM {{my_input_table}} LIMIT {{num_rows}}"
+    def raw_sql_query(
+        my_input_table: Table,
+        num_rows: int,
+        created_table: Table,
+    ):
+        # return "SELECT * FROM {{my_input_table}} LIMIT {{num_rows}}"
+        return "SELECT TOP {{num_rows}} * FROM {{my_input_table}}"
 
     @task
     def validate_raw_sql(cur: pd.DataFrame):

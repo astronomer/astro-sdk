@@ -117,9 +117,19 @@ class BaseTable:
         Return the row count of table.
         """
         db = create_database(self.conn_id)
-        result = db.run_sql(
-            f"select count(*) from {db.get_table_qualified_name(self)}"  # skipcq: BAN-B608
-        ).scalar()
+
+        if db.connection.engine.name == "mssql":
+            from astro.databases.mssql import MssqlDatabase
+
+            if isinstance(db, MssqlDatabase):
+                result = db.run_sql(
+                    f"select count(*) from "
+                    f"{db.get_table_qualified_name(self, fully_qualified=True)}"  # skipcq: BAN-B608
+                ).scalar()
+        else:
+            result = db.run_sql(
+                f"select count(*) from {db.get_table_qualified_name(self)}"  # skipcq: BAN-B608
+            ).scalar()
         return result
 
     @property

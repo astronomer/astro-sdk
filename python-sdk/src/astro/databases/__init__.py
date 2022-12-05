@@ -37,6 +37,8 @@ def create_database(
     from airflow.hooks.base import BaseHook
 
     conn_type = BaseHook.get_connection(conn_id).conn_type
+    print("******************", conn_type)
+    print("^^^^^^^^^^^^^^^^^^", CONN_TYPE_TO_MODULE_PATH)
     module_path = CONN_TYPE_TO_MODULE_PATH[conn_type]
     module = importlib.import_module(module_path)
     class_name = get_class_name(module_ref=module, suffix="Database")

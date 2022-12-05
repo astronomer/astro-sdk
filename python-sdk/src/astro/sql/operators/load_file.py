@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import Any
 
 import pandas as pd
@@ -314,6 +315,8 @@ def load_file(
     # Note - using path for task id is causing issues as it's a pattern and
     # contain chars like - ?, * etc. Which are not acceptable as task id.
     task_id = task_id if task_id is not None else get_unique_task_id("load_file")
+    print("$$$$$$$$$$$$$$$$$$$$$$")
+    print(os.getcwd())
 
     return LoadFileOperator(
         task_id=task_id,
