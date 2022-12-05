@@ -12,6 +12,5 @@ typer.rich_utils.rich_format_error = rich_format_error
 os.environ["AIRFLOW__CORE__ENABLE_XCOM_PICKLING"] = "True"
 os.environ["AIRFLOW__CORE__LAZY_LOAD_PLUGINS"] = "True"
 os.environ["AIRFLOW__CORE__LOAD_EXAMPLES"] = "False"
-os.environ["AIRFLOW__LOGGING__LOGGING_LEVEL"] = "CRITICAL"
 
 __version__ = importlib.metadata.version("astro-sql-cli")
