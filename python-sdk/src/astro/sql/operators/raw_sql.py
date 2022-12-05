@@ -10,7 +10,12 @@ except ImportError:
     from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
-from sqlalchemy.engine.row import LegacyRow
+import airflow
+
+if airflow.__version__ >= "2.3":
+    from sqlalchemy.engine.row import LegacyRow as SQLAlcRow
+else:
+    from sqlalchemy.engine.result import RowProxy as SQLAlcRow
 
 from astro import settings
 from astro.exceptions import IllegalLoadToDatabaseException
@@ -41,7 +46,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
 
         if self.handler:
             response = self.handler(result)
-            response = [SdkLegacyRow.from_legacy_row(r) if isinstance(r, LegacyRow) else r for r in response]
+            response = [SdkLegacyRow.from_legacy_row(r) if isinstance(r, SQLAlcRow) else r for r in response]
             if 0 <= self.response_limit < len(response):
                 raise IllegalLoadToDatabaseException()  # pragma: no cover
             if self.response_size >= 0:
@@ -52,7 +57,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
             return None
 
 
-class SdkLegacyRow(LegacyRow):
+class SdkLegacyRow(SQLAlcRow):
     version: int = 1
 
     def serialize(self):
