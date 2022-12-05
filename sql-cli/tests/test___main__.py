@@ -167,8 +167,8 @@ def test_generate(workflow_name, environment, initialised_project, generate_task
 @pytest.mark.parametrize(
     "workflow_name,environment",
     [
-        # ("example_basic_transform", "default"),
-        # ("example_load_file", "default"),
+        ("example_basic_transform", "default"),
+        ("example_load_file", "default"),
         ("example_templating", "dev"),
     ],
 )
