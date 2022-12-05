@@ -75,8 +75,9 @@ azure = [
     "apache-airflow-providers-microsoft-azure",
     "azure-storage-blob",
     "smart-open[azure]>=5.2.1",
+]
 sftp = [
-    "apache-airflow-providers-sftp>=4.0.0",
+    "apache-airflow-providers-sftp",
     "smart-open[ssh]>=5.2.1",
 ]
 openlineage = ["openlineage-airflow>=0.17.0"]
