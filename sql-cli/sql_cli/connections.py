@@ -20,7 +20,6 @@ def validate_connections(connections: list[Connection], connection_id: str | Non
     for connection in connections:
         if connection.conn_id == connection_id:
             config_file_contains_connection = True
-        # Create connection using Environment Variable
         os.environ[f"AIRFLOW_CONN_{connection.conn_id.upper()}"] = connection.get_uri()
         status = "[bold green]PASSED[/bold green]" if _is_valid(connection) else "[bold red]FAILED[/bold red]"
         rprint(f"Validating connection {connection.conn_id:{CONNECTION_ID_OUTPUT_STRING_WIDTH}}", status)
