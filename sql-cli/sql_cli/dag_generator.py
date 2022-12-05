@@ -125,7 +125,8 @@ def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) ->
     )
 
     # format DAG to be black compliant
-    with open(output_file, "r+") as file:
+
+    with output_file.open("r+") as file:
         output_str = format_str(file.read(), mode=FileMode())
         file.seek(0)
         file.write(output_str)

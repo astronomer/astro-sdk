@@ -99,6 +99,4 @@ with DAG(
 
 def test_generate_dag_black_compliant(root_directory, dags_directory):
     dag_file = generate_dag(directory=root_directory, dags_directory=dags_directory, generate_tasks=True)
-    with open(dag_file) as file:
-        file_str = file.read()
-        assert file_str == compliant_dag
+    assert dag_file.read_text() == compliant_dag
