@@ -106,9 +106,6 @@ class Config:
             - item1
             - item2
         ```
-
-        :param section: Section within the YAML file where the key/value will be recorded
-        :param values: List of items to be written to the YAML file
         """
         yaml_config = self.from_yaml_to_dict()
         yaml_config["connections"] = self.connections
