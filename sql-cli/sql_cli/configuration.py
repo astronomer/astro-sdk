@@ -67,12 +67,12 @@ class Config:
         with open(filepath) as fp:
             yaml_with_env = os.path.expandvars(fp.read())
             yaml_config = yaml.safe_load(yaml_with_env)
-        return yaml_config
+        return yaml_config or {}
 
     def from_yaml_to_config(self) -> Config:
         """Returns a Config instance with the contents of the environment specific and global configuration.yaml"""
         env_yaml_config = self.from_yaml_to_dict(self.get_env_config_filepath())
-        global_yaml_config = self.from_yaml_to_dict(self.get_global_config_filepath()) or {}
+        global_yaml_config = self.from_yaml_to_dict(self.get_global_config_filepath())
         return Config(
             project_dir=self.project_dir,
             environment=self.environment,
@@ -94,6 +94,7 @@ class Config:
         :param section: Section within the YAML file where the key/value will be recorded
         :param key: Key within the YAML file associated to the value to be recorded.
         :param value: Value associated to the key in the YAML file.
+        :param filepath: Path of the desired configuration.yaml to write contents to.
         """
         yaml_config = self.from_yaml_to_dict(filepath)
         yaml_config.setdefault(section, {})
@@ -119,7 +120,7 @@ class Config:
         env_config_filepath = self.get_env_config_filepath()
         env_yaml_config = self.from_yaml_to_dict(env_config_filepath)
         env_yaml_config["connections"] = self.connections
-        with open(env_config_filepath, "w") as fp:
+        with env_config_filepath.open(mode="w") as fp:
             yaml.dump(env_yaml_config, fp)
 
         global_config_filepath = self.get_global_config_filepath()
@@ -128,5 +129,5 @@ class Config:
             global_yaml_config["airflow"]["home"] = self.airflow_home
         if self.airflow_dags_folder:
             global_yaml_config["airflow"]["dags_folder"] = self.airflow_dags_folder
-        with open(global_config_filepath, "w") as fp:
+        with global_config_filepath.open(mode="w") as fp:
             yaml.dump(global_yaml_config, fp)
