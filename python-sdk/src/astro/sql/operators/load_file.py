@@ -137,13 +137,14 @@ class LoadFileOperator(AstroSQLBaseOperator):
                         file.export_to_dataframe(
                             columns_names_capitalization=self.columns_names_capitalization
                         ),
-                    ]
+                    ],
+                    ignore_index=True,
                 )
             else:
                 df = file.export_to_dataframe(columns_names_capitalization=self.columns_names_capitalization)
 
         if not isinstance(df, PandasDataframe):
-            PandasDataframe.from_pandas_df(df)
+            df = PandasDataframe.from_pandas_df(df)
 
         self.log.info("Completed loading the data into dataframe.")
         return df

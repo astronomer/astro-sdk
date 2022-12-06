@@ -125,9 +125,6 @@ class Project:
     def initialise(self) -> None:
         """
         Initialise a SQL CLI project, creating expected directories and files.
-
-        :param airflow_home: Custom user-defined Airflow Home directory
-        :param airflow_dags_folder: Custom user-defined Airflow DAGs folder
         """
         shutil.copytree(
             src=BASE_SOURCE_DIR,
