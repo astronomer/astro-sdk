@@ -99,16 +99,16 @@ class Project:
     def transform_env_config(self, environment: str = DEFAULT_ENVIRONMENT) -> None:
         """
         Transforms environment specific configurations post project initialisation.
-
-        E.g. the example workflows have relative paths for the host URLs for SQLite connections. They need to be
-        converted to absolute paths once the project directory is initialised so that the connections work successfully.
-
         :param environment: the environment for which the configuration has to be updated
         """
         config = Config(environment=environment, project_dir=self.directory)
         config = config.from_yaml_to_config()
+
         for connection in config.connections:
             if connection["conn_type"] == SQLITE_CONN_TYPE and not os.path.isabs(connection["host"]):
+                # the example workflows have relative paths for the host URLs for SQLite connections. They need to be
+                # converted to absolute paths once the project directory is initialised so that the connections work
+                # successfully.
                 connection["host"] = str(self.directory / connection["host"])
         config.write_config_to_yaml()
 
