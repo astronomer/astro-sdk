@@ -29,8 +29,7 @@ except ModuleNotFoundError:
     wait=wait_exponential(multiplier=10, min=10, max=60),  # values in seconds
 )
 def wrapper_run_dag(dag) -> DagRun:
-    dag_run = test_utils.run_dag(dag)
-    return dag_run
+    return test_utils.run_dag(dag)
 
 
 @provide_session
