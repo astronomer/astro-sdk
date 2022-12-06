@@ -46,7 +46,7 @@ jobs:
              ~/.cache/pip
              sql-cli/.nox
              .local
-           key: ${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+           key: type-check-${{ runner.os }}-${{ hashFiles('sql-cli/pyproject.toml') }}
       - run: pip3 install nox
       - run: nox -s type_check
 
