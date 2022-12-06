@@ -228,7 +228,7 @@ def test_generate_invalid(workflow_name, message, initialised_project_with_tests
     "env,connection,status",
     [
         ("default", "sqlite_conn", "PASSED"),
-        ("test", "sqlite_conn_invalid", "FAILED"),
+        ("test", "bigquery_conn_invalid", "FAILED"),
     ],
 )
 def test_validate(env, connection, status, initialised_project_with_test_config):
@@ -246,6 +246,24 @@ def test_validate(env, connection, status, initialised_project_with_test_config)
     assert result.exit_code == 0, result.exception
     assert f"Validating connection(s) for environment '{env}'" in result.stdout
     assert f"Validating connection {connection:{CONNECTION_ID_OUTPUT_STRING_WIDTH}} {status}" in result.stdout
+
+
+def test_validate_sqlite_non_existent_host_path(
+    initialised_project_with_sqlite_non_existent_host_path_config,
+):
+    result = runner.invoke(
+        app,
+        [
+            "validate",
+            initialised_project_with_sqlite_non_existent_host_path_config.directory.as_posix(),
+            "--env",
+            "sqlite_non_existent_host_path",
+            "--connection",
+            "sqlite_conn_invalid",
+        ],
+    )
+    assert result.exit_code == 1
+    assert isinstance(result.exception, FileNotFoundError)
 
 
 def test_validate_all(initialised_project_with_test_config):

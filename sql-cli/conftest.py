@@ -186,6 +186,16 @@ def initialised_project_with_test_config(initialised_project: Project):
 
 
 @pytest.fixture()
+def initialised_project_with_sqlite_non_existent_host_path_config(initialised_project: Project):
+    sqlite_non_existent_host_path = "sqlite_non_existent_host_path"
+    shutil.copytree(
+        src=CWD / "tests" / "config" / sqlite_non_existent_host_path,
+        dst=initialised_project.directory / "config" / sqlite_non_existent_host_path,
+    )
+    return initialised_project
+
+
+@pytest.fixture()
 def connections():
     return [
         Connection(conn_id="sqlite_conn", conn_type="sqlite", host="data/imdb.db"),
