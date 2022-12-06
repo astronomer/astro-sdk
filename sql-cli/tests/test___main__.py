@@ -127,7 +127,6 @@ def test_config(key, value, initialised_project_with_custom_airflow_config):
             "config",
             "--project-dir",
             initialised_project_with_custom_airflow_config.directory.as_posix(),
-            "--key",
             key,
         ],
     )

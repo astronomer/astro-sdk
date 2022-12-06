@@ -55,16 +55,17 @@ def about() -> None:
     """,
 )
 def config(
+    key: str = typer.Argument(
+        default=...,
+        show_default=False,
+        help="Key from the configuration whose value needs to be fetched.",
+    ),
     project_dir: Path = typer.Option(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
     env: str = typer.Option(
         default="default",
         help="(Optional) Environment used to fetch the configuration key from.",
-    ),
-    key: str = typer.Option(
-        default=None,
-        help="(Optional) Key from the configuration whose value needs to be fetched.",
     ),
 ) -> None:
     from sql_cli.configuration import Config
