@@ -29,8 +29,8 @@ def test_write_config_to_yaml(
     get_global_config_filepath, get_env_config_filepath, mock_from_yaml_to_dict, tmp_path
 ):
     tmp_dir = gettempdir()
-    get_global_config_filepath.return_value = f"{tmp_dir}/{uuid4().hex}"
-    get_env_config_filepath.return_value = f"{tmp_dir}/{uuid4().hex}"
+    get_global_config_filepath.return_value = Path(f"{tmp_dir}/{uuid4().hex}")
+    get_env_config_filepath.return_value = Path(f"{tmp_dir}/{uuid4().hex}")
     config = Config(
         project_dir=tmp_path,
         environment="neverland",
