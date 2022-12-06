@@ -89,6 +89,9 @@ class Project:
         """
         config = Config(environment=GLOBAL_CONFIG, project_dir=self.directory)
         global_env_filepath = config.get_global_config_filepath()
+        # If the `Airflow Home` directory does not exist, Airflow initialisation flow takes care of creating the
+        # directory. We rely on this behaviour and hence do not raise an exception if the path specified as
+        # `Airflow Home` does not exist.
         config.write_value_to_yaml("airflow", "home", str(self._airflow_home.resolve()), global_env_filepath)
         if not Path.exists(self._airflow_dags_folder):
             raise FileNotFoundError(f"Specified DAGs directory {self._airflow_dags_folder} does not exist.")
@@ -103,13 +106,21 @@ class Project:
         """
         config = Config(environment=environment, project_dir=self.directory)
         config = config.from_yaml_to_config()
-
         for connection in config.connections:
-            if connection["conn_type"] == SQLITE_CONN_TYPE and not os.path.isabs(connection["host"]):
-                # the example workflows have relative paths for the host URLs for SQLite connections. They need to be
-                # converted to absolute paths once the project directory is initialised so that the connections work
-                # successfully.
-                connection["host"] = str(self.directory / connection["host"])
+            if connection["conn_type"] == SQLITE_CONN_TYPE:
+                host_path = connection["host"]
+                if os.path.isabs(host_path):
+                    continue
+                # The example workflows have relative paths for the host URLs for SQLite connections. Additionally, the
+                # user might also sometimes set relative paths for the host from the initialised project directory. Such
+                # paths need to be converted to absolute paths so that the connections work successfully.
+                resolved_host_path = self.directory / host_path
+                if not resolved_host_path.exists():
+                    raise FileNotFoundError(
+                        f"The relative file path {host_path} was resolved into {resolved_host_path} but it's a failed "
+                        f"resolution as the path does not exist."
+                    )
+                connection["host"] = str(resolved_host_path)
         config.write_config_to_yaml()
 
     def _remove_unnecessary_airflow_files(self) -> None:
