@@ -5,6 +5,7 @@ from pathlib import Path
 import airflow
 import pytest
 from airflow.models.dagbag import DagBag
+from airflow.models.dagrun import DagRun
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import provide_session
 from packaging.version import Version
@@ -27,8 +28,9 @@ except ModuleNotFoundError:
     retry=retry_if_exception_type(tuple(RETRY_ON_EXCEPTIONS)),
     wait=wait_exponential(multiplier=10, min=10, max=60),  # values in seconds
 )
-def wrapper_run_dag(dag):
-    test_utils.run_dag(dag)
+def wrapper_run_dag(dag) -> DagRun:
+    dag_run = test_utils.run_dag(dag)
+    return dag_run
 
 
 @provide_session
@@ -89,7 +91,11 @@ dag_bag = get_dag_bag()
 @pytest.mark.parametrize("dag_id", sorted(dag_bag.dag_ids, key=order))
 def test_example_dag(session, dag_id: str):
     dag = dag_bag.get_dag(dag_id)
-    wrapper_run_dag(dag)
+    dag_run = wrapper_run_dag(dag)
+    print(dag_run)
+    for ti in dag_run.get_task_instances():
+        if ti.state == "failed":
+            assert False
 
 
 def test_example_dags_loaded_with_no_errors():
