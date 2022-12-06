@@ -183,14 +183,6 @@ def connections():
 
 
 @pytest.fixture()
-def multiple_connections():
-    return [
-        Connection(conn_id="sqlite_conn1", conn_type="sqlite", host="data/imdb.db"),
-        Connection(conn_id="sqlite_conn2", conn_type="sqlite", host="data/imdb.db"),
-    ]
-
-
-@pytest.fixture()
 def initialised_project_with_tests_workflows(initialised_project: Project):
     shutil.copytree(
         src=CWD / "tests" / "workflows",

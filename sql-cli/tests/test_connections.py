@@ -1,8 +1,15 @@
 import os
 from unittest.mock import patch
 
+from airflow.models import Connection
+
 from sql_cli.connections import CONNECTION_ID_OUTPUT_STRING_WIDTH, validate_connections
 from tests.utils import get_connection_by_id
+
+two_valid_connections = [
+    Connection(conn_id="sqlite_conn1", conn_type="sqlite", host="data/imdb.db"),
+    Connection(conn_id="sqlite_conn2", conn_type="sqlite", host="data/imdb.db"),
+]
 
 
 @patch("sql_cli.connections.Path.is_file", return_value=True)
@@ -46,14 +53,13 @@ def test_validate_connections_config_file_does_not_contain_connection(
 @patch("sql_cli.connections.Path.is_file", return_value=True)
 @patch("sql_cli.connections.Connection.test_connection", return_value=(True, ""))
 @patch.dict(os.environ, {}, clear=True)
-def test_validate_connections_multiple_connections(
+def test_validate_two_connections_validates_both(
     mock_test_connection,
     mock_is_file,
-    multiple_connections,
     initialised_project,
     capsys,
 ):
-    validate_connections(connections=multiple_connections)
+    validate_connections(connections=two_valid_connections)
     captured = capsys.readouterr()
     assert captured.out.count("PASSED") == 2
     assert "AIRFLOW_CONN_SQLITE_CONN1" in os.environ
@@ -63,14 +69,13 @@ def test_validate_connections_multiple_connections(
 @patch("sql_cli.connections.Path.is_file", return_value=True)
 @patch("sql_cli.connections.Connection.test_connection", return_value=(True, ""))
 @patch.dict(os.environ, {}, clear=True)
-def test_validate_connections_multiple_connections_single_specified(
+def test_validate_two_connections_validates_specified_one(
     mock_test_connection,
     mock_is_file,
-    multiple_connections,
     initialised_project,
     capsys,
 ):
-    validate_connections(connections=multiple_connections, connection_id="sqlite_conn1")
+    validate_connections(connections=two_valid_connections, connection_id="sqlite_conn1")
     captured = capsys.readouterr()
     assert captured.out.count("PASSED") == 1
     assert "AIRFLOW_CONN_SQLITE_CONN1" in os.environ
