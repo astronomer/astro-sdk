@@ -17,7 +17,6 @@
 * Improve how Airflow configuration is set/retrieved #1219
 * Improve generated DAGs (using black) #1362
 * Astro CLI end-to-end integration tests #1234
-* Change `load_file` example to use Sqlite #1303
 * Run tests against multiple versions of Airflow #1055
 
 
