@@ -47,16 +47,15 @@ def test(session: nox.Session, airflow: str) -> None:
         session.log("Installed Dependencies:")
         session.run("pip3", "freeze")
 
-        session.run("pytest")
+        session.run("pytest", *session.posargs)
     else:
         session.install("poetry")
         session.run("poetry", "install", "--with", "dev")
         session.run("poetry", "run", "pip", "install", f"apache-airflow=={airflow}")
 
         session.log("Installed Dependencies:")
-        session.run("pip3", "freeze")
-
-        session.run("poetry", "run", "pytest")
+        session.run("poetry", "run", "pip3", "freeze")
+        session.run("poetry", "run", "pytest", *session.posargs)
 
 
 @nox.session(python=["3.8"])
