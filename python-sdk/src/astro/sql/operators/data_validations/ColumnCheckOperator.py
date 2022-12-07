@@ -2,6 +2,7 @@ from typing import Any, Dict, Optional, Union
 
 import pandas
 from airflow import AirflowException
+from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
 from airflow.providers.common.sql.operators.sql import SQLColumnCheckOperator
 
@@ -47,6 +48,7 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
         dataset: Union[BaseTable, pandas.DataFrame],
         column_mapping: Dict[str, Dict[str, Any]],
         partition_clause: Optional[str] = None,
+        task_id: Optional[str] = None,
         **kwargs,
     ):
         for checks in column_mapping.values():
@@ -58,18 +60,21 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
         self.partition_clause = partition_clause
         self.kwargs = kwargs
         self.df = None
-        if type(dataset) == BaseTable:
+
+        if isinstance(dataset, BaseTable):
             db = create_database(conn_id=self.dataset.conn_id)  # type: ignore
+            self.conn_id = self.dataset.conn_id
             super().__init__(
                 table=db.get_table_qualified_name(table=self.dataset),
                 column_mapping=self.column_mapping,
                 partition_clause=self.partition_clause,
                 conn_id=dataset.conn_id,
                 database=dataset.metadata.database,
+                task_id=task_id if task_id is not None else get_unique_task_id("column_check"),
             )
 
     def execute(self, context: "Context"):
-        if type(self.dataset) == BaseTable:
+        if isinstance(self.dataset, BaseTable):
             return super().execute(context=context)
         elif type(self.dataset) == pandas.DataFrame:
             self.df = self.dataset
@@ -171,6 +176,7 @@ def column_check(
     dataset: Union[BaseTable, pandas.DataFrame],
     column_mapping: Dict[str, Dict[str, Any]],
     partition_clause: Optional[str] = None,
+    task_id: Optional[str] = None,
     **kwargs,
 ) -> XComArg:
     """
@@ -208,4 +214,5 @@ def column_check(
         column_mapping=column_mapping,
         partition_clause=partition_clause,
         kwargs=kwargs,
+        task_id=task_id,
     ).output
