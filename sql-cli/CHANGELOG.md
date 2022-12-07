@@ -4,6 +4,7 @@
 
 ### Bug fixes
 
+* Fix misplacement of generated DAGs by introducing the concept of global configuration #1230
 * Change validate to only check the connection of interest if the flag --connection is given #1370
 * Fix connection not found issue #1124
 * Improve error message when the remote connection can't be established #1366
