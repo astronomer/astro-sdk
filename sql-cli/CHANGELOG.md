@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.2.2
+
+### Bug fixes
+
+* Change validate to only check the connection of interest if the flag --connection is given #1370
+* Fix connection not found issue #1124
+* Improve error message when the remote connection can't be established #1366
+* Fix verbose logging #1368
+* Fix validate connection ID matching #1361
+* Support Airflow 2.2 #1162
+
+### Improvements
+
+* Improve how Airflow configuration is set/retrieved #1219
+* Improve generated DAGs (using black) #1362
+* Astro CLI end-to-end integration tests #1234
+* Change `load_file` example to use Sqlite #1303
+* Run tests against multiple versions of Airflow #1055
+
+
 ## 0.2.1
 
 A patch release containing the following change:
