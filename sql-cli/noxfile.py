@@ -34,8 +34,8 @@ def test(session: nox.Session, airflow: str) -> None:
     if airflow.startswith("2.2."):
         # We are duplicating the tests dependencies until we find a better solution.
         # The solution might be to move out of poetry.
-        session.install("-e", ".", "pytest", "pytest-cov", "mypy", "types-pyyaml")
-
+        dev = ("pytest", "pytest-cov", "mypy", "types-pyyaml")
+        session.install("-e", ".", *dev)
         # To install some versions of Airflow, we need constraints, due to issues like:
         # https://github.com/apache/airflow/issues/19804
         constraints_url = (
