@@ -90,7 +90,7 @@ jobs:
             ~/.cache/pip
             sql-cli/.nox
             .local/
-          key: ${{ runner.os }}-${{ hashFiles('sql-cli/pyproject.toml') }}
+          key: ${{ runner.os }}-${{ matrix.python }}-${{ matrix.airflow }}-${{ hashFiles('sql-cli/pyproject.toml') }}
       - run: pip3 install nox
       - run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')"
       - name: Upload coverage
