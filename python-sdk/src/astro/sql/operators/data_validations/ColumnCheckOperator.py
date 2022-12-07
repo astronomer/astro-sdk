@@ -84,6 +84,9 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
         self.process_checks()
 
     def get_check_method(self, check_name: str, column_name: str):
+        """
+        Get the method ref that will validate the dataframe
+        """
         column_checks = {
             "null_check": self.col_null_check,
             "distinct_check": self.col_distinct_check,
@@ -94,7 +97,9 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
         return column_checks[check_name](column_name=column_name)
 
     def process_checks(self):
-
+        """
+        Process all the checks and print the result or raise an exception in the event of failed checks
+        """
         failed_tests = []
         passed_tests = []
 
@@ -119,26 +124,41 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
             print(f"The following tests have passed:" f"\n{''.join(passed_tests)}")
 
     def col_null_check(self, column_name: str) -> Optional[int]:
+        """
+        Count the total null values in a dataframe column
+        """
         if self.df is not None and column_name in self.df.columns:
             return list(self.df[column_name].isnull().values).count(True)
         return None
 
     def col_distinct_check(self, column_name: str) -> Optional[int]:
+        """
+        Count the distinct value in a dataframe column
+        """
         if self.df is not None and column_name in self.df.columns:
             return len(self.df[column_name].unique())
         return None
 
     def col_unique_check(self, column_name: str) -> Optional[int]:
+        """
+        Count the unique value in a dataframe column
+        """
         if self.df is not None and column_name in self.df.columns:
             return len(self.df[column_name]) - self.col_distinct_check(column_name=column_name)
         return None
 
     def col_max(self, column_name: str) -> Optional[float]:
+        """
+        Get the max value in dataframe column
+        """
         if self.df is not None and column_name in self.df.columns:
             return self.df[column_name].max()
         return None
 
     def col_min(self, column_name: str) -> Optional[float]:
+        """
+        Get the min value in dataframe column
+        """
         if self.df is not None and column_name in self.df.columns:
             return self.df[column_name].min()
         return None
