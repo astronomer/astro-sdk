@@ -8,17 +8,15 @@ connections:
     login:
     password:
 
-## Example of Bigquery connection
-#  - conn_id: bigquery_conn
-#    conn_type: bigquery
-#    description: null
-#    extra:
-#      project: "my-gcp-project"
-#    host: null
-#    login: null
-#    password: null
-#    port: null
-#    schema: null
+## Examples of Bigquery connections
+### For bigquery it is recommended to use environment variables. You can set those in a .env file in the root directory of your project.
+  - conn_id: bigquery_conn_with_fallback
+    conn_type: gcpbigquery
+    # Note that you need to set GOOGLE_APPLICATION_CREDENTIALS environment variable.
+  - conn_id: bigquery_conn_with_env_expand
+    conn_type: gcpbigquery
+    extra: '{"extra__google_cloud_platform__project": "$GOOGLE_CLOUD_PROJECT", "extra__google_cloud_platform__key_path": "$GOOGLE_CLOUD_KEY_PATH"}'
+    # Note that you need to set these environment variables.
 
 ## Example of Postgres connection
 #  - conn_id: postgres_conn

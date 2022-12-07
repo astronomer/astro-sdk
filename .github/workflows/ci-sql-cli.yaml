@@ -91,6 +91,7 @@ jobs:
             sql-cli/.nox
             .local/
           key: sql-cli-tests-os-${{ runner.os }}-python-${{ matrix.python }}-airflow-${{ matrix.airflow }}-deps-${{ hashFiles('sql-cli/poetry.lock') }}
+      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: pip3 install nox
       - run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')"
       - name: Upload coverage
@@ -99,6 +100,8 @@ jobs:
           name: coverage-${{ matrix.python }}-${{ matrix.airflow }}
           path: ./sql-cli/.coverage
     env:
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
       AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
       AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
       TERMINAL_WIDTH: 3000
