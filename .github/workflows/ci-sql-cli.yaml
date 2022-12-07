@@ -46,7 +46,7 @@ jobs:
              ~/.cache/pip
              sql-cli/.nox
              .local
-           key: sql-cli-tests-type-check-${{ runner.os }}-${{ hashFiles('sql-cli/pyproject.toml') }}
+           key: sql-cli-type-check-os-${{ runner.os }}-deps-${{ hashFiles('sql-cli/pyproject.toml') }}
       - run: pip3 install nox
       - run: nox -s type_check
 
@@ -90,7 +90,7 @@ jobs:
             ~/.cache/pip
             sql-cli/.nox
             .local/
-          key: sql-cli-tests-${{ runner.os }}-${{ matrix.python }}-${{ matrix.airflow }}-${{ hashFiles('sql-cli/pyproject.toml') }}
+          key: sql-cli-tests-os-${{ runner.os }}-python-${{ matrix.python }}-airflow-${{ matrix.airflow }}-deps-${{ hashFiles('sql-cli/pyproject.toml') }}
       - run: pip3 install nox
       - run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')"
       - name: Upload coverage
