@@ -68,7 +68,7 @@ jobs:
       fail-fast: false
       matrix:
         python: [ 3.8, 3.9 ]
-        airflow: [ 2.2.5, 2.3, 2.4, 2.5 ]
+        airflow: [ 2.2.5, 2.3.4, 2.4, 2.5 ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -90,7 +90,7 @@ jobs:
             ~/.cache/pip
             sql-cli/.nox
             .local/
-          key: ${{ runner.os }}-2.3-${{ hashFiles('sql-cli/pyproject.toml') }}
+          key: ${{ runner.os }}-${{ hashFiles('sql-cli/pyproject.toml') }}
       - run: pip3 install nox
       - run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')"
       - name: Upload coverage
