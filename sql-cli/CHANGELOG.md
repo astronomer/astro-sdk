@@ -2,6 +2,46 @@
 
 ## 0.2.2
 
+
+### Breaking changes
+
+Projects created with previous versions of the SQL CLI will need to be reinitialised, so they respect
+the new configuration structure, implemented as part of the bug fix #1230.
+It's recommended to back up any previous configuration.
+
+Before the config structure was:
+```
+config/
+├── default
+│   └── configuration.yml
+└── dev
+    └── configuration.yml
+
+```
+
+Now it is:
+
+```
+config/
+├── default
+│   └── configuration.yml
+├── dev
+│   └── configuration.yml
+└── global
+    └── configuration.yml
+
+```
+
+The global configuration contains environment-agnostic properties which were previously (incorrectly) set in the environment-specific settings:
+
+```
+airflow:
+  dags_folder: /home/tati/Code/astro-sdk/sql-cli/test-0.2.2/dags
+  home: /home/tati/Code/astro-sdk/sql-cli/test-0.2.2/.airflow/default
+
+```
+
+
 ### Bug fixes
 
 * Fix misplacement of generated DAGs by introducing the concept of global configuration #1230
