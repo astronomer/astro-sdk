@@ -224,17 +224,38 @@ class CleanupOperator(AstroSQLBaseOperator):
         for task in tasks:
             try:
                 if isinstance(task, OPERATOR_CLASSES_WITH_TABLE_OUTPUT):
-                    t = task.output.resolve(context)
-                    if isinstance(t, BaseTable):
-                        res.append(t)
+                    try:
+                        # works on airflow version >= 2.4.0
+                        t = task.output.resolve(context)
+                        if isinstance(t, BaseTable):
+                            res.append(t)
+                    except AttributeError:
+                        # works on airflow version < 2.4.0
+                        from airflow.models.xcom_arg import XComArg
+
+                        task_output = XComArg(operator=self)
+                        for t in task_output.resolve(context):
+                            if isinstance(t, BaseTable):
+                                res.append(t)
                 elif (
                     MappedOperator
                     and isinstance(task, MappedOperator)
                     and issubclass(task.operator_class, OPERATOR_CLASSES_WITH_TABLE_OUTPUT)
                 ):
-                    for t in task.output.resolve(context):
-                        if isinstance(t, BaseTable):
-                            res.append(t)
+                    try:
+                        # works on airflow version >= 2.4.0
+                        for t in task.output.resolve(context):
+                            if isinstance(t, BaseTable):
+                                res.append(t)
+                    except AttributeError:
+                        # works on airflow version < 2.4.0
+                        from airflow.models.xcom_arg import XComArg
+
+                        task_output = XComArg(operator=self)
+                        for t in task_output.resolve(context):
+                            if isinstance(t, BaseTable):
+                                res.append(t)
+
             except AirflowException:  # pragma: no cover
                 self.log.info(
                     "xcom output for %s not found. Will not clean up this task",
