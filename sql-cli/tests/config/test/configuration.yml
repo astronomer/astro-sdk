@@ -1,7 +1,9 @@
 connections:
-  - conn_id: sqlite_conn_invalid
-    conn_type: sqlite
-    host: data/imdb2.db
-    login:
-    password:
-    schema:
+  - conn_id: bigquery_conn_invalid
+    conn_type: bigquery
+    description: null
+    host: null
+    login: null
+    password: null
+    port: null
+    schema: null

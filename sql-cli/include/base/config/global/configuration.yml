@@ -1,0 +1,3 @@
+airflow:
+  dags_folder:
+  home:

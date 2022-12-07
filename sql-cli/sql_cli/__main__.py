@@ -50,6 +50,33 @@ def about() -> None:
 
 @app.command(
     cls=AstroCommand,
+    help="""
+    Gets the value of the configuration key set in the configuration file for the given environment.
+    """,
+)
+def config(
+    key: str = typer.Argument(
+        default=...,
+        show_default=False,
+        help="Key from the configuration whose value needs to be fetched.",
+    ),
+    project_dir: Path = typer.Option(
+        None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
+    ),
+    env: str = typer.Option(
+        default="default",
+        help="(Optional) Environment used to fetch the configuration key from.",
+    ),
+) -> None:
+    from sql_cli.configuration import Config
+
+    project_dir_absolute = _resolve_project_dir(project_dir)
+    project_config = Config(environment=env, project_dir=project_dir_absolute).from_yaml_to_config()
+    print(getattr(project_config, key))
+
+
+@app.command(
+    cls=AstroCommand,
     help="Generate the Airflow DAG from a directory of SQL files.",
 )
 def generate(
@@ -73,7 +100,7 @@ def generate(
 ) -> None:
     from sql_cli.project import Project
 
-    project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
+    project_dir_absolute = _resolve_project_dir(project_dir)
     project = Project(project_dir_absolute)
     project.load_config(env)
 
@@ -107,8 +134,9 @@ def validate(
     from sql_cli.connections import validate_connections
     from sql_cli.project import Project
 
-    project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
+    project_dir_absolute = _resolve_project_dir(project_dir)
     project = Project(project_dir_absolute)
+    project.transform_env_config(environment=env)
     project.load_config(environment=env)
 
     rprint(f"Validating connection(s) for environment '{env}'")
@@ -149,9 +177,9 @@ def run(
     from sql_cli.project import Project
     from sql_cli.utils.airflow import get_dag
 
-    project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
+    project_dir_absolute = _resolve_project_dir(project_dir)
     project = Project(project_dir_absolute)
-    project.update_config(environment=env)
+    project.transform_env_config(environment=env)
     project.load_config(env)
 
     dag_file = _generate_dag(project=project, workflow_name=workflow_name, generate_tasks=generate_tasks)
@@ -222,10 +250,17 @@ def init(
 ) -> None:
     from sql_cli.project import Project
 
-    project_dir_absolute = project_dir.resolve() if project_dir else Path.cwd()
+    project_dir_absolute = _resolve_project_dir(project_dir)
     project = Project(project_dir_absolute, airflow_home, airflow_dags_folder)
     project.initialise()
     rprint("Initialized an Astro SQL project at", project.directory)
+
+
+def _resolve_project_dir(project_dir: Path | None) -> Path:
+    """Resolve project directory to be used by the corresponding command for its functionality."""
+    # If the caller has not supplied a `project_dir`, we assume that the user is calling the command from the project
+    # directory itself and hence we resolve the current working directory as the project directory.
+    return project_dir.resolve() if project_dir else Path.cwd()
 
 
 def _generate_dag(project: Project, workflow_name: str, generate_tasks: bool) -> Path:

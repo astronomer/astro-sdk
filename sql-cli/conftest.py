@@ -167,10 +167,30 @@ def initialised_project(tmp_path):
 
 
 @pytest.fixture()
+def initialised_project_with_custom_airflow_config(tmp_path):
+    airflow_home_dir = tmp_path / "airflow_home"
+    dags_dir = airflow_home_dir / "dags"
+    dags_dir.mkdir(parents=True, exist_ok=True)
+    proj = Project(tmp_path, airflow_home=airflow_home_dir, airflow_dags_folder=dags_dir)
+    proj.initialise()
+    return proj
+
+
+@pytest.fixture()
 def initialised_project_with_test_config(initialised_project: Project):
     shutil.copytree(
         src=CWD / "tests" / "config" / "test",
         dst=initialised_project.directory / "config" / "test",
+    )
+    return initialised_project
+
+
+@pytest.fixture()
+def initialised_project_with_sqlite_non_existent_host_path_config(initialised_project: Project):
+    sqlite_non_existent_host_path = "sqlite_non_existent_host_path"
+    shutil.copytree(
+        src=CWD / "tests" / "config" / sqlite_non_existent_host_path,
+        dst=initialised_project.directory / "config" / sqlite_non_existent_host_path,
     )
     return initialised_project
 
