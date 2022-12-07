@@ -25,30 +25,26 @@ def dev(session: nox.Session) -> None:
 def test(session: nox.Session, airflow: str) -> None:
     """Run both unit and integration tests."""
 
-    # Airflow automatically creates the ~/airflow directory on importing airflow
-    # but we are not using this directory hence we change the home to a tmp directory to avoid side effects.
     env = {
+        # Airflow automatically creates the ~/airflow directory on importing airflow
+        # but we are not using this directory hence we change the home to a tmp directory to avoid side effects.
         "AIRFLOW_HOME": session.create_tmp(),
     }
 
     if airflow.startswith("2.2."):
+        # We are duplicating the tests dependencies until we find a better solution.
+        # The solution might be to move out of poetry.
+        session.install("-e", ".", "pytest", "pytest-cov", "mypy", "types-pyyaml")
+
         # To install some versions of Airflow, we need constraints, due to issues like:
         # https://github.com/apache/airflow/issues/19804
         constraints_url = (
             "https://raw.githubusercontent.com/apache/airflow/"
             f"constraints-{airflow}/constraints-{session.python}.txt"
         )
-
         # Poetry does not support constraints:
         # https://github.com/python-poetry/poetry/issues/3225
-        session.install("-e", ".", f"apache-airflow=={airflow}", "-c", constraints_url, env=env)
-
-        # We are duplicating the tests dependencies until we find a better solution.
-        # The solution might be to move out of poetry.
-        session.install("pytest")
-        session.install("pytest-cov")
-        session.install("mypy")
-        session.install("types-pyyaml")
+        session.install(f"apache-airflow=={airflow}", "-c", constraints_url, env=env)
 
         session.log("Installed Dependencies:")
         session.run("pip3", "freeze")
