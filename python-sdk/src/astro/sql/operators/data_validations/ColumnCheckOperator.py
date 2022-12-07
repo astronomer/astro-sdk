@@ -1,11 +1,11 @@
 from typing import Any, Dict, Optional, Union
 
 import pandas
+from airflow import AirflowException
 from airflow.models.xcom_arg import XComArg
 from airflow.providers.common.sql.operators.sql import SQLColumnCheckOperator
 
 from astro.databases import create_database
-from astro.files import File
 from astro.table import BaseTable
 from astro.utils.typing_compat import Context
 
@@ -22,7 +22,7 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
     - leq_to: value that results should be less than or equal to
     - tolerance: the percentage that the result may be off from the expected value
 
-    :param table: the table to run checks on
+    :param dataset: the table or dataframe to run checks on
     :param column_mapping: the dictionary of columns and their associated checks, e.g.
 
     .. code-block:: python
@@ -44,7 +44,7 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
 
     def __init__(
         self,
-        dataset: Union[BaseTable, pandas.DataFrame, File],
+        dataset: Union[BaseTable, pandas.DataFrame],
         column_mapping: Dict[str, Dict[str, Any]],
         partition_clause: Optional[str] = None,
         **kwargs,
@@ -71,8 +71,6 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
     def execute(self, context: "Context"):
         if type(self.dataset) == BaseTable:
             return super().execute(context=context)
-        # elif type(self.dataset) == File:
-        #     self.df = self.dataset.export_to_dataframe()
         elif type(self.dataset) == pandas.DataFrame:
             self.df = self.dataset
         else:
@@ -80,46 +78,54 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
 
         self.process_checks()
 
-    def process_checks(self):
+    def get_check_method(self, check_name: str, column_name: str):
         column_checks = {
             "null_check": self.col_null_check,
             "distinct_check": self.col_distinct_check,
             "unique_check": self.col_unique_check,
-            "min": self.col_max,
-            "max": self.col_min,
+            "min": self.col_min,
+            "max": self.col_max,
         }
+        return column_checks[check_name](column_name=column_name)
+
+    def process_checks(self):
+
         failed_tests = []
+        passed_tests = []
+
+        # Iterating over columns
         for column in self.column_mapping:
             checks = self.column_mapping[column]
+
+            # Iterating over checks
             for check in checks:
                 tolerance = self.column_mapping[column][check].get("tolerance")
-                result = column_checks[check](column_name=column)
+                result = self.get_check_method(check, column_name=column)
                 self.column_mapping[column][check]["result"] = result
                 self.column_mapping[column][check]["success"] = self._get_match(
                     self.column_mapping[column][check], result, tolerance
                 )
                 failed_tests.extend(_get_failed_checks(self.column_mapping[column], column))
-        if failed_tests:
-            pass
-            # raise AirflowException(
-            #     f"Test failed.\nResults:\n{records!s}\n"
-            #     "The following tests have failed:"
-            #     f"\n{''.join(failed_tests)}"
-            # )
+                passed_tests.extend(_get_success_checks(self.column_mapping[column], column))
 
-    def col_null_check(self, column_name: str) -> list:
-        if self.df is not None and column_name in self.df.columns:
-            return self.df[column_name].isnull().values.any()
-        return []
+        if len(failed_tests) > 0:
+            raise AirflowException(f"The following tests have failed:" f"\n{''.join(failed_tests)}")
+        if len(passed_tests) > 0:
+            print(f"The following tests have passed:" f"\n{''.join(passed_tests)}")
 
-    def col_distinct_check(self, column_name: str) -> list:
+    def col_null_check(self, column_name: str) -> Optional[int]:
         if self.df is not None and column_name in self.df.columns:
-            return self.df[column_name].unique()
-        return []
+            return list(self.df[column_name].isnull().values).count(True)
+        return None
 
-    def col_unique_check(self, column_name: str) -> Optional[bool]:
+    def col_distinct_check(self, column_name: str) -> Optional[int]:
         if self.df is not None and column_name in self.df.columns:
-            return len(self.df[column_name].unique()) == 1
+            return len(self.df[column_name].unique())
+        return None
+
+    def col_unique_check(self, column_name: str) -> Optional[int]:
+        if self.df is not None and column_name in self.df.columns:
+            return len(self.df[column_name]) - self.col_distinct_check(column_name=column_name)
         return None
 
     def col_max(self, column_name: str) -> Optional[float]:
@@ -147,8 +153,22 @@ def _get_failed_checks(checks, col=None):
     ]
 
 
+def _get_success_checks(checks, col=None):
+    if col:
+        return [
+            f"Column: {col}\nCheck: {check},\nCheck Values: {check_values}\n"
+            for check, check_values in checks.items()
+            if check_values["success"]
+        ]
+    return [
+        f"\tCheck: {check},\n\tCheck Values: {check_values}\n"
+        for check, check_values in checks.items()
+        if check_values["success"]
+    ]
+
+
 def column_check(
-    dataset: Union[BaseTable, pandas.DataFrame, File],
+    dataset: Union[BaseTable, pandas.DataFrame],
     column_mapping: Dict[str, Dict[str, Any]],
     partition_clause: Optional[str] = None,
     **kwargs,
@@ -164,7 +184,7 @@ def column_check(
     - leq_to: value that results should be less than or equal to
     - tolerance: the percentage that the result may be off from the expected value
 
-    :param table: the table to run checks on
+    :param dataset: dataframe or BaseTable that has to be validated
     :param column_mapping: the dictionary of columns and their associated checks, e.g.
 
     .. code-block:: python
