@@ -74,7 +74,7 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
         elif type(self.dataset) == pandas.DataFrame:
             self.df = self.dataset
         else:
-            raise ValueError("dataset can only be of type File | pandas.dataframe | Table object")
+            raise ValueError("dataset can only be of type pandas.dataframe | Table object")
 
         self.process_checks()
 
