@@ -117,10 +117,7 @@ class BaseTable:
         Return the row count of table.
         """
         db = create_database(self.conn_id)
-        result = db.run_sql(
-            f"select count(*) from {db.get_table_qualified_name(self)}"  # skipcq: BAN-B608
-        ).scalar()
-        return result
+        return db.row_count(self)
 
     @property
     def sql_type(self) -> Any:

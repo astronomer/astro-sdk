@@ -19,6 +19,7 @@ from airflow.utils.timezone import datetime
 
 import astro.sql as aql
 from astro.constants import SUPPORTED_DATABASES, Database
+from astro.databricks.load_options import default_delta_options
 from astro.files import File
 from astro.sql.operators.cleanup import CleanupOperator
 from astro.sql.operators.load_file import LoadFileOperator
@@ -33,7 +34,6 @@ SUPPORTED_DATABASES_OBJECTS = [
         "database": database,
     }
     for database in Database
-    if database != Database.DELTA
 ]
 SUPPORTED_DATABASES_OBJECTS_WITH_FILE = [
     {
@@ -41,9 +41,7 @@ SUPPORTED_DATABASES_OBJECTS_WITH_FILE = [
         "file": File(DEFAULT_FILEPATH),
     }
     for database in Database
-    if database != Database.DELTA
 ]
-SUPPORTED_DATABASES.remove("delta")  # pop delta from this value for this class
 
 
 @pytest.mark.integration
@@ -173,9 +171,7 @@ def test_cleanup_multiple_table(database_table_fixture, multiple_tables_fixture)
     [
         {
             "items": [
-                {
-                    "file": File(DEFAULT_FILEPATH),
-                },
+                {"file": File(path=DEFAULT_FILEPATH)},
                 {
                     "file": File(DEFAULT_FILEPATH),
                 },
@@ -220,6 +216,7 @@ def test_cleanup_mapped_task(sample_dag, database_temp_table_fixture):
                 {
                     "input_file": File(path=(CWD.parent.parent / "data/sample.csv").as_posix()),
                     "output_table": temp_table,
+                    "load_options": default_delta_options,
                 }
             ]
         )
@@ -246,6 +243,7 @@ def test_cleanup_default_all_tables_mapped_task(sample_dag, database_temp_table_
                 {
                     "input_file": File(path=(CWD.parent.parent / "data/sample.csv").as_posix()),
                     "output_table": temp_table,
+                    "load_options": default_delta_options,
                 }
             ]
         )
