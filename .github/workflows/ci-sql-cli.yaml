@@ -26,6 +26,22 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
+# This list should only have non-sensitive env vars
+# Env vars with secrets should be in the specific jobs
+env:
+  GOOGLE_CLOUD_PROJECT: astronomer-dag-authoring
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: 5432
+  REDSHIFT_DATABASE: dev
+  REDSHIFT_HOST: utkarsh-cluster.cdru7mxqmtyx.us-east-2.redshift.amazonaws.com
+  SNOWFLAKE_SCHEMA: ASTROFLOW_CI
+  SNOWFLAKE_DATABASE: SANDBOX
+  SNOWFLAKE_WAREHOUSE: DEMO
+  SNOWFLAKE_HOST: https://gp21411.us-east-1.snowflakecomputing.com
+  SNOWFLAKE_ACCOUNT: gp21411
+  SNOWFLAKE_REGION: us-east-1
+  SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
+
 jobs:
   Type-Check:
     if: github.event.action != 'labeled'
@@ -70,6 +86,19 @@ jobs:
         python: [ 3.8, 3.9 ]
         airflow: [ 2.2.5, 2.3.4, 2.4, 2.5 ]
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: dimberman/pagila-test
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --name postgres
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -91,6 +120,7 @@ jobs:
             sql-cli/.nox
             .local/
           key: sql-cli-tests-os-${{ runner.os }}-python-${{ matrix.python }}-airflow-${{ matrix.airflow }}-deps-${{ hashFiles('sql-cli/poetry.lock') }}
+      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: pip3 install nox
       - run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')"
       - name: Upload coverage
@@ -99,6 +129,15 @@ jobs:
           name: coverage-${{ matrix.python }}-${{ matrix.airflow }}
           path: ./sql-cli/.coverage
     env:
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
+      GOOGLE_CLOUD_KEY_PATH: /tmp/google_credentials.json
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
+      REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
+      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
       AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
       AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
       TERMINAL_WIDTH: 3000
