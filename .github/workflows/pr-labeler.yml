@@ -1,0 +1,19 @@
+name: "Pull Request Labeler"
+on:
+  pull_request:
+    branches: [ 'main', 'release-**' ]
+  # Run on PRs from forks
+  pull_request_target:
+    branches: [ 'main' ]
+
+jobs:
+  triage:
+    permissions:
+      contents: read
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/labeler@v4
+      with:
+        repo-token: "${{ secrets.GITHUB_TOKEN }}"
+        sync-labels: true
