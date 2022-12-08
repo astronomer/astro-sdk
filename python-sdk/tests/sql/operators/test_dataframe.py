@@ -59,6 +59,7 @@ def test_dataframe_from_sql_basic(sample_dag, database_table_fixture):
         from astro.dataframes.pandas import PandasDataframe
 
         assert isinstance(df, PandasDataframe)
+        assert len(df) == 5
         return df.sell.count().tolist()
 
     with sample_dag:
@@ -103,6 +104,7 @@ def test_dataframe_from_sql_custom_task_id(sample_dag, database_table_fixture):
 
     @aql.dataframe(task_id="foo")
     def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
+        assert len(df) == 5
         return df.sell.count()
 
     with sample_dag:
@@ -151,6 +153,7 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, database_table_fixture):
         database=getattr(test_table.metadata, "database", None),
     )
     def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
+        assert len(df) == 5
         return df.sell.count().tolist()
 
     with sample_dag:
@@ -199,6 +202,8 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(
         database=getattr(test_table.metadata, "database", None),
     )
     def my_df_func(df_1: pandas.DataFrame, df_2: pandas.DataFrame):  # skipcq: PY-D0003
+        assert len(df_1) == 5
+        assert len(df_2) == 5
         return (df_1.sell.count() + df_2.sell.count()).tolist()
 
     with sample_dag:
@@ -213,6 +218,7 @@ def test_postgres_dataframe_without_table_arg(sample_dag):
 
     @aql.dataframe
     def validate_result(df: pandas.DataFrame):  # skipcq: PY-D0003
+        assert len(df) == 3
         assert df.iloc[0].to_dict()["colors"] == "red"
 
     @aql.dataframe
@@ -437,6 +443,7 @@ def test_col_case_is_preserved(sample_dag):
     def validate(df):  # skipcq: PY-D0003
         cols = list(df.columns)
         cols.sort()
+        assert len(df) == 3
         return cols == ["Colors", "Numbers"]
 
     with sample_dag:
