@@ -14,7 +14,6 @@ connections:
   # - conn_id: bigquery_conn
   #   conn_type: gcpbigquery
   #   extra: '{"extra__google_cloud_platform__project": "$GOOGLE_CLOUD_PROJECT", "extra__google_cloud_platform__key_path": "$GOOGLE_CLOUD_KEY_PATH"}'
-    # Note that you need to set these environment variables.
   # - conn_id: bigquery_conn_with_fallback
   #   conn_type: gcpbigquery
     # Note that you need to set GOOGLE_APPLICATION_CREDENTIALS environment variable.
@@ -29,7 +28,6 @@ connections:
   #   login: $POSTGRES_USERNAME
   #   password: $POSTGRES_PASSWORD
   #   port: $POSTGRES_PORT
-    # Note that you need to set these environment variables.
 
 ## Example of Redshift connection
 ## To use this, either set the corresponding environment variables or
@@ -41,7 +39,6 @@ connections:
   #   port: $REDSHIFT_PORT
   #   login: $REDSHIFT_USERNAME
   #   password: $REDSHIFT_PASSWORD
-    # Note that you need to set these environment variables.
 
 ## Example of Snowflake connection
 ## To use this, either set the corresponding environment variables or
