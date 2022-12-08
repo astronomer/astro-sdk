@@ -198,7 +198,7 @@ def test_merge_with_the_same_schema(database_table_fixture, multiple_tables_fixt
             {"id": 4, "name": "Czwarte imię"},
         ]
     )
-
+    assert first_table.row_count == 4
     test_utils.assert_dataframes_are_equal(computed, expected)
 
 
@@ -261,7 +261,7 @@ def test_merge_with_different_schemas(database_table_fixture, multiple_tables_fi
             {"id": 4, "name": "Czwarte imię"},
         ]
     )
-
+    assert first_table.row_count == 4
     test_utils.assert_dataframes_are_equal(computed, expected)
 
 
