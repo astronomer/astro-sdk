@@ -24,8 +24,8 @@ connections:
   # - conn_id: postgres_conn
   #   conn_type: postgres
   #   host: $POSTGRES_HOST
-  #   schema: $POSTGRES_DATABASE
-  #   login: $POSTGRES_USERNAME
+  #   schema: pagila
+  #   login: postgres
   #   password: $POSTGRES_PASSWORD
   #   port: $POSTGRES_PORT
 
@@ -36,7 +36,7 @@ connections:
   #   conn_type: redshift
   #   schema: $REDSHIFT_DATABASE
   #   host: $REDSHIFT_HOST
-  #   port: $REDSHIFT_PORT
+  #   port: 5439
   #   login: $REDSHIFT_USERNAME
   #   password: $REDSHIFT_PASSWORD
 
@@ -46,7 +46,7 @@ connections:
   # - conn_id: snowflake_conn
   #   conn_type: snowflake
   #   host: $SNOWFLAKE_HOST
-  #   port: $SNOWFLAKE_PORT
+  #   port: 443
   #   login: $SNOWFLAKE_ACCOUNT_NAME
   #   password: $SNOWFLAKE_PASSWORD
   #   schema: $SNOWFLAKE_SCHEMA
