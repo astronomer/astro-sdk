@@ -8,6 +8,7 @@ from airflow.decorators import task
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
+from astro.databricks.load_options import default_delta_options
 from astro.files import File
 from astro.table import Metadata, Table
 from tests.sql.operators import utils as test_utils
@@ -59,9 +60,10 @@ def test_dataframe_transform(database_table_fixture, sample_dag):
         {"database": Database.POSTGRES},
         {"database": Database.SQLITE},
         {"database": Database.REDSHIFT},
+        {"database": Database.DELTA},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "delta"],
 )
 def test_transform(database_table_fixture, sample_dag):
     _, test_table = database_table_fixture
@@ -78,6 +80,7 @@ def test_transform(database_table_fixture, sample_dag):
         homes_file = aql.load_file(
             input_file=File(path=str(cwd) + "/../../../data/homes.csv"),
             output_table=test_table,
+            load_options=default_delta_options,
         )
         first_model = sample_function(
             input_table=homes_file,
@@ -97,12 +100,13 @@ def test_transform(database_table_fixture, sample_dag):
         {"database": Database.POSTGRES},
         {"database": Database.SQLITE},
         {"database": Database.REDSHIFT},
+        {"database": Database.DELTA},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "delta"],
 )
 def test_raw_sql(database_table_fixture, sample_dag):
-    _, test_table = database_table_fixture
+    db, test_table = database_table_fixture
 
     @aql.run_raw_sql
     def raw_sql_query(my_input_table: Table, created_table: Table, num_rows: int):
@@ -112,13 +116,18 @@ def test_raw_sql(database_table_fixture, sample_dag):
     def validate_raw_sql(cur: pd.DataFrame):
         from sqlalchemy.engine.row import LegacyRow
 
-        for c in cur:
-            assert isinstance(c, LegacyRow)
+        if db.sql_type == "delta":
+            for c in cur:
+                assert isinstance(c, list)
+        else:
+            for c in cur:
+                assert isinstance(c, LegacyRow)
 
     with sample_dag:
         homes_file = aql.load_file(
             input_file=File(path=str(cwd) + "/../../../data/homes.csv"),
             output_table=test_table,
+            load_options=default_delta_options,
         )
         raw_sql_result = raw_sql_query(
             my_input_table=homes_file,
