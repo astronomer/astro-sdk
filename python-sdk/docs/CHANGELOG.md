@@ -35,7 +35,7 @@
 - Update the documentation for Google Drive support. [#1044](https://github.com/astronomer/astro-sdk/issues/1044)
 - Update the documentation to remove the environment variable `OPENLINEAGE_EXTRACTORS` to use OpenLineage. [#1292](https://github.com/astronomer/astro-sdk/issues/1292)
 
-## Misc
+### Misc
 - Fix the GCS path in `aql.export_file` in the example DAGs. [#1339](https://github.com/astronomer/astro-sdk/issues/1339)
 
 ## 1.2.3
