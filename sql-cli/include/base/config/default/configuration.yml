@@ -50,9 +50,4 @@ connections:
   #   login: $SNOWFLAKE_ACCOUNT_NAME
   #   password: $SNOWFLAKE_PASSWORD
   #   schema: $SNOWFLAKE_SCHEMA
-  #   extra:
-  #     account: $SNOWFLAKE_ACCOUNT
-  #     region: $SNOWFLAKE_REGION
-  #     role: $SNOWFLAKE_ROLE
-  #     warehouse: $SNOWFLAKE_WAREHOUSE
-  #     database: $SNOWFLAKE_DATABASE
+  #   extra: '{"account": "$SNOWFLAKE_ACCOUNT", "region": "$SNOWFLAKE_REGION", "role": "$SNOWFLAKE_ROLE", "warehouse": "$SNOWFLAKE_WAREHOUSE", "database": "$SNOWFLAKE_DATABASE"}'
