@@ -119,11 +119,12 @@ def test_version():
         ("airflow_dags_folder", "airflow_home/dags"),
     ],
 )
-def test_config(key, value, initialised_project_with_custom_airflow_config):
+def test_config_get(key, value, initialised_project_with_custom_airflow_config):
     result = runner.invoke(
         app,
         [
             "config",
+            "get",
             "--project-dir",
             initialised_project_with_custom_airflow_config.directory.as_posix(),
             key,

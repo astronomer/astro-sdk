@@ -94,3 +94,9 @@ class Config:
 
         with filepath.open(mode="w") as fp:
             yaml.dump(yaml_config, fp)
+
+    def as_json(self):
+        """
+        Return configuration represented as JSON string.
+        """
+        return "{}"
