@@ -176,7 +176,6 @@ def test_transform_with_templated_table_name(database_table_fixture, sample_dag)
 
     expected_target_table = target_table.create_similar_table()
     expected_target_table.name = "test_is_True"
-    expected_target_table == 117
     database.drop_table(expected_target_table)
     assert not database.table_exists(expected_target_table)
 
@@ -216,7 +215,6 @@ def test_transform_with_file(database_table_fixture, sample_dag):
 
     expected_target_table = target_table.create_similar_table()
     expected_target_table.name = "test_is_True"
-    expected_target_table.row_count == 117
     database.drop_table(expected_target_table)
     assert not database.table_exists(expected_target_table)
 
