@@ -14,4 +14,3 @@ os.environ["AIRFLOW__CORE__LAZY_LOAD_PLUGINS"] = "True"
 os.environ["AIRFLOW__CORE__LOAD_EXAMPLES"] = "False"
 
 __version__ = importlib.metadata.version("astro-sql-cli")
-
