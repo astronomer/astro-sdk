@@ -227,12 +227,7 @@ def test_generate_invalid(workflow_name, message, initialised_project_with_tests
     "env,connection,status",
     [
         ("default", "sqlite_conn", "PASSED"),
-        (
-            "default",
-            "bigquery_conn_with_fallback",
-            "PASSED",
-        ),  # requires GOOGLE_APPLICATION_CREDENTIALS env var to be set
-        ("default", "bigquery_conn_with_env_expand", "FAILED"),  # expects the env vars to not be set
+        ("dev", "sqlite_conn", "PASSED"),
     ],
 )
 def test_validate(env, connection, status, initialised_project):
@@ -270,12 +265,21 @@ def test_validate_sqlite_non_existent_host_path(
     assert isinstance(result.exception, FileNotFoundError)
 
 
-def test_validate_all(initialised_project):
+@pytest.mark.parametrize(
+    "env",
+    [
+        "default",
+        "test",
+    ],
+)
+def test_validate_all(env, initialised_project_with_test_config):
     result = runner.invoke(
         app,
         [
             "validate",
-            initialised_project.directory.as_posix(),
+            initialised_project_with_test_config.directory.as_posix(),
+            "--env",
+            env,
         ],
     )
     assert result.exit_code == 0
