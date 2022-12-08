@@ -46,19 +46,6 @@ jobs:
   Type-Check:
     if: github.event.action != 'labeled'
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: dimberman/pagila-test
-        env:
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-          --name postgres
-        ports:
-          - 5432:5432
     env:
       MYPY_FORCE_COLOR: 1
       TERM: xterm-color
@@ -99,6 +86,19 @@ jobs:
         python: [ 3.8, 3.9 ]
         airflow: [ 2.2.5, 2.3.4, 2.4, 2.5 ]
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: dimberman/pagila-test
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --name postgres
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
