@@ -14,6 +14,7 @@ from airflow.utils.session import create_session, provide_session
 
 from astro.constants import Database, FileLocation, FileType
 from astro.databases import create_database
+from astro.databricks.load_options import default_delta_options
 from astro.table import MAX_TABLE_NAME_LENGTH, Table, TempTable
 from tests.sql.operators import utils as test_utils
 
@@ -140,8 +141,13 @@ def database_table_fixture(request):
 
     database.populate_table_metadata(table)
     database.create_schema_if_needed(table.metadata.schema)
+
     if file:
-        database.load_file_to_table(file, table)
+        database.load_file_to_table(
+            file,
+            table,
+            load_options=default_delta_options,
+        )
     yield database, table
     database.drop_table(table)
 
@@ -204,7 +210,11 @@ def multiple_tables_fixture(request, database_table_fixture):
         database.populate_table_metadata(table)
         database.create_schema_if_needed(table.metadata.schema)
         if file:
-            database.load_file_to_table(file, table)
+            database.load_file_to_table(
+                file,
+                table,
+                load_options=default_delta_options,
+            )
         tables.append(table)
 
     yield tables if len(tables) > 1 else tables[0]

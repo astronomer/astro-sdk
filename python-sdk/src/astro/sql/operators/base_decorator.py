@@ -188,7 +188,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                 context[k] = jinja_table_identifier
                 self.parameters[k] = jinja_table_parameter_value
             else:
-                context[k] = ":" + k
+                context[k] = self.database_impl.parameterize_variable(k)
 
         # Render templating in sql query
         if context:
