@@ -15,7 +15,6 @@ from unittest import mock
 
 import pandas as pd
 import pytest
-from airflow.decorators import task
 from airflow.exceptions import AirflowNotFoundException
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
@@ -62,6 +61,8 @@ CWD = pathlib.Path(__file__).parent
 )
 def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
+
+    from airflow.decorators import task
 
     @task
     def validate_table_exists(table: Table):
