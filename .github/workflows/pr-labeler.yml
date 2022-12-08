@@ -1,6 +1,10 @@
 name: "Pull Request Labeler"
 on:
-- pull_request
+  pull_request:
+    branches: [ 'main', 'release-**' ]
+  # Run on PRs from forks
+  pull_request_target:
+    branches: [ 'main' ]
 
 jobs:
   triage:
