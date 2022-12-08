@@ -27,8 +27,6 @@ def validate_connections(connections: list[Connection], connection_id: str | Non
             rprint(f"Validating connection {connection.conn_id:{CONNECTION_ID_OUTPUT_STRING_WIDTH}}", status)
 
 
-# dummy comment
-
 def _is_valid(connection: Connection) -> bool:
     # Sqlite automatically creates the file if it does not exist,
     # but our users might not expect that. They are referencing a database they expect to exist.
