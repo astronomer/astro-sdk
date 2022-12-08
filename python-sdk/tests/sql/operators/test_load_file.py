@@ -123,7 +123,6 @@ def test_aql_load_remote_file_to_dbs(sample_dag, database_table_fixture, remote_
     test_utils.run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
-    df = db.export_table_to_pandas_dataframe(test_table)
     assert test_table.row_count == 3
     # Workaround for snowflake capitalized col names
     sort_cols = "name"
