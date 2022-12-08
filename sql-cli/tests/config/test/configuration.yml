@@ -1,22 +1,12 @@
-# IMPORTANT:
-# Please use environment variables to define secrets in connections.
-# You can set those in a .env file in the root directory of your project.
 connections:
-
-## Examples of Bigquery connections
-## To use this, either set the corresponding environment variables or
-## replace the values started by $ inline
   - conn_id: bigquery_conn
     conn_type: gcpbigquery
     extra: '{"extra__google_cloud_platform__project": "$GOOGLE_CLOUD_PROJECT", "extra__google_cloud_platform__key_path": "$GOOGLE_CLOUD_KEY_PATH"}'
-    # Note that you need to set these environment variables.
+
   - conn_id: bigquery_conn_with_fallback
     conn_type: gcpbigquery
-    # Note that you need to set GOOGLE_APPLICATION_CREDENTIALS environment variable.
+    # Falls back to GOOGLE_APPLICATION_CREDENTIALS environment variable.
 
-## Example of Postgres connection
-## To use this, either set the corresponding environment variables or
-## replace the values started by $ inline
   - conn_id: postgres_conn
     conn_type: postgres
     host: $POSTGRES_HOST
@@ -24,11 +14,7 @@ connections:
     login: $POSTGRES_USERNAME
     password: $POSTGRES_PASSWORD
     port: $POSTGRES_PORT
-    # Note that you need to set these environment variables.
 
-## Example of Redshift connection
-## To use this, either set the corresponding environment variables or
-## replace the values started by $ inline
   - conn_id: redshift_conn
     conn_type: redshift
     schema: $REDSHIFT_DATABASE
@@ -36,11 +22,7 @@ connections:
     port: $REDSHIFT_PORT
     login: $REDSHIFT_USERNAME
     password: $REDSHIFT_PASSWORD
-    # Note that you need to set these environment variables.
 
-## Example of Snowflake connection
-## To use this, either set the corresponding environment variables or
-## replace the values started by $ inline
   - conn_id: snowflake_conn
     conn_type: snowflake
     host: $SNOWFLAKE_HOST
