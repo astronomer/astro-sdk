@@ -1,4 +1,13 @@
 connections:
+  - conn_id: aws_conn
+    conn_type: aws
+    login: $AWS_ACCESS_KEY_ID
+    password: $AWS_SECRET_ACCESS_KEY
+
+  - conn_id: aws_conn_with_fallback
+    conn_type: aws
+    # Falls back to AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variable.
+
   - conn_id: bigquery_conn
     conn_type: gcpbigquery
     extra: '{"extra__google_cloud_platform__project": "$GOOGLE_CLOUD_PROJECT", "extra__google_cloud_platform__key_path": "$GOOGLE_CLOUD_KEY_PATH"}'
