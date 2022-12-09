@@ -1,8 +1,8 @@
 .. _transform_operator:
 
-==================
-transform operator
-==================
+============================================================
+:py:mod:`transform operator <astro.sql.operators.transform>`
+============================================================
 
 When to use the ``transform`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
