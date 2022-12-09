@@ -253,23 +253,23 @@ def test_failure_of_column_check_operator_with_min_check(sample_dag):
     [
         {
             "database": Database.SNOWFLAKE,
-            "file": File(path=str(CWD) + "/../../data/data_validation.csv"),
+            "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
         },
         {
             "database": Database.BIGQUERY,
-            "file": File(path=str(CWD) + "/../../data/data_validation.csv"),
+            "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
         },
         {
             "database": Database.POSTGRES,
-            "file": File(path=str(CWD) + "/../../data/data_validation.csv"),
+            "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
         },
         {
             "database": Database.SQLITE,
-            "file": File(path=str(CWD) + "/../../data/data_validation.csv"),
+            "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
         },
         {
             "database": Database.REDSHIFT,
-            "file": File(path=str(CWD) + "/../../data/data_validation.csv"),
+            "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
         },
     ],
     indirect=True,
