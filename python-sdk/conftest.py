@@ -12,15 +12,13 @@ from airflow.utils import timezone
 from airflow.utils.db import create_default_connections
 from airflow.utils.session import create_session, provide_session
 
-from astro.constants import Database, FileLocation, FileType
+from astro.constants import Database, FileType
 from astro.databases import create_database
 from astro.databricks.load_options import default_delta_options
 from astro.table import MAX_TABLE_NAME_LENGTH, Table, TempTable
-from tests.sql.operators import utils as test_utils
 
 DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 
-OUTPUT_TABLE_NAME = test_utils.get_table_name("integration_test_table")
 UNIQUE_HASH_SIZE = 16
 CWD = pathlib.Path(__file__).parent
 
@@ -81,34 +79,6 @@ def create_unique_table_name(length: int = MAX_TABLE_NAME_LENGTH) -> str:
         random.choice(string.ascii_lowercase + string.digits) for _ in range(length - 1)
     )
     return unique_id
-
-
-@pytest.fixture
-def output_table(request):
-    table_type = request.param
-    if table_type == "None":
-        return Table()
-    elif table_type == "partial":
-        return Table(name="my_table")
-    elif table_type == "full":
-        return Table(name="my_table", conn_id="postgres_conn_pagila")
-
-
-@pytest.fixture
-def schemas_fixture(request, database_table_fixture):
-    """
-    Given request.param in the format:
-        "someschema"  # name of the schema to be created
-    If the schema exists, it is deleted during the tests setup and tear down.
-    """
-    schema_name = request.param
-    database, _ = database_table_fixture
-
-    database.run_sql(f"DROP SCHEMA IF EXISTS {schema_name}")
-
-    yield
-
-    database.run_sql(f"DROP SCHEMA IF EXISTS {schema_name}")
 
 
 @pytest.fixture
@@ -332,30 +302,3 @@ def type_method_map_fixture(request):
         base_path=base_path,
         get=lambda x: FileType(x.rstrip(suffix).lower()),
     )
-
-
-@pytest.fixture
-def locations_method_map_fixture(request):
-    """Get paths for location's package for methods"""
-    method = request.param["method"]
-    classes = [
-        "local.LocalLocation",
-        "http.HTTPLocation",
-        "google.gcs.GCSLocation",
-        "amazon.s3.S3Location",
-    ]
-    base_path = ("astro.files.locations",)
-    suffix = "Location"
-
-    synonyms = {"gcs": "gs"}
-
-    def get_location_type(cls):
-        """getter for location type"""
-        val = cls.split(".")[-1].rstrip(suffix).lower()
-        if synonyms.get(val):
-            val = synonyms[val]
-        return FileLocation(val)
-
-    result = method_map_fixture(method=method, classes=classes, base_path=base_path, get=get_location_type)
-    result[FileLocation("https")] = result[FileLocation("http")]
-    yield result
