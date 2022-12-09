@@ -4,12 +4,10 @@ import time
 from datetime import timedelta
 from typing import Any
 
-import airflow
 from airflow.decorators.base import get_unique_task_id
 from airflow.exceptions import AirflowException
 from airflow.models.baseoperator import BaseOperator
 from airflow.models.dagrun import DagRun
-from packaging.version import Version
 
 try:
     # Airflow >= 2.3
@@ -234,18 +232,16 @@ class CleanupOperator(AstroSQLBaseOperator):
                     and isinstance(task, MappedOperator)
                     and issubclass(task.operator_class, OPERATOR_CLASSES_WITH_TABLE_OUTPUT)
                 ):
-                    if Version(airflow.__version__) >= Version("2.4.0"):
-                        for t in task.output.resolve(context):
-                            if isinstance(t, BaseTable):
-                                res.append(t)
-                    else:
-                        from airflow.models.xcom_arg import XComArg
+                    from airflow.models.xcom_arg import XComArg
 
+                    try:
+                        task_output = task.output
+                    except AttributeError:
                         task_output = XComArg(operator=task)
-                        for t in task_output.resolve(context):
-                            if isinstance(t, BaseTable):
-                                res.append(t)
 
+                    for t in task_output.resolve(context):
+                        if isinstance(t, BaseTable):
+                            res.append(t)
             except AirflowException:  # pragma: no cover
                 self.log.info(
                     "xcom output for %s not found. Will not clean up this task",
