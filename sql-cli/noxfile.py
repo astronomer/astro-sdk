@@ -34,16 +34,16 @@ def test(session: nox.Session, airflow: str) -> None:
     session.install("poetry")
 
     if airflow.startswith("2.2."):
-        # We are duplicating the tests dependencies until we find a better solution.
-        # The solution might be to move out of poetry.
-        dev = ("pytest", "pytest-cov", "mypy", "types-pyyaml")
-        session.run("poetry", "run", "pip", "install", "-e", ".", *dev)
         # To install some versions of Airflow, we need constraints, due to issues like:
         # https://github.com/apache/airflow/issues/19804
         constraints_url = (
             "https://raw.githubusercontent.com/apache/airflow/"
             f"constraints-{airflow}/constraints-{session.python}.txt"
         )
+        # We are duplicating the tests dependencies until we find a better solution.
+        # The solution might be to move out of poetry.
+        dev = ("pytest", "pytest-cov", "mypy", "types-pyyaml")
+        session.run("poetry", "run", "pip", "install", "-e", ".", *dev, "-c", constraints_url)
         session.run("poetry", "run", "pip", "install", f"apache-airflow=={airflow}", "-c", constraints_url)
     else:
         session.run("poetry", "install", "--with", "dev")
