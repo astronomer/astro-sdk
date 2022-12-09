@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import inspect
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, get_type_hints
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
@@ -48,21 +47,21 @@ def load_op_arg_table_into_dataframe(
 ) -> tuple:
     """For dataframe based functions, takes any Table objects from the op_args
     and converts them into local dataframes that can be handled in the python context"""
-    full_spec = inspect.getfullargspec(python_callable)
+
+    type_hints = get_type_hints(python_callable)
     op_args_list = list(op_args)
+    type_hints_vals = list(type_hints.values())
     ret_args = []
     # We check if the type annotation is of type dataframe to determine that the user actually WANTS
     # this table to be converted into a dataframe, rather that passed in as a table
     log.debug("retrieving op_args")
 
-    for arg in op_args_list:
-        current_arg = full_spec.args.pop(0)
-        if full_spec.annotations.get(current_arg) == pd.DataFrame and isinstance(arg, BaseTable):
+    for i, arg in enumerate(op_args_list):
+        is_arg_dataframe = type_hints_vals and type_hints_vals[i] is pd.DataFrame
+        if is_arg_dataframe and isinstance(arg, BaseTable):
             log.debug("Found SQL table, retrieving dataframe from table %s", arg.name)
             ret_args.append(_get_dataframe(arg, columns_names_capitalization=columns_names_capitalization))
-        elif isinstance(arg, File) and (
-            full_spec.annotations.get(current_arg) == pd.DataFrame or arg.is_dataframe
-        ):
+        elif isinstance(arg, File) and (is_arg_dataframe or arg.is_dataframe):
             log.debug("Found dataframe file, retrieving dataframe from file %s", arg.path)
             ret_args.append(arg.export_to_dataframe())
         else:
@@ -78,17 +77,17 @@ def load_op_kwarg_table_into_dataframe(
 ) -> dict:
     """For dataframe based functions, takes any Table objects from the op_kwargs
     and converts them into local dataframes that can be handled in the python context"""
-    param_types = inspect.signature(python_callable).parameters
+    type_hints = get_type_hints(python_callable)
     # We check if the type annotation is of type dataframe to determine that the user actually WANTS
     # this table to be converted into a dataframe, rather that passed in as a table
     out_dict = {}
     log.debug("retrieving op_kwargs")
 
     for k, v in op_kwargs.items():
-        if param_types.get(k).annotation is pd.DataFrame and isinstance(v, BaseTable):  # type: ignore
+        if type_hints.get(k) is pd.DataFrame and isinstance(v, BaseTable):  # type: ignore
             log.debug("Found SQL table, retrieving dataframe from table %s", v.name)
             out_dict[k] = _get_dataframe(v, columns_names_capitalization=columns_names_capitalization)
-        elif isinstance(v, File) and (param_types.get(k).annotation is pd.DataFrame or v.is_dataframe):  # type: ignore
+        elif isinstance(v, File) and (type_hints.get(k) is pd.DataFrame or v.is_dataframe):  # type: ignore
             log.debug("Found dataframe file, retrieving dataframe from file %s", v.path)
             out_dict[k] = v.export_to_dataframe()
         else:
