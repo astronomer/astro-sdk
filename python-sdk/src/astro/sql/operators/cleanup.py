@@ -234,9 +234,9 @@ class CleanupOperator(AstroSQLBaseOperator):
                         from airflow.models.xcom_arg import XComArg
 
                         task_output = XComArg(operator=self)
-                        for t in task_output.resolve(context):
-                            if isinstance(t, BaseTable):
-                                res.append(t)
+                        t = task_output.resolve(context)
+                        if isinstance(t, BaseTable):
+                            res.append(t)
                 elif (
                     MappedOperator
                     and isinstance(task, MappedOperator)
