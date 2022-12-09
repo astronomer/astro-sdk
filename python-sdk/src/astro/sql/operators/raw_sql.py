@@ -35,7 +35,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
     def execute(self, context: Context) -> Any:
         super().execute(context)
 
-        result = self.database_impl.run_sql(sql=self.sql, parameters=self.parameters)
+        result = self.database_impl.run_sql(sql=self.sql, parameters=self.parameters, handler=self.handler)
         if self.response_size == -1 and not settings.IS_CUSTOM_XCOM_BACKEND:
             logging.warning(
                 "Using `run_raw_sql` without `response_size` can result in excessive amount of data being recorded "
@@ -44,7 +44,9 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
                 "backend."
             )
 
-        if self.handler:
+        if self.handler and self.database_impl.sql_type == "delta":
+            return result
+        elif self.handler:
             response = self.handler(result)
             response = [SdkLegacyRow.from_legacy_row(r) if isinstance(r, SQLAlcRow) else r for r in response]
             if 0 <= self.response_limit < len(response):

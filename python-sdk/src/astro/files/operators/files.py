@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any
 
 from airflow.decorators.base import get_unique_task_id
@@ -29,8 +31,13 @@ class ListFileOperator(BaseOperator):
         super().__init__(task_id=task_id, **kwargs)
 
     def execute(self, context: Context) -> Any:  # skipcq: PYL-W0613
-        location = create_file_location(self.path, self.conn_id)
+        files = get_file_list_func(self.path, self.conn_id)
         # Get list of files excluding folders
-        return [
-            File(path=path, conn_id=location.conn_id) for path in location.paths if not path.endswith("/")
-        ]
+        return [File(path=file, conn_id=self.conn_id) for file in files]
+
+
+def get_file_list_func(path: str, conn_id: str) -> list[str]:
+    """Function to get list of files from a bucket"""
+    location = create_file_location(path, conn_id)
+    # Get list of files excluding folders
+    return [path for path in location.paths if not path.endswith("/")]

@@ -1,6 +1,5 @@
 .git
 coverage.xml
-.env
 **/.coverage*
 **/.python-version
 python-sdk/integration-tests/test_data*
@@ -58,6 +57,7 @@ sql-cli/tests/.airflow/dags/*
 sql-cli/include/base/.airflow/dags/*
 !sql-cli/include/base/.airflow/dags/include/.gitkeep
 !sql-cli/include/base/.airflow/dags/.gitkeep
+!/sql-cli/include/base/.env
 
 # Airflow
 **/.airflowignore
