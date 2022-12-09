@@ -31,6 +31,12 @@ airflow_logger = logging.getLogger("airflow")
 airflow_logger.setLevel(logging.CRITICAL)
 airflow_logger.propagate = False
 
+boto_logger = logging.getLogger("botocore")
+boto_logger.setLevel(logging.CRITICAL)
+
+snowflake_logger = logging.getLogger("snowflake")
+snowflake_logger.setLevel(logging.CRITICAL)
+
 
 @app.command(
     cls=AstroCommand,
