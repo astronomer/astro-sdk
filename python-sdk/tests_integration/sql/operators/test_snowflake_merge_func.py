@@ -4,7 +4,8 @@ import unittest
 from astro.databases import create_database
 from astro.databases.snowflake import SnowflakeDatabase, is_valid_snow_identifier
 from astro.table import Metadata, Table
-from tests.sql.operators import utils as test_utils
+
+from ..operators import utils as test_utils
 
 
 class TestSnowflakeMerge(unittest.TestCase):

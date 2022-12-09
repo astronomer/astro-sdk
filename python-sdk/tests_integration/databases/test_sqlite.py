@@ -1,69 +1,86 @@
-"""Tests specific to the Sqlite Database implementation."""
 import os
 import pathlib
-from urllib.parse import urlparse
 
 import pandas as pd
 import pytest
 import sqlalchemy
+from airflow.hooks.base import BaseHook
 
 from astro.constants import Database
 from astro.databases import create_database
-from astro.databases.postgres import PostgresDatabase
+from astro.databases.sqlite import SqliteDatabase
 from astro.exceptions import NonExistentTableException
 from astro.files import File
-from astro.settings import SCHEMA
-from astro.table import Metadata, Table
+from astro.table import Table
 from astro.utils.load import copy_remote_file_to_local
-from tests.sql.operators import utils as test_utils
 
-DEFAULT_CONN_ID = "postgres_default"
-CUSTOM_CONN_ID = "postgres_conn"
-SUPPORTED_CONN_IDS = [DEFAULT_CONN_ID, CUSTOM_CONN_ID]
+from ..sql.operators import utils as test_utils
+
 CWD = pathlib.Path(__file__).parent
 
-TEST_TABLE = Table()
+DEFAULT_CONN_ID = "sqlite_default"
+CUSTOM_CONN_ID = "sqlite_conn"
+SUPPORTED_CONN_IDS = [DEFAULT_CONN_ID, CUSTOM_CONN_ID]
 
 
 @pytest.mark.parametrize("conn_id", SUPPORTED_CONN_IDS)
 def test_create_database(conn_id):
-    """Test creation of database"""
+    """Check that the database is created with the correct class."""
     database = create_database(conn_id)
-    assert isinstance(database, PostgresDatabase)
+    assert isinstance(database, SqliteDatabase)
 
 
 @pytest.mark.parametrize(
-    "conn_id,expected_uri",
+    "conn_id,expected_db_path",
     [
-        (DEFAULT_CONN_ID, "postgresql://postgres:airflow@postgres/airflow"),
-        (CUSTOM_CONN_ID, "postgresql://postgres:postgres@localhost:5432"),
+        (
+            DEFAULT_CONN_ID,
+            BaseHook.get_connection(DEFAULT_CONN_ID).host,
+        ),  # Linux and MacOS have different hosts
+        (CUSTOM_CONN_ID, "/tmp/sqlite.db"),
     ],
     ids=SUPPORTED_CONN_IDS,
 )
-def test_postgres_sqlalchemy_engine(conn_id, expected_uri):
-    """Test getting a postgres based sqla engine."""
-    database = PostgresDatabase(conn_id)
+def test_sqlite_sqlalchemy_engine(conn_id, expected_db_path):
+    """Confirm that the SQLAlchemy is created successfully and verify DB path."""
+    database = SqliteDatabase(conn_id)
     engine = database.sqlalchemy_engine
     assert isinstance(engine, sqlalchemy.engine.base.Engine)
-    url = urlparse(str(engine.url))
-    assert url.geturl() == expected_uri
+    assert engine.url.database == expected_db_path
 
 
 @pytest.mark.integration
-def test_postgres_run_sql():
-    """Test run_sql against postgres database"""
-    statement = "SELECT 1 + 1;"
-    database = PostgresDatabase(conn_id=CUSTOM_CONN_ID)
+def test_sqlite_run_sql_with_sqlalchemy_text():
+    """Run a SQL statement using SQLAlchemy text"""
+    statement = sqlalchemy.text("SELECT 1 + 1;")
+    database = SqliteDatabase()
     response = database.run_sql(statement)
     assert response.first()[0] == 2
 
 
 @pytest.mark.integration
+def test_sqlite_run_sql():
+    """Run a SQL statement using plain string."""
+    statement = "SELECT 1 + 1;"
+    database = SqliteDatabase()
+    response = database.run_sql(statement)
+    assert response.first()[0] == 2
+
+
+@pytest.mark.integration
+def test_sqlite_run_sql_with_parameters():
+    """Test running a SQL query using SQLAlchemy templating engine"""
+    statement = "SELECT 1 + :value;"
+    database = SqliteDatabase()
+    response = database.run_sql(statement, parameters={"value": 1})
+    assert response.first()[0] == 2
+
+
+@pytest.mark.integration
 def test_table_exists_raises_exception():
-    """Test if table exists in postgres database"""
-    database = PostgresDatabase(conn_id=CUSTOM_CONN_ID)
-    table = Table(name="inexistent-table", metadata=Metadata(schema=SCHEMA))
-    assert not database.table_exists(table)
+    """Raise an exception when checking for a non-existent table"""
+    database = SqliteDatabase()
+    assert not database.table_exists(Table(name="inexistent-table"))
 
 
 @pytest.mark.integration
@@ -71,24 +88,23 @@ def test_table_exists_raises_exception():
     "database_table_fixture",
     [
         {
-            "database": Database.POSTGRES,
+            "database": Database.SQLITE,
             "table": Table(
-                metadata=Metadata(schema=SCHEMA),
                 columns=[
                     sqlalchemy.Column("id", sqlalchemy.Integer, primary_key=True),
                     sqlalchemy.Column("name", sqlalchemy.String(60), nullable=False, key="name"),
-                ],
+                ]
             ),
         }
     ],
     indirect=True,
-    ids=["postgres"],
+    ids=["sqlite"],
 )
-def test_postgres_create_table_with_columns(database_table_fixture):
-    """Test table creation with columns data"""
+def test_sqlite_create_table_with_columns(database_table_fixture):
+    """Create a table using specific columns and types"""
     database, table = database_table_fixture
 
-    statement = f"SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name='{table.name}'"
+    statement = f"PRAGMA table_info({table.name});"
     response = database.run_sql(statement)
     assert response.first() is None
 
@@ -96,37 +112,71 @@ def test_postgres_create_table_with_columns(database_table_fixture):
     response = database.run_sql(statement)
     rows = response.fetchall()
     assert len(rows) == 2
-    assert rows[0][0:4] == (
-        "postgres",
-        SCHEMA,
-        f"{table.name}",
-        "id",
-    )
-    assert rows[1][0:4] == (
-        "postgres",
-        SCHEMA,
-        f"{table.name}",
-        "name",
-    )
+    assert rows[0] == (0, "id", "INTEGER", 1, None, 1)
+    assert rows[1] == (1, "name", "VARCHAR(60)", 1, None, 0)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [{"database": Database.SQLITE, "table": Table()}],
+    indirect=True,
+    ids=["sqlite"],
+)
+def test_sqlite_create_table_autodetection_with_file(database_table_fixture):
+    """Create a table using specific columns and types"""
+    database, table = database_table_fixture
+
+    statement = f"PRAGMA table_info({table.name});"
+    response = database.run_sql(statement)
+    assert response.first() is None
+
+    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
+    database.create_table(table, File(filepath))
+    response = database.run_sql(statement)
+    rows = response.fetchall()
+    assert len(rows) == 2
+    assert rows[0] == (0, "id", "BIGINT", 0, None, 0)
+    assert rows[1] == (1, "name", "TEXT", 0, None, 0)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [{"database": Database.SQLITE, "table": Table()}],
+    indirect=True,
+    ids=["sqlite"],
+)
+def test_sqlite_create_table_autodetection_without_file(database_table_fixture):
+    """Create a table using specific columns and types"""
+    database, table = database_table_fixture
+
+    statement = f"PRAGMA table_info({table.name});"
+    response = database.run_sql(statement)
+    assert response.first() is None
+
+    with pytest.raises(ValueError) as exc_info:
+        database.create_table(table)
+    assert exc_info.match("File or Dataframe is required for creating table using schema autodetection")
 
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.POSTGRES},
+        {"database": Database.SQLITE},
     ],
     indirect=True,
-    ids=["postgres"],
+    ids=["sqlite"],
 )
 def test_load_pandas_dataframe_to_table(database_table_fixture):
-    """Test load_pandas_dataframe_to_table against postgres"""
+    """Load Pandas Dataframe to a SQL table"""
     database, table = database_table_fixture
 
     pandas_dataframe = pd.DataFrame(data={"id": [1, 2]})
     database.load_pandas_dataframe_to_table(pandas_dataframe, table)
 
-    statement = f"SELECT * FROM {database.get_table_qualified_name(table)};"
+    statement = f"SELECT * FROM {table.name};"
     response = database.run_sql(statement)
 
     rows = response.fetchall()
@@ -139,18 +189,18 @@ def test_load_pandas_dataframe_to_table(database_table_fixture):
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.POSTGRES},
+        {"database": Database.SQLITE},
     ],
     indirect=True,
-    ids=["postgres"],
+    ids=["sqlite"],
 )
 def test_load_file_to_table(database_table_fixture):
-    """Test loading on files to postgres database"""
+    """Load a file to a SQL table"""
     database, target_table = database_table_fixture
     filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
     database.load_file_to_table(File(filepath), target_table, {})
 
-    df = database.hook.get_pandas_df(f"SELECT * FROM {database.get_table_qualified_name(target_table)}")
+    df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
     assert len(df) == 3
     expected = pd.DataFrame(
         [
@@ -162,49 +212,23 @@ def test_load_file_to_table(database_table_fixture):
     test_utils.assert_dataframes_are_equal(df, expected)
 
 
-@pytest.mark.parametrize(
-    "database_table_fixture",
-    [
-        {"database": Database.POSTGRES},
-    ],
-    indirect=True,
-    ids=["postgres"],
-)
-def test_export_table_to_file_file_already_exists_raises_exception(
-    database_table_fixture,
-):
-    """
-    Test export_table_to_file_file() where the end file already exists, should result in exception
-    when the override option is False
-    """
-    database, source_table = database_table_fixture
-    filepath = pathlib.Path(CWD.parent, "data/sample.csv")
-    with pytest.raises(FileExistsError) as exception_info:
-        database.export_table_to_file(source_table, File(str(filepath)))
-    err_msg = exception_info.value.args[0]
-    assert err_msg.endswith(f"The file {filepath} already exists.")
-
-
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
         {
-            "database": Database.POSTGRES,
+            "database": Database.SQLITE,
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
-        },
+        }
     ],
     indirect=True,
-    ids=["postgres"],
+    ids=["sqlite"],
 )
 def test_export_table_to_file_overrides_existing_file(database_table_fixture):
-    """
-    Test export_table_to_file_file() where the end file already exists,
-    should result in overriding the existing file
-    """
+    """Override file if using the replace option"""
     database, populated_table = database_table_fixture
 
-    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
+    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv").absolute())
     database.export_table_to_file(populated_table, File(filepath), if_exists="replace")
 
     df = test_utils.load_to_dataframe(filepath, "csv")
@@ -222,14 +246,14 @@ def test_export_table_to_file_overrides_existing_file(database_table_fixture):
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
-    [{"database": Database.POSTGRES}],
+    [{"database": Database.SQLITE}],
     indirect=True,
-    ids=["postgres"],
+    ids=["sqlite"],
 )
 def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     database_table_fixture,
 ):
-    """Test export_table_to_file_file() where the table don't exist, should result in exception"""
+    """Export table to a Pandas dataframe"""
     database, non_existent_table = database_table_fixture
 
     with pytest.raises(NonExistentTableException) as exc_info:
@@ -244,12 +268,12 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     "database_table_fixture",
     [
         {
-            "database": Database.POSTGRES,
+            "database": Database.SQLITE,
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
         }
     ],
     indirect=True,
-    ids=["postgres"],
+    ids=["sqlite"],
 )
 @pytest.mark.parametrize(
     "remote_files_fixture",
@@ -258,7 +282,7 @@ def test_export_table_to_pandas_dataframe_non_existent_table_raises_exception(
     ids=["google"],
 )
 def test_export_table_to_file_in_the_cloud(database_table_fixture, remote_files_fixture):
-    """Test export_table_to_file_file() where end file location is in cloud object stores"""
+    """Export a SQL tale to a file in the cloud"""
     object_path = remote_files_fixture[0]
     database, populated_table = database_table_fixture
 
@@ -287,22 +311,22 @@ def test_export_table_to_file_in_the_cloud(database_table_fixture, remote_files_
     "database_table_fixture",
     [
         {
-            "database": Database.POSTGRES,
+            "database": Database.SQLITE,
             "file": File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
         }
     ],
     indirect=True,
-    ids=["postgres"],
+    ids=["sqlite"],
 )
 def test_create_table_from_select_statement(database_table_fixture):
-    """Test table creation via select statement"""
+    """Create a table given a SQL select statement"""
     database, original_table = database_table_fixture
 
     statement = f"SELECT * FROM {database.get_table_qualified_name(original_table)} WHERE id = 1;"
-    target_table = original_table.create_similar_table()
+    target_table = Table()
     database.create_table_from_select_statement(statement, target_table)
 
-    df = database.hook.get_pandas_df(f"SELECT * FROM {database.get_table_qualified_name(target_table)}")
+    df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
     assert len(df) == 1
     expected = pd.DataFrame([{"id": 1, "name": "First"}])
     test_utils.assert_dataframes_are_equal(df, expected)

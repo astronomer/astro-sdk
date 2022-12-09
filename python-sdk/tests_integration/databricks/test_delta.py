@@ -1,4 +1,3 @@
-"""Tests specific to the Sqlite Database implementation."""
 import pathlib
 
 import pytest
@@ -16,14 +15,19 @@ CUSTOM_CONN_ID = "databricks_conn"
 SUPPORTED_CONN_IDS = [CUSTOM_CONN_ID]
 CWD = pathlib.Path(__file__).parent
 
-TEST_TABLE = Table()
 
-
+@pytest.mark.integration
 @pytest.mark.parametrize("conn_id", SUPPORTED_CONN_IDS)
 def test_create_database(conn_id):
     """Check that the database is created with the correct class."""
     database = create_database(conn_id)
     assert isinstance(database, DeltaDatabase)
+
+
+@pytest.mark.integration
+def test_schema_exists():
+    database = DeltaDatabase(DEFAULT_CONN_ID)
+    assert database.schema_exists("")
 
 
 @pytest.mark.integration
@@ -130,22 +134,6 @@ def test_create_table_from_select_statement(database_table_fixture):
     assert len(df) == 26
     assert df.NAME[0] == "Dancer"
     database.drop_table(target_table)
-
-
-def test_merge():
-    with pytest.raises(NotImplementedError):
-        database = DeltaDatabase(DEFAULT_CONN_ID)
-        database.merge_table(
-            source_table=Table(),
-            target_table=Table(),
-            source_to_target_columns_map={},
-            target_conflict_columns=[],
-        )
-
-
-def test_schema_exists():
-    database = DeltaDatabase(DEFAULT_CONN_ID)
-    assert database.schema_exists("")
 
 
 @pytest.mark.integration

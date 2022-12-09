@@ -8,7 +8,7 @@ from airflow.decorators import task
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
-from astro.databricks.load_options import default_delta_options
+from astro.databricks.load_options import DeltaLoadOptions
 from astro.files import File
 from astro.table import Metadata, Table
 from tests.sql.operators import utils as test_utils
@@ -80,7 +80,7 @@ def test_transform(database_table_fixture, sample_dag):
         homes_file = aql.load_file(
             input_file=File(path=str(cwd) + "/../../../data/homes.csv"),
             output_table=test_table,
-            load_options=default_delta_options,
+            load_options=DeltaLoadOptions.get_default_delta_options(),
         )
         first_model = sample_function(
             input_table=homes_file,
@@ -127,7 +127,7 @@ def test_raw_sql(database_table_fixture, sample_dag):
         homes_file = aql.load_file(
             input_file=File(path=str(cwd) + "/../../../data/homes.csv"),
             output_table=test_table,
-            load_options=default_delta_options,
+            load_options=DeltaLoadOptions.get_default_delta_options(),
         )
         raw_sql_result = raw_sql_query(
             my_input_table=homes_file,
@@ -206,7 +206,7 @@ def test_transform_with_file(database_table_fixture, sample_dag):
     with sample_dag:
         target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="sqlite_default")
         table_from_query = aql.transform_file(
-            file_path="tests/sql/operators/transform/test.sql",
+            file_path="tests_integration/sql/operators/transform/test.sql",
             parameters={"input_table": imdb_table},
             op_kwargs={"output_table": target_table},
         )

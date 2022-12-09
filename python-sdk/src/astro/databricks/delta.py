@@ -13,7 +13,7 @@ from sqlalchemy.sql import ClauseElement
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.databricks.load_file.load_file_job import load_file_to_delta
-from astro.databricks.load_options import DeltaLoadOptions, default_delta_options
+from astro.databricks.load_options import DeltaLoadOptions
 from astro.files import File
 from astro.options import LoadOptions
 from astro.table import BaseTable, Metadata
@@ -141,7 +141,7 @@ class DeltaDatabase(BaseDatabase):
             input_file=input_file,
             delta_table=output_table,
             databricks_job_name=databricks_job_name,
-            delta_load_options=load_options or default_delta_options,
+            delta_load_options=load_options or DeltaLoadOptions.get_default_delta_options(),
         )
 
     def openlineage_dataset_name(self, table: BaseTable) -> str:
