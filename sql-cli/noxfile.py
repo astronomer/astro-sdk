@@ -45,6 +45,8 @@ def test(session: nox.Session, airflow: str) -> None:
         # We are duplicating the tests dependencies until we find a better solution.
         # The solution might be to move out of poetry.
         dev_deps = ("pytest", "pytest-cov", "mypy", "types-pyyaml")
+        # Poetry does not support constraints:
+        # https://github.com/python-poetry/poetry/issues/3225
         session.run("poetry", "run", "pip", "install", "-e", ".", *dev_deps, "-c", constraints_url)
         session.run("poetry", "run", "pip", "install", f"apache-airflow=={airflow}", "-c", constraints_url)
     else:
