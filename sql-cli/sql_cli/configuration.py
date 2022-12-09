@@ -50,7 +50,7 @@ class Config:
         :returns: Content of the YAML configuration file as a python dictionary.
         """
         load_dotenv(self.project_dir / ".env")
-        with open(filepath) as fp:
+        with filepath.open() as fp:
             yaml_with_env = os.path.expandvars(fp.read())
             yaml_config = yaml.safe_load(yaml_with_env)
         return yaml_config or {}
