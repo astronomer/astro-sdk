@@ -25,11 +25,13 @@ def dev(session: nox.Session) -> None:
 def test(session: nox.Session, airflow: str) -> None:
     """Run both unit and integration tests."""
 
-    session.virtualenv.env = {
-        # Airflow automatically creates the ~/airflow directory on importing airflow
-        # but we are not using this directory hence we change the home to a tmp directory to avoid side effects.
-        "AIRFLOW_HOME": session.create_tmp(),
-    }
+    session.virtualenv.env.update(
+        {
+            # Airflow automatically creates the ~/airflow directory on importing airflow
+            # but we are not using this directory hence we change the home to a tmp directory to avoid side effects.
+            "AIRFLOW_HOME": session.create_tmp(),
+        }
+    )
 
     session.install("poetry")
 
