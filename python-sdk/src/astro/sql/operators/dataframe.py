@@ -16,7 +16,7 @@ except ImportError:  # pragma: no cover
     from airflow.decorators import _TaskDecorator as TaskDecorator
     from airflow.decorators.base import task_decorator_factory
 
-from astro.constants import ColumnCapitalization
+from astro.constants import ColumnCapitalization, LoadExistStrategy
 from astro.databases import create_database
 from astro.files import File
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
@@ -105,6 +105,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
     :param conn_id: Connection to the DB that you will pull the table from
     :param database: Database for input table
     :param schema:  schema for input table
+    :param if_exists: Overwrite when set to "replace" else "append".
     :param warehouse: (Snowflake) Which warehouse to use for the input table
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
         in the resulting dataframe
@@ -119,6 +120,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         database: str | None = None,
         schema: str | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
+        if_exists: LoadExistStrategy = "replace",
         **kwargs,
     ):
         self.conn_id: str = conn_id or ""
@@ -133,6 +135,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             self.output_table = None
         self.op_args = self.kwargs.get("op_args", ())  # type: ignore
         self.columns_names_capitalization = columns_names_capitalization
+        self.if_exists = if_exists
 
         # We purposely do NOT render upstream_tasks otherwise we could have a case where a user
         # has 10 dataframes as upstream tasks and it crashes the worker
@@ -185,7 +188,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             db.load_pandas_dataframe_to_table(
                 source_dataframe=function_output,
                 target_table=self.output_table,
-                if_exists="replace",
+                if_exists=self.if_exists,
             )
             return self.output_table
         else:
@@ -271,6 +274,7 @@ def dataframe(
     database: str | None = None,
     schema: str | None = None,
     columns_names_capitalization: ColumnCapitalization = "original",
+    if_exists: LoadExistStrategy = "replace",
     **kwargs: Any,
 ) -> TaskDecorator:
     """
@@ -295,6 +299,7 @@ def dataframe(
         function (required if there are no table arguments)
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
         in the resulting dataframe
+    :param if_exists: Overwrite when set to "replace" else "append"
     :param kwargs: Any keyword arguments supported by the BaseOperator is supported (e.g ``queue``, ``owner``)
     """
     kwargs.update(
@@ -303,6 +308,7 @@ def dataframe(
             "database": database,
             "schema": schema,
             "columns_names_capitalization": columns_names_capitalization,
+            "if_exists": if_exists,
         }
     )
     decorated_function = task_decorator_factory(
