@@ -25,6 +25,16 @@ def dev(session: nox.Session) -> None:
 def test(session: nox.Session, airflow: str) -> None:
     """Run both unit and integration tests."""
 
+    session.virtualenv.env.update(
+        {
+            # Airflow automatically creates the ~/airflow directory on importing airflow
+            # but we are not using this directory hence we change the home to a tmp directory to avoid side effects.
+            "AIRFLOW_HOME": session.create_tmp(),
+        }
+    )
+
+    session.install("poetry")
+
     if airflow.startswith("2.2."):
         # To install some versions of Airflow, we need constraints, due to issues like:
         # https://github.com/apache/airflow/issues/19804
@@ -32,30 +42,25 @@ def test(session: nox.Session, airflow: str) -> None:
             "https://raw.githubusercontent.com/apache/airflow/"
             f"constraints-{airflow}/constraints-{session.python}.txt"
         )
-
-        # Poetry does not support constraints:
-        # https://github.com/python-poetry/poetry/issues/3225
-        session.install("-e", ".", f"apache-airflow=={airflow}", "-c", constraints_url)
-
         # We are duplicating the tests dependencies until we find a better solution.
         # The solution might be to move out of poetry.
-        session.install("pytest")
-        session.install("pytest-cov")
-        session.install("mypy")
-        session.install("types-pyyaml")
-
-        session.log("Installed Dependencies:")
-        session.run("pip3", "freeze")
-
-        session.run("pytest", *session.posargs)
+        dev_deps = ("pytest", "pytest-cov", "mypy", "types-pyyaml")
+        # Poetry does not support constraints:
+        # https://github.com/python-poetry/poetry/issues/3225
+        session.run("poetry", "run", "pip", "install", "-e", ".", *dev_deps, "-c", constraints_url)
+        session.run("poetry", "run", "pip", "install", f"apache-airflow=={airflow}", "-c", constraints_url)
     else:
-        session.install("poetry")
         session.run("poetry", "install", "--with", "dev")
         session.run("poetry", "run", "pip", "install", f"apache-airflow=={airflow}")
 
-        session.log("Installed Dependencies:")
-        session.run("poetry", "run", "pip3", "freeze")
-        session.run("poetry", "run", "pytest", *session.posargs)
+    session.log("Installed Dependencies:")
+    session.run("poetry", "run", "pip", "freeze")
+
+    pytest_env = {
+        "TERMINAL_WIDTH": "3000",
+        "_TYPER_FORCE_DISABLE_TERMINAL": "1",
+    }
+    session.run("poetry", "run", "pytest", *session.posargs, env=pytest_env)
 
 
 @nox.session(python=["3.8"])
