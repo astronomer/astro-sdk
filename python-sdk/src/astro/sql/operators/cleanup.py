@@ -238,7 +238,7 @@ class CleanupOperator(AstroSQLBaseOperator):
                     task_output = task.output
                 except AttributeError:
                     task_output = XComArg(operator=task)
-                
+
                 for t in task_output.resolve(context):
                     if isinstance(t, BaseTable):
                         res.append(t)
