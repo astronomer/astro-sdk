@@ -120,7 +120,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         database: str | None = None,
         schema: str | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
-        if_exists: LoadExistStrategy | None = "replace",
+        if_exists: LoadExistStrategy = "replace",
         **kwargs,
     ):
         self.conn_id: str = conn_id or ""
@@ -135,7 +135,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             self.output_table = None
         self.op_args = self.kwargs.get("op_args", ())  # type: ignore
         self.columns_names_capitalization = columns_names_capitalization
-        self.if_exists = if_exists if if_exists else "replace"
+        self.if_exists = if_exists
 
         # We purposely do NOT render upstream_tasks otherwise we could have a case where a user
         # has 10 dataframes as upstream tasks and it crashes the worker
@@ -274,7 +274,7 @@ def dataframe(
     database: str | None = None,
     schema: str | None = None,
     columns_names_capitalization: ColumnCapitalization = "original",
-    if_exists: LoadExistStrategy | None = "replace",
+    if_exists: LoadExistStrategy = "replace",
     **kwargs: Any,
 ) -> TaskDecorator:
     """
