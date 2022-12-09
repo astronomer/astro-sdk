@@ -142,7 +142,6 @@ def validate(
 
     project_dir_absolute = _resolve_project_dir(project_dir)
     project = Project(project_dir_absolute)
-    project.transform_env_config(environment=env)
     project.load_config(environment=env)
 
     rprint(f"Validating connection(s) for environment '{env}'")
@@ -185,7 +184,6 @@ def run(
 
     project_dir_absolute = _resolve_project_dir(project_dir)
     project = Project(project_dir_absolute)
-    project.transform_env_config(environment=env)
     project.load_config(env)
 
     dag_file = _generate_dag(project=project, workflow_name=workflow_name, generate_tasks=generate_tasks)
