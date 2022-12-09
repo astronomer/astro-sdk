@@ -54,7 +54,11 @@ def test(session: nox.Session, airflow: str) -> None:
     session.log("Installed Dependencies:")
     session.run("poetry", "run", "pip", "freeze")
 
-    session.run("poetry", "run", "pytest", *session.posargs)
+    pytest_env = {
+        "TERMINAL_WIDTH": "3000",
+        "_TYPER_FORCE_DISABLE_TERMINAL": "1",
+    }
+    session.run("poetry", "run", "pytest", *session.posargs, env=pytest_env)
 
 
 @nox.session(python=["3.8"])
