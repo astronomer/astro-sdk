@@ -68,8 +68,8 @@ def type_check(session: nox.Session) -> None:
     """Run MyPy checks."""
     session.install("poetry")
     session.run("poetry", "install", "--with", "type_check")
-    session.run("mypy", "--version")
-    session.run("mypy")
+    session.run("poetry", "run", "mypy", "--version")
+    session.run("poetry", "run", "mypy")
 
 
 @nox.session()

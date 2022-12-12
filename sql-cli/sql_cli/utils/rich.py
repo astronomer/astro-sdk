@@ -75,5 +75,5 @@ def rprint(
 
 
 class RichHandler(OriginalRichHandler):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: object, **kwargs: object) -> None:
         super().__init__(*args, **kwargs, console=_get_rich_console())
