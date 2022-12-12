@@ -94,7 +94,7 @@ connections:
     password: $DATABRICKS_TOKEN
     extra:
       http_path: /sql/1.0/warehouses/cf414a2206dfb397
-  - conn_id: sftp_default
+  - conn_id: sftp_conn
     conn_type: sftp
     host: localhost
     login: foo
