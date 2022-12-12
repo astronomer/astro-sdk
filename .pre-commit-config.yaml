@@ -56,7 +56,7 @@ repos:
         exclude: ^python-sdk/mk/|^python-sdk/docs/Makefile|^python-sdk/Makefile$|^python-sdk/tests/benchmark/Makefile|^sql-cli/Makefile$
 
   - repo: https://github.com/psf/black
-    rev: 22.10.0
+    rev: 22.12.0
     hooks:
       - id: black
         # Exclude auto-generated example files from being changed
@@ -83,7 +83,7 @@ repos:
           - flake8-logging-format
 
   - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
+    rev: 5.11.0
     hooks:
       - id: isort
         name: Run isort
@@ -119,7 +119,7 @@ repos:
         files: "^sql-cli/"
 
   -   repo: https://github.com/asottile/pyupgrade
-      rev: v3.3.0
+      rev: v3.3.1
       hooks:
       -   id: pyupgrade
           args: [--py37-plus]
