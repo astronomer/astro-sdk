@@ -7,7 +7,8 @@ from airflow.decorators import task
 from astro import sql as aql
 from astro.constants import Database
 from astro.files import File
-from tests.sql.operators import utils as test_utils
+
+from ..operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
 DATA_FILEPATH = pathlib.Path(CWD.parent.parent, "data/sample.csv")

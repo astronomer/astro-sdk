@@ -98,7 +98,12 @@ def test_examples_by_dependency(session: nox.Session, extras):
 
     # Since pytest is not installed in the nox session directly, we need to set `external=true`.
     session.run(
-        "pytest", "tests/test_example_dags.py", *pytest_args, *session.posargs, env=env, external=True
+        "pytest",
+        "tests_integration/test_example_dags.py",
+        *pytest_args,
+        *session.posargs,
+        env=env,
+        external=True,
     )
 
 

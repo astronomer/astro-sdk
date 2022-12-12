@@ -279,7 +279,7 @@ Following are important pointers for implementing the operators:
    For optimised loads, you need to try to support native loads. Check what all file types and object stores the database supports for native load and provide support for those. Also, handle/retry the native load exceptions thrown by the corresponding connector library.
    Example PR: [Native load support for Redshift](https://github.com/astronomer/astro-sdk/pull/700).
 
-You're recommended to provide example DAGs to guide on the usage relevant to your database in [example_dags](../../example_dags) directory and add those example DAGs as part of integration test suite run in [test_example_dags.py](../../tests/test_example_dags.py).
+You're recommended to provide example DAGs to guide on the usage relevant to your database in [example_dags](../../example_dags) directory and add those example DAGs as part of integration test suite run in [test_example_dags.py](../../tests_integration/test_example_dags.py).
 
 Additionally, once you have implemented support for all the Astro SDK Python Operators, you also need to benchmark the performance of the file loads.
 You can refer to the [benchmarking guide](../../tests/benchmark/README.md) to generate results and publish those for the database like in [PR](https://github.com/astronomer/astro-sdk/pull/806).
