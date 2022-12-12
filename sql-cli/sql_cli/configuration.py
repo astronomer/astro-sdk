@@ -9,7 +9,7 @@ import yaml
 from airflow.models.connection import Connection
 from dotenv import load_dotenv
 
-from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME, GLOBAL_CONFIG
+from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME, GLOBAL_CONFIG_FILENAME
 
 
 @dataclass
@@ -39,7 +39,7 @@ class Config:
 
         :return: The path to the desired global YAML configuration file
         """
-        return self.project_dir / CONFIG_DIR / GLOBAL_CONFIG / CONFIG_FILENAME
+        return self.project_dir / CONFIG_DIR / GLOBAL_CONFIG_FILENAME
 
     def from_yaml_to_dict(self, filepath: Path) -> dict[str, Any]:
         """
