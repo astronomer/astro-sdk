@@ -1,8 +1,8 @@
 .. _export_file:
 
-====================
-export_file operator
-====================
+================================================================
+:py:mod:`export_file operator <astro.sql.operators.export_file>`
+================================================================
 
 .. _export_file_operator:
 

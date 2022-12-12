@@ -24,6 +24,7 @@ __all__ = [
     "drop_table",
     "ExportFileOperator",
     "export_file",
+    "get_value_list",
     "LoadFileOperator",
     "load_file",
     "MergeOperator",
