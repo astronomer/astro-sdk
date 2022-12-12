@@ -26,6 +26,8 @@ class SFTPLocation(BaseFileLocation):
         if "key_file" in extra_options:
             key_file = extra_options.get("key_file")
             return {"connect_kwargs": {"key_filename": key_file}}
+        elif client.password:
+            return {"connect_kwargs": {"password": client.password}}
         return {}
 
     @property
