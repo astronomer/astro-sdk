@@ -15,13 +15,12 @@ from airflow.utils import timezone
 from airflow.utils.session import provide_session
 from airflow.utils.state import DagRunState, State
 from airflow.utils.types import DagRunType
-from rich.logging import RichHandler
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.session import Session
 
 from astro.sql.operators.cleanup import AstroCleanupException
 from sql_cli.exceptions import ConnectionFailed
-from sql_cli.utils.rich import rprint
+from sql_cli.utils.rich import RichHandler, rprint
 
 log = logging.getLogger("sql_cli")
 

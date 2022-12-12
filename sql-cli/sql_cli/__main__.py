@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 import typer
 from dotenv import load_dotenv
-from rich.logging import RichHandler
 
 import sql_cli
 from sql_cli.astro.command import AstroCommand
@@ -15,7 +14,7 @@ from sql_cli.cli import config as cli_config
 from sql_cli.cli.utils import resolve_project_dir
 from sql_cli.constants import DEFAULT_BASE_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_DATA_DIR
 from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
-from sql_cli.utils.rich import rprint
+from sql_cli.utils.rich import RichHandler, rprint
 
 if TYPE_CHECKING:
     from sql_cli.project import Project  # pragma: no cover

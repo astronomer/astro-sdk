@@ -2,6 +2,7 @@ from typing import IO, Any, Optional, Union
 
 import click
 from rich.highlighter import ReprHighlighter
+from rich.logging import RichHandler as OriginalRichHandler
 from rich.panel import Panel
 from typer.rich_utils import (
     ALIGN_ERRORS_PANEL,
@@ -71,3 +72,8 @@ def rprint(
 
     write_console = console if file is None else Console(file=file)
     return write_console.print(*objects, sep=sep, end=end)
+
+
+class RichHandler(OriginalRichHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs, console=_get_rich_console())
