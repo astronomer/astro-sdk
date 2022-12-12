@@ -106,6 +106,7 @@ connections:
       project: "astronomer-dag-authoring"
       project_id: "astronomer-dag-authoring"
   - conn_id: sftp_default
+  - conn_id: sftp_conn
     conn_type: sftp
     host: localhost
     login: foo
