@@ -179,11 +179,22 @@ class BaseDatabase(ABC):
         # Initially this method belonged to the Table class.
         # However, in order to have an agnostic table class implementation,
         # we are keeping all methods which vary depending on the database within the Database class.
-        if table.metadata and table.metadata.schema:
-            qualified_name = f"{table.metadata.schema}.{table.name}"
+        if table.metadata and table.get_schema():
+            qualified_name = f"{table.get_schema()}.{table.name}"
         else:
             qualified_name = table.name
         return qualified_name
+
+    @staticmethod
+    def get_table_schema(table: BaseTable) -> str | None:
+        """
+        Prepare the name for the schema
+
+        :param table: The table we want for which we need the schema name for.
+        """
+        if table.metadata and table.metadata.schema:
+            return table.metadata.schema
+        return None
 
     @property
     def default_metadata(self) -> Metadata:
@@ -207,7 +218,7 @@ class BaseDatabase(ABC):
         """
         if table.metadata and table.metadata.is_empty() and self.default_metadata:
             table.metadata = self.default_metadata
-        if not table.metadata.schema:
+        if not table.get_schema():
             table.metadata.schema = self.DEFAULT_SCHEMA
         return table
 
@@ -269,7 +280,7 @@ class BaseDatabase(ABC):
         db.prep_table(
             source_dataframe,
             table.name.lower(),
-            schema=table.metadata.schema,
+            schema=table.get_schema(),
             if_exists="replace",
             index=False,
         )
@@ -374,7 +385,7 @@ class BaseDatabase(ABC):
         ):
             return
 
-        self.create_schema_if_needed(table.metadata.schema)
+        self.create_schema_if_needed(table.get_schema())
         if if_exists == "replace" or not self.table_exists(table):
             files = resolve_file_path_pattern(
                 file.path,

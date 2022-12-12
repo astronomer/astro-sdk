@@ -70,7 +70,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         if first_table:
             self.conn_id = self.conn_id or first_table.conn_id  # type: ignore
             self.database = self.database or first_table.metadata.database  # type: ignore
-            self.schema = self.schema or first_table.metadata.schema  # type: ignore
+            self.schema = self.schema or first_table.get_schema()  # type: ignore
         else:
             if not self.conn_id:
                 raise ValueError("You need to provide a table or a connection id")

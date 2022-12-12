@@ -93,7 +93,7 @@ class ExportFileOperator(AstroSQLBaseOperator):
                         "schema": SchemaDatasetFacet(
                             fields=[
                                 SchemaField(
-                                    name=self.input_data.metadata.schema,
+                                    name=self.input_data.get_schema(),
                                     type=self.input_data.metadata.database,
                                 )
                             ]

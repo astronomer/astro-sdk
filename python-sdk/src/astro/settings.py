@@ -7,9 +7,13 @@ from astro.constants import DEFAULT_SCHEMA
 # Section name for astro SDK configs in airflow.cfg
 SECTION_KEY = "astro_sdk"
 
+# Bigquery list of all the valid locations: https://cloud.google.com/bigquery/docs/locations
+DEFAULT_BIGQUERY_SCHEMA_LOCATION = "us-central1"
+
 SCHEMA = conf.get(SECTION_KEY, "sql_schema", fallback=DEFAULT_SCHEMA)
 POSTGRES_SCHEMA = conf.get(SECTION_KEY, "postgres_default_schema", fallback=SCHEMA)
 BIGQUERY_SCHEMA = conf.get(SECTION_KEY, "bigquery_default_schema", fallback=SCHEMA)
+BIGQUERY_SCHEMA_LOCATION = conf.get("bigquery_dataset_location", fallback=DEFAULT_BIGQUERY_SCHEMA_LOCATION)
 SNOWFLAKE_SCHEMA = conf.get(SECTION_KEY, "snowflake_default_schema", fallback=SCHEMA)
 REDSHIFT_SCHEMA = conf.get(SECTION_KEY, "redshift_default_schema", fallback=SCHEMA)
 
@@ -18,6 +22,7 @@ LOAD_FILE_ENABLE_NATIVE_FALLBACK = conf.get(SECTION_KEY, "load_file_enable_nativ
 DATAFRAME_STORAGE_CONN_ID = conf.get(SECTION_KEY, "xcom_storage_conn_id", fallback=None)
 DATAFRAME_STORAGE_URL = conf.get(SECTION_KEY, "xcom_storage_url", fallback=tempfile.gettempdir())
 STORE_DATA_LOCAL_DEV = conf.get(SECTION_KEY, "store_data_local_dev", fallback=False)
+
 
 # Size is in KB - Max memory usage for Dataframe to be stored in the Airflow metadata DB
 # If dataframe size is more than that, it will be stored in an Object Store defined by

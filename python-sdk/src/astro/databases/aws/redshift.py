@@ -127,7 +127,7 @@ class RedshiftDatabase(BaseDatabase):
         :param table: Details of the table we want to check that exists
         """
         inspector = sqlalchemy.inspect(self.sqlalchemy_engine)
-        return bool(inspector.dialect.has_table(self.connection, table.name, schema=table.metadata.schema))
+        return bool(inspector.dialect.has_table(self.connection, table.name, schema=table.get_schema()))
 
     def load_pandas_dataframe_to_table(
         self,
@@ -151,7 +151,7 @@ class RedshiftDatabase(BaseDatabase):
             target_table.name,
             self.connection,
             index=False,
-            schema=target_table.metadata.schema,
+            schema=target_table.get_schema(),
             if_exists=if_exists,
             chunksize=chunk_size,
         )

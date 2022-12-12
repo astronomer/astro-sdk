@@ -53,7 +53,7 @@ class TransformOperator(BaseSQLDecoratedOperator):
     def execute(self, context: Context):
         super().execute(context)
 
-        self.database_impl.create_schema_if_needed(self.output_table.metadata.schema)
+        self.database_impl.create_schema_if_needed(self.output_table.get_schema())
         self.database_impl.drop_table(self.output_table)
         self.database_impl.create_table_from_select_statement(
             statement=self.sql,

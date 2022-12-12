@@ -95,7 +95,7 @@ class PostgresDatabase(BaseDatabase):
         """
         self._assert_not_empty_df(source_dataframe)
 
-        self.create_schema_if_needed(target_table.metadata.schema)
+        self.create_schema_if_needed(target_table.get_schema())
         if not self.table_exists(table=target_table) or if_exists == "replace":
             self.create_table(table=target_table, dataframe=source_dataframe)
 
@@ -122,8 +122,8 @@ class PostgresDatabase(BaseDatabase):
         # Initially this method belonged to the Table class.
         # However, in order to have an agnostic table class implementation,
         # we are keeping all methods which vary depending on the database within the Database class.
-        if table.metadata and table.metadata.schema:
-            qualified_name = f"{table.metadata.schema.lower()}.{table.name}"  # type: ignore
+        if table.metadata and table.get_schema():
+            qualified_name = f"{table.get_schema().lower()}.{table.name}"  # type: ignore
         else:
             qualified_name = table.name
         return qualified_name
@@ -134,7 +134,7 @@ class PostgresDatabase(BaseDatabase):
 
         :param table: Details of the table we want to check that exists
         """
-        _schema = table.metadata.schema
+        _schema = table.get_schema()
         # when creating schemas they are created in a lowercase even when we have a schema in uppercase.
         # while checking for schema there in no lowercase applied in 'has_table()' which leads to table not found.
         # Added 'schema.lower()' to make sure we search for schema in lowercase to match the creation lowercase.
@@ -163,7 +163,7 @@ class PostgresDatabase(BaseDatabase):
         """
 
         def identifier_args(table: BaseTable):
-            schema = table.metadata.schema
+            schema = table.get_schema()
             return (schema, table.name) if schema else (table.name,)
 
         statement = (

@@ -156,7 +156,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         if first_table:
             self.conn_id = self.conn_id or first_table.conn_id  # type: ignore
             self.database = self.database or first_table.metadata.database  # type: ignore
-            self.schema = self.schema or first_table.metadata.schema  # type: ignore
+            self.schema = self.schema or first_table.get_schema()  # type: ignore
         self.op_args = load_op_arg_table_into_dataframe(
             self.op_args,
             self.python_callable,
@@ -243,7 +243,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                         "schema": SchemaDatasetFacet(
                             fields=[
                                 SchemaField(
-                                    name=self.schema if self.schema else self.output_table.metadata.schema,
+                                    name=self.schema if self.schema else self.output_table.get_schema(),
                                     type=self.database
                                     if self.database
                                     else self.output_table.metadata.database,

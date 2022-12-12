@@ -45,7 +45,7 @@ from astro.constants import (
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
-from astro.settings import BIGQUERY_SCHEMA
+from astro.settings import BIGQUERY_SCHEMA, BIGQUERY_SCHEMA_LOCATION
 from astro.table import BaseTable, Metadata
 
 DEFAULT_CONN_ID = BigQueryHook.default_conn_name
@@ -113,7 +113,10 @@ class BigqueryDatabase(BaseDatabase):
     @property
     def hook(self) -> BigQueryHook:
         """Retrieve Airflow hook to interface with the BigQuery database."""
-        return BigQueryHook(gcp_conn_id=self.conn_id, use_legacy_sql=False)
+        return BigQueryHook(
+            gcp_conn_id=self.conn_id,
+            use_legacy_sql=False,
+        )
 
     @property
     def sqlalchemy_engine(self) -> Engine:
@@ -142,6 +145,32 @@ class BigqueryDatabase(BaseDatabase):
         except GoogleNotFound:
             return False
         return True
+
+    @staticmethod
+    def get_table_schema(table: BaseTable):
+        """
+        Prepare the name for the schema
+
+        :param table: table
+        """
+        location = BIGQUERY_SCHEMA_LOCATION
+        if table.metadata and table.metadata.schema:
+            return f"{table.metadata.schema}__{location}"
+        raise ValueError("Table object metadata or schema is not set")
+
+    def create_schema_if_needed(self, schema: str | None) -> None:
+        """
+        This function checks if the expected schema exists in the database. If the schema does not exist,
+        it will attempt to create it.
+
+        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        """
+        # We check if the schema exists first because snowflake will fail on a create schema query even if it
+        # doesn't actually create a schema.
+
+        if schema and not self.schema_exists(schema):
+            statement = self._create_schema_statement.format(schema)
+            self.run_sql(statement)
 
     @staticmethod
     def get_merge_initialization_query(parameters: tuple) -> str:
@@ -324,7 +353,7 @@ class BigqueryDatabase(BaseDatabase):
             "sourceUris": [source_file.path],
             "destinationTable": {
                 "projectId": self.get_project_id(target_table),
-                "datasetId": target_table.metadata.schema,
+                "datasetId": target_table.get_schema(),
                 "tableId": target_table.name,
             },
             "createDisposition": "CREATE_IF_NEEDED",
@@ -441,7 +470,7 @@ class BigqueryDatabase(BaseDatabase):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         Example: PROJECT.dataset_name.table_name
         """
-        dataset = table.metadata.database or table.metadata.schema
+        dataset = table.metadata.database or table.get_schema()
         return f"{self.hook.project_id}.{dataset}.{table.name}"
 
     def openlineage_dataset_namespace(self) -> str:
@@ -563,7 +592,7 @@ class S3ToBigqueryDataTransfer:
             params=params,
             schedule_options={"disable_auto_scheduling": True},
             disabled=False,
-            destination_dataset_id=self.target_table.metadata.schema,
+            destination_dataset_id=self.target_table.get_schema(),
         )
         response = self.client.create_transfer_config(
             transfer_config=transfer_config, project_id=self.project_id

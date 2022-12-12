@@ -116,7 +116,7 @@ class MergeOperator(AstroSQLBaseOperator):
                         "schema": SchemaDatasetFacet(
                             fields=[
                                 SchemaField(
-                                    name=self.source_table.metadata.schema,
+                                    name=self.source_table.get_schema(),
                                     type=self.source_table.metadata.database,
                                 )
                             ]

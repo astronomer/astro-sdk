@@ -270,7 +270,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
                         "schema": SchemaDatasetFacet(
                             fields=[
                                 SchemaField(
-                                    name=self.output_table.metadata.schema,
+                                    name=self.output_table.get_schema(),
                                     type=self.output_table.metadata.database,
                                 )
                             ]

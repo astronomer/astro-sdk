@@ -119,6 +119,14 @@ class BaseTable:
         db = create_database(self.conn_id)
         return db.row_count(self)
 
+    def get_schema(self) -> str | None:
+        """
+        Get schema name for a table
+        :return:
+        """
+        db = create_database(self.conn_id)
+        return db.get_table_schema(self)
+
     @property
     def sql_type(self) -> Any:
         if self.conn_id:

@@ -264,8 +264,8 @@ class SnowflakeDatabase(BaseDatabase):
         if self.table and self.table.metadata:
             if _hook.database is None and self.table.metadata.database:
                 kwargs.update({"database": self.table.metadata.database})
-            if _hook.schema is None and self.table.metadata.schema:
-                kwargs.update({"schema": self.table.metadata.schema})
+            if _hook.schema is None and self.table.get_schema():
+                kwargs.update({"schema": self.table.get_schema() or ""})
         return SnowflakeHook(snowflake_conn_id=self.conn_id, **kwargs)
 
     @property
@@ -292,7 +292,7 @@ class SnowflakeDatabase(BaseDatabase):
         """
         qualified_name_lists = [
             table.metadata.database,
-            table.metadata.schema,
+            table.get_schema(),
             table.name,
         ]
         qualified_name = ".".join(name for name in qualified_name_lists if name)
@@ -542,7 +542,7 @@ class SnowflakeDatabase(BaseDatabase):
             conn=self.hook.get_conn(),
             df=source_dataframe,
             table_name=table.name.upper(),
-            schema=table.metadata.schema,
+            schema=table.get_schema(),
             database=table.metadata.database,
             chunk_size=DEFAULT_CHUNK_SIZE,
             quote_identifiers=self.use_quotes(source_dataframe),
@@ -665,7 +665,7 @@ class SnowflakeDatabase(BaseDatabase):
             conn=self.hook.get_conn(),
             df=source_dataframe,
             table_name=target_table.name.upper(),
-            schema=target_table.metadata.schema,
+            schema=target_table.get_schema(),
             database=target_table.metadata.database,
             chunk_size=chunk_size,
             quote_identifiers=self.use_quotes(source_dataframe),
