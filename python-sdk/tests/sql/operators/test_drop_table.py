@@ -58,6 +58,7 @@ def test_drop_table_with_table_metadata(database_table_fixture, sample_dag):
     def validate_table_exists(table: Table):
         assert database.table_exists(table)
         assert table.name == tmp_table.name
+        assert table.row_count == 3
         return table
 
     with sample_dag:

@@ -61,6 +61,15 @@ CWD = pathlib.Path(__file__).parent
 )
 def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
+
+    from airflow.decorators import task
+
+    @task
+    def validate_table_exists(table: Table):
+        assert db.table_exists(table)
+        assert table.row_count == 3
+        return table
+
     with sample_dag:
         load_file(
             input_file=File(
@@ -68,6 +77,7 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
             ),
             output_table=test_table,
         )
+        validate_table_exists(test_table)
     test_utils.run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
@@ -113,6 +123,7 @@ def test_aql_load_remote_file_to_dbs(sample_dag, database_table_fixture, remote_
     test_utils.run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
+    assert test_table.row_count == 3
 
     # Workaround for snowflake capitalized col names
     sort_cols = "name"
@@ -165,6 +176,7 @@ def test_aql_replace_existing_table(sample_dag, database_table_fixture):
     df = db.export_table_to_pandas_dataframe(test_table)
     data_df = pd.read_csv(data_path_2)
 
+    # df.shape will check for rows and columns
     assert df.shape == data_df.shape
 
 
@@ -200,7 +212,7 @@ def test_aql_local_file_with_no_table_name(sample_dag, database_table_fixture):
 
     df = db.export_table_to_pandas_dataframe(test_table)
     data_df = pd.read_csv(data_path)
-
+    # df.shape will check for rows and columns
     assert df.shape == data_df.shape
 
 
