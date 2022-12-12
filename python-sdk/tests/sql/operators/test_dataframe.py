@@ -513,3 +513,36 @@ def test_dataframe_replace_table_if_exist(sample_dag, conn_id):
     with sample_dag:
         aql.drop_table(table=output_tb)
     test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "conn_id",
+    [
+        "bigquery",
+        "postgres_conn",
+        "redshift_conn",
+        "snowflake_conn",
+        "sqlite_conn",
+    ],
+)
+def test_dataframe_append_table_if_exist(sample_dag, conn_id):
+    @aql.dataframe(if_exists="append")
+    def get_empty_dataframe():
+        arr = {"col1": [1, 2]}
+        return pandas.DataFrame(data=arr)
+
+    output_tb = Table(conn_id=conn_id)
+    with sample_dag:
+        get_empty_dataframe(output_table=output_tb)
+
+    test_utils.run_dag(sample_dag)
+    assert output_tb.row_count == 2
+    # re-run dag to and make sure it is appending the table
+    test_utils.run_dag(sample_dag)
+    assert output_tb.row_count == 4
+
+    # drop the table to avoid issue with concurrent test run
+    with sample_dag:
+        aql.drop_table(table=output_tb)
+    test_utils.run_dag(sample_dag)

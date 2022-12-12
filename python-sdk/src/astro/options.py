@@ -1,7 +1,7 @@
-from attrs import define
+import attr
 
 
-@define
+@attr.define
 class LoadOptions:
     def empty(self):
         return NotImplementedError()
