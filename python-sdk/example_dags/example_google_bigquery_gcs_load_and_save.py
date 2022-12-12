@@ -52,7 +52,7 @@ with DAG(
     # [START export_example_1]
     gcs_bucket = os.getenv("GCS_BUCKET", "gs://dag-authoring")
 
-    aql.export_file(
+    aql.export_table_to_file(
         task_id="save_file_to_gcs",
         input_data=t1,
         output_file=File(
