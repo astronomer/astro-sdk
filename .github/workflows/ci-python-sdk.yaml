@@ -135,7 +135,7 @@ jobs:
       sftp:
         image: rajaths1494/sftp-docker
         ports:
-          - 22:22
+          - 2222:22
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -259,7 +259,7 @@ jobs:
       sftp:
         image: rajaths1494/sftp-docker
         ports:
-          - 22:22
+          - 2222:22
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -335,7 +335,7 @@ jobs:
       sftp:
         image: rajaths1494/sftp-docker
         ports:
-          - 22:22
+          - 2222:22
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
