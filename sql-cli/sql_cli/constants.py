@@ -1,5 +1,5 @@
 CONFIG_DIR = "config"
-GLOBAL_CONFIG = "global"
+GLOBAL_CONFIG_FILENAME = "global.yml"
 CONFIG_FILENAME = "configuration.yml"
 
 DEFAULT_ENVIRONMENT = "default"

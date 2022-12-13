@@ -45,7 +45,7 @@ from astro.constants import (
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
-from astro.settings import BIGQUERY_SCHEMA
+from astro.settings import BIGQUERY_SCHEMA, BIGQUERY_SCHEMA_LOCATION
 from astro.table import BaseTable, Metadata
 
 DEFAULT_CONN_ID = BigQueryHook.default_conn_name
@@ -102,6 +102,8 @@ class BigqueryDatabase(BaseDatabase):
         DatabaseCustomError,
     )
 
+    _create_schema_statement: str = "CREATE SCHEMA IF NOT EXISTS {} OPTIONS (location='{}')"
+
     def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
         super().__init__(conn_id)
         self.table = table
@@ -129,7 +131,11 @@ class BigqueryDatabase(BaseDatabase):
 
         :return:
         """
-        return Metadata(schema=self.DEFAULT_SCHEMA, database=self.hook.project_id)  # type: ignore
+        return Metadata(
+            schema=self.DEFAULT_SCHEMA,
+            database=self.hook.project_id,
+            region=BIGQUERY_SCHEMA_LOCATION,
+        )  # type: ignore
 
     def schema_exists(self, schema: str) -> bool:
         """
@@ -142,6 +148,28 @@ class BigqueryDatabase(BaseDatabase):
         except GoogleNotFound:
             return False
         return True
+
+    def get_schema_region(self, schema: str | None = None) -> str:
+        """
+        Get region where the schema is created
+        :param schema: Bigquery namespace
+        :return:
+        """
+        if schema is None:
+            return ""
+        try:
+            dataset = self.hook.get_dataset(dataset_id=schema)
+            return str(dataset.location)
+        except GoogleNotFound:
+            return ""
+
+    def check_same_region(self, table: BaseTable, other_table: BaseTable):
+        """
+        Check if two tables are from the same database region
+        """
+        table_location = self.get_schema_region(schema=table.metadata.schema)
+        other_table_location = self.get_schema_region(schema=other_table.metadata.schema)
+        return table_location == other_table_location
 
     @staticmethod
     def get_merge_initialization_query(parameters: tuple) -> str:
@@ -182,6 +210,20 @@ class BigqueryDatabase(BaseDatabase):
             project_id=self.hook.project_id,
             credentials=creds,
         )
+
+    def create_schema_if_needed(self, schema: str | None, location: str | None = None) -> None:
+        """
+        This function checks if the expected schema exists in the database. If the schema does not exist,
+        it will attempt to create it.
+
+        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        """
+        # We check if the schema exists first because BigQuery will fail on a create schema query even if it
+        # doesn't actually create a schema.
+        location = location or BIGQUERY_SCHEMA_LOCATION
+        if schema and not self.schema_exists(schema):
+            statement = self._create_schema_statement.format(schema, location)
+            self.run_sql(statement)
 
     def merge_table(
         self,
