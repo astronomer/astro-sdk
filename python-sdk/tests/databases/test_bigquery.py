@@ -9,6 +9,7 @@ from google.cloud.bigquery_datatransfer_v1.types import (
 
 from astro.databases.google.bigquery import BigqueryDatabase, S3ToBigqueryDataTransfer
 from astro.files import File
+from astro.table import Table
 
 DEFAULT_CONN_ID = "google_cloud_default"
 CUSTOM_CONN_ID = "gcp_conn"
@@ -41,3 +42,27 @@ def test_get_run_id():
     )
     config.runs.append(run)
     assert S3ToBigqueryDataTransfer.get_run_id(config) == "62d6a4df-0000-2fad-8752-d4f547e68ef4"
+
+
+def test_get_schema_region():
+    """
+    Test get_schema_region() function
+    :return:
+    """
+    db = BigqueryDatabase(conn_id="google_cloud_default")
+    location = db.get_schema_region("tmp_astro")
+    assert location == "US"
+
+
+def test_check_same_region():
+    """
+    Test check_same_region() function
+    :return:
+    """
+    db = BigqueryDatabase(conn_id="google_cloud_default")
+    tableA = Table(conn_id=db.conn_id, metadata=db.default_metadata)
+    tableB = Table(conn_id=db.conn_id, metadata=db.default_metadata)
+    assert db.check_same_region(first_table=tableA, output_table=tableB)
+
+    tableA.metadata.schema = "test"
+    assert not db.check_same_region(first_table=tableA, output_table=tableB)

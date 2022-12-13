@@ -26,7 +26,7 @@ class Metadata:
     """
 
     # This property is used by several databases, including: Postgres, Snowflake and BigQuery ("namespace")
-    # schema: str | None = None
+    _schema: str | None = None
     database: str | None = None
     location: str | None = None
 
@@ -37,12 +37,12 @@ class Metadata:
     @property
     def schema(self):
         if self.location:
-            return f"{self.schema}__{self.location}"
-        return self.schema
+            return f"{self._schema}__{self.location.replace('-', '_')}"
+        return self._schema
 
     @schema.setter
     def schema(self, value):
-        self.schema = value
+        self._schema = value
 
 
 @define(slots=False)

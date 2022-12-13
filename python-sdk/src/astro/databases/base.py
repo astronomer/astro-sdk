@@ -683,7 +683,7 @@ class BaseDatabase(ABC):
     # Schema Management
     # ---------------------------------------------------------
 
-    def create_schema_if_needed(self, schema: str | None) -> None:
+    def create_schema_if_needed(self, schema: str | None, location: str | None = None) -> None:
         """
         This function checks if the expected schema exists in the database. If the schema does not exist,
         it will attempt to create it.
@@ -703,6 +703,20 @@ class BaseDatabase(ABC):
         :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
         """
         raise NotImplementedError
+
+    def get_schema_region(self, schema: str) -> str:
+        """
+        Get region where the schema is created
+        :param schema: namespace
+        :return:
+        """
+        return ""
+
+    def check_same_region(self, first_table: BaseTable, output_table: BaseTable):
+        """
+        Check if two tables are from the same database region
+        """
+        return True
 
     # ---------------------------------------------------------
     # Context & Template Rendering methods (Transformations)

@@ -15,7 +15,9 @@ BIGQUERY_SCHEMA = conf.get(SECTION_KEY, "bigquery_default_schema", fallback=SCHE
 SNOWFLAKE_SCHEMA = conf.get(SECTION_KEY, "snowflake_default_schema", fallback=SCHEMA)
 REDSHIFT_SCHEMA = conf.get(SECTION_KEY, "redshift_default_schema", fallback=SCHEMA)
 
-BIGQUERY_SCHEMA_LOCATION = conf.get("bigquery_dataset_location", fallback=DEFAULT_BIGQUERY_SCHEMA_LOCATION)
+BIGQUERY_SCHEMA_LOCATION = conf.get(
+    SECTION_KEY, "bigquery_dataset_location", fallback=DEFAULT_BIGQUERY_SCHEMA_LOCATION
+)
 
 LOAD_FILE_ENABLE_NATIVE_FALLBACK = conf.get(SECTION_KEY, "load_file_enable_native_fallback", fallback=False)
 

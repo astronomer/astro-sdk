@@ -294,3 +294,20 @@ def test_cross_db_transform_raise_exception(sample_dag):
     with pytest.raises(ValueError) as exec_info:
         test_utils.run_dag(sample_dag)
     assert exec_info.value.args[0] == "source and target table must belong to the same datasource"
+
+
+def test_transform_region(sample_dag):
+    """Test the transform operator raise exception if input and output is not for same database source"""
+
+    @aql.transform
+    def select_all(input_table: Table) -> str:
+        return """
+            SELECT *
+            FROM {{ input_table }}
+        """
+
+    with sample_dag:
+        input_table = Table(conn_id="google_cloud_default", name="tmp", metadata=Metadata(schema="test"))
+        select_all(input_table=input_table)
+        aql.cleanup()
+    test_utils.run_dag(sample_dag)

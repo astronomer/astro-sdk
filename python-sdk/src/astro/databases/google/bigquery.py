@@ -13,6 +13,7 @@ from google.api_core.exceptions import (
     Forbidden,
     GoogleAPIError,
     InvalidArgument,
+    NotFound,
     NotFound as GoogleNotFound,
     ResourceExhausted,
     RetryError,
@@ -102,6 +103,8 @@ class BigqueryDatabase(BaseDatabase):
         DatabaseCustomError,
     )
 
+    _create_schema_statement: str = "CREATE SCHEMA IF NOT EXISTS {} OPTIONS (location='{}')"
+
     def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
         super().__init__(conn_id)
         self.table = table
@@ -147,6 +150,28 @@ class BigqueryDatabase(BaseDatabase):
             return False
         return True
 
+    def get_schema_region(self, schema: str | None = None) -> str:
+        """
+        Get region where the schema is created
+        :param schema: Bigquery namespace
+        :return:
+        """
+        if schema is None:
+            return ""
+        try:
+            dataset = self.hook.get_dataset(dataset_id=schema)
+            return dataset.location
+        except NotFound:
+            return ""
+
+    def check_same_region(self, first_table: BaseTable, output_table: BaseTable):
+        """
+        Check if two tables are from the same database region
+        """
+        first_table_location = self.get_schema_region(schema=first_table.metadata.schema)
+        output_table_location = self.get_schema_region(schema=output_table.metadata.schema)
+        return first_table_location == output_table_location
+
     @staticmethod
     def get_merge_initialization_query(parameters: tuple) -> str:
         """
@@ -186,6 +211,20 @@ class BigqueryDatabase(BaseDatabase):
             project_id=self.hook.project_id,
             credentials=creds,
         )
+
+    def create_schema_if_needed(self, schema: str | None, location: str | None = None) -> None:
+        """
+        This function checks if the expected schema exists in the database. If the schema does not exist,
+        it will attempt to create it.
+
+        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        """
+        # We check if the schema exists first because snowflake will fail on a create schema query even if it
+        # doesn't actually create a schema.
+        location = location or BIGQUERY_SCHEMA_LOCATION
+        if schema and not self.schema_exists(schema):
+            statement = self._create_schema_statement.format(schema, location)
+            self.run_sql(statement)
 
     def merge_table(
         self,
