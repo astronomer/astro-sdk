@@ -683,7 +683,9 @@ class BaseDatabase(ABC):
     # Schema Management
     # ---------------------------------------------------------
 
-    def create_schema_if_needed(self, schema: str | None, location: str | None = None) -> None:
+    def create_schema_if_needed(
+        self, schema: str | None, location: str | None = None
+    ) -> None:  # skipcq: PYL-W0613
         """
         This function checks if the expected schema exists in the database. If the schema does not exist,
         it will attempt to create it.
@@ -704,7 +706,7 @@ class BaseDatabase(ABC):
         """
         raise NotImplementedError
 
-    def get_schema_region(self, schema: str | None = None) -> str:
+    def get_schema_region(self, schema: str | None = None) -> str:  # skipcq: PYL-W0613, PYL-R0201
         """
         Get region where the schema is created
         :param schema: namespace
@@ -712,7 +714,7 @@ class BaseDatabase(ABC):
         """
         return ""
 
-    def check_same_region(self, table: BaseTable, other_table: BaseTable):
+    def check_same_region(self, table: BaseTable, other_table: BaseTable):  # skipcq: PYL-W0613, PYL-R0201
         """
         Check if two tables are from the same database region
         """

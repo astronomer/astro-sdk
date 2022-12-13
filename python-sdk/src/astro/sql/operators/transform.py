@@ -13,7 +13,6 @@ from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
 from sqlalchemy.sql.functions import Function
 
-from astro.databases import create_database
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 from astro.utils.table import find_first_table
 from astro.utils.typing_compat import Context
@@ -64,7 +63,6 @@ class TransformOperator(BaseSQLDecoratedOperator):
         super().execute(context)
 
         if first_table:
-            self.database_impl = create_database(first_table.conn_id, first_table)
             if self.output_table.temp and (
                 not self.database_impl.check_same_region(table=first_table, other_table=self.output_table)
             ):

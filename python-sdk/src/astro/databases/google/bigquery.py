@@ -13,7 +13,6 @@ from google.api_core.exceptions import (
     Forbidden,
     GoogleAPIError,
     InvalidArgument,
-    NotFound,
     NotFound as GoogleNotFound,
     ResourceExhausted,
     RetryError,
@@ -161,7 +160,7 @@ class BigqueryDatabase(BaseDatabase):
         try:
             dataset = self.hook.get_dataset(dataset_id=schema)
             return str(dataset.location)
-        except NotFound:
+        except GoogleNotFound:
             return ""
 
     def check_same_region(self, table: BaseTable, other_table: BaseTable):
