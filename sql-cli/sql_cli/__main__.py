@@ -115,7 +115,7 @@ def generate(
         f" for [bold]{env}[/bold] environment..\n"
     )
     dag_file = _generate_dag(project=project, workflow_name=workflow_name, generate_tasks=generate_tasks)
-    rprint("The DAG file", dag_file.resolve(), "has been successfully generated. 🎉")
+    rprint(f"The DAG file { dag_file.resolve() } has been successfully generated. 🎉")
 
 
 @app.command(

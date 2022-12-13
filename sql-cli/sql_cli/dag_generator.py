@@ -7,9 +7,9 @@ from pathlib import Path
 from black import FileMode, format_str
 from networkx import DiGraph, depth_first_search, find_cycle, is_directed_acyclic_graph
 
+from astro.render.workflow_directory_parser import WorkflowFile, get_workflow_files
 from sql_cli.exceptions import DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
 from sql_cli.utils.jinja import render
-from sql_cli.workflow_directory_parser import WorkflowFile, get_workflow_files
 
 TEMPLATES_DIRECTORY = Path("templates")
 

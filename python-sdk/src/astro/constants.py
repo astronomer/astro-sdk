@@ -67,3 +67,5 @@ ExportExistsStrategy = Literal["replace", "exception"]
 MergeConflictStrategy = Literal["ignore", "update", "exception"]
 
 ColumnCapitalization = Literal["upper", "lower", "original"]
+
+GENERATED_WORKFLOW_INCLUDE_DIRECTORY = "include"

@@ -1,3 +1,4 @@
+import os
 import pathlib
 from tempfile import gettempdir
 from unittest import mock
@@ -15,6 +16,7 @@ from tests.utils import list_dir
 runner = CliRunner()
 
 CWD = pathlib.Path(__file__).parent
+os.environ["TERMINAL_WIDTH"] = "3000"
 
 
 @pytest.mark.parametrize(

@@ -8,10 +8,10 @@ from airflow.models import DAG, Connection, DagRun, TaskInstance as TI
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 
+from astro.render.workflow_directory_parser import SqlFile, WorkflowFile
 from astro.table import MAX_TABLE_NAME_LENGTH
 from sql_cli.dag_generator import Workflow
 from sql_cli.project import Project
-from sql_cli.workflow_directory_parser import SqlFile, WorkflowFile
 
 CWD = Path(__file__).parent
 

@@ -1,0 +1,9 @@
+load_file:
+  input_file:
+    conn_id: foo
+    path: /foo/bar
+  output_table:
+    conn_id: bar
+    name: baz
+    metadata:
+      schema: None

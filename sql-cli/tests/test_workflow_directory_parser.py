@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from yaml.scanner import ScannerError
 
-from sql_cli.workflow_directory_parser import SqlFile, WorkflowFile, YamlFile, get_workflow_files
+from astro.render.workflow_directory_parser import SqlFile, WorkflowFile, YamlFile, get_workflow_files
 
 
 def test_workflow_file_get_parameters(sql_file_with_parameters):
