@@ -89,7 +89,7 @@ all = [
     "apache-airflow-providers-google>=6.4.0",
     "apache-airflow-providers-postgres",
     "apache-airflow-providers-snowflake",
-    "apache-airflow-providers-sftp>=4.0.0",
+    "apache-airflow-providers-sftp",
     "smart-open[all]>=5.2.1",
     "snowflake-connector-python[pandas]",
     "snowflake-sqlalchemy>=1.2.0",
