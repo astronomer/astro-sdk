@@ -16,8 +16,9 @@ TEMP_PREFIX = "_tmp"
 
 
 def metadata_field_converter(val):
-    if isinstance(val, dict) and "_schema" in val:
-        val["schema"] = val.pop("_schema")
+    if isinstance(val, dict):
+        if "_schema" in val:
+            val["schema"] = val.pop("_schema")
         return Metadata(**val)
     return val
 

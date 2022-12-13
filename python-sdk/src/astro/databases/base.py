@@ -362,7 +362,7 @@ class BaseDatabase(ABC):
         is_file_pattern_based_schema_autodetection_supported = (
             self.check_file_pattern_based_schema_autodetection_is_supported(source_file=file)
         )
-        if if_exists == "replace":
+        if self.schema_exists(table.metadata.schema) and if_exists == "replace":
             self.drop_table(table)
         if use_native_support and is_schema_autodetection_supported and not file.is_pattern():
             return

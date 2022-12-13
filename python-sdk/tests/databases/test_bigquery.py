@@ -49,7 +49,7 @@ def test_get_schema_region():
     Test get_schema_region() function
     :return:
     """
-    db = BigqueryDatabase(conn_id="google_cloud_default")
+    db = BigqueryDatabase(conn_id="gcp_conn")
     location = db.get_schema_region("tmp_astro")
     assert location == "US"
 
@@ -59,7 +59,7 @@ def test_check_same_region():
     Test check_same_region() function
     :return:
     """
-    db = BigqueryDatabase(conn_id="google_cloud_default")
+    db = BigqueryDatabase(conn_id="gcp_conn")
     tableA = Table(conn_id=db.conn_id, metadata=db.default_metadata)
     tableB = Table(conn_id=db.conn_id, metadata=db.default_metadata)
     assert db.check_same_region(first_table=tableA, output_table=tableB)
