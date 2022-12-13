@@ -34,14 +34,16 @@ class SFTPLocation(BaseFileLocation):
     def paths(self) -> list[str]:
         """Resolve SFTP file paths with prefix"""
         url = urlparse(self.path)
+        client = self.hook.get_connection(self.conn_id)
+        port = str(client.port or 22)
         if self.hook.isdir(url.path):
             prefixes = self.hook.list_directory(url.path)
             paths = [
-                urlunparse((url.scheme, url.netloc, os.path.join(url.path, keys), "", "", ""))
+                urlunparse((url.scheme, url.netloc + ":" + port, os.path.join(url.path, keys), "", "", ""))
                 for keys in prefixes
             ]
         else:
-            paths = [self.path]
+            paths = [urlunparse((url.scheme, url.netloc + ":" + port, url.path, "", "", ""))]
         return paths
 
     @property
