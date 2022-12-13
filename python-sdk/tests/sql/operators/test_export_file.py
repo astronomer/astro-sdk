@@ -6,11 +6,11 @@ import pytest
 
 import astro.sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
-from astro.constants import Database, FileType
+from astro.constants import Database
 from astro.files import File
 
 # Import Operator
-from astro.sql.operators.export_table_to_file import ExportTableToFileOperator, export_table_to_file
+from astro.sql.operators.export_table_to_file import export_table_to_file
 from astro.table import Table
 
 from ..operators import utils as test_utils
