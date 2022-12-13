@@ -15,6 +15,15 @@ MAX_TABLE_NAME_LENGTH = 62
 TEMP_PREFIX = "_tmp"
 
 
+def metadata_field_converter(val):
+    Metadata(**val) if isinstance(val, dict) else val
+    if isinstance(val, dict):
+        if "_schema" in val:
+            val["schema"] = val.pop("_schema")
+        return Metadata(**val)
+    return val
+
+
 @define
 class Metadata:
     """
@@ -70,7 +79,7 @@ class BaseTable:
     # Setting converter allows passing a dictionary to metadata arg
     metadata: Metadata = field(
         factory=Metadata,
-        converter=lambda val: Metadata(**val) if isinstance(val, dict) else val,
+        converter=metadata_field_converter,
     )
     columns: list[Column] = field(factory=list)
     temp: bool = field(default=False)
