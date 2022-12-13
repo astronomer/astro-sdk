@@ -33,7 +33,7 @@ class ExportFileOperator(ExportTableToFileOperator):
         warnings.warn(
             """This class is deprecated.
             Please use `astro.sql.operators.export_table_to_file.ExportTableToFileOperator`.
-            And, will be removed in astro-sdk-python>=1.4.0.""",
+            And, will be removed in astro-sdk-python>=2.0.0.""",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -75,7 +75,7 @@ def export_file(
     warnings.warn(
         """This decorator is deprecated.
         Please use `astro.sql.operators.export_table_to_file.export_table_to_file`.
-        And, will be removed in astro-sdk-python>=1.4.0.""",
+        And, will be removed in astro-sdk-python>=2.0.0.""",
         DeprecationWarning,
         stacklevel=2,
     )
