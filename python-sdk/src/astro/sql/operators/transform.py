@@ -70,12 +70,12 @@ class TransformOperator(BaseSQLDecoratedOperator):
                     first_table=first_table, output_table=self.output_table
                 )
             ):
-                self.output_table.metadata.location = self.database_impl.get_schema_region(
+                self.output_table.metadata.region = self.database_impl.get_schema_region(
                     schema=first_table.metadata.schema
                 )
 
         self.database_impl.create_schema_if_needed(
-            self.output_table.metadata.schema, self.output_table.metadata.location
+            self.output_table.metadata.schema, self.output_table.metadata.region
         )
         self.database_impl.drop_table(self.output_table)
         self.database_impl.create_table_from_select_statement(

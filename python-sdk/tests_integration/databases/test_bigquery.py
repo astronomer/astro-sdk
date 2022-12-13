@@ -485,7 +485,7 @@ def test_check_same_region():
     db = BigqueryDatabase(conn_id="gcp_conn")
     tableA = Table(conn_id=db.conn_id, metadata=db.default_metadata)
     tableB = Table(conn_id=db.conn_id, metadata=db.default_metadata)
-    assert db.check_same_region(first_table=tableA, output_table=tableB)
+    assert db.check_same_region(table=tableA, other_table=tableB)
 
-    tableA.metadata.schema = "test"
-    assert not db.check_same_region(first_table=tableA, output_table=tableB)
+    tableA.metadata.schema = "testing_region"
+    assert not db.check_same_region(table=tableA, other_table=tableB)

@@ -36,7 +36,7 @@ class Metadata:
     # This property is used by several databases, including: Postgres, Snowflake and BigQuery ("namespace")
     _schema: str | None = None
     database: str | None = None
-    location: str | None = None
+    region: str | None = None
 
     def is_empty(self) -> bool:
         """Check if all the fields are None."""
@@ -46,7 +46,7 @@ class Metadata:
     def schema(self):
         if self.location:
             # We are replacing the `-` with `_` because for bigquery doesn't allow `-` in schema name
-            return f"{self._schema}__{self.location.replace('-', '_')}"
+            return f"{self._schema}__{self.region.replace('-', '_')}"
         return self._schema
 
     @schema.setter
