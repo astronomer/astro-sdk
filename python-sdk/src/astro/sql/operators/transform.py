@@ -66,9 +66,7 @@ class TransformOperator(BaseSQLDecoratedOperator):
         if first_table:
             self.database_impl = create_database(first_table.conn_id, first_table)
             if self.output_table.temp and (
-                not self.database_impl.check_same_region(
-                    first_table=first_table, output_table=self.output_table
-                )
+                not self.database_impl.check_same_region(table=first_table, other_table=self.output_table)
             ):
                 self.output_table.metadata.region = self.database_impl.get_schema_region(
                     schema=first_table.metadata.schema
