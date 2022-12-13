@@ -129,7 +129,11 @@ class BigqueryDatabase(BaseDatabase):
 
         :return:
         """
-        return Metadata(schema=self.DEFAULT_SCHEMA, database=self.hook.project_id, location=BIGQUERY_SCHEMA_LOCATION)  # type: ignore
+        return Metadata(
+            schema=self.DEFAULT_SCHEMA,  # type: ignore
+            database=self.hook.project_id,
+            location=BIGQUERY_SCHEMA_LOCATION,
+        )  # type: ignore
 
     def schema_exists(self, schema: str) -> bool:
         """
