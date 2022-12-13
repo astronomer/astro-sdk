@@ -160,7 +160,7 @@ class BigqueryDatabase(BaseDatabase):
             return ""
         try:
             dataset = self.hook.get_dataset(dataset_id=schema)
-            return dataset.location
+            return str(dataset.location)
         except NotFound:
             return ""
 
