@@ -44,7 +44,7 @@ def test(session: nox.Session, airflow) -> None:
         session.install("-e", ".[all,tests]", "-c", constraints_url)
         # install apache-airflow-providers-sftp>=4.0.0 since it was required for
         # to run sftp example dag to load file
-        session.install("apache-airflow-providers-sftp>=4.0.0")
+        session.install("apache-airflow-providers-sftp==4.0.0")
     else:
         env["AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES"] = "airflow.* astro.*"
 
