@@ -6,12 +6,16 @@ from astro.constants import DEFAULT_SCHEMA
 
 # Section name for astro SDK configs in airflow.cfg
 SECTION_KEY = "astro_sdk"
+# Bigquery list of all the valid locations: https://cloud.google.com/bigquery/docs/locations
+DEFAULT_BIGQUERY_SCHEMA_LOCATION = "us-central1"
 
 SCHEMA = conf.get(SECTION_KEY, "sql_schema", fallback=DEFAULT_SCHEMA)
 POSTGRES_SCHEMA = conf.get(SECTION_KEY, "postgres_default_schema", fallback=SCHEMA)
 BIGQUERY_SCHEMA = conf.get(SECTION_KEY, "bigquery_default_schema", fallback=SCHEMA)
 SNOWFLAKE_SCHEMA = conf.get(SECTION_KEY, "snowflake_default_schema", fallback=SCHEMA)
 REDSHIFT_SCHEMA = conf.get(SECTION_KEY, "redshift_default_schema", fallback=SCHEMA)
+
+BIGQUERY_SCHEMA_LOCATION = conf.get("bigquery_dataset_location", fallback=DEFAULT_BIGQUERY_SCHEMA_LOCATION)
 
 LOAD_FILE_ENABLE_NATIVE_FALLBACK = conf.get(SECTION_KEY, "load_file_enable_native_fallback", fallback=False)
 

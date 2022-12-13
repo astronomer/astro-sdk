@@ -28,10 +28,17 @@ class Metadata:
     # This property is used by several databases, including: Postgres, Snowflake and BigQuery ("namespace")
     schema: str | None = None
     database: str | None = None
+    location: str | None = None
 
     def is_empty(self) -> bool:
         """Check if all the fields are None."""
         return all(getattr(self, field_name) is None for field_name in fields_dict(self.__class__))
+
+    @property
+    def schema(self):
+        if self.location:
+            return f"{self.schema}__{self.location}"
+        return self.schema
 
 
 @define(slots=False)

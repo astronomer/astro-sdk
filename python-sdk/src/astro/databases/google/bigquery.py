@@ -45,7 +45,7 @@ from astro.constants import (
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
-from astro.settings import BIGQUERY_SCHEMA
+from astro.settings import BIGQUERY_SCHEMA, BIGQUERY_SCHEMA_LOCATION
 from astro.table import BaseTable, Metadata
 
 DEFAULT_CONN_ID = BigQueryHook.default_conn_name
@@ -129,7 +129,7 @@ class BigqueryDatabase(BaseDatabase):
 
         :return:
         """
-        return Metadata(schema=self.DEFAULT_SCHEMA, database=self.hook.project_id)  # type: ignore
+        return Metadata(schema=self.DEFAULT_SCHEMA, database=self.hook.project_id, location=BIGQUERY_SCHEMA_LOCATION)  # type: ignore
 
     def schema_exists(self, schema: str) -> bool:
         """
