@@ -132,11 +132,6 @@ jobs:
           --name postgres
         ports:
           - 5432:5432
-      sftp:
-        image: rajaths1494/sftp-docker
-        ports:
-          - 22:22
-        command: foo:pass:::upload
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -158,6 +153,7 @@ jobs:
             .nox
           key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
+      - run: docker run -p 22:22 -d rajaths1494/sftp-docker foo:pass:::upload
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
@@ -257,11 +253,6 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-      sftp:
-        image: rajaths1494/sftp-docker
-        ports:
-          - 22:22
-        command: foo:pass:::upload
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -282,6 +273,7 @@ jobs:
             .nox
           key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
+      - run: docker run -p 22:22 -d rajaths1494/sftp-docker foo:pass:::upload
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
@@ -334,11 +326,6 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-      sftp:
-        image: rajaths1494/sftp-docker
-        ports:
-          - 22:22
-        command: foo:pass:::upload
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -360,6 +347,7 @@ jobs:
             .nox
           key: ${{ runner.os }}-2.2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
+      - run: docker run -p 22:22 -d rajaths1494/sftp-docker foo:pass:::upload
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
