@@ -9,7 +9,7 @@ import yaml
 from airflow.models.connection import Connection
 from dotenv import load_dotenv
 
-from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME, GLOBAL_CONFIG
+from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME, GLOBAL_CONFIG_FILENAME
 
 
 @dataclass
@@ -19,18 +19,20 @@ class Config:
     """
 
     project_dir: Path
-    environment: str
+    environment: str | None = None
 
     connections: list[dict[str, Connection]] = field(default_factory=list)
     airflow_home: str | None = None
     airflow_dags_folder: str | None = None
 
-    def get_env_config_filepath(self) -> Path:
+    def get_env_config_filepath(self) -> Path | None:
         """
         Return environment specific configuration.yaml filepath.
 
         :returns: The path to the desired YAML configuration file
         """
+        if not self.environment:
+            return None
         return self.project_dir / CONFIG_DIR / self.environment / CONFIG_FILENAME
 
     def get_global_config_filepath(self) -> Path:
@@ -39,9 +41,9 @@ class Config:
 
         :return: The path to the desired global YAML configuration file
         """
-        return self.project_dir / CONFIG_DIR / GLOBAL_CONFIG / CONFIG_FILENAME
+        return self.project_dir / CONFIG_DIR / GLOBAL_CONFIG_FILENAME
 
-    def from_yaml_to_dict(self, filepath: Path) -> dict[str, Any]:
+    def from_yaml_to_dict(self, filepath: Path | None) -> dict[str, Any]:
         """
         Return a dict with the contents of the given configuration.yaml
 
@@ -49,6 +51,8 @@ class Config:
 
         :returns: Content of the YAML configuration file as a python dictionary.
         """
+        if not filepath:
+            return {}
         load_dotenv(self.project_dir / ".env")
         with filepath.open() as fp:
             yaml_with_env = os.path.expandvars(fp.read())
@@ -64,7 +68,7 @@ class Config:
             environment=self.environment,
             airflow_home=global_yaml_config.get("airflow", {}).get("home"),
             airflow_dags_folder=global_yaml_config.get("airflow", {}).get("dags_folder"),
-            connections=env_yaml_config["connections"],
+            connections=env_yaml_config.get("connections", []),
         )
 
     def write_value_to_yaml(self, section: str, key: str, value: str, filepath: Path) -> None:

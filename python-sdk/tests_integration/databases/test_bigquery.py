@@ -465,3 +465,27 @@ def test_export_table_to_file_file_already_exists_raises_exception(
         database.export_table_to_file(source_table, File(str(filepath)))
     err_msg = exception_info.value.args[0]
     assert err_msg.endswith(f"The file {filepath} already exists.")
+
+
+def test_get_schema_region():
+    """
+    Test get_schema_region() function
+    :return:
+    """
+    db = BigqueryDatabase(conn_id="gcp_conn")
+    location = db.get_schema_region("tmp_astro")
+    assert location == "US"
+
+
+def test_check_same_region():
+    """
+    Test check_same_region() function
+    :return:
+    """
+    db = BigqueryDatabase(conn_id="gcp_conn")
+    tableA = Table(conn_id=db.conn_id, metadata=db.default_metadata)
+    tableB = Table(conn_id=db.conn_id, metadata=db.default_metadata)
+    assert db.check_same_region(table=tableA, other_table=tableB)
+
+    tableA.metadata.schema = "testing_region"
+    assert not db.check_same_region(table=tableA, other_table=tableB)
