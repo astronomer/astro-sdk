@@ -360,7 +360,7 @@ class BaseDatabase(ABC):
         is_file_pattern_based_schema_autodetection_supported = (
             self.check_file_pattern_based_schema_autodetection_is_supported(source_file=file)
         )
-        if if_exists == "replace":
+        if self.schema_exists(table.metadata.schema) and if_exists == "replace":
             self.drop_table(table)
         if use_native_support and is_schema_autodetection_supported and not file.is_pattern():
             return
@@ -679,7 +679,9 @@ class BaseDatabase(ABC):
     # Schema Management
     # ---------------------------------------------------------
 
-    def create_schema_if_needed(self, schema: str | None) -> None:
+    def create_schema_if_needed(
+        self, schema: str | None, location: str | None = None  # skipcq: PYL-W0613
+    ) -> None:
         """
         This function checks if the expected schema exists in the database. If the schema does not exist,
         it will attempt to create it.
@@ -699,6 +701,20 @@ class BaseDatabase(ABC):
         :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
         """
         raise NotImplementedError
+
+    def get_schema_region(self, schema: str | None = None) -> str:  # skipcq: PYL-W0613, PYL-R0201
+        """
+        Get region where the schema is created
+        :param schema: namespace
+        :return:
+        """
+        return ""
+
+    def check_same_region(self, table: BaseTable, other_table: BaseTable):  # skipcq: PYL-W0613, PYL-R0201
+        """
+        Check if two tables are from the same database region
+        """
+        return True
 
     # ---------------------------------------------------------
     # Context & Template Rendering methods (Transformations)
