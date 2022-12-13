@@ -211,8 +211,8 @@ def run(
     elif dr.state == State.FAILED:
         final_state = "[bold red]FAILED 💥[/bold red]"
     rprint(f"Completed running the workflow {dr.dag_id}. Final state: {final_state}")
-    elapsed_seconds = (dr.end_date - dr.start_date).microseconds / 10**6
-    rprint(f"Total elapsed time: [bold blue]{elapsed_seconds:.2}s[/bold blue]")
+    elapsed_seconds = (dr.end_date - dr.start_date).total_seconds()
+    rprint(f"Total elapsed time: [bold blue]{elapsed_seconds:.2f}s[/bold blue]")
 
 
 @app.command(
