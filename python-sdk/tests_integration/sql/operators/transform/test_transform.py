@@ -307,7 +307,9 @@ def test_transform_region(sample_dag):
         """
 
     with sample_dag:
-        input_table = Table(conn_id="google_cloud_default", name="tmp", metadata=Metadata(schema="test"))
+        input_table = Table(
+            conn_id="google_cloud_default", name="tmp", metadata=Metadata(schema="testing_region")
+        )
         select_all(input_table=input_table)
         aql.cleanup()
     test_utils.run_dag(sample_dag)
