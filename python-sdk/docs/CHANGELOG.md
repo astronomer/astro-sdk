@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.3.1
+
+### Feature:
+- Introduce a parameter `if_exists` which user can set to `append` or `replace` for `aql.dataframe()` operator. `append` insert into an existing table (`output_table`) from a Dataframe. [#1379](https://github.com/astronomer/astro-sdk/issues/1379)
+- Temporary Schemas accounts for Location/Region when creating BigQuery schema. User can now create schema in Bigquery as per region like - `<dataset_id>__<region_id>`. [#1369](https://github.com/astronomer/astro-sdk/issues/1369)
+
+### Bug fixes
+- Fix the `aql.cleanup()` operator as failing as the attribute `output` was implemented in 2.4.0 [#1359](https://github.com/astronomer/astro-sdk/issues/1359)
+- Fix the backward compatibility with `apache-airflow-providers-snowflake==4.0.2`. [#1351](https://github.com/astronomer/astro-sdk/issues/1351)
+- LoadFile operator returns a dataframe if not using XCom backend.[#1348](https://github.com/astronomer/astro-sdk/pull/1348),[#1337](https://github.com/astronomer/astro-sdk/issues/1337)
+
+### Docs
+- Cross-link to API reference page from Operators page.[#1383](https://github.com/astronomer/astro-sdk/issues/1383)
+
+### Misc
+- Improve the integration tests to assert for specific values for database attributes. [#1273](https://github.com/astronomer/astro-sdk/issues/1273)
+- Run python-sdk tests with airflow 2.5.0 and fix the CI failures. [#1232](https://github.com/astronomer/astro-sdk/issues/1232), [#1351](https://github.com/astronomer/astro-sdk/issues/1351),[#1317](https://github.com/astronomer/astro-sdk/pull/1317), [#1337](https://github.com/astronomer/astro-sdk/issues/1337)
+- Deprecate `export_file` before renaming to `export_table_to_file`. [#1411](https://github.com/astronomer/astro-sdk/issues/1411)
+
 ## 1.3.0
 
 ### Feature:
