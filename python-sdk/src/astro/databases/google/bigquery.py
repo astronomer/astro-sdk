@@ -135,7 +135,7 @@ class BigqueryDatabase(BaseDatabase):
         return Metadata(
             schema=self.DEFAULT_SCHEMA,
             database=self.hook.project_id,
-            location=BIGQUERY_SCHEMA_LOCATION,
+            region=BIGQUERY_SCHEMA_LOCATION,
         )  # type: ignore
 
     def schema_exists(self, schema: str) -> bool:
