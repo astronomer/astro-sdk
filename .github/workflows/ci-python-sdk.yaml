@@ -130,6 +130,11 @@ jobs:
           --name postgres
         ports:
           - 5432:5432
+      sftp:
+        image: rajaths1494/sftp-docker
+        ports:
+          - 22:22
+        command: foo:pass:::upload
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -249,6 +254,11 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+      sftp:
+        image: rajaths1494/sftp-docker
+        ports:
+          - 22:22
+        command: foo:pass:::upload
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -320,6 +330,11 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+      sftp:
+        image: rajaths1494/sftp-docker
+        ports:
+          - 22:22
+        command: foo:pass:::upload
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
