@@ -255,9 +255,7 @@ with dag:
 
     # [START load_file_example_20]
     aql.load_file(
-        input_file=File(
-            path="sftp://foo@host.docker.internal/upload/", conn_id="sftp_conn", filetype=FileType.CSV
-        ),
+        input_file=File(path="sftp://foo@localhost/upload/", conn_id="sftp_conn", filetype=FileType.CSV),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
             metadata=Metadata(
