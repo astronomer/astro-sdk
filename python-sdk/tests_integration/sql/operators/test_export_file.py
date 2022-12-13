@@ -12,7 +12,7 @@ from astro import sql as aql
 from astro.constants import SUPPORTED_FILE_TYPES, Database, FileType
 from astro.files import File
 from astro.settings import SCHEMA
-from astro.sql import export_file, ExportTableToFileOperator, export_table_to_file
+from astro.sql import ExportTableToFileOperator, export_file, export_table_to_file
 from astro.table import Table
 
 from ..operators import utils as test_utils
