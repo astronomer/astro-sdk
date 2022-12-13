@@ -10,12 +10,7 @@ from airflow.models.connection import Connection
 
 from sql_cli.configuration import Config
 from sql_cli.connections import convert_to_connection
-from sql_cli.constants import (
-    DEFAULT_AIRFLOW_HOME,
-    DEFAULT_DAGS_FOLDER,
-    DEFAULT_DATA_DIR,
-    DEFAULT_ENVIRONMENT,
-)
+from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_DATA_DIR, DEFAULT_ENVIRONMENT
 from sql_cli.exceptions import InvalidProject
 from sql_cli.utils.airflow import initialise as initialise_airflow, reload as reload_airflow
 
@@ -129,20 +124,20 @@ class Project:
         Initialise a SQL CLI project, creating expected directories and files.
         """
         excludes = [".gitkeep"]
-        if self.data_dir != Path(self.directory, DEFAULT_DATA_DIR):
+        if self.data_dir != self.directory / DEFAULT_DATA_DIR:
+            # Use user-provided data directory
             excludes.append(DEFAULT_DATA_DIR)
+            shutil.copytree(
+                src=BASE_SOURCE_DIR / DEFAULT_DATA_DIR,
+                dst=self.data_dir,
+                dirs_exist_ok=True,
+            )
         shutil.copytree(
             src=BASE_SOURCE_DIR,
             dst=self.directory,
             ignore=shutil.ignore_patterns(*excludes),
             dirs_exist_ok=True,
         )
-        if self.data_dir != Path(self.directory, DEFAULT_DATA_DIR):
-            shutil.copytree(
-                src=BASE_SOURCE_DIR / DEFAULT_DATA_DIR,
-                dst=self.data_dir,
-                dirs_exist_ok=True,
-            )
         self._initialise_global_config()
         initialise_airflow(self.airflow_home, self.airflow_dags_folder)
         self._remove_unnecessary_airflow_files()

@@ -16,7 +16,7 @@ def convert_to_connection(conn: dict[str, Any], data_dir: Path) -> Connection:
     Convert the SQL CLI connection dictionary into an Airflow Connection instance.
 
     :param conn: SQL CLI connection dictionary
-    :param data_dir: Path to the initialised project data directory
+    :param data_dir: Path to the initialised project's data directory
     :returns: Connection object
     """
     from airflow.api_connexion.schemas.connection_schema import connection_schema
@@ -26,13 +26,13 @@ def convert_to_connection(conn: dict[str, Any], data_dir: Path) -> Connection:
 
     if connection["conn_type"] == "sqlite" and not os.path.isabs(connection["host"]):
         # Try resolving with data directory
-        resolved_path = data_dir / connection["host"]
-        if not resolved_path.is_file():
+        resolved_host = data_dir / connection["host"]
+        if not resolved_host.is_file():
             raise FileNotFoundError(
-                f"The relative file path {connection['host']} was resolved into {resolved_path}"
+                f"The relative file path {connection['host']} was resolved into {resolved_host}"
                 " but it's a failed resolution as the path does not exist."
             )
-        connection["host"] = resolved_path.as_posix()
+        connection["host"] = resolved_host.as_posix()
 
     connection_kwargs = connection_schema.load(connection)
     return Connection(**connection_kwargs)
