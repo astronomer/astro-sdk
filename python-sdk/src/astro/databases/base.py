@@ -704,7 +704,7 @@ class BaseDatabase(ABC):
         """
         raise NotImplementedError
 
-    def get_schema_region(self, schema: str) -> str:
+    def get_schema_region(self, schema: str | None = None) -> str:
         """
         Get region where the schema is created
         :param schema: namespace

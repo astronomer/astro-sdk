@@ -133,7 +133,7 @@ class BigqueryDatabase(BaseDatabase):
         :return:
         """
         return Metadata(
-            schema=self.DEFAULT_SCHEMA,  # type: ignore
+            schema=self.DEFAULT_SCHEMA,
             database=self.hook.project_id,
             location=BIGQUERY_SCHEMA_LOCATION,
         )  # type: ignore
