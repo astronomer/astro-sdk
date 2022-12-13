@@ -44,7 +44,7 @@ class Metadata:
 
     @property
     def schema(self):
-        if self.location:
+        if self.region:
             # We are replacing the `-` with `_` because for bigquery doesn't allow `-` in schema name
             return f"{self._schema}__{self.region.replace('-', '_')}"
         return self._schema
