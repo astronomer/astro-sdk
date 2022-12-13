@@ -15,7 +15,7 @@
 - Cross-link to API reference page from Operators page.[#1383](https://github.com/astronomer/astro-sdk/issues/1383)
 
 ### Misc
-- Improve the integration tests to assert for specific values for database attributes. [#1273](https://github.com/astronomer/astro-sdk/issues/1273)
+- Improve the integration tests to count the number of rows impacted for database operations. [#1273](https://github.com/astronomer/astro-sdk/issues/1273)
 - Run python-sdk tests with airflow 2.5.0 and fix the CI failures. [#1232](https://github.com/astronomer/astro-sdk/issues/1232), [#1351](https://github.com/astronomer/astro-sdk/issues/1351),[#1317](https://github.com/astronomer/astro-sdk/pull/1317), [#1337](https://github.com/astronomer/astro-sdk/issues/1337)
 - Deprecate `export_file` before renaming to `export_table_to_file`. [#1411](https://github.com/astronomer/astro-sdk/issues/1411)
 
