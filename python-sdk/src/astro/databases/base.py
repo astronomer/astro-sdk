@@ -684,8 +684,8 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
 
     def create_schema_if_needed(
-        self, schema: str | None, location: str | None = None
-    ) -> None:  # skipcq: PYL-W0613
+        self, schema: str | None, location: str | None = None  # skipcq: PYL-W0613
+    ) -> None:
         """
         This function checks if the expected schema exists in the database. If the schema does not exist,
         it will attempt to create it.

@@ -97,8 +97,8 @@ class DeltaDatabase(BaseDatabase):
         return True
 
     def create_schema_if_needed(
-        self, schema: str | None, location: str | None = None
-    ) -> None:  # skipcq: PYL-W0613
+        self, schema: str | None, location: str | None = None  # skipcq: PYL-W0613
+    ) -> None:
         # Schemas do not need to be created for delta, so we don't need to do anything here
         return None
 

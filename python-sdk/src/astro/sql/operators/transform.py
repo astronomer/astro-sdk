@@ -62,13 +62,14 @@ class TransformOperator(BaseSQLDecoratedOperator):
 
         super().execute(context)
 
-        if first_table:
-            if self.output_table.temp and (
-                not self.database_impl.check_same_region(table=first_table, other_table=self.output_table)
-            ):
-                self.output_table.metadata.region = self.database_impl.get_schema_region(
-                    schema=first_table.metadata.schema
-                )
+        if (
+            first_table
+            and self.output_table.temp
+            and (not self.database_impl.check_same_region(table=first_table, other_table=self.output_table))
+        ):
+            self.output_table.metadata.region = self.database_impl.get_schema_region(
+                schema=first_table.metadata.schema
+            )
 
         self.database_impl.create_schema_if_needed(
             self.output_table.metadata.schema, self.output_table.metadata.region
