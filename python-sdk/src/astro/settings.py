@@ -7,7 +7,7 @@ from astro.constants import DEFAULT_SCHEMA
 # Section name for astro SDK configs in airflow.cfg
 SECTION_KEY = "astro_sdk"
 # Bigquery list of all the valid locations: https://cloud.google.com/bigquery/docs/locations
-DEFAULT_BIGQUERY_SCHEMA_LOCATION = "us-central1"
+DEFAULT_BIGQUERY_SCHEMA_LOCATION = "us"
 
 SCHEMA = conf.get(SECTION_KEY, "sql_schema", fallback=DEFAULT_SCHEMA)
 POSTGRES_SCHEMA = conf.get(SECTION_KEY, "postgres_default_schema", fallback=SCHEMA)

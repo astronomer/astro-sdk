@@ -96,7 +96,7 @@ class DeltaDatabase(BaseDatabase):
         # Schemas do not need to be created for delta, so we can assume this is true
         return True
 
-    def create_schema_if_needed(self, schema: str | None) -> None:
+    def create_schema_if_needed(self, schema: str | None, location: str | None = None) -> None:
         # Schemas do not need to be created for delta, so we don't need to do anything here
         return None
 
