@@ -263,7 +263,7 @@ class YamlFile(WorkflowFile):
 
         :returns: the function name of the operator in aql.
         """
-        operators = list(self.yaml_content.keys())
+        operators: list[str] = list(self.yaml_content.keys())
         operators_count = len(operators)
 
         if operators_count != 1:
@@ -282,7 +282,7 @@ class YamlFile(WorkflowFile):
 
         :returns: the operator kwargs.
         """
-        return self.yaml_content[self.operator_name]
+        return self.yaml_content[self.operator_name]  # type: ignore
 
     def to_operator(self) -> LoadFileOperator:
         """
