@@ -164,13 +164,13 @@ class BigqueryDatabase(BaseDatabase):
         except NotFound:
             return ""
 
-    def check_same_region(self, first_table: BaseTable, output_table: BaseTable):
+    def check_same_region(self, table: BaseTable, other_table: BaseTable):
         """
         Check if two tables are from the same database region
         """
-        first_table_location = self.get_schema_region(schema=first_table.metadata.schema)
-        output_table_location = self.get_schema_region(schema=output_table.metadata.schema)
-        return first_table_location == output_table_location
+        table_location = self.get_schema_region(schema=table.metadata.schema)
+        other_table_location = self.get_schema_region(schema=other_table.metadata.schema)
+        return table_location == other_table_location
 
     @staticmethod
     def get_merge_initialization_query(parameters: tuple) -> str:
