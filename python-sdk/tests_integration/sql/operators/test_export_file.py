@@ -12,7 +12,7 @@ from astro import sql as aql
 from astro.constants import SUPPORTED_FILE_TYPES, Database, FileType
 from astro.files import File
 from astro.settings import SCHEMA
-from astro.sql import ExportTableToFileOperator, export_file, export_table_to_file
+from astro.sql import ExportTableToFileOperator, ExportFileOperator, export_file, export_table_to_file
 from astro.table import Table
 
 from ..operators import utils as test_utils
@@ -333,8 +333,6 @@ def test_raise_exception_for_invalid_input_type():
 
 # TODO: Remove this test in astro-sdk 1.4
 def test_warnings_message():
-    from astro.sql.operators.export_file import ExportFileOperator, export_file
-
     with pytest.warns(
         expected_warning=DeprecationWarning,
         match="""This class is deprecated.
