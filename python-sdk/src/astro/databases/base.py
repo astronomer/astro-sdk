@@ -712,7 +712,7 @@ class BaseDatabase(ABC):
         """
         return ""
 
-    def check_same_region(self, first_table: BaseTable, output_table: BaseTable):
+    def check_same_region(self, table: BaseTable, other_table: BaseTable):
         """
         Check if two tables are from the same database region
         """
