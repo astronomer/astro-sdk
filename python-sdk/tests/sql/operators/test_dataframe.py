@@ -58,7 +58,7 @@ def test_dataframe_from_sql_basic(sample_dag, database_table_fixture):
         from astro.dataframes.pandas import PandasDataframe
 
         assert isinstance(df, PandasDataframe)
-        return df.sell.count()
+        return df.sell.count().tolist()
 
     with sample_dag:
         f = my_df_func(df=test_table)
@@ -102,6 +102,7 @@ def test_dataframe_from_sql_custom_task_id(sample_dag, database_table_fixture):
 
     @aql.dataframe(task_id="foo")
     def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
+        assert len(df) == 5
         return df.sell.count()
 
     with sample_dag:
@@ -150,7 +151,8 @@ def test_dataframe_from_sql_basic_op_arg(sample_dag, database_table_fixture):
         database=getattr(test_table.metadata, "database", None),
     )
     def my_df_func(df: pandas.DataFrame):  # skipcq: PY-D0003
-        return df.sell.count()
+        assert len(df) == 5
+        return df.sell.count().tolist()
 
     with sample_dag:
         res = my_df_func(test_table)
@@ -198,7 +200,9 @@ def test_dataframe_from_sql_basic_op_arg_and_kwarg(
         database=getattr(test_table.metadata, "database", None),
     )
     def my_df_func(df_1: pandas.DataFrame, df_2: pandas.DataFrame):  # skipcq: PY-D0003
-        return df_1.sell.count() + df_2.sell.count()
+        assert len(df_1) == 5
+        assert len(df_2) == 5
+        return (df_1.sell.count() + df_2.sell.count()).tolist()
 
     with sample_dag:
         res = my_df_func(test_table, df_2=test_table)
@@ -212,6 +216,7 @@ def test_postgres_dataframe_without_table_arg(sample_dag):
 
     @aql.dataframe
     def validate_result(df: pandas.DataFrame):  # skipcq: PY-D0003
+        assert len(df) == 3
         assert df.iloc[0].to_dict()["colors"] == "red"
 
     @aql.dataframe
@@ -432,7 +437,8 @@ def test_col_case_is_preserved(sample_dag):
     def validate(df):  # skipcq: PY-D0003
         cols = list(df.columns)
         cols.sort()
-        return df.columns == ["Colors", "Numbers"]
+        assert len(df) == 3
+        return cols == ["Colors", "Numbers"]
 
     with sample_dag:
         task1 = sample_df_1()
@@ -496,6 +502,39 @@ def test_dataframe_replace_table_if_exist(sample_dag, conn_id):
     # re-run dag to and make sure it is replacing table
     test_utils.run_dag(sample_dag)
     assert output_tb.row_count == 2
+
+    # drop the table to avoid issue with concurrent test run
+    with sample_dag:
+        aql.drop_table(table=output_tb)
+    test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "conn_id",
+    [
+        "bigquery",
+        "postgres_conn",
+        "redshift_conn",
+        "snowflake_conn",
+        "sqlite_conn",
+    ],
+)
+def test_dataframe_append_table_if_exist(sample_dag, conn_id):
+    @aql.dataframe(if_exists="append")
+    def get_empty_dataframe():
+        arr = {"col1": [1, 2]}
+        return pandas.DataFrame(data=arr)
+
+    output_tb = Table(conn_id=conn_id)
+    with sample_dag:
+        get_empty_dataframe(output_table=output_tb)
+
+    test_utils.run_dag(sample_dag)
+    assert output_tb.row_count == 2
+    # re-run dag to and make sure it is appending the table
+    test_utils.run_dag(sample_dag)
+    assert output_tb.row_count == 4
 
     # drop the table to avoid issue with concurrent test run
     with sample_dag:

@@ -1,8 +1,8 @@
 .. _merge_operator:
 
-===============
-merge operator
-===============
+====================================================
+:py:mod:`merge operator <astro.sql.operators.merge>`
+====================================================
 
 When to use the ``merge`` operator
 ----------------------------------

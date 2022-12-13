@@ -21,12 +21,13 @@ from airflow.providers.google.cloud.hooks.gcs import GCSHook
 
 import astro.sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
-from astro.constants import SUPPORTED_FILE_TYPES, Database
+from astro.constants import SUPPORTED_FILE_TYPES, Database, FileType
 from astro.files import File
 from astro.settings import SCHEMA
+from astro.sql.operators.export_file import ExportFileOperator, export_file
 
 # Import Operator
-from astro.sql.operators.export_file import export_file
+from astro.sql.operators.export_table_to_file import ExportTableToFileOperator, export_table_to_file
 from astro.table import Table
 from tests.sql.operators import utils as test_utils
 
@@ -52,7 +53,7 @@ def test_save_dataframe_to_local(sample_dag):
 
     with sample_dag:
         df = make_df()
-        aql.export_file(
+        aql.export_table_to_file(
             input_data=df,
             output_file=File(path="/tmp/saved_df.csv"),
             if_exists="replace",
@@ -92,7 +93,7 @@ def test_save_returns_output_file(sample_dag, database_table_fixture):
     data_path = str(CWD) + "/../../data/homes.csv"
     with sample_dag:
         table = aql.load_file(input_file=File(path=data_path), output_table=test_table)
-        file = aql.export_file(
+        file = aql.export_table_to_file(
             input_data=table,
             output_file=File(path="/tmp/saved_df.csv"),
             if_exists="replace",
@@ -324,14 +325,14 @@ def test_unique_task_id_for_same_path(
 
             if i == 3:
                 params["task_id"] = "task_id"
-            task = export_file(**params)
+            task = export_table_to_file(**params)
             tasks.append(task)
     test_utils.run_dag(sample_dag)
 
     assert tasks[0].operator.task_id != tasks[1].operator.task_id
-    assert tasks[0].operator.task_id == "export_file"
-    assert tasks[1].operator.task_id == "export_file__1"
-    assert tasks[2].operator.task_id == "export_file__2"
+    assert tasks[0].operator.task_id == "export_table_to_file"
+    assert tasks[1].operator.task_id == "export_table_to_file__1"
+    assert tasks[2].operator.task_id == "export_table_to_file__2"
     assert tasks[3].operator.task_id == "task_id"
 
     os.remove(OUTPUT_FILE_PATH)
@@ -431,7 +432,7 @@ def test_inlets_outlets_supported_ds():
     """Test Datasets are set as inlets and outlets"""
     input_data = Table("test_name")
     output_file = File("gs://bucket/object.csv")
-    task = aql.export_file(
+    task = aql.export_table_to_file(
         input_data=input_data,
         output_file=output_file,
     )
@@ -444,9 +445,53 @@ def test_inlets_outlets_non_supported_ds():
     """Test inlets and outlets are not set if Datasets are not supported"""
     input_data = Table("test_name")
     output_file = File("gs://bucket/object.csv")
-    task = aql.export_file(
+    task = aql.export_table_to_file(
         input_data=input_data,
         output_file=output_file,
     )
     assert task.operator.inlets == []
     assert task.operator.outlets == []
+
+
+def test_raise_exception_for_invalid_input_type():
+    with pytest.raises(ValueError) as exc_info:
+        ExportTableToFileOperator(
+            task_id="task_id",
+            input_data=123,
+            output_file=File(
+                path="gs://astro-sdk/workspace/openlineage_export_file.csv",
+                conn_id="bigquery",
+                filetype=FileType.CSV,
+            ),
+            if_exists="replace",
+        ).execute(context=None)
+    expected_msg = "Expected input_table to be Table or dataframe. Got <class 'int'>"
+    assert exc_info.value.args[0] == expected_msg
+
+
+# TODO: Remove this test in astro-sdk 1.4
+def test_warnings_message():
+    with pytest.warns(
+        expected_warning=DeprecationWarning,
+        match="""This class is deprecated.
+            Please use `astro.sql.operators.export_table_to_file.ExportTableToFileOperator`.
+            And, will be removed in astro-sdk-python>=1.4.0.""",
+    ):
+        ExportFileOperator(
+            task_id="task_id",
+            input_data=123,
+            output_file=File(
+                path="gs://astro-sdk/workspace/openlineage_export_file.csv",
+                conn_id="bigquery",
+                filetype=FileType.CSV,
+            ),
+            if_exists="replace",
+        )
+
+    with pytest.warns(
+        expected_warning=DeprecationWarning,
+        match="""This decorator is deprecated.
+        Please use `astro.sql.operators.export_table_to_file.export_table_to_file`.
+        And, will be removed in astro-sdk-python>=1.4.0.""",
+    ):
+        export_file(input_data=Table(), output_file=File(path="/tmp/saved_df.csv"), if_exists="replace")

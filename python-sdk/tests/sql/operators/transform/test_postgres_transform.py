@@ -31,7 +31,10 @@ def validate(df: pd.DataFrame):
     assert df.iloc[0].to_dict()["first_name"] == "PENELOPE"
 
 
-@pytest.mark.parametrize("output_table", ["None", "partial", "full"], indirect=True)
+@pytest.mark.parametrize(
+    "output_table",
+    [Table(), Table(name="my_table"), Table(name="my_table", conn_id="postgres_conn_pagila")],
+)
 def test_postgres_to_dataframe_partial_output(output_table, dag):
     @aql.transform
     def sample_pg(input_table: Table):
