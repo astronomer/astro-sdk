@@ -52,6 +52,37 @@ def test_raise_exception_for_invalid_input_type():
     assert exc_info.value.args[0] == expected_msg
 
 
+def test_warnings_message():
+    from astro.sql.operators.export_file import (
+        ExportFileOperator,
+        export_file,
+    )
+    with pytest.warns(expected_warning=DeprecationWarning,
+                      match="""This class is deprecated.
+            Please use `astro.sql.operators.export_table_to_file.ExportTableToFileOperator`.
+            And, will be removed in astro-sdk-python>=1.4.0."""):
+        ExportFileOperator(
+            task_id="task_id",
+            input_data=123,
+            output_file=File(
+                path="gs://astro-sdk/workspace/openlineage_export_file.csv",
+                conn_id="bigquery",
+                filetype=FileType.CSV,
+            ),
+            if_exists="replace",
+        )
+
+    with pytest.warns(expected_warning=DeprecationWarning,
+                      match="""This decorator is deprecated.
+        Please use `astro.sql.operators.export_table_to_file.export_table_to_file`.
+        And, will be removed in astro-sdk-python>=1.4.0."""):
+        export_file(
+            input_data=Table(),
+            output_file=File(path="/tmp/saved_df.csv"),
+            if_exists="replace"
+        )
+
+
 @pytest.mark.parametrize("database_table_fixture", [{"database": Database.SQLITE}], indirect=True)
 def test_save_temp_table_to_local(sample_dag, database_table_fixture):
     _, test_table = database_table_fixture
@@ -106,8 +137,8 @@ def test_save_returns_output_file(sample_dag, database_table_fixture):
     indirect=True,
 )
 def test_unique_task_id_for_same_path(
-    sample_dag,
-    database_table_fixture,
+        sample_dag,
+        database_table_fixture,
 ):
     _, test_table = database_table_fixture
     file_name = f"{test_utils.get_table_name('output')}.csv"
