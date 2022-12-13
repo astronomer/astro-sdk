@@ -82,7 +82,7 @@ class Project:
         Initialises global config file that includes configuration to be shared across environments including the
         airflow config.
         """
-        config = Config(environment=DEFAULT_ENVIRONMENT, project_dir=self.directory)
+        config = Config(project_dir=self.directory)
         global_env_filepath = config.get_global_config_filepath()
         # If the `Airflow Home` directory does not exist, Airflow initialisation flow takes care of creating the
         # directory. We rely on this behaviour and hence do not raise an exception if the path specified as
