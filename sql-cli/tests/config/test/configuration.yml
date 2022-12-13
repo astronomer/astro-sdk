@@ -22,7 +22,7 @@ connections:
     schema: pagila
     login: postgres
     password: $POSTGRES_PASSWORD
-    port: $POSTGRES_PORT
+    port: 5432
 
   - conn_id: redshift_conn
     conn_type: redshift
