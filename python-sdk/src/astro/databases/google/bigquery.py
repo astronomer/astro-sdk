@@ -219,7 +219,7 @@ class BigqueryDatabase(BaseDatabase):
 
         :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
         """
-        # We check if the schema exists first because snowflake will fail on a create schema query even if it
+        # We check if the schema exists first because BigQuery will fail on a create schema query even if it
         # doesn't actually create a schema.
         location = location or BIGQUERY_SCHEMA_LOCATION
         if schema and not self.schema_exists(schema):
