@@ -13,7 +13,7 @@ The ``transform`` operator treats values in the double brackets as Airflow jinja
 There are two main uses for the ``transform`` operator.
 
 Case 1: Passing tables between tasks while completing data transformations.
-    The following example applies a SQL ``SELECT`` statement to a ``imdb_movies`` table with templating and saves the result to a ``top_animation`` table.
+    The following example applies a SQL ``SELECT`` statement to a ``imdb_movies`` table with templating and saves the result to a astro-sdk tmp table.
 
     Note that the ``input_table`` in the double brackets is treated as an Airflow jinja template. It is **not** an f string. F-strings in SQL formatting are at risk of security breaches via SQL injections. For security, you **must** explicitly identify tables in the function parameters by typing a value as a Table. Only then will the ``transform`` operator treat the value as a table.
 
@@ -22,7 +22,7 @@ Case 1: Passing tables between tasks while completing data transformations.
        :start-after: [START transform_example_1]
        :end-before: [END transform_example_1]
 
-    The following example applies a SQL ``SELECT`` statement to a ``imdb_movies`` table with templating and saves the result to a ``last_animation`` table.
+    The following example applies a SQL ``SELECT`` statement to a ``imdb_movies`` table with templating and saves the result to a astro-sdk tmp table.
 
     .. literalinclude:: ../../../../example_dags/example_transform.py
        :language: python
