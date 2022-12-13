@@ -52,15 +52,18 @@ def test_get_transport_params_for_sftp_password(mock_sftp_hook):  # skipcq: PYL-
 
 @patch("airflow.providers.sftp.hooks.sftp.SFTPHook.isdir")
 @patch("airflow.providers.sftp.hooks.sftp.SFTPHook.list_directory")
-def test_get_paths_from_sftp(mock_list, mock_isdir):
+@patch("airflow.providers.sftp.hooks.sftp.SFTPHook.get_connection")
+def test_get_paths_from_sftp(mock_sftp_conn, mock_list, mock_isdir):
     """Get the list of files from the sftp path"""
-
+    mock_sftp_conn.return_value = Connection(
+        conn_id="sftp_default", conn_type="test", login=1234, host="localhost", password="test", port=1234
+    )
     mock_isdir.return_value = True
     mock_list.return_value = ["sample.csv"]
     location = create_file_location("sftp://user@host/some")
-    assert sorted(location.paths) == sorted(["sftp://user@host/some/sample.csv"])
+    assert sorted(location.paths) == sorted(["sftp://user@host:1234/some/sample.csv"])
     mock_isdir.return_value = False
-    assert sorted(location.paths) == sorted(["sftp://user@host/some"])
+    assert sorted(location.paths) == sorted(["sftp://user@host:1234/some"])
 
 
 @patch("airflow.providers.sftp.hooks.sftp.SFTPHook.get_conn")

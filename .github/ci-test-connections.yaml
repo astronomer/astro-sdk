@@ -111,5 +111,5 @@ connections:
     host: localhost
     login: foo
     password: pass
-    port: null
+    port: 2222
     extra:
