@@ -103,6 +103,7 @@ class Project:
         """
         config = Config(project_dir=self.directory)
         global_env_filepath = config.get_global_config_filepath()
+        config.write_value_to_yaml("general", "data_dir", str(self._data_dir.resolve()), global_env_filepath)
         # If the `Airflow Home` directory does not exist, Airflow initialisation flow takes care of creating the
         # directory. We rely on this behaviour and hence do not raise an exception if the path specified as
         # `Airflow Home` does not exist.
@@ -168,7 +169,9 @@ class Project:
             self._airflow_home = Path(config.airflow_home).resolve()
         if config.airflow_dags_folder:
             self._airflow_dags_folder = Path(config.airflow_dags_folder).resolve()
+        if config.data_dir:
+            self._data_dir = Path(config.data_dir).resolve()
         reload_airflow(self.airflow_home)
         self.connections = [
-            convert_to_connection(connection, self.directory) for connection in config.connections
+            convert_to_connection(connection, self._data_dir) for connection in config.connections
         ]
