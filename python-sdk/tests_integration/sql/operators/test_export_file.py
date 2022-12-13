@@ -9,10 +9,10 @@ import pytest
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
 
 from astro import sql as aql
-from astro.constants import SUPPORTED_FILE_TYPES, Database
+from astro.constants import SUPPORTED_FILE_TYPES, Database, FileType
 from astro.files import File
 from astro.settings import SCHEMA
-from astro.sql import export_file
+from astro.sql import export_file, ExportTableToFileOperator, export_table_to_file
 from astro.table import Table
 
 from ..operators import utils as test_utils
@@ -122,7 +122,7 @@ def test_save_all_db_tables_to_gcs(sample_dag, database_table_fixture):
     output_file_path = f"gs://{bucket}/test/{file_name}"
 
     with sample_dag:
-        export_file(
+        export_table_to_file(
             input_data=test_table,
             output_file=File(path=output_file_path, conn_id="google_cloud_default"),
             if_exists="replace",
@@ -168,7 +168,7 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(sample_dag, dat
     _, test_table = database_table_fixture
     with tempfile.NamedTemporaryFile(suffix=".csv") as temp_file, pytest.raises(FileExistsError):
         with sample_dag:
-            export_file(
+            export_table_to_file(
                 input_data=test_table,
                 output_file=File(path=temp_file.name),
                 if_exists="exception",
@@ -216,7 +216,7 @@ def test_save_table_remote_file_exists_overwrite_false(
     _, test_table = database_table_fixture
     with pytest.raises(FileExistsError):
         with sample_dag:
-            export_file(
+            export_table_to_file(
                 input_data=test_table,
                 output_file=File(path=remote_files_fixture[0], conn_id="aws_default"),
                 if_exists="exception",
@@ -258,7 +258,7 @@ def test_export_file(sample_dag, database_table_fixture, file_type):
     with tempfile.TemporaryDirectory() as tmp_dir:
         filepath = Path(tmp_dir, f"sample.{file_type}")
         with sample_dag:
-            export_file(
+            export_table_to_file(
                 input_data=test_table,
                 output_file=File(path=str(filepath)),
                 if_exists="exception",
@@ -305,7 +305,7 @@ def test_populate_table_metadata(sample_dag, database_table_fixture):
         assert table.metadata.schema == SCHEMA
 
     with sample_dag:
-        aql.export_file(
+        aql.export_table_to_file(
             input_data=test_table,
             output_file=File(path="/tmp/saved_df.csv"),
             if_exists="replace",
@@ -313,3 +313,49 @@ def test_populate_table_metadata(sample_dag, database_table_fixture):
         validate(test_table)
 
     test_utils.run_dag(sample_dag)
+
+
+def test_raise_exception_for_invalid_input_type():
+    with pytest.raises(ValueError) as exc_info:
+        ExportTableToFileOperator(
+            task_id="task_id",
+            input_data=123,
+            output_file=File(
+                path="gs://astro-sdk/workspace/openlineage_export_file.csv",
+                conn_id="bigquery",
+                filetype=FileType.CSV,
+            ),
+            if_exists="replace",
+        ).execute(context=None)
+    expected_msg = "Expected input_table to be Table or dataframe. Got <class 'int'>"
+    assert exc_info.value.args[0] == expected_msg
+
+
+# TODO: Remove this test in astro-sdk 1.4
+def test_warnings_message():
+    from astro.sql.operators.export_file import ExportFileOperator, export_file
+
+    with pytest.warns(
+        expected_warning=DeprecationWarning,
+        match="""This class is deprecated.
+            Please use `astro.sql.operators.export_table_to_file.ExportTableToFileOperator`.
+            And, will be removed in astro-sdk-python>=1.4.0.""",
+    ):
+        ExportFileOperator(
+            task_id="task_id",
+            input_data=123,
+            output_file=File(
+                path="gs://astro-sdk/workspace/openlineage_export_file.csv",
+                conn_id="bigquery",
+                filetype=FileType.CSV,
+            ),
+            if_exists="replace",
+        )
+
+    with pytest.warns(
+        expected_warning=DeprecationWarning,
+        match="""This decorator is deprecated.
+        Please use `astro.sql.operators.export_table_to_file.export_table_to_file`.
+        And, will be removed in astro-sdk-python>=1.4.0.""",
+    ):
+        export_file(input_data=Table(), output_file=File(path="/tmp/saved_df.csv"), if_exists="replace")
