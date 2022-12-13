@@ -136,8 +136,7 @@ jobs:
         image: rajaths1494/sftp-docker
         ports:
           - 22:22
-        options: >-
-          foo:pass:::upload
+        run: foo:pass:::upload
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -262,8 +261,7 @@ jobs:
         image: rajaths1494/sftp-docker
         ports:
           - 22:22
-        options: >-
-          foo:pass:::upload
+        run: foo:pass:::upload
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -340,8 +338,7 @@ jobs:
         image: rajaths1494/sftp-docker
         ports:
           - 22:22
-        options: >-
-          foo:pass:::upload
+        run: foo:pass:::upload
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
