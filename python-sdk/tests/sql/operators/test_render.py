@@ -1,6 +1,7 @@
 import pathlib
 
 from astro.sql.operators.render import render_tasks
+from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
 
@@ -18,6 +19,7 @@ def test_render_directory(sample_dag):
     }
     for k, v in sample_dag.task_dict.items():
         assert set(known_deps[k]) == v.upstream_task_ids
+    test_utils.run_dag(sample_dag)
 
 
 def test_render_directory_with_load(sample_dag):
@@ -39,3 +41,5 @@ def test_render_directory_with_load(sample_dag):
     }
     for k, v in sample_dag.task_dict.items():
         assert set(known_deps[k]) == v.upstream_task_ids
+
+    test_utils.run_dag(sample_dag)

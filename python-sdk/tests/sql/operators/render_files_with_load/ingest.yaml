@@ -1,9 +1,7 @@
 load_file:
   input_file:
-    conn_id: foo
-    path: /foo/bar
+    conn_id: aws_conn
+    path: s3://tmp9/ADOPTION_CENTER_1.csv
   output_table:
-    conn_id: bar
-    name: baz
-    metadata:
-      schema: None
+    conn_id: sqlite_conn
+    name: test_table

@@ -1,4 +1,4 @@
 ---
-conn_id: my_test_sqlite
+conn_id: sqlite_conn
 ---
 select 1
