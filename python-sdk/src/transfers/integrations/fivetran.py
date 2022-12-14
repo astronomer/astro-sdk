@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from airflow.hooks.dbapi import DbApiHook
 from transfers.datasets.base import UniversalDataset as Dataset
-from transfers.integrations.base import TransferIntegrations
+from transfers.integrations.base import TransferIntegration
 
 
-class FivetranIntegration(TransferIntegrations):
+class FivetranIntegration(TransferIntegration):
     """
     Class for FiveTran.
 

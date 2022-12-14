@@ -1,14 +1,14 @@
 import importlib
 
 from transfers.constants import IngestorSupported
-from transfers.integrations.base import TransferIntegrations
+from transfers.integrations.base import TransferIntegration
 
 from astro.utils.path import get_class_name
 
 CUSTOM_INGESTION_TYPE_TO_MODULE_PATH = {"Fivetran": "transfers.integrations.fivetran"}
 
 
-def create_transfer_integration(transfer_params: dict = {}) -> TransferIntegrations:
+def create_transfer_integration(transfer_params: dict = {}) -> TransferIntegration:
     """
     Given a transfer_params return the associated TransferIntegrations class.
 
@@ -23,5 +23,5 @@ def create_transfer_integration(transfer_params: dict = {}) -> TransferIntegrati
     module_path = CUSTOM_INGESTION_TYPE_TO_MODULE_PATH[ingestion_type_name]
     module = importlib.import_module(module_path)
     class_name = get_class_name(module_ref=module, suffix="Integration")
-    transfer_integrations: TransferIntegrations = getattr(module, class_name)(transfer_params)
+    transfer_integrations: TransferIntegration = getattr(module, class_name)(transfer_params)
     return transfer_integrations

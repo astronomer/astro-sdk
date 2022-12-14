@@ -6,7 +6,7 @@ from airflow.hooks.dbapi import DbApiHook
 from transfers.datasets.base import UniversalDataset as Dataset
 
 
-class TransferIntegrations(ABC):
+class TransferIntegration(ABC):
     """
     Class for third party transfer.
 
