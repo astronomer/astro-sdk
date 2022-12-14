@@ -11,7 +11,6 @@ class FivetranIntegration(TransferIntegrations):
 
     """
 
-
     def hook(self) -> DbApiHook:
         """Return an instance of the database-specific Airflow hook."""
         raise NotImplementedError
