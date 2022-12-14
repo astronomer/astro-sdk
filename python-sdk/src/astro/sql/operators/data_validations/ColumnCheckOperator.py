@@ -83,18 +83,23 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
 
         self.process_checks()
 
-    def get_check_method(self, check_name: str, column_name: str):
+    def get_check_result(self, check_name: str, column_name: str, df: pandas.DataFrame):
         """
-        Get the method ref that will validate the dataframe
+        Get the check method results post validating the dataframe
         """
-        column_checks = {
-            "null_check": self.col_null_check,
-            "distinct_check": self.col_distinct_check,
-            "unique_check": self.col_unique_check,
-            "min": self.col_min,
-            "max": self.col_max,
-        }
-        return column_checks[check_name](column_name=column_name)
+        if df is not None and column_name in df.columns:
+            column_checks = {
+                "null_check": self.col_null_check,
+                "distinct_check": self.col_distinct_check,
+                "unique_check": self.col_unique_check,
+                "min": self.col_min,
+                "max": self.col_max,
+            }
+            return column_checks[check_name](column_name=column_name, df=df)
+        elif df is None:
+            raise ValueError("Dataframe is None")
+        else:
+            raise ValueError(f"Dataframe is don't have column {column_name}")
 
     def process_checks(self):
         """
@@ -110,7 +115,7 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
             # Iterating over checks
             for check in checks:
                 tolerance = self.column_mapping[column][check].get("tolerance")
-                result = self.get_check_method(check, column_name=column)
+                result = self.get_check_result(check, column_name=column, df=self.df)
                 self.column_mapping[column][check]["result"] = result
                 self.column_mapping[column][check]["success"] = self._get_match(
                     self.column_mapping[column][check], result, tolerance
@@ -123,45 +128,40 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
         if len(passed_tests) > 0:
             print(f"The following tests have passed:" f"\n{''.join(passed_tests)}")
 
-    def col_null_check(self, column_name: str) -> Optional[int]:
+    @staticmethod
+    def col_null_check(column_name: str, df: pandas.DataFrame) -> Optional[int]:
         """
         Count the total null values in a dataframe column
         """
-        if self.df is not None and column_name in self.df.columns:
-            return list(self.df[column_name].isnull().values).count(True)
-        return None
+        return list(df[column_name].isnull().values).count(True)
 
-    def col_distinct_check(self, column_name: str) -> Optional[int]:
+    @staticmethod
+    def col_distinct_check(column_name: str, df: pandas.DataFrame) -> Optional[int]:
         """
         Count the distinct value in a dataframe column
         """
-        if self.df is not None and column_name in self.df.columns:
-            return len(self.df[column_name].unique())
-        return None
+        return len(df[column_name].unique())
 
-    def col_unique_check(self, column_name: str) -> Optional[int]:
+    @staticmethod
+    def col_unique_check(column_name: str, df: pandas.DataFrame) -> Optional[int]:
         """
         Count the unique value in a dataframe column
         """
-        if self.df is not None and column_name in self.df.columns:
-            return len(self.df[column_name]) - self.col_distinct_check(column_name=column_name)
-        return None
+        return len(df[column_name]) - len(df[column_name].unique())
 
-    def col_max(self, column_name: str) -> Optional[float]:
+    @staticmethod
+    def col_max(column_name: str, df: pandas.DataFrame) -> Optional[float]:
         """
         Get the max value in dataframe column
         """
-        if self.df is not None and column_name in self.df.columns:
-            return self.df[column_name].max()
-        return None
+        return df[column_name].max()
 
-    def col_min(self, column_name: str) -> Optional[float]:
+    @staticmethod
+    def col_min(column_name: str, df: pandas.DataFrame) -> Optional[float]:
         """
         Get the min value in dataframe column
         """
-        if self.df is not None and column_name in self.df.columns:
-            return self.df[column_name].min()
-        return None
+        return df[column_name].min()
 
 
 def _get_failed_checks(checks, col=None):
