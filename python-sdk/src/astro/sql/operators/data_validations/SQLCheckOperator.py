@@ -55,7 +55,6 @@ class SQLCheckOperator(SQLTableCheckOperator):
         )
 
 
-
 def sql_check(
     dataset: BaseTable,
     checks: Dict[str, Dict[str, Any]],
