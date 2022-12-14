@@ -54,8 +54,6 @@ class SQLCheckOperator(SQLTableCheckOperator):
             task_id=task_id or get_unique_task_id("sql_check"),
         )
 
-    def execute(self, context: "Context"):
-        return super().execute(context=context)
 
 
 def sql_check(
