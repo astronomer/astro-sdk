@@ -49,7 +49,11 @@ def find_worst_covid_month(dfs: List[pd.DataFrame]):
     res = {}
     for covid_month_data in dfs:
         if ALLOWED_DESERIALIZATION_CLASSES == "airflow.* astro.*":
-            covid_month = datetime.fromtimestamp(covid_month_data.Date_YMD.iloc[0] / 1e3).strftime("%Y-%m")
+            # TODO: When we fix following issue https://github.com/astronomer/astro-sdk/issues/1425
+            #  we can uncomment the below line and remove the later two line.
+            # covid_month = datetime.fromtimestamp(covid_month_data.Date_YMD.iloc[0] / 1e3).strftime("%Y-%m")
+            timestamp = covid_month_data.Date_YMD.iloc[0]
+            covid_month = f"{timestamp.year}-{timestamp.month}"
         else:
             covid_month = covid_month_data.Date_YMD.iloc[0].__format__("%Y-%m")
         num_deceased = covid_month_data["Daily Deceased"].sum()
