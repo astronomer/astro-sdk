@@ -51,7 +51,7 @@ class SQLCheckOperator(SQLTableCheckOperator):
             checks=checks,
             partition_clause=partition_clause,
             conn_id=dataset.conn_id,
-            task_id=task_id if task_id is not None else get_unique_task_id("sql_check"),
+            task_id=task_id or get_unique_task_id("sql_check"),
         )
 
     def execute(self, context: "Context"):
