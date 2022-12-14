@@ -14,6 +14,8 @@ class DeltaLoadOptions(LoadOptions):
     copy_into_copy_options: dict = field(init=True, factory=dict)
     existing_cluster_id: str = field()
     new_cluster_spec: dict = field(init=True, factory=dict)
+    secret_scope: str = "astro-sdk-secrets"
+    load_secrets: bool = False
 
     @existing_cluster_id.default
     def get_existing_cluster_id(self):
@@ -38,4 +40,5 @@ class DeltaLoadOptions(LoadOptions):
         return cls(
             copy_into_format_options={"header": "true", "inferSchema": "true"},
             copy_into_copy_options={"mergeSchema": "true"},
+            load_secrets=conf.get("astro_sdk", "load_storage_configs_to_databricks", fallback=True),
         )

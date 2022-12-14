@@ -16,7 +16,7 @@ from astro.files import File
 from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
 from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
 from astro.sql import AppendOperator, DataframeOperator, MergeOperator
-from astro.sql.operators.export_file import ExportFileOperator
+from astro.sql.operators.export_table_to_file import ExportTableToFileOperator
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.sql.operators.transform import TransformOperator
 from astro.table import Metadata, Table
@@ -132,7 +132,7 @@ def test_python_sdk_export_file_extract_on_complete():
     """
     Tests that  the custom PythonSDKExtractor is able to process the
     operator's metadata that needs to be extracted as per OpenLineage
-    for ExportFileOperator.
+    for ExportTableToFileOperator.
     """
     load_file = LoadFileOperator(
         task_id="load_file",
@@ -144,7 +144,7 @@ def test_python_sdk_export_file_extract_on_complete():
     load_file.execute(context=create_context(load_file))
 
     task_id = "export_file"
-    export_file_operator = ExportFileOperator(
+    export_file_operator = ExportTableToFileOperator(
         task_id=task_id,
         input_data=Table(conn_id="sqlite_conn", name="test_extractor"),
         output_file=File(
@@ -156,7 +156,7 @@ def test_python_sdk_export_file_extract_on_complete():
     )
 
     task_instance = TaskInstance(task=export_file_operator)
-    python_sdk_extractor = Extractors().get_extractor_class(ExportFileOperator)
+    python_sdk_extractor = Extractors().get_extractor_class(ExportTableToFileOperator)
     assert python_sdk_extractor is DefaultExtractor
     task_meta_extract = python_sdk_extractor(export_file_operator).extract()
     assert task_meta_extract is None

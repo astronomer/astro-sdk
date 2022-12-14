@@ -96,7 +96,9 @@ class DeltaDatabase(BaseDatabase):
         # Schemas do not need to be created for delta, so we can assume this is true
         return True
 
-    def create_schema_if_needed(self, schema: str | None) -> None:
+    def create_schema_if_needed(
+        self, schema: str | None, location: str | None = None  # skipcq: PYL-W0613
+    ) -> None:
         # Schemas do not need to be created for delta, so we don't need to do anything here
         return None
 
@@ -111,7 +113,7 @@ class DeltaDatabase(BaseDatabase):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = None,
-        load_options: LoadOptions = DeltaLoadOptions(),
+        load_options: LoadOptions = DeltaLoadOptions.get_default_delta_options(),
         databricks_job_name: str = "",
         **kwargs,
     ):
