@@ -108,8 +108,8 @@ connections:
   - conn_id: sftp_default
   - conn_id: sftp_conn
     conn_type: sftp
-    host: localhost
-    login: foo
-    password: pass
+    host: $SFTP_HOSTNAME
+    login: $SFTP_USERNAME
+    password: $SFTP_PASSWORD
     port: 2222
     extra:
