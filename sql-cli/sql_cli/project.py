@@ -10,7 +10,7 @@ from airflow.models.connection import Connection
 
 from sql_cli.configuration import Config
 from sql_cli.connections import convert_to_connection
-from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_DATA_DIR, DEFAULT_ENVIRONMENT
+from sql_cli.constants import DEFAULT_BASE_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_DATA_DIR, DEFAULT_ENVIRONMENT
 from sql_cli.exceptions import InvalidProject
 from sql_cli.utils.airflow import initialise as initialise_airflow, reload as reload_airflow
 
@@ -38,22 +38,20 @@ class Project:
         data_dir: Path | None = None,
     ) -> None:
         self.directory = directory
-        self._airflow_home = airflow_home or Path(self.directory, DEFAULT_AIRFLOW_HOME)
+        self._airflow_home = airflow_home
         self._airflow_dags_folder = airflow_dags_folder or Path(self.directory, DEFAULT_DAGS_FOLDER)
         self._data_dir = data_dir or Path(self.directory, DEFAULT_DATA_DIR)
         self.connections: list[Connection] = []
 
-    @property
-    def airflow_home(self) -> Path:
+    def get_env_airflow_home(self, env: str = DEFAULT_ENVIRONMENT) -> Path:
         """
-        Folder which contains the Airflow database and configuration.
-        Can be either user-defined, during initialisation, or the default one.
+        Return Airflow home for desired environment.
 
-        This is used by flow validate and flow run.
-
-        :returns: The path to the Airflow home directory.
+        :param env: SQL CLI environment
+        :returns: Path to environment-specific Airflow home
         """
-        return self._airflow_home
+        default_path = self.directory / DEFAULT_BASE_AIRFLOW_HOME / env
+        return self._airflow_home or default_path
 
     @property
     def airflow_dags_folder(self) -> Path:
@@ -68,6 +66,7 @@ class Project:
         return self._airflow_dags_folder
 
     @property
+<<<<<<< HEAD
     def data_dir(self) -> Path:
         """
         Folder which contains additional data files.
@@ -81,21 +80,35 @@ class Project:
 
     @property
     def airflow_config(self) -> dict[str, Any]:
+=======
+    def environments_list(self) -> list:
+        """
+        Return list with the names of the existing environments in the current project.
+
+        :returns: A list with strings representing the existing environments.
+        """
+        config_dir = self.directory / "config"
+        return [subpath.name for subpath in config_dir.iterdir() if subpath.is_dir()]
+
+    def get_env_airflow_config(self, env: str) -> dict[str, Any]:
+>>>>>>> Add flow config get --as-json option
         """
         Retrieve the Airflow configuration for the currently set environment.
 
         :returns: A Python dictionary containing the Airflow configuration.
         """
-        filename = self.airflow_home / "airflow.cfg"
+        airflow_home = self.get_env_airflow_home(env)
+        filename = airflow_home / "airflow.cfg"
         parser = ConfigParser()
         parser.read(filename)
         return {section: dict(parser.items(section)) for section in parser.sections()}
 
     def _initialise_global_config(self) -> None:
         """
-        Initialises global config file that includes configuration to be shared across environments including the
+        Initialises global config YAML file that includes configuration to be shared across environments including the
         airflow config.
         """
+<<<<<<< HEAD
         config = Config(project_dir=self.directory)
         global_env_filepath = config.get_global_config_filepath()
         config.write_value_to_yaml(
@@ -113,17 +126,55 @@ class Project:
             )
         config.write_value_to_yaml(
             "airflow", "dags_folder", self._airflow_dags_folder.resolve().as_posix(), global_env_filepath
+=======
+        config = Config(environment=DEFAULT_ENVIRONMENT, project_dir=self.directory)
+        global_config_filepath = config.get_global_config_filepath()
+        # If the `Airflow Home` directory does not exist, Airflow initialisation flow takes care of creating the
+        # directory. We rely on this behaviour and hence do not raise an exception if the path specified as
+        # `Airflow Home` does not exist.
+        if not Path.exists(self._airflow_dags_folder):
+            raise FileNotFoundError(f"Specified DAGs directory {self._airflow_dags_folder} does not exist.")
+        config.write_value_to_yaml(
+            "airflow", "dags_folder", str(self._airflow_dags_folder.resolve()), global_config_filepath
         )
 
-    def _remove_unnecessary_airflow_files(self) -> None:
+    def _initialise_env_config(self, environment: str) -> None:
         """
-        Delete Airflow generated paths which are not necessary for the SQL CLI (scheduler & webserver-related).
+        Initialises the environment YAML config file that includes environment-specific values.
+
+        :param environment: Environment to set the configuration
         """
-        logs_folder = self.airflow_home / "logs"
+        config = Config(environment=environment, project_dir=self.directory)
+        config_filepath = config.get_env_config_filepath()
+        # If the `Airflow Home` directory does not exist, Airflow initialisation flow takes care of creating the
+        # directory. We rely on this behaviour and hence do not raise an exception if the path specified as
+        # `Airflow Home` does not exist.
+        config.write_value_to_yaml(
+            "airflow", "home", str(self.get_env_airflow_home(environment)), config_filepath
+>>>>>>> Add flow config get --as-json option
+        )
+
+    def _remove_unnecessary_airflow_files(self, airflow_home: Path) -> None:
+        """
+        Delete Airflow generated paths which are not necessary for the desired Airflow home.
+
+        :param airflow_home: Path to Airflow home we want to clean up.
+        """
+        logs_folder = airflow_home / "logs"
         shutil.rmtree(logs_folder)
 
-        webserver_config = self.airflow_home / "webserver_config.py"
+        webserver_config = airflow_home / "webserver_config.py"
         webserver_config.unlink()
+
+    def _initialise_airflow_for_environment(self, env: str) -> None:
+        """
+        Initialise Airflow home for given environment.
+
+        :param env: SQL CLI environment
+        """
+        airflow_home = self.get_env_airflow_home(env)
+        initialise_airflow(airflow_home, self.airflow_dags_folder)
+        self._remove_unnecessary_airflow_files(airflow_home)
 
     def initialise(self) -> None:
         """
@@ -145,8 +196,9 @@ class Project:
             dirs_exist_ok=True,
         )
         self._initialise_global_config()
-        initialise_airflow(self.airflow_home, self.airflow_dags_folder)
-        self._remove_unnecessary_airflow_files()
+        for env in self.environments_list:
+            self._initialise_env_config(env)
+            self._initialise_airflow_for_environment(env)
 
     def is_valid_project(self) -> bool:
         """
@@ -168,11 +220,22 @@ class Project:
         config = Config(environment=environment, project_dir=self.directory).from_yaml_to_config()
         if config.airflow_home:
             self._airflow_home = Path(config.airflow_home).resolve()
+        else:
+            self._initialise_env_config(environment)
+            config = Config(environment=environment, project_dir=self.directory).from_yaml_to_config()
+
+        if not self.get_env_airflow_home(environment).exists():
+            self._initialise_airflow_for_environment(environment)
+
         if config.airflow_dags_folder:
             self._airflow_dags_folder = Path(config.airflow_dags_folder).resolve()
+<<<<<<< HEAD
         if config.data_dir:
             self._data_dir = Path(config.data_dir).resolve()
         reload_airflow(self.airflow_home)
+=======
+        reload_airflow(self.get_env_airflow_home(environment))
+>>>>>>> Add flow config get --as-json option
         self.connections = [
             convert_to_connection(connection, self._data_dir) for connection in config.connections
         ]

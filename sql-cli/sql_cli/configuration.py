@@ -67,7 +67,7 @@ class Config:
         return Config(
             project_dir=self.project_dir,
             environment=self.environment,
-            airflow_home=global_yaml_config.get("airflow", {}).get("home"),
+            airflow_home=env_yaml_config.get("airflow", {}).get("home"),
             airflow_dags_folder=global_yaml_config.get("airflow", {}).get("dags_folder"),
             data_dir=global_yaml_config.get("general", {}).get("data_dir"),
             connections=env_yaml_config.get("connections", []),
@@ -95,8 +95,13 @@ class Config:
         with filepath.open(mode="w") as fp:
             yaml.dump(yaml_config, fp)
 
-    def as_json(self):
+    def to_dict(self):
         """
         Return configuration represented as JSON string.
         """
-        return "{}"
+        config_as_dict = {"global": self.from_yaml_to_dict(self.get_global_config_filepath())}
+        if self.environment:
+            env_config = self.from_yaml_to_dict(self.get_env_config_filepath())
+            env_config.pop("connections", None)  # remove sensitive information
+            config_as_dict[self.environment] = env_config
+        return config_as_dict

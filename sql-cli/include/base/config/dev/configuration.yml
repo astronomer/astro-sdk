@@ -9,3 +9,7 @@ connections:
   - conn_id: sqlite_conn
     conn_type: sqlite
     host: retail.db
+
+# Apache Airflow optional settings
+airflow:
+  home:

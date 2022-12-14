@@ -62,3 +62,7 @@ connections:
   #   password: $SNOWFLAKE_PASSWORD
   #   schema: $SNOWFLAKE_SCHEMA
   #   extra: '{"account": "$SNOWFLAKE_ACCOUNT", "region": "$SNOWFLAKE_REGION", "role": "$SNOWFLAKE_ROLE", "warehouse": "$SNOWFLAKE_WAREHOUSE", "database": "$SNOWFLAKE_DATABASE"}'
+
+# Apache Airflow optional settings
+airflow:
+  home:

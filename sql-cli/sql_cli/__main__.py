@@ -13,7 +13,7 @@ from sql_cli.astro.command import AstroCommand
 from sql_cli.astro.group import AstroGroup
 from sql_cli.cli import config as cli_config
 from sql_cli.cli.utils import resolve_project_dir
-from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_DATA_DIR
+from sql_cli.constants import DEFAULT_BASE_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_DATA_DIR
 from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
 from sql_cli.utils.rich import rprint
 
@@ -28,7 +28,7 @@ app = typer.Typer(
     context_settings={"help_option_names": ["-h", "--help"]},
     rich_markup_mode="rich",
 )
-app.add_typer(cli_config.app, name="config")
+app.add_typer(cli_config.app, name="config", hidden=True)
 
 airflow_logger = logging.getLogger("airflow")
 airflow_logger.setLevel(logging.CRITICAL)
@@ -169,7 +169,7 @@ def run(
     try:
         dr = dag_runner.run_dag(
             dag,
-            run_conf=project.airflow_config,
+            run_conf=project.get_env_airflow_config(env),
             connections={c.conn_id: c for c in project.connections},
             verbose=verbose,
         )
@@ -218,7 +218,7 @@ def init(
     airflow_home: Path = typer.Option(
         None,
         dir_okay=True,
-        help=f"(Optional) Set the Airflow Home. Default: {DEFAULT_AIRFLOW_HOME}",
+        help=f"(Optional) Set the Airflow Home. Default: {DEFAULT_BASE_AIRFLOW_HOME}/<env>/",
         show_default=False,
     ),
     airflow_dags_folder: Path = typer.Option(
