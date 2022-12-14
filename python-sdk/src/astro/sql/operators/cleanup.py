@@ -232,7 +232,14 @@ class CleanupOperator(AstroSQLBaseOperator):
                     and isinstance(task, MappedOperator)
                     and issubclass(task.operator_class, OPERATOR_CLASSES_WITH_TABLE_OUTPUT)
                 ):
-                    for t in task.output.resolve(context):
+                    from airflow.models.xcom_arg import XComArg
+
+                    try:
+                        task_output = task.output
+                    except AttributeError:
+                        task_output = XComArg(operator=task)
+
+                    for t in task_output.resolve(context):
                         if isinstance(t, BaseTable):
                             res.append(t)
             except AirflowException:  # pragma: no cover

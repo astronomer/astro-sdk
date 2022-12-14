@@ -15,6 +15,7 @@ from astro.dataframes.pandas import PandasDataframe
 
 if TYPE_CHECKING:  # pragma: no cover
     from sqlalchemy.engine.cursor import CursorResult
+
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
@@ -32,6 +33,7 @@ from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File, resolve_file_path_pattern
 from astro.files.types import create_file_type
 from astro.files.types.base import FileType as FileTypeConstants
+from astro.options import LoadOptions
 from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK, LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.table import BaseTable, Metadata
 
@@ -360,7 +362,7 @@ class BaseDatabase(ABC):
         is_file_pattern_based_schema_autodetection_supported = (
             self.check_file_pattern_based_schema_autodetection_is_supported(source_file=file)
         )
-        if if_exists == "replace":
+        if self.schema_exists(table.metadata.schema) and if_exists == "replace":
             self.drop_table(table)
         if use_native_support and is_schema_autodetection_supported and not file.is_pattern():
             return
@@ -398,12 +400,14 @@ class BaseDatabase(ABC):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+        load_options: LoadOptions = LoadOptions(),
         **kwargs,
     ):
         """
         Load content of multiple files in output_table.
         Multiple files are sourced from the file path, which can also be path pattern.
 
+        :param load_options: Options for loading into specific data warehouses. Currently supports: databricks
         :param input_file: File path and conn_id for object stores
         :param output_table: Table to create
         :param if_exists: Overwrite file if exists
@@ -679,7 +683,9 @@ class BaseDatabase(ABC):
     # Schema Management
     # ---------------------------------------------------------
 
-    def create_schema_if_needed(self, schema: str | None) -> None:
+    def create_schema_if_needed(
+        self, schema: str | None, location: str | None = None  # skipcq: PYL-W0613
+    ) -> None:
         """
         This function checks if the expected schema exists in the database. If the schema does not exist,
         it will attempt to create it.
@@ -699,6 +705,20 @@ class BaseDatabase(ABC):
         :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
         """
         raise NotImplementedError
+
+    def get_schema_region(self, schema: str | None = None) -> str:  # skipcq: PYL-W0613, PYL-R0201
+        """
+        Get region where the schema is created
+        :param schema: namespace
+        :return:
+        """
+        return ""
+
+    def check_same_region(self, table: BaseTable, other_table: BaseTable):  # skipcq: PYL-W0613, PYL-R0201
+        """
+        Check if two tables are from the same database region
+        """
+        return True
 
     # ---------------------------------------------------------
     # Context & Template Rendering methods (Transformations)
@@ -732,6 +752,28 @@ class BaseDatabase(ABC):
             self.get_table_qualified_name(table),
             self.get_table_qualified_name(table),
         )
+
+    def row_count(self, table: BaseTable):
+        """
+        Returns the number of rows in a table.
+
+        :param table: table to count
+        :return: The number of rows in the table
+        """
+        result = self.run_sql(
+            f"select count(*) from {self.get_table_qualified_name(table)}"  # skipcq: BAN-B608
+        ).scalar()
+        return result
+
+    def parameterize_variable(self, variable: str):
+        """
+        While most databases use sqlalchemy, we want to open up how we paramaterize variables for databases
+        that a) do not use sqlalchemy and b) have different parameterization schemes (namely delta).
+
+        :param variable: The variable to parameterize.
+        :return: Variable with proper parameters
+        """
+        return ":" + variable
 
     def is_native_load_file_available(  # skipcq: PYL-R0201
         self, source_file: File, target_table: BaseTable  # skipcq: PYL-W0613

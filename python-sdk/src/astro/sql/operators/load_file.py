@@ -4,6 +4,7 @@ from typing import Any
 
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
+from airflow.hooks.base import BaseHook
 from airflow.models.xcom_arg import XComArg
 
 from astro.airflow.datasets import kwargs_with_datasets
@@ -11,7 +12,8 @@ from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistS
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.dataframes.pandas import PandasDataframe
-from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
+from astro.files import File, resolve_file_path_pattern
+from astro.options import LoadOptions
 from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
@@ -47,6 +49,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         ndjson_normalize_sep: str = "_",
         use_native_support: bool = True,
         native_support_kwargs: dict | None = None,
+        load_options: LoadOptions = LoadOptions(),
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         **kwargs,
@@ -70,6 +73,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         self.native_support_kwargs: dict[str, Any] = native_support_kwargs or {}
         self.columns_names_capitalization = columns_names_capitalization
         self.enable_native_fallback = enable_native_fallback
+        self.load_options = load_options
 
     def execute(self, context: Context) -> BaseTable | File:  # skipcq: PYL-W0613
         """
@@ -81,17 +85,17 @@ class LoadFileOperator(AstroSQLBaseOperator):
         if self.output_table:
             context["ti"].xcom_push(key="output_table_conn_id", value=str(self.output_table.conn_id))
             context["ti"].xcom_push(key="output_table_name", value=str(self.output_table.name))
-        return self.load_data(input_file=self.input_file)
+        return self.load_data(input_file=self.input_file, context=context)
 
-    def load_data(self, input_file: File) -> BaseTable | pd.DataFrame:
+    def load_data(self, input_file: File, context: Context) -> BaseTable | pd.DataFrame:
 
         self.log.info("Loading %s into %s ...", self.input_file.path, self.output_table)
         if self.output_table:
-            return self.load_data_to_table(input_file)
+            return self.load_data_to_table(input_file, context)
         else:
             return self.load_data_to_dataframe(input_file)
 
-    def load_data_to_table(self, input_file: File) -> BaseTable:
+    def load_data_to_table(self, input_file: File, context: Context) -> BaseTable:
         """
         Loads csv/parquet table from local/S3/GCS with Pandas.
         Infers SQL database type based on connection then loads table to db.
@@ -114,6 +118,8 @@ class LoadFileOperator(AstroSQLBaseOperator):
             native_support_kwargs=self.native_support_kwargs,
             columns_names_capitalization=self.columns_names_capitalization,
             enable_native_fallback=self.enable_native_fallback,
+            databricks_job_name=f"Load data {self.dag_id}_{self.task_id}",
+            load_options=self.load_options,
         )
         self.log.info("Completed loading the data into %s.", self.output_table)
         return self.output_table
@@ -327,3 +333,15 @@ def load_file(
         enable_native_fallback=enable_native_fallback,
         **kwargs,
     ).output
+
+
+def check_if_connection_exists(conn_id: str) -> bool:
+    """
+    Given an Airflow connection ID, identify if it exists.
+    Return True if it does or raise an AirflowNotFoundException exception if it does not.
+
+    :param conn_id: Airflow connection ID
+    :return bool: If the connection exists, return True
+    """
+    BaseHook.get_connection(conn_id)
+    return True

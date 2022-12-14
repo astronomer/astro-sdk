@@ -108,7 +108,7 @@ provider_info = "astro.__init__:get_provider_info"
 minversion = "6.0"
 addopts = "--durations=30 --durations-min=1.0"
 env_files = [".env"]
-testpaths = ["tests"]
+testpaths = ["tests", "tests_integration"]
 markers = [
     "integration"
 ]

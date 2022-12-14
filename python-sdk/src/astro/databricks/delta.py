@@ -3,14 +3,19 @@ from __future__ import annotations
 from textwrap import dedent
 
 import pandas
+from airflow.providers.databricks.hooks.databricks import DatabricksHook
 from airflow.providers.databricks.hooks.databricks_sql import DatabricksSqlHook
 from databricks.sql.client import Cursor
+from databricks_cli.sdk.api_client import ApiClient
 from sqlalchemy.engine.base import Engine as SqlAlchemyEngine
 from sqlalchemy.sql import ClauseElement
 
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
+from astro.databricks.load_file.load_file_job import load_file_to_delta
+from astro.databricks.load_options import DeltaLoadOptions
 from astro.files import File
+from astro.options import LoadOptions
 from astro.table import BaseTable, Metadata
 
 
@@ -25,8 +30,8 @@ class DeltaDatabase(BaseDatabase):
         # TODO: Do we need default configurations for a delta table?
         """
         Given a table, populates the "metadata" field with what we would consider as "defaults"
-
         These defaults are determined based on environment variables and the connection settings.
+
         :param table: table to be populated
         :return:
         """
@@ -37,6 +42,20 @@ class DeltaDatabase(BaseDatabase):
             else:
                 table.metadata = self.default_metadata
         return table
+
+    @property
+    def api_client(self) -> ApiClient:
+        """
+        Returns the databricks API client. Used for interacting with databricks services like
+        DBFS, Jobs, etc.
+
+        :return: A databricks ApiClient
+        """
+        conn = DatabricksHook(
+            databricks_conn_id=self.conn_id
+        ).get_conn()  # add this because DatabricksSqlHook does not expose password
+        api_client = ApiClient(host=conn.host, token=conn.password)
+        return api_client
 
     @property
     def sql_type(self):
@@ -77,7 +96,9 @@ class DeltaDatabase(BaseDatabase):
         # Schemas do not need to be created for delta, so we can assume this is true
         return True
 
-    def create_schema_if_needed(self, schema: str | None) -> None:
+    def create_schema_if_needed(
+        self, schema: str | None, location: str | None = None  # skipcq: PYL-W0613
+    ) -> None:
         # Schemas do not need to be created for delta, so we don't need to do anything here
         return None
 
@@ -91,13 +112,19 @@ class DeltaDatabase(BaseDatabase):
         use_native_support: bool = True,
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
-        enable_native_fallback: bool | None = True,
+        enable_native_fallback: bool | None = None,
+        load_options: LoadOptions = DeltaLoadOptions(),
+        databricks_job_name: str = "",
         **kwargs,
     ):
         """
         Load content of multiple files in output_table.
         Multiple files are sourced from the file path, which can also be path pattern.
 
+        :param load_options: options for passing into COPY INTO. currently we support
+            ``format_options`` and ``copy_options``
+        :param databricks_job_name: Create a consistent job name so that we don't litter the databricks job screen.
+            This should be <dag_id>_<task_id>
         :param input_file: File path and conn_id for object stores
         :param output_table: Table to create
         :param if_exists: Overwrite file if exists
@@ -108,8 +135,16 @@ class DeltaDatabase(BaseDatabase):
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
+
         """
-        raise NotImplementedError("Load is not yet implemented")
+        if not isinstance(load_options, DeltaLoadOptions):
+            raise ValueError("Please use a DeltaLoadOption for the load_options parameter")
+        load_file_to_delta(
+            input_file=input_file,
+            delta_table=output_table,
+            databricks_job_name=databricks_job_name,
+            delta_load_options=load_options or DeltaLoadOptions.get_default_delta_options(),
+        )
 
     def openlineage_dataset_name(self, table: BaseTable) -> str:
         return ""
@@ -134,7 +169,22 @@ class DeltaDatabase(BaseDatabase):
         statement = self._create_table_statement.format(
             self.get_table_qualified_name(target_table), statement
         )
-        self.run_sql(sql=statement, parameters=None)
+        self.run_sql(sql=statement, parameters=parameters)
+
+    def parameterize_variable(self, variable: str) -> str:
+        """
+        Parameterize a variable in a way that the Databricks SQL API can recognize.
+        :param variable: Variable to parameterize
+        :return: The number of rows in the table
+        """
+        return "%(" + variable + ")s"
+
+    def row_count(self, table: BaseTable):
+        result = self.run_sql(
+            f"SELECT COUNT(*) FROM {self.get_table_qualified_name(table)}",
+            handler=lambda x: x.fetchone(),
+        )  # skipcq: BAN-B608
+        return result.asDict()["count(1)"]
 
     def run_sql(
         self,
@@ -213,6 +263,7 @@ class DeltaDatabase(BaseDatabase):
         """
 
         def convert_delta_table_to_df(cur: Cursor) -> pandas.DataFrame:
-            return cur.fetchall_arrow().to_pandas()
+            df = cur.fetchall_arrow().to_pandas()
+            return df
 
-        return self.hook.run(f"SELECT * FROM {source_table.name}", handler=convert_delta_table_to_df)[1]
+        return self.hook.run(f"SELECT * FROM {source_table.name}", handler=convert_delta_table_to_df)

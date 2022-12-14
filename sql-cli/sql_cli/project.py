@@ -8,14 +8,9 @@ from typing import Any
 
 from airflow.models.connection import Connection
 
-from sql_cli.configuration import Config, convert_to_connection
-from sql_cli.constants import (
-    DEFAULT_AIRFLOW_HOME,
-    DEFAULT_DAGS_FOLDER,
-    DEFAULT_ENVIRONMENT,
-    GLOBAL_CONFIG,
-    SQLITE_CONN_TYPE,
-)
+from sql_cli.configuration import Config
+from sql_cli.connections import convert_to_connection
+from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_ENVIRONMENT
 from sql_cli.exceptions import InvalidProject
 from sql_cli.utils.airflow import initialise as initialise_airflow, reload as reload_airflow
 
@@ -23,7 +18,7 @@ BASE_SOURCE_DIR = Path(os.path.realpath(__file__)).parent.parent / "include/base
 
 MANDATORY_PATHS = {
     Path("config/default/configuration.yml"),
-    Path("config/global/configuration.yml"),
+    Path("config/global.yml"),
     Path("workflows"),
 }
 
@@ -87,7 +82,7 @@ class Project:
         Initialises global config file that includes configuration to be shared across environments including the
         airflow config.
         """
-        config = Config(environment=GLOBAL_CONFIG, project_dir=self.directory)
+        config = Config(project_dir=self.directory)
         global_env_filepath = config.get_global_config_filepath()
         # If the `Airflow Home` directory does not exist, Airflow initialisation flow takes care of creating the
         # directory. We rely on this behaviour and hence do not raise an exception if the path specified as
@@ -98,30 +93,6 @@ class Project:
         config.write_value_to_yaml(
             "airflow", "dags_folder", str(self._airflow_dags_folder.resolve()), global_env_filepath
         )
-
-    def transform_env_config(self, environment: str = DEFAULT_ENVIRONMENT) -> None:
-        """
-        Transforms environment specific configurations post project initialisation.
-        :param environment: the environment for which the configuration has to be updated
-        """
-        config = Config(environment=environment, project_dir=self.directory)
-        config = config.from_yaml_to_config()
-        for connection in config.connections:
-            if connection["conn_type"] == SQLITE_CONN_TYPE:
-                host_path = connection["host"]
-                if os.path.isabs(host_path):
-                    continue
-                # The example workflows have relative paths for the host URLs for SQLite connections. Additionally, the
-                # user might also sometimes set relative paths for the host from the initialised project directory. Such
-                # paths need to be converted to absolute paths so that the connections work successfully.
-                resolved_host_path = self.directory / host_path
-                if not resolved_host_path.exists():
-                    raise FileNotFoundError(
-                        f"The relative file path {host_path} was resolved into {resolved_host_path} but it's a failed "
-                        f"resolution as the path does not exist."
-                    )
-                connection["host"] = str(resolved_host_path)
-        config.write_config_to_yaml()
 
     def _remove_unnecessary_airflow_files(self) -> None:
         """
@@ -144,7 +115,6 @@ class Project:
             dirs_exist_ok=True,
         )
         self._initialise_global_config()
-        self.transform_env_config()
         initialise_airflow(self.airflow_home, self.airflow_dags_folder)
         self._remove_unnecessary_airflow_files()
 
@@ -171,4 +141,6 @@ class Project:
         if config.airflow_dags_folder:
             self._airflow_dags_folder = Path(config.airflow_dags_folder).resolve()
         reload_airflow(self.airflow_home)
-        self.connections = [convert_to_connection(c) for c in config.connections]
+        self.connections = [
+            convert_to_connection(connection, self.directory) for connection in config.connections
+        ]

@@ -9,6 +9,7 @@ from astro.sql.operators.data_validations.SQLCheckOperator import SQLCheckOperat
 from astro.sql.operators.dataframe import DataframeOperator, dataframe
 from astro.sql.operators.drop import DropTableOperator, drop_table
 from astro.sql.operators.export_file import ExportFileOperator, export_file
+from astro.sql.operators.export_table_to_file import ExportTableToFileOperator, export_table_to_file
 from astro.sql.operators.load_file import LoadFileOperator, load_file
 from astro.sql.operators.merge import MergeOperator, merge
 from astro.sql.operators.raw_sql import RawSQLOperator, run_raw_sql
@@ -26,6 +27,9 @@ __all__ = [
     "drop_table",
     "ExportFileOperator",
     "export_file",
+    "ExportTableToFileOperator",
+    "export_table_to_file",
+    "get_value_list",
     "LoadFileOperator",
     "load_file",
     "MergeOperator",

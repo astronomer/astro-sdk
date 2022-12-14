@@ -6,11 +6,13 @@ from astro import sql as aql
 from astro.constants import Database
 from astro.files import File
 from astro.table import Table
-from tests.sql.operators import utils as test_utils
+
+from ..operators import utils as test_utils
 
 cwd = pathlib.Path(__file__).parent
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
