@@ -37,13 +37,12 @@ class UniversalTransferOperator(BaseOperator):
         if_exists: LoadExistStrategy = "replace",
         **kwargs,
     ) -> None:
-
-        super().__init__(**kwargs)
         self.source_dataset = source_dataset
         self.destination_dataset = destination_dataset
-        self.transfer_mode = transfer_mode if transfer_mode else TransferMode.NONNATIVE
-        self.transfer_params = transfer_params if transfer_params else {}
+        self.transfer_mode = transfer_mode or TransferMode.NONNATIVE
+        self.transfer_params = transfer_params or {}
         self.if_exists = if_exists
+        super().__init__(**kwargs)
 
     def execute(self, context: Context) -> Any:
         if self.source_dataset.conn_id:
