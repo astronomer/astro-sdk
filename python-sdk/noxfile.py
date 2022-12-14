@@ -33,19 +33,12 @@ def test(session: nox.Session, airflow) -> None:
         ] = "astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend"
         env["AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV"] = "True"
 
-        # 2.2.5 requires a certain version of pandas and sqlalchemy
-        # Otherwise it fails with
-        # Pandas requires version '1.4.0' or newer of 'sqlalchemy' (version '1.3.24' currently installed).
-        constraints_url = (
-            "https://raw.githubusercontent.com/apache/airflow/"
-            f"constraints-{airflow}/constraints-{session.python}.txt"
-        )
-        session.install(f"apache-airflow=={airflow}", "-c", constraints_url)
-        session.install("-e", ".[all,tests]", "-c", constraints_url)
-        # install apache-airflow-providers-sftp==4.0.0 since it is the compatible version
-        # to run sftp example dag to load file with airflow 2.2.5
-        session.install("apache-airflow-providers-sftp==4.0.0")
-        session.install("apache-airflow-providers-sqlite>=3.1.0")
+        # If you need a pinned version of a provider to be present in a nox session then
+        # update the constraints file used below with that  version of provider
+        # For example as part of MSSQL support we need apache-airflow-providers-microsoft-mssql>=3.2 and this
+        # has been updated in the below constraint file.
+        session.install(f"apache-airflow=={airflow}", "-c", "tests/modified_constraint_file.txt")
+        session.install("-e", ".[all,tests]", "-c", "tests/modified_constraint_file.txt")
         session.install("apache-airflow-providers-common-sql==1.2.0")
         # install smart-open 6.3.0 since it has FTP implementation
         session.install("smart-open>=6.3.0")

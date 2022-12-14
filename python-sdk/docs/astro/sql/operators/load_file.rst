@@ -208,6 +208,21 @@ Supported native transfers
 
    Reference on how to create such a role is here: https://www.dataliftoff.com/iam-roles-for-loading-data-from-s3-into-redshift/
 
+Loading to MS SQL
+~~~~~~~~~~~~~~~~~
+
+``load_file`` can load data to SQL Server database hosted on cloud or on-premise server.
+
+.. literalinclude:: ../../../../example_dags/example_load_file.py
+   :language: python
+   :start-after: [START load_file_example_26]
+   :end-before: [END load_file_example_26]
+
+.. note::
+   We do not support loading Unicode data to SQL Server due to limitations on the underlying ``pymssql`` library
+
+
+
 Patterns in file path
 ~~~~~~~~~~~~~~~~~~~~~
 

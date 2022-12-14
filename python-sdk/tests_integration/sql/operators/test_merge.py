@@ -111,9 +111,10 @@ def validate_results(df: pd.DataFrame, mode):
     [
         {"database": Database.REDSHIFT},
         {"database": Database.POSTGRES},
+        {"database": Database.MSSQL},
     ],
     indirect=True,
-    ids=["redshift", "postgres"],
+    ids=["redshift", "postgres", "mssql"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
@@ -194,6 +195,58 @@ def test_merge_with_the_same_schema(database_table_fixture, multiple_tables_fixt
         ]
     )
     assert first_table.row_count == 4
+    test_utils.assert_dataframes_are_equal(computed, expected)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.MSSQL},
+    ],
+    indirect=True,
+    ids=["mssql"],
+)
+@pytest.mark.parametrize(
+    "multiple_tables_fixture",
+    [
+        {
+            "items": [
+                {"file": File(str(pathlib.Path(CWD.parent.parent, "data/sample_without_unicode.csv")))},
+                {"file": File(str(pathlib.Path(CWD.parent.parent, "data/sample_part2_without_unicode.csv")))},
+            ]
+        }
+    ],
+    indirect=True,
+    ids=["two_tables_same_schema"],
+)
+def test_merge_with_the_same_schema_on_mssql(database_table_fixture, multiple_tables_fixture, sample_dag):
+    """
+    Validate that the output of merge is what we expect.
+    """
+    database, _ = database_table_fixture
+    first_table, second_table = multiple_tables_fixture
+
+    with sample_dag:
+        aql.merge(
+            target_table=first_table,
+            source_table=second_table,
+            target_conflict_columns=["id"],
+            columns={"id": "id", "name": "name"},
+            if_conflicts="update",
+        )
+
+    test_utils.run_dag(sample_dag)
+    computed = database.export_table_to_pandas_dataframe(first_table)
+    computed = computed.sort_values(by="id", ignore_index=True)
+    expected = pd.DataFrame(
+        [
+            {"id": 1, "name": "First"},
+            {"id": 2, "name": "Second"},
+            {"id": 4, "name": "Czwarte"},
+        ]
+    )
+    assert first_table.row_count == 3
     test_utils.assert_dataframes_are_equal(computed, expected)
 
 
