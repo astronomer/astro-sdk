@@ -5,6 +5,7 @@ import pytest
 from astro import sql as aql
 from astro.constants import Database
 from astro.files import File
+from tests.sql.operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
 
@@ -42,10 +43,11 @@ def test_column_check_operator_with_table_dataset(sample_dag, database_table_fix
     all the database we support.
     """
     db, test_table = database_table_fixture
-
-    aql.SQLCheckOperator(
-        dataset=test_table,
-        checks={
-            "sell_list": {"check_statement": "sell <= list"},
-        },
-    ).execute({})
+    with sample_dag:
+        aql.SQLCheckOperator(
+            dataset=test_table,
+            checks={
+                "sell_list": {"check_statement": "sell <= list"},
+            },
+        )
+    test_utils.run_dag(sample_dag)

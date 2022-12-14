@@ -3,7 +3,6 @@ from typing import Any, Dict, Optional, Union
 import pandas
 from airflow import AirflowException
 from airflow.decorators.base import get_unique_task_id
-from airflow.models.xcom_arg import XComArg
 from airflow.providers.common.sql.operators.sql import SQLColumnCheckOperator
 
 from astro.databases import create_database
@@ -61,17 +60,22 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
         self.kwargs = kwargs
         self.df = None
 
+        dataset_qualified_name = ""
+        dataset_conn_id = ""
+
         if isinstance(dataset, BaseTable):
             db = create_database(conn_id=self.dataset.conn_id)  # type: ignore
             self.conn_id = self.dataset.conn_id
-            super().__init__(
-                table=db.get_table_qualified_name(table=self.dataset),
-                column_mapping=self.column_mapping,
-                partition_clause=self.partition_clause,
-                conn_id=dataset.conn_id,
-                database=dataset.metadata.database,
-                task_id=task_id if task_id is not None else get_unique_task_id("column_check"),
-            )
+            dataset_qualified_name = db.get_table_qualified_name(table=self.dataset)
+            dataset_conn_id = dataset.conn_id
+
+        super().__init__(
+            table=dataset_qualified_name,
+            column_mapping=self.column_mapping,
+            partition_clause=self.partition_clause,
+            conn_id=dataset_conn_id,
+            task_id=task_id if task_id is not None else get_unique_task_id("column_check"),
+        )
 
     def execute(self, context: "Context"):
         if isinstance(self.dataset, BaseTable):
@@ -198,7 +202,7 @@ def column_check(
     partition_clause: Optional[str] = None,
     task_id: Optional[str] = None,
     **kwargs,
-) -> XComArg:
+) -> ColumnCheckOperator:
     """
     Performs one or more of the templated checks in the column_checks dictionary.
     Checks are performed on a per-column basis specified by the column_mapping.
@@ -235,4 +239,4 @@ def column_check(
         partition_clause=partition_clause,
         kwargs=kwargs,
         task_id=task_id,
-    ).output
+    )
