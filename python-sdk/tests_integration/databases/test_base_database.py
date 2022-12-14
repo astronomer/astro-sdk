@@ -2,10 +2,11 @@ from unittest import mock
 
 import pytest
 
-from astro.constants import Database
+from astro.constants import Database, FileType
 from astro.databases import create_database
 from astro.files import File
-from astro.table import Table
+from astro.settings import SCHEMA
+from astro.table import Metadata, Table
 
 
 def is_dict_subset(superset: dict, subset: dict) -> bool:
@@ -84,3 +85,25 @@ def test_load_file_to_table_natively(sample_dag, database_table_fixture, remote_
         assert method.called
         assert is_dict_subset(superset=method.call_args.kwargs, subset=expected_kwargs)
         assert method.call_args.args == expected_args
+
+
+@mock.patch("astro.databases.base.BaseDatabase.drop_table")
+@mock.patch("astro.databases.base.BaseDatabase.create_schema_if_needed")
+@mock.patch("astro.databases.base.BaseDatabase.create_table")
+@mock.patch("astro.databases.base.BaseDatabase.load_file_to_table_natively_with_fallback")
+@mock.patch("astro.databases.base.resolve_file_path_pattern")
+def test_load_file_calls_resolve_file_path_pattern_with_filetype(
+    resolve_file_path_pattern,
+    load_file_to_table_natively_with_fallback,
+    create_table,
+    create_schema_if_needed,
+    drop_table,
+):
+    resolve_file_path_pattern.return_value = [File(path="S3://somebucket/test.csv")]
+    database = create_database("gcp_conn")
+    database.load_file_to_table(
+        input_file=File(path="S3://somebucket/test.csv"),
+        output_table=Table(conn_id="gcp_conn", metadata=Metadata(schema=SCHEMA)),
+        use_native_support=True,
+    )
+    assert resolve_file_path_pattern.call_args.kwargs["filetype"] == FileType.CSV
