@@ -11,9 +11,6 @@ class FivetranIntegration(TransferIntegrations):
 
     """
 
-    def __init__(self, transfer_params: dict):
-        self.transfer_params = transfer_params
-        self.transfer_mapping = {}
 
     def hook(self) -> DbApiHook:
         """Return an instance of the database-specific Airflow hook."""
