@@ -3,6 +3,7 @@ import logging
 import pathlib
 import time
 from pathlib import Path
+from typing import Dict
 
 from airflow.configuration import conf
 from airflow.exceptions import AirflowException
@@ -10,12 +11,57 @@ from databricks_cli.dbfs.api import DbfsApi, DbfsPath
 from databricks_cli.jobs.api import JobsApi
 from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
+from databricks_cli.secrets.api import SecretApi
+from requests.exceptions import HTTPError
 
 from astro.databricks.load_file.load_file_python_code_generator import render
 from astro.databricks.load_options import DeltaLoadOptions
 
 cwd = pathlib.Path(__file__).parent
 log = logging.getLogger(__name__)
+
+
+def delete_secret_scope(scope_name: str, api_client: ApiClient) -> None:
+    """
+    Delete the scope we created to prevent littering the databricks secret store with one-time scopes.
+
+    :param scope_name: name of scope to delete
+    :param api_client: populated databricks client
+    """
+    secrets = SecretApi(api_client)
+    try:
+        secrets.delete_scope(scope_name)
+    except HTTPError as http_error:
+        # We don't care if the resource doesn't exist since we're trying to delete it
+        if not http_error.response.json().get("error_code", "") == "RESOURCE_DOES_NOT_EXIST":
+            raise http_error
+
+
+def create_secrets(scope_name: str, filesystem_secrets: Dict[str, str], api_client: ApiClient) -> None:
+    """
+    Uploads secrets to a scope
+    Before we can transfer data from external file sources (s3, GCS, etc.) we first need to upload the relevant
+    secrets to databricks, so we can use them in the autoloader config. This allows us to perform ad-hoc queries
+    that are not dependent on existing settings.
+
+    :param scope_name: the name of the secret scope. placing all secrets in a single scope makes them easy to
+        delete later
+    :param filesystem_secrets: a dictionary of k,v secrets where the key is the secret name and the value is
+        the secret value
+    :param api_client: The databricks API client that has all necessary credentials
+    """
+    secrets = SecretApi(api_client)
+    secrets.create_scope(
+        scope=scope_name,
+        initial_manage_principal=None,
+        backend_azure_keyvault=None,
+        scope_backend_type=None,
+    )
+
+    for k, v in filesystem_secrets.items():
+        # Add "astro_sdk_" to the front, so we know which secrets are hadoop settings
+        secret_key = "astro_sdk_" + k
+        secrets.put_secret(scope=scope_name, key=secret_key, string_value=v, bytes_value=None)
 
 
 def generate_file(

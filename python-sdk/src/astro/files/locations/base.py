@@ -32,7 +32,7 @@ class BaseFileLocation(ABC):
 
     @property
     @abstractmethod
-    def location_type(self):
+    def location_type(self) -> FileLocation:
         """Property to identify location type"""
         raise NotImplementedError
 
@@ -131,6 +131,14 @@ class BaseFileLocation(ABC):
                 return True
         except OSError:
             return False
+
+    def databricks_settings(self) -> dict:
+        """
+        Required settings to upload this file into databricks. Only needed for cloud storage systems
+        like S3
+        :return: A dictionary of settings keys to settings values
+        """
+        return {}
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}(path="{self.path}",conn_id="{self.conn_id}")'

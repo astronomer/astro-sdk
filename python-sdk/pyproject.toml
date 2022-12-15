@@ -47,6 +47,7 @@ tests = [
     "requests-mock",
     "pytest-cov",
     "pytest-describe",
+    "types-requests",
     "mypy",
     "sqlalchemy-stubs", # Change when sqlalchemy is upgraded https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html
 ]

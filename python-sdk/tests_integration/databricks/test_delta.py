@@ -4,7 +4,7 @@ import pytest
 import sqlalchemy
 from databricks.sql.types import Row
 
-from astro.constants import Database
+from astro.constants import Database, FileType
 from astro.databases import create_database
 from astro.databricks.delta import DeltaDatabase
 from astro.files import File
@@ -109,15 +109,14 @@ def test_existing_table_exists(database_table_fixture):
     assert database.table_exists(table)
 
 
-@pytest.mark.xfail
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
         {
             "database": Database.DELTA,
-            "file": File("s3://tmp9/databricks-test/", conn_id="default_aws"),
-        }
+            "file": File("s3://tmp9/databricks-test/", conn_id="default_aws", filetype=FileType.CSV),
+        },
     ],
     indirect=True,
     ids=["delta"],

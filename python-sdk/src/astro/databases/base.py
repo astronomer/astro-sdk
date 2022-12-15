@@ -400,7 +400,7 @@ class BaseDatabase(ABC):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
-        load_options: LoadOptions = LoadOptions(),
+        load_options: LoadOptions | None = None,
         **kwargs,
     ):
         """

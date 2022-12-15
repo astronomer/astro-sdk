@@ -113,7 +113,7 @@ class DeltaDatabase(BaseDatabase):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = None,
-        load_options: LoadOptions = DeltaLoadOptions(),
+        load_options: LoadOptions | None = DeltaLoadOptions.get_default_delta_options(),
         databricks_job_name: str = "",
         **kwargs,
     ):
@@ -137,13 +137,15 @@ class DeltaDatabase(BaseDatabase):
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
 
         """
-        if not isinstance(load_options, DeltaLoadOptions):
+        if not load_options:
+            load_options = DeltaLoadOptions.get_default_delta_options()
+        elif not isinstance(load_options, DeltaLoadOptions):
             raise ValueError("Please use a DeltaLoadOption for the load_options parameter")
         load_file_to_delta(
             input_file=input_file,
             delta_table=output_table,
             databricks_job_name=databricks_job_name,
-            delta_load_options=load_options or DeltaLoadOptions.get_default_delta_options(),
+            delta_load_options=load_options,  # type: ignore
         )
 
     def openlineage_dataset_name(self, table: BaseTable) -> str:
