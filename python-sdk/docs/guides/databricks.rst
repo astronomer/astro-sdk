@@ -95,12 +95,36 @@ The first option is to pass in an s3 conn_id to the aql.load_file function, as s
     )
 
 The second option is to pre-load your s3 secrets into the databricks cluster before setting up.
-Instructions for this can be found here. This approach has the benefit of not passing any sensitive information to databricks,
+Instructions for this can be found `here <https://docs.databricks.com/external-data/amazon-s3.html>`_. This approach has the benefit of not passing any sensitive information to databricks,
 but at the expense of the ability to load arbitrary datasets into your databricks cluster.
 
-If you want to go with this option, set the environment variable ``AIRLFOW__ASTRO_SDK__LOAD_STORAGE_CONFIGS_TO_DATABRICKS`` to false.
+If you want to go with this option, set the environment variable ``AIRLFOW__ASTRO_SDK__LOAD_STORAGE_CONFIGS_TO_DATABRICKS`` to False.
 This will ensure that the Astro SDK does not attempt to load any information to databricks.
 You can also set this value on a per-job basis using the ``astro.databricks.DeltaLoadOptions`` class.
+
+Loading files from GCS
+======================
+
+GCS support works very similar to how S3 support is mentioned above. Users who want to manage their databricks loading manually
+can follow `This guide <https://docs.gcp.databricks.com/external-data/gcs.html>`_ and set ``AIRLFOW__ASTRO_SDK__LOAD_STORAGE_CONFIGS_TO_DATABRICKS`` to False.
+For those who want Airflow to handle access management, simply offer a gcs_conn in their file and all necessary credentials
+will be loaded to databricks using the secrets API.
+
+.. code-block:: python
+
+    file = File("gs://tmp9/databricks-test/", conn_id="gcp_conn", filetype=FileType.CSV)
+    aql.load_file(
+        input_file=file,
+        output_table=Table(conn_id="my_databricks_conn"),
+    )
+
+
+NOTE:
+-----
+In order to use the GCS -> Databricks automatic connection, we require one of these to be true:
+1. You set ``key_path`` to your auth file in the ``extras`` section of your GCS connection
+2. You set ``keyfile_dict`` to a dictionary of credentials in the ``extras`` section of your GCS connection
+3. You set the environment variable ``GOOGLE_APPLICATION_CREDENTIALS``
 
 Querying Data
 =============

@@ -132,7 +132,7 @@ class BaseFileLocation(ABC):
         except OSError:
             return False
 
-    def databricks_settings(self) -> dict:
+    def databricks_auth_settings(self) -> dict:
         """
         Required settings to upload this file into databricks. Only needed for cloud storage systems
         like S3
