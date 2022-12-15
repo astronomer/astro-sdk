@@ -98,15 +98,21 @@ class Project:
         """
         config = Config(project_dir=self.directory)
         global_env_filepath = config.get_global_config_filepath()
-        config.write_value_to_yaml("general", "data_dir", str(self._data_dir.resolve()), global_env_filepath)
+        config.write_value_to_yaml(
+            "general", "data_dir", self._data_dir.resolve().as_posix(), global_env_filepath
+        )
         # If the `Airflow Home` directory does not exist, Airflow initialisation flow takes care of creating the
         # directory. We rely on this behaviour and hence do not raise an exception if the path specified as
         # `Airflow Home` does not exist.
-        config.write_value_to_yaml("airflow", "home", str(self._airflow_home.resolve()), global_env_filepath)
-        if not Path.exists(self._airflow_dags_folder):
-            raise FileNotFoundError(f"Specified DAGs directory {self._airflow_dags_folder} does not exist.")
         config.write_value_to_yaml(
-            "airflow", "dags_folder", str(self._airflow_dags_folder.resolve()), global_env_filepath
+            "airflow", "home", self._airflow_home.resolve().as_posix(), global_env_filepath
+        )
+        if not self._airflow_dags_folder.exists():
+            raise FileNotFoundError(
+                f"Specified DAGs directory {self._airflow_dags_folder.as_posix()} does not exist."
+            )
+        config.write_value_to_yaml(
+            "airflow", "dags_folder", self._airflow_dags_folder.resolve().as_posix(), global_env_filepath
         )
 
     def _remove_unnecessary_airflow_files(self) -> None:
