@@ -46,7 +46,8 @@ secret_gen_string = """secret_key_list = dbutils.secrets.list("astro-sdk-secrets
 for secret_key in secret_key_list:
     if 'astro_sdk_' in secret_key.key:
         key_name = secret_key.key.replace("astro_sdk_","")
-        logger.info(f"setting {key_name}")
+        # We are using print here as we have yet to find a way to make logs surface in the databricks UI
+        print(f"setting {key_name}")
         sc._jsc.hadoopConfiguration().set(key_name, dbutils.secrets.get("astro-sdk-secrets", secret_key.key))"""
 
 

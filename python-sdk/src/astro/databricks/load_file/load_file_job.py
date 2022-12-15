@@ -21,7 +21,7 @@ from astro.table import BaseTable
 
 cwd = pathlib.Path(__file__).parent
 
-supported_file_locations = [FileLocation.LOCAL, FileLocation.S3]
+supported_file_locations = [FileLocation.LOCAL, FileLocation.S3, FileLocation.GS]
 
 
 def load_file_to_delta(
@@ -119,7 +119,7 @@ def _load_secrets_to_databricks(api_client: ApiClient, input_file: File, secret_
     """
     create_secrets(
         scope_name=secret_scope_name,
-        filesystem_secrets=input_file.location.databricks_settings(),
+        filesystem_secrets=input_file.location.databricks_auth_settings(),
         api_client=api_client,
     )
 

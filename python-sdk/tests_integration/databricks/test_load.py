@@ -53,3 +53,61 @@ def test_autoloader_load_file_s3(database_table_fixture):
         input_file=file,
         output_table=table,
     )
+    assert database.table_exists(table)
+    database.drop_table(table)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.DELTA,
+        }
+    ],
+    indirect=True,
+    ids=["delta"],
+)
+def test_delta_load_file_gcs(database_table_fixture):
+    from astro.constants import FileType
+
+    file = File(
+        "gs://astro-sdk/benchmark/trimmed/covid_overview/covid_overview_10kb.csv",
+        conn_id="databricks_gcs",
+        filetype=FileType.CSV,
+    )
+    database, table = database_table_fixture
+    database.load_file_to_table(
+        input_file=file,
+        output_table=table,
+    )
+    assert database.table_exists(table)
+    database.drop_table(table)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.DELTA,
+        }
+    ],
+    indirect=True,
+    ids=["delta"],
+)
+def test_delta_load_file_gcs_default_connection(database_table_fixture):
+    from astro.constants import FileType
+
+    file = File(
+        "gs://astro-sdk/benchmark/trimmed/covid_overview/covid_overview_10kb.csv",
+        conn_id="google_cloud_default",
+        filetype=FileType.CSV,
+    )
+    database, table = database_table_fixture
+    database.load_file_to_table(
+        input_file=file,
+        output_table=table,
+    )
+    assert database.table_exists(table)
+    database.drop_table(table)
