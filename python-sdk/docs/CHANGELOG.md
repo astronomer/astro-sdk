@@ -8,6 +8,7 @@
 ### Misc
 - Update the deprecation warning for `export_file()` operator. [#1411](https://github.com/astronomer/astro-sdk/issues/1411)
 
+
 ## 1.3.1
 
 ### Feature:
