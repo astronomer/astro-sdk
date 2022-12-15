@@ -142,7 +142,7 @@ def test_fetch_all_rows(mock_run_sql, database_table_fixture, row_count):
     db.fetch_all_rows(table, row_count)
     select_statements = [m.args[0] for m in mock_run_sql.mock_calls if m.args and "SELECT" in m.args[0]]
     assert len(select_statements) == 1
-    if row_count > 0:
+    if row_count > -1:
         assert f"LIMIT {row_count}" in select_statements[0]
     else:
         assert f"LIMIT {row_count}" not in select_statements[0]
