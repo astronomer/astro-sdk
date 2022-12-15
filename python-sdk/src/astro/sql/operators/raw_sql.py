@@ -59,11 +59,11 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
             return None
 
     @staticmethod
-    def make_row_serializable(rows):
+    def make_row_serializable(rows: SQLAlcRow):
         """
         Convert rows to a serializable format
         """
-        if rows is not None and hasattr(rows, "__iter__"):
+        if isinstance(rows, Iterable):
             return [SdkLegacyRow.from_legacy_row(r) if isinstance(r, SQLAlcRow) else r for r in rows]
         return rows
 
