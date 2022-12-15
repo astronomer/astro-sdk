@@ -68,7 +68,7 @@ def test_get_paths_from_sftp(mock_sftp_conn, mock_list, mock_isdir):
 
 @patch("airflow.providers.sftp.hooks.sftp.SFTPHook.get_conn")
 def test_size(mock_get_conn):
-    """Test get_size() of for Google Drive file."""
+    """Test get_size() of for SFTP file."""
 
     mock_get_conn.return_value.stat.return_value.st_size = 110
     location = create_file_location("sftp://user@host/some")
@@ -76,7 +76,7 @@ def test_size(mock_get_conn):
 
 
 def test_hook():
-    """Test whether GoogleDriveHook is being called or not."""
+    """Test whether SFTPHook is being called or not."""
     location = create_file_location("sftp://user@host/some")
     hook = location.hook
     assert isinstance(hook, SFTPHook)
