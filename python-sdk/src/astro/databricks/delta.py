@@ -115,7 +115,7 @@ class DeltaDatabase(BaseDatabase):
         :return: a list of rows
         """
         statement = f"SELECT * FROM {self.get_table_qualified_name(table)};"
-        if row_limit > 0:
+        if row_limit > -1:
             statement = statement + f" LIMIT {row_limit}"
         return self.run_sql(statement, handler=lambda x: x.fetchall())  # type: ignore
 

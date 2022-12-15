@@ -399,7 +399,7 @@ class BaseDatabase(ABC):
         :return: a list of rows
         """
         statement = f"SELECT * FROM {self.get_table_qualified_name(table)}"
-        if row_limit > 0:
+        if row_limit > -1:
             statement = statement + f" LIMIT {row_limit}"
         response = self.run_sql(statement)
         return response.fetchall()  # type: ignore
