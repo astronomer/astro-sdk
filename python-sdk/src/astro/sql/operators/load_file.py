@@ -276,7 +276,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
                             ]
                         ),
                         "dataSource": DataSourceDatasetFacet(
-                            name=self.output_table.name, uri=self.output_table.openlingeage_dataset_uri()
+                            name=self.output_table.name, uri=self.output_table.openlineage_dataset_uri()
                         ),
                     },
                 )

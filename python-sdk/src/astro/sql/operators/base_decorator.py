@@ -230,7 +230,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                             fields=[SchemaField(name=self.schema, type=self.database)]
                         ),
                         "dataSource": DataSourceDatasetFacet(
-                            name=first_table.name, uri=first_table.openlingeage_dataset_uri()
+                            name=first_table.name, uri=first_table.openlineage_dataset_uri()
                         ),
                     },
                 )
@@ -254,7 +254,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                             rowCount=output_table_row_count
                         ),
                         "dataSource": DataSourceDatasetFacet(
-                            name=self.output_table.name, uri=self.output_table.openlingeage_dataset_uri()
+                            name=self.output_table.name, uri=self.output_table.openlineage_dataset_uri()
                         ),
                     },
                 )

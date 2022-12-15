@@ -251,7 +251,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                             ]
                         ),
                         "dataSource": DataSourceDatasetFacet(
-                            name=self.output_table.name, uri=self.output_table.openlingeage_dataset_uri()
+                            name=self.output_table.name, uri=self.output_table.openlineage_dataset_uri()
                         ),
                         "outputStatistics": OutputStatisticsOutputDatasetFacet(
                             rowCount=self.output_table.row_count,

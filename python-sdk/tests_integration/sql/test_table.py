@@ -87,4 +87,4 @@ def test_openlineage_dataset(mock_get_connection, gcp_cred, connection, name, na
 
     assert tb.openlineage_dataset_name() == name
     assert tb.openlineage_dataset_namespace() == namespace
-    assert tb.openlingeage_dataset_uri() == uri
+    assert tb.openlineage_dataset_uri() == uri
