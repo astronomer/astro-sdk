@@ -6,7 +6,7 @@
 - Fix the `run_raw_sql()` operator as handler return `None` causing the serialization logic to fail. [#1431](https://github.com/astronomer/astro-sdk/pull/1431)
 
 ### Misc
-- Update the depreciation message for `export_file()` operator. [#1411](https://github.com/astronomer/astro-sdk/issues/1411)
+- Update the deprecation warning for `export_file()` operator. [#1411](https://github.com/astronomer/astro-sdk/issues/1411)
 
 ## 1.3.1
 
