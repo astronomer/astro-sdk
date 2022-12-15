@@ -1,5 +1,7 @@
-{% macro copy_into_command(file_format, load_options) -%}
+{%- macro copy_into_command(file_format, load_options, if_exists) -%}
+{%- if if_exists == "replace" %}
 spark.sql(f"DROP TABLE IF EXISTS {table_name}")
+{%- endif %}
 spark.sql(f"CREATE TABLE IF NOT EXISTS {table_name}")
 spark.sql(
     f"""COPY INTO {table_name} FROM '{src_data_path}' FILEFORMAT={{ file_format }}

@@ -389,6 +389,21 @@ class BaseDatabase(ABC):
                 columns_names_capitalization=columns_names_capitalization,
             )
 
+    def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> list:
+        """
+        Fetches all rows for a table and returns as a list. This is needed because some
+        databases have different cursors that require different methods to fetch rows
+
+        :param row_limit: Limit the number of rows returned, by default return all rows.
+        :param table: The table metadata needed to fetch the rows
+        :return: a list of rows
+        """
+        statement = f"SELECT * FROM {self.get_table_qualified_name(table)}"
+        if row_limit > -1:
+            statement = statement + f" LIMIT {row_limit}"
+        response = self.run_sql(statement)
+        return response.fetchall()  # type: ignore
+
     def load_file_to_table(
         self,
         input_file: File,

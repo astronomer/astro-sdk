@@ -10,8 +10,8 @@ username = spark.sql("SELECT regexp_replace(current_user(), '[^a-zA-Z0-9]', '_')
 table_name = f"{{ table_name }}" # This can be generated based on task ID and dag ID or just entirely random
 checkpoint_path = f"/tmp/{username}/_checkpoint/etl_3_quickstart"
 
-{% if load_options.load_secrets %}
+{%- if load_options.load_secrets %}
 {{ load_secrets_command(load_options.secret_scope) }}
-{% endif %}
+{%- endif %}
 
-{{ copy_into_command(file_type, load_options) }}
+{{ copy_into_command(file_type, load_options, load_options.if_exists) }}

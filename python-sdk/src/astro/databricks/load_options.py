@@ -3,6 +3,7 @@ from __future__ import annotations
 from airflow.configuration import conf
 from attr import define, field
 
+from astro.constants import LoadExistStrategy
 from astro.options import LoadOptions
 
 
@@ -14,6 +15,7 @@ class DeltaLoadOptions(LoadOptions):
     copy_into_copy_options: dict = field(init=True, factory=dict)
     existing_cluster_id: str = field()
     new_cluster_spec: dict = field(init=True, factory=dict)
+    if_exists: LoadExistStrategy = "replace"
     secret_scope: str = "astro-sdk-secrets"
     load_secrets: bool = False
 

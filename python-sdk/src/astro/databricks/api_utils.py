@@ -94,6 +94,7 @@ def generate_file(
             "load_options": load_options,
             "input_path": data_source_path,
             "file_type": file_type.upper(),
+            "if_exists": load_options.if_exists,
         },
         output_file_path,
     )
