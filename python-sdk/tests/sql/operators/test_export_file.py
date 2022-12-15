@@ -469,13 +469,13 @@ def test_raise_exception_for_invalid_input_type():
     assert exc_info.value.args[0] == expected_msg
 
 
-# TODO: Remove this test in astro-sdk 1.4
+# TODO: Remove this test in astro-sdk 2.0.0
 def test_warnings_message():
     with pytest.warns(
         expected_warning=DeprecationWarning,
         match="""This class is deprecated.
             Please use `astro.sql.operators.export_table_to_file.ExportTableToFileOperator`.
-            And, will be removed in astro-sdk-python>=1.4.0.""",
+            And, will be removed in astro-sdk-python>=2.0.0.""",
     ):
         ExportFileOperator(
             task_id="task_id",
@@ -492,6 +492,6 @@ def test_warnings_message():
         expected_warning=DeprecationWarning,
         match="""This decorator is deprecated.
         Please use `astro.sql.operators.export_table_to_file.export_table_to_file`.
-        And, will be removed in astro-sdk-python>=1.4.0.""",
+        And, will be removed in astro-sdk-python>=2.0.0.""",
     ):
         export_file(input_data=Table(), output_file=File(path="/tmp/saved_df.csv"), if_exists="replace")
