@@ -24,6 +24,7 @@ class FileLocation(Enum):
     S3 = "s3"  # Amazon S3
     WASB = "wasb"  # Azure Blob Storage
     WASBS = "wasbs"  # Azure Blob Storage
+    FTP = "ftp"
     # [END filelocation]
 
     def __str__(self) -> str:
