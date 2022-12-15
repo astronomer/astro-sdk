@@ -7,7 +7,7 @@ from typing import Any
 
 from databricks_cli.sdk.api_client import ApiClient
 
-from astro.constants import FileLocation
+from astro.constants import FileLocation, LoadExistStrategy
 from astro.databricks.api_utils import (
     create_and_run_job,
     create_secrets,
@@ -29,10 +29,12 @@ def load_file_to_delta(
     delta_table: BaseTable,
     databricks_job_name: str,
     delta_load_options: DeltaLoadOptions,
+    if_exists: LoadExistStrategy = "replace",
 ):
     """
     Load a file object into a databricks delta table
 
+    :param if_exists: How to handle the data if the table exists. Defaults to replace (but can be set to "append")
     :param delta_load_options: Loading options for passing data into delta. Things like COPY_OPTIONS, cluster_id, etc.
     :param databricks_job_name: The name of the job as it will show up in databricks.
     :param input_file: File to load into delta
@@ -40,6 +42,7 @@ def load_file_to_delta(
     """
     from astro.databricks.delta import DeltaDatabase
 
+    delta_load_options.if_exists = if_exists
     db = DeltaDatabase(conn_id=delta_table.conn_id)
     api_client = db.api_client
     if input_file.location.location_type not in supported_file_locations:
@@ -57,6 +60,7 @@ def load_file_to_delta(
         _load_secrets_to_databricks(api_client, input_file, delta_load_options.secret_scope)
 
     with tempfile.NamedTemporaryFile(suffix=".py") as tfile:
+        delta_load_options.if_exists = if_exists
         dbfs_file_path = _create_load_file_pyspark_file(
             api_client, delta_load_options, dbfs_file_path, delta_table, input_file, tfile
         )

@@ -14,7 +14,6 @@ table_name = f"baz" # This can be generated based on task ID and dag ID or just 
 checkpoint_path = f"/tmp/{username}/_checkpoint/etl_3_quickstart"
 
 
-
 spark.sql(f"DROP TABLE IF EXISTS {table_name}")
 spark.sql(f"CREATE TABLE IF NOT EXISTS {table_name}")
 spark.sql(
@@ -80,3 +79,20 @@ def test_generate_file_without_secrets():
         with open(output_file) as file:
             file_string = file.read()
             assert secret_gen_string not in file_string
+
+
+def test_generate_file_append():
+    with tempfile.NamedTemporaryFile() as tfile:
+        options = DeltaLoadOptions.get_default_delta_options()
+        options.load_secrets = False
+        options.if_exists = "append"
+        output_file = generate_file(
+            data_source_path="foobar",
+            table_name="baz",
+            source_type="s3",
+            output_file_path=Path(tfile.name),
+            load_options=options,
+        )
+        with open(output_file) as file:
+            file_string = file.read()
+            assert "DROP TABLE" not in file_string

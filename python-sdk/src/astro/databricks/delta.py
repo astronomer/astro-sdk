@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import tempfile
+import uuid
 from textwrap import dedent
 
-import pandas
+import pandas as pd
 from airflow.providers.databricks.hooks.databricks import DatabricksHook
 from airflow.providers.databricks.hooks.databricks_sql import DatabricksSqlHook
 from databricks.sql.client import Cursor
@@ -14,6 +16,7 @@ from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistS
 from astro.databases.base import BaseDatabase
 from astro.databricks.load_file.load_file_job import load_file_to_delta
 from astro.databricks.load_options import DeltaLoadOptions
+from astro.dataframes.pandas import PandasDataframe
 from astro.files import File
 from astro.options import LoadOptions
 from astro.table import BaseTable, Metadata
@@ -102,6 +105,20 @@ class DeltaDatabase(BaseDatabase):
         # Schemas do not need to be created for delta, so we don't need to do anything here
         return None
 
+    def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> list:
+        """
+        Fetches all rows for a table and returns as a list. This is needed because some
+        databases have different cursors that require different methods to fetch rows
+
+        :param table: The table metadata needed to fetch the rows
+        :param row_limit: Limit the number of rows returned, by default return all rows.
+        :return: a list of rows
+        """
+        statement = f"SELECT * FROM {self.get_table_qualified_name(table)};"
+        if row_limit > 0:
+            statement = statement + f" LIMIT {row_limit}"
+        return self.run_sql(statement, handler=lambda x: x.fetchall())  # type: ignore
+
     def load_file_to_table(
         self,
         input_file: File,
@@ -146,6 +163,7 @@ class DeltaDatabase(BaseDatabase):
             delta_table=output_table,
             databricks_job_name=databricks_job_name,
             delta_load_options=load_options,  # type: ignore
+            if_exists=if_exists,
         )
 
     def openlineage_dataset_name(self, table: BaseTable) -> str:
@@ -253,7 +271,7 @@ class DeltaDatabase(BaseDatabase):
 
     def export_table_to_pandas_dataframe(
         self, source_table: BaseTable, select_kwargs: dict | None = None
-    ) -> pandas.DataFrame:
+    ) -> pd.DataFrame:
         """
         Converts a delta table into a pandas dataframe that can be processed locally.
 
@@ -264,8 +282,35 @@ class DeltaDatabase(BaseDatabase):
         :return:
         """
 
-        def convert_delta_table_to_df(cur: Cursor) -> pandas.DataFrame:
+        def convert_delta_table_to_df(cur: Cursor) -> pd.DataFrame:
             df = cur.fetchall_arrow().to_pandas()
             return df
 
-        return self.hook.run(f"SELECT * FROM {source_table.name}", handler=convert_delta_table_to_df)
+        df = self.hook.run(f"SELECT * FROM {source_table.name}", handler=convert_delta_table_to_df)
+        return PandasDataframe.from_pandas_df(df)
+
+    def load_pandas_dataframe_to_table(
+        self,
+        source_dataframe: pd.DataFrame,
+        target_table: BaseTable,
+        if_exists: LoadExistStrategy = "replace",
+        chunk_size: int = DEFAULT_CHUNK_SIZE,
+    ) -> None:
+        """
+        Create a table with the dataframe's contents.
+        If the table already exists, append or replace the content, depending on the value of `if_exists`.
+
+        :param source_dataframe: Local or remote filepath
+        :param target_table: Table in which the file will be loaded
+        :param if_exists: Strategy to be used in case the target table already exists.
+        :param chunk_size: Specify the number of rows in each batch to be written at a time.
+        """
+        self._assert_not_empty_df(source_dataframe)
+        from astro.constants import FileType
+
+        with tempfile.TemporaryDirectory() as t:
+            # We have to give each dataframe a unique name because delta does not want to upload the same
+            # file multiple times.
+            file = File(path=t + f"/dataframe_{uuid.uuid4()}.parquet", filetype=FileType.PARQUET)
+            file.create_from_dataframe(source_dataframe)
+            self.load_file_to_table(input_file=file, output_table=target_table, if_exists=if_exists)
