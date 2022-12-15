@@ -2,7 +2,12 @@ import pathlib
 from unittest import mock
 from unittest.mock import call
 
-from astro.databricks.api_utils import create_and_run_job, load_file_to_dbfs
+from astro.databricks.api_utils import (
+    create_and_run_job,
+    create_secrets,
+    delete_secret_scope,
+    load_file_to_dbfs,
+)
 
 CWD = pathlib.Path(__file__).parent
 
@@ -54,3 +59,38 @@ def test_load_to_dbfs(mock_api_client):
         ),
     ]
     mock_api_client.assert_has_calls(calls)
+
+
+@mock.patch("databricks_cli.sdk.api_client.ApiClient")
+def test_create_secrets(mock_api_client):
+    create_secrets(scope_name="my-scope", filesystem_secrets={"foo": "bar"}, api_client=mock_api_client)
+    calls = [
+        call.perform_query(
+            "POST",
+            "/secrets/scopes/create",
+            data={"scope": "my-scope"},
+            headers=None,
+        ),
+        call.perform_query(
+            "POST",
+            "/secrets/put",
+            data={"scope": "my-scope", "key": "astro_sdk_foo", "string_value": "bar"},
+            headers=None,
+        ),
+    ]
+    mock_api_client.assert_has_calls(calls)
+
+
+@mock.patch("databricks_cli.sdk.api_client.ApiClient")
+def test_delete_secret_scope(mock_api_client):
+    delete_secret_scope(scope_name="my-scope", api_client=mock_api_client)
+    mock_api_client.assert_has_calls(
+        [
+            call.perform_query(
+                "POST",
+                "/secrets/scopes/delete",
+                data={"scope": "my-scope"},
+                headers=None,
+            )
+        ]
+    )

@@ -6,7 +6,6 @@ import pytest
 
 import astro.sql as aql
 from astro.constants import SUPPORTED_DATABASES, Database
-from astro.databricks.load_options import DeltaLoadOptions
 from astro.files import File
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import Table
@@ -206,7 +205,6 @@ def test_cleanup_mapped_task(sample_dag, database_temp_table_fixture):
                 {
                     "input_file": File(path=(CWD.parent.parent / "data/sample.csv").as_posix()),
                     "output_table": temp_table,
-                    "load_options": DeltaLoadOptions.get_default_delta_options(),
                 }
             ]
         )
@@ -234,7 +232,6 @@ def test_cleanup_default_all_tables_mapped_task(sample_dag, database_temp_table_
                 {
                     "input_file": File(path=(CWD.parent.parent / "data/sample.csv").as_posix()),
                     "output_table": temp_table,
-                    "load_options": DeltaLoadOptions.get_default_delta_options(),
                 }
             ]
         )

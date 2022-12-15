@@ -8,14 +8,20 @@ from typing import Any
 from databricks_cli.sdk.api_client import ApiClient
 
 from astro.constants import FileLocation
-from astro.databricks.api_utils import create_and_run_job, generate_file, load_file_to_dbfs
+from astro.databricks.api_utils import (
+    create_and_run_job,
+    create_secrets,
+    delete_secret_scope,
+    generate_file,
+    load_file_to_dbfs,
+)
 from astro.databricks.load_options import DeltaLoadOptions
 from astro.files import File
 from astro.table import BaseTable
 
 cwd = pathlib.Path(__file__).parent
 
-supported_file_locations = [FileLocation.LOCAL]
+supported_file_locations = [FileLocation.LOCAL, FileLocation.S3]
 
 
 def load_file_to_delta(
@@ -42,19 +48,29 @@ def load_file_to_delta(
             f"Currently supported locations: {','.join([str(s) for s in supported_file_locations])}"
         )
     dbfs_file_path = None
-    if input_file.location.location_type == FileLocation.LOCAL:
-        dbfs_file_path = _load_load_file_to_dbfs(api_client, input_file)
+    if input_file.is_local():
+        # There are no secrets to load since this is a local file
+        delta_load_options.load_secrets = False
+        dbfs_file_path = _load_local_file_to_dbfs(api_client, input_file)
+    elif delta_load_options.load_secrets:
+        delete_secret_scope(delta_load_options.secret_scope, api_client=api_client)
+        _load_secrets_to_databricks(api_client, input_file, delta_load_options.secret_scope)
 
     with tempfile.NamedTemporaryFile(suffix=".py") as tfile:
         dbfs_file_path = _create_load_file_pyspark_file(
             api_client, delta_load_options, dbfs_file_path, delta_table, input_file, tfile
         )
-    create_and_run_job(
-        api_client=api_client,
-        databricks_job_name=databricks_job_name,
-        existing_cluster_id=delta_load_options.existing_cluster_id,
-        file_to_run=str(dbfs_file_path),
-    )
+    try:
+        create_and_run_job(
+            api_client=api_client,
+            databricks_job_name=databricks_job_name,
+            existing_cluster_id=delta_load_options.existing_cluster_id,
+            file_to_run=str(dbfs_file_path),
+        )
+    finally:
+        if input_file.location.location_type != FileLocation.LOCAL:
+            if delta_load_options.secret_scope == DeltaLoadOptions.get_default_delta_options().secret_scope:
+                delete_secret_scope(delta_load_options.secret_scope, api_client=api_client)
 
 
 def _create_load_file_pyspark_file(
@@ -65,13 +81,7 @@ def _create_load_file_pyspark_file(
     input_file: File,
     output_file: Any,
 ):
-    if input_file.filetype:
-        file_type = str(input_file.filetype)
-    else:
-        if "." in input_file.path:
-            file_type = input_file.path.split(".")[-1]
-        else:
-            raise ValueError("Can not determine filetype, please include filetype in file class")
+    file_type = _find_file_type(input_file)
     file_path = generate_file(
         data_source_path=str(dbfs_file_path) if dbfs_file_path else input_file.path,
         table_name=delta_table.name,
@@ -86,9 +96,40 @@ def _create_load_file_pyspark_file(
     return dbfs_file_path
 
 
-def _load_load_file_to_dbfs(api_client: ApiClient, input_file: File):
+def _load_local_file_to_dbfs(api_client: ApiClient, input_file: File):
     file_path = Path(input_file.path)
     dbfs_file_path = load_file_to_dbfs(
         local_file_path=Path(input_file.path), file_name=file_path.name, api_client=api_client
     )
     return dbfs_file_path
+
+
+def _load_secrets_to_databricks(api_client: ApiClient, input_file: File, secret_scope_name: str):
+    """
+    Load secrets into a secret scope in databricks. This can be used as a utility for loading
+    necessary secrets for accessing external data stores.
+
+    :param api_client: Databricks API client loaded with credentials
+    :param input_file: file for loading connection info
+    :param secret_scope_name: name of the secret scope to load info into
+    """
+    create_secrets(
+        scope_name=secret_scope_name,
+        filesystem_secrets=input_file.location.databricks_settings(),
+        api_client=api_client,
+    )
+
+
+def _find_file_type(input_file: File) -> str:
+    """
+    Since COPY INTO does not automatically detect schema, we need to ensure that the file type is
+    either set by the user, or inferable in the URL
+    :param input_file: file to parse
+    :return: file type of the uploaded file
+    """
+    if input_file.filetype:
+        return str(input_file.filetype)
+    if not input_file.filetype:
+        if "." in input_file.path:
+            return input_file.path.split(".")[-1]
+    raise ValueError("For COPY INTO, you need to supply a file type.")

@@ -79,6 +79,28 @@ We also offer a ``astro.databricks.load_options.default_delta_options`` for thos
 If you wish to use the defaults, you only need to set the ``AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID`` env variable
 so the Astro SDK knows where to send your load_file job.
 
+Loading files from S3
+=====================
+
+There are two options for loading data to s3:
+
+The first option is to pass in an s3 conn_id to the aql.load_file function, as shown in the example below:
+
+.. code-block:: python
+
+    file = File("s3://tmp9/databricks-test/", conn_id="default_aws", filetype=FileType.CSV)
+    aql.load_file(
+        input_file=file,
+        output_table=Table(conn_id="my_databricks_conn"),
+    )
+
+The second option is to pre-load your s3 secrets into the databricks cluster before setting up.
+Instructions for this can be found here. This approach has the benefit of not passing any sensitive information to databricks,
+but at the expense of the ability to load arbitrary datasets into your databricks cluster.
+
+If you want to go with this option, set the environment variable ``AIRLFOW__ASTRO_SDK__LOAD_STORAGE_CONFIGS_TO_DATABRICKS`` to false.
+This will ensure that the Astro SDK does not attempt to load any information to databricks.
+You can also set this value on a per-job basis using the ``astro.databricks.DeltaLoadOptions`` class.
 
 Querying Data
 =============
