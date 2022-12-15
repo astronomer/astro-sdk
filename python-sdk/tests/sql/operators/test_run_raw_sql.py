@@ -8,7 +8,7 @@ CWD = pathlib.Path(__file__).parent
 DATA_FILEPATH = pathlib.Path(CWD.parent.parent, "data/sample.csv")
 
 
-@pytest.mark.parametrize("rows", [([], []), (["a", "b"], ["a", "b"]), ("a", "a"), (1, 1), (None, None)])
+@pytest.mark.parametrize("rows", [([], []), (["a", "b"], ["a", "b"]), (1, 1), (None, None)])
 def test_make_row_serializable(rows):
     """
     Test make_row_serializable() only modifies SQLAlcRow object
