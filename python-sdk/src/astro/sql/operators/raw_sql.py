@@ -48,7 +48,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
             return result
         elif self.handler:
             response = self.handler(result)
-            response = [SdkLegacyRow.from_legacy_row(r) if isinstance(r, SQLAlcRow) else r for r in response]
+            response = self.make_row_serializable(response)
             if 0 <= self.response_limit < len(response):
                 raise IllegalLoadToDatabaseException()  # pragma: no cover
             if self.response_size >= 0:
@@ -57,6 +57,15 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
                 return response
         else:
             return None
+
+    @staticmethod
+    def make_row_serializable(rows):
+        """
+        Convert rows to a serializable format
+        """
+        if rows is not None and hasattr(rows, "__iter__"):
+            return [SdkLegacyRow.from_legacy_row(r) if isinstance(r, SQLAlcRow) else r for r in rows]
+        return rows
 
 
 class SdkLegacyRow(SQLAlcRow):
