@@ -88,7 +88,7 @@ class ExportTableToFileOperator(AstroSQLBaseOperator):
                     facets={
                         "dataSource": DataSourceDatasetFacet(
                             name=self.input_data.openlineage_dataset_name(),
-                            uri=self.input_data.openlingeage_dataset_uri(),
+                            uri=self.input_data.openlineage_dataset_uri(),
                         ),
                         "schema": SchemaDatasetFacet(
                             fields=[

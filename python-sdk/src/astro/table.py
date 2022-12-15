@@ -181,7 +181,7 @@ class BaseTable:
         database = create_database(self.conn_id)
         return database.openlineage_dataset_namespace()
 
-    def openlingeage_dataset_uri(self) -> str:
+    def openlineage_dataset_uri(self) -> str:
         """
         Returns the open lineage dataset uri as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md

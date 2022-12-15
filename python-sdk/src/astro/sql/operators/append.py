@@ -108,7 +108,7 @@ class AppendOperator(AstroSQLBaseOperator):
                             ]
                         ),
                         "dataSource": DataSourceDatasetFacet(
-                            name=self.source_table.name, uri=self.source_table.openlingeage_dataset_uri()
+                            name=self.source_table.name, uri=self.source_table.openlineage_dataset_uri()
                         ),
                         "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(
                             rowCount=self.source_table.row_count, columnMetrics={}
@@ -133,7 +133,7 @@ class AppendOperator(AstroSQLBaseOperator):
                             rowCount=self.target_table.row_count
                         ),
                         "dataSource": DataSourceDatasetFacet(
-                            name=self.target_table.name, uri=self.target_table.openlingeage_dataset_uri()
+                            name=self.target_table.name, uri=self.target_table.openlineage_dataset_uri()
                         ),
                         "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(
                             rowCount=self.target_table.row_count, columnMetrics={}
