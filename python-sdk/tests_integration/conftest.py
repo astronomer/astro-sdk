@@ -140,7 +140,7 @@ def multiple_tables_fixture(request, database_table_fixture):
 
 
 @pytest.fixture
-def remote_files_fixture(request):
+def remote_files_fixture(request):  # noqa: C901
     """
     Return a list of remote object filenames.
     By default, this fixture also creates objects using sample.<filetype>, unless
@@ -197,7 +197,7 @@ def remote_files_fixture(request):
             hook.delete_blobs(bucket_name, object_prefix)
 
 
-def _upload_or_delete_remote_file(file_create, object_prefix, provider, source_path):
+def _upload_or_delete_remote_file(file_create, object_prefix, provider, source_path):   # noqa: C901
     """
     Upload a local file to remote bucket if file_create is True.
     And deletes a file if it already exists and file_create is False.

@@ -41,7 +41,10 @@ class WASBLocation(BaseFileLocation):
         object_name = url.path
         if object_name.startswith("/"):
             object_name = object_name[1:]
-        return int(self.hook._get_blob_client(container_name=container_name, blob_name=object_name).get_blob_properties().size)
+        return int(
+            self.hook._get_blob_client(container_name=container_name, blob_name=object_name)  # skipcq: PYL-W0212
+            .get_blob_properties()
+            .size)
 
     @property
     def openlineage_dataset_namespace(self) -> str:
