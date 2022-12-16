@@ -15,14 +15,6 @@ MAX_TABLE_NAME_LENGTH = 62
 TEMP_PREFIX = "_tmp"
 
 
-def metadata_field_converter(val):
-    if isinstance(val, dict):
-        if "_schema" in val:
-            val["schema"] = val.pop("_schema")
-        return Metadata(**val)
-    return val
-
-
 @define
 class Metadata:
     """
@@ -34,24 +26,20 @@ class Metadata:
     """
 
     # This property is used by several databases, including: Postgres, Snowflake and BigQuery ("namespace")
-    _schema: str | None = None
+    schema: str | None = field()
     database: str | None = None
     region: str | None = None
+
+    @schema.default
+    def _set_schema(self):
+        if self.region:
+            # We are replacing the `-` with `_` because bigquery doesn't allow `-` in schema name
+            return f"{self.schema}__{self.region.replace('-', '_')}"
+        return self.schema
 
     def is_empty(self) -> bool:
         """Check if all the fields are None."""
         return all(getattr(self, field_name) is None for field_name in fields_dict(self.__class__))
-
-    @property
-    def schema(self):
-        if self.region:
-            # We are replacing the `-` with `_` because for bigquery doesn't allow `-` in schema name
-            return f"{self._schema}__{self.region.replace('-', '_')}"
-        return self._schema
-
-    @schema.setter
-    def schema(self, value):
-        self._schema = value
 
 
 @define(slots=False)
@@ -79,7 +67,7 @@ class BaseTable:
     # Setting converter allows passing a dictionary to metadata arg
     metadata: Metadata = field(
         factory=Metadata,
-        converter=metadata_field_converter,
+        converter=lambda val: Metadata(**val) if isinstance(val, dict) else val,
     )
     columns: list[Column] = field(factory=list)
     temp: bool = field(default=False)

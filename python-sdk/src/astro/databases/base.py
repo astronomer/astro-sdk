@@ -713,7 +713,7 @@ class BaseDatabase(ABC):
             statement = self._create_schema_statement.format(schema)
             self.run_sql(statement)
 
-    def schema_exists(self, schema: str) -> bool:
+    def schema_exists(self, schema: str | None = None) -> bool:
         """
         Checks if a schema exists in the database
 
@@ -724,8 +724,8 @@ class BaseDatabase(ABC):
     def get_schema_region(self, schema: str | None = None) -> str:  # skipcq: PYL-W0613, PYL-R0201
         """
         Get region where the schema is created
+
         :param schema: namespace
-        :return:
         """
         return ""
 
