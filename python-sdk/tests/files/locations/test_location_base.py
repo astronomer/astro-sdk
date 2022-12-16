@@ -56,6 +56,7 @@ def test_get_class_name_method_valid_name():
         (FileLocation.S3, "s3://bucket/some-file", "s3://bucket"),
         (FileLocation.GS, "gs://bucket/some-file", "gs://bucket"),
         (FileLocation.GOOGLE_DRIVE, "gdrive://bucket/some-file", "gdrive://bucket"),
+        (FileLocation.FTP, "ftp://user@host/some", "ftp://user@host"),
     ],
 )
 def test_openlineage_file_dataset_namespace(file_location, filepath, namespace):
@@ -76,6 +77,7 @@ def test_openlineage_file_dataset_namespace(file_location, filepath, namespace):
         (FileLocation.S3, "s3://bucket/some-file", "/some-file"),
         (FileLocation.GS, "gs://bucket/some-file", "/some-file"),
         (FileLocation.GOOGLE_DRIVE, "gdrive://bucket/some-file", "/some-file"),
+        (FileLocation.FTP, "ftp://user@host/some", "/some"),
     ],
 )
 def test_openlineage_file_dataset_name(file_location, filepath, dataset_name):
