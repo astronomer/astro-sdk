@@ -291,6 +291,7 @@ jobs:
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+      AIRFLOW_CONN_WASB_DEFAULT: ${{ secrets.AIRFLOW_CONN_WASB_DEFAULT }}
 
   Run-Unit-tests-Airflow-2-2-5:
     if: >-
