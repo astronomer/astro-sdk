@@ -33,7 +33,7 @@ def test(session: nox.Session, airflow: str) -> None:
         }
     )
 
-    session.install("poetry")
+    session.run("pip", "install", "poetry")
 
     if airflow.startswith("2.2."):
         # To install some versions of Airflow, we need constraints, due to issues like:
