@@ -136,29 +136,33 @@ class BigqueryDatabase(BaseDatabase):
             database=self.hook.project_id,
         )  # type: ignore
 
-    def populate_table_metadata(self, table: BaseTable, source_table: None | BaseTable = None) -> BaseTable:
+    def populate_table_metadata(self, table: BaseTable) -> BaseTable:
         if (
             table.temp
-            and (source_table and not source_table.metadata.is_empty())
+            and (self.table and not self.table.metadata.is_empty())
             and (table.metadata and table.metadata.is_empty())
         ):
-            source_location = (
-                self._get_schema_location(source_table.metadata.schema) or BIGQUERY_SCHEMA_LOCATION
-            )
-            source_schema = source_table.metadata.schema
-            schema = (
-                f"{source_schema}__{source_location.replace('-', '_')}"
-                if not source_schema
-                else source_schema
-            )
-            source_db = source_table.metadata.database or self.hook.project_id
-            table.metadata = Metadata(schema=schema, database=source_db)
-            return table
-
+            return self._populate_temp_table_metadata_from_input_table(table)
         if table.metadata and table.metadata.is_empty() and self.default_metadata:
             table.metadata = self.default_metadata
         if not table.metadata.schema:
             table.metadata.schema = self.DEFAULT_SCHEMA
+        return table
+
+    def _populate_temp_table_metadata_from_input_table(self, table: BaseTable) -> BaseTable:
+        if not self.table:
+            return table
+
+        source_table = self.table
+        source_location = self._get_schema_location(source_table.metadata.schema) or BIGQUERY_SCHEMA_LOCATION
+        source_schema = source_table.metadata.schema
+        schema = (
+            f"{self.DEFAULT_SCHEMA}__{source_location.replace('-', '_')}"
+            if not source_schema
+            else source_schema
+        )
+        source_db = source_table.metadata.database or self.hook.project_id
+        table.metadata = Metadata(schema=schema, database=source_db)
         return table
 
     def schema_exists(self, schema: str) -> bool:
@@ -227,18 +231,21 @@ class BigqueryDatabase(BaseDatabase):
             credentials=creds,
         )
 
-    def create_schema_if_needed(self, schema: str | None, location: str | None = None) -> None:
+    def create_schema_if_needed(self, schema: str | None) -> None:
         """
         This function checks if the expected schema exists in the database. If the schema does not exist,
         it will attempt to create it.
 
         :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
-        :param location: Geographic area of the location (example: ``us-west4``)
         """
         # We check if the schema exists first because BigQuery will fail on a create schema query even if it
         # doesn't actually create a schema.
-        location = location or BIGQUERY_SCHEMA_LOCATION
         if schema and not self.schema_exists(schema):
+
+            input_table_schema = self.table.metadata.schema if self.table and self.table.metadata else None
+            input_table_location = self._get_schema_location(input_table_schema)
+
+            location = input_table_location or BIGQUERY_SCHEMA_LOCATION
             statement = self._create_schema_statement.format(schema, location)
             self.run_sql(statement)
 

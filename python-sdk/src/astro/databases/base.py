@@ -195,7 +195,7 @@ class BaseDatabase(ABC):
         """
         raise NotImplementedError
 
-    def populate_table_metadata(self, table: BaseTable, source_table: None | BaseTable = None) -> BaseTable:
+    def populate_table_metadata(self, table: BaseTable) -> BaseTable:
         """
         Given a table, check if the table has metadata.
         If the metadata is missing and source_table is defined, copy the attrs from that.
@@ -364,7 +364,7 @@ class BaseDatabase(ABC):
         is_file_pattern_based_schema_autodetection_supported = (
             self.check_file_pattern_based_schema_autodetection_is_supported(source_file=file)
         )
-        if self.schema_exists(table.metadata.schema) and if_exists == "replace":
+        if if_exists == "replace":
             self.drop_table(table)
         if use_native_support and is_schema_autodetection_supported and not file.is_pattern():
             return

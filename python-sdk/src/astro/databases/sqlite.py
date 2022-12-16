@@ -58,7 +58,7 @@ class SqliteDatabase(BaseDatabase):
         """
         return str(table.name)
 
-    def populate_table_metadata(self, table: BaseTable, source_table: None | BaseTable = None) -> BaseTable:
+    def populate_table_metadata(self, table: BaseTable) -> BaseTable:
         """
         Since SQLite does not have a concept of databases or schemas, we just return the table as is,
         without any modifications.

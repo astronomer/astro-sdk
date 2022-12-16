@@ -29,7 +29,7 @@ class DeltaDatabase(BaseDatabase):
         super().__init__(conn_id)
         self.table = table
 
-    def populate_table_metadata(self, table: BaseTable, source_table: None | BaseTable = None) -> BaseTable:
+    def populate_table_metadata(self, table: BaseTable) -> BaseTable:
         # TODO: Do we need default configurations for a delta table?
         """
         Given a table, populates the "metadata" field with what we would consider as "defaults"
@@ -99,7 +99,7 @@ class DeltaDatabase(BaseDatabase):
         # Schemas do not need to be created for delta, so we can assume this is true
         return True
 
-    def create_schema_if_needed(self, schema: str | None) -> None:
+    def create_schema_if_needed(self, schema: str | None) -> None:  # skipcq: PYL-W0613
         # Schemas do not need to be created for delta, so we don't need to do anything here
         return None
 
