@@ -1,3 +1,8 @@
+from unittest.mock import patch
+
+from azure.storage.blob import BlobServiceClient
+
+from astro.files.locations import create_file_location
 from astro.files.locations.azure.wasb import WASBLocation
 
 

@@ -1,8 +1,6 @@
-from pathlib import Path
-from unittest.mock import patch
-
 import pytest
-from azure.storage.blob import BlobServiceClient
+
+from pathlib import Path
 
 from astro.files.locations import create_file_location
 from astro.files.locations.azure.wasb import WASBLocation

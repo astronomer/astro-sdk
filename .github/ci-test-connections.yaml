@@ -98,4 +98,4 @@ connections:
     conn_type: wasb
     description: null
     extra:
-      connection_string: $AIRFLOW_CONN_WASB_DEFAULT
+      connection_string: $AZURE_WASB_CONN_STRING
