@@ -1,6 +1,6 @@
-import pytest
-
 from pathlib import Path
+
+import pytest
 
 from astro.files.locations import create_file_location
 from astro.files.locations.azure.wasb import WASBLocation
