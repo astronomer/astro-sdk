@@ -4,6 +4,7 @@ from unittest import mock
 
 import pandas as pd
 import pytest
+from airflow.decorators import task
 from airflow.exceptions import AirflowNotFoundException
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
@@ -16,7 +17,7 @@ from astro.exceptions import DatabaseCustomError
 from astro.files import File
 from astro.settings import SCHEMA
 from astro.sql import load_file
-from astro.table import Table
+from astro.table import Metadata, Table
 from tests.utils.airflow import create_context
 
 from ..operators import utils as test_utils
@@ -1138,3 +1139,25 @@ def test_aql_nested_ndjson_file_to_database_explicit_illegal_sep_params(sample_d
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (1, 36)
     assert "payload_size" in df.columns
+
+
+def test_serialization_and_deserialization_of_table(sample_dag):
+    """
+    Test serialization and deserialization of table object
+    """
+    with sample_dag:
+        init_table = Table(
+            name="test", conn_id="gcp_conn", metadata=Metadata(schema="testing_region", region="east1")
+        )
+
+        @task(task_id="serialize")
+        def serialize():
+            return init_table
+
+        @task(task_id="verify")
+        def verify(t):
+            assert t == init_table
+
+        t = serialize()
+        verify(t)
+    test_utils.run_dag(sample_dag)
