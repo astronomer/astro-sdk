@@ -104,9 +104,12 @@ class BigqueryDatabase(BaseDatabase):
 
     _create_schema_statement: str = "CREATE SCHEMA IF NOT EXISTS {} OPTIONS (location='{}')"
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
+    def __init__(
+        self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None, region: str | None = None
+    ):
         super().__init__(conn_id)
         self.table = table
+        self.region = region
 
     @property
     def sql_type(self) -> str:
@@ -115,7 +118,7 @@ class BigqueryDatabase(BaseDatabase):
     @property
     def hook(self) -> BigQueryHook:
         """Retrieve Airflow hook to interface with the BigQuery database."""
-        return BigQueryHook(gcp_conn_id=self.conn_id, use_legacy_sql=False)
+        return BigQueryHook(gcp_conn_id=self.conn_id, use_legacy_sql=False, location=self.region)
 
     @property
     def sqlalchemy_engine(self) -> Engine:

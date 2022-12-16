@@ -13,29 +13,30 @@ CWD = pathlib.Path(__file__).parent
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {
-            "database": Database.SNOWFLAKE,
-            "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
-        },
+        # {
+        #     "database": Database.SNOWFLAKE,
+        #     "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
+        # },
         {
             "database": Database.BIGQUERY,
             "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
         },
-        {
-            "database": Database.POSTGRES,
-            "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
-        },
-        {
-            "database": Database.SQLITE,
-            "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
-        },
-        {
-            "database": Database.REDSHIFT,
-            "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
-        },
+        # {
+        #     "database": Database.POSTGRES,
+        #     "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
+        # },
+        # {
+        #     "database": Database.SQLITE,
+        #     "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
+        # },
+        # {
+        #     "database": Database.REDSHIFT,
+        #     "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
+        # },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    # ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["bigquery"],
 )
 def test_column_check_operator_with_table_dataset(sample_dag, database_table_fixture):
     """
