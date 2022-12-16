@@ -134,8 +134,32 @@ class BigqueryDatabase(BaseDatabase):
         return Metadata(
             schema=self.DEFAULT_SCHEMA,
             database=self.hook.project_id,
-            region=BIGQUERY_SCHEMA_LOCATION,
         )  # type: ignore
+
+    def populate_table_metadata(self, table: BaseTable, source_table: None | BaseTable = None) -> BaseTable:
+        if (
+            table.temp
+            and (source_table and not source_table.metadata.is_empty())
+            and (table.metadata and table.metadata.is_empty())
+        ):
+            source_location = (
+                self._get_schema_location(source_table.metadata.schema) or BIGQUERY_SCHEMA_LOCATION
+            )
+            source_schema = source_table.metadata.schema
+            schema = (
+                f"{source_schema}__{source_location.replace('-', '_')}"
+                if not source_schema
+                else source_schema
+            )
+            source_db = source_table.metadata.database or self.hook.project_id
+            table.metadata = Metadata(schema=schema, database=source_db)
+            return table
+
+        if table.metadata and table.metadata.is_empty() and self.default_metadata:
+            table.metadata = self.default_metadata
+        if not table.metadata.schema:
+            table.metadata.schema = self.DEFAULT_SCHEMA
+        return table
 
     def schema_exists(self, schema: str) -> bool:
         """
@@ -149,11 +173,11 @@ class BigqueryDatabase(BaseDatabase):
             return False
         return True
 
-    def get_schema_region(self, schema: str | None = None) -> str:
+    def _get_schema_location(self, schema: str | None = None) -> str:
         """
         Get region where the schema is created
+
         :param schema: Bigquery namespace
-        :return:
         """
         if schema is None:
             return ""
@@ -162,14 +186,6 @@ class BigqueryDatabase(BaseDatabase):
             return str(dataset.location)
         except GoogleNotFound:
             return ""
-
-    def check_same_region(self, table: BaseTable, other_table: BaseTable):
-        """
-        Check if two tables are from the same database region
-        """
-        table_location = self.get_schema_region(schema=table.metadata.schema)
-        other_table_location = self.get_schema_region(schema=other_table.metadata.schema)
-        return table_location == other_table_location
 
     @staticmethod
     def get_merge_initialization_query(parameters: tuple) -> str:
@@ -217,6 +233,7 @@ class BigqueryDatabase(BaseDatabase):
         it will attempt to create it.
 
         :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        :param location: Geographic area of the location (example: ``us-west4``)
         """
         # We check if the schema exists first because BigQuery will fail on a create schema query even if it
         # doesn't actually create a schema.
@@ -376,6 +393,7 @@ class BigqueryDatabase(BaseDatabase):
         if self.is_native_autodetect_schema_available(file=source_file):
             load_job_config["autodetect"] = True  # type: ignore
 
+        # TODO: Fix this -- it should be load_job_config.update(native_support_kwargs)
         native_support_kwargs.update(native_support_kwargs)
 
         # Since bigquery has other options besides used here, we need to expose them to end user.

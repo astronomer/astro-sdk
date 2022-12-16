@@ -58,6 +58,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             upstream_tasks=upstream_tasks,
             **kwargs_with_datasets(kwargs=kwargs, output_datasets=self.output_table),
         )
+        self._first_table = None
 
     def execute(self, context: Context) -> None:
         first_table = find_first_table(
@@ -82,6 +83,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             and (first_table.sql_type != self.output_table.sql_type)
         ):
             raise ValueError("source and target table must belong to the same datasource")
+        self._first_table = first_table
 
         self.database_impl = create_database(self.conn_id, first_table)
 
@@ -120,7 +122,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         the output table with necessary metadata.
         """
         self.output_table.conn_id = self.output_table.conn_id or self.conn_id
-        self.output_table = self.database_impl.populate_table_metadata(self.output_table)
+        self.output_table = self.database_impl.populate_table_metadata(self.output_table, self._first_table)
         self.log.info("Returning table %s", self.output_table)
 
     def read_sql_from_function(self) -> None:

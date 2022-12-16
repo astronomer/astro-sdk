@@ -195,14 +195,16 @@ class BaseDatabase(ABC):
         """
         raise NotImplementedError
 
-    def populate_table_metadata(self, table: BaseTable) -> BaseTable:
+    def populate_table_metadata(self, table: BaseTable, source_table: None | BaseTable = None) -> BaseTable:
         """
         Given a table, check if the table has metadata.
-        If the metadata is missing, and the database has metadata, assign it to the table.
+        If the metadata is missing and source_table is defined, copy the attrs from that.
+        If the source_table is missing, and the database has metadata, assign it to the table.
         If the table schema was not defined by the end, retrieve the user-defined schema.
         This method performs the changes in-place and also returns the table.
 
         :param table: Table to potentially have their metadata changed
+        :param source_table: Table to copy metadata from
         :return table: Return the modified table
         """
         if table.metadata and table.metadata.is_empty() and self.default_metadata:
@@ -698,9 +700,7 @@ class BaseDatabase(ABC):
     # Schema Management
     # ---------------------------------------------------------
 
-    def create_schema_if_needed(
-        self, schema: str | None, location: str | None = None  # skipcq: PYL-W0613
-    ) -> None:
+    def create_schema_if_needed(self, schema: str | None) -> None:
         """
         This function checks if the expected schema exists in the database. If the schema does not exist,
         it will attempt to create it.
@@ -720,20 +720,6 @@ class BaseDatabase(ABC):
         :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
         """
         raise NotImplementedError
-
-    def get_schema_region(self, schema: str | None = None) -> str:  # skipcq: PYL-W0613, PYL-R0201
-        """
-        Get region where the schema is created
-        :param schema: namespace
-        :return:
-        """
-        return ""
-
-    def check_same_region(self, table: BaseTable, other_table: BaseTable):  # skipcq: PYL-W0613, PYL-R0201
-        """
-        Check if two tables are from the same database region
-        """
-        return True
 
     # ---------------------------------------------------------
     # Context & Template Rendering methods (Transformations)
