@@ -15,15 +15,6 @@ MAX_TABLE_NAME_LENGTH = 62
 TEMP_PREFIX = "_tmp"
 
 
-def metadata_field_converter(val):
-    if isinstance(val, dict):
-        # TODO: remove following 2 lines or deprecate it
-        if "_schema" in val:
-            val["schema"] = val.pop("_schema")
-        return Metadata(**val)
-    return val
-
-
 @define
 class Metadata:
     """
@@ -38,8 +29,7 @@ class Metadata:
     schema: str | None = None
     database: str | None = None
 
-    # TODO - deprecate region param
-    region: str | None = None
+    # TODO(kaxil) - add deprecation for region param in __init__
 
     def is_empty(self) -> bool:
         """Check if all the fields are None."""
@@ -71,7 +61,7 @@ class BaseTable:
     # Setting converter allows passing a dictionary to metadata arg
     metadata: Metadata = field(
         factory=Metadata,
-        converter=metadata_field_converter,
+        converter=lambda val: Metadata(**val) if isinstance(val, dict) else val,
     )
     columns: list[Column] = field(factory=list)
     temp: bool = field(default=False)
