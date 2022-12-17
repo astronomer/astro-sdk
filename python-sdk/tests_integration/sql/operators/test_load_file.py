@@ -11,6 +11,7 @@ from pandas._testing import assert_frame_equal
 
 from astro import sql as aql
 from astro.constants import Database, FileType
+from astro.dataframes.load_options import CsvLoadOption
 from astro.dataframes.pandas import PandasDataframe
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
@@ -1175,3 +1176,29 @@ def test_aql_nested_ndjson_file_to_database_explicit_illegal_sep_params(sample_d
     df = db.export_table_to_pandas_dataframe(test_table)
     assert df.shape == (1, 36)
     assert "payload_size" in df.columns
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SNOWFLAKE,
+        },
+    ],
+    indirect=True,
+    ids=["snowflake"],
+)
+def test_loadfile_delimiter(sample_dag, database_table_fixture):
+    _, test_table = database_table_fixture
+
+    path = str(CWD) + "/../../data/delimiter_dollar.csv"
+
+    with sample_dag:
+        load_file(
+            input_file=File(path),
+            output_table=test_table,
+            use_native_support=False,
+            pandas_options=CsvLoadOption(delimiter="$"),
+        )
+    test_utils.run_dag(sample_dag)
