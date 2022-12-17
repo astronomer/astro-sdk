@@ -1,6 +1,8 @@
 import tempfile
 
 from airflow.configuration import conf
+from airflow.version import version as airflow_version
+from packaging.version import Version
 
 from astro.constants import DEFAULT_SCHEMA
 
@@ -34,6 +36,13 @@ OPENLINEAGE_EMIT_TEMP_TABLE_EVENT = conf.getboolean(
     SECTION_KEY, "openlineage_emit_temp_table_event", fallback=True
 )
 XCOM_BACKEND = conf.get("core", "xcom_backend")
+IS_BASE_XCOM_BACKEND = conf.get("core", "xcom_backend") == "airflow.models.xcom.BaseXCom"
+ENABLE_XCOM_PICKLING = conf.getboolean("core", "enable_xcom_pickling")
+AIRFLOW_25_PLUS = Version(airflow_version) >= Version("2.5.0")
+# We only need AstroPandasDataframe and other custom serialization and deserialization
+# if Airflow >= 2.5 and Pickling is not enabled and neither Custom XCom backend is used
+NEED_CUSTOM_SERIALIZATION = AIRFLOW_25_PLUS and IS_BASE_XCOM_BACKEND and not ENABLE_XCOM_PICKLING
+
 IS_CUSTOM_XCOM_BACKEND = XCOM_BACKEND not in [
     "airflow.models.xcom.BaseXCom",
     "astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend",
