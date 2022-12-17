@@ -17,6 +17,7 @@ from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistS
 from astro.databases.base import BaseDatabase
 from astro.databricks.load_file.load_file_job import load_file_to_delta
 from astro.databricks.load_options import DeltaLoadOptions
+from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files import File
 from astro.options import LoadOptions
@@ -121,6 +122,7 @@ class DeltaDatabase(BaseDatabase):
         enable_native_fallback: bool | None = None,
         load_options: LoadOptions | None = DeltaLoadOptions.get_default_delta_options(),
         databricks_job_name: str = "",
+        pandas_options: PandasLoadOptions | None = None,  # skipcq PYL-W0613
         **kwargs,
     ):
         """

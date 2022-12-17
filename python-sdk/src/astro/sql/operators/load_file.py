@@ -11,6 +11,7 @@ from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
+from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files import File, resolve_file_path_pattern
 from astro.options import LoadOptions
@@ -33,6 +34,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
     :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
+    :param pandas_options: pandas options while reading file
 
     :return: If ``output_table`` is passed this operator returns a Table object. If not
         passed, returns a dataframe.
@@ -52,6 +54,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         load_options: LoadOptions | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+        pandas_options: PandasLoadOptions | None = None,
         **kwargs,
     ) -> None:
         kwargs.setdefault("task_id", get_unique_task_id("load_file"))
@@ -67,13 +70,14 @@ class LoadFileOperator(AstroSQLBaseOperator):
         self.chunk_size = chunk_size
         self.kwargs = kwargs
         self.if_exists = if_exists
-        self.ndjson_normalize_sep = ndjson_normalize_sep
         self.normalize_config: dict[str, str] = {}
         self.use_native_support = use_native_support
         self.native_support_kwargs: dict[str, Any] = native_support_kwargs or {}
         self.columns_names_capitalization = columns_names_capitalization
         self.enable_native_fallback = enable_native_fallback
         self.load_options = load_options
+        self.ndjson_normalize_sep = ndjson_normalize_sep
+        self.pandas_options = pandas_options
 
     def execute(self, context: Context) -> BaseTable | File:  # skipcq: PYL-W0613
         """
@@ -120,6 +124,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
             enable_native_fallback=self.enable_native_fallback,
             databricks_job_name=f"Load data {self.dag_id}_{self.task_id}",
             load_options=self.load_options,
+            pandas_options=self.pandas_options,
         )
         self.log.info("Completed loading the data into %s.", self.output_table)
         return self.output_table
@@ -300,6 +305,7 @@ def load_file(
     native_support_kwargs: dict | None = None,
     columns_names_capitalization: ColumnCapitalization = "original",
     enable_native_fallback: bool | None = True,
+    pandas_options: PandasLoadOptions | None = None,
     **kwargs: Any,
 ) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.
@@ -315,6 +321,7 @@ def load_file(
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
         in the resulting dataframe
     :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
+    :param pandas_options: pandas options while reading file
     """
 
     # Note - using path for task id is causing issues as it's a pattern and
@@ -331,6 +338,7 @@ def load_file(
         native_support_kwargs=native_support_kwargs,
         columns_names_capitalization=columns_names_capitalization,
         enable_native_fallback=enable_native_fallback,
+        pandas_options=pandas_options,
         **kwargs,
     ).output
 

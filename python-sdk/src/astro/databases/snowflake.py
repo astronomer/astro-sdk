@@ -36,6 +36,7 @@ from astro.constants import (
     MergeConflictStrategy,
 )
 from astro.databases.base import BaseDatabase
+from astro.dataframes.load_options import PandasLoadOptions
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SNOWFLAKE_SCHEMA
@@ -518,6 +519,7 @@ class SnowflakeDatabase(BaseDatabase):
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
+        pandas_options: PandasLoadOptions | None = None,
     ) -> None:  # skipcq PYL-W0613
         """
         Create a SQL table, automatically inferring the schema using the given file.
@@ -534,7 +536,9 @@ class SnowflakeDatabase(BaseDatabase):
                 )
             source_dataframe = dataframe
         else:
-            source_dataframe = file.export_to_dataframe(nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT)
+            source_dataframe = file.export_to_dataframe(
+                nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT, pandas_options=pandas_options
+            )
 
         # We are changing the case of table name to ease out on the requirements to add quotes in raw queries.
         # ToDO - Currently, we cannot to append using load_file to a table name which is having name in lower case.
