@@ -22,6 +22,8 @@ class FileLocation(Enum):
     GS = "gs"  # Google Cloud Storage
     GOOGLE_DRIVE = "gdrive"
     S3 = "s3"  # Amazon S3
+    WASB = "wasb"  # Azure Blob Storage
+    WASBS = "wasbs"  # Azure Blob Storage
     # [END filelocation]
 
     def __str__(self) -> str:

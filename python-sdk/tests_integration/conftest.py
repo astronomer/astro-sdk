@@ -140,7 +140,7 @@ def multiple_tables_fixture(request, database_table_fixture):
 
 
 @pytest.fixture
-def remote_files_fixture(request):
+def remote_files_fixture(request):  # noqa: C901
     """
     Return a list of remote object filenames.
     By default, this fixture also creates objects using sample.<filetype>, unless
@@ -192,8 +192,12 @@ def remote_files_fixture(request):
         for object_prefix in object_prefix_list:
             hook.delete_objects(bucket_name, object_prefix)
 
+    elif provider == "azure":
+        for object_prefix in object_prefix_list:
+            hook.delete_blobs(bucket_name, object_prefix)
 
-def _upload_or_delete_remote_file(file_create, object_prefix, provider, source_path):
+
+def _upload_or_delete_remote_file(file_create, object_prefix, provider, source_path):  # noqa: C901
     """
     Upload a local file to remote bucket if file_create is True.
     And deletes a file if it already exists and file_create is False.
@@ -221,6 +225,18 @@ def _upload_or_delete_remote_file(file_create, object_prefix, provider, source_p
             hook.load_file(source_path, object_prefix, bucket_name)
         else:
             hook.delete_objects(bucket_name, object_prefix)
+
+    elif provider == "azure":
+        from airflow.providers.microsoft.azure.hooks.wasb import WasbHook
+
+        bucket_name = os.getenv("AZURE_BUCKET", "astro-sdk")
+        object_path = f"wasb://{bucket_name}/{object_prefix}"
+        hook = WasbHook(wasb_conn_id="wasb_default_conn")
+        if file_create:
+            hook.load_file(source_path, bucket_name, object_prefix)
+        else:
+            hook.delete_file(bucket_name, object_prefix)
+
     elif provider == "local":
         bucket_name = None
         hook = None

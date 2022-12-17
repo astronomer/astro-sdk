@@ -70,6 +70,11 @@ amazon = [
     "s3fs",
     "smart-open[s3]>=5.2.1",
 ]
+azure = [
+    "apache-airflow-providers-microsoft-azure",
+    "azure-storage-blob",
+    "smart-open[azure]>=5.2.1",
+]
 openlineage = ["openlineage-airflow>=0.17.0"]
 
 databricks = ["databricks-cli",
@@ -88,7 +93,9 @@ all = [
     "apache-airflow-providers-databricks",
     "s3fs",
     "protobuf<=3.20", # Google bigquery client require protobuf <= 3.20.0. We can remove the limitation when this limitation is removed
-    "openlineage-airflow>=0.17.0"
+    "openlineage-airflow>=0.17.0",
+    "apache-airflow-providers-microsoft-azure",
+    "azure-storage-blob",
 ]
 doc = [
     "myst-parser>=0.17",
