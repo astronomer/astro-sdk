@@ -13,6 +13,19 @@ def test_from_pandas_df():
     assert df.equals(astro_df)
 
 
+@mock.patch("astro.utils.dataframe.settings.NEED_CUSTOM_SERIALIZATION", False)
+def test_from_pandas_df_returns_pandas_type():
+    """
+    Test that PandasDataframe is unchanged when a Custom XCom backend is used or XCom pickling is enabled
+    or Airflow version is <2.5
+    """
+    df = pd.DataFrame([{"id": 1, "name": "xyz"}, {"id": 2, "name": "abc"}])
+    astro_df = PandasDataframe.from_pandas_df(df)
+    assert not isinstance(astro_df, PandasDataframe)
+    assert isinstance(astro_df, pd.DataFrame)
+    assert df.equals(astro_df)
+
+
 def test_serialize_deserialize_with_larger_df(tmp_path):
     """
     Test that we do not store the entire dataframe in DB if it is greater and we can correctly

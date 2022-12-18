@@ -63,6 +63,8 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
         """
         Convert rows to a serializable format
         """
+        if not settings.NEED_CUSTOM_SERIALIZATION:
+            return rows
         if isinstance(rows, Iterable):
             return [SdkLegacyRow.from_legacy_row(r) if isinstance(r, SQLAlcRow) else r for r in rows]
         return rows
