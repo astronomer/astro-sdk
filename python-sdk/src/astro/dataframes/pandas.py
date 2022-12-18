@@ -49,5 +49,7 @@ class PandasDataframe(DataFrame):
         return PandasDataframe.from_pandas_df(read_json(data["data"]))
 
     @classmethod
-    def from_pandas_df(cls, df: DataFrame) -> PandasDataframe:
+    def from_pandas_df(cls, df: DataFrame) -> DataFrame | PandasDataframe:
+        if not settings.NEED_CUSTOM_SERIALIZATION:
+            return df
         return cls(df)
