@@ -149,21 +149,20 @@ class BigqueryDatabase(BaseDatabase):
             table.metadata.schema = self.DEFAULT_SCHEMA
         return table
 
-    def _populate_temp_table_metadata_from_input_table(self, table: BaseTable) -> BaseTable:
+    def _populate_temp_table_metadata_from_input_table(self, temp_table: BaseTable) -> BaseTable:
         if not self.table:
-            return table
+            return temp_table
 
-        source_table = self.table
-        source_location = self._get_schema_location(source_table.metadata.schema) or BIGQUERY_SCHEMA_LOCATION
-        source_schema = source_table.metadata.schema
-        schema = (
-            f"{self.DEFAULT_SCHEMA}__{source_location.replace('-', '_')}"
-            if not source_schema
-            else source_schema
-        )
-        source_db = source_table.metadata.database or self.hook.project_id
-        table.metadata = Metadata(schema=schema, database=source_db)
-        return table
+        source_location = self._get_schema_location(self.table.metadata.schema)
+        default_schema_location = self._get_schema_location(self.DEFAULT_SCHEMA)
+
+        if source_location == default_schema_location:
+            schema = self.DEFAULT_SCHEMA
+        else:
+            schema = f"{self.DEFAULT_SCHEMA}__{source_location.replace('-', '_')}"
+        source_db = self.table.metadata.database or self.hook.project_id
+        temp_table.metadata = Metadata(schema=schema, database=source_db)
+        return temp_table
 
     def schema_exists(self, schema: str) -> bool:
         """
