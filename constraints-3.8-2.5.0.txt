@@ -3,7 +3,7 @@ aiofiles==0.8.0
 aiohttp==3.8.3
 aioitertools==0.11.0
 aiosignal==1.3.1
-alembic==1.8.1
+alembic==1.9.0
 anyio==3.6.2
 apache-airflow==2.5.0
 apache-airflow-providers-amazon==6.2.0
@@ -19,7 +19,7 @@ apispec==3.3.2
 argcomplete==2.0.0
 asgiref==3.5.2
 asn1crypto==1.5.1
-astro-sdk-python==1.3.2
+astro-sdk-python==1.3.3b1
 async-timeout==4.0.2
 attrs==22.1.0
 azure-common==1.1.28
@@ -161,7 +161,7 @@ mdit-py-plugins==0.3.3
 mdurl==0.1.2
 msrest==0.7.1
 multidict==6.0.3
-mypy-boto3-appflow==1.26.15
+mypy-boto3-appflow==1.26.32
 mypy-boto3-rds==1.26.29
 mypy-boto3-redshift-data==1.26.30
 nox==2022.11.21
@@ -206,7 +206,7 @@ python-dateutil==2.8.2
 python-frontmatter==1.0.0
 python-nvd3==0.15.0
 python-slugify==7.0.0
-pytz==2022.6
+pytz==2022.7
 pytzdata==2020.1
 PyYAML==6.0
 redshift-connector==2.0.909
@@ -225,7 +225,7 @@ six==1.16.0
 smart-open==6.3.0
 sniffio==1.3.0
 snowflake-connector-python==2.9.0
-snowflake-sqlalchemy==1.4.5
+snowflake-sqlalchemy==1.4.4
 soupsieve==2.3.2.post1
 SQLAlchemy==1.4.45
 sqlalchemy-bigquery==1.5.0
