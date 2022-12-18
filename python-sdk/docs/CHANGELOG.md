@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.3
+
+### Bug fixes
+- Disable Custom serialization for Back-compat [#1453](https://github.com/astronomer/astro-sdk/pull/1453)
+
 ## 1.3.2
 
 ### Bug fixes
