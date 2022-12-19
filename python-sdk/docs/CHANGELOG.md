@@ -4,6 +4,7 @@
 
 ### Bug fixes
 - Disable Custom serialization for Back-compat [#1453](https://github.com/astronomer/astro-sdk/pull/1453)
+- Use different approach to get location for Bigquery tables [#1449](https://github.com/astronomer/astro-sdk/pull/1449)
 
 ## 1.3.2
 
