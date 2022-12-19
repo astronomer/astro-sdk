@@ -137,6 +137,13 @@ class BigqueryDatabase(BaseDatabase):
         )  # type: ignore
 
     def populate_table_metadata(self, table: BaseTable) -> BaseTable:
+        """
+        Populate the metadata of the passed Table object from the Table used in instantiation of
+        the BigqueryDatabase or from the Default Metadata (passed in configs).
+
+        :param table: Table for which the metadata needs to be populated
+        :return: Modified Table
+        """
         if (
             table.temp
             and (self.table and not self.table.metadata.is_empty())

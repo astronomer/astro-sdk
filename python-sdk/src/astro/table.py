@@ -206,7 +206,7 @@ class Table(BaseTable, Dataset):
     :param columns: columns which define the database table schema.
     """
 
-    uri: str = field(init=False)
+    uri: str = field(init=False, eq=False)
     extra: dict | None = field(init=False, factory=dict)
 
     def __new__(cls, *args, **kwargs):

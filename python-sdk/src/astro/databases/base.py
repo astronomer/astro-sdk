@@ -198,13 +198,11 @@ class BaseDatabase(ABC):
     def populate_table_metadata(self, table: BaseTable) -> BaseTable:
         """
         Given a table, check if the table has metadata.
-        If the metadata is missing and source_table is defined, copy the attrs from that.
-        If the source_table is missing, and the database has metadata, assign it to the table.
+        If the metadata is missing, and the database has metadata, assign it to the table.
         If the table schema was not defined by the end, retrieve the user-defined schema.
         This method performs the changes in-place and also returns the table.
 
         :param table: Table to potentially have their metadata changed
-        :param source_table: Table to copy metadata from
         :return table: Return the modified table
         """
         if table.metadata and table.metadata.is_empty() and self.default_metadata:
