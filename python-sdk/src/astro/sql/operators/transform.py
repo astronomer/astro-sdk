@@ -14,7 +14,6 @@ from airflow.models.xcom_arg import XComArg
 from sqlalchemy.sql.functions import Function
 
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
-from astro.utils.table import find_first_table
 from astro.utils.typing_compat import Context
 
 
@@ -52,28 +51,8 @@ class TransformOperator(BaseSQLDecoratedOperator):
         )
 
     def execute(self, context: Context):
-        first_table = find_first_table(
-            op_args=self.op_args,  # type: ignore
-            op_kwargs=self.op_kwargs,
-            python_callable=self.python_callable,
-            parameters=self.parameters,  # type: ignore
-            context=context,
-        )
-
         super().execute(context)
-
-        if (
-            first_table
-            and self.output_table.temp
-            and (not self.database_impl.check_same_region(table=first_table, other_table=self.output_table))
-        ):
-            self.output_table.metadata.region = self.database_impl.get_schema_region(
-                schema=first_table.metadata.schema
-            )
-
-        self.database_impl.create_schema_if_needed(
-            self.output_table.metadata.schema, self.output_table.metadata.region
-        )
+        self.database_impl.create_schema_if_needed(self.output_table.metadata.schema)
         self.database_impl.drop_table(self.output_table)
         self.database_impl.create_table_from_select_statement(
             statement=self.sql,

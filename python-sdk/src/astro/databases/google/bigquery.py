@@ -134,8 +134,42 @@ class BigqueryDatabase(BaseDatabase):
         return Metadata(
             schema=self.DEFAULT_SCHEMA,
             database=self.hook.project_id,
-            region=BIGQUERY_SCHEMA_LOCATION,
         )  # type: ignore
+
+    def populate_table_metadata(self, table: BaseTable) -> BaseTable:
+        """
+        Populate the metadata of the passed Table object from the Table used in instantiation of
+        the BigqueryDatabase or from the Default Metadata (passed in configs).
+
+        :param table: Table for which the metadata needs to be populated
+        :return: Modified Table
+        """
+        if (
+            table.temp
+            and (self.table and not self.table.metadata.is_empty())
+            and (table.metadata and table.metadata.is_empty())
+        ):
+            return self._populate_temp_table_metadata_from_input_table(table)
+        if table.metadata and table.metadata.is_empty() and self.default_metadata:
+            table.metadata = self.default_metadata
+        if not table.metadata.schema:
+            table.metadata.schema = self.DEFAULT_SCHEMA
+        return table
+
+    def _populate_temp_table_metadata_from_input_table(self, temp_table: BaseTable) -> BaseTable:
+        if not self.table:
+            return temp_table
+
+        source_location = self._get_schema_location(self.table.metadata.schema)
+        default_schema_location = self._get_schema_location(self.DEFAULT_SCHEMA)
+
+        if source_location == default_schema_location:
+            schema = self.DEFAULT_SCHEMA
+        else:
+            schema = f"{self.DEFAULT_SCHEMA}__{source_location.replace('-', '_')}"
+        source_db = self.table.metadata.database or self.hook.project_id
+        temp_table.metadata = Metadata(schema=schema, database=source_db)
+        return temp_table
 
     def schema_exists(self, schema: str) -> bool:
         """
@@ -149,11 +183,11 @@ class BigqueryDatabase(BaseDatabase):
             return False
         return True
 
-    def get_schema_region(self, schema: str | None = None) -> str:
+    def _get_schema_location(self, schema: str | None = None) -> str:
         """
         Get region where the schema is created
+
         :param schema: Bigquery namespace
-        :return:
         """
         if schema is None:
             return ""
@@ -162,14 +196,6 @@ class BigqueryDatabase(BaseDatabase):
             return str(dataset.location)
         except GoogleNotFound:
             return ""
-
-    def check_same_region(self, table: BaseTable, other_table: BaseTable):
-        """
-        Check if two tables are from the same database region
-        """
-        table_location = self.get_schema_region(schema=table.metadata.schema)
-        other_table_location = self.get_schema_region(schema=other_table.metadata.schema)
-        return table_location == other_table_location
 
     @staticmethod
     def get_merge_initialization_query(parameters: tuple) -> str:
@@ -211,7 +237,7 @@ class BigqueryDatabase(BaseDatabase):
             credentials=creds,
         )
 
-    def create_schema_if_needed(self, schema: str | None, location: str | None = None) -> None:
+    def create_schema_if_needed(self, schema: str | None) -> None:
         """
         This function checks if the expected schema exists in the database. If the schema does not exist,
         it will attempt to create it.
@@ -220,8 +246,12 @@ class BigqueryDatabase(BaseDatabase):
         """
         # We check if the schema exists first because BigQuery will fail on a create schema query even if it
         # doesn't actually create a schema.
-        location = location or BIGQUERY_SCHEMA_LOCATION
         if schema and not self.schema_exists(schema):
+
+            input_table_schema = self.table.metadata.schema if self.table and self.table.metadata else None
+            input_table_location = self._get_schema_location(input_table_schema)
+
+            location = input_table_location or BIGQUERY_SCHEMA_LOCATION
             statement = self._create_schema_statement.format(schema, location)
             self.run_sql(statement)
 
@@ -376,6 +406,7 @@ class BigqueryDatabase(BaseDatabase):
         if self.is_native_autodetect_schema_available(file=source_file):
             load_job_config["autodetect"] = True  # type: ignore
 
+        # TODO: Fix this -- it should be load_job_config.update(native_support_kwargs)
         native_support_kwargs.update(native_support_kwargs)
 
         # Since bigquery has other options besides used here, we need to expose them to end user.
