@@ -29,8 +29,6 @@ class Metadata:
     schema: str | None = None
     database: str | None = None
 
-    # TODO(kaxil) - add deprecation for region param in __init__
-
     def is_empty(self) -> bool:
         """Check if all the fields are None."""
         return all(getattr(self, field_name) is None for field_name in fields_dict(self.__class__))
