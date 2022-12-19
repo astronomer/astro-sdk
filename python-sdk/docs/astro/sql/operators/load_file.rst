@@ -299,7 +299,7 @@ Columns
 When loading data to the snowflake table from a file there are three cases concerning column names
 
 * Uppercase: When all your column names are in uppercase
-* Lowercase: When all your column names are in uppercase
+* Lowercase: When all your column names are in lowercase
 * Mixed case: When your column names are like - ``List`` etc.
 
 Mixed
