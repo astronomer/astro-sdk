@@ -1,18 +1,16 @@
 import tempfile
 from pathlib import Path
 
+from astro.constants import DatabricksLoadMode
 from astro.databricks.api_utils import generate_file
 from astro.databricks.load_options import DeltaLoadOptions
 
-expected_basic_file = '''import logging
-from pyspark.sql.functions import input_file_name, current_timestamp
-logger = logging.getLogger("broadcast")
+expected_basic_file_copy_into = '''from pyspark.sql.functions import input_file_name, current_timestamp
 
 src_data_path = "foobar"
 username = spark.sql("SELECT regexp_replace(current_user(), '[^a-zA-Z0-9]', '_')").first()[0]
 table_name = f"baz" # This can be generated based on task ID and dag ID or just entirely random
 checkpoint_path = f"/tmp/{username}/_checkpoint/etl_3_quickstart"
-
 
 spark.sql(f"DROP TABLE IF EXISTS {table_name}")
 spark.sql(f"CREATE TABLE IF NOT EXISTS {table_name}")
@@ -24,8 +22,36 @@ spark.sql(
 )
 '''
 
+expected_basic_file_autoloader = """from pyspark.sql.functions import input_file_name, current_timestamp
 
-def test_generate_file_basic():
+src_data_path = "foobar"
+username = spark.sql("SELECT regexp_replace(current_user(), '[^a-zA-Z0-9]', '_')").first()[0]
+table_name = f"baz" # This can be generated based on task ID and dag ID or just entirely random
+checkpoint_path = f"/tmp/{username}/_checkpoint/etl_3_quickstart"
+load_options = {
+    "cloudFiles.schemaLocation": checkpoint_path,
+    "cloudFiles.format": "CSV"
+}
+
+write_options = {
+    "checkpointLocation": checkpoint_path
+}
+
+spark.sql(f"DROP TABLE IF EXISTS {table_name}")
+dbutils.fs.rm(checkpoint_path, True)
+(spark.readStream
+  .format("cloudFiles")
+  .options(**load_options)
+  .load(src_data_path)
+  .select("*", input_file_name().alias("source_file"), current_timestamp().alias("processing_time"))
+  .writeStream
+  .options(**write_options)
+  .trigger(once=True)
+  .toTable(table_name))
+"""
+
+
+def test_generate_file_autoloader():
     with tempfile.NamedTemporaryFile() as tfile:
         delta_options = DeltaLoadOptions.get_default_delta_options()
         delta_options.load_secrets = False
@@ -39,7 +65,25 @@ def test_generate_file_basic():
         )
         with open(output_file) as file:
             file_string = file.read()
-            assert file_string == expected_basic_file
+            assert file_string == expected_basic_file_autoloader
+
+
+def test_generate_file_copy_into():
+    with tempfile.NamedTemporaryFile() as tfile:
+        delta_options = DeltaLoadOptions.get_default_delta_options()
+        delta_options.load_secrets = False
+        delta_options.load_mode = DatabricksLoadMode.COPY_INTO
+        output_file = generate_file(
+            data_source_path="foobar",
+            table_name="baz",
+            source_type="s3",
+            output_file_path=Path(tfile.name),
+            load_options=delta_options,
+            file_type="CSV",
+        )
+        with open(output_file) as file:
+            file_string = file.read()
+            assert file_string == expected_basic_file_copy_into
 
 
 secret_gen_string = """secret_key_list = dbutils.secrets.list("astro-sdk-secrets")

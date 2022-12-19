@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import os.path
 import pathlib
 
 import pandas as pd
@@ -114,6 +115,11 @@ class File(LoggingMixin, Dataset):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         return self.location.openlineage_dataset_name
+
+    def is_directory(self) -> bool:
+        """ """
+
+        return os.path.isdir(self.path)
 
     def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes."""
