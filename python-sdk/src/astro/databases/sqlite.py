@@ -66,7 +66,7 @@ class SqliteDatabase(BaseDatabase):
         table.conn_id = table.conn_id or self.conn_id
         return table
 
-    def create_schema_if_needed(self, schema: str | None, location: str | None = None) -> None:
+    def create_schema_if_needed(self, schema: str | None) -> None:
         """
         Since SQLite does not have schemas, we do not need to set a schema here.
         """
