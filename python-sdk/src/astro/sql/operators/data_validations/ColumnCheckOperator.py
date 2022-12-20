@@ -176,14 +176,14 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
         """
         Get the max value in dataframe column
         """
-        return df[column_name].max()
+        return float(df[column_name].max())
 
     @staticmethod
     def col_min(column_name: str, df: pandas.DataFrame) -> Optional[float]:
         """
         Get the min value in dataframe column
         """
-        return df[column_name].min()
+        return float(df[column_name].min())
 
 
 def _get_failed_checks(checks, col=None):
