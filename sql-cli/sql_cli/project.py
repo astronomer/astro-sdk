@@ -10,7 +10,7 @@ from airflow.models.connection import Connection
 
 from sql_cli.configuration import Config
 from sql_cli.connections import convert_to_connection
-from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_ENVIRONMENT
+from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_DATA_DIR, DEFAULT_ENVIRONMENT
 from sql_cli.exceptions import InvalidProject
 from sql_cli.utils.airflow import initialise as initialise_airflow, reload as reload_airflow
 
@@ -35,10 +35,12 @@ class Project:
         directory: Path,
         airflow_home: Path | None = None,
         airflow_dags_folder: Path | None = None,
+        data_dir: Path | None = None,
     ) -> None:
         self.directory = directory
         self._airflow_home = airflow_home or Path(self.directory, DEFAULT_AIRFLOW_HOME)
         self._airflow_dags_folder = airflow_dags_folder or Path(self.directory, DEFAULT_DAGS_FOLDER)
+        self._data_dir = data_dir or Path(self.directory, DEFAULT_DATA_DIR)
         self.connections: list[Connection] = []
 
     @property
@@ -66,6 +68,18 @@ class Project:
         return self._airflow_dags_folder
 
     @property
+    def data_dir(self) -> Path:
+        """
+        Folder which contains additional data files.
+        Can be either user-defined, during initialisation, or the default one.
+
+        This is used by flow init for copying the data files.
+
+        :returns: The path to the data directory.
+        """
+        return self._data_dir
+
+    @property
     def airflow_config(self) -> dict[str, Any]:
         """
         Retrieve the Airflow configuration for the currently set environment.
@@ -84,14 +98,21 @@ class Project:
         """
         config = Config(project_dir=self.directory)
         global_env_filepath = config.get_global_config_filepath()
+        config.write_value_to_yaml(
+            "general", "data_dir", self._data_dir.resolve().as_posix(), global_env_filepath
+        )
         # If the `Airflow Home` directory does not exist, Airflow initialisation flow takes care of creating the
         # directory. We rely on this behaviour and hence do not raise an exception if the path specified as
         # `Airflow Home` does not exist.
-        config.write_value_to_yaml("airflow", "home", str(self._airflow_home.resolve()), global_env_filepath)
-        if not Path.exists(self._airflow_dags_folder):
-            raise FileNotFoundError(f"Specified DAGs directory {self._airflow_dags_folder} does not exist.")
         config.write_value_to_yaml(
-            "airflow", "dags_folder", str(self._airflow_dags_folder.resolve()), global_env_filepath
+            "airflow", "home", self._airflow_home.resolve().as_posix(), global_env_filepath
+        )
+        if not self._airflow_dags_folder.exists():
+            raise FileNotFoundError(
+                f"Specified DAGs directory {self._airflow_dags_folder.as_posix()} does not exist."
+            )
+        config.write_value_to_yaml(
+            "airflow", "dags_folder", self._airflow_dags_folder.resolve().as_posix(), global_env_filepath
         )
 
     def _remove_unnecessary_airflow_files(self) -> None:
@@ -108,10 +129,19 @@ class Project:
         """
         Initialise a SQL CLI project, creating expected directories and files.
         """
+        excludes = [".gitkeep"]
+        if self.data_dir != self.directory / DEFAULT_DATA_DIR:
+            # Use user-provided data directory
+            excludes.append(DEFAULT_DATA_DIR)
+            shutil.copytree(
+                src=BASE_SOURCE_DIR / DEFAULT_DATA_DIR,
+                dst=self.data_dir,
+                dirs_exist_ok=True,
+            )
         shutil.copytree(
             src=BASE_SOURCE_DIR,
             dst=self.directory,
-            ignore=shutil.ignore_patterns(".gitkeep"),
+            ignore=shutil.ignore_patterns(*excludes),
             dirs_exist_ok=True,
         )
         self._initialise_global_config()
@@ -140,7 +170,9 @@ class Project:
             self._airflow_home = Path(config.airflow_home).resolve()
         if config.airflow_dags_folder:
             self._airflow_dags_folder = Path(config.airflow_dags_folder).resolve()
+        if config.data_dir:
+            self._data_dir = Path(config.data_dir).resolve()
         reload_airflow(self.airflow_home)
         self.connections = [
-            convert_to_connection(connection, self.directory) for connection in config.connections
+            convert_to_connection(connection, self._data_dir) for connection in config.connections
         ]

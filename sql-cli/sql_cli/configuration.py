@@ -24,6 +24,7 @@ class Config:
     connections: list[dict[str, Connection]] = field(default_factory=list)
     airflow_home: str | None = None
     airflow_dags_folder: str | None = None
+    data_dir: str | None = None
 
     def get_env_config_filepath(self) -> Path | None:
         """
@@ -68,6 +69,7 @@ class Config:
             environment=self.environment,
             airflow_home=global_yaml_config.get("airflow", {}).get("home"),
             airflow_dags_folder=global_yaml_config.get("airflow", {}).get("dags_folder"),
+            data_dir=global_yaml_config.get("general", {}).get("data_dir"),
             connections=env_yaml_config.get("connections", []),
         )
 
