@@ -616,7 +616,7 @@ class S3ToBigqueryDataTransfer:
         return str(tokens[-1])
 
     def create_transfer_config(self):
-        """Create bigquery transfer config on cloud"""
+        """Create bigquery transfer config on  cloud"""
         s3_params = {
             "destination_table_name_template": self.target_table.name,
             "data_path": self.source_file.path,
