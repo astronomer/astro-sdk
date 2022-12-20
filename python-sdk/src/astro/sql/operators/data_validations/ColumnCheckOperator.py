@@ -99,22 +99,22 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
 
         self.process_checks()
 
-    def get_check_result(self, check_name: str, column_name: str, df: pandas.DataFrame):
+    def get_check_result(self, check_name: str, column_name: str):
         """
         Get the check method results post validating the dataframe
         """
-        if df is not None and column_name in df.columns:
+        if self.df is not None and column_name in self.df.columns:
             column_checks = {
-                "null_check": lambda column_name: int(df[column_name].isna().sum()),
-                "distinct_check": lambda column_name: len(df[column_name].unique()),
-                "unique_check": lambda column_name: len(df[column_name]) - len(df[column_name].unique()),
-                "min": lambda column_name: float(df[column_name].min()),
-                "max": lambda column_name: float(df[column_name].max()),
+                "null_check": lambda column: column.isna().sum(),
+                "distinct_check": lambda column: len(column.unique()),
+                "unique_check": lambda column: len(column) - len(column.unique()),
+                "min": lambda column: column.min(),
+                "max": lambda column: column.max(),
             }
-            return column_checks[check_name](column_name=column_name)
-        if df is None:
+            return column_checks[check_name](column=self.df[column_name])
+        if self.df is None:
             raise ValueError("Dataframe is None")
-        if column_name not in df.columns:
+        if column_name not in self.df.columns:
             raise ValueError(f"Dataframe doesn't have column {column_name}")
 
     def process_checks(self):
@@ -129,15 +129,13 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
             checks = self.column_mapping[column]
 
             # Iterating over checks
-            for check in checks:
-                tolerance = self.column_mapping[column][check].get("tolerance")
-                result = self.get_check_result(check, column_name=column, df=self.df)
-                self.column_mapping[column][check]["result"] = result
-                self.column_mapping[column][check]["success"] = self._get_match(
-                    self.column_mapping[column][check], result, tolerance
-                )
-                failed_tests.extend(_get_failed_checks(self.column_mapping[column], column))
-                passed_tests.extend(_get_success_checks(self.column_mapping[column], column))
+            for check_key, check_val in checks.items():
+                tolerance = check_val.get("tolerance")
+                result = self.get_check_result(check_key, column_name=column)
+                check_val["result"] = result
+                check_val["success"] = self._get_match(check_val, result, tolerance)
+                failed_tests.extend(_get_failed_checks(checks, column))
+                passed_tests.extend(_get_success_checks(checks, column))
 
         if len(failed_tests) > 0:
             raise AirflowException(f"The following tests have failed:" f"\n{''.join(failed_tests)}")
