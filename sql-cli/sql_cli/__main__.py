@@ -254,7 +254,7 @@ def init(
     data_dir: Path = typer.Option(
         None,
         dir_okay=True,
-        help=f"(Optional) Set the data directory. Default: {DEFAULT_DATA_DIR}",
+        help=f"(Optional) Set the data directory for local file databases such as sqlite. Default: {DEFAULT_DATA_DIR}",
         show_default=False,
     ),
 ) -> None:
