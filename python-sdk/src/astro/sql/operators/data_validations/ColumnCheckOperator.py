@@ -155,7 +155,7 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
         """
         Count the total null values in a dataframe column
         """
-        return list(df[column_name].isnull().values).count(True)
+        return df[column_name].isna().sum()
 
     @staticmethod
     def col_distinct_check(column_name: str, df: pandas.DataFrame) -> Optional[int]:
