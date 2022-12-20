@@ -57,7 +57,7 @@ class Database(Enum):
         return self.value
 
 
-class DatabricksLoadMode(Enum):
+class DatabricksLoadMode(str, Enum):
     AUTOLOADER = "autoloader"
     COPY_INTO = "copy_into"
 
