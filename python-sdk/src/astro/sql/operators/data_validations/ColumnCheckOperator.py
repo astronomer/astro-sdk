@@ -92,7 +92,7 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
     def execute(self, context: "Context"):
         if isinstance(self.dataset, BaseTable):
             return super().execute(context=context)
-        elif type(self.dataset) is pandas.DataFrame:
+        elif isinstance(self.dataset, pandas.DataFrame):
             self.df = self.dataset
         else:
             raise ValueError("dataset can only be of type pandas.dataframe | Table object")
@@ -105,14 +105,13 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
         """
         if df is not None and column_name in df.columns:
             column_checks = {
-                "null_check": lambda column_name, dataframe: int(df[column_name].isna().sum()),
-                "distinct_check": lambda column_name, dataframe: len(df[column_name].unique()),
-                "unique_check": lambda column_name, dataframe: len(df[column_name])
-                - len(df[column_name].unique()),
-                "min": lambda column_name, dataframe: float(df[column_name].max()),
-                "max": lambda column_name, dataframe: float(df[column_name].min()),
+                "null_check": lambda column_name: int(df[column_name].isna().sum()),
+                "distinct_check": lambda column_name: len(df[column_name].unique()),
+                "unique_check": lambda column_name: len(df[column_name]) - len(df[column_name].unique()),
+                "min": lambda column_name: float(df[column_name].min()),
+                "max": lambda column_name: float(df[column_name].max()),
             }
-            return column_checks[check_name](column_name=column_name, dataframe=df)
+            return column_checks[check_name](column_name=column_name)
         if df is None:
             raise ValueError("Dataframe is None")
         if column_name not in df.columns:
