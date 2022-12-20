@@ -68,7 +68,7 @@ class BaseDatabase(ABC):
     NATIVE_AUTODETECT_SCHEMA_CONFIG: Mapping[FileLocation, Mapping[str, list[FileType] | Callable]] = {}
     FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = set()
 
-    def __init__(self, conn_id: str, table: BaseTable | None = None, region: str | None = None):
+    def __init__(self, conn_id: str, table: BaseTable | None = None):
         self.conn_id = conn_id
         self.sql: str | ClauseElement = ""
 

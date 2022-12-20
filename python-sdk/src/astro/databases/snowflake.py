@@ -252,9 +252,7 @@ class SnowflakeDatabase(BaseDatabase):
     )
     DEFAULT_SCHEMA = SNOWFLAKE_SCHEMA
 
-    def __init__(
-        self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None, region: str | None = None
-    ):
+    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
         super().__init__(conn_id)
         self.table = table
 
