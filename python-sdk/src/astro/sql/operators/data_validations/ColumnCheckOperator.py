@@ -181,31 +181,25 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
 
 
 def _get_failed_checks(checks, col=None):
-    if col:
-        return [
-            f"Column: {col}\nCheck: {check},\nCheck Values: {check_values}\n"
-            for check, check_values in checks.items()
-            if not check_values["success"]
-        ]
     return [
-        f"\tCheck: {check},\n\tCheck Values: {check_values}\n"
+        f"{get_checks_string(checks, col)} {check_values}\n"
         for check, check_values in checks.items()
         if not check_values["success"]
     ]
 
 
 def _get_success_checks(checks, col=None):
-    if col:
-        return [
-            f"Column: {col}\nCheck: {check},\nCheck Values: {check_values}\n"
-            for check, check_values in checks.items()
-            if check_values["success"]
-        ]
     return [
-        f"\tCheck: {check},\n\tCheck Values: {check_values}\n"
+        f"{get_checks_string(checks, col)} {check_values}\n"
         for check, check_values in checks.items()
         if check_values["success"]
     ]
+
+
+def get_checks_string(check, col):
+    if col:
+        return f"Column: {col}\nCheck: {check},\nCheck Values:"
+    return f"\tCheck: {check},\n\tCheck Values:"
 
 
 def column_check(
