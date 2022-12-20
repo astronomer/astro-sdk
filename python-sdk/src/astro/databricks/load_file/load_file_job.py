@@ -73,6 +73,7 @@ def load_file_to_delta(
 
     with tempfile.NamedTemporaryFile(suffix=".py") as tfile:
         delta_load_options.if_exists = if_exists
+
         log.info("Generating Pyspark file")
         dbfs_file_path = _create_load_file_pyspark_file(
             api_client, delta_load_options, dbfs_file_path, delta_table, input_file, tfile
@@ -99,6 +100,12 @@ def _create_load_file_pyspark_file(
     output_file: Any,
 ):
     file_type = _find_file_type(input_file)
+    if (
+        databricks_options.load_mode == DatabricksLoadMode.AUTOLOADER
+        and databricks_options.if_exists == "replace"
+    ):
+        databricks_options.autoloader_load_options["cloudFiles.allowOverwrites"] = "true"
+
     file_path = generate_file(
         data_source_path=str(dbfs_file_path) if dbfs_file_path else input_file.path,
         table_name=delta_table.name,

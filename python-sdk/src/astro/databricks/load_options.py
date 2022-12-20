@@ -19,7 +19,7 @@ class DeltaLoadOptions(LoadOptions):
     secret_scope: str = "astro-sdk-secrets"
     load_secrets: bool = False
     load_mode: DatabricksLoadMode = DatabricksLoadMode.AUTOLOADER
-    autoloader_load_dict: dict = {}
+    autoloader_load_options: dict = field(factory=dict)
 
     @existing_cluster_id.default
     def get_existing_cluster_id(self):

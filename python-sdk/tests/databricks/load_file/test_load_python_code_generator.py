@@ -126,11 +126,12 @@ def test_generate_file_without_secrets():
             assert secret_gen_string not in file_string
 
 
-def test_generate_file_append():
+def test_generate_file_append_copy_into():
     with tempfile.NamedTemporaryFile() as tfile:
         options = DeltaLoadOptions.get_default_delta_options()
         options.load_secrets = False
         options.if_exists = "append"
+        options.load_mode = DatabricksLoadMode.COPY_INTO
         output_file = generate_file(
             data_source_path="foobar",
             table_name="baz",
@@ -141,3 +142,22 @@ def test_generate_file_append():
         with open(output_file) as file:
             file_string = file.read()
             assert "DROP TABLE" not in file_string
+
+
+def test_generate_file_append_autoloader():
+    with tempfile.NamedTemporaryFile() as tfile:
+        options = DeltaLoadOptions.get_default_delta_options()
+        options.load_secrets = False
+        options.if_exists = "append"
+        options.load_mode = DatabricksLoadMode.COPY_INTO
+
+        output_file = generate_file(
+            data_source_path="foobar",
+            table_name="baz",
+            source_type="s3",
+            output_file_path=Path(tfile.name),
+            load_options=options,
+        )
+        with open(output_file) as file:
+            file_string = file.read()
+            assert "cloudFiles.allowOverwrites" not in file_string

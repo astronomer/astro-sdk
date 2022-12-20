@@ -1,6 +1,6 @@
 {% macro autoloader_command(load_options, file_type) -%}
 load_options = {
-{%- for k,v in load_options.autoloader_load_dict.items() %}
+{%- for k,v in load_options.autoloader_load_options.items() %}
     "{{ k }}": "{{ v }}",
 {%- endfor %}
     "cloudFiles.schemaLocation": checkpoint_path,

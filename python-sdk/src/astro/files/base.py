@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import io
-import os.path
 import pathlib
 
 import pandas as pd
@@ -117,9 +116,11 @@ class File(LoggingMixin, Dataset):
         return self.location.openlineage_dataset_name
 
     def is_directory(self) -> bool:
-        """ """
+        """
+        :returns: A boolean representing whether this path is a directory or not.
+        """
 
-        return os.path.isdir(self.path)
+        return pathlib.Path(self.path).is_dir()
 
     def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes."""
