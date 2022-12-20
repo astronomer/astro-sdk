@@ -134,11 +134,11 @@ def test_generate_file_append_copy_into(tmp_path):
 
 @mock.patch("astro.databricks.load_file.load_file_job.load_file_to_dbfs")
 @mock.patch("databricks_cli.sdk.api_client.ApiClient")
-def test_generate_file_append_autoloader(mock_api_client, mock_load_to_dbfs):
+def test_generate_file_overwrite_autoloader(mock_api_client, mock_load_to_dbfs):
     options = DeltaLoadOptions.get_default_delta_options()
     options.load_secrets = False
-    options.if_exists = "append"
-    options.load_mode = DatabricksLoadMode.COPY_INTO
+    options.if_exists = "replace"
+    options.load_mode = DatabricksLoadMode.AUTOLOADER
     with tempfile.NamedTemporaryFile(suffix=".py") as tfile:
         _create_load_file_pyspark_file(
             api_client=mock_api_client,
@@ -150,4 +150,4 @@ def test_generate_file_append_autoloader(mock_api_client, mock_load_to_dbfs):
         )
 
         output_file_path = mock_load_to_dbfs.mock_calls[0].args[0]
-        assert "cloudFiles.allowOverwrites" not in output_file_path.read_text()
+        assert "cloudFiles.allowOverwrites" in output_file_path.read_text()
