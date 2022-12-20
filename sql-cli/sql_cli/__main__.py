@@ -11,7 +11,7 @@ from typer import Exit
 import sql_cli
 from sql_cli.astro.command import AstroCommand
 from sql_cli.astro.group import AstroGroup
-from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER
+from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_DATA_DIR
 from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
 from sql_cli.utils.rich import rprint
 
@@ -251,11 +251,17 @@ def init(
         help=f"(Optional) Set the DAGs Folder. Default: {DEFAULT_DAGS_FOLDER}",
         show_default=False,
     ),
+    data_dir: Path = typer.Option(
+        None,
+        dir_okay=True,
+        help=f"(Optional) Set the data directory for local file databases such as sqlite. Default: {DEFAULT_DATA_DIR}",
+        show_default=False,
+    ),
 ) -> None:
     from sql_cli.project import Project
 
     project_dir_absolute = _resolve_project_dir(project_dir)
-    project = Project(project_dir_absolute, airflow_home, airflow_dags_folder)
+    project = Project(project_dir_absolute, airflow_home, airflow_dags_folder, data_dir)
     project.initialise()
     rprint("Initialized an Astro SQL project at", project.directory)
 

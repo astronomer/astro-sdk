@@ -1,5 +1,4 @@
 import pathlib
-from tempfile import gettempdir
 from unittest import mock
 
 import pytest
@@ -390,27 +389,44 @@ def test_init_with_directory(tmp_path):
     result = runner.invoke(app, ["init", tmp_path.as_posix()])
     assert result.exit_code == 0
     assert f"Initialized an Astro SQL project at {tmp_path.as_posix()}" in result.stdout
-    assert list_dir(tmp_path.as_posix())
+    assert list_dir(tmp_path)
 
 
-def test_init_with_custom_airflow_config(tmp_path):
-    tmp_dir = gettempdir()
+def test_init_with_custom_airflow_config(tmp_path, tmp_path_factory):
+    airflow_home = tmp_path_factory.mktemp("airflow")
+    airflow_dags_folder = tmp_path_factory.mktemp("dags")
+    data_dir = tmp_path_factory.mktemp("data-dir")
     result = runner.invoke(
-        app, ["init", tmp_path.as_posix(), "--airflow-home", tmp_dir, "--airflow-dags-folder", tmp_dir]
+        app,
+        [
+            "init",
+            tmp_path.as_posix(),
+            "--airflow-home",
+            airflow_home.as_posix(),
+            "--airflow-dags-folder",
+            airflow_dags_folder.as_posix(),
+            "--data-dir",
+            data_dir.as_posix(),
+        ],
     )
     assert result.exit_code == 0
     assert f"Initialized an Astro SQL project at {tmp_path.as_posix()}" in result.stdout
-    assert list_dir(tmp_path.as_posix())
+    assert list_dir(tmp_path)
+    # Airflow home should have been initialised with the airflow files
+    assert list_dir(airflow_home)
+    # Data directory should have been initialised with the examples
+    assert list_dir(data_dir)
 
 
 def test_init_without_directory():
     # Creates a temporary directory and cd into it.
     # This isolates tests that affect the contents of the CWD to prevent them from interfering with each other.
     with runner.isolated_filesystem() as temp_dir:
-        assert not list_dir(temp_dir)
+        temp_path = pathlib.Path(temp_dir)
+        assert not list_dir(temp_path)
         result = runner.invoke(app, ["init"])
         assert result.exit_code == 0
         # We are not checking the full temp_dir because in MacOS the temp directory starts with /private
         assert "Initialized an Astro SQL project at" in result.stdout
         assert temp_dir in result.stdout
-        assert list_dir(temp_dir)
+        assert list_dir(temp_path)

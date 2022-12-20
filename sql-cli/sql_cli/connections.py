@@ -6,39 +6,36 @@ from typing import Any
 
 from airflow.models import Connection
 
-from sql_cli.constants import SQLITE_CONN_TYPE
 from sql_cli.utils.rich import rprint
 
 CONNECTION_ID_OUTPUT_STRING_WIDTH = 25
 
 
-def convert_to_connection(conn: dict[str, Any], project_dir: Path | None) -> Connection:
+def convert_to_connection(conn: dict[str, Any], data_dir: Path) -> Connection:
     """
     Convert the SQL CLI connection dictionary into an Airflow Connection instance.
 
     :param conn: SQL CLI connection dictionary
-    :param project_dir: Path to the initialised project
+    :param data_dir: Path to the initialised project's data directory
     :returns: Connection object
     """
     from airflow.api_connexion.schemas.connection_schema import connection_schema
 
     connection = conn.copy()
-    connection["connection_id"] = connection["conn_id"]
-    connection.pop("conn_id")
-    if connection["conn_type"] == SQLITE_CONN_TYPE:
-        host_path = connection["host"]
-        if not os.path.isabs(host_path):
-            # The example workflows have relative paths for the host URLs for SQLite connections. Additionally, the
-            # user might also sometimes set relative paths for the host from the initialised project directory. Such
-            # paths need to be converted to absolute paths so that the connections work successfully.
-            resolved_host_path = project_dir / host_path
-            if not resolved_host_path.exists():
-                raise FileNotFoundError(
-                    f"The relative file path {host_path} was resolved into {resolved_host_path} but it's a failed "
-                    f"resolution as the path does not exist."
-                )
-            connection["host"] = str(resolved_host_path)
-    return Connection(**connection_schema.load(connection))
+    connection["connection_id"] = connection.pop("conn_id")
+
+    if connection["conn_type"] == "sqlite" and not os.path.isabs(connection["host"]):
+        # Try resolving with data directory
+        resolved_host = data_dir / connection["host"]
+        if not resolved_host.is_file():
+            raise FileNotFoundError(
+                f"The relative file path {connection['host']} was resolved into {resolved_host}"
+                " but it's a failed resolution as the path does not exist."
+            )
+        connection["host"] = resolved_host.as_posix()
+
+    connection_kwargs = connection_schema.load(connection)
+    return Connection(**connection_kwargs)
 
 
 def validate_connections(connections: list[Connection], connection_id: str | None = None) -> None:
