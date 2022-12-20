@@ -7,7 +7,6 @@ from airflow.providers.common.sql.hooks.sql import DbApiHook
 from airflow.providers.common.sql.operators.sql import SQLColumnCheckOperator
 
 from astro.databases import create_database
-from astro.settings import BIGQUERY_SCHEMA_LOCATION
 from astro.table import BaseTable
 from astro.utils.typing_compat import Context
 
@@ -85,9 +84,7 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
 
         :return: the database hook object.
         """
-        db = create_database(
-            conn_id=self.conn_id, region=self.dataset.metadata.region or BIGQUERY_SCHEMA_LOCATION
-        )
+        db = create_database(conn_id=self.conn_id)
         if db.sql_type == "bigquery":
             return db.hook
         return super().get_db_hook()
