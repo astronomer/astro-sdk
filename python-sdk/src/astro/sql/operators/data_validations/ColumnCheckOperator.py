@@ -118,10 +118,10 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
                 "max": self.col_max,
             }
             return column_checks[check_name](column_name=column_name, df=df)
-        elif df is None:
+        if df is None:
             raise ValueError("Dataframe is None")
-        else:
-            raise ValueError(f"Dataframe is don't have column {column_name}")
+        if column_name not in df.columns:
+            raise ValueError(f"Dataframe doesn't have column {column_name}")
 
     def process_checks(self):
         """
