@@ -44,7 +44,7 @@ def test_column_check_operator_with_table_dataset(sample_dag, database_table_fix
     Test column_check_operator with table dataset for all checks types and make sure the generated sql is working for
     all the database we support.
     """
-    db, test_table = database_table_fixture
+    _, test_table = database_table_fixture
     with sample_dag:
         aql.ColumnCheckOperator(
             dataset=test_table,

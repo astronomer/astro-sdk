@@ -91,14 +91,8 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
 
     def execute(self, context: "Context"):
         if isinstance(self.dataset, BaseTable):
-            # Work around for GoogleBaseHook not inheriting from DBApi
-            # db = create_database(
-            #     conn_id=self.conn_id, region=self.dataset.metadata.region or BIGQUERY_SCHEMA_LOCATION
-            # )
-            # if db.sql_type == "bigquery":
-            #     self._hook = db.hook
             return super().execute(context=context)
-        elif type(self.dataset) == pandas.DataFrame:
+        elif type(self.dataset) is pandas.DataFrame:
             self.df = self.dataset
         else:
             raise ValueError("dataset can only be of type pandas.dataframe | Table object")
@@ -155,7 +149,7 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
         """
         Count the total null values in a dataframe column
         """
-        return df[column_name].isna().sum()
+        return int(df[column_name].isna().sum())
 
     @staticmethod
     def col_distinct_check(column_name: str, df: pandas.DataFrame) -> Optional[int]:
