@@ -63,6 +63,7 @@ To use the ``aql.load_file()`` function, you will need to specify the path to th
 
 To load data into databrick, you only need to set the ``AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID`` env variable
 so the Astro SDK knows where to send your load_file job.
+
 Autoloader Support
 ==================
 
@@ -79,12 +80,10 @@ By default, the Astro SDK uses autoloader to load data into Databricks. However,
     from astro.databricks.load_options import DeltaLoadOptions
     from astro.constants import DatabricksLoadMode
 
-    delta_options = DeltaLoadOptions.get_default_delta_options()
-    delta_options.load_mode = DatabricksLoadMode.COPY_INTO
     aql.load_file(
         input_file=File("data.csv"),
         output_table=Table(conn_id="my_databricks_conn"),
-        load_options=delta_options,
+        load_options=DeltaLoadOptions(load_mode=DatabricksLoadMode.COPY_INTO),
     )
 
 
