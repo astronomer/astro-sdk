@@ -24,10 +24,7 @@ CONN_TYPE_TO_MODULE_PATH = {
 SUPPORTED_DATABASES = set(DEFAULT_CONN_TYPE_TO_MODULE_PATH.keys())
 
 
-def create_database(
-    conn_id: str,
-    table: BaseTable | None = None,
-) -> BaseDatabase:
+def create_database(conn_id: str, table: BaseTable | None = None) -> BaseDatabase:
     """
     Given a conn_id, return the associated Database class.
 
