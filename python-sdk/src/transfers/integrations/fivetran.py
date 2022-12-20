@@ -78,7 +78,6 @@ class Connector:
 class FivetranIntegration(TransferIntegration):
     """
     Class for FiveTran.
-
     """
 
     api_user_agent = "airflow_provider_fivetran/1.1.3"
