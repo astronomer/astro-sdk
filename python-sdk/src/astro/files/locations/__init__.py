@@ -9,6 +9,7 @@ from astro.utils.path import get_class_name, get_dict_with_module_names_to_dot_n
 DEFAULT_CONN_TYPE_TO_MODULE_PATH = get_dict_with_module_names_to_dot_notations(Path(__file__))
 DEFAULT_CONN_TYPE_TO_MODULE_PATH["https"] = DEFAULT_CONN_TYPE_TO_MODULE_PATH["http"]
 DEFAULT_CONN_TYPE_TO_MODULE_PATH["gs"] = DEFAULT_CONN_TYPE_TO_MODULE_PATH["gcs"]
+DEFAULT_CONN_TYPE_TO_MODULE_PATH["wasbs"] = DEFAULT_CONN_TYPE_TO_MODULE_PATH["wasb"]
 
 
 def create_file_location(path: str, conn_id: Optional[str] = None) -> BaseFileLocation:

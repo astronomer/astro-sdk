@@ -45,7 +45,7 @@ from astro.constants import (
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
-from astro.settings import BIGQUERY_SCHEMA
+from astro.settings import BIGQUERY_SCHEMA, BIGQUERY_SCHEMA_LOCATION
 from astro.table import BaseTable, Metadata
 
 DEFAULT_CONN_ID = BigQueryHook.default_conn_name
@@ -102,6 +102,8 @@ class BigqueryDatabase(BaseDatabase):
         DatabaseCustomError,
     )
 
+    _create_schema_statement: str = "CREATE SCHEMA IF NOT EXISTS {} OPTIONS (location='{}')"
+
     def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
         super().__init__(conn_id)
         self.table = table
@@ -113,7 +115,7 @@ class BigqueryDatabase(BaseDatabase):
     @property
     def hook(self) -> BigQueryHook:
         """Retrieve Airflow hook to interface with the BigQuery database."""
-        return BigQueryHook(gcp_conn_id=self.conn_id, use_legacy_sql=False)
+        return BigQueryHook(gcp_conn_id=self.conn_id, use_legacy_sql=False, location=BIGQUERY_SCHEMA_LOCATION)
 
     @property
     def sqlalchemy_engine(self) -> Engine:
@@ -129,7 +131,45 @@ class BigqueryDatabase(BaseDatabase):
 
         :return:
         """
-        return Metadata(schema=self.DEFAULT_SCHEMA, database=self.hook.project_id)  # type: ignore
+        return Metadata(
+            schema=self.DEFAULT_SCHEMA,
+            database=self.hook.project_id,
+        )  # type: ignore
+
+    def populate_table_metadata(self, table: BaseTable) -> BaseTable:
+        """
+        Populate the metadata of the passed Table object from the Table used in instantiation of
+        the BigqueryDatabase or from the Default Metadata (passed in configs).
+
+        :param table: Table for which the metadata needs to be populated
+        :return: Modified Table
+        """
+        if (
+            table.temp
+            and (self.table and not self.table.metadata.is_empty())
+            and (table.metadata and table.metadata.is_empty())
+        ):
+            return self._populate_temp_table_metadata_from_input_table(table)
+        if table.metadata and table.metadata.is_empty() and self.default_metadata:
+            table.metadata = self.default_metadata
+        if not table.metadata.schema:
+            table.metadata.schema = self.DEFAULT_SCHEMA
+        return table
+
+    def _populate_temp_table_metadata_from_input_table(self, temp_table: BaseTable) -> BaseTable:
+        if not self.table:
+            return temp_table
+
+        source_location = self._get_schema_location(self.table.metadata.schema)
+        default_schema_location = self._get_schema_location(self.DEFAULT_SCHEMA)
+
+        if source_location == default_schema_location:
+            schema = self.DEFAULT_SCHEMA
+        else:
+            schema = f"{self.DEFAULT_SCHEMA}__{source_location.replace('-', '_')}"
+        source_db = self.table.metadata.database or self.hook.project_id
+        temp_table.metadata = Metadata(schema=schema, database=source_db)
+        return temp_table
 
     def schema_exists(self, schema: str) -> bool:
         """
@@ -142,6 +182,20 @@ class BigqueryDatabase(BaseDatabase):
         except GoogleNotFound:
             return False
         return True
+
+    def _get_schema_location(self, schema: str | None = None) -> str:
+        """
+        Get region where the schema is created
+
+        :param schema: Bigquery namespace
+        """
+        if schema is None:
+            return ""
+        try:
+            dataset = self.hook.get_dataset(dataset_id=schema)
+            return str(dataset.location)
+        except GoogleNotFound:
+            return ""
 
     @staticmethod
     def get_merge_initialization_query(parameters: tuple) -> str:
@@ -182,6 +236,24 @@ class BigqueryDatabase(BaseDatabase):
             project_id=self.hook.project_id,
             credentials=creds,
         )
+
+    def create_schema_if_needed(self, schema: str | None) -> None:
+        """
+        This function checks if the expected schema exists in the database. If the schema does not exist,
+        it will attempt to create it.
+
+        :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
+        """
+        # We check if the schema exists first because BigQuery will fail on a create schema query even if it
+        # doesn't actually create a schema.
+        if schema and not self.schema_exists(schema):
+
+            input_table_schema = self.table.metadata.schema if self.table and self.table.metadata else None
+            input_table_location = self._get_schema_location(input_table_schema)
+
+            location = input_table_location or BIGQUERY_SCHEMA_LOCATION
+            statement = self._create_schema_statement.format(schema, location)
+            self.run_sql(statement)
 
     def merge_table(
         self,
@@ -334,6 +406,7 @@ class BigqueryDatabase(BaseDatabase):
         if self.is_native_autodetect_schema_available(file=source_file):
             load_job_config["autodetect"] = True  # type: ignore
 
+        # TODO: Fix this -- it should be load_job_config.update(native_support_kwargs)
         native_support_kwargs.update(native_support_kwargs)
 
         # Since bigquery has other options besides used here, we need to expose them to end user.

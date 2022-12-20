@@ -2,7 +2,7 @@ from astro.constants import SUPPORTED_DATABASES, SUPPORTED_FILE_LOCATIONS, SUPPO
 
 
 def test_supported_file_locations():
-    expected = ["gdrive", "gs", "http", "https", "local", "s3"]
+    expected = ["gdrive", "gs", "http", "https", "local", "s3", "wasb", "wasbs"]
     assert sorted(SUPPORTED_FILE_LOCATIONS) == expected
 
 
@@ -12,5 +12,5 @@ def test_supported_file_types():
 
 
 def test_supported_databases():
-    expected = ["bigquery", "postgres", "redshift", "snowflake", "sqlite"]
+    expected = ["bigquery", "delta", "postgres", "redshift", "snowflake", "sqlite"]
     assert sorted(SUPPORTED_DATABASES) == expected

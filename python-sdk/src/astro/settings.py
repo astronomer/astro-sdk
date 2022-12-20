@@ -1,17 +1,25 @@
 import tempfile
 
 from airflow.configuration import conf
+from airflow.version import version as airflow_version
+from packaging.version import Version
 
 from astro.constants import DEFAULT_SCHEMA
 
 # Section name for astro SDK configs in airflow.cfg
 SECTION_KEY = "astro_sdk"
+# Bigquery list of all the valid locations: https://cloud.google.com/bigquery/docs/locations
+DEFAULT_BIGQUERY_SCHEMA_LOCATION = "us"
 
 SCHEMA = conf.get(SECTION_KEY, "sql_schema", fallback=DEFAULT_SCHEMA)
 POSTGRES_SCHEMA = conf.get(SECTION_KEY, "postgres_default_schema", fallback=SCHEMA)
 BIGQUERY_SCHEMA = conf.get(SECTION_KEY, "bigquery_default_schema", fallback=SCHEMA)
 SNOWFLAKE_SCHEMA = conf.get(SECTION_KEY, "snowflake_default_schema", fallback=SCHEMA)
 REDSHIFT_SCHEMA = conf.get(SECTION_KEY, "redshift_default_schema", fallback=SCHEMA)
+
+BIGQUERY_SCHEMA_LOCATION = conf.get(
+    SECTION_KEY, "bigquery_dataset_location", fallback=DEFAULT_BIGQUERY_SCHEMA_LOCATION
+)
 
 LOAD_FILE_ENABLE_NATIVE_FALLBACK = conf.get(SECTION_KEY, "load_file_enable_native_fallback", fallback=False)
 
@@ -28,6 +36,13 @@ OPENLINEAGE_EMIT_TEMP_TABLE_EVENT = conf.getboolean(
     SECTION_KEY, "openlineage_emit_temp_table_event", fallback=True
 )
 XCOM_BACKEND = conf.get("core", "xcom_backend")
+IS_BASE_XCOM_BACKEND = conf.get("core", "xcom_backend") == "airflow.models.xcom.BaseXCom"
+ENABLE_XCOM_PICKLING = conf.getboolean("core", "enable_xcom_pickling")
+AIRFLOW_25_PLUS = Version(airflow_version) >= Version("2.5.0")
+# We only need AstroPandasDataframe and other custom serialization and deserialization
+# if Airflow >= 2.5 and Pickling is not enabled and neither Custom XCom backend is used
+NEED_CUSTOM_SERIALIZATION = AIRFLOW_25_PLUS and IS_BASE_XCOM_BACKEND and not ENABLE_XCOM_PICKLING
+
 IS_CUSTOM_XCOM_BACKEND = XCOM_BACKEND not in [
     "airflow.models.xcom.BaseXCom",
     "astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend",

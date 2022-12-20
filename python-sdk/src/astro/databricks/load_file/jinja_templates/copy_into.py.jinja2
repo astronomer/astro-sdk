@@ -1,0 +1,18 @@
+{%- macro copy_into_command(file_format, load_options, if_exists) -%}
+{%- if if_exists == "replace" %}
+spark.sql(f"DROP TABLE IF EXISTS {table_name}")
+{%- endif %}
+spark.sql(f"CREATE TABLE IF NOT EXISTS {table_name}")
+spark.sql(
+    f"""COPY INTO {table_name} FROM '{src_data_path}' FILEFORMAT={{ file_format }}
+    {%- if load_options.copy_into_format_options|length %}
+    FORMAT_OPTIONS ({{ load_options.convert_format_options_to_string()| safe }})
+    {%-endif %}
+
+    {%- if load_options.copy_into_copy_options|length %}
+    COPY_OPTIONS ({{ load_options.convert_copy_options_to_string()| safe }})
+    {%-endif %}
+    """
+)
+
+{%- endmacro -%}

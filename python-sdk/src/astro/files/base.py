@@ -73,6 +73,13 @@ class File(LoggingMixin, Dataset):
         result: bool = self.type.name == constants.FileType.PARQUET
         return result
 
+    def is_local(self) -> bool:
+        """
+        Return a boolean showing whether this file is stored locally or in a cloud storage
+        :return: A boolean for whether the file is local
+        """
+        return self.location.location_type == constants.FileLocation.LOCAL
+
     def is_pattern(self) -> bool:
         """
         Returns True when file path is a pattern(eg. s3://bucket/folder or /folder/sample_* etc)

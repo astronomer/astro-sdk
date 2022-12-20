@@ -52,11 +52,11 @@ with DAG(
     # [START export_example_1]
     gcs_bucket = os.getenv("GCS_BUCKET", "gs://dag-authoring")
 
-    aql.export_file(
+    aql.export_table_to_file(
         task_id="save_file_to_gcs",
         input_data=t1,
         output_file=File(
-            path=f"{gcs_bucket}/{{ task_instance_key_str }}/all_movies.csv",
+            path=f"{gcs_bucket}/{{{{ task_instance_key_str }}}}/all_movies.csv",
             conn_id="gcp_conn",
         ),
         if_exists="replace",
@@ -68,7 +68,7 @@ with DAG(
         task_id="save_dataframe_to_gcs",
         input_data=t2,
         output_file=File(
-            path=f"{gcs_bucket}/{{ task_instance_key_str }}/top_5_movies.csv",
+            path=f"{gcs_bucket}/{{{{ task_instance_key_str }}}}/top_5_movies.csv",
             conn_id="gcp_conn",
         ),
         if_exists="replace",

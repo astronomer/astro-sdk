@@ -1,25 +1,41 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
+from typing import Any
 
 from airflow.models import Connection
-from airflow.utils.session import create_session
 
 from sql_cli.utils.rich import rprint
 
 CONNECTION_ID_OUTPUT_STRING_WIDTH = 25
 
 
-def _create_or_replace_connection(conn_obj: Connection) -> None:
-    """Creates a new or replaces existing connection in the Airflow DB with the given connection object."""
-    conn_id = conn_obj.conn_id
-    with create_session() as session:
-        db_connection = session.query(Connection).filter_by(conn_id=conn_id).one_or_none()
-        if db_connection:
-            session.delete(db_connection)
-            session.commit()
-        session.add(conn_obj)
-        session.commit()
+def convert_to_connection(conn: dict[str, Any], data_dir: Path) -> Connection:
+    """
+    Convert the SQL CLI connection dictionary into an Airflow Connection instance.
+
+    :param conn: SQL CLI connection dictionary
+    :param data_dir: Path to the initialised project's data directory
+    :returns: Connection object
+    """
+    from airflow.api_connexion.schemas.connection_schema import connection_schema
+
+    connection = conn.copy()
+    connection["connection_id"] = connection.pop("conn_id")
+
+    if connection["conn_type"] == "sqlite" and not os.path.isabs(connection["host"]):
+        # Try resolving with data directory
+        resolved_host = data_dir / connection["host"]
+        if not resolved_host.is_file():
+            raise FileNotFoundError(
+                f"The relative file path {connection['host']} was resolved into {resolved_host}"
+                " but it's a failed resolution as the path does not exist."
+            )
+        connection["host"] = resolved_host.as_posix()
+
+    connection_kwargs = connection_schema.load(connection)
+    return Connection(**connection_kwargs)
 
 
 def validate_connections(connections: list[Connection], connection_id: str | None = None) -> None:
@@ -27,17 +43,16 @@ def validate_connections(connections: list[Connection], connection_id: str | Non
     Validates that the given connections are valid and registers them to Airflow with replace policy for existing
     connections.
     """
-    config_file_contains_connection = False
+    if connection_id and not any(connection.conn_id == connection_id for connection in connections):
+        rprint("[bold red]Error: Config file does not contain given connection[/bold red]", connection_id)
 
     for connection in connections:
-        if connection.id == connection_id:
-            config_file_contains_connection = True
-        _create_or_replace_connection(connection)
-        status = "[bold green]PASSED[/bold green]" if _is_valid(connection) else "[bold red]FAILED[/bold red]"
-        rprint(f"Validating connection {connection.conn_id:{CONNECTION_ID_OUTPUT_STRING_WIDTH}}", status)
-
-    if not config_file_contains_connection:
-        rprint("Error: Config file does not contain given connection", connection_id)
+        if not connection_id or connection_id and connection.conn_id == connection_id:
+            os.environ[f"AIRFLOW_CONN_{connection.conn_id.upper()}"] = connection.get_uri()
+            status = (
+                "[bold green]PASSED[/bold green]" if _is_valid(connection) else "[bold red]FAILED[/bold red]"
+            )
+            rprint(f"Validating connection {connection.conn_id:{CONNECTION_ID_OUTPUT_STRING_WIDTH}}", status)
 
 
 def _is_valid(connection: Connection) -> bool:

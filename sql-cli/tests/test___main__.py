@@ -1,5 +1,4 @@
 import pathlib
-from tempfile import gettempdir
 from unittest import mock
 
 import pytest
@@ -114,6 +113,27 @@ def test_version():
 
 
 @pytest.mark.parametrize(
+    "key,value",
+    [
+        ("airflow_home", "airflow_home"),
+        ("airflow_dags_folder", "airflow_home/dags"),
+    ],
+)
+def test_config(key, value, initialised_project_with_custom_airflow_config):
+    result = runner.invoke(
+        app,
+        [
+            "config",
+            "--project-dir",
+            initialised_project_with_custom_airflow_config.directory.as_posix(),
+            key,
+        ],
+    )
+    assert result.exit_code == 0
+    assert value in result.stdout
+
+
+@pytest.mark.parametrize(
     "workflow_name,environment",
     [
         ("example_basic_transform", "default"),
@@ -139,6 +159,37 @@ def test_generate(workflow_name, environment, initialised_project, generate_task
     assert (
         f"The DAG file {initialised_project.airflow_dags_folder}/{workflow_name}.py has been successfully generated. 🎉"
         in result.stdout
+    )
+
+
+@pytest.mark.parametrize(
+    "workflow_name,environment",
+    [
+        ("example_basic_transform", "default"),
+        ("example_load_file", "default"),
+        ("example_templating", "dev"),
+    ],
+)
+@pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
+def test_generate_custom_airflow_config(
+    workflow_name, environment, initialised_project_with_custom_airflow_config, generate_tasks
+):
+    result = runner.invoke(
+        app,
+        [
+            "generate",
+            workflow_name,
+            "--env",
+            environment,
+            "--project-dir",
+            initialised_project_with_custom_airflow_config.directory.as_posix(),
+            generate_tasks,
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    assert (
+        f"The DAG file {initialised_project_with_custom_airflow_config.airflow_dags_folder}/{workflow_name}.py "
+        f"has been successfully generated. 🎉" in result.stdout
     )
 
 
@@ -175,15 +226,15 @@ def test_generate_invalid(workflow_name, message, initialised_project_with_tests
     "env,connection,status",
     [
         ("default", "sqlite_conn", "PASSED"),
-        ("test", "sqlite_conn_invalid", "FAILED"),
+        ("dev", "sqlite_conn", "PASSED"),
     ],
 )
-def test_validate(env, connection, status, initialised_project_with_test_config):
+def test_validate(env, connection, status, initialised_project):
     result = runner.invoke(
         app,
         [
             "validate",
-            initialised_project_with_test_config.directory.as_posix(),
+            initialised_project.directory.as_posix(),
             "--env",
             env,
             "--connection",
@@ -195,12 +246,39 @@ def test_validate(env, connection, status, initialised_project_with_test_config)
     assert f"Validating connection {connection:{CONNECTION_ID_OUTPUT_STRING_WIDTH}} {status}" in result.stdout
 
 
-def test_validate_all(initialised_project_with_test_config):
+def test_validate_sqlite_non_existent_host_path(
+    initialised_project_with_sqlite_non_existent_host_path_config,
+):
+    result = runner.invoke(
+        app,
+        [
+            "validate",
+            initialised_project_with_sqlite_non_existent_host_path_config.directory.as_posix(),
+            "--env",
+            "sqlite_non_existent_host_path",
+            "--connection",
+            "sqlite_conn_invalid",
+        ],
+    )
+    assert result.exit_code == 1
+    assert isinstance(result.exception, FileNotFoundError)
+
+
+@pytest.mark.parametrize(
+    "env",
+    [
+        "default",
+        "test",
+    ],
+)
+def test_validate_all(env, initialised_project_with_test_config):
     result = runner.invoke(
         app,
         [
             "validate",
             initialised_project_with_test_config.directory.as_posix(),
+            "--env",
+            env,
         ],
     )
     assert result.exit_code == 0
@@ -311,27 +389,44 @@ def test_init_with_directory(tmp_path):
     result = runner.invoke(app, ["init", tmp_path.as_posix()])
     assert result.exit_code == 0
     assert f"Initialized an Astro SQL project at {tmp_path.as_posix()}" in result.stdout
-    assert list_dir(tmp_path.as_posix())
+    assert list_dir(tmp_path)
 
 
-def test_init_with_custom_airflow_config(tmp_path):
-    tmp_dir = gettempdir()
+def test_init_with_custom_airflow_config(tmp_path, tmp_path_factory):
+    airflow_home = tmp_path_factory.mktemp("airflow")
+    airflow_dags_folder = tmp_path_factory.mktemp("dags")
+    data_dir = tmp_path_factory.mktemp("data-dir")
     result = runner.invoke(
-        app, ["init", tmp_path.as_posix(), "--airflow-home", tmp_dir, "--airflow-dags-folder", tmp_dir]
+        app,
+        [
+            "init",
+            tmp_path.as_posix(),
+            "--airflow-home",
+            airflow_home.as_posix(),
+            "--airflow-dags-folder",
+            airflow_dags_folder.as_posix(),
+            "--data-dir",
+            data_dir.as_posix(),
+        ],
     )
     assert result.exit_code == 0
     assert f"Initialized an Astro SQL project at {tmp_path.as_posix()}" in result.stdout
-    assert list_dir(tmp_path.as_posix())
+    assert list_dir(tmp_path)
+    # Airflow home should have been initialised with the airflow files
+    assert list_dir(airflow_home)
+    # Data directory should have been initialised with the examples
+    assert list_dir(data_dir)
 
 
 def test_init_without_directory():
     # Creates a temporary directory and cd into it.
     # This isolates tests that affect the contents of the CWD to prevent them from interfering with each other.
     with runner.isolated_filesystem() as temp_dir:
-        assert not list_dir(temp_dir)
+        temp_path = pathlib.Path(temp_dir)
+        assert not list_dir(temp_path)
         result = runner.invoke(app, ["init"])
         assert result.exit_code == 0
         # We are not checking the full temp_dir because in MacOS the temp directory starts with /private
         assert "Initialized an Astro SQL project at" in result.stdout
         assert temp_dir in result.stdout
-        assert list_dir(temp_dir)
+        assert list_dir(temp_path)

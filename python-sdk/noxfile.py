@@ -20,26 +20,42 @@ def dev(session: nox.Session) -> None:
 
 
 @nox.session(python=["3.7", "3.8", "3.9"])
-@nox.parametrize("airflow", ["2.2.5", "2.4"])
+@nox.parametrize("airflow", ["2.2.5", "2.4", "2.5.0"])
 def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
-    # 2.2.5 requires a certain version of pandas and sqlalchemy
-    # Otherwise it fails with
-    # Pandas requires version '1.4.0' or newer of 'sqlalchemy' (version '1.3.24' currently installed).
-    constraints_url = (
-        "https://raw.githubusercontent.com/apache/airflow/"
-        f"constraints-{airflow}/constraints-{session.python}.txt"
-    )
-    constraints = ["-c", constraints_url] if airflow == "2.2.5" else []
-    session.install(f"apache-airflow=={airflow}", *constraints)
-    session.install("-e", ".[all,tests]", *constraints)
+    env = {
+        "AIRFLOW_HOME": f"~/airflow-{airflow}-python-{session.python}",
+    }
+
+    if airflow == "2.2.5":
+        env[
+            "AIRFLOW__CORE__XCOM_BACKEND"
+        ] = "astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend"
+        env["AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV"] = "True"
+
+        # 2.2.5 requires a certain version of pandas and sqlalchemy
+        # Otherwise it fails with
+        # Pandas requires version '1.4.0' or newer of 'sqlalchemy' (version '1.3.24' currently installed).
+        constraints_url = (
+            "https://raw.githubusercontent.com/apache/airflow/"
+            f"constraints-{airflow}/constraints-{session.python}.txt"
+        )
+        session.install(f"apache-airflow=={airflow}", "-c", constraints_url)
+        session.install("-e", ".[all,tests]", "-c", constraints_url)
+    else:
+        env["AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES"] = "airflow.* astro.*"
+
+        session.install(f"apache-airflow=={airflow}")
+        session.install("-e", ".[all,tests]")
+
     # Log all the installed dependencies
     session.log("Installed Dependencies:")
     session.run("pip3", "freeze")
-    AIRFLOW_HOME = f"~/airflow-{airflow}-{session.python}"
-    session.run("airflow", "db", "init", env={"AIRFLOW_HOME": AIRFLOW_HOME})
+
+    session.run("airflow", "db", "init", env=env)
+
     # Since pytest is not installed in the nox session directly, we need to set `external=true`.
-    session.run("pytest", *session.posargs, env={"AIRFLOW_HOME": AIRFLOW_HOME}, external=True)
+    session.run("pytest", *session.posargs, env=env, external=True)
 
 
 @nox.session(python=["3.8"])
@@ -66,12 +82,29 @@ def test_examples_by_dependency(session: nox.Session, extras):
     pytest_options = " and not ".join([pytest_options, *extras.get("exclude", [])])
     pytest_args = ["-k", pytest_options]
 
+    env = {
+        "AIRFLOW_HOME": "~/airflow-latest-python-latest",
+        "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow.* astro.*",
+    }
+
     session.install("-e", f".[{pypi_deps}]")
     session.install("-e", ".[tests]")
-    session.run("airflow", "db", "init")
+
+    # Log all the installed dependencies
+    session.log("Installed Dependencies:")
+    session.run("pip3", "freeze")
+
+    session.run("airflow", "db", "init", env=env)
 
     # Since pytest is not installed in the nox session directly, we need to set `external=true`.
-    session.run("pytest", "tests/test_example_dags.py", *pytest_args, *session.posargs, external=True)
+    session.run(
+        "pytest",
+        "tests_integration/test_example_dags.py",
+        *pytest_args,
+        *session.posargs,
+        env=env,
+        external=True,
+    )
 
 
 @nox.session()

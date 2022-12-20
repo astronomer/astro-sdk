@@ -13,8 +13,22 @@ from sqlalchemy.exc import OperationalError
 from astro import sql as aql
 from sql_cli.exceptions import ConnectionFailed
 from sql_cli.run_dag import _run_task, run_dag
+from sql_cli.utils.airflow import initialise as initialise_airflow, reload as reload_airflow
 
 CWD = pathlib.Path(__file__).parent
+
+
+@pytest.fixture(scope="module")
+def airflow_home(tmp_path_factory):
+    return tmp_path_factory.mktemp("airflow")
+
+
+@pytest.fixture(autouse=True, scope="module")
+def airflow_setup(airflow_home):
+    # Set up the database
+    initialise_airflow(airflow_home, airflow_home / "dags")
+    # Reload airflow to be able to use reloaded airflow modules
+    reload_airflow(airflow_home)
 
 
 def airflow_less_than(threshold: Version) -> bool:

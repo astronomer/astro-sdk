@@ -1,7 +1,42 @@
 connections:
-  - conn_id: sqlite_conn_invalid
-    conn_type: sqlite
-    host: data/imdb2.db
-    login:
-    password:
-    schema:
+  - conn_id: aws_conn
+    conn_type: aws
+    login: $AWS_ACCESS_KEY_ID
+    password: $AWS_SECRET_ACCESS_KEY
+
+  - conn_id: aws_conn_with_fallback
+    conn_type: aws
+    # Falls back to AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variable.
+
+  - conn_id: bigquery_conn
+    conn_type: gcpbigquery
+    extra: '{"extra__google_cloud_platform__project": "$GOOGLE_CLOUD_PROJECT", "extra__google_cloud_platform__key_path": "$GOOGLE_CLOUD_KEY_PATH"}'
+
+  - conn_id: bigquery_conn_with_fallback
+    conn_type: gcpbigquery
+    # Falls back to GOOGLE_APPLICATION_CREDENTIALS environment variable.
+
+  - conn_id: postgres_conn
+    conn_type: postgres
+    host: $POSTGRES_HOST
+    schema: pagila
+    login: postgres
+    password: $POSTGRES_PASSWORD
+    port: $POSTGRES_PORT
+
+  - conn_id: redshift_conn
+    conn_type: redshift
+    schema: $REDSHIFT_DATABASE
+    host: $REDSHIFT_HOST
+    port: 5439
+    login: $REDSHIFT_USERNAME
+    password: $REDSHIFT_PASSWORD
+
+  - conn_id: snowflake_conn
+    conn_type: snowflake
+    host: $SNOWFLAKE_HOST
+    port: 443
+    login: $SNOWFLAKE_ACCOUNT_NAME
+    password: $SNOWFLAKE_PASSWORD
+    schema: $SNOWFLAKE_SCHEMA
+    extra: '{"account": "$SNOWFLAKE_ACCOUNT", "region": "$SNOWFLAKE_REGION", "role": "$SNOWFLAKE_ROLE", "warehouse": "$SNOWFLAKE_WAREHOUSE", "database": "$SNOWFLAKE_DATABASE"}'

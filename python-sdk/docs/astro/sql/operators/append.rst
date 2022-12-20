@@ -1,8 +1,8 @@
 .. _append_operator:
 
-================
-append operator
-================
+======================================================
+:py:mod:`append operator <astro.sql.operators.append>`
+======================================================
 When to use the ``append`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The ``append`` operator allows you to append data from a source table to a target table.

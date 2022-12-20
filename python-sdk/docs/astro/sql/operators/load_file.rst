@@ -1,8 +1,8 @@
 .. _load_file:
 
-==================
-load_file operator
-==================
+============================================================
+:py:mod:`load_file operator <astro.sql.operators.load_file>`
+============================================================
 
 When to use the ``load_file`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -299,7 +299,7 @@ Columns
 When loading data to the snowflake table from a file there are three cases concerning column names
 
 * Uppercase: When all your column names are in uppercase
-* Lowercase: When all your column names are in uppercase
+* Lowercase: When all your column names are in lowercase
 * Mixed case: When your column names are like - ``List`` etc.
 
 Mixed

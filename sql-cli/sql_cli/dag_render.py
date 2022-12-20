@@ -11,8 +11,9 @@ if TYPE_CHECKING:
 
 def to_task_list(workflow_files: list[WorkflowFile]) -> list[TransformOperator]:
     """
-    Converts the list of SQL Files into a list of TranformOperator tasks
+    Converts the list of SQL Files into a list of TransformOperator tasks
     that all have proper dependencies set.
+
     :param workflow_files: The list of SQL files with necessary metadata for us to
         generate tasks with dependencies
     """
@@ -34,10 +35,6 @@ def render_tasks(directory: Path) -> list[TransformOperator]:
 
     :param directory: Base directory for SQL files. We will recursively parse
         subdirectories as well.
-    :param workflow_name: the name of the Workflow you would like to run
-    :param start_date: (Optional) the start date you would like to set for your run.
-        defaults to 2020-01-01
-    :return: a DAG that can be run by any airflow
     """
     workflow_files: list[WorkflowFile] = sorted(get_workflow_files(directory, target_directory=None))
     return to_task_list(workflow_files)

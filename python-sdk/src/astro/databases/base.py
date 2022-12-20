@@ -15,6 +15,7 @@ from astro.dataframes.pandas import PandasDataframe
 
 if TYPE_CHECKING:  # pragma: no cover
     from sqlalchemy.engine.cursor import CursorResult
+
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
@@ -32,6 +33,7 @@ from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File, resolve_file_path_pattern
 from astro.files.types import create_file_type
 from astro.files.types.base import FileType as FileTypeConstants
+from astro.options import LoadOptions
 from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK, LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.table import BaseTable, Metadata
 
@@ -66,7 +68,7 @@ class BaseDatabase(ABC):
     NATIVE_AUTODETECT_SCHEMA_CONFIG: Mapping[FileLocation, Mapping[str, list[FileType] | Callable]] = {}
     FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = set()
 
-    def __init__(self, conn_id: str):
+    def __init__(self, conn_id: str, table: BaseTable | None = None):  # skipcq: PYL-W0613
         self.conn_id = conn_id
         self.sql: str | ClauseElement = ""
 
@@ -387,6 +389,21 @@ class BaseDatabase(ABC):
                 columns_names_capitalization=columns_names_capitalization,
             )
 
+    def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> list:
+        """
+        Fetches all rows for a table and returns as a list. This is needed because some
+        databases have different cursors that require different methods to fetch rows
+
+        :param row_limit: Limit the number of rows returned, by default return all rows.
+        :param table: The table metadata needed to fetch the rows
+        :return: a list of rows
+        """
+        statement = f"SELECT * FROM {self.get_table_qualified_name(table)}"
+        if row_limit > -1:
+            statement = statement + f" LIMIT {row_limit}"
+        response = self.run_sql(statement)
+        return response.fetchall()  # type: ignore
+
     def load_file_to_table(
         self,
         input_file: File,
@@ -398,12 +415,14 @@ class BaseDatabase(ABC):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
+        load_options: LoadOptions | None = None,
         **kwargs,
     ):
         """
         Load content of multiple files in output_table.
         Multiple files are sourced from the file path, which can also be path pattern.
 
+        :param load_options: Options for loading into specific data warehouses. Currently supports: databricks
         :param input_file: File path and conn_id for object stores
         :param output_table: Table to create
         :param if_exists: Overwrite file if exists
@@ -732,6 +751,28 @@ class BaseDatabase(ABC):
             self.get_table_qualified_name(table),
             self.get_table_qualified_name(table),
         )
+
+    def row_count(self, table: BaseTable):
+        """
+        Returns the number of rows in a table.
+
+        :param table: table to count
+        :return: The number of rows in the table
+        """
+        result = self.run_sql(
+            f"select count(*) from {self.get_table_qualified_name(table)}"  # skipcq: BAN-B608
+        ).scalar()
+        return result
+
+    def parameterize_variable(self, variable: str):
+        """
+        While most databases use sqlalchemy, we want to open up how we paramaterize variables for databases
+        that a) do not use sqlalchemy and b) have different parameterization schemes (namely delta).
+
+        :param variable: The variable to parameterize.
+        :return: Variable with proper parameters
+        """
+        return ":" + variable
 
     def is_native_load_file_available(  # skipcq: PYL-R0201
         self, source_file: File, target_table: BaseTable  # skipcq: PYL-W0613

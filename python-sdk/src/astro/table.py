@@ -117,10 +117,7 @@ class BaseTable:
         Return the row count of table.
         """
         db = create_database(self.conn_id)
-        result = db.run_sql(
-            f"select count(*) from {db.get_table_qualified_name(self)}"  # skipcq: BAN-B608
-        ).scalar()
-        return result
+        return db.row_count(self)
 
     @property
     def sql_type(self) -> Any:
@@ -164,7 +161,7 @@ class BaseTable:
         database = create_database(self.conn_id)
         return database.openlineage_dataset_namespace()
 
-    def openlingeage_dataset_uri(self) -> str:
+    def openlineage_dataset_uri(self) -> str:
         """
         Returns the open lineage dataset uri as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
@@ -207,7 +204,7 @@ class Table(BaseTable, Dataset):
     :param columns: columns which define the database table schema.
     """
 
-    uri: str = field(init=False)
+    uri: str = field(init=False, eq=False)
     extra: dict | None = field(init=False, factory=dict)
 
     def __new__(cls, *args, **kwargs):

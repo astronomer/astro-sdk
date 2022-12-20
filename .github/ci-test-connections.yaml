@@ -88,10 +88,20 @@ connections:
     extra:
       aws_access_key_id: $AWS_ACCESS_KEY_ID
       aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
-  - conn_id: minio_conn
-    conn_type: aws
+  - conn_id: databricks_conn
+    conn_type: delta
+    host: https://dbc-9c390870-65ef.cloud.databricks.com/
+    password: $DATABRICKS_TOKEN
+    extra:
+      http_path: /sql/1.0/warehouses/cf414a2206dfb397
+  - conn_id: wasb_default_conn
+    conn_type: wasb
     description: null
     extra:
-      aws_access_key_id: "ROOTNAME"
-      aws_secret_access_key: "CHANGEME123"
-      endpoint_url: "http://127.0.0.1:9000"
+      connection_string: $AZURE_WASB_CONN_STRING
+  - conn_id: gcp_conn_project
+    conn_type: google_cloud_platform
+    description: null
+    extra:
+      project: "astronomer-dag-authoring"
+      project_id: "astronomer-dag-authoring"

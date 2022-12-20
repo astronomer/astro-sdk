@@ -7,23 +7,9 @@ from typing import Any
 
 import yaml
 from airflow.models.connection import Connection
+from dotenv import load_dotenv
 
-from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME
-
-
-def convert_to_connection(conn: dict[str, Any]) -> Connection:
-    """
-    Convert the SQL CLI connection dictionary into an Airflow Connection instance.
-
-    :param conn: SQL CLI connection dictionary
-    :returns: Connection object
-    """
-    from airflow.api_connexion.schemas.connection_schema import connection_schema
-
-    c = conn.copy()
-    c["connection_id"] = c["conn_id"]
-    c.pop("conn_id")
-    return Connection(**connection_schema.load(c))
+from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME, GLOBAL_CONFIG_FILENAME
 
 
 @dataclass
@@ -33,48 +19,61 @@ class Config:
     """
 
     project_dir: Path
-    environment: str
+    environment: str | None = None
 
     connections: list[dict[str, Connection]] = field(default_factory=list)
     airflow_home: str | None = None
     airflow_dags_folder: str | None = None
+    data_dir: str | None = None
 
-    def get_filepath(self) -> Path:
+    def get_env_config_filepath(self) -> Path | None:
         """
-        Return configuration.yaml filepath.
+        Return environment specific configuration.yaml filepath.
 
         :returns: The path to the desired YAML configuration file
         """
+        if not self.environment:
+            return None
         return self.project_dir / CONFIG_DIR / self.environment / CONFIG_FILENAME
 
-    def from_yaml_to_dict(self) -> dict[str, Any]:
+    def get_global_config_filepath(self) -> Path:
         """
-        Return a dict with the content of the configuration.yaml.
+        Return global configuration.yaml filepath which is shared across environments.
+
+        :return: The path to the desired global YAML configuration file
+        """
+        return self.project_dir / CONFIG_DIR / GLOBAL_CONFIG_FILENAME
+
+    def from_yaml_to_dict(self, filepath: Path | None) -> dict[str, Any]:
+        """
+        Return a dict with the contents of the given configuration.yaml
+
+        :param filepath: Path of the desired configuration.yaml to read contents from.
 
         :returns: Content of the YAML configuration file as a python dictionary.
         """
-        filepath = self.get_filepath()
-        with open(filepath) as fp:
+        if not filepath:
+            return {}
+        load_dotenv(self.project_dir / ".env")
+        with filepath.open() as fp:
             yaml_with_env = os.path.expandvars(fp.read())
             yaml_config = yaml.safe_load(yaml_with_env)
-        return yaml_config
+        return yaml_config or {}
 
     def from_yaml_to_config(self) -> Config:
-        """
-        Return a Config instance with the content of the configuration.yaml.
-
-        :returns: Contents of the YAML configuration file.
-        """
-        yaml_config = self.from_yaml_to_dict()
+        """Returns a Config instance with the contents of the environment specific and global configuration.yaml"""
+        env_yaml_config = self.from_yaml_to_dict(self.get_env_config_filepath())
+        global_yaml_config = self.from_yaml_to_dict(self.get_global_config_filepath())
         return Config(
             project_dir=self.project_dir,
             environment=self.environment,
-            airflow_home=yaml_config.get("airflow", {}).get("home"),
-            airflow_dags_folder=yaml_config.get("airflow", {}).get("dags_folder"),
-            connections=yaml_config["connections"],
+            airflow_home=global_yaml_config.get("airflow", {}).get("home"),
+            airflow_dags_folder=global_yaml_config.get("airflow", {}).get("dags_folder"),
+            data_dir=global_yaml_config.get("general", {}).get("data_dir"),
+            connections=env_yaml_config.get("connections", []),
         )
 
-    def write_value_to_yaml(self, section: str, key: str, value: str) -> None:
+    def write_value_to_yaml(self, section: str, key: str, value: str, filepath: Path) -> None:
         """
         Write a particular key/value to the desired configuration.yaml.
 
@@ -87,35 +86,11 @@ class Config:
         :param section: Section within the YAML file where the key/value will be recorded
         :param key: Key within the YAML file associated to the value to be recorded.
         :param value: Value associated to the key in the YAML file.
+        :param filepath: Path of the desired configuration.yaml to write contents to.
         """
-        yaml_config = self.from_yaml_to_dict()
+        yaml_config = self.from_yaml_to_dict(filepath)
         yaml_config.setdefault(section, {})
         yaml_config[section][key] = value
 
-        filepath = self.get_filepath()
-        with open(filepath, "w") as fp:
-            yaml.dump(yaml_config, fp)
-
-    def write_config_to_yaml(self) -> None:
-        """
-        Write a particular key/value to the desired configuration.yaml.
-
-        Example:
-        ```
-            [section]
-            - item1
-            - item2
-        ```
-
-        :param section: Section within the YAML file where the key/value will be recorded
-        :param values: List of items to be written to the YAML file
-        """
-        yaml_config = self.from_yaml_to_dict()
-        yaml_config["connections"] = self.connections
-        if self.airflow_home:
-            yaml_config["airflow"]["home"] = self.airflow_home
-        if self.airflow_dags_folder:
-            yaml_config["airflow"]["dags_folder"] = self.airflow_dags_folder
-        filepath = self.get_filepath()
-        with open(filepath, "w") as fp:
+        with filepath.open(mode="w") as fp:
             yaml.dump(yaml_config, fp)

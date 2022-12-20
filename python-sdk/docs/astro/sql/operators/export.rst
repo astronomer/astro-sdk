@@ -1,16 +1,16 @@
-.. _export_file:
+.. _export_table_to_file:
 
-====================
-export_file operator
-====================
+==================================================================================
+:py:mod:`export_table_to_file operator <astro.sql.operators.export_table_to_file>`
+==================================================================================
 
-.. _export_file_operator:
+.. _export_table_to_file_operator:
 
-When to use the ``export_file`` operator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+When to use the ``export_table_to_file`` operator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The ``export_file`` operator allows you to write SQL tables to CSV or parquet files and store them locally, on S3, or on GCS. The ``export_file`` function can export data from :ref:`supported_databases` or a Pandas dataframe.
 
-There are two main uses for the ``export_file`` operator.
+There are two main uses for the ``export_table_to_file`` operator.
 
 Case 1: Export data from a table.
 

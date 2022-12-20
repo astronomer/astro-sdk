@@ -14,6 +14,8 @@ DEFAULT_CONN_TYPE_TO_MODULE_PATH = get_dict_with_module_names_to_dot_notations(P
 CUSTOM_CONN_TYPE_TO_MODULE_PATH = {
     "gcpbigquery": DEFAULT_CONN_TYPE_TO_MODULE_PATH["bigquery"],
     "google_cloud_platform": DEFAULT_CONN_TYPE_TO_MODULE_PATH["bigquery"],
+    "databricks": "astro.databricks.delta",
+    "delta": "astro.databricks.delta",
 }
 CONN_TYPE_TO_MODULE_PATH = {
     **DEFAULT_CONN_TYPE_TO_MODULE_PATH,
@@ -22,10 +24,7 @@ CONN_TYPE_TO_MODULE_PATH = {
 SUPPORTED_DATABASES = set(DEFAULT_CONN_TYPE_TO_MODULE_PATH.keys())
 
 
-def create_database(
-    conn_id: str,
-    table: BaseTable | None = None,
-) -> BaseDatabase:
+def create_database(conn_id: str, table: BaseTable | None = None) -> BaseDatabase:
     """
     Given a conn_id, return the associated Database class.
 
