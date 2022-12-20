@@ -1,6 +1,8 @@
 """
 This DAG is to benchmark GCSToBigQueryOperator for various dataset
 """
+from __future__ import annotations
+
 import os
 from datetime import datetime, timedelta
 

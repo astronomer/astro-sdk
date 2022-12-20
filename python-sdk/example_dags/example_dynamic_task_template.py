@@ -7,8 +7,9 @@ This Example DAG:
 - Dynamically expand on the list of rows to calculate average rating if rating is a valid number.
 """
 
-# [START howto_operator_get_file_list]
+from __future__ import annotations
 
+# [START howto_operator_get_file_list]
 import os
 from datetime import datetime
 

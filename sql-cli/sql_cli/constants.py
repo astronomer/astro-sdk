@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 CONFIG_DIR = "config"
 GLOBAL_CONFIG_FILENAME = "global.yml"
 CONFIG_FILENAME = "configuration.yml"

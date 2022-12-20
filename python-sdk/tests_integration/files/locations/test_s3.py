@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from astro.files.locations.amazon.s3 import S3Location

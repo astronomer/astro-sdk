@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any
 
 from airflow.exceptions import AirflowException
@@ -41,7 +43,7 @@ class AstroCustomXcomBackend(BaseXCom):
         return BaseXCom.serialize_value(value, **kwargs)
 
     @staticmethod
-    def deserialize_value(result: "XCom") -> Any:
+    def deserialize_value(result: XCom) -> Any:
         """
         Deserializing the result of a xcom_pull before passing th result to the next task.
         :param result:

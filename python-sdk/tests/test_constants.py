@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from astro.constants import SUPPORTED_DATABASES, SUPPORTED_FILE_LOCATIONS, SUPPORTED_FILE_TYPES
 
 

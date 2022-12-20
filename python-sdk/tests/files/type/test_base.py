@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from astro.constants import FileType
 from astro.files import File
 

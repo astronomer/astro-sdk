@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Any, MutableMapping
 
 # The ``airflow.utils.context.Context`` class was not available in Apache Airflow until 2.3.3. This class is

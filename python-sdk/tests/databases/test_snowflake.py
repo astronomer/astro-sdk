@@ -1,4 +1,6 @@
 """Tests specific to the Snowflake Database implementation."""
+from __future__ import annotations
+
 import pathlib
 from unittest.mock import patch
 

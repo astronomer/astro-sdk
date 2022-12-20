@@ -6,6 +6,8 @@ This Example DAG:
     n copy of ``summarize_campaign`` task will be created dynamically
     using dynamic task mapping
 """
+from __future__ import annotations
+
 import os
 from datetime import datetime
 

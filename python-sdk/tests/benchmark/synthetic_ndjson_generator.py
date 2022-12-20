@@ -1,6 +1,8 @@
 """
 Function to generate ndjson files of various sizes
 """
+from __future__ import annotations
+
 import ndjson
 from faker import Faker
 

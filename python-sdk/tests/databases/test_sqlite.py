@@ -1,5 +1,7 @@
 """Tests specific to the Sqlite Database implementation."""
 
+from __future__ import annotations
+
 import pathlib
 
 import pytest

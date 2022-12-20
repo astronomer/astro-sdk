@@ -1,5 +1,7 @@
 """Tests to cover the drop table function"""
 
+from __future__ import annotations
+
 import pathlib
 
 import pandas

@@ -1,6 +1,8 @@
 """
 Function to generate csv files of various sizes
 """
+from __future__ import annotations
+
 import csv
 import random
 

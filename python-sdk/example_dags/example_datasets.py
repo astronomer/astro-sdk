@@ -17,6 +17,8 @@ Pre-requisites:
  - Install dependencies for Astro Python SDK with Postgres, refer to README.md
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 
 from airflow import DAG

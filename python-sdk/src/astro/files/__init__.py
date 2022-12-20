@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 from astro.files.base import File, resolve_file_path_pattern  # noqa: F401 # skipcq: PY-W2000
@@ -6,7 +8,7 @@ if TYPE_CHECKING:
     from airflow.models.xcom_arg import XComArg
 
 
-def get_file_list(path: str, conn_id: str, **kwargs) -> "XComArg":
+def get_file_list(path: str, conn_id: str, **kwargs) -> XComArg:
     """
     List file path from a remote object store or the local filesystem based on the given path pattern.
     It is not advisable to fetch huge number of files since it would overload the XCOM and

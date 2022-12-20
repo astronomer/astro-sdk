@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 from google.cloud.storage import Client
 

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 
 

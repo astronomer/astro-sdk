@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from airflow.configuration import conf
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg

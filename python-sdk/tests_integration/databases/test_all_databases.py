@@ -1,4 +1,6 @@
 """Tests all Database implementations."""
+from __future__ import annotations
+
 import pathlib
 from unittest import mock
 

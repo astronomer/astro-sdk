@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pytest
 
 from astro.files.locations import create_file_location

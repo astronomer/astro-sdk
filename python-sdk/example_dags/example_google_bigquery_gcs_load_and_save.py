@@ -12,6 +12,8 @@ Pre-requisites:
  - You can either specify a service account key file and set `GOOGLE_APPLICATION_CREDENTIALS`
     with the file path to the service account.
 """
+from __future__ import annotations
+
 import os
 
 import pandas as pd

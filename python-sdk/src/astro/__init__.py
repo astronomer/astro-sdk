@@ -1,5 +1,7 @@
 """A decorator that allows users to run SQL queries natively in Airflow."""
 
+from __future__ import annotations
+
 __version__ = "1.4.0.dev1"
 
 
