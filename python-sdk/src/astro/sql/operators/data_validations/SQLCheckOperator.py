@@ -2,11 +2,11 @@ from typing import Any, Dict, Optional
 
 from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
+from airflow.providers.common.sql.hooks.sql import DbApiHook
 from airflow.providers.common.sql.operators.sql import SQLTableCheckOperator
 
 from astro.databases import create_database
 from astro.table import BaseTable
-from astro.utils.typing_compat import Context
 
 
 class SQLCheckOperator(SQLTableCheckOperator):
@@ -53,6 +53,17 @@ class SQLCheckOperator(SQLTableCheckOperator):
             conn_id=dataset.conn_id,
             task_id=task_id or get_unique_task_id("sql_check"),
         )
+
+    def get_db_hook(self) -> DbApiHook:
+        """
+        Get the database hook for the connection.
+
+        :return: the database hook object.
+        """
+        db = create_database(conn_id=self.conn_id)
+        if db.sql_type == "bigquery":
+            return db.hook
+        return super().get_db_hook()
 
 
 def sql_check(
