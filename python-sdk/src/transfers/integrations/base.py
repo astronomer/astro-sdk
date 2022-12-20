@@ -12,7 +12,8 @@ class TransferIntegration(ABC):
 
     """
 
-    def __init__(self, transfer_params: dict):
+    def __init__(self, conn_id: str, transfer_params: dict):
+        self.conn_id = conn_id
         self.transfer_params = transfer_params
         self.transfer_mapping: dict[str, str] = {}
 

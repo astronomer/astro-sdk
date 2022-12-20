@@ -6,7 +6,7 @@ from transfers.datasets.base import UniversalDataset
 
 
 @define
-class Database(LoggingMixin, UniversalDataset):
+class Table(LoggingMixin, UniversalDataset):
     """
     Repersents all Databases datasets, and abstract away the details related to database types.
     Intended to be used within library.
