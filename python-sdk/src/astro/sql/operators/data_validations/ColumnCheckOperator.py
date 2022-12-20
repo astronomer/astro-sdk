@@ -105,13 +105,14 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
         """
         if df is not None and column_name in df.columns:
             column_checks = {
-                "null_check": self.col_null_check,
-                "distinct_check": self.col_distinct_check,
-                "unique_check": self.col_unique_check,
-                "min": self.col_min,
-                "max": self.col_max,
+                "null_check": lambda column_name, dataframe: int(df[column_name].isna().sum()),
+                "distinct_check": lambda column_name, dataframe: len(df[column_name].unique()),
+                "unique_check": lambda column_name, dataframe: len(df[column_name])
+                - len(df[column_name].unique()),
+                "min": lambda column_name, dataframe: float(df[column_name].max()),
+                "max": lambda column_name, dataframe: float(df[column_name].min()),
             }
-            return column_checks[check_name](column_name=column_name, df=df)
+            return column_checks[check_name](column_name=column_name, dataframe=df)
         if df is None:
             raise ValueError("Dataframe is None")
         if column_name not in df.columns:
@@ -143,41 +144,6 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
             raise AirflowException(f"The following tests have failed:" f"\n{''.join(failed_tests)}")
         if len(passed_tests) > 0:
             print(f"The following tests have passed:" f"\n{''.join(passed_tests)}")
-
-    @staticmethod
-    def col_null_check(column_name: str, df: pandas.DataFrame) -> int:
-        """
-        Count the total null values in a dataframe column
-        """
-        return int(df[column_name].isna().sum())
-
-    @staticmethod
-    def col_distinct_check(column_name: str, df: pandas.DataFrame) -> Optional[int]:
-        """
-        Count the distinct value in a dataframe column
-        """
-        return len(df[column_name].unique())
-
-    @staticmethod
-    def col_unique_check(column_name: str, df: pandas.DataFrame) -> Optional[int]:
-        """
-        Count the unique value in a dataframe column
-        """
-        return len(df[column_name]) - len(df[column_name].unique())
-
-    @staticmethod
-    def col_max(column_name: str, df: pandas.DataFrame) -> Optional[float]:
-        """
-        Get the max value in dataframe column
-        """
-        return float(df[column_name].max())
-
-    @staticmethod
-    def col_min(column_name: str, df: pandas.DataFrame) -> Optional[float]:
-        """
-        Get the min value in dataframe column
-        """
-        return float(df[column_name].min())
 
 
 def _get_failed_checks(checks, col=None):
