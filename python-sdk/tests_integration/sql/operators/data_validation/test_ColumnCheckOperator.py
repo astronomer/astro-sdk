@@ -21,7 +21,7 @@ CWD = pathlib.Path(__file__).parent
         {
             "database": Database.BIGQUERY,
             "file": File(path=str(CWD) + "/../../../data/data_validation.csv"),
-            "table": Table(conn_id="bigquery"),
+            "table": Table(conn_id="gcp_conn_project"),
         },
         {
             "database": Database.POSTGRES,
