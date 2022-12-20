@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pathlib
 
+import pandas
 import pytest
 
 from astro import sql as aql
@@ -27,7 +28,6 @@ cwd = pathlib.Path(__file__).parent
     ids=["snowflake", "bigquery", "postgresql", "sqlite"],
 )
 def test_raw_sql_chained_queries(database_table_fixture, sample_dag):
-    import pandas
 
     db, test_table = database_table_fixture
 
