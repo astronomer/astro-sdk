@@ -151,7 +151,7 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
             print(f"The following tests have passed:" f"\n{''.join(passed_tests)}")
 
     @staticmethod
-    def col_null_check(column_name: str, df: pandas.DataFrame) -> Optional[int]:
+    def col_null_check(column_name: str, df: pandas.DataFrame) -> int:
         """
         Count the total null values in a dataframe column
         """
