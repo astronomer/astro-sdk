@@ -45,7 +45,6 @@ def test_column_check_operator_with_table_dataset(sample_dag, database_table_fix
     all the database we support.
     """
     db, test_table = database_table_fixture
-    test_table.conn_id = "gcp_conn_project"
     with sample_dag:
         aql.ColumnCheckOperator(
             dataset=test_table,
