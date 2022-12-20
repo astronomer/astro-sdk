@@ -8,4 +8,4 @@ connections:
 ## Instead of connecting to data/imdb.db it connects to data/retail.db on dev.
   - conn_id: sqlite_conn
     conn_type: sqlite
-    host: data/retail.db
+    host: retail.db
