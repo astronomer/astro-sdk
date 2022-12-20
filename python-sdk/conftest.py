@@ -66,7 +66,11 @@ def database_table_fixture(request):
     params = deepcopy(request.param)
 
     database_name = params["database"]
+    user_table = params.get("table", None)
     conn_id = DATABASE_NAME_TO_CONN_ID[database_name]
+    if user_table and user_table.conn_id:
+        conn_id = user_table.conn_id
+
     database = create_database(conn_id)
     table = params.get("table", Table(conn_id=database.conn_id, metadata=database.default_metadata))
     if not isinstance(table, TempTable):

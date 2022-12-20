@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.3.3
+
+### Bug fixes
+- Disable Custom serialization for Back-compat [#1453](https://github.com/astronomer/astro-sdk/pull/1453)
+- Use different approach to get location for Bigquery tables [#1449](https://github.com/astronomer/astro-sdk/pull/1449)
+
+## 1.3.2
+
+### Bug fixes
+- Fix the `run_raw_sql()` operator as handler return `None` causing the serialization logic to fail. [#1431](https://github.com/astronomer/astro-sdk/pull/1431)
+
+### Misc
+- Update the deprecation warning for `export_file()` operator. [#1411](https://github.com/astronomer/astro-sdk/issues/1411)
+
+
 ## 1.3.1
 
 ### Feature:
@@ -18,7 +33,6 @@
 - Improve the integration tests to count the number of rows impacted for database operations. [#1273](https://github.com/astronomer/astro-sdk/issues/1273)
 - Run python-sdk tests with airflow 2.5.0 and fix the CI failures. [#1232](https://github.com/astronomer/astro-sdk/issues/1232), [#1351](https://github.com/astronomer/astro-sdk/issues/1351),[#1317](https://github.com/astronomer/astro-sdk/pull/1317), [#1337](https://github.com/astronomer/astro-sdk/issues/1337)
 - Deprecate `export_file` before renaming to `export_table_to_file`. [#1411](https://github.com/astronomer/astro-sdk/issues/1411)
-
 
 ## 1.3.0
 

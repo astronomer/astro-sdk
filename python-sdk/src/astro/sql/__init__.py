@@ -4,6 +4,14 @@ from airflow.models.xcom_arg import XComArg
 
 from astro.sql.operators.append import AppendOperator, append
 from astro.sql.operators.cleanup import CleanupOperator, cleanup
+from astro.sql.operators.data_validations.ColumnCheckOperator import (  # skipcq: PY-W2000
+    ColumnCheckOperator,
+    column_check,
+)
+from astro.sql.operators.data_validations.SQLCheckOperator import (  # skipcq: PY-W2000
+    SQLCheckOperator,
+    sql_check,
+)
 from astro.sql.operators.dataframe import DataframeOperator, dataframe
 from astro.sql.operators.drop import DropTableOperator, drop_table
 from astro.sql.operators.export_file import ExportFileOperator, export_file
