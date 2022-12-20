@@ -162,7 +162,7 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
         """
         Count the distinct value in a dataframe column
         """
-        return df[column_name].nunique()
+        return len(df[column_name].unique())
 
     @staticmethod
     def col_unique_check(column_name: str, df: pandas.DataFrame) -> Optional[int]:
