@@ -159,7 +159,7 @@ with dag:
     # [START load_file_example_12]
     aql.load_file(
         input_file=File(
-            "s3://astro-sdk/python_sdk/example_dags/data/sample_pattern.csv",
+            "gs://astro-sdk/workspace/sample_pattern.csv",
             conn_id="bigquery",
             filetype=FileType.CSV,
         ),
