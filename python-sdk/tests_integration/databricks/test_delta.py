@@ -115,7 +115,7 @@ def test_existing_table_exists(database_table_fixture):
     [
         {
             "database": Database.DELTA,
-            "file": File("s3://tmp9/databricks-test/", conn_id="default_aws", filetype=FileType.CSV),
+            "file": File("s3://tmp9/databricks-test/", conn_id="aws_default", filetype=FileType.CSV),
         },
     ],
     indirect=True,
