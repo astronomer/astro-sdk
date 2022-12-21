@@ -32,8 +32,6 @@ from astro.table import Metadata, Table
 # refer: https://www.dataliftoff.com/iam-roles-for-loading-data-from-s3-into-redshift/
 REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN = os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN")
 SNOWFLAKE_CONN_ID = "snowflake_conn"
-SFTP_USERNAME = os.getenv("SFTP_USERNAME")
-SFTP_HOSTNAME = os.getenv("SFTP_HOSTNAME")
 
 CWD = pathlib.Path(__file__).parent
 default_args = {
@@ -257,9 +255,7 @@ with dag:
 
     # [START load_file_example_20]
     aql.load_file(
-        input_file=File(
-            path=f"sftp://{SFTP_USERNAME}@{SFTP_HOSTNAME}/upload/", conn_id="sftp_conn", filetype=FileType.CSV
-        ),
+        input_file=File(path="sftp://upload/", conn_id="sftp_conn", filetype=FileType.CSV),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
             metadata=Metadata(
