@@ -139,7 +139,8 @@ class Project:
             "airflow", "home", str(self.get_env_airflow_home(environment)), config_filepath
         )
 
-    def _remove_unnecessary_airflow_files(self, airflow_home: Path) -> None:
+    @staticmethod
+    def _remove_unnecessary_airflow_files(airflow_home: Path) -> None:
         """
         Delete Airflow generated paths which are not necessary for the desired Airflow home.
 

@@ -103,7 +103,7 @@ def get(
    $ flow config set deploy --env=dev --astro-workspace=cl123 --astro-deployment=cl345
    """,
 )
-def set(  # noqa: A001
+def set(  # noqa: A001,  skipcq: PYL-W0622
     key: str = typer.Argument(
         default="",
         show_default=False,
