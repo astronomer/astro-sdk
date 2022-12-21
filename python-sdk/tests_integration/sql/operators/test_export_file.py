@@ -218,7 +218,7 @@ def test_save_table_remote_file_exists_overwrite_false(
         with sample_dag:
             export_table_to_file(
                 input_data=test_table,
-                output_file=File(path=remote_files_fixture[0], conn_id="aws_default"),
+                output_file=File(path=remote_files_fixture[0]),
                 if_exists="exception",
             )
         test_utils.run_dag(sample_dag)
