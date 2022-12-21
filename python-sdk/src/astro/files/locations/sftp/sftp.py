@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import os
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse
 
 from airflow.providers.sftp.hooks.sftp import SFTPHook
 
 from astro.constants import FileLocation
+from astro.exceptions import PermissionNotSetError
 from astro.files.locations.base import BaseFileLocation
 
 
@@ -28,22 +29,19 @@ class SFTPLocation(BaseFileLocation):
             return {"connect_kwargs": {"key_filename": key_file}}
         elif client.password:
             return {"connect_kwargs": {"password": client.password}}
-        return {}
+        raise PermissionNotSetError("SFTP credentials were not set in the connection.")
 
     @property
     def paths(self) -> list[str]:
         """Resolve SFTP file paths with prefix"""
         url = urlparse(self.path)
         client = self.hook.get_connection(self.conn_id)
-        port = str(client.port or 22)
-        if self.hook.isdir(url.path):
-            prefixes = self.hook.list_directory(url.path)
-            paths = [
-                urlunparse((url.scheme, url.netloc + ":" + port, os.path.join(url.path, keys), "", "", ""))
-                for keys in prefixes
-            ]
+        uri = client.get_uri()
+        if self.hook.isdir(url.netloc + url.path):
+            prefixes = self.hook.list_directory(url.netloc + url.path)
+            paths = [uri + "/" + url.netloc + os.path.join(url.path, keys) for keys in prefixes]
         else:
-            paths = [urlunparse((url.scheme, url.netloc + ":" + port, url.path, "", "", ""))]
+            paths = [uri + "/" + url.netloc + url.path]
         return paths
 
     @property

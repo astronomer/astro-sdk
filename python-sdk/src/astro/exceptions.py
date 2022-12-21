@@ -20,3 +20,11 @@ class DatabaseCustomError(ValueError, AttributeError):
     Inappropriate argument value (of correct type) or attribute
     not found while running query. while running query
     """
+
+
+class NonExistentTableException1(Exception):
+    """Raised if an operation expected a SQL table to exist, but it does not exist"""
+
+
+class PermissionNotSetError(Exception):
+    """Raised if a permission to files present in locations are not accessible"""
