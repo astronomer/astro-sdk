@@ -3,7 +3,7 @@ from __future__ import annotations
 from airflow.configuration import conf
 from attr import define, field
 
-from astro.constants import LoadExistStrategy
+from astro.constants import DatabricksLoadMode, LoadExistStrategy
 from astro.options import LoadOptions
 
 
@@ -18,6 +18,8 @@ class DeltaLoadOptions(LoadOptions):
     if_exists: LoadExistStrategy = "replace"
     secret_scope: str = "astro-sdk-secrets"
     load_secrets: bool = False
+    load_mode: DatabricksLoadMode = DatabricksLoadMode.AUTOLOADER
+    autoloader_load_options: dict = field(factory=dict)
 
     @existing_cluster_id.default
     def get_existing_cluster_id(self):

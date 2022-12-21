@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import logging
 import pathlib
 import tempfile
 from pathlib import Path
 from typing import Any
 
+from airflow.configuration import conf
 from databricks_cli.sdk.api_client import ApiClient
 
-from astro.constants import FileLocation, LoadExistStrategy
+from astro.constants import DatabricksLoadMode, FileLocation, LoadExistStrategy
 from astro.databricks.api_utils import (
     create_and_run_job,
     create_secrets,
@@ -22,6 +24,8 @@ from astro.table import BaseTable
 cwd = pathlib.Path(__file__).parent
 
 supported_file_locations = [FileLocation.LOCAL, FileLocation.S3, FileLocation.GS]
+
+log = logging.getLogger(__file__)
 
 
 def load_file_to_delta(
@@ -53,14 +57,24 @@ def load_file_to_delta(
     dbfs_file_path = None
     if input_file.is_local():
         # There are no secrets to load since this is a local file
+        log.info("Found local file. Uploading file(s) to DBFS")
         delta_load_options.load_secrets = False
         dbfs_file_path = _load_local_file_to_dbfs(api_client, input_file)
-    elif delta_load_options.load_secrets:
+    elif delta_load_options.load_secrets and conf.getboolean(
+        "astro_sdk", "load_storage_configs_to_databricks", fallback=True
+    ):
+        log.info("Loading storage configurations for remote file to databricks")
         delete_secret_scope(delta_load_options.secret_scope, api_client=api_client)
         _load_secrets_to_databricks(api_client, input_file, delta_load_options.secret_scope)
 
+    if not input_file.is_directory() and delta_load_options.load_mode == DatabricksLoadMode.AUTOLOADER:
+        log.info("Since this is a single file, changing to COPY INTO as autoloader only supports directories")
+        delta_load_options.load_mode = DatabricksLoadMode.COPY_INTO
+
     with tempfile.NamedTemporaryFile(suffix=".py") as tfile:
         delta_load_options.if_exists = if_exists
+
+        log.info("Generating Pyspark file")
         dbfs_file_path = _create_load_file_pyspark_file(
             api_client, delta_load_options, dbfs_file_path, delta_table, input_file, tfile
         )
@@ -86,6 +100,12 @@ def _create_load_file_pyspark_file(
     output_file: Any,
 ):
     file_type = _find_file_type(input_file)
+    if (
+        databricks_options.load_mode == DatabricksLoadMode.AUTOLOADER
+        and databricks_options.if_exists == "replace"
+    ):
+        databricks_options.autoloader_load_options["cloudFiles.allowOverwrites"] = "true"
+
     file_path = generate_file(
         data_source_path=str(dbfs_file_path) if dbfs_file_path else input_file.path,
         table_name=delta_table.name,
