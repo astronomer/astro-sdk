@@ -1,13 +1,17 @@
+from unittest.mock import patch
+
 from astro.constants import FileType
 from astro.files import File
 
 
-def test_str():
+@patch("astro.files.locations.base.BaseFileLocation.validate_conn", return_value=None)
+def test_str(validate_conn):
     file = File(path="astro", conn_id="local", filetype=FileType.CSV)
     assert file.__str__() == "astro"
 
 
-def test_repr():
+@patch("astro.files.locations.base.BaseFileLocation.validate_conn", return_value=None)
+def test_repr(validate_conn):
     file = File(path="astro", conn_id="local", filetype=FileType.CSV)
     assert file.__repr__() == (
         "File(path='astro', conn_id='local', filetype=<FileType.CSV: 'csv'>, "
@@ -16,12 +20,14 @@ def test_repr():
     )
 
 
-def test_eq():
+@patch("astro.files.locations.base.BaseFileLocation.validate_conn", return_value=None)
+def test_eq(validate_conn):
     file1 = File(path="astro", conn_id="local", filetype=FileType.CSV)
     file2 = File(path="astro", conn_id="local", filetype=FileType.CSV)
     assert file1.__eq__(file2) is True
 
 
-def test_hash():
+@patch("astro.files.locations.base.BaseFileLocation.validate_conn", return_value=None)
+def test_hash(validate_conn):
     file = File(path="astro", conn_id="local", filetype=FileType.CSV)
     assert file.__hash__() is not None
