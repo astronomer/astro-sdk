@@ -35,7 +35,7 @@ def test_get_file_list_s3(hook):
     hook.return_value = Connection(conn_id="conn", conn_type="s3")
     op = ListFileOperator(
         task_id="task_id",
-        conn_id="google_cloud_default",
+        conn_id="aws_default",
         path="s3://bucket/some-file",
     )
     op.execute(None)
