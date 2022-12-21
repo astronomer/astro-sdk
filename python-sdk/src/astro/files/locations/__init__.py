@@ -19,7 +19,7 @@ def create_file_location(path: str, conn_id: Optional[str] = None) -> BaseFileLo
     :param path: Path to a file in the filesystem/Object stores
     :param conn_id: Airflow connection ID
     """
-    filetype: FileLocation = BaseFileLocation.get_location_type(path, conn_id)
+    filetype: FileLocation = BaseFileLocation.get_location_type(path)
     module_path = DEFAULT_CONN_TYPE_TO_MODULE_PATH[filetype.value]
     module_ref = importlib.import_module(module_path)
     class_name = get_class_name(module_ref)
