@@ -14,7 +14,6 @@ from astro.constants import FileLocation
 CUSTOM_CONN_TYPE_TO_FILE_SCHEME = {
     "bigquery": "gs",
     "google_cloud_platform": "gs",
-    "s3": "s3",
     "aws": "s3",
     "wasb": "wasb",
     "gcpbigquery": "gs",
@@ -134,7 +133,7 @@ class BaseFileLocation(ABC):
         file_scheme_from_conn_id = CUSTOM_CONN_TYPE_TO_FILE_SCHEME.get(connection_type)
         if file_scheme_from_conn_id is not None and file_scheme_from_conn_id is not file_scheme:
             raise ValueError(
-                f"Unsupported scheme '{file_scheme}' from path"
+                f"Unsupported scheme '{file_scheme}' and conn_id scheme '{file_scheme_from_conn_id}' path"
                 f" '{path}' in connection type '{connection_type}'"
             )
         if file_scheme == "":
