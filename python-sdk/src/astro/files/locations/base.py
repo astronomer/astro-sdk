@@ -14,6 +14,7 @@ from astro.constants import FileLocation
 CUSTOM_CONN_TYPE_TO_FILE_SCHEME = {
     "bigquery": "gs",
     "google_cloud_platform": "gs",
+    "s3": "s3",
     "aws": "s3",
     "wasb": "wasb",
     "gcpbigquery": "gs",
@@ -34,6 +35,23 @@ class BaseFileLocation(ABC):
         """
         self.path: str = path
         self.conn_id: str | None = conn_id
+        self.validate_conn()
+
+    def validate_conn(self):
+        """
+        Check if the conn_id matches with provided path.
+        """
+        connection_type = ""
+        if self.conn_id is not None:
+            connection_type = BaseHook.get_connection(self.conn_id).conn_type
+        file_scheme = urlparse(self.path).scheme
+
+        file_scheme_from_conn_id = CUSTOM_CONN_TYPE_TO_FILE_SCHEME.get(connection_type)
+        if file_scheme_from_conn_id is not None and file_scheme_from_conn_id != file_scheme:
+            raise ValueError(
+                f"Mismatch in file scheme '{file_scheme}' in the path"
+                f" '{self.path}' with connection type '{connection_type}'"
+            )
 
     @property
     def hook(self):
@@ -118,24 +136,12 @@ class BaseFileLocation(ABC):
         return True
 
     @staticmethod
-    def get_location_type(path: str, conn_id: str | None = None) -> FileLocation:
+    def get_location_type(path: str) -> FileLocation:
         """Identify where a file is located
 
         :param path: Path to a file in the filesystem/Object stores
-        :param conn_id: Airflow connection id
         """
-        connection_type = ""
-        if conn_id is not None:
-            connection_type = BaseHook.get_connection(conn_id).conn_type
-
         file_scheme = urlparse(path).scheme
-
-        file_scheme_from_conn_id = CUSTOM_CONN_TYPE_TO_FILE_SCHEME.get(connection_type)
-        if file_scheme_from_conn_id is not None and file_scheme_from_conn_id != file_scheme:
-            raise ValueError(
-                f"Unsupported scheme '{file_scheme}' and conn_id scheme '{file_scheme_from_conn_id}' path"
-                f" '{path}' in connection type '{connection_type}'"
-            )
         if file_scheme == "":
             location = FileLocation.LOCAL
         else:
