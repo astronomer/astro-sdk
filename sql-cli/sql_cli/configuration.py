@@ -93,9 +93,11 @@ class Config:
         with filepath.open(mode="w") as fp:
             yaml.dump(yaml_config, fp)
 
-    def to_dict(self):
+    def to_dict(self) -> dict[str, Any]:
         """
         Return configuration represented as JSON string.
+
+        :returns: Dictionary containing non-sensitive global and per-environment configuration.
         """
         config_as_dict = {"global": self.from_yaml_to_dict(self.get_global_config_filepath())}
         if self.environment:

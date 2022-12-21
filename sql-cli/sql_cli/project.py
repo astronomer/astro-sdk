@@ -83,7 +83,7 @@ class Project:
         return self._data_dir
 
     @property
-    def environments_list(self) -> list:
+    def environments_list(self) -> list[str]:
         """
         Return list with the names of the existing environments in the current project.
 
