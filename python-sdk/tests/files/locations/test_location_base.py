@@ -121,11 +121,6 @@ def test_get_class_name_method_invalid_name():
             True,
         ),
         (
-            GCSLocation("gs://tmp/file_a.csv", conn_id="bigquery"),
-            GCSLocation("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
-            False,
-        ),
-        (
             GCSLocation("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
             GCSLocation("gs://tmp/file_b.csv", conn_id="google_cloud_default"),
             False,
