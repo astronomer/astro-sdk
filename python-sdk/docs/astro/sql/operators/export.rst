@@ -8,7 +8,7 @@
 
 When to use the ``export_table_to_file`` operator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-The ``export_file`` operator allows you to write SQL tables to CSV or parquet files and store them locally, on S3, or on GCS. The ``export_file`` function can export data from :ref:`supported_databases` or a Pandas dataframe.
+The ``export_table_to_file`` operator allows you to write SQL tables to CSV or parquet files and store them locally, on S3, or on GCS. The ``export_table_to_file`` function can export data from :ref:`supported_databases` or a Pandas dataframe.
 
 There are two main uses for the ``export_table_to_file`` operator.
 
