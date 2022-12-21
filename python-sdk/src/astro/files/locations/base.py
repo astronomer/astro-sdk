@@ -12,12 +12,12 @@ from airflow.hooks.base import BaseHook
 from astro.constants import FileLocation
 
 CUSTOM_CONN_TYPE_TO_FILE_SCHEME = {
-    "bigquery": "gs",
-    "google_cloud_platform": "gs",
-    "s3": "s3",
-    "aws": "s3",
-    "wasb": "wasb",
-    "gcpbigquery": "gs",
+    "bigquery": {"gs"},
+    "google_cloud_platform": {"gs", "gdrive"},
+    "s3": {"s3"},
+    "aws": {"s3"},
+    "wasb": {"wasb"},
+    "gcpbigquery": {"gs"},
 }
 
 
@@ -47,7 +47,7 @@ class BaseFileLocation(ABC):
         file_scheme = urlparse(self.path).scheme
 
         file_scheme_from_conn_id = CUSTOM_CONN_TYPE_TO_FILE_SCHEME.get(connection_type)
-        if file_scheme_from_conn_id is not None and file_scheme_from_conn_id != file_scheme:
+        if file_scheme_from_conn_id is not None and file_scheme not in file_scheme_from_conn_id:
             raise ValueError(
                 f"Mismatch in file scheme '{file_scheme}' in the path"
                 f" '{self.path}' with connection type '{connection_type}'"
