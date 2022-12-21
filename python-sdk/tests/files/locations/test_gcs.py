@@ -35,7 +35,8 @@ def test_pull_from_json_dict():
 
 
 @pytest.mark.parametrize("input_dict", [{}], ids=["empty_dict"])
-def test_databricks_auth_no_value(input_dict):
+@mock.patch("astro.files.locations.base.BaseFileLocation.validate_conn", return_value=None)
+def test_databricks_auth_no_value(validate_conn, input_dict):
     with mock.patch(
         "astro.files.locations.google.gcs.GCSLocation.hook", new_callable=PropertyMock
     ), pytest.raises(ValueError) as exc_info:
@@ -53,7 +54,8 @@ def test_databricks_auth_no_value(input_dict):
 @pytest.mark.parametrize(
     "input_dict", [{"key_path": "foo/bar"}, {"keyfile_dict": mock_creds}], ids=["key_path", "key_dict"]
 )
-def test_databricks_auth(input_dict):
+@mock.patch("astro.files.locations.base.BaseFileLocation.validate_conn", return_value=None)
+def test_databricks_auth(validate_conn, input_dict):
     with mock.patch(
         "astro.files.locations.google.gcs.GCSLocation.hook", new_callable=PropertyMock
     ), mock.patch("astro.files.locations.google.gcs._pull_credentials_from_keypath") as mock_keypath:
