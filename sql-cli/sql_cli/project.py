@@ -10,7 +10,12 @@ from airflow.models.connection import Connection
 
 from sql_cli.configuration import Config
 from sql_cli.connections import convert_to_connection
-from sql_cli.constants import DEFAULT_BASE_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_DATA_DIR, DEFAULT_ENVIRONMENT
+from sql_cli.constants import (
+    DEFAULT_BASE_AIRFLOW_HOME,
+    DEFAULT_DAGS_FOLDER,
+    DEFAULT_DATA_DIR,
+    DEFAULT_ENVIRONMENT,
+)
 from sql_cli.exceptions import InvalidProject
 from sql_cli.utils.airflow import initialise as initialise_airflow, reload as reload_airflow
 
@@ -66,7 +71,6 @@ class Project:
         return self._airflow_dags_folder
 
     @property
-<<<<<<< HEAD
     def data_dir(self) -> Path:
         """
         Folder which contains additional data files.
@@ -79,8 +83,6 @@ class Project:
         return self._data_dir
 
     @property
-    def airflow_config(self) -> dict[str, Any]:
-=======
     def environments_list(self) -> list:
         """
         Return list with the names of the existing environments in the current project.
@@ -91,7 +93,6 @@ class Project:
         return [subpath.name for subpath in config_dir.iterdir() if subpath.is_dir()]
 
     def get_env_airflow_config(self, env: str) -> dict[str, Any]:
->>>>>>> Add flow config get --as-json option
         """
         Retrieve the Airflow configuration for the currently set environment.
 
@@ -108,27 +109,12 @@ class Project:
         Initialises global config YAML file that includes configuration to be shared across environments including the
         airflow config.
         """
-<<<<<<< HEAD
-        config = Config(project_dir=self.directory)
-        global_env_filepath = config.get_global_config_filepath()
-        config.write_value_to_yaml(
-            "general", "data_dir", self._data_dir.resolve().as_posix(), global_env_filepath
-        )
-        # If the `Airflow Home` directory does not exist, Airflow initialisation flow takes care of creating the
-        # directory. We rely on this behaviour and hence do not raise an exception if the path specified as
-        # `Airflow Home` does not exist.
-        config.write_value_to_yaml(
-            "airflow", "home", self._airflow_home.resolve().as_posix(), global_env_filepath
-        )
-        if not self._airflow_dags_folder.exists():
-            raise FileNotFoundError(
-                f"Specified DAGs directory {self._airflow_dags_folder.as_posix()} does not exist."
-            )
-        config.write_value_to_yaml(
-            "airflow", "dags_folder", self._airflow_dags_folder.resolve().as_posix(), global_env_filepath
-=======
         config = Config(environment=DEFAULT_ENVIRONMENT, project_dir=self.directory)
         global_config_filepath = config.get_global_config_filepath()
+        config.write_value_to_yaml(
+            "general", "data_dir", self._data_dir.resolve().as_posix(), global_config_filepath
+        )
+
         # If the `Airflow Home` directory does not exist, Airflow initialisation flow takes care of creating the
         # directory. We rely on this behaviour and hence do not raise an exception if the path specified as
         # `Airflow Home` does not exist.
@@ -151,7 +137,6 @@ class Project:
         # `Airflow Home` does not exist.
         config.write_value_to_yaml(
             "airflow", "home", str(self.get_env_airflow_home(environment)), config_filepath
->>>>>>> Add flow config get --as-json option
         )
 
     def _remove_unnecessary_airflow_files(self, airflow_home: Path) -> None:
@@ -229,13 +214,9 @@ class Project:
 
         if config.airflow_dags_folder:
             self._airflow_dags_folder = Path(config.airflow_dags_folder).resolve()
-<<<<<<< HEAD
         if config.data_dir:
             self._data_dir = Path(config.data_dir).resolve()
-        reload_airflow(self.airflow_home)
-=======
         reload_airflow(self.get_env_airflow_home(environment))
->>>>>>> Add flow config get --as-json option
         self.connections = [
             convert_to_connection(connection, self._data_dir) for connection in config.connections
         ]

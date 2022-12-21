@@ -17,7 +17,8 @@ def test__get_as_json(initialised_project):
         "global": {
             "airflow": {
                 "dags_folder": str(initialised_project.directory / ".airflow/dags"),
-            }
+            },
+            "general": {"data_dir": str(initialised_project.directory / "data")},
         },
         "dev": {
             "airflow": {

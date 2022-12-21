@@ -69,8 +69,8 @@ def _set(key: str, project_dir: Path, env: str, astro_deployment: str, astro_wor
     Get the project configuration.
 
     Example of usages:
-    $ astro config get airflow_home
-    $ astro config get --as-json
+    $ flow config get airflow_home
+    $ flow config get --as-json
 
     The first returns a key from the config whereas the second returns all the configuration as JSON.
     """,
@@ -100,7 +100,7 @@ def get(
    Set the project configuration.
 
    Example:
-   $ astro config set deploy --env=dev --astro-workspace=cl123 --astro-deployment=cl345
+   $ flow config set deploy --env=dev --astro-workspace=cl123 --astro-deployment=cl345
    """,
 )
 def set(  # noqa: A001

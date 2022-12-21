@@ -9,7 +9,7 @@ import yaml
 from airflow.models.connection import Connection
 from dotenv import load_dotenv
 
-from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME, GLOBAL_CONFIG_FILENAME
+from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME, DEFAULT_ENVIRONMENT, GLOBAL_CONFIG_FILENAME
 
 
 @dataclass
@@ -19,21 +19,19 @@ class Config:
     """
 
     project_dir: Path
-    environment: str | None = None
+    environment: str = DEFAULT_ENVIRONMENT
 
     connections: list[dict[str, Connection]] = field(default_factory=list)
     airflow_home: str | None = None
     airflow_dags_folder: str | None = None
     data_dir: str | None = None
 
-    def get_env_config_filepath(self) -> Path | None:
+    def get_env_config_filepath(self) -> Path:
         """
         Return environment specific configuration.yaml filepath.
 
         :returns: The path to the desired YAML configuration file
         """
-        if not self.environment:
-            return None
         return self.project_dir / CONFIG_DIR / self.environment / CONFIG_FILENAME
 
     def get_global_config_filepath(self) -> Path:
