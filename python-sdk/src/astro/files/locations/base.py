@@ -7,8 +7,18 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import smart_open
+from airflow.hooks.base import BaseHook
 
 from astro.constants import FileLocation
+
+CUSTOM_CONN_TYPE_TO_FILE_SCHEME = {
+    "bigquery": "gs",
+    "google_cloud_platform": "gs",
+    "s3": "s3",
+    "aws": "s3",
+    "wasb": "wasb",
+    "gcpbigquery": "gs",
+}
 
 
 class BaseFileLocation(ABC):
@@ -72,14 +82,14 @@ class BaseFileLocation(ABC):
         raise NotImplementedError
 
     @staticmethod
-    def is_valid_path(path: str) -> bool:
+    def is_valid_path(path: str, conn_id: str | None = None) -> bool:
         """
         Check if the given path is either a valid URI or a local file
 
         :param path: Either local filesystem path or remote URI
         """
         try:
-            BaseFileLocation.get_location_type(path)
+            BaseFileLocation.get_location_type(path, conn_id)
         except ValueError:
             return False
 
@@ -109,12 +119,24 @@ class BaseFileLocation(ABC):
         return True
 
     @staticmethod
-    def get_location_type(path: str) -> FileLocation:
+    def get_location_type(path: str, conn_id: str | None = None) -> FileLocation:
         """Identify where a file is located
 
         :param path: Path to a file in the filesystem/Object stores
+        :param conn_id: Airflow connection id
         """
+        connection_type = ""
+        if conn_id is not None:
+            connection_type = BaseHook.get_connection(conn_id).conn_type
+
         file_scheme = urlparse(path).scheme
+
+        file_scheme_from_conn_id = CUSTOM_CONN_TYPE_TO_FILE_SCHEME.get(connection_type)
+        if file_scheme_from_conn_id is not None and file_scheme_from_conn_id is not file_scheme:
+            raise ValueError(
+                f"Unsupported scheme '{file_scheme}' from path"
+                f" '{path}' in connection type '{connection_type}'"
+            )
         if file_scheme == "":
             location = FileLocation.LOCAL
         else:
