@@ -111,13 +111,13 @@ def test_get_class_name_method_invalid_name():
     [
         (GCSLocation("gs://tmp/file_a.csv"), GCSLocation("gs://tmp/file_a.csv"), True),
         (
-            GCSLocation("gs://tmp/file_a.csv", conn_id="bigquery"),
-            GCSLocation("gs://tmp/file_a.csv", conn_id="bigquery"),
+            GCSLocation("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
+            GCSLocation("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
             True,
         ),
         (
-            GCSLocation("gs://tmp/file_a.csv", conn_id="bigquery"),
-            GCSLocation("gs://tmp/file_a.csv", conn_id="bigquery"),
+            GCSLocation("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
+            GCSLocation("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
             True,
         ),
         (
@@ -127,7 +127,7 @@ def test_get_class_name_method_invalid_name():
         ),
         (
             GCSLocation("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
-            GCSLocation("gs://tmp/file_b.csv", conn_id="bigquery"),
+            GCSLocation("gs://tmp/file_b.csv", conn_id="google_cloud_default"),
             False,
         ),
     ],
