@@ -81,14 +81,14 @@ class BaseFileLocation(ABC):
         raise NotImplementedError
 
     @staticmethod
-    def is_valid_path(path: str, conn_id: str | None = None) -> bool:
+    def is_valid_path(path: str) -> bool:
         """
         Check if the given path is either a valid URI or a local file
 
         :param path: Either local filesystem path or remote URI
         """
         try:
-            BaseFileLocation.get_location_type(path, conn_id)
+            BaseFileLocation.get_location_type(path)
         except ValueError:
             return False
 
