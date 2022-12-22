@@ -1,0 +1,6 @@
+class BaseFileSystemProvider:
+    def read(self, ref):
+        ...
+
+    def write(self, df, ref):
+        ...
