@@ -11,20 +11,12 @@ from airflow.hooks.base import BaseHook
 
 from astro.constants import FileLocation
 
-CUSTOM_CONN_TYPE_TO_FILE_SCHEME = {
-    "bigquery": {"gs"},
-    "google_cloud_platform": {"gs", "gdrive", "https"},
-    "s3": {"s3"},
-    "aws": {"s3"},
-    "wasb": {"wasb"},
-    "gcpbigquery": {"gs"},
-}
-
 
 class BaseFileLocation(ABC):
     """Base Location abstract class"""
 
     template_fields = ("path", "conn_id")
+    supported_conn_type = {}
 
     def __init__(self, path: str, conn_id: str | None = None):
         """
@@ -38,19 +30,15 @@ class BaseFileLocation(ABC):
         self.validate_conn()
 
     def validate_conn(self):
-        """
-        Check if the conn_id matches with provided path.
-        """
-        connection_type = ""
-        if self.conn_id is not None:
-            connection_type = BaseHook.get_connection(self.conn_id).conn_type
-        file_scheme = urlparse(self.path).scheme
+        """Check if the conn_id matches with provided path."""
+        if not self.conn_id:
+            return
 
-        file_scheme_from_conn_id = CUSTOM_CONN_TYPE_TO_FILE_SCHEME.get(connection_type)
-        if file_scheme_from_conn_id is not None and file_scheme not in file_scheme_from_conn_id:
+        connection_type = BaseHook.get_connection(self.conn_id).conn_type
+        if connection_type not in self.supported_conn_type:
             raise ValueError(
-                f"Mismatch in file scheme '{file_scheme}' in the path"
-                f" '{self.path}' with connection type '{connection_type}'"
+                f"Connection type {connection_type} is not supported for {self.path}. "
+                f"Supported types are {self.supported_conn_type}"
             )
 
     @property
