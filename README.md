@@ -47,7 +47,7 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
     airflow db init
     ```
 
-   > **Note:** `AIRFLOW__CORE__ENABLE_XCOM_PICKLING` no longer needs to be enabled from `astro-sdk-python` with airflow >= 2.5 and release 1.3.3 and above. This functionality is now deprecated as Airflow xcom backend handles serialization.
+   > **Note:** `AIRFLOW__CORE__ENABLE_XCOM_PICKLING` no longer needs to be enabled from `astro-sdk-python` release 1.3.3 with airflow >= 2.5 and above. This functionality is now deprecated as Airflow xcom backend handles serialization.
     Users have to add a few configs as suggested in the [doc](https://astro-sdk-python.readthedocs.io/en/latest/guides/xcom_backend.html#airflow_xcom_backend) to enable it.
 
     The data format used by pickle is Python-specific. This has the advantage that there are no restrictions imposed by external standards such as JSON or XDR (which can’t represent pointer sharing); however it means that non-Python programs may not be able to reconstruct pickled Python objects.
