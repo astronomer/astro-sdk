@@ -2,7 +2,7 @@ from astro.constants import SUPPORTED_DATABASES, SUPPORTED_FILE_LOCATIONS, SUPPO
 
 
 def test_supported_file_locations():
-    expected = ["ftp","gdrive", "gs", "http", "https", "local", "s3", "wasb", "wasbs"]
+    expected = ["ftp", "gdrive", "gs", "http", "https", "local", "s3", "wasb", "wasbs"]
     assert sorted(SUPPORTED_FILE_LOCATIONS) == expected
 
 
