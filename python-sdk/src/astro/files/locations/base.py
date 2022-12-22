@@ -13,7 +13,7 @@ from astro.constants import FileLocation
 
 CUSTOM_CONN_TYPE_TO_FILE_SCHEME = {
     "bigquery": {"gs"},
-    "google_cloud_platform": {"gs", "gdrive"},
+    "google_cloud_platform": {"gs", "gdrive", "https"},
     "s3": {"s3"},
     "aws": {"s3"},
     "wasb": {"wasb"},
