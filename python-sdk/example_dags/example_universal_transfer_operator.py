@@ -5,29 +5,31 @@ from transfers.constants import TransferMode
 from transfers.datasets.base import UniversalDataset as Dataset
 from transfers.universal_transfer_operator import UniversalTransferOperator
 
-START_DATE = datetime(2022, 1, 1)
+START_DATE = datetime(2000, 1, 1)
 with DAG(
-    "universal_transfer_operator_example",
+    "uto_example",
     schedule_interval=None,
     start_date=START_DATE,
     catchup=False,
 ) as dag:
     uto_task = UniversalTransferOperator(
-        task_id="universal_transfer_operator",
-        source_dataset=Dataset("gs://uto-test/uto/", conn_id="gcp_conn", extra={}),
-        destination_dataset=Dataset("s3://astro-sdk-test/uto/", conn_id="aws_conn", extra={}),
+        task_id="uto",
+        source_dataset=Dataset("gs://uto-test/uto/", conn_id="google_cloud_default", extra={}),
+        destination_dataset=Dataset("s3://astro-sdk-test/uto/", conn_id="aws_default", extra={}),
     )
 
     uto_fivetran_with_connector_id = UniversalTransferOperator(
         task_id="uto_fivetran_with_connector_id",
         source_dataset=Dataset("s3://astro-sdk-test/uto/", conn_id="aws_default", extra={}),
         destination_dataset=Dataset(
-            "snowflake://{account name}/{database}.{schema}.{table}", conn_id="snowflake_default", extra={}
+            "snowflake://gp21411.us-east-1.snowflakecomputing.com/providers_fivetran_dev.s3.fivetran_ankit_test",
+            conn_id="snowflake_default",
+            extra={},
         ),
         transfer_mode=TransferMode.THIRDPARTY,
         transfer_params={
             "thirdparty_conn_id": "fivetran_default",
-            "connector_id": "dummy",
+            "connector_id": "filing_muppet",
         },
     )
 

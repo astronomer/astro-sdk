@@ -91,7 +91,7 @@ class FivetranIntegration(TransferIntegration):
         self.conn_id = thirdparty_conn_id
         self.transfer_params = transfer_params
         self.transfer_mapping = {}
-        self.fivetran_retry_limit = (self.transfer_params.get("fivetran_retry_limit", 3),)
+        self.fivetran_retry_limit = self.transfer_params.get("fivetran_retry_limit", 3)
         self.fivetran_retry_delay = self.transfer_params.get("fivetran_retry_delay", 1)
         self.poll_frequency = self.transfer_params.get("poll_frequency", 15)
         self.schedule_type = self.transfer_params.get("schedule_type", "manual")
@@ -124,7 +124,7 @@ class FivetranIntegration(TransferIntegration):
             # Check for destination based on destination_id else create destination
             self.create_destination(fivetran_hook=fivetran_hook, group_id=group_id)
 
-        # Create connector if it doesn't exists
+        # Create connector if it doesn't exist
         connector_id = self.create_connector(fivetran_hook=fivetran_hook, group_id=group_id)
 
         # Run connector setup test
@@ -256,6 +256,23 @@ class FivetranIntegration(TransferIntegration):
             raise ValueError(api_response)
         return api_response["data"]["id"]
 
-    def run_connector_setup_tests(self, fivetran_hook: FivetranHook, connector_id: str) -> bool:
-        # TODO: Add logic to setup tests
-        return True
+    def run_connector_setup_tests(self, fivetran_hook: FivetranHook, connector_id: str):
+        """
+        Runs the setup tests for an existing connector within your Fivetran account.
+        """
+        endpoint = self.api_path_connectors + connector_id + "/test"
+        connector_dict = self.transfer_params.get("connector", None)
+        if connector_dict is None:
+            raise ValueError("connector is none. Pass a valid connector")
+
+        connector = Connector(**connector_dict)
+        payload = {
+            "trust_certificates": connector.trust_certificates,
+            "trust_fingerprints": connector.trust_fingerprints,
+        }
+        api_response = fivetran_hook._do_api_call(("POST", endpoint), json=payload)
+        if api_response["code"] == "Success":
+            logging.info(api_response)
+            # TODO: parse all setup tests status for passed status
+        else:
+            raise ValueError(api_response)
