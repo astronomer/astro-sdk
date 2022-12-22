@@ -100,7 +100,7 @@ def test_delta_load_file_gcs_autoloader(database_table_fixture):
 
     file = File(
         "gs://astro-sdk/benchmark/trimmed/covid_overview/",
-        conn_id="databricks_gcs",
+        conn_id="google_cloud_default",
         filetype=FileType.CSV,
     )
     database, table = database_table_fixture
