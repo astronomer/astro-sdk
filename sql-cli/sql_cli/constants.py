@@ -3,7 +3,7 @@ GLOBAL_CONFIG_FILENAME = "global.yml"
 CONFIG_FILENAME = "configuration.yml"
 
 DEFAULT_ENVIRONMENT = "default"
-DEFAULT_BASE_AIRFLOW_HOME = ".airflow/"
+DEFAULT_BASE_AIRFLOW_HOME = ".airflow"
 DEFAULT_DAGS_FOLDER = ".airflow/dags"
 DEFAULT_DATA_DIR = "data"
 

@@ -17,7 +17,11 @@ from sql_cli.constants import (
     DEFAULT_ENVIRONMENT,
 )
 from sql_cli.exceptions import InvalidProject
-from sql_cli.utils.airflow import initialise as initialise_airflow, reload as reload_airflow
+from sql_cli.utils.airflow import (
+    initialise as initialise_airflow,
+    reload as reload_airflow,
+    remove_unnecessary_files,
+)
 
 BASE_SOURCE_DIR = Path(os.path.realpath(__file__)).parent.parent / "include/base/"
 
@@ -139,19 +143,6 @@ class Project:
             "airflow", "home", str(self.get_env_airflow_home(environment)), config_filepath
         )
 
-    @staticmethod
-    def _remove_unnecessary_airflow_files(airflow_home: Path) -> None:
-        """
-        Delete Airflow generated paths which are not necessary for the desired Airflow home.
-
-        :param airflow_home: Path to Airflow home we want to clean up.
-        """
-        logs_folder = airflow_home / "logs"
-        shutil.rmtree(logs_folder)
-
-        webserver_config = airflow_home / "webserver_config.py"
-        webserver_config.unlink()
-
     def _initialise_airflow_for_environment(self, env: str) -> None:
         """
         Initialise Airflow home for given environment.
@@ -160,7 +151,7 @@ class Project:
         """
         airflow_home = self.get_env_airflow_home(env)
         initialise_airflow(airflow_home, self.airflow_dags_folder)
-        self._remove_unnecessary_airflow_files(airflow_home)
+        remove_unnecessary_files(airflow_home)
 
     def initialise(self) -> None:
         """
@@ -204,19 +195,27 @@ class Project:
         if not self.is_valid_project():
             raise InvalidProject("This is not a valid SQL project. Please, use `flow init`")
         config = Config(environment=environment, project_dir=self.directory).from_yaml_to_config()
+
         if config.airflow_home:
             self._airflow_home = Path(config.airflow_home).resolve()
         else:
+            # Scenario in which the end-user created an environment configuration after the project initialisation
+            # and it did not specify the Airflow home property.
             self._initialise_env_config(environment)
             config = Config(environment=environment, project_dir=self.directory).from_yaml_to_config()
 
         if not self.get_env_airflow_home(environment).exists():
+            # Scenario in which the end-user created an environment configuration after the project initialisation.
+            # In these cases, we need to initialise Airflow (folder and files) so the user can run commands such
+            # as validate and run.
             self._initialise_airflow_for_environment(environment)
 
         if config.airflow_dags_folder:
             self._airflow_dags_folder = Path(config.airflow_dags_folder).resolve()
+
         if config.data_dir:
             self._data_dir = Path(config.data_dir).resolve()
+
         reload_airflow(self.get_env_airflow_home(environment))
         self.connections = [
             convert_to_connection(connection, self._data_dir) for connection in config.connections

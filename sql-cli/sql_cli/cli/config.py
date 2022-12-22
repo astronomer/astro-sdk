@@ -64,18 +64,19 @@ def _set(key: str, project_dir: Path, env: str, astro_deployment: str, astro_wor
 
 
 @app.command(
+    "get",
     cls=AstroCommand,
     help="""
     Get the project configuration.
 
     Example of usages:
     $ flow config get airflow_home
-    $ flow config get --as-json
+    $ flow config get --json
 
     The first returns a key from the config whereas the second returns all the configuration as JSON.
     """,
 )
-def get(
+def get_config(
     key: str = typer.Argument(
         default="",
         show_default=False,
@@ -88,23 +89,23 @@ def get(
         default=DEFAULT_ENVIRONMENT,
         help="(Optional) Environment used to fetch the configuration key from.",
     ),
-    as_json: bool = typer.Option(False, help="If the response should be in JSON format", show_default=True),
+    json: bool = typer.Option(False, help="If the response should be in JSON format", show_default=True),
 ) -> None:
-    value = _get(key, project_dir, env, as_json)
+    value = _get(key, project_dir, env, json)
     print(value)
 
 
 @app.command(
+    "set",
     cls=AstroCommand,
     help="""
-   Set the project configuration.
+    Set the project configuration.
 
-   Example:
-   $ flow config set deploy --env=dev --astro-workspace=cl123 --astro-deployment=cl345
-   """,
+    Example:
+    $ flow config set deploy --env=dev --astro-workspace=cl123 --astro-deployment=cl345
+    """,
 )
-# skipcq: PYL-W0622
-def set(  # noqa: A001
+def set_config(
     key: str = typer.Argument(
         default="",
         show_default=False,
