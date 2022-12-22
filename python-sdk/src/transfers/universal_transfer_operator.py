@@ -7,7 +7,7 @@ from airflow.utils.context import Context
 from transfers.constants import TransferMode
 from transfers.data_providers import create_dataprovider
 from transfers.datasets.base import UniversalDataset as Dataset
-from transfers.integrations import create_transfer_integration
+from transfers.integrations import get_transfer_integration
 from transfers.utils import check_if_connection_exists
 
 from astro.constants import LoadExistStrategy
@@ -54,7 +54,7 @@ class UniversalTransferOperator(BaseOperator):
                 raise ValueError("destination_dataset connection does not exist.")
 
         if self.transfer_mode is TransferMode.THIRDPARTY:
-            transfer_integration = create_transfer_integration(self.transfer_params)
+            transfer_integration = get_transfer_integration(self.transfer_params)
             return transfer_integration.transfer_job(self.source_dataset, self.destination_dataset)
 
         destination_dataprovider = create_dataprovider(
