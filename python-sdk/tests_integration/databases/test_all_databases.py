@@ -190,6 +190,7 @@ def test_load_pandas_dataframe_to_table_with_replace(database_table_fixture):
     database.drop_table(table)
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
