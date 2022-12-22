@@ -89,9 +89,11 @@ def get_config(
         default=DEFAULT_ENVIRONMENT,
         help="(Optional) Environment used to fetch the configuration key from.",
     ),
-    json: bool = typer.Option(False, help="If the response should be in JSON format", show_default=True),
+    as_json: bool = typer.Option(
+        False, "--json", help="If the response should be in JSON format", show_default=True
+    ),
 ) -> None:
-    value = _get(key, project_dir, env, json)
+    value = _get(key, project_dir, env, as_json)
     print(value)
 
 
