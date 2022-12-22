@@ -1,36 +1,61 @@
 from __future__ import annotations
 
-from airflow.utils.log.logging_mixin import LoggingMixin
-from attr import define, field
+from urllib.parse import urlparse
+
+from attr import define, field, fields_dict
+from sqlalchemy import Column
 from transfers.datasets.base import UniversalDataset
 
 
 @define
-class Table(LoggingMixin, UniversalDataset):
+class Metadata:
     """
-    Repersents all Databases datasets, and abstract away the details related to database types.
+    Contains additional information to access a SQL Table, which is very likely optional and, in some cases, may
+    be database-specific.
+
+    :param schema: A schema name
+    :param database: A database name
+    """
+
+    # This property is used by several databases, including: Postgres, Snowflake and BigQuery ("namespace")
+    schema: str | None = None
+    database: str | None = None
+
+    def is_empty(self) -> bool:
+        """Check if all the fields are None."""
+        return all(getattr(self, field_name) is None for field_name in fields_dict(self.__class__))
+
+
+@define
+class Table(UniversalDataset):
+    """
+    Repersents all Table datasets.
     Intended to be used within library.
 
     :param path: Path to a database
     :param conn_id: Airflow connection ID
+    :param name: The name of the database table. If name not provided then it would create a temporary name
+    :param conn_id: The Airflow connection id. This will be used to identify the right database type at the runtime
+    :param metadata: A metadata object which will have database or schema name
+    :param columns: columns which define the database table schema.
     """
 
-    path: str
-    conn_id: str
-
-    uri: str = field(init=False)
-    extra: dict = field(init=True, factory=dict)
-
-    template_fields = ("path", "conn_id", "extra")
+    name: str = field(default="")
+    conn_id: str = field(default="")
+    # Setting converter allows passing a dictionary to metadata arg
+    metadata: Metadata = field(
+        factory=Metadata,
+        converter=lambda val: Metadata(**val) if isinstance(val, dict) else val,
+    )
+    columns: list[Column] = field(factory=list)
 
     @property
     def sql_type(self):
         raise NotImplementedError
 
-    def exists(self) -> bool:
-        """Check if the database exists or not"""
-        database_exists: bool = self.data_provider.check_if_exists(self)
-        return database_exists
+    def exists(self):
+        """Check if the table exists or not"""
+        raise NotImplementedError
 
     def __str__(self) -> str:
         return self.path
@@ -38,23 +63,28 @@ class Table(LoggingMixin, UniversalDataset):
     def __hash__(self) -> int:
         return hash((self.path, self.conn_id))
 
-    @uri.default
-    def _path_to_dataset_uri(self) -> str:
-        """Build a URI to be passed to Dataset obj introduced in Airflow 2.4"""
-        from urllib.parse import urlencode, urlparse
+    def dataset_scheme(self):
+        """
+        Return the scheme based on path
+        """
+        parsed = urlparse(self.path)
+        return parsed.scheme
 
-        parsed_url = urlparse(url=self.path)
-        netloc = parsed_url.netloc
-        # Local filepaths do not have scheme
-        parsed_scheme = parsed_url.scheme or "file"
-        scheme = f"astro+{parsed_scheme}"
-        extra = {}
-        if self.filetype:
-            extra["filetype"] = str(self.filetype)
+    def dataset_namespace(self):
+        """
+        The namespace of a dataset can be combined to form a URI (scheme:[//authority]path)
 
-        new_parsed_url = parsed_url._replace(
-            netloc=f"{self.conn_id}@{netloc}" if self.conn_id else netloc,
-            scheme=scheme,
-            query=urlencode(extra),
-        )
-        return new_parsed_url.geturl()
+        Namespace = scheme:[//authority] (the dataset)
+        """
+        parsed = urlparse(self.path)
+        namespace = f"{self.dataset_scheme()}://{parsed.netloc}"
+        return namespace
+
+    def dataset_name(self):
+        """
+        The name of a dataset can be combined to form a URI (scheme:[//authority]path)
+
+        Name = path (the datasets)
+        """
+        parsed = urlparse(self.path)
+        return parsed.path if self.path else self.name

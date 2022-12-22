@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from urllib.parse import urlparse
+
 from airflow.utils.log.logging_mixin import LoggingMixin
 from attr import define, field
 
@@ -22,3 +24,29 @@ class UniversalDataset(LoggingMixin, Dataset):
     extra: dict = field(init=True, factory=dict)
 
     template_fields = ("path", "conn_id", "extra")
+
+    def dataset_scheme(self):
+        """
+        Return the scheme based on path
+        """
+        parsed = urlparse(self.path)
+        return parsed.scheme
+
+    def dataset_namespace(self):
+        """
+        The namespace of a dataset can be combined to form a URI (scheme:[//authority]path)
+
+        Namespace = scheme:[//authority] (the dataset)
+        """
+        parsed = urlparse(self.path)
+        namespace = f"{self.dataset_scheme()}://{parsed.netloc}"
+        return namespace
+
+    def dataset_name(self):
+        """
+        The name of a dataset can be combined to form a URI (scheme:[//authority]path)
+
+        Name = path (the datasets)
+        """
+        parsed = urlparse(self.path)
+        return parsed.path

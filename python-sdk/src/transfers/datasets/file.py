@@ -5,8 +5,7 @@ import pathlib
 
 import pandas as pd
 import smart_open
-from airflow.utils.log.logging_mixin import LoggingMixin
-from attr import define, field
+from attr import define
 from transfers.datasets.base import UniversalDataset
 
 from astro import constants
@@ -16,28 +15,20 @@ from astro.files.types import FileType, create_file_type
 
 
 @define
-class File(LoggingMixin, UniversalDataset):
+class File(UniversalDataset):
     """
-    Repersents all file dataset, and abstract away the details related to location and file types.
-    Intended to be used within library.
+    Repersents all file dataset.
 
     :param path: Path to a file in the filesystem/Object stores
     :param conn_id: Airflow connection ID
     :param filetype: constant to provide an explicit file type
     :param normalize_config: parameters in dict format of pandas json_normalize() function.
+    :param is_bytes: is bytes
     """
 
-    path: str
-    conn_id: str
     filetype: constants.FileType | None = None
     normalize_config: dict | None = None
-    is_dataframe: bool = False
     is_bytes: bool = False
-
-    uri: str = field(init=False)
-    extra: dict = field(init=True, factory=dict)
-
-    template_fields = ("path", "conn_id", "extra")
 
     @property
     def location(self) -> BaseFileLocation:
@@ -137,49 +128,3 @@ class File(LoggingMixin, UniversalDataset):
 
     def __hash__(self) -> int:
         return hash((self.path, self.conn_id, self.filetype))
-
-    @uri.default
-    def _path_to_dataset_uri(self) -> str:
-        """Build a URI to be passed to Dataset obj introduced in Airflow 2.4"""
-        from urllib.parse import urlencode, urlparse
-
-        parsed_url = urlparse(url=self.path)
-        netloc = parsed_url.netloc
-        # Local filepaths do not have scheme
-        parsed_scheme = parsed_url.scheme or "file"
-        scheme = f"astro+{parsed_scheme}"
-        extra = {}
-        if self.filetype:
-            extra["filetype"] = str(self.filetype)
-
-        new_parsed_url = parsed_url._replace(
-            netloc=f"{self.conn_id}@{netloc}" if self.conn_id else netloc,
-            scheme=scheme,
-            query=urlencode(extra),
-        )
-        return new_parsed_url.geturl()
-
-    def to_json(self):
-        self.log.debug("converting file %s into json", self.path)
-        filetype = self.filetype.value if self.filetype else None
-        return {
-            "class": "File",
-            "conn_id": self.conn_id,
-            "path": self.path,
-            "filetype": filetype,
-            "normalize_config": self.normalize_config,
-            "is_dataframe": self.is_dataframe,
-        }
-
-    @classmethod
-    def from_json(cls, serialized_object: dict):
-        filetype = (
-            constants.FileType(serialized_object["filetype"]) if serialized_object.get("filetype") else None
-        )
-        return File(
-            conn_id=serialized_object["conn_id"],
-            path=serialized_object["path"],
-            filetype=filetype,
-            normalize_config=serialized_object["normalize_config"],
-            is_dataframe=serialized_object["is_dataframe"],
-        )
