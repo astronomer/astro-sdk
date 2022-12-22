@@ -111,3 +111,9 @@ connections:
     login: $SFTP_USERNAME
     password: $SFTP_PASSWORD
     port: 2222
+  - conn_id: ftp_conn
+    conn_type: ftp
+    host: 127.0.0.1
+    login: $REMOTE_USERNAME
+    password: $REMOTE_PASSWORD
+    port: 21

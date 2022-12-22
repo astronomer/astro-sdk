@@ -25,6 +25,7 @@ class FileLocation(Enum):
     WASB = "wasb"  # Azure Blob Storage
     WASBS = "wasbs"  # Azure Blob Storage
     SFTP = "sftp"  # Remote file location
+    FTP = "ftp"  # Remote file location
     # [END filelocation]
 
     def __str__(self) -> str:

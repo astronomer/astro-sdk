@@ -49,6 +49,9 @@ env:
   SFTP_HOSTNAME: ${{ secrets.SFTP_HOSTNAME }}
   SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
   SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
+  REMOTE_HOSTNAME: localhost
+  REMOTE_USERNAME: foo
+  REMOTE_PASSWORD: pass
   AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
   AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
   AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
@@ -139,6 +142,14 @@ jobs:
         image: ghcr.io/astronomer/astro-sdk/sftp_docker
         ports:
           - 2222:22
+      ftp:
+        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        ports:
+          - 21:21
+          - 21000-21010:21000-21010
+        env:
+          USERS: "foo|pass|/home/foo"
+          ADDRESS: localhost
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -263,6 +274,14 @@ jobs:
         image: ghcr.io/astronomer/astro-sdk/sftp_docker
         ports:
           - 2222:22
+      ftp:
+        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        ports:
+          - 21:21
+          - 21000-21010:21000-21010
+        env:
+          USERS: "foo|pass|/home/foo"
+          ADDRESS: localhost
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -339,6 +358,14 @@ jobs:
         image: ghcr.io/astronomer/astro-sdk/sftp_docker
         ports:
           - 2222:22
+      ftp:
+        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        ports:
+          - 21:21
+          - 21000-21010:21000-21010
+        env:
+          USERS: "foo|pass|/home/foo"
+          ADDRESS: 127.0.0.1
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
