@@ -21,7 +21,7 @@ class SFTPLocation(BaseFileLocation):
 
     @property
     def transport_params(self) -> dict:
-        """get SFTP credentials for remote file system"""
+        """Get SFTP credentials in order to access remote file system"""
         client = self.hook.get_connection(self.conn_id)
         extra_options = client.extra_dejson
         if "key_file" in extra_options:
