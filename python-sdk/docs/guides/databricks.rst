@@ -52,7 +52,7 @@ Please note that when loading data into Delta using ``COPY INTO``, you must spec
 
 Currently, only local files can be loaded using the ``aql.load_file()`` function. Support for loading data from S3 and GCS will be added soon.
 
-To use the ``aql.load_file()`` function, you will need to specify the path to the file you want to load, the target Delta table you want to pass the result to.g
+To use the ``aql.load_file()`` function, you will need to specify the path to the file you want to load, the target Delta table you want to pass the result to.
 
 .. code-block:: python
 
@@ -61,6 +61,34 @@ To use the ``aql.load_file()`` function, you will need to specify the path to th
         output_table=Table(conn_id="my_databricks_conn"),
     )
 
+To load data into databrick, you only need to set the ``AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID`` env variable
+so the Astro SDK knows where to send your load_file job.
+
+Autoloader Support
+==================
+
+Autoloader is a powerful data loading feature in Databricks that allows users to efficiently load large amounts of data into delta tables. It has several benefits over traditional methods such as COPY INTO:
+
+* Incremental loading: Autoloader can detect new files in a directory and only load those, rather than all files every time. This makes it more efficient for loading data on a regular basis.
+* Schema inference: Autoloader can automatically infer the schema of the data being loaded, making it easier to get up and running quickly with new datasets.
+* Scalability: Autoloader is designed to handle very large datasets, making it a more scalable option for data loading.
+
+By default, the Astro SDK uses autoloader to load data into Databricks. However, if you want to use COPY INTO instead, you can set the load_mode option in your load_options object like this:
+
+.. code-block:: python
+
+    from astro.databricks.load_options import DeltaLoadOptions
+    from astro.constants import DatabricksLoadMode
+
+    aql.load_file(
+        input_file=File("data.csv"),
+        output_table=Table(conn_id="my_databricks_conn"),
+        load_options=DeltaLoadOptions(load_mode=DatabricksLoadMode.COPY_INTO),
+    )
+
+
+COPY INTO Options
+=================
 If you have extra options you would like to add, you can user the ``load_options`` parameter to pass ``copy_into_parameters`` into the ``COPY INTO`` command.
 
 Please note that we by default set ``header`` and ``inferSchema`` to true, so if you pass in your own commands you will need to set those values explicitly.
@@ -76,8 +104,6 @@ Please note that we by default set ``header`` and ``inferSchema`` to true, so if
     )
 
 We also offer a ``astro.databricks.load_options.default_delta_options`` for those who do not want to manually set options.
-If you wish to use the defaults, you only need to set the ``AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID`` env variable
-so the Astro SDK knows where to send your load_file job.
 
 Loading files from S3
 =====================

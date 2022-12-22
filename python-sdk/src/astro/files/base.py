@@ -115,6 +115,13 @@ class File(LoggingMixin, Dataset):
         """
         return self.location.openlineage_dataset_name
 
+    def is_directory(self) -> bool:
+        """
+        :returns: A boolean representing whether this path is a directory or not.
+        """
+
+        return pathlib.Path(self.path).is_dir()
+
     def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes."""
         mode = "rb" if self.is_binary() else "r"

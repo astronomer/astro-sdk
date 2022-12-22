@@ -1,0 +1,25 @@
+{% macro autoloader_command(load_options, file_type) -%}
+load_options = {
+{%- for k,v in load_options.autoloader_load_options.items() %}
+    "{{ k }}": "{{ v }}",
+{%- endfor %}
+    "cloudFiles.schemaLocation": checkpoint_path,
+    "cloudFiles.format": "{{ file_type }}"
+}
+
+write_options = {
+    "checkpointLocation": checkpoint_path
+}
+
+spark.sql(f"DROP TABLE IF EXISTS {table_name}")
+dbutils.fs.rm(checkpoint_path, True)
+(spark.readStream
+  .format("cloudFiles")
+  .options(**load_options)
+  .load(src_data_path)
+  .select("*", input_file_name().alias("source_file"), current_timestamp().alias("processing_time"))
+  .writeStream
+  .options(**write_options)
+  .trigger(once=True)
+  .toTable(table_name))
+{%- endmacro -%}

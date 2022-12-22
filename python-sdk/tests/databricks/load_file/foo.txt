@@ -1,0 +1,14 @@
+from pyspark.sql.functions import input_file_name, current_timestamp
+
+src_data_path = "foo.csv"
+username = spark.sql("SELECT regexp_replace(current_user(), '[^a-zA-Z0-9]', '_')").first()[0]
+table_name = f"_tmp_lejxxtmabh8li4kr7xszyal06nehb86u4q6aurvioceti8rihj17sv16t" # This can be generated based on task ID and dag ID or just entirely random
+checkpoint_path = f"/tmp/{username}/_checkpoint/etl_3_quickstart"
+
+spark.sql(f"CREATE TABLE IF NOT EXISTS {table_name}")
+spark.sql(
+    f"""COPY INTO {table_name} FROM '{src_data_path}' FILEFORMAT=CSV
+    FORMAT_OPTIONS ('header' = 'true','inferSchema' = 'true')
+    COPY_OPTIONS ('mergeSchema' = 'true')
+    """
+)
