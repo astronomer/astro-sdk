@@ -33,10 +33,12 @@ class GCSLocation(BaseFileLocation):
     """Handler GS object store operations"""
 
     location_type = FileLocation.GS
+    # TODO: Restrict the supported conn_type to only GCSHook.conn_type
+    supported_conn_type = {GCSHook.conn_type, "gcpbigquery", "bigquery"}
 
     @property
     def hook(self) -> GCSHook:
-        return GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else GCSHook()
+        return GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else GCSHook().conn_type
 
     @property
     def transport_params(self) -> dict:
