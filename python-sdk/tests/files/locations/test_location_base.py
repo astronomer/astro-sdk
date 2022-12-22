@@ -138,3 +138,9 @@ def test_location_eq(loc_1, loc_2, equality):
 def test_location_hash():
     """Test that hashing works"""
     assert isinstance(hash(LocalLocation("/tmp/file_a.csv")), int)
+
+
+def test_invalid_conn_id_with_file_path():
+    """Raise a value when the connection types doesn't match the path"""
+    with pytest.raises(ValueError):
+        GCSLocation("gs://tmp/file_a.csv", conn_id="aws_default")
