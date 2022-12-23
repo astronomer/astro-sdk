@@ -29,10 +29,19 @@ def test__get_as_json(initialised_project):
     assert computed == json.dumps(expected)
 
 
-def test__get_invalid(initialised_project):
+def test__get_invalid_missing_mandatory(initialised_project):
     with pytest.raises(InvalidConfigException) as err:
         _get("", initialised_project.directory, env="default", as_json=False)
-    assert str(err.value) == "Please, either define a key or use the --as-json flag"
+    assert (
+        str(err.value)
+        == "Please, either give a key or use the --json flag. It is mandatory to give one of them."
+    )
+
+
+def test__get_invalid_mutually_exclusive(initialised_project):
+    with pytest.raises(InvalidConfigException) as err:
+        _get("some-key", initialised_project.directory, env="default", as_json=True)
+    assert str(err.value) == "Sorry, key and --json are mutually exclusive. Give only one of them."
 
 
 def test__set_invalid(initialised_project):

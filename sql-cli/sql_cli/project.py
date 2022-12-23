@@ -113,7 +113,7 @@ class Project:
         Initialises global config YAML file that includes configuration to be shared across environments including the
         airflow config.
         """
-        config = Config(environment=DEFAULT_ENVIRONMENT, project_dir=self.directory)
+        config = Config(project_dir=self.directory)
         global_config_filepath = config.get_global_config_filepath()
         config.write_value_to_yaml(
             "general", "data_dir", self._data_dir.resolve().as_posix(), global_config_filepath

@@ -30,12 +30,16 @@ def _get(key: str, project_dir: Path, env: str, as_json: bool) -> str:
 
     project_dir_absolute = resolve_project_dir(project_dir)
     project_config = Config(environment=env, project_dir=project_dir_absolute).from_yaml_to_config()
-    if key:
+    if key and as_json:
+        raise InvalidConfigException("Sorry, key and --json are mutually exclusive. Give only one of them.")
+    elif key:
         return getattr(project_config, key)
     elif as_json:
         return json.dumps(project_config.to_dict())
     else:
-        raise InvalidConfigException("Please, either define a key or use the --as-json flag")
+        raise InvalidConfigException(
+            "Please, either give a key or use the --json flag. It is mandatory to give one of them."
+        )
 
 
 def _set(key: str, project_dir: Path, env: str, astro_deployment: str, astro_workspace: str) -> None:
