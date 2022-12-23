@@ -19,5 +19,4 @@ def test_from_yaml_to_config_without_env():
     config_from_file = config_reference.from_yaml_to_config()
     assert isinstance(config_from_file, Config)
     assert config_from_file.project_dir == config_reference.project_dir
-    assert config_from_file.environment is None
-    assert config_from_file.connections == []
+    assert config_from_file.environment == "default"
