@@ -9,10 +9,10 @@ from astro.constants import LoadExistStrategy
 from astro.utils.path import get_class_name
 
 DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = {
-    "s3": "transfers.data_providers.filesystem.aws.s3",
-    "aws": "transfers.data_providers.filesystem.aws.s3",
-    "gs": "transfers.data_providers.filesystem.google.cloud.gcs",
-    "google_cloud_platform": "transfers.data_providers.filesystem.google.cloud.gcs",
+    "s3": "data_providers.filesystem.aws.s3",
+    "aws": "data_providers.filesystem.aws.s3",
+    "gs": "data_providers.filesystem.google.cloud.gcs",
+    "google_cloud_platform": "data_providers.filesystem.google.cloud.gcs",
 }
 
 
