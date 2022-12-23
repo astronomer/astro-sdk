@@ -4,9 +4,10 @@ import logging
 from tempfile import NamedTemporaryFile
 
 from airflow.providers.google.cloud.hooks.gcs import GCSHook, _parse_gcs_url
-from constants import FileLocation, LoadExistStrategy, TransferMode
 from data_providers.filesystem.base import BaseFilesystemProviders, TempFile
 from datasets.base import UniversalDataset as Dataset
+
+from constants import FileLocation, LoadExistStrategy, TransferMode
 
 
 class GCSDataProvider(BaseFilesystemProviders):
