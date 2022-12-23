@@ -779,7 +779,6 @@ class SnowflakeDatabase(BaseDatabase):
         if_conflicts: MergeConflictStrategy = "exception",
     ):
         """Build the SQL statement for Merge operation"""
-        # TODO: Simplify this function
         source_table_name = source_table.name
         target_table_name = target_table.name
 
@@ -824,8 +823,8 @@ class SnowflakeDatabase(BaseDatabase):
         statement = (
             f"merge into {target_table_identifier} as TARGET_TABLE "
             f"using {source_table_identifier} as SOURCE_TABLE "
-            f"on {merge_clauses}"
         )
+        statement += f"on {merge_clauses}"
 
         values_to_check = [target_table_name, source_table_name]
         values_to_check.extend(source_cols)
@@ -836,15 +835,35 @@ class SnowflakeDatabase(BaseDatabase):
                     f"The identifier {v} is invalid. Please check to prevent SQL injection"
                 )
         if if_conflicts == "update":
-            merge_vals = ",".join(
-                [
-                    f"TARGET_TABLE.{target_identifier_enclosure}{t}{target_identifier_enclosure}="
-                    f"SOURCE_TABLE.{source_identifier_enclosure}{s}{source_identifier_enclosure}"
-                    for s, t in source_to_target_columns_map.items()
-                ]
+            statement += self._create_merge_update_statement(
+                source_identifier_enclosure, source_to_target_columns_map, target_identifier_enclosure
             )
-            statement += f" when matched then UPDATE SET {merge_vals}"
 
+        statement += self._create_not_matched_statement(
+            source_cols,
+            source_identifier_enclosure,
+            source_table_name,
+            target_cols,
+            target_identifier_enclosure,
+            target_table_name,
+        )
+        params = {
+            **merge_target_dict,
+            **merge_source_dict,
+            "source_table": source_table_param,
+            "target_table": target_table_param,
+        }
+        return statement, params
+
+    def _create_not_matched_statement(
+        self,
+        source_cols,
+        source_identifier_enclosure,
+        source_table_name,
+        target_cols,
+        target_identifier_enclosure,
+        target_table_name,
+    ):
         target_columns = ",".join(
             f"{target_table_name}.{target_identifier_enclosure}{t}{target_identifier_enclosure}"
             for t in target_cols
@@ -855,14 +874,21 @@ class SnowflakeDatabase(BaseDatabase):
                 for s in source_cols
             ),
         )
-        statement += f" when not matched then insert({target_columns}) values ({append_columns})"
-        params = {
-            **merge_target_dict,
-            **merge_source_dict,
-            "source_table": source_table_param,
-            "target_table": target_table_param,
-        }
-        return statement, params
+        not_matched_statement = f" when not matched then insert({target_columns}) values ({append_columns})"
+        return not_matched_statement
+
+    def _create_merge_update_statement(
+        self, source_identifier_enclosure, source_to_target_columns_map, target_identifier_enclosure
+    ):
+        merge_vals = ",".join(
+            [
+                f"TARGET_TABLE.{target_identifier_enclosure}{t}{target_identifier_enclosure}="
+                f"SOURCE_TABLE.{source_identifier_enclosure}{s}{source_identifier_enclosure}"
+                for s, t in source_to_target_columns_map.items()
+            ]
+        )
+        update_statement = f" when matched then UPDATE SET {merge_vals}"
+        return update_statement
 
     def append_table(
         self,
