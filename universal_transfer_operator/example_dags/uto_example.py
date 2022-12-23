@@ -1,11 +1,11 @@
 from datetime import datetime
 
 from airflow import DAG
-from constants import TransferMode
 from datasets.file import File
 from datasets.table import Table
-
 from universal_transfer_operator import UniversalTransferOperator
+
+from constants import TransferMode
 
 START_DATE = datetime(2000, 1, 1)
 with DAG(
