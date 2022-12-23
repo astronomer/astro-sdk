@@ -66,12 +66,10 @@ You don't need to use a Custom XCom backend or XCom pickling for Airflow >=2.5 a
 .. code-block:: ini
 
    [core]
-   enable_xcom_pickling = false
    allowed_deserialization_classes = airflow.* astro.*
 
 or we can also set env variables like
 
 .. code-block:: ini
 
-   AIRFLOW__CORE__ENABLE_XCOM_PICKLING = false
    AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES=airflow.* astro.*
