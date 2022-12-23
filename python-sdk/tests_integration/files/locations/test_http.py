@@ -4,7 +4,6 @@ from astro.files.locations import create_file_location
 
 
 @pytest.mark.integration
-@pytest.mark.integration
 def test_size():
     """Test get_size() of for HTTP file."""
     location = create_file_location(
