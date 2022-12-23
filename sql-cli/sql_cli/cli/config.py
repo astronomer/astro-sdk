@@ -42,15 +42,15 @@ def _get(key: str, project_dir: Path, env: str, as_json: bool) -> str:
         )
 
 
-def _set(key: str, project_dir: Path, env: str, astro_deployment: str, astro_workspace: str) -> None:
+def _set(key: str, project_dir: Path, env: str, astro_deployment_id: str, astro_workspace_id: str) -> None:
     """
     Set deployment configuration associated to a SQL CLI environment.
 
     :param key: Configuration property (key) to be set. At the mmoment only "deploy" is accepted.
     :param project_dir: Path to the project directory.
     :param env: SQL CLI environment (default, dev).
-    :param astro_deployment: Astronomer Cloud deployment ID.
-    :param astro_workspace: Astronomer Cloud deployment workspace.
+    :param astro_deployment_id: Astronomer Cloud deployment ID.
+    :param astro_workspace_id: Astronomer Cloud deployment workspace ID.
     """
     from sql_cli.configuration import Config
 
@@ -63,8 +63,12 @@ def _set(key: str, project_dir: Path, env: str, astro_deployment: str, astro_wor
     project_config = Config(environment=env, project_dir=project_dir_absolute).from_yaml_to_config()
     config_filepath = project_config.get_env_config_filepath()
 
-    project_config.write_value_to_yaml("deployment", "astro_deployment", astro_deployment, config_filepath)
-    project_config.write_value_to_yaml("deployment", "astro_workspace", astro_workspace, config_filepath)
+    project_config.write_value_to_yaml(
+        "deployment", "astro_deployment_id", astro_deployment_id, config_filepath
+    )
+    project_config.write_value_to_yaml(
+        "deployment", "astro_workspace_id", astro_workspace_id, config_filepath
+    )
 
 
 @app.command(
@@ -108,7 +112,7 @@ def get_config(
     Set the project configuration.
 
     Example:
-    $ flow config set deploy --env=dev --astro-workspace=cl123 --astro-deployment=cl345
+    $ flow config set deploy --env=dev --astro-workspace-id=cl123 --astro-deployment-id=cl345
     """,
 )
 def set_config(
@@ -120,11 +124,11 @@ def set_config(
     project_dir: Path = typer.Option(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
-    astro_deployment: str = typer.Option(
+    astro_deployment_id: str = typer.Option(
         ...,
         help="Astro deployment deployment ID (e.g. cl8bqua474573873jwenjhb6bbo)",
     ),
-    astro_workspace: str = typer.Option(
+    astro_workspace_id: str = typer.Option(
         ...,
         help="Astro deployment workspace ID (e.g. cl6geh889308371i01vscssm4q)",
     ),
@@ -133,4 +137,6 @@ def set_config(
         help="(Optional) Environment used to fetch the configuration key from.",
     ),
 ) -> None:
-    _set(key, project_dir, env, astro_workspace=astro_workspace, astro_deployment=astro_deployment)
+    _set(
+        key, project_dir, env, astro_workspace_id=astro_workspace_id, astro_deployment_id=astro_deployment_id
+    )

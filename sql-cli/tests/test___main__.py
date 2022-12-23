@@ -144,16 +144,16 @@ def test_config_set_deploy(initialised_project):
             "deploy",
             "--project-dir",
             initialised_project.directory.as_posix(),
-            "--astro-deployment",
+            "--astro-deployment-id",
             "some-deployment",
-            "--astro-workspace",
+            "--astro-workspace-id",
             "some-workspace",
         ],
     )
     assert result.exit_code == 0, result.output
     project_config = Config(environment="default", project_dir=initialised_project.directory).to_dict()
-    assert project_config["default"]["deployment"]["astro_workspace"] == "some-workspace"
-    assert project_config["default"]["deployment"]["astro_deployment"] == "some-deployment"
+    assert project_config["default"]["deployment"]["astro_workspace_id"] == "some-workspace"
+    assert project_config["default"]["deployment"]["astro_deployment_id"] == "some-deployment"
 
 
 @pytest.mark.parametrize(
