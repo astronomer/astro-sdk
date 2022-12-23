@@ -34,6 +34,7 @@ from astro.files import File
 from astro.options import LoadOptions
 from astro.settings import REDSHIFT_SCHEMA
 from astro.table import BaseTable, Metadata, Table
+from astro.utils.compat.functools import cached_property
 
 DEFAULT_CONN_ID = RedshiftSQLHook.default_conn_name
 NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
@@ -89,7 +90,7 @@ class RedshiftDatabase(BaseDatabase):
     def sql_type(self):
         return "redshift"
 
-    @property
+    @cached_property
     def hook(self) -> RedshiftSQLHook:
         """Retrieve Airflow hook to interface with the Redshift database."""
         kwargs = {}
@@ -100,7 +101,7 @@ class RedshiftDatabase(BaseDatabase):
             kwargs.update({"schema": self.table.metadata.database})
         return RedshiftSQLHook(redshift_conn_id=self.conn_id, use_legacy_sql=False, **kwargs)
 
-    @property
+    @cached_property
     def sqlalchemy_engine(self) -> Engine:
         """Return SQAlchemy engine."""
         uri = self.hook.get_uri()

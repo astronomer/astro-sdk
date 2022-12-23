@@ -36,6 +36,7 @@ from astro.files.types.base import FileType as FileTypeConstants
 from astro.options import LoadOptions
 from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK, LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.table import BaseTable, Metadata
+from astro.utils.compat.functools import cached_property
 
 
 class BaseDatabase(ABC):
@@ -85,7 +86,7 @@ class BaseDatabase(ABC):
     def sql_type(self):
         raise NotImplementedError
 
-    @property
+    @cached_property
     def hook(self) -> DbApiHook:
         """Return an instance of the database-specific Airflow hook."""
         raise NotImplementedError
@@ -95,7 +96,7 @@ class BaseDatabase(ABC):
         """Return a Sqlalchemy connection object for the given database."""
         return self.sqlalchemy_engine.connect()
 
-    @property
+    @cached_property
     def sqlalchemy_engine(self) -> sqlalchemy.engine.base.Engine:
         """Return Sqlalchemy engine."""
         return self.hook.get_sqlalchemy_engine()  # type: ignore[no-any-return]

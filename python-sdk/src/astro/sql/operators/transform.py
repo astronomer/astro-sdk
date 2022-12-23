@@ -14,7 +14,7 @@ from airflow.models.xcom_arg import XComArg
 from sqlalchemy.sql.functions import Function
 
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
-from astro.utils.typing_compat import Context
+from astro.utils.compat.typing import Context
 
 
 class TransformOperator(BaseSQLDecoratedOperator):
@@ -60,7 +60,9 @@ class TransformOperator(BaseSQLDecoratedOperator):
             parameters=self.parameters,
         )
         # TODO: remove pushing to XCom once we update the airflow version.
-        context["ti"].xcom_push(key="output_table_row_count", value=str(self.output_table.row_count))
+        context["ti"].xcom_push(
+            key="output_table_row_count", value=str(self.database_impl.row_count(self.output_table))
+        )
         context["ti"].xcom_push(key="output_table_conn_id", value=str(self.output_table.conn_id))
         return self.output_table
 
