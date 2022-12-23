@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib
 import logging
 import os
+import shutil
 from configparser import ConfigParser
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -146,3 +147,16 @@ def check_for_dag_import_errors(dag_file: Path) -> dict[str, str]:
     dag_folder = process_subdir(str(dag_file))
     dagbag = DagBag(dag_folder, include_examples=False)
     return dagbag.import_errors
+
+
+def remove_unnecessary_files(airflow_home: Path) -> None:
+    """
+    Delete Airflow generated paths which are not necessary during the SQL CLI project initialisation.
+
+    :param airflow_home: Path to Airflow home we want to clean up.
+    """
+    logs_folder = airflow_home / "logs"
+    shutil.rmtree(logs_folder)
+
+    webserver_config = airflow_home / "webserver_config.py"
+    webserver_config.unlink()

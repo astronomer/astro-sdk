@@ -8,6 +8,7 @@ from typer.testing import CliRunner
 
 from sql_cli import __version__
 from sql_cli.__main__ import app
+from sql_cli.configuration import Config
 from sql_cli.connections import CONNECTION_ID_OUTPUT_STRING_WIDTH
 from tests.utils import list_dir
 
@@ -119,18 +120,40 @@ def test_version():
         ("airflow_dags_folder", "airflow_home/dags"),
     ],
 )
-def test_config(key, value, initialised_project_with_custom_airflow_config):
+def test_config_get(key, value, initialised_project_with_custom_airflow_config):
     result = runner.invoke(
         app,
         [
             "config",
+            "get",
             "--project-dir",
             initialised_project_with_custom_airflow_config.directory.as_posix(),
             key,
         ],
     )
-    assert result.exit_code == 0
+    assert result.exit_code == 0, result.output
     assert value in result.stdout
+
+
+def test_config_set_deploy(initialised_project):
+    result = runner.invoke(
+        app,
+        [
+            "config",
+            "set",
+            "deploy",
+            "--project-dir",
+            initialised_project.directory.as_posix(),
+            "--astro-deployment-id",
+            "some-deployment",
+            "--astro-workspace-id",
+            "some-workspace",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+    project_config = Config(environment="default", project_dir=initialised_project.directory).to_dict()
+    assert project_config["default"]["deployment"]["astro_workspace_id"] == "some-workspace"
+    assert project_config["default"]["deployment"]["astro_deployment_id"] == "some-deployment"
 
 
 @pytest.mark.parametrize(
@@ -281,8 +304,8 @@ def test_validate_all(env, initialised_project_with_test_config):
             env,
         ],
     )
-    assert result.exit_code == 0
     assert "Validating connection(s)" in result.stdout
+    assert result.exit_code == 0, result.stdout
 
 
 @pytest.mark.parametrize(
