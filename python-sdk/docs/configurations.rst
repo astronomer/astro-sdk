@@ -124,8 +124,6 @@ or by updating Airflow's configuration
    [astro_sdk]
    auto_add_inlets_outlets = True
 
-.. _configure_native_fallback:
-
 Configuring to emit temp table event in openlineage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Astro SDK has ability to create temporary tables see: :ref:`table`.
@@ -145,6 +143,7 @@ or by updating Airflow's configuration
    [astro_sdk]
    openlineage_emit_temp_table_event = True
 
+.. _configure_native_fallback:
 
 Configuring the native fallback mechanism
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
