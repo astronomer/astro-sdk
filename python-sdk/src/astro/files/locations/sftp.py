@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from urllib.parse import urlparse
 
 from airflow.providers.sftp.hooks.sftp import SFTPHook
@@ -37,11 +36,12 @@ class SFTPLocation(BaseFileLocation):
         url = urlparse(self.path)
         client = self.hook.get_connection(self.conn_id)
         uri = client.get_uri()
-        if self.hook.isdir(url.netloc + url.path):
-            prefixes = self.hook.list_directory(url.netloc + url.path)
-            paths = [uri + "/" + url.netloc + os.path.join(url.path, keys) for keys in prefixes]
-        else:
-            paths = [uri + "/" + url.netloc + url.path]
+        full_paths = []
+        prefixes = self.hook.get_tree_map(url.netloc, prefix=url.netloc + url.path)
+        for keys in prefixes:
+            if len(keys) > 0:
+                full_paths.extend(keys)
+        paths = [uri + "/" + path for path in full_paths]
         return paths
 
     @property
@@ -49,7 +49,7 @@ class SFTPLocation(BaseFileLocation):
         """Return file size for SFTP location"""
         url = urlparse(self.path)
         conn = self.hook.get_conn()
-        stat = conn.stat(url.path).st_size
+        stat = conn.stat(url.netloc + url.path).st_size
         return int(stat) or -1
 
     @property
