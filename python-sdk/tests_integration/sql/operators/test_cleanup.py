@@ -57,7 +57,7 @@ def test_cleanup_one_table(database_table_fixture):
         {
             "items": [
                 {
-                    "table": Table(name="non_temp_table"),
+                    "table": Table(name="non_temporary_table"),
                     "file": File(DEFAULT_FILEPATH),
                 },
                 {
