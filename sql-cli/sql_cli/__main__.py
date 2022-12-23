@@ -11,7 +11,9 @@ from typer import Exit
 import sql_cli
 from sql_cli.astro.command import AstroCommand
 from sql_cli.astro.group import AstroGroup
-from sql_cli.constants import DEFAULT_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_DATA_DIR
+from sql_cli.cli import config as cli_config
+from sql_cli.cli.utils import resolve_project_dir
+from sql_cli.constants import DEFAULT_BASE_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_DATA_DIR
 from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
 from sql_cli.utils.rich import rprint
 
@@ -26,6 +28,7 @@ app = typer.Typer(
     context_settings={"help_option_names": ["-h", "--help"]},
     rich_markup_mode="rich",
 )
+app.add_typer(cli_config.app, name="config", hidden=True)
 
 airflow_logger = logging.getLogger("airflow")
 airflow_logger.setLevel(logging.CRITICAL)
@@ -56,33 +59,6 @@ def about() -> None:
 
 @app.command(
     cls=AstroCommand,
-    help="""
-    Gets the value of the configuration key set in the configuration file for the given environment.
-    """,
-)
-def config(
-    key: str = typer.Argument(
-        default=...,
-        show_default=False,
-        help="Key from the configuration whose value needs to be fetched.",
-    ),
-    project_dir: Path = typer.Option(
-        None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
-    ),
-    env: str = typer.Option(
-        default="default",
-        help="(Optional) Environment used to fetch the configuration key from.",
-    ),
-) -> None:
-    from sql_cli.configuration import Config
-
-    project_dir_absolute = _resolve_project_dir(project_dir)
-    project_config = Config(environment=env, project_dir=project_dir_absolute).from_yaml_to_config()
-    print(getattr(project_config, key))
-
-
-@app.command(
-    cls=AstroCommand,
     help="Generate the Airflow DAG from a directory of SQL files.",
 )
 def generate(
@@ -106,7 +82,7 @@ def generate(
 ) -> None:
     from sql_cli.project import Project
 
-    project_dir_absolute = _resolve_project_dir(project_dir)
+    project_dir_absolute = resolve_project_dir(project_dir)
     project = Project(project_dir_absolute)
     project.load_config(env)
 
@@ -140,7 +116,7 @@ def validate(
     from sql_cli.connections import validate_connections
     from sql_cli.project import Project
 
-    project_dir_absolute = _resolve_project_dir(project_dir)
+    project_dir_absolute = resolve_project_dir(project_dir)
     project = Project(project_dir_absolute)
     project.load_config(environment=env)
 
@@ -182,7 +158,7 @@ def run(
     from sql_cli.project import Project
     from sql_cli.utils.airflow import get_dag
 
-    project_dir_absolute = _resolve_project_dir(project_dir)
+    project_dir_absolute = resolve_project_dir(project_dir)
     project = Project(project_dir_absolute)
     project.load_config(env)
 
@@ -193,7 +169,7 @@ def run(
     try:
         dr = dag_runner.run_dag(
             dag,
-            run_conf=project.airflow_config,
+            run_conf=project.get_env_airflow_config(env),
             connections={c.conn_id: c for c in project.connections},
             verbose=verbose,
         )
@@ -242,7 +218,7 @@ def init(
     airflow_home: Path = typer.Option(
         None,
         dir_okay=True,
-        help=f"(Optional) Set the Airflow Home. Default: {DEFAULT_AIRFLOW_HOME}",
+        help=f"(Optional) Set the Airflow Home. Default: {DEFAULT_BASE_AIRFLOW_HOME}/<env>/",
         show_default=False,
     ),
     airflow_dags_folder: Path = typer.Option(
@@ -260,17 +236,10 @@ def init(
 ) -> None:
     from sql_cli.project import Project
 
-    project_dir_absolute = _resolve_project_dir(project_dir)
+    project_dir_absolute = resolve_project_dir(project_dir)
     project = Project(project_dir_absolute, airflow_home, airflow_dags_folder, data_dir)
     project.initialise()
     rprint("Initialized an Astro SQL project at", project.directory)
-
-
-def _resolve_project_dir(project_dir: Path | None) -> Path:
-    """Resolve project directory to be used by the corresponding command for its functionality."""
-    # If the caller has not supplied a `project_dir`, we assume that the user is calling the command from the project
-    # directory itself and hence we resolve the current working directory as the project directory.
-    return project_dir.resolve() if project_dir else Path.cwd()
 
 
 def _generate_dag(project: Project, workflow_name: str, generate_tasks: bool) -> Path:

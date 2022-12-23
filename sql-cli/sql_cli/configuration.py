@@ -9,7 +9,7 @@ import yaml
 from airflow.models.connection import Connection
 from dotenv import load_dotenv
 
-from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME, GLOBAL_CONFIG_FILENAME
+from sql_cli.constants import CONFIG_DIR, CONFIG_FILENAME, DEFAULT_ENVIRONMENT, GLOBAL_CONFIG_FILENAME
 
 
 @dataclass
@@ -19,21 +19,19 @@ class Config:
     """
 
     project_dir: Path
-    environment: str | None = None
+    environment: str = DEFAULT_ENVIRONMENT
 
     connections: list[dict[str, Connection]] = field(default_factory=list)
     airflow_home: str | None = None
     airflow_dags_folder: str | None = None
     data_dir: str | None = None
 
-    def get_env_config_filepath(self) -> Path | None:
+    def get_env_config_filepath(self) -> Path:
         """
         Return environment specific configuration.yaml filepath.
 
         :returns: The path to the desired YAML configuration file
         """
-        if not self.environment:
-            return None
         return self.project_dir / CONFIG_DIR / self.environment / CONFIG_FILENAME
 
     def get_global_config_filepath(self) -> Path:
@@ -67,7 +65,7 @@ class Config:
         return Config(
             project_dir=self.project_dir,
             environment=self.environment,
-            airflow_home=global_yaml_config.get("airflow", {}).get("home"),
+            airflow_home=env_yaml_config.get("airflow", {}).get("home"),
             airflow_dags_folder=global_yaml_config.get("airflow", {}).get("dags_folder"),
             data_dir=global_yaml_config.get("general", {}).get("data_dir"),
             connections=env_yaml_config.get("connections", []),
@@ -94,3 +92,16 @@ class Config:
 
         with filepath.open(mode="w") as fp:
             yaml.dump(yaml_config, fp)
+
+    def to_dict(self) -> dict[str, Any]:
+        """
+        Return configuration represented as JSON string.
+
+        :returns: Dictionary containing non-sensitive global and per-environment configuration.
+        """
+        config_as_dict = {"global": self.from_yaml_to_dict(self.get_global_config_filepath())}
+        if self.environment:
+            env_config = self.from_yaml_to_dict(self.get_env_config_filepath())
+            env_config.pop("connections", None)  # remove sensitive information
+            config_as_dict[self.environment] = env_config
+        return config_as_dict
