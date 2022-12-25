@@ -28,7 +28,8 @@ setup: system install  ## Setup a local development environment
 pre-commit:  # Run pre-commit
 	@git ls-files -- . | xargs pre-commit run --files
 
-flow:  # Build and run the latest version of flow
+temp-flow: # Build flow project in temp directory
+	@flow init $(shell mktemp -d)
 
 test:  # Run tests
 	@TERMINAL_WIDTH=3000 _TYPER_FORCE_DISABLE_TERMINAL=1 PYTHONWARNINGS="ignore" poetry run pytest -vv
