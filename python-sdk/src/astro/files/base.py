@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import io
 import pathlib
-from urllib.parse import urlparse
 
 import pandas as pd
 import smart_open
@@ -96,6 +95,8 @@ class File(LoggingMixin, Dataset):
             delimited data (e.g. csv, parquet, etc.).
         :param df: pandas dataframe
         """
+        from urllib.parse import urlparse
+
         self.is_dataframe = store_as_dataframe
         parsed_url = urlparse(self.path)
         if parsed_url.scheme == constants.FileLocation.SFTP.value:
