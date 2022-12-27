@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import io
 from urllib.parse import urlparse
 
+import pandas as pd
 from airflow.providers.sftp.hooks.sftp import SFTPHook
 
-from astro.constants import FileLocation
+from astro.constants import FileLocation, FileType
 from astro.exceptions import PermissionNotSetError
 from astro.files.locations.base import BaseFileLocation
 
@@ -34,8 +36,7 @@ class SFTPLocation(BaseFileLocation):
     def paths(self) -> list[str]:
         """Resolve SFTP file paths with prefix"""
         url = urlparse(self.path)
-        client = self.hook.get_connection(self.conn_id)
-        uri = client.get_uri()
+        uri = self.get_uri()
         full_paths = []
         prefixes = self.hook.get_tree_map(url.netloc, prefix=url.netloc + url.path)
         for keys in prefixes:
@@ -68,3 +69,22 @@ class SFTPLocation(BaseFileLocation):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         return urlparse(self.path).path
+
+    def get_uri(self):
+        client = self.hook.get_connection(self.conn_id)
+        return client.get_uri()
+
+    def create_from_dataframe(self, full_path: str, df: pd.DataFrame, filetype: FileType):
+
+        sftp = self.hook.get_conn()
+        buffer = io.BytesIO()
+        if filetype == FileType.CSV:
+            df.to_csv(buffer, index=False)
+        elif filetype == FileType.JSON:
+            df.to_json(buffer, orient="records")
+        elif filetype == FileType.NDJSON:
+            df.to_json(buffer, orient="records", lines=True)
+        elif filetype == FileType.PARQUET:
+            df.to_parquet(buffer)
+        buffer.seek(0)
+        sftp.putfo(buffer, full_path)
