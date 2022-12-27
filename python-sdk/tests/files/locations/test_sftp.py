@@ -10,7 +10,7 @@ from astro.files.locations import create_file_location
 
 
 @patch("airflow.providers.sftp.hooks.sftp.SFTPHook.get_connection")
-def test_get_transport_params_for_sftp(mock_sftp_hook):  # skipcq: PYL-W0612, PTC-W0065
+def test_get_transport_params_for_sftp(mock_sftp_hook):
     """test get_transport_params() method which should return connect_kwargs when keyfile is passed"""
     mock_sftp_hook.return_value = Connection(
         conn_id="sftp_default",
@@ -26,7 +26,7 @@ def test_get_transport_params_for_sftp(mock_sftp_hook):  # skipcq: PYL-W0612, PT
 
 
 @patch("airflow.providers.sftp.hooks.sftp.SFTPHook.get_connection")
-def test_get_transport_params_for_sftp_no_value(mock_sftp_hook):  # skipcq: PYL-W0612, PTC-W0065
+def test_get_transport_params_for_sftp_no_value(mock_sftp_hook):
     """test get_transport_params() method when no keyfile is passed"""
     mock_sftp_hook.return_value = Connection(
         conn_id="sftp_default",
@@ -41,7 +41,7 @@ def test_get_transport_params_for_sftp_no_value(mock_sftp_hook):  # skipcq: PYL-
 
 
 @patch("airflow.providers.sftp.hooks.sftp.SFTPHook.get_connection")
-def test_get_transport_params_for_sftp_password(mock_sftp_hook):  # skipcq: PYL-W0612, PTC-W0065
+def test_get_transport_params_for_sftp_password(mock_sftp_hook):
     """test get_transport_params() method when no keyfile is passed"""
     mock_sftp_hook.return_value = Connection(
         conn_id="sftp_default", conn_type="test", login=1234, host="localhost", password="test"
