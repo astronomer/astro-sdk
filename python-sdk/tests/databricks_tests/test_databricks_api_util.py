@@ -44,7 +44,7 @@ def test_delete_scope_http_error_non_existent(mock_api_client, mock_delete_secre
     delete_secret_scope("non-existent-scope", api_client=mock_api_client)
 
 
-@mock.patch("databricks_cli.sdk.api_client.ApiClient")
+@mock.patch("databricks_cli.sdk.api_client.ApiClient", autospec=True)
 def test_create_and_run_job(mock_api_client):
     create_and_run_job(
         api_client=mock_api_client,
@@ -52,7 +52,7 @@ def test_create_and_run_job(mock_api_client):
         databricks_job_name="my-db-job",
         existing_cluster_id="foobar",
     )
-    mock_api_client.perform_query.__getitem__("job_id").return_value = 123
+    mock_api_client.perform_query.return_value = {"job_id": 123}
     calls = [
         call.perform_query(
             "POST",
@@ -69,7 +69,7 @@ def test_create_and_run_job(mock_api_client):
     mock_api_client.assert_has_calls(calls)
 
 
-@mock.patch("databricks_cli.sdk.api_client.ApiClient")
+@mock.patch("databricks_cli.sdk.api_client.ApiClient", autospec=True)
 def test_load_to_dbfs(mock_api_client):
     load_file_to_dbfs(
         local_file_path=CWD / "__init__.py", file_name="my_table.py", api_client=mock_api_client
@@ -93,7 +93,7 @@ def test_load_to_dbfs(mock_api_client):
     mock_api_client.assert_has_calls(calls)
 
 
-@mock.patch("databricks_cli.sdk.api_client.ApiClient")
+@mock.patch("databricks_cli.sdk.api_client.ApiClient", autospec=True)
 def test_create_secrets(mock_api_client):
     create_secrets(scope_name="my-scope", filesystem_secrets={"foo": "bar"}, api_client=mock_api_client)
     calls = [
@@ -113,7 +113,7 @@ def test_create_secrets(mock_api_client):
     mock_api_client.assert_has_calls(calls)
 
 
-@mock.patch("databricks_cli.sdk.api_client.ApiClient")
+@mock.patch("databricks_cli.sdk.api_client.ApiClient", autospec=True)
 def test_delete_secret_scope(mock_api_client):
     delete_secret_scope(scope_name="my-scope", api_client=mock_api_client)
     mock_api_client.assert_has_calls(
