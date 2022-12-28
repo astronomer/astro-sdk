@@ -27,7 +27,6 @@ class LocalLocation(BaseFileLocation):
 
     def validate_conn(self):  # skipcq: PTC-W0049
         """Override as conn_id is not always required for local location."""
-        return
 
     @property
     def size(self) -> int:
