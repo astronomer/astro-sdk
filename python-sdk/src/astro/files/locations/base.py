@@ -16,7 +16,7 @@ class BaseFileLocation(ABC):
     """Base Location abstract class"""
 
     template_fields = ("path", "conn_id")
-    supported_conn_type = {}
+    supported_conn_type: set[str] = set()
 
     def __init__(self, path: str, conn_id: str | None = None):
         """

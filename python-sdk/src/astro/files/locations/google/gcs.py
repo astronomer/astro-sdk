@@ -38,7 +38,7 @@ class GCSLocation(BaseFileLocation):
 
     @property
     def hook(self) -> GCSHook:
-        return GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else GCSHook().conn_type
+        return GCSHook(gcp_conn_id=self.conn_id) if self.conn_id else GCSHook()
 
     @property
     def transport_params(self) -> dict:
