@@ -25,6 +25,10 @@ class LocalLocation(BaseFileLocation):
             paths = glob.glob(url.path)
         return paths
 
+    def validate_conn(self):  # skipcq: PTC-W0049
+        """Override as conn_id is not always required for local location."""
+        return
+
     @property
     def size(self) -> int:
         """Return the size in bytes of the given file.

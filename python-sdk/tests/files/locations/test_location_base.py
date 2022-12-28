@@ -142,5 +142,5 @@ def test_location_hash():
 
 def test_invalid_conn_id_with_file_path():
     """Raise a value when the connection types doesn't match the path"""
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r".* is not supported for .*"):
         GCSLocation("gs://tmp/file_a.csv", conn_id="aws_default")

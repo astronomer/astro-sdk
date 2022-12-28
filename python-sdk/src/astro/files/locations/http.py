@@ -11,8 +11,6 @@ class HTTPLocation(BaseFileLocation):
     """Handler http location operations"""
 
     location_type = FileLocation.HTTP
-    # Google Drive uses HTTP location
-    supported_conn_type = {"google_cloud_platform"}
 
     @property
     def paths(self) -> list[str]:
@@ -20,7 +18,7 @@ class HTTPLocation(BaseFileLocation):
         return [self.path]
 
     def validate_conn(self):  # skipcq: PTC-W0049
-        """Override as conn_id is not required at all for http location."""
+        """Override as conn_id is not always required for http location."""
         return
 
     @property
