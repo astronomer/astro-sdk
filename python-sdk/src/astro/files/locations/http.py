@@ -11,6 +11,8 @@ class HTTPLocation(BaseFileLocation):
     """Handler http location operations"""
 
     location_type = FileLocation.HTTP
+    # Google Drive uses HTTP location
+    supported_conn_type = {"google_cloud_platform"}
 
     @property
     def paths(self) -> list[str]:

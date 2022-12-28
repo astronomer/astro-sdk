@@ -70,7 +70,7 @@ class GdriveLocation(BaseFileLocation):
     """Handler for Google Drive operators."""
 
     location_type = FileLocation.GOOGLE_DRIVE
-    supported_conn_type = {GoogleDriveHook.conn_type, "google_cloud_platform"}
+    supported_conn_type = {GoogleDriveHook.conn_type}
 
     @property
     def hook(self) -> GoogleDriveHook:
