@@ -1,10 +1,10 @@
 [build-system]
-requires = ["flit_core ~=3.2"]
-build-backend = "flit_core.buildapi"
+requires = ["hatchling>=1.8.0", "hatch-fancy-pypi-readme"]
+build-backend = "hatchling.build"
 
 [project]
 name = "astro-sdk-python"
-dynamic = ["version"]
+dynamic = ["readme", "version"]
 description = """
 Astro SDK allows rapid and clean development of {Extract, Load, Transform} workflows using Python and SQL, powered by Apache Airflow.
 """
@@ -12,8 +12,7 @@ Astro SDK allows rapid and clean development of {Extract, Load, Transform} workf
 authors = [
     { name = "Astronomer", email = "humans@astronomer.io" },
 ]
-readme = "README.md"
-license = { file = "LICENSE" }
+license-files = { paths = ["../LICENSE"] }
 
 requires-python = ">=3.7"
 dependencies = [
@@ -122,9 +121,22 @@ markers = [
     "integration"
 ]
 
+[tool.hatch.version]
+path = "src/astro/__init__.py"
 
-[tool.flit.module]
-name = "astro"  # Or "astro.sql" if you just want this directory, not the entire 'astro'.
+[tool.hatch.build.targets.sdist]
+exclude = ["tests", "tests_integration", "dev"]
+
+[tool.hatch.build.targets.wheel]
+only-include = ["src"]
+sources = ["src"]
+
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+fragments = [
+  { path = "README.md" },
+  { path = "docs/CHANGELOG.md" },
+]
 
 [tool.mypy]
 color_output = true
