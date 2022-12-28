@@ -6,6 +6,7 @@ import pytest
 from airflow.decorators import task
 
 from astro import sql as aql
+from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
 from astro.databricks.load_options import DeltaLoadOptions
 from astro.files import File
@@ -290,3 +291,33 @@ def test_transform_region(sample_dag):
         select_all(input_table=input_table)
         aql.cleanup()
     test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
+def test_inlets_outlets_supported_ds():
+    """Test Datasets are set as inlets and outlets"""
+    imdb_table = (Table(name="imdb", conn_id="sqlite_default"),)
+    output_table = Table(name="test_name")
+
+    @aql.transform
+    def top_five_animations(input_table: Table) -> str:
+        return "SELECT title, rating FROM {{ input_table }} LIMIT 5;"
+
+    task = top_five_animations(input_table=imdb_table, output_table=output_table)
+    assert task.operator.outlets == [output_table]
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
+def test_inlets_outlets_non_supported_ds():
+    """Test inlets and outlets are not set if Datasets are not supported"""
+    imdb_table = (Table(name="imdb", conn_id="sqlite_default"),)
+    output_table = Table(name="test_name")
+
+    @aql.transform
+    def top_five_animations(input_table: Table) -> str:
+        return "SELECT title, rating FROM {{ input_table }} LIMIT 5;"
+
+    task = top_five_animations(input_table=imdb_table, output_table=output_table)
+    assert task.operator.outlets == []
