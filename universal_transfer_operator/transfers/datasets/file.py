@@ -6,9 +6,8 @@ import pathlib
 import pandas as pd
 import smart_open
 from attr import define
-from datasets.base import UniversalDataset
-
 from constants import FileType
+from datasets.base import UniversalDataset
 
 
 @define

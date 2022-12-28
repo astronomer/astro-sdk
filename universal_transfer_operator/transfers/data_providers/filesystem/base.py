@@ -5,10 +5,9 @@ from typing import Any
 
 from airflow.hooks.dbapi import DbApiHook
 from attr import define
+from constants import FileLocation, LoadExistStrategy
 from data_providers.base import DataProviders
 from datasets.base import UniversalDataset as Dataset
-
-from constants import FileLocation, LoadExistStrategy
 from utils import get_dataset_connection_type
 
 

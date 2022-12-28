@@ -3,10 +3,9 @@ from __future__ import annotations
 import os
 
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+from constants import FileLocation, LoadExistStrategy, TransferMode
 from data_providers.filesystem.base import BaseFilesystemProviders, TempFile
 from datasets.base import UniversalDataset as Dataset
-
-from constants import FileLocation, LoadExistStrategy, TransferMode
 
 
 class S3DataProvider(BaseFilesystemProviders):
