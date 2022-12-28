@@ -5,6 +5,7 @@ import pytest
 
 from astro.constants import FileLocation
 from astro.files.locations import create_file_location, get_class_name
+from astro.files.locations.google.gcs import GCSLocation
 from astro.files.locations.local import LocalLocation
 
 LOCAL_FILENAME = str(uuid.uuid4())
@@ -108,25 +109,20 @@ def test_get_class_name_method_invalid_name():
 @pytest.mark.parametrize(
     "loc_1,loc_2,equality",
     [
-        (LocalLocation("/tmp/file_a.csv"), LocalLocation("/tmp/file_a.csv"), True),
+        (GCSLocation("gs://tmp/file_a.csv"), GCSLocation("gs://tmp/file_a.csv"), True),
         (
-            LocalLocation("/tmp/file_a.csv", conn_id="test"),
-            LocalLocation("/tmp/file_a.csv", conn_id="test"),
+            GCSLocation("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
+            GCSLocation("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
             True,
         ),
         (
-            LocalLocation("/tmp/file_a.csv", conn_id="test"),
-            LocalLocation("/tmp/file_a.csv", conn_id="test"),
+            GCSLocation("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
+            GCSLocation("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
             True,
         ),
         (
-            LocalLocation("/tmp/file_a.csv", conn_id="test"),
-            LocalLocation("/tmp/file_a.csv", conn_id="test2"),
-            False,
-        ),
-        (
-            LocalLocation("/tmp/file_a.csv", conn_id="test"),
-            LocalLocation("/tmp/file_b.csv", conn_id="test"),
+            GCSLocation("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
+            GCSLocation("gs://tmp/file_b.csv", conn_id="google_cloud_default"),
             False,
         ),
     ],
@@ -142,3 +138,9 @@ def test_location_eq(loc_1, loc_2, equality):
 def test_location_hash():
     """Test that hashing works"""
     assert isinstance(hash(LocalLocation("/tmp/file_a.csv")), int)
+
+
+def test_invalid_conn_id_with_file_path():
+    """Raise a value when the connection types doesn't match the path"""
+    with pytest.raises(ValueError, match=r".* is not supported for .*"):
+        GCSLocation("gs://tmp/file_a.csv", conn_id="aws_default")
