@@ -7,11 +7,10 @@ from universal_transfer_operator import UniversalTransferOperator
 
 from constants import TransferMode
 
-START_DATE = datetime(2000, 1, 1)
 with DAG(
     "example_universal_transfer_operator",
     schedule_interval=None,
-    start_date=START_DATE,
+    start_date=datetime(2022, 1, 1),
     catchup=False,
 ) as dag:
     transfer_non_native = UniversalTransferOperator(
