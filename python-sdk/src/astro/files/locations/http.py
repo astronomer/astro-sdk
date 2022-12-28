@@ -19,6 +19,10 @@ class HTTPLocation(BaseFileLocation):
         """Resolve patterns in path"""
         return [self.path]
 
+    def validate_conn(self):
+        """Override as conn_id is not required at all for http location."""
+        return
+
     @property
     def size(self) -> int:
         """Return file size for HTTP location"""
