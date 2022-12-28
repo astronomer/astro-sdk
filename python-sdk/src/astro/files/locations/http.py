@@ -17,9 +17,8 @@ class HTTPLocation(BaseFileLocation):
         """Resolve patterns in path"""
         return [self.path]
 
-    def validate_conn(self):  # skipcq: PTC-W0049
+    def validate_conn(self):
         """Override as conn_id is not always required for http location."""
-        return
 
     @property
     def size(self) -> int:
