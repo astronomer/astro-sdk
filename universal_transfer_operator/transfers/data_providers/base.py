@@ -3,8 +3,9 @@ from __future__ import annotations
 from abc import ABC
 
 from airflow.hooks.base import BaseHook
-from constants import LoadExistStrategy, Location
 from datasets.base import UniversalDataset as Dataset
+
+from constants import LoadExistStrategy, Location
 from utils import get_dataset_connection_type
 
 

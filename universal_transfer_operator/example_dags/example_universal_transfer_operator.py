@@ -1,11 +1,11 @@
 from datetime import datetime
 
 from airflow import DAG
-from constants import TransferMode
 from datasets.file import File
 from datasets.table import Table
-
 from universal_transfer_operator import UniversalTransferOperator
+
+from constants import TransferMode
 
 with DAG(
     "example_universal_transfer_operator",
