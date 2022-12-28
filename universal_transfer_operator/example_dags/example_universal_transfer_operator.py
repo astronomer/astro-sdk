@@ -21,7 +21,7 @@ with DAG(
 
     transfer_fivetran_with_connector_id = UniversalTransferOperator(
         task_id="transfer_fivetran_with_connector_id",
-        source_dataset=File("s3://astro-sdk-test/uto/", conn_id="aws_default", extra={}),
+        source_dataset=File("s3://astro-sdk-test/uto/", conn_id="aws_default"),
         destination_dataset=Table(
             "snowflake://gp21411.us-east-1.snowflakecomputing.com/providers_fivetran_dev.s3.fivetran_ankit_test",
             conn_id="snowflake_default",
