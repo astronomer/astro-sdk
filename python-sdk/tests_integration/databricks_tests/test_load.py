@@ -69,7 +69,6 @@ def test_autoloader_load_file_s3(database_table_fixture):
     ids=["delta"],
 )
 def test_delta_load_file_gcs(database_table_fixture):
-    from astro.constants import FileType
 
     file = File(
         "gs://astro-sdk/benchmark/trimmed/covid_overview/covid_overview_10kb.csv",
@@ -124,7 +123,6 @@ def test_delta_load_file_gcs_autoloader(database_table_fixture):
     ids=["delta"],
 )
 def test_delta_load_file_gcs_default_connection(database_table_fixture):
-    from astro.constants import FileType
 
     file = File(
         "gs://astro-sdk/benchmark/trimmed/covid_overview/covid_overview_10kb.csv",
