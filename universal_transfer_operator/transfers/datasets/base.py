@@ -33,6 +33,16 @@ class UniversalDataset(LoggingMixin, Dataset):
 
     template_fields = ("path", "conn_id", "extra")
 
+    @conn_id.validator
+    def _validate_conn(self, attr, conn_id: str):
+        """Validate the conn_id provided."""
+        try:
+            from airflow.hooks.base import BaseHook
+
+            BaseHook.get_connection(conn_id)
+        except ValueError:
+            raise ValueError("source_dataset connection does not exist.")
+
     def dataset_scheme(self):
         """
         Return the scheme based on path

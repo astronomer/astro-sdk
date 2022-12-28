@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import logging
+import os
 from tempfile import NamedTemporaryFile
 
 from airflow.providers.google.cloud.hooks.gcs import GCSHook, _parse_gcs_url
+from constants import FileLocation, LoadExistStrategy, TransferMode
 from data_providers.filesystem.base import BaseFilesystemProviders, TempFile
 from datasets.base import UniversalDataset as Dataset
-
-from constants import FileLocation, LoadExistStrategy, TransferMode
 
 
 class GCSDataProvider(BaseFilesystemProviders):
@@ -94,6 +94,14 @@ class GCSDataProvider(BaseFilesystemProviders):
         else:
             logging.info("In sync, no files needed to be uploaded to Google Cloud Storage")
         return source_ref
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, file_list: list[TempFile]):
+        for file in file_list:
+            if os.path.exists(file.tmp_file.name):
+                os.remove(file.tmp_file.name)
 
     def get_bucket_name(self) -> str:
         bucket_name, _ = _parse_gcs_url(gsurl=self.dataset.path)

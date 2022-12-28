@@ -8,6 +8,24 @@ else:
     from typing_extensions import Literal
 
 
+class Location(Enum):
+    LOCAL = "local"
+    HTTP = "http"
+    HTTPS = "https"
+    GS = "gs"  # Google Cloud Storage
+    GOOGLE_DRIVE = "gdrive"
+    S3 = "s3"  # Amazon S3
+    WASB = "wasb"  # Azure Blob Storage
+    WASBS = "wasbs"  # Azure Blob Storage
+    POSTGRES = "postgres"
+    POSTGRESQL = "postgres"
+    SQLITE = "sqlite"
+    DELTA = "delta"
+    BIGQUERY = "bigquery"
+    SNOWFLAKE = "snowflake"
+    REDSHIFT = "redshift"
+
+
 class FileLocation(Enum):
     # [START filelocation]
     LOCAL = "local"

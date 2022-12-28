@@ -1,11 +1,11 @@
 from datetime import datetime
 
 from airflow import DAG
+from constants import TransferMode
 from datasets.file import File
 from datasets.table import Table
-from universal_transfer_operator import UniversalTransferOperator
 
-from constants import TransferMode
+from universal_transfer_operator import UniversalTransferOperator
 
 with DAG(
     "example_universal_transfer_operator",
@@ -15,8 +15,8 @@ with DAG(
 ) as dag:
     transfer_non_native = UniversalTransferOperator(
         task_id="transfer_non_native",
-        source_dataset=File("gs://uto-test/uto/", conn_id="google_cloud_default", extra={}),
-        destination_dataset=File("s3://astro-sdk-test/uto/", conn_id="aws_default", extra={}),
+        source_dataset=File("gs://uto-test/uto/", conn_id="google_cloud_default"),
+        destination_dataset=File("s3://astro-sdk-test/uto/", conn_id="aws_default"),
     )
 
     transfer_fivetran_with_connector_id = UniversalTransferOperator(
@@ -25,7 +25,6 @@ with DAG(
         destination_dataset=Table(
             "snowflake://gp21411.us-east-1.snowflakecomputing.com/providers_fivetran_dev.s3.fivetran_ankit_test",
             conn_id="snowflake_default",
-            extra={},
         ),
         transfer_mode=TransferMode.THIRDPARTY,
         transfer_params={
@@ -36,9 +35,9 @@ with DAG(
 
     transfer_fivetran_without_connector_id = UniversalTransferOperator(
         task_id="transfer_fivetran_without_connector_id",
-        source_dataset=File("s3://astro-sdk-test/uto/", conn_id="aws_default", extra={}),
+        source_dataset=File("s3://astro-sdk-test/uto/", conn_id="aws_default"),
         destination_dataset=Table(
-            "snowflake://{account name}/{database}.{schema}.{table}", conn_id="snowflake_default", extra={}
+            "snowflake://{account name}/{database}.{schema}.{table}", conn_id="snowflake_default"
         ),
         transfer_mode=TransferMode.THIRDPARTY,
         transfer_params={

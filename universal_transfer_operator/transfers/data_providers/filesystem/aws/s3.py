@@ -3,10 +3,9 @@ from __future__ import annotations
 import os
 
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+from constants import FileLocation, LoadExistStrategy, TransferMode
 from data_providers.filesystem.base import BaseFilesystemProviders, TempFile
 from datasets.base import UniversalDataset as Dataset
-
-from constants import FileLocation, LoadExistStrategy, TransferMode
 
 
 class S3DataProvider(BaseFilesystemProviders):
@@ -94,6 +93,14 @@ class S3DataProvider(BaseFilesystemProviders):
                     )
 
         return source_ref
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, file_list: list[TempFile]):
+        for file in file_list:
+            if os.path.exists(file.tmp_file.name):
+                os.remove(file.tmp_file.name)
 
     def get_bucket_name(self) -> str:
         bucket_name, key = self.hook.parse_s3_url(self.dataset.path)

@@ -1,12 +1,10 @@
 import importlib
-import os.path
 
-from transfers.constants import TransferMode
-from transfers.data_providers.base import DataProviders, TempFile
-from transfers.datasets.base import UniversalDataset as Dataset
-
-from astro.constants import LoadExistStrategy
-from astro.utils.path import get_class_name
+from airflow.hooks.base import BaseHook
+from constants import LoadExistStrategy, TransferMode
+from data_providers.base import DataProviders
+from datasets.base import UniversalDataset as Dataset
+from utils import get_class_name
 
 DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = {
     "s3": "data_providers.filesystem.aws.s3",
@@ -18,12 +16,10 @@ DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = {
 
 def create_dataprovider(
     dataset: Dataset,
-    transfer_params: dict = {},
+    transfer_params: dict = None,
     transfer_mode: TransferMode = TransferMode.NONNATIVE,
     if_exists: LoadExistStrategy = "replace",
 ) -> DataProviders:
-    from airflow.hooks.base import BaseHook
-
     conn_type = BaseHook.get_connection(dataset.conn_id).conn_type
     module_path = DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING[conn_type]
     module = importlib.import_module(module_path)
@@ -35,9 +31,3 @@ def create_dataprovider(
         if_exists=if_exists,
     )
     return data_provider
-
-
-def cleanup(file_list: list[TempFile]):
-    for file in file_list:
-        if os.path.exists(file.tmp_file.name):
-            os.remove(file.tmp_file.name)

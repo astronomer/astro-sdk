@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import Any
 
 from airflow.hooks.base import BaseHook
+from constants import LoadExistStrategy, Location
 from datasets.base import UniversalDataset as Dataset
-
-from constants import FileLocation, LoadExistStrategy
 from utils import get_dataset_connection_type
 
 
@@ -30,7 +28,7 @@ class DataProviders(ABC):
         self.transfer_params = transfer_params
         self.transfer_mode = transfer_mode
         self.if_exists = if_exists
-        self.transfer_mapping: Any = {}
+        self.transfer_mapping: set[Location] = {}
         self.LOAD_DATA_NATIVELY_FROM_SOURCE: dict = {}
 
     def __repr__(self):
@@ -50,7 +48,7 @@ class DataProviders(ABC):
         Checks if the transfer is supported from source to destination based on source_dataset.
         """
         source_connection_type = get_dataset_connection_type(source_dataset)
-        return FileLocation(source_connection_type) in self.transfer_mapping
+        return Location(source_connection_type) in self.transfer_mapping
 
     def read(self):
         """Read the dataset and write to local reference location"""
@@ -59,6 +57,12 @@ class DataProviders(ABC):
     def write(self, source_ref):
         """Write the data from local reference location to the dataset"""
         raise NotImplementedError
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self):
+        return self
 
     def load_data_from_source_natively(self, source_dataset: Dataset, destination_dataset: Dataset) -> None:
         """
