@@ -7,7 +7,7 @@ from pyspark.sql.functions import input_file_name, current_timestamp
 src_data_path = "{{ input_path }}"
 username = spark.sql("SELECT regexp_replace(current_user(), '[^a-zA-Z0-9]', '_')").first()[0]
 table_name = f"{{ table_name }}" # This can be generated based on task ID and dag ID or just entirely random
-checkpoint_path = f"/tmp/{username}/_checkpoint/etl_3_quickstart"
+checkpoint_path = f"/tmp/{username}/_checkpoint/{table_name}"
 
 {%- if load_options.load_secrets %}
 {{ load_secrets_command(load_options.secret_scope) }}
