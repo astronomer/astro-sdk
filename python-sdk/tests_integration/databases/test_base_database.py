@@ -87,6 +87,7 @@ def test_load_file_to_table_natively(sample_dag, database_table_fixture, remote_
         assert method.call_args.args == expected_args
 
 
+@pytest.mark.integration
 @mock.patch("astro.databases.base.BaseDatabase.drop_table")
 @mock.patch("astro.databases.base.BaseDatabase.create_schema_if_needed")
 @mock.patch("astro.databases.base.BaseDatabase.create_table")

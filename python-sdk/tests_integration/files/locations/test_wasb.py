@@ -6,6 +6,7 @@ from astro.files.locations import create_file_location
 from astro.files.locations.azure.wasb import WASBLocation
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "remote_files_fixture",
     [{"provider": "azure", "file_count": 2, "conn_id": "wasb_default_conn"}],
@@ -21,6 +22,7 @@ def test_remote_object_store_connection(remote_files_fixture):
     assert set(expected_blobs_list).issubset(set(actual_blobs_list))
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "remote_files_fixture",
     [{"provider": "azure", "file_count": 1}],

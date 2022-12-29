@@ -23,6 +23,7 @@ CUSTOM_CONN_ID = "sqlite_conn"
 SUPPORTED_CONN_IDS = [DEFAULT_CONN_ID, CUSTOM_CONN_ID]
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("conn_id", SUPPORTED_CONN_IDS)
 def test_create_database(conn_id):
     """Check that the database is created with the correct class."""
@@ -30,6 +31,7 @@ def test_create_database(conn_id):
     assert isinstance(database, SqliteDatabase)
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "conn_id,expected_db_path",
     [

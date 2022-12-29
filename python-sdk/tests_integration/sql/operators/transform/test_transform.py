@@ -16,6 +16,7 @@ from tests.sql.operators import utils as test_utils
 cwd = pathlib.Path(__file__).parent
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
@@ -52,6 +53,7 @@ def test_dataframe_transform(database_table_fixture, sample_dag):
     test_utils.run_dag(sample_dag)
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
@@ -92,6 +94,7 @@ def test_transform(database_table_fixture, sample_dag):
     test_utils.run_dag(sample_dag)
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
@@ -219,34 +222,7 @@ def test_transform_with_file(database_table_fixture, sample_dag):
     assert not database.table_exists(expected_target_table)
 
 
-@pytest.mark.skipif(not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
-def test_inlets_outlets_supported_ds():
-    """Test Datasets are set as inlets and outlets"""
-    imdb_table = (Table(name="imdb", conn_id="sqlite_default"),)
-    output_table = Table(name="test_name")
-
-    @aql.transform
-    def top_five_animations(input_table: Table) -> str:
-        return "SELECT title, rating FROM {{ input_table }} LIMIT 5;"
-
-    task = top_five_animations(input_table=imdb_table, output_table=output_table)
-    assert task.operator.outlets == [output_table]
-
-
-@pytest.mark.skipif(DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
-def test_inlets_outlets_non_supported_ds():
-    """Test inlets and outlets are not set if Datasets are not supported"""
-    imdb_table = (Table(name="imdb", conn_id="sqlite_default"),)
-    output_table = Table(name="test_name")
-
-    @aql.transform
-    def top_five_animations(input_table: Table) -> str:
-        return "SELECT title, rating FROM {{ input_table }} LIMIT 5;"
-
-    task = top_five_animations(input_table=imdb_table, output_table=output_table)
-    assert task.operator.outlets == []
-
-
+@pytest.mark.integration
 def test_transform_using_table_metadata(sample_dag):
     """
     Test that load file and transform when database and schema is available in table metadata instead of conn
@@ -273,6 +249,7 @@ def test_transform_using_table_metadata(sample_dag):
     test_utils.run_dag(sample_dag)
 
 
+@pytest.mark.integration
 def test_cross_db_transform_raise_exception(sample_dag):
     """Test the transform operator raise exception if input and output is not for same database source"""
 
@@ -296,6 +273,7 @@ def test_cross_db_transform_raise_exception(sample_dag):
     assert exec_info.value.args[0] == "source and target table must belong to the same datasource"
 
 
+@pytest.mark.integration
 def test_transform_region(sample_dag):
     """Test the transform operator raise exception if input and output is not for same database source"""
 
@@ -313,3 +291,33 @@ def test_transform_region(sample_dag):
         select_all(input_table=input_table)
         aql.cleanup()
     test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
+def test_inlets_outlets_supported_ds():
+    """Test Datasets are set as inlets and outlets"""
+    imdb_table = (Table(name="imdb", conn_id="sqlite_default"),)
+    output_table = Table(name="test_name")
+
+    @aql.transform
+    def top_five_animations(input_table: Table) -> str:
+        return "SELECT title, rating FROM {{ input_table }} LIMIT 5;"
+
+    task = top_five_animations(input_table=imdb_table, output_table=output_table)
+    assert task.operator.outlets == [output_table]
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
+def test_inlets_outlets_non_supported_ds():
+    """Test inlets and outlets are not set if Datasets are not supported"""
+    imdb_table = (Table(name="imdb", conn_id="sqlite_default"),)
+    output_table = Table(name="test_name")
+
+    @aql.transform
+    def top_five_animations(input_table: Table) -> str:
+        return "SELECT title, rating FROM {{ input_table }} LIMIT 5;"
+
+    task = top_five_animations(input_table=imdb_table, output_table=output_table)
+    assert task.operator.outlets == []

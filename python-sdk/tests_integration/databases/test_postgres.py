@@ -24,6 +24,7 @@ SUPPORTED_CONN_IDS = [DEFAULT_CONN_ID, CUSTOM_CONN_ID]
 CWD = pathlib.Path(__file__).parent
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("conn_id", SUPPORTED_CONN_IDS)
 def test_create_database(conn_id):
     """Test creation of database"""
@@ -31,6 +32,7 @@ def test_create_database(conn_id):
     assert isinstance(database, PostgresDatabase)
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "conn_id,expected_uri",
     [
