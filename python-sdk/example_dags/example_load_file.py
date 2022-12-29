@@ -255,7 +255,9 @@ with dag:
 
     # [START load_file_example_20]
     aql.load_file(
-        input_file=File(path="sftp://upload/", conn_id="sftp_conn", filetype=FileType.CSV),
+        input_file=File(
+            path="sftp://upload/ADOPTION_CENTER_1_unquoted.csv", conn_id="sftp_conn", filetype=FileType.CSV
+        ),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
             metadata=Metadata(
