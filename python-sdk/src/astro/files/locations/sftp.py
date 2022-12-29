@@ -15,6 +15,7 @@ class SFTPLocation(BaseFileLocation):
     """Handler SFTP object store operations"""
 
     location_type = FileLocation.SFTP
+    supported_conn_type = {SFTPHook.conn_type}
 
     @property
     def hook(self) -> SFTPHook:
@@ -30,7 +31,7 @@ class SFTPLocation(BaseFileLocation):
             return {"connect_kwargs": {"key_filename": key_file}}
         elif client.password:
             return {"connect_kwargs": {"password": client.password}}
-        raise PermissionNotSetError("SFTP credentials were not set in the connection.")
+        raise PermissionNotSetError("SFTP credentials are not set in the connection.")
 
     @property
     def paths(self) -> list[str]:
