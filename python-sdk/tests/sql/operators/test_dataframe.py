@@ -219,6 +219,7 @@ def test_col_case_is_preserved(sample_dag):
 @mock.patch.dict(os.environ, {"AIRFLOW__CORE__ENABLE_XCOM_PICKLING": "True"})
 def test_dataframe_from_file_xcom_pickling(mock_serde, sample_dag):
     """Assert when ENABLE_XCOM_PICKLING is true we do not use custom backend serializer"""
+
     @aql.dataframe
     def validate_file(df: pandas.DataFrame):  # skipcq: PY-D0003
         assert len(df) == 5
