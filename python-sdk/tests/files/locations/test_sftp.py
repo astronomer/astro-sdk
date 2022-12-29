@@ -27,7 +27,7 @@ def test_get_transport_params_for_sftp(mock_sftp_hook):
 
 @patch("airflow.providers.sftp.hooks.sftp.SFTPHook.get_connection")
 def test_get_transport_params_for_sftp_no_value(mock_sftp_hook):
-    """test get_transport_params() method when no keyfile is passed"""
+    """test get_transport_params() method raises exception when no credentials is passed"""
     mock_sftp_hook.return_value = Connection(
         conn_id="sftp_default",
         conn_type="test",
@@ -36,13 +36,14 @@ def test_get_transport_params_for_sftp_no_value(mock_sftp_hook):
     )
     path = "sftp://bucket/some-file"
     location = create_file_location(path)
-    with pytest.raises(PermissionNotSetError):
+    with pytest.raises(PermissionNotSetError) as exec_info:
         location.transport_params
+    assert str(exec_info.value) == "SFTP credentials are not set in the connection."
 
 
 @patch("airflow.providers.sftp.hooks.sftp.SFTPHook.get_connection")
 def test_get_transport_params_for_sftp_password(mock_sftp_hook):
-    """test get_transport_params() method when no keyfile is passed"""
+    """test get_transport_params() method when password is sent in connection"""
     mock_sftp_hook.return_value = Connection(
         conn_id="sftp_default", conn_type="test", login=1234, host="localhost", password="test"
     )
@@ -64,13 +65,20 @@ def test_get_paths_from_sftp(mock_sftp_conn, mock_list):
     assert sorted(location.paths) == sorted(["sftp://user@host:1234/some/sample.csv"])
 
 
+@pytest.mark.parametrize(
+    "return_value, path",
+    [
+        (110, "sftp://bucket/some-file"),
+        (-1, "sftp://wrong_path/to_file"),
+    ],
+)
 @patch("airflow.providers.sftp.hooks.sftp.SFTPHook.get_conn")
-def test_size(mock_get_conn):
+def test_size(mock_get_conn, return_value, path):
     """Test get_size() of for SFTP file."""
 
-    mock_get_conn.return_value.stat.return_value.st_size = 110
-    location = create_file_location("sftp://bucket/some-file")
-    assert location.size == 110
+    mock_get_conn.return_value.stat.return_value.st_size = return_value
+    location = create_file_location(path)
+    assert location.size == return_value
 
 
 def test_hook():

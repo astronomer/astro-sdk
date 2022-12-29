@@ -352,11 +352,23 @@ def test_load_file_using_file_connection(sample_dag, remote_files_fixture, datab
     "database_table_fixture",
     [
         {
+            "database": Database.SNOWFLAKE,
+        },
+        {
+            "database": Database.BIGQUERY,
+        },
+        {
+            "database": Database.POSTGRES,
+        },
+        {
             "database": Database.SQLITE,
+        },
+        {
+            "database": Database.REDSHIFT,
         },
     ],
     indirect=True,
-    ids=["sqlite"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 def test_load_file_using_sftp_connection(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture

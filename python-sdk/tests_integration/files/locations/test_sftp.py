@@ -6,6 +6,8 @@ import pytest
 
 from astro.constants import Database
 from astro.files import File
+from astro.settings import SCHEMA
+from astro.table import Metadata, Table
 from astro.utils.load import copy_remote_file_to_local
 from tests.sql.operators import utils as test_utils
 
@@ -20,10 +22,33 @@ CWD = pathlib.Path(__file__).parent
         {
             "database": Database.POSTGRES,
             "file": File(str(pathlib.Path(CWD.parent.parent, "data/sample.csv"))),
-        }
+        },
+        {
+            "database": Database.SNOWFLAKE,
+            "file": File(str(pathlib.Path(CWD.parent.parent, "data/sample.csv"))),
+            "table": Table(
+                metadata=Metadata(
+                    schema=os.getenv("SNOWFLAKE_SCHEMA", SCHEMA),
+                    database=os.getenv("SNOWFLAKE_DATABASE", "snowflake"),
+                )
+            ),
+        },
+        {
+            "database": Database.SQLITE,
+            "file": File(str(pathlib.Path(CWD.parent.parent, "data/sample.csv"))),
+        },
+        {
+            "database": Database.BIGQUERY,
+            "file": File(str(pathlib.Path(CWD.parent.parent, "data/sample.csv"))),
+            "table": Table(metadata=Metadata(schema=SCHEMA)),
+        },
+        {
+            "database": Database.REDSHIFT,
+            "file": File(str(pathlib.Path(CWD.parent.parent, "data/sample.csv"))),
+        },
     ],
     indirect=True,
-    ids=["postgres"],
+    ids=["postgres", "snowflake", "sqlite", "bigquery", "redshift"],
 )
 def test_export_table_to_file_in_the_cloud(database_table_fixture):
     """Test export_table_to_file_file() where end file location is in cloud object stores"""
