@@ -149,6 +149,7 @@ def test_inlets_outlets_non_supported_ds():
 
 
 def test_raise_exception_for_invalid_input_type():
+    """Raise value error when input data is not correct in ExportTableToFileOperator"""
     with pytest.raises(ValueError) as exc_info:
         ExportTableToFileOperator(
             task_id="task_id",
@@ -166,6 +167,7 @@ def test_raise_exception_for_invalid_input_type():
 
 # TODO: Remove this test in astro-sdk 2.0.0
 def test_warnings_message():
+    """Assert the warning log when using deprecated method"""
     with pytest.warns(
         expected_warning=DeprecationWarning,
         match="""This class is deprecated.

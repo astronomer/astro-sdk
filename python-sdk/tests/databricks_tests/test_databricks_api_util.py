@@ -29,6 +29,7 @@ def raise_not_exist_error(unneeded_arg):
 @mock.patch("databricks_cli.secrets.api.SecretApi.delete_scope")
 @mock.patch("databricks_cli.sdk.api_client.ApiClient")
 def test_delete_scope_http_error_arbitary(mock_api_client, mock_delete_secret):
+    """Raise error when delete_scope throw error"""
     mock_delete_secret.raiseError.side_effect = raise_arb_http_error
     mock_delete_secret.side_effect = raise_arb_http_error
     with pytest.raises(HTTPError):
@@ -38,6 +39,7 @@ def test_delete_scope_http_error_arbitary(mock_api_client, mock_delete_secret):
 @mock.patch("databricks_cli.secrets.api.SecretApi.delete_scope")
 @mock.patch("databricks_cli.sdk.api_client.ApiClient")
 def test_delete_scope_http_error_non_existent(mock_api_client, mock_delete_secret):
+    """Do not raise an error when trying to delete non-existent scope and the error code is RESOURCE_DOES_NOT_EXIST"""
     mock_delete_secret.side_effect = raise_not_exist_error
     delete_secret_scope("non-existent-scope", api_client=mock_api_client)
 
