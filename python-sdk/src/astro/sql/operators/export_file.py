@@ -8,11 +8,11 @@ from airflow.models.xcom_arg import XComArg
 
 from astro.constants import ExportExistsStrategy
 from astro.files import File
-from astro.sql.operators.export_table_to_file import ExportTableToFileOperator, export_table_to_file
+from astro.sql.operators.export_to_file import ExportToFileOperator, export_to_file
 from astro.table import BaseTable
 
 
-class ExportFileOperator(ExportTableToFileOperator):
+class ExportFileOperator(ExportToFileOperator):
     """Write SQL table to csv/parquet on local/S3/GCS.
 
     :param input_data: Table to convert to file
@@ -32,7 +32,7 @@ class ExportFileOperator(ExportTableToFileOperator):
         super().__init__(input_data=input_data, output_file=output_file, if_exists=if_exists, **kwargs)
         warnings.warn(
             """This class is deprecated.
-            Please use `astro.sql.operators.export_table_to_file.ExportTableToFileOperator`.
+            Please use `astro.sql.operators.export_to_file.ExportToFileOperator`.
             And, will be removed in astro-sdk-python>=2.0.0.""",
             DeprecationWarning,
             stacklevel=2,
@@ -74,12 +74,12 @@ def export_file(
 
     warnings.warn(
         """This decorator is deprecated.
-        Please use `astro.sql.operators.export_table_to_file.export_table_to_file`.
+        Please use `astro.sql.operators.export_to_file.export_to_file`.
         And, will be removed in astro-sdk-python>=2.0.0.""",
         DeprecationWarning,
         stacklevel=2,
     )
 
-    return export_table_to_file(
+    return export_to_file(
         input_data=input_data, output_file=output_file, if_exists=if_exists, task_id=task_id, **kwargs
     )

@@ -15,7 +15,7 @@ from astro.table import BaseTable, Table
 from astro.utils.typing_compat import Context
 
 
-class ExportTableToFileOperator(AstroSQLBaseOperator):
+class ExportToFileOperator(AstroSQLBaseOperator):
     """Write SQL table to csv/parquet on local/S3/GCS.
 
     :param input_data: Table to convert to file
@@ -137,14 +137,14 @@ class ExportTableToFileOperator(AstroSQLBaseOperator):
         )
 
 
-def export_table_to_file(
+def export_to_file(
     input_data: BaseTable | pd.DataFrame,
     output_file: File,
     if_exists: ExportExistsStrategy = "exception",
     task_id: str | None = None,
     **kwargs: Any,
 ) -> XComArg:
-    """Convert ExportTableToFileOperator into a function. Returns XComArg.
+    """Convert ExportToFileOperator into a function. Returns XComArg.
 
     Returns an XComArg object of type File which matches the output_file parameter.
 
@@ -170,9 +170,9 @@ def export_table_to_file(
     :param task_id: task id, optional
     """
 
-    task_id = task_id or get_unique_task_id("export_table_to_file")
+    task_id = task_id or get_unique_task_id("export_to_file")
 
-    return ExportTableToFileOperator(
+    return ExportToFileOperator(
         task_id=task_id,
         output_file=output_file,
         input_data=input_data,

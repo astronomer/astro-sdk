@@ -30,7 +30,7 @@ def example_amazon_s3_postgres_load_and_save():
         # [END named_table_example]  skipcq: PY-W0069
     )
 
-    aql.export_table_to_file(
+    aql.export_to_file(
         input_data=t1,
         output_file=File(path=f"{s3_bucket}/homes.csv"),
         if_exists="replace",
