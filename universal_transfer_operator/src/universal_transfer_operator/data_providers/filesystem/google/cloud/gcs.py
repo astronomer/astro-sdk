@@ -6,7 +6,6 @@ from tempfile import NamedTemporaryFile
 from typing import Sequence
 
 from airflow.providers.google.cloud.hooks.gcs import GCSHook, _parse_gcs_url
-
 from universal_transfer_operator.constants import LoadExistStrategy, Location, TransferMode
 from universal_transfer_operator.data_providers.filesystem.base import (
     BaseFilesystemProviders,
