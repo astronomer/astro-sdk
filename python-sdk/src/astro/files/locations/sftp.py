@@ -12,7 +12,11 @@ from astro.files.locations.base import BaseFileLocation
 
 
 class SFTPLocation(BaseFileLocation):
-    """Handler SFTP object store operations"""
+    """
+    Handler SFTP object store operations.
+    While exporting to SFTP the user should have permission
+    to create the file in the desired location.
+    """
 
     location_type = FileLocation.SFTP
     supported_conn_type = {SFTPHook.conn_type}
