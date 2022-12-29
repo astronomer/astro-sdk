@@ -1,16 +1,19 @@
 from __future__ import annotations
 
+import os
 from tempfile import NamedTemporaryFile
 
+import attr
 from airflow.hooks.dbapi import DbApiHook
-from attr import define
-from universal_transfer_operator.constants import LoadExistStrategy, Location
+
+from universal_transfer_operator.constants import Location
 from universal_transfer_operator.data_providers.base import DataProviders, contextmanager
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
+from universal_transfer_operator.universal_transfer_operator import TransferParameters
 from universal_transfer_operator.utils import get_dataset_connection_type
 
 
-@define
+@attr.define
 class TempFile:
     tmp_file: NamedTemporaryFile | None
     actual_filename: str
@@ -23,13 +26,14 @@ class BaseFilesystemProviders(DataProviders):
         self,
         dataset: Dataset,
         transfer_mode,
-        transfer_params: dict = None,
-        if_exists: LoadExistStrategy = "replace",
+        transfer_params: TransferParameters = attr.field(
+            factory=TransferParameters,
+            converter=lambda val: TransferParameters(**val) if isinstance(val, dict) else val,
+        ),
     ):
         self.dataset = dataset
         self.transfer_params = transfer_params
         self.transfer_mode = transfer_mode
-        self.if_exists = if_exists
         self.transfer_mapping = {}
         self.LOAD_DATA_NATIVELY_FROM_SOURCE: dict = {}
 
@@ -60,6 +64,13 @@ class BaseFilesystemProviders(DataProviders):
     def write(self, source_ref) -> list[TempFile]:
         """Write the source data from local file location to the dataset"""
         raise NotImplementedError
+
+    @staticmethod
+    def cleanup(file_list: list[TempFile]) -> None:
+        """Cleans up the temporary files created"""
+        for file in file_list:
+            if os.path.exists(file.tmp_file.name):
+                os.remove(file.tmp_file.name)
 
     def load_data_from_source_natively(self, source_dataset: Dataset, destination_dataset: Dataset) -> None:
         """

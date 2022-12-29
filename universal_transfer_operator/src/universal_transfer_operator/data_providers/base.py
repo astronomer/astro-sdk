@@ -4,7 +4,8 @@ from abc import ABC
 from contextlib import contextmanager
 
 from airflow.hooks.base import BaseHook
-from universal_transfer_operator.constants import LoadExistStrategy, Location
+
+from universal_transfer_operator.constants import Location
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
 from universal_transfer_operator.utils import get_dataset_connection_type
 
@@ -18,18 +19,11 @@ class DataProviders(ABC):
     changing other modules and classes.
     """
 
-    def __init__(
-        self,
-        dataset: Dataset,
-        transfer_mode,
-        transfer_params: dict = None,
-        if_exists: LoadExistStrategy = "replace",
-    ):
+    def __init__(self, dataset: Dataset, transfer_mode, transfer_params: dict = None):
         self.dataset = dataset
         self.transfer_params = transfer_params
         self.transfer_mode = transfer_mode
-        self.if_exists = if_exists
-        self.transfer_mapping: set[Location] = {}
+        self.transfer_mapping: set[Location] = set()
         self.LOAD_DATA_NATIVELY_FROM_SOURCE: dict = {}
 
     def __repr__(self):

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from airflow.hooks.dbapi import DbApiHook
+from airflow.hooks.base import BaseHook
+
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
 
 
@@ -21,7 +22,7 @@ class TransferIntegration(ABC):
         # TODO: add method for validation, transfer mapping, transfer params etc
 
     @property
-    def hook(self) -> DbApiHook:
+    def hook(self) -> BaseHook:
         """Return an instance of the database-specific Airflow hook."""
         raise NotImplementedError
 

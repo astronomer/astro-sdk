@@ -5,14 +5,17 @@ from functools import cached_property
 from tempfile import NamedTemporaryFile
 from typing import Sequence
 
+import attr
 from airflow.providers.google.cloud.hooks.gcs import GCSHook, _parse_gcs_url
-from universal_transfer_operator.constants import LoadExistStrategy, Location, TransferMode
+
+from universal_transfer_operator.constants import Location, TransferMode
 from universal_transfer_operator.data_providers.filesystem.base import (
     BaseFilesystemProviders,
     TempFile,
     contextmanager,
 )
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
+from universal_transfer_operator.universal_transfer_operator import TransferParameters
 
 
 class GCSDataProvider(BaseFilesystemProviders):
@@ -23,15 +26,16 @@ class GCSDataProvider(BaseFilesystemProviders):
     def __init__(
         self,
         dataset: Dataset,
-        transfer_params: dict = None,
+        transfer_params: TransferParameters = attr.field(
+            factory=TransferParameters,
+            converter=lambda val: TransferParameters(**val) if isinstance(val, dict) else val,
+        ),
         transfer_mode: TransferMode = TransferMode.NONNATIVE,
-        if_exists: LoadExistStrategy = "replace",
     ):
         super().__init__(
             dataset=dataset,
             transfer_params=transfer_params,
             transfer_mode=transfer_mode,
-            if_exists=if_exists,
         )
         self.transfer_mapping = {
             Location.S3,
@@ -69,19 +73,23 @@ class GCSDataProvider(BaseFilesystemProviders):
             delimiter=self.delimiter,
         )
 
-        local_filename = []
-        if files:
-            for file in files:
-                _, _, file_name = file.rpartition("/")
-                with NamedTemporaryFile(suffix=file_name, delete=False) as tmp_file:
-                    self.hook.download(
-                        bucket_name=self.bucket_name,
-                        object_name=self.blob_name,
-                        filename=tmp_file.name,
-                    )
-                    local_filename.append(TempFile(tmp_file=tmp_file, actual_filename=file_name))
+        try:
+            local_file_paths = []
+            if files:
+                for file in files:
+                    _, _, file_name = file.rpartition("/")
+                    with NamedTemporaryFile(suffix=file_name, delete=False) as tmp_file:
+                        self.hook.download(
+                            bucket_name=self.bucket_name,
+                            object_name=self.blob_name,
+                            filename=tmp_file.name,
+                        )
+                        local_file_paths.append(TempFile(tmp_file=tmp_file, actual_filename=file_name))
 
-        yield local_filename
+            yield local_file_paths
+        finally:
+            # Clean up the local files
+            self.cleanup(local_file_paths)
 
     def write(self, source_ref: list[TempFile]) -> list[str]:
         """Write the file from local file location to the dataset"""

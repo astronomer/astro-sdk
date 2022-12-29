@@ -1,6 +1,7 @@
 import importlib
 
 from airflow.hooks.base import BaseHook
+
 from universal_transfer_operator.constants import IngestorSupported
 from universal_transfer_operator.integrations.base import TransferIntegration
 from universal_transfer_operator.utils import get_class_name
@@ -8,7 +9,7 @@ from universal_transfer_operator.utils import get_class_name
 CUSTOM_INGESTION_TYPE_TO_MODULE_PATH = {"fivetran": "universal_transfer_operator.integrations.fivetran"}
 
 
-def get_transfer_integration(transfer_params: dict = {}) -> TransferIntegration:
+def get_transfer_integration(transfer_params: dict = None) -> TransferIntegration:
     """
     Given a transfer_params return the associated TransferIntegrations class.
 

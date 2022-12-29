@@ -2,12 +2,19 @@ from __future__ import annotations
 
 from typing import Any
 
+import attr
 from airflow.models import BaseOperator
 from airflow.utils.context import Context
-from universal_transfer_operator.constants import LoadExistStrategy, TransferMode
+
+from universal_transfer_operator.constants import TransferMode
 from universal_transfer_operator.data_providers import create_dataprovider
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
 from universal_transfer_operator.integrations import get_transfer_integration
+
+
+@attr.define
+class TransferParameters:
+    if_exists: str = "replace"
 
 
 class UniversalTransferOperator(BaseOperator):
@@ -29,9 +36,11 @@ class UniversalTransferOperator(BaseOperator):
         *,
         source_dataset: Dataset,
         destination_dataset: Dataset,
-        transfer_params: dict | None = None,
+        transfer_params: TransferParameters = attr.field(
+            factory=TransferParameters,
+            converter=lambda val: TransferParameters(**val) if isinstance(val, dict) else val,
+        ),
         transfer_mode: TransferMode = TransferMode.NONNATIVE,
-        if_exists: LoadExistStrategy = "replace",
         **kwargs,
     ) -> None:
         self.source_dataset = source_dataset
@@ -39,7 +48,6 @@ class UniversalTransferOperator(BaseOperator):
         self.transfer_mode = transfer_mode
         # TODO: revisit names of transfer_mode
         self.transfer_params = transfer_params
-        self.if_exists = if_exists
         super().__init__(**kwargs)
 
     def execute(self, context: Context) -> Any:
@@ -51,14 +59,12 @@ class UniversalTransferOperator(BaseOperator):
             dataset=self.source_dataset,
             transfer_params=self.transfer_params,
             transfer_mode=self.transfer_mode,
-            if_exists=self.if_exists,
         )
 
         destination_dataprovider = create_dataprovider(
             dataset=self.destination_dataset,
             transfer_params=self.transfer_params,
             transfer_mode=self.transfer_mode,
-            if_exists=self.if_exists,
         )
 
         with source_dataprovider.read() as source_data:

@@ -96,14 +96,17 @@ class FivetranIntegration(TransferIntegration):
     api_path_groups = "v1/groups/"
     api_path_destinations = "v1/destinations/"
 
-    def __init__(self, thirdparty_conn_id: str, transfer_params: dict):
+    def __init__(
+        self,
+        thirdparty_conn_id: str,
+        transfer_params: FiveTranOptions = attr.field(
+            factory=FiveTranOptions,
+            converter=lambda val: FiveTranOptions(**val) if isinstance(val, dict) else val,
+        ),
+    ):
         self.conn_id = thirdparty_conn_id
         self.transfer_params = transfer_params
         self.transfer_mapping = None
-        self.fivetran_retry_limit = self.transfer_params.get("fivetran_retry_limit", 3)
-        self.fivetran_retry_delay = self.transfer_params.get("fivetran_retry_delay", 1)
-        self.poll_frequency = self.transfer_params.get("poll_frequency", 15)
-        self.schedule_type = self.transfer_params.get("schedule_type", "manual")
 
     def hook(self) -> FivetranHook:
         """Return an instance of the database-specific Airflow hook."""

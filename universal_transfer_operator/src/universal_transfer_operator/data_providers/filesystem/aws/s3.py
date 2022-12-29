@@ -3,14 +3,17 @@ from __future__ import annotations
 import os
 from functools import cached_property
 
+import attr
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-from universal_transfer_operator.constants import LoadExistStrategy, Location, TransferMode
+
+from universal_transfer_operator.constants import Location, TransferMode
 from universal_transfer_operator.data_providers.filesystem.base import (
     BaseFilesystemProviders,
     TempFile,
     contextmanager,
 )
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
+from universal_transfer_operator.universal_transfer_operator import TransferParameters
 
 
 class S3DataProvider(BaseFilesystemProviders):
@@ -21,15 +24,16 @@ class S3DataProvider(BaseFilesystemProviders):
     def __init__(
         self,
         dataset: Dataset,
-        transfer_params: dict = None,
+        transfer_params: TransferParameters = attr.field(
+            factory=TransferParameters,
+            converter=lambda val: TransferParameters(**val) if isinstance(val, dict) else val,
+        ),
         transfer_mode: TransferMode = TransferMode.NONNATIVE,
-        if_exists: LoadExistStrategy = "replace",
     ):
         super().__init__(
             dataset=dataset,
             transfer_params=transfer_params,
             transfer_mode=transfer_mode,
-            if_exists=if_exists,
         )
         self.transfer_mapping: set = {
             Location.S3,
@@ -61,10 +65,14 @@ class S3DataProvider(BaseFilesystemProviders):
             delimiter=self.delimiter,
         )
         local_file_paths = []
-        for file in files:
-            local_path = self.hook.download_file(key=file)
-            local_file_paths.append(local_path)
-        yield local_file_paths
+        try:
+            for file in files:
+                local_path = self.hook.download_file(key=file)
+                local_file_paths.append(local_path)
+            yield local_file_paths
+        finally:
+            # Clean up the local files
+            self.cleanup(local_file_paths)
 
     def write(self, source_ref: list[TempFile]):
         """Write the file from local file location to the dataset"""
@@ -73,17 +81,6 @@ class S3DataProvider(BaseFilesystemProviders):
 
         if not self.keep_directory_structure and self.prefix:
             dest_s3_key = os.path.join(dest_s3_key, self.prefix)
-
-        if self.if_exists != "replace":
-            bucket_name, prefix = self.hook.parse_s3_url(dest_s3_key)
-            # look for the bucket and the prefix to avoid look into
-            # parent directories/keys
-            existing_files = self.hook.list_keys(bucket_name, prefix=prefix)
-            # in case that no files exists, return an empty array to avoid errors
-            existing_files = existing_files if existing_files is not None else []
-            # remove the prefix for the existing files to allow the match
-            existing_files = [file.replace(prefix, "", 1) for file in existing_files]
-            source_ref = list(set(source_ref) - set(existing_files))
 
         destination_keys = []
         if source_ref:
