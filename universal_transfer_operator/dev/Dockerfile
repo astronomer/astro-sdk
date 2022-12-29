@@ -12,7 +12,7 @@ ENV SETUPTOOLS_USE_DISTUTILS=stdlib
 COPY ../pyproject.toml  ${AIRFLOW_HOME}/universal_transfer_operator/
 # The following file are needed because version they are referenced from pyproject.toml
 COPY ../README.md  ${AIRFLOW_HOME}/universal_transfer_operator/
-COPY ../transfers/__init__.py  ${AIRFLOW_HOME}/universal_transfer_operator/transfers/__init__.py
+COPY ../src/universal_transfer_operator/__init__.py  ${AIRFLOW_HOME}/universal_transfer_operator/src/universal_transfer_operator/__init__.py
 
 RUN pip install -e "${AIRFLOW_HOME}/universal_transfer_operator[all]"
 USER astro
