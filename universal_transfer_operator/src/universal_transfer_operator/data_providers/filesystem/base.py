@@ -4,7 +4,6 @@ from tempfile import NamedTemporaryFile
 
 from airflow.hooks.dbapi import DbApiHook
 from attr import define
-
 from universal_transfer_operator.constants import LoadExistStrategy, Location
 from universal_transfer_operator.data_providers.base import DataProviders
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset

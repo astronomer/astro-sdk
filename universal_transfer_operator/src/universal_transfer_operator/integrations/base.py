@@ -3,7 +3,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from airflow.hooks.dbapi import DbApiHook
-
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
 
 

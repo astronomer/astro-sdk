@@ -4,7 +4,6 @@ from urllib.parse import urlparse
 
 from attr import define, field, fields_dict
 from sqlalchemy import Column
-
 from universal_transfer_operator.datasets.base import UniversalDataset
 
 
