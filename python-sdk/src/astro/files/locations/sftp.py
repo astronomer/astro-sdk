@@ -80,6 +80,12 @@ class SFTPLocation(BaseFileLocation):
         return client.get_uri()
 
     def create_from_dataframe(self, full_path: str, df: pd.DataFrame, filetype: FileType):
+        """Create a file in the desired SFTP location using the values of a dataframe.
+
+        :param full_path: The full path to the file
+        :param df: pandas dataframe
+        :param filetype: constant to provide an explicit file type
+        """
 
         sftp = self.hook.get_conn()
         buffer = io.BytesIO()
