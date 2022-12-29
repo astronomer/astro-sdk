@@ -5,7 +5,6 @@ from typing import Any
 import attr
 from airflow.models import BaseOperator
 from airflow.utils.context import Context
-
 from universal_transfer_operator.constants import TransferMode
 from universal_transfer_operator.data_providers import create_dataprovider
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset

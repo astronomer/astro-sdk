@@ -7,7 +7,6 @@ from typing import Sequence
 
 import attr
 from airflow.providers.google.cloud.hooks.gcs import GCSHook, _parse_gcs_url
-
 from universal_transfer_operator.constants import Location, TransferMode
 from universal_transfer_operator.data_providers.filesystem.base import (
     BaseFilesystemProviders,

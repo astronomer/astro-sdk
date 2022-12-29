@@ -4,7 +4,6 @@ from abc import ABC
 from contextlib import contextmanager
 
 from airflow.hooks.base import BaseHook
-
 from universal_transfer_operator.constants import Location
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
 from universal_transfer_operator.utils import get_dataset_connection_type
