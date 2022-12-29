@@ -28,6 +28,7 @@ CWD = pathlib.Path(__file__).parent
 def test_export_table_to_file_in_the_cloud(database_table_fixture):
     """Test export_table_to_file_file() where end file location is in cloud object stores"""
     object_path = "sftp://upload/test.csv"
+    final_path = "sftp://foo:pass@localhost:2222/upload/test.csv"
     database, populated_table = database_table_fixture
     database.export_table_to_file(
         populated_table,
@@ -36,7 +37,7 @@ def test_export_table_to_file_in_the_cloud(database_table_fixture):
     )
 
     filepath = copy_remote_file_to_local(
-        source_filepath=object_path, transport_params={"connect_kwargs": {"password": "foo"}}
+        source_filepath=final_path, transport_params={"connect_kwargs": {"password": "pass"}}
     )
     df = pd.read_csv(filepath)
     assert len(df) == 3
