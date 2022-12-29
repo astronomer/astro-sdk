@@ -4,8 +4,9 @@ from tempfile import NamedTemporaryFile
 
 from airflow.hooks.dbapi import DbApiHook
 from attr import define
+
 from universal_transfer_operator.constants import LoadExistStrategy, Location
-from universal_transfer_operator.data_providers.base import DataProviders
+from universal_transfer_operator.data_providers.base import DataProviders, contextmanager
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
 from universal_transfer_operator.utils import get_dataset_connection_type
 
@@ -23,7 +24,7 @@ class BaseFilesystemProviders(DataProviders):
         self,
         dataset: Dataset,
         transfer_mode,
-        transfer_params: dict = {},
+        transfer_params: dict = None,
         if_exists: LoadExistStrategy = "replace",
     ):
         self.dataset = dataset
@@ -52,6 +53,7 @@ class BaseFilesystemProviders(DataProviders):
         source_connection_type = get_dataset_connection_type(source_dataset)
         return Location(source_connection_type) in self.transfer_mapping
 
+    @contextmanager
     def read(self) -> list[TempFile]:
         """Read the file dataset and write to local file location"""
         raise NotImplementedError

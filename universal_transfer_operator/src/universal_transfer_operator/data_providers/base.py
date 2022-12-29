@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 from abc import ABC
+from contextlib import contextmanager
 
 from airflow.hooks.base import BaseHook
+
 from universal_transfer_operator.constants import LoadExistStrategy, Location
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
 from universal_transfer_operator.utils import get_dataset_connection_type
@@ -21,7 +23,7 @@ class DataProviders(ABC):
         self,
         dataset: Dataset,
         transfer_mode,
-        transfer_params: dict = {},
+        transfer_params: dict = None,
         if_exists: LoadExistStrategy = "replace",
     ):
         self.dataset = dataset
@@ -50,6 +52,7 @@ class DataProviders(ABC):
         source_connection_type = get_dataset_connection_type(source_dataset)
         return Location(source_connection_type) in self.transfer_mapping
 
+    @contextmanager
     def read(self):
         """Read the dataset and write to local reference location"""
         raise NotImplementedError
@@ -57,12 +60,6 @@ class DataProviders(ABC):
     def write(self, source_ref):
         """Write the data from local reference location to the dataset"""
         raise NotImplementedError
-
-    # def __enter__(self):
-    #     return self
-    #
-    # def __exit__(self):
-    #     return self
 
     def load_data_from_source_natively(self, source_dataset: Dataset, destination_dataset: Dataset) -> None:
         """

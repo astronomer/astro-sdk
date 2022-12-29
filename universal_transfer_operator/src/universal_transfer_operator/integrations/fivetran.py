@@ -4,6 +4,7 @@ import logging
 
 import attr
 from fivetran_provider.hooks.fivetran import FivetranHook
+
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
 from universal_transfer_operator.integrations.base import TransferIntegration
 
@@ -99,7 +100,7 @@ class FivetranIntegration(TransferIntegration):
     def __init__(self, thirdparty_conn_id: str, transfer_params: dict):
         self.conn_id = thirdparty_conn_id
         self.transfer_params = transfer_params
-        self.transfer_mapping = {}
+        self.transfer_mapping = None
         self.fivetran_retry_limit = self.transfer_params.get("fivetran_retry_limit", 3)
         self.fivetran_retry_delay = self.transfer_params.get("fivetran_retry_delay", 1)
         self.poll_frequency = self.transfer_params.get("poll_frequency", 15)

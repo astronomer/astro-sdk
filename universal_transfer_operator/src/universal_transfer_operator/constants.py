@@ -25,6 +25,9 @@ class Location(Enum):
     SNOWFLAKE = "snowflake"
     REDSHIFT = "redshift"
 
+    def __repr__(self):
+        return f"{self}"
+
 
 class FileLocation(Enum):
     # [START filelocation]
@@ -38,8 +41,8 @@ class FileLocation(Enum):
     WASBS = "wasbs"  # Azure Blob Storage
     # [END filelocation]
 
-    def __str__(self) -> str:
-        return self.value
+    def __repr__(self):
+        return f"{self}"
 
 
 class IngestorSupported(Enum):
@@ -47,8 +50,8 @@ class IngestorSupported(Enum):
     Fivetran = "fivetran"
     # [END transferingestor]
 
-    def __str__(self) -> str:
-        return self.value
+    def __repr__(self):
+        return f"{self}"
 
 
 class TransferMode(Enum):
@@ -70,8 +73,8 @@ class FileType(Enum):
     PARQUET = "parquet"
     # [END filetypes]
 
-    def __str__(self) -> str:
-        return self.value
+    def __repr__(self):
+        return f"{self}"
 
 
 class Database(Enum):
@@ -85,8 +88,8 @@ class Database(Enum):
     REDSHIFT = "redshift"
     # [END database]
 
-    def __str__(self) -> str:
-        return self.value
+    def __repr__(self):
+        return f"{self}"
 
 
 SUPPORTED_FILE_LOCATIONS = [const.value for const in FileLocation]

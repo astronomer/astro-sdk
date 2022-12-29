@@ -1,12 +1,18 @@
 from __future__ import annotations
 
 import logging
-import os
+from functools import cached_property
 from tempfile import NamedTemporaryFile
+from typing import Sequence
 
 from airflow.providers.google.cloud.hooks.gcs import GCSHook, _parse_gcs_url
+
 from universal_transfer_operator.constants import LoadExistStrategy, Location, TransferMode
-from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders, TempFile
+from universal_transfer_operator.data_providers.filesystem.base import (
+    BaseFilesystemProviders,
+    TempFile,
+    contextmanager,
+)
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
 
 
@@ -18,7 +24,7 @@ class GCSDataProvider(BaseFilesystemProviders):
     def __init__(
         self,
         dataset: Dataset,
-        transfer_params: dict = {},
+        transfer_params: dict = None,
         transfer_mode: TransferMode = TransferMode.NONNATIVE,
         if_exists: LoadExistStrategy = "replace",
     ):
@@ -33,19 +39,20 @@ class GCSDataProvider(BaseFilesystemProviders):
             Location.GS,
         }
 
-    @property
+    @cached_property
     def hook(self) -> GCSHook:
         """Return an instance of the database-specific Airflow hook."""
         return GCSHook(
             gcp_conn_id=self.dataset.conn_id,
-            delegate_to=self.dataset.extra.get("delegate_to", None),
-            impersonation_chain=self.dataset.extra.get("google_impersonation_chain", None),
+            delegate_to=self.delegate_to,
+            impersonation_chain=self.google_impersonation_chain,
         )
 
     def check_if_exists(self) -> bool:
         """Return true if the dataset exists"""
-        return self.hook.exists(bucket_name=self.get_bucket_name, object_name=self.get_blob_name)
+        return self.hook.exists(bucket_name=self.bucket_name, object_name=self.blob_name)
 
+    @contextmanager
     def read(self) -> list[TempFile]:
         """Read the file from dataset and write to local file location"""
         if not self.check_if_exists():
@@ -53,14 +60,14 @@ class GCSDataProvider(BaseFilesystemProviders):
 
         logging.info(
             "Getting list of the files. Bucket: %s; Delimiter: %s; Prefix: %s",
-            self.get_bucket_name,  # type: ignore
-            self.dataset.extra.get("delimiter", None),
-            self.dataset.extra.get("prefix", None),
+            self.bucket_name,  # type: ignore
+            self.delimiter,
+            self.prefix,
         )
         files = self.hook.list(
-            bucket_name=self.get_bucket_name,  # type: ignore
-            prefix=self.dataset.extra.get("prefix", None),
-            delimiter=self.dataset.extra.get("delimiter", None),
+            bucket_name=self.bucket_name,  # type: ignore
+            prefix=self.prefix,
+            delimiter=self.delimiter,
         )
 
         local_filename = []
@@ -69,19 +76,20 @@ class GCSDataProvider(BaseFilesystemProviders):
                 _, _, file_name = file.rpartition("/")
                 with NamedTemporaryFile(suffix=file_name, delete=False) as tmp_file:
                     self.hook.download(
-                        bucket_name=self.get_bucket_name(),
-                        object_name=self.get_blob_name(),
+                        bucket_name=self.bucket_name,
+                        object_name=self.blob_name,
                         filename=tmp_file.name,
                     )
                     local_filename.append(TempFile(tmp_file=tmp_file, actual_filename=file_name))
 
-        return local_filename
+        yield local_filename
 
     def write(self, source_ref: list[TempFile]) -> list[str]:
         """Write the file from local file location to the dataset"""
-        bucket_name = self.get_bucket_name()
-        object_prefix = self.get_blob_name()
+        bucket_name = self.bucket_name
+        object_prefix = self.blob_name
 
+        destination_objects = []
         if source_ref:
             for file in source_ref:
                 # There will always be a '/' before file because it is
@@ -91,28 +99,41 @@ class GCSDataProvider(BaseFilesystemProviders):
                     bucket_name=bucket_name,
                     object_name=dest_gcs_object,
                     filename=file.name,
-                    gzip=self.dataset.extra.get("gzip", False),
+                    gzip=self.gzip,
                 )
+                destination_objects.append(dest_gcs_object)
             logging.info("All done, uploaded %d files to Google Cloud Storage", len(source_ref))
         else:
             logging.info("In sync, no files needed to be uploaded to Google Cloud Storage")
-        return source_ref
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, file_list: list[TempFile]):
-        for file in file_list:
-            if os.path.exists(file.tmp_file.name):
-                os.remove(file.tmp_file.name)
+        return destination_objects
 
     @property
-    def get_bucket_name(self) -> str:
+    def delegate_to(self) -> str | None:
+        return self.dataset.extra.get("delegate_to", None)
+
+    @property
+    def google_impersonation_chain(self) -> str | Sequence[str] | None:
+        return self.dataset.extra.get("google_impersonation_chain", None)
+
+    @property
+    def delimiter(self) -> str | None:
+        return self.dataset.extra.get("delimiter", None)
+
+    @property
+    def bucket_name(self) -> str:
         bucket_name, _ = _parse_gcs_url(gsurl=self.dataset.path)
         return bucket_name
 
     @property
-    def get_blob_name(self) -> str:
+    def prefix(self) -> str | None:
+        return self.dataset.extra.get("prefix", None)
+
+    @property
+    def gzip(self) -> bool | None:
+        return self.dataset.extra.get("gzip", False)
+
+    @property
+    def blob_name(self) -> str:
         bucket_name, blob = _parse_gcs_url(gsurl=self.dataset.path)
         return blob
 

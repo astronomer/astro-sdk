@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 from airflow.hooks.dbapi import DbApiHook
+
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
 
 
@@ -17,7 +18,7 @@ class TransferIntegration(ABC):
         self.transfer_params = transfer_params
         # transfer mapping creates a mapping between various sources and destination, where
         # transfer is possible using the integration
-        self.transfer_mapping: dict[str, str] = {}
+        self.transfer_mapping: dict[str, str] = None
         # TODO: add method for validation, transfer mapping, transfer params etc
 
     @property
