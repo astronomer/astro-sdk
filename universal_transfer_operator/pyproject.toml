@@ -125,7 +125,7 @@ markers = [
 
 
 [tool.flit.module]
-name = "universal_transfer_operator"  # Or "astro.sql" if you just want this directory, not the entire 'astro'.
+name = "universal_transfer_operator"
 
 [tool.mypy]
 color_output = true
