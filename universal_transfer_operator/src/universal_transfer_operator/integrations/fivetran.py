@@ -3,9 +3,10 @@ from __future__ import annotations
 import logging
 
 import attr
-from datasets.base import UniversalDataset as Dataset
 from fivetran_provider.hooks.fivetran import FivetranHook
-from integrations.base import TransferIntegration
+
+from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
+from universal_transfer_operator.integrations.base import TransferIntegration
 
 
 @attr.define

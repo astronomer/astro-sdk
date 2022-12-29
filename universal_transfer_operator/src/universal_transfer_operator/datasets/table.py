@@ -3,8 +3,9 @@ from __future__ import annotations
 from urllib.parse import urlparse
 
 from attr import define, field, fields_dict
-from datasets.base import UniversalDataset
 from sqlalchemy import Column
+
+from universal_transfer_operator.datasets.base import UniversalDataset
 
 
 @define

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from attr import define
-from datasets.base import UniversalDataset
+
+from universal_transfer_operator.datasets.base import UniversalDataset
 
 
 @define

@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 from tempfile import NamedTemporaryFile
-from typing import Any
 
 from airflow.hooks.dbapi import DbApiHook
 from attr import define
-from data_providers.base import DataProviders
-from datasets.base import UniversalDataset as Dataset
 
-from constants import FileLocation, LoadExistStrategy
-from utils import get_dataset_connection_type
+from universal_transfer_operator.constants import LoadExistStrategy, Location
+from universal_transfer_operator.data_providers.base import DataProviders
+from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
+from universal_transfer_operator.utils import get_dataset_connection_type
 
 
 @define
@@ -32,7 +31,7 @@ class BaseFilesystemProviders(DataProviders):
         self.transfer_params = transfer_params
         self.transfer_mode = transfer_mode
         self.if_exists = if_exists
-        self.transfer_mapping: Any = {}
+        self.transfer_mapping = {}
         self.LOAD_DATA_NATIVELY_FROM_SOURCE: dict = {}
 
     def __repr__(self):
@@ -52,7 +51,7 @@ class BaseFilesystemProviders(DataProviders):
         Checks if the transfer is supported from source to destination based on source_dataset.
         """
         source_connection_type = get_dataset_connection_type(source_dataset)
-        return FileLocation(source_connection_type) in self.transfer_mapping
+        return Location(source_connection_type) in self.transfer_mapping
 
     def read(self) -> list[TempFile]:
         """Read the file dataset and write to local file location"""

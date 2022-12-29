@@ -5,10 +5,10 @@ import os
 from tempfile import NamedTemporaryFile
 
 from airflow.providers.google.cloud.hooks.gcs import GCSHook, _parse_gcs_url
-from data_providers.filesystem.base import BaseFilesystemProviders, TempFile
-from datasets.base import UniversalDataset as Dataset
 
-from constants import FileLocation, LoadExistStrategy, TransferMode
+from universal_transfer_operator.constants import LoadExistStrategy, Location, TransferMode
+from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders, TempFile
+from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
 
 
 class GCSDataProvider(BaseFilesystemProviders):
@@ -29,9 +29,9 @@ class GCSDataProvider(BaseFilesystemProviders):
             transfer_mode=transfer_mode,
             if_exists=if_exists,
         )
-        self.transfer_mapping: set = {
-            FileLocation.AWS,
-            FileLocation.google_cloud_platform,
+        self.transfer_mapping = {
+            Location.S3,
+            Location.GS,
         }
 
     @property
@@ -45,23 +45,25 @@ class GCSDataProvider(BaseFilesystemProviders):
 
     def check_if_exists(self) -> bool:
         """Return true if the dataset exists"""
-        return self.hook.exists(bucket_name=self.get_bucket_name(), object_name=self.get_blob_name())
+        return self.hook.exists(bucket_name=self.get_bucket_name, object_name=self.get_blob_name)
 
     def read(self) -> list[TempFile]:
         """Read the file from dataset and write to local file location"""
         if not self.check_if_exists():
             raise ValueError(f"{self.dataset.path} doesn't exits")
+
         logging.info(
             "Getting list of the files. Bucket: %s; Delimiter: %s; Prefix: %s",
-            self.get_bucket_name(),  # type: ignore
+            self.get_bucket_name,  # type: ignore
             self.dataset.extra.get("delimiter", None),
             self.dataset.extra.get("prefix", None),
         )
         files = self.hook.list(
-            bucket_name=self.get_bucket_name(),  # type: ignore
+            bucket_name=self.get_bucket_name,  # type: ignore
             prefix=self.dataset.extra.get("prefix", None),
             delimiter=self.dataset.extra.get("delimiter", None),
         )
+
         local_filename = []
         if files:
             for file in files:
@@ -73,6 +75,7 @@ class GCSDataProvider(BaseFilesystemProviders):
                         filename=tmp_file.name,
                     )
                     local_filename.append(TempFile(tmp_file=tmp_file, actual_filename=file_name))
+
         return local_filename
 
     def write(self, source_ref: list[TempFile]) -> list[str]:
@@ -104,10 +107,12 @@ class GCSDataProvider(BaseFilesystemProviders):
             if os.path.exists(file.tmp_file.name):
                 os.remove(file.tmp_file.name)
 
+    @property
     def get_bucket_name(self) -> str:
         bucket_name, _ = _parse_gcs_url(gsurl=self.dataset.path)
         return bucket_name
 
+    @property
     def get_blob_name(self) -> str:
         bucket_name, blob = _parse_gcs_url(gsurl=self.dataset.path)
         return blob

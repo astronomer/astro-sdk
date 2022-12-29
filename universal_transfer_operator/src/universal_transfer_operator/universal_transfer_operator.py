@@ -4,11 +4,11 @@ from typing import Any
 
 from airflow.models import BaseOperator
 from airflow.utils.context import Context
-from data_providers import create_dataprovider
-from datasets.base import UniversalDataset as Dataset
-from integrations import get_transfer_integration
 
-from constants import LoadExistStrategy, TransferMode
+from universal_transfer_operator.constants import LoadExistStrategy, TransferMode
+from universal_transfer_operator.data_providers import create_dataprovider
+from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
+from universal_transfer_operator.integrations import get_transfer_integration
 
 
 class UniversalTransferOperator(BaseOperator):

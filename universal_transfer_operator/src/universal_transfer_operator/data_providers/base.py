@@ -3,10 +3,10 @@ from __future__ import annotations
 from abc import ABC
 
 from airflow.hooks.base import BaseHook
-from datasets.base import UniversalDataset as Dataset
 
-from constants import LoadExistStrategy, Location
-from utils import get_dataset_connection_type
+from universal_transfer_operator.constants import LoadExistStrategy, Location
+from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
+from universal_transfer_operator.utils import get_dataset_connection_type
 
 
 class DataProviders(ABC):
@@ -59,11 +59,11 @@ class DataProviders(ABC):
         """Write the data from local reference location to the dataset"""
         raise NotImplementedError
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self):
-        return self
+    # def __enter__(self):
+    #     return self
+    #
+    # def __exit__(self):
+    #     return self
 
     def load_data_from_source_natively(self, source_dataset: Dataset, destination_dataset: Dataset) -> None:
         """

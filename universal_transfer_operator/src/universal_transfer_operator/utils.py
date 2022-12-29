@@ -1,7 +1,8 @@
 from typing import Any
 
 from airflow.hooks.base import BaseHook
-from datasets.base import UniversalDataset as Dataset
+
+from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
 
 
 def check_if_connection_exists(conn_id: str) -> bool:

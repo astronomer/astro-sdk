@@ -3,10 +3,10 @@ from __future__ import annotations
 import os
 
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-from data_providers.filesystem.base import BaseFilesystemProviders, TempFile
-from datasets.base import UniversalDataset as Dataset
 
-from constants import FileLocation, LoadExistStrategy, TransferMode
+from universal_transfer_operator.constants import LoadExistStrategy, Location, TransferMode
+from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders, TempFile
+from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
 
 
 class S3DataProvider(BaseFilesystemProviders):
@@ -28,8 +28,8 @@ class S3DataProvider(BaseFilesystemProviders):
             if_exists=if_exists,
         )
         self.transfer_mapping: set = {
-            FileLocation.AWS,
-            FileLocation.google_cloud_platform,
+            Location.S3,
+            Location.GS,
         }
 
     @property
