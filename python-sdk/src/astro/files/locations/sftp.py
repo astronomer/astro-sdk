@@ -89,10 +89,11 @@ class SFTPSteam:
         self.buffer = io.BytesIO()
 
     def __enter__(self):
-        return io.BytesIO()
+        return self.buffer
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.buffer.seek(0)
         sftp = self.sftp.hook.get_conn()
         parsed_url = urlparse(self.sftp.path)
         sftp.putfo(self.buffer, parsed_url.netloc + parsed_url.path)
+        self.buffer.close()
