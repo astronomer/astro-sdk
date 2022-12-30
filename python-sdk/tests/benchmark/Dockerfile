@@ -14,6 +14,7 @@ ENV GCP_BUCKET=dag-authoring
 ENV AIRFLOW__ASTRO_SDK__SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE=gcs_int_python_sdk
 ENV AIRFLOW__ASTRO_SDK__LOAD_TABLE_AUTODETECT_ROWS_COUNT=1000
 ENV GIT_HASH ${GIT_HASH}
+ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
 # Debian Bullseye is shipped with Python 3.9
 # Upgrade built-in pip
@@ -24,7 +25,9 @@ RUN apt install -y vim
 
 # Install the Google SDK
 RUN apt install -y curl
+RUN apt-get install google-cloud-sdk-gke-gcloud-auth-plugin
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && apt-get update -y && apt-get install google-cloud-cli -y
+RUN gcloud components update
 
 RUN apt install -y libpq-dev python3-dev
 
