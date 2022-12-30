@@ -86,6 +86,6 @@ def test_find_first_table(kwargs, return_type):
     ],
     ids=["op_args", "op_kwargs", "parameters"],
 )
-@mock.patch("airflow.models.xcom_arg.PlainXComArg.resolve", return_value=Table())
+@mock.patch("airflow.models.xcom_arg.PlainXComArg.resolve", return_value=Table(), autospec=True)
 def test_find_first_table_with_xcom_arg(xcom_arg_resolve, kwargs, return_type):
     assert isinstance(find_first_table(context={}, **kwargs), return_type)

@@ -17,7 +17,7 @@ def test_find_file_type():
         _find_file_type(File("foo/bar"))
 
 
-@mock.patch("databricks_cli.sdk.api_client.ApiClient")
+@mock.patch("databricks_cli.sdk.api_client.ApiClient", autospec=True)
 def test_load_local_file(mock_api_client):
     _load_local_file_to_dbfs(api_client=mock_api_client, input_file=File(__file__))
     calls = [
