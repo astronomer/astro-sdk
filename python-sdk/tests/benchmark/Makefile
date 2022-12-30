@@ -55,6 +55,7 @@ local: clean check_google_credentials
 
 run_job:
 	@gcloud container clusters get-credentials astro-sdk --zone us-central1-a --project ${GCP_PROJECT}
+	@gcloud components install gke-gcloud-auth-plugin
 	@kubectl apply -f infrastructure/kubernetes/namespace.yaml
 	@kubectl apply -f infrastructure/kubernetes/postgres.yaml
 	@kubectl apply -f infrastructure/kubernetes/postgres_svc.yaml
