@@ -97,7 +97,7 @@ class File(LoggingMixin, Dataset):
         """
         self.is_dataframe = store_as_dataframe
 
-        with self.location.get_stream(df=df) as stream:
+        with self.location.get_stream() as stream:
             self.type.create_from_dataframe(stream=stream, df=df)
 
     @property

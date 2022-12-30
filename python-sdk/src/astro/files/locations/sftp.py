@@ -3,7 +3,6 @@ from __future__ import annotations
 import io
 from urllib.parse import urlparse
 
-import pandas as pd
 from airflow.providers.sftp.hooks.sftp import SFTPHook
 
 from astro.constants import FileLocation
@@ -79,12 +78,18 @@ class SFTPLocation(BaseFileLocation):
         client = self.hook.get_connection(self.conn_id)
         return client.get_uri()
 
-    def get_stream(self, df: pd.DataFrame):
-        return SFTPSteam(self)
+    def get_stream(self):
+        """return the custom SFTP stream to add file into given path"""
+        return SFTPStream(self)
 
 
-class SFTPSteam:
+class SFTPStream:
     def __init__(self, sftp: SFTPLocation):
+        """
+        SFTP stream to export an file to the given location.
+
+        :param sftp: SFTPLocation Class instance
+        """
         self.sftp = sftp
         self.buffer = io.BytesIO()
 

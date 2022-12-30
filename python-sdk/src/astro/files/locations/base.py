@@ -6,7 +6,6 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from urllib.parse import urlparse
 
-import pandas
 import smart_open
 from airflow.hooks.base import BaseHook
 
@@ -171,5 +170,9 @@ class BaseFileLocation(ABC):
     def __hash__(self) -> int:
         return hash((self.path, self.conn_id))
 
-    def get_stream(self, df: pandas.DataFrame):
+    def get_stream(self):
+        """Create a file in the desired location using the smart_open.
+
+        :param df: pandas dataframe
+        """
         return smart_open.open(self.path, mode="wb", transport_params=self.transport_params)
