@@ -26,7 +26,7 @@ RUN apt-get update && \
 
 # Install the Google SDK
 RUN apt install -y curl
-RUN wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-327.0.0-linux-x86_64.tar.gz /tmp/google-cloud-sdk.tar.gz
+RUN wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-327.0.0-linux-x86_64.tar.gz -O /tmp/google-cloud-sdk.tar.gz
 
 RUN mkdir -p /usr/local/gcloud \
     && tar -C /usr/local/gcloud -xvzf /tmp/google-cloud-sdk.tar.gz \
