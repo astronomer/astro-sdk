@@ -116,7 +116,7 @@ def test_unique_task_id_for_same_path(
     assert tasks[0].operator.task_id != tasks[1].operator.task_id
     assert tasks[0].operator.task_id == "export_to_file"
     assert tasks[1].operator.task_id == "export_to_file__1"
-    assert tasks[2].operator.task_id == "export__to_file__2"
+    assert tasks[2].operator.task_id == "export_to_file__2"
     assert tasks[3].operator.task_id == "task_id"
 
     os.remove(OUTPUT_FILE_PATH)
@@ -188,7 +188,7 @@ def test_warnings_message():
     with pytest.warns(
         expected_warning=DeprecationWarning,
         match="""This decorator is deprecated.
-        Please use `astro.sql.operators.export_table_to_file.export_table_to_file`.
+        Please use `astro.sql.operators.export_to_file.export_table_to_file`.
         And, will be removed in astro-sdk-python>=2.0.0.""",
     ):
         export_file(input_data=Table(), output_file=File(path="/tmp/saved_df.csv"), if_exists="replace")
