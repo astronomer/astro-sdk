@@ -34,9 +34,9 @@ RUN mkdir -p /usr/local/gcloud \
 
 ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin
 
-RUN gcloud components install gke-gcloud-auth-plugin
-
 RUN gcloud components update
+
+RUN gcloud components install gke-gcloud-auth-plugin
 
 RUN apt install -y libpq-dev python3-dev
 
