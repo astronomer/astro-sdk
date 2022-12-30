@@ -18,15 +18,15 @@ ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
 # Debian Bullseye is shipped with Python 3.9
 # Upgrade built-in pip
-RUN apt-get update
-RUN apt-get install -y python3-pip
-RUN apt install -y jq
-RUN apt install -y vim
+RUN apt-get update && \
+    apt-get install -y python3-pip && \
+    apt-get install -y wget && \
+    apt install -y jq && \
+    apt install -y vim
 
 # Install the Google SDK
 RUN apt install -y curl
-RUN wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-327.0.0-linux-x86_64.tar.gz \
-    -O /tmp/google-cloud-sdk.tar.gz | bash
+RUN wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-327.0.0-linux-x86_64.tar.gz /tmp/google-cloud-sdk.tar.gz
 
 RUN mkdir -p /usr/local/gcloud \
     && tar -C /usr/local/gcloud -xvzf /tmp/google-cloud-sdk.tar.gz \
