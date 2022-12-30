@@ -95,21 +95,10 @@ class File(LoggingMixin, Dataset):
             delimited data (e.g. csv, parquet, etc.).
         :param df: pandas dataframe
         """
-        from urllib.parse import urlparse
-
         self.is_dataframe = store_as_dataframe
-        parsed_url = urlparse(self.path)
-        if parsed_url.scheme == constants.FileLocation.SFTP.value:
-            # For SFTP, smart_open doesn't support write functionality.
-            # So here we have custom method to write to SFTP.
-            self.location.create_from_dataframe(  # type: ignore[attr-defined]
-                parsed_url.netloc + parsed_url.path, df, self.type.name
-            )
-        else:
-            with smart_open.open(
-                self.path, mode="wb", transport_params=self.location.transport_params
-            ) as stream:
-                self.type.create_from_dataframe(stream=stream, df=df)
+
+        with self.location.get_stream(df=df) as stream:
+            self.type.create_from_dataframe(stream=stream, df=df)
 
     @property
     def openlineage_dataset_namespace(self) -> str:

@@ -6,7 +6,7 @@ from urllib.parse import urlparse
 import pandas as pd
 from airflow.providers.sftp.hooks.sftp import SFTPHook
 
-from astro.constants import FileLocation, FileType
+from astro.constants import FileLocation
 from astro.exceptions import PermissionNotSetError
 from astro.files.locations.base import BaseFileLocation
 
@@ -79,23 +79,20 @@ class SFTPLocation(BaseFileLocation):
         client = self.hook.get_connection(self.conn_id)
         return client.get_uri()
 
-    def create_from_dataframe(self, full_path: str, df: pd.DataFrame, filetype: FileType):
-        """Create a file in the desired SFTP location using the values of a dataframe.
+    def get_stream(self, df: pd.DataFrame):
+        return SFTPSteam(self)
 
-        :param full_path: The full path to the file
-        :param df: pandas dataframe
-        :param filetype: constant to provide an explicit file type
-        """
 
-        sftp = self.hook.get_conn()
-        buffer = io.BytesIO()
-        if filetype == FileType.CSV:
-            df.to_csv(buffer, index=False)
-        elif filetype == FileType.JSON:
-            df.to_json(buffer, orient="records")
-        elif filetype == FileType.NDJSON:
-            df.to_json(buffer, orient="records", lines=True)
-        elif filetype == FileType.PARQUET:
-            df.to_parquet(buffer)
-        buffer.seek(0)
-        sftp.putfo(buffer, full_path)
+class SFTPSteam:
+    def __init__(self, sftp: SFTPLocation):
+        self.sftp = sftp
+        self.buffer = io.BytesIO()
+
+    def __enter__(self):
+        return io.BytesIO()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.buffer.seek(0)
+        sftp = self.sftp.hook.get_conn()
+        parsed_url = urlparse(self.sftp.path)
+        sftp.putfo(self.buffer, parsed_url.netloc + parsed_url.path)
