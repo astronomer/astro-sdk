@@ -188,7 +188,7 @@ def test_warnings_message():
     with pytest.warns(
         expected_warning=DeprecationWarning,
         match="""This decorator is deprecated.
-        Please use `astro.sql.operators.export_to_file.export_table_to_file`.
+        Please use `astro.sql.operators.export_to_file.export_to_file`.
         And, will be removed in astro-sdk-python>=2.0.0.""",
     ):
         export_file(input_data=Table(), output_file=File(path="/tmp/saved_df.csv"), if_exists="replace")
