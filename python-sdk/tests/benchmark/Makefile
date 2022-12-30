@@ -6,7 +6,7 @@ GIT_HASH = $(shell git log -1 --format=%h)
 APP ?= benchmark
 CONTAINER_REGISTRY=gcr.io/$(GCP_PROJECT)/$(APP)
 ASTRO_TARGET_PLATFORM ?= "linux/amd64"
-
+export USE_GKE_GCLOUD_AUTH_PLUGIN := True
 check_google_credentials:
 ifndef GOOGLE_APPLICATION_CREDENTIALS
 	@echo "The GOOGLE_APPLICATION_CREDENTIALS environment variable is missing."
@@ -56,6 +56,7 @@ local: clean check_google_credentials
 
 run_job:
 	@gcloud container clusters get-credentials astro-sdk --zone us-central1-a --project ${GCP_PROJECT}
+	@gcloud components install gke-gcloud-auth-plugin
 	@kubectl apply -f infrastructure/kubernetes/namespace.yaml
 	@kubectl apply -f infrastructure/kubernetes/postgres.yaml
 	@kubectl apply -f infrastructure/kubernetes/postgres_svc.yaml
