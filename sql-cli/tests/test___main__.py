@@ -521,32 +521,6 @@ def test_init_with_directory(tmp_path):
     assert list_dir(tmp_path)
 
 
-def test_init_with_custom_airflow_config(tmp_path, tmp_path_factory):
-    airflow_home = tmp_path_factory.mktemp("airflow")
-    airflow_dags_folder = tmp_path_factory.mktemp("dags")
-    data_dir = tmp_path_factory.mktemp("data-dir")
-    result = runner.invoke(
-        app,
-        [
-            "init",
-            tmp_path.as_posix(),
-            "--airflow-home",
-            airflow_home.as_posix(),
-            "--airflow-dags-folder",
-            airflow_dags_folder.as_posix(),
-            "--data-dir",
-            data_dir.as_posix(),
-        ],
-    )
-    assert result.exit_code == 0
-    assert f"Initialized an Astro SQL project at {tmp_path.as_posix()}" in result.stdout
-    assert list_dir(tmp_path)
-    # Airflow home should have been initialised with the airflow files
-    assert list_dir(airflow_home)
-    # Data directory should have been initialised with the examples
-    assert list_dir(data_dir)
-
-
 def test_init_without_directory():
     # Creates a temporary directory and cd into it.
     # This isolates tests that affect the contents of the CWD to prevent them from interfering with each other.
@@ -559,6 +533,55 @@ def test_init_without_directory():
         assert "Initialized an Astro SQL project at" in result.stdout
         assert temp_dir in result.stdout
         assert list_dir(temp_path)
+
+
+@pytest.mark.parametrize(
+    "debug_option,check_output",
+    [
+        ("--debug", lambda output: "Airflow DB Initialization exited with 0" in output),
+        ("--no-debug", lambda output: "Airflow DB Initialization exited with 0" not in output),
+    ],
+    ids=[
+        "debug",
+        "no-debug",
+    ],
+)
+def test_init_output(tmp_path, debug_option, check_output):
+    result = runner.invoke(app, [debug_option, "init", tmp_path.as_posix()])
+    assert result.exit_code == 0
+    assert f"Initialized an Astro SQL project at {tmp_path.as_posix()}" in result.stdout
+    assert list_dir(tmp_path)
+    assert check_output(result.stdout)
+
+
+@pytest.mark.parametrize(
+    "option,files_created",
+    [
+        ("--airflow-home", True),  # Airflow home should have been initialised with the airflow files
+        ("--airflow-dags-folder", False),  # Does not create example DAGs
+        ("--data-dir", True),  # Data directory should have been initialised with the examples
+    ],
+    ids=[
+        "airflow-home",
+        "airflow-dags-folder",
+        "data-dir",
+    ],
+)
+def test_init_option(tmp_path, tmp_path_factory, option, files_created, request):
+    option_path = tmp_path_factory.mktemp(request.node.callspec.id)
+    result = runner.invoke(
+        app,
+        [
+            "init",
+            tmp_path.as_posix(),
+            option,
+            option_path.as_posix(),
+        ],
+    )
+    assert result.exit_code == 0
+    assert f"Initialized an Astro SQL project at {tmp_path.as_posix()}" in result.stdout
+    assert list_dir(tmp_path)
+    assert bool(list_dir(option_path)) == files_created
 
 
 @pytest.mark.parametrize(

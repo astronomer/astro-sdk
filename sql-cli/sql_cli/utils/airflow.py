@@ -10,10 +10,13 @@ from typing import TYPE_CHECKING
 
 from packaging.version import Version
 
+from sql_cli.constants import STATE
+
 if TYPE_CHECKING:
     from airflow.models.dag import DAG  # pragma: no cover
 
 log = logging.getLogger("sql_cli")
+airflow_logger = logging.getLogger("airflow")
 
 
 def version() -> Version:
@@ -45,10 +48,10 @@ def initialise(airflow_home: Path, airflow_dags_folder: Path) -> None:
 
     importlib.reload(configuration)
 
-    if log.level == logging.DEBUG:
+    if STATE["debug"]:
         # Initialise the airflow database
         exit_code = os.system("airflow db init")  # skipcq: BAN-B605,BAN-B607
-        log.debug("Airflow DB Initialization exited with %s", exit_code)
+        airflow_logger.debug("Airflow DB Initialization exited with %s", exit_code)
     else:
         # Initialise the airflow database & hide all logs
         os.system("airflow db init > /dev/null 2>&1")  # skipcq: BAN-B605,BAN-B607

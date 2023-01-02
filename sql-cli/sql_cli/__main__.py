@@ -12,7 +12,7 @@ from sql_cli.astro.command import AstroCommand
 from sql_cli.astro.group import AstroGroup
 from sql_cli.cli import config as cli_config
 from sql_cli.cli.utils import resolve_project_dir
-from sql_cli.constants import DEFAULT_BASE_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_DATA_DIR
+from sql_cli.constants import DEFAULT_BASE_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_DATA_DIR, STATE
 from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
 from sql_cli.utils.rich import RichHandler, rprint
 
@@ -51,6 +51,8 @@ def set_debug_mode(debug: bool) -> None:
 
     :param debug: Whether debug logs should be enabled.
     """
+    STATE["debug"] = debug
+
     for logger_name in ["airflow", "botocore", "snowflake"]:
         logger = logging.getLogger(logger_name)
         logger.propagate = debug
