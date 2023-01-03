@@ -273,6 +273,15 @@ Users can also load data from an SFTP:
    :start-after: [START load_file_example_20]
    :end-before: [END load_file_example_20]
 
+Loading data from FTP
+~~~~~~~~~~~~~~~~~~~~~~
+Users can also load data from an FTP:
+
+.. literalinclude:: ../../../../example_dags/example_load_file.py
+   :language: python
+   :start-after: [START load_file_example_21]
+   :end-before: [END load_file_example_21]
+
 
 Default Datasets
 ~~~~~~~~~~~~~~~~

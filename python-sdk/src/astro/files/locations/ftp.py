@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from urllib.parse import urlparse
 
+import smart_open
 from airflow.providers.ftp.hooks.ftp import FTPHook
 
 from astro.constants import FileLocation
@@ -12,6 +13,7 @@ class FTPLocation(BaseFileLocation):
     """Handler FTP object store operations"""
 
     location_type = FileLocation.FTP
+    supported_conn_type = {FTPHook.conn_type}
 
     @property
     def hook(self) -> FTPHook:
@@ -64,3 +66,8 @@ class FTPLocation(BaseFileLocation):
         """Gets the URI of the connection"""
         conn = self.hook.get_connection(self.conn_id)
         return conn.get_uri()
+
+    def get_stream(self):
+        parsed_url = urlparse(self.path)
+        self.path = f"{self.get_uri()}/{parsed_url.netloc}{parsed_url.path}"
+        return smart_open.open(self.path, mode="wb", transport_params=self.transport_params)

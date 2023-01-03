@@ -113,7 +113,8 @@ connections:
     port: 2222
   - conn_id: ftp_conn
     conn_type: ftp
-    host: 127.0.0.1
-    login: $REMOTE_USERNAME
-    password: $REMOTE_PASSWORD
+    host: localhost
+    login: foo
+    password: pass
     port: 21
+    extra:
