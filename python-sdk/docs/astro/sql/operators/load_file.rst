@@ -264,6 +264,15 @@ Users can also load data from an HTTP API:
    :start-after: [START load_file_http_example]
    :end-before: [END load_file_http_example]
 
+Loading data from SFTP
+~~~~~~~~~~~~~~~~~~~~~~
+Users can also load data from an SFTP:
+
+.. literalinclude:: ../../../../example_dags/example_load_file.py
+   :language: python
+   :start-after: [START load_file_example_20]
+   :end-before: [END load_file_example_20]
+
 
 Default Datasets
 ~~~~~~~~~~~~~~~~

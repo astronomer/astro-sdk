@@ -96,7 +96,8 @@ class File(LoggingMixin, Dataset):
         :param df: pandas dataframe
         """
         self.is_dataframe = store_as_dataframe
-        with smart_open.open(self.path, mode="wb", transport_params=self.location.transport_params) as stream:
+
+        with self.location.get_stream() as stream:
             self.type.create_from_dataframe(stream=stream, df=df)
 
     @property
