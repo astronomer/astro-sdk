@@ -804,12 +804,12 @@ class SnowflakeDatabase(BaseDatabase):
         ) = self.get_sqlalchemy_template_table_identifier_and_parameter(target_table, "target_table")
 
         merge_target_dict = {
-            f"merge_clause_target_{i}": f"TARGET_TABLE."
+            f"merge_clause_target_{i}": f"{target_table_identifier}."
             f"{target_identifier_enclosure}{x}{target_identifier_enclosure}"
             for i, x in enumerate(target_conflict_columns)
         }
         merge_source_dict = {
-            f"merge_clause_source_{i}": f"SOURCE_TABLE."
+            f"merge_clause_source_{i}": f"{source_table_identifier}."
             f"{source_identifier_enclosure}{x}{source_identifier_enclosure}"
             for i, x in enumerate(target_conflict_columns)
         }
@@ -820,10 +820,7 @@ class SnowflakeDatabase(BaseDatabase):
                 for k, v in zip(merge_target_dict.keys(), merge_source_dict.keys())
             ),
         )
-        statement = (
-            f"merge into {target_table_identifier} as TARGET_TABLE "
-            f"using {source_table_identifier} as SOURCE_TABLE "
-        )
+        statement = f"merge into {target_table_identifier} " f"using {source_table_identifier} "
         statement += f"on {merge_clauses}"
 
         values_to_check = [target_table_name, source_table_name]
@@ -836,16 +833,20 @@ class SnowflakeDatabase(BaseDatabase):
                 )
         if if_conflicts == "update":
             statement += self._create_merge_update_statement(
-                source_identifier_enclosure, source_to_target_columns_map, target_identifier_enclosure
+                source_table_identifier,
+                target_table_identifier,
+                source_identifier_enclosure,
+                source_to_target_columns_map,
+                target_identifier_enclosure,
             )
 
         statement += self._create_not_matched_statement(
             source_cols,
             source_identifier_enclosure,
-            source_table_name,
+            source_table_identifier,
             target_cols,
             target_identifier_enclosure,
-            target_table_name,
+            target_table_identifier,
         )
         params = {
             **merge_target_dict,
@@ -859,18 +860,18 @@ class SnowflakeDatabase(BaseDatabase):
         self,
         source_cols,
         source_identifier_enclosure,
-        source_table_name,
+        source_table_identifier,
         target_cols,
         target_identifier_enclosure,
-        target_table_name,
+        target_table_identifier,
     ):
         target_columns = ",".join(
-            f"{target_table_name}.{target_identifier_enclosure}{t}{target_identifier_enclosure}"
+            f"{target_table_identifier}.{target_identifier_enclosure}{t}{target_identifier_enclosure}"
             for t in target_cols
         )
         append_columns = (
             ",".join(
-                f"{source_table_name}.{source_identifier_enclosure}{s}{source_identifier_enclosure}"
+                f"{source_table_identifier}.{source_identifier_enclosure}{s}{source_identifier_enclosure}"
                 for s in source_cols
             ),
         )
@@ -878,12 +879,17 @@ class SnowflakeDatabase(BaseDatabase):
         return not_matched_statement
 
     def _create_merge_update_statement(
-        self, source_identifier_enclosure, source_to_target_columns_map, target_identifier_enclosure
+        self,
+        source_table_identifier,
+        target_table_identifier,
+        source_identifier_enclosure,
+        source_to_target_columns_map,
+        target_identifier_enclosure,
     ):
         merge_vals = ",".join(
             [
-                f"TARGET_TABLE.{target_identifier_enclosure}{t}{target_identifier_enclosure}="
-                f"SOURCE_TABLE.{source_identifier_enclosure}{s}{source_identifier_enclosure}"
+                f"{target_table_identifier}.{target_identifier_enclosure}{t}{target_identifier_enclosure}="
+                f"{source_table_identifier}.{source_identifier_enclosure}{s}{source_identifier_enclosure}"
                 for s, t in source_to_target_columns_map.items()
             ]
         )
