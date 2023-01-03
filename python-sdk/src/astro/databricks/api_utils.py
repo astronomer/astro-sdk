@@ -168,7 +168,16 @@ def create_and_run_job(
         python_params=None,
         spark_submit_params=None,
     )["run_id"]
+    monitor_job(api_client=api_client, run_id=run_id)
 
+
+def monitor_job(api_client: ApiClient, run_id: str):
+    """
+    Take an existing spark job and monitor it until it either succeeds or fail
+    :param api_client: Api Client with credentials for communicating with databricks
+    :param run_id: the run ID returned by the databricks JobsAPI
+    :return:
+    """
     runs_api = RunsApi(api_client)
     ping_interval = int(conf.get("astro_sdk", "databricks_ping_interval", fallback=5))
     while runs_api.get_run(run_id)["state"]["life_cycle_state"] == "PENDING":
