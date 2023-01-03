@@ -1,3 +1,4 @@
+import contextlib
 import json
 from unittest.mock import patch
 
@@ -86,3 +87,13 @@ def test_hook():
     location = create_file_location("sftp://bucket/some-file")
     hook = location.hook
     assert isinstance(hook, SFTPHook)
+
+
+@patch("astro.files.locations.sftp.SFTPLocation.hook")
+def test_sftp_stream(mock_get_hook):
+    """Test to see if sftp stream is closed or not."""
+    location = create_file_location("sftp://bucket/some-file")
+    with contextlib.ExitStack() as stack:
+        resource = stack.enter_context(location.get_stream())
+        stack.pop_all()
+        assert resource.closed is True
