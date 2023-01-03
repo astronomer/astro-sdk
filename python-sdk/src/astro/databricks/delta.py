@@ -374,7 +374,7 @@ class DeltaDatabase(BaseDatabase):
         )
         statement = (
             f"merge into {target_table_identifier} as `target_table` "
-            f"using {source_table_identifier}as `source_table`"
+            f"using {source_table_identifier} as `source_table`"
             f" on {merge_clauses}"
         )
 
