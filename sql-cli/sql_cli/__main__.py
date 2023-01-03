@@ -154,7 +154,7 @@ def run(
 ) -> None:
     from airflow.utils.state import State
 
-    from sql_cli import run_dag as dag_runner
+    from sql_cli.dag_runner import run_dag
     from sql_cli.project import Project
     from sql_cli.utils.airflow import get_dag
 
@@ -167,7 +167,7 @@ def run(
 
     rprint(f"\nRunning the workflow [bold blue]{dag.dag_id}[/bold blue] for [bold]{env}[/bold] environment\n")
     try:
-        dr = dag_runner.run_dag(
+        dr = run_dag(
             dag,
             run_conf=project.get_env_airflow_config(env),
             connections={c.conn_id: c for c in project.connections},

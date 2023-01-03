@@ -346,7 +346,7 @@ def test_run(workflow_name, environment, initialised_project, generate_tasks):
     ],
 )
 @pytest.mark.parametrize("generate_tasks", ["--generate-tasks", "--no-generate-tasks"])
-@mock.patch("sql_cli.run_dag.run_dag")
+@mock.patch("sql_cli.dag_runner.run_dag")
 def test_run_state(mock_run_dag, initialised_project, generate_tasks, dag_run_state, final_state):
     workflow_name = "example_basic_transform"
     environment = "dev"
