@@ -415,7 +415,7 @@ class BaseDatabase(ABC):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
-        load_options: LoadOptions | None = None,
+        load_options: LoadOptions = LoadOptions(),
         **kwargs,
     ):
         """
@@ -455,6 +455,7 @@ class BaseDatabase(ABC):
                 normalize_config=normalize_config,
                 native_support_kwargs=native_support_kwargs,
                 enable_native_fallback=enable_native_fallback,
+                load_options=load_options,
                 chunk_size=chunk_size,
             )
         else:
@@ -521,11 +522,13 @@ class BaseDatabase(ABC):
         native_support_kwargs: dict | None = None,
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
+        load_options: LoadOptions = LoadOptions(),
         **kwargs,
     ):
         """
         Load content of a file in output_table.
 
+        :param load_options:
         :param source_file: File path and conn_id for object stores
         :param target_table: Table to create
         :param if_exists: Overwrite file if exists
@@ -542,6 +545,7 @@ class BaseDatabase(ABC):
                 target_table=target_table,
                 if_exists=if_exists,
                 native_support_kwargs=native_support_kwargs,
+                load_options=load_options,
                 **kwargs,
             )
         except self.NATIVE_LOAD_EXCEPTIONS as load_exception:  # skipcq: PYL-W0703
@@ -791,6 +795,7 @@ class BaseDatabase(ABC):
         target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
+        load_options: LoadOptions = LoadOptions(),
         **kwargs,
     ):
         """

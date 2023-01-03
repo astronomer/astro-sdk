@@ -38,6 +38,7 @@ from astro.constants import (
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
+from astro.options import LoadOptions, SnowflakeLoadOptions
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SNOWFLAKE_SCHEMA
 from astro.table import BaseTable, Metadata
 
@@ -367,6 +368,7 @@ class SnowflakeDatabase(BaseDatabase):
         file: File,
         storage_integration: str | None = None,
         metadata: Metadata | None = None,
+        load_options: SnowflakeLoadOptions = SnowflakeLoadOptions(),
     ) -> SnowflakeStage:
         """
         Creates a new named external stage to use for loading data from files into Snowflake
@@ -394,13 +396,14 @@ class SnowflakeDatabase(BaseDatabase):
         stage.set_url_from_file(file)
 
         fileformat = ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP[file.type.name]
-        copy_options = COPY_OPTIONS[file.type.name]
-
+        copy_options = [COPY_OPTIONS[file.type.name]]
+        copy_options.extend([f"{k}={v}" for k, v in load_options.copy_options.items()])
+        file_options = [f"{k}={v}" for k, v in load_options.file_options.items()]
         sql_statement = "".join(
             [
                 f"CREATE OR REPLACE STAGE {stage.qualified_name} URL='{stage.url}' ",
-                f"FILE_FORMAT=(TYPE={fileformat}, TRIM_SPACE=TRUE) ",
-                f"COPY_OPTIONS=({copy_options}) ",
+                f"FILE_FORMAT=(TYPE={fileformat}, TRIM_SPACE=TRUE" + ",".join(file_options) + ") ",
+                f"COPY_OPTIONS=({copy_options}" + ",".join(copy_options) + ") ",
                 auth,
             ]
         )
@@ -573,6 +576,7 @@ class SnowflakeDatabase(BaseDatabase):
         target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
+        load_options: LoadOptions = SnowflakeLoadOptions(),
         **kwargs,
     ):  # skipcq PYL-W0613
         """
@@ -587,6 +591,7 @@ class SnowflakeDatabase(BaseDatabase):
         retrieved from the Airflow connection or from the `storage_integration`
         attribute within `native_support_kwargs`.
 
+        :param load_options:
         :param source_file: File from which we need to transfer data
         :param target_table: Table to which the content of the file will be loaded to
         :param if_exists: Strategy used to load (currently supported: "append" or "replace")
@@ -601,7 +606,11 @@ class SnowflakeDatabase(BaseDatabase):
         """
         native_support_kwargs = native_support_kwargs or {}
         storage_integration = native_support_kwargs.get("storage_integration")
-        stage = self.create_stage(file=source_file, storage_integration=storage_integration)
+        if not isinstance(load_options, SnowflakeLoadOptions):
+            raise ValueError("Error: Requires a SnowflakeLoadOptions")
+        stage = self.create_stage(
+            file=source_file, storage_integration=storage_integration, load_options=load_options
+        )
 
         table_name = self.get_table_qualified_name(target_table)
         file_path = os.path.basename(source_file.path) or ""
@@ -610,6 +619,10 @@ class SnowflakeDatabase(BaseDatabase):
         # Below code is added due to breaking change in apache-airflow-providers-snowflake==3.2.0,
         # we need to pass handler param to get the rows. But in version apache-airflow-providers-snowflake==3.1.0
         # if we pass the handler provider raises an exception AttributeError
+        rows = self._copy_into_table_from_stage(sql_statement, stage)
+        self.evaluate_results(rows)
+
+    def _copy_into_table_from_stage(self, sql_statement, stage):
         try:
             rows = self.hook.run(sql_statement, handler=lambda cur: cur.fetchall())
         except AttributeError:
@@ -621,7 +634,7 @@ class SnowflakeDatabase(BaseDatabase):
             raise DatabaseCustomError from exe
         finally:
             self.drop_stage(stage)
-        self.evaluate_results(rows)
+        return rows
 
     @staticmethod
     def evaluate_results(rows):
