@@ -85,16 +85,6 @@ class DeltaDatabase(BaseDatabase):
         # TODO Do we need to implement this function? It seems like databricks will handle schemas for us
         raise NotImplementedError("Not implemented yet.")
 
-    def merge_table(
-        self,
-        source_table: BaseTable,
-        target_table: BaseTable,
-        source_to_target_columns_map: dict[str, str],
-        target_conflict_columns: list[str],
-        if_conflicts: MergeConflictStrategy = "exception",
-    ) -> None:
-        raise NotImplementedError("We do not yet support merge for databricks")
-
     def schema_exists(self, schema: str) -> bool:
         # Schemas do not need to be created for delta, so we can assume this is true
         return True
@@ -312,3 +302,98 @@ class DeltaDatabase(BaseDatabase):
             file = File(path=t + f"/dataframe_{uuid.uuid4()}.parquet", filetype=FileType.PARQUET)
             file.create_from_dataframe(source_dataframe)
             self.load_file_to_table(input_file=file, output_table=target_table, if_exists=if_exists)
+
+    @staticmethod
+    def get_merge_initialization_query(parameters: tuple) -> str:
+        """
+        Handles database-specific logic to handle constraints
+        for Delta. setting constraints is not required for merging tables in Delta so we only return "1"
+        """
+        return "SELECT 1"
+
+    def merge_table(
+        self,
+        source_table: BaseTable,
+        target_table: BaseTable,
+        source_to_target_columns_map: dict[str, str],
+        target_conflict_columns: list[str],
+        if_conflicts: MergeConflictStrategy = "exception",
+    ):
+        """
+        Merge the source table rows into a destination table.
+        The argument `if_conflicts` allows the user to define how to handle conflicts.
+
+        :param source_table: Contains the rows to be merged to the target_table
+        :param target_table: Contains the destination table in which the rows will be merged
+        :param source_to_target_columns_map: Dict of target_table columns names to source_table columns names
+        :param target_conflict_columns: List of cols where we expect to have a conflict while combining
+        :param if_conflicts: The strategy to be applied if there are conflicts.
+        """
+        statement, params = self._build_merge_sql(
+            source_table=source_table,
+            target_table=target_table,
+            source_to_target_columns_map=source_to_target_columns_map,
+            target_conflict_columns=target_conflict_columns,
+            if_conflicts=if_conflicts,
+        )
+        self.run_sql(sql=statement, parameters=params)
+
+    def _build_merge_sql(
+        self,
+        source_table: BaseTable,
+        target_table: BaseTable,
+        source_to_target_columns_map: dict[str, str],
+        target_conflict_columns: list[str],
+        if_conflicts: MergeConflictStrategy = "exception",
+    ):
+        """Build the SQL statement for Merge operation"""
+        # TODO: Simplify this function
+        source_table_name = source_table.name
+        target_table_name = target_table.name
+
+        source_cols = source_to_target_columns_map.keys()
+        target_cols = source_to_target_columns_map.values()
+
+        (
+            source_table_identifier,
+            source_table_param,
+        ) = self.get_sqlalchemy_template_table_identifier_and_parameter(source_table, "source_table")
+
+        (
+            target_table_identifier,
+            target_table_param,
+        ) = self.get_sqlalchemy_template_table_identifier_and_parameter(target_table, "target_table")
+        merge_target_dict = {
+            f"`target_table`.`{x}`": f"`target_table`.`{x}`" for i, x in enumerate(target_conflict_columns)
+        }
+        merge_source_dict = {
+            f"`source_table`.`{x}`": f"`source_table`.`{x}`" for i, x in enumerate(target_conflict_columns)
+        }
+        merge_clauses = " AND ".join(
+            f"{k}={v}" for k, v in zip(merge_target_dict.keys(), merge_source_dict.keys())
+        )
+        statement = (
+            f"merge into {target_table_identifier} as `target_table` "
+            f"using {source_table_identifier}as `source_table`"
+            f" on {merge_clauses}"
+        )
+
+        values_to_check = [target_table_name, source_table_name]
+        values_to_check.extend(source_cols)
+        values_to_check.extend(target_cols)
+        if if_conflicts == "update":
+            merge_statement = ",".join(
+                [f"target_table.{t} = source_table.{s}" for s, t in source_to_target_columns_map.items()]
+            )
+            statement += f" when matched then UPDATE SET {merge_statement}"
+        target_columns = ",".join(f"target_table.{t}" for t in target_cols)
+        append_columns = ",".join(f"source_table.{s}" for s in source_cols)
+        statement += f" when not matched then insert({target_columns}) values ({append_columns})"
+
+        params = {
+            **merge_target_dict,
+            **merge_source_dict,
+            "source_table": source_table_param,
+            "target_table": target_table_param,
+        }
+        return statement, params

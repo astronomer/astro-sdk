@@ -96,7 +96,7 @@ load_five_gb = GCSToBigQueryOperator(
 )
 
 delete_test_dataset = BigQueryDeleteDatasetOperator(
-    task_id="delete_airflow_test_dataset",
+    task_id="delete_airflow_dataset",
     dataset_id=DATASET_NAME,
     delete_contents=True,
     dag=dag,
