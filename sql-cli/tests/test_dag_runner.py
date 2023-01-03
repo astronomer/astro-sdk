@@ -11,8 +11,8 @@ from packaging.version import Version
 from sqlalchemy.exc import OperationalError
 
 from astro import sql as aql
+from sql_cli.dag_runner import _run_task, run_dag
 from sql_cli.exceptions import ConnectionFailed
-from sql_cli.run_dag import _run_task, run_dag
 from sql_cli.utils.airflow import initialise as initialise_airflow, reload as reload_airflow
 
 CWD = pathlib.Path(__file__).parent
