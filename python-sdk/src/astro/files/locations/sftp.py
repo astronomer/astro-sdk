@@ -81,17 +81,17 @@ class SFTPLocation(BaseFileLocation):
 
     def get_stream(self):
         """return the custom SFTP read_buffer context to add file into given path"""
-        return self.read_buffer()
+        return self.sftp_stream()
 
     @contextmanager
-    def read_buffer(self):
-        """SFTP read_buffer context to export an file to the given location."""
-        self.buffer = io.BytesIO()
+    def sftp_stream(self):
+        """sftp_stream context to export a file to the given location."""
+        buffer = io.BytesIO()
         try:
-            yield self.buffer
+            yield buffer
         finally:
-            self.buffer.seek(0)
+            buffer.seek(0)
             sftp = self.hook.get_conn()
             parsed_url = urlparse(self.path)
-            sftp.putfo(self.buffer, parsed_url.netloc + parsed_url.path)
-            self.buffer.close()
+            sftp.putfo(buffer, parsed_url.netloc + parsed_url.path)
+            buffer.close()
