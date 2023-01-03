@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+from contextlib import contextmanager
 from urllib.parse import urlparse
 
 from airflow.providers.sftp.hooks.sftp import SFTPHook
@@ -79,26 +80,18 @@ class SFTPLocation(BaseFileLocation):
         return client.get_uri()
 
     def get_stream(self):
-        """return the custom SFTP stream to add file into given path"""
-        return SFTPStream(self)
+        """return the custom SFTP read_buffer context to add file into given path"""
+        return self.read_buffer()
 
-
-class SFTPStream:
-    def __init__(self, sftp: SFTPLocation):
-        """
-        SFTP stream to export an file to the given location.
-
-        :param sftp: SFTPLocation Class instance
-        """
-        self.sftp = sftp
+    @contextmanager
+    def read_buffer(self):
+        """SFTP read_buffer context to export an file to the given location."""
         self.buffer = io.BytesIO()
-
-    def __enter__(self):
-        return self.buffer
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.buffer.seek(0)
-        sftp = self.sftp.hook.get_conn()
-        parsed_url = urlparse(self.sftp.path)
-        sftp.putfo(self.buffer, parsed_url.netloc + parsed_url.path)
-        self.buffer.close()
+        try:
+            yield self.buffer
+        finally:
+            self.buffer.seek(0)
+            sftp = self.hook.get_conn()
+            parsed_url = urlparse(self.path)
+            sftp.putfo(self.buffer, parsed_url.netloc + parsed_url.path)
+            self.buffer.close()
