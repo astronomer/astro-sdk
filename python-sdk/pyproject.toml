@@ -24,7 +24,7 @@ dependencies = [
     "python-frontmatter",
     "smart-open",
     "SQLAlchemy>=1.3.18",
-    "apache-airflow-providers-common-sql"
+    "apache-airflow-providers-common-sql==1.3.2rc2"
 ]
 
 keywords = ["airflow", "provider", "astronomer", "sql", "decorator", "task flow", "elt", "etl", "dag"]
