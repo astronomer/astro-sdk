@@ -69,5 +69,5 @@ class FTPLocation(BaseFileLocation):
 
     def get_stream(self):
         parsed_url = urlparse(self.path)
-        self.path = f"{self.get_uri()}/{parsed_url.netloc}{parsed_url.path}"
-        return smart_open.open(self.path, mode="wb", transport_params=self.transport_params)
+        path = f"{self.get_uri()}/{parsed_url.netloc}{parsed_url.path}"
+        return smart_open.open(path, mode="wb", transport_params=self.transport_params)
