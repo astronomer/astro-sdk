@@ -113,9 +113,10 @@ def validate_results(df: pd.DataFrame, mode):
         {"database": Database.REDSHIFT},
         {"database": Database.POSTGRES},
         {"database": Database.SQLITE},
+        {"database": Database.DELTA},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "redshift", "postgres", "sqlite"],
+    ids=["snowflake", "bigquery", "redshift", "postgres", "sqlite", "delta"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
@@ -150,9 +151,10 @@ def test_merge(database_table_fixture, multiple_tables_fixture, sample_dag, merg
         {"database": Database.SNOWFLAKE},
         {"database": Database.BIGQUERY},
         {"database": Database.REDSHIFT},
+        {"database": Database.DELTA},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "redshift"],
+    ids=["snowflake", "bigquery", "redshift", "delta"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
