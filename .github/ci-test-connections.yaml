@@ -113,8 +113,8 @@ connections:
     port: 2222
   - conn_id: ftp_conn
     conn_type: ftp
-    host: localhost
-    login: foo
-    password: pass
-    port: 21
+    host: $SFTP_HOSTNAME
+    login: $SFTP_USERNAME
+    password: $SFTP_PASSWORD
+    port: 2222
     extra:

@@ -52,8 +52,8 @@ CWD = pathlib.Path(__file__).parent
 )
 def test_export_table_to_file_in_the_ftp(database_table_fixture):
     """Test export_table_to_file_file() where end file location is in FTP"""
-    object_path = "ftp://home/foo/upload/test.csv"
-    final_path = "ftp://foo:pass@localhost:21/home/foo/upload/test.csv"
+    object_path = "ftp://home/foo/upload/test_ftp.csv"
+    final_path = "ftp://foo:pass@localhost:21/home/foo/upload/test_ftp.csv"
     database, populated_table = database_table_fixture
     database.export_table_to_file(
         populated_table,
