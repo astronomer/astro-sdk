@@ -352,6 +352,43 @@ def test_load_file_using_file_connection(sample_dag, remote_files_fixture, datab
     "database_table_fixture",
     [
         {
+            "database": Database.SNOWFLAKE,
+        },
+        {
+            "database": Database.BIGQUERY,
+        },
+        {
+            "database": Database.POSTGRES,
+        },
+        {
+            "database": Database.SQLITE,
+        },
+        {
+            "database": Database.REDSHIFT,
+        },
+    ],
+    indirect=True,
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+)
+def test_load_file_using_sftp_connection(sample_dag, database_table_fixture):
+    db, test_table = database_table_fixture
+    file_conn_id = "sftp_conn"
+    with sample_dag:
+        load_file(
+            input_file=File(path="sftp://upload/ADOPTION_CENTER_1_unquoted.csv", conn_id=file_conn_id),
+            output_table=test_table,
+        )
+    test_utils.run_dag(sample_dag)
+
+    df = db.export_table_to_pandas_dataframe(test_table)
+    assert len(df) == 18
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
             "database": Database.BIGQUERY,
         },
         {

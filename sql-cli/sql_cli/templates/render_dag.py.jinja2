@@ -5,7 +5,7 @@ from airflow import DAG
 from airflow.utils import timezone
 from astro import sql as aql
 from astro.table import Table
-from sql_cli.dag_render import render_tasks
+from sql_cli.dag_renderer import render_tasks
 
 DAGS_FOLDER = Path(__file__).parent.as_posix()
 

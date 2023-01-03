@@ -13,6 +13,7 @@ class S3Location(BaseFileLocation):
     """Handler S3 object store operations"""
 
     location_type = FileLocation.S3
+    supported_conn_type = {S3Hook.conn_type, "aws"}
 
     @property
     def hook(self) -> S3Hook:

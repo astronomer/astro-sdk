@@ -125,7 +125,7 @@ def test_get_run_id():
         ),
     ],
 )
-@mock.patch("astro.databases.google.bigquery.BigQueryHook")
+@mock.patch("astro.databases.google.bigquery.BigQueryHook", autospec=True)
 def test_populate_table_metadata(mock_bq_hook, source_table, input_table, returned_table, source_location):
     bq_hook = mock.MagicMock(project_id="test_project_id")
     mock_bq_hook.return_value = bq_hook

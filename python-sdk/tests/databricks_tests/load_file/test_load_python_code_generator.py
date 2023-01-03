@@ -13,7 +13,7 @@ expected_basic_file_copy_into = '''from pyspark.sql.functions import input_file_
 src_data_path = "foobar"
 username = spark.sql("SELECT regexp_replace(current_user(), '[^a-zA-Z0-9]', '_')").first()[0]
 table_name = f"baz" # This can be generated based on task ID and dag ID or just entirely random
-checkpoint_path = f"/tmp/{username}/_checkpoint/etl_3_quickstart"
+checkpoint_path = f"/tmp/{username}/_checkpoint/{table_name}"
 
 spark.sql(f"DROP TABLE IF EXISTS {table_name}")
 spark.sql(f"CREATE TABLE IF NOT EXISTS {table_name}")
@@ -30,7 +30,7 @@ expected_basic_file_autoloader = """from pyspark.sql.functions import input_file
 src_data_path = "foobar"
 username = spark.sql("SELECT regexp_replace(current_user(), '[^a-zA-Z0-9]', '_')").first()[0]
 table_name = f"baz" # This can be generated based on task ID and dag ID or just entirely random
-checkpoint_path = f"/tmp/{username}/_checkpoint/etl_3_quickstart"
+checkpoint_path = f"/tmp/{username}/_checkpoint/{table_name}"
 load_options = {
     "cloudFiles.schemaLocation": checkpoint_path,
     "cloudFiles.format": "CSV"
@@ -132,8 +132,8 @@ def test_generate_file_append_copy_into(tmp_path):
     assert "DROP TABLE" not in output_file.read_text()
 
 
-@mock.patch("astro.databricks.load_file.load_file_job.load_file_to_dbfs")
-@mock.patch("databricks_cli.sdk.api_client.ApiClient")
+@mock.patch("astro.databricks.load_file.load_file_job.load_file_to_dbfs", autospec=True)
+@mock.patch("databricks_cli.sdk.api_client.ApiClient", autospec=True)
 def test_generate_file_overwrite_autoloader(mock_api_client, mock_load_to_dbfs):
     options = DeltaLoadOptions.get_default_delta_options()
     options.load_secrets = False
