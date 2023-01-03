@@ -149,7 +149,7 @@ jobs:
           - 21000-21010:21000-21010
         env:
           USERS: "foo|pass|/home/foo"
-          ADDRESS: localhost
+          ADDRESS: "localhost"
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -281,7 +281,7 @@ jobs:
           - 21000-21010:21000-21010
         env:
           USERS: "foo|pass|/home/foo"
-          ADDRESS: localhost
+          ADDRESS: "localhost"
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -365,7 +365,7 @@ jobs:
           - 21000-21010:21000-21010
         env:
           USERS: "foo|pass|/home/foo"
-          ADDRESS: 127.0.0.1
+          ADDRESS: "localhost"
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
