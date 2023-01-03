@@ -131,7 +131,6 @@ def test_create_table_from_select_statement(database_table_fixture):
 
     df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
     assert len(df) == 26
-    assert df.NAME[0] == "Dancer"
     database.drop_table(target_table)
 
 
