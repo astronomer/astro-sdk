@@ -47,7 +47,7 @@ def test_autoloader_load_file_local(database_table_fixture):
     ids=["delta"],
 )
 def test_autoloader_load_file_s3(database_table_fixture):
-    file = File("s3://tmp9/databricks-test/", conn_id="default_aws", filetype=FileType.CSV)
+    file = File("s3://tmp9/databricks-test/", conn_id="aws_default", filetype=FileType.CSV)
     database, table = database_table_fixture
     database.load_file_to_table(
         input_file=file,
@@ -69,11 +69,10 @@ def test_autoloader_load_file_s3(database_table_fixture):
     ids=["delta"],
 )
 def test_delta_load_file_gcs(database_table_fixture):
-    from astro.constants import FileType
 
     file = File(
         "gs://astro-sdk/benchmark/trimmed/covid_overview/covid_overview_10kb.csv",
-        conn_id="databricks_gcs",
+        conn_id="google_cloud_default",
         filetype=FileType.CSV,
     )
     database, table = database_table_fixture
@@ -100,7 +99,7 @@ def test_delta_load_file_gcs_autoloader(database_table_fixture):
 
     file = File(
         "gs://astro-sdk/benchmark/trimmed/covid_overview/",
-        conn_id="databricks_gcs",
+        conn_id="google_cloud_default",
         filetype=FileType.CSV,
     )
     database, table = database_table_fixture
@@ -124,7 +123,6 @@ def test_delta_load_file_gcs_autoloader(database_table_fixture):
     ids=["delta"],
 )
 def test_delta_load_file_gcs_default_connection(database_table_fixture):
-    from astro.constants import FileType
 
     file = File(
         "gs://astro-sdk/benchmark/trimmed/covid_overview/covid_overview_10kb.csv",

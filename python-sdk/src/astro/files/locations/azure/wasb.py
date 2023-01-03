@@ -12,6 +12,7 @@ class WASBLocation(BaseFileLocation):
     """Handler WASB object store operations"""
 
     location_type = FileLocation.WASB
+    supported_conn_type = {WasbHook.conn_type, "wasbs"}
 
     @property
     def hook(self) -> WasbHook:

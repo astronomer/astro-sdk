@@ -11,6 +11,7 @@ from tests.sql.operators import utils as test_utils
 CWD = pathlib.Path(__file__).parent
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [

@@ -561,6 +561,7 @@ def test_export_table_to_file_file_already_exists_raises_exception(
     assert err_msg.endswith(f"The file {filepath} already exists.")
 
 
+@pytest.mark.integration
 @pytest.mark.parametrize("conn_id", SUPPORTED_CONN_IDS)
 def test_create_database(conn_id):
     """Test creation of database"""

@@ -94,23 +94,23 @@ def test_get_file_list():
     [
         (File("/tmp/file_a.csv"), File("/tmp/file_a.csv"), True),
         (
-            File("/tmp/file_a.csv", conn_id="test"),
-            File("/tmp/file_a.csv", conn_id="test"),
+            File("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
+            File("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
             True,
         ),
         (
-            File("/tmp/file_a.csv", conn_id="test", filetype=constants.FileType.CSV),
-            File("/tmp/file_a.csv", conn_id="test", filetype=constants.FileType.CSV),
+            File("gs://tmp/file_a.csv", conn_id="google_cloud_default", filetype=constants.FileType.CSV),
+            File("gs://tmp/file_a.csv", conn_id="google_cloud_default", filetype=constants.FileType.CSV),
             True,
         ),
         (
-            File("/tmp/file_a.csv", conn_id="test", filetype=constants.FileType.CSV),
-            File("/tmp/file_a.csv", conn_id="test2", filetype=constants.FileType.JSON),
+            File("gs://tmp/file_a.csv", conn_id="google_cloud_default", filetype=constants.FileType.CSV),
+            File("gs://tmp/file_a.csv", conn_id="google_cloud_default", filetype=constants.FileType.JSON),
             False,
         ),
         (
-            File("/tmp/file_a.csv", conn_id="test", filetype=constants.FileType.CSV),
-            File("/tmp/file_b.csv", conn_id="test", filetype=constants.FileType.CSV),
+            File("gs://tmp/file_a.csv", conn_id="google_cloud_default", filetype=constants.FileType.CSV),
+            File("gs://tmp/file_b.csv", conn_id="google_cloud_default", filetype=constants.FileType.CSV),
             False,
         ),
     ],

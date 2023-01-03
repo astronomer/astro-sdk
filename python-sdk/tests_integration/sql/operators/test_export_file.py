@@ -9,10 +9,10 @@ import pytest
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
 
 from astro import sql as aql
-from astro.constants import SUPPORTED_FILE_TYPES, Database, FileType
+from astro.constants import SUPPORTED_FILE_TYPES, Database
 from astro.files import File
 from astro.settings import SCHEMA
-from astro.sql import ExportFileOperator, ExportTableToFileOperator, export_file, export_table_to_file
+from astro.sql import export_file, export_table_to_file
 from astro.table import Table
 
 from ..operators import utils as test_utils
@@ -218,7 +218,7 @@ def test_save_table_remote_file_exists_overwrite_false(
         with sample_dag:
             export_table_to_file(
                 input_data=test_table,
-                output_file=File(path=remote_files_fixture[0], conn_id="aws_default"),
+                output_file=File(path=remote_files_fixture[0]),
                 if_exists="exception",
             )
         test_utils.run_dag(sample_dag)
@@ -313,47 +313,3 @@ def test_populate_table_metadata(sample_dag, database_table_fixture):
         validate(test_table)
 
     test_utils.run_dag(sample_dag)
-
-
-def test_raise_exception_for_invalid_input_type():
-    with pytest.raises(ValueError) as exc_info:
-        ExportTableToFileOperator(
-            task_id="task_id",
-            input_data=123,
-            output_file=File(
-                path="gs://astro-sdk/workspace/openlineage_export_file.csv",
-                conn_id="bigquery",
-                filetype=FileType.CSV,
-            ),
-            if_exists="replace",
-        ).execute(context=None)
-    expected_msg = "Expected input_table to be Table or dataframe. Got <class 'int'>"
-    assert exc_info.value.args[0] == expected_msg
-
-
-# TODO: Remove this test in astro-sdk 2.0.0
-def test_warnings_message():
-    with pytest.warns(
-        expected_warning=DeprecationWarning,
-        match="""This class is deprecated.
-            Please use `astro.sql.operators.export_table_to_file.ExportTableToFileOperator`.
-            And, will be removed in astro-sdk-python>=2.0.0.""",
-    ):
-        ExportFileOperator(
-            task_id="task_id",
-            input_data=123,
-            output_file=File(
-                path="gs://astro-sdk/workspace/openlineage_export_file.csv",
-                conn_id="bigquery",
-                filetype=FileType.CSV,
-            ),
-            if_exists="replace",
-        )
-
-    with pytest.warns(
-        expected_warning=DeprecationWarning,
-        match="""This decorator is deprecated.
-        Please use `astro.sql.operators.export_table_to_file.export_table_to_file`.
-        And, will be removed in astro-sdk-python>=2.0.0.""",
-    ):
-        export_file(input_data=Table(), output_file=File(path="/tmp/saved_df.csv"), if_exists="replace")

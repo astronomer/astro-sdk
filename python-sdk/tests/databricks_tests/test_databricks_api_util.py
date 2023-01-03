@@ -1,6 +1,9 @@
 import pathlib
 from unittest import mock
-from unittest.mock import call
+from unittest.mock import Mock, call
+
+import pytest
+from requests.exceptions import HTTPError
 
 from astro.databricks.api_utils import (
     create_and_run_job,
@@ -12,7 +15,36 @@ from astro.databricks.api_utils import (
 CWD = pathlib.Path(__file__).parent
 
 
-@mock.patch("databricks_cli.sdk.api_client.ApiClient")
+def raise_arb_http_error(unneeded_arg):
+    arbitrary_http = HTTPError()
+    arbitrary_http.response = Mock(json=lambda: {"error_code": "FOOBAR"})
+    raise arbitrary_http
+
+
+def raise_not_exist_error(unneeded_arg):
+    non_existent_http = HTTPError()
+    non_existent_http.response = Mock(json=lambda: {"error_code": "RESOURCE_DOES_NOT_EXIST"})
+
+
+@mock.patch("databricks_cli.secrets.api.SecretApi.delete_scope")
+@mock.patch("databricks_cli.sdk.api_client.ApiClient", autospec=True)
+def test_delete_scope_http_error_arbitary(mock_api_client, mock_delete_secret):
+    """Raise error when delete_scope throw error"""
+    mock_delete_secret.raiseError.side_effect = raise_arb_http_error
+    mock_delete_secret.side_effect = raise_arb_http_error
+    with pytest.raises(HTTPError):
+        delete_secret_scope("non-existent-scope", api_client=mock_api_client)
+
+
+@mock.patch("databricks_cli.secrets.api.SecretApi.delete_scope")
+@mock.patch("databricks_cli.sdk.api_client.ApiClient", autospec=True)
+def test_delete_scope_http_error_non_existent(mock_api_client, mock_delete_secret):
+    """Do not raise an error when trying to delete non-existent scope and the error code is RESOURCE_DOES_NOT_EXIST"""
+    mock_delete_secret.side_effect = raise_not_exist_error
+    delete_secret_scope("non-existent-scope", api_client=mock_api_client)
+
+
+@mock.patch("databricks_cli.sdk.api_client.ApiClient", autospec=True)
 def test_create_and_run_job(mock_api_client):
     create_and_run_job(
         api_client=mock_api_client,
@@ -20,7 +52,7 @@ def test_create_and_run_job(mock_api_client):
         databricks_job_name="my-db-job",
         existing_cluster_id="foobar",
     )
-    mock_api_client.perform_query.__getitem__("job_id").return_value = 123
+    mock_api_client.perform_query.return_value = {"job_id": 123}
     calls = [
         call.perform_query(
             "POST",
@@ -37,7 +69,7 @@ def test_create_and_run_job(mock_api_client):
     mock_api_client.assert_has_calls(calls)
 
 
-@mock.patch("databricks_cli.sdk.api_client.ApiClient")
+@mock.patch("databricks_cli.sdk.api_client.ApiClient", autospec=True)
 def test_load_to_dbfs(mock_api_client):
     load_file_to_dbfs(
         local_file_path=CWD / "__init__.py", file_name="my_table.py", api_client=mock_api_client
@@ -61,7 +93,7 @@ def test_load_to_dbfs(mock_api_client):
     mock_api_client.assert_has_calls(calls)
 
 
-@mock.patch("databricks_cli.sdk.api_client.ApiClient")
+@mock.patch("databricks_cli.sdk.api_client.ApiClient", autospec=True)
 def test_create_secrets(mock_api_client):
     create_secrets(scope_name="my-scope", filesystem_secrets={"foo": "bar"}, api_client=mock_api_client)
     calls = [
@@ -81,7 +113,7 @@ def test_create_secrets(mock_api_client):
     mock_api_client.assert_has_calls(calls)
 
 
-@mock.patch("databricks_cli.sdk.api_client.ApiClient")
+@mock.patch("databricks_cli.sdk.api_client.ApiClient", autospec=True)
 def test_delete_secret_scope(mock_api_client):
     delete_secret_scope(scope_name="my-scope", api_client=mock_api_client)
     mock_api_client.assert_has_calls(

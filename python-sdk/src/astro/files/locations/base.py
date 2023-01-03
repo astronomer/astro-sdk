@@ -7,6 +7,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import smart_open
+from airflow.hooks.base import BaseHook
 
 from astro.constants import FileLocation
 
@@ -15,6 +16,7 @@ class BaseFileLocation(ABC):
     """Base Location abstract class"""
 
     template_fields = ("path", "conn_id")
+    supported_conn_type: set[str] = set()
 
     def __init__(self, path: str, conn_id: str | None = None):
         """
@@ -25,6 +27,19 @@ class BaseFileLocation(ABC):
         """
         self.path: str = path
         self.conn_id: str | None = conn_id
+        self.validate_conn()
+
+    def validate_conn(self):
+        """Check if the conn_id matches with provided path."""
+        if not self.conn_id:
+            return
+
+        connection_type = BaseHook.get_connection(self.conn_id).conn_type
+        if connection_type not in self.supported_conn_type:
+            raise ValueError(
+                f"Connection type {connection_type} is not supported for {self.path}. "
+                f"Supported types are {self.supported_conn_type}"
+            )
 
     @property
     def hook(self):
@@ -154,3 +169,10 @@ class BaseFileLocation(ABC):
 
     def __hash__(self) -> int:
         return hash((self.path, self.conn_id))
+
+    def get_stream(self):
+        """Create a file in the desired location using the smart_open.
+
+        :param df: pandas dataframe
+        """
+        return smart_open.open(self.path, mode="wb", transport_params=self.transport_params)
