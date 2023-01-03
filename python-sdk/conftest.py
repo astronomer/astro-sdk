@@ -46,7 +46,10 @@ def create_unique_table_name(length: int = MAX_TABLE_NAME_LENGTH) -> str:
     return unique_id
 
 
-@pytest.fixture
+file_table_map: dict = {}
+
+
+@pytest.fixture(scope="session")
 def database_table_fixture(request):
     """
     Given request.param in the format:
@@ -72,11 +75,15 @@ def database_table_fixture(request):
         conn_id = user_table.conn_id
 
     database = create_database(conn_id)
-    table = params.get("table", Table(conn_id=database.conn_id, metadata=database.default_metadata))
+    file = params.get("file")
+    file_table_key = file.name + "_" + conn_id
+    if file_table_map.get(file_table_key) and not params.get("table"):
+        table = file_table_map.get(file_table_key)
+    else:
+        table = params.get("table", Table(conn_id=database.conn_id, metadata=database.default_metadata))
     if not isinstance(table, TempTable):
         # We create a unique table name to make the name unique across runs
         table.name = create_unique_table_name(UNIQUE_HASH_SIZE)
-    file = params.get("file")
 
     database.populate_table_metadata(table)
     database.create_schema_if_needed(table.metadata.schema)
@@ -87,7 +94,7 @@ def database_table_fixture(request):
 
         kwargs["load_options"] = DeltaLoadOptions.get_default_delta_options()
 
-    if file:
+    if file and not file_table_map.get(file_table_key):
         database.load_file_to_table(file, table, **kwargs)
     yield database, table
     database.drop_table(table)
