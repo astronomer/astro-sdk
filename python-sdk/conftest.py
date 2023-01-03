@@ -76,7 +76,10 @@ def database_table_fixture(request):
 
     database = create_database(conn_id)
     file = params.get("file")
-    file_table_key = file.name + "_" + conn_id
+    if file:
+        file_table_key = file.name + "_" + conn_id
+    else:
+        file_table_key = "no_file"
     if file_table_map.get(file_table_key) and not params.get("table"):
         table = file_table_map.get(file_table_key)
     else:
