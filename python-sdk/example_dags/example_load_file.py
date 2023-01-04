@@ -271,7 +271,7 @@ with dag:
     # [START load_file_example_21]
     aql.load_file(
         input_file=File(
-            path="ftp://home/foo/upload/ADOPTION_CENTER_1_unquoted.csv",
+            path="ftp://upload/ADOPTION_CENTER_1_unquoted.csv",
             conn_id="ftp_conn",
             filetype=FileType.CSV,
         ),
