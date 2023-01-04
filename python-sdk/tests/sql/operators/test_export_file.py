@@ -10,7 +10,7 @@ from astro.constants import Database, FileType
 from astro.files import File
 
 # Import Operator
-from astro.sql import ExportFileOperator, export_file
+from astro.sql import ExportFileOperator, export_file, ExportTableToFileOperator, export_table_to_file
 from astro.sql.operators.export_to_file import ExportToFileOperator, export_to_file
 from astro.table import Table
 
@@ -166,7 +166,7 @@ def test_raise_exception_for_invalid_input_type():
 
 
 # TODO: Remove this test in astro-sdk 2.0.0
-def test_warnings_message():
+def test_export_file_warnings_message():
     """Assert the warning log when using deprecated method"""
     with pytest.warns(
         expected_warning=DeprecationWarning,
@@ -192,3 +192,32 @@ def test_warnings_message():
         And, will be removed in astro-sdk-python>=2.0.0.""",
     ):
         export_file(input_data=Table(), output_file=File(path="/tmp/saved_df.csv"), if_exists="replace")
+
+
+# TODO: Remove this test in astro-sdk 1.5.0
+def test_export_table_to_file_warnings_message():
+    """Assert the warning log when using deprecated method"""
+    with pytest.warns(
+        expected_warning=DeprecationWarning,
+        match="""This class is deprecated.
+            Please use `astro.sql.operators.export_to_file.ExportToFileOperator`.
+            And, will be removed in astro-sdk-python>=1.5.0.""",
+    ):
+        ExportTableToFileOperator(
+            task_id="task_id",
+            input_data=123,
+            output_file=File(
+                path="gs://astro-sdk/workspace/openlineage_export_file.csv",
+                conn_id="bigquery",
+                filetype=FileType.CSV,
+            ),
+            if_exists="replace",
+        )
+
+    with pytest.warns(
+        expected_warning=DeprecationWarning,
+        match="""This decorator is deprecated.
+        Please use `astro.sql.operators.export_to_file.export_to_file`.
+        And, will be removed in astro-sdk-python>=1.5.0.""",
+    ):
+        export_table_to_file(input_data=Table(), output_file=File(path="/tmp/saved_df.csv"), if_exists="replace")
