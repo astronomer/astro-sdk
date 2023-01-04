@@ -19,10 +19,11 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm.session import Session
 
 from astro.sql.operators.cleanup import AstroCleanupException
+from sql_cli.constants import LOGGER_NAME
 from sql_cli.exceptions import ConnectionFailed
 from sql_cli.utils.rich import RichHandler, rprint
 
-log = logging.getLogger("sql_cli")
+log = logging.getLogger(LOGGER_NAME)
 
 # This was added to airflow.utils.session as part of Airflow 2.2.4, we're copying it here for backwwards
 # compatibility (currently we support Airflow 2.1 onwards)

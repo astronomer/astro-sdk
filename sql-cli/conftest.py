@@ -10,6 +10,7 @@ from airflow.utils import timezone
 from airflow.utils.session import create_session
 
 from astro.table import MAX_TABLE_NAME_LENGTH
+from sql_cli.constants import EXT_LOGGER_NAMES, LOGGER_NAME
 from sql_cli.dag_generator import Workflow
 from sql_cli.project import Project
 from sql_cli.workflow_directory_parser import SqlFile, WorkflowFile
@@ -214,9 +215,9 @@ def initialised_project_with_tests_workflows(initialised_project: Project):
 
 @pytest.fixture()
 def logger():
-    return logging.getLogger("sql_cli")
+    return logging.getLogger(LOGGER_NAME)
 
 
 @pytest.fixture()
 def ext_loggers():
-    return [logging.getLogger(logger_name) for logger_name in ["airflow", "botocore", "snowflake"]]
+    return [logging.getLogger(logger_name) for logger_name in EXT_LOGGER_NAMES]

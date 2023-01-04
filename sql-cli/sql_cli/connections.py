@@ -7,11 +7,12 @@ from typing import Any
 
 from airflow.models import Connection
 
+from sql_cli.constants import LOGGER_NAME
 from sql_cli.utils.rich import rprint
 
 CONNECTION_ID_OUTPUT_STRING_WIDTH = 25
 
-log = logging.getLogger("sql_cli")
+log = logging.getLogger(LOGGER_NAME)
 
 
 def convert_to_connection(conn: dict[str, Any], data_dir: Path) -> Connection:

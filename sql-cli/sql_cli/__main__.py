@@ -12,8 +12,15 @@ from sql_cli.astro.command import AstroCommand
 from sql_cli.astro.group import AstroGroup
 from sql_cli.cli import config as cli_config
 from sql_cli.cli.utils import resolve_project_dir
-from sql_cli.constants import DEFAULT_BASE_AIRFLOW_HOME, DEFAULT_DAGS_FOLDER, DEFAULT_DATA_DIR, STATE
+from sql_cli.constants import (
+    DEFAULT_BASE_AIRFLOW_HOME,
+    DEFAULT_DAGS_FOLDER,
+    DEFAULT_DATA_DIR,
+    EXT_LOGGER_NAMES,
+    LOGGER_NAME,
+)
 from sql_cli.exceptions import ConnectionFailed, DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
+from sql_cli.settings import STATE
 from sql_cli.utils.rich import RichHandler, rprint
 
 if TYPE_CHECKING:
@@ -28,7 +35,7 @@ app = typer.Typer(
     rich_markup_mode="rich",
 )
 app.add_typer(cli_config.app, name="config", hidden=True)
-log = logging.getLogger("sql_cli")
+log = logging.getLogger(LOGGER_NAME)
 
 
 def set_verbose_mode(verbose: bool) -> None:
@@ -53,7 +60,7 @@ def set_debug_mode(debug: bool) -> None:
     """
     STATE["debug"] = debug
 
-    for logger_name in ["airflow", "botocore", "snowflake"]:
+    for logger_name in EXT_LOGGER_NAMES:
         logger = logging.getLogger(logger_name)
         logger.propagate = debug
         if debug:
@@ -269,9 +276,11 @@ def init(
         help=f"(Optional) Set the data directory for local file databases such as sqlite. Default: {DEFAULT_DATA_DIR}",
         show_default=False,
     ),
+    verbose: bool = typer.Option(False, help="Whether to show verbose output", show_default=True),
 ) -> None:
     from sql_cli.project import Project
 
+    set_verbose_mode(verbose)
     project_dir_absolute = resolve_project_dir(project_dir)
     project = Project(project_dir_absolute, airflow_home, airflow_dags_folder, data_dir)
     project.initialise()

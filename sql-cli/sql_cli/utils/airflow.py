@@ -10,12 +10,13 @@ from typing import TYPE_CHECKING
 
 from packaging.version import Version
 
-from sql_cli.constants import STATE
+from sql_cli.constants import LOGGER_NAME
+from sql_cli.settings import STATE
 
 if TYPE_CHECKING:
     from airflow.models.dag import DAG  # pragma: no cover
 
-log = logging.getLogger("sql_cli")
+log = logging.getLogger(LOGGER_NAME)
 airflow_logger = logging.getLogger("airflow")
 
 
@@ -35,7 +36,7 @@ def initialise(airflow_home: Path, airflow_dags_folder: Path) -> None:
     :params airflow_home: The airflow home to set
     :params airflow_dags_folder: The airflow dags folder to set
     """
-    # Set airflow environment variables prior to database initialization
+    log.debug("Set airflow environment variables prior to database initialization")
     os.environ["AIRFLOW_HOME"] = airflow_home.as_posix()
     os.environ["AIRFLOW__CORE__DAGS_FOLDER"] = airflow_dags_folder.as_posix()
     if version() >= Version("2.3"):
@@ -43,18 +44,20 @@ def initialise(airflow_home: Path, airflow_dags_folder: Path) -> None:
     else:
         os.environ.pop("AIRFLOW__CORE__SQL_ALCHEMY_CONN", None)
 
-    # Reload airflow configuration after setting environment variables
+    log.debug("Reload airflow configuration after setting environment variables")
     from airflow import configuration
 
     importlib.reload(configuration)
 
     if STATE["debug"]:
-        # Initialise the airflow database
+        log.debug("Initialise the airflow database")
         exit_code = os.system("airflow db init")  # skipcq: BAN-B605,BAN-B607
         airflow_logger.debug("Airflow DB Initialization exited with %s", exit_code)
     else:
-        # Initialise the airflow database & hide all logs
+        log.debug("Initialise the airflow database & hide all logs")
         os.system("airflow db init > /dev/null 2>&1")  # skipcq: BAN-B605,BAN-B607
+
+    log.debug("Initialised Airflow successfully. Airflow env vars are: %s", _get_airflow_env_vars())
 
 
 def reload(airflow_home: Path) -> None:
@@ -64,9 +67,9 @@ def reload(airflow_home: Path) -> None:
 
     :params airflow_home: The airflow home to set
     """
-    # Set airflow environment variables
+    log.debug("Set airflow environment variables")
     os.environ["AIRFLOW_HOME"] = airflow_home.as_posix()
-    # ..from config
+    log.debug("Set airflow environment variables from config")
     parser = ConfigParser()
     parser.read(airflow_home / "airflow.cfg")
     if version() >= Version("2.3"):
@@ -83,6 +86,12 @@ def reload(airflow_home: Path) -> None:
     import airflow
 
     importlib.reload(airflow)
+
+    log.debug("Reloaded Airflow successfully. Airflow env vars are: %s", _get_airflow_env_vars())
+
+
+def _get_airflow_env_vars() -> list[str]:
+    return [f"{item}={value}" for item, value in os.environ.items() if item.startswith("AIRFLOW_")]
 
 
 # The following function was copied from Apache Airflow
