@@ -143,7 +143,7 @@ jobs:
         ports:
           - 2222:22
       ftp:
-        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        image: delfer/alpine-ftp-server
         ports:
           - 21:21
           - 21000-21010:21000-21010
@@ -276,7 +276,7 @@ jobs:
         ports:
           - 2222:22
       ftp:
-        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        image: delfer/alpine-ftp-server
         ports:
           - 21:21
           - 21000-21010:21000-21010
@@ -360,7 +360,7 @@ jobs:
         ports:
           - 2222:22
       ftp:
-        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        image: delfer/alpine-ftp-server
         ports:
           - 21:21
           - 21000-21010:21000-21010
