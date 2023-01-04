@@ -49,9 +49,6 @@ env:
   SFTP_HOSTNAME: ${{ secrets.SFTP_HOSTNAME }}
   SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
   SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
-  REMOTE_HOSTNAME: localhost
-  REMOTE_USERNAME: foo
-  REMOTE_PASSWORD: pass
   AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
   AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
   AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
@@ -148,8 +145,8 @@ jobs:
           - 21:21
           - 30000-30009:30000-30009
         env:
-          FTP_USER_NAME: foo
-          FTP_USER_PASS: pass
+          FTP_USER_NAME: ${{ secrets.SFTP_USERNAME }}
+          FTP_USER_PASS: ${{ secrets.SFTP_PASSWORD }}
           FTP_USER_HOME: /home/foo
           PUBLICHOST: "localhost"
     steps:
@@ -173,7 +170,6 @@ jobs:
             .nox
           key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
-      - run: docker inspect  $(docker ps -aq)
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
@@ -283,8 +279,8 @@ jobs:
           - 21:21
           - 30000-30009:30000-30009
         env:
-          FTP_USER_NAME: foo
-          FTP_USER_PASS: pass
+          FTP_USER_NAME: ${{ secrets.SFTP_USERNAME }}
+          FTP_USER_PASS: ${{ secrets.SFTP_PASSWORD }}
           FTP_USER_HOME: /home/foo
           PUBLICHOST: "localhost"
     steps:
@@ -369,8 +365,8 @@ jobs:
           - 21:21
           - 30000-30009:30000-30009
         env:
-          FTP_USER_NAME: foo
-          FTP_USER_PASS: pass
+          FTP_USER_NAME: ${{ secrets.SFTP_USERNAME }}
+          FTP_USER_PASS: ${{ secrets.SFTP_PASSWORD }}
           FTP_USER_HOME: /home/foo
           PUBLICHOST: "localhost"
     steps:
