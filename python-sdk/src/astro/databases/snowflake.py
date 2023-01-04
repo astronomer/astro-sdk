@@ -818,8 +818,7 @@ class SnowflakeDatabase(BaseDatabase):
             f"{wrap_identifier(k)}={wrap_identifier(v)}"
             for k, v in zip(merge_target_dict.keys(), merge_source_dict.keys())
         )
-        statement = f"merge into {target_table_identifier} " f"using {source_table_identifier} "
-        statement += f"on {merge_clauses}"
+        statement = f"merge into {target_table_identifier} using {source_table_identifier} on {merge_clauses}"
 
         values_to_check = [target_table_name, source_table_name]
         values_to_check.extend(source_cols)
