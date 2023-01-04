@@ -6,10 +6,10 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
-import settings as benchmark_settings
 from airflow import DAG
 from run import export_profile_data_to_bq
 
+import settings as benchmark_settings
 from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
 from astro.files import File
