@@ -66,7 +66,6 @@ class S3DataProvider(BaseFilesystemProviders):
             prefix=self.s3_key,
             delimiter=self.delimiter,
         )
-        print(files)
         local_file_paths = []
         try:
             for file in files:

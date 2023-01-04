@@ -5,7 +5,7 @@ import pathlib
 
 import pandas as pd
 import smart_open
-from attr import define
+from attr import define, field
 
 from universal_transfer_operator.constants import FileType
 from universal_transfer_operator.datasets.base import UniversalDataset
@@ -23,6 +23,8 @@ class File(UniversalDataset):
     :param is_bytes: is bytes
     """
 
+    path: str = field(default="")
+    conn_id: str = field(default="")
     filetype: FileType | None = None
     normalize_config: dict | None = None
     is_bytes: bool = False

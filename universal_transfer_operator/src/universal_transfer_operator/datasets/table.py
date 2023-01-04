@@ -33,8 +33,6 @@ class Table(UniversalDataset):
     Repersents all Table datasets.
     Intended to be used within library.
 
-    :param path: Path to a database
-    :param conn_id: Airflow connection ID
     :param name: The name of the database table. If name not provided then it would create a temporary name
     :param conn_id: The Airflow connection id. This will be used to identify the right database type at the runtime
     :param metadata: A metadata object which will have database or schema name

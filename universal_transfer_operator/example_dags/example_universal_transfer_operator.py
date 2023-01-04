@@ -1,11 +1,12 @@
+import os
 from datetime import datetime
 
 from airflow import DAG
-from constants import TransferMode
-from datasets.file import File
-from datasets.table import Table
 
-from universal_transfer_operator import UniversalTransferOperator
+from universal_transfer_operator.constants import TransferMode
+from universal_transfer_operator.datasets.file import File
+from universal_transfer_operator.datasets.table import Metadata, Table
+from universal_transfer_operator.universal_transfer_operator import UniversalTransferOperator
 
 with DAG(
     "example_universal_transfer_operator",
@@ -31,10 +32,7 @@ with DAG(
     transfer_fivetran_with_connector_id = UniversalTransferOperator(
         task_id="transfer_fivetran_with_connector_id",
         source_dataset=File("s3://astro-sdk-test/uto/", conn_id="aws_default"),
-        destination_dataset=Table(
-            "snowflake://gp21411.us-east-1.snowflakecomputing.com/providers_fivetran_dev.s3.fivetran_ankit_test",
-            conn_id="snowflake_default",
-        ),
+        destination_dataset=Table(name="fivetran_test", conn_id="snowflake_default"),
         transfer_mode=TransferMode.THIRDPARTY,
         transfer_params={
             "thirdparty_conn_id": "fivetran_default",
@@ -46,7 +44,11 @@ with DAG(
         task_id="transfer_fivetran_without_connector_id",
         source_dataset=File("s3://astro-sdk-test/uto/", conn_id="aws_default"),
         destination_dataset=Table(
-            "snowflake://{account name}/{database}.{schema}.{table}", conn_id="snowflake_default"
+            name="fivetran_test",
+            conn_id="snowflake_default",
+            metadata=Metadata(
+                database=os.environ["SNOWFLAKE_DATABASE"], schema=os.environ["SNOWFLAKE_SCHEMA"]
+            ),
         ),
         transfer_mode=TransferMode.THIRDPARTY,
         transfer_params={
