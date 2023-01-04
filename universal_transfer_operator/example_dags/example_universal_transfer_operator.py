@@ -13,10 +13,19 @@ with DAG(
     start_date=datetime(2022, 1, 1),
     catchup=False,
 ) as dag:
-    transfer_non_native = UniversalTransferOperator(
-        task_id="transfer_non_native",
+    transfer_non_native_gs_to_s3 = UniversalTransferOperator(
+        task_id="transfer_non_native_gs_to_s3",
         source_dataset=File("gs://uto-test/uto/", conn_id="google_cloud_default"),
         destination_dataset=File("s3://astro-sdk-test/uto/", conn_id="aws_default"),
+    )
+
+    transfer_non_native_s3_to_gs = UniversalTransferOperator(
+        task_id="transfer_non_native_s3_to_gs",
+        source_dataset=File("s3://astro-sdk-test/uto/", conn_id="aws_default"),
+        destination_dataset=File(
+            "gs://uto-test/uto/",
+            conn_id="google_cloud_default",
+        ),
     )
 
     transfer_fivetran_with_connector_id = UniversalTransferOperator(
