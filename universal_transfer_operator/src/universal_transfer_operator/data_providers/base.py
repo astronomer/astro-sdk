@@ -4,6 +4,7 @@ from abc import ABC
 from contextlib import contextmanager
 
 from airflow.hooks.base import BaseHook
+
 from universal_transfer_operator.constants import Location
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
 from universal_transfer_operator.utils import get_dataset_connection_type
@@ -61,6 +62,7 @@ class DataProviders(ABC):
             raise ValueError("Transfer not supported yet.")
 
         source_connection_type = get_dataset_connection_type(source_dataset)
+        destination_connection_type = get_dataset_connection_type(destination_dataset)
         method_name = self.LOAD_DATA_FROM_SOURCE.get(source_connection_type)
         if method_name:
             transfer_method = self.__getattribute__(method_name)
@@ -69,7 +71,9 @@ class DataProviders(ABC):
                 destination_dataset=destination_dataset,
             )
         else:
-            raise ValueError(f"No transfer performed from {source_connection_type} to S3.")
+            raise ValueError(
+                f"No transfer performed from {source_connection_type} to {destination_connection_type}."
+            )
 
     @property
     def openlineage_dataset_namespace(self) -> str:

@@ -5,6 +5,7 @@ from functools import cached_property
 
 import attr
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+
 from universal_transfer_operator.constants import Location, TransferMode
 from universal_transfer_operator.data_providers.filesystem.base import (
     BaseFilesystemProviders,
@@ -82,17 +83,16 @@ class S3DataProvider(BaseFilesystemProviders):
             dest_s3_key = os.path.join(dest_s3_key, self.prefix)
 
         destination_keys = []
-        if source_ref:
-            for file in source_ref:
-                if os.path.exists(file.tmp_file.name):
-                    dest_key = os.path.join(dest_s3_key, os.path.basename(file.actual_filename))
-                    self.hook.load_file(
-                        filename=file.tmp_file.name,
-                        key=dest_key,
-                        replace="replace",
-                        acl_policy=self.s3_acl_policy,
-                    )
-                    destination_keys.append(dest_key)
+        for file in source_ref:
+            if os.path.exists(file.tmp_file.name):
+                dest_key = os.path.join(dest_s3_key, os.path.basename(file.actual_filename))
+                self.hook.load_file(
+                    filename=file.tmp_file.name,
+                    key=dest_key,
+                    replace="replace",
+                    acl_policy=self.s3_acl_policy,
+                )
+                destination_keys.append(dest_key)
 
         return destination_keys
 
