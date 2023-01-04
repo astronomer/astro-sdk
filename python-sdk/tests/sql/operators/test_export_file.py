@@ -10,7 +10,7 @@ from astro.constants import Database, FileType
 from astro.files import File
 
 # Import Operator
-from astro.sql import ExportFileOperator, export_file, ExportTableToFileOperator, export_table_to_file
+from astro.sql import ExportFileOperator, ExportTableToFileOperator, export_file, export_table_to_file
 from astro.sql.operators.export_to_file import ExportToFileOperator, export_to_file
 from astro.table import Table
 
@@ -220,4 +220,6 @@ def test_export_table_to_file_warnings_message():
         Please use `astro.sql.operators.export_to_file.export_to_file`.
         And, will be removed in astro-sdk-python>=1.5.0.""",
     ):
-        export_table_to_file(input_data=Table(), output_file=File(path="/tmp/saved_df.csv"), if_exists="replace")
+        export_table_to_file(
+            input_data=Table(), output_file=File(path="/tmp/saved_df.csv"), if_exists="replace"
+        )

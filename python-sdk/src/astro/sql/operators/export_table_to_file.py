@@ -8,7 +8,7 @@ from airflow.models.xcom_arg import XComArg
 
 from astro.constants import ExportExistsStrategy
 from astro.files import File
-from astro.sql.operators.export_to_file import export_to_file, ExportToFileOperator
+from astro.sql.operators.export_to_file import ExportToFileOperator, export_to_file
 from astro.table import BaseTable
 
 
