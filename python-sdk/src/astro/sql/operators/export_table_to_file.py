@@ -8,7 +8,7 @@ from airflow.models.xcom_arg import XComArg
 
 from astro.constants import ExportExistsStrategy
 from astro.files import File
-from astro.sql import export_to_file, ExportToFileOperator
+from astro.sql.operators.export_to_file import export_to_file, ExportToFileOperator
 from astro.table import BaseTable
 
 
@@ -46,10 +46,15 @@ def export_table_to_file(
     **kwargs: Any,
 ) -> XComArg:
     """Convert ExportTableToFileOperator into a function. Returns XComArg.
+
     Returns an XComArg object of type File which matches the output_file parameter.
+
     This will allow users to perform further actions with the exported file.
+
     e.g.:
+
     .. code-block:: python
+
       with sample_dag:
           table = aql.load_file(input_file=File(path=data_path), output_table=test_table)
           exported_file = aql.export_file(
@@ -58,6 +63,8 @@ def export_table_to_file(
               if_exists="replace",
           )
           res_df = aql.load_file(input_file=exported_file)
+
+
     :param output_file: Path and conn_id
     :param input_data: Input table / dataframe
     :param if_exists: Overwrite file if exists. Default "exception"
