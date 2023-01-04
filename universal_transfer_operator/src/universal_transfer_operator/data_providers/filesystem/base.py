@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from tempfile import NamedTemporaryFile
+from pathlib import Path
 
 import attr
 from airflow.hooks.dbapi import DbApiHook
@@ -15,8 +15,8 @@ from universal_transfer_operator.utils import get_dataset_connection_type
 
 @attr.define
 class TempFile:
-    tmp_file: NamedTemporaryFile | None
-    actual_filename: str
+    tmp_file: Path | None
+    actual_filename: Path
 
 
 class BaseFilesystemProviders(DataProviders):

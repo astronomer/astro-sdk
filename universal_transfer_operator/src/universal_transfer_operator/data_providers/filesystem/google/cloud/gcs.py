@@ -11,6 +11,7 @@ from airflow.providers.google.cloud.hooks.gcs import GCSHook, _parse_gcs_url
 from universal_transfer_operator.constants import Location, TransferMode
 from universal_transfer_operator.data_providers.filesystem.base import (
     BaseFilesystemProviders,
+    Path,
     TempFile,
     contextmanager,
 )
@@ -77,15 +78,7 @@ class GCSDataProvider(BaseFilesystemProviders):
             local_file_paths = []
             if files:
                 for file in files:
-                    _, _, file_name = file.rpartition("/")
-                    with NamedTemporaryFile(suffix=file_name, delete=False) as tmp_file:
-                        self.hook.download(
-                            bucket_name=self.bucket_name,
-                            object_name=file,
-                            filename=tmp_file.name,
-                        )
-                        local_file_paths.append(TempFile(tmp_file=tmp_file, actual_filename=file_name))
-
+                    local_file_paths.append(self.download_file(file))
             yield local_file_paths
         finally:
             # Clean up the local files
@@ -93,26 +86,38 @@ class GCSDataProvider(BaseFilesystemProviders):
 
     def write(self, source_ref: list[TempFile]) -> list[str]:
         """Write the file from local file location to the dataset"""
-        bucket_name = self.bucket_name
-        object_prefix = self.blob_name
-
         destination_objects = []
         if source_ref:
             for file in source_ref:
-                # There will always be a '/' before file because it is
-                # enforced at instantiation time
-                dest_gcs_object = object_prefix + file
-                self.hook.upload(
-                    bucket_name=bucket_name,
-                    object_name=dest_gcs_object,
-                    filename=file.name,
-                    gzip=self.gzip,
-                )
-                destination_objects.append(dest_gcs_object)
+                destination_objects.append(self.upload_file(file))
             logging.info("All done, uploaded %d files to Google Cloud Storage", len(source_ref))
         else:
             logging.info("In sync, no files needed to be uploaded to Google Cloud Storage")
         return destination_objects
+
+    def upload_file(self, file: TempFile):
+        """Upload file to GCS and return path"""
+        # There will always be a '/' before file because it is
+        # enforced at instantiation time
+        dest_gcs_object = self.blob_name + file.actual_filename.name
+        self.hook.upload(
+            bucket_name=self.bucket_name,
+            object_name=dest_gcs_object,
+            filename=file.tmp_file.as_posix(),
+            gzip=self.gzip,
+        )
+        return dest_gcs_object
+
+    def download_file(self, file) -> TempFile:
+        """Download file and save to temporary path."""
+        _, _, file_name = file.rpartition("/")
+        with NamedTemporaryFile(suffix=file_name, delete=False) as tmp_file:
+            self.hook.download(
+                bucket_name=self.bucket_name,
+                object_name=file,
+                filename=tmp_file.name,
+            )
+            return TempFile(tmp_file=Path(tmp_file.name), actual_filename=Path(file_name))
 
     @property
     def delegate_to(self) -> str | None:

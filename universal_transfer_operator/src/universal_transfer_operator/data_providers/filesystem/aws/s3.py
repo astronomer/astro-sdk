@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from functools import cached_property
+from tempfile import NamedTemporaryFile
 
 import attr
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
@@ -9,6 +10,7 @@ from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 from universal_transfer_operator.constants import Location, TransferMode
 from universal_transfer_operator.data_providers.filesystem.base import (
     BaseFilesystemProviders,
+    Path,
     TempFile,
     contextmanager,
 )
@@ -64,11 +66,11 @@ class S3DataProvider(BaseFilesystemProviders):
             prefix=self.s3_key,
             delimiter=self.delimiter,
         )
+        print(files)
         local_file_paths = []
         try:
             for file in files:
-                local_path = self.hook.download_file(key=file)
-                local_file_paths.append(local_path)
+                local_file_paths.append(self.download_file(file))
             yield local_file_paths
         finally:
             # Clean up the local files
@@ -84,10 +86,10 @@ class S3DataProvider(BaseFilesystemProviders):
 
         destination_keys = []
         for file in source_ref:
-            if os.path.exists(file.tmp_file.name):
-                dest_key = os.path.join(dest_s3_key, os.path.basename(file.actual_filename))
+            if file.tmp_file.exists():
+                dest_key = os.path.join(dest_s3_key, os.path.basename(file.actual_filename.name))
                 self.hook.load_file(
-                    filename=file.tmp_file.name,
+                    filename=file.tmp_file.as_posix(),
                     key=dest_key,
                     replace="replace",
                     acl_policy=self.s3_acl_policy,
@@ -95,6 +97,14 @@ class S3DataProvider(BaseFilesystemProviders):
                 destination_keys.append(dest_key)
 
         return destination_keys
+
+    def download_file(self, file) -> TempFile:
+        """Download file and save to temporary path."""
+        file_object = self.hook.get_key(file, self.bucket_name)
+        _, _, file_name = file.rpartition("/")
+        with NamedTemporaryFile(suffix=file_name, delete=False) as tmp_file:
+            file_object.download_fileobj(tmp_file)
+            return TempFile(tmp_file=Path(tmp_file.name), actual_filename=Path(file_name))
 
     @property
     def verify(self) -> str | bool | None:
