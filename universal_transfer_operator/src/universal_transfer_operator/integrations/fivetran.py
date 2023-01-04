@@ -4,6 +4,7 @@ import logging
 
 import attr
 from fivetran_provider.hooks.fivetran import FivetranHook
+
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
 from universal_transfer_operator.integrations.base import TransferIntegration
 
