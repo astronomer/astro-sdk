@@ -1,6 +1,7 @@
 import os
 import pathlib
 
+import airflow
 import pandas as pd
 import pytest
 
@@ -16,6 +17,7 @@ CWD = pathlib.Path(__file__).parent
 
 
 @pytest.mark.integration
+@pytest.mark.skipif(airflow.__version__ < "2.3.0", reason="Require Airflow version >= 2.3.0")
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
