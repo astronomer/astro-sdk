@@ -8,10 +8,10 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import pandas as pd
-import settings as benchmark_settings
 from google.cloud import storage
 from sqlalchemy import text
 
+import settings as benchmark_settings
 from astro.databases import create_database
 from astro.table import Metadata, Table
 

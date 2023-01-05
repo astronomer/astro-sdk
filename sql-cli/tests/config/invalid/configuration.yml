@@ -1,5 +1,5 @@
 connections:
-  - conn_id: sqlite_conn_invalid
+  - conn_id: sqlite_non_existent_host_path
     conn_type: sqlite
     host: imdb2.db
     login:

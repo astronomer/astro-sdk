@@ -1,3 +1,4 @@
+import logging
 import random
 import shutil
 import string
@@ -9,6 +10,7 @@ from airflow.utils import timezone
 from airflow.utils.session import create_session
 
 from astro.table import MAX_TABLE_NAME_LENGTH
+from sql_cli.constants import EXT_LOGGER_NAMES, LOGGER_NAME
 from sql_cli.dag_generator import Workflow
 from sql_cli.project import Project
 from sql_cli.workflow_directory_parser import SqlFile, WorkflowFile
@@ -186,11 +188,10 @@ def initialised_project_with_test_config(initialised_project: Project):
 
 
 @pytest.fixture()
-def initialised_project_with_sqlite_non_existent_host_path_config(initialised_project: Project):
-    sqlite_non_existent_host_path = "sqlite_non_existent_host_path"
+def initialised_project_with_invalid_config(initialised_project: Project):
     shutil.copytree(
-        src=CWD / "tests" / "config" / sqlite_non_existent_host_path,
-        dst=initialised_project.directory / "config" / sqlite_non_existent_host_path,
+        src=CWD / "tests" / "config" / "invalid",
+        dst=initialised_project.directory / "config" / "invalid",
     )
     return initialised_project
 
@@ -210,3 +211,13 @@ def initialised_project_with_tests_workflows(initialised_project: Project):
         dirs_exist_ok=True,
     )
     return initialised_project
+
+
+@pytest.fixture()
+def logger():
+    return logging.getLogger(LOGGER_NAME)
+
+
+@pytest.fixture()
+def ext_loggers():
+    return [logging.getLogger(logger_name) for logger_name in EXT_LOGGER_NAMES]
