@@ -268,4 +268,21 @@ with dag:
     )
     # [END load_file_example_20]
 
+    # [START load_file_example_21]
+    aql.load_file(
+        input_file=File(
+            path="ftp://upload/ADOPTION_CENTER_1_unquoted.csv",
+            conn_id="ftp_conn",
+            filetype=FileType.CSV,
+        ),
+        output_table=Table(
+            conn_id=SNOWFLAKE_CONN_ID,
+            metadata=Metadata(
+                database=os.environ["SNOWFLAKE_DATABASE"],
+                schema=os.environ["SNOWFLAKE_SCHEMA"],
+            ),
+        ),
+    )
+    # [END load_file_example_21]
+
     aql.cleanup()

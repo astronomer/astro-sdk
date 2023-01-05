@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 import argparse
 import json
@@ -8,12 +9,12 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import pandas as pd
-import settings as benchmark_settings
 from google.cloud import storage
 from sqlalchemy import text
 
 from astro.databases import create_database
 from astro.table import Metadata, Table
+from tests.benchmark import settings as benchmark_settings
 
 SUMMARY_FIELDS = [
     "database",
@@ -130,7 +131,7 @@ def analyse_results_from_database(bq_git_sha: str, output_filepath: str):
     analyse_results(df, output_filepath)
 
 
-def analyse_results(df: pd.DataFrame, output_filepath: str = None):
+def analyse_results(df: pd.DataFrame, output_filepath: str | None = None):
     # calculate total CPU from process & children
     mean_by_dag = df.groupby("dag_id", as_index=False).mean()
 

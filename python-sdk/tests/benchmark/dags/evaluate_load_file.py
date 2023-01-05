@@ -6,7 +6,6 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
-import settings as benchmark_settings
 from airflow import DAG
 from run import export_profile_data_to_bq
 
@@ -14,6 +13,7 @@ from astro import sql as aql
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType
 from astro.files import File
 from astro.table import Metadata, Table
+from tests.benchmark import settings as benchmark_settings
 
 START_DATE = datetime(2000, 1, 1)
 
