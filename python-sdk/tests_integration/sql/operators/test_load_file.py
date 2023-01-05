@@ -1199,6 +1199,6 @@ def test_loadfile_delimiter(sample_dag, database_table_fixture):
             input_file=File(path),
             output_table=test_table,
             use_native_support=False,
-            pandas_options=CsvLoadOption(delimiter="$"),
+            load_options=CsvLoadOption(delimiter="$"),
         )
     test_utils.run_dag(sample_dag)
