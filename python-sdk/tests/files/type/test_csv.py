@@ -1,8 +1,10 @@
 import pathlib
 import tempfile
+from unittest import mock
 
 import pandas as pd
 
+from astro.dataframes.load_options import CsvLoadOption
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types import CSVFileType
 
@@ -17,6 +19,16 @@ def test_read_csv_file():
         df = csv_type.export_to_dataframe(file)
     assert df.shape == (3, 2)
     assert isinstance(df, PandasDataframe)
+
+
+@mock.patch("astro.files.types.csv.pd.read_csv")
+def test_read_csv_file_with_pandas_opts(mock_read_csv):
+    """Test pandas option get pass to read_csv"""
+    path = str(sample_file.absolute())
+    csv_type = CSVFileType(path)
+    with open(path) as file:
+        csv_type.export_to_dataframe(file, load_options=CsvLoadOption(delimiter="$"))
+    mock_read_csv.assert_called_once_with(file, delimiter="$")
 
 
 def test_write_csv_file():
