@@ -19,7 +19,6 @@ Welcome to astro-sdk-python's documentation!
    :titlesonly:
 
    guides/concepts.rst
-   guides/operators.rst
    guides/xcom_backend.rst
    guides/openlineage.rst
    guides/databricks.rst
@@ -30,6 +29,7 @@ Welcome to astro-sdk-python's documentation!
    :glob:
 
    autoapi/*
+   operators.rst
    configurations.rst
    supported_databases.rst
    supported_file.rst
