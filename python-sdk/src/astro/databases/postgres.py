@@ -13,6 +13,7 @@ from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflict
 from astro.databases.base import BaseDatabase
 from astro.dataframes.load_options import PandasLoadOptions
 from astro.files import File
+from astro.options import LoadOptions
 from astro.settings import POSTGRES_SCHEMA
 from astro.table import BaseTable, Metadata
 
@@ -202,13 +203,13 @@ class PostgresDatabase(BaseDatabase):
 
     @staticmethod
     def get_dataframe_from_file(
-        file: File, pandas_options: PandasLoadOptions | None = None  # skipcq: PYL-W0613
+        file: File, load_options: LoadOptions | None = None  # skipcq: PYL-W0613
     ):
         """
         Get pandas dataframe file
 
         :param file: File path and conn_id for object stores
-        :param pandas_options: pandas options while reading file
+        :param load_options: pandas options while reading file
         """
         return file.export_to_dataframe_via_byte_stream()
 

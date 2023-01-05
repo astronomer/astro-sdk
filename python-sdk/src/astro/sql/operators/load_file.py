@@ -68,13 +68,13 @@ class LoadFileOperator(AstroSQLBaseOperator):
         self.chunk_size = chunk_size
         self.kwargs = kwargs
         self.if_exists = if_exists
+        self.ndjson_normalize_sep = ndjson_normalize_sep
         self.normalize_config: dict[str, str] = {}
         self.use_native_support = use_native_support
         self.native_support_kwargs: dict[str, Any] = native_support_kwargs or {}
         self.columns_names_capitalization = columns_names_capitalization
         self.enable_native_fallback = enable_native_fallback
         self.load_options = load_options
-        self.ndjson_normalize_sep = ndjson_normalize_sep
 
     def execute(self, context: Context) -> BaseTable | File:  # skipcq: PYL-W0613
         """
