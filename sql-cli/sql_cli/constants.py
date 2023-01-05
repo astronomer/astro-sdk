@@ -11,3 +11,6 @@ GENERATED_WORKFLOW_INCLUDE_DIRECTORY = "include"
 
 # Connection types
 SQLITE_CONN_TYPE = "sqlite"
+
+LOGGER_NAME = "sql_cli"
+EXT_LOGGER_NAMES = ["airflow", "botocore", "snowflake"]
