@@ -1,7 +1,5 @@
 import logging
-import random
 import shutil
-import string
 from pathlib import Path
 
 import pytest
@@ -9,11 +7,11 @@ from airflow.models import DAG, Connection, DagRun, TaskInstance as TI
 from airflow.utils import timezone
 from airflow.utils.session import create_session
 
-from astro.table import MAX_TABLE_NAME_LENGTH
 from sql_cli.constants import EXT_LOGGER_NAMES, LOGGER_NAME
 from sql_cli.dag_generator import Workflow
 from sql_cli.project import Project
 from sql_cli.workflow_directory_parser import SqlFile, WorkflowFile
+from tests.utils import create_unique_table_name
 
 CWD = Path(__file__).parent
 
@@ -23,42 +21,42 @@ DEFAULT_DATE = timezone.datetime(2016, 1, 1)
 UNIQUE_HASH_SIZE = 16
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def root_directory():
     return CWD / "tests" / "workflows" / "basic"
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def root_directory_cycle():
     return CWD / "tests" / "workflows" / "cycle"
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def root_directory_symlink():
     return CWD / "tests" / "workflows" / "symlink"
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def root_directory_multiple_operators():
     return CWD / "tests" / "workflows" / "multiple_operators"
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def root_directory_unsupported_operator():
     return CWD / "tests" / "workflows" / "unsupported_operator"
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def root_directory_dags():
     return CWD / "tests" / "test_dag"
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def dags_directory():
     return CWD / "tests" / ".airflow" / "dags"
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def sql_file(root_directory, dags_directory):
     return SqlFile(
         root_directory=root_directory,
@@ -67,7 +65,7 @@ def sql_file(root_directory, dags_directory):
     )
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def sql_file_with_parameters(root_directory, dags_directory):
     return SqlFile(
         root_directory=root_directory,
@@ -76,7 +74,7 @@ def sql_file_with_parameters(root_directory, dags_directory):
     )
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def sql_file_in_sub_directory(root_directory, dags_directory):
     return SqlFile(
         root_directory=root_directory,
@@ -85,7 +83,7 @@ def sql_file_in_sub_directory(root_directory, dags_directory):
     )
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def sql_file_with_cycle(root_directory_cycle, dags_directory):
     return SqlFile(
         root_directory=root_directory_cycle,
@@ -94,7 +92,7 @@ def sql_file_with_cycle(root_directory_cycle, dags_directory):
     )
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def workflow_file(root_directory, dags_directory):
     return WorkflowFile(
         root_directory=root_directory,
@@ -103,7 +101,7 @@ def workflow_file(root_directory, dags_directory):
     )
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def workflow_file_with_parameters(root_directory, dags_directory):
     return WorkflowFile(
         root_directory=root_directory,
@@ -112,7 +110,7 @@ def workflow_file_with_parameters(root_directory, dags_directory):
     )
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def workflow(sql_file):
     return Workflow(
         dag_id="workflow",
@@ -121,7 +119,7 @@ def workflow(sql_file):
     )
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def workflow_with_parameters(sql_file_with_parameters):
     return Workflow(
         dag_id="workflow_with_parameters",
@@ -130,7 +128,7 @@ def workflow_with_parameters(sql_file_with_parameters):
     )
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def workflow_with_cycle(sql_file_with_cycle):
     return Workflow(
         dag_id="workflow_with_cycle",
@@ -139,7 +137,7 @@ def workflow_with_cycle(sql_file_with_cycle):
     )
 
 
-@pytest.fixture
+@pytest.fixture()
 def sample_dag():
     dag_id = create_unique_table_name(UNIQUE_HASH_SIZE)
     yield DAG(dag_id, start_date=DEFAULT_DATE)
@@ -148,22 +146,14 @@ def sample_dag():
         session_.query(TI).delete()
 
 
-def create_unique_table_name(length: int = MAX_TABLE_NAME_LENGTH) -> str:
-    """
-    Create a unique table name of the requested size, which is compatible with all supported databases.
-
-    :return: Unique table name
-    :rtype: str
-    """
-    unique_id = random.choice(string.ascii_lowercase) + "".join(
-        random.choice(string.ascii_lowercase + string.digits) for _ in range(length - 1)
-    )
-    return unique_id
+@pytest.fixture(scope="module")
+def tmp_path_cached(tmp_path_factory):
+    return tmp_path_factory.mktemp("sql-cli")
 
 
-@pytest.fixture()
-def initialised_project(tmp_path):
-    proj = Project(tmp_path)
+@pytest.fixture(scope="module")
+def initialised_project(tmp_path_cached):
+    proj = Project(tmp_path_cached)
     proj.initialise()
     return proj
 
@@ -178,7 +168,7 @@ def initialised_project_with_custom_airflow_config(tmp_path):
     return proj
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def initialised_project_with_test_config(initialised_project: Project):
     shutil.copytree(
         src=CWD / "tests" / "config" / "test",
@@ -187,7 +177,7 @@ def initialised_project_with_test_config(initialised_project: Project):
     return initialised_project
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def initialised_project_with_invalid_config(initialised_project: Project):
     shutil.copytree(
         src=CWD / "tests" / "config" / "invalid",
@@ -196,14 +186,14 @@ def initialised_project_with_invalid_config(initialised_project: Project):
     return initialised_project
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def connections():
     return [
         Connection(conn_id="sqlite_conn", conn_type="sqlite", host="data/imdb.db"),
     ]
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def initialised_project_with_tests_workflows(initialised_project: Project):
     shutil.copytree(
         src=CWD / "tests" / "workflows",
