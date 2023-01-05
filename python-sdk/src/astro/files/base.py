@@ -95,6 +95,7 @@ class File(LoggingMixin, Dataset):
             delimited data (e.g. csv, parquet, etc.).
         :param df: pandas dataframe
         """
+
         self.is_dataframe = store_as_dataframe
 
         with self.location.get_stream() as stream:

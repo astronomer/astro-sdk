@@ -139,6 +139,16 @@ jobs:
         image: ghcr.io/astronomer/astro-sdk/sftp_docker
         ports:
           - 2222:22
+      ftp:
+        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        ports:
+          - 21:21
+          - 30000-30009:30000-30009
+        env:
+          FTP_USER_NAME: ${{ secrets.SFTP_USERNAME }}
+          FTP_USER_PASS: ${{ secrets.SFTP_PASSWORD }}
+          FTP_USER_HOME: /home/foo
+          PUBLICHOST: "localhost"
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -263,6 +273,16 @@ jobs:
         image: ghcr.io/astronomer/astro-sdk/sftp_docker
         ports:
           - 2222:22
+      ftp:
+        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        ports:
+          - 21:21
+          - 30000-30009:30000-30009
+        env:
+          FTP_USER_NAME: ${{ secrets.SFTP_USERNAME }}
+          FTP_USER_PASS: ${{ secrets.SFTP_PASSWORD }}
+          FTP_USER_HOME: /home/foo
+          PUBLICHOST: "localhost"
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -339,6 +359,16 @@ jobs:
         image: ghcr.io/astronomer/astro-sdk/sftp_docker
         ports:
           - 2222:22
+      ftp:
+        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        ports:
+          - 21:21
+          - 30000-30009:30000-30009
+        env:
+          FTP_USER_NAME: ${{ secrets.SFTP_USERNAME }}
+          FTP_USER_PASS: ${{ secrets.SFTP_PASSWORD }}
+          FTP_USER_HOME: /home/foo
+          PUBLICHOST: "localhost"
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
