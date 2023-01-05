@@ -28,7 +28,7 @@ def test_read_csv_file_with_pandas_opts(mock_read_csv):
     csv_type = CSVFileType(path)
     with open(path) as file:
         csv_type.export_to_dataframe(file, load_options=CsvLoadOption(delimiter="$"))
-    mock_read_csv.assert_called_once_with(file, delimiter="$")
+    mock_read_csv.assert_called_once_with(file, delimiter="$", dtype=None)
 
 
 def test_write_csv_file():

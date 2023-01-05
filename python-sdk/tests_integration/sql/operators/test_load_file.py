@@ -1189,7 +1189,7 @@ def test_aql_nested_ndjson_file_to_database_explicit_illegal_sep_params(sample_d
     indirect=True,
     ids=["snowflake"],
 )
-def test_loadfile_delimiter(sample_dag, database_table_fixture):
+def test_load_file_delimiter(sample_dag, database_table_fixture):
     _, test_table = database_table_fixture
 
     path = str(CWD) + "/../../data/delimiter_dollar.csv"
