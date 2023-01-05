@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 
 import pandas as pd
 
-from astro.dataframes.load_options import PandasLoadOptions
 from astro.options import LoadOptions
 
 
