@@ -11,7 +11,6 @@ from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
-from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files import File, resolve_file_path_pattern
 from astro.options import LoadOptions
