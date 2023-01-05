@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from attr import asdict, define
+from attr import define
 from pandas._typing import DtypeArg
 
 from astro.options import LoadOptions
