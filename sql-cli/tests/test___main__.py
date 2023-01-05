@@ -247,6 +247,25 @@ def test_generate_invalid(workflow_name, message, initialised_project_with_tests
     assert message in result.stdout
 
 
+def test_generate_with_output_dir(initialised_project, tmp_path):
+    result = runner.invoke(
+        app,
+        [
+            "generate",
+            "example_basic_transform",
+            "--project-dir",
+            initialised_project.directory.as_posix(),
+            "--output-dir",
+            tmp_path.as_posix(),
+        ],
+    )
+    expected_dag_file_path = tmp_path / "example_basic_transform.py"
+    assert expected_dag_file_path.exists()
+    message = "has been successfully generated."
+    assert message in result.stdout
+    assert result.exit_code == 0
+
+
 @pytest.mark.parametrize(
     "workflow_name,exit_code",
     [
