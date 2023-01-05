@@ -9,7 +9,7 @@ from faker import Faker
 
 def generate_data(row_size, file_name):
 
-    faked_obj: object = Faker("en_GB")
+    faked_obj = Faker("en_GB")
 
     file_obj = open(file_name, "w")
     write_obj = csv.writer(file_obj)
