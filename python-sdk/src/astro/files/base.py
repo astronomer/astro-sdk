@@ -10,7 +10,6 @@ from attr import define, field
 
 from astro import constants
 from astro.airflow.datasets import Dataset
-from astro.dataframes.load_options import PandasLoadOptions
 from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
 from astro.files.types import FileType, create_file_type
