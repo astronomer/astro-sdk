@@ -32,6 +32,7 @@ class FTPLocation(BaseFileLocation):
         uri = conn.get_uri()
         client = self.hook.get_conn()
         files = client.nlst("/" + url.netloc + url.path)
+        # the above command checks if the path is a file or directory
         if len(files) > 0:
             paths = [uri + file for file in files]
         else:
