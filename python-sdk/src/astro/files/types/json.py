@@ -32,7 +32,7 @@ class JSONFileType(FileType):
         kwargs_copy = dict(kwargs)
         # Pandas `read_json` does not support the `nrows` parameter unless we're using NDJSON
         kwargs_copy.pop("nrows", None)
-        if load_options is not None:
+        if isinstance(load_options, PandasLoadOptions):
             kwargs_copy.update(load_options.to_dict)
         df = pd.read_json(stream, **kwargs_copy)
         df = convert_columns_names_capitalization(

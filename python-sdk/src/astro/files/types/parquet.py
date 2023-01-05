@@ -33,7 +33,7 @@ class ParquetFileType(FileType):
         kwargs_copy.pop("nrows", None)
 
         byte_io_buffer = self._convert_remote_file_to_byte_stream(stream)
-        if load_options is not None:
+        if isinstance(load_options, PandasLoadOptions):
             kwargs_copy.update(load_options.to_dict)
 
         df = pd.read_parquet(byte_io_buffer, **kwargs_copy)
