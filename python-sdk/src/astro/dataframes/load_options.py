@@ -8,9 +8,7 @@ from astro.options import LoadOptions
 
 @define
 class PandasLoadOptions(LoadOptions):
-    @property
-    def to_dict(self):
-        return dict(filter(lambda x: x[1], asdict(self).items()))
+    pass
 
 
 @define
