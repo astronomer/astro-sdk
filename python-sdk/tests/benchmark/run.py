@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 import airflow
 import pandas as pd
 import psutil
+import settings as benchmark_settings
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import TaskInstance
 from airflow.utils import timezone

@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlparse
 
+import settings as benchmark_settings
 from airflow import DAG
 from run import export_profile_data_to_bq
 

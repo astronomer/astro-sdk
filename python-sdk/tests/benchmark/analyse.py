@@ -9,6 +9,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import pandas as pd
+import settings as benchmark_settings
 from google.cloud import storage
 from sqlalchemy import text
 
