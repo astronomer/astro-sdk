@@ -11,7 +11,6 @@ from psycopg2 import sql as postgres_sql
 
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
-from astro.dataframes.load_options import PandasLoadOptions
 from astro.files import File
 from astro.options import LoadOptions
 from astro.settings import POSTGRES_SCHEMA
