@@ -6,6 +6,7 @@ from airflow import DAG
 from universal_transfer_operator.constants import TransferMode
 from universal_transfer_operator.datasets.file import File
 from universal_transfer_operator.datasets.table import Metadata, Table
+from universal_transfer_operator.integrations.fivetran import Connector, Destination, FiveTranOptions, Group
 from universal_transfer_operator.universal_transfer_operator import UniversalTransferOperator
 
 with DAG(
@@ -34,10 +35,7 @@ with DAG(
         source_dataset=File(path="s3://astro-sdk-test/uto/", conn_id="aws_default"),
         destination_dataset=Table(name="fivetran_test", conn_id="snowflake_default"),
         transfer_mode=TransferMode.THIRDPARTY,
-        transfer_params={
-            "thirdparty_conn_id": "fivetran_default",
-            "connector_id": "filing_muppet",
-        },
+        transfer_params=FiveTranOptions(conn_id="fivetran_default", connector_id="filing_muppet"),
     )
 
     transfer_fivetran_without_connector_id = UniversalTransferOperator(
@@ -51,25 +49,13 @@ with DAG(
             ),
         ),
         transfer_mode=TransferMode.THIRDPARTY,
-        transfer_params={
-            "thirdparty_conn_id": "fivetran_default",
-            "group": {"name": "test_group"},
-            "destination": {
-                "service": "snowflake",
-                "time_zone_offset": "-5",
-                "region": "GCP_US_EAST4",
-                "config": {
-                    "host": "your-account.snowflakecomputing.com",
-                    "port": 443,
-                    "database": "fivetran",
-                    "auth": "PASSWORD",
-                    "user": "fivetran_user",
-                    "password": "123456",
-                },
-            },
-            "connector": {
-                "service": "s3",
-                "config": {
+        transfer_params=FiveTranOptions(
+            conn_id="fivetran_default",
+            connector_id="filing_muppet",
+            group=Group(name="test_group"),
+            connector=Connector(
+                service="s3",
+                config={
                     "schema": "s3",
                     "append_file_option": "upsert_file",
                     "prefix": "folder_path",
@@ -89,6 +75,19 @@ with DAG(
                     "table": "fivetran_test",
                     "archive_pattern": "regex_pattern",
                 },
-            },
-        },
+            ),
+            destination=Destination(
+                service="snowflake",
+                time_zone_offset="-5",
+                region="GCP_US_EAST4",
+                config={
+                    "host": "your-account.snowflakecomputing.com",
+                    "port": 443,
+                    "database": "fivetran",
+                    "auth": "PASSWORD",
+                    "user": "fivetran_user",
+                    "password": "123456",
+                },
+            ),
+        ),
     )
