@@ -12,7 +12,7 @@ from astro import sql as aql
 from astro.constants import SUPPORTED_FILE_TYPES, Database
 from astro.files import File
 from astro.settings import SCHEMA
-from astro.sql import export_file, export_table_to_file
+from astro.sql import export_file, export_to_file
 from astro.table import Table
 
 from ..operators import utils as test_utils
@@ -122,7 +122,7 @@ def test_save_all_db_tables_to_gcs(sample_dag, database_table_fixture):
     output_file_path = f"gs://{bucket}/test/{file_name}"
 
     with sample_dag:
-        export_table_to_file(
+        export_to_file(
             input_data=test_table,
             output_file=File(path=output_file_path, conn_id="google_cloud_default"),
             if_exists="replace",
@@ -168,7 +168,7 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(sample_dag, dat
     _, test_table = database_table_fixture
     with tempfile.NamedTemporaryFile(suffix=".csv") as temp_file, pytest.raises(FileExistsError):
         with sample_dag:
-            export_table_to_file(
+            export_to_file(
                 input_data=test_table,
                 output_file=File(path=temp_file.name),
                 if_exists="exception",
@@ -216,7 +216,7 @@ def test_save_table_remote_file_exists_overwrite_false(
     _, test_table = database_table_fixture
     with pytest.raises(FileExistsError):
         with sample_dag:
-            export_table_to_file(
+            export_to_file(
                 input_data=test_table,
                 output_file=File(path=remote_files_fixture[0]),
                 if_exists="exception",
@@ -258,7 +258,7 @@ def test_export_file(sample_dag, database_table_fixture, file_type):
     with tempfile.TemporaryDirectory() as tmp_dir:
         filepath = Path(tmp_dir, f"sample.{file_type}")
         with sample_dag:
-            export_table_to_file(
+            export_to_file(
                 input_data=test_table,
                 output_file=File(path=str(filepath)),
                 if_exists="exception",
@@ -305,7 +305,7 @@ def test_populate_table_metadata(sample_dag, database_table_fixture):
         assert table.metadata.schema == SCHEMA
 
     with sample_dag:
-        aql.export_table_to_file(
+        aql.export_to_file(
             input_data=test_table,
             output_file=File(path="/tmp/saved_df.csv"),
             if_exists="replace",
