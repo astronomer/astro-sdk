@@ -90,6 +90,17 @@ class Workflow:
 
         return list(depth_first_search.dfs_postorder_nodes(graph))
 
+    @classmethod
+    def from_yaml(cls, yaml_path: Path):
+        """
+        Create a Workflow data class loading properties from a YAML file.
+        
+        :params yaml_path: 
+        """
+        with yaml_path.open() as fp:
+            yaml_config = yaml.safe_load(fp.read())
+
+        {k:v for k,v in dict.items() if k in tuple(e.name for e in dataclasses.fields(Workflow).keys())}
 
 def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) -> Path:
     """
