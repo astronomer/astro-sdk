@@ -2,16 +2,30 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+import attr
 from airflow.hooks.base import BaseHook
 
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
+from universal_transfer_operator.utils import TransferParameters
+
+
+@attr.define
+class TransferIntegrationOptions(TransferParameters):
+    """TransferIntegrationOptions for transfer integration configuration"""
+
+    conn_id: str = attr.field(default="")
 
 
 class TransferIntegration(ABC):
     """Basic implementation of a third party transfer."""
 
-    def __init__(self, conn_id: str, transfer_params: dict):
-        self.conn_id = conn_id
+    def __init__(
+        self,
+        transfer_params: TransferIntegrationOptions = attr.field(
+            factory=TransferIntegrationOptions,
+            converter=lambda val: TransferIntegrationOptions(**val) if isinstance(val, dict) else val,
+        ),
+    ):
         self.transfer_params = transfer_params
         # transfer mapping creates a mapping between various sources and destination, where
         # transfer is possible using the integration

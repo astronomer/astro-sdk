@@ -5,7 +5,7 @@ from airflow.hooks.base import BaseHook
 from universal_transfer_operator.constants import TransferMode
 from universal_transfer_operator.data_providers.base import DataProviders
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
-from universal_transfer_operator.utils import get_class_name
+from universal_transfer_operator.utils import TransferParameters, get_class_name
 
 DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = {
     "s3": "universal_transfer_operator.data_providers.filesystem.aws.s3",
@@ -17,7 +17,7 @@ DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = {
 
 def create_dataprovider(
     dataset: Dataset,
-    transfer_params: dict = None,
+    transfer_params: TransferParameters = None,
     transfer_mode: TransferMode = TransferMode.NONNATIVE,
 ) -> DataProviders:
     conn_type = BaseHook.get_connection(dataset.conn_id).conn_type

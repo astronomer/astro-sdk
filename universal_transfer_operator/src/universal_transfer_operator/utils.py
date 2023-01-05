@@ -1,8 +1,17 @@
 from typing import Any
 
+import attr
 from airflow.hooks.base import BaseHook
 
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
+
+
+@attr.define
+class TransferParameters:
+    if_exists: str = "replace"
+
+    def empty(self):
+        return NotImplementedError()
 
 
 def check_if_connection_exists(conn_id: str) -> bool:

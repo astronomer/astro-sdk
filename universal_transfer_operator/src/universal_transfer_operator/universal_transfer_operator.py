@@ -10,11 +10,7 @@ from universal_transfer_operator.constants import TransferMode
 from universal_transfer_operator.data_providers import create_dataprovider
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
 from universal_transfer_operator.integrations import get_transfer_integration
-
-
-@attr.define
-class TransferParameters:
-    if_exists: str = "replace"
+from universal_transfer_operator.utils import TransferParameters
 
 
 class UniversalTransferOperator(BaseOperator):

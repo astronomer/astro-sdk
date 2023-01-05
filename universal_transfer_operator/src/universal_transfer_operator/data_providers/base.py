@@ -3,11 +3,12 @@ from __future__ import annotations
 from abc import ABC
 from contextlib import contextmanager
 
+import attr
 from airflow.hooks.base import BaseHook
 
 from universal_transfer_operator.constants import Location
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
-from universal_transfer_operator.utils import get_dataset_connection_type
+from universal_transfer_operator.utils import TransferParameters, get_dataset_connection_type
 
 
 class DataProviders(ABC):
@@ -19,7 +20,15 @@ class DataProviders(ABC):
     changing other modules and classes.
     """
 
-    def __init__(self, dataset: Dataset, transfer_mode, transfer_params: dict = None):
+    def __init__(
+        self,
+        dataset: Dataset,
+        transfer_mode,
+        transfer_params: TransferParameters = attr.field(
+            factory=TransferParameters,
+            converter=lambda val: TransferParameters(**val) if isinstance(val, dict) else val,
+        ),
+    ):
         self.dataset = dataset
         self.transfer_params = transfer_params
         self.transfer_mode = transfer_mode

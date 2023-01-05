@@ -15,7 +15,7 @@ from universal_transfer_operator.data_providers.filesystem.base import (
     contextmanager,
 )
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
-from universal_transfer_operator.universal_transfer_operator import TransferParameters
+from universal_transfer_operator.utils import TransferParameters
 
 
 class S3DataProvider(BaseFilesystemProviders):

@@ -3,10 +3,11 @@ from __future__ import annotations
 import logging
 
 import attr
+from attr import field
 from fivetran_provider.hooks.fivetran import FivetranHook
 
 from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
-from universal_transfer_operator.integrations.base import TransferIntegration
+from universal_transfer_operator.integrations.base import TransferIntegration, TransferIntegrationOptions
 
 
 @attr.define
@@ -14,9 +15,11 @@ class Group:
     """
     Fivetran group details
     :param name: The name of the group within Fivetran account.
+    :param group_id : Group id in fivetran system
     """
 
     name: str
+    group_id: str | None = None
 
 
 @attr.define
@@ -24,6 +27,7 @@ class Destination:
     """
     Fivetran destination details
 
+    :param destination_id: The unique identifier for the destination within the Fivetran system
     :param service: services as per https://fivetran.com/docs/rest-api/destinations/config
     :param region: Data processing location. This is where Fivetran will operate and run computation on data.
     :param time_zone_offset: Determines the time zone for the Fivetran sync schedule.
@@ -33,6 +37,7 @@ class Destination:
 
     service: str
     config: dict
+    destination_id: str | None = None
     time_zone_offset: str | None = "-5"
     region: str | None = "GCP_US_EAST4"
     run_setup_tests: bool | None = True
@@ -77,12 +82,16 @@ class Connector:
 
 
 @attr.define
-class FiveTranOptions:
+class FiveTranOptions(TransferIntegrationOptions):
+    conn_id: str | None = field(default="fivetran_default")
+    connector_id: str | None = field(default="")
     retry_limit: int = 3
     retry_delay: int = 1
     poll_interval: int = 15
     schedule_type: str = "manual"
-    connector: Connector = attr.field(factory=Connector)
+    connector: Connector | None = attr.field(default=None)
+    group: Group | None = attr.field(default=None)
+    destination: Destination | None = attr.field(default=None)
 
 
 class FivetranIntegration(TransferIntegration):
@@ -99,20 +108,20 @@ class FivetranIntegration(TransferIntegration):
 
     def __init__(
         self,
-        thirdparty_conn_id: str,
         transfer_params: FiveTranOptions = attr.field(
             factory=FiveTranOptions,
             converter=lambda val: FiveTranOptions(**val) if isinstance(val, dict) else val,
         ),
     ):
-        self.conn_id = thirdparty_conn_id
         self.transfer_params = transfer_params
         self.transfer_mapping = None
 
     def hook(self) -> FivetranHook:
         """Return an instance of the database-specific Airflow hook."""
         return FivetranHook(
-            self.conn_id, retry_limit=self.fivetran_retry_limit, retry_delay=self.fivetran_retry_delay
+            self.transfer_params.conn_id,
+            retry_limit=self.transfer_params.retry_limit,
+            retry_delay=self.transfer_params.retry_delay,
         )
 
     def transfer_job(self, source_dataset: Dataset, destination_dataset: Dataset) -> None:
@@ -122,18 +131,20 @@ class FivetranIntegration(TransferIntegration):
         fivetran_hook = self.hook()
 
         # Check if connector_id is passed and check if it exists and do the transfer.
-        connector_id = self.transfer_params.get("connector_id", None)
+        connector_id = self.transfer_params.connector_id
         if self.check_for_connector_id(fivetran_hook=fivetran_hook):
-            fivetran_hook.prep_connector(connector_id=connector_id, schedule_type=self.schedule_type)
+            fivetran_hook.prep_connector(
+                connector_id=connector_id, schedule_type=self.transfer_params.schedule_type
+            )
             # TODO: wait until the job is done
             return fivetran_hook.start_fivetran_sync(connector_id=connector_id)
 
-        group_id = self.transfer_params.get("group_id", None)
+        group_id = self.transfer_params.group.group_id
         if not self.check_group_details(fivetran_hook=fivetran_hook, group_id=group_id):
             # create group if not group_id is not passed.
             group_id = self.create_group(fivetran_hook=fivetran_hook)
 
-        destination_id = self.transfer_params.get("destination_id", None)
+        destination_id = self.transfer_params.destination.destination_id
         if not self.check_destination_details(fivetran_hook=fivetran_hook, destination_id=destination_id):
             # Check for destination based on destination_id else create destination
             self.create_destination(fivetran_hook=fivetran_hook, group_id=group_id)
@@ -152,7 +163,7 @@ class FivetranIntegration(TransferIntegration):
         """
         Ensures connector configuration has been completed successfully and is in a functional state.
         """
-        connector_id = self.transfer_params.get("connector_id", None)
+        connector_id = self.transfer_params.connector_id
         if connector_id is None:
             logging.warning("No value specified for connector_id")
             return False
@@ -183,7 +194,7 @@ class FivetranIntegration(TransferIntegration):
         Creates the group based on group name passed
         """
         endpoint = self.api_path_groups
-        group_dict = self.transfer_params.get("group", None)
+        group_dict = self.transfer_params.group
         if group_dict is None:
             raise ValueError("Group is none. Pass a valid group")
         group = Group(**group_dict)
@@ -218,7 +229,7 @@ class FivetranIntegration(TransferIntegration):
         Creates the destination based on destination configuration passed
         """
         endpoint = self.api_path_destinations
-        destination_dict = self.transfer_params.get("destination", None)
+        destination_dict = self.transfer_params.destination
         if destination_dict is None:
             raise ValueError("destination is none. Pass a valid destination")
         destination = Destination(**destination_dict)
@@ -243,7 +254,7 @@ class FivetranIntegration(TransferIntegration):
         Creates the connector based on connector configuration passed
         """
         endpoint = self.api_path_connectors
-        connector_dict = self.transfer_params.get("connector", None)
+        connector_dict = self.transfer_params.connector
         if connector_dict is None:
             raise ValueError("connector is none. Pass a valid connector")
 
@@ -275,7 +286,7 @@ class FivetranIntegration(TransferIntegration):
         Runs the setup tests for an existing connector within your Fivetran account.
         """
         endpoint = self.api_path_connectors + connector_id + "/test"
-        connector_dict = self.transfer_params.get("connector", None)
+        connector_dict = self.transfer_params.connector
         if connector_dict is None:
             raise ValueError("connector is none. Pass a valid connector")
 
