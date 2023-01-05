@@ -16,22 +16,22 @@ with DAG(
 ) as dag:
     transfer_non_native_gs_to_s3 = UniversalTransferOperator(
         task_id="transfer_non_native_gs_to_s3",
-        source_dataset=File("gs://uto-test/uto/", conn_id="google_cloud_default"),
-        destination_dataset=File("s3://astro-sdk-test/uto/", conn_id="aws_default"),
+        source_dataset=File(path="gs://uto-test/uto/", conn_id="google_cloud_default"),
+        destination_dataset=File(path="s3://astro-sdk-test/uto/", conn_id="aws_default"),
     )
 
     transfer_non_native_s3_to_gs = UniversalTransferOperator(
         task_id="transfer_non_native_s3_to_gs",
-        source_dataset=File("s3://astro-sdk-test/uto/", conn_id="aws_default"),
+        source_dataset=File(path="s3://astro-sdk-test/uto/", conn_id="aws_default"),
         destination_dataset=File(
-            "gs://uto-test/uto/",
+            path="gs://uto-test/uto/",
             conn_id="google_cloud_default",
         ),
     )
 
     transfer_fivetran_with_connector_id = UniversalTransferOperator(
         task_id="transfer_fivetran_with_connector_id",
-        source_dataset=File("s3://astro-sdk-test/uto/", conn_id="aws_default"),
+        source_dataset=File(path="s3://astro-sdk-test/uto/", conn_id="aws_default"),
         destination_dataset=Table(name="fivetran_test", conn_id="snowflake_default"),
         transfer_mode=TransferMode.THIRDPARTY,
         transfer_params={
@@ -42,7 +42,7 @@ with DAG(
 
     transfer_fivetran_without_connector_id = UniversalTransferOperator(
         task_id="transfer_fivetran_without_connector_id",
-        source_dataset=File("s3://astro-sdk-test/uto/", conn_id="aws_default"),
+        source_dataset=File(path="s3://astro-sdk-test/uto/", conn_id="aws_default"),
         destination_dataset=Table(
             name="fivetran_test",
             conn_id="snowflake_default",
