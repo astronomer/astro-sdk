@@ -8,6 +8,7 @@ from astro.constants import FileType as FileTypeConstants
 from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types.base import FileType
+from astro.options import LoadOptions
 from astro.utils.dataframe import convert_columns_names_capitalization
 
 
@@ -17,14 +18,14 @@ class ParquetFileType(FileType):
     def export_to_dataframe(
         self,
         stream,
-        pandas_options: PandasLoadOptions | None = None,
+        load_options: LoadOptions | None = None,
         columns_names_capitalization="original",
         **kwargs,
     ):
         """read parquet file from one of the supported locations and return dataframe
 
         :param stream: file stream object
-        :param pandas_options: Pandas option to pass to the Pandas lib while reading parquet
+        :param load_options: Pandas option to pass to the Pandas lib while reading parquet
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
         """
@@ -33,8 +34,8 @@ class ParquetFileType(FileType):
         kwargs_copy.pop("nrows", None)
 
         byte_io_buffer = self._convert_remote_file_to_byte_stream(stream)
-        if pandas_options is not None:
-            kwargs_copy.update(pandas_options.to_dict)
+        if load_options is not None:
+            kwargs_copy.update(load_options.to_dict)
 
         df = pd.read_parquet(byte_io_buffer, **kwargs_copy)
         df = convert_columns_names_capitalization(

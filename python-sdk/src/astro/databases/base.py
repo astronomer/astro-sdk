@@ -247,7 +247,7 @@ class BaseDatabase(ABC):
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",  # skipcq
-        pandas_options: PandasLoadOptions | None = None,
+        load_options: LoadOptions | None = None,
     ) -> None:
         """
         Create a SQL table, automatically inferring the schema using the given file.
@@ -266,7 +266,7 @@ class BaseDatabase(ABC):
             source_dataframe = dataframe
         else:
             source_dataframe = file.export_to_dataframe(
-                nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT, pandas_options=pandas_options
+                nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT, load_options=load_options
             )
 
         db = SQLDatabase(engine=self.sqlalchemy_engine)
@@ -295,7 +295,7 @@ class BaseDatabase(ABC):
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
-        pandas_options: PandasLoadOptions | None = None,
+        load_options: LoadOptions | None = None,
     ) -> None:
         """
         Create a table either using its explicitly defined columns or inferring
@@ -317,7 +317,7 @@ class BaseDatabase(ABC):
                 file=file,
                 dataframe=dataframe,
                 columns_names_capitalization=columns_names_capitalization,
-                pandas_options=pandas_options,
+                load_options=load_options,
             )
 
     def create_table_from_select_statement(
@@ -359,7 +359,7 @@ class BaseDatabase(ABC):
         columns_names_capitalization: ColumnCapitalization = "original",
         if_exists: LoadExistStrategy = "replace",
         use_native_support: bool = True,
-        pandas_options: PandasLoadOptions | None = None,
+        load_options: LoadOptions | None = None,
     ):
         """
         Checks if the autodetect schema exists for native support else creates the schema and table
@@ -399,7 +399,7 @@ class BaseDatabase(ABC):
                 # We only use the first file for inferring the table schema
                 files[0],
                 columns_names_capitalization=columns_names_capitalization,
-                pandas_options=pandas_options,
+                load_options=load_options,
             )
 
     def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> list:
@@ -430,7 +430,6 @@ class BaseDatabase(ABC):
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         load_options: LoadOptions | None = None,
         databricks_job_name: str = "",  # skipcq PYL-W0613
-        pandas_options: PandasLoadOptions | None = None,
         **kwargs,
     ):
         """
@@ -457,7 +456,7 @@ class BaseDatabase(ABC):
             columns_names_capitalization=columns_names_capitalization,
             if_exists=if_exists,
             normalize_config=normalize_config,
-            pandas_options=pandas_options,
+            load_options=load_options,
         )
 
         if use_native_support and self.is_native_load_file_available(

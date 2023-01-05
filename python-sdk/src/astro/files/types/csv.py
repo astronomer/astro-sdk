@@ -8,6 +8,7 @@ from astro.constants import FileType as FileTypeConstants
 from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types.base import FileType
+from astro.options import LoadOptions
 from astro.utils.dataframe import convert_columns_names_capitalization
 
 
@@ -18,19 +19,19 @@ class CSVFileType(FileType):
     def export_to_dataframe(
         self,
         stream,
-        pandas_options: PandasLoadOptions | None = None,
+        load_options: LoadOptions | None = None,
         columns_names_capitalization="original",
         **kwargs,
     ) -> pd.DataFrame:  # skipcq PYL-R0201
         """read csv file from one of the supported locations and return dataframe
 
         :param stream: file stream object
-        :param pandas_options: Pandas option to pass to the Pandas lib while reading csv
+        :param load_options: Pandas option to pass to the Pandas lib while reading csv
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
         """
-        if pandas_options is not None:
-            kwargs.update(pandas_options.to_dict)
+        if load_options is not None:
+            kwargs.update(load_options.to_dict)
         df = pd.read_csv(stream, **kwargs)
         df = convert_columns_names_capitalization(
             df=df, columns_names_capitalization=columns_names_capitalization

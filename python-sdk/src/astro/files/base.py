@@ -14,6 +14,7 @@ from astro.dataframes.load_options import PandasLoadOptions
 from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
 from astro.files.types import FileType, create_file_type
+from astro.options import LoadOptions
 
 
 @define
@@ -125,11 +126,11 @@ class File(LoggingMixin, Dataset):
 
         return pathlib.Path(self.path).is_dir()
 
-    def export_to_dataframe(self, pandas_options: PandasLoadOptions | None = None, **kwargs) -> pd.DataFrame:
+    def export_to_dataframe(self, load_options: LoadOptions | None = None, **kwargs) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes."""
         mode = "rb" if self.is_binary() else "r"
         with smart_open.open(self.path, mode=mode, transport_params=self.location.transport_params) as stream:
-            return self.type.export_to_dataframe(stream, pandas_options, **kwargs)
+            return self.type.export_to_dataframe(stream, load_options, **kwargs)
 
     def _convert_remote_file_to_byte_stream(self) -> io.IOBase:
         """
