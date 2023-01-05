@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 
+import attr
 import pandas as pd
 
 from astro.constants import FileType as FileTypeConstants
@@ -35,7 +36,7 @@ class ParquetFileType(FileType):
 
         byte_io_buffer = self._convert_remote_file_to_byte_stream(stream)
         if isinstance(load_options, PandasLoadOptions):
-            kwargs_copy.update(load_options.to_dict)
+            kwargs_copy.update(attr.asdict(load_options))
 
         df = pd.read_parquet(byte_io_buffer, **kwargs_copy)
         df = convert_columns_names_capitalization(

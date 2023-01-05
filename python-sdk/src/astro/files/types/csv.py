@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 
+import attr
 import pandas as pd
 
 from astro.constants import FileType as FileTypeConstants
@@ -31,7 +32,7 @@ class CSVFileType(FileType):
             in the resulting dataframe
         """
         if isinstance(load_options, PandasLoadOptions):
-            kwargs.update(load_options.to_dict)
+            kwargs.update(attr.asdict(load_options))
         df = pd.read_csv(stream, **kwargs)
         df = convert_columns_names_capitalization(
             df=df, columns_names_capitalization=columns_names_capitalization
