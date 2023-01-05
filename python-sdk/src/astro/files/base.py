@@ -126,7 +126,9 @@ class File(LoggingMixin, Dataset):
 
         return pathlib.Path(self.path).is_dir()
 
-    def export_to_dataframe(self, load_options: LoadOptions | PandasLoadOptions | None = None, **kwargs) -> pd.DataFrame:
+    def export_to_dataframe(
+        self, load_options: LoadOptions | PandasLoadOptions | None = None, **kwargs
+    ) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes."""
         mode = "rb" if self.is_binary() else "r"
         with smart_open.open(self.path, mode=mode, transport_params=self.location.transport_params) as stream:
