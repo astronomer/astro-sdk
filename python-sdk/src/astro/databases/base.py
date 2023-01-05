@@ -11,6 +11,7 @@ from airflow.hooks.dbapi import DbApiHook
 from pandas.io.sql import SQLDatabase
 from sqlalchemy import column, insert, select
 
+from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -512,7 +513,7 @@ class BaseDatabase(ABC):
         normalize_config: dict | None = None,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
-        load_options: LoadOptions | None = None,
+        load_options: PandasLoadOptions | None = None,
     ):
         logging.info("Loading file(s) with Pandas...")
         input_files = resolve_file_path_pattern(
@@ -539,7 +540,7 @@ class BaseDatabase(ABC):
         native_support_kwargs: dict | None = None,
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
-        load_options: LoadOptions | None = None,
+        load_options: PandasLoadOptions | None = None,
         **kwargs,
     ):
         """
@@ -552,6 +553,7 @@ class BaseDatabase(ABC):
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         :param normalize_config: pandas json_normalize params config
+        :param load_options: pandas options while reading file
         """
 
         try:
