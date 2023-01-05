@@ -513,7 +513,7 @@ class BaseDatabase(ABC):
         normalize_config: dict | None = None,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
-        load_options: PandasLoadOptions | None = None,
+        load_options: PandasLoadOptions | LoadOptions | None = None,
     ):
         logging.info("Loading file(s) with Pandas...")
         input_files = resolve_file_path_pattern(
@@ -540,7 +540,7 @@ class BaseDatabase(ABC):
         native_support_kwargs: dict | None = None,
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
-        load_options: PandasLoadOptions | None = None,
+        load_options: PandasLoadOptions | LoadOptions | None = None,
         **kwargs,
     ):
         """

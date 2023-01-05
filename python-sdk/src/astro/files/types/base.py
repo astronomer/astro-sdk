@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 import pandas as pd
 
 from astro.dataframes.load_options import PandasLoadOptions
+from astro.options import LoadOptions
 
 
 class FileType(ABC):
@@ -16,7 +17,7 @@ class FileType(ABC):
         self.normalize_config = normalize_config
 
     @abstractmethod
-    def export_to_dataframe(self, stream, load_options: PandasLoadOptions | None = None, **kwargs) -> pd.DataFrame:
+    def export_to_dataframe(self, stream, load_options: LoadOptions | PandasLoadOptions | None = None, **kwargs) -> pd.DataFrame:
         """read file from one of the supported locations and return dataframe
 
         :param stream: file stream object
