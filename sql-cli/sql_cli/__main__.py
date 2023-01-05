@@ -108,6 +108,9 @@ def generate(
         show_default=True,
     ),
     verbose: bool = typer.Option(False, help="Whether to show verbose output", show_default=True),
+    output_dir: Path = typer.Option(
+        default=None, help="to export a SQL workflow to a specific directory", show_default=False
+    ),
 ) -> None:
     from sql_cli.project import Project
 
@@ -120,7 +123,9 @@ def generate(
         f"\nGenerating the DAG file from workflow [bold blue]{workflow_name}[/bold blue]"
         f" for [bold]{env}[/bold] environment..\n"
     )
-    dag_file = _generate_dag(project=project, workflow_name=workflow_name, generate_tasks=generate_tasks)
+    dag_file = _generate_dag(
+        project=project, workflow_name=workflow_name, generate_tasks=generate_tasks, output_dir=output_dir
+    )
     rprint("The DAG file", dag_file.resolve(), "has been successfully generated. 🎉")
 
 
@@ -287,14 +292,18 @@ def init(
     rprint("Initialized an Astro SQL project at", project.directory)
 
 
-def _generate_dag(project: Project, workflow_name: str, generate_tasks: bool) -> Path:
+def _generate_dag(
+    project: Project, workflow_name: str, generate_tasks: bool, output_dir: Path | None = None
+) -> Path:
     """
     Helper function for generating DAGs with proper exceptions. Moved here since this function is used by
     multiple commands
 
     :param project: project object containing project metadata
-    :param workflow_name: name of the workflow directory for this DAG
+    :param workflow_name: name of the workflow for this DAG
     :param generate_tasks: whether to render each task individually or use the render function
+    :param output_dir: directory where the DAG will be exported to (used in conjunction with name).
+       Defaults to airflow_dags_folder.
     :return: the path to the generated dag_file
     """
     from sql_cli import dag_generator
@@ -303,7 +312,7 @@ def _generate_dag(project: Project, workflow_name: str, generate_tasks: bool) ->
     try:
         dag_file = dag_generator.generate_dag(
             directory=project.directory / project.workflows_directory / workflow_name,
-            dags_directory=project.airflow_dags_folder,
+            dags_directory=output_dir or project.airflow_dags_folder,
             generate_tasks=generate_tasks,
         )
     except EmptyDag as empty_dag:
