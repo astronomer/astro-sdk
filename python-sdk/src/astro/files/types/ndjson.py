@@ -29,7 +29,7 @@ class NDJSONFileType(FileType):
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
         """
-        if load_options is not None:
+        if isinstance(load_options, PandasLoadOptions):
             kwargs.update(load_options.to_dict)
         df = NDJSONFileType.flatten(self.normalize_config, stream, **kwargs)
         df = convert_columns_names_capitalization(
