@@ -32,10 +32,10 @@ class Destination:
     """
 
     service: str
-    region: str | None
-    time_zone_offset: str | None
-    run_setup_tests: bool | None
     config: dict
+    time_zone_offset: str | None = "-5"
+    region: str | None = "GCP_US_EAST4"
+    run_setup_tests: bool | None = True
 
 
 @attr.define
@@ -87,7 +87,7 @@ class FiveTranOptions:
 
 class FivetranIntegration(TransferIntegration):
     """
-    Class for FiveTran.
+    Fivetran integration to transfer datasets using Fivetran APIs.
     """
 
     api_user_agent = "airflow_provider_fivetran/1.1.3"
@@ -225,10 +225,10 @@ class FivetranIntegration(TransferIntegration):
         payload = {
             "group_id": group_id,
             "service": destination.service,
-            "region": destination.region if destination.region else "GCP_US_EAST4",
-            "time_zone_offset": destination.time_zone_offset if destination.time_zone_offset else "-5",
+            "region": destination.region,
+            "time_zone_offset": destination.time_zone_offset,
             "config": destination.config,
-            "run_setup_tests": destination.run_setup_tests if destination.run_setup_tests else True,
+            "run_setup_tests": destination.run_setup_tests,
         }
         api_response = fivetran_hook._do_api_call(("POST", endpoint), json=payload)
         if api_response["code"] == "Success":

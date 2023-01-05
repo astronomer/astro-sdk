@@ -8,10 +8,7 @@ from universal_transfer_operator.datasets.base import UniversalDataset as Datase
 
 
 class TransferIntegration(ABC):
-    """
-    Class for third party transfer.
-
-    """
+    """Basic implementation of a third party transfer."""
 
     def __init__(self, conn_id: str, transfer_params: dict):
         self.conn_id = conn_id
