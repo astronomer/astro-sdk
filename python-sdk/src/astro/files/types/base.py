@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 import pandas as pd
 
 from astro.dataframes.load_options import PandasLoadOptions
+from astro.options import LoadOptions
 
 
 class FileType(ABC):
@@ -17,12 +18,12 @@ class FileType(ABC):
 
     @abstractmethod
     def export_to_dataframe(
-        self, stream, pandas_options: PandasLoadOptions | None = None, **kwargs
+        self, stream, load_options: LoadOptions | None = None, **kwargs
     ) -> pd.DataFrame:
         """read file from one of the supported locations and return dataframe
 
         :param stream: file stream object
-        :param pandas_options: Pandas option to pass to the Pandas lib while reading file
+        :param load_options: Pandas option to pass to the Pandas lib while reading file
         """
         raise NotImplementedError
 
