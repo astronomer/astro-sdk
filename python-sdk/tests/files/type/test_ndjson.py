@@ -5,7 +5,7 @@ from unittest import mock
 
 import pandas as pd
 
-from astro.dataframes.load_options import NdjsonLoadOption
+from astro.dataframes.load_options import NdjsonLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types import NDJSONFileType
 
@@ -28,7 +28,7 @@ def test_read_ndjson_file_with_pandas_opts(mock_ndjson_flatten):
     path = str(sample_file.absolute())
     ndjson_type = NDJSONFileType(path)
     with open(path) as file:
-        ndjson_type.export_to_dataframe(file, load_options=NdjsonLoadOption())
+        ndjson_type.export_to_dataframe(file, load_options=NdjsonLoadOptions())
     mock_ndjson_flatten.assert_called_once_with(None, file, ndjson_normalize_sep="_")
 
 
