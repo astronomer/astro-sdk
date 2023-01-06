@@ -300,6 +300,7 @@ def load_file(
     native_support_kwargs: dict | None = None,
     columns_names_capitalization: ColumnCapitalization = "original",
     enable_native_fallback: bool | None = True,
+    load_options: LoadOptions | None = None,
     **kwargs: Any,
 ) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.
@@ -331,6 +332,7 @@ def load_file(
         native_support_kwargs=native_support_kwargs,
         columns_names_capitalization=columns_names_capitalization,
         enable_native_fallback=enable_native_fallback,
+        load_options=load_options,
         **kwargs,
     ).output
 

@@ -1,11 +1,13 @@
 """Tests specific to the Snowflake Database implementation."""
 import pathlib
-from unittest.mock import patch
+from unittest import mock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
 from astro.databases.snowflake import SnowflakeDatabase, SnowflakeFileFormat, SnowflakeStage
 from astro.files import File
+from astro.options import SnowflakeLoadOptions
 from astro.settings import SNOWFLAKE_STORAGE_INTEGRATION_AMAZON, SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE
 
 DEFAULT_CONN_ID = "snowflake_default"
@@ -74,3 +76,23 @@ def test_use_quotes(cols_eval):
     Verify the quotes addition only in case where we are having mixed case col names
     """
     assert SnowflakeDatabase.use_quotes(cols_eval["cols"]) == cols_eval["expected_result"]
+
+
+def test_snowflake_load_options():
+    path = str(CWD) + "/../../data/homes_main.csv"
+    database = SnowflakeDatabase(conn_id="fake-conn")
+    file = File(path)
+    with mock.patch(
+        "astro.databases.snowflake.SnowflakeDatabase.hook", new_callable=PropertyMock
+    ), mock.patch(
+        "astro.databases.snowflake.SnowflakeStage.qualified_name", new_callable=PropertyMock
+    ) as mock_q_name:
+        mock_q_name.return_value = "foo"
+        database.run_sql = MagicMock()
+        database.create_stage(
+            file=file,
+            storage_integration="foo",
+            load_options=SnowflakeLoadOptions(file_options={"foo": "bar"}),
+        )
+    assert "FILE_FORMAT=(foo=bar, TYPE=CSV, TRIM_SPACE=TRUE)" in database.run_sql.call_args[0][0]
+    assert "COPY_OPTIONS=(ON_ERROR=CONTINUE)" in database.run_sql.call_args[0][0]
