@@ -247,6 +247,5 @@ def test_get_source_code_handle_exception(mock_getsource, exception):
     mock_getsource.side_effect = exception
     DataframeOperator(
         task_id="test",
-        sql="select * from 1",
         python_callable=lambda: 1
     ).get_source_code(py_callable=None)
