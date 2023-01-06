@@ -191,3 +191,10 @@ For example, you can create a parameterized query to select all users over a spe
         return "SELECT * FROM {{ table }} WHERE age > {{ age }}"
 
 The aql.transform() function will replace {{ table }} with users and {{ age }} with 30, and then run the resulting query against the Delta table.
+
+Appending Data
+==============
+To append data from one delta table to another, you can use the ``aql.append`` function in a similar fashion to any other database. The only caveat when
+using this function on delta tables is that Databricks does not support "partial" inserts. If you wish to upload a table that has different rows from the target table, you
+will need to cast all columns for databricks to accept the query. In a future delta release databricks might support the ``default`` keyword on certain rows, but for now
+this is not possible.
