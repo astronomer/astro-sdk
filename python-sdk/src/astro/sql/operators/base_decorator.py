@@ -279,17 +279,16 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
 
-    def get_source_code(self, callable: Callable) -> str | None:
-        import inspect
-
+    def get_source_code(self, py_callable: Callable) -> str | None:
+        """Return the source code for the lineage"""
         try:
-            return inspect.getsource(callable)
+            return inspect.getsource(py_callable)
         except TypeError:
             # Trying to extract source code of builtin_function_or_method
-            return str(callable)
+            return str(py_callable)
         except OSError:
             self.log.warning("Can't get source code facet of Operator {self.operator.task_id}")
-        return None
+            return None
 
 
 def load_op_arg_dataframes_into_sql(conn_id: str, op_args: tuple, target_table: BaseTable) -> tuple:
