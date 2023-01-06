@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import io
 
-import attr
 import pandas as pd
 
 from astro.constants import FileType as FileTypeConstants
@@ -35,7 +34,7 @@ class JSONFileType(FileType):
         # Pandas `read_json` does not support the `nrows` parameter unless we're using NDJSON
         kwargs_copy.pop("nrows", None)
         if isinstance(load_options, PandasLoadOptions):
-            kwargs_copy.update(attr.asdict(load_options))
+            kwargs_copy.update(load_options.to_dict())
         df = pd.read_json(stream, **kwargs_copy)
         df = convert_columns_names_capitalization(
             df=df, columns_names_capitalization=columns_names_capitalization

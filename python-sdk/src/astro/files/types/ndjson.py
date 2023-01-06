@@ -3,7 +3,6 @@ from __future__ import annotations
 import io
 import json
 
-import attr
 import pandas as pd
 
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType as FileTypeConstants
@@ -32,7 +31,7 @@ class NDJSONFileType(FileType):
             in the resulting dataframe
         """
         if isinstance(load_options, PandasLoadOptions):
-            kwargs.update(attr.asdict(load_options))
+            kwargs.update(load_options.to_dict())
         df = NDJSONFileType.flatten(self.normalize_config, stream, **kwargs)
         df = convert_columns_names_capitalization(
             df=df, columns_names_capitalization=columns_names_capitalization
