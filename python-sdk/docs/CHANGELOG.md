@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.4.0
+
+### Feature:
+- Support for SFTP as file location [#1481](https://github.com/astronomer/astro-sdk/pull/1481)
+- Support for FTP as file location [#1482](https://github.com/astronomer/astro-sdk/pull/1482)
+- Add support for Azure Blob Storage [#1275](https://github.com/astronomer/astro-sdk/pull/1275), [#1542](https://github.com/astronomer/astro-sdk/pull/1542)
+- Add databricks support [#1352](https://github.com/astronomer/astro-sdk/pull/1352), [#1397](https://github.com/astronomer/astro-sdk/pull/1397), [#1452](https://github.com/astronomer/astro-sdk/pull/1452), [#1476](https://github.com/astronomer/astro-sdk/pull/1476), [#1480](https://github.com/astronomer/astro-sdk/pull/1480), [#1555](https://github.com/astronomer/astro-sdk/pull/1555)
+- Add source code facet for operators [#1537](https://github.com/astronomer/astro-sdk/pull/1537)
+- Use load_options param to pass pandasOptions in load_file [#1466](https://github.com/astronomer/astro-sdk/pull/1466)
+- Add a snowflake load options [#1516](https://github.com/astronomer/astro-sdk/pull/1516)
+- Expose `get_file_list_func` to users [#1380](https://github.com/astronomer/astro-sdk/pull/1380)
+
+### Improvements
+- Refactor snowflake merge function for easier maintenance [#1493](https://github.com/astronomer/astro-sdk/pull/1493)
+- Deprecate `export_table_to_file` to `export_to_file` (*`ExportTableToFileOperator` and `export_table_to_file` operator would be removed in astro-python-sdk 1.5.0*) [#1503](https://github.com/astronomer/astro-sdk/pull/1503)
+- Fix the dataframe test function name [#1490](https://github.com/astronomer/astro-sdk/pull/1490)
+
+### Bug fixes
+- Loadfile should also check for conn_type of conn_id provided [#1471](https://github.com/astronomer/astro-sdk/issues/1471)
+- Generate constraints on releases and pushes (not PRs) [#1472](https://github.com/astronomer/astro-sdk/pull/1472)
+
+### Docs
+- Use the latest name of export op in doc [#1477](https://github.com/astronomer/astro-sdk/pull/1477)
+- Add Xcom req as per 1.3.3 and airflow 2.5 [#1483](https://github.com/astronomer/astro-sdk/pull/1483)
+- Add documentation around LoadOptions with example DAGs [#1567](https://github.com/astronomer/astro-sdk/pull/1567)
+
+
 ## 1.3.3
 
 ### Bug fixes
