@@ -4,6 +4,7 @@ import importlib
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from astro.options import LoadOptionsList
 from astro.utils.path import get_class_name, get_dict_with_module_names_to_dot_notations
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -24,7 +25,9 @@ CONN_TYPE_TO_MODULE_PATH = {
 SUPPORTED_DATABASES = set(DEFAULT_CONN_TYPE_TO_MODULE_PATH.keys())
 
 
-def create_database(conn_id: str, table: BaseTable | None = None) -> BaseDatabase:
+def create_database(
+    conn_id: str, table: BaseTable | None = None, load_options_list: LoadOptionsList | None = None
+) -> BaseDatabase:
     """
     Given a conn_id, return the associated Database class.
 
@@ -37,5 +40,7 @@ def create_database(conn_id: str, table: BaseTable | None = None) -> BaseDatabas
     module_path = CONN_TYPE_TO_MODULE_PATH[conn_type]
     module = importlib.import_module(module_path)
     class_name = get_class_name(module_ref=module, suffix="Database")
-    database: BaseDatabase = getattr(module, class_name)(conn_id, table)
+    database: BaseDatabase = getattr(module, class_name)(
+        conn_id, table, load_options=load_options_list and load_options_list.get(getattr(module, class_name))
+    )
     return database

@@ -13,7 +13,7 @@ from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.dataframes.pandas import PandasDataframe
 from astro.files import File, resolve_file_path_pattern
-from astro.options import LoadOptions, LoadOptionsList
+from astro.options import LoadOptions
 from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
@@ -64,6 +64,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         )
         self.output_table = output_table
         self.input_file = input_file
+        self.input_file.load_options = load_options
         self.chunk_size = chunk_size
         self.kwargs = kwargs
         self.if_exists = if_exists
@@ -73,8 +74,6 @@ class LoadFileOperator(AstroSQLBaseOperator):
         self.native_support_kwargs: dict[str, Any] = native_support_kwargs or {}
         self.columns_names_capitalization = columns_names_capitalization
         self.enable_native_fallback = enable_native_fallback
-        # self.load_options = load_options
-        self.load_options_list = LoadOptionsList(load_options)
 
     def execute(self, context: Context) -> BaseTable | File:  # skipcq: PYL-W0613
         """
@@ -148,7 +147,9 @@ class LoadFileOperator(AstroSQLBaseOperator):
                     ignore_index=True,
                 )
             else:
-                df = file.export_to_dataframe(columns_names_capitalization=self.columns_names_capitalization)
+                df = file.export_to_dataframe(
+                    columns_names_capitalization=self.columns_names_capitalization,
+                )
 
         if not isinstance(df, PandasDataframe):
             df = PandasDataframe.from_pandas_df(df)
@@ -301,7 +302,7 @@ def load_file(
     native_support_kwargs: dict | None = None,
     columns_names_capitalization: ColumnCapitalization = "original",
     enable_native_fallback: bool | None = True,
-    load_options: LoadOptions | None = None,
+    load_options: list[LoadOptions] | None = None,
     **kwargs: Any,
 ) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.

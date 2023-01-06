@@ -81,13 +81,7 @@ def database_table_fixture(request):
     database.populate_table_metadata(table)
     database.create_schema_if_needed(table.metadata.schema)
 
-    kwargs = {}
-    if database.sql_type == "delta":
-        from astro.databricks.load_options import DeltaLoadOptions
-
-        kwargs["load_options"] = DeltaLoadOptions.get_default_delta_options()
-
     if file:
-        database.load_file_to_table(file, table, **kwargs)
+        database.load_file_to_table(file, table)
     yield database, table
     database.drop_table(table)

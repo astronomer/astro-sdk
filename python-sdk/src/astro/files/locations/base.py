@@ -10,6 +10,7 @@ import smart_open
 from airflow.hooks.base import BaseHook
 
 from astro.constants import FileLocation
+from astro.options import LoadOptions
 
 
 class BaseFileLocation(ABC):
@@ -18,7 +19,7 @@ class BaseFileLocation(ABC):
     template_fields = ("path", "conn_id")
     supported_conn_type: set[str] = set()
 
-    def __init__(self, path: str, conn_id: str | None = None):
+    def __init__(self, path: str, conn_id: str | None = None, load_options: LoadOptions | None = None):
         """
         Manages and provide interface for the operation for all the supported locations.
 
@@ -27,6 +28,7 @@ class BaseFileLocation(ABC):
         """
         self.path: str = path
         self.conn_id: str | None = conn_id
+        self.load_options: LoadOptions | None = load_options
         self.validate_conn()
 
     def validate_conn(self):

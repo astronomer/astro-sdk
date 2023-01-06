@@ -9,6 +9,7 @@ from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import MergeConflictStrategy
 from astro.databases.base import BaseDatabase
+from astro.options import LoadOptions
 from astro.table import BaseTable, Metadata
 
 DEFAULT_CONN_ID = SqliteHook.default_conn_name
@@ -20,9 +21,15 @@ class SqliteDatabase(BaseDatabase):
     logic in other parts of our code-base.
     """
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
+    def __init__(
+        self,
+        conn_id: str = DEFAULT_CONN_ID,
+        table: BaseTable | None = None,
+        load_options: LoadOptions | None = None,
+    ):
         super().__init__(conn_id)
         self.table = table
+        self.load_options = load_options
 
     @property
     def sql_type(self) -> str:

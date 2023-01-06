@@ -29,9 +29,15 @@ class PostgresDatabase(BaseDatabase):
     illegal_column_name_chars: list[str] = ["."]
     illegal_column_name_chars_replacement: list[str] = ["_"]
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
+    def __init__(
+        self,
+        conn_id: str = DEFAULT_CONN_ID,
+        table: BaseTable | None = None,
+        load_options: LoadOptions | None = None,
+    ):
         super().__init__(conn_id)
         self.table = table
+        self.load_options = load_options
 
     @property
     def sql_type(self) -> str:
@@ -201,12 +207,11 @@ class PostgresDatabase(BaseDatabase):
         self.run_sql(sql=sql)
 
     @staticmethod
-    def get_dataframe_from_file(file: File, load_options: LoadOptions | None = None):  # skipcq: PYL-W0613
+    def get_dataframe_from_file(file: File):
         """
         Get pandas dataframe file
 
         :param file: File path and conn_id for object stores
-        :param load_options: pandas options while reading file
         """
         return file.export_to_dataframe_via_byte_stream()
 

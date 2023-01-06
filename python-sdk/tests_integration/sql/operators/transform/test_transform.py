@@ -82,7 +82,7 @@ def test_transform(database_table_fixture, sample_dag):
         homes_file = aql.load_file(
             input_file=File(path=str(cwd) + "/../../../data/homes.csv"),
             output_table=test_table,
-            load_options=DeltaLoadOptions.get_default_delta_options(),
+            load_options=[DeltaLoadOptions.get_default_delta_options()],
         )
         first_model = sample_function(
             input_table=homes_file,
@@ -130,7 +130,7 @@ def test_raw_sql(database_table_fixture, sample_dag):
         homes_file = aql.load_file(
             input_file=File(path=str(cwd) + "/../../../data/homes.csv"),
             output_table=test_table,
-            load_options=DeltaLoadOptions.get_default_delta_options(),
+            load_options=[DeltaLoadOptions.get_default_delta_options()],
         )
         raw_sql_result = raw_sql_query(
             my_input_table=homes_file,

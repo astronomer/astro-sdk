@@ -31,6 +31,7 @@ from astro.constants import (
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
+from astro.options import LoadOptions
 from astro.settings import REDSHIFT_SCHEMA
 from astro.table import BaseTable, Metadata, Table
 
@@ -73,10 +74,16 @@ class RedshiftDatabase(BaseDatabase):
     illegal_column_name_chars: list[str] = ["."]
     illegal_column_name_chars_replacement: list[str] = ["_"]
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
+    def __init__(
+        self,
+        conn_id: str = DEFAULT_CONN_ID,
+        table: BaseTable | None = None,
+        load_options: LoadOptions | None = None,
+    ):
         super().__init__(conn_id)
         self._create_table_statement: str = "CREATE TABLE {} AS {}"
         self.table = table
+        self.load_options = load_options
 
     @property
     def sql_type(self):
