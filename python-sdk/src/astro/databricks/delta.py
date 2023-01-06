@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import tempfile
 import uuid
+import warnings
 from textwrap import dedent
 
 import pandas as pd
@@ -256,6 +257,39 @@ class DeltaDatabase(BaseDatabase):
             """
             )
         )
+
+    def append_table(
+        self,
+        source_table: BaseTable,
+        target_table: BaseTable,
+        source_to_target_columns_map: dict[str, str],
+    ) -> None:
+        """
+        Append the source table rows into a destination table.
+
+        :param source_table: Contains the rows to be appended to the target_table
+        :param target_table: Contains the destination table in which the rows will be appended
+        :param source_to_target_columns_map: Dict of source_table columns names to target_table columns names
+        """
+
+        if source_to_target_columns_map:
+            warnings.warn(
+                'Warning: Databricks does not support "partial" inserts. '
+                "You will need to cast all columns if you wish to use this feature"
+            )
+            append_query = (
+                f"INSERT INTO `{self.get_table_qualified_name(target_table)}` "
+                f"({','.join(source_to_target_columns_map.keys())}) SELECT "
+                f"{','.join(source_to_target_columns_map.values())} "
+                f"FROM `{self.get_table_qualified_name(source_table)}`"
+            )
+        else:
+            append_query = (
+                f"INSERT INTO `{self.get_table_qualified_name(target_table)}` "
+                f"SELECT * FROM `{self.get_table_qualified_name(source_table)}`"
+            )
+
+        self.run_sql(append_query)
 
     def export_table_to_pandas_dataframe(
         self, source_table: BaseTable, select_kwargs: dict | None = None
