@@ -12,8 +12,8 @@ from airflow.utils import timezone
 import astro.sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.files import File
-from astro.table import Table
 from astro.sql.operators.dataframe import DataframeOperator
+from astro.table import Table
 
 from ..operators import utils as test_utils
 
@@ -238,14 +238,9 @@ def test_dataframe_from_file_xcom_pickling(mock_serde, sample_dag):
     mock_serde.deserialize.assert_not_called()
 
 
-@pytest.mark.parametrize(
-    "exception", [OSError("os error"), TypeError("type error")]
-)
+@pytest.mark.parametrize("exception", [OSError("os error"), TypeError("type error")])
 @mock.patch("astro.sql.operators.base_decorator.inspect.getsource", autospec=True)
 def test_get_source_code_handle_exception(mock_getsource, exception):
     """assert get_source_code not raise exception"""
     mock_getsource.side_effect = exception
-    DataframeOperator(
-        task_id="test",
-        python_callable=lambda: 1
-    ).get_source_code(py_callable=None)
+    DataframeOperator(task_id="test", python_callable=lambda: 1).get_source_code(py_callable=None)
