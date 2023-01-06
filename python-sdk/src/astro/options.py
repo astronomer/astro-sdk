@@ -1,5 +1,6 @@
+from typing import List, Optional
+
 import attr
-from typing import Optional, List
 
 
 @attr.define

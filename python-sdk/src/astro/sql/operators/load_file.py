@@ -349,4 +349,3 @@ def check_if_connection_exists(conn_id: str) -> bool:
     """
     BaseHook.get_connection(conn_id)
     return True
-
