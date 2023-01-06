@@ -14,7 +14,7 @@ DEFAULT_FILE_SCHEME_TO_MODULE_PATH["wasbs"] = DEFAULT_FILE_SCHEME_TO_MODULE_PATH
 
 
 def create_file_location(
-    path: str, conn_id: Optional[str] = None, load_options_list: LoadOptionsList | None = None
+    path: str, conn_id: Optional[str] = None, load_options_list: Optional[LoadOptionsList] = None
 ) -> BaseFileLocation:
     """
     Location factory method to generate location class
