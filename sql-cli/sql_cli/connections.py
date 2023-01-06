@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 from typing import Any
 
 from airflow.models import Connection
 
+from sql_cli.constants import LOGGER_NAME
 from sql_cli.utils.rich import rprint
 
 CONNECTION_ID_OUTPUT_STRING_WIDTH = 25
+
+log = logging.getLogger(LOGGER_NAME)
 
 
 def convert_to_connection(conn: dict[str, Any], data_dir: Path) -> Connection:
@@ -49,17 +53,19 @@ def validate_connections(connections: list[Connection], connection_id: str | Non
     for connection in connections:
         if not connection_id or connection_id and connection.conn_id == connection_id:
             os.environ[f"AIRFLOW_CONN_{connection.conn_id.upper()}"] = connection.get_uri()
-            status = (
-                "[bold green]PASSED[/bold green]" if _is_valid(connection) else "[bold red]FAILED[/bold red]"
-            )
+            success_status, message = _is_valid(connection)
+            status = "[bold green]PASSED[/bold green]" if success_status else "[bold red]FAILED[/bold red]"
             rprint(f"Validating connection {connection.conn_id:{CONNECTION_ID_OUTPUT_STRING_WIDTH}}", status)
+            formatted_message = (
+                f"[bold green]{message}[/bold green]" if success_status else f"[bold red]{message}[/bold red]"
+            )
+            log.debug("Connection Message: %s", formatted_message)
 
 
-def _is_valid(connection: Connection) -> bool:
+def _is_valid(connection: Connection) -> tuple[bool, str]:
     # Sqlite automatically creates the file if it does not exist,
     # but our users might not expect that. They are referencing a database they expect to exist.
     if connection.conn_type == "sqlite" and not Path(connection.host).is_file():
-        return False
+        return False, "Sqlite db does not exist!"
 
-    success_status, _ = connection.test_connection()
-    return success_status
+    return connection.test_connection()

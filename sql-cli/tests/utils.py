@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import random
+import string
 from pathlib import Path
 
 from airflow.models import Connection
+
+from astro.table import MAX_TABLE_NAME_LENGTH
 
 
 def list_dir(path: Path) -> list[Path]:
@@ -29,3 +33,16 @@ def get_connection_by_id(connections: list[Connection], connection_id: str) -> C
         if connection.conn_id == connection_id:
             return connection
     return None
+
+
+def create_unique_table_name(length: int = MAX_TABLE_NAME_LENGTH) -> str:
+    """
+    Create a unique table name of the requested size, which is compatible with all supported databases.
+
+    :return: Unique table name
+    :rtype: str
+    """
+    unique_id = random.choice(string.ascii_lowercase) + "".join(
+        random.choice(string.ascii_lowercase + string.digits) for _ in range(length - 1)
+    )
+    return unique_id

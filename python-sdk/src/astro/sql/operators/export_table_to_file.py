@@ -1,23 +1,19 @@
 from __future__ import annotations
 
+import warnings
 from typing import Any
 
 import pandas as pd
-from airflow.decorators.base import get_unique_task_id
 from airflow.models.xcom_arg import XComArg
 
-from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import ExportExistsStrategy
-from astro.databases import create_database
 from astro.files import File
-from astro.sql.operators.base_operator import AstroSQLBaseOperator
-from astro.table import BaseTable, Table
-from astro.utils.typing_compat import Context
+from astro.sql.operators.export_to_file import ExportToFileOperator, export_to_file
+from astro.table import BaseTable
 
 
-class ExportTableToFileOperator(AstroSQLBaseOperator):
+class ExportTableToFileOperator(ExportToFileOperator):
     """Write SQL table to csv/parquet on local/S3/GCS.
-
     :param input_data: Table to convert to file
     :param output_file: File object containing the path to the file and connection id.
     :param if_exists: Overwrite file if exists. Default False.
@@ -32,108 +28,13 @@ class ExportTableToFileOperator(AstroSQLBaseOperator):
         if_exists: ExportExistsStrategy = "exception",
         **kwargs,
     ) -> None:
-        self.output_file = output_file
-        self.input_data = input_data
-        self.if_exists = if_exists
-        self.kwargs = kwargs
-        datasets = {"output_datasets": self.output_file}
-        if isinstance(input_data, Table):
-            datasets["input_datasets"] = input_data
-        super().__init__(**kwargs_with_datasets(kwargs=kwargs, **datasets))
-
-    def execute(self, context: Context) -> File:  # skipcq PYL-W0613
-        """Write SQL table to csv/parquet on local/S3/GCS.
-
-        Infers SQL database type based on connection.
-        """
-        # Infer db type from `input_conn_id`.
-        if isinstance(self.input_data, BaseTable):
-            database = create_database(self.input_data.conn_id, table=self.input_data)
-            self.input_data = database.populate_table_metadata(self.input_data)
-            df = database.export_table_to_pandas_dataframe(self.input_data)
-        elif isinstance(self.input_data, pd.DataFrame):
-            df = self.input_data
-        else:
-            raise ValueError(f"Expected input_table to be Table or dataframe. Got {type(self.input_data)}")
-        # Write file if overwrite == True or if file doesn't exist.
-        if self.if_exists == "replace" or not self.output_file.exists():
-            self.output_file.create_from_dataframe(df, store_as_dataframe=False)
-            return self.output_file
-        else:
-            raise FileExistsError(f"{self.output_file.path} file already exists.")
-
-    def get_openlineage_facets_on_complete(self, task_instance):  # skipcq: PYL-W0613
-        """
-        Collect the input, output, job and run facets for export file operator
-        """
-
-        from astro.lineage import (
-            BaseFacet,
-            DataQualityMetricsInputDatasetFacet,
-            DataSourceDatasetFacet,
-            OpenlineageDataset,
-            OperatorLineage,
-            OutputStatisticsOutputDatasetFacet,
-            SchemaDatasetFacet,
-            SchemaField,
-        )
-        from astro.lineage.facets import ExportFileFacet
-
-        input_dataset: list[OpenlineageDataset] = []
-        if isinstance(self.input_data, BaseTable) and self.input_data.openlineage_emit_temp_table_event():
-            input_dataset = [
-                OpenlineageDataset(
-                    namespace=self.input_data.openlineage_dataset_namespace(),
-                    name=self.input_data.openlineage_dataset_name(),
-                    facets={
-                        "dataSource": DataSourceDatasetFacet(
-                            name=self.input_data.openlineage_dataset_name(),
-                            uri=self.input_data.openlineage_dataset_uri(),
-                        ),
-                        "schema": SchemaDatasetFacet(
-                            fields=[
-                                SchemaField(
-                                    name=self.input_data.metadata.schema,
-                                    type=self.input_data.metadata.database,
-                                )
-                            ]
-                        ),
-                        "dataQualityMetrics": DataQualityMetricsInputDatasetFacet(
-                            rowCount=self.input_data.row_count, columnMetrics={}
-                        ),
-                    },
-                )
-            ]
-        output_uri = (
-            f"{self.output_file.openlineage_dataset_namespace}" f"{self.output_file.openlineage_dataset_name}"
-        )
-        output_dataset = [
-            OpenlineageDataset(
-                namespace=self.output_file.openlineage_dataset_namespace,
-                name=self.output_file.openlineage_dataset_name,
-                facets={
-                    "output_file_facet": ExportFileFacet(
-                        filepath=self.output_file.path,
-                        file_size=self.output_file.size,
-                        file_type=self.output_file.type.name,
-                        if_exists=self.if_exists,
-                    ),
-                    "dataSource": DataSourceDatasetFacet(name=self.output_file.path, uri=output_uri),
-                    "outputStatistics": OutputStatisticsOutputDatasetFacet(
-                        rowCount=self.input_data.row_count
-                        if isinstance(self.input_data, BaseTable)
-                        else len(self.input_data),
-                        size=self.output_file.size,
-                    ),
-                },
-            )
-        ]
-
-        run_facets: dict[str, BaseFacet] = {}
-        job_facets: dict[str, BaseFacet] = {}
-
-        return OperatorLineage(
-            inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
+        super().__init__(input_data=input_data, output_file=output_file, if_exists=if_exists, **kwargs)
+        warnings.warn(
+            """This class is deprecated.
+            Please use `astro.sql.operators.export_to_file.ExportToFileOperator`.
+            And, will be removed in astro-sdk-python>=1.5.0.""",
+            DeprecationWarning,
+            stacklevel=2,
         )
 
 
@@ -170,12 +71,14 @@ def export_table_to_file(
     :param task_id: task id, optional
     """
 
-    task_id = task_id or get_unique_task_id("export_table_to_file")
+    warnings.warn(
+        """This decorator is deprecated.
+        Please use `astro.sql.operators.export_to_file.export_to_file`.
+        And, will be removed in astro-sdk-python>=1.5.0.""",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
-    return ExportTableToFileOperator(
-        task_id=task_id,
-        output_file=output_file,
-        input_data=input_data,
-        if_exists=if_exists,
-        **kwargs,
-    ).output
+    return export_to_file(
+        input_data=input_data, output_file=output_file, if_exists=if_exists, task_id=task_id, **kwargs
+    )
