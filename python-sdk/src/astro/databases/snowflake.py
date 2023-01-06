@@ -576,7 +576,7 @@ class SnowflakeDatabase(BaseDatabase):
         target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
-        load_options: LoadOptions = SnowflakeLoadOptions(),
+        load_options: LoadOptions | None = None,
         **kwargs,
     ):  # skipcq PYL-W0613
         """
@@ -606,6 +606,8 @@ class SnowflakeDatabase(BaseDatabase):
         """
         native_support_kwargs = native_support_kwargs or {}
         storage_integration = native_support_kwargs.get("storage_integration")
+        if not load_options:
+            load_options = SnowflakeLoadOptions()
         if not isinstance(load_options, SnowflakeLoadOptions):
             raise ValueError("Error: Requires a SnowflakeLoadOptions")
         stage = self.create_stage(

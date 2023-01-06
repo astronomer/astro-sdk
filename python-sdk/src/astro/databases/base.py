@@ -415,7 +415,7 @@ class BaseDatabase(ABC):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
-        load_options: LoadOptions = LoadOptions(),
+        load_options: LoadOptions | None = None,
         **kwargs,
     ):
         """
@@ -522,7 +522,7 @@ class BaseDatabase(ABC):
         native_support_kwargs: dict | None = None,
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
-        load_options: LoadOptions = LoadOptions(),
+        load_options: LoadOptions | None = None,
         **kwargs,
     ):
         """
@@ -795,13 +795,15 @@ class BaseDatabase(ABC):
         target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
-        load_options: LoadOptions = LoadOptions(),
+        load_options: LoadOptions | None = None,
         **kwargs,
     ):
         """
         Checks if optimised path for transfer between File location to database exists
         and if it does, it transfers it and returns true else false
 
+        :param load_options: Options for database specific loading
+         parameters (e.g. SnowflakeLoadOptions or DeltaLoadOptions)
         :param source_file: File from which we need to transfer data
         :param target_table: Table that needs to be populated with file data
         :param if_exists: Overwrite file if exists. Default False
