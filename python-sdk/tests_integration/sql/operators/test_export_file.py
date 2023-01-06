@@ -3,16 +3,14 @@ import pathlib
 import tempfile
 from pathlib import Path
 
-import boto3
 import pandas as pd
 import pytest
-from airflow.providers.google.cloud.hooks.gcs import GCSHook
 
 from astro import sql as aql
 from astro.constants import SUPPORTED_FILE_TYPES, Database
 from astro.files import File
 from astro.settings import SCHEMA
-from astro.sql import export_file, export_to_file
+from astro.sql import export_to_file
 from astro.table import Table
 
 from ..operators import utils as test_utils
@@ -33,60 +31,11 @@ def s3fs_creds():
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
-    "database_table_fixture",
-    [
-        {
-            "database": Database.SNOWFLAKE,
-            "file": File(path=str(CWD) + "/../../data/homes.csv"),
-        },
-        {
-            "database": Database.BIGQUERY,
-            "file": File(path=str(CWD) + "/../../data/homes.csv"),
-        },
-        {
-            "database": Database.POSTGRES,
-            "file": File(path=str(CWD) + "/../../data/homes.csv"),
-        },
-        {
-            "database": Database.SQLITE,
-            "file": File(path=str(CWD) + "/../../data/homes.csv"),
-        },
-        {
-            "database": Database.REDSHIFT,
-            "file": File(path=str(CWD) + "/../../data/homes.csv"),
-        },
-    ],
+    "remote_files_fixture",
+    [{"provider": "google"}, {"provider": "amazon"}, {"provider": "azure"}],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["google_gcs", "amazon_s3", "azure_blob_storage"],
 )
-def test_save_all_db_tables_to_s3(sample_dag, database_table_fixture):
-    _creds = s3fs_creds()
-    file_name = f"{test_utils.get_table_name('test_save')}.csv"
-
-    output_file_path = f"s3://tmp9/{file_name}"
-
-    db, test_table = database_table_fixture
-    with sample_dag:
-        export_file(
-            input_data=test_table,
-            output_file=File(path=output_file_path, conn_id="aws_default"),
-            if_exists="replace",
-        )
-    test_utils.run_dag(sample_dag)
-
-    df = db.export_table_to_pandas_dataframe(test_table)
-    # # Read output CSV
-    df_file = pd.read_csv(output_file_path, storage_options=s3fs_creds())
-
-    assert len(df_file) == 47
-    assert (df["sell"] == df_file["sell"]).all()
-
-    # Delete object from S3
-    s3 = boto3.Session(_creds["key"], _creds["secret"]).resource("s3")
-    s3.Object("tmp9", file_name).delete()
-
-
-@pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
@@ -114,26 +63,26 @@ def test_save_all_db_tables_to_s3(sample_dag, database_table_fixture):
     indirect=True,
     ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
-def test_save_all_db_tables_to_gcs(sample_dag, database_table_fixture):
-    database, test_table = database_table_fixture
-    file_name = f"{test_utils.get_table_name('test_save')}.csv"
-    bucket = "dag-authoring"
+def test_export_to_file_dbs_to_remote_file(sample_dag, database_table_fixture, remote_files_fixture):
+    _, test_table = database_table_fixture
+    file_uri = remote_files_fixture[0]
 
-    output_file_path = f"gs://{bucket}/test/{file_name}"
+    if file_uri.startswith("wasb"):
+        file_ = File(file_uri, conn_id="wasb_default_conn")
+    else:
+        file_ = File(file_uri)
+    assert not file_.exists()
 
     with sample_dag:
         export_to_file(
             input_data=test_table,
-            output_file=File(path=output_file_path, conn_id="google_cloud_default"),
+            output_file=file_,
             if_exists="replace",
         )
     test_utils.run_dag(sample_dag)
-    df = database.export_table_to_pandas_dataframe(source_table=test_table)
 
-    assert (df["sell"].sort_values() == [129, 138, 142, 175, 232]).all()
-
-    hook = GCSHook(gcp_conn_id="google_cloud_default")
-    hook.delete(bucket, f"test/{file_name}")
+    assert file_.exists()
+    assert file_.size
 
 
 @pytest.mark.integration

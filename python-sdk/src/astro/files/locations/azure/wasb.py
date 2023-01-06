@@ -35,6 +35,21 @@ class WASBLocation(BaseFileLocation):
         return paths
 
     @property
+    def smartopen_uri(self) -> str:
+        """
+        SmartOpen does not support URIs prefixed with wasb, so we need to change them to azure.
+
+        :return: URI compatible with SmartOpen for Azure BlobStorage.
+        """
+        parsed_url = urlparse(self.path)
+        if parsed_url.scheme == "wasbs":
+            return self.path.replace("wasbs", "azure")
+        elif parsed_url.scheme == "wasb":
+            return self.path.replace("wasb", "azure")
+        else:
+            return self.path
+
+    @property
     def size(self) -> int:
         """Return file size for WASB location"""
         url = urlparse(self.path)

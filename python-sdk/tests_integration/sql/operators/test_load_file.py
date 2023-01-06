@@ -96,9 +96,9 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "remote_files_fixture",
-    [{"provider": "google"}, {"provider": "amazon"}],
+    [{"provider": "google"}, {"provider": "amazon"}, {"provider": "azure"}],
     indirect=True,
-    ids=["google_gcs", "amazon_s3"],
+    ids=["google_gcs", "amazon_s3", "azure_blob_storage"],
 )
 @pytest.mark.parametrize(
     "database_table_fixture",
@@ -126,8 +126,17 @@ def test_aql_load_remote_file_to_dbs(sample_dag, database_table_fixture, remote_
     db, test_table = database_table_fixture
     file_uri = remote_files_fixture[0]
 
+    if file_uri.startswith("wasb"):
+        file_ = File(file_uri, conn_id="wasb_default_conn")
+    else:
+        file_ = File(file_uri)
+
     with sample_dag:
-        load_file(input_file=File(file_uri), output_table=test_table, use_native_support=False)
+        load_file(
+	    input_file=file_,
+	    output_table=test_table,
+	    use_native_support=False,
+        )
     test_utils.run_dag(sample_dag)
 
     df = db.export_table_to_pandas_dataframe(test_table)
