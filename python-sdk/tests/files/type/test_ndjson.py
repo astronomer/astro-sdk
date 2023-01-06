@@ -26,9 +26,9 @@ def test_read_ndjson_file():
 def test_read_ndjson_file_with_pandas_opts(mock_ndjson_flatten):
     """Test pandas option get pass to ndjson_flatten method"""
     path = str(sample_file.absolute())
-    ndjson_type = NDJSONFileType(path)
+    ndjson_type = NDJSONFileType(path, load_options=NdjsonLoadOption())
     with open(path) as file:
-        ndjson_type.export_to_dataframe(file, load_options=NdjsonLoadOption())
+        ndjson_type.export_to_dataframe(file)
     mock_ndjson_flatten.assert_called_once_with(None, file, ndjson_normalize_sep="_")
 
 

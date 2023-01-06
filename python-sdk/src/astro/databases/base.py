@@ -389,6 +389,7 @@ class BaseDatabase(ABC):
                 file.conn_id,
                 normalize_config=normalize_config,
                 filetype=file.type.name,
+                load_options=file.load_options,
             )
             self.create_table(
                 table,
@@ -508,6 +509,7 @@ class BaseDatabase(ABC):
             input_file.conn_id,
             normalize_config=normalize_config,
             filetype=input_file.type.name,
+            load_options=input_file.load_options,
         )
 
         for file in input_files:

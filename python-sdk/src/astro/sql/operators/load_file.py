@@ -137,6 +137,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
             input_file.conn_id,
             normalize_config=self.normalize_config,
             filetype=input_file.type.name,
+            load_options=input_file.load_options,
         ):
             if isinstance(df, pd.DataFrame):
                 df = pd.concat(
@@ -220,6 +221,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
             self.input_file.conn_id,
             normalize_config={},
             filetype=self.input_file.type.name,
+            load_options=self.input_file.load_options,
         )
 
         input_uri = (

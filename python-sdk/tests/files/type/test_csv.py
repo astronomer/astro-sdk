@@ -25,9 +25,9 @@ def test_read_csv_file():
 def test_read_csv_file_with_pandas_opts(mock_read_csv):
     """Test pandas option get pass to read_csv"""
     path = str(sample_file.absolute())
-    csv_type = CSVFileType(path)
+    csv_type = CSVFileType(path, load_options=CsvLoadOption(delimiter="$"))
     with open(path) as file:
-        csv_type.export_to_dataframe(file, load_options=CsvLoadOption(delimiter="$"))
+        csv_type.export_to_dataframe(file)
     mock_read_csv.assert_called_once_with(file, delimiter="$", dtype=None)
 
 

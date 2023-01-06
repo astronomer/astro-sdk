@@ -232,6 +232,7 @@ def resolve_file_path_pattern(
     conn_id: str | None = None,
     filetype: constants.FileType | None = None,
     normalize_config: dict | None = None,
+    load_options: list[LoadOptions] | None = None,
 ) -> list[File]:
     """get file objects by resolving path_pattern from local/object stores
     path_pattern can be
@@ -252,6 +253,7 @@ def resolve_file_path_pattern(
             conn_id=conn_id,
             filetype=filetype,
             normalize_config=normalize_config,
+            load_options=load_options,
         )
         for path in location.paths
         if not path.endswith("/")
