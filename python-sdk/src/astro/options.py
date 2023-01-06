@@ -17,7 +17,7 @@ class LoadOptions:
 
 @attr.define
 class LoadOptionsList:
-    _load_options: List[LoadOptions]
+    _load_options: Optional[List[LoadOptions]]
 
     def get(self, option_class) -> Optional[LoadOptions]:
         """
@@ -33,6 +33,8 @@ class LoadOptionsList:
         Get load_option by class name
         :return:
         """
+        if self._load_options is None:
+            return None
         for option in self._load_options:
             if type(option).__name__ == option_class_name:
                 return option
