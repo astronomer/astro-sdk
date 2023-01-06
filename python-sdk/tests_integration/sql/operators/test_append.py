@@ -94,6 +94,51 @@ def test_append(database_table_fixture, sample_dag, multiple_tables_fixture, app
 
 @pytest.mark.integration
 @pytest.mark.parametrize(
+    "append_params",
+    ["all_fields"],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.DELTA},
+    ],
+    indirect=True,
+    ids=["delta"],
+)
+@pytest.mark.parametrize(
+    "multiple_tables_fixture",
+    [
+        {
+            "items": [
+                {
+                    "file": File(path=str(CWD) + "/../../data/homes_main.csv"),
+                },
+                {
+                    "file": File(path=str(CWD) + "/../../data/homes_append.csv"),
+                },
+            ],
+        }
+    ],
+    indirect=True,
+)
+def test_append_delta(database_table_fixture, sample_dag, multiple_tables_fixture, append_params):
+    # TODO: We currently can not get the "basic" to work because Delta does not yet support default values.
+    app_param, validate_append = append_params
+    main_table, append_table = multiple_tables_fixture
+    with sample_dag:
+        appended_table = aql.append(
+            **app_param,
+            target_table=main_table,
+            source_table=append_table,
+        )
+        validate_append(appended_table)
+        aql.cleanup()
+    test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
     "database_table_fixture",
     [{"database": Database.POSTGRES}],
     indirect=True,
