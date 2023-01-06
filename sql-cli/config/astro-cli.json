@@ -1,7 +1,7 @@
 {
   "baseDockerImage": "quay.io/astronomer/astro-runtime:6.0.4-base",
   "compatibility": {
-    "0.3.0a0": {
+    "0.3.0a1": {
       "astro-runtime": "8.0.0",
       "astro-sdk-python": "1.3.0"
     }
