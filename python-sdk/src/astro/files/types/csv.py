@@ -4,12 +4,15 @@ import io
 
 import pandas as pd
 
+from typing import Optional
 from astro.constants import FileType as FileTypeConstants
 from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
+from astro.dataframes.load_options import CsvLoadOption
 from astro.files.types.base import FileType
 from astro.options import LoadOptions
 from astro.utils.dataframe import convert_columns_names_capitalization
+from astro.options import LoadOptionsList
 
 
 class CSVFileType(FileType):
@@ -46,6 +49,14 @@ class CSVFileType(FileType):
         :param stream: file stream object
         """
         df.to_csv(stream, index=False)
+
+    @staticmethod
+    def get_options(load_option_list: LoadOptionsList) -> Optional[CsvLoadOption]:
+        """
+        Get CsvLoadOption
+        :param load_option_list:
+        """
+        return load_option_list.get("CsvLoadOption")
 
     @property
     def name(self):

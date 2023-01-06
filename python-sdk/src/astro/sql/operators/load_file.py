@@ -13,7 +13,7 @@ from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.dataframes.pandas import PandasDataframe
 from astro.files import File, resolve_file_path_pattern
-from astro.options import LoadOptions
+from astro.options import LoadOptions, LoadOptionsList
 from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
@@ -49,7 +49,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         ndjson_normalize_sep: str = "_",
         use_native_support: bool = True,
         native_support_kwargs: dict | None = None,
-        load_options: LoadOptions | None = None,
+        load_options: list[LoadOptions] | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         **kwargs,
@@ -73,7 +73,8 @@ class LoadFileOperator(AstroSQLBaseOperator):
         self.native_support_kwargs: dict[str, Any] = native_support_kwargs or {}
         self.columns_names_capitalization = columns_names_capitalization
         self.enable_native_fallback = enable_native_fallback
-        self.load_options = load_options
+        # self.load_options = load_options
+        self.load_options_list = LoadOptionsList(load_options)
 
     def execute(self, context: Context) -> BaseTable | File:  # skipcq: PYL-W0613
         """
@@ -348,3 +349,4 @@ def check_if_connection_exists(conn_id: str) -> bool:
     """
     BaseHook.get_connection(conn_id)
     return True
+
