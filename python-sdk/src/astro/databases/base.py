@@ -528,7 +528,7 @@ class BaseDatabase(ABC):
         """
         Load content of a file in output_table.
 
-        :param load_options:
+        :param load_options: Options for database specific loading
         :param source_file: File path and conn_id for object stores
         :param target_table: Table to create
         :param if_exists: Overwrite file if exists

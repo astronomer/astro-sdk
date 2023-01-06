@@ -7,14 +7,14 @@ import pytest
 
 from astro.databases.snowflake import SnowflakeDatabase, SnowflakeFileFormat, SnowflakeStage
 from astro.files import File
-from astro.options import SnowflakeLoadOptions
+from astro.options import LoadOptions, SnowflakeLoadOptions
 from astro.settings import SNOWFLAKE_STORAGE_INTEGRATION_AMAZON, SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE
+from astro.table import Table
 
 DEFAULT_CONN_ID = "snowflake_default"
 CUSTOM_CONN_ID = "snowflake_conn"
 SUPPORTED_CONN_IDS = [CUSTOM_CONN_ID]
 CWD = pathlib.Path(__file__).parent
-
 
 SNOWFLAKE_STORAGE_INTEGRATION_AMAZON = SNOWFLAKE_STORAGE_INTEGRATION_AMAZON or "aws_int_python_sdk"
 SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE = SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE or "gcs_int_python_sdk"
@@ -116,3 +116,15 @@ def test_snowflake_load_options_default():
         )
     assert "FILE_FORMAT=(TYPE=CSV, TRIM_SPACE=TRUE)" in database.run_sql.call_args[0][0]
     assert "COPY_OPTIONS=(ON_ERROR=CONTINUE)" in database.run_sql.call_args[0][0]
+
+
+def test_snowflake_load_options_wrong_options():
+    path = str(CWD) + "/../../data/homes_main.csv"
+    database = SnowflakeDatabase(conn_id="fake-conn")
+    file = File(path)
+    with pytest.raises(ValueError, match="Error: Requires a SnowflakeLoadOptions"):
+        database.load_file_to_table_natively(
+            source_file=file,
+            target_table=Table(),
+            load_options=LoadOptions(),
+        )
