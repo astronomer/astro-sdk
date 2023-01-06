@@ -96,3 +96,23 @@ def test_snowflake_load_options():
         )
     assert "FILE_FORMAT=(foo=bar, TYPE=CSV, TRIM_SPACE=TRUE)" in database.run_sql.call_args[0][0]
     assert "COPY_OPTIONS=(ON_ERROR=CONTINUE)" in database.run_sql.call_args[0][0]
+
+
+def test_snowflake_load_options_default():
+    path = str(CWD) + "/../../data/homes_main.csv"
+    database = SnowflakeDatabase(conn_id="fake-conn")
+    file = File(path)
+    with mock.patch(
+        "astro.databases.snowflake.SnowflakeDatabase.hook", new_callable=PropertyMock
+    ), mock.patch(
+        "astro.databases.snowflake.SnowflakeStage.qualified_name", new_callable=PropertyMock
+    ) as mock_q_name:
+        mock_q_name.return_value = "foo"
+        database.run_sql = MagicMock()
+        database.create_stage(
+            file=file,
+            storage_integration="foo",
+            load_options=SnowflakeLoadOptions(),
+        )
+    assert "FILE_FORMAT=(TYPE=CSV, TRIM_SPACE=TRUE)" in database.run_sql.call_args[0][0]
+    assert "COPY_OPTIONS=(ON_ERROR=CONTINUE)" in database.run_sql.call_args[0][0]
