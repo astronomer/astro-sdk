@@ -56,13 +56,12 @@ def test_create_and_run_job(mock_api_client):
     calls = [
         call.perform_query(
             "POST",
-            "/jobs/create",
+            "/jobs/runs/submit",
             data={
                 "name": "my-db-job",
                 "spark_python_task": {"python_file": "/foo/bar.py"},
                 "existing_cluster_id": "foobar",
             },
-            headers=None,
             version=None,
         ),
     ]
