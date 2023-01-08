@@ -8,7 +8,6 @@ from typing import Dict
 from airflow.configuration import conf
 from airflow.exceptions import AirflowException
 from databricks_cli.dbfs.api import DbfsApi, DbfsPath
-from databricks_cli.jobs.api import JobsApi
 from databricks_cli.runs.api import RunsApi
 from databricks_cli.sdk.api_client import ApiClient
 from databricks_cli.secrets.api import SecretApi
@@ -143,7 +142,7 @@ def create_and_run_job(
         as a python dictionary.
 
     """
-    jobs_api = JobsApi(api_client=api_client)
+    runs_api = RunsApi(api_client=api_client)
     json_info = {
         "name": databricks_job_name,
         "spark_python_task": {"python_file": file_to_run},
@@ -158,16 +157,7 @@ def create_and_run_job(
     else:
         raise AirflowException("Error, must have a new cluster spec or an existing cluster ID for spark job")
 
-    # TODO find a way to link to existing job so we're not creating a new job id every time
-    job = jobs_api.create_job(json=json_info)
-    log.debug("Created job %s", job["job_id"])
-    run_id = jobs_api.run_now(
-        job_id=job["job_id"],
-        jar_params=None,
-        notebook_params=None,
-        python_params=None,
-        spark_submit_params=None,
-    )["run_id"]
+    run_id = runs_api.submit_run(json=json_info)["run_id"]
 
     runs_api = RunsApi(api_client)
     ping_interval = int(conf.get("astro_sdk", "databricks_ping_interval", fallback=5))
