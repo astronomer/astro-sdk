@@ -24,7 +24,7 @@ class PandasJsonLoadOptions(PandasLoadOptions):
 
 @define
 class PandasNdjsonLoadOptions(PandasLoadOptions):
-    ndjson_normalize_sep: str = "_"
+    normalize_sep: str = "_"
 
 
 @define
