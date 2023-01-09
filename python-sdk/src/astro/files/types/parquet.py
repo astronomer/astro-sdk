@@ -2,21 +2,19 @@ from __future__ import annotations
 
 import io
 
-import attr
 import pandas as pd
 
 from astro.constants import FileType as FileTypeConstants
 from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types.base import FileType
-from astro.options import LoadOptions
 from astro.utils.dataframe import convert_columns_names_capitalization
 
 
 class ParquetFileType(FileType):
     """Concrete implementation to handle Parquet file type"""
 
-    LOAD_OPTIONS_CLASS_NAME = "ParquetLoadOption"
+    LOAD_OPTIONS_CLASS_NAME = "PandasParquetLoadOptions"
 
     def export_to_dataframe(
         self,

@@ -2,21 +2,19 @@ from __future__ import annotations
 
 import io
 
-import attr
 import pandas as pd
 
 from astro.constants import FileType as FileTypeConstants
 from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types.base import FileType
-from astro.options import LoadOptions
 from astro.utils.dataframe import convert_columns_names_capitalization
 
 
 class CSVFileType(FileType):
     """Concrete implementation to handle CSV file type"""
 
-    LOAD_OPTIONS_CLASS_NAME = "CsvLoadOption"
+    LOAD_OPTIONS_CLASS_NAME = "PandasCsvLoadOptions"
 
     # We need skipcq because it's a method overloading so we don't want to make it a static method
     def export_to_dataframe(

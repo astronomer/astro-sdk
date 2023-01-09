@@ -3,21 +3,19 @@ from __future__ import annotations
 import io
 import json
 
-import attr
 import pandas as pd
 
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType as FileTypeConstants
 from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types.base import FileType
-from astro.options import LoadOptions
 from astro.utils.dataframe import convert_columns_names_capitalization
 
 
 class NDJSONFileType(FileType):
     """Concrete implementation to handle NDJSON file type"""
 
-    LOAD_OPTIONS_CLASS_NAME = "NdjsonLoadOption"
+    LOAD_OPTIONS_CLASS_NAME = "PandasNdjsonLoadOptions"
 
     def export_to_dataframe(
         self,

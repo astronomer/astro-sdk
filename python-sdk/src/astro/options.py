@@ -15,7 +15,7 @@ class LoadOptions:
         return attr.asdict(self)
 
 
-def list_to_dict(value: List[LoadOptions]) -> Optional[Dict[str, LoadOptions]]:
+def list_to_dict(value: Optional[List[LoadOptions]]) -> Optional[Dict[str, LoadOptions]]:
     """
     Convert list object to dict
     """

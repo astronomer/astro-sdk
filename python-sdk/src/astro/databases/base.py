@@ -456,7 +456,6 @@ class BaseDatabase(ABC):
             columns_names_capitalization=columns_names_capitalization,
             if_exists=if_exists,
             normalize_config=normalize_config,
-            load_options=load_options,
         )
 
         if use_native_support and self.is_native_load_file_available(
@@ -471,7 +470,6 @@ class BaseDatabase(ABC):
                 native_support_kwargs=native_support_kwargs,
                 enable_native_fallback=enable_native_fallback,
                 chunk_size=chunk_size,
-                load_options=load_options,
             )
         else:
             self.load_file_to_table_using_pandas(
@@ -480,7 +478,6 @@ class BaseDatabase(ABC):
                 normalize_config=normalize_config,
                 if_exists="append",
                 chunk_size=chunk_size,
-                load_options=load_options,
             )
 
     @staticmethod

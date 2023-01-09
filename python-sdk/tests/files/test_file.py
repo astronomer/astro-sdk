@@ -8,7 +8,12 @@ import pytest
 from airflow import DAG
 
 from astro import constants
-from astro.dataframes.load_options import CsvLoadOption, JsonLoadOption, NdjsonLoadOption, ParquetLoadOption
+from astro.dataframes.load_options import (
+    PandasCsvLoadOptions,
+    PandasJsonLoadOptions,
+    PandasNdjsonLoadOptions,
+    PandasParquetLoadOptions,
+)
 from astro.files import File, get_file_list, resolve_file_path_pattern
 
 sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent, "data/sample.csv")
@@ -215,10 +220,10 @@ def test_if_file_object_can_be_pickled():
 @pytest.mark.parametrize(
     "file_type",
     [
-        {"type": "csv", "expected_class": CsvLoadOption},
-        {"type": "ndjson", "expected_class": NdjsonLoadOption},
-        {"type": "json", "expected_class": JsonLoadOption},
-        {"type": "parquet", "expected_class": ParquetLoadOption},
+        {"type": "csv", "expected_class": PandasCsvLoadOptions},
+        {"type": "ndjson", "expected_class": PandasNdjsonLoadOptions},
+        {"type": "json", "expected_class": PandasJsonLoadOptions},
+        {"type": "parquet", "expected_class": PandasParquetLoadOptions},
     ],
     ids=["csv", "ndjson", "json", "parquet"],
 )
@@ -248,10 +253,10 @@ def test_file_object_picks_load_options(file_type, file_location):
     file = File(
         path=location_path + f".{type_name}",
         load_options=[
-            CsvLoadOption(delimiter="$"),
-            JsonLoadOption(encoding="test"),
-            ParquetLoadOption(columns=["name", "age"]),
-            NdjsonLoadOption(ndjson_normalize_sep="__"),
+            PandasCsvLoadOptions(delimiter="$"),
+            PandasJsonLoadOptions(encoding="test"),
+            PandasParquetLoadOptions(columns=["name", "age"]),
+            PandasNdjsonLoadOptions(ndjson_normalize_sep="__"),
         ],
     )
     assert type(file.type.load_options) == type_expected_class

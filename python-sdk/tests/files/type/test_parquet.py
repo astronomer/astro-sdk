@@ -4,7 +4,7 @@ from unittest import mock
 
 import pandas as pd
 
-from astro.dataframes.load_options import ParquetLoadOption
+from astro.dataframes.load_options import PandasParquetLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types import ParquetFileType
 
@@ -26,7 +26,7 @@ def test_read_parquet_file():
 def test_read_parquet_file_with_pandas_opts(mock_read_parquet, mock_file_to_byte):
     """Test pandas option get pass to read_parquet"""
     path = str(sample_file.absolute())
-    parquet_type = ParquetFileType(path, load_options=ParquetLoadOption(columns=["col1"]))
+    parquet_type = ParquetFileType(path, load_options=PandasParquetLoadOptions(columns=["col1"]))
     stream = b"12345"
     mock_file_to_byte.return_value = stream
     with open(path, mode="rb") as file:
