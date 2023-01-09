@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from urllib.parse import urlparse, urlunparse
 
+import smart_open
 from airflow.providers.microsoft.azure.hooks.wasb import WasbHook
+from azure.core.exceptions import ResourceNotFoundError
 
 from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
@@ -13,6 +15,14 @@ class WASBLocation(BaseFileLocation):
 
     location_type = FileLocation.WASB
     supported_conn_type = {WasbHook.conn_type, "wasbs"}
+
+    def exists(self) -> bool:
+        """Check if the file exists or not"""
+        try:
+            with smart_open.open(self.smartopen_uri, mode="r", transport_params=self.transport_params):
+                return True
+        except ResourceNotFoundError:
+            return False
 
     @property
     def hook(self) -> WasbHook:
