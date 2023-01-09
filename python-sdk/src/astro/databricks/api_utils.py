@@ -159,7 +159,6 @@ def create_and_run_job(
 
     run_id = runs_api.submit_run(json=json_info)["run_id"]
 
-    runs_api = RunsApi(api_client)
     ping_interval = int(conf.get("astro_sdk", "databricks_ping_interval", fallback=5))
     while runs_api.get_run(run_id)["state"]["life_cycle_state"] == "PENDING":
         log.info("job pending")
