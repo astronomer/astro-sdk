@@ -4,7 +4,7 @@ from unittest import mock
 
 import pandas as pd
 
-from astro.dataframes.load_options import ParquetLoadOptions
+from astro.dataframes.load_options import PandasParquetLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types import ParquetFileType
 
@@ -30,7 +30,7 @@ def test_read_parquet_file_with_pandas_opts(mock_read_parquet, mock_file_to_byte
     stream = b"12345"
     mock_file_to_byte.return_value = stream
     with open(path, mode="rb") as file:
-        parquet_type.export_to_dataframe(file, load_options=ParquetLoadOptions(columns=["col1"]))
+        parquet_type.export_to_dataframe(file, load_options=PandasParquetLoadOptions(columns=["col1"]))
     mock_read_parquet.assert_called_once_with(stream, columns=["col1"])
 
 

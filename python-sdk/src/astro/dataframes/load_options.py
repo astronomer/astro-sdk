@@ -12,21 +12,21 @@ class PandasLoadOptions(LoadOptions):
 
 
 @define
-class CsvLoadOptions(PandasLoadOptions):
+class PandasCsvLoadOptions(PandasLoadOptions):
     delimiter: str | None = None
     dtype: DtypeArg | None = None
 
 
 @define
-class JsonLoadOptions(PandasLoadOptions):
+class PandasJsonLoadOptions(PandasLoadOptions):
     encoding: str | None = None
 
 
 @define
-class NdjsonLoadOptions(PandasLoadOptions):
+class PandasNdjsonLoadOptions(PandasLoadOptions):
     ndjson_normalize_sep: str = "_"
 
 
 @define
-class ParquetLoadOptions(PandasLoadOptions):
+class PandasParquetLoadOptions(PandasLoadOptions):
     columns: list[str] | None = None
