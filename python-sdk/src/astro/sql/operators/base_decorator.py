@@ -287,7 +287,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             return str(py_callable)
         except OSError:
             self.log.warning("Can't get source code facet of Operator {self.operator.task_id}")
-        return None
+            return None
 
 
 def load_op_arg_dataframes_into_sql(conn_id: str, op_args: tuple, target_table: BaseTable) -> tuple:

@@ -285,7 +285,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             return str(py_callable)
         except OSError:
             self.log.warning("Can't get source code facet of Operator {self.operator.task_id}")
-        return None
+            return None
 
 
 def dataframe(
