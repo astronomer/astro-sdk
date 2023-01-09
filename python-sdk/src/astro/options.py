@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import attr
 
@@ -15,9 +15,18 @@ class LoadOptions:
         return attr.asdict(self)
 
 
+def list_to_dict(value: List[LoadOptions]) -> Optional[Dict[str, LoadOptions]]:
+    """
+    Convert list object to dict
+    """
+    if value is None:
+        return None
+    return {type(option).__name__: option for option in value}
+
+
 @attr.define
 class LoadOptionsList:
-    _load_options: Optional[List[LoadOptions]]
+    _load_options: Optional[Dict[str, LoadOptions]] = attr.field(converter=list_to_dict)
 
     def get(self, option_class) -> Optional[LoadOptions]:
         """
@@ -35,7 +44,4 @@ class LoadOptionsList:
         """
         if self._load_options is None:
             return None
-        for option in self._load_options:
-            if type(option).__name__ == option_class_name:
-                return option
-        return None
+        return self._load_options.get(option_class_name, None)
