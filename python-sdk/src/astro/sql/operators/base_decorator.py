@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, Sequence, cast
+from typing import Any, Callable, Sequence, cast
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
@@ -206,8 +206,10 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
+            SourceCodeJobFacet,
             SqlJobFacet,
         )
+        from astro.settings import OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE
 
         input_dataset: list[OpenlineageDataset] = []
         output_dataset: list[OpenlineageDataset] = []
@@ -264,10 +266,28 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
 
         base_sql_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="base_sql_query")
         job_facets: dict[str, BaseFacet] = {"sql": SqlJobFacet(query=base_sql_query)}
+        source_code = self.get_source_code(task_instance.task.python_callable)
+        if OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE and source_code:
+            job_facets.update(
+                {
+                    "sourceCode": SourceCodeJobFacet("python", source_code),
+                }
+            )
 
         return OperatorLineage(
             inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
+
+    def get_source_code(self, py_callable: Callable) -> str | None:
+        """Return the source code for the lineage"""
+        try:
+            return inspect.getsource(py_callable)
+        except TypeError:
+            # Trying to extract source code of builtin_function_or_method
+            return str(py_callable)
+        except OSError:
+            self.log.warning("Can't get source code facet of Operator {self.operator.task_id}")
+            return None
 
 
 def load_op_arg_dataframes_into_sql(conn_id: str, op_args: tuple, target_table: BaseTable) -> tuple:

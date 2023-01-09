@@ -35,6 +35,9 @@ MAX_DATAFRAME_MEMORY_FOR_XCOM_DB = conf.getint(SECTION_KEY, "max_dataframe_mem_f
 OPENLINEAGE_EMIT_TEMP_TABLE_EVENT = conf.getboolean(
     SECTION_KEY, "openlineage_emit_temp_table_event", fallback=True
 )
+OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE = conf.getboolean(
+    SECTION_KEY, "openlineage_airflow_disable_source_code", fallback=True
+)
 XCOM_BACKEND = conf.get("core", "xcom_backend")
 IS_BASE_XCOM_BACKEND = conf.get("core", "xcom_backend") == "airflow.models.xcom.BaseXCom"
 ENABLE_XCOM_PICKLING = conf.getboolean("core", "enable_xcom_pickling")
