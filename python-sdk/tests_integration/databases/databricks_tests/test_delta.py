@@ -6,7 +6,7 @@ from databricks.sql.types import Row
 
 from astro.constants import Database, FileType
 from astro.databases import create_database
-from astro.databricks.delta import DeltaDatabase
+from astro.databases.databricks.delta import DeltaDatabase
 from astro.files import File
 from astro.table import Table, TempTable
 

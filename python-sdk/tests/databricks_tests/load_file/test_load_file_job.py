@@ -4,7 +4,7 @@ from unittest.mock import call
 import pytest
 
 from astro.constants import FileType
-from astro.databricks.load_file.load_file_job import _find_file_type, _load_local_file_to_dbfs
+from astro.databases.databricks.load_file.load_file_job import _find_file_type, _load_local_file_to_dbfs
 from astro.files.base import File
 
 

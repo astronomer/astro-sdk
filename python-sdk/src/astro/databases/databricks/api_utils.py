@@ -13,8 +13,8 @@ from databricks_cli.sdk.api_client import ApiClient
 from databricks_cli.secrets.api import SecretApi
 from requests.exceptions import HTTPError
 
-from astro.databricks.load_file.load_file_python_code_generator import render
-from astro.databricks.load_options import DeltaLoadOptions
+from astro.databases.databricks.load_file.load_file_python_code_generator import render
+from astro.databases.databricks.load_options import DeltaLoadOptions
 
 cwd = pathlib.Path(__file__).parent
 log = logging.getLogger(__name__)

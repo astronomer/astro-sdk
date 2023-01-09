@@ -2,9 +2,9 @@ import tempfile
 from unittest import mock
 
 from astro.constants import DatabricksLoadMode
-from astro.databricks.api_utils import generate_file
-from astro.databricks.load_file.load_file_job import _create_load_file_pyspark_file
-from astro.databricks.load_options import DeltaLoadOptions
+from astro.databases.databricks.api_utils import generate_file
+from astro.databases.databricks.load_file.load_file_job import _create_load_file_pyspark_file
+from astro.databases.databricks.load_options import DeltaLoadOptions
 from astro.files import File
 from astro.table import Table
 

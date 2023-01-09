@@ -5,7 +5,7 @@ from unittest.mock import Mock, call
 import pytest
 from requests.exceptions import HTTPError
 
-from astro.databricks.api_utils import (
+from astro.databases.databricks.api_utils import (
     create_and_run_job,
     create_secrets,
     delete_secret_scope,

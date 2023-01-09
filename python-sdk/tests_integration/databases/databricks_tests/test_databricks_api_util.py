@@ -5,7 +5,7 @@ from unittest.mock import Mock, call
 import pytest
 from requests.exceptions import HTTPError
 
-from astro.databricks.api_utils import create_secrets, delete_secret_scope, load_file_to_dbfs
+from astro.databases.databricks.api_utils import create_secrets, delete_secret_scope, load_file_to_dbfs
 
 CWD = pathlib.Path(__file__).parent
 

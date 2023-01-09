@@ -83,7 +83,7 @@ def database_table_fixture(request):
 
     kwargs = {}
     if database.sql_type == "delta":
-        from astro.databricks.load_options import DeltaLoadOptions
+        from astro.databases.databricks.load_options import DeltaLoadOptions
 
         kwargs["load_options"] = DeltaLoadOptions.get_default_delta_options()
 
