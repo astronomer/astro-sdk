@@ -13,6 +13,7 @@ try:
         OutputStatisticsOutputDatasetFacet,
         SchemaDatasetFacet,
         SchemaField,
+        SourceCodeJobFacet,
         SqlJobFacet,
     )
     from openlineage.client.run import Dataset as OpenlineageDataset

@@ -316,6 +316,7 @@ def load_file(
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
         in the resulting dataframe
     :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
+    :param load_options: load options while reading and loading file
     """
 
     # Note - using path for task id is causing issues as it's a pattern and
