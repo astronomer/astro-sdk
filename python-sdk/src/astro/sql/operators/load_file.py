@@ -300,6 +300,7 @@ def load_file(
     native_support_kwargs: dict | None = None,
     columns_names_capitalization: ColumnCapitalization = "original",
     enable_native_fallback: bool | None = True,
+    load_options: LoadOptions | None = None,
     **kwargs: Any,
 ) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.
@@ -315,6 +316,7 @@ def load_file(
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
         in the resulting dataframe
     :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
+    :param load_options: load options while reading and loading file
     """
 
     # Note - using path for task id is causing issues as it's a pattern and
@@ -331,6 +333,7 @@ def load_file(
         native_support_kwargs=native_support_kwargs,
         columns_names_capitalization=columns_names_capitalization,
         enable_native_fallback=enable_native_fallback,
+        load_options=load_options,
         **kwargs,
     ).output
 

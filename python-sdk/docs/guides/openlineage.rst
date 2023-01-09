@@ -19,6 +19,9 @@ We'll need to specify where we want Astro Python SDK operators to send OpenLinea
 ``OPENLINEAGE_URL`` environment variable to send OpenLineage events to Marquez. Optionally, we can also
 specify a namespace where the lineage events will be stored using the ``OPENLINEAGE_NAMESPACE`` environment variable.
 
+A user may choose to send or not, the source code to the OpenLineage then user can specify an environment variable
+``OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE`` set with either ``True`` or ``False``. By default it will be set to ``True``.
+
 For example, to send OpenLineage events to a local instance of Marquez with the dev namespace, use:
 
 .. code-block:: ini
