@@ -19,7 +19,9 @@ class FileType(ABC):
         self.load_options = load_options
 
     @abstractmethod
-    def export_to_dataframe(self, stream, **kwargs) -> pd.DataFrame:
+    def export_to_dataframe(
+        self, stream, load_options: LoadOptions | None = None, **kwargs
+    ) -> pd.DataFrame:
         """read file from one of the supported locations and return dataframe
 
         :param stream: file stream object

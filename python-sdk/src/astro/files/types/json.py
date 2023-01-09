@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import io
 
+import attr
 import pandas as pd
 
 from astro.constants import FileType as FileTypeConstants
 from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types.base import FileType
+from astro.options import LoadOptions
 from astro.utils.dataframe import convert_columns_names_capitalization
 
 
@@ -20,12 +22,14 @@ class JSONFileType(FileType):
     def export_to_dataframe(
         self,
         stream: io.TextIOWrapper,
+        load_options: LoadOptions | PandasLoadOptions | None = None,
         columns_names_capitalization="original",
         **kwargs,
     ) -> pd.DataFrame:  # skipcq PYL-R0201
         """read json file from one of the supported locations and return dataframe
 
         :param stream: file stream object
+        :param load_options: Pandas option to pass to the Pandas lib while reading json
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
         """

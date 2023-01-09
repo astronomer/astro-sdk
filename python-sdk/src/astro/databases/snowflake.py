@@ -525,6 +525,7 @@ class SnowflakeDatabase(BaseDatabase):
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
+        load_options: LoadOptions | None = None,
     ) -> None:  # skipcq PYL-W0613
         """
         Create a SQL table, automatically inferring the schema using the given file.
@@ -541,7 +542,9 @@ class SnowflakeDatabase(BaseDatabase):
                 )
             source_dataframe = dataframe
         else:
-            source_dataframe = file.export_to_dataframe(nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT)
+            source_dataframe = file.export_to_dataframe(
+                nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT, load_options=load_options
+            )
 
         # We are changing the case of table name to ease out on the requirements to add quotes in raw queries.
         # ToDO - Currently, we cannot to append using load_file to a table name which is having name in lower case.
