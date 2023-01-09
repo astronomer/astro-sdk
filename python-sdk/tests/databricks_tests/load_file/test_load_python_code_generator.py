@@ -132,7 +132,7 @@ def test_generate_file_append_copy_into(tmp_path):
     assert "DROP TABLE" not in output_file.read_text()
 
 
-@mock.patch("astro.databricks.load_file.load_file_job.load_file_to_dbfs", autospec=True)
+@mock.patch("astro.databases.databricks.load_file.load_file_job.load_file_to_dbfs", autospec=True)
 @mock.patch("databricks_cli.sdk.api_client.ApiClient", autospec=True)
 def test_generate_file_overwrite_autoloader(mock_api_client, mock_load_to_dbfs):
     options = DeltaLoadOptions.get_default_delta_options()
