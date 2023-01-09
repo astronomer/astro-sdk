@@ -12,6 +12,7 @@ from psycopg2 import sql as postgres_sql
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.files import File
+from astro.options import LoadOptions
 from astro.settings import POSTGRES_SCHEMA
 from astro.table import BaseTable, Metadata
 
@@ -200,11 +201,12 @@ class PostgresDatabase(BaseDatabase):
         self.run_sql(sql=sql)
 
     @staticmethod
-    def get_dataframe_from_file(file: File):
+    def get_dataframe_from_file(file: File, load_options: LoadOptions | None = None):  # skipcq: PYL-W0613
         """
         Get pandas dataframe file
 
         :param file: File path and conn_id for object stores
+        :param load_options: pandas options while reading file
         """
         return file.export_to_dataframe_via_byte_stream()
 

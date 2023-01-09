@@ -5,6 +5,9 @@ from abc import ABC, abstractmethod
 
 import pandas as pd
 
+from astro.dataframes.load_options import PandasLoadOptions
+from astro.options import LoadOptions
+
 
 class FileType(ABC):
     """Abstract File type class, meant to be the interface to all client code for all supported file types"""
@@ -14,10 +17,13 @@ class FileType(ABC):
         self.normalize_config = normalize_config
 
     @abstractmethod
-    def export_to_dataframe(self, stream, **kwargs) -> pd.DataFrame:
+    def export_to_dataframe(
+        self, stream, load_options: LoadOptions | PandasLoadOptions | None = None, **kwargs
+    ) -> pd.DataFrame:
         """read file from one of the supported locations and return dataframe
 
         :param stream: file stream object
+        :param load_options: Pandas option to pass to the Pandas lib while reading file
         """
         raise NotImplementedError
 
