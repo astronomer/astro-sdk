@@ -29,7 +29,7 @@ def test_read_ndjson_file_with_pandas_opts(mock_ndjson_flatten):
     ndjson_type = NDJSONFileType(path, load_options=PandasNdjsonLoadOptions())
     with open(path) as file:
         ndjson_type.export_to_dataframe(file)
-    mock_ndjson_flatten.assert_called_once_with(None, file, ndjson_normalize_sep="_")
+    mock_ndjson_flatten.assert_called_once_with(None, file, normalize_sep="_")
 
 
 def test_write_ndjson_file():

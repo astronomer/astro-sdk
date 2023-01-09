@@ -37,7 +37,7 @@ class LoadOptionsList:
             return None
         return self.get_by_class_name(option_class.LOAD_OPTIONS_CLASS_NAME)
 
-    def get_by_class_name(self, option_class_name):
+    def get_by_class_name(self, option_class_name) -> Optional[LoadOptions]:
         """
         Get load_option by class name
         :return:

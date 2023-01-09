@@ -26,7 +26,7 @@ def test_load_options_list():
     parquet_load_option = load_option_list.get_by_class_name("PandasParquetLoadOptions")
     assert parquet_load_option.columns == ["name", "age"]
     parquet_load_option = load_option_list.get_by_class_name("PandasNdjsonLoadOptions")
-    assert parquet_load_option.ndjson_normalize_sep == "__"
+    assert parquet_load_option.normalize_sep == "__"
 
     load_option = load_option_list.get_by_class_name("InvalidLoadOption")
     assert load_option is None
