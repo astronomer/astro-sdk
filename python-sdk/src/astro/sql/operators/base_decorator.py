@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import inspect
-import os
 from typing import Any, Callable, Sequence, cast
 
 import pandas as pd
@@ -210,6 +209,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             SourceCodeJobFacet,
             SqlJobFacet,
         )
+        from astro.settings import OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE
 
         input_dataset: list[OpenlineageDataset] = []
         output_dataset: list[OpenlineageDataset] = []
@@ -266,9 +266,8 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
 
         base_sql_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="base_sql_query")
         job_facets: dict[str, BaseFacet] = {"sql": SqlJobFacet(query=base_sql_query)}
-        collect_source = os.environ.get("OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE", "True")
         source_code = self.get_source_code(task_instance.task.python_callable)
-        if collect_source and source_code:
+        if OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE and source_code:
             job_facets.update(
                 {
                     "sourceCode": SourceCodeJobFacet("python", source_code),
@@ -288,7 +287,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             return str(py_callable)
         except OSError:
             self.log.warning("Can't get source code facet of Operator {self.operator.task_id}")
-            return None
+        return None
 
 
 def load_op_arg_dataframes_into_sql(conn_id: str, op_args: tuple, target_table: BaseTable) -> tuple:

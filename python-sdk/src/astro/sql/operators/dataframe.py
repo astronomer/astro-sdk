@@ -222,7 +222,6 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         """
         Collect the input, output, job and run facets for DataframeOperator
         """
-        import os
 
         from astro.lineage import (
             BaseFacet,
@@ -234,6 +233,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             SchemaField,
             SourceCodeJobFacet,
         )
+        from astro.settings import OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE
 
         output_dataset: list[OpenlineageDataset] = []
 
@@ -265,9 +265,8 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
 
         run_facets: dict[str, BaseFacet] = {}
         job_facets: dict[str, BaseFacet] = {}
-        collect_source = os.environ.get("OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE", "True")
         source_code = self.get_source_code(task_instance.task.python_callable)
-        if collect_source and source_code:
+        if OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE and source_code:
             job_facets.update(
                 {
                     "sourceCode": SourceCodeJobFacet("python", source_code),
@@ -286,7 +285,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             return str(py_callable)
         except OSError:
             self.log.warning("Can't get source code facet of Operator {self.operator.task_id}")
-            return None
+        return None
 
 
 def dataframe(

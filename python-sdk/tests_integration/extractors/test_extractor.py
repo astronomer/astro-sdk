@@ -296,6 +296,10 @@ def test_python_sdk_transform_extract_on_complete():
     assert task_meta_extract is None
     task_meta = python_sdk_extractor(task.operator).extract_on_complete(task_instance=task_instance)
     assert task_meta.name == f"adhoc_airflow.{task_id}"
+    source_code = task_meta.job_facets.get("sourceCode")
+    # check for transform code return is present in source code facet.
+    validate_string = """return "SELECT title, rating FROM {{ input_table }} LIMIT 5;"""
+    assert validate_string in source_code.source
     assert len(task_meta.job_facets) > 0
     assert task_meta.run_facets == {}
 
