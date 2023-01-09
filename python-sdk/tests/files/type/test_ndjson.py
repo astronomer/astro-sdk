@@ -1,9 +1,11 @@
 import json
 import pathlib
 import tempfile
+from unittest import mock
 
 import pandas as pd
 
+from astro.dataframes.load_options import PandasNdjsonLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types import NDJSONFileType
 
@@ -18,6 +20,16 @@ def test_read_ndjson_file():
         df = json_type.export_to_dataframe(file)
     assert df.shape == (3, 2)
     assert isinstance(df, PandasDataframe)
+
+
+@mock.patch("astro.files.types.ndjson.NDJSONFileType.flatten")
+def test_read_ndjson_file_with_pandas_opts(mock_ndjson_flatten):
+    """Test pandas option get pass to ndjson_flatten method"""
+    path = str(sample_file.absolute())
+    ndjson_type = NDJSONFileType(path)
+    with open(path) as file:
+        ndjson_type.export_to_dataframe(file, load_options=PandasNdjsonLoadOptions())
+    mock_ndjson_flatten.assert_called_once_with(None, file, normalize_sep="_")
 
 
 def test_write_ndjson_file():

@@ -11,6 +11,7 @@ from airflow.hooks.dbapi import DbApiHook
 from pandas.io.sql import SQLDatabase
 from sqlalchemy import column, insert, select
 
+from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -246,6 +247,7 @@ class BaseDatabase(ABC):
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",  # skipcq
+        load_options: LoadOptions | None = None,
     ) -> None:
         """
         Create a SQL table, automatically inferring the schema using the given file.
@@ -263,7 +265,9 @@ class BaseDatabase(ABC):
                 )
             source_dataframe = dataframe
         else:
-            source_dataframe = file.export_to_dataframe(nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT)
+            source_dataframe = file.export_to_dataframe(
+                nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT, load_options=load_options
+            )
 
         db = SQLDatabase(engine=self.sqlalchemy_engine)
         db.prep_table(
@@ -291,6 +295,7 @@ class BaseDatabase(ABC):
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
+        load_options: LoadOptions | None = None,
     ) -> None:
         """
         Create a table either using its explicitly defined columns or inferring
@@ -307,7 +312,13 @@ class BaseDatabase(ABC):
         elif file and self.is_native_autodetect_schema_available(file):
             self.create_table_using_native_schema_autodetection(table, file)
         else:
-            self.create_table_using_schema_autodetection(table, file, dataframe, columns_names_capitalization)
+            self.create_table_using_schema_autodetection(
+                table,
+                file=file,
+                dataframe=dataframe,
+                columns_names_capitalization=columns_names_capitalization,
+                load_options=load_options,
+            )
 
     def create_table_from_select_statement(
         self,
@@ -348,6 +359,7 @@ class BaseDatabase(ABC):
         columns_names_capitalization: ColumnCapitalization = "original",
         if_exists: LoadExistStrategy = "replace",
         use_native_support: bool = True,
+        load_options: LoadOptions | None = None,
     ):
         """
         Checks if the autodetect schema exists for native support else creates the schema and table
@@ -387,6 +399,7 @@ class BaseDatabase(ABC):
                 # We only use the first file for inferring the table schema
                 files[0],
                 columns_names_capitalization=columns_names_capitalization,
+                load_options=load_options,
             )
 
     def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> list:
@@ -442,6 +455,7 @@ class BaseDatabase(ABC):
             columns_names_capitalization=columns_names_capitalization,
             if_exists=if_exists,
             normalize_config=normalize_config,
+            load_options=load_options,
         )
 
         if use_native_support and self.is_native_load_file_available(
@@ -456,6 +470,7 @@ class BaseDatabase(ABC):
                 native_support_kwargs=native_support_kwargs,
                 enable_native_fallback=enable_native_fallback,
                 chunk_size=chunk_size,
+                load_options=load_options,
             )
         else:
             self.load_file_to_table_using_pandas(
@@ -464,10 +479,11 @@ class BaseDatabase(ABC):
                 normalize_config=normalize_config,
                 if_exists="append",
                 chunk_size=chunk_size,
+                load_options=load_options,
             )
 
     @staticmethod
-    def get_dataframe_from_file(file: File):
+    def get_dataframe_from_file(file: File, load_options: LoadOptions | None = None):
         """
         Get pandas dataframe file. We need export_to_dataframe() for Biqqery,Snowflake and Redshift except for Postgres.
         For postgres we are overriding this method and using export_to_dataframe_via_byte_stream().
@@ -475,9 +491,10 @@ class BaseDatabase(ABC):
         With this approach we have significant performance boost for postgres.
 
         :param file: File path and conn_id for object stores
+        :param load_options: pandas options while reading file
         """
 
-        return file.export_to_dataframe()
+        return file.export_to_dataframe(load_options=load_options)
 
     @staticmethod
     def _assert_not_empty_df(df):
@@ -495,6 +512,7 @@ class BaseDatabase(ABC):
         normalize_config: dict | None = None,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
+        load_options: PandasLoadOptions | LoadOptions | None = None,
     ):
         logging.info("Loading file(s) with Pandas...")
         input_files = resolve_file_path_pattern(
@@ -506,7 +524,7 @@ class BaseDatabase(ABC):
 
         for file in input_files:
             self.load_pandas_dataframe_to_table(
-                self.get_dataframe_from_file(file),
+                self.get_dataframe_from_file(file, load_options),
                 output_table,
                 chunk_size=chunk_size,
                 if_exists=if_exists,
@@ -521,6 +539,7 @@ class BaseDatabase(ABC):
         native_support_kwargs: dict | None = None,
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
+        load_options: PandasLoadOptions | LoadOptions | None = None,
         **kwargs,
     ):
         """
@@ -533,6 +552,7 @@ class BaseDatabase(ABC):
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         :param normalize_config: pandas json_normalize params config
+        :param load_options: pandas options while reading file
         """
 
         try:
@@ -557,6 +577,7 @@ class BaseDatabase(ABC):
                     normalize_config=normalize_config,
                     if_exists=if_exists,
                     chunk_size=chunk_size,
+                    load_options=load_options,
                 )
             else:
                 raise load_exception
@@ -724,8 +745,8 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
 
     def get_sqlalchemy_template_table_identifier_and_parameter(
-        self, table: BaseTable, jinja_table_identifier: str
-    ) -> tuple[str, str]:  # skipcq PYL-W0613
+        self, table: BaseTable, jinja_table_identifier: str  # skipcq PYL-W0613
+    ) -> tuple[str, str]:
         """
         During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
         convert a Jinja table identifier to a safe SQLAlchemy-compatible table identifier.
