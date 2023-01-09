@@ -78,7 +78,7 @@ class GCSLocation(BaseFileLocation):
         elif creds_dict.get("keyfile_dict"):
             return _pull_credentials_from_json_dict(creds_dict.get("keyfile_dict"))
         elif os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
-            return _pull_credentials_from_json_dict(
+            return _pull_credentials_from_keypath(
                 {"key_path": os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "")}
             )
         else:
