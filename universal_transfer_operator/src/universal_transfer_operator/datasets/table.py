@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 from attr import define, field, fields_dict
 from sqlalchemy import Column
 
-from universal_transfer_operator.datasets.base import UniversalDataset
+from universal_transfer_operator.datasets.base import Dataset
 
 
 @define
@@ -28,7 +28,7 @@ class Metadata:
 
 
 @define
-class Table(UniversalDataset):
+class Table(Dataset):
     """
     Repersents all Table datasets.
     Intended to be used within library.
@@ -47,6 +47,8 @@ class Table(UniversalDataset):
         converter=lambda val: Metadata(**val) if isinstance(val, dict) else val,
     )
     columns: list[Column] = field(factory=list)
+    uri: str = field(init=False)
+    extra: dict = field(init=True, factory=dict)
 
     @property
     def sql_type(self):

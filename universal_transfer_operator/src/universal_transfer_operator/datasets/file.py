@@ -8,11 +8,11 @@ import smart_open
 from attr import define, field
 
 from universal_transfer_operator.constants import FileType
-from universal_transfer_operator.datasets.base import UniversalDataset
+from universal_transfer_operator.datasets.base import Dataset
 
 
 @define
-class File(UniversalDataset):
+class File(Dataset):
     """
     Repersents all file dataset.
 
@@ -28,6 +28,8 @@ class File(UniversalDataset):
     filetype: FileType | None = None
     normalize_config: dict | None = None
     is_bytes: bool = False
+    uri: str = field(init=False)
+    extra: dict = field(init=True, factory=dict)
 
     @property
     def size(self) -> int:

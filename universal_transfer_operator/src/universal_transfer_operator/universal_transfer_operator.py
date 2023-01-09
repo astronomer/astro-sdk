@@ -8,7 +8,7 @@ from airflow.utils.context import Context
 
 from universal_transfer_operator.constants import TransferMode
 from universal_transfer_operator.data_providers import create_dataprovider
-from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
+from universal_transfer_operator.datasets.base import Dataset
 from universal_transfer_operator.integrations import get_transfer_integration
 from universal_transfer_operator.utils import TransferParameters
 

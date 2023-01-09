@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from attr import define
 
-from universal_transfer_operator.datasets.base import UniversalDataset
+from universal_transfer_operator.datasets.base import Dataset
 
 
 @define
-class Dataframe(UniversalDataset):
+class Dataframe(Dataset):
     """
     Repersents all dataframe dataset.
     Intended to be used within library.

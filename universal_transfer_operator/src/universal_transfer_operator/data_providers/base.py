@@ -7,7 +7,7 @@ import attr
 from airflow.hooks.base import BaseHook
 
 from universal_transfer_operator.constants import Location
-from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
+from universal_transfer_operator.datasets.base import Dataset
 from universal_transfer_operator.utils import TransferParameters, get_dataset_connection_type
 
 

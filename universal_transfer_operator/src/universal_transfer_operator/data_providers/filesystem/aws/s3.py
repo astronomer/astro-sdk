@@ -14,7 +14,7 @@ from universal_transfer_operator.data_providers.filesystem.base import (
     TempFile,
     contextmanager,
 )
-from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
+from universal_transfer_operator.datasets.base import Dataset
 from universal_transfer_operator.utils import TransferParameters
 
 

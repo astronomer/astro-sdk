@@ -6,7 +6,7 @@ import attr
 from attr import field
 from fivetran_provider.hooks.fivetran import FivetranHook
 
-from universal_transfer_operator.datasets.base import UniversalDataset as Dataset
+from universal_transfer_operator.datasets.base import Dataset
 from universal_transfer_operator.integrations.base import TransferIntegration, TransferIntegrationOptions
 
 
