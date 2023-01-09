@@ -11,7 +11,7 @@ def test_repr():
     file = File(path="astro", conn_id="local", filetype=FileType.CSV)
     assert file.__repr__() == (
         "File(path='astro', conn_id='local', filetype=<FileType.CSV: 'csv'>, "
-        "normalize_config=None, is_dataframe=False, is_bytes=False, "
+        "normalize_config=None, is_dataframe=False, is_bytes=False, load_options=None, "
         "uri='astro+file://local@/astro?filetype=csv', extra={})"
     )
 

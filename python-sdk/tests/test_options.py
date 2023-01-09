@@ -16,7 +16,7 @@ def test_load_options_list():
             PandasCsvLoadOptions(delimiter="$"),
             PandasJsonLoadOptions(encoding="test"),
             PandasParquetLoadOptions(columns=["name", "age"]),
-            PandasNdjsonLoadOptions(ndjson_normalize_sep="__"),
+            PandasNdjsonLoadOptions(normalize_sep="__"),
         ]
     )
     csv_load_option = load_option_list.get_by_class_name("PandasCsvLoadOptions")
