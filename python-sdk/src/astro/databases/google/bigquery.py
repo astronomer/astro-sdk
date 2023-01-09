@@ -45,6 +45,7 @@ from astro.constants import (
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
+from astro.options import LoadOptions
 from astro.settings import BIGQUERY_SCHEMA, BIGQUERY_SCHEMA_LOCATION
 from astro.table import BaseTable, Metadata
 
@@ -347,12 +348,14 @@ class BigqueryDatabase(BaseDatabase):
         target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
+        load_options: LoadOptions | None = None,
         **kwargs,
     ):
         """
         Checks if optimised path for transfer between File location to database exists
         and if it does, it transfers it and returns true else false.
 
+        :param load_options: Database specific options for loading
         :param source_file: File from which we need to transfer data
         :param target_table: Table that needs to be populated with file data
         :param if_exists: Overwrite file if exists. Default False
