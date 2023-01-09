@@ -32,7 +32,20 @@ def s3fs_creds():
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "remote_files_fixture",
-    [{"provider": "google"}, {"provider": "amazon"}, {"provider": "azure"}],
+    [
+        {
+            "provider": "google",
+            "file_create": False
+        },
+        {
+            "provider": "amazon",
+            "file_create": False
+        },
+        {
+            "provider": "azure",
+            "file_create": False
+        }
+    ],
     indirect=True,
     ids=["google_gcs", "amazon_s3", "azure_blob_storage"],
 )
@@ -71,6 +84,7 @@ def test_export_to_file_dbs_to_remote_file(sample_dag, database_table_fixture, r
         file_ = File(file_uri, conn_id="wasb_default_conn")
     else:
         file_ = File(file_uri)
+
     assert not file_.exists()
 
     with sample_dag:
