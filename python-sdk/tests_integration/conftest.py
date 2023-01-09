@@ -194,7 +194,7 @@ def remote_files_fixture(request):  # noqa: C901
 
     elif provider == "azure":
         for object_prefix in object_prefix_list:
-            hook.delete_blobs(bucket_name, object_prefix)
+            hook.check_for_blob(bucket_name, object_prefix) and hook.delete_blobs(bucket_name, object_prefix)
 
 
 def _upload_or_delete_remote_file(file_create, object_prefix, provider, source_path):  # noqa: C901
@@ -235,7 +235,7 @@ def _upload_or_delete_remote_file(file_create, object_prefix, provider, source_p
         if file_create:
             hook.load_file(source_path, bucket_name, object_prefix)
         else:
-            hook.delete_file(bucket_name, object_prefix)
+            hook.check_for_blob(bucket_name, object_prefix) and hook.delete_file(bucket_name, object_prefix)
 
     elif provider == "local":
         bucket_name = None
