@@ -256,7 +256,7 @@ def test_file_object_picks_load_options(file_type, file_location):
             PandasCsvLoadOptions(delimiter="$"),
             PandasJsonLoadOptions(encoding="test"),
             PandasParquetLoadOptions(columns=["name", "age"]),
-            PandasNdjsonLoadOptions(ndjson_normalize_sep="__"),
+            PandasNdjsonLoadOptions(normalize_sep="__"),
         ],
     )
     assert type(file.type.load_options) == type_expected_class
