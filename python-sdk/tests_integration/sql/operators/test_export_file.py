@@ -33,18 +33,9 @@ def s3fs_creds():
 @pytest.mark.parametrize(
     "remote_files_fixture",
     [
-        {
-            "provider": "google",
-            "file_create": False
-        },
-        {
-            "provider": "amazon",
-            "file_create": False
-        },
-        {
-            "provider": "azure",
-            "file_create": False
-        }
+        {"provider": "google", "file_create": False},
+        {"provider": "amazon", "file_create": False},
+        {"provider": "azure", "file_create": False},
     ],
     indirect=True,
     ids=["google_gcs", "amazon_s3", "azure_blob_storage"],

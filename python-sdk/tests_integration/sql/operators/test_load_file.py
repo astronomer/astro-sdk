@@ -133,9 +133,9 @@ def test_aql_load_remote_file_to_dbs(sample_dag, database_table_fixture, remote_
 
     with sample_dag:
         load_file(
-	    input_file=file_,
-	    output_table=test_table,
-	    use_native_support=False,
+            input_file=file_,
+            output_table=test_table,
+            use_native_support=False,
         )
     test_utils.run_dag(sample_dag)
 
