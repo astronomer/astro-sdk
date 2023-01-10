@@ -10,6 +10,10 @@ from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
 
 
+class WASBLocationException(Exception):
+    pass
+
+
 class WASBLocation(BaseFileLocation):
     """Handler WASB object store operations"""
 
@@ -89,3 +93,27 @@ class WASBLocation(BaseFileLocation):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         return urlparse(self.path).path
+
+    def databricks_auth_settings(self) -> dict:
+        """
+        Required settings to transfer files in/to Databricks.
+
+        Reference:
+        https://docs.databricks.com/external-data/wasb-blob.html
+
+        :return: A dictionary of settings keys to settings values
+        """
+        parsed_url = urlparse(self.path)
+        container_name = parsed_url.netloc
+        account_name = self.hook.get_conn().account_name
+        try:
+            sas_token = self.hook.get_connection(conn_id=self.conn_id).extra_dejson["sas_token"]
+        except KeyError:
+            raise WASBLocationException(
+                "The connection extras must define `sas_token` for transfers from BlobStorage to Databricks using WASB"
+            )
+
+        cred_dict = {
+            f"fs.azure.sas.{container_name}.{account_name}.blob.core.windows.net": sas_token,
+        }
+        return cred_dict

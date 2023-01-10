@@ -23,7 +23,13 @@ from astro.table import BaseTable
 
 cwd = pathlib.Path(__file__).parent
 
-supported_file_locations = [FileLocation.LOCAL, FileLocation.S3, FileLocation.GS]
+supported_file_locations = [
+    FileLocation.LOCAL,
+    FileLocation.S3,
+    FileLocation.GS,
+    FileLocation.WASB,
+    FileLocation.WASBS,
+]
 
 log = logging.getLogger(__file__)
 
