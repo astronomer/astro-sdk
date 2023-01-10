@@ -33,8 +33,7 @@ def convert_to_connection(conn: dict[str, Any], data_dir: Path) -> Connection:
         resolved_host = data_dir / connection["host"]
         if not resolved_host.is_file():
             log.error(
-                "The relative file path %s was resolved into %s"
-                " but it does not exist.",
+                "The relative file path %s was resolved into %s" " but it does not exist.",
                 connection["host"],
                 resolved_host,
             )
