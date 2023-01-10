@@ -46,6 +46,7 @@ class LoadOptionsList:
             return None
         return self._load_options.get(option_class_name, None)
 
+
 @attr.define
 class SnowflakeLoadOptions(LoadOptions):
     file_options: dict = attr.field(init=True, factory=dict)
