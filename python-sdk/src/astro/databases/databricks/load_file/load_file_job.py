@@ -10,14 +10,14 @@ from airflow.configuration import conf
 from databricks_cli.sdk.api_client import ApiClient
 
 from astro.constants import DatabricksLoadMode, FileLocation, LoadExistStrategy
-from astro.databricks.api_utils import (
+from astro.databases.databricks.api_utils import (
     create_and_run_job,
     create_secrets,
     delete_secret_scope,
     generate_file,
     load_file_to_dbfs,
 )
-from astro.databricks.load_options import DeltaLoadOptions
+from astro.databases.databricks.load_options import DeltaLoadOptions
 from astro.files import File
 from astro.table import BaseTable
 
@@ -44,7 +44,7 @@ def load_file_to_delta(
     :param input_file: File to load into delta
     :param delta_table: a Table object with necessary metadata for accessing the cluster.
     """
-    from astro.databricks.delta import DeltaDatabase
+    from astro.databases.databricks.delta import DeltaDatabase
 
     delta_load_options.if_exists = if_exists
     db = DeltaDatabase(conn_id=delta_table.conn_id)

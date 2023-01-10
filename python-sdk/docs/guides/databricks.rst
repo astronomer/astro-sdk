@@ -77,7 +77,7 @@ By default, the Astro SDK uses autoloader to load data into Databricks. However,
 
 .. code-block:: python
 
-    from astro.databricks.load_options import DeltaLoadOptions
+    from astro.databases.databricks.load_options import DeltaLoadOptions
     from astro.constants import DatabricksLoadMode
 
     aql.load_file(
@@ -95,7 +95,7 @@ Please note that we by default set ``header`` and ``inferSchema`` to true, so if
 
 .. code-block:: python
 
-    from astro.databricks.load_options import DeltaLoadOptions
+    from astro.databases.databricks.load_options import DeltaLoadOptions
 
     aql.load_file(
         input_file=File("data.csv"),
