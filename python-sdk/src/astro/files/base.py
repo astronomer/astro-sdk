@@ -10,7 +10,6 @@ from attr import define, field
 
 from astro import constants
 from astro.airflow.datasets import Dataset
-from astro.dataframes.load_options import PandasLoadOptions
 from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
 from astro.files.types import FileType, create_file_type
@@ -132,9 +131,7 @@ class File(LoggingMixin, Dataset):
 
         return pathlib.Path(self.path).is_dir()
 
-    def export_to_dataframe(
-        self, load_options: LoadOptions | PandasLoadOptions | None = None, **kwargs
-    ) -> pd.DataFrame:
+    def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes."""
         mode = "rb" if self.is_binary() else "r"
         with smart_open.open(

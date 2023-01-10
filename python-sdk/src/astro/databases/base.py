@@ -70,8 +70,11 @@ class BaseDatabase(ABC):
     FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = set()
 
     def __init__(
-        self, conn_id: str, table: BaseTable | None = None, load_options: LoadOptions | None = None
-    ):  # skipcq: PYL-W0613
+        self,
+        conn_id: str,
+        table: BaseTable | None = None,  # skipcq: PYL-W0613
+        load_options: LoadOptions | None = None,
+    ):
         self.conn_id = conn_id
         self.sql: str | ClauseElement = ""
         self.load_options = load_options
@@ -298,7 +301,6 @@ class BaseDatabase(ABC):
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
-        load_options: LoadOptions | None = None,
     ) -> None:
         """
         Create a table either using its explicitly defined columns or inferring
@@ -402,7 +404,6 @@ class BaseDatabase(ABC):
                 # We only use the first file for inferring the table schema
                 files[0],
                 columns_names_capitalization=columns_names_capitalization,
-                load_options=load_options,
             )
 
     def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> list:

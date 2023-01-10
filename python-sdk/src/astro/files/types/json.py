@@ -8,7 +8,6 @@ from astro.constants import FileType as FileTypeConstants
 from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types.base import FileType
-from astro.options import LoadOptions
 from astro.utils.dataframe import convert_columns_names_capitalization
 
 
@@ -21,7 +20,6 @@ class JSONFileType(FileType):
     def export_to_dataframe(
         self,
         stream: io.TextIOWrapper,
-        load_options: LoadOptions | PandasLoadOptions | None = None,
         columns_names_capitalization="original",
         **kwargs,
     ) -> pd.DataFrame:  # skipcq PYL-R0201

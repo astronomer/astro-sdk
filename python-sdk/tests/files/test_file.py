@@ -259,5 +259,5 @@ def test_file_object_picks_load_options(file_type, file_location):
             PandasNdjsonLoadOptions(normalize_sep="__"),
         ],
     )
-    assert type(file.type.load_options) == type_expected_class
+    assert type(file.type.load_options) is type_expected_class
     assert file.location.load_options is location_expected_class
