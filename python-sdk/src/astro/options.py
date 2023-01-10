@@ -45,3 +45,11 @@ class LoadOptionsList:
         if self._load_options is None:
             return None
         return self._load_options.get(option_class_name, None)
+
+@attr.define
+class SnowflakeLoadOptions(LoadOptions):
+    file_options: dict = attr.field(init=True, factory=dict)
+    copy_options: dict = attr.field(init=True, factory=dict)
+
+    def empty(self):
+        return not self.file_options and not self.copy_options

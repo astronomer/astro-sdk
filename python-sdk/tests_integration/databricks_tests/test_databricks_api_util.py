@@ -5,12 +5,7 @@ from unittest.mock import Mock, call
 import pytest
 from requests.exceptions import HTTPError
 
-from astro.databricks.api_utils import (
-    create_and_run_job,
-    create_secrets,
-    delete_secret_scope,
-    load_file_to_dbfs,
-)
+from astro.databricks.api_utils import create_secrets, delete_secret_scope, load_file_to_dbfs
 
 CWD = pathlib.Path(__file__).parent
 
@@ -42,31 +37,6 @@ def test_delete_scope_http_error_non_existent(mock_api_client, mock_delete_secre
     """Do not raise an error when trying to delete non-existent scope and the error code is RESOURCE_DOES_NOT_EXIST"""
     mock_delete_secret.side_effect = raise_not_exist_error
     delete_secret_scope("non-existent-scope", api_client=mock_api_client)
-
-
-@mock.patch("databricks_cli.sdk.api_client.ApiClient", autospec=True)
-def test_create_and_run_job(mock_api_client):
-    create_and_run_job(
-        api_client=mock_api_client,
-        file_to_run="/foo/bar.py",
-        databricks_job_name="my-db-job",
-        existing_cluster_id="foobar",
-    )
-    mock_api_client.perform_query.return_value = {"job_id": 123}
-    calls = [
-        call.perform_query(
-            "POST",
-            "/jobs/create",
-            data={
-                "name": "my-db-job",
-                "spark_python_task": {"python_file": "/foo/bar.py"},
-                "existing_cluster_id": "foobar",
-            },
-            headers=None,
-            version=None,
-        ),
-    ]
-    mock_api_client.assert_has_calls(calls)
 
 
 @mock.patch("databricks_cli.sdk.api_client.ApiClient", autospec=True)

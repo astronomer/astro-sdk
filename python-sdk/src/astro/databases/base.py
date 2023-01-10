@@ -561,6 +561,7 @@ class BaseDatabase(ABC):
                 target_table=target_table,
                 if_exists=if_exists,
                 native_support_kwargs=native_support_kwargs,
+                load_options=load_options,
                 **kwargs,
             )
         except self.NATIVE_LOAD_EXCEPTIONS as load_exception:  # skipcq: PYL-W0703
@@ -811,12 +812,15 @@ class BaseDatabase(ABC):
         target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
+        load_options: LoadOptions | None = None,
         **kwargs,
     ):
         """
         Checks if optimised path for transfer between File location to database exists
         and if it does, it transfers it and returns true else false
 
+        :param load_options: Options for database specific loading
+         parameters (e.g. SnowflakeLoadOptions or DeltaLoadOptions)
         :param source_file: File from which we need to transfer data
         :param target_table: Table that needs to be populated with file data
         :param if_exists: Overwrite file if exists. Default False

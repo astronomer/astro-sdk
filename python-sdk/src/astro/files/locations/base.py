@@ -44,6 +44,16 @@ class BaseFileLocation(ABC):
             )
 
     @property
+    def smartopen_uri(self) -> str:
+        """
+        Changes the object URI (self.path) to a SmartOpen supported URI if necessary.
+        By default, does not change the self.path.
+
+        :return: URI compatible with SmartOpen for desired location.
+        """
+        return self.path
+
+    @property
     def hook(self):
         raise NotImplementedError
 
@@ -144,7 +154,7 @@ class BaseFileLocation(ABC):
     def exists(self) -> bool:
         """Check if the file exists or not"""
         try:
-            with smart_open.open(self.path, mode="r", transport_params=self.transport_params):
+            with smart_open.open(self.smartopen_uri, mode="r", transport_params=self.transport_params):
                 return True
         except OSError:
             return False
@@ -177,4 +187,4 @@ class BaseFileLocation(ABC):
 
         :param df: pandas dataframe
         """
-        return smart_open.open(self.path, mode="wb", transport_params=self.transport_params)
+        return smart_open.open(self.smartopen_uri, mode="wb", transport_params=self.transport_params)

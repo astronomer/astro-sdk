@@ -60,7 +60,13 @@ def test(session: nox.Session, airflow) -> None:
     session.run("airflow", "db", "init", env=env)
 
     # Since pytest is not installed in the nox session directly, we need to set `external=true`.
-    session.run("pytest", *session.posargs, env=env, external=True)
+    session.run(
+        "pytest",
+        "-vv",
+        *session.posargs,
+        env=env,
+        external=True,
+    )
 
 
 @nox.session(python=["3.8"])
