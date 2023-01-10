@@ -622,6 +622,12 @@ class SnowflakeDatabase(BaseDatabase):
             file=source_file, storage_integration=storage_integration, load_options=load_options
         )
 
+        rows = self._copy_into_table_from_stage(
+            source_file=source_file, target_table=target_table, stage=stage
+        )
+        self.evaluate_results(rows)
+
+    def _copy_into_table_from_stage(self, source_file, target_table, stage):
         table_name = self.get_table_qualified_name(target_table)
         file_path = os.path.basename(source_file.path) or ""
         sql_statement = f"COPY INTO {table_name} FROM @{stage.qualified_name}/{file_path}"
@@ -629,10 +635,6 @@ class SnowflakeDatabase(BaseDatabase):
         # Below code is added due to breaking change in apache-airflow-providers-snowflake==3.2.0,
         # we need to pass handler param to get the rows. But in version apache-airflow-providers-snowflake==3.1.0
         # if we pass the handler provider raises an exception AttributeError
-        rows = self._copy_into_table_from_stage(sql_statement, stage)
-        self.evaluate_results(rows)
-
-    def _copy_into_table_from_stage(self, sql_statement, stage):
         try:
             rows = self.hook.run(sql_statement, handler=lambda cur: cur.fetchall())
         except AttributeError:

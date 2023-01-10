@@ -128,3 +128,16 @@ def test_snowflake_load_options_wrong_options():
             target_table=Table(),
             load_options=LoadOptions(),
         )
+
+
+def test_snowflake_load_options_empty():
+    load_options = SnowflakeLoadOptions()
+    assert load_options.empty()
+    load_options.copy_options = {"foo": "bar"}
+    assert not load_options.empty()
+    load_options.file_options = {"biz": "baz"}
+    assert not load_options.empty()
+    load_options.copy_options = {}
+    assert not load_options.empty()
+    load_options.file_options = {}
+    assert load_options.empty()
