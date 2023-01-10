@@ -51,6 +51,7 @@ env:
   SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
   AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
   AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+  AZURE_SAS_TOKEN: ${{ secrets.AZURE_SAS_TOKEN }}
   AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
   AIRFLOW_VAR_FOO: templated_file_name
   AWS_BUCKET: tmp9
@@ -200,6 +201,7 @@ jobs:
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+      AZURE_SAS_TOKEN: ${{ secrets.AZURE_SAS_TOKEN }}
 
   Run-Unit-tests-Airflow-2-5:
     strategy:
@@ -534,6 +536,7 @@ jobs:
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+      AZURE_SAS_TOKEN: ${{ secrets.AZURE_SAS_TOKEN }}
 
   Run-example-dag-tests-Airflow-2-2-5:
     if: >-
@@ -616,6 +619,7 @@ jobs:
       DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+      AZURE_SAS_TOKEN: ${{ secrets.AZURE_SAS_TOKEN }}
 
   Generate-Constraints:
     if: (github.event_name == 'release' || github.event_name == 'push')
