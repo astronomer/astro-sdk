@@ -155,11 +155,7 @@ def validate(
     set_verbose_mode(verbose)
     project_dir_absolute = resolve_project_dir(project_dir)
     project = Project(project_dir_absolute)
-    try:
-        project.load_config(environment=env)
-    except FileNotFoundError as file_not_found_error:
-        log.exception(file_not_found_error.args[0])
-        rprint(f"[bold red]{file_not_found_error}[/bold red]")
+    project.load_config(environment=env)
 
     rprint(f"Validating connection(s) for environment '{env}'")
     validate_connections(connections=project.connections, connection_id=connection)
