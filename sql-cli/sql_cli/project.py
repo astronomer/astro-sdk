@@ -23,7 +23,7 @@ from sql_cli.utils.airflow import (
     remove_unnecessary_files,
 )
 
-BASE_SOURCE_DIR = Path(os.path.realpath(__file__)).parent.parent / "include/base/"
+BASE_SOURCE_DIR = Path(os.path.realpath(__file__)).parent / "include/base/"
 
 MANDATORY_PATHS = {
     Path("config/default/configuration.yml"),

@@ -20,9 +20,6 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
 ]
-include=[
-   { path = 'include', format = 'wheel' }
-]
 
 [project.urls]
 Home = "https://astronomer.io/"
