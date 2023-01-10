@@ -61,15 +61,18 @@ Airflow's XCom Backend
 .. note::
     Recommended to be used with airflow >= 2.5
 
-You don't need to use a Custom XCom backend or XCom pickling for Airflow >=2.5 and SDK 1.3+. From Airflow 2.5 onwards, airflow can internally handle serialization and deserialization of custom constructs of SDK. All we need to do to enable this feature is set a few configs in airflow’s config file as shown below.
+You don't need to use a Custom XCom backend or XCom pickling for Airflow >=2.5 and SDK 1.3+.
+From Airflow 2.5 onwards, airflow can internally handle serialization and deserialization of custom
+constructs of SDK. All we need to do to enable this feature is set a few configs
+in airflow’s config file as shown below.
 
 .. code-block:: ini
 
    [core]
-   allowed_deserialization_classes = airflow.* astro.*
+   allowed_deserialization_classes = airflow\.* astro\.*
 
 or we can also set env variables like
 
 .. code-block:: ini
 
-   AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES=airflow.* astro.*
+   AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES = airflow\.* astro\.*

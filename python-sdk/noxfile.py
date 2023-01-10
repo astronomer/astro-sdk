@@ -48,7 +48,7 @@ def test(session: nox.Session, airflow) -> None:
         # install smart-open 6.3.0 since it has FTP implementation
         session.install("smart-open>=6.3.0")
     else:
-        env["AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES"] = "airflow.* astro.*"
+        env["AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES"] = "airflow\\.* astro\\.*"
 
         session.install(f"apache-airflow=={airflow}")
         session.install("-e", ".[all,tests]")
@@ -95,7 +95,7 @@ def test_examples_by_dependency(session: nox.Session, extras):
 
     env = {
         "AIRFLOW_HOME": "~/airflow-latest-python-latest",
-        "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow.* astro.*",
+        "AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES": "airflow\\.* astro\\.*",
     }
 
     session.install("-e", f".[{pypi_deps}]")
