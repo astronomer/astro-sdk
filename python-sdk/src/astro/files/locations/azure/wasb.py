@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from urllib.parse import urlparse, urlunparse
 
+import smart_open
 from airflow.providers.microsoft.azure.hooks.wasb import WasbHook
+from azure.core.exceptions import ResourceNotFoundError
 
 from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
@@ -13,6 +15,14 @@ class WASBLocation(BaseFileLocation):
 
     location_type = FileLocation.WASB
     supported_conn_type = {WasbHook.conn_type, "wasbs"}
+
+    def exists(self) -> bool:
+        """Check if the file exists or not"""
+        try:
+            with smart_open.open(self.smartopen_uri, mode="r", transport_params=self.transport_params):
+                return True
+        except ResourceNotFoundError:
+            return False
 
     @property
     def hook(self) -> WasbHook:
@@ -33,6 +43,21 @@ class WASBLocation(BaseFileLocation):
         prefixes = self.hook.get_blobs_list(container_name=container_name, prefix=prefix)
         paths = [urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in prefixes]
         return paths
+
+    @property
+    def smartopen_uri(self) -> str:
+        """
+        SmartOpen does not support URIs prefixed with wasb, so we need to change them to azure.
+
+        :return: URI compatible with SmartOpen for Azure BlobStorage.
+        """
+        parsed_url = urlparse(self.path)
+        if parsed_url.scheme == "wasbs":
+            return self.path.replace("wasbs", "azure")
+        elif parsed_url.scheme == "wasb":
+            return self.path.replace("wasb", "azure")
+        else:
+            return self.path
 
     @property
     def size(self) -> int:

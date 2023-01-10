@@ -4,7 +4,9 @@ import json
 import os
 from urllib.parse import urlparse, urlunparse
 
+import smart_open
 from airflow.providers.google.cloud.hooks.gcs import GCSHook
+from google.api_core.exceptions import NotFound
 
 from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
@@ -86,6 +88,14 @@ class GCSLocation(BaseFileLocation):
                 "Error: to pull credentials from GCP We either need a keyfile or a keyfile_dict "
                 "to retrieve credentials"
             )
+
+    def exists(self) -> bool:
+        """Check if the file exists or not"""
+        try:
+            with smart_open.open(self.smartopen_uri, mode="r", transport_params=self.transport_params):
+                return True
+        except (OSError, NotFound):
+            return False
 
     @property
     def openlineage_dataset_namespace(self) -> str:
