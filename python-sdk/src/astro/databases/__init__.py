@@ -42,5 +42,5 @@ def create_database(
     class_name = get_class_name(module_ref=module, suffix="Database")
     database_class = getattr(module, class_name)
     load_options = load_options_list and load_options_list.get(database_class)
-    database: BaseDatabase = database_class(module, class_name)(conn_id, table, load_options=load_options)
+    database: BaseDatabase = database_class(conn_id, table, load_options=load_options)
     return database
