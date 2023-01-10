@@ -263,7 +263,7 @@ class SnowflakeDatabase(BaseDatabase):
     ):
         super().__init__(conn_id)
         self.table = table
-        if load_options is not None or not isinstance(load_options, SnowflakeLoadOptions):
+        if not isinstance(load_options, SnowflakeLoadOptions) and load_options is not None:
             raise ValueError("Error: Requires a SnowflakeLoadOptions")
         self.load_options: SnowflakeLoadOptions | None = load_options
 
