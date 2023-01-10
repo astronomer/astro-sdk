@@ -2,6 +2,6 @@ connections:
   - conn_id: sqlite_non_existent_host_path
     conn_type: sqlite
     host: imdb2.db
-    login:
-    password:
-    schema:
+  - conn_id: unknown_hook_type
+    conn_type: sqlite2
+    host: imdb.db

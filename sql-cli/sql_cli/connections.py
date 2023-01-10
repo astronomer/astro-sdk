@@ -32,9 +32,10 @@ def convert_to_connection(conn: dict[str, Any], data_dir: Path) -> Connection:
         # Try resolving with data directory
         resolved_host = data_dir / connection["host"]
         if not resolved_host.is_file():
-            raise FileNotFoundError(
-                f"The relative file path {connection['host']} was resolved into {resolved_host}"
-                " but it's a failed resolution as the path does not exist."
+            log.error(
+                "The relative file path %s was resolved into %s but it does not exist.",
+                connection["host"],
+                resolved_host,
             )
         connection["host"] = resolved_host.as_posix()
 
@@ -56,6 +57,8 @@ def validate_connections(connections: list[Connection], connection_id: str | Non
             success_status, message = _is_valid(connection)
             status = "[bold green]PASSED[/bold green]" if success_status else "[bold red]FAILED[/bold red]"
             rprint(f"Validating connection {connection.conn_id:{CONNECTION_ID_OUTPUT_STRING_WIDTH}}", status)
+            if not success_status:
+                rprint(f"  [bold red]Error: {message}[/bold red]")
             formatted_message = (
                 f"[bold green]{message}[/bold green]" if success_status else f"[bold red]{message}[/bold red]"
             )

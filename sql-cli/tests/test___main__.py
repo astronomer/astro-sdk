@@ -345,12 +345,17 @@ def test_validate_all(env, initialised_project_with_test_config):
 
 
 @pytest.mark.parametrize(
-    "env,connection",
+    "env,connection,message",
     [
-        ("invalid", "sqlite_non_existent_host_path"),
+        ("invalid", "sqlite_non_existent_host_path", "Error: Sqlite db does not exist!"),
+        ("invalid", "unknown_hook_type", 'Error: Unknown hook type "sqlite2"'),
+    ],
+    ids=[
+        "sqlite_non_existent_host_path",
+        "unknown_hook_type",
     ],
 )
-def test_validate_invalid(env, connection, initialised_project_with_invalid_config, logger):
+def test_validate_invalid(env, connection, message, initialised_project_with_invalid_config, logger):
     result = runner.invoke(
         app,
         [
@@ -364,7 +369,7 @@ def test_validate_invalid(env, connection, initialised_project_with_invalid_conf
     )
     assert result.exit_code == 0, result.exception
     assert f"Validating connection(s) for environment '{env}'" in result.stdout
-    assert "Error: Config file does not contain given connection" in result.stdout
+    assert message in result.stdout
 
 
 @pytest.mark.parametrize(
