@@ -11,7 +11,6 @@ from airflow.hooks.dbapi import DbApiHook
 from pandas.io.sql import SQLDatabase
 from sqlalchemy import column, insert, select
 
-from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -69,9 +68,15 @@ class BaseDatabase(ABC):
     NATIVE_AUTODETECT_SCHEMA_CONFIG: Mapping[FileLocation, Mapping[str, list[FileType] | Callable]] = {}
     FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = set()
 
-    def __init__(self, conn_id: str, table: BaseTable | None = None):  # skipcq: PYL-W0613
+    def __init__(
+        self,
+        conn_id: str,
+        table: BaseTable | None = None,  # skipcq: PYL-W0613
+        load_options: LoadOptions | None = None,
+    ):
         self.conn_id = conn_id
         self.sql: str | ClauseElement = ""
+        self.load_options = load_options
 
     def __repr__(self):
         return f'{self.__class__.__name__}(conn_id="{self.conn_id})'
@@ -247,7 +252,6 @@ class BaseDatabase(ABC):
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",  # skipcq
-        load_options: LoadOptions | None = None,
     ) -> None:
         """
         Create a SQL table, automatically inferring the schema using the given file.
@@ -265,9 +269,7 @@ class BaseDatabase(ABC):
                 )
             source_dataframe = dataframe
         else:
-            source_dataframe = file.export_to_dataframe(
-                nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT, load_options=load_options
-            )
+            source_dataframe = file.export_to_dataframe(nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT)
 
         db = SQLDatabase(engine=self.sqlalchemy_engine)
         db.prep_table(
@@ -295,7 +297,6 @@ class BaseDatabase(ABC):
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
-        load_options: LoadOptions | None = None,
     ) -> None:
         """
         Create a table either using its explicitly defined columns or inferring
@@ -317,7 +318,6 @@ class BaseDatabase(ABC):
                 file=file,
                 dataframe=dataframe,
                 columns_names_capitalization=columns_names_capitalization,
-                load_options=load_options,
             )
 
     def create_table_from_select_statement(
@@ -359,7 +359,6 @@ class BaseDatabase(ABC):
         columns_names_capitalization: ColumnCapitalization = "original",
         if_exists: LoadExistStrategy = "replace",
         use_native_support: bool = True,
-        load_options: LoadOptions | None = None,
     ):
         """
         Checks if the autodetect schema exists for native support else creates the schema and table
@@ -393,13 +392,13 @@ class BaseDatabase(ABC):
                 file.conn_id,
                 normalize_config=normalize_config,
                 filetype=file.type.name,
+                load_options=file.load_options,
             )
             self.create_table(
                 table,
                 # We only use the first file for inferring the table schema
                 files[0],
                 columns_names_capitalization=columns_names_capitalization,
-                load_options=load_options,
             )
 
     def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> list:
@@ -428,14 +427,12 @@ class BaseDatabase(ABC):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
-        load_options: LoadOptions | None = None,
         **kwargs,
     ):
         """
         Load content of multiple files in output_table.
         Multiple files are sourced from the file path, which can also be path pattern.
 
-        :param load_options: Options for loading into specific data warehouses. Currently supports: databricks
         :param input_file: File path and conn_id for object stores
         :param output_table: Table to create
         :param if_exists: Overwrite file if exists
@@ -455,7 +452,6 @@ class BaseDatabase(ABC):
             columns_names_capitalization=columns_names_capitalization,
             if_exists=if_exists,
             normalize_config=normalize_config,
-            load_options=load_options,
         )
 
         if use_native_support and self.is_native_load_file_available(
@@ -470,7 +466,6 @@ class BaseDatabase(ABC):
                 native_support_kwargs=native_support_kwargs,
                 enable_native_fallback=enable_native_fallback,
                 chunk_size=chunk_size,
-                load_options=load_options,
             )
         else:
             self.load_file_to_table_using_pandas(
@@ -479,11 +474,10 @@ class BaseDatabase(ABC):
                 normalize_config=normalize_config,
                 if_exists="append",
                 chunk_size=chunk_size,
-                load_options=load_options,
             )
 
     @staticmethod
-    def get_dataframe_from_file(file: File, load_options: LoadOptions | None = None):
+    def get_dataframe_from_file(file: File):
         """
         Get pandas dataframe file. We need export_to_dataframe() for Biqqery,Snowflake and Redshift except for Postgres.
         For postgres we are overriding this method and using export_to_dataframe_via_byte_stream().
@@ -491,10 +485,9 @@ class BaseDatabase(ABC):
         With this approach we have significant performance boost for postgres.
 
         :param file: File path and conn_id for object stores
-        :param load_options: pandas options while reading file
         """
 
-        return file.export_to_dataframe(load_options=load_options)
+        return file.export_to_dataframe()
 
     @staticmethod
     def _assert_not_empty_df(df):
@@ -512,7 +505,6 @@ class BaseDatabase(ABC):
         normalize_config: dict | None = None,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
-        load_options: PandasLoadOptions | LoadOptions | None = None,
     ):
         logging.info("Loading file(s) with Pandas...")
         input_files = resolve_file_path_pattern(
@@ -520,11 +512,12 @@ class BaseDatabase(ABC):
             input_file.conn_id,
             normalize_config=normalize_config,
             filetype=input_file.type.name,
+            load_options=input_file.load_options,
         )
 
         for file in input_files:
             self.load_pandas_dataframe_to_table(
-                self.get_dataframe_from_file(file, load_options),
+                self.get_dataframe_from_file(file),
                 output_table,
                 chunk_size=chunk_size,
                 if_exists=if_exists,
@@ -539,7 +532,6 @@ class BaseDatabase(ABC):
         native_support_kwargs: dict | None = None,
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         chunk_size: int = DEFAULT_CHUNK_SIZE,
-        load_options: PandasLoadOptions | LoadOptions | None = None,
         **kwargs,
     ):
         """
@@ -552,7 +544,6 @@ class BaseDatabase(ABC):
         :param native_support_kwargs: kwargs to be used by method involved in native support flow
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
         :param normalize_config: pandas json_normalize params config
-        :param load_options: pandas options while reading file
         """
 
         try:
@@ -562,7 +553,6 @@ class BaseDatabase(ABC):
                 target_table=target_table,
                 if_exists=if_exists,
                 native_support_kwargs=native_support_kwargs,
-                load_options=load_options,
                 **kwargs,
             )
         except self.NATIVE_LOAD_EXCEPTIONS as load_exception:  # skipcq: PYL-W0703
@@ -578,7 +568,6 @@ class BaseDatabase(ABC):
                     normalize_config=normalize_config,
                     if_exists=if_exists,
                     chunk_size=chunk_size,
-                    load_options=load_options,
                 )
             else:
                 raise load_exception
@@ -813,15 +802,12 @@ class BaseDatabase(ABC):
         target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
-        load_options: LoadOptions | None = None,
         **kwargs,
     ):
         """
         Checks if optimised path for transfer between File location to database exists
         and if it does, it transfers it and returns true else false
 
-        :param load_options: Options for database specific loading
-         parameters (e.g. SnowflakeLoadOptions or DeltaLoadOptions)
         :param source_file: File from which we need to transfer data
         :param target_table: Table that needs to be populated with file data
         :param if_exists: Overwrite file if exists. Default False

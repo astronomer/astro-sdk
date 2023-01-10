@@ -129,7 +129,7 @@ def multiple_tables_fixture(request, database_table_fixture):
             database.load_file_to_table(
                 file,
                 table,
-                load_options=DeltaLoadOptions.get_default_delta_options(),
+                load_options=[DeltaLoadOptions.get_default_delta_options()],
             )
         tables.append(table)
 

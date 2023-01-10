@@ -25,9 +25,9 @@ def test_read_json_file():
 def test_read_json_file_with_pandas_opts(mock_read_json):
     """Test pandas option get pass to read_json"""
     path = str(sample_file.absolute())
-    json_type = JSONFileType(path)
+    json_type = JSONFileType(path, load_options=PandasJsonLoadOptions(encoding="utf-8"))
     with open(path) as file:
-        json_type.export_to_dataframe(file, load_options=PandasJsonLoadOptions(encoding="utf-8"))
+        json_type.export_to_dataframe(file)
     mock_read_json.assert_called_once_with(file, encoding="utf-8")
 
 

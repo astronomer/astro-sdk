@@ -10,11 +10,10 @@ from attr import define, field
 
 from astro import constants
 from astro.airflow.datasets import Dataset
-from astro.dataframes.load_options import PandasLoadOptions
 from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
 from astro.files.types import FileType, create_file_type
-from astro.options import LoadOptions
+from astro.options import LoadOptions, LoadOptionsList
 
 
 @define
@@ -35,6 +34,7 @@ class File(LoggingMixin, Dataset):
     normalize_config: dict | None = None
     is_dataframe: bool = False
     is_bytes: bool = False
+    load_options: list[LoadOptions] | None = None
 
     uri: str = field(init=False)
     extra: dict | None = field(init=False, factory=dict)
@@ -46,7 +46,11 @@ class File(LoggingMixin, Dataset):
 
     @property
     def location(self) -> BaseFileLocation:
-        return create_file_location(self.path, self.conn_id)
+        return create_file_location(self.path, self.conn_id, self.load_options_list)
+
+    @property
+    def load_options_list(self):
+        return LoadOptionsList(self.load_options)
 
     @property
     def type(self) -> FileType:  # noqa: A003
@@ -54,6 +58,7 @@ class File(LoggingMixin, Dataset):
             path=self.path,
             filetype=self.filetype,
             normalize_config=self.normalize_config,
+            load_options_list=self.load_options_list,
         )
 
     @property
@@ -126,15 +131,13 @@ class File(LoggingMixin, Dataset):
 
         return pathlib.Path(self.path).is_dir()
 
-    def export_to_dataframe(
-        self, load_options: LoadOptions | PandasLoadOptions | None = None, **kwargs
-    ) -> pd.DataFrame:
+    def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes."""
         mode = "rb" if self.is_binary() else "r"
         with smart_open.open(
             self.location.smartopen_uri, mode=mode, transport_params=self.location.transport_params
         ) as stream:
-            return self.type.export_to_dataframe(stream, load_options, **kwargs)
+            return self.type.export_to_dataframe(stream, **kwargs)
 
     def _convert_remote_file_to_byte_stream(self) -> io.IOBase:
         """
@@ -233,6 +236,7 @@ def resolve_file_path_pattern(
     conn_id: str | None = None,
     filetype: constants.FileType | None = None,
     normalize_config: dict | None = None,
+    load_options: list[LoadOptions] | None = None,
 ) -> list[File]:
     """get file objects by resolving path_pattern from local/object stores
     path_pattern can be
@@ -253,6 +257,7 @@ def resolve_file_path_pattern(
             conn_id=conn_id,
             filetype=filetype,
             normalize_config=normalize_config,
+            load_options=load_options,
         )
         for path in location.paths
         if not path.endswith("/")
