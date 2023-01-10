@@ -33,3 +33,13 @@ def test_wasb_location_openlineage_dataset_namespace():
 def test_wasb_location_openlineage_dataset_name():
     location = WASBLocation(path="wasbs://blobaccount@owshqblobstg.blob.core.windows.net/container")
     assert location.openlineage_dataset_name == "/container"
+
+
+def test_wasb_smartopen_uri_wasbs_scheme():
+    location = WASBLocation(path="wasbs://somepath")
+    assert location.smartopen_uri == "azure://somepath"
+
+
+def test_wasb_smartopen_uri_azure_scheme():
+    location = WASBLocation(path="azure://somepath")
+    assert location.smartopen_uri == "azure://somepath"

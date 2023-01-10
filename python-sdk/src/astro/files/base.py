@@ -131,7 +131,9 @@ class File(LoggingMixin, Dataset):
     ) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes."""
         mode = "rb" if self.is_binary() else "r"
-        with smart_open.open(self.path, mode=mode, transport_params=self.location.transport_params) as stream:
+        with smart_open.open(
+            self.location.smartopen_uri, mode=mode, transport_params=self.location.transport_params
+        ) as stream:
             return self.type.export_to_dataframe(stream, load_options, **kwargs)
 
     def _convert_remote_file_to_byte_stream(self) -> io.IOBase:
@@ -147,7 +149,9 @@ class File(LoggingMixin, Dataset):
 
         mode = "rb" if self.is_binary() else "r"
         remote_obj_buffer = io.BytesIO() if self.is_binary() else io.StringIO()
-        with smart_open.open(self.path, mode=mode, transport_params=self.location.transport_params) as stream:
+        with smart_open.open(
+            self.location.smartopen_uri, mode=mode, transport_params=self.location.transport_params
+        ) as stream:
             remote_obj_buffer.write(stream.read())
         remote_obj_buffer.seek(0)
         return remote_obj_buffer
