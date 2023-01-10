@@ -80,7 +80,9 @@ def test_use_quotes(cols_eval):
 
 def test_snowflake_load_options():
     path = str(CWD) + "/../../data/homes_main.csv"
-    database = SnowflakeDatabase(conn_id="fake-conn")
+    database = SnowflakeDatabase(
+        conn_id="fake-conn", load_options=SnowflakeLoadOptions(file_options={"foo": "bar"})
+    )
     file = File(path)
     with mock.patch(
         "astro.databases.snowflake.SnowflakeDatabase.hook", new_callable=PropertyMock
@@ -92,7 +94,6 @@ def test_snowflake_load_options():
         database.create_stage(
             file=file,
             storage_integration="foo",
-            load_options=SnowflakeLoadOptions(file_options={"foo": "bar"}),
         )
     assert "FILE_FORMAT=(foo=bar, TYPE=CSV, TRIM_SPACE=TRUE)" in database.run_sql.call_args[0][0]
     assert "COPY_OPTIONS=(ON_ERROR=CONTINUE)" in database.run_sql.call_args[0][0]
@@ -100,7 +101,7 @@ def test_snowflake_load_options():
 
 def test_snowflake_load_options_default():
     path = str(CWD) + "/../../data/homes_main.csv"
-    database = SnowflakeDatabase(conn_id="fake-conn")
+    database = SnowflakeDatabase(conn_id="fake-conn", load_options=SnowflakeLoadOptions())
     file = File(path)
     with mock.patch(
         "astro.databases.snowflake.SnowflakeDatabase.hook", new_callable=PropertyMock
@@ -112,7 +113,6 @@ def test_snowflake_load_options_default():
         database.create_stage(
             file=file,
             storage_integration="foo",
-            load_options=SnowflakeLoadOptions(),
         )
     assert "FILE_FORMAT=(TYPE=CSV, TRIM_SPACE=TRUE)" in database.run_sql.call_args[0][0]
     assert "COPY_OPTIONS=(ON_ERROR=CONTINUE)" in database.run_sql.call_args[0][0]
@@ -120,14 +120,10 @@ def test_snowflake_load_options_default():
 
 def test_snowflake_load_options_wrong_options():
     path = str(CWD) + "/../../data/homes_main.csv"
-    database = SnowflakeDatabase(conn_id="fake-conn")
     file = File(path)
     with pytest.raises(ValueError, match="Error: Requires a SnowflakeLoadOptions"):
-        database.load_file_to_table_natively(
-            source_file=file,
-            target_table=Table(),
-            load_options=LoadOptions(),
-        )
+        database = SnowflakeDatabase(conn_id="fake-conn", load_options=LoadOptions())
+        database.load_file_to_table_natively(source_file=file, target_table=Table())
 
 
 def test_snowflake_load_options_empty():

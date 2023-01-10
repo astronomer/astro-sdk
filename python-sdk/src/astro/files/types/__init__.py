@@ -8,12 +8,14 @@ from astro.files.types.csv import CSVFileType
 from astro.files.types.json import JSONFileType
 from astro.files.types.ndjson import NDJSONFileType
 from astro.files.types.parquet import ParquetFileType
+from astro.options import LoadOptionsList
 
 
 def create_file_type(
     path: str,
     filetype: FileTypeConstants | None = None,
     normalize_config: dict | None = None,
+    load_options_list: LoadOptionsList | None = None,
 ) -> FileType:
     """Factory method to create FileType super objects based on the file extension in path or filetype specified."""
     filetype_to_class: dict[FileTypeConstants, type[FileType]] = {
@@ -26,7 +28,15 @@ def create_file_type(
         filetype = get_filetype(path)
 
     try:
-        return filetype_to_class[filetype](path=path, normalize_config=normalize_config)
+        load_options = None
+        if load_options_list is not None:
+            load_options = load_options_list.get(filetype_to_class[filetype])
+
+        return filetype_to_class[filetype](
+            path=path,
+            normalize_config=normalize_config,
+            load_options=load_options,
+        )
     except KeyError:
         raise ValueError(
             f"Non supported file type provided {filetype}, file_type should be among {', '.join(FileTypeConstants)}."

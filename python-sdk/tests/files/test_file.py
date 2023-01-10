@@ -8,6 +8,12 @@ import pytest
 from airflow import DAG
 
 from astro import constants
+from astro.dataframes.load_options import (
+    PandasCsvLoadOptions,
+    PandasJsonLoadOptions,
+    PandasNdjsonLoadOptions,
+    PandasParquetLoadOptions,
+)
 from astro.files import File, get_file_list, resolve_file_path_pattern
 
 sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent, "data/sample.csv")
@@ -209,3 +215,49 @@ def test_if_file_object_can_be_pickled():
     """Verify if we can pickle File object"""
     file = File(path="./test.csv")
     assert pickle.loads(pickle.dumps(file)) == file
+
+
+@pytest.mark.parametrize(
+    "file_type",
+    [
+        {"type": "csv", "expected_class": PandasCsvLoadOptions},
+        {"type": "ndjson", "expected_class": PandasNdjsonLoadOptions},
+        {"type": "json", "expected_class": PandasJsonLoadOptions},
+        {"type": "parquet", "expected_class": PandasParquetLoadOptions},
+    ],
+    ids=["csv", "ndjson", "json", "parquet"],
+)
+@pytest.mark.parametrize(
+    "file_location",
+    [
+        {"location": "s3://dummy/test", "expected_class": None},
+        {"location": "gs://dummy/test", "expected_class": None},
+        # ToDo: Get the correct protocol for the azure URL. `wasb, wasbs, azure` is failing.
+        # {
+        #     "location": "wasb://dummy/test",
+        #     "expected_class": None
+        # },
+        {"location": "ftp://dummy/test", "expected_class": None},
+        {"location": "sftp://dummy/test", "expected_class": None},
+        {"location": "gdrive://dummy/test", "expected_class": None},
+        {"location": "http://dummy.com/test", "expected_class": None},
+        {"location": "https://dummy.com/test", "expected_class": None},
+        {"location": "./test", "expected_class": None},  # local path
+    ],
+    ids=["s3", "gs", "ftp", "sftp", "gdrive", "http", "https", "local"],
+)
+def test_file_object_picks_load_options(file_type, file_location):
+    """Test file object pick correct load_options"""
+    type_name, type_expected_class = file_type.values()
+    location_path, location_expected_class = file_location.values()
+    file = File(
+        path=location_path + f".{type_name}",
+        load_options=[
+            PandasCsvLoadOptions(delimiter="$"),
+            PandasJsonLoadOptions(encoding="test"),
+            PandasParquetLoadOptions(columns=["name", "age"]),
+            PandasNdjsonLoadOptions(normalize_sep="__"),
+        ],
+    )
+    assert type(file.type.load_options) is type_expected_class
+    assert file.location.load_options is location_expected_class

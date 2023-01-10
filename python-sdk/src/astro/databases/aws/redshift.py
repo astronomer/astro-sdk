@@ -74,10 +74,16 @@ class RedshiftDatabase(BaseDatabase):
     illegal_column_name_chars: list[str] = ["."]
     illegal_column_name_chars_replacement: list[str] = ["_"]
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
+    def __init__(
+        self,
+        conn_id: str = DEFAULT_CONN_ID,
+        table: BaseTable | None = None,
+        load_options: LoadOptions | None = None,
+    ):
         super().__init__(conn_id)
         self._create_table_statement: str = "CREATE TABLE {} AS {}"
         self.table = table
+        self.load_options = load_options
 
     @property
     def sql_type(self):
@@ -316,14 +322,12 @@ class RedshiftDatabase(BaseDatabase):
         target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
-        load_options: LoadOptions | None = None,
         **kwargs,
     ):
         """
         Checks if optimised path for transfer between File location to database exists
         and if it does, it transfers it and returns true else false.
 
-        :param load_options: Database specific options for loading
         :param source_file: File from which we need to transfer data
         :param target_table: Table that needs to be populated with file data
         :param if_exists: Overwrite file if exists. Default False

@@ -24,11 +24,15 @@ from astro.table import BaseTable, Metadata
 
 
 class DeltaDatabase(BaseDatabase):
+
+    LOAD_OPTIONS_CLASS_NAME = "DeltaLoadOptions"
+
     _create_table_statement: str = "CREATE TABLE IF NOT EXISTS {} USING DELTA AS {} "
 
-    def __init__(self, conn_id: str, table: BaseTable | None = None):
+    def __init__(self, conn_id: str, table: BaseTable | None = None, load_options: LoadOptions | None = None):
         super().__init__(conn_id)
         self.table = table
+        self.load_options = load_options or DeltaLoadOptions.get_default_delta_options()
 
     def populate_table_metadata(self, table: BaseTable) -> BaseTable:
         # TODO: Do we need default configurations for a delta table?
@@ -119,7 +123,6 @@ class DeltaDatabase(BaseDatabase):
         native_support_kwargs: dict | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = None,
-        load_options: LoadOptions | None = DeltaLoadOptions.get_default_delta_options(),
         databricks_job_name: str = "",
         **kwargs,
     ):
@@ -127,8 +130,6 @@ class DeltaDatabase(BaseDatabase):
         Load content of multiple files in output_table.
         Multiple files are sourced from the file path, which can also be path pattern.
 
-        :param load_options: options for passing into COPY INTO. currently we support
-            ``format_options`` and ``copy_options``
         :param databricks_job_name: Create a consistent job name so that we don't litter the databricks job screen.
             This should be <dag_id>_<task_id>
         :param input_file: File path and conn_id for object stores
@@ -143,15 +144,11 @@ class DeltaDatabase(BaseDatabase):
         :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
 
         """
-        if not load_options:
-            load_options = DeltaLoadOptions.get_default_delta_options()
-        elif not isinstance(load_options, DeltaLoadOptions):
-            raise ValueError("Please use a DeltaLoadOption for the load_options parameter")
         load_file_to_delta(
             input_file=input_file,
             delta_table=output_table,
             databricks_job_name=databricks_job_name,
-            delta_load_options=load_options,  # type: ignore
+            delta_load_options=self.load_options,  # type: ignore
             if_exists=if_exists,
         )
 

@@ -3,24 +3,23 @@ from __future__ import annotations
 import io
 import json
 
-import attr
 import pandas as pd
 
 from astro.constants import DEFAULT_CHUNK_SIZE, FileType as FileTypeConstants
 from astro.dataframes.load_options import PandasLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files.types.base import FileType
-from astro.options import LoadOptions
 from astro.utils.dataframe import convert_columns_names_capitalization
 
 
 class NDJSONFileType(FileType):
     """Concrete implementation to handle NDJSON file type"""
 
+    LOAD_OPTIONS_CLASS_NAME = "PandasNdjsonLoadOptions"
+
     def export_to_dataframe(
         self,
         stream,
-        load_options: LoadOptions | PandasLoadOptions | None = None,
         columns_names_capitalization="original",
         **kwargs,
     ):
@@ -31,8 +30,8 @@ class NDJSONFileType(FileType):
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
         """
-        if isinstance(load_options, PandasLoadOptions):
-            kwargs.update(attr.asdict(load_options))
+        if isinstance(self.load_options, PandasLoadOptions):
+            kwargs.update(self.load_options.to_dict())
         df = NDJSONFileType.flatten(self.normalize_config, stream, **kwargs)
         df = convert_columns_names_capitalization(
             df=df, columns_names_capitalization=columns_names_capitalization

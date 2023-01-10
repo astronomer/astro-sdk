@@ -38,7 +38,7 @@ from astro.constants import (
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
-from astro.options import LoadOptions, SnowflakeLoadOptions
+from astro.options import SnowflakeLoadOptions
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SNOWFLAKE_SCHEMA
 from astro.table import BaseTable, Metadata
 
@@ -237,6 +237,8 @@ class SnowflakeDatabase(BaseDatabase):
     logic in other parts of our code-base.
     """
 
+    LOAD_OPTIONS_CLASS_NAME = "SnowflakeLoadOptions"
+
     NATIVE_LOAD_EXCEPTIONS: Any = (
         DatabaseCustomError,
         ProgrammingError,
@@ -253,9 +255,17 @@ class SnowflakeDatabase(BaseDatabase):
     )
     DEFAULT_SCHEMA = SNOWFLAKE_SCHEMA
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
+    def __init__(
+        self,
+        conn_id: str = DEFAULT_CONN_ID,
+        table: BaseTable | None = None,
+        load_options: SnowflakeLoadOptions | None = None,
+    ):
         super().__init__(conn_id)
         self.table = table
+        if not isinstance(load_options, SnowflakeLoadOptions) and load_options is not None:
+            raise ValueError("Error: Requires a SnowflakeLoadOptions")
+        self.load_options: SnowflakeLoadOptions | None = load_options
 
     @property
     def hook(self) -> SnowflakeHook:
@@ -368,7 +378,6 @@ class SnowflakeDatabase(BaseDatabase):
         file: File,
         storage_integration: str | None = None,
         metadata: Metadata | None = None,
-        load_options: SnowflakeLoadOptions | None = None,
     ) -> SnowflakeStage:
         """
         Creates a new named external stage to use for loading data from files into Snowflake
@@ -391,16 +400,16 @@ class SnowflakeDatabase(BaseDatabase):
         """
         auth = self._create_stage_auth_sub_statement(file=file, storage_integration=storage_integration)
 
-        if not load_options:
-            load_options = SnowflakeLoadOptions()
+        if not self.load_options:
+            self.load_options = SnowflakeLoadOptions()
         metadata = metadata or self.default_metadata
         stage = SnowflakeStage(metadata=metadata)
         stage.set_url_from_file(file)
 
         fileformat = ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP[file.type.name]
         copy_options = [COPY_OPTIONS[file.type.name]]
-        copy_options.extend([f"{k}={v}" for k, v in load_options.copy_options.items()])
-        file_options = [f"{k}={v}" for k, v in load_options.file_options.items()]
+        copy_options.extend([f"{k}={v}" for k, v in self.load_options.copy_options.items()])
+        file_options = [f"{k}={v}" for k, v in self.load_options.file_options.items()]
         file_options.extend([f"TYPE={fileformat}", "TRIM_SPACE=TRUE"])
         file_options_str = ", ".join(file_options)
         copy_options_str = ", ".join(copy_options)
@@ -526,7 +535,6 @@ class SnowflakeDatabase(BaseDatabase):
         file: File | None = None,
         dataframe: pd.DataFrame | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
-        load_options: LoadOptions | None = None,
     ) -> None:  # skipcq PYL-W0613
         """
         Create a SQL table, automatically inferring the schema using the given file.
@@ -543,9 +551,7 @@ class SnowflakeDatabase(BaseDatabase):
                 )
             source_dataframe = dataframe
         else:
-            source_dataframe = file.export_to_dataframe(
-                nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT, load_options=load_options
-            )
+            source_dataframe = file.export_to_dataframe(nrows=LOAD_TABLE_AUTODETECT_ROWS_COUNT)
 
         # We are changing the case of table name to ease out on the requirements to add quotes in raw queries.
         # ToDO - Currently, we cannot to append using load_file to a table name which is having name in lower case.
@@ -584,7 +590,6 @@ class SnowflakeDatabase(BaseDatabase):
         target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         native_support_kwargs: dict | None = None,
-        load_options: LoadOptions | None = None,
         **kwargs,
     ):  # skipcq PYL-W0613
         """
@@ -599,7 +604,6 @@ class SnowflakeDatabase(BaseDatabase):
         retrieved from the Airflow connection or from the `storage_integration`
         attribute within `native_support_kwargs`.
 
-        :param load_options: Options for format and copy options when loading data to snowflake
         :param source_file: File from which we need to transfer data
         :param target_table: Table to which the content of the file will be loaded to
         :param if_exists: Strategy used to load (currently supported: "append" or "replace")
@@ -614,13 +618,9 @@ class SnowflakeDatabase(BaseDatabase):
         """
         native_support_kwargs = native_support_kwargs or {}
         storage_integration = native_support_kwargs.get("storage_integration")
-        if not load_options:
-            load_options = SnowflakeLoadOptions()
-        if not isinstance(load_options, SnowflakeLoadOptions):
-            raise ValueError("Error: Requires a SnowflakeLoadOptions")
-        stage = self.create_stage(
-            file=source_file, storage_integration=storage_integration, load_options=load_options
-        )
+        if not self.load_options:
+            self.load_options = SnowflakeLoadOptions()
+        stage = self.create_stage(file=source_file, storage_integration=storage_integration)
 
         rows = self._copy_into_table_from_stage(
             source_file=source_file, target_table=target_table, stage=stage
