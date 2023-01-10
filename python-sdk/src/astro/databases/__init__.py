@@ -40,7 +40,7 @@ def create_database(
     module_path = CONN_TYPE_TO_MODULE_PATH[conn_type]
     module = importlib.import_module(module_path)
     class_name = get_class_name(module_ref=module, suffix="Database")
-    database: BaseDatabase = getattr(module, class_name)(
-        conn_id, table, load_options=load_options_list and load_options_list.get(getattr(module, class_name))
-    )
+    database_class = getattr(module, class_name)
+    load_options = load_options_list and load_options_list.get(database_class)
+    database: BaseDatabase = database_class(module, class_name)(conn_id, table, load_options=load_options)
     return database
