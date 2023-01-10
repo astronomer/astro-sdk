@@ -2,9 +2,9 @@ import tempfile
 from unittest import mock
 
 from astro.constants import DatabricksLoadMode
-from astro.databricks.api_utils import generate_file
-from astro.databricks.load_file.load_file_job import _create_load_file_pyspark_file
-from astro.databricks.load_options import DeltaLoadOptions
+from astro.databases.databricks.api_utils import generate_file
+from astro.databases.databricks.load_file.load_file_job import _create_load_file_pyspark_file
+from astro.databases.databricks.load_options import DeltaLoadOptions
 from astro.files import File
 from astro.table import Table
 
@@ -132,7 +132,7 @@ def test_generate_file_append_copy_into(tmp_path):
     assert "DROP TABLE" not in output_file.read_text()
 
 
-@mock.patch("astro.databricks.load_file.load_file_job.load_file_to_dbfs", autospec=True)
+@mock.patch("astro.databases.databricks.load_file.load_file_job.load_file_to_dbfs", autospec=True)
 @mock.patch("databricks_cli.sdk.api_client.ApiClient", autospec=True)
 def test_generate_file_overwrite_autoloader(mock_api_client, mock_load_to_dbfs):
     options = DeltaLoadOptions.get_default_delta_options()

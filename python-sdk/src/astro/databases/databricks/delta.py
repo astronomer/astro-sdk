@@ -15,8 +15,8 @@ from sqlalchemy.sql import ClauseElement
 
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
-from astro.databricks.load_file.load_file_job import load_file_to_delta
-from astro.databricks.load_options import DeltaLoadOptions
+from astro.databases.databricks.load_file.load_file_job import load_file_to_delta
+from astro.databases.databricks.load_options import DeltaLoadOptions
 from astro.dataframes.pandas import PandasDataframe
 from astro.files import File
 from astro.options import LoadOptions

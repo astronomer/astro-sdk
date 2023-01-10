@@ -8,7 +8,7 @@ from airflow.decorators import task
 from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database
-from astro.databricks.load_options import DeltaLoadOptions
+from astro.databases.databricks.load_options import DeltaLoadOptions
 from astro.files import File
 from astro.table import Metadata, Table
 from tests.sql.operators import utils as test_utils
