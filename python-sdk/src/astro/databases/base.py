@@ -808,7 +808,6 @@ class BaseDatabase(ABC):
         Checks if optimised path for transfer between File location to database exists
         and if it does, it transfers it and returns true else false
 
-         parameters (e.g. SnowflakeLoadOptions or DeltaLoadOptions)
         :param source_file: File from which we need to transfer data
         :param target_table: Table that needs to be populated with file data
         :param if_exists: Overwrite file if exists. Default False

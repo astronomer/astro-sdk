@@ -120,9 +120,9 @@ def test_snowflake_load_options_default():
 
 def test_snowflake_load_options_wrong_options():
     path = str(CWD) + "/../../data/homes_main.csv"
-    database = SnowflakeDatabase(conn_id="fake-conn", load_options=LoadOptions())
     file = File(path)
     with pytest.raises(ValueError, match="Error: Requires a SnowflakeLoadOptions"):
+        database = SnowflakeDatabase(conn_id="fake-conn", load_options=LoadOptions())
         database.load_file_to_table_natively(source_file=file, target_table=Table())
 
 
