@@ -23,7 +23,6 @@ class FileType(ABC):
         """read file from one of the supported locations and return dataframe
 
         :param stream: file stream object
-        :param load_options: Pandas option to pass to the Pandas lib while reading file
         """
         raise NotImplementedError
 

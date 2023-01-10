@@ -26,7 +26,6 @@ class CSVFileType(FileType):
         """read csv file from one of the supported locations and return dataframe
 
         :param stream: file stream object
-        :param load_options: Pandas option to pass to the Pandas lib while reading csv
         :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
             in the resulting dataframe
         """

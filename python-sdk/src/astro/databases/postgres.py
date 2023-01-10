@@ -207,12 +207,11 @@ class PostgresDatabase(BaseDatabase):
         self.run_sql(sql=sql)
 
     @staticmethod
-    def get_dataframe_from_file(file: File, load_options: LoadOptions | None = None):  # skipcq: PYL-W0613
+    def get_dataframe_from_file(file: File):  # skipcq: PYL-W0613
         """
         Get pandas dataframe file
 
         :param file: File path and conn_id for object stores
-        :param load_options: pandas options while reading file
         """
         return file.export_to_dataframe_via_byte_stream()
 
