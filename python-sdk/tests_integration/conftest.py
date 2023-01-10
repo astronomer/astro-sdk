@@ -13,7 +13,7 @@ from airflow.utils.session import create_session, provide_session
 
 from astro.constants import Database, FileType
 from astro.databases import create_database
-from astro.databricks.load_options import DeltaLoadOptions
+from astro.databases.databricks.load_options import DeltaLoadOptions
 from astro.table import MAX_TABLE_NAME_LENGTH, Table, TempTable
 
 CWD = pathlib.Path(__file__).parent

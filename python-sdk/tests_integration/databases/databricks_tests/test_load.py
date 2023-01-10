@@ -20,7 +20,7 @@ CWD = pathlib.Path(__file__).parent
     ids=["delta"],
 )
 def test_autoloader_load_file_local(database_table_fixture):
-    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
+    filepath = str(pathlib.Path(CWD.parent.parent, "data/sample.csv"))
     database, table = database_table_fixture
     database.load_file_to_table(
         input_file=File(filepath),
