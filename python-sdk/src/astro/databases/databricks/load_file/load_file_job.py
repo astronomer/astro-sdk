@@ -90,8 +90,8 @@ def load_file_to_delta(
         )
     finally:
         if (
-            input_file.location.location_type != FileLocation.LOCAL and
-            delta_load_options.secret_scope == DeltaLoadOptions.get_default_delta_options().secret_scope
+            input_file.location.location_type != FileLocation.LOCAL
+            and delta_load_options.secret_scope == DeltaLoadOptions.get_default_delta_options().secret_scope
         ):
             delete_secret_scope(delta_load_options.secret_scope, api_client=api_client)
 
