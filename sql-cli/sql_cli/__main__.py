@@ -62,7 +62,7 @@ def set_debug_mode(debug: bool) -> None:
         for logger_name in EXT_LOGGER_NAMES:
             logging.getLogger(logger_name).setLevel(logging.DEBUG)
     else:
-        logging.disable()
+        logging.disable()  # skipcq PY-A6006
 
 
 @app.command(
