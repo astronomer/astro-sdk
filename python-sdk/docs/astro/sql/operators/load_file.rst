@@ -382,16 +382,20 @@ Load_options
 
  We can use this parameter to pass options that can be used by integrations SDK use internally. For example, there can be a simple case of passing a ``delimiter`` while loading CSV to pandas.read_csv() method.
 
-    .. literalinclude:: ../../../../example_dags/example_load_file.py
-       :language: python
-       :start-after: [START load_file_example_22]
-       :end-before: [END load_file_example_22]
+ .. note::
 
-    ``load_options`` is a list of different :py:class:`LoadOptions <astro.options.LoadOptions>` class objects. Please refer the list below for all valid options.
+    ``load_options`` will be replacing ``native_support_kwargs`` parameter
 
-    - :py:class:`PandasCsvLoadOptions <astro.dataframes.load_options.PandasCsvLoadOptions>`
-    - :py:class:`PandasJsonLoadOptions <astro.dataframes.load_options.PandasJsonLoadOptions>`
-    - :py:class:`PandasNdjsonLoadOptions <astro.dataframes.load_options.PandasNdjsonLoadOptions>`
-    - :py:class:`PandasParquetLoadOptions <astro.dataframes.load_options.PandasParquetLoadOptions>`
-    - :py:class:`DeltaLoadOptions <astro.databases.databricks.load_options.DeltaLoadOptions>`
-    - :py:class:`SnowflakeLoadOptions <astro.options.SnowflakeLoadOptions>`
+ .. literalinclude:: ../../../../example_dags/example_load_file.py
+   :language: python
+   :start-after: [START load_file_example_22]
+   :end-before: [END load_file_example_22]
+
+ ``load_options`` is a list of different :py:class:`LoadOptions <astro.options.LoadOptions>` class objects. Please refer the list below for all valid options.
+
+ - :py:class:`PandasCsvLoadOptions <astro.dataframes.load_options.PandasCsvLoadOptions>`
+ - :py:class:`PandasJsonLoadOptions <astro.dataframes.load_options.PandasJsonLoadOptions>`
+ - :py:class:`PandasNdjsonLoadOptions <astro.dataframes.load_options.PandasNdjsonLoadOptions>`
+ - :py:class:`PandasParquetLoadOptions <astro.dataframes.load_options.PandasParquetLoadOptions>`
+ - :py:class:`DeltaLoadOptions <astro.databases.databricks.load_options.DeltaLoadOptions>`
+ - :py:class:`SnowflakeLoadOptions <astro.options.SnowflakeLoadOptions>`
