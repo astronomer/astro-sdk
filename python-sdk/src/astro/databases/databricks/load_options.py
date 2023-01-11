@@ -9,7 +9,22 @@ from astro.options import LoadOptions
 
 @define
 class DeltaLoadOptions(LoadOptions):
-    """Helper class for rendering options into COPY_INTO Databricks SQL statements"""
+    """
+    Helper class for rendering options into COPY_INTO Databricks SQL statements
+
+    :param copy_into_format_options: File format options for COPY INTO. Read more at:
+        https://docs.databricks.com/sql/language-manual/delta-copy-into.html#format-options
+    :param copy_into_copy_options: Options to control the operation of the COPY INTO command. Read more at:
+        https://docs.databricks.com/sql/language-manual/delta-copy-into.html
+    :param existing_cluster_id: Existing cluster ID on databricks.
+    :param new_cluster_spec: New cluster specifications.
+    :param if_exists: default override an existing Table. Options: fail, replace, append
+    :param secret_scope: Secrets scope
+    :param load_secrets: Defaults to False.
+    :param load_mode: defaults to autoloader. Options: autoloader, COPY INTO
+    :param autoloader_load_options: Options for load using autoloader. Read more at:
+        https://docs.databricks.com/ingestion/auto-loader/options.html
+    """
 
     copy_into_format_options: dict = field(init=True, factory=dict)
     copy_into_copy_options: dict = field(init=True, factory=dict)
