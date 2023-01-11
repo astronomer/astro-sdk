@@ -48,6 +48,7 @@ def set_verbose_mode(verbose: bool) -> None:
     log.addHandler(RichHandler(markup=True))
     if verbose:
         log.setLevel(logging.DEBUG)
+        log.manager.disable = logging.NOTSET
 
 
 def set_debug_mode(debug: bool) -> None:
