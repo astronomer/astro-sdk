@@ -89,9 +89,11 @@ def load_file_to_delta(
             file_to_run=str(dbfs_file_path),
         )
     finally:
-        if input_file.location.location_type != FileLocation.LOCAL:
-            if delta_load_options.secret_scope == DeltaLoadOptions.get_default_delta_options().secret_scope:
-                delete_secret_scope(delta_load_options.secret_scope, api_client=api_client)
+        if (
+            input_file.location.location_type != FileLocation.LOCAL and
+            delta_load_options.secret_scope == DeltaLoadOptions.get_default_delta_options().secret_scope
+        ):
+            delete_secret_scope(delta_load_options.secret_scope, api_client=api_client)
 
 
 def _create_load_file_pyspark_file(
@@ -156,7 +158,6 @@ def _find_file_type(input_file: File) -> str:
     """
     if input_file.filetype:
         return str(input_file.filetype)
-    if not input_file.filetype:
-        if "." in input_file.path:
-            return input_file.path.split(".")[-1]
+    if not input_file.filetype and "." in input_file.path:
+        return input_file.path.split(".")[-1]
     raise ValueError("For COPY INTO, you need to supply a file type.")
