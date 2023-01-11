@@ -22,8 +22,6 @@ from astro.files import File
 from astro.options import LoadOptions
 from astro.table import BaseTable, Metadata
 
-# please ignore it
-
 
 class DeltaDatabase(BaseDatabase):
 
@@ -189,9 +187,9 @@ class DeltaDatabase(BaseDatabase):
 
     def row_count(self, table: BaseTable):
         result = self.run_sql(
-            f"SELECT COUNT(*) FROM {self.get_table_qualified_name(table)}",
+            f"SELECT COUNT(*) FROM {self.get_table_qualified_name(table)}",  # skipcq: BAN-B608
             handler=lambda x: x.fetchone(),
-        )  # skipcq: BAN-B608
+        )
         return result.asDict()["count(1)"]
 
     def run_sql(
