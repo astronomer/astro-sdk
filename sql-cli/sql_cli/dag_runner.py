@@ -88,6 +88,10 @@ def run_dag(
         session=session,
         conf=run_conf,
     )
+    dr.log.propagate = False
+    dr.log.addHandler(RichHandler(markup=True))
+    if verbose:
+        dr.log.manager.disable = logging.NOTSET
 
     if conn_file_path or variable_file_path or connections:
         # To get around the fact that we reload certain modules, we need to import here
@@ -127,11 +131,10 @@ def add_loghandler(ti: TaskInstance, verbose: bool) -> None:
     :param verbose: Whether to enable debug or critical logs
     """
     log.debug("Adding RichHandler to taskinstance %s", ti.task_id)
+    ti.log.propagate = False
+    ti.log.addHandler(RichHandler(markup=True))
     if verbose:
         ti.log.setLevel(logging.INFO)
-    else:
-        ti.log.setLevel(logging.CRITICAL)
-    ti.log.addHandler(RichHandler(markup=True))
 
 
 def _run_task(ti: TaskInstance, session: Session) -> None:
