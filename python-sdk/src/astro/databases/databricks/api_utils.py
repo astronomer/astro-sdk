@@ -19,8 +19,6 @@ from astro.databases.databricks.load_options import DeltaLoadOptions
 cwd = pathlib.Path(__file__).parent
 log = logging.getLogger(__name__)
 
-# please ignore it
-
 
 def delete_secret_scope(scope_name: str, api_client: ApiClient) -> None:
     """
