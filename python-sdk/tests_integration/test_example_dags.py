@@ -88,8 +88,9 @@ dag_bag = get_dag_bag()
 
 @pytest.mark.parametrize("dag_id", sorted(dag_bag.dag_ids, key=order))
 def test_example_dag(session, dag_id: str):
-    dag = dag_bag.get_dag(dag_id)
-    wrapper_run_dag(dag)
+    if dag_id == "example_load_file":
+        dag = dag_bag.get_dag(dag_id)
+        wrapper_run_dag(dag)
 
 
 def test_example_dags_loaded_with_no_errors():

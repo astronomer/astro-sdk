@@ -76,6 +76,8 @@ Parameters to use when loading a file to a database table
        :start-after: [START load_file_example_3]
        :end-before: [END load_file_example_3]
 
+#. **load_options** - `load_options`_
+
 .. _table_schema:
 
 Inferring a Table Schema
@@ -116,6 +118,7 @@ Parameters to use when loading a file to a Pandas dataframe
        :start-after: [START load_file_example_6]
        :end-before: [END load_file_example_6]
 
+#. **load_options** - `load_options`_
 
 Parameters for native transfer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -159,6 +162,8 @@ Refer to :ref:`load_file_working` for details on Native Path.
            :language: python
            :start-after: [START load_file_example_17]
            :end-before: [END load_file_example_17]
+
+#. **load_options** - `load_options`_
 
 .. _supported_native_path:
 
@@ -369,3 +374,24 @@ Upper/Lower
             - 30
 
        When we load this into a dataframe, you will get columns in lowercase - ``name`` and ``age``
+
+.. _load_options:
+
+Load_options
+~~~~~~~~~~~~
+
+ We can use this parameter to pass options that can be used by integrations SDK use internally. For example, there can be a simple case of passing a ``delimiter`` while loading CSV to pandas.read_csv() method.
+
+    .. literalinclude:: ../../../../example_dags/example_load_file.py
+       :language: python
+       :start-after: [START load_file_example_22]
+       :end-before: [END load_file_example_22]
+
+    ``load_options`` is a list of different :py:class:`LoadOptions <astro.options.LoadOptions>` class objects. Please refer the list below for all valid options.
+
+    - :py:class:`PandasCsvLoadOptions <astro.dataframes.load_options.PandasCsvLoadOptions>`
+    - :py:class:`PandasJsonLoadOptions <astro.dataframes.load_options.PandasJsonLoadOptions>`
+    - :py:class:`PandasNdjsonLoadOptions <astro.dataframes.load_options.PandasNdjsonLoadOptions>`
+    - :py:class:`PandasParquetLoadOptions <astro.dataframes.load_options.PandasParquetLoadOptions>`
+    - :py:class:`DeltaLoadOptions <astro.databases.databricks.load_options.DeltaLoadOptions>`
+    - :py:class:`SnowflakeLoadOptions <astro.options.SnowflakeLoadOptions>`

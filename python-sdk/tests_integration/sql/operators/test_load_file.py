@@ -2,6 +2,7 @@ import os
 import pathlib
 from unittest import mock
 
+import pandas
 import pandas as pd
 import pytest
 from airflow.exceptions import AirflowNotFoundException
@@ -1210,4 +1211,23 @@ def test_load_file_delimiter(sample_dag, database_table_fixture):
             use_native_support=False,
             load_options=[PandasCsvLoadOptions(delimiter="$")],
         )
+    test_utils.run_dag(sample_dag)
+
+
+def test_load_options(sample_dag):
+    """
+    Verify the working of load_options with PandasCsvLoadOptions
+    :param sample_dag:
+    :return:
+    """
+    path = str(CWD) + "/../../data/sample_pipe_del.csv"
+
+    @aql.dataframe
+    def verify(df: pandas.DataFrame):
+        assert list(df.columns) == ["id", "name"]
+
+    with sample_dag:
+        df = aql.load_file(input_file=File(path=path), load_options=[PandasCsvLoadOptions(delimiter="|")])
+        verify(df)
+
     test_utils.run_dag(sample_dag)

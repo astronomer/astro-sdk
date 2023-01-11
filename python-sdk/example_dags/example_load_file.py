@@ -25,6 +25,7 @@ from airflow.models import DAG
 
 from astro import sql as aql
 from astro.constants import FileType
+from astro.dataframes.load_options import PandasCsvLoadOptions
 from astro.files import File
 from astro.table import Metadata, Table
 
@@ -39,6 +40,8 @@ default_args = {
     "retries": 1,
     "retry_delay": 0,
 }
+
+DATA_DIR = str(CWD) + "/data/"
 
 dag = DAG(
     dag_id="example_load_file",
@@ -285,4 +288,13 @@ with dag:
     )
     # [END load_file_example_21]
 
+    # [START load_file_example_22]
+    df = aql.load_file(
+        input_file=File(path=DATA_DIR + "sample_pipe_del.csv"),
+        output_table=Table(
+            conn_id="sqlite_default",
+        ),
+        load_options=[PandasCsvLoadOptions(delimiter="|")],
+    )
+    # [END load_file_example_22]
     aql.cleanup()
