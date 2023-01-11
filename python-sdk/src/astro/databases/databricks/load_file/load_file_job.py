@@ -28,6 +28,9 @@ supported_file_locations = [FileLocation.LOCAL, FileLocation.S3, FileLocation.GS
 log = logging.getLogger(__file__)
 
 
+# please ignore it
+
+
 def load_file_to_delta(
     input_file: File,
     delta_table: BaseTable,
