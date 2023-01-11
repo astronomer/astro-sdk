@@ -91,6 +91,7 @@ def run_dag(
     dr.log.propagate = False
     dr.log.addHandler(RichHandler(markup=True))
     if verbose:
+        dr.log.setLevel(logging.INFO)
         dr.log.manager.disable = logging.NOTSET
 
     if conn_file_path or variable_file_path or connections:
@@ -135,6 +136,7 @@ def add_loghandler(ti: TaskInstance, verbose: bool) -> None:
     ti.log.addHandler(RichHandler(markup=True))
     if verbose:
         ti.log.setLevel(logging.INFO)
+        ti.log.manager.disable = logging.NOTSET
 
 
 def _run_task(ti: TaskInstance, session: Session) -> None:
