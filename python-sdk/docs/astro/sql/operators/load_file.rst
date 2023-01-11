@@ -52,32 +52,7 @@ Parameters to use when loading a file to a database table
 
 #. **columns_names_capitalization** - If you are working with a ``Snowflake`` database with :ref:`table_schema` and with ``if_exists=replace``, you can control whether the column names of the output table are capitalized. The default is to convert all column names to lowercase. Valid inputs are ``lower``, ``upper``, or ``original`` which will convert column names to lowercase.
 
-#. **load_options** - If you want to provide the list of load options(specific to database or file location) while reading or loading the file pass the list of :py:obj:`LoadOptions <astro.options.LoadOptions>`. Following are the different load options supported:
-
-    - :py:obj:`PandasLoadOptions <astro.options.LoadOptions>` - Pandas load options for reading and loading file using pandas path for various file types:
-        1. :py:obj:`PandasCsvLoadOptions <astro.dataframes.load_options.PandasCsvLoadOptions>` - Pandas load options while reading and loading csv file.
-        2. :py:obj:`PandasJsonLoadOptions <astro.dataframes.load_options.PandasJsonLoadOptions>` - Pandas load options while reading and loading json file.
-        3. :py:obj:`PandasNdjsonLoadOptions <astro.dataframes.load_options.PandasNdjsonLoadOptions>` - Pandas load options while reading and loading Ndjson file.
-        4. :py:obj:`PandasParquetLoadOptions <astro.dataframes.load_options.PandasParquetLoadOptions>` - Pandas load options while reading and loading Parquet file.
-
-    .. literalinclude:: ../../../../example_dags/example_load_file.py
-       :language: python
-       :start-after: [START load_file_example_22]
-       :end-before: [END load_file_example_22]
-
-    - :py:obj:`SnowflakeLoadOptions <astro.options.SnowflakeLoadOptions>` - Load options to load file to snowflake using native approach.
-
-    .. literalinclude:: ../../../../example_dags/example_load_file.py
-       :language: python
-       :start-after: [START load_file_example_23]
-       :end-before: [END load_file_example_23]
-
-    - :py:obj:`DeltaLoadOptions <astro.databases.databricks.load_options.DeltaLoadOptions>` - Load options to rendering options into COPY_INTO Databricks SQL statements.
-
-    .. literalinclude:: ../../../../example_dags/example_load_file.py
-       :language: python
-       :start-after: [START load_file_example_24]
-       :end-before: [END load_file_example_24]
+#. **load_options** - :ref:`load_options`
 
 #. **ndjson_normalize_sep** - If your input file type is NDJSON, you can use this parameter to normalize the data to two dimensions. This makes the data suitable for loading into a table. This parameter is used as a delimiter for combining columns names if required.
 
@@ -143,6 +118,8 @@ Parameters to use when loading a file to a Pandas dataframe
        :start-after: [START load_file_example_6]
        :end-before: [END load_file_example_6]
 
+#. **load_options** - :ref:`load_options`
+
 
 Parameters for native transfer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -186,6 +163,8 @@ Refer to :ref:`load_file_working` for details on Native Path.
            :language: python
            :start-after: [START load_file_example_17]
            :end-before: [END load_file_example_17]
+
+#. **load_options** - :ref:`load_options`
 
 .. _supported_native_path:
 
@@ -396,3 +375,39 @@ Upper/Lower
             - 30
 
        When we load this into a dataframe, you will get columns in lowercase - ``name`` and ``age``
+
+.. _load_options:
+
+LoadOptions
+~~~~~~~~~~~~
+
+If you want to provide the list of load options(specific to database or file location) while reading or loading the file pass the list of :py:obj:`LoadOptions <astro.options.LoadOptions>`. For example, there can be a simple case of passing a ``delimiter`` while loading CSV to pandas.read_csv() method. Following are the different load options supported:
+
+    .. note::
+
+        ``load_options`` will be replacing ``native_support_kwargs`` parameter
+
+    - :py:obj:`PandasLoadOptions <astro.options.LoadOptions>` - Pandas load options for reading and loading file using pandas path for various file types:
+        1. :py:obj:`PandasCsvLoadOptions <astro.dataframes.load_options.PandasCsvLoadOptions>` - Pandas load options while reading and loading csv file.
+        2. :py:obj:`PandasJsonLoadOptions <astro.dataframes.load_options.PandasJsonLoadOptions>` - Pandas load options while reading and loading json file.
+        3. :py:obj:`PandasNdjsonLoadOptions <astro.dataframes.load_options.PandasNdjsonLoadOptions>` - Pandas load options while reading and loading Ndjson file.
+        4. :py:obj:`PandasParquetLoadOptions <astro.dataframes.load_options.PandasParquetLoadOptions>` - Pandas load options while reading and loading Parquet file.
+
+    .. literalinclude:: ../../../../example_dags/example_load_file.py
+       :language: python
+       :start-after: [START load_file_example_22]
+       :end-before: [END load_file_example_22]
+
+    - :py:obj:`SnowflakeLoadOptions <astro.options.SnowflakeLoadOptions>` - Load options to load file to snowflake using native approach.
+
+    .. literalinclude:: ../../../../example_dags/example_load_file.py
+       :language: python
+       :start-after: [START load_file_example_23]
+       :end-before: [END load_file_example_23]
+
+    - :py:obj:`DeltaLoadOptions <astro.databases.databricks.load_options.DeltaLoadOptions>` - Load options to rendering options into COPY_INTO Databricks SQL statements.
+
+    .. literalinclude:: ../../../../example_dags/example_load_file.py
+       :language: python
+       :start-after: [START load_file_example_24]
+       :end-before: [END load_file_example_24]
