@@ -302,7 +302,7 @@ with dag:
 
     # [START load_file_example_23]
     aql.load_file(
-        input_file=File("s3://tmp9/delimiter_dollar.csv", conn_id="aws_conn"),
+        input_file=File("s3://astro-sdk/python_sdk/example_dags/data/sample.csv", conn_id="aws_conn"),
         output_table=Table(
             conn_id=SNOWFLAKE_CONN_ID,
         ),

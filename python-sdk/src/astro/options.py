@@ -53,7 +53,7 @@ class SnowflakeLoadOptions(LoadOptions):
     Load options to load file to snowflake using native approach.
 
     :param file_options: Depending on the file format type specified, use one or more of the
-        format-specific optionsas key-value pair. Read more at:
+        format-specific options as key-value pair. Read more at:
         https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html#format-type-options-formattypeoptions
     :param copy_options: Specify one or more of the copy option as key-value pair. Read more at:
         https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html#copy-options-copyoptions
