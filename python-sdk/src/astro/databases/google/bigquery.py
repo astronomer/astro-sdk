@@ -48,6 +48,7 @@ from astro.files import File
 from astro.options import LoadOptions
 from astro.settings import BIGQUERY_SCHEMA, BIGQUERY_SCHEMA_LOCATION
 from astro.table import BaseTable, Metadata
+from astro.utils.compat.functools import cached_property
 
 DEFAULT_CONN_ID = BigQueryHook.default_conn_name
 NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
@@ -119,12 +120,12 @@ class BigqueryDatabase(BaseDatabase):
     def sql_type(self) -> str:
         return "bigquery"
 
-    @property
+    @cached_property
     def hook(self) -> BigQueryHook:
         """Retrieve Airflow hook to interface with the BigQuery database."""
         return BigQueryHook(gcp_conn_id=self.conn_id, use_legacy_sql=False, location=BIGQUERY_SCHEMA_LOCATION)
 
-    @property
+    @cached_property
     def sqlalchemy_engine(self) -> Engine:
         """Return SQAlchemy engine."""
         uri = self.hook.get_uri()

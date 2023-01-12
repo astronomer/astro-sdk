@@ -41,6 +41,7 @@ from astro.files import File
 from astro.options import SnowflakeLoadOptions
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SNOWFLAKE_SCHEMA
 from astro.table import BaseTable, Metadata
+from astro.utils.compat.functools import cached_property
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
 
@@ -267,7 +268,7 @@ class SnowflakeDatabase(BaseDatabase):
             raise ValueError("Error: Requires a SnowflakeLoadOptions")
         self.load_options: SnowflakeLoadOptions | None = load_options
 
-    @property
+    @cached_property
     def hook(self) -> SnowflakeHook:
         """Retrieve Airflow hook to interface with the snowflake database."""
         kwargs = {}
