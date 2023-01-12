@@ -88,7 +88,7 @@
       load_options=PandasCsvLoadOptions(delimiter="$"),
   )
   ```
-- Add a snowflake load options [#1516](https://github.com/astronomer/astro-sdk/pull/1516)
+- Add a snowflake load options in order to pass native API supported param [#1516](https://github.com/astronomer/astro-sdk/pull/1516)
   ```python
   aql.load_file(
       input_file=File(
