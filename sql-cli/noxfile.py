@@ -49,8 +49,6 @@ def test(session: nox.Session, airflow: str) -> None:
         session.run("poetry", "run", "pip", "install", f"apache-airflow=={airflow}", "-c", constraints_url)
     else:
         session.run("poetry", "install", "--with", "dev")
-        # FIXME: Pendulum requires a manual installation. Poetry's "install" command does not add the python files.
-        session.run("poetry", "run", "pip", "install", "--force-reinstall", "pendulum")
         session.run("poetry", "run", "pip", "install", f"apache-airflow=={airflow}")
 
     session.log("Installed Dependencies:")
