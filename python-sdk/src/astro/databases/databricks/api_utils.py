@@ -149,7 +149,7 @@ def create_and_run_job(
     }
 
     if new_cluster_specs:
-        log.debug("creating new spark cluster with spec", new_cluster_specs)
+        log.debug("creating new spark cluster with spec %s", new_cluster_specs)
         json_info["new_cluster"] = new_cluster_specs
     elif existing_cluster_id:
         log.debug("Using existing cluster %s", existing_cluster_id)
