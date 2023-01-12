@@ -105,7 +105,7 @@ class ExportToFileOperator(AstroSQLBaseOperator):
                 )
             ]
         output_uri = (
-            f"{self.output_file.openlineage_dataset_namespace}" f"{self.output_file.openlineage_dataset_name}"
+            f"{self.output_file.openlineage_dataset_namespace}{self.output_file.openlineage_dataset_name}"
         )
         output_dataset = [
             OpenlineageDataset(

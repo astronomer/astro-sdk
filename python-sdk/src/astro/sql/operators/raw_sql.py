@@ -5,12 +5,12 @@ from collections.abc import Iterable, Mapping
 from typing import Any, Callable
 
 try:
-    from airflow.decorators.base import TaskDecorator, task_decorator_factory
+    from airflow.decorators.base import TaskDecorator
 except ImportError:
-    from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
 import airflow
+from airflow.decorators.base import task_decorator_factory
 
 if airflow.__version__ >= "2.3":
     from sqlalchemy.engine.row import LegacyRow as SQLAlcRow

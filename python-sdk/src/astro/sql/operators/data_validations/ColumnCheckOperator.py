@@ -138,9 +138,9 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
                 passed_tests.extend(_get_success_checks(checks, column))
 
         if len(failed_tests) > 0:
-            raise AirflowException(f"The following tests have failed:" f"\n{''.join(failed_tests)}")
+            raise AirflowException(f"The following tests have failed: \n{''.join(failed_tests)}")
         if len(passed_tests) > 0:
-            print(f"The following tests have passed:" f"\n{''.join(passed_tests)}")
+            print(f"The following tests have passed: \n{''.join(passed_tests)}")
 
 
 def _get_failed_checks(checks, col=None):
