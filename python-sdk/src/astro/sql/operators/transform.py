@@ -4,12 +4,11 @@ from collections.abc import Iterable, Mapping
 from typing import Any, Callable
 
 try:
-    from airflow.decorators.base import TaskDecorator, task_decorator_factory
+    from airflow.decorators.base import TaskDecorator
 except ImportError:
-    from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
-from airflow.decorators.base import get_unique_task_id
+from airflow.decorators.base import get_unique_task_id, task_decorator_factory
 from airflow.models.xcom_arg import XComArg
 from sqlalchemy.sql.functions import Function
 

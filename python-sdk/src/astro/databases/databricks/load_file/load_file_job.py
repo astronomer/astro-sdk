@@ -28,7 +28,7 @@ supported_file_locations = [FileLocation.LOCAL, FileLocation.S3, FileLocation.GS
 log = logging.getLogger(__file__)
 
 
-def load_file_to_delta(
+def load_file_to_delta(  # noqa: C901
     input_file: File,
     delta_table: BaseTable,
     databricks_job_name: str,
