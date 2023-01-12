@@ -100,7 +100,7 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
 | Databases        |
 |------------------|
-| Databricks DELTA |
+| Databricks Delta |
 | Google BigQuery  |
 | Postgres         |
 | Snowflake        |
