@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.4.0
+
+### Feature:
+
+- Support SFTP as file location [docs](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/load_file.html#loading-data-from-sftp) [#1481](https://github.com/astronomer/astro-sdk/pull/1481)
+- Support FTP as file location [docs](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/load_file.html#loading-data-from-ftp) [#1482](https://github.com/astronomer/astro-sdk/pull/1482)
+- Add support for Azure Blob Storage (*only non-native implementation*) [#1275](https://github.com/astronomer/astro-sdk/pull/1275), [#1542](https://github.com/astronomer/astro-sdk/pull/1542)
+- Add databricks delta table support [docs](https://astro-sdk-python.readthedocs.io/en/latest/guides/databricks.html) [#1352](https://github.com/astronomer/astro-sdk/pull/1352), [#1397](https://github.com/astronomer/astro-sdk/pull/1397), [#1452](https://github.com/astronomer/astro-sdk/pull/1452), [#1476](https://github.com/astronomer/astro-sdk/pull/1476), [#1480](https://github.com/astronomer/astro-sdk/pull/1480), [#1555](https://github.com/astronomer/astro-sdk/pull/1555)
+- Add [sourceCode](https://github.com/OpenLineage/OpenLineage/blob/main/spec/OpenLineage.md#job-facets) facet to  `aql.dataframe()` and `aql.transform()` as part of OpenLineage integration [#1537](https://github.com/astronomer/astro-sdk/pull/1537)
+- Enhance `LoadFileOperator` so that users can send pandas attributes through `PandasLoadOptions` [docs](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/load_file.html#loadoptions) [#1466](https://github.com/astronomer/astro-sdk/pull/1466)
+- Enhance `LoadFileOperator` so that users can send Snowflake specific load attributes through  `SnowflakeLoadOptions` [docs](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/load_file.html#loadoptions) [#1516](https://github.com/astronomer/astro-sdk/pull/1516)
+- Expose `get_file_list_func` to users so that it returns iterable File list from given destination file storage [#1380](https://github.com/astronomer/astro-sdk/pull/1380)
+
+### Improvements
+- Deprecate `export_table_to_file` in favor of `export_to_file` (*`ExportTableToFileOperator` and `export_table_to_file` operator would be removed in astro-python-sdk 1.5.0*) [#1503](https://github.com/astronomer/astro-sdk/pull/1503)
+
+### Bug fixes
+- `LoadFileOperator` operator checks for `conn_type` and `conn_id` provided to `File` [#1471](https://github.com/astronomer/astro-sdk/issues/1471)
+- Generate constraints on releases and pushes (not PRs) [#1472](https://github.com/astronomer/astro-sdk/pull/1472)
+
+### Docs
+- Change `export_file` to `export_table_to_file`  in the documentation [#1477](https://github.com/astronomer/astro-sdk/pull/1477)
+- Enhance documentation to describe the new Xcom requirements from Astro SDK 1.3.3 and airflow 2.5 [#1483](https://github.com/astronomer/astro-sdk/pull/1483)
+- Add documentation around `LoadOptions` with example DAGs [#1567](https://github.com/astronomer/astro-sdk/pull/1567)
+
+### Misc
+- Refactor snowflake merge function for easier maintenance [#1493](https://github.com/astronomer/astro-sdk/pull/1493)
+
+
 ## 1.3.3
 
 ### Bug fixes
