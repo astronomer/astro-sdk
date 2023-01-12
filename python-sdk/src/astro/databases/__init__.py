@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from astro.options import LoadOptionsList
+from astro.utils.compat.functools import cache
 from astro.utils.path import get_class_name, get_dict_with_module_names_to_dot_notations
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -34,13 +35,18 @@ def create_database(
     :param conn_id: Database connection ID in Airflow
     :param table: (optional) The Table object
     """
-    from airflow.hooks.base import BaseHook
-
-    conn_type = BaseHook.get_connection(conn_id).conn_type
-    module_path = CONN_TYPE_TO_MODULE_PATH[conn_type]
-    module = importlib.import_module(module_path)
+    module = importlib.import_module(_get_conn(conn_id))
     class_name = get_class_name(module_ref=module, suffix="Database")
     database_class = getattr(module, class_name)
     load_options = load_options_list and load_options_list.get(database_class)
     database: BaseDatabase = database_class(conn_id, table, load_options=load_options)
     return database
+
+
+@cache
+def _get_conn(conn_id: str) -> str:
+    from airflow.hooks.base import BaseHook
+
+    conn_type = BaseHook.get_connection(conn_id).conn_type
+    module_path = CONN_TYPE_TO_MODULE_PATH[conn_type]
+    return module_path

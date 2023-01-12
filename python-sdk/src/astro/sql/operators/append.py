@@ -9,7 +9,7 @@ from astro.airflow.datasets import kwargs_with_datasets
 from astro.databases import create_database
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
-from astro.utils.typing_compat import Context
+from astro.utils.compat.typing import Context
 
 
 class AppendOperator(AstroSQLBaseOperator):

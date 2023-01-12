@@ -12,7 +12,7 @@ from astro.databases import create_database
 from astro.files import File
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable, Table
-from astro.utils.typing_compat import Context
+from astro.utils.compat.typing import Context
 
 
 class ExportToFileOperator(AstroSQLBaseOperator):

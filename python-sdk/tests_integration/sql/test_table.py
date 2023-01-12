@@ -13,7 +13,7 @@ from astro.table import Metadata, Table
     [
         (
             Connection(
-                conn_id="test_conn", conn_type="gcpbigquery", extra={"project": "astronomer-dag-authoring"}
+                conn_id="test_bq", conn_type="gcpbigquery", extra={"project": "astronomer-dag-authoring"}
             ),
             "astronomer-dag-authoring.dataset.test_tb",
             "bigquery",
@@ -21,7 +21,7 @@ from astro.table import Metadata, Table
         ),
         (
             Connection(
-                conn_id="test_conn",
+                conn_id="test_redshift",
                 conn_type="redshift",
                 schema="astro",
                 host="local",
@@ -35,7 +35,7 @@ from astro.table import Metadata, Table
         ),
         (
             Connection(
-                conn_id="test_conn",
+                conn_id="test_pg",
                 conn_type="postgres",
                 login="postgres",
                 password="postgres",
@@ -48,7 +48,7 @@ from astro.table import Metadata, Table
         ),
         (
             Connection(
-                conn_id="test_conn",
+                conn_id="test_snow",
                 conn_type="snowflake",
                 host="local",
                 port=443,
@@ -68,7 +68,7 @@ from astro.table import Metadata, Table
             "snowflake://astro-sdk/TEST_ASTRO.ci.test_tb",
         ),
         (
-            Connection(conn_id="test_conn", conn_type="sqlite", host="/tmp/sqlite.db"),
+            Connection(conn_id="test_sqlite", conn_type="sqlite", host="/tmp/sqlite.db"),
             "/tmp/sqlite.db.test_tb",
             f"file://{socket.gethostbyname(socket.gethostname())}:22",
             f"file://{socket.gethostbyname(socket.gethostname())}:22/tmp/sqlite.db.test_tb",
@@ -83,7 +83,7 @@ def test_openlineage_dataset(mock_get_connection, gcp_cred, connection, name, na
     """
     mock_get_connection.return_value = connection
     gcp_cred.return_value = "astronomer-dag-authoring", "astronomer-dag-authoring"
-    tb = Table(conn_id="test_conn", name="test_tb", metadata=Metadata(schema="dataset"))
+    tb = Table(conn_id=connection.conn_id, name="test_tb", metadata=Metadata(schema="dataset"))
 
     assert tb.openlineage_dataset_name() == name
     assert tb.openlineage_dataset_namespace() == namespace

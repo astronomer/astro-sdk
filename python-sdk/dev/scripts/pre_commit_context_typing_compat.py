@@ -12,7 +12,7 @@ from pathlib import Path
 
 SOURCES_ROOT = Path(__file__).parents[2]
 ASTRO_ROOT = SOURCES_ROOT / "src" / "astro"
-TYPING_COMPAT_PATH = "python-sdk/src/astro/utils/typing_compat.py"
+TYPING_COMPAT_PATH = "python-sdk/src/astro/utils/compat/typing.py"
 
 
 class ImportCrawler(NodeVisitor):

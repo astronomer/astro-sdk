@@ -13,8 +13,8 @@ from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
 from astro.table import BaseTable, Table
+from astro.utils.compat.typing import Context
 from astro.utils.table import find_first_table
-from astro.utils.typing_compat import Context
 
 
 class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
