@@ -141,7 +141,8 @@ class TestSnowflakeMerge(unittest.TestCase):
         ]
         invalid_strings = [
             "$invalid",
-            "Infvalid\x00" "Invalid Name",
+            "Infvalid\x00",
+            "Invalid Name",
             '"Invalid " Name"',
             '"Also Invalid Name""',
         ]

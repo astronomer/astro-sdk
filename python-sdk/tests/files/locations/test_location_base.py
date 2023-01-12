@@ -40,7 +40,7 @@ def test_get_class_name_method_valid_name():
     """Test valid case of implicit naming dependency among the module name and class name for dynamic imports"""
 
     class Test:  # skipcq: PY-D0002
-        __name__ = "test.some"
+        __name__ = "test.some"  # noqa: A003
 
         class TestLocation:  # skipcq: PY-D0002
             pass
@@ -96,7 +96,7 @@ def test_get_class_name_method_invalid_name():
     """Test invalid case of implicit naming dependency among the module name and class name for dynamic imports"""
 
     class Test:  # skipcq: PY-D0002
-        __name__ = "test.some"
+        __name__ = "test.some"  # noqa: A003
 
         class SomethingElseLocation:  # skipcq: PY-D0002
             pass
