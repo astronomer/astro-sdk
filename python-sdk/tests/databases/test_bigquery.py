@@ -10,6 +10,7 @@ from google.cloud.bigquery_datatransfer_v1.types import (
 
 from astro import settings
 from astro.databases.google.bigquery import BigqueryDatabase, S3ToBigqueryDataTransfer
+from astro.exceptions import DatabaseCustomError
 from astro.files import File
 from astro.table import TEMP_PREFIX, Metadata, Table
 
@@ -139,3 +140,21 @@ def test_populate_table_metadata(mock_bq_hook, source_table, input_table, return
 
     db = BigqueryDatabase(table=source_table, conn_id="test_conn")
     assert db.populate_table_metadata(input_table) == returned_table
+
+
+@mock.patch("astro.databases.google.bigquery.BigqueryDatabase.hook")
+def test_get_project_id_raise_exception(mock_hook):
+    """
+    Test loading on files to bigquery natively for fallback without fallback
+    gracefully for wrong file location.
+    """
+
+    class CustomAttributeError:
+        def __str__(self):
+            raise AttributeError
+
+    database = BigqueryDatabase()
+    mock_hook.project_id = CustomAttributeError()
+
+    with pytest.raises(DatabaseCustomError):
+        database.get_project_id(target_table=Table())

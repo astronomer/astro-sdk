@@ -8,7 +8,7 @@ from airflow.providers.common.sql.operators.sql import SQLColumnCheckOperator
 
 from astro.databases import create_database
 from astro.table import BaseTable
-from astro.utils.typing_compat import Context
+from astro.utils.compat.typing import Context
 
 
 class ColumnCheckOperator(SQLColumnCheckOperator):

@@ -15,6 +15,7 @@ from astro.files import File
 from astro.options import LoadOptions
 from astro.settings import POSTGRES_SCHEMA
 from astro.table import BaseTable, Metadata
+from astro.utils.compat.functools import cached_property
 
 DEFAULT_CONN_ID = PostgresHook.default_conn_name
 
@@ -43,7 +44,7 @@ class PostgresDatabase(BaseDatabase):
     def sql_type(self) -> str:
         return "postgresql"
 
-    @property
+    @cached_property
     def hook(self) -> PostgresHook:
         """Retrieve Airflow hook to interface with the Postgres database."""
         conn = PostgresHook(postgres_conn_id=self.conn_id).get_connection(self.conn_id)

@@ -11,6 +11,7 @@ from astro.constants import MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.options import LoadOptions
 from astro.table import BaseTable, Metadata
+from astro.utils.compat.functools import cached_property
 
 DEFAULT_CONN_ID = SqliteHook.default_conn_name
 
@@ -35,12 +36,12 @@ class SqliteDatabase(BaseDatabase):
     def sql_type(self) -> str:
         return "sqlite"
 
-    @property
+    @cached_property
     def hook(self) -> SqliteHook:
         """Retrieve Airflow hook to interface with the Sqlite database."""
         return SqliteHook(sqlite_conn_id=self.conn_id)
 
-    @property
+    @cached_property
     def sqlalchemy_engine(self) -> Engine:
         """Return SQAlchemy engine."""
         # Airflow uses sqlite3 library and not SqlAlchemy for SqliteHook
