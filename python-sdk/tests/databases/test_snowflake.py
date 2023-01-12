@@ -6,10 +6,11 @@ from unittest.mock import MagicMock, PropertyMock, patch
 import pytest
 
 from astro.databases.snowflake import SnowflakeDatabase, SnowflakeFileFormat, SnowflakeStage
+from astro.exceptions import DatabaseCustomError
 from astro.files import File
 from astro.options import LoadOptions, SnowflakeLoadOptions
 from astro.settings import SNOWFLAKE_STORAGE_INTEGRATION_AMAZON, SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE
-from astro.table import Table
+from astro.table import Metadata, Table
 
 DEFAULT_CONN_ID = "snowflake_default"
 CUSTOM_CONN_ID = "snowflake_conn"
@@ -76,6 +77,33 @@ def test_use_quotes(cols_eval):
     Verify the quotes addition only in case where we are having mixed case col names
     """
     assert SnowflakeDatabase.use_quotes(cols_eval["cols"]) == cols_eval["expected_result"]
+
+
+@mock.patch("astro.databases.snowflake.SnowflakeDatabase.hook")
+@mock.patch("astro.databases.snowflake.SnowflakeDatabase.create_stage")
+def test_load_file_to_table_natively_for_fallback_raises_exception_if_not_enable_native_fallback(
+    mock_stage, mock_hook
+):
+    mock_hook.run.side_effect = [
+        ValueError,  # 1st run call copies the data
+        None,  # 2nd run call drops the stage
+    ]
+    mock_stage.return_value = SnowflakeStage(
+        name="mock_stage",
+        url="gcs://bucket/prefix",
+        metadata=Metadata(database="SNOWFLAKE_DATABASE", schema="SNOWFLAKE_SCHEMA"),
+    )
+    database = SnowflakeDatabase()
+    with pytest.raises(DatabaseCustomError):
+        database.load_file_to_table_natively_with_fallback(
+            source_file=File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),
+            target_table=Table(),
+        )
+    mock_hook.run.assert_has_calls(
+        [
+            mock.call(f"DROP STAGE IF EXISTS {mock_stage.return_value.qualified_name};", autocommit=True),
+        ]
+    )
 
 
 def test_snowflake_load_options():

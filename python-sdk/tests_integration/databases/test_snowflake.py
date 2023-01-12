@@ -2,7 +2,6 @@
 import os
 import pathlib
 from unittest import mock
-from unittest.mock import call
 
 import pandas as pd
 import pytest
@@ -230,47 +229,6 @@ def test_load_file_from_cloud_to_table(database_table_fixture):
         ]
     )
     test_utils.assert_dataframes_are_equal(df, expected)
-
-
-@pytest.mark.integration
-@pytest.mark.parametrize(
-    "database_table_fixture",
-    [
-        {
-            "database": Database.SNOWFLAKE,
-            "table": Table(metadata=Metadata(schema=SCHEMA)),
-        },
-    ],
-    indirect=True,
-    ids=["snowflake"],
-)
-@mock.patch("astro.databases.snowflake.SnowflakeDatabase.hook")
-@mock.patch("astro.databases.snowflake.SnowflakeDatabase.create_stage")
-def test_load_file_to_table_natively_for_fallback_raises_exception_if_not_enable_native_fallback(
-    mock_stage, mock_hook, database_table_fixture
-):
-    """Test loading on files to snowflake natively for fallback raise exception."""
-    mock_hook.run.side_effect = [
-        ValueError,  # 1st run call copies the data
-        None,  # 2nd run call drops the stage
-    ]
-    mock_stage.return_value = SnowflakeStage(
-        name="mock_stage",
-        url="gcs://bucket/prefix",
-        metadata=Metadata(database="SNOWFLAKE_DATABASE", schema="SNOWFLAKE_SCHEMA"),
-    )
-    database, target_table = database_table_fixture
-    filepath = str(pathlib.Path(CWD.parent, "data/sample.csv"))
-    with pytest.raises(DatabaseCustomError):
-        database.load_file_to_table_natively_with_fallback(
-            source_file=File(filepath),
-            target_table=target_table,
-        )
-    mock_hook.run.assert_has_calls(
-        [
-            call(f"DROP STAGE IF EXISTS {mock_stage.return_value.qualified_name};", autocommit=True),
-        ]
-    )
 
 
 @pytest.mark.integration
