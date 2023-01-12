@@ -129,6 +129,7 @@ def add_loghandler(ti: TaskInstance, verbose: bool) -> None:
     log.debug("Adding RichHandler to taskinstance %s", ti.task_id)
     if verbose:
         ti.log.setLevel(logging.INFO)
+        ti.log.manager.disable = logging.NOTSET
     else:
         ti.log.setLevel(logging.CRITICAL)
     ti.log.addHandler(RichHandler(markup=True))
