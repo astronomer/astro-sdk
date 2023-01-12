@@ -70,8 +70,8 @@
       ],
   )
   ```
-- Add source code facet for operators dataframe and transform [#1537](https://github.com/astronomer/astro-sdk/pull/1537)
-- Use load_options param to pass pandasOptions in load_file [#1466](https://github.com/astronomer/astro-sdk/pull/1466)
+- Add source code facet for openlineage on operators dataframe and transform [#1537](https://github.com/astronomer/astro-sdk/pull/1537)
+- Use load_options param to pass pandasOptions in load_file operator [#1466](https://github.com/astronomer/astro-sdk/pull/1466)
   ```python
   aql.load_file(
       input_file=File(
@@ -88,7 +88,7 @@
       load_options=PandasCsvLoadOptions(delimiter="$"),
   )
   ```
-- Add a snowflake load options in order to pass native API supported param [#1516](https://github.com/astronomer/astro-sdk/pull/1516)
+- Add a snowflake load options in order to pass native API supported param in load_file operator [#1516](https://github.com/astronomer/astro-sdk/pull/1516)
   ```python
   aql.load_file(
       input_file=File(
@@ -112,7 +112,7 @@
 - Fix the dataframe test function name [#1490](https://github.com/astronomer/astro-sdk/pull/1490)
 
 ### Bug fixes
-- Loadfile should also check for conn_type of conn_id provided [#1471](https://github.com/astronomer/astro-sdk/issues/1471)
+- load_file operator should also check for conn_type of conn_id provided to file object [#1471](https://github.com/astronomer/astro-sdk/issues/1471)
 - Generate constraints on releases and pushes (not PRs) [#1472](https://github.com/astronomer/astro-sdk/pull/1472)
 
 ### Docs
