@@ -49,6 +49,8 @@ def set_verbose_mode(verbose: bool) -> None:
     if verbose:
         log.setLevel(logging.DEBUG)
         log.manager.disable = logging.NOTSET
+    else:
+        log.setLevel(logging.CRITICAL)
 
 
 def set_debug_mode(debug: bool) -> None:
@@ -61,8 +63,15 @@ def set_debug_mode(debug: bool) -> None:
 
     if debug:
         for logger_name in EXT_LOGGER_NAMES:
-            logging.getLogger(logger_name).setLevel(logging.DEBUG)
+            logger = logging.getLogger(logger_name)
+            logger.propagate = True
+            logger.setLevel(logging.DEBUG)
+            logger.manager.disable = logging.NOTSET
     else:
+        for logger_name in EXT_LOGGER_NAMES:
+            logger = logging.getLogger(logger_name)
+            logger.propagate = False
+            logger.setLevel(logging.CRITICAL)
         logging.disable()  # skipcq PY-A6006
 
 
