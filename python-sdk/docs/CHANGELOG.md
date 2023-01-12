@@ -71,7 +71,7 @@
   )
   ```
 - Add source code facet for openlineage on operators dataframe and transform [#1537](https://github.com/astronomer/astro-sdk/pull/1537)
-- Use load_options param to pass pandasOptions in load_file operator [#1466](https://github.com/astronomer/astro-sdk/pull/1466)
+- Enhance `LoadFileOperator` so that users can send pandas attributes through `PandasCsvLoadOptions` [#1466](https://github.com/astronomer/astro-sdk/pull/1466)
   ```python
   aql.load_file(
       input_file=File(
@@ -88,7 +88,7 @@
       load_options=PandasCsvLoadOptions(delimiter="$"),
   )
   ```
-- Add a snowflake load options in order to pass native API supported param in load_file operator [#1516](https://github.com/astronomer/astro-sdk/pull/1516)
+- Enhance `LoadFileOperator` so that users can send Snowflake specific load attributes through  `SnowflakeLoadOptions` [#1516](https://github.com/astronomer/astro-sdk/pull/1516)
   ```python
   aql.load_file(
       input_file=File(
@@ -108,7 +108,7 @@
 - Expose `get_file_list_func` to users that will return iterable File list from given destination file storage [#1380](https://github.com/astronomer/astro-sdk/pull/1380)
 
 ### Improvements
-- Deprecate `export_table_to_file` to `export_to_file` (*`ExportTableToFileOperator` and `export_table_to_file` operator would be removed in astro-python-sdk 1.5.0*) [#1503](https://github.com/astronomer/astro-sdk/pull/1503)
+- Deprecate `export_table_to_file` in favor of `export_to_file` (*`ExportTableToFileOperator` and `export_table_to_file` operator would be removed in astro-python-sdk 1.5.0*) [#1503](https://github.com/astronomer/astro-sdk/pull/1503)
 - Fix the dataframe test function name [#1490](https://github.com/astronomer/astro-sdk/pull/1490)
 
 ### Bug fixes
