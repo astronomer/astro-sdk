@@ -184,7 +184,7 @@ def test_generate(workflow_name, environment, initialised_project, generate_task
         f"The DAG file {initialised_project.airflow_dags_folder}/{workflow_name}.py has been successfully generated. 🎉"
         in result.stdout
     )
-    assert logger.level == logging.CRITICAL
+    assert logger.manager.disable == logging.CRITICAL
 
 
 @pytest.mark.parametrize(
@@ -320,7 +320,7 @@ def test_validate(env, connection, status, initialised_project_with_invalid_conf
     assert result.exit_code == 0, result.exception
     assert f"Validating connection(s) for environment '{env}'" in result.stdout
     assert f"Validating connection {connection:{CONNECTION_ID_OUTPUT_STRING_WIDTH}} {status}" in result.stdout
-    assert logger.level == logging.CRITICAL
+    assert logger.manager.disable == logging.CRITICAL
 
 
 @pytest.mark.parametrize(
@@ -423,7 +423,7 @@ def test_run(workflow_name, environment, initialised_project, generate_tasks, lo
     )
     assert result.exit_code == 0, result.output
     assert f"Completed running the workflow {workflow_name}." in result.stdout
-    assert logger.level == logging.CRITICAL
+    assert logger.manager.disable == logging.CRITICAL
 
 
 @pytest.mark.parametrize(
@@ -611,17 +611,30 @@ def test_init_option(tmp_path, tmp_path_factory, option, files_created, request)
 @pytest.mark.parametrize(
     "args,log_level",
     [
-        (["version"], logging.CRITICAL),
         (["--debug", "version"], logging.DEBUG),
-        (["--no-debug", "version"], logging.CRITICAL),
     ],
     ids=[
-        "default",
         "debug",
-        "no-debug",
     ],
 )
 def test_main_debug(args, log_level, ext_loggers):
     result = runner.invoke(app, args)
     assert result.exit_code == 0
     assert all(logger.level == log_level for logger in ext_loggers)
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        ["version"],
+        ["--no-debug", "version"],
+    ],
+    ids=[
+        "default",
+        "no-debug",
+    ],
+)
+def test_main_no_debug(args, ext_loggers):
+    result = runner.invoke(app, args)
+    assert result.exit_code == 0
+    assert all(logger.manager.disable == logging.CRITICAL for logger in ext_loggers)

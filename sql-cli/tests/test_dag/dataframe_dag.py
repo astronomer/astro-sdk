@@ -10,6 +10,7 @@ from airflow import DAG
 from astro import sql as aql
 
 log = logging.getLogger(__name__)
+log.manager.disable = logging.NOTSET
 
 
 START_DATE = datetime(2000, 1, 1)
