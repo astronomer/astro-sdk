@@ -122,7 +122,7 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 | Google Drive |
 | SFTP         |
 | FTP          |
- | Azure WASB   |
+| Azure WASB   |
 | Azure WASBS  |
 
 ## Available operations
