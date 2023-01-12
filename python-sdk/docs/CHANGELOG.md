@@ -22,7 +22,7 @@
       ),
   )
   ```
-- Add databricks delta table support [docs](https://astro-sdk-python.readthedocs.io/en/stable/guides/databricks.html) [#1352](https://github.com/astronomer/astro-sdk/pull/1352), [#1397](https://github.com/astronomer/astro-sdk/pull/1397), [#1452](https://github.com/astronomer/astro-sdk/pull/1452), [#1476](https://github.com/astronomer/astro-sdk/pull/1476), [#1480](https://github.com/astronomer/astro-sdk/pull/1480), [#1555](https://github.com/astronomer/astro-sdk/pull/1555)
+- Add databricks delta table support [docs](https://astro-sdk-python.readthedocs.io/en/latest/guides/databricks.html) [#1352](https://github.com/astronomer/astro-sdk/pull/1352), [#1397](https://github.com/astronomer/astro-sdk/pull/1397), [#1452](https://github.com/astronomer/astro-sdk/pull/1452), [#1476](https://github.com/astronomer/astro-sdk/pull/1476), [#1480](https://github.com/astronomer/astro-sdk/pull/1480), [#1555](https://github.com/astronomer/astro-sdk/pull/1555)
 - Add [sourceCode](https://github.com/OpenLineage/OpenLineage/blob/main/spec/OpenLineage.md#job-facets) facet to  `aql.dataframe()` and `aql.transform()` as part of OpenLineage integration [#1537](https://github.com/astronomer/astro-sdk/pull/1537)
 - Enhance `LoadFileOperator` so that users can send pandas attributes through `PandasLoadOptions` [docs](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/load_file.html#loadoptions) [#1466](https://github.com/astronomer/astro-sdk/pull/1466)
 - Enhance `LoadFileOperator` so that users can send Snowflake specific load attributes through  `SnowflakeLoadOptions` [docs](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/load_file.html#loadoptions) [#1516](https://github.com/astronomer/astro-sdk/pull/1516)
