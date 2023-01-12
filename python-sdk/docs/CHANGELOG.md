@@ -4,13 +4,13 @@
 
 ### Feature:
 
-- Support SFTP as file location [docs](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/load_file.html#loading-data-from-sftp) [#1481](https://github.com/astronomer/astro-sdk/pull/1481)
-- Support FTP as file location [docs](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/load_file.html#loading-data-from-ftp) [#1482](https://github.com/astronomer/astro-sdk/pull/1482)
+- Support SFTP as file location [docs](https://astro-sdk-python.readthedocs.io/en/1.4/astro/sql/operators/load_file.html#loading-data-from-sftp) [#1481](https://github.com/astronomer/astro-sdk/pull/1481)
+- Support FTP as file location [docs](https://astro-sdk-python.readthedocs.io/en/1.4/astro/sql/operators/load_file.html#loading-data-from-ftp) [#1482](https://github.com/astronomer/astro-sdk/pull/1482)
 - Add support for Azure Blob Storage (*only non-native implementation*) [#1275](https://github.com/astronomer/astro-sdk/pull/1275), [#1542](https://github.com/astronomer/astro-sdk/pull/1542)
-- Add databricks delta table support [docs](https://astro-sdk-python.readthedocs.io/en/latest/guides/databricks.html) [#1352](https://github.com/astronomer/astro-sdk/pull/1352), [#1397](https://github.com/astronomer/astro-sdk/pull/1397), [#1452](https://github.com/astronomer/astro-sdk/pull/1452), [#1476](https://github.com/astronomer/astro-sdk/pull/1476), [#1480](https://github.com/astronomer/astro-sdk/pull/1480), [#1555](https://github.com/astronomer/astro-sdk/pull/1555)
+- Add databricks delta table support [docs](https://astro-sdk-python.readthedocs.io/en/1.4/guides/databricks.html) [#1352](https://github.com/astronomer/astro-sdk/pull/1352), [#1397](https://github.com/astronomer/astro-sdk/pull/1397), [#1452](https://github.com/astronomer/astro-sdk/pull/1452), [#1476](https://github.com/astronomer/astro-sdk/pull/1476), [#1480](https://github.com/astronomer/astro-sdk/pull/1480), [#1555](https://github.com/astronomer/astro-sdk/pull/1555)
 - Add [sourceCode](https://github.com/OpenLineage/OpenLineage/blob/main/spec/OpenLineage.md#job-facets) facet to  `aql.dataframe()` and `aql.transform()` as part of OpenLineage integration [#1537](https://github.com/astronomer/astro-sdk/pull/1537)
-- Enhance `LoadFileOperator` so that users can send pandas attributes through `PandasLoadOptions` [docs](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/load_file.html#loadoptions) [#1466](https://github.com/astronomer/astro-sdk/pull/1466)
-- Enhance `LoadFileOperator` so that users can send Snowflake specific load attributes through  `SnowflakeLoadOptions` [docs](https://astro-sdk-python.readthedocs.io/en/stable/astro/sql/operators/load_file.html#loadoptions) [#1516](https://github.com/astronomer/astro-sdk/pull/1516)
+- Enhance `LoadFileOperator` so that users can send pandas attributes through `PandasLoadOptions` [docs](https://astro-sdk-python.readthedocs.io/en/1.4/astro/sql/operators/load_file.html#loadoptions) [#1466](https://github.com/astronomer/astro-sdk/pull/1466)
+- Enhance `LoadFileOperator` so that users can send Snowflake specific load attributes through  `SnowflakeLoadOptions` [docs](https://astro-sdk-python.readthedocs.io/en/1.4/astro/sql/operators/load_file.html#loadoptions) [#1516](https://github.com/astronomer/astro-sdk/pull/1516)
 - Expose `get_file_list_func` to users so that it returns iterable File list from given destination file storage [#1380](https://github.com/astronomer/astro-sdk/pull/1380)
 
 ### Improvements
