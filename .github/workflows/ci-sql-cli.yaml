@@ -113,6 +113,7 @@ jobs:
         with:
           python-version: '${{ matrix.python }}'
           architecture: 'x64'
+
       - uses: actions/cache@v3
         with:
           path: |
@@ -120,9 +121,23 @@ jobs:
             sql-cli/.nox
             .local/
           key: sql-cli-tests-os-${{ runner.os }}-python-${{ matrix.python }}-airflow-${{ matrix.airflow }}-deps-${{ hashFiles('sql-cli/poetry.lock') }}
-      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
-      - run: pip3 install nox
-      - run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')"
+
+      - name: Set GOOGLE_APPLICATION_CREDENTIALS environment variable
+        run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+
+      - name: Install Poetry
+        run: |
+          pipx install poetry
+          poetry --version
+
+      - name: Install Nox
+        run: |
+          pipx install nox
+          nox --version
+
+      - name: Run tests
+        run: nox -s "test-${{ matrix.python }}(airflow='${{ matrix.airflow }}')"
+
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
