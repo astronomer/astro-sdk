@@ -72,3 +72,29 @@ target the release branch (e.g. `release-0.7`). Failure to do these steps proper
 <!-- markdown-link-check-enable -->
 
 Once you've created your release, that's it! The rest of the steps should be handled by the CI system.
+
+# Releasing constraints for the release
+
+Once the package pushed (PyPI/Readthedocs) you also need to release constraints files. This steps it bit manual at this point of time.
+
+1. First create a new branch of the last constraints branch. 
+   ```commandline
+   ❯ git branch constraints-1-4 constraints-1-3
+   ```
+2. Checkout that branch 
+   ```commandline
+   ❯ git checkout constraints-1-4 
+   ```
+3. Find the GitHub action CI job that ran when you tagged the release and which published the artifact i.e. visit https://github.com/astronomer/astro-sdk/actions/runs/<RUN_ID> and form the bottom of that GH page download all the constraints file.
+4. Remove old files
+   ```commandline
+   ❯ rm *.txt  and unzip *.zip all the files and then delete zips rm *.zip
+   ```
+5. Then rename them
+   ```commandline
+   ❯ for f in constraints*; do mv "$f" "$f.txt"; done
+   ```
+6. Add and upload
+   ```commandline
+   ❯ git add const* && ❯ git commit -m "Update constraints for Astro SDK 1.4.0" --no-verify  && git push origin constraints-1-4 && git tag constraints-1.4.0 && git push origin constraints-1.4.0
+   ```
