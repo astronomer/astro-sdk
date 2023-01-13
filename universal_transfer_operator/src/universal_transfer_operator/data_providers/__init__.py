@@ -7,12 +7,11 @@ from universal_transfer_operator.data_providers.base import DataProviders
 from universal_transfer_operator.datasets.base import Dataset
 from universal_transfer_operator.utils import TransferParameters, get_class_name
 
-DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = {
-    "s3": "universal_transfer_operator.data_providers.filesystem.aws.s3",
-    "aws": "universal_transfer_operator.data_providers.filesystem.aws.s3",
-    "gs": "universal_transfer_operator.data_providers.filesystem.google.cloud.gcs",
-    "google_cloud_platform": "universal_transfer_operator.data_providers.filesystem.google.cloud.gcs",
-}
+DATASET_CONN_ID_TO_DATAPROVIDER_MAPPING = dict.fromkeys(
+    ["s3", "aws"], "universal_transfer_operator.data_providers.filesystem.aws.s3"
+) | dict.fromkeys(
+    ["gs", "google_cloud_platform"], "universal_transfer_operator.data_providers.filesystem.google.cloud.gcs"
+)
 
 
 def create_dataprovider(

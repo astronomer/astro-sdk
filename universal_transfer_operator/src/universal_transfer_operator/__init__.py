@@ -1,4 +1,4 @@
-"""A decorator that allows users to run SQL queries natively in Airflow."""
+"""An Operator that allows transfers between different datasets."""
 
 __version__ = "0.0.1dev1"
 

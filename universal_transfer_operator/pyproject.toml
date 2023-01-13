@@ -5,8 +5,9 @@ build-backend = "flit_core.buildapi"
 [project]
 name = "universal-transfer-operator"
 dynamic = ["version"]
-description = """
-"""
+description = """Universal Transfer Operator transfers all the data that could be read from the source Dataset into
+the destination Dataset. From a DAG author standpoint, all transfers would be performed through the invocation of
+only the Universal Transfer Operator."""
 
 authors = [
     { name = "Astronomer", email = "humans@astronomer.io" },
@@ -42,13 +43,6 @@ classifiers = [
 [project.optional-dependencies]
 tests = [
     "pytest>=6.0",
-    "pytest-split",
-    "pytest-dotenv",
-    "requests-mock",
-    "pytest-cov",
-    "pytest-describe",
-    "types-requests",
-    "mypy",
     "sqlalchemy-stubs", # Change when sqlalchemy is upgraded https://docs.sqlalchemy.org/en/14/orm/extensions/mypy.html
 ]
 google = [
@@ -62,43 +56,29 @@ snowflake = [
     "snowflake-sqlalchemy>=1.2.0",
     "snowflake-connector-python[pandas]",
 ]
-postgres = [
-    "apache-airflow-providers-postgres",
-]
+
 amazon = [
     "apache-airflow-providers-amazon>=5.0.0",
     "s3fs",
     "smart-open[s3]>=5.2.1",
 ]
-azure = [
-    "apache-airflow-providers-microsoft-azure",
-    "azure-storage-blob",
-    "smart-open[azure]>=5.2.1",
-]
+
 openlineage = ["openlineage-airflow>=0.17.0"]
 
 fivetran = ["airflow-provider-fivetran>=1.1.3"]
 
-databricks = ["databricks-cli",
-    "apache-airflow-providers-databricks"]
-
 all = [
     "apache-airflow-providers-amazon",
     "apache-airflow-providers-google>=6.4.0",
-    "apache-airflow-providers-postgres",
     "apache-airflow-providers-snowflake",
     "smart-open[all]>=5.2.1",
     "snowflake-connector-python[pandas]",
     "snowflake-sqlalchemy>=1.2.0",
     "sqlalchemy-bigquery>=1.3.0",
-    "databricks-cli",
-    "apache-airflow-providers-databricks",
     "s3fs",
     "protobuf<=3.20", # Google bigquery client require protobuf <= 3.20.0. We can remove the limitation when this limitation is removed
     "openlineage-airflow>=0.17.0",
     "airflow-provider-fivetran>=1.1.3",
-    "apache-airflow-providers-microsoft-azure",
-    "azure-storage-blob"
 ]
 doc = [
     "myst-parser>=0.17",
