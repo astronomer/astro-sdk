@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterable, Mapping
-from typing import Any, Callable
+from typing import Any, Callable, Literal, cast
 
 try:
     from airflow.decorators.base import TaskDecorator
@@ -11,6 +11,9 @@ except ImportError:
 
 import airflow
 from airflow.decorators.base import task_decorator_factory
+
+import pandas as pd
+from sqlalchemy.engine import ResultProxy
 
 if airflow.__version__ >= "2.3":
     from sqlalchemy.engine.row import LegacyRow as SQLAlcRow
@@ -32,6 +35,18 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
     and on the SQL statement/function declared by the user.
     """
 
+    def __init__(
+        self,
+        results_format: Literal['list', 'dataframe'] | None = None,
+        fail_on_empty: bool = False,
+        **kwargs: Any,
+    ):
+        super().__init__(**kwargs)
+
+        # add the results_format and fail_on_empty to the kwargs
+        self.results_format = results_format
+        self.fail_on_empty = fail_on_empty
+
     def execute(self, context: Context) -> Any:
         super().execute(context)
 
@@ -44,9 +59,30 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
                 "backend."
             )
 
-        if self.handler and self.database_impl.sql_type == "delta":
-            return result
+        # if a user specifies a results_format, we will return the results in that format
+        # note that it takes precedence over the handler
+        if self.results_format:
+            conversion_func = getattr(self, f"results_as_{self.results_format}")
+
+            # if fail_on_empty is set to False, wrap in a try/except block
+            # this is because the conversion function will fail if the result is empty
+            # due to sqlalchemy failing when there are no results
+            if not self.fail_on_empty:
+                try:
+                    return conversion_func(result)
+                except Exception:
+                    return None
+            
+            # otherwise, just return the result
+            return conversion_func(result)
+
+        # if no results_format is specified, we will return the results in the format specified by the handler
         elif self.handler:
+            # if it's a delta table, we don't need to do any conversion
+            if self.database_impl.sql_type == "delta":
+                return result
+
+            # otherwise, call the handler and convert the result to a list
             response = self.handler(result)
             response = self.make_row_serializable(response)
             if 0 <= self.response_limit < len(response):
@@ -55,8 +91,9 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
                 return response[: self.response_size]
             else:
                 return response
-        else:
-            return None
+
+        # if no results_format or handler is specified, we don't return results
+        return None
 
     @staticmethod
     def make_row_serializable(rows: Any) -> Any:
@@ -68,6 +105,20 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
         if isinstance(rows, Iterable):
             return [SdkLegacyRow.from_legacy_row(r) if isinstance(r, SQLAlcRow) else r for r in rows]
         return rows
+
+    @staticmethod
+    def results_as_list(result: ResultProxy) -> list:
+        """
+        Convert the result of a SQL query to a list
+        """
+        return cast(list[Any], result.fetchall())
+
+    @staticmethod
+    def results_as_dataframe(result: ResultProxy) -> pd.DataFrame:
+        """
+        Convert the result of a SQL query to a pandas dataframe
+        """
+        return pd.DataFrame(result.fetchall(), columns=result.keys())
 
 
 class SdkLegacyRow(SQLAlcRow):
@@ -92,6 +143,8 @@ def run_raw_sql(
     database: str | None = None,
     schema: str | None = None,
     handler: Callable | None = None,
+    results_format: Literal['list', 'dataframe'] | None = None,
+    fail_on_empty: bool = False,
     response_size: int = settings.RAW_SQL_MAX_RESPONSE_SIZE,
     **kwargs: Any,
 ) -> TaskDecorator:
@@ -130,6 +183,8 @@ def run_raw_sql(
         (required if there are no table arguments)
     :param handler: Handler function to process the result of the SQL query. For more information please consult
         https://docs.sqlalchemy.org/en/14/core/connections.html#sqlalchemy.engine.Result
+    :param results_format: Format of the results returned by the SQL query. Overrides the handler, if provided.
+    :param fail_on_empty: If True and a results_format is provided, raises an exception if the query returns no results.
     :param response_size: Used to trim the responses returned to avoid trashing the Airflow DB.
         The default value is -1, which means the response is not changed. Otherwise, if the response is a list,
         returns up to the desired amount of items. If the response is a string, trims it to the desired size.
@@ -145,6 +200,8 @@ def run_raw_sql(
             "database": database,
             "schema": schema,
             "handler": handler,
+            "results_format": results_format,
+            "fail_on_empty": fail_on_empty,
             "response_size": response_size,
         }
     )
