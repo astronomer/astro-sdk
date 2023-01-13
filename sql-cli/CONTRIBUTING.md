@@ -10,7 +10,7 @@ See [Getting started](README.md) for setting up the project locally.
 
 We are using _pytest_ to run tests and `nox` to run them across different python and airflow versions.
 
-For running tests it is advisable to use `nox` to be able to test with different python and airflow versions.
+For running tests, it is advisable to use `nox` to be able to test with different python and airflow versions.
 
 For example:
 
