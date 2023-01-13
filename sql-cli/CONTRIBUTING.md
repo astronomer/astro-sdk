@@ -24,7 +24,7 @@ In case you only want to test a specific test, you can append the path to the no
 nox -s "test-3.8(airflow='2.5')" -- tests/test___main__.py::test_validate
 ```
 
-If you only want to test on the current installed version - and want to run all tests you can use the `make test` command.
+If you only want to test on the current installed version and want to run all the tests, you can use the `make test` command.
 
 ### Debugging
 
