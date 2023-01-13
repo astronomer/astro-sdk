@@ -49,7 +49,7 @@ _You can find the code in the [astro-cli repository](https://github.com/astronom
 For example, you can call `astro flow version` to get the version of the sql-cli package. For a full list of commands, run `astro flow --help`.
 
 Internally, what happens is that we build a command that we pass on to a docker container which has the sql-cli installed and executes the command.
-Additionally, the "flow" command requires some more functionality like mounting files from the host to the container to be able to use the created sql-cli project outside of the container after the command exits. Furthermore, we resolve directory paths before mounting so that we have the exact same directory structure outside and inside the container.
+Additionally, the `flow` command requires some more functionality like mounting files from the host to the container to be able to use the created sql-cli project outside of the container after the command exits. Furthermore, we resolve directory paths before mounting so that we have the exact same directory structure outside and inside the container.
 _You can find the code for that in `sql` directory._
 
 _You can find the user documentation of the "flow" command [here](https://docs.astronomer.io/astro/cli/sql-cli)._
