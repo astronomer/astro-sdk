@@ -1,6 +1,7 @@
 import os
 import pathlib
 from unittest import mock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -118,3 +119,175 @@ def test_cross_db_merge_raise_exception(monkeypatch):
             columns=["set_item_1", "set_item_2", "set_item_3"],
         ).execute({})
     assert exec_info.value.args[0] == "source and target table must belong to the same datasource"
+
+
+@pytest.fixture
+def merge_parameters(request):
+    mode = request.param
+    if mode == "single":
+        return (
+            {
+                "target_conflict_columns": ["list"],
+                "columns": {"list": "list"},
+                "if_conflicts": "ignore",
+            },
+            mode,
+        )
+    elif mode == "multi":
+        return (
+            {
+                "target_conflict_columns": ["list", "sell"],
+                "columns": {"list": "list", "sell": "sell"},
+                "if_conflicts": "ignore",
+            },
+            mode,
+        )
+    return (
+        {
+            "target_conflict_columns": ["list", "sell"],
+            "columns": {
+                "list": "list",
+                "sell": "sell",
+                "age": "taxes",
+            },
+            "if_conflicts": "update",
+        },
+        mode,
+    )
+
+
+sqlite_update_result_sql = (
+    "INSERT INTO target_table (list,sell,taxes) SELECT list,sell,age FROM source_table "
+    "Where true ON CONFLICT (list,sell) DO UPDATE SET "
+    "list=EXCLUDED.list,sell=EXCLUDED.sell,taxes=EXCLUDED.taxes"
+)
+
+snowflake_update_result_sql = (
+    "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
+    "on Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0) "
+    "AND Identifier(:merge_clause_target_1)=Identifier(:merge_clause_source_1) "
+    "when matched then "
+    "UPDATE SET "
+    "target_table.list=source_table.list,target_table.sell=source_table.sell,"
+    "target_table.taxes=source_table.age "
+    "when not matched then insert(target_table.list,target_table.sell,target_table.taxes) "
+    "values (source_table.list,source_table.sell,source_table.age)"
+)
+
+delta_update_result_sql = (
+    "merge into target_table as `target_table` using source_table as"
+    " `source_table` on `target_table`.`list`=`source_table`.`list` AND "
+    "`target_table`.`sell`=`source_table`.`sell` "
+    "when matched then UPDATE SET target_table.list = source_table.list,"
+    "target_table.sell = source_table.sell,target_table.taxes = source_table.age "
+    "when not matched then insert(target_table.list,target_table.sell,target_table.taxes) "
+    "values (source_table.list,source_table.sell,source_table.age)"
+)
+
+sqlite_multi_result_sql = (
+    "INSERT INTO target_table (list,sell) SELECT list,sell FROM source_table "
+    "Where true ON CONFLICT (list,sell) DO NOTHING"
+)
+snowflake_multi_result_sql = (
+    "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) on "
+    "Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0) AND "
+    "Identifier(:merge_clause_target_1)=Identifier(:merge_clause_source_1) "
+    "when not matched then insert(target_table.list,target_table.sell) values "
+    "(source_table.list,source_table.sell)"
+)
+delta_multi_result_sql = (
+    "merge into target_table as `target_table` using source_table as `source_table` on "
+    "`target_table`.`list`=`source_table`.`list` AND `target_table`.`sell`=`source_table`.`sell`"
+    " when not matched then insert(target_table.list,target_table.sell) "
+    "values (source_table.list,source_table.sell)"
+)
+sqlite_single_result_sql = (
+    "INSERT INTO target_table (list) SELECT list "
+    "FROM source_table Where true ON CONFLICT (list) DO NOTHING"
+)
+snowflake_single_result_sql = (
+    "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
+    "on Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0)"
+    " when not matched then insert(target_table.list) values (source_table.list)"
+)
+delta_single_result_sql = (
+    "merge into target_table as `target_table` using source_table as `source_table`"
+    " on `target_table`.`list`=`source_table`.`list` when not matched then "
+    "insert(target_table.list) values (source_table.list)"
+)
+
+base_database_class = "astro.databases.base.BaseDatabase.run_sql"
+delta_database_class = "astro.databases.databricks.delta.DeltaDatabase.run_sql"
+
+
+def get_result_sql(database_type, mode):
+    if mode == "update":
+        return get_result_sql_update(database_type)
+    elif mode == "single":
+        return get_result_sql_single(database_type)
+    return get_result_sql_multi(database_type)
+
+
+def get_result_sql_update(database_type):
+    if database_type == "sqlite":
+        return sqlite_update_result_sql
+    elif database_type == "snowflake":
+        return snowflake_update_result_sql
+    elif database_type == "databricks":
+        return delta_update_result_sql
+
+
+def get_result_sql_multi(database_type):
+    if database_type == "sqlite":
+        return sqlite_multi_result_sql
+    elif database_type == "snowflake":
+        return snowflake_multi_result_sql
+    elif database_type == "databricks":
+        return delta_multi_result_sql
+
+
+def get_result_sql_single(database_type):
+    if database_type == "sqlite":
+        return sqlite_single_result_sql
+    elif database_type == "snowflake":
+        return snowflake_single_result_sql
+    elif database_type == "databricks":
+        return delta_single_result_sql
+
+
+@pytest.mark.parametrize(
+    "merge_parameters",
+    [
+        "single",
+        "multi",
+        "update",
+    ],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    "database_class,conn_id",
+    [
+        (base_database_class, "sqlite_conn"),
+        (base_database_class, "snowflake_conn"),
+        (delta_database_class, "databricks_conn"),
+    ],
+    ids=["sqlite", "snowflake", "databricks"],
+)
+def test_merge_sql_generation(database_class, conn_id, merge_parameters):
+    parameters, mode = merge_parameters
+    target_table = Table("target_table", conn_id=conn_id)
+    source_table = Table("source_table", conn_id=conn_id)
+    target_conflict_columns = parameters["target_conflict_columns"]
+    columns = parameters["columns"]
+    if_conflicts = parameters["if_conflicts"]
+    with patch(database_class) as mock_run_sql:
+        merge_func = aql.merge(
+            target_table=target_table,
+            source_table=source_table,
+            target_conflict_columns=target_conflict_columns,
+            columns=columns,
+            if_conflicts=if_conflicts,
+        )
+        merge_func.operator.execute(MagicMock())
+    print(mock_run_sql.call_args_list[0][1]["sql"])
+    assert mock_run_sql.call_args_list[0][1]["sql"] == get_result_sql(conn_id.replace("_conn", ""), mode)

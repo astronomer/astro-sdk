@@ -108,12 +108,9 @@ def validate_results(df: pd.DataFrame, mode):
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.SNOWFLAKE},
         {"database": Database.BIGQUERY},
         {"database": Database.REDSHIFT},
         {"database": Database.POSTGRES},
-        {"database": Database.SQLITE},
-        {"database": Database.DELTA},
     ],
     indirect=True,
     ids=["snowflake", "bigquery", "redshift", "postgres", "sqlite", "delta"],
