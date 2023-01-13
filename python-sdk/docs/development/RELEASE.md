@@ -77,13 +77,13 @@ Once you've created your release, that's it! The rest of the steps should be han
 
 Once the package pushed to PyPI/Readthedocs you also need to release constraints files. This steps it bit manual at this point of time.
 
-1. First create a new branch of the last constraints branch. 
+1. First create a new branch of the last constraints branch.
    ```commandline
    ❯ git branch constraints-1-4 constraints-1-3
    ```
-2. Checkout that branch 
+2. Checkout that branch
    ```commandline
-   ❯ git checkout constraints-1-4 
+   ❯ git checkout constraints-1-4
    ```
 3. Find the GitHub action CI job that ran when you tagged the release and which published the artifact i.e. visit https\://github.com/astronomer/astro-sdk/actions/runs/<RUN_ID> and form the bottom of that GH page download all the constraints file.
 4. Remove old files
