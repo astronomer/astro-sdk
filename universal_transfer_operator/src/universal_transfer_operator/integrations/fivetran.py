@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from functools import cached_property
 
 import attr
 from attr import field
@@ -116,6 +117,7 @@ class FivetranIntegration(TransferIntegration):
         self.transfer_params = transfer_params
         self.transfer_mapping = None
 
+    @cached_property
     def hook(self) -> FivetranHook:
         """Return an instance of the database-specific Airflow hook."""
         return FivetranHook(
@@ -182,7 +184,7 @@ class FivetranIntegration(TransferIntegration):
             )
             return False
         endpoint = self.api_path_groups + group_id
-        api_response = fivetran_hook._do_api_call(("GET", endpoint))
+        api_response = fivetran_hook._do_api_call(("GET", endpoint))  # skipcq: PYL-W0212
         if api_response["code"] == "Success":
             logging.info("group_id {group_id} found.", extra={"group_id": group_id})
         else:
@@ -199,7 +201,7 @@ class FivetranIntegration(TransferIntegration):
             raise ValueError("Group is none. Pass a valid group")
         group = Group(**group_dict)
         payload = {"name": group.name}
-        api_response = fivetran_hook._do_api_call(("POST", endpoint), json=payload)
+        api_response = fivetran_hook._do_api_call(("POST", endpoint), json=payload)  # skipcq: PYL-W0212
         if api_response["code"] == "Success":
             logging.info(api_response)
         else:
@@ -217,7 +219,7 @@ class FivetranIntegration(TransferIntegration):
             )
             return False
         endpoint = self.api_path_destinations + destination_id
-        api_response = fivetran_hook._do_api_call(("GET", endpoint))
+        api_response = fivetran_hook._do_api_call(("GET", endpoint))  # skipcq: PYL-W0212
         if api_response["code"] == "Success":
             logging.info("destination_id {destination_id} found.", extra={"destination_id": destination_id})
         else:
@@ -241,7 +243,7 @@ class FivetranIntegration(TransferIntegration):
             "config": destination.config,
             "run_setup_tests": destination.run_setup_tests,
         }
-        api_response = fivetran_hook._do_api_call(("POST", endpoint), json=payload)
+        api_response = fivetran_hook._do_api_call(("POST", endpoint), json=payload)  # skipcq: PYL-W0212
         if api_response["code"] == "Success":
             logging.info(api_response)
             # TODO: parse all setup tests status for passed status
@@ -273,7 +275,7 @@ class FivetranIntegration(TransferIntegration):
             "connect_card_config": connector.connect_card_config,
             "config": connector.config,
         }
-        api_response = fivetran_hook._do_api_call(("POST", endpoint), json=payload)
+        api_response = fivetran_hook._do_api_call(("POST", endpoint), json=payload)  # skipcq: PYL-W0212
         if api_response["code"] == "Success":
             logging.info(api_response)
             # TODO: parse all setup tests status for passed status
@@ -295,7 +297,7 @@ class FivetranIntegration(TransferIntegration):
             "trust_certificates": connector.trust_certificates,
             "trust_fingerprints": connector.trust_fingerprints,
         }
-        api_response = fivetran_hook._do_api_call(("POST", endpoint), json=payload)
+        api_response = fivetran_hook._do_api_call(("POST", endpoint), json=payload)  # skipcq: PYL-W0212
         if api_response["code"] == "Success":
             logging.info(api_response)
             # TODO: parse all setup tests status for passed status

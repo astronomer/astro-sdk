@@ -45,7 +45,7 @@ class BaseFilesystemProviders(DataProviders):
         """Return an instance of the database-specific Airflow hook."""
         raise NotImplementedError
 
-    def check_if_exists(self, dataset: Dataset) -> bool:
+    def check_if_exists(self) -> bool:
         """Return true if the dataset exists"""
         raise NotImplementedError
 

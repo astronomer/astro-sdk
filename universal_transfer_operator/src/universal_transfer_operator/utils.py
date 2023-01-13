@@ -10,9 +10,6 @@ from universal_transfer_operator.datasets.base import Dataset
 class TransferParameters:
     if_exists: str = "replace"
 
-    def empty(self):
-        return NotImplementedError()
-
 
 def check_if_connection_exists(conn_id: str) -> bool:
     """
