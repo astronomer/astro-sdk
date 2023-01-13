@@ -75,7 +75,7 @@ Once you've created your release, that's it! The rest of the steps should be han
 
 # Releasing constraints for the release
 
-Once the package pushed (PyPI/Readthedocs) you also need to release constraints files. This steps it bit manual at this point of time.
+Once the package pushed to PyPI/Readthedocs you also need to release constraints files. This steps it bit manual at this point of time.
 
 1. First create a new branch of the last constraints branch. 
    ```commandline
