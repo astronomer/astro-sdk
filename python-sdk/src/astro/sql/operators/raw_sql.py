@@ -10,9 +10,8 @@ except ImportError:
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
 import airflow
-from airflow.decorators.base import task_decorator_factory
-
 import pandas as pd
+from airflow.decorators.base import task_decorator_factory
 from sqlalchemy.engine import ResultProxy
 
 if airflow.__version__ >= "2.3":
@@ -37,7 +36,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
 
     def __init__(
         self,
-        results_format: Literal['list', 'dataframe'] | None = None,
+        results_format: Literal["list", "dataframe"] | None = None,
         fail_on_empty: bool = False,
         **kwargs: Any,
     ):
@@ -72,7 +71,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
                     return conversion_func(result)
                 except Exception:
                     return None
-            
+
             # otherwise, just return the result
             return conversion_func(result)
 
@@ -143,7 +142,7 @@ def run_raw_sql(
     database: str | None = None,
     schema: str | None = None,
     handler: Callable | None = None,
-    results_format: Literal['list', 'dataframe'] | None = None,
+    results_format: Literal["list", "dataframe"] | None = None,
     fail_on_empty: bool = False,
     response_size: int = settings.RAW_SQL_MAX_RESPONSE_SIZE,
     **kwargs: Any,
