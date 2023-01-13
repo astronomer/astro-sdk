@@ -85,7 +85,7 @@ Once the package pushed to PyPI/Readthedocs you also need to release constraints
    ```commandline
    ❯ git checkout constraints-1-4 
    ```
-3. Find the GitHub action CI job that ran when you tagged the release and which published the artifact i.e. visit https://github.com/astronomer/astro-sdk/actions/runs/<RUN_ID> and form the bottom of that GH page download all the constraints file.
+3. Find the GitHub action CI job that ran when you tagged the release and which published the artifact i.e. visit https\://github.com/astronomer/astro-sdk/actions/runs/<RUN_ID> and form the bottom of that GH page download all the constraints file.
 4. Remove old files
    ```commandline
    ❯ rm *.txt  and unzip *.zip all the files and then delete zips rm *.zip
