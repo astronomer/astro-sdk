@@ -36,6 +36,9 @@ class BaseFilesystemProviders(DataProviders):
         self.transfer_mode = transfer_mode
         self.transfer_mapping = {}
         self.LOAD_DATA_NATIVELY_FROM_SOURCE: dict = {}
+        super().__init__(
+            dataset=self.dataset, transfer_mode=self.transfer_mode, transfer_params=self.transfer_params
+        )
 
     def __repr__(self):
         return f'{self.__class__.__name__}(conn_id="{self.dataset.conn_id})'

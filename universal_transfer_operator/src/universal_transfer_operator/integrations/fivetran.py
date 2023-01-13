@@ -116,6 +116,7 @@ class FivetranIntegration(TransferIntegration):
     ):
         self.transfer_params = transfer_params
         self.transfer_mapping = None
+        super().__init__(transfer_params=self.transfer_params)
 
     @cached_property
     def hook(self) -> FivetranHook:
@@ -130,7 +131,7 @@ class FivetranIntegration(TransferIntegration):
         """
         Loads data from source dataset to the destination using ingestion config
         """
-        fivetran_hook = self.hook()
+        fivetran_hook = self.hook
 
         # Check if connector_id is passed and check if it exists and do the transfer.
         connector_id = self.transfer_params.connector_id
