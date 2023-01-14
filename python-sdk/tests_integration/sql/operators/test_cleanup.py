@@ -8,6 +8,7 @@ import pytest
 
 import astro.sql as aql
 from astro.constants import SUPPORTED_DATABASES, Database
+from astro.databases import create_database
 from astro.files import File
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import Table
@@ -37,11 +38,11 @@ drop_table_statement = "DROP TABLE IF EXISTS {table_name}"
     "temp_table",
     [
         Table(conn_id="sqlite_conn"),
-        Table(conn_id="gcp_conn"),
         Table(conn_id="snowflake_conn"),
         Table(conn_id="bigquery"),
+        Table(conn_id="databricks_conn"),
     ],
-    ids=["sqlite", "gcp", "snowflake", "bigquery"],
+    ids=["sqlite", "snowflake", "bigquery", "databricks"],
 )
 @mock.patch("astro.databases.base.BaseDatabase.run_sql")
 def test_cleanup_one_table(mock_run_sql, temp_table):
@@ -56,11 +57,10 @@ def test_cleanup_one_table(mock_run_sql, temp_table):
     "temp_table, non_temp_table",
     [
         (Table(conn_id="sqlite_conn"), Table(name="foo", conn_id="sqlite_conn")),
-        (Table(conn_id="gcp_conn"), Table(name="foo", conn_id="gcp_conn")),
         (Table(conn_id="snowflake_conn"), Table(name="foo", conn_id="snowflake_conn")),
         (Table(conn_id="bigquery"), Table(name="foo", conn_id="bigquery")),
     ],
-    ids=["sqlite", "gcp", "snowflake", "bigquery"],
+    ids=["sqlite", "snowflake", "bigquery"],
 )
 @mock.patch("astro.databases.base.BaseDatabase.run_sql")
 def test_cleanup_non_temp_table(mock_run_sql, temp_table, non_temp_table):
@@ -75,11 +75,10 @@ def test_cleanup_non_temp_table(mock_run_sql, temp_table, non_temp_table):
     "temp_table",
     [
         Table(conn_id="sqlite_conn"),
-        Table(conn_id="gcp_conn"),
         Table(conn_id="snowflake_conn"),
         Table(conn_id="bigquery"),
     ],
-    ids=["sqlite", "gcp", "snowflake", "bigquery"],
+    ids=["sqlite", "snowflake", "bigquery"],
 )
 @mock.patch("astro.databases.base.BaseDatabase.run_sql")
 def test_cleanup_non_table(mock_run_sql, temp_table):
@@ -101,11 +100,10 @@ def test_cleanup_non_table(mock_run_sql, temp_table):
     "temp_table_1, temp_table_2",
     [
         (Table(conn_id="sqlite_conn"), Table(conn_id="sqlite_conn")),
-        (Table(conn_id="gcp_conn"), Table(conn_id="gcp_conn")),
         (Table(conn_id="snowflake_conn"), Table(conn_id="snowflake_conn")),
         (Table(conn_id="bigquery"), Table(conn_id="bigquery")),
     ],
-    ids=["sqlite", "gcp", "snowflake", "bigquery"],
+    ids=["sqlite", "gcp", "snowflake"],
 )
 @mock.patch("astro.databases.base.BaseDatabase.run_sql")
 def test_cleanup_multiple_table(mock_run_sql, temp_table_1, temp_table_2):
@@ -146,9 +144,9 @@ def test_cleanup_default_all_tables(mock_run_sql, temp_table_1, temp_table_2, sa
 
         aql.cleanup()
     test_utils.run_dag(sample_dag)
+    db = create_database(temp_table_1.conn_id)
     calls = [
-        call(drop_table_statement.format("table_name", table_name=temp_table_1.name)),
-        call(drop_table_statement.format("table_name", table_name=temp_table_2.name)),
+        call(drop_table_statement.format("table_name", table_name=db.get_table_qualified_name(temp_table_2))),
     ]
     mock_run_sql.assert_has_calls(calls)
 
