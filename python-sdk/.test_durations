@@ -33,7 +33,7 @@
     "tests_integration/sql/operators/test_load_file.py::test_loading_gcs_file_to_database[Bigquery-ndjson]": 7.660091588,
     "tests_integration/sql/operators/test_load_file.py::test_loading_gcs_file_to_database[Bigquery-parquet]": 5.441974445000028,
     "tests_integration/sql/operators/test_load_file.py::test_populate_table_metadata": 0.19492750599999908,
-        "tests_integration/sql/operators/test_load_file.py::test_aql_load_file_local_file_pattern[postgres]": 0.2643213999999716,
+    "tests_integration/sql/operators/test_load_file.py::test_aql_load_file_local_file_pattern[postgres]": 0.2643213999999716,
     "tests_integration/sql/operators/test_load_file.py::test_aql_load_file_local_file_pattern_dataframe": 0.21413447100019312,
     "tests_integration/sql/operators/test_load_file.py::test_aql_load_file_pattern[sqlite-amazon]": 6.005973923999932,
     "tests_integration/sql/operators/test_load_file.py::test_aql_load_file_pattern[sqlite-google]": 8.61791391700001,
