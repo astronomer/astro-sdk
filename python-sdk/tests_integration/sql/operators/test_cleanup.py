@@ -1,4 +1,6 @@
 import pathlib
+from unittest import mock
+from unittest.mock import call
 
 import airflow
 import pandas
@@ -28,70 +30,59 @@ SUPPORTED_DATABASES_OBJECTS_WITH_FILE = [
     for database in Database
 ]
 
-
-@pytest.mark.integration
-@pytest.mark.parametrize(
-    "database_table_fixture",
-    SUPPORTED_DATABASES_OBJECTS_WITH_FILE,
-    indirect=True,
-    ids=SUPPORTED_DATABASES,
-)
-def test_cleanup_one_table(database_table_fixture):
-    db, test_table = database_table_fixture
-    assert db.table_exists(test_table)
-    a = aql.cleanup([test_table])
-    a.execute({})
-    assert not db.table_exists(test_table)
+drop_table_statement = "DROP TABLE IF EXISTS {table_name}"
 
 
-@pytest.mark.integration
 @pytest.mark.parametrize(
-    "database_table_fixture",
-    SUPPORTED_DATABASES_OBJECTS,
-    indirect=True,
-    ids=SUPPORTED_DATABASES,
-)
-@pytest.mark.parametrize(
-    "multiple_tables_fixture",
+    "temp_table",
     [
-        {
-            "items": [
-                {
-                    "table": Table(name="non_temporary_table"),
-                    "file": File(DEFAULT_FILEPATH),
-                },
-                {
-                    "table": Table(),
-                    "file": File(DEFAULT_FILEPATH),
-                },
-            ]
-        }
+        Table(conn_id="sqlite_conn"),
+        Table(conn_id="gcp_conn"),
+        Table(conn_id="snowflake_conn"),
+        Table(conn_id="bigquery"),
     ],
-    indirect=True,
-    ids=["named_table"],
+    ids=["sqlite", "gcp", "snowflake", "bigquery"],
 )
-def test_cleanup_non_temp_table(database_table_fixture, multiple_tables_fixture):
-    db, _ = database_table_fixture
-    test_table, test_temp_table = multiple_tables_fixture
-    assert db.table_exists(test_table)
-    assert db.table_exists(test_temp_table)
-    test_table.conn_id = db.conn_id
-    test_temp_table.conn_id = db.conn_id
-    a = aql.cleanup([test_table, test_temp_table])
+@mock.patch("astro.databases.base.BaseDatabase.run_sql")
+def test_cleanup_one_table(mock_run_sql, temp_table):
+    a = aql.cleanup([temp_table])
     a.execute({})
-    assert db.table_exists(test_table)
-    assert not db.table_exists(test_temp_table)
+    mock_run_sql.assert_called_once_with(
+        drop_table_statement.format("table_name", table_name=temp_table.name)
+    )
 
 
-@pytest.mark.integration
 @pytest.mark.parametrize(
-    "database_table_fixture",
-    SUPPORTED_DATABASES_OBJECTS_WITH_FILE,
-    indirect=True,
-    ids=SUPPORTED_DATABASES,
+    "temp_table, non_temp_table",
+    [
+        (Table(conn_id="sqlite_conn"), Table(name="foo", conn_id="sqlite_conn")),
+        (Table(conn_id="gcp_conn"), Table(name="foo", conn_id="gcp_conn")),
+        (Table(conn_id="snowflake_conn"), Table(name="foo", conn_id="snowflake_conn")),
+        (Table(conn_id="bigquery"), Table(name="foo", conn_id="bigquery")),
+    ],
+    ids=["sqlite", "gcp", "snowflake", "bigquery"],
 )
-def test_cleanup_non_table(database_table_fixture):
-    db, test_table = database_table_fixture
+@mock.patch("astro.databases.base.BaseDatabase.run_sql")
+def test_cleanup_non_temp_table(mock_run_sql, temp_table, non_temp_table):
+    a = aql.cleanup([temp_table, non_temp_table])
+    a.execute({})
+    mock_run_sql.assert_called_once_with(
+        drop_table_statement.format("table_name", table_name=temp_table.name)
+    )
+
+
+@pytest.mark.parametrize(
+    "temp_table",
+    [
+        Table(conn_id="sqlite_conn"),
+        Table(conn_id="gcp_conn"),
+        Table(conn_id="snowflake_conn"),
+        Table(conn_id="bigquery"),
+    ],
+    ids=["sqlite", "gcp", "snowflake", "bigquery"],
+)
+@mock.patch("astro.databases.base.BaseDatabase.run_sql")
+def test_cleanup_non_table(mock_run_sql, temp_table):
     df = pandas.DataFrame(
         [
             {"id": 1, "name": "First"},
@@ -99,41 +90,25 @@ def test_cleanup_non_table(database_table_fixture):
             {"id": 3, "name": "Third with unicode पांचाल"},
         ]
     )
-    a = aql.cleanup([test_table, df])
+    a = aql.cleanup([temp_table, df])
     a.execute({})
-    assert not db.table_exists(test_table)
+    mock_run_sql.assert_called_once_with(
+        drop_table_statement.format("table_name", table_name=temp_table.name)
+    )
 
 
-@pytest.mark.integration
 @pytest.mark.parametrize(
-    "database_table_fixture",
-    SUPPORTED_DATABASES_OBJECTS_WITH_FILE,
-    indirect=True,
-    ids=SUPPORTED_DATABASES,
-)
-@pytest.mark.parametrize(
-    "multiple_tables_fixture",
+    "temp_table_1, temp_table_2",
     [
-        {
-            "items": [
-                {
-                    "file": File(DEFAULT_FILEPATH),
-                },
-                {
-                    "file": File(DEFAULT_FILEPATH),
-                },
-            ]
-        }
+        (Table(conn_id="sqlite_conn"), Table(conn_id="sqlite_conn")),
+        (Table(conn_id="gcp_conn"), Table(conn_id="gcp_conn")),
+        (Table(conn_id="snowflake_conn"), Table(conn_id="snowflake_conn")),
+        (Table(conn_id="bigquery"), Table(conn_id="bigquery")),
     ],
-    indirect=True,
-    ids=["two_tables"],
+    ids=["sqlite", "gcp", "snowflake", "bigquery"],
 )
-def test_cleanup_multiple_table(database_table_fixture, multiple_tables_fixture):
-    db, _ = database_table_fixture
-    test_table_1, test_table_2 = multiple_tables_fixture
-    assert db.table_exists(test_table_1)
-    assert db.table_exists(test_table_2)
-
+@mock.patch("astro.databases.base.BaseDatabase.run_sql")
+def test_cleanup_multiple_table(mock_run_sql, temp_table_1, temp_table_2):
     df = pandas.DataFrame(
         [
             {"id": 1, "name": "First"},
@@ -141,51 +116,41 @@ def test_cleanup_multiple_table(database_table_fixture, multiple_tables_fixture)
             {"id": 3, "name": "Third with unicode पांचाल"},
         ]
     )
-    a = aql.cleanup([test_table_1, test_table_2, df])
+    a = aql.cleanup([temp_table_1, temp_table_2, df])
     a.execute({})
-    assert not db.table_exists(test_table_1)
-    assert not db.table_exists(test_table_2)
+    calls = [
+        call(drop_table_statement.format("table_name", table_name=temp_table_1.name)),
+        call(drop_table_statement.format("table_name", table_name=temp_table_2.name)),
+    ]
+    mock_run_sql.assert_has_calls(calls)
 
 
-@pytest.mark.integration
 @pytest.mark.parametrize(
-    "database_table_fixture",
-    SUPPORTED_DATABASES_OBJECTS_WITH_FILE,
-    indirect=True,
-    ids=SUPPORTED_DATABASES,
-)
-@pytest.mark.parametrize(
-    "multiple_tables_fixture",
+    "temp_table_1, temp_table_2",
     [
-        {
-            "items": [
-                {"file": File(path=DEFAULT_FILEPATH)},
-                {
-                    "file": File(DEFAULT_FILEPATH),
-                },
-            ]
-        }
+        (Table(conn_id="sqlite_conn"), Table(conn_id="sqlite_conn")),
+        (Table(conn_id="gcp_conn"), Table(conn_id="gcp_conn")),
+        (Table(conn_id="snowflake_conn"), Table(conn_id="snowflake_conn")),
+        (Table(conn_id="bigquery"), Table(conn_id="bigquery")),
     ],
-    indirect=True,
-    ids=["two_tables"],
+    ids=["sqlite", "gcp", "snowflake", "bigquery"],
 )
-def test_cleanup_default_all_tables(sample_dag, database_table_fixture, multiple_tables_fixture):
+@mock.patch("astro.databases.base.BaseDatabase.run_sql")
+def test_cleanup_default_all_tables(mock_run_sql, temp_table_1, temp_table_2, sample_dag):
     @aql.transform()
     def foo(input_table: Table):
         return "SELECT * FROM {{input_table}}"
 
-    db, _ = database_table_fixture
-    table_1, table_2 = multiple_tables_fixture
-    assert db.table_exists(table_1)
-    assert db.table_exists(table_2)
-
     with sample_dag:
-        foo(table_1, output_table=table_2)
+        foo(temp_table_1, output_table=temp_table_2)
 
         aql.cleanup()
     test_utils.run_dag(sample_dag)
-
-    assert not db.table_exists(table_2)
+    calls = [
+        call(drop_table_statement.format("table_name", table_name=temp_table_1.name)),
+        call(drop_table_statement.format("table_name", table_name=temp_table_2.name)),
+    ]
+    mock_run_sql.assert_has_calls(calls)
 
 
 @pytest.mark.integration
