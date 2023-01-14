@@ -317,5 +317,4 @@ def test_merge_sql_generation(database_class, conn_id, merge_parameters):
             if_conflicts=if_conflicts,
         )
         merge_func.operator.execute(MagicMock())
-    print(mock_run_sql.call_args_list[0][1]["sql"])
     assert mock_run_sql.call_args_list[0][1]["sql"] == get_result_sql(conn_id, mode)
