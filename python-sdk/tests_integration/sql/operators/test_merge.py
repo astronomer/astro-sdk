@@ -1,5 +1,6 @@
 import math
 import pathlib
+from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
@@ -256,3 +257,166 @@ def test_merge_with_different_schemas(database_table_fixture, multiple_tables_fi
     )
     assert first_table.row_count == 4
     test_utils.assert_dataframes_are_equal(computed, expected)
+
+
+sqlite_update_result_sql = (
+    "INSERT INTO target_table (list,sell,taxes) SELECT list,sell,age FROM source_table "
+    "Where true ON CONFLICT (list,sell) DO UPDATE SET "
+    "list=EXCLUDED.list,sell=EXCLUDED.sell,taxes=EXCLUDED.taxes"
+)
+
+snowflake_update_result_sql = (
+    "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
+    "on Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0) "
+    "AND Identifier(:merge_clause_target_1)=Identifier(:merge_clause_source_1) "
+    "when matched then "
+    "UPDATE SET "
+    "target_table.list=source_table.list,target_table.sell=source_table.sell,"
+    "target_table.taxes=source_table.age "
+    "when not matched then insert(target_table.list,target_table.sell,target_table.taxes) "
+    "values (source_table.list,source_table.sell,source_table.age)"
+)
+
+delta_update_result_sql = (
+    "merge into target_table as `target_table` using source_table as"
+    " `source_table` on `target_table`.`list`=`source_table`.`list` AND "
+    "`target_table`.`sell`=`source_table`.`sell` "
+    "when matched then UPDATE SET target_table.list = source_table.list,"
+    "target_table.sell = source_table.sell,target_table.taxes = source_table.age "
+    "when not matched then insert(target_table.list,target_table.sell,target_table.taxes) "
+    "values (source_table.list,source_table.sell,source_table.age)"
+)
+bigquery_update_result_sql = (
+    "MERGE tmp_astro.target_table T USING tmp_astro.source_table S "
+    "ON T.list=S.list AND T.sell=S.sell WHEN NOT MATCHED BY TARGET THEN INSERT "
+    "(list, sell, taxes) VALUES (list, sell, age) WHEN MATCHED THEN UPDATE SET T.list=S.list, "
+    "T.sell=S.sell, T.taxes=S.age"
+)
+
+sqlite_multi_result_sql = (
+    "INSERT INTO target_table (list,sell) SELECT list,sell FROM source_table "
+    "Where true ON CONFLICT (list,sell) DO NOTHING"
+)
+snowflake_multi_result_sql = (
+    "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) on "
+    "Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0) AND "
+    "Identifier(:merge_clause_target_1)=Identifier(:merge_clause_source_1) "
+    "when not matched then insert(target_table.list,target_table.sell) values "
+    "(source_table.list,source_table.sell)"
+)
+delta_multi_result_sql = (
+    "merge into target_table as `target_table` using source_table as `source_table` on "
+    "`target_table`.`list`=`source_table`.`list` AND `target_table`.`sell`=`source_table`.`sell`"
+    " when not matched then insert(target_table.list,target_table.sell) "
+    "values (source_table.list,source_table.sell)"
+)
+bigquery_multi_result_sql = (
+    "MERGE tmp_astro.target_table T USING tmp_astro.source_table S "
+    "ON T.list=S.list AND T.sell=S.sell WHEN NOT MATCHED BY TARGET THEN INSERT"
+    " (list, sell) VALUES (list, sell)"
+)
+sqlite_single_result_sql = (
+    "INSERT INTO target_table (list) SELECT list "
+    "FROM source_table Where true ON CONFLICT (list) DO NOTHING"
+)
+snowflake_single_result_sql = (
+    "merge into IDENTIFIER(:target_table) using IDENTIFIER(:source_table) "
+    "on Identifier(:merge_clause_target_0)=Identifier(:merge_clause_source_0)"
+    " when not matched then insert(target_table.list) values (source_table.list)"
+)
+delta_single_result_sql = (
+    "merge into target_table as `target_table` using source_table as `source_table`"
+    " on `target_table`.`list`=`source_table`.`list` when not matched then "
+    "insert(target_table.list) values (source_table.list)"
+)
+bigquery_single_result_sql = (
+    "MERGE tmp_astro.target_table T USING tmp_astro.source_table S ON T.list=S.list "
+    "WHEN NOT MATCHED BY TARGET THEN INSERT (list) VALUES (list)"
+)
+
+base_database_class = "astro.databases.base.BaseDatabase.run_sql"
+delta_database_class = "astro.databases.databricks.delta.DeltaDatabase.run_sql"
+
+
+def get_result_sql(conn_id, mode):
+    if mode == "update":
+        return get_result_sql_update(conn_id)
+    elif mode == "single":
+        return get_result_sql_single(conn_id)
+    return get_result_sql_multi(conn_id)
+
+
+def get_result_sql_update(conn_id):
+    database_type = create_database(conn_id=conn_id).sql_type
+    if database_type == "sqlite":
+        return sqlite_update_result_sql
+    elif database_type == "snowflake":
+        return snowflake_update_result_sql
+    elif database_type == "delta":
+        return delta_update_result_sql
+    elif database_type == "bigquery":
+        return bigquery_update_result_sql
+
+
+def get_result_sql_multi(conn_id):
+    database_type = create_database(conn_id=conn_id).sql_type
+    if database_type == "sqlite":
+        return sqlite_multi_result_sql
+    elif database_type == "snowflake":
+        return snowflake_multi_result_sql
+    elif database_type == "delta":
+        return delta_multi_result_sql
+    elif database_type == "bigquery":
+        return bigquery_multi_result_sql
+
+
+def get_result_sql_single(conn_id):
+    database_type = create_database(conn_id=conn_id).sql_type
+    if database_type == "sqlite":
+        return sqlite_single_result_sql
+    elif database_type == "snowflake":
+        return snowflake_single_result_sql
+    elif database_type == "delta":
+        return delta_single_result_sql
+    elif database_type == "bigquery":
+        return bigquery_single_result_sql
+
+
+@pytest.mark.parametrize(
+    "merge_parameters",
+    [
+        "single",
+        "multi",
+        "update",
+    ],
+    indirect=True,
+)
+@pytest.mark.parametrize(
+    "database_class,conn_id",
+    [
+        (base_database_class, "sqlite_conn"),
+        (base_database_class, "gcp_conn"),
+        (base_database_class, "snowflake_conn"),
+        (delta_database_class, "databricks_conn"),
+    ],
+    ids=["sqlite", "bigquery", "snowflake", "databricks"],
+)
+def test_merge_sql_generation(database_class, conn_id, merge_parameters):
+    parameters, mode = merge_parameters
+    target_table = Table("target_table", conn_id=conn_id)
+    source_table = Table("source_table", conn_id=conn_id)
+    target_conflict_columns = parameters["target_conflict_columns"]
+    columns = parameters["columns"]
+    if_conflicts = parameters["if_conflicts"]
+    with patch(database_class) as mock_run_sql, patch(
+        "astro.databases.google.bigquery.BigqueryDatabase.columns_exist"
+    ):
+        merge_func = aql.merge(
+            target_table=target_table,
+            source_table=source_table,
+            target_conflict_columns=target_conflict_columns,
+            columns=columns,
+            if_conflicts=if_conflicts,
+        )
+        merge_func.operator.execute(MagicMock())
+    assert mock_run_sql.call_args_list[0][1]["sql"] == get_result_sql(conn_id, mode)
