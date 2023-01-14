@@ -252,6 +252,8 @@ def get_result_sql_update(conn_id):
         return snowflake_update_result_sql
     elif database_type == "delta":
         return delta_update_result_sql
+    elif database_type == "bigquery":
+        return bigquery_update_result_sql
 
 
 def get_result_sql_multi(conn_id):
@@ -262,6 +264,8 @@ def get_result_sql_multi(conn_id):
         return snowflake_multi_result_sql
     elif database_type == "delta":
         return delta_multi_result_sql
+    elif database_type == "bigquery":
+        return bigquery_multi_result_sql
 
 
 def get_result_sql_single(conn_id):
@@ -272,6 +276,8 @@ def get_result_sql_single(conn_id):
         return snowflake_single_result_sql
     elif database_type == "delta":
         return delta_single_result_sql
+    elif database_type == "bigquery":
+        return bigquery_single_result_sql
 
 
 @pytest.mark.parametrize(

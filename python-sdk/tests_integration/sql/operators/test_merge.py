@@ -107,12 +107,11 @@ def validate_results(df: pd.DataFrame, mode):
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
-        {"database": Database.BIGQUERY},
         {"database": Database.REDSHIFT},
         {"database": Database.POSTGRES},
     ],
     indirect=True,
-    ids=["bigquery", "redshift", "postgres"],
+    ids=["redshift", "postgres"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
