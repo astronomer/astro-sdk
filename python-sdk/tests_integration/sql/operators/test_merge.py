@@ -10,6 +10,7 @@ from astro import sql as aql
 from astro.constants import Database
 from astro.databases import create_database
 from astro.files import File
+from astro.settings import SCHEMA
 from astro.table import Metadata, Table
 
 from ..operators import utils as test_utils
@@ -287,7 +288,7 @@ delta_update_result_sql = (
     "values (source_table.list,source_table.sell,source_table.age)"
 )
 bigquery_update_result_sql = (
-    "MERGE tmp_astro.target_table T USING tmp_astro.source_table S "
+    f"MERGE {SCHEMA}.target_table T USING {SCHEMA}.source_table S "
     "ON T.list=S.list AND T.sell=S.sell WHEN NOT MATCHED BY TARGET THEN INSERT "
     "(list, sell, taxes) VALUES (list, sell, age) WHEN MATCHED THEN UPDATE SET T.list=S.list, "
     "T.sell=S.sell, T.taxes=S.age"
@@ -311,7 +312,7 @@ delta_multi_result_sql = (
     "values (source_table.list,source_table.sell)"
 )
 bigquery_multi_result_sql = (
-    "MERGE tmp_astro.target_table T USING tmp_astro.source_table S "
+    f"MERGE {SCHEMA}.target_table T USING {SCHEMA}.source_table S "
     "ON T.list=S.list AND T.sell=S.sell WHEN NOT MATCHED BY TARGET THEN INSERT"
     " (list, sell) VALUES (list, sell)"
 )
@@ -330,7 +331,7 @@ delta_single_result_sql = (
     "insert(target_table.list) values (source_table.list)"
 )
 bigquery_single_result_sql = (
-    "MERGE tmp_astro.target_table T USING tmp_astro.source_table S ON T.list=S.list "
+    f"MERGE {SCHEMA}.target_table T USING {SCHEMA}.source_table S ON T.list=S.list "
     "WHEN NOT MATCHED BY TARGET THEN INSERT (list) VALUES (list)"
 )
 
