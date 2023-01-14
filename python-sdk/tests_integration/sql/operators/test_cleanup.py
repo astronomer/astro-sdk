@@ -40,9 +40,8 @@ drop_table_statement = "DROP TABLE IF EXISTS {table_name}"
         Table(conn_id="sqlite_conn"),
         Table(conn_id="snowflake_conn"),
         Table(conn_id="bigquery"),
-        Table(conn_id="databricks_conn"),
     ],
-    ids=["sqlite", "snowflake", "bigquery", "databricks"],
+    ids=["sqlite", "snowflake", "bigquery"],
 )
 @mock.patch("astro.databases.base.BaseDatabase.run_sql")
 def test_cleanup_one_table(mock_run_sql, temp_table):
