@@ -690,7 +690,7 @@ def test_load_file_bigquery_error_out(sample_dag, database_table_fixture):
     with pytest.raises(DatabaseCustomError):
         with sample_dag:
             load_file(
-                input_file=File("gs://astro-sdk/imdb.csv", conn_id="gcp_conn"),
+                input_file=File("s3://astro-sdk/imdb.csv", conn_id="aws_conn"),
                 output_table=test_table,
                 use_native_support=True,
                 enable_native_fallback=False,
