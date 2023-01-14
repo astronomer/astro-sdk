@@ -43,7 +43,6 @@ def merge_parameters(request):
             },
             mode,
         )
-    # elif mode == "update":
     return (
         {
             "target_conflict_columns": ["list", "sell"],
@@ -113,7 +112,7 @@ def validate_results(df: pd.DataFrame, mode):
         {"database": Database.POSTGRES},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "redshift", "postgres", "sqlite", "delta"],
+    ids=["bigquery", "redshift", "postgres"],
 )
 @pytest.mark.parametrize(
     "multiple_tables_fixture",
