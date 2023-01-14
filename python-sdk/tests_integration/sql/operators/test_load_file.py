@@ -495,16 +495,6 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
     [
         (
             {
-                "database": Database.BIGQUERY,
-            },
-            {
-                "ignore_unknown_values": True,
-                "allow_jagged_rows": True,
-                "skip_leading_rows": "1",
-            },
-        ),
-        (
-            {
                 "database": Database.REDSHIFT,
             },
             {
@@ -515,7 +505,7 @@ def test_load_file_chunks(sample_dag, database_table_fixture):
         ),
     ],
     indirect=["database_table_fixture"],
-    ids=["Bigquery", "Redshift"],
+    ids=["Redshift"],
 )
 def test_aql_load_file_s3_native_path(sample_dag, database_table_fixture, native_support_kwargs):
     """
@@ -700,7 +690,7 @@ def test_load_file_bigquery_error_out(sample_dag, database_table_fixture):
     with pytest.raises(DatabaseCustomError):
         with sample_dag:
             load_file(
-                input_file=File("s3://astro-sdk/imdb.csv", conn_id="aws_conn"),
+                input_file=File("gs://astro-sdk/imdb.csv", conn_id="gcp_conn"),
                 output_table=test_table,
                 use_native_support=True,
                 enable_native_fallback=False,

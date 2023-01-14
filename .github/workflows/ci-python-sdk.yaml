@@ -342,8 +342,6 @@ jobs:
       )
     strategy:
       fail-fast: false
-      matrix:
-        group: [ 1, 2, 3]
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -396,7 +394,7 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.5.0')" -- tests_integration/ -k "test_example_dags.py" --splits 3 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-3.8(airflow='2.5.0')" -- tests_integration/ -k "test_example_dags.py" --cov=src --cov-report=xml --cov-branch
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
