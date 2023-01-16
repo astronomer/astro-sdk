@@ -618,9 +618,19 @@ class SnowflakeDatabase(BaseDatabase):
 
         """
         native_support_kwargs = native_support_kwargs or {}
-        storage_integration = native_support_kwargs.get("storage_integration")
         if not self.load_options:
             self.load_options = SnowflakeLoadOptions()
+
+        storage_integration = native_support_kwargs.get("storage_integration", None)
+        if storage_integration is None:
+            storage_integration = self.load_options.copy_options.get("storage_integration", None)
+
+        if storage_integration is None:
+            raise ValueError(
+                "Param 'storage_integration' is required. Please pass either in `native_support_kwargs` or"
+                " `SnowflakeLoadOptions.copy_options`"
+            )
+
         stage = self.create_stage(file=source_file, storage_integration=storage_integration)
 
         rows = self._copy_into_table_from_stage(
