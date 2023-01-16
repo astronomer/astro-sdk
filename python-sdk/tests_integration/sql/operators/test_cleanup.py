@@ -40,13 +40,16 @@ drop_table_statement = "DROP TABLE IF EXISTS {table_name}"
         Table(conn_id="sqlite_conn"),
         Table(conn_id="snowflake_conn"),
         Table(conn_id="bigquery"),
+        Table(conn_id="databricks_conn"),
+        Table(conn_id="redshift_conn"),
     ],
-    ids=["sqlite", "snowflake", "bigquery"],
+    ids=["sqlite", "snowflake", "bigquery", "databricks", "redshift"],
 )
-@mock.patch("astro.databases.base.BaseDatabase.run_sql")
-def test_cleanup_one_table(mock_run_sql, temp_table):
-    a = aql.cleanup([temp_table])
-    a.execute({})
+def test_cleanup_one_table(temp_table):
+    module = create_database(temp_table.conn_id)
+    with mock.patch(f"{module.__class__.__module__}.{module.__class__.__name__}.run_sql") as mock_run_sql:
+        a = aql.cleanup([temp_table])
+        a.execute({})
     mock_run_sql.assert_called_once_with(
         drop_table_statement.format("table_name", table_name=temp_table.name)
     )
@@ -58,13 +61,16 @@ def test_cleanup_one_table(mock_run_sql, temp_table):
         (Table(conn_id="sqlite_conn"), Table(name="foo", conn_id="sqlite_conn")),
         (Table(conn_id="snowflake_conn"), Table(name="foo", conn_id="snowflake_conn")),
         (Table(conn_id="bigquery"), Table(name="foo", conn_id="bigquery")),
+        (Table(conn_id="databricks_conn"), Table(name="foo", conn_id="databricks_conn")),
+        (Table(conn_id="redshift_conn"), Table(name="foo", conn_id="redshift_conn")),
     ],
-    ids=["sqlite", "snowflake", "bigquery"],
+    ids=["sqlite", "snowflake", "bigquery", "databricks", "redshift"],
 )
-@mock.patch("astro.databases.base.BaseDatabase.run_sql")
-def test_cleanup_non_temp_table(mock_run_sql, temp_table, non_temp_table):
-    a = aql.cleanup([temp_table, non_temp_table])
-    a.execute({})
+def test_cleanup_non_temp_table(temp_table, non_temp_table):
+    module = create_database(temp_table.conn_id)
+    with mock.patch(f"{module.__class__.__module__}.{module.__class__.__name__}.run_sql") as mock_run_sql:
+        a = aql.cleanup([temp_table, non_temp_table])
+        a.execute({})
     mock_run_sql.assert_called_once_with(
         drop_table_statement.format("table_name", table_name=temp_table.name)
     )
@@ -76,11 +82,12 @@ def test_cleanup_non_temp_table(mock_run_sql, temp_table, non_temp_table):
         Table(conn_id="sqlite_conn"),
         Table(conn_id="snowflake_conn"),
         Table(conn_id="bigquery"),
+        Table(conn_id="databricks_conn"),
+        Table(conn_id="redshift_conn"),
     ],
-    ids=["sqlite", "snowflake", "bigquery"],
+    ids=["sqlite", "snowflake", "bigquery", "databricks", "redshift"],
 )
-@mock.patch("astro.databases.base.BaseDatabase.run_sql")
-def test_cleanup_non_table(mock_run_sql, temp_table):
+def test_cleanup_non_table(temp_table):
     df = pandas.DataFrame(
         [
             {"id": 1, "name": "First"},
@@ -88,8 +95,10 @@ def test_cleanup_non_table(mock_run_sql, temp_table):
             {"id": 3, "name": "Third with unicode पांचाल"},
         ]
     )
-    a = aql.cleanup([temp_table, df])
-    a.execute({})
+    module = create_database(temp_table.conn_id)
+    with mock.patch(f"{module.__class__.__module__}.{module.__class__.__name__}.run_sql") as mock_run_sql:
+        a = aql.cleanup([temp_table, df])
+        a.execute({})
     mock_run_sql.assert_called_once_with(
         drop_table_statement.format("table_name", table_name=temp_table.name)
     )
@@ -104,8 +113,7 @@ def test_cleanup_non_table(mock_run_sql, temp_table):
     ],
     ids=["sqlite", "gcp", "snowflake"],
 )
-@mock.patch("astro.databases.base.BaseDatabase.run_sql")
-def test_cleanup_multiple_table(mock_run_sql, temp_table_1, temp_table_2):
+def test_cleanup_multiple_table(temp_table_1, temp_table_2):
     df = pandas.DataFrame(
         [
             {"id": 1, "name": "First"},
@@ -113,8 +121,10 @@ def test_cleanup_multiple_table(mock_run_sql, temp_table_1, temp_table_2):
             {"id": 3, "name": "Third with unicode पांचाल"},
         ]
     )
-    a = aql.cleanup([temp_table_1, temp_table_2, df])
-    a.execute({})
+    module = create_database(temp_table_1.conn_id)
+    with mock.patch(f"{module.__class__.__module__}.{module.__class__.__name__}.run_sql") as mock_run_sql:
+        a = aql.cleanup([temp_table_1, temp_table_2, df])
+        a.execute({})
     calls = [
         call(drop_table_statement.format("table_name", table_name=temp_table_1.name)),
         call(drop_table_statement.format("table_name", table_name=temp_table_2.name)),
@@ -129,11 +139,12 @@ def test_cleanup_multiple_table(mock_run_sql, temp_table_1, temp_table_2):
         (Table(conn_id="gcp_conn"), Table(conn_id="gcp_conn")),
         (Table(conn_id="snowflake_conn"), Table(conn_id="snowflake_conn")),
         (Table(conn_id="bigquery"), Table(conn_id="bigquery")),
+        (Table(conn_id="databricks_conn"), Table(conn_id="databricks_conn")),
+        (Table(conn_id="redshift_conn"), Table(conn_id="redshift_conn")),
     ],
     ids=["sqlite", "gcp", "snowflake", "bigquery"],
 )
-@mock.patch("astro.databases.base.BaseDatabase.run_sql")
-def test_cleanup_default_all_tables(mock_run_sql, temp_table_1, temp_table_2, sample_dag):
+def test_cleanup_default_all_tables(temp_table_1, temp_table_2, sample_dag):
     @aql.transform()
     def foo(input_table: Table):
         return "SELECT * FROM {{input_table}}"
@@ -142,11 +153,17 @@ def test_cleanup_default_all_tables(mock_run_sql, temp_table_1, temp_table_2, sa
         foo(temp_table_1, output_table=temp_table_2)
 
         aql.cleanup()
-    test_utils.run_dag(sample_dag)
-    db = create_database(temp_table_1.conn_id)
-    calls = [
-        call(drop_table_statement.format("table_name", table_name=db.get_table_qualified_name(temp_table_2))),
-    ]
+    module = create_database(temp_table_1.conn_id)
+    with mock.patch(f"{module.__class__.__module__}.{module.__class__.__name__}.run_sql") as mock_run_sql:
+        test_utils.run_dag(sample_dag)
+        db = create_database(temp_table_1.conn_id)
+        calls = [
+            call(
+                drop_table_statement.format(
+                    "table_name", table_name=db.get_table_qualified_name(temp_table_2)
+                )
+            ),
+        ]
     mock_run_sql.assert_has_calls(calls)
 
 
