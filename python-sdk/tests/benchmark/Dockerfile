@@ -22,12 +22,12 @@ RUN apt-get update && \
     apt-get install -y wget && \
     apt install -y jq && \
     apt install -y vim && \
+    apt install -y curl && \
     echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && \
-    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
+    curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
     apt-get update && \
     apt-get install google-cloud-sdk -y && \
     apt-get install google-cloud-sdk-gke-gcloud-auth-plugin -y && \
-    apt install -y curl && \
     apt install -y libpq-dev python3-dev
 
 # Install Astro SDK dependencies
