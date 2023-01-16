@@ -11,6 +11,7 @@ Example -
 
 This will show all the commits that are in the main branch but not in the release branch. Using this we can note all the changes significant enough to be mentioned in CHANGELOGS.
 
+
 ## Handling patch releases
 
 ### When should I create a patch release?
