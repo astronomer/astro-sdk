@@ -56,6 +56,7 @@ jobs:
       - run: ( echo "cat <<EOF >python-sdk/test-connections.yaml"; cat .github/ci-test-connections.yaml; ) >python-sdk/test-connections.yaml && . python-sdk/test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: curl -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-413.0.0-linux-x86_64.tar.gz
+      - run: ls -la
       - run: tar -xf google-cloud-cli-413.0.0-linux-x86.tar.gz
       - run: ./google-cloud-sdk/install.sh
       - run: gcloud components update
