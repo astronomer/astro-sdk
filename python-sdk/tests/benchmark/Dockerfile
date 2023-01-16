@@ -22,8 +22,8 @@ RUN apt-get update && \
     apt-get install -y wget && \
     apt install -y jq && \
     apt install -y vim && \
-    apt-get install google-cloud-sdk -y && \
     apt-get update && \
+    apt-get install google-cloud-sdk -y && \
     apt-get install google-cloud-sdk-gke-gcloud-auth-plugin -y && \
     apt install -y curl && \
     apt install -y libpq-dev python3-dev
