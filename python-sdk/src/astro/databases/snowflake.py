@@ -626,7 +626,7 @@ class SnowflakeDatabase(BaseDatabase):
             storage_integration = self.load_options.storage_integration
 
         if storage_integration is None:
-            raise ValueError(
+            raise DatabaseCustomError(
                 "Param 'storage_integration' is required. Please pass either in `native_support_kwargs` or"
                 " `SnowflakeLoadOptions.copy_options`"
             )

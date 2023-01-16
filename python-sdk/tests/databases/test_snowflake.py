@@ -175,7 +175,7 @@ def test_storage_integrations_params():
     table = Table(conn_id="fake-conn")
     file = File(path="azure://data/homes_main.ndjson")
     database = SnowflakeDatabase(conn_id=table.conn_id, load_options=SnowflakeLoadOptions())
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(DatabaseCustomError) as e:
         database.load_file_to_table_natively(source_file=file, target_table=table)
     assert e.match(
         "Param 'storage_integration' is required. Please pass either in `native_support_kwargs` or"
