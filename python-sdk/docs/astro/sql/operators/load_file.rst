@@ -288,6 +288,15 @@ Users can also load data from an FTP:
    :start-after: [START load_file_example_21]
    :end-before: [END load_file_example_21]
 
+Loading data from Azure Blob storage
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Users can also load data from an FTP:
+
+.. literalinclude:: ../../../../example_dags/example_load_file.py
+   :language: python
+   :start-after: [START load_file_example_25]
+   :end-before: [END load_file_example_25]
+
 
 Default Datasets
 ~~~~~~~~~~~~~~~~
