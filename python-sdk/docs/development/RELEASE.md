@@ -2,7 +2,9 @@
 
 ## Updating the changelog
 
-The first step to creating a release is identifying what changed from the previous release and adding a description to the [CHANGELOG.md](../CHANGELOG.md)
+The first step to creating a release is identifying what changed from the previous release and adding a description to the [CHANGELOG.md](../CHANGELOG.md).
+
+One way to identify what changed from the previous release is to raise a dummy PR from the main branch to the previous release branch. This will show all the commits that are in the main branch but not in the release branch. Using this we can note all the changes significant enough to be mentioned in CHANGELOGS.
 
 ## Handling patch releases
 
