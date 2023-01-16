@@ -103,8 +103,8 @@ Once the package pushed to PyPI/Readthedocs you also need to release constraints
 6. Add and upload
    ```console
    git add const*
-   git commit -m "Update constraints for Astro SDK 1.4.0" --no-verify  
-   git push origin constraints-1-4 
-   git tag constraints-1.4.0 
+   git commit -m "Update constraints for Astro SDK 1.4.0" --no-verify
+   git push origin constraints-1-4
+   git tag constraints-1.4.0
    git push origin constraints-1.4.0
    ```
