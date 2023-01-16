@@ -55,6 +55,6 @@ jobs:
       - run: ls -la
       - run: ( echo "cat <<EOF >python-sdk/test-connections.yaml"; cat .github/ci-test-connections.yaml; ) >python-sdk/test-connections.yaml && . python-sdk/test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
-      - run: apt-get install google-cloud-sdk -y
-      - run: apt-get install google-cloud-sdk-gke-gcloud-auth-plugin -y
+      - run: sudo apt-get install google-cloud-sdk -y
+      - run: sudo apt-get install google-cloud-sdk-gke-gcloud-auth-plugin -y
       - run: cd python-sdk/tests/benchmark && make
