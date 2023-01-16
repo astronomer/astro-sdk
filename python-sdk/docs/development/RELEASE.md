@@ -7,7 +7,7 @@ The first step to creating a release is identifying what changed from the previo
 One way to identify what changed from the previous release is to use a comparison URL between the previous release branch and the main branch.
 
 Example -
-```https://github.com/astronomer/astro-sdk/compare/1.3.3...main```
+[https://github.com/astronomer/astro-sdk/compare/1.3.3...main](https://github.com/astronomer/astro-sdk/compare/1.3.3...main)
 
 This will show all the commits that are in the main branch but not in the release branch. Using this we can note all the changes significant enough to be mentioned in CHANGELOGS.
 
