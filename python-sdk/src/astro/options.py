@@ -61,6 +61,7 @@ class SnowflakeLoadOptions(LoadOptions):
 
     file_options: dict = attr.field(init=True, factory=dict)
     copy_options: dict = attr.field(init=True, factory=dict)
+    storage_integration: str = attr.field(default=None)
 
     def empty(self):
         return not self.file_options and not self.copy_options

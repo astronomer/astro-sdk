@@ -623,7 +623,7 @@ class SnowflakeDatabase(BaseDatabase):
 
         storage_integration = native_support_kwargs.get("storage_integration", None)
         if storage_integration is None:
-            storage_integration = self.load_options.copy_options.get("storage_integration", None)
+            storage_integration = self.load_options.storage_integration
 
         if storage_integration is None:
             raise ValueError(

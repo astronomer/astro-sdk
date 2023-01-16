@@ -211,7 +211,7 @@ def test_storage_integrations_params_in_load_options():
     file = File(path="azure://data/homes_main.ndjson")
     database = SnowflakeDatabase(
         conn_id=table.conn_id,
-        load_options=SnowflakeLoadOptions(copy_options={"storage_integration": "some_integrations"}),
+        load_options=SnowflakeLoadOptions(storage_integration="some_integrations"),
     )
 
     with mock.patch("astro.databases.snowflake.SnowflakeDatabase.create_stage"), mock.patch(
