@@ -14,7 +14,6 @@ ENV GCP_BUCKET=dag-authoring
 ENV AIRFLOW__ASTRO_SDK__SNOWFLAKE_STORAGE_INTEGRATION_GOOGLE=gcs_int_python_sdk
 ENV AIRFLOW__ASTRO_SDK__LOAD_TABLE_AUTODETECT_ROWS_COUNT=1000
 ENV GIT_HASH ${GIT_HASH}
-ENV USE_GKE_GCLOUD_AUTH_PLUGIN=True
 
 # Debian Bullseye is shipped with Python 3.9
 # Upgrade built-in pip
@@ -22,23 +21,11 @@ RUN apt-get update && \
     apt-get install -y python3-pip && \
     apt-get install -y wget && \
     apt install -y jq && \
-    apt install -y vim
-
-# Install the Google SDK
-RUN apt install -y curl
-RUN wget https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-327.0.0-linux-x86_64.tar.gz -O /tmp/google-cloud-sdk.tar.gz
-
-RUN mkdir -p /usr/local/gcloud \
-    && tar -C /usr/local/gcloud -xvzf /tmp/google-cloud-sdk.tar.gz \
-    && /usr/local/gcloud/google-cloud-sdk/install.sh -q
-
-ENV PATH $PATH:/usr/local/gcloud/google-cloud-sdk/bin
-
-RUN gcloud components update
-
-RUN gcloud components install gke-gcloud-auth-plugin
-
-RUN apt install -y libpq-dev python3-dev
+    apt install -y vim && \
+    apt-get install google-cloud-sdk -y && \
+    apt-get install google-cloud-sdk-gke-gcloud-auth-plugin -y && \
+    apt install -y curl && \
+    apt install -y libpq-dev python3-dev
 
 # Install Astro SDK dependencies
 COPY . .
