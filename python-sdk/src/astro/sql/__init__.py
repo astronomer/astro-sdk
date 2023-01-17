@@ -8,7 +8,7 @@ from astro.sql.operators.data_validations.check_column import (  # skipcq: PY-W2
     ColumnCheckOperator,
     column_check,
 )
-from astro.sql.operators.data_validations.SQLCheckOperator import (  # skipcq: PY-W2000
+from astro.sql.operators.data_validations.check_sql_table import (  # skipcq: PY-W2000
     SQLCheckOperator,
     sql_check,
 )
