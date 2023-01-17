@@ -186,7 +186,9 @@ Subset of the Github git repository records
 
 ### Stack Overflow
 Subset of the archives of Stack Overflow:
+<!-- markdown-link-check-disable -->
 * Source: https://archive.org/download/stackexchange (superuser.com.7z)
+*<!-- markdown-link-check-enable -->
 * Download date: 9 June 2022
 * Original (file) size: 1.1 GB
 * License: CC BY-SA 3.0
