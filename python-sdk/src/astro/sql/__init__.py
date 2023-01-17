@@ -8,9 +8,9 @@ from astro.sql.operators.data_validations.check_column import (  # skipcq: PY-W2
     ColumnCheckOperator,
     column_check,
 )
-from astro.sql.operators.data_validations.check_sql_table import (  # skipcq: PY-W2000
+from astro.sql.operators.data_validations.check_table import (  # skipcq: PY-W2000
     SQLCheckOperator,
-    check_sql_table,
+    check_table,
 )
 from astro.sql.operators.dataframe import DataframeOperator, dataframe
 from astro.sql.operators.drop import DropTableOperator, drop_table

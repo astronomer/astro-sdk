@@ -51,7 +51,7 @@ class SQLCheckOperator(SQLTableCheckOperator):
             checks=checks,
             partition_clause=partition_clause,
             conn_id=dataset.conn_id,
-            task_id=task_id or get_unique_task_id("check_sql_table"),
+            task_id=task_id or get_unique_task_id("check_table"),
         )
 
     def get_db_hook(self) -> DbApiHook:
@@ -66,7 +66,7 @@ class SQLCheckOperator(SQLTableCheckOperator):
         return super().get_db_hook()
 
 
-def check_sql_table(
+def check_table(
     dataset: BaseTable,
     checks: Dict[str, Dict[str, Any]],
     partition_clause: Optional[str] = None,
