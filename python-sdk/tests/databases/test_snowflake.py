@@ -165,3 +165,45 @@ def test_snowflake_load_options_empty():
     assert not load_options.empty()
     load_options.file_options = {}
     assert load_options.empty()
+
+
+def test_storage_integrations_params_in_native_support_kwargs():
+    """
+    Test passing of storage_integrations in native_support_kwargs
+    """
+    table = Table(conn_id="fake-conn")
+    file = File(path="azure://data/homes_main.ndjson")
+    database = SnowflakeDatabase(conn_id=table.conn_id, load_options=SnowflakeLoadOptions())
+
+    with mock.patch("astro.databases.snowflake.SnowflakeDatabase.create_stage") as create_stage, mock.patch(
+        "astro.databases.snowflake.SnowflakeDatabase._copy_into_table_from_stage"
+    ) as _copy_into_table_from_stage, mock.patch(
+        "astro.databases.snowflake.SnowflakeDatabase.evaluate_results"
+    ):
+        database.load_file_to_table_natively(
+            source_file=file,
+            target_table=table,
+            native_support_kwargs={"storage_integration": "some_integrations"},
+        )
+    assert create_stage.call_args.kwargs["storage_integration"] == "some_integrations"
+
+
+def test_storage_integrations_params_in_load_options():
+    """
+    Test passing of storage_integrations in SnowflakeLoadOptions
+    """
+    table = Table(conn_id="fake-conn")
+    file = File(path="azure://data/homes_main.ndjson")
+    database = SnowflakeDatabase(
+        conn_id=table.conn_id,
+        load_options=SnowflakeLoadOptions(storage_integration="some_integrations"),
+    )
+
+    with mock.patch("astro.databases.snowflake.SnowflakeDatabase.create_stage") as create_stage, mock.patch(
+        "astro.databases.snowflake.SnowflakeDatabase._copy_into_table_from_stage"
+    ) as _copy_into_table_from_stage, mock.patch(
+        "astro.databases.snowflake.SnowflakeDatabase.evaluate_results"
+    ):
+        database.load_file_to_table_natively(source_file=file, target_table=table)
+
+    assert create_stage.call_args.kwargs["storage_integration"] == "some_integrations"
