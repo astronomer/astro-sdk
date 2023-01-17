@@ -24,7 +24,7 @@ def test_column_check_operator_with_null_checks(sample_dag):
     Test column_check_operator for null_check case
     """
     with sample_dag:
-        aql.column_check(
+        aql.check_column(
             dataset=df,
             column_mapping={
                 "name": {"null_check": {"geq_to": 0, "leq_to": 1}},
@@ -49,7 +49,7 @@ def test_failure_of_column_check_operator_with_null_checks__equal_to(sample_dag)
     Test that failure column_check_operator for null_check
     """
     with sample_dag, pytest.raises(AirflowException) as e:
-        aql.column_check(
+        aql.check_column(
             dataset=df,
             column_mapping={
                 "city": {
