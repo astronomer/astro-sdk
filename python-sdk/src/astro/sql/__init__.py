@@ -6,7 +6,7 @@ from astro.sql.operators.append import AppendOperator, append
 from astro.sql.operators.cleanup import CleanupOperator, cleanup
 from astro.sql.operators.data_validations.check_column import (  # skipcq: PY-W2000
     ColumnCheckOperator,
-    column_check,
+    check_column,
 )
 from astro.sql.operators.data_validations.check_table import (  # skipcq: PY-W2000
     SQLCheckOperator,
