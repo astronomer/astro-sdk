@@ -26,6 +26,8 @@ class WorkflowFile:
     :param target_directory: The target directory path for the executable workflow file.
     """
 
+    IGNORE_FILENAMES: set[str] = set()
+
     def __init__(self, root_directory: Path, path: Path, target_directory: Path) -> None:
         self.root_directory = root_directory
         self.path = path
@@ -165,6 +167,15 @@ class WorkflowFile:
         """
         raise NotImplementedError("aql operator not implemented!")
 
+    @classmethod
+    def should_ignore(cls, filepath: Path) -> bool:
+        """
+        If the file represented by filepath should not be treated as an operator.
+
+        :returns: True/False depending if the given file should be ignored.
+        """
+        return filepath.name in cls.IGNORE_FILENAMES
+
 
 class SqlFile(WorkflowFile):
     """A SqlFile is equivalent to a transform step in the Astro SDK."""
@@ -210,6 +221,7 @@ class YamlFile(WorkflowFile):
     """
 
     SUPPORTED_OPERATORS = {"load_file": get_load_file_instance}
+    IGNORE_FILENAMES: set[str] = {"workflow.yaml", "workflow.yml"}
 
     def __init__(self, root_directory: Path, path: Path, target_directory: Path) -> None:
         super().__init__(root_directory, path, target_directory)
@@ -229,7 +241,6 @@ class YamlFile(WorkflowFile):
             raise ScannerError(f"Exactly one operator expected. Got {operators_count} operators: {operators}")
 
         operator = operators[0]
-
         if operator not in self.SUPPORTED_OPERATORS:
             raise NotImplementedError(f"Operator support for {operator} not available!")
 
@@ -272,5 +283,5 @@ def get_workflow_files(directory: Path, target_directory: Path | None) -> set[Wo
         )
         for file_type in SUPPORTED_FILES
         for child in directory.rglob(file_type)
-        if child.is_file() and not child.is_symlink()
+        if child.is_file() and not child.is_symlink() and not SUPPORTED_FILES[file_type].should_ignore(child)
     }

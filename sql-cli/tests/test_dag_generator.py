@@ -1,10 +1,16 @@
+import datetime
+import shutil
+import tempfile
 from pathlib import Path
 
 import pytest
 from conftest import DEFAULT_DATE
+from freezegun import freeze_time
 
 from sql_cli.dag_generator import Workflow, generate_dag
 from sql_cli.exceptions import DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
+
+CWD = Path(__file__).parent
 
 
 def test_workflow(workflow, workflow_with_parameters, sql_file, sql_file_with_parameters):
@@ -23,6 +29,65 @@ def test_workflow_without_workflow_files():
     """Test that an exception is being raised when it does not have any workflow files."""
     with pytest.raises(EmptyDag):
         Workflow(dag_id="workflow_without_workflow_files", start_date=DEFAULT_DATE, workflow_files=[])
+
+
+sample_workflow_with_dataset_schedule = b"""
+workflow:
+  schedule:
+    - Dataset:
+        uri: s3://some-dataset/upstream1.parquet
+    - Dataset:
+        uri: s3://some-dataset/upstream2.parquet
+"""
+
+
+def test_workflow_from_yaml_with_dataset_as_schedule():
+    """Test that we are able to generate a workflow class from a YAML file."""
+    with tempfile.NamedTemporaryFile() as tmp:
+        tmp.write(sample_workflow_with_dataset_schedule)
+        tmp.flush()
+        workflow = Workflow.from_yaml(Path(tmp.name), dag_id="default", workflow_files=[Path("/tmp")])
+        expected = [
+            {"Dataset": {"uri": "s3://some-dataset/upstream1.parquet"}},
+            {"Dataset": {"uri": "s3://some-dataset/upstream2.parquet"}},
+        ]
+
+        assert workflow.schedule == expected
+
+
+@freeze_time(datetime.datetime(1984, 5, 11, 14, 0, 0))
+def test_workflow_from_yaml_defaults():
+    """Test that we are able to generate a workflow class from a YAML file."""
+    with tempfile.NamedTemporaryFile() as tmp:
+        tmp.write(b"workflow:\n  some_key: some_value")
+        tmp.flush()
+        workflow = Workflow.from_yaml(Path(tmp.name), dag_id="default", workflow_files=[Path("/tmp")])
+        assert not workflow.catchup
+        assert workflow.dag_id == "default"
+        assert workflow.description is None
+        assert workflow.end_date is None
+        assert not workflow.is_paused_upon_creation
+        assert workflow.orientation == "LR"
+        assert workflow.schedule == "@daily"
+        assert workflow.start_date == "1984-05-10T14:00:00"
+        assert workflow.tags == ["SQL"]
+        assert workflow.workflow_files
+
+
+def test_workflow_from_yaml_file_overrides_defaults():
+    """Test that we are able to generate a workflow class from a YAML file."""
+    workflow_yaml = CWD / "workflows/example_deploy/workflow.yaml"
+    workflow = Workflow.from_yaml(workflow_yaml, dag_id="test", workflow_files=[Path("/tmp")])
+    assert workflow.catchup
+    assert workflow.dag_id == "test"
+    assert workflow.description == "Sample workflow used to load data from a CSV file into a SQLite database"
+    assert workflow.end_date is None
+    assert not workflow.is_paused_upon_creation
+    assert workflow.orientation == "LR"
+    assert workflow.schedule == "@hourly"
+    assert workflow.start_date == "2015-12-1"
+    assert workflow.tags == ["SQLite"]
+    assert workflow.workflow_files
 
 
 @pytest.mark.parametrize("generate_tasks", [True, False])
@@ -55,8 +120,12 @@ DAGS_FOLDER = Path(__file__).parent.as_posix()
 
 with DAG(
     dag_id="basic",
-    start_date=timezone.parse("2020-01-01 00:00:00"),
-    schedule_interval=None,
+    start_date=timezone.parse("2016-12-21T03:49:00"),
+    catchup=False,
+    is_paused_upon_creation=False,
+    orientation="LR",
+    tags=["SQL"],
+    schedule="@daily",
 ) as dag:
     a = aql.transform_file(
         file_path=f"{DAGS_FOLDER}/include/basic/a.sql",
@@ -97,6 +166,43 @@ with DAG(
 """
 
 
+@freeze_time(datetime.datetime(2016, 12, 22, 3, 49, 0))
 def test_generate_dag_black_compliant(root_directory, dags_directory):
     dag_file = generate_dag(directory=root_directory, dags_directory=dags_directory, generate_tasks=True)
     assert dag_file.read_text() == compliant_dag
+
+
+@freeze_time(datetime.datetime(2023, 1, 16, 17, 0, 0))
+def test_generate_dag_using_workflow_yaml(tmp_path):
+    root_directory = CWD / "workflows/example_deploy/"
+    dag_file = generate_dag(directory=root_directory, dags_directory=tmp_path, generate_tasks=True)
+    content = dag_file.read_text()
+    expected = """
+with DAG(
+    dag_id="example_deploy",
+    start_date=timezone.parse("2015-12-1"),
+    catchup=True,
+    description="Sample workflow used to load data from a CSV file into a SQLite database",
+    is_paused_upon_creation=False,
+    orientation="LR",
+    tags=["SQLite"],
+    schedule="@hourly",
+) as dag:
+"""
+    assert expected in content
+
+
+def test_generate_dag_using_workflow_yaml_with_dataset_as_schedule(tmp_path):
+    """Test that we are able to generate a workflow class from a YAML file."""
+    with open(tmp_path / "workflow.yml", "wb") as workflow_config:
+        workflow_config.write(sample_workflow_with_dataset_schedule)
+        workflow_config.flush()
+        shutil.copy(CWD / "workflows/example_deploy/original_imdb_movies.yaml", tmp_path / "load_task.yml")
+        dag_file = generate_dag(directory=tmp_path, dags_directory=tmp_path, generate_tasks=True)
+        content = dag_file.read_text()
+        expected = """
+    schedule=[
+        Dataset(uri="s3://some-dataset/upstream1.parquet"),
+        Dataset(uri="s3://some-dataset/upstream2.parquet"),
+    ],"""
+        assert expected in content
