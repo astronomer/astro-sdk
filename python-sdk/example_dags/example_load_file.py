@@ -163,7 +163,7 @@ with dag:
     # [START load_file_example_12]
     aql.load_file(
         input_file=File(
-            "gs://astro-sdk/workspace/sample_pattern.csv",
+            "gs://astro-sdk/workspace/sample_pattern",
             conn_id="bigquery",
             filetype=FileType.CSV,
         ),
@@ -329,5 +329,18 @@ with dag:
         ],
     )
     # [END load_file_example_24]
+
+    # [START load_file_example_25]
+    aql.load_file(
+        input_file=File("wasb://astro-sdk/sample.csv", conn_id="wasb_default_conn"),
+        output_table=Table(
+            conn_id=SNOWFLAKE_CONN_ID,
+            metadata=Metadata(
+                database=os.environ["SNOWFLAKE_DATABASE"],
+                schema=os.environ["SNOWFLAKE_SCHEMA"],
+            ),
+        ),
+    )
+    # [END load_file_example_25]
 
     aql.cleanup()

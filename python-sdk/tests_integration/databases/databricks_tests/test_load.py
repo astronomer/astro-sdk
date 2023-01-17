@@ -32,7 +32,6 @@ def test_autoloader_load_file_local(database_table_fixture):
     assert not df.empty
     assert len(df) == 3
     assert df.columns.to_list() == ["id", "name"]
-    database.drop_table(table)
 
 
 @pytest.mark.integration
@@ -54,7 +53,6 @@ def test_autoloader_load_file_s3(database_table_fixture):
         output_table=table,
     )
     assert database.table_exists(table)
-    database.drop_table(table)
 
 
 @pytest.mark.integration
@@ -81,7 +79,6 @@ def test_delta_load_file_gcs(database_table_fixture):
         output_table=table,
     )
     assert database.table_exists(table)
-    database.drop_table(table)
 
 
 @pytest.mark.integration
@@ -108,7 +105,6 @@ def test_delta_load_file_gcs_autoloader(database_table_fixture):
         output_table=table,
     )
     assert database.table_exists(table)
-    database.drop_table(table)
 
 
 @pytest.mark.integration
@@ -135,4 +131,3 @@ def test_delta_load_file_gcs_default_connection(database_table_fixture):
         output_table=table,
     )
     assert database.table_exists(table)
-    database.drop_table(table)

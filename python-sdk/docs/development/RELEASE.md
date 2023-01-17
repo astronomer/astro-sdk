@@ -2,7 +2,15 @@
 
 ## Updating the changelog
 
-The first step to creating a release is identifying what changed from the previous release and adding a description to the [CHANGELOG.md](../CHANGELOG.md)
+The first step to creating a release is identifying what changed from the previous release and adding a description to the [CHANGELOG.md](../CHANGELOG.md).
+
+One way to identify what changed from the previous release is to use a comparison URL between the previous release branch and the main branch.
+
+Example -
+[https://github.com/astronomer/astro-sdk/compare/1.3.3...main](https://github.com/astronomer/astro-sdk/compare/1.3.3...main)
+
+This will show all the commits that are in the main branch but not in the release branch. Using this we can note all the changes significant enough to be mentioned in CHANGELOGS.
+
 
 ## Handling patch releases
 
@@ -72,3 +80,39 @@ target the release branch (e.g. `release-0.7`). Failure to do these steps proper
 <!-- markdown-link-check-enable -->
 
 Once you've created your release, that's it! The rest of the steps should be handled by the CI system.
+
+# Releasing constraints for the release
+
+Once the package pushed to PyPI/Readthedocs you also need to release constraints files. This steps it bit manual at this point of time.
+
+1. First create a new branch of the last constraints branch.
+   ```console
+   git fetch origin constraints-1-3 && git checkout constraints-1-3
+   ```
+   ```console
+   git branch constraints-1-4 constraints-1-3
+   ```
+2. Checkout that branch
+   ```console
+   git checkout constraints-1-4
+   ```
+3. Remove old files
+   ```console
+   rm *.txt
+   ```
+4. Find the GitHub action CI job that ran when you tagged the release and which published the artifact i.e. visit https\://github.com/astronomer/astro-sdk/actions/runs/<RUN_ID> and form the bottom of that GH page download all the constraints file and unzip it.
+   ```console
+   unzip "*.zip" &&  rm -rf *.zip
+   ```
+5. Then rename them
+   ```console
+   for f in constraints*; do mv "$f" "$f.txt"; done
+   ```
+6. Add and upload
+   ```console
+   git add const*
+   git commit -m "Update constraints for Astro SDK 1.4.0" --no-verify
+   git push origin constraints-1-4
+   git tag constraints-1.4.0
+   git push origin constraints-1.4.0
+   ```

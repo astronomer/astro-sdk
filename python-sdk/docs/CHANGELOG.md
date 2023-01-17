@@ -335,7 +335,7 @@ fallback [#1089](https://github.com/astronomer/astro-sdk/issues/1089)
   pre-requirements to work. To disable this mode, use the argument `use_native_support=False` in `aql.load_file`.
   [#557](https://github.com/astronomer/astro-sdk/issues/557), [#481](https://github.com/astronomer/astro-sdk/issues/481)
 * `aql.dataframe` will raise an exception if the default Airflow XCom backend is being used.
-  To solve this, either use an [external XCom backend, such as S3 or GCS](https://docs.astronomer.io/learn/custom-xcom-backends)
+  To solve this, either use an [external XCom backend, such as S3 or GCS](https://docs.astronomer.io/learn/xcom-backend-tutorial)
   or set the configuration `AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE=True`. [#444](https://github.com/astronomer/astro-sdk/issues/444)
 * Change the declaration for the default Astro SDK temporary schema from using `AIRFLOW__ASTRO__SQL_SCHEMA`
   to `AIRFLOW__ASTRO_SDK__SQL_SCHEMA` [#503](https://github.com/astronomer/astro-sdk/issues/503)
