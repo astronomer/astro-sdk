@@ -75,7 +75,7 @@ class ColumnCheckOperator(SQLColumnCheckOperator):
             column_mapping=self.column_mapping,
             partition_clause=self.partition_clause,
             conn_id=dataset_conn_id,
-            task_id=task_id if task_id is not None else get_unique_task_id("column_check"),
+            task_id=task_id if task_id is not None else get_unique_task_id("check_column"),
         )
 
     def get_db_hook(self) -> DbApiHook:
@@ -165,7 +165,7 @@ def get_checks_string(check, col):
     return f"\tCheck: {check},\n\tCheck Values:"
 
 
-def column_check(
+def check_column(
     dataset: Union[BaseTable, pandas.DataFrame],
     column_mapping: Dict[str, Dict[str, Any]],
     partition_clause: Optional[str] = None,
