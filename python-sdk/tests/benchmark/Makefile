@@ -6,6 +6,7 @@ GIT_HASH = $(shell git log -1 --format=%h)
 APP ?= benchmark
 CONTAINER_REGISTRY=gcr.io/$(GCP_PROJECT)/$(APP)
 ASTRO_TARGET_PLATFORM ?= "linux/amd64"
+
 check_google_credentials:
 ifndef GOOGLE_APPLICATION_CREDENTIALS
 	@echo "The GOOGLE_APPLICATION_CREDENTIALS environment variable is missing."
