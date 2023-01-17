@@ -628,7 +628,7 @@ class SnowflakeDatabase(BaseDatabase):
         if storage_integration is None:
             raise DatabaseCustomError(
                 "Param 'storage_integration' is required. Please pass either in `native_support_kwargs` or"
-                " `SnowflakeLoadOptions.copy_options`"
+                " `SnowflakeLoadOptions.storage_integration`"
             )
 
         stage = self.create_stage(file=source_file, storage_integration=storage_integration)
