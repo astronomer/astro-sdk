@@ -112,7 +112,7 @@ all = [
 doc = [
     "myst-parser>=0.17",
     "sphinx>=4.4.0",
-    "sphinx-autoapi>=2.0.0",
+    "sphinx-autoapi==2.0.0", # Multiple FileType class (same name) import is broken in sphinx-autoapi 2.0.1
     "sphinx-rtd-theme"
 ]
 

@@ -39,7 +39,7 @@ repos:
           ^sql-cli/tests/test_dag/.*$|
           ^sql-cli/tests/utils.py
   - repo: https://github.com/pre-commit/pygrep-hooks
-    rev: v1.9.0
+    rev: v1.10.0
     hooks:
       - id: rst-backticks
       - id: python-no-log-warn
@@ -64,14 +64,14 @@ repos:
         args: ["--config", "./python-sdk/pyproject.toml"]
 
   - repo: https://github.com/asottile/blacken-docs
-    rev: v1.12.1
+    rev: 1.13.0
     hooks:
       - id: blacken-docs
         alias: black
         additional_dependencies: [black>=22.10.0]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.219'
+    rev: 'v0.0.223'
     hooks:
       - id: ruff
         args:

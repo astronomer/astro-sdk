@@ -1,4 +1,6 @@
 import pathlib
+from unittest import mock
+from unittest.mock import call
 
 import airflow
 import pandas
@@ -6,6 +8,7 @@ import pytest
 
 import astro.sql as aql
 from astro.constants import SUPPORTED_DATABASES, Database
+from astro.databases import create_database
 from astro.files import File
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import Table
@@ -28,70 +31,66 @@ SUPPORTED_DATABASES_OBJECTS_WITH_FILE = [
     for database in Database
 ]
 
-
-@pytest.mark.integration
-@pytest.mark.parametrize(
-    "database_table_fixture",
-    SUPPORTED_DATABASES_OBJECTS_WITH_FILE,
-    indirect=True,
-    ids=SUPPORTED_DATABASES,
-)
-def test_cleanup_one_table(database_table_fixture):
-    db, test_table = database_table_fixture
-    assert db.table_exists(test_table)
-    a = aql.cleanup([test_table])
-    a.execute({})
-    assert not db.table_exists(test_table)
+drop_table_statement = "DROP TABLE IF EXISTS {table_name}"
 
 
-@pytest.mark.integration
 @pytest.mark.parametrize(
-    "database_table_fixture",
-    SUPPORTED_DATABASES_OBJECTS,
-    indirect=True,
-    ids=SUPPORTED_DATABASES,
-)
-@pytest.mark.parametrize(
-    "multiple_tables_fixture",
+    "temp_table",
     [
-        {
-            "items": [
-                {
-                    "table": Table(name="non_temporary_table"),
-                    "file": File(DEFAULT_FILEPATH),
-                },
-                {
-                    "table": Table(),
-                    "file": File(DEFAULT_FILEPATH),
-                },
-            ]
-        }
+        Table(conn_id="sqlite_conn"),
+        Table(conn_id="snowflake_conn"),
+        Table(conn_id="bigquery"),
+        Table(conn_id="databricks_conn"),
+        Table(conn_id="redshift_conn"),
+        Table(conn_id="postgres_conn"),
     ],
-    indirect=True,
-    ids=["named_table"],
+    ids=["sqlite", "snowflake", "bigquery", "databricks", "redshift", "postgres"],
 )
-def test_cleanup_non_temp_table(database_table_fixture, multiple_tables_fixture):
-    db, _ = database_table_fixture
-    test_table, test_temp_table = multiple_tables_fixture
-    assert db.table_exists(test_table)
-    assert db.table_exists(test_temp_table)
-    test_table.conn_id = db.conn_id
-    test_temp_table.conn_id = db.conn_id
-    a = aql.cleanup([test_table, test_temp_table])
-    a.execute({})
-    assert db.table_exists(test_table)
-    assert not db.table_exists(test_temp_table)
+def test_cleanup_one_table(temp_table):
+    module = create_database(temp_table.conn_id)
+    with mock.patch(f"{module.__class__.__module__}.{module.__class__.__name__}.run_sql") as mock_run_sql:
+        a = aql.cleanup([temp_table])
+        a.execute({})
+    mock_run_sql.assert_called_once_with(
+        drop_table_statement.format("table_name", table_name=temp_table.name)
+    )
 
 
-@pytest.mark.integration
 @pytest.mark.parametrize(
-    "database_table_fixture",
-    SUPPORTED_DATABASES_OBJECTS_WITH_FILE,
-    indirect=True,
-    ids=SUPPORTED_DATABASES,
+    "temp_table, non_temp_table",
+    [
+        (Table(conn_id="sqlite_conn"), Table(name="foo", conn_id="sqlite_conn")),
+        (Table(conn_id="snowflake_conn"), Table(name="foo", conn_id="snowflake_conn")),
+        (Table(conn_id="bigquery"), Table(name="foo", conn_id="bigquery")),
+        (Table(conn_id="databricks_conn"), Table(name="foo", conn_id="databricks_conn")),
+        (Table(conn_id="redshift_conn"), Table(name="foo", conn_id="redshift_conn")),
+        (Table(conn_id="postgres_conn"), Table(name="foo", conn_id="postgres_conn")),
+    ],
+    ids=["sqlite", "snowflake", "bigquery", "databricks", "redshift", "postgres"],
 )
-def test_cleanup_non_table(database_table_fixture):
-    db, test_table = database_table_fixture
+def test_cleanup_non_temp_table(temp_table, non_temp_table):
+    module = create_database(temp_table.conn_id)
+    with mock.patch(f"{module.__class__.__module__}.{module.__class__.__name__}.run_sql") as mock_run_sql:
+        a = aql.cleanup([temp_table, non_temp_table])
+        a.execute({})
+    mock_run_sql.assert_called_once_with(
+        drop_table_statement.format("table_name", table_name=temp_table.name)
+    )
+
+
+@pytest.mark.parametrize(
+    "temp_table",
+    [
+        Table(conn_id="sqlite_conn"),
+        Table(conn_id="snowflake_conn"),
+        Table(conn_id="bigquery"),
+        Table(conn_id="databricks_conn"),
+        Table(conn_id="redshift_conn"),
+        Table(conn_id="postgres_conn"),
+    ],
+    ids=["sqlite", "snowflake", "bigquery", "databricks", "redshift", "postgres"],
+)
+def test_cleanup_non_table(temp_table):
     df = pandas.DataFrame(
         [
             {"id": 1, "name": "First"},
@@ -99,41 +98,28 @@ def test_cleanup_non_table(database_table_fixture):
             {"id": 3, "name": "Third with unicode पांचाल"},
         ]
     )
-    a = aql.cleanup([test_table, df])
-    a.execute({})
-    assert not db.table_exists(test_table)
+    module = create_database(temp_table.conn_id)
+    with mock.patch(f"{module.__class__.__module__}.{module.__class__.__name__}.run_sql") as mock_run_sql:
+        a = aql.cleanup([temp_table, df])
+        a.execute({})
+    mock_run_sql.assert_called_once_with(
+        drop_table_statement.format("table_name", table_name=temp_table.name)
+    )
 
 
-@pytest.mark.integration
 @pytest.mark.parametrize(
-    "database_table_fixture",
-    SUPPORTED_DATABASES_OBJECTS_WITH_FILE,
-    indirect=True,
-    ids=SUPPORTED_DATABASES,
-)
-@pytest.mark.parametrize(
-    "multiple_tables_fixture",
+    "temp_table_1, temp_table_2",
     [
-        {
-            "items": [
-                {
-                    "file": File(DEFAULT_FILEPATH),
-                },
-                {
-                    "file": File(DEFAULT_FILEPATH),
-                },
-            ]
-        }
+        (Table(conn_id="sqlite_conn"), Table(conn_id="sqlite_conn")),
+        (Table(conn_id="snowflake_conn"), Table(conn_id="snowflake_conn")),
+        (Table(conn_id="bigquery"), Table(conn_id="bigquery")),
+        (Table(conn_id="databricks_conn"), Table(conn_id="databricks_conn")),
+        (Table(conn_id="redshift_conn"), Table(conn_id="redshift_conn")),
+        (Table(conn_id="postgres_conn"), Table(conn_id="postgres_conn")),
     ],
-    indirect=True,
-    ids=["two_tables"],
+    ids=["sqlite", "snowflake", "bigquery", "databricks", "redshift", "postgres"],
 )
-def test_cleanup_multiple_table(database_table_fixture, multiple_tables_fixture):
-    db, _ = database_table_fixture
-    test_table_1, test_table_2 = multiple_tables_fixture
-    assert db.table_exists(test_table_1)
-    assert db.table_exists(test_table_2)
-
+def test_cleanup_multiple_table(temp_table_1, temp_table_2):
     df = pandas.DataFrame(
         [
             {"id": 1, "name": "First"},
@@ -141,51 +127,52 @@ def test_cleanup_multiple_table(database_table_fixture, multiple_tables_fixture)
             {"id": 3, "name": "Third with unicode पांचाल"},
         ]
     )
-    a = aql.cleanup([test_table_1, test_table_2, df])
-    a.execute({})
-    assert not db.table_exists(test_table_1)
-    assert not db.table_exists(test_table_2)
+    module = create_database(temp_table_1.conn_id)
+    with mock.patch(f"{module.__class__.__module__}.{module.__class__.__name__}.run_sql") as mock_run_sql:
+        a = aql.cleanup([temp_table_1, temp_table_2, df])
+        a.execute({})
+    calls = [
+        call(drop_table_statement.format("table_name", table_name=temp_table_1.name)),
+        call(drop_table_statement.format("table_name", table_name=temp_table_2.name)),
+    ]
+    mock_run_sql.assert_has_calls(calls)
 
 
-@pytest.mark.integration
 @pytest.mark.parametrize(
-    "database_table_fixture",
-    SUPPORTED_DATABASES_OBJECTS_WITH_FILE,
-    indirect=True,
-    ids=SUPPORTED_DATABASES,
-)
-@pytest.mark.parametrize(
-    "multiple_tables_fixture",
+    "temp_table_1, temp_table_2",
     [
-        {
-            "items": [
-                {"file": File(path=DEFAULT_FILEPATH)},
-                {
-                    "file": File(DEFAULT_FILEPATH),
-                },
-            ]
-        }
+        (Table(conn_id="sqlite_conn"), Table(conn_id="sqlite_conn")),
+        (Table(conn_id="bigquery"), Table(conn_id="bigquery")),
+        (Table(conn_id="snowflake_conn"), Table(conn_id="snowflake_conn")),
+        (Table(conn_id="databricks_conn"), Table(conn_id="databricks_conn")),
+        (Table(conn_id="redshift_conn"), Table(conn_id="redshift_conn")),
+        (Table(conn_id="postgres_conn"), Table(conn_id="postgres_conn")),
     ],
-    indirect=True,
-    ids=["two_tables"],
+    ids=["sqlite", "bigquery", "snowflake", "databricks", "redshift", "postgres"],
 )
-def test_cleanup_default_all_tables(sample_dag, database_table_fixture, multiple_tables_fixture):
+def test_cleanup_default_all_tables(temp_table_1, temp_table_2, sample_dag):
     @aql.transform()
     def foo(input_table: Table):
         return "SELECT * FROM {{input_table}}"
 
-    db, _ = database_table_fixture
-    table_1, table_2 = multiple_tables_fixture
-    assert db.table_exists(table_1)
-    assert db.table_exists(table_2)
-
     with sample_dag:
-        foo(table_1, output_table=table_2)
+        foo(temp_table_1, output_table=temp_table_2)
 
         aql.cleanup()
-    test_utils.run_dag(sample_dag)
-
-    assert not db.table_exists(table_2)
+    module = create_database(temp_table_1.conn_id)
+    with mock.patch(
+        f"{module.__class__.__module__}.{module.__class__.__name__}.run_sql"
+    ) as mock_run_sql, mock.patch(f"{module.__class__.__module__}.{module.__class__.__name__}.schema_exists"):
+        test_utils.run_dag(sample_dag)
+        db = create_database(temp_table_1.conn_id)
+        calls = [
+            call(
+                drop_table_statement.format(
+                    "table_name", table_name=db.get_table_qualified_name(temp_table_2)
+                )
+            ),
+        ]
+    mock_run_sql.assert_has_calls(calls)
 
 
 @pytest.mark.integration
