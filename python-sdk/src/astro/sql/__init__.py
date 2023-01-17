@@ -4,7 +4,7 @@ from airflow.models.xcom_arg import XComArg
 
 from astro.sql.operators.append import AppendOperator, append
 from astro.sql.operators.cleanup import CleanupOperator, cleanup
-from astro.sql.operators.data_validations.ColumnCheckOperator import (  # skipcq: PY-W2000
+from astro.sql.operators.data_validations.check_column import (  # skipcq: PY-W2000
     ColumnCheckOperator,
     column_check,
 )
