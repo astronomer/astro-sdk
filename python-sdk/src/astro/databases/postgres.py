@@ -12,8 +12,10 @@ from psycopg2 import sql as postgres_sql
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
 from astro.databases.base import BaseDatabase
 from astro.files import File
+from astro.options import LoadOptions
 from astro.settings import POSTGRES_SCHEMA
 from astro.table import BaseTable, Metadata
+from astro.utils.compat.functools import cached_property
 
 DEFAULT_CONN_ID = PostgresHook.default_conn_name
 
@@ -28,21 +30,27 @@ class PostgresDatabase(BaseDatabase):
     illegal_column_name_chars: list[str] = ["."]
     illegal_column_name_chars_replacement: list[str] = ["_"]
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
+    def __init__(
+        self,
+        conn_id: str = DEFAULT_CONN_ID,
+        table: BaseTable | None = None,
+        load_options: LoadOptions | None = None,
+    ):
         super().__init__(conn_id)
         self.table = table
+        self.load_options = load_options
 
     @property
     def sql_type(self) -> str:
         return "postgresql"
 
-    @property
+    @cached_property
     def hook(self) -> PostgresHook:
         """Retrieve Airflow hook to interface with the Postgres database."""
         conn = PostgresHook(postgres_conn_id=self.conn_id).get_connection(self.conn_id)
         kwargs = {}
-        if (conn.schema is None) and (self.table and self.table.metadata and self.table.metadata.schema):
-            kwargs.update({"database": self.table.metadata.schema})
+        if (conn.schema is None) and (self.table and self.table.metadata and self.table.metadata.database):
+            kwargs.update({"database": self.table.metadata.database})
         return PostgresHook(postgres_conn_id=self.conn_id, **kwargs)
 
     @property
@@ -200,7 +208,7 @@ class PostgresDatabase(BaseDatabase):
         self.run_sql(sql=sql)
 
     @staticmethod
-    def get_dataframe_from_file(file: File):
+    def get_dataframe_from_file(file: File):  # skipcq: PYL-W0613
         """
         Get pandas dataframe file
 
@@ -225,3 +233,10 @@ class PostgresDatabase(BaseDatabase):
         """
         conn = self.hook.get_connection(self.conn_id)
         return f"{self.sql_type}://{conn.host}:{conn.port}"
+
+    def openlineage_dataset_uri(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset uri as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return f"{self.openlineage_dataset_namespace()}/{self.openlineage_dataset_name(table=table)}"

@@ -1,0 +1,4 @@
+airflow:
+  dags_folder:
+general:
+  data_dir:

@@ -1,0 +1,15 @@
+# IMPORTANT:
+# Please use environment variables to define secrets in connections.
+# You can set those in a .env file in the root directory of your project.
+connections:
+
+## Example of SQLite connection
+## This shows how you can use a different connection with the same id.
+## Instead of connecting to data/imdb.db it connects to data/retail.db on dev.
+  - conn_id: sqlite_conn
+    conn_type: sqlite
+    host: retail.db
+
+# Apache Airflow optional settings
+airflow:
+  home:

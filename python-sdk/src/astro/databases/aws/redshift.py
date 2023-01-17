@@ -31,8 +31,10 @@ from astro.constants import (
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
+from astro.options import LoadOptions
 from astro.settings import REDSHIFT_SCHEMA
 from astro.table import BaseTable, Metadata, Table
+from astro.utils.compat.functools import cached_property
 
 DEFAULT_CONN_ID = RedshiftSQLHook.default_conn_name
 NATIVE_PATHS_SUPPORTED_FILE_TYPES = {
@@ -73,16 +75,22 @@ class RedshiftDatabase(BaseDatabase):
     illegal_column_name_chars: list[str] = ["."]
     illegal_column_name_chars_replacement: list[str] = ["_"]
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
+    def __init__(
+        self,
+        conn_id: str = DEFAULT_CONN_ID,
+        table: BaseTable | None = None,
+        load_options: LoadOptions | None = None,
+    ):
         super().__init__(conn_id)
         self._create_table_statement: str = "CREATE TABLE {} AS {}"
         self.table = table
+        self.load_options = load_options
 
     @property
     def sql_type(self):
         return "redshift"
 
-    @property
+    @cached_property
     def hook(self) -> RedshiftSQLHook:
         """Retrieve Airflow hook to interface with the Redshift database."""
         kwargs = {}
@@ -93,7 +101,7 @@ class RedshiftDatabase(BaseDatabase):
             kwargs.update({"schema": self.table.metadata.database})
         return RedshiftSQLHook(redshift_conn_id=self.conn_id, use_legacy_sql=False, **kwargs)
 
-    @property
+    @cached_property
     def sqlalchemy_engine(self) -> Engine:
         """Return SQAlchemy engine."""
         uri = self.hook.get_uri()
@@ -417,3 +425,10 @@ class RedshiftDatabase(BaseDatabase):
         """
         conn = self.hook.conn
         return f"{self.sql_type}://{conn.host}:{conn.port}"
+
+    def openlineage_dataset_uri(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset uri as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return f"{self.openlineage_dataset_namespace()}/{self.openlineage_dataset_name(table=table)}"

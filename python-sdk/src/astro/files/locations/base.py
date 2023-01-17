@@ -7,16 +7,19 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import smart_open
+from airflow.hooks.base import BaseHook
 
 from astro.constants import FileLocation
+from astro.options import LoadOptions
 
 
 class BaseFileLocation(ABC):
     """Base Location abstract class"""
 
     template_fields = ("path", "conn_id")
+    supported_conn_type: set[str] = set()
 
-    def __init__(self, path: str, conn_id: str | None = None):
+    def __init__(self, path: str, conn_id: str | None = None, load_options: LoadOptions | None = None):
         """
         Manages and provide interface for the operation for all the supported locations.
 
@@ -25,6 +28,30 @@ class BaseFileLocation(ABC):
         """
         self.path: str = path
         self.conn_id: str | None = conn_id
+        self.load_options: LoadOptions | None = load_options
+        self.validate_conn()
+
+    def validate_conn(self):
+        """Check if the conn_id matches with provided path."""
+        if not self.conn_id:
+            return
+
+        connection_type = BaseHook.get_connection(self.conn_id).conn_type
+        if connection_type not in self.supported_conn_type:
+            raise ValueError(
+                f"Connection type {connection_type} is not supported for {self.path}. "
+                f"Supported types are {self.supported_conn_type}"
+            )
+
+    @property
+    def smartopen_uri(self) -> str:
+        """
+        Changes the object URI (self.path) to a SmartOpen supported URI if necessary.
+        By default, does not change the self.path.
+
+        :return: URI compatible with SmartOpen for desired location.
+        """
+        return self.path
 
     @property
     def hook(self):
@@ -32,7 +59,7 @@ class BaseFileLocation(ABC):
 
     @property
     @abstractmethod
-    def location_type(self):
+    def location_type(self) -> FileLocation:
         """Property to identify location type"""
         raise NotImplementedError
 
@@ -127,10 +154,18 @@ class BaseFileLocation(ABC):
     def exists(self) -> bool:
         """Check if the file exists or not"""
         try:
-            with smart_open.open(self.path, mode="r", transport_params=self.transport_params):
+            with smart_open.open(self.smartopen_uri, mode="r", transport_params=self.transport_params):
                 return True
         except OSError:
             return False
+
+    def databricks_auth_settings(self) -> dict:
+        """
+        Required settings to upload this file into databricks. Only needed for cloud storage systems
+        like S3
+        :return: A dictionary of settings keys to settings values
+        """
+        return {}
 
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}(path="{self.path}",conn_id="{self.conn_id}")'
@@ -146,3 +181,10 @@ class BaseFileLocation(ABC):
 
     def __hash__(self) -> int:
         return hash((self.path, self.conn_id))
+
+    def get_stream(self):
+        """Create a file in the desired location using the smart_open.
+
+        :param df: pandas dataframe
+        """
+        return smart_open.open(self.smartopen_uri, mode="wb", transport_params=self.transport_params)

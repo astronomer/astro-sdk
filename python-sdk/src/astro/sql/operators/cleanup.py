@@ -26,7 +26,7 @@ from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.operators.dataframe import DataframeOperator
 from astro.sql.operators.load_file import LoadFileOperator
 from astro.table import BaseTable, TempTable
-from astro.utils.typing_compat import Context
+from astro.utils.compat.typing import Context
 
 OPERATOR_CLASSES_WITH_TABLE_OUTPUT = (
     DataframeOperator,
@@ -232,7 +232,14 @@ class CleanupOperator(AstroSQLBaseOperator):
                     and isinstance(task, MappedOperator)
                     and issubclass(task.operator_class, OPERATOR_CLASSES_WITH_TABLE_OUTPUT)
                 ):
-                    for t in task.output.resolve(context):
+                    from airflow.models.xcom_arg import XComArg
+
+                    try:
+                        task_output = task.output
+                    except AttributeError:
+                        task_output = XComArg(operator=task)
+
+                    for t in task_output.resolve(context):
                         if isinstance(t, BaseTable):
                             res.append(t)
             except AirflowException:  # pragma: no cover

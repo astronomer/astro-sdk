@@ -83,9 +83,9 @@ load_five_gb = GCSToBigQueryOperator(
     task_id="load_five_gb",
     bucket="astro-sdk",
     source_objects=[
-        ("benchmark/trimmed/pypi/pypi-downloads-2021-03-28-0000000000" + str(i) + ".ndjson")
+        f"benchmark/trimmed/pypi/pypi-downloads-2021-03-28-0000000000{str(i)}.ndjson"
         if i >= 10
-        else ("benchmark/trimmed/pypi/pypi-downloads-2021-03-28-0000000000" + "0" + str(i) + ".ndjson")
+        else f"benchmark/trimmed/pypi/pypi-downloads-2021-03-28-00000000000{str(i)}.ndjson"
         for i in range(20)
     ],
     destination_project_dataset_table=f"{DATASET_NAME}.{TABLE_NAME}",
@@ -96,7 +96,7 @@ load_five_gb = GCSToBigQueryOperator(
 )
 
 delete_test_dataset = BigQueryDeleteDatasetOperator(
-    task_id="delete_airflow_test_dataset",
+    task_id="delete_airflow_dataset",
     dataset_id=DATASET_NAME,
     delete_contents=True,
     dag=dag,

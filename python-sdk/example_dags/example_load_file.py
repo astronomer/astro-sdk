@@ -1,3 +1,21 @@
+"""
+Pre-requisites for load_file_example_19:
+ - Install dependencies for Astro Python SDK with Google, refer to README.md
+ - You can either specify a service account key file and set `GOOGLE_APPLICATION_CREDENTIALS`
+    with the file path to the service account.
+ - In the connection we need to specfiy the scopes.
+    Connection variable is ``extra__google_cloud_platform__scope``
+    or in Airflow Connections UI ``Scopes (comma separated)``
+    For ex:- https://www.googleapis.com/auth/drive.readonly
+    Please refer to https://developers.google.com/identity/protocols/oauth2/scopes#drive for more details.
+ - In Google Cloud, for the project we need to enable the Google Drive API.
+    To enable the API please refer https://developers.google.com/drive/api/guides/enable-drive-api
+ - Create a Google Drive folder (or) use an existing folder with a file inside it,
+    and share the file with service account email id in order for it to be able to access those
+    folders/files. In this example DAG, we will load this file into Snowflake table.
+    For sharing a file/folder
+    please refer https://www.labnol.org/google-api-service-account-220404#4-share-a-drive-folder
+"""
 import os
 import pathlib
 from datetime import datetime, timedelta
@@ -7,12 +25,17 @@ from airflow.models import DAG
 
 from astro import sql as aql
 from astro.constants import FileType
+from astro.databases.databricks.load_options import DeltaLoadOptions
+from astro.dataframes.load_options import PandasCsvLoadOptions
 from astro.files import File
+from astro.options import SnowflakeLoadOptions
 from astro.table import Metadata, Table
 
 # To create IAM role with needed permissions,
 # refer: https://www.dataliftoff.com/iam-roles-for-loading-data-from-s3-into-redshift/
 REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN = os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN")
+SNOWFLAKE_CONN_ID = "snowflake_conn"
+DATABRICKS_CONN_ID = "databricks_conn"
 
 CWD = pathlib.Path(__file__).parent
 default_args = {
@@ -20,7 +43,6 @@ default_args = {
     "retries": 1,
     "retry_delay": 0,
 }
-data_url = "https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data"  # URL for Iris data API
 
 dag = DAG(
     dag_id="example_load_file",
@@ -34,7 +56,7 @@ dag = DAG(
 with dag:
     # [START load_file_example_1]
     my_homes_table = aql.load_file(
-        input_file=File(path="s3://astro-sdk/sample.csv"),
+        input_file=File(path="s3://astro-sdk/python_sdk/example_dags/data/sample.csv"),
         output_table=Table(
             conn_id="postgres_conn",
         ),
@@ -43,13 +65,13 @@ with dag:
 
     # [START load_file_example_2]
     dataframe = aql.load_file(
-        input_file=File(path="s3://astro-sdk/sample.csv"),
+        input_file=File(path="s3://astro-sdk/python_sdk/example_dags/data/sample.csv"),
     )
     # [END load_file_example_2]
 
     # [START load_file_example_3]
     sample_table = aql.load_file(
-        input_file=File(path="s3://astro-sdk/sample.ndjson"),
+        input_file=File(path="s3://astro-sdk/python_sdk/example_dags/data/sample.ndjson"),
         output_table=Table(
             conn_id="postgres_conn",
         ),
@@ -59,7 +81,7 @@ with dag:
 
     # [START load_file_example_4]
     new_table = aql.load_file(
-        input_file=File(path="s3://astro-sdk/sample.csv"),
+        input_file=File(path="s3://astro-sdk/python_sdk/example_dags/data/sample.csv"),
         output_table=Table(
             conn_id="postgres_conn",
         ),
@@ -69,7 +91,7 @@ with dag:
 
     # [START load_file_example_5]
     custom_schema_table = aql.load_file(
-        input_file=File(path="s3://astro-sdk/sample.csv"),
+        input_file=File(path="s3://astro-sdk/python_sdk/example_dags/data/sample.csv"),
         output_table=Table(
             conn_id="postgres_conn",
             columns=[
@@ -82,7 +104,7 @@ with dag:
 
     # [START load_file_example_6]
     dataframe = aql.load_file(
-        input_file=File(path="s3://astro-sdk/sample.csv"),
+        input_file=File(path="s3://astro-sdk/python_sdk/example_dags/data/sample.csv"),
         columns_names_capitalization="upper",
     )
     # [END load_file_example_6]
@@ -141,7 +163,7 @@ with dag:
     # [START load_file_example_12]
     aql.load_file(
         input_file=File(
-            "gs://astro-sdk/workspace/sample_pattern.csv",
+            "gs://astro-sdk/workspace/sample_pattern",
             conn_id="bigquery",
             filetype=FileType.CSV,
         ),
@@ -215,7 +237,110 @@ with dag:
     # [END load_file_example_17]
 
     # [START load_file_example_18]
-    dataframe = aql.load_file(input_file=File(path=data_url, filetype=FileType.CSV))
+    dataframe = aql.load_file(
+        input_file=File(
+            path="s3://astro-sdk/python_sdk/example_dags/data/sample_csv.data", filetype=FileType.CSV
+        )
+    )
     # [END load_file_example_18]
+
+    # [START load_file_example_19]
+    aql.load_file(
+        input_file=File(path="gdrive://test-google-drive-support/sample.csv", conn_id="gdrive_conn"),
+        output_table=Table(
+            conn_id=SNOWFLAKE_CONN_ID,
+            metadata=Metadata(
+                database=os.environ["SNOWFLAKE_DATABASE"],
+                schema=os.environ["SNOWFLAKE_SCHEMA"],
+            ),
+        ),
+    )
+    # [END load_file_example_19]
+
+    # [START load_file_example_20]
+    aql.load_file(
+        input_file=File(
+            path="sftp://upload/ADOPTION_CENTER_1_unquoted.csv", conn_id="sftp_conn", filetype=FileType.CSV
+        ),
+        output_table=Table(
+            conn_id=SNOWFLAKE_CONN_ID,
+            metadata=Metadata(
+                database=os.environ["SNOWFLAKE_DATABASE"],
+                schema=os.environ["SNOWFLAKE_SCHEMA"],
+            ),
+        ),
+    )
+    # [END load_file_example_20]
+
+    # [START load_file_example_21]
+    aql.load_file(
+        input_file=File(
+            path="ftp://upload/ADOPTION_CENTER_1_unquoted.csv",
+            conn_id="ftp_conn",
+            filetype=FileType.CSV,
+        ),
+        output_table=Table(
+            conn_id=SNOWFLAKE_CONN_ID,
+            metadata=Metadata(
+                database=os.environ["SNOWFLAKE_DATABASE"],
+                schema=os.environ["SNOWFLAKE_SCHEMA"],
+            ),
+        ),
+    )
+    # [END load_file_example_21]
+
+    # [START load_file_example_22]
+    aql.load_file(
+        input_file=File("s3://tmp9/delimiter_dollar.csv", conn_id="aws_conn"),
+        output_table=Table(
+            conn_id=SNOWFLAKE_CONN_ID,
+        ),
+        use_native_support=False,
+        load_options=[PandasCsvLoadOptions(delimiter="$")],
+    )
+    # [END load_file_example_22]
+
+    # [START load_file_example_23]
+    aql.load_file(
+        input_file=File("s3://astro-sdk/python_sdk/example_dags/data/sample.csv", conn_id="aws_conn"),
+        output_table=Table(
+            conn_id=SNOWFLAKE_CONN_ID,
+        ),
+        load_options=[
+            SnowflakeLoadOptions(
+                file_options={"SKIP_HEADER": 1, "SKIP_BLANK_LINES": True},
+                copy_options={"ON_ERROR": "CONTINUE"},
+            )
+        ],
+    )
+    # [END load_file_example_23]
+
+    # [START load_file_example_24]
+    aql.load_file(
+        input_file=File("s3://astro-sdk/python_sdk/example_dags/data/sample.csv", conn_id="aws_conn"),
+        output_table=Table(
+            conn_id=DATABRICKS_CONN_ID,
+        ),
+        load_options=[
+            DeltaLoadOptions(
+                copy_into_format_options={"header": "true", "inferSchema": "true"},
+                copy_into_copy_options={"mergeSchema": "true"},
+            )
+        ],
+    )
+    # [END load_file_example_24]
+
+    # [START load_file_example_25]
+    aql.load_file(
+        input_file=File("wasb://astro-sdk/sample.csv", conn_id="wasb_default_conn"),
+        output_table=Table(
+            conn_id=SNOWFLAKE_CONN_ID,
+            metadata=Metadata(
+                database=os.environ["SNOWFLAKE_DATABASE"],
+                schema=os.environ["SNOWFLAKE_SCHEMA"],
+            ),
+        ),
+    )
+    # [END load_file_example_25]
 
     aql.cleanup()

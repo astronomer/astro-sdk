@@ -19,6 +19,9 @@ We'll need to specify where we want Astro Python SDK operators to send OpenLinea
 ``OPENLINEAGE_URL`` environment variable to send OpenLineage events to Marquez. Optionally, we can also
 specify a namespace where the lineage events will be stored using the ``OPENLINEAGE_NAMESPACE`` environment variable.
 
+A user may choose to send or not, the source code to the OpenLineage then user can specify an environment variable
+``OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE`` set with either ``True`` or ``False``. By default it will be set to ``True``.
+
 For example, to send OpenLineage events to a local instance of Marquez with the dev namespace, use:
 
 .. code-block:: ini
@@ -26,12 +29,6 @@ For example, to send OpenLineage events to a local instance of Marquez with the 
     AIRFLOW__LINEAGE__BACKEND=openlineage.lineage_backend.OpenLineageBackend
     OPENLINEAGE_URL=http://localhost:5000
     OPENLINEAGE_NAMESPACE="dev"
-
-If you want to use the Astro Python SDK extractors to generate OpenLineage events, then set the environment variable
-
-.. code-block:: ini
-
-    OPENLINEAGE_EXTRACTORS="astro.lineage.extractor.PythonSDKExtractor"
 
 
 When you run the example DAG given below, by setting the environment variables described above,

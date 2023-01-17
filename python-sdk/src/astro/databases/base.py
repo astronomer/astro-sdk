@@ -11,8 +11,11 @@ from airflow.hooks.dbapi import DbApiHook
 from pandas.io.sql import SQLDatabase
 from sqlalchemy import column, insert, select
 
+from astro.dataframes.pandas import PandasDataframe
+
 if TYPE_CHECKING:  # pragma: no cover
     from sqlalchemy.engine.cursor import CursorResult
+
 from sqlalchemy.sql import ClauseElement
 from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.schema import Table as SqlaTable
@@ -30,8 +33,10 @@ from astro.exceptions import DatabaseCustomError, NonExistentTableException
 from astro.files import File, resolve_file_path_pattern
 from astro.files.types import create_file_type
 from astro.files.types.base import FileType as FileTypeConstants
+from astro.options import LoadOptions
 from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK, LOAD_TABLE_AUTODETECT_ROWS_COUNT, SCHEMA
 from astro.table import BaseTable, Metadata
+from astro.utils.compat.functools import cached_property
 
 
 class BaseDatabase(ABC):
@@ -59,14 +64,20 @@ class BaseDatabase(ABC):
     illegal_column_name_chars: list[str] = []
     illegal_column_name_chars_replacement: list[str] = []
     NATIVE_PATHS: dict[Any, Any] = {}
-    NATIVE_LOAD_EXCEPTIONS: Any = DatabaseCustomError
     DEFAULT_SCHEMA = SCHEMA
+    NATIVE_LOAD_EXCEPTIONS: Any = DatabaseCustomError
     NATIVE_AUTODETECT_SCHEMA_CONFIG: Mapping[FileLocation, Mapping[str, list[FileType] | Callable]] = {}
     FILE_PATTERN_BASED_AUTODETECT_SCHEMA_SUPPORTED: set[FileLocation] = set()
 
-    def __init__(self, conn_id: str):
+    def __init__(
+        self,
+        conn_id: str,
+        table: BaseTable | None = None,  # skipcq: PYL-W0613
+        load_options: LoadOptions | None = None,
+    ):
         self.conn_id = conn_id
         self.sql: str | ClauseElement = ""
+        self.load_options = load_options
 
     def __repr__(self):
         return f'{self.__class__.__name__}(conn_id="{self.conn_id})'
@@ -75,7 +86,7 @@ class BaseDatabase(ABC):
     def sql_type(self):
         raise NotImplementedError
 
-    @property
+    @cached_property
     def hook(self) -> DbApiHook:
         """Return an instance of the database-specific Airflow hook."""
         raise NotImplementedError
@@ -85,7 +96,7 @@ class BaseDatabase(ABC):
         """Return a Sqlalchemy connection object for the given database."""
         return self.sqlalchemy_engine.connect()
 
-    @property
+    @cached_property
     def sqlalchemy_engine(self) -> sqlalchemy.engine.base.Engine:
         """Return Sqlalchemy engine."""
         return self.hook.get_sqlalchemy_engine()  # type: ignore[no-any-return]
@@ -303,7 +314,12 @@ class BaseDatabase(ABC):
         elif file and self.is_native_autodetect_schema_available(file):
             self.create_table_using_native_schema_autodetection(table, file)
         else:
-            self.create_table_using_schema_autodetection(table, file, dataframe, columns_names_capitalization)
+            self.create_table_using_schema_autodetection(
+                table,
+                file=file,
+                dataframe=dataframe,
+                columns_names_capitalization=columns_names_capitalization,
+            )
 
     def create_table_from_select_statement(
         self,
@@ -377,6 +393,7 @@ class BaseDatabase(ABC):
                 file.conn_id,
                 normalize_config=normalize_config,
                 filetype=file.type.name,
+                load_options=file.load_options,
             )
             self.create_table(
                 table,
@@ -384,6 +401,21 @@ class BaseDatabase(ABC):
                 files[0],
                 columns_names_capitalization=columns_names_capitalization,
             )
+
+    def fetch_all_rows(self, table: BaseTable, row_limit: int = -1) -> list:
+        """
+        Fetches all rows for a table and returns as a list. This is needed because some
+        databases have different cursors that require different methods to fetch rows
+
+        :param row_limit: Limit the number of rows returned, by default return all rows.
+        :param table: The table metadata needed to fetch the rows
+        :return: a list of rows
+        """
+        statement = f"SELECT * FROM {self.get_table_qualified_name(table)}"
+        if row_limit > -1:
+            statement = statement + f" LIMIT {row_limit}"
+        response = self.run_sql(statement)
+        return response.fetchall()  # type: ignore
 
     def load_file_to_table(
         self,
@@ -475,11 +507,13 @@ class BaseDatabase(ABC):
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
     ):
+        logging.info("Loading file(s) with Pandas...")
         input_files = resolve_file_path_pattern(
             input_file.path,
             input_file.conn_id,
             normalize_config=normalize_config,
             filetype=input_file.type.name,
+            load_options=input_file.load_options,
         )
 
         for file in input_files:
@@ -514,6 +548,7 @@ class BaseDatabase(ABC):
         """
 
         try:
+            logging.info("Loading file(s) with Native Support...")
             self.load_file_to_table_natively(
                 source_file=source_file,
                 target_table=target_table,
@@ -521,13 +556,13 @@ class BaseDatabase(ABC):
                 native_support_kwargs=native_support_kwargs,
                 **kwargs,
             )
-        # Catching NATIVE_LOAD_EXCEPTIONS for fallback
         except self.NATIVE_LOAD_EXCEPTIONS as load_exception:  # skipcq: PYL-W0703
             logging.warning(
-                "Loading files failed with Native Support. Falling back to Pandas-based load",
+                "Loading file(s) failed with Native Support.",
                 exc_info=True,
             )
             if enable_native_fallback:
+                logging.warning("Falling back to Pandas-based load...")
                 self.load_file_to_table_using_pandas(
                     input_file=source_file,
                     output_table=target_table,
@@ -646,7 +681,8 @@ class BaseDatabase(ABC):
 
         if self.table_exists(source_table):
             sqla_table = self.get_sqla_table(source_table)
-            return pd.read_sql(sql=sqla_table.select(**select_kwargs), con=self.sqlalchemy_engine)
+            df = pd.read_sql(sql=sqla_table.select(**select_kwargs), con=self.sqlalchemy_engine)
+            return PandasDataframe.from_pandas_df(df)
 
         table_qualified_name = self.get_table_qualified_name(source_table)
         raise NonExistentTableException(f"The table {table_qualified_name} does not exist")
@@ -700,8 +736,8 @@ class BaseDatabase(ABC):
     # ---------------------------------------------------------
 
     def get_sqlalchemy_template_table_identifier_and_parameter(
-        self, table: BaseTable, jinja_table_identifier: str
-    ) -> tuple[str, str]:  # skipcq PYL-W0613
+        self, table: BaseTable, jinja_table_identifier: str  # skipcq PYL-W0613
+    ) -> tuple[str, str]:
         """
         During the conversion from a Jinja-templated SQL query to a SQLAlchemy query, there is the need to
         convert a Jinja table identifier to a safe SQLAlchemy-compatible table identifier.
@@ -727,6 +763,28 @@ class BaseDatabase(ABC):
             self.get_table_qualified_name(table),
             self.get_table_qualified_name(table),
         )
+
+    def row_count(self, table: BaseTable):
+        """
+        Returns the number of rows in a table.
+
+        :param table: table to count
+        :return: The number of rows in the table
+        """
+        result = self.run_sql(
+            f"select count(*) from {self.get_table_qualified_name(table)}"  # skipcq: BAN-B608
+        ).scalar()
+        return result
+
+    def parameterize_variable(self, variable: str):
+        """
+        While most databases use sqlalchemy, we want to open up how we paramaterize variables for databases
+        that a) do not use sqlalchemy and b) have different parameterization schemes (namely delta).
+
+        :param variable: The variable to parameterize.
+        :return: Variable with proper parameters
+        """
+        return ":" + variable
 
     def is_native_load_file_available(  # skipcq: PYL-R0201
         self, source_file: File, target_table: BaseTable  # skipcq: PYL-W0613
@@ -803,6 +861,13 @@ class BaseDatabase(ABC):
     def openlineage_dataset_namespace(self) -> str:
         """
         Returns the open lineage dataset namespace as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        raise NotImplementedError
+
+    def openlineage_dataset_uri(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset uri as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         raise NotImplementedError

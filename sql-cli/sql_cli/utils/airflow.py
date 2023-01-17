@@ -3,19 +3,24 @@ from __future__ import annotations
 import importlib
 import logging
 import os
+import shutil
 from configparser import ConfigParser
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from packaging.version import Version
 
+from sql_cli.constants import LOGGER_NAME
+from sql_cli.settings import STATE
+
 if TYPE_CHECKING:
-    from airflow.models.dag import DAG
+    from airflow.models.dag import DAG  # pragma: no cover
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(LOGGER_NAME)
+airflow_logger = logging.getLogger("airflow")
 
 
-def airflow_version() -> Version:
+def version() -> Version:
     """
     Return the version of Airflow installed.
     """
@@ -24,61 +29,69 @@ def airflow_version() -> Version:
     return Version(airflow.__version__)
 
 
-def retrieve_airflow_database_conn_from_config(airflow_home: Path) -> str:
+def initialise(airflow_home: Path, airflow_dags_folder: Path) -> None:
     """
-    Retrieve the path to the Airflow metadata database connection.
+    Create an Airflow database and configure airflow via environment variables.
 
-    :params airfow_home: Path to where Airflow was initialized ($AIRFLOW_HOME).
-    :returns: Airflow metadata database connection URI
+    :params airflow_home: The airflow home to set
+    :params airflow_dags_folder: The airflow dags folder to set
     """
-    os.environ["AIRFLOW_HOME"] = str(airflow_home.resolve())
-    filename = airflow_home / "airflow.cfg"
-    parser = ConfigParser()
-    parser.read(filename)
-    confdict = {section: dict(parser.items(section)) for section in parser.sections()}
-
-    if airflow_version() >= Version("2.3"):
-        sql_alchemy_conn = confdict["database"]["sql_alchemy_conn"]
+    log.debug("Set airflow environment variables prior to database initialization")
+    os.environ["AIRFLOW_HOME"] = airflow_home.as_posix()
+    os.environ["AIRFLOW__CORE__DAGS_FOLDER"] = airflow_dags_folder.as_posix()
+    if version() >= Version("2.3"):
+        os.environ.pop("AIRFLOW__DATABASE__SQL_ALCHEMY_CONN", None)
     else:
-        sql_alchemy_conn = confdict["core"]["sql_alchemy_conn"]
+        os.environ.pop("AIRFLOW__CORE__SQL_ALCHEMY_CONN", None)
 
-    return sql_alchemy_conn
+    log.debug("Reload airflow configuration after setting environment variables")
+    from airflow import configuration
 
+    importlib.reload(configuration)
 
-def disable_examples(airflow_home: Path) -> None:
-    """
-    Disable Airflow examples in the configuration file available at the given airflow_home directory.
-
-    :params airflow_home: Path to where Airflow was initialised ($AIRFLOW_HOME)
-    """
-    filename = airflow_home / "airflow.cfg"
-    parser = ConfigParser()
-    parser.read(filename)
-    parser["core"]["load_examples"] = "False"
-    parser["core"]["logging_level"] = "WARN"
-    with open(filename, "w") as out_fp:
-        parser.write(out_fp)
-
-
-def set_airflow_database_conn(airflow_meta_conn: str) -> None:
-    """
-    Given a desired Airflow DB connection string, refresh Airflow settings so
-    that Airflow ORM uses this database as metadata store.
-
-    :params airflow_db_conn: Similar to `sqlite:////tmp/project/airflow.db`
-    """
-    if airflow_version() >= Version("2.3"):
-        # This is a hacky approach we managed to find to make things work with Airflow 2.4
-        os.environ["AIRFLOW__DATABASE__SQL_ALCHEMY_CONN"] = airflow_meta_conn
+    if STATE["debug"]:
+        log.debug("Initialise the airflow database")
+        exit_code = os.system("airflow db init")  # skipcq: BAN-B605,BAN-B607
+        airflow_logger.debug("Airflow DB Initialization exited with %s", exit_code)
     else:
-        os.environ["AIRFLOW__CORE__SQL_ALCHEMY_CONN"] = airflow_meta_conn
+        log.debug("Initialise the airflow database & hide all logs")
+        os.system("airflow db init > /dev/null 2>&1")  # skipcq: BAN-B605,BAN-B607
 
-    import airflow  # skipcq: PYL-W0406
+    log.debug("Initialised Airflow successfully. Airflow env vars are: %s", _get_airflow_env_vars())
+
+
+def reload(airflow_home: Path) -> None:
+    """
+    Given a desired Airflow home, refresh Airflow settings so
+    that Airflow ORM uses the correct database as metadata store.
+
+    :params airflow_home: The airflow home to set
+    """
+    log.debug("Set airflow environment variables")
+    os.environ["AIRFLOW_HOME"] = airflow_home.as_posix()
+    log.debug("Set airflow environment variables from config")
+    parser = ConfigParser()
+    parser.read(airflow_home / "airflow.cfg")
+    if version() >= Version("2.3"):
+        os.environ["AIRFLOW__DATABASE__SQL_ALCHEMY_CONN"] = parser.get("database", "sql_alchemy_conn")
+    else:
+        os.environ["AIRFLOW__CORE__SQL_ALCHEMY_CONN"] = parser.get("core", "sql_alchemy_conn")
+
+    # Reload airflow configuration after setting environment variables
+    from airflow import configuration
+
+    importlib.reload(configuration)
+
+    # Re-initialise airflow settings
+    import airflow
 
     importlib.reload(airflow)
-    importlib.reload(airflow.configuration)
-    importlib.reload(airflow.models.base)
-    importlib.reload(airflow.models.connection)
+
+    log.debug("Reloaded Airflow successfully. Airflow env vars are: %s", _get_airflow_env_vars())
+
+
+def _get_airflow_env_vars() -> list[str]:
+    return [f"{item}={value}" for item, value in os.environ.items() if item.startswith("AIRFLOW_")]
 
 
 # The following function was copied from Apache Airflow
@@ -128,7 +141,7 @@ def get_dag(subdir: str, dag_id: str, include_examples: bool = False) -> DAG:
     dagbag = DagBag(first_path, include_examples=include_examples)
     if dag_id not in dagbag.dags:
         fallback_path = _search_for_dag_file(subdir) or settings.DAGS_FOLDER
-        logger.warning("Dag %r not found in path %s; trying path %s", dag_id, first_path, fallback_path)
+        log.warning("Dag %r not found in path %s; trying path %s", dag_id, first_path, fallback_path)
         dagbag = DagBag(dag_folder=fallback_path, include_examples=include_examples)
         if dag_id not in dagbag.dags:
             raise AirflowException(
@@ -151,3 +164,16 @@ def check_for_dag_import_errors(dag_file: Path) -> dict[str, str]:
     dag_folder = process_subdir(str(dag_file))
     dagbag = DagBag(dag_folder, include_examples=False)
     return dagbag.import_errors
+
+
+def remove_unnecessary_files(airflow_home: Path) -> None:
+    """
+    Delete Airflow generated paths which are not necessary during the SQL CLI project initialisation.
+
+    :param airflow_home: Path to Airflow home we want to clean up.
+    """
+    logs_folder = airflow_home / "logs"
+    shutil.rmtree(logs_folder)
+
+    webserver_config = airflow_home / "webserver_config.py"
+    webserver_config.unlink()

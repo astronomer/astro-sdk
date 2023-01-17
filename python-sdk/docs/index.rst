@@ -22,6 +22,7 @@ Welcome to astro-sdk-python's documentation!
    guides/operators.rst
    guides/xcom_backend.rst
    guides/openlineage.rst
+   guides/databricks.rst
 
 .. toctree::
    :maxdepth: 1

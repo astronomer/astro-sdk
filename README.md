@@ -44,17 +44,17 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 
     ```shell
     export AIRFLOW_HOME=`pwd`
-    export AIRFLOW__CORE__ENABLE_XCOM_PICKLING=True
     airflow db init
     ```
 
-   > **Note:** `AIRFLOW__CORE__ENABLE_XCOM_PICKLING` no longer needs to be enabled for `astro-sdk-python`. This functionality is now deprecated as our custom xcom backend handles serialization.
-
-    Currently, custom XCom backends are limited to data types that are json serializable. Since Dataframes are not json serializable, we need to enable XCom pickling to store dataframes.
+   > **Note:** `AIRFLOW__CORE__ENABLE_XCOM_PICKLING` no longer needs to be enabled from astro-sdk-python release 1.2 and above. This functionality is now deprecated.
+   > - For airflow version < 2.5 and astro-sdk-python release < 1.3 Users can either use a custom XCom backend [AstroCustomXcomBackend](https://astro-sdk-python.readthedocs.io/en/latest/guides/xcom_backend.html#xcom-backend) with Xcom pickling disabled (or) enable Xcom pickling.
+   > - For airflow version >= 2.5 and astro-sdk-python release >= 1.3.3 Users can either use [Airflow's Xcom backend](https://astro-sdk-python.readthedocs.io/en/latest/guides/xcom_backend.html#airflow_xcom_backend) with Xcom pickling disabled (or) enable Xcom pickling.
 
     The data format used by pickle is Python-specific. This has the advantage that there are no restrictions imposed by external standards such as JSON or XDR (which can’t represent pointer sharing); however it means that non-Python programs may not be able to reconstruct pickled Python objects.
 
     Read more: [enable_xcom_pickling](https://airflow.apache.org/docs/apache-airflow/stable/configurations-ref.html#enable-xcom-pickling) and [pickle](https://docs.python.org/3/library/pickle.html#comparison-with-json):
+
 
 
 2. Create a SQLite database for the example to run with:
@@ -119,6 +119,9 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
 | Amazon S3   |
 | Filesystem  |
 | Google GCS  |
+| Google Drive|
+| SFTP        |
+| FTP         |
 
 ## Available operations
 

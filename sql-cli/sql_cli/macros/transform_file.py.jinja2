@@ -1,0 +1,33 @@
+{% macro transform_file(sql_file, dag) -%}
+{{ sql_file.get_variable_name() }} = aql.transform_file(
+    file_path=f"{DAGS_FOLDER}/{{ sql_file.get_relative_target_path() }}",
+    parameters={
+        {%- for parameter in sql_file.get_parameters() %}
+        {%- if dag.has_workflow_file(parameter) %}
+        "{{ parameter }}": {{ parameter }},
+        {%- endif %}
+        {%- endfor %}
+    },
+    {%- if sql_file.metadata and "conn_id" in sql_file.metadata %}
+    conn_id="{{ sql_file.metadata.conn_id }}",
+    {%- endif %}
+    {%- if sql_file.metadata and "database" in sql_file.metadata %}
+    database="{{ sql_file.metadata.database }}",
+    {%- endif %}
+    {%- if sql_file.metadata and "schema" in sql_file.metadata %}
+    schema="{{ sql_file.metadata.schema }}",
+    {%- endif %}
+    {#- Note: Unfortunately, we cannot simply use **op_kwargs as some of the deserialized fields
+        such as Table contain invalid args for an __init__ call.
+        For example:
+          `output_table={{ sql_file.output_table }}` won't work as the deserialized output table
+          contains args such as `uri` which cannot be set,
+          causing `output_table=Table(uri="...", ...)` to fail when parsed by python. #}
+    op_kwargs={
+        "output_table": Table(
+            name="{{ sql_file.name }}",
+        ),
+    },
+    task_id="{{ sql_file.get_variable_name() }}",
+)
+{%- endmacro -%}

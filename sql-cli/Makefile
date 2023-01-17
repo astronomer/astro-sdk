@@ -1,7 +1,6 @@
 .PHONY: help
 .DEFAULT_GOAL:= help
 SHELL := /bin/bash
-SYSTEM_PIP := pip
 
 
 clean:  ## Remove temporary files
@@ -14,8 +13,9 @@ clean:  ## Remove temporary files
 
 system:  ## Install system dependencies
 	@echo "Installing system dependencies using default pip"
-	@$(SYSTEM_PIP) install poetry
-	@$(SYSTEM_PIP) install pre-commit
+	@pipx install nox
+	@pipx install poetry
+	@pipx install pre-commit
 
 install:  ## Create Python virtualenv and install python dependencies
 	@poetry install --with dev
@@ -28,10 +28,11 @@ setup: system install  ## Setup a local development environment
 pre-commit:  # Run pre-commit
 	@git ls-files -- . | xargs pre-commit run --files
 
-flow:  # Build and run the latest version of flow
+temp-flow: # Build flow project in temp directory
+	@flow init $(shell mktemp -d)
 
 test:  # Run tests
-	@_TYPER_FORCE_DISABLE_TERMINAL=1 PYTHONWARNINGS="ignore" poetry run pytest -s --cov --cov-branch --cov-report=term-missing tests
+	@nox -s "test-3.8(airflow='2.5')"
 
 release:  # Build a package
 	@echo -e "If this is your first time, please, manually follow these two steps: \n" \

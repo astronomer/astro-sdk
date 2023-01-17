@@ -46,10 +46,13 @@ env:
   SNOWFLAKE_ACCOUNT: gp21411
   SNOWFLAKE_REGION: us-east-1
   SNOWFLAKE_ROLE: AIRFLOW_TEST_USER
+  SFTP_HOSTNAME: ${{ secrets.SFTP_HOSTNAME }}
+  SFTP_USERNAME: ${{ secrets.SFTP_USERNAME }}
+  SFTP_PASSWORD: ${{ secrets.SFTP_PASSWORD }}
   AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: True
+  AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+  AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
   AIRFLOW_VAR_FOO: templated_file_name
-  AIRFLOW__CORE__XCOM_BACKEND: astro.custom_backend.astro_custom_backend.AstroCustomXcomBackend
-  AIRFLOW__ASTRO_SDK__STORE_DATA_LOCAL_DEV: True
   AWS_BUCKET: tmp9
   GOOGLE_BUCKET: dag-authoring
   FORCE_COLOR: "true"
@@ -132,6 +135,20 @@ jobs:
           --name postgres
         ports:
           - 5432:5432
+      sftp:
+        image: ghcr.io/astronomer/astro-sdk/sftp_docker
+        ports:
+          - 2222:22
+      ftp:
+        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        ports:
+          - 21:21
+          - 30000-30009:30000-30009
+        env:
+          FTP_USER_NAME: ${{ secrets.SFTP_USERNAME }}
+          FTP_USER_PASS: ${{ secrets.SFTP_PASSWORD }}
+          FTP_USER_HOME: /home/foo
+          PUBLICHOST: "localhost"
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -151,7 +168,7 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}
+          key: ${{ runner.os }}-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
@@ -172,8 +189,11 @@ jobs:
       REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+      AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
 
-  Run-Unit-tests-Airflow-2-4:
+  Run-Unit-tests-Airflow-2-5:
     if: >-
       github.event_name == 'push' ||
       (
@@ -187,25 +207,7 @@ jobs:
       (
         github.event_name == 'release'
       )
-    strategy:
-      fail-fast: false
-      matrix:
-        group: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 ]
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        # Docker Hub image
-        image: dimberman/pagila-test
-        env:
-          POSTGRES_PASSWORD: postgres
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -224,16 +226,91 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: ${{ runner.os }}-2.3-${{ hashFiles('python-sdk/pyproject.toml') }}
+          key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+      - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
+      - run: pip3 install nox
+      - run: nox -s "test-3.8(airflow='2.5.0')" -- tests/ --cov=src --cov-report=xml --cov-branch
+      - name: Upload coverage
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-unit-test
+          path: ./python-sdk/.coverage
+
+  Run-load-file-Integration-Airflow-2-5:
+    if: >-
+      github.event_name == 'push' ||
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.fork == false
+      ) ||
+      (
+        github.event_name == 'pull_request_target' &&
+        contains(github.event.pull_request.labels.*.name, 'safe to test')
+      ) ||
+      (
+        github.event_name == 'release'
+      )
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [ 1, 2, 3]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # Docker Hub image
+        image: dimberman/pagila-test
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      sftp:
+        image: ghcr.io/astronomer/astro-sdk/sftp_docker
+        ports:
+          - 2222:22
+      ftp:
+        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        ports:
+          - 21:21
+          - 30000-30009:30000-30009
+        env:
+          FTP_USER_NAME: ${{ secrets.SFTP_USERNAME }}
+          FTP_USER_PASS: ${{ secrets.SFTP_PASSWORD }}
+          FTP_USER_HOME: /home/foo
+          PUBLICHOST: "localhost"
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.4')" -- --splits 12 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-3.8(airflow='2.5.0')" -- tests_integration/ -k "test_load_file.py" --splits 3 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
-          name: coverage${{ matrix.group }}
+          name: coverage-${{ matrix.group }}-integration-tests
           path: ./python-sdk/.coverage
     env:
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
@@ -245,6 +322,187 @@ jobs:
       REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+      AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+
+  Run-example-dag-Integration-Airflow-2-5:
+    if: >-
+      github.event_name == 'push' ||
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.fork == false
+      ) ||
+      (
+        github.event_name == 'pull_request_target' &&
+        contains(github.event.pull_request.labels.*.name, 'safe to test')
+      ) ||
+      (
+        github.event_name == 'release'
+      )
+    strategy:
+      fail-fast: false
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # Docker Hub image
+        image: dimberman/pagila-test
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      sftp:
+        image: ghcr.io/astronomer/astro-sdk/sftp_docker
+        ports:
+          - 2222:22
+      ftp:
+        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        ports:
+          - 21:21
+          - 30000-30009:30000-30009
+        env:
+          FTP_USER_NAME: ${{ secrets.SFTP_USERNAME }}
+          FTP_USER_PASS: ${{ secrets.SFTP_PASSWORD }}
+          FTP_USER_HOME: /home/foo
+          PUBLICHOST: "localhost"
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+      - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
+      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
+      - run: pip3 install nox
+      - run: nox -s "test-3.8(airflow='2.5.0')" -- tests_integration/ -k "test_example_dags.py" --cov=src --cov-report=xml --cov-branch
+      - name: Upload coverage
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-${{ matrix.group }}-integration-tests
+          path: ./python-sdk/.coverage
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
+      REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
+      REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
+      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+      AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+
+  Run-Integration-tests-Airflow-2-5:
+    if: >-
+      github.event_name == 'push' ||
+      (
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.repo.fork == false
+      ) ||
+      (
+        github.event_name == 'pull_request_target' &&
+        contains(github.event.pull_request.labels.*.name, 'safe to test')
+      ) ||
+      (
+        github.event_name == 'release'
+      )
+    strategy:
+      fail-fast: false
+      matrix:
+        group: [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # Docker Hub image
+        image: dimberman/pagila-test
+        env:
+          POSTGRES_PASSWORD: postgres
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      sftp:
+        image: ghcr.io/astronomer/astro-sdk/sftp_docker
+        ports:
+          - 2222:22
+      ftp:
+        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        ports:
+          - 21:21
+          - 30000-30009:30000-30009
+        env:
+          FTP_USER_NAME: ${{ secrets.SFTP_USERNAME }}
+          FTP_USER_PASS: ${{ secrets.SFTP_PASSWORD }}
+          FTP_USER_HOME: /home/foo
+          PUBLICHOST: "localhost"
+    steps:
+      - uses: actions/checkout@v3
+        if: github.event_name != 'pull_request_target'
+
+      - name: Checkout pull/${{ github.event.number }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+        if: github.event_name == 'pull_request_target'
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            .nox
+          key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+      - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
+      - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
+      - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
+      - run: pip3 install nox
+      - run: nox -s "test-3.8(airflow='2.5.0')" -- tests_integration/ -k "not test_load_file.py and not test_example_dags.py" --splits 11 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - name: Upload coverage
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-${{ matrix.group }}-integration-tests
+          path: ./python-sdk/.coverage
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+      GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN: ${{ secrets.REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN }}
+      REDSHIFT_USERNAME: ${{ secrets.REDSHIFT_USERNAME }}
+      REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
+      SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+      AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
 
   Run-Unit-tests-Airflow-2-2-5:
     if: >-
@@ -275,6 +533,20 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+      sftp:
+        image: ghcr.io/astronomer/astro-sdk/sftp_docker
+        ports:
+          - 2222:22
+      ftp:
+        image: ghcr.io/astronomer/astro-sdk/ftp_docker
+        ports:
+          - 21:21
+          - 30000-30009:30000-30009
+        env:
+          FTP_USER_NAME: ${{ secrets.SFTP_USERNAME }}
+          FTP_USER_PASS: ${{ secrets.SFTP_PASSWORD }}
+          FTP_USER_HOME: /home/foo
+          PUBLICHOST: "localhost"
     steps:
       - uses: actions/checkout@v3
         if: github.event_name != 'pull_request_target'
@@ -294,12 +566,12 @@ jobs:
           path: |
             ~/.cache/pip
             .nox
-          key: ${{ runner.os }}-2.2.5-${{ hashFiles('python-sdk/pyproject.toml') }}
+          key: ${{ runner.os }}-2.2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
       - run: cat ../.github/ci-test-connections.yaml > test-connections.yaml
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.2.5')" -- "tests/test_example_dags.py" "tests/integration_test_dag.py"
+      - run: nox -s "test-3.8(airflow='2.2.5')" -- "tests_integration/test_example_dags.py" "tests_integration/integration_test_dag.py"
     env:
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
@@ -310,11 +582,51 @@ jobs:
       REDSHIFT_PASSWORD: ${{ secrets.REDSHIFT_PASSWORD }}
       SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_UNAME }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+      AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
+      AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
+
+  Generate-Constraints:
+    if: (github.event_name == 'release' || github.event_name == 'push')
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [ 3.7, 3.8, 3.9 ]
+        airflow: [ 2.2.5, 2.3.4, 2.4.2, 2.5.0 ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: '${{ matrix.python }}'
+          architecture: 'x64'
+      - name: Get pip cache dir
+        id: pip-cache
+        run: |
+          echo "pip_cache_dir=$(pip cache dir)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v3
+        with:
+          path: ${{ steps.pip-cache.outputs.pip_cache_dir }}
+          key: constraints-${{ matrix.python }}-${{ matrix.airflow }}-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
+      - run: pip3 install -U pip wheel build nox
+      - run: nox -s build
+      - run: pip3 install 'apache-airflow==${{ matrix.airflow }}' "$(ls dist/*.whl)[all]"
+      - run: pip3 list --format=freeze > constraints-${{ matrix.python }}-${{ matrix.airflow }}
+      - run: cat constraints-${{ matrix.python }}-${{ matrix.airflow }}
+      - name: Upload constraints
+        uses: actions/upload-artifact@v3
+        with:
+          name: constraints-${{ matrix.python }}-${{ matrix.airflow }}
+          path: ./python-sdk/constraints-${{ matrix.python }}-${{ matrix.airflow }}
+          if-no-files-found: error
 
   Code-Coverage:
     if: github.event.action != 'labeled'
     needs:
-      - Run-Unit-tests-Airflow-2-4
+      - Run-Unit-tests-Airflow-2-5
+      - Run-Integration-tests-Airflow-2-5
+      - Run-load-file-Integration-Airflow-2-5
+      - Run-example-dag-Integration-Airflow-2-5
       - Run-Optional-Packages-tests-python-sdk
     runs-on: ubuntu-latest
     steps:
@@ -346,9 +658,13 @@ jobs:
     if: github.event_name == 'release'
     name: Build and publish Python 🐍 distributions 📦 to PyPI
     needs:
-      - Run-Unit-tests-Airflow-2-4
+      - Run-Unit-tests-Airflow-2-5
       - Run-Unit-tests-Airflow-2-2-5
+      - Run-Integration-tests-Airflow-2-5
+      - Run-load-file-Integration-Airflow-2-5
+      - Run-example-dag-Integration-Airflow-2-5
       - Run-Optional-Packages-tests-python-sdk
+      - Generate-Constraints
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2

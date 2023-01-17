@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from io import StringIO
 from typing import List
@@ -15,6 +16,8 @@ This DAG means to serve as an example of how you can use the @aql.dataframe deco
 API hooks. By requesting the expected data and returning it as a dataframe, our results can now easily pass into
 @task or @aql.transform tasks.
 """
+
+ALLOWED_DESERIALIZATION_CLASSES = os.getenv("AIRFLOW__CORE__ALLOWED_DESERIALIZATION_CLASSES")
 
 
 def _load_covid_data():
@@ -45,7 +48,10 @@ def find_worst_covid_month(dfs: List[pd.DataFrame]):
     """
     res = {}
     for covid_month_data in dfs:
-        covid_month = covid_month_data.Date_YMD.iloc[0].__format__("%Y-%m")
+        if ALLOWED_DESERIALIZATION_CLASSES == "airflow\\.* astro\\.*":
+            covid_month = datetime.fromtimestamp(covid_month_data.Date_YMD.iloc[0] / 1e3).strftime("%Y-%m")
+        else:
+            covid_month = covid_month_data.Date_YMD.iloc[0].__format__("%Y-%m")
         num_deceased = covid_month_data["Daily Deceased"].sum()
         res[covid_month] = num_deceased
         print(f"Found {num_deceased} dead for month {covid_month}")

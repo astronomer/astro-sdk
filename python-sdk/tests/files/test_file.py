@@ -1,16 +1,19 @@
 import pathlib
 import pickle
 from datetime import datetime
-from unittest.mock import mock_open, patch
+from unittest.mock import patch
 
 import pandas as pd
 import pytest
 from airflow import DAG
-from botocore.client import BaseClient
-from google.cloud.storage import Client
 
 from astro import constants
-from astro.constants import SUPPORTED_FILE_TYPES, FileType
+from astro.dataframes.load_options import (
+    PandasCsvLoadOptions,
+    PandasJsonLoadOptions,
+    PandasNdjsonLoadOptions,
+    PandasParquetLoadOptions,
+)
 from astro.files import File, get_file_list, resolve_file_path_pattern
 
 sample_file = pathlib.Path(pathlib.Path(__file__).parent.parent, "data/sample.csv")
@@ -63,160 +66,6 @@ def test_path_property():
 
 
 @pytest.mark.parametrize(
-    "files",
-    [
-        {
-            "path": "/tmp/sample.csv",
-            "instance": None,
-        },
-        {
-            "path": "s3://tmp/sample.csv",
-            "instance": BaseClient,
-        },
-        {
-            "path": "gs://tmp/sample.csv",
-            "instance": Client,
-        },
-    ],
-)
-@patch("astro.files.locations.base.smart_open.open")
-def test_exists(mocked_smart_open, files):
-    """Test existence of files across supported locations"""
-    File(files["path"]).exists()
-    mocked_smart_open.assert_called()
-    kwargs = mocked_smart_open.call_args.kwargs
-    args = mocked_smart_open.call_args.args
-    if kwargs["transport_params"]:
-        assert isinstance(kwargs["transport_params"]["client"], files["instance"])
-    assert files["path"] == args[0]
-
-
-@pytest.mark.parametrize("type_method_map_fixture", [{"method": "create_from_dataframe"}], indirect=True)
-@pytest.mark.parametrize(
-    "locations",
-    [
-        {
-            "path": "/tmp/sample",
-            "instance": None,
-        },
-        {
-            "path": "s3://tmp/sample",
-            "instance": BaseClient,
-        },
-        {
-            "path": "gs://tmp/sample",
-            "instance": Client,
-        },
-    ],
-    ids=["local", "s3", "gcs"],
-)
-@pytest.mark.parametrize("filetype", SUPPORTED_FILE_TYPES)
-@patch("astro.files.base.smart_open.open")
-def test_create_from_dataframe(mocked_smart_open, filetype, locations, type_method_map_fixture):
-    """Test create_from_dataframe() for all locations and filetypes"""
-    data = {"id": [1, 2, 3], "name": ["First", "Second", "Third with unicode पांचाल"]}
-    df = pd.DataFrame(data=data)
-    with patch(type_method_map_fixture[FileType(filetype)]) as mocked_write:
-
-        path = locations["path"] + "." + filetype
-
-        File(path).create_from_dataframe(df=df)
-        mocked_smart_open.assert_called()
-        kwargs = mocked_smart_open.call_args.kwargs
-        args = mocked_smart_open.call_args.args
-        if kwargs["transport_params"]:
-            assert isinstance(kwargs["transport_params"]["client"], locations["instance"])
-        assert path == args[0]
-
-        mocked_write.assert_called()
-        mocked_write.stop()
-
-
-@pytest.mark.parametrize("type_method_map_fixture", [{"method": "export_to_dataframe"}], indirect=True)
-@pytest.mark.parametrize(
-    "locations",
-    [
-        {
-            "path": "/tmp/sample",
-            "instance": None,
-        },
-        {
-            "path": "s3://tmp/sample",
-            "instance": BaseClient,
-        },
-        {
-            "path": "gs://tmp/sample",
-            "instance": Client,
-        },
-    ],
-    ids=["local", "s3", "gcs"],
-)
-@pytest.mark.parametrize("filetype", SUPPORTED_FILE_TYPES)
-def test_export_to_dataframe(filetype, locations, type_method_map_fixture):
-    """Test export_to_dataframe() for all locations and filetypes"""
-    if filetype == "parquet":
-        data = str.encode("data")
-    else:
-        data = "data"
-    with patch(type_method_map_fixture[FileType(filetype)]) as mocked_read, patch(
-        "astro.files.base.smart_open.open", mock_open(read_data=data)
-    ) as mocked_smart_open:
-
-        path = locations["path"] + "." + filetype
-
-        File(path).export_to_dataframe(normalize_config=None)
-        mocked_smart_open.assert_called()
-        kwargs = mocked_smart_open.call_args.kwargs
-        args = mocked_smart_open.call_args.args
-        if kwargs["transport_params"]:
-            assert isinstance(kwargs["transport_params"]["client"], locations["instance"])
-        assert path == args[0]
-        mocked_read.assert_called()
-
-
-@pytest.mark.parametrize("type_method_map_fixture", [{"method": "export_to_dataframe"}], indirect=True)
-@pytest.mark.parametrize(
-    "locations",
-    [
-        {
-            "path": "/tmp/sample",
-            "instance": None,
-        },
-        {
-            "path": "s3://tmp/sample",
-            "instance": BaseClient,
-        },
-        {
-            "path": "gs://tmp/sample",
-            "instance": Client,
-        },
-    ],
-    ids=["local", "s3", "gcs"],
-)
-@pytest.mark.parametrize("filetype", SUPPORTED_FILE_TYPES)
-def test_read_with_explicit_valid_type(filetype, locations, type_method_map_fixture):
-    """Test export_to_dataframe() for all locations and filetypes, where the file type is explicitly specified"""
-    if filetype == "parquet":
-        data = str.encode("data")
-    else:
-        data = "data"
-    with patch(type_method_map_fixture[FileType(filetype)]) as mocked_read, patch(
-        "astro.files.base.smart_open.open", mock_open(read_data=data)
-    ) as mocked_smart_open:
-
-        path = locations["path"]
-
-        File(path=path, filetype=FileType(filetype)).export_to_dataframe(normalize_config=None)
-        mocked_smart_open.assert_called()
-        kwargs = mocked_smart_open.call_args.kwargs
-        args = mocked_smart_open.call_args.args
-        if kwargs["transport_params"]:
-            assert isinstance(kwargs["transport_params"]["client"], locations["instance"])
-        assert path == args[0]
-        mocked_read.assert_called()
-
-
-@pytest.mark.parametrize(
     "invalid_path",
     [
         "/tmp/cklcdklscdksl.csv",
@@ -251,23 +100,23 @@ def test_get_file_list():
     [
         (File("/tmp/file_a.csv"), File("/tmp/file_a.csv"), True),
         (
-            File("/tmp/file_a.csv", conn_id="test"),
-            File("/tmp/file_a.csv", conn_id="test"),
+            File("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
+            File("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
             True,
         ),
         (
-            File("/tmp/file_a.csv", conn_id="test", filetype=constants.FileType.CSV),
-            File("/tmp/file_a.csv", conn_id="test", filetype=constants.FileType.CSV),
+            File("gs://tmp/file_a.csv", conn_id="google_cloud_default", filetype=constants.FileType.CSV),
+            File("gs://tmp/file_a.csv", conn_id="google_cloud_default", filetype=constants.FileType.CSV),
             True,
         ),
         (
-            File("/tmp/file_a.csv", conn_id="test", filetype=constants.FileType.CSV),
-            File("/tmp/file_a.csv", conn_id="test2", filetype=constants.FileType.JSON),
+            File("gs://tmp/file_a.csv", conn_id="google_cloud_default", filetype=constants.FileType.CSV),
+            File("gs://tmp/file_a.csv", conn_id="google_cloud_default", filetype=constants.FileType.JSON),
             False,
         ),
         (
-            File("/tmp/file_a.csv", conn_id="test", filetype=constants.FileType.CSV),
-            File("/tmp/file_b.csv", conn_id="test", filetype=constants.FileType.CSV),
+            File("gs://tmp/file_a.csv", conn_id="google_cloud_default", filetype=constants.FileType.CSV),
+            File("gs://tmp/file_b.csv", conn_id="google_cloud_default", filetype=constants.FileType.CSV),
             False,
         ),
     ],
@@ -366,3 +215,49 @@ def test_if_file_object_can_be_pickled():
     """Verify if we can pickle File object"""
     file = File(path="./test.csv")
     assert pickle.loads(pickle.dumps(file)) == file
+
+
+@pytest.mark.parametrize(
+    "file_type",
+    [
+        {"type": "csv", "expected_class": PandasCsvLoadOptions},
+        {"type": "ndjson", "expected_class": PandasNdjsonLoadOptions},
+        {"type": "json", "expected_class": PandasJsonLoadOptions},
+        {"type": "parquet", "expected_class": PandasParquetLoadOptions},
+    ],
+    ids=["csv", "ndjson", "json", "parquet"],
+)
+@pytest.mark.parametrize(
+    "file_location",
+    [
+        {"location": "s3://dummy/test", "expected_class": None},
+        {"location": "gs://dummy/test", "expected_class": None},
+        # ToDo: Get the correct protocol for the azure URL. `wasb, wasbs, azure` is failing.
+        # {
+        #     "location": "wasb://dummy/test",
+        #     "expected_class": None
+        # },
+        {"location": "ftp://dummy/test", "expected_class": None},
+        {"location": "sftp://dummy/test", "expected_class": None},
+        {"location": "gdrive://dummy/test", "expected_class": None},
+        {"location": "http://dummy.com/test", "expected_class": None},
+        {"location": "https://dummy.com/test", "expected_class": None},
+        {"location": "./test", "expected_class": None},  # local path
+    ],
+    ids=["s3", "gs", "ftp", "sftp", "gdrive", "http", "https", "local"],
+)
+def test_file_object_picks_load_options(file_type, file_location):
+    """Test file object pick correct load_options"""
+    type_name, type_expected_class = file_type.values()
+    location_path, location_expected_class = file_location.values()
+    file = File(
+        path=location_path + f".{type_name}",
+        load_options=[
+            PandasCsvLoadOptions(delimiter="$"),
+            PandasJsonLoadOptions(encoding="test"),
+            PandasParquetLoadOptions(columns=["name", "age"]),
+            PandasNdjsonLoadOptions(normalize_sep="__"),
+        ],
+    )
+    assert type(file.type.load_options) is type_expected_class
+    assert file.location.load_options is location_expected_class

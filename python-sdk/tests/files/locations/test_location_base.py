@@ -5,6 +5,7 @@ import pytest
 
 from astro.constants import FileLocation
 from astro.files.locations import create_file_location, get_class_name
+from astro.files.locations.google.gcs import GCSLocation
 from astro.files.locations.local import LocalLocation
 
 LOCAL_FILENAME = str(uuid.uuid4())
@@ -39,7 +40,7 @@ def test_get_class_name_method_valid_name():
     """Test valid case of implicit naming dependency among the module name and class name for dynamic imports"""
 
     class Test:  # skipcq: PY-D0002
-        __name__ = "test.some"
+        __name__ = "test.some"  # noqa: A003
 
         class TestLocation:  # skipcq: PY-D0002
             pass
@@ -55,6 +56,9 @@ def test_get_class_name_method_valid_name():
         (FileLocation.HTTPS, "https://domain/some-file", "https://domain"),
         (FileLocation.S3, "s3://bucket/some-file", "s3://bucket"),
         (FileLocation.GS, "gs://bucket/some-file", "gs://bucket"),
+        (FileLocation.GOOGLE_DRIVE, "gdrive://bucket/some-file", "gdrive://bucket"),
+        (FileLocation.SFTP, "sftp://user@host/some", "sftp://user@host"),
+        (FileLocation.FTP, "ftp://user@host/some", "ftp://user@host"),
     ],
 )
 def test_openlineage_file_dataset_namespace(file_location, filepath, namespace):
@@ -74,6 +78,9 @@ def test_openlineage_file_dataset_namespace(file_location, filepath, namespace):
         (FileLocation.HTTPS, "https://domain/some-file", "/some-file"),
         (FileLocation.S3, "s3://bucket/some-file", "/some-file"),
         (FileLocation.GS, "gs://bucket/some-file", "/some-file"),
+        (FileLocation.GOOGLE_DRIVE, "gdrive://bucket/some-file", "/some-file"),
+        (FileLocation.SFTP, "sftp://user@host/some", "/some"),
+        (FileLocation.FTP, "ftp://user@host/some", "/some"),
     ],
 )
 def test_openlineage_file_dataset_name(file_location, filepath, dataset_name):
@@ -89,7 +96,7 @@ def test_get_class_name_method_invalid_name():
     """Test invalid case of implicit naming dependency among the module name and class name for dynamic imports"""
 
     class Test:  # skipcq: PY-D0002
-        __name__ = "test.some"
+        __name__ = "test.some"  # noqa: A003
 
         class SomethingElseLocation:  # skipcq: PY-D0002
             pass
@@ -106,25 +113,20 @@ def test_get_class_name_method_invalid_name():
 @pytest.mark.parametrize(
     "loc_1,loc_2,equality",
     [
-        (LocalLocation("/tmp/file_a.csv"), LocalLocation("/tmp/file_a.csv"), True),
+        (GCSLocation("gs://tmp/file_a.csv"), GCSLocation("gs://tmp/file_a.csv"), True),
         (
-            LocalLocation("/tmp/file_a.csv", conn_id="test"),
-            LocalLocation("/tmp/file_a.csv", conn_id="test"),
+            GCSLocation("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
+            GCSLocation("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
             True,
         ),
         (
-            LocalLocation("/tmp/file_a.csv", conn_id="test"),
-            LocalLocation("/tmp/file_a.csv", conn_id="test"),
+            GCSLocation("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
+            GCSLocation("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
             True,
         ),
         (
-            LocalLocation("/tmp/file_a.csv", conn_id="test"),
-            LocalLocation("/tmp/file_a.csv", conn_id="test2"),
-            False,
-        ),
-        (
-            LocalLocation("/tmp/file_a.csv", conn_id="test"),
-            LocalLocation("/tmp/file_b.csv", conn_id="test"),
+            GCSLocation("gs://tmp/file_a.csv", conn_id="google_cloud_default"),
+            GCSLocation("gs://tmp/file_b.csv", conn_id="google_cloud_default"),
             False,
         ),
     ],
@@ -140,3 +142,9 @@ def test_location_eq(loc_1, loc_2, equality):
 def test_location_hash():
     """Test that hashing works"""
     assert isinstance(hash(LocalLocation("/tmp/file_a.csv")), int)
+
+
+def test_invalid_conn_id_with_file_path():
+    """Raise a value when the connection types doesn't match the path"""
+    with pytest.raises(ValueError, match=r".* is not supported for .*"):
+        GCSLocation("gs://tmp/file_a.csv", conn_id="aws_default")

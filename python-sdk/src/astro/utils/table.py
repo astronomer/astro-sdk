@@ -6,7 +6,7 @@ from typing import Callable
 from airflow.models.xcom_arg import XComArg
 
 from astro.sql.table import BaseTable
-from astro.utils.typing_compat import Context
+from astro.utils.compat.typing import Context
 
 
 def _have_same_conn_id(tables: list[BaseTable]) -> bool:

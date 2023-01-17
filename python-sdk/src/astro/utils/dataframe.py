@@ -6,8 +6,9 @@ from typing import TYPE_CHECKING
 
 import pandas as pd
 
+from astro import settings
 from astro.constants import ColumnCapitalization, FileType
-from astro.settings import DATAFRAME_STORAGE_CONN_ID, DATAFRAME_STORAGE_URL
+from astro.dataframes.pandas import PandasDataframe
 
 if TYPE_CHECKING:
     from astro.files import File
@@ -23,10 +24,12 @@ def convert_columns_names_capitalization(
     :param columns_names_capitalization: String Literal with possible values - lower/Upper
     """
     if isinstance(df, pd.DataFrame):
+        df = PandasDataframe.from_pandas_df(df)
         if columns_names_capitalization == "lower":
             df.columns = [col_label.lower() for col_label in df.columns]
         elif columns_names_capitalization == "upper":
             df.columns = [col_label.upper() for col_label in df.columns]
+
     return df
 
 
@@ -50,8 +53,8 @@ def convert_dataframe_to_file(df: pd.DataFrame) -> File:
     from astro.files import File
 
     file = File(
-        path=DATAFRAME_STORAGE_URL + "/" + unique_id + ".parquet",
-        conn_id=DATAFRAME_STORAGE_CONN_ID,
+        path=settings.DATAFRAME_STORAGE_URL + "/" + unique_id + ".parquet",
+        conn_id=settings.DATAFRAME_STORAGE_CONN_ID,
         filetype=FileType.PARQUET,
         is_dataframe=True,
     )

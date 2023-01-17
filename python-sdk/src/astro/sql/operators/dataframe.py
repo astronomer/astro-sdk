@@ -8,6 +8,7 @@ import pandas as pd
 from airflow.decorators.base import DecoratedOperator
 
 from astro.airflow.datasets import kwargs_with_datasets
+from astro.dataframes.pandas import PandasDataframe
 
 try:
     from airflow.decorators.base import TaskDecorator, task_decorator_factory
@@ -15,14 +16,14 @@ except ImportError:  # pragma: no cover
     from airflow.decorators import _TaskDecorator as TaskDecorator
     from airflow.decorators.base import task_decorator_factory
 
-from astro.constants import ColumnCapitalization
+from astro.constants import ColumnCapitalization, LoadExistStrategy
 from astro.databases import create_database
 from astro.files import File
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.sql.table import BaseTable, Table
+from astro.utils.compat.typing import Context
 from astro.utils.dataframe import convert_columns_names_capitalization
 from astro.utils.table import find_first_table
-from astro.utils.typing_compat import Context
 
 
 def _get_dataframe(
@@ -36,8 +37,7 @@ def _get_dataframe(
     df = convert_columns_names_capitalization(
         df=df, columns_names_capitalization=columns_names_capitalization
     )
-
-    return df
+    return PandasDataframe.from_pandas_df(df)
 
 
 def load_op_arg_table_into_dataframe(
@@ -105,6 +105,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
     :param conn_id: Connection to the DB that you will pull the table from
     :param database: Database for input table
     :param schema:  schema for input table
+    :param if_exists: Overwrite when set to "replace" else "append".
     :param warehouse: (Snowflake) Which warehouse to use for the input table
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
         in the resulting dataframe
@@ -119,6 +120,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
         database: str | None = None,
         schema: str | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
+        if_exists: LoadExistStrategy = "replace",
         **kwargs,
     ):
         self.conn_id: str = conn_id or ""
@@ -133,6 +135,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             self.output_table = None
         self.op_args = self.kwargs.get("op_args", ())  # type: ignore
         self.columns_names_capitalization = columns_names_capitalization
+        self.if_exists = if_exists
 
         # We purposely do NOT render upstream_tasks otherwise we could have a case where a user
         # has 10 dataframes as upstream tasks and it crashes the worker
@@ -185,7 +188,7 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             db.load_pandas_dataframe_to_table(
                 source_dataframe=function_output,
                 target_table=self.output_table,
-                if_exists="replace",
+                if_exists=self.if_exists,
             )
             return self.output_table
         else:
@@ -215,28 +218,26 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
             )
         return function_output
 
-    def get_openlineage_facets(self, task_instance):  # skipcq: PYL-W0613
+    def get_openlineage_facets_on_complete(self, task_instance):  # skipcq: PYL-W0613
         """
         Collect the input, output, job and run facets for DataframeOperator
         """
+
         from astro.lineage import (
             BaseFacet,
             DataSourceDatasetFacet,
             OpenlineageDataset,
+            OperatorLineage,
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
+            SourceCodeJobFacet,
         )
-        from astro.lineage.extractor import OpenLineageFacets
+        from astro.settings import OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE
 
         output_dataset: list[OpenlineageDataset] = []
 
         if self.output_table and self.output_table.openlineage_emit_temp_table_event():  # pragma: no cover
-            output_uri = (
-                f"{self.output_table.openlineage_dataset_namespace()}"
-                f"/{self.output_table.openlineage_dataset_name()}"
-            )
-
             output_dataset = [
                 OpenlineageDataset(
                     namespace=self.output_table.openlineage_dataset_namespace(),
@@ -252,7 +253,9 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
                                 )
                             ]
                         ),
-                        "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=output_uri),
+                        "dataSource": DataSourceDatasetFacet(
+                            name=self.output_table.name, uri=self.output_table.openlineage_dataset_uri()
+                        ),
                         "outputStatistics": OutputStatisticsOutputDatasetFacet(
                             rowCount=self.output_table.row_count,
                         ),
@@ -262,9 +265,27 @@ class DataframeOperator(AstroSQLBaseOperator, DecoratedOperator):
 
         run_facets: dict[str, BaseFacet] = {}
         job_facets: dict[str, BaseFacet] = {}
-        return OpenLineageFacets(
+        source_code = self.get_source_code(task_instance.task.python_callable)
+        if OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE and source_code:
+            job_facets.update(
+                {
+                    "sourceCode": SourceCodeJobFacet("python", source_code),
+                }
+            )
+        return OperatorLineage(
             inputs=[], outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
+
+    def get_source_code(self, py_callable: Callable) -> str | None:
+        """Return the source code for the lineage"""
+        try:
+            return inspect.getsource(py_callable)
+        except TypeError:
+            # Trying to extract source code of builtin_function_or_method
+            return str(py_callable)
+        except OSError:
+            self.log.warning("Can't get source code facet of Operator {self.operator.task_id}")
+            return None
 
 
 def dataframe(
@@ -274,6 +295,7 @@ def dataframe(
     database: str | None = None,
     schema: str | None = None,
     columns_names_capitalization: ColumnCapitalization = "original",
+    if_exists: LoadExistStrategy = "replace",
     **kwargs: Any,
 ) -> TaskDecorator:
     """
@@ -298,6 +320,7 @@ def dataframe(
         function (required if there are no table arguments)
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
         in the resulting dataframe
+    :param if_exists: Overwrite when set to "replace" else "append"
     :param kwargs: Any keyword arguments supported by the BaseOperator is supported (e.g ``queue``, ``owner``)
     """
     kwargs.update(
@@ -306,6 +329,7 @@ def dataframe(
             "database": database,
             "schema": schema,
             "columns_names_capitalization": columns_names_capitalization,
+            "if_exists": if_exists,
         }
     )
     decorated_function = task_decorator_factory(

@@ -4,18 +4,20 @@ from typing import Any
 
 import pandas as pd
 from airflow.decorators.base import get_unique_task_id
+from airflow.hooks.base import BaseHook
 from airflow.models.xcom_arg import XComArg
 
 from astro.airflow.datasets import kwargs_with_datasets
 from astro.constants import DEFAULT_CHUNK_SIZE, ColumnCapitalization, LoadExistStrategy
 from astro.databases import create_database
 from astro.databases.base import BaseDatabase
-from astro.files import File, check_if_connection_exists, resolve_file_path_pattern
+from astro.dataframes.pandas import PandasDataframe
+from astro.files import File, resolve_file_path_pattern
+from astro.options import LoadOptions, LoadOptionsList
 from astro.settings import LOAD_FILE_ENABLE_NATIVE_FALLBACK
 from astro.sql.operators.base_operator import AstroSQLBaseOperator
 from astro.table import BaseTable
-from astro.utils.dataframe import convert_dataframe_to_file
-from astro.utils.typing_compat import Context
+from astro.utils.compat.typing import Context
 
 
 class LoadFileOperator(AstroSQLBaseOperator):
@@ -47,6 +49,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         ndjson_normalize_sep: str = "_",
         use_native_support: bool = True,
         native_support_kwargs: dict | None = None,
+        load_options: list[LoadOptions] | None = None,
         columns_names_capitalization: ColumnCapitalization = "original",
         enable_native_fallback: bool | None = LOAD_FILE_ENABLE_NATIVE_FALLBACK,
         **kwargs,
@@ -61,6 +64,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         )
         self.output_table = output_table
         self.input_file = input_file
+        self.input_file.load_options = load_options
         self.chunk_size = chunk_size
         self.kwargs = kwargs
         self.if_exists = if_exists
@@ -70,6 +74,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         self.native_support_kwargs: dict[str, Any] = native_support_kwargs or {}
         self.columns_names_capitalization = columns_names_capitalization
         self.enable_native_fallback = enable_native_fallback
+        self.load_options_list = LoadOptionsList(load_options)
 
     def execute(self, context: Context) -> BaseTable | File:  # skipcq: PYL-W0613
         """
@@ -77,25 +82,30 @@ class LoadFileOperator(AstroSQLBaseOperator):
         """
         if self.input_file.conn_id:
             check_if_connection_exists(self.input_file.conn_id)
+        # TODO: remove pushing to XCom once we update the airflow version.
+        if self.output_table:
+            context["ti"].xcom_push(key="output_table_conn_id", value=str(self.output_table.conn_id))
+            context["ti"].xcom_push(key="output_table_name", value=str(self.output_table.name))
+        return self.load_data(input_file=self.input_file, context=context)
 
-        return self.load_data(input_file=self.input_file)
-
-    def load_data(self, input_file: File) -> BaseTable | File:
+    def load_data(self, input_file: File, context: Context) -> BaseTable | pd.DataFrame:
 
         self.log.info("Loading %s into %s ...", self.input_file.path, self.output_table)
         if self.output_table:
-            return self.load_data_to_table(input_file)
+            return self.load_data_to_table(input_file, context)
         else:
-            return convert_dataframe_to_file(self.load_data_to_dataframe(input_file))
+            return self.load_data_to_dataframe(input_file)
 
-    def load_data_to_table(self, input_file: File) -> BaseTable:
+    def load_data_to_table(self, input_file: File, context: Context) -> BaseTable:
         """
         Loads csv/parquet table from local/S3/GCS with Pandas.
         Infers SQL database type based on connection then loads table to db.
         """
         if not isinstance(self.output_table, BaseTable):
             raise ValueError("Please pass a valid Table instance in 'output_table' parameter")
-        database = create_database(self.output_table.conn_id, self.output_table)
+        database = create_database(
+            self.output_table.conn_id, self.output_table, load_options_list=self.load_options_list
+        )
         self.output_table = database.populate_table_metadata(self.output_table)
         normalize_config = self._populate_normalize_config(
             ndjson_normalize_sep=self.ndjson_normalize_sep,
@@ -111,6 +121,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
             native_support_kwargs=self.native_support_kwargs,
             columns_names_capitalization=self.columns_names_capitalization,
             enable_native_fallback=self.enable_native_fallback,
+            databricks_job_name=f"Load data {self.dag_id}_{self.task_id}",
         )
         self.log.info("Completed loading the data into %s.", self.output_table)
         return self.output_table
@@ -126,6 +137,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
             input_file.conn_id,
             normalize_config=self.normalize_config,
             filetype=input_file.type.name,
+            load_options=input_file.load_options,
         ):
             if isinstance(df, pd.DataFrame):
                 df = pd.concat(
@@ -134,10 +146,16 @@ class LoadFileOperator(AstroSQLBaseOperator):
                         file.export_to_dataframe(
                             columns_names_capitalization=self.columns_names_capitalization
                         ),
-                    ]
+                    ],
+                    ignore_index=True,
                 )
             else:
-                df = file.export_to_dataframe(columns_names_capitalization=self.columns_names_capitalization)
+                df = file.export_to_dataframe(
+                    columns_names_capitalization=self.columns_names_capitalization,
+                )
+
+        if not isinstance(df, PandasDataframe):
+            df = PandasDataframe.from_pandas_df(df)
 
         self.log.info("Completed loading the data into dataframe.")
         return df
@@ -182,16 +200,18 @@ class LoadFileOperator(AstroSQLBaseOperator):
 
         return normalize_config
 
-    def get_openlineage_facets(self, task_instance):  # skipcq: PYL-W0613
-        """Returns the lineage data"""
+    def get_openlineage_facets_on_complete(self, task_instance):  # skipcq: PYL-W0613
+        """
+        Returns the lineage data
+        """
         from astro.lineage import (
             BaseFacet,
             DataSourceDatasetFacet,
             OpenlineageDataset,
+            OperatorLineage,
             SchemaDatasetFacet,
             SchemaField,
         )
-        from astro.lineage.extractor import OpenLineageFacets
         from astro.lineage.facets import InputFileDatasetFacet, InputFileFacet, OutputDatabaseDatasetFacet
 
         # if the input_file is a folder or pattern, it needs to be resolved to
@@ -201,10 +221,11 @@ class LoadFileOperator(AstroSQLBaseOperator):
             self.input_file.conn_id,
             normalize_config={},
             filetype=self.input_file.type.name,
+            load_options=self.input_file.load_options,
         )
 
         input_uri = (
-            f"{self.input_file.openlineage_dataset_namespace}://{self.input_file.openlineage_dataset_name}"
+            f"{self.input_file.openlineage_dataset_namespace}{self.input_file.openlineage_dataset_name}"
         )
         input_dataset: list[OpenlineageDataset] = [
             OpenlineageDataset(
@@ -230,11 +251,14 @@ class LoadFileOperator(AstroSQLBaseOperator):
             )
         ]
 
-        output_dataset: list[OpenlineageDataset] = [OpenlineageDataset(namespace=None, name=None, facets={})]
+        output_dataset: list[OpenlineageDataset] = []
         if self.output_table is not None and self.output_table.openlineage_emit_temp_table_event():
-            output_uri = (
-                f"{self.output_table.openlineage_dataset_namespace()}"
-                f"://{self.output_table.openlineage_dataset_name()}"
+            # TODO: remove pushing to XCom once we update the airflow version.
+            self.output_table.conn_id = task_instance.xcom_pull(
+                task_ids=task_instance.task_id, key="output_table_conn_id"
+            )
+            self.output_table.name = task_instance.xcom_pull(
+                task_ids=task_instance.task_id, key="output_table_name"
             )
             output_dataset = [
                 OpenlineageDataset(
@@ -257,7 +281,9 @@ class LoadFileOperator(AstroSQLBaseOperator):
                                 )
                             ]
                         ),
-                        "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=output_uri),
+                        "dataSource": DataSourceDatasetFacet(
+                            name=self.output_table.name, uri=self.output_table.openlineage_dataset_uri()
+                        ),
                     },
                 )
             ]
@@ -265,7 +291,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         run_facets: dict[str, BaseFacet] = {}
         job_facets: dict[str, BaseFacet] = {}
 
-        return OpenLineageFacets(
+        return OperatorLineage(
             inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
 
@@ -280,6 +306,7 @@ def load_file(
     native_support_kwargs: dict | None = None,
     columns_names_capitalization: ColumnCapitalization = "original",
     enable_native_fallback: bool | None = True,
+    load_options: list[LoadOptions] | None = None,
     **kwargs: Any,
 ) -> XComArg:
     """Load a file or bucket into either a SQL table or a pandas dataframe.
@@ -295,6 +322,7 @@ def load_file(
     :param columns_names_capitalization: determines whether to convert all columns to lowercase/uppercase
         in the resulting dataframe
     :param enable_native_fallback: Use enable_native_fallback=True to fall back to default transfer
+    :param load_options: load options while reading and loading file
     """
 
     # Note - using path for task id is causing issues as it's a pattern and
@@ -311,5 +339,18 @@ def load_file(
         native_support_kwargs=native_support_kwargs,
         columns_names_capitalization=columns_names_capitalization,
         enable_native_fallback=enable_native_fallback,
+        load_options=load_options,
         **kwargs,
     ).output
+
+
+def check_if_connection_exists(conn_id: str) -> bool:
+    """
+    Given an Airflow connection ID, identify if it exists.
+    Return True if it does or raise an AirflowNotFoundException exception if it does not.
+
+    :param conn_id: Airflow connection ID
+    :return bool: If the connection exists, return True
+    """
+    BaseHook.get_connection(conn_id)
+    return True

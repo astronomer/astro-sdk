@@ -9,7 +9,9 @@ from sqlalchemy.sql.schema import Table as SqlaTable
 
 from astro.constants import MergeConflictStrategy
 from astro.databases.base import BaseDatabase
+from astro.options import LoadOptions
 from astro.table import BaseTable, Metadata
+from astro.utils.compat.functools import cached_property
 
 DEFAULT_CONN_ID = SqliteHook.default_conn_name
 
@@ -20,20 +22,26 @@ class SqliteDatabase(BaseDatabase):
     logic in other parts of our code-base.
     """
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
+    def __init__(
+        self,
+        conn_id: str = DEFAULT_CONN_ID,
+        table: BaseTable | None = None,
+        load_options: LoadOptions | None = None,
+    ):
         super().__init__(conn_id)
         self.table = table
+        self.load_options = load_options
 
     @property
     def sql_type(self) -> str:
         return "sqlite"
 
-    @property
+    @cached_property
     def hook(self) -> SqliteHook:
         """Retrieve Airflow hook to interface with the Sqlite database."""
         return SqliteHook(sqlite_conn_id=self.conn_id)
 
-    @property
+    @cached_property
     def sqlalchemy_engine(self) -> Engine:
         """Return SQAlchemy engine."""
         # Airflow uses sqlite3 library and not SqlAlchemy for SqliteHook
@@ -144,6 +152,15 @@ class SqliteDatabase(BaseDatabase):
         """
         Returns the open lineage dataset namespace as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
-        Example: sqlite://127.0.0.1
+        Example: file://127.0.0.1:22
         """
-        return f"{self.sql_type}://{socket.gethostbyname(socket.gethostname())}"
+        conn = self.hook.get_connection(self.conn_id)
+        port = conn.port or 22
+        return f"file://{socket.gethostbyname(socket.gethostname())}:{port}"
+
+    def openlineage_dataset_uri(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset uri as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return f"{self.openlineage_dataset_namespace()}{self.openlineage_dataset_name(table=table)}"

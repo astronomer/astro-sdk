@@ -13,6 +13,7 @@ class S3Location(BaseFileLocation):
     """Handler S3 object store operations"""
 
     location_type = FileLocation.S3
+    supported_conn_type = {S3Hook.conn_type, "aws"}
 
     @property
     def hook(self) -> S3Hook:
@@ -66,3 +67,21 @@ class S3Location(BaseFileLocation):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         return urlparse(self.path).path
+
+    def databricks_auth_settings(self) -> dict:
+        """
+        Required settings to upload this file into databricks. Only needed for cloud storage systems
+        like S3
+        :return: A dictionary of settings keys to settings values
+        """
+        credentials = self.hook.get_credentials()
+        cred_dict = {
+            "fs.s3a.access.key": credentials.access_key,
+            "fs.s3a.secret.key": credentials.secret_key,
+        }
+        if credentials.token:
+            cred_dict[
+                "fs.s3a.aws.credentials.provider"
+            ] = "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider"
+            cred_dict["fs.s3a.session.token"] = credentials.token
+        return cred_dict

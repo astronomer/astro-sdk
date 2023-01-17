@@ -4,17 +4,16 @@ from collections.abc import Iterable, Mapping
 from typing import Any, Callable
 
 try:
-    from airflow.decorators.base import TaskDecorator, task_decorator_factory
+    from airflow.decorators.base import TaskDecorator
 except ImportError:
-    from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
 
-from airflow.decorators.base import get_unique_task_id
+from airflow.decorators.base import get_unique_task_id, task_decorator_factory
 from airflow.models.xcom_arg import XComArg
 from sqlalchemy.sql.functions import Function
 
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
-from astro.utils.typing_compat import Context
+from astro.utils.compat.typing import Context
 
 
 class TransformOperator(BaseSQLDecoratedOperator):
@@ -52,7 +51,6 @@ class TransformOperator(BaseSQLDecoratedOperator):
 
     def execute(self, context: Context):
         super().execute(context)
-
         self.database_impl.create_schema_if_needed(self.output_table.metadata.schema)
         self.database_impl.drop_table(self.output_table)
         self.database_impl.create_table_from_select_statement(
@@ -60,7 +58,11 @@ class TransformOperator(BaseSQLDecoratedOperator):
             target_table=self.output_table,
             parameters=self.parameters,
         )
-        context["ti"].xcom_push(key="output_table_row_count", value=str(self.output_table.row_count))
+        # TODO: remove pushing to XCom once we update the airflow version.
+        context["ti"].xcom_push(
+            key="output_table_row_count", value=str(self.database_impl.row_count(self.output_table))
+        )
+        context["ti"].xcom_push(key="output_table_conn_id", value=str(self.output_table.conn_id))
         return self.output_table
 
 

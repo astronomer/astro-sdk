@@ -5,15 +5,22 @@ from collections.abc import Iterable, Mapping
 from typing import Any, Callable
 
 try:
-    from airflow.decorators.base import TaskDecorator, task_decorator_factory
+    from airflow.decorators.base import TaskDecorator
 except ImportError:
-    from airflow.decorators.base import task_decorator_factory
     from airflow.decorators import _TaskDecorator as TaskDecorator
+
+import airflow
+from airflow.decorators.base import task_decorator_factory
+
+if airflow.__version__ >= "2.3":
+    from sqlalchemy.engine.row import LegacyRow as SQLAlcRow
+else:
+    from sqlalchemy.engine.result import RowProxy as SQLAlcRow
 
 from astro import settings
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
-from astro.utils.typing_compat import Context
+from astro.utils.compat.typing import Context
 
 
 class RawSQLOperator(BaseSQLDecoratedOperator):
@@ -28,7 +35,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
     def execute(self, context: Context) -> Any:
         super().execute(context)
 
-        result = self.database_impl.run_sql(sql=self.sql, parameters=self.parameters)
+        result = self.database_impl.run_sql(sql=self.sql, parameters=self.parameters, handler=self.handler)
         if self.response_size == -1 and not settings.IS_CUSTOM_XCOM_BACKEND:
             logging.warning(
                 "Using `run_raw_sql` without `response_size` can result in excessive amount of data being recorded "
@@ -37,8 +44,11 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
                 "backend."
             )
 
-        if self.handler:
+        if self.handler and self.database_impl.sql_type == "delta":
+            return result
+        elif self.handler:
             response = self.handler(result)
+            response = self.make_row_serializable(response)
             if 0 <= self.response_limit < len(response):
                 raise IllegalLoadToDatabaseException()  # pragma: no cover
             if self.response_size >= 0:
@@ -47,6 +57,32 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
                 return response
         else:
             return None
+
+    @staticmethod
+    def make_row_serializable(rows: Any) -> Any:
+        """
+        Convert rows to a serializable format
+        """
+        if not settings.NEED_CUSTOM_SERIALIZATION:
+            return rows
+        if isinstance(rows, Iterable):
+            return [SdkLegacyRow.from_legacy_row(r) if isinstance(r, SQLAlcRow) else r for r in rows]
+        return rows
+
+
+class SdkLegacyRow(SQLAlcRow):
+    version: int = 1
+
+    def serialize(self):
+        return {"key_map": self._keymap, "key_style": self._key_style, "data": self._data}
+
+    @staticmethod
+    def deserialize(data: dict, version: int):  # skipcq: PYL-W0613
+        return SdkLegacyRow(None, None, data["key_map"], data["key_style"], data["data"])
+
+    @staticmethod
+    def from_legacy_row(obj):
+        return SdkLegacyRow(None, None, obj._keymap, obj._key_style, obj._data)  # skipcq: PYL-W0212
 
 
 def run_raw_sql(

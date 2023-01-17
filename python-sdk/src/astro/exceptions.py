@@ -8,7 +8,7 @@ class IllegalLoadToDatabaseException(Exception):
             "Failing this task because you do not have a custom xcom backend set up. If you use "
             "the default XCOM backend to store large dataframes, this can significantly degrade "
             "Airflow DB performance. Please set up a custom XCOM backend (info here "
-            "https://docs.astronomer.io/learn/custom-xcom-backends) or set the environment "
+            "https://docs.astronomer.io/learn/xcom-backend-tutorial) or set the environment "
             "variable AIRFLOW__ASTRO_SDK__DATAFRAME_ALLOW_UNSAFE_STORAGE to true if you wish to proceed while "
             "knowing the risks. "
         )
@@ -20,3 +20,7 @@ class DatabaseCustomError(ValueError, AttributeError):
     Inappropriate argument value (of correct type) or attribute
     not found while running query. while running query
     """
+
+
+class PermissionNotSetError(Exception):
+    """Raised if a permission to files present in locations are not accessible"""

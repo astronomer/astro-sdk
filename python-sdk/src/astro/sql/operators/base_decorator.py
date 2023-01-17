@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, Sequence, cast
+from typing import Any, Callable, Sequence, cast
 
 import pandas as pd
 from airflow.decorators.base import DecoratedOperator
@@ -13,8 +13,8 @@ from astro.databases import create_database
 from astro.databases.base import BaseDatabase
 from astro.sql.operators.upstream_task_mixin import UpstreamTaskMixin
 from astro.table import BaseTable, Table
+from astro.utils.compat.typing import Context
 from astro.utils.table import find_first_table
-from astro.utils.typing_compat import Context
 
 
 class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
@@ -111,6 +111,7 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         if self.sql == "" or not self.sql:
             raise AirflowException("There's no SQL to run")
 
+        # TODO: remove pushing to XCom once we update the airflow version.
         context["ti"].xcom_push(key="base_sql_query", value=str(self.sql))
 
     def create_output_table_if_needed(self) -> None:
@@ -187,13 +188,13 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                 context[k] = jinja_table_identifier
                 self.parameters[k] = jinja_table_parameter_value
             else:
-                context[k] = ":" + k
+                context[k] = self.database_impl.parameterize_variable(k)
 
         # Render templating in sql query
         if context:
             self.sql = self.render_template(self.sql, context)
 
-    def get_openlineage_facets(self, task_instance):
+    def get_openlineage_facets_on_complete(self, task_instance):
         """
         Returns the lineage data
         """
@@ -201,41 +202,48 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             BaseFacet,
             DataSourceDatasetFacet,
             OpenlineageDataset,
+            OperatorLineage,
             OutputStatisticsOutputDatasetFacet,
             SchemaDatasetFacet,
             SchemaField,
+            SourceCodeJobFacet,
             SqlJobFacet,
         )
-        from astro.lineage.extractor import OpenLineageFacets
+        from astro.settings import OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE
 
         input_dataset: list[OpenlineageDataset] = []
         output_dataset: list[OpenlineageDataset] = []
-        if (
-            self.output_table.openlineage_emit_temp_table_event() and self.output_table.conn_id
-        ):  # pragma: no cover
-            input_uri = (
-                f"{self.output_table.openlineage_dataset_namespace()}"
-                f"://{self.output_table.openlineage_dataset_name()}"
-            )
+
+        first_table = find_first_table(
+            op_args=self.op_args,  # type: ignore
+            op_kwargs=self.op_kwargs,
+            python_callable=self.python_callable,
+            parameters=self.parameters,  # type: ignore
+            context={},
+        )
+
+        if first_table.openlineage_emit_temp_table_event() and first_table.conn_id:  # pragma: no cover
             input_dataset = [
                 OpenlineageDataset(
-                    namespace=self.output_table.openlineage_dataset_namespace(),
-                    name=self.output_table.openlineage_dataset_name(),
+                    namespace=first_table.openlineage_dataset_namespace(),
+                    name=first_table.openlineage_dataset_name(),
                     facets={
                         "schema": SchemaDatasetFacet(
                             fields=[SchemaField(name=self.schema, type=self.database)]
                         ),
-                        "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=input_uri),
+                        "dataSource": DataSourceDatasetFacet(
+                            name=first_table.name, uri=first_table.openlineage_dataset_uri()
+                        ),
                     },
                 )
             ]
+        # TODO: remove pushing to XCom once we update the airflow version.
+        self.output_table.conn_id = task_instance.xcom_pull(
+            task_ids=task_instance.task_id, key="output_table_conn_id"
+        )
         if (
             self.output_table.openlineage_emit_temp_table_event() and self.output_table.conn_id
         ):  # pragma: no cover
-            output_uri = (
-                f"{self.output_table.openlineage_dataset_namespace()}"
-                f"://{self.output_table.openlineage_dataset_name()}"
-            )
             output_table_row_count = task_instance.xcom_pull(
                 task_ids=task_instance.task_id, key="output_table_row_count"
             )
@@ -247,7 +255,9 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
                         "outputStatistics": OutputStatisticsOutputDatasetFacet(
                             rowCount=output_table_row_count
                         ),
-                        "dataSource": DataSourceDatasetFacet(name=self.output_table.name, uri=output_uri),
+                        "dataSource": DataSourceDatasetFacet(
+                            name=self.output_table.name, uri=self.output_table.openlineage_dataset_uri()
+                        ),
                     },
                 )
             ]
@@ -256,10 +266,28 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
 
         base_sql_query = task_instance.xcom_pull(task_ids=task_instance.task_id, key="base_sql_query")
         job_facets: dict[str, BaseFacet] = {"sql": SqlJobFacet(query=base_sql_query)}
+        source_code = self.get_source_code(task_instance.task.python_callable)
+        if OPENLINEAGE_AIRFLOW_DISABLE_SOURCE_CODE and source_code:
+            job_facets.update(
+                {
+                    "sourceCode": SourceCodeJobFacet("python", source_code),
+                }
+            )
 
-        return OpenLineageFacets(
+        return OperatorLineage(
             inputs=input_dataset, outputs=output_dataset, run_facets=run_facets, job_facets=job_facets
         )
+
+    def get_source_code(self, py_callable: Callable) -> str | None:
+        """Return the source code for the lineage"""
+        try:
+            return inspect.getsource(py_callable)
+        except TypeError:
+            # Trying to extract source code of builtin_function_or_method
+            return str(py_callable)
+        except OSError:
+            self.log.warning("Can't get source code facet of Operator {self.operator.task_id}")
+            return None
 
 
 def load_op_arg_dataframes_into_sql(conn_id: str, op_args: tuple, target_table: BaseTable) -> tuple:

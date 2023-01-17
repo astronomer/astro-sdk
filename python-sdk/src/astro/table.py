@@ -12,7 +12,7 @@ from astro.databases import create_database
 from astro.settings import OPENLINEAGE_EMIT_TEMP_TABLE_EVENT
 
 MAX_TABLE_NAME_LENGTH = 62
-TEMP_PREFIX = "_tmp_"
+TEMP_PREFIX = "_tmp"
 
 
 @define
@@ -54,7 +54,7 @@ class BaseTable:
     # TODO: discuss alternative names to this class, since it contains metadata as opposed to be the
     # SQL table itself
     # Some ideas: TableRef, TableMetadata, TableData, TableDataset
-    _name: str = field(default="")
+    name: str = field(default="")
     conn_id: str = field(default="")
     # Setting converter allows passing a dictionary to metadata arg
     metadata: Metadata = field(
@@ -64,13 +64,16 @@ class BaseTable:
     columns: list[Column] = field(factory=list)
     temp: bool = field(default=False)
 
+    def __attrs_post_init__(self) -> None:
+        if not self.name:
+            self.name = self._create_unique_table_name(TEMP_PREFIX + "_")
+            self.temp = True
+        if self.name.startswith(TEMP_PREFIX):
+            self.temp = True
+
     # We need this method to pickle Table object, without this we cannot push/pull this object from xcom.
     def __getstate__(self):
         return self.__dict__
-
-    def __attrs_post_init__(self) -> None:
-        if not self._name or self._name.startswith("_tmp"):
-            self.temp = True
 
     def _create_unique_table_name(self, prefix: str = "") -> str:
         """
@@ -109,34 +112,12 @@ class BaseTable:
         return alchemy_metadata
 
     @property
-    def name(self) -> str:
-        """
-        Return either the user-defined name or auto-generate one.
-        :sphinx-autoapi-skip:
-        """
-        if self.temp and not self._name:
-            self._name = self._create_unique_table_name(TEMP_PREFIX)
-        return self._name
-
-    @name.setter
-    def name(self, value: str) -> None:
-        """
-        Set the table name. Once this happens, the table is no longer considered temporary.
-        """
-        if not isinstance(value, property) and value != self._name:
-            self._name = value
-            self.temp = False
-
-    @property
     def row_count(self) -> Any:
         """
         Return the row count of table.
         """
         db = create_database(self.conn_id)
-        result = db.run_sql(
-            f"select count(*) from {db.get_table_qualified_name(self)}"  # skipcq: BAN-B608
-        ).scalar()
-        return result
+        return db.row_count(self)
 
     @property
     def sql_type(self) -> Any:
@@ -180,6 +161,14 @@ class BaseTable:
         database = create_database(self.conn_id)
         return database.openlineage_dataset_namespace()
 
+    def openlineage_dataset_uri(self) -> str:
+        """
+        Returns the open lineage dataset uri as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        database = create_database(self.conn_id)
+        return f"{database.openlineage_dataset_uri(table=self)}"
+
     def openlineage_emit_temp_table_event(self):
         """
         Based on airflow config ```OPENLINEAGE_EMIT_TEMP_TABLE_EVENT``` value and table type
@@ -215,7 +204,7 @@ class Table(BaseTable, Dataset):
     :param columns: columns which define the database table schema.
     """
 
-    uri: str = field(init=False)
+    uri: str = field(init=False, eq=False)
     extra: dict | None = field(init=False, factory=dict)
 
     def __new__(cls, *args, **kwargs):

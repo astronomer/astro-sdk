@@ -9,7 +9,6 @@ from urllib.parse import urlparse
 import airflow
 import pandas as pd
 import psutil
-import settings as benchmark_settings
 from airflow.executors.debug_executor import DebugExecutor
 from airflow.models import TaskInstance
 from airflow.utils import timezone
@@ -17,6 +16,7 @@ from airflow.utils.session import provide_session
 
 from astro.databases import create_database
 from astro.table import Metadata, Table
+from tests.benchmark import settings as benchmark_settings
 
 
 def get_disk_usage():

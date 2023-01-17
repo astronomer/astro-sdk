@@ -1,0 +1,20 @@
+from pyspark.sql.functions import input_file_name, current_timestamp
+
+{% from 'jinja_templates/copy_into.py.jinja2' import copy_into_command -%}
+{% from 'jinja_templates/load_secrets.py.jinja2' import load_secrets_command -%}
+{% from 'jinja_templates/autoloader.py.jinja2' import autoloader_command -%}
+
+src_data_path = "{{ input_path }}"
+username = spark.sql("SELECT regexp_replace(current_user(), '[^a-zA-Z0-9]', '_')").first()[0]
+table_name = f"{{ table_name }}" # This can be generated based on task ID and dag ID or just entirely random
+checkpoint_path = f"/tmp/{username}/_checkpoint/{table_name}"
+
+{%- if load_options.load_secrets %}
+{{ load_secrets_command(load_options.secret_scope) }}
+{%- endif %}
+
+{%- if load_options.load_mode.value == "autoloader" %}
+{{ autoloader_command(load_options, file_type) }}
+{%- else  %}
+{{ copy_into_command(file_type, load_options, load_options.if_exists) }}
+{%- endif %}

@@ -52,21 +52,23 @@ def example_amazon_s3_snowflake_transform():
     s3_bucket = os.getenv("S3_BUCKET", "s3://tmp9")
 
     input_table_1 = Table(
-        name="ADOPTION_CENTER_1",
+        name="ADOPTION_CENTER_1_" + str(int(time.time())),
         metadata=Metadata(
             database=os.environ["SNOWFLAKE_DATABASE"],
             schema=os.environ["SNOWFLAKE_SCHEMA"],
         ),
         conn_id="snowflake_conn",
+        temp=True,
     )
     # [START metadata_example_snowflake]
     input_table_2 = Table(
-        name="ADOPTION_CENTER_2",
+        name="ADOPTION_CENTER_2_" + str(int(time.time())),
         metadata=Metadata(
             database=os.environ["SNOWFLAKE_DATABASE"],
             schema=os.environ["SNOWFLAKE_SCHEMA"],
         ),
         conn_id="snowflake_conn",
+        temp=True,
     )
     # [END metadata_example_snowflake]
 
@@ -86,16 +88,18 @@ def example_amazon_s3_snowflake_transform():
 
     cleaned_data = clean_data(combined_data)
     # [START dataframe_example_2]
+    snowflake_output_table = Table(
+        name="aggregated_adoptions_" + str(int(time.time())),
+        metadata=Metadata(
+            schema=os.environ["SNOWFLAKE_SCHEMA"],
+            database=os.environ["SNOWFLAKE_DATABASE"],
+        ),
+        conn_id="snowflake_conn",
+        temp=True,
+    )
     aggregate_data(
         cleaned_data,
-        output_table=Table(
-            name="aggregated_adoptions_" + str(int(time.time())),
-            metadata=Metadata(
-                schema=os.environ["SNOWFLAKE_SCHEMA"],
-                database=os.environ["SNOWFLAKE_DATABASE"],
-            ),
-            conn_id="snowflake_conn",
-        ),
+        output_table=snowflake_output_table,
     )
     # [END dataframe_example_2]
     aql.cleanup()

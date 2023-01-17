@@ -19,10 +19,10 @@ def test_get_file_list_execute_local():
 @patch("astro.files.locations.google.gcs.GCSLocation.hook")
 def test_get_file_list_execute_gcs(hook):
     """Assert that when file object location point to GCS then get_file_list using GCSHook"""
-    hook.return_value = Connection(conn_id="conn", conn_type="google_cloud_platform")
+    hook.return_value = Connection(conn_id="google_cloud_default", conn_type="google_cloud_platform")
     op = ListFileOperator(
         task_id="task_id",
-        conn_id="conn",
+        conn_id="google_cloud_default",
         path="gs://bucket/some-file",
     )
     op.execute(None)
@@ -32,10 +32,10 @@ def test_get_file_list_execute_gcs(hook):
 @patch("astro.files.locations.amazon.s3.S3Location.hook")
 def test_get_file_list_s3(hook):
     """Assert that when file object location point to s3 then get_file_list using S3Hook"""
-    hook.return_value = Connection(conn_id="conn", conn_type="s3")
+    hook.return_value = Connection(conn_id="aws_default", conn_type="s3")
     op = ListFileOperator(
         task_id="task_id",
-        conn_id="conn",
+        conn_id="aws_default",
         path="s3://bucket/some-file",
     )
     op.execute(None)

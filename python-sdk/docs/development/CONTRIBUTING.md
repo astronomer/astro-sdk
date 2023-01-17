@@ -79,5 +79,6 @@ Before you submit a pull request (PR), check that it meets these guidelines:
 
 -   Run tests locally before opening PR.
 
--   Adhere to guidelines for commit messages described in this [article](http://chris.beams.io/posts/git-commit/).
+-   Adhere to guidelines for commit messages described in this
+    [article](https://cbea.ms/git-commit/).
     This makes the lives of those who come after you a lot easier.

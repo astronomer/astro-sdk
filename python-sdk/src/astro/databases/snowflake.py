@@ -38,8 +38,10 @@ from astro.constants import (
 from astro.databases.base import BaseDatabase
 from astro.exceptions import DatabaseCustomError
 from astro.files import File
+from astro.options import SnowflakeLoadOptions
 from astro.settings import LOAD_TABLE_AUTODETECT_ROWS_COUNT, SNOWFLAKE_SCHEMA
 from astro.table import BaseTable, Metadata
+from astro.utils.compat.functools import cached_property
 
 DEFAULT_CONN_ID = SnowflakeHook.default_conn_name
 
@@ -236,6 +238,8 @@ class SnowflakeDatabase(BaseDatabase):
     logic in other parts of our code-base.
     """
 
+    LOAD_OPTIONS_CLASS_NAME = "SnowflakeLoadOptions"
+
     NATIVE_LOAD_EXCEPTIONS: Any = (
         DatabaseCustomError,
         ProgrammingError,
@@ -252,11 +256,19 @@ class SnowflakeDatabase(BaseDatabase):
     )
     DEFAULT_SCHEMA = SNOWFLAKE_SCHEMA
 
-    def __init__(self, conn_id: str = DEFAULT_CONN_ID, table: BaseTable | None = None):
+    def __init__(
+        self,
+        conn_id: str = DEFAULT_CONN_ID,
+        table: BaseTable | None = None,
+        load_options: SnowflakeLoadOptions | None = None,
+    ):
         super().__init__(conn_id)
         self.table = table
+        if not isinstance(load_options, SnowflakeLoadOptions) and load_options is not None:
+            raise ValueError("Error: Requires a SnowflakeLoadOptions")
+        self.load_options: SnowflakeLoadOptions | None = load_options
 
-    @property
+    @cached_property
     def hook(self) -> SnowflakeHook:
         """Retrieve Airflow hook to interface with the snowflake database."""
         kwargs = {}
@@ -389,18 +401,24 @@ class SnowflakeDatabase(BaseDatabase):
         """
         auth = self._create_stage_auth_sub_statement(file=file, storage_integration=storage_integration)
 
+        if not self.load_options:
+            self.load_options = SnowflakeLoadOptions()
         metadata = metadata or self.default_metadata
         stage = SnowflakeStage(metadata=metadata)
         stage.set_url_from_file(file)
 
         fileformat = ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP[file.type.name]
-        copy_options = COPY_OPTIONS[file.type.name]
-
+        copy_options = [COPY_OPTIONS[file.type.name]]
+        copy_options.extend([f"{k}={v}" for k, v in self.load_options.copy_options.items()])
+        file_options = [f"{k}={v}" for k, v in self.load_options.file_options.items()]
+        file_options.extend([f"TYPE={fileformat}", "TRIM_SPACE=TRUE"])
+        file_options_str = ", ".join(file_options)
+        copy_options_str = ", ".join(copy_options)
         sql_statement = "".join(
             [
                 f"CREATE OR REPLACE STAGE {stage.qualified_name} URL='{stage.url}' ",
-                f"FILE_FORMAT=(TYPE={fileformat}, TRIM_SPACE=TRUE) ",
-                f"COPY_OPTIONS=({copy_options}) ",
+                f"FILE_FORMAT=({file_options_str}) ",
+                f"COPY_OPTIONS=({copy_options_str}) ",
                 auth,
             ]
         )
@@ -600,9 +618,21 @@ class SnowflakeDatabase(BaseDatabase):
 
         """
         native_support_kwargs = native_support_kwargs or {}
-        storage_integration = native_support_kwargs.get("storage_integration")
+        if not self.load_options:
+            self.load_options = SnowflakeLoadOptions()
+
+        storage_integration = native_support_kwargs.get("storage_integration", None)
+        if storage_integration is None:
+            storage_integration = self.load_options.storage_integration
+
         stage = self.create_stage(file=source_file, storage_integration=storage_integration)
 
+        rows = self._copy_into_table_from_stage(
+            source_file=source_file, target_table=target_table, stage=stage
+        )
+        self.evaluate_results(rows)
+
+    def _copy_into_table_from_stage(self, source_file, target_table, stage):
         table_name = self.get_table_qualified_name(target_table)
         file_path = os.path.basename(source_file.path) or ""
         sql_statement = f"COPY INTO {table_name} FROM @{stage.qualified_name}/{file_path}"
@@ -615,19 +645,25 @@ class SnowflakeDatabase(BaseDatabase):
         except AttributeError:
             try:
                 rows = self.hook.run(sql_statement)
-            except (AttributeError, ValueError) as exe:
+            except ValueError as exe:
                 raise DatabaseCustomError from exe
         except ValueError as exe:
             raise DatabaseCustomError from exe
-
-        self.evaluate_results(rows)
-        self.drop_stage(stage)
+        finally:
+            self.drop_stage(stage)
+        return rows
 
     @staticmethod
     def evaluate_results(rows):
         """check the error state returned by snowflake when running `copy into` query."""
-        if any(row["status"] == COPY_INTO_COMMAND_FAIL_STATUS for row in rows):
-            raise DatabaseCustomError(rows)
+        try:
+            # Handle case for apache-airflow-providers-snowflake<4.0.1
+            if any(row["status"] == COPY_INTO_COMMAND_FAIL_STATUS for row in rows):
+                raise DatabaseCustomError(rows)
+        except TypeError:
+            # Handle case for apache-airflow-providers-snowflake>=4.0.1
+            if any(row[0] == COPY_INTO_COMMAND_FAIL_STATUS for row in rows):
+                raise DatabaseCustomError(rows)
 
     def load_pandas_dataframe_to_table(
         self,
@@ -648,8 +684,10 @@ class SnowflakeDatabase(BaseDatabase):
         self._assert_not_empty_df(source_dataframe)
 
         auto_create_table = False
-        if if_exists == "replace" or not self.table_exists(target_table):
+        if not self.table_exists(target_table):
             auto_create_table = True
+        elif if_exists == "replace":
+            self.create_table(target_table, dataframe=source_dataframe)
 
         # We are changing the case of table name to ease out on the requirements to add quotes in raw queries.
         # ToDO - Currently, we cannot to append using load_file to a table name which is having name in lower case.
@@ -727,8 +765,12 @@ class SnowflakeDatabase(BaseDatabase):
                 "SELECT SCHEMA_NAME from information_schema.schemata WHERE LOWER(SCHEMA_NAME) = %(schema_name)s;",
                 parameters={"schema_name": schema.lower()},
             )
-
-        created_schemas = [x["SCHEMA_NAME"] for x in schemas]
+        try:
+            # Handle case for apache-airflow-providers-snowflake<4.0.1
+            created_schemas = [x["SCHEMA_NAME"] for x in schemas]
+        except TypeError:
+            # Handle case for apache-airflow-providers-snowflake>=4.0.1
+            created_schemas = [x[0] for x in schemas]
         return len(created_schemas) == 1
 
     def merge_table(
@@ -767,7 +809,6 @@ class SnowflakeDatabase(BaseDatabase):
         if_conflicts: MergeConflictStrategy = "exception",
     ):
         """Build the SQL statement for Merge operation"""
-        # TODO: Simplify this function
         source_table_name = source_table.name
         target_table_name = target_table.name
 
@@ -792,10 +833,6 @@ class SnowflakeDatabase(BaseDatabase):
             target_table_param,
         ) = self.get_sqlalchemy_template_table_identifier_and_parameter(target_table, "target_table")
 
-        statement = (
-            f"merge into {target_table_identifier} using {source_table_identifier} " + "on {merge_clauses}"
-        )
-
         merge_target_dict = {
             f"merge_clause_target_{i}": f"{target_table_name}."
             f"{target_identifier_enclosure}{x}{target_identifier_enclosure}"
@@ -806,13 +843,12 @@ class SnowflakeDatabase(BaseDatabase):
             f"{source_identifier_enclosure}{x}{source_identifier_enclosure}"
             for i, x in enumerate(target_conflict_columns)
         }
-        statement = statement.replace(
-            "{merge_clauses}",
-            " AND ".join(
-                f"{wrap_identifier(k)}={wrap_identifier(v)}"
-                for k, v in zip(merge_target_dict.keys(), merge_source_dict.keys())
-            ),
+
+        merge_clauses = " AND ".join(
+            f"{wrap_identifier(k)}={wrap_identifier(v)}"
+            for k, v in zip(merge_target_dict.keys(), merge_source_dict.keys())
         )
+        statement = f"merge into {target_table_identifier} using {source_table_identifier} on {merge_clauses}"
 
         values_to_check = [target_table_name, source_table_name]
         values_to_check.extend(source_cols)
@@ -823,29 +859,21 @@ class SnowflakeDatabase(BaseDatabase):
                     f"The identifier {v} is invalid. Please check to prevent SQL injection"
                 )
         if if_conflicts == "update":
-            statement += " when matched then UPDATE SET {merge_vals}"
-            merge_statement = ",".join(
-                [
-                    f"{target_table_name}.{target_identifier_enclosure}{t}{target_identifier_enclosure}="
-                    f"{source_table_name}.{source_identifier_enclosure}{s}{source_identifier_enclosure}"
-                    for s, t in source_to_target_columns_map.items()
-                ]
+            statement += self._create_merge_update_statement(
+                source_table_name,
+                target_table_name,
+                source_identifier_enclosure,
+                source_to_target_columns_map,
+                target_identifier_enclosure,
             )
-            statement = statement.replace("{merge_vals}", merge_statement)
-        statement += " when not matched then insert({target_columns}) values ({append_columns})"
-        statement = statement.replace(
-            "{target_columns}",
-            ",".join(
-                f"{target_table_name}.{target_identifier_enclosure}{t}{target_identifier_enclosure}"
-                for t in target_cols
-            ),
-        )
-        statement = statement.replace(
-            "{append_columns}",
-            ",".join(
-                f"{source_table_name}.{source_identifier_enclosure}{s}{source_identifier_enclosure}"
-                for s in source_cols
-            ),
+
+        statement += self._create_not_matched_statement(
+            source_cols,
+            source_identifier_enclosure,
+            source_table_name,
+            target_cols,
+            target_identifier_enclosure,
+            target_table_name,
         )
         params = {
             **merge_target_dict,
@@ -854,6 +882,44 @@ class SnowflakeDatabase(BaseDatabase):
             "target_table": target_table_param,
         }
         return statement, params
+
+    def _create_not_matched_statement(
+        self,
+        source_cols,
+        source_identifier_enclosure,
+        source_table_name,
+        target_cols,
+        target_identifier_enclosure,
+        target_table_name,
+    ):
+        target_columns = ",".join(
+            f"{target_table_name}.{target_identifier_enclosure}{t}{target_identifier_enclosure}"
+            for t in target_cols
+        )
+        append_columns = ",".join(
+            f"{source_table_name}.{source_identifier_enclosure}{s}{source_identifier_enclosure}"
+            for s in source_cols
+        )
+        not_matched_statement = f" when not matched then insert({target_columns}) values ({append_columns})"
+        return not_matched_statement
+
+    def _create_merge_update_statement(
+        self,
+        source_table_name,
+        target_table_name,
+        source_identifier_enclosure,
+        source_to_target_columns_map,
+        target_identifier_enclosure,
+    ):
+        merge_vals = ",".join(
+            [
+                f"{target_table_name}.{target_identifier_enclosure}{t}{target_identifier_enclosure}="
+                f"{source_table_name}.{source_identifier_enclosure}{s}{source_identifier_enclosure}"
+                for s, t in source_to_target_columns_map.items()
+            ]
+        )
+        update_statement = f" when matched then UPDATE SET {merge_vals}"
+        return update_statement
 
     def append_table(
         self,
@@ -936,6 +1002,13 @@ class SnowflakeDatabase(BaseDatabase):
         """
         account = self.hook.get_connection(self.conn_id).extra_dejson.get("account")
         return f"{self.sql_type}://{account}"
+
+    def openlineage_dataset_uri(self, table: BaseTable) -> str:
+        """
+        Returns the open lineage dataset uri as per
+        https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
+        """
+        return f"{self.openlineage_dataset_namespace()}/{self.openlineage_dataset_name(table=table)}"
 
     def truncate_table(self, table):
         """Truncate table"""

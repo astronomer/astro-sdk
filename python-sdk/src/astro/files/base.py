@@ -13,6 +13,7 @@ from astro.airflow.datasets import Dataset
 from astro.files.locations import create_file_location
 from astro.files.locations.base import BaseFileLocation
 from astro.files.types import FileType, create_file_type
+from astro.options import LoadOptions, LoadOptionsList
 
 
 @define
@@ -33,6 +34,7 @@ class File(LoggingMixin, Dataset):
     normalize_config: dict | None = None
     is_dataframe: bool = False
     is_bytes: bool = False
+    load_options: list[LoadOptions] | None = None
 
     uri: str = field(init=False)
     extra: dict | None = field(init=False, factory=dict)
@@ -44,7 +46,11 @@ class File(LoggingMixin, Dataset):
 
     @property
     def location(self) -> BaseFileLocation:
-        return create_file_location(self.path, self.conn_id)
+        return create_file_location(self.path, self.conn_id, self.load_options_list)
+
+    @property
+    def load_options_list(self):
+        return LoadOptionsList(self.load_options)
 
     @property
     def type(self) -> FileType:  # noqa: A003
@@ -52,6 +58,7 @@ class File(LoggingMixin, Dataset):
             path=self.path,
             filetype=self.filetype,
             normalize_config=self.normalize_config,
+            load_options_list=self.load_options_list,
         )
 
     @property
@@ -73,6 +80,13 @@ class File(LoggingMixin, Dataset):
         result: bool = self.type.name == constants.FileType.PARQUET
         return result
 
+    def is_local(self) -> bool:
+        """
+        Return a boolean showing whether this file is stored locally or in a cloud storage
+        :return: A boolean for whether the file is local
+        """
+        return self.location.location_type == constants.FileLocation.LOCAL
+
     def is_pattern(self) -> bool:
         """
         Returns True when file path is a pattern(eg. s3://bucket/folder or /folder/sample_* etc)
@@ -88,8 +102,10 @@ class File(LoggingMixin, Dataset):
             delimited data (e.g. csv, parquet, etc.).
         :param df: pandas dataframe
         """
+
         self.is_dataframe = store_as_dataframe
-        with smart_open.open(self.path, mode="wb", transport_params=self.location.transport_params) as stream:
+
+        with self.location.get_stream() as stream:
             self.type.create_from_dataframe(stream=stream, df=df)
 
     @property
@@ -108,10 +124,19 @@ class File(LoggingMixin, Dataset):
         """
         return self.location.openlineage_dataset_name
 
+    def is_directory(self) -> bool:
+        """
+        :returns: A boolean representing whether this path is a directory or not.
+        """
+
+        return pathlib.Path(self.path).is_dir()
+
     def export_to_dataframe(self, **kwargs) -> pd.DataFrame:
         """Read file from all supported location and convert them into dataframes."""
         mode = "rb" if self.is_binary() else "r"
-        with smart_open.open(self.path, mode=mode, transport_params=self.location.transport_params) as stream:
+        with smart_open.open(
+            self.location.smartopen_uri, mode=mode, transport_params=self.location.transport_params
+        ) as stream:
             return self.type.export_to_dataframe(stream, **kwargs)
 
     def _convert_remote_file_to_byte_stream(self) -> io.IOBase:
@@ -127,7 +152,9 @@ class File(LoggingMixin, Dataset):
 
         mode = "rb" if self.is_binary() else "r"
         remote_obj_buffer = io.BytesIO() if self.is_binary() else io.StringIO()
-        with smart_open.open(self.path, mode=mode, transport_params=self.location.transport_params) as stream:
+        with smart_open.open(
+            self.location.smartopen_uri, mode=mode, transport_params=self.location.transport_params
+        ) as stream:
             remote_obj_buffer.write(stream.read())
         remote_obj_buffer.seek(0)
         return remote_obj_buffer
@@ -209,6 +236,7 @@ def resolve_file_path_pattern(
     conn_id: str | None = None,
     filetype: constants.FileType | None = None,
     normalize_config: dict | None = None,
+    load_options: list[LoadOptions] | None = None,
 ) -> list[File]:
     """get file objects by resolving path_pattern from local/object stores
     path_pattern can be
@@ -229,6 +257,7 @@ def resolve_file_path_pattern(
             conn_id=conn_id,
             filetype=filetype,
             normalize_config=normalize_config,
+            load_options=load_options,
         )
         for path in location.paths
         if not path.endswith("/")
