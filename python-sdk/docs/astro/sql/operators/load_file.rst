@@ -290,7 +290,7 @@ Users can also load data from an FTP:
 
 Loading data from Azure Blob storage
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Users can also load data from an FTP:
+Users can also load data from an Azure Blob storage:
 
 .. literalinclude:: ../../../../example_dags/example_load_file.py
    :language: python
