@@ -294,6 +294,32 @@ def init(
     rprint("Initialized an Astro SQL project at", project.directory)
 
 
+@app.command(
+    cls=AstroCommand,
+    help="""Deploy workflows to Astro Cloud.""",
+)
+def deploy(
+    workflow_name: str = typer.Option(
+        default=None,
+        show_default=False,
+        help="name of the workflow directory within workflows directory.",
+    ),
+    env: str = typer.Option(
+        metavar="environment",
+        default="default",
+        help="environment to deploy",
+    ),
+    project_dir: Path = typer.Option(
+        None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
+    ),
+):
+    rprint(
+        "Native deployment not yet available."
+        " Please use the astro-cli to deploy. See https://docs.astronomer.io/astro/cli/overview for details."
+    )
+    raise typer.Exit(code=1)
+
+
 def _generate_dag(
     project: Project, workflow_name: str, generate_tasks: bool, output_dir: Path | None = None
 ) -> Path:
