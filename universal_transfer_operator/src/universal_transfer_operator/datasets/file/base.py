@@ -9,6 +9,7 @@ from attr import define, field
 
 from universal_transfer_operator.constants import FileType
 from universal_transfer_operator.datasets.base import Dataset
+from universal_transfer_operator.datasets.file.types import create_file_type
 
 
 @define
@@ -41,14 +42,24 @@ class File(Dataset):
         size: int = self.location.size
         return size
 
+    @property
+    def type(self) -> FileType:  # noqa: A003
+        return create_file_type(
+            path=self.path,
+            filetype=self.filetype,
+            normalize_config=self.normalize_config,
+        )
+
     def is_binary(self) -> bool:
         """
         Return a constants.FileType given the filepath. Uses a naive strategy, using the file extension.
 
         :return: True or False
         """
-        result: bool = self.type.name == FileType.PARQUET
-        return result
+        read_as_non_binary = {FileType.CSV, FileType.JSON, FileType.NDJSON}
+        if self.type in read_as_non_binary:
+            return False
+        return True
 
     def is_pattern(self) -> bool:
         """
@@ -58,11 +69,14 @@ class File(Dataset):
         """
         return not pathlib.PosixPath(self.path).suffix
 
-    def create_from_dataframe(self, df: pd.DataFrame) -> None:
+    def create_from_dataframe(self, df: pd.DataFrame, store_as_dataframe: bool = True) -> None:
         """Create a file in the desired location using the values of a dataframe.
 
+        :param store_as_dataframe: Whether the data should later be deserialized as a dataframe or as a file containing
+            delimited data (e.g. csv, parquet, etc.).
         :param df: pandas dataframe
         """
+        self.is_dataframe = store_as_dataframe
         with smart_open.open(self.path, mode="wb", transport_params=self.location.transport_params) as stream:
             self.type.create_from_dataframe(stream=stream, df=df)
 
