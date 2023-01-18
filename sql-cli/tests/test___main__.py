@@ -644,6 +644,6 @@ def test_deploy():
     result = runner.invoke(app, ["deploy"])
     assert result.exit_code == 1
     assert (
-        "Please use the astro-cli to deploy. See https://docs.astronomer.io/astro/cli/overview for details."
+        "Please use the Astro CLI to deploy. See https://docs.astronomer.io/astro/cli/sql-cli for details."
         in result.stdout
     )

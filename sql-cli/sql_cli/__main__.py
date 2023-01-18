@@ -314,7 +314,7 @@ def deploy(
     ),
 ) -> None:
     rprint(
-        "Please use the astro-cli to deploy. See https://docs.astronomer.io/astro/cli/overview for details."
+        "Please use the Astro CLI to deploy. See https://docs.astronomer.io/astro/cli/sql-cli for details."
     )
     raise typer.Exit(code=1)
 
