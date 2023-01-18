@@ -129,7 +129,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
         # if fail_on_empty is set to False, wrap in a try/except block
         # this is because the conversion function will fail if the result is empty
         # due to sqlalchemy failing when there are no results
-        if fail_on_empty:
+        if not fail_on_empty:
 
             def handle_exceptions(result):
                 try:

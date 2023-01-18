@@ -118,7 +118,7 @@ def test_run_sql_should_raise_exception(run_sql, results_as_pandas_dataframe, sa
     with pytest.raises(ValueError) as e:
         with sample_dag:
 
-            @aql.run_raw_sql(conn_id="sqlite_default", handler=raise_exception, fail_on_empty=False)
+            @aql.run_raw_sql(conn_id="sqlite_default", handler=raise_exception, fail_on_empty=True)
             def dummy_method():
                 return "SELECT 1+1"
 
@@ -142,7 +142,7 @@ def test_run_sql_should_not_raise_exception(run_sql, results_as_pandas_dataframe
 
     with sample_dag:
 
-        @aql.run_raw_sql(conn_id="sqlite_default", handler=raise_exception, fail_on_empty=True)
+        @aql.run_raw_sql(conn_id="sqlite_default", handler=raise_exception, fail_on_empty=False)
         def dummy_method():
             return "SELECT 1+1"
 
