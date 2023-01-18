@@ -313,7 +313,9 @@ def deploy(
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
 ) -> None:
-    rprint("Please use the astro-cli to deploy. See https://docs.astronomer.io/astro/cli/overview for details.")
+    rprint(
+        "Please use the astro-cli to deploy. See https://docs.astronomer.io/astro/cli/overview for details."
+    )
     raise typer.Exit(code=1)
 
 
