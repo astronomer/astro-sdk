@@ -6,4 +6,5 @@ coverage:
         threshold: 5%
         only_pulls: true
     patch:
-      threshold: 5%
+      default:
+        threshold: 5%
