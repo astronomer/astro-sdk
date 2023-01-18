@@ -644,7 +644,6 @@ def test_deploy():
     result = runner.invoke(app, ["deploy"])
     assert result.exit_code == 1
     assert (
-        "Native deployment not yet available."
-        " Please use the astro-cli to deploy. See https://docs.astronomer.io/astro/cli/overview for details."
+        "Please use the astro-cli to deploy. See https://docs.astronomer.io/astro/cli/overview for details."
         in result.stdout
     )
