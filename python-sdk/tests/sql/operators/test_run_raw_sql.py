@@ -29,7 +29,7 @@ def test_run_sql_calls_list_handler(run_sql, results_as_list, sample_dag):
     run_sql.return_value = []
     with sample_dag:
 
-        @aql.run_raw_sql(results_format="list", conn_id="google_cloud_default")
+        @aql.run_raw_sql(results_format="list", conn_id="sqlite_default")
         def dummy_method():
             return "SELECT 1+1"
 
@@ -46,7 +46,7 @@ def test_run_sql_calls_pandas_dataframe_handler(run_sql, results_as_pandas_dataf
     run_sql.return_value = []
     with sample_dag:
 
-        @aql.run_raw_sql(results_format="pandas_dataframe", conn_id="google_cloud_default")
+        @aql.run_raw_sql(results_format="pandas_dataframe", conn_id="sqlite_default")
         def dummy_method():
             return "SELECT 1+1"
 
@@ -67,7 +67,7 @@ def test_run_sql_gives_priority_to_pandas_dataframe_handler(run_sql, results_as_
     with sample_dag:
 
         @aql.run_raw_sql(
-            results_format="pandas_dataframe", conn_id="google_cloud_default", handler=lambda x: x.fetchall()
+            results_format="pandas_dataframe", conn_id="sqlite_default", handler=lambda x: x.fetchall()
         )
         def dummy_method():
             return "SELECT 1+1"
@@ -94,7 +94,7 @@ def test_run_sql_called_handler(run_sql, results_as_pandas_dataframe, sample_dag
 
     with sample_dag:
 
-        @aql.run_raw_sql(conn_id="google_cloud_default", handler=verify)
+        @aql.run_raw_sql(conn_id="sqlite_default", handler=verify)
         def dummy_method():
             return "SELECT 1+1"
 
@@ -118,7 +118,7 @@ def test_run_sql_should_raise_exception(run_sql, results_as_pandas_dataframe, sa
     with pytest.raises(ValueError) as e:
         with sample_dag:
 
-            @aql.run_raw_sql(conn_id="google_cloud_default", handler=raise_exception, fail_on_empty=False)
+            @aql.run_raw_sql(conn_id="sqlite_default", handler=raise_exception, fail_on_empty=False)
             def dummy_method():
                 return "SELECT 1+1"
 
@@ -142,7 +142,7 @@ def test_run_sql_should_not_raise_exception(run_sql, results_as_pandas_dataframe
 
     with sample_dag:
 
-        @aql.run_raw_sql(conn_id="google_cloud_default", handler=raise_exception, fail_on_empty=True)
+        @aql.run_raw_sql(conn_id="sqlite_default", handler=raise_exception, fail_on_empty=True)
         def dummy_method():
             return "SELECT 1+1"
 
