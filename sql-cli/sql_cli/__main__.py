@@ -299,17 +299,17 @@ def init(
     help="""Deploy workflows to Astro Cloud.""",
 )
 def deploy(
-    workflow_name: str = typer.Option(
+    workflow_name: str = typer.Option(  # skipcq: PYL-W0613
         default=None,
         show_default=False,
         help="name of the workflow directory within workflows directory.",
     ),
-    env: str = typer.Option(
+    env: str = typer.Option(  # skipcq: PYL-W0613
         metavar="environment",
         default="default",
         help="environment to deploy",
     ),
-    project_dir: Path = typer.Option(
+    project_dir: Path = typer.Option(  # skipcq: PYL-W0613
         None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
     ),
 ) -> None:
