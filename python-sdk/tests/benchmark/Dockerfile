@@ -19,7 +19,6 @@ ENV GIT_HASH ${GIT_HASH}
 # Upgrade built-in pip
 RUN apt-get update && \
     apt-get install -y python3-pip && \
-    apt-get install -y wget && \
     apt install -y jq && \
     apt install -y vim && \
     apt install -y curl && \
@@ -27,7 +26,6 @@ RUN apt-get update && \
     curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - && \
     apt-get update && \
     apt-get install google-cloud-sdk -y && \
-    apt-get install google-cloud-sdk-gke-gcloud-auth-plugin -y && \
     apt install -y libpq-dev python3-dev
 
 # Install Astro SDK dependencies
