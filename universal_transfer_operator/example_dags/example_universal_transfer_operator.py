@@ -4,7 +4,7 @@ from datetime import datetime
 from airflow import DAG
 
 from universal_transfer_operator.constants import TransferMode
-from universal_transfer_operator.datasets.file import File
+from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.datasets.table import Metadata, Table
 from universal_transfer_operator.integrations.fivetran import Connector, Destination, FiveTranOptions, Group
 from universal_transfer_operator.universal_transfer_operator import UniversalTransferOperator

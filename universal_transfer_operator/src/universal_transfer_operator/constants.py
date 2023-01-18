@@ -97,3 +97,5 @@ SUPPORTED_FILE_TYPES = [const.value for const in FileType]
 SUPPORTED_DATABASES = [const.value for const in Database]
 
 LoadExistStrategy = Literal["replace", "append"]
+DEFAULT_CHUNK_SIZE = 1000000
+ColumnCapitalization = Literal["upper", "lower", "original"]

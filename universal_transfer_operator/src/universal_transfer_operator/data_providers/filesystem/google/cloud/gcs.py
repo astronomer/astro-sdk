@@ -1,21 +1,18 @@
 from __future__ import annotations
 
 import logging
+from contextlib import contextmanager
 from functools import cached_property
 from tempfile import NamedTemporaryFile
 from typing import Sequence
+from urllib.parse import urlparse, urlunparse
 
 import attr
 from airflow.providers.google.cloud.hooks.gcs import GCSHook, _parse_gcs_url
 
 from universal_transfer_operator.constants import Location, TransferMode
-from universal_transfer_operator.data_providers.filesystem.base import (
-    BaseFilesystemProviders,
-    Path,
-    TempFile,
-    contextmanager,
-)
-from universal_transfer_operator.datasets.base import Dataset
+from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders, Path, TempFile
+from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.utils import TransferParameters
 
 
@@ -26,7 +23,7 @@ class GCSDataProvider(BaseFilesystemProviders):
 
     def __init__(
         self,
-        dataset: Dataset,
+        dataset: File,
         transfer_params: TransferParameters = attr.field(
             factory=TransferParameters,
             converter=lambda val: TransferParameters(**val) if isinstance(val, dict) else val,
@@ -52,12 +49,30 @@ class GCSDataProvider(BaseFilesystemProviders):
             impersonation_chain=self.google_impersonation_chain,
         )
 
+    @property
+    def transport_params(self) -> dict:
+        """get GCS credentials for storage"""
+        client = self.hook.get_conn()
+        return {"client": client}
+
+    @property
+    def paths(self) -> list[str]:
+        """Resolve GS file paths with prefix"""
+        url = urlparse(self.dataset.path)
+        prefixes = self.hook.list(
+            bucket_name=self.bucket_name,  # type: ignore
+            prefix=self.prefix,
+            delimiter=self.delimiter,
+        )
+        paths = [urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in prefixes]
+        return paths
+
     def check_if_exists(self) -> bool:
         """Return true if the dataset exists"""
         return self.hook.exists(bucket_name=self.bucket_name, object_name=self.blob_name)
 
     @contextmanager
-    def read(self) -> list[TempFile]:
+    def read_using_hook(self) -> list[TempFile]:
         """Read the file from dataset and write to local file location"""
         if not self.check_if_exists():
             raise ValueError(f"{self.dataset.path} doesn't exits")
@@ -84,7 +99,7 @@ class GCSDataProvider(BaseFilesystemProviders):
             # Clean up the local files
             self.cleanup(local_file_paths)
 
-    def write(self, source_ref: list[TempFile]) -> list[str]:
+    def write_using_hook(self, source_ref: list[TempFile]) -> list[str]:
         """Write the file from local file location to the dataset"""
         destination_objects = []
         if source_ref:

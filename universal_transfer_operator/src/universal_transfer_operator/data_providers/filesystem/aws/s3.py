@@ -1,20 +1,17 @@
 from __future__ import annotations
 
 import os
+from contextlib import contextmanager
 from functools import cached_property
 from tempfile import NamedTemporaryFile
+from urllib.parse import urlparse, urlunparse
 
 import attr
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
 from universal_transfer_operator.constants import Location, TransferMode
-from universal_transfer_operator.data_providers.filesystem.base import (
-    BaseFilesystemProviders,
-    Path,
-    TempFile,
-    contextmanager,
-)
-from universal_transfer_operator.datasets.base import Dataset
+from universal_transfer_operator.data_providers.filesystem.base import BaseFilesystemProviders, Path, TempFile
+from universal_transfer_operator.datasets.file.base import File
 from universal_transfer_operator.utils import TransferParameters
 
 
@@ -25,7 +22,7 @@ class S3DataProvider(BaseFilesystemProviders):
 
     def __init__(
         self,
-        dataset: Dataset,
+        dataset: File,
         transfer_params: TransferParameters = attr.field(
             factory=TransferParameters,
             converter=lambda val: TransferParameters(**val) if isinstance(val, dict) else val,
@@ -52,12 +49,31 @@ class S3DataProvider(BaseFilesystemProviders):
             extra_args=self.s3_extra_args,
         )
 
+    @property
+    def transport_params(self) -> dict:
+        """Structure s3fs credentials from Airflow connection.
+        s3fs enables pandas to write to s3
+        """
+        return {"client": self.hook.conn}
+
+    @property
+    def paths(self) -> list[str]:
+        """Resolve S3 file paths with prefix"""
+        url = urlparse(self.dataset.path)
+        prefixes = self.hook.list_keys(
+            bucket_name=self.bucket_name,
+            prefix=self.s3_key,
+            delimiter=self.delimiter,
+        )
+        paths = [urlunparse((url.scheme, url.netloc, keys, "", "", "")) for keys in prefixes]
+        return paths
+
     def check_if_exists(self) -> bool:
         """Return true if the dataset exists"""
         return self.hook.check_for_key(key=self.dataset.path)
 
     @contextmanager
-    def read(self) -> list[TempFile]:
+    def read_using_hook(self) -> list[TempFile]:
         """Read the file from dataset and write to local file location"""
         if not self.check_if_exists():
             raise ValueError(f"{self.dataset.path} doesn't exits")
@@ -75,7 +91,7 @@ class S3DataProvider(BaseFilesystemProviders):
             # Clean up the local files
             self.cleanup(local_file_paths)
 
-    def write(self, source_ref: list[TempFile]):
+    def write_using_hook(self, source_ref: list[TempFile]):
         """Write the file from local file location to the dataset"""
 
         dest_s3_key = self.dataset.path

@@ -63,7 +63,7 @@ class UniversalTransferOperator(BaseOperator):
             transfer_mode=self.transfer_mode,
         )
 
-        with source_dataprovider.read() as source_data:
-            destination_data = destination_dataprovider.write(source_data)
-
-        return destination_data
+        destination_references = []
+        for source_data in source_dataprovider.read():
+            destination_references.append(destination_dataprovider.write(source_data))
+        return destination_references
