@@ -47,6 +47,9 @@ class BaseFilesystemProviders(DataProviders):
         self.transfer_mode = transfer_mode
         self.transfer_mapping = {}
         self.LOAD_DATA_NATIVELY_FROM_SOURCE: dict = {}
+        super().__init__(
+            dataset=self.dataset, transfer_mode=self.transfer_mode, transfer_params=self.transfer_params
+        )
 
     def __repr__(self):
         return f'{self.__class__.__name__}(conn_id="{self.dataset.conn_id})'
@@ -71,11 +74,11 @@ class BaseFilesystemProviders(DataProviders):
         """Return true if the dataset exists"""
         raise NotImplementedError
 
-    def check_if_transfer_supported(self, source_dataset: File) -> bool:
+    def check_if_transfer_supported(self) -> bool:
         """
         Checks if the transfer is supported from source to destination based on source_dataset.
         """
-        source_connection_type = get_dataset_connection_type(source_dataset)
+        source_connection_type = get_dataset_connection_type(self.dataset)
         return Location(source_connection_type) in self.transfer_mapping
 
     def read(self):

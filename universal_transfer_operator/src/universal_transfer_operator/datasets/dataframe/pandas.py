@@ -95,8 +95,8 @@ def convert_columns_names_capitalization(
     if isinstance(df, pd.DataFrame):
         df = PandasDataframe.from_pandas_df(df)
         if columns_names_capitalization == "lower":
-            df.columns = [col_label.lower() for col_label in df.columns]
+            df.columns = [col_label.lower() for col_label in df.columns]  # skipcq: PYL-W0201
         elif columns_names_capitalization == "upper":
-            df.columns = [col_label.upper() for col_label in df.columns]
+            df.columns = [col_label.upper() for col_label in df.columns]  # skipcq: PYL-W0201
 
     return df
