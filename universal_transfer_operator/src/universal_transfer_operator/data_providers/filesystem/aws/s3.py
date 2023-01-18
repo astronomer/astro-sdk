@@ -135,12 +135,12 @@ class S3DataProvider(BaseFilesystemProviders):
 
     @property
     def bucket_name(self) -> str:
-        bucket_name, key = self.hook.parse_s3_url(self.dataset.path)
+        bucket_name, _ = self.hook.parse_s3_url(self.dataset.path)
         return bucket_name
 
     @property
     def s3_key(self) -> str:
-        bucket_name, key = self.hook.parse_s3_url(self.dataset.path)
+        _, key = self.hook.parse_s3_url(self.dataset.path)
         return key
 
     @property

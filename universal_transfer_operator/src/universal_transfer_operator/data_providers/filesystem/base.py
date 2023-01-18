@@ -70,15 +70,15 @@ class BaseFilesystemProviders(DataProviders):
         """Get credentials required by smart open to access files"""
         return None
 
-    def check_if_exists(self, dataset: File) -> bool:
+    def check_if_exists(self) -> bool:
         """Return true if the dataset exists"""
         raise NotImplementedError
 
-    def check_if_transfer_supported(self) -> bool:
+    def check_if_transfer_supported(self, source_dataset: Dataset) -> bool:
         """
         Checks if the transfer is supported from source to destination based on source_dataset.
         """
-        source_connection_type = get_dataset_connection_type(self.dataset)
+        source_connection_type = get_dataset_connection_type(source_dataset)
         return Location(source_connection_type) in self.transfer_mapping
 
     def read(self):

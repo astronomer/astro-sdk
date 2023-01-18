@@ -161,7 +161,7 @@ class GCSDataProvider(BaseFilesystemProviders):
 
     @property
     def blob_name(self) -> str:
-        bucket_name, blob = _parse_gcs_url(gsurl=self.dataset.path)
+        _, blob = _parse_gcs_url(gsurl=self.dataset.path)
         return blob
 
     @property
