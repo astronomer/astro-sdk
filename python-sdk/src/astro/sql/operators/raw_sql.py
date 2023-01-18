@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterable, Mapping
-from typing import Any, Callable, Literal, cast
+from typing import Any, Callable, List, cast
 
 try:
     from airflow.decorators.base import TaskDecorator
@@ -20,6 +20,7 @@ else:
     from sqlalchemy.engine.result import RowProxy as SQLAlcRow
 
 from astro import settings
+from astro.constants import RunRawSQLResultFormat
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 from astro.utils.compat.typing import Context
@@ -36,7 +37,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
 
     def __init__(
         self,
-        results_format: Literal["list", "dataframe"] | None = None,
+        results_format: RunRawSQLResultFormat | None = None,
         fail_on_empty: bool = False,
         **kwargs: Any,
     ):
@@ -58,29 +59,19 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
                 "backend."
             )
 
-        # if a user specifies a results_format, we will return the results in that format
-        # note that it takes precedence over the handler
-        if self.results_format:
-            conversion_func = getattr(self, f"results_as_{self.results_format}")
+        # ToDo: Currently, the handler param in run_sql() method is only used in databricks all other databases are
+        # not using it. Which leads to different response types since handler is processed within `run_sql()` for
+        # databricks and not for other databases. Also the signature of `run_sql()` in databricks deviates from base.
+        # We need to standardise and when we do, we can remove below check as well.
+        if self.database_impl.IGNORE_HANDLER_IN_RUN_RAW_SQL:
+            return result
 
-            # if fail_on_empty is set to False, wrap in a try/except block
-            # this is because the conversion function will fail if the result is empty
-            # due to sqlalchemy failing when there are no results
-            if not self.fail_on_empty:
-                try:
-                    return conversion_func(result)
-                except Exception:
-                    return None
+        self.handler = self.get_handler()
 
-            # otherwise, just return the result
-            return conversion_func(result)
-
-        # if no results_format is specified, we will return the results in the format specified by the handler
-        elif self.handler:
-            # if it's a delta table, we don't need to do any conversion
-            if self.database_impl.sql_type == "delta":
-                return result
-
+        if self.handler:
+            self.handler = self.get_wrapped_handler(
+                fail_on_empty=self.fail_on_empty, conversion_func=self.handler
+            )
             # otherwise, call the handler and convert the result to a list
             response = self.handler(result)
             response = self.make_row_serializable(response)
@@ -110,14 +101,46 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
         """
         Convert the result of a SQL query to a list
         """
-        return cast(list[Any], result.fetchall())
+        return cast(List[Any], result.fetchall())
 
     @staticmethod
-    def results_as_dataframe(result: ResultProxy) -> pd.DataFrame:
+    def results_as_pandas_dataframe(result: ResultProxy) -> pd.DataFrame:
         """
         Convert the result of a SQL query to a pandas dataframe
         """
         return pd.DataFrame(result.fetchall(), columns=result.keys())
+
+    def get_results_format_handler(self, results_format: str):
+        return getattr(self, f"results_as_{results_format}")
+
+    def get_handler(self):
+        # if a user specifies a results_format, we will return the results in that format
+        # note that it takes precedence over the handler
+        if self.results_format:
+            self.handler = self.get_results_format_handler(results_format=self.results_format)
+        if self.handler:
+            self.handler = self.get_wrapped_handler(
+                fail_on_empty=self.fail_on_empty, conversion_func=self.handler
+            )
+        return self.handler
+
+    @staticmethod
+    def get_wrapped_handler(fail_on_empty: bool, conversion_func: Callable):
+        # if fail_on_empty is set to False, wrap in a try/except block
+        # this is because the conversion function will fail if the result is empty
+        # due to sqlalchemy failing when there are no results
+        if fail_on_empty:
+
+            def handle_exceptions(result):
+                try:
+                    return conversion_func(result)
+                except Exception:
+                    return None
+
+            return handle_exceptions
+
+        # otherwise, just return the result
+        return conversion_func
 
 
 class SdkLegacyRow(SQLAlcRow):
@@ -142,7 +165,7 @@ def run_raw_sql(
     database: str | None = None,
     schema: str | None = None,
     handler: Callable | None = None,
-    results_format: Literal["list", "dataframe"] | None = None,
+    results_format: RunRawSQLResultFormat | None = None,
     fail_on_empty: bool = False,
     response_size: int = settings.RAW_SQL_MAX_RESPONSE_SIZE,
     **kwargs: Any,
