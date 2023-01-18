@@ -134,7 +134,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
             def handle_exceptions(result):
                 try:
                     return conversion_func(result)
-                except Exception:
+                except Exception:  # skipcq: PYL-W0703
                     return None
 
             return handle_exceptions

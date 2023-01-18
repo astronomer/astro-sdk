@@ -156,10 +156,12 @@ def test_handlers():
     """
 
     class MockResultProxy:
-        def fetchall(self):
+        @staticmethod
+        def fetchall():
             return [1, 2, 3]
 
-        def keys(self):
+        @staticmethod
+        def keys():
             return ["col"]
 
     result = MockResultProxy()
@@ -167,5 +169,5 @@ def test_handlers():
     assert processed_result == [1, 2, 3]
 
     processed_result = aql.RawSQLOperator.results_as_pandas_dataframe(result)
-    assert type(processed_result) == pandas.DataFrame
+    assert isinstance(processed_result, pandas.DataFrame)
     assert processed_result.shape == (3, 1)
