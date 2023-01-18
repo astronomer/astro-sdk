@@ -34,7 +34,7 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
             message_list.append(dr_status)
             for ti in dr.get_task_instances():
                 task_code = ":black_circle: "
-                if not ((ti.task_id == "end") or (ti.task_id == "get_report")):
+                if ti.task_id not in ["end", "get_report"]:
                     if ti.state == "success":
                         task_code = ":large_green_circle: "
                     elif ti.state == "failed":
@@ -175,7 +175,7 @@ with DAG(
         trigger_rule="all_success",
     )
 
-    start >> [
+    start >> [  # skipcq PYL-W0104
         list_installed_pip_packages,
         get_airflow_version,
         load_file_trigger_tasks[0],
@@ -197,5 +197,4 @@ with DAG(
         dynamic_task_trigger_tasks[-1],
     ]
 
-    last_task >> end
-    last_task >> report
+    last_task >> [end, report]  # skipcq PYL-W0104
