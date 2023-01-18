@@ -118,6 +118,7 @@ from astro.table import Metadata, Table
 
 DAGS_FOLDER = Path(__file__).parent.as_posix()
 
+
 with DAG(
     dag_id="basic",
     start_date=timezone.parse("2016-12-21T03:49:00"),
