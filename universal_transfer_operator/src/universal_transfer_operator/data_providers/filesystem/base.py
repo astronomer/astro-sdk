@@ -6,7 +6,6 @@ from abc import abstractmethod
 from pathlib import Path
 
 import attr
-import pandas as pd
 import smart_open
 from airflow.hooks.base import BaseHook
 
