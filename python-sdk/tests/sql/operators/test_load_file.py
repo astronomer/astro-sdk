@@ -9,7 +9,7 @@ from astro import sql as aql
 from astro.airflow.datasets import DATASET_SUPPORT
 from astro.constants import Database, FileType
 from astro.files import File
-from astro.sql.operators.load_file import load_file
+from astro.sql.operators.load_file import LoadFileOperator, load_file
 from astro.table import Metadata, Table
 from tests.utils.airflow import create_context
 
@@ -165,3 +165,42 @@ def test_tables_creation_if_they_dont_exist(database_table_fixture, if_exists):
 
     database_df = db.export_table_to_pandas_dataframe(test_table)
     assert database_df.shape == (3, 9)
+
+
+# TODO: Remove this test in astro-sdk 1.5.0
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.SQLITE,
+        },
+    ],
+    indirect=True,
+    ids=["Sqlite"],
+)
+@pytest.mark.parametrize("if_exists", ["append"])
+def test_load_file_native_support_kwargs_warnings_message(database_table_fixture, if_exists):
+    """Assert the warning log for load_options will be replacing native_support_kwargs parameter"""
+    path = str(CWD) + "/../../data/homes_main.csv"
+    db, test_table = database_table_fixture
+    with pytest.warns(
+        expected_warning=DeprecationWarning,
+        match=r"`load_options` will be replacing `native_support_kwargs`",
+    ):
+        load_file(
+            input_file=File(path),
+            output_table=test_table,
+            if_exists=if_exists,
+            native_support_kwargs={"dummy": "dummy"},
+        )
+
+    with pytest.warns(
+        expected_warning=DeprecationWarning,
+        match=r"`load_options` will be replacing `native_support_kwargs`",
+    ):
+        LoadFileOperator(
+            input_file=File(path),
+            output_table=test_table,
+            if_exists=if_exists,
+            native_support_kwargs={"dummy": "dummy"},
+        )

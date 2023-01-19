@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import Any
 
 import pandas as pd
@@ -62,6 +63,13 @@ class LoadFileOperator(AstroSQLBaseOperator):
                 output_datasets=output_table,
             )
         )
+        if native_support_kwargs:
+            warnings.warn(
+                """`load_options` will be replacing `native_support_kwargs` parameter. Please use `load_options`
+                parameter instead. And, `native_support_kwargs` will be removed in astro-sdk-python>=1.5.0.""",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         self.output_table = output_table
         self.input_file = input_file
         self.input_file.load_options = load_options
@@ -82,6 +90,7 @@ class LoadFileOperator(AstroSQLBaseOperator):
         """
         if self.input_file.conn_id:
             check_if_connection_exists(self.input_file.conn_id)
+
         # TODO: remove pushing to XCom once we update the airflow version.
         if self.output_table:
             context["ti"].xcom_push(key="output_table_conn_id", value=str(self.output_table.conn_id))
@@ -328,6 +337,14 @@ def load_file(
     # Note - using path for task id is causing issues as it's a pattern and
     # contain chars like - ?, * etc. Which are not acceptable as task id.
     task_id = task_id if task_id is not None else get_unique_task_id("load_file")
+
+    if native_support_kwargs:
+        warnings.warn(
+            """`load_options` will be replacing `native_support_kwargs` parameter. Please use `load_options`
+            parameter instead. And, `native_support_kwargs` will be removed in astro-sdk-python>=1.5.0.""",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     return LoadFileOperator(
         task_id=task_id,
