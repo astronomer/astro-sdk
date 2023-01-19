@@ -140,10 +140,14 @@ class Workflow:
         :return: Workflow instance with the properties declared in the YAML file
         """
 
-        class DatasetYAML(yaml.YAMLObject):
+        class DatasetYAML(yaml.YAMLObject):  # skipcq: PYL-W0612, PTC-W0065
+            """
+            Used to parse Dataset information from YML file.
+            """
+
             yaml_tag = "!dataset"
 
-            def __init__(self, uri):
+            def __init__(self, uri: str) -> None:
                 self.uri = uri
 
         yaml.add_path_resolver("!dataset", ["DatasetYAML"], dict)
