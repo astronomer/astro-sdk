@@ -197,4 +197,5 @@ with DAG(
         dynamic_task_trigger_tasks[-1],
     ]
 
-    last_task >> [end, report]  # skipcq PYL-W0104
+    last_task >> end  # skipcq PYL-W0104
+    last_task >> report  # skipcq PYL-W0104
