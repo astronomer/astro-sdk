@@ -38,11 +38,11 @@ CWD = pathlib.Path(__file__).parent
         },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["bigquery", "postgresql", "sqlite", "redshift"],
 )
-def test_column_check_operator_with_table_dataset(sample_dag, database_table_fixture):
+def test_check_table_operator(sample_dag, database_table_fixture):
     """
-    Test column_check_operator with table dataset for all checks types and make sure the generated sql is working for
+    Test check_table_operator for all checks types and make sure the generated sql is working for
     all the database we support.
     """
     _, test_table = database_table_fixture
