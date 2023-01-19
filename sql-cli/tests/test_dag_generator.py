@@ -127,7 +127,7 @@ with airflow.DAG(
     is_paused_upon_creation=False,
     orientation="LR",
     tags=[
-        "SQL"
+        "SQL",
     ],
     schedule="@daily",
 ) as dag:
@@ -189,7 +189,9 @@ with airflow.DAG(
     description="Sample workflow used to load data from a CSV file into a SQLite database",
     is_paused_upon_creation=False,
     orientation="LR",
-    tags=["SQLite"],
+    tags=[
+        "SQLite",
+    ],
     schedule="@hourly",
 ) as dag:
 """
