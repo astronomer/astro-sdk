@@ -19,7 +19,7 @@ Supported Checks
 ~~~~~~~~~~~~~~~~
 Supported checks are also explained `here <https://airflow.apache.org/docs/apache-airflow-providers-common-sql/stable/operators.html#check-sql-table-values>`_.
 
-.. literalinclude:: ../../../../../example_dags/example_check_column.py
+.. literalinclude:: ../../../../../example_dags/example_check_table.py
    :language: python
    :start-after: [START data_validation__check_table]
    :end-before: [END data_validation__check_table]
