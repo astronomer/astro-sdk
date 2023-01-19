@@ -182,7 +182,7 @@ def test_tables_creation_if_they_dont_exist(database_table_fixture, if_exists):
 def test_load_file_native_support_kwargs_warnings_message(database_table_fixture, if_exists):
     """Assert the warning log for load_options will be replacing native_support_kwargs parameter"""
     path = str(CWD) + "/../../data/homes_main.csv"
-    db, test_table = database_table_fixture
+    _, test_table = database_table_fixture
     with pytest.warns(
         expected_warning=DeprecationWarning,
         match=r"`load_options` will be replacing `native_support_kwargs`",
