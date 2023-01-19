@@ -11,5 +11,5 @@ from sql_cli.dag_renderer import render_tasks
 
 DAGS_FOLDER = Path(__file__).parent.as_posix()
 
-{{ build_dag(dag) }}
+{{ build_dag(dag, schedule_type) }}
     render_tasks(Path(f"{DAGS_FOLDER}/include/{{ dag.dag_id }}"))

@@ -13,7 +13,7 @@ from astro.table import Metadata, Table
 
 DAGS_FOLDER = Path(__file__).parent.as_posix()
 
-{{ build_dag(dag) }}
+{{ build_dag(dag, schedule_type) }}
     {%- for workflow_file in dag.sorted_workflow_files() %}
     {%- if workflow_file.operator_name == 'load_file' %}
     {{ load_file(workflow_file, dag)|indent(width=4) }}

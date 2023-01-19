@@ -15,6 +15,7 @@ from networkx import DiGraph, depth_first_search, find_cycle, is_directed_acycli
 
 from sql_cli.constants import WORKFLOW_CONFIG_FILENAME
 from sql_cli.exceptions import DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
+from sql_cli.utils.airflow import dag_schedule_arg_name
 from sql_cli.utils.jinja import render
 from sql_cli.workflow_directory_parser import WorkflowFile, get_workflow_files
 
@@ -68,6 +69,8 @@ class Workflow:
     start_date: datetime | str | None = None
     end_date: datetime | None = None
     tags: list[str] = field(default_factory=lambda: ["SQL"])
+
+    schedule_arg_name: str = dag_schedule_arg_name()
 
     def __post_init__(self) -> None:
         if not self.workflow_files:
@@ -209,7 +212,7 @@ def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) ->
     output_file = dags_directory / f"{workflow_files_dag.dag_id}.py"
     render(
         template_file=template_file,
-        context={"dag": workflow_files_dag},
+        context={"dag": workflow_files_dag, "schedule_type": type(workflow_files_dag.schedule)},
         output_file=output_file,
     )
 

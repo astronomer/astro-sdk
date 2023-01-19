@@ -29,6 +29,16 @@ def version() -> Version:
     return Version(airflow.__version__)
 
 
+def dag_schedule_arg_name() -> str:
+    """
+    Return the DAG schedule argument name depending in the Airflow version.
+    May be schedule_interval (<= 2.3) or schedule (>= 2.4)
+
+    :return: DAG schedule argument name depending on the version of Airflow
+    """
+    return "schedule" if version() > Version("2.3") else "schedule_interval"
+
+
 def initialise(airflow_home: Path, airflow_dags_folder: Path) -> None:
     """
     Create an Airflow database and configure airflow via environment variables.

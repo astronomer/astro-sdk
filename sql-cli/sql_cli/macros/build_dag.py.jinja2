@@ -1,4 +1,4 @@
-{% macro build_dag(dag) %}
+{% macro build_dag(dag, schedule_type) %}
 with airflow.DAG(
     dag_id="{{ dag.dag_id }}",
     start_date=timezone.parse("{{ dag.start_date }}"),
@@ -16,10 +16,10 @@ with airflow.DAG(
         "{{ tag }}",
         {% endfor %}
     ],
-    {% if dag.schedule.__class__.__name__ == "str" %}
-    schedule="{{ dag.schedule }}",
-    {% else %}
-    schedule=[
+    {% if schedule_type == "str" %}
+    {{ dag.schedule_arg_name }} = {{ dag.schedule }}",
+    {% elif schedule_type == "list" %}
+    {{ dag.schedule_arg_name }} = [
         {% for dataset in dag.schedule %}
             airflow.Dataset(uri="{{ dataset["dataset"]["uri"] }}"),
         {% endfor %}

@@ -58,7 +58,7 @@ def test(session: nox.Session, airflow: str) -> None:
         "TERMINAL_WIDTH": "3000",
         "_TYPER_FORCE_DISABLE_TERMINAL": "1",
     }
-    session.run("poetry", "run", "pytest", *session.posargs, env=pytest_env)
+    session.run("poetry", "run", "pytest", "-vv", *session.posargs, env=pytest_env)
 
 
 @nox.session(python=["3.8"])
