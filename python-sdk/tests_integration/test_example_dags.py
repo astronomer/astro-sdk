@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import glob
 from pathlib import Path
 
 import airflow
@@ -54,6 +55,12 @@ MIN_VER_DAG_FILE_VER: dict[Version, list[str]] = {
 }
 
 
+def verify(example_dags_dir, dag_bag):
+    path = str(example_dags_dir) + "/*.py"
+    for file in glob.glob(path):
+        dag_bag.process_file(filepath=file, only_if_updated=False)
+
+
 def get_dag_bag() -> DagBag:
     """Create a DagBag by adding the files that are not supported to .airflowignore"""
     example_dags_dir = Path(__file__).parent.parent / "example_dags"
@@ -68,6 +75,7 @@ def get_dag_bag() -> DagBag:
     print(".airflowignore contents: ")
     print(airflow_ignore_file.read_text())
     dag_bag = DagBag(example_dags_dir, include_examples=False)
+    verify(example_dags_dir, dag_bag)
     return dag_bag
 
 
@@ -83,15 +91,14 @@ def order(dag_id: str) -> int:
     return -1
 
 
-dag_bag = get_dag_bag()
-
-
-@pytest.mark.parametrize("dag_id", sorted(dag_bag.dag_ids, key=order))
-def test_example_dag(session, dag_id: str):
-    dag = dag_bag.get_dag(dag_id)
-    wrapper_run_dag(dag)
+def test_example_dag():
+    dag_bag = get_dag_bag()
+    for dag_id in sorted(dag_bag.dag_ids, key=order):
+        dag = dag_bag.get_dag(dag_id)
+        wrapper_run_dag(dag)
 
 
 def test_example_dags_loaded_with_no_errors():
+    dag_bag = get_dag_bag()
     assert dag_bag.dags
     assert not dag_bag.import_errors
