@@ -13,7 +13,7 @@ with airflow.DAG(
     orientation="{{ dag.orientation }}",
     tags=[
         {% for tag in dag.tags %}
-        "{{ tag }}"
+        "{{ tag }}",
         {% endfor %}
     ],
     {% if dag.schedule.__class__.__name__ == "str" %}

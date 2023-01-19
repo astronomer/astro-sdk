@@ -126,7 +126,9 @@ with airflow.DAG(
     catchup=False,
     is_paused_upon_creation=False,
     orientation="LR",
-    tags=["SQL"],
+    tags=[
+        "SQL"
+    ],
     schedule="@daily",
 ) as dag:
     a = aql.transform_file(
