@@ -349,6 +349,6 @@ with dag:
     def add_delay():
         time.sleep(120)
 
-    databricks_load >> add_delay  # skipcq: PYL-W0104
+    databricks_load >> add_delay()  # skipcq: PYL-W0104
 
     aql.cleanup()
