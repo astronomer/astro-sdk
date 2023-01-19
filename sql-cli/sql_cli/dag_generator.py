@@ -65,7 +65,7 @@ class Workflow:
     description: str | None = None
     is_paused_upon_creation: bool = False
     orientation: str = "LR"
-    schedule: str | list[Dataset] = "@daily"
+    schedule: str | list[Dataset] | None = "@daily"
     start_date: datetime | str | None = None
     end_date: datetime | None = None
     tags: list[str] = field(default_factory=lambda: ["SQL"])
