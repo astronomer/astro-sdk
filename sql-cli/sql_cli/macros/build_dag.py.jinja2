@@ -21,7 +21,7 @@ with airflow.DAG(
     {% else %}
     schedule=[
         {% for dataset in dag.schedule %}
-            airflow.Dataset(uri="{{ dataset["Dataset"]["uri"] }}"),
+            airflow.Dataset(uri="{{ dataset["dataset"]["uri"] }}"),
         {% endfor %}
     ]
     {% endif %}

@@ -35,9 +35,9 @@ def test_workflow_without_workflow_files():
 sample_workflow_with_dataset_schedule = b"""
 workflow:
   schedule:
-    - Dataset:
+    - dataset:
         uri: s3://some-dataset/upstream1.parquet
-    - Dataset:
+    - dataset:
         uri: s3://some-dataset/upstream2.parquet
 """
 
@@ -49,8 +49,8 @@ def test_workflow_from_yaml_with_dataset_as_schedule():
         tmp.flush()
         workflow = Workflow.from_yaml(Path(tmp.name), dag_id="default", workflow_files=[Path("/tmp")])
         expected = [
-            {"Dataset": {"uri": "s3://some-dataset/upstream1.parquet"}},
-            {"Dataset": {"uri": "s3://some-dataset/upstream2.parquet"}},
+            {"dataset": {"uri": "s3://some-dataset/upstream1.parquet"}},
+            {"dataset": {"uri": "s3://some-dataset/upstream2.parquet"}},
         ]
 
         assert workflow.schedule == expected
