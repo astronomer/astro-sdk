@@ -77,7 +77,7 @@ def test_workflow_from_yaml_defaults():
 
 def test_workflow_from_yaml_file_overrides_defaults():
     """Test that we are able to generate a workflow class from a YAML file."""
-    workflow_yaml = CWD / "workflows/example_deploy/workflow.yaml"
+    workflow_yaml = CWD / "workflows/example_deploy/workflow.yml"
     workflow = Workflow.from_yaml(workflow_yaml, dag_id="test", workflow_files=[Path("/tmp")])
     assert workflow.catchup
     assert workflow.dag_id == "test"
