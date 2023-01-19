@@ -4,7 +4,7 @@
 {% from 'macros/transform_file.py.jinja2' import transform_file -%}
 from pathlib import Path
 
-from airflow import DAG
+import airflow
 from airflow.utils import timezone
 from astro import sql as aql
 from astro.constants import FileType

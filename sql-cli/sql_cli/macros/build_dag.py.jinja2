@@ -1,5 +1,5 @@
 {% macro build_dag(dag) %}
-with DAG(
+with airflow.DAG(
     dag_id="{{ dag.dag_id }}",
     start_date=timezone.parse("{{ dag.start_date }}"),
     {%- if dag.end_date %}
@@ -21,7 +21,7 @@ with DAG(
     {% else %}
     schedule=[
         {% for dataset in dag.schedule %}
-            Dataset(uri="{{ dataset["Dataset"]["uri"] }}"),
+            airflow.Dataset(uri="{{ dataset["Dataset"]["uri"] }}"),
         {% endfor %}
     ]
     {% endif %}

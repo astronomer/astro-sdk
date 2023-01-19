@@ -5,7 +5,11 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import yaml
-from airflow import Dataset
+
+try:
+    from airflow import Dataset
+except ImportError:
+    Dataset = None
 from black import FileMode, format_str
 from networkx import DiGraph, depth_first_search, find_cycle, is_directed_acyclic_graph
 
