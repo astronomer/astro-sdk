@@ -44,13 +44,17 @@ class SQLCheckOperator(SQLTableCheckOperator):
         task_id: Optional[str] = None,
         **kwargs,
     ):
+        # We need astro table object to get conn_id from it. Adding to template_fields doesn't work for __init__()
+        table = dataset
+        if not isinstance(table, BaseTable):
+            table = dataset.operator.output_table
 
-        db = create_database(dataset.conn_id)
+        db = create_database(table.conn_id)
         super().__init__(
-            table=db.get_table_qualified_name(dataset),
+            table=db.get_table_qualified_name(table),
             checks=checks,
             partition_clause=partition_clause,
-            conn_id=dataset.conn_id,
+            conn_id=table.conn_id,
             task_id=task_id or get_unique_task_id("check_table"),
         )
 
