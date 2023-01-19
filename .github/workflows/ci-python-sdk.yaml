@@ -232,7 +232,7 @@ jobs:
           key: ${{ runner.os }}-2.5-${{ hashFiles('python-sdk/pyproject.toml') }}-${{ hashFiles('python-sdk/src/astro/__init__.py') }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-${{ matrix.version }}(airflow='2.5.1rc1')" -- tests/ --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-${{ matrix.version }}(airflow='2.5.1rc2')" -- tests/ --cov=src --cov-report=xml --cov-branch
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
@@ -487,7 +487,7 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.5.1rc1')" -- tests_integration/ -k "not test_load_file.py and not test_example_dags.py" --splits 11 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-3.8(airflow='2.5.1rc2')" -- tests_integration/ -k "not test_load_file.py and not test_example_dags.py" --splits 11 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
