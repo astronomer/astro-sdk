@@ -167,7 +167,7 @@ def test_tables_creation_if_they_dont_exist(database_table_fixture, if_exists):
     assert database_df.shape == (3, 9)
 
 
-# TODO: Remove this test in astro-sdk 1.5.0
+# TODO: Remove this test in astro-sdk 2.0.0
 @pytest.mark.parametrize(
     "database_table_fixture",
     [

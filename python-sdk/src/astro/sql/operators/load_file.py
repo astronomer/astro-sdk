@@ -65,8 +65,8 @@ class LoadFileOperator(AstroSQLBaseOperator):
         )
         if native_support_kwargs:
             warnings.warn(
-                """`load_options` will be replacing `native_support_kwargs` parameter. Please use `load_options`
-                parameter instead. And, `native_support_kwargs` will be removed in astro-sdk-python>=1.5.0.""",
+                """`load_options` will replace `native_support_kwargs` parameter in astro-sdk-python>=1.5.0. Please
+                use `load_options` parameter instead.""",
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -340,8 +340,8 @@ def load_file(
 
     if native_support_kwargs:
         warnings.warn(
-            """`load_options` will be replacing `native_support_kwargs` parameter. Please use `load_options`
-            parameter instead. And, `native_support_kwargs` will be removed in astro-sdk-python>=1.5.0.""",
+            """`load_options` will replace `native_support_kwargs` parameter in astro-sdk-python>=1.5.0. Please use
+            `load_options` parameter instead.""",
             DeprecationWarning,
             stacklevel=2,
         )
