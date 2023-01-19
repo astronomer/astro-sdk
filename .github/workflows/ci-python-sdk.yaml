@@ -326,7 +326,7 @@ jobs:
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
 
-  Run-Unit-tests-Airflow-2-2-5:
+  Run-Integration-tests-Airflow-2-2-5:
     if: >-
       github.event_name == 'push' ||
       (
@@ -479,7 +479,7 @@ jobs:
     name: Build and publish Python 🐍 distributions 📦 to PyPI
     needs:
       - Run-Unit-tests-Airflow-2-5
-      - Run-Unit-tests-Airflow-2-2-5
+      - Run-Integration-tests-Airflow-2-2-5
       - Run-Integration-tests-Airflow-2-5
       - Run-Optional-Packages-tests-python-sdk
       - Generate-Constraints
