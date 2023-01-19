@@ -38,7 +38,7 @@ CWD = pathlib.Path(__file__).parent
         },
     ],
     indirect=True,
-    ids=["bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
 )
 def test_check_table_operator(sample_dag, database_table_fixture):
     """
