@@ -26,7 +26,7 @@ def get_report(dag_run_ids: List[str], **context: Any) -> None:
         message_list: List[str] = []
 
         airflow_version = context["ti"].xcom_pull(task_ids="get_airflow_version")
-        airflow_version_message = f"Airflow version for the below run is `{airflow_version}` \n\n"
+        airflow_version_message = f"Airflow version for the below astro-sdk run is `{airflow_version}` \n\n"
         message_list.append(airflow_version_message)
 
         for dr in last_dags_runs:
