@@ -18,7 +18,7 @@ try:
     from pandas_gbq.exceptions import GenericGBQException
 
     RETRY_ON_EXCEPTIONS.extend([Forbidden, TooManyRequests, GenericGBQException])
-except (ModuleNotFoundError, ImportError):
+except ModuleNotFoundError:
     pass
 
 
@@ -88,9 +88,8 @@ dag_bag = get_dag_bag()
 
 @pytest.mark.parametrize("dag_id", sorted(dag_bag.dag_ids, key=order))
 def test_example_dag(session, dag_id: str):
-    if dag_id in ["data_validation_check_column", "data_validation_check_table"]:
-        dag = dag_bag.get_dag(dag_id)
-        wrapper_run_dag(dag)
+    dag = dag_bag.get_dag(dag_id)
+    wrapper_run_dag(dag)
 
 
 def test_example_dags_loaded_with_no_errors():
