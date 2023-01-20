@@ -1,5 +1,99 @@
 # Changelog
 
+## 0.3.0
+
+### Features
+
+For more information on the features, please, check their help or access: https://docs.astronomer.io/astro/cli/sql-cli.html
+
+1. Deployment to Astro Cloud
+
+The main feature of this release is exposed in the Astro CLI 1.10, through the command:
+
+```sh
+astro flow deploy
+```
+
+Related tickets:
+* Allow SQL CLI users to define scheduling and other DAG metadata using YML ([#1614](https://github.com/astronomer/astro-sdk/pull/1614))
+* Add flow deploy command ([#1615](https://github.com/astronomer/astro-sdk/pull/1615))
+
+2. Examples runnable from Astro CLI
+
+SQL CLI examples can now run in the Astro CLI when the user uses
+
+```sh
+astro dev init
+astro flow init --data-dir=./include
+```
+
+Related tickets:
+* Add configurable data dir to project init ([#1407](https://github.com/astronomer/astro-sdk/pull/1407))
+
+3. Improved troubleshooting
+
+We are exposing additional logs when users use one or both of the following flags:
+
+```sh
+astro flow --debug <cmd> --verbose
+```
+
+Related tickets:
+* Add global debug option and more verbose options to sql-cli ([#1177](https://github.com/astronomer/astro-sdk/pull/1177))
+
+4. Improvements in DAG generation
+
+Allow users to export SQL workflows as DAGs to custom output directories
+
+```sh
+astro flow generate <workflow-name> --output-dir <>
+```
+
+Related tickets:
+* Add output-dir option to flow generate ([#1533](https://github.com/astronomer/astro-sdk/pull/1533))
+
+
+### Breaking changes
+
+1. The `flow config` was split into two (`get` / `set`). The consequence of this breaking change is that the Astro CLI 1.8 and 1.9 flow commands will not work as expected. Users should upgrade to the latest version of the Astro CLI to be able to use the SQL CLI features:
+
+```
+sudo bash < <(curl -sSL https://install.astronomer.io) -s v1.10.0
+```
+
+Related ticket:
+* Expose get/set deployment config in SQL CLI ([#1479](https://github.com/astronomer/astro-sdk/pull/1479))
+
+2. The global configuration is no longer a directory but a file. Previously created SQL CLI projects will no longer work with this new release unless this change is manually applied:
+
+The `config/global/configuration.yml` should be moved to `config/global.yml`.
+
+Related ticket:
+* Move file config/global/configuration.yml -> config/global.yml ([#1409](https://github.com/astronomer/astro-sdk/pull/1409))
+
+
+### Others
+
+* Add error message for validate connections ([#1554](https://github.com/astronomer/astro-sdk/pull/1554))
+* Move "include" directory to project ([#1560](https://github.com/astronomer/astro-sdk/pull/1560))
+* Disable logging for non-debug mode ([#1569](https://github.com/astronomer/astro-sdk/pull/1569))
+* Add developer docs ([#1577](https://github.com/astronomer/astro-sdk/pull/1577))
+* Fix poetry nox integration ([#1570](https://github.com/astronomer/astro-sdk/pull/1570))
+* Fix minor consistency issues ([#1505](https://github.com/astronomer/astro-sdk/pull/1505))
+* Add temp-flow make command ([#1495](https://github.com/astronomer/astro-sdk/pull/1495))
+* Remove stale .airflow/global directory ([#1491](https://github.com/astronomer/astro-sdk/pull/1491))
+* Bump sql-cli version to 0.3.0a0 ([#1484](https://github.com/astronomer/astro-sdk/pull/1484))
+* Install poetry in nox sessions using session.run using pip instead of session.install ([#1443](https://github.com/astronomer/astro-sdk/pull/1443))
+* Bump certifi from 2022.9.24 to 2022.12.7 in /sql-cli ([#1408](https://github.com/astronomer/astro-sdk/pull/1408))
+* Make environment optional for Config instance ([#1417](https://github.com/astronomer/astro-sdk/pull/1417))
+* Fix elapsed seconds for run command ([#1406](https://github.com/astronomer/astro-sdk/pull/1406v
+* [sql-cli] Fix validate logging ([#1398](https://github.com/astronomer/astro-sdk/pull/1398))
+* Create .env file on project initialisation + important refactorings (read desc) ([#1391](https://github.com/astronomer/astro-sdk/pull/1391))
+* Redirect default airflow_home to tmp directory in tests ([#1384](https://github.com/astronomer/astro-sdk/pull/1384))
+* Add working examples and tests for all supported connection types ([#1388](https://github.com/astronomer/astro-sdk/pull/1388))
+* Cache poetry installs ([#1392](https://github.com/astronomer/astro-sdk/pull/1392))
+
+
 ## 0.2.2
 
 
