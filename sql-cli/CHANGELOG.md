@@ -86,7 +86,7 @@ Related ticket:
 * Install poetry in nox sessions using session.run using pip instead of session.install ([#1443](https://github.com/astronomer/astro-sdk/pull/1443))
 * Bump certifi from 2022.9.24 to 2022.12.7 in /sql-cli ([#1408](https://github.com/astronomer/astro-sdk/pull/1408))
 * Make environment optional for Config instance ([#1417](https://github.com/astronomer/astro-sdk/pull/1417))
-* Fix elapsed seconds for run command ([#1406](https://github.com/astronomer/astro-sdk/pull/1406v
+* Fix elapsed seconds for run command ([#1406](https://github.com/astronomer/astro-sdk/pull/1406)
 * [sql-cli] Fix validate logging ([#1398](https://github.com/astronomer/astro-sdk/pull/1398))
 * Create .env file on project initialisation + important refactorings (read desc) ([#1391](https://github.com/astronomer/astro-sdk/pull/1391))
 * Redirect default airflow_home to tmp directory in tests ([#1384](https://github.com/astronomer/astro-sdk/pull/1384))
