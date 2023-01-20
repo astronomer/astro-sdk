@@ -17,7 +17,7 @@ with airflow.DAG(
         {% endfor %}
     ],
     {% if schedule_type == "str" %}
-    {{ dag.schedule_arg_name }} = {{ dag.schedule }}",
+    {{ dag.schedule_arg_name }} = "{{ dag.schedule }}",
     {% elif schedule_type == "list" %}
     {{ dag.schedule_arg_name }} = [
         {% for dataset in dag.schedule %}

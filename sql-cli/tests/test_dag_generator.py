@@ -3,13 +3,14 @@ import shutil
 import tempfile
 from pathlib import Path
 
-import airflow
 import pytest
 from conftest import DEFAULT_DATE
 from freezegun import freeze_time
+from packaging.version import Version
 
 from sql_cli.dag_generator import Workflow, generate_dag
 from sql_cli.exceptions import DagCycle, EmptyDag, WorkflowFilesDirectoryNotFound
+from sql_cli.utils.airflow import version as airflow_version
 
 CWD = Path(__file__).parent
 
@@ -176,7 +177,12 @@ compliant_dag_second_part = """
 def test_generate_dag_black_compliant(root_directory, dags_directory):
     dag_file = generate_dag(directory=root_directory, dags_directory=dags_directory, generate_tasks=True)
     computed = dag_file.read_text()
-    assert computed.startswith(compliant_dag_first_part)
+
+    first_part = compliant_dag_first_part
+    if airflow_version() < Version("2.4"):
+        first_part = compliant_dag_first_part.replace("schedule", "schedule_interval")
+
+    assert computed.startswith(first_part)
     assert computed.endswith(compliant_dag_second_part)
 
 
@@ -199,11 +205,14 @@ with airflow.DAG(
     schedule="@hourly",
 ) as dag:
 """
-    assert expected in content
+    value = expected
+    if airflow_version() < Version("2.4"):
+        value = expected.replace("schedule", "schedule_interval")
+    assert value in content
 
 
 @pytest.mark.skipif(
-    airflow.__version__ < "2.4.0", reason="Require airflow.Dataset available in version >= 2.4.0"
+    airflow_version() > Version("2.3"), reason="Require airflow.Dataset available in version >= 2.4.0"
 )
 def test_generate_dag_using_workflow_yaml_with_dataset_as_schedule(tmp_path):
     """Test that we are able to generate a workflow class from a YAML file."""

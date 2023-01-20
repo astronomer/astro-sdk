@@ -212,7 +212,7 @@ def generate_dag(directory: Path, dags_directory: Path, generate_tasks: bool) ->
     output_file = dags_directory / f"{workflow_files_dag.dag_id}.py"
     render(
         template_file=template_file,
-        context={"dag": workflow_files_dag, "schedule_type": type(workflow_files_dag.schedule)},
+        context={"dag": workflow_files_dag, "schedule_type": type(workflow_files_dag.schedule).__name__},
         output_file=output_file,
     )
 

@@ -36,7 +36,7 @@ def dag_schedule_arg_name() -> str:
 
     :return: DAG schedule argument name depending on the version of Airflow
     """
-    return "schedule" if version() > Version("2.3") else "schedule_interval"
+    return "schedule" if version() >= Version("2.4") else "schedule_interval"
 
 
 def initialise(airflow_home: Path, airflow_dags_folder: Path) -> None:
