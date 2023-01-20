@@ -18,11 +18,9 @@ Pre-requisites for load_file_example_19:
 """
 import os
 import pathlib
-import time
 from datetime import datetime, timedelta
 
 import sqlalchemy
-from airflow.decorators import task
 from airflow.models import DAG
 
 from astro import sql as aql
@@ -318,7 +316,7 @@ with dag:
     # [END load_file_example_23]
 
     # [START load_file_example_24]
-    databricks_load = aql.load_file(
+    aql.load_file(
         input_file=File("s3://astro-sdk/python_sdk/example_dags/data/sample.csv", conn_id="aws_conn"),
         output_table=Table(
             conn_id=DATABRICKS_CONN_ID,
@@ -345,10 +343,4 @@ with dag:
     )
     # [END load_file_example_25]
 
-    @task
-    def add_delay():
-        time.sleep(120)
-
-    databricks_load >> add_delay()  # skipcq: PYL-W0104
-
-    aql.cleanup()
+    aql.cleanup(retries=2, retry_delay=timedelta(seconds=120))
