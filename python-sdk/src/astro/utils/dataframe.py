@@ -40,8 +40,8 @@ def convert_dataframe_to_file(df: pd.DataFrame) -> File:
     be found in the airflow.cfg as follows:
 
     [astro]
-    dataframe_storage_conn_id=...
-    dataframe_storage_url=///
+    xcom_storage_conn_id=...
+    xcom_storage_url=///
     :param df: Dataframe to convert to file
     :return: File object with reference to stored dataframe file
     """
