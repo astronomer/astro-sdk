@@ -2,17 +2,20 @@
 
 ## 1.4.1
 
+## Bug fixes
+- Support "s3" conn type for S3Location [#1647](https://github.com/astronomer/astro-sdk/pull/1647)
+
 ### Docs
 - Add the documentation and example DAG for Azure blob storage [#1598](https://github.com/astronomer/astro-sdk/pull/1598)
-- Add step to generate constraints in Python SDK release process [#1474](https://github.com/astronomer/astro-sdk/issues/1474)
 - Fix dead link in documentation [#1596](https://github.com/astronomer/astro-sdk/pull/1596)
 - Update README with newly supported location and db [#1596](https://github.com/astronomer/astro-sdk/pull/1579)
+- Update configuration reference for XCom [#1646](https://github.com/astronomer/astro-sdk/pull/1646)
+- Add step to generate constraints in Python SDK release process [#1474](https://github.com/astronomer/astro-sdk/issues/1474)
+
 
 ### Misc
 - install `google-cloud-sdk-gke-gcloud-auth-plugin` in benchmark ci job [#1557](https://github.com/astronomer/astro-sdk/issues/1557)
-- Pin sphinx-autoapi==2.0.0 version for docs build [#1609](https://github.com/astronomer/astro-sdk/pull/1609)
-
-
+- Pin `sphinx-autoapi==2.0.0` version for docs build [#1609](https://github.com/astronomer/astro-sdk/pull/1609)
 ## 1.4.0
 
 ### Feature:
