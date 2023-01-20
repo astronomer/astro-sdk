@@ -185,7 +185,7 @@ def test_load_file_native_support_kwargs_warnings_message(database_table_fixture
     _, test_table = database_table_fixture
     with pytest.warns(
         expected_warning=DeprecationWarning,
-        match=r"`load_options` will be replacing `native_support_kwargs`",
+        match=r"`load_options` will replace `native_support_kwargs`",
     ):
         load_file(
             input_file=File(path),
@@ -196,7 +196,7 @@ def test_load_file_native_support_kwargs_warnings_message(database_table_fixture
 
     with pytest.warns(
         expected_warning=DeprecationWarning,
-        match=r"`load_options` will be replacing `native_support_kwargs`",
+        match=r"`load_options` will replace `native_support_kwargs`",
     ):
         LoadFileOperator(
             input_file=File(path),
