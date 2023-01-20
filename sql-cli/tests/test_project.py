@@ -17,6 +17,7 @@ BASE_PATHS = [
     Path("config"),
     Path("config/default"),
     Path("config/default/configuration.yml"),
+    Path("config/default/configuration.yml.example"),
     Path("config/dev"),
     Path("config/dev/configuration.yml"),
     Path("config/global.yml"),
