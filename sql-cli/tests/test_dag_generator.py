@@ -212,7 +212,7 @@ with airflow.DAG(
 
 
 @pytest.mark.skipif(
-    airflow_version() > Version("2.3"), reason="Require airflow.Dataset available in version >= 2.4.0"
+    airflow_version() >= Version("2.4"), reason="Require airflow.Dataset available in version >= 2.4.0"
 )
 def test_generate_dag_using_workflow_yaml_with_dataset_as_schedule(tmp_path):
     """Test that we are able to generate a workflow class from a YAML file."""
