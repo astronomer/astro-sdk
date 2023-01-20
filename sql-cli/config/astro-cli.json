@@ -2,14 +2,14 @@
   "astroCliCompatibility": {
     "1.10.0": {
       "preRelease": true,
-      "sqlCliVersion": ">=0.3"
+      "sqlCliVersion": ">0.2.2"
     },
     "1.8": {
-      "preRelease": true,
+      "preRelease": false,
       "sqlCliVersion": ">0.2, <0.3"
     },
     "1.9": {
-      "preRelease": true,
+      "preRelease": false,
       "sqlCliVersion": ">0.2, <0.3"
     }
   },
