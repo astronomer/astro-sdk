@@ -1,0 +1,66 @@
+# IMPORTANT:
+# Please use environment variables to define secrets in connections.
+# You can set those in a .env file in the root directory of your project.
+connections:
+
+## Example of SQLite connection
+  - conn_id: sqlite_conn
+    conn_type: sqlite
+    host: imdb.db
+
+## Examples of AWS S3 connections
+## To use this, either set the corresponding environment variables or
+## replace the values started by $ inline
+  - conn_id: aws_conn
+    conn_type: aws
+    login: $AWS_ACCESS_KEY_ID
+    password: $AWS_SECRET_ACCESS_KEY
+
+   - conn_id: aws_conn_with_fallback
+     conn_type: aws
+    # Note that you need to set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variable.
+
+## Examples of Bigquery connections
+## To use this, either set the corresponding environment variables or
+## replace the values started by $ inline
+  - conn_id: bigquery_conn
+    conn_type: gcpbigquery
+    extra: '{"extra__google_cloud_platform__project": "$GOOGLE_CLOUD_PROJECT", "extra__google_cloud_platform__key_path": "$GOOGLE_CLOUD_KEY_PATH"}'
+
+  - conn_id: bigquery_conn_with_fallback
+    conn_type: gcpbigquery
+    # Note that you need to set GOOGLE_APPLICATION_CREDENTIALS environment variable.
+
+## Example of Postgres connection
+## To use this, either set the corresponding environment variables or
+## replace the values started by $ inline
+  - conn_id: postgres_conn
+    conn_type: postgres
+    host: $POSTGRES_HOST
+    schema: pagila
+    login: postgres
+    password: $POSTGRES_PASSWORD
+    port: $POSTGRES_PORT
+
+## Example of Redshift connection
+## To use this, either set the corresponding environment variables or
+## replace the values started by $ inline
+  - conn_id: redshift_conn
+    conn_type: redshift
+    schema: $REDSHIFT_DATABASE
+    host: $REDSHIFT_HOST
+    port: 5439
+    login: $REDSHIFT_USERNAME
+    password: $REDSHIFT_PASSWORD
+
+## Example of Snowflake connection
+## To use this, either set the corresponding environment variables or
+## replace the values started by $ inline
+  - conn_id: snowflake_conn
+    conn_type: snowflake
+    host: $SNOWFLAKE_HOST
+    port: 443
+    login: $SNOWFLAKE_ACCOUNT_NAME
+    password: $SNOWFLAKE_PASSWORD
+    schema: $SNOWFLAKE_SCHEMA
+    extra: '{"account": "$SNOWFLAKE_ACCOUNT", "region": "$SNOWFLAKE_REGION", "role": "$SNOWFLAKE_ROLE", "warehouse": "$SNOWFLAKE_WAREHOUSE", "database": "$SNOWFLAKE_DATABASE"}'
