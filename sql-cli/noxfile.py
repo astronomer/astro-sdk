@@ -64,7 +64,6 @@ def test(session: nox.Session, airflow: str) -> None:
 @nox.session(python=["3.8"])
 def type_check(session: nox.Session) -> None:
     """Run MyPy checks."""
-    session.install("poetry")
     session.run("poetry", "install", "--with", "type_check")
     session.run("poetry", "run", "mypy", "--version")
     session.run("poetry", "run", "mypy")

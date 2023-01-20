@@ -26,7 +26,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-# This list should only have non-sensitive env vars
+# This list should only have non-sensitive env vars.
 # Env vars with secrets should be in the specific jobs
 env:
   GOOGLE_CLOUD_PROJECT: astronomer-dag-authoring
@@ -52,10 +52,12 @@ jobs:
       SETUPTOOLS_USE_DISTUTILS: stdlib
     steps:
       - uses: actions/checkout@v3
+
       - uses: actions/setup-python@v3
         with:
           python-version: '3.8'
           architecture: 'x64'
+
       - uses: actions/cache@v3
         with:
            path: |
@@ -63,8 +65,19 @@ jobs:
              sql-cli/.nox
              .local
            key: sql-cli-type-check-os-${{ runner.os }}-deps-${{ hashFiles('sql-cli/poetry.lock') }}
-      - run: pip3 install nox
-      - run: nox -s type_check
+
+      - name: Install Poetry
+        run: |
+          pipx install poetry
+          poetry --version
+
+      - name: Install Nox
+        run: |
+          pipx install nox
+          nox --version
+
+      - name: Run type check
+        run: nox -s type_check
 
   Run-SQL-CLI-tests:
     if: >-
