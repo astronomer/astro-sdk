@@ -309,12 +309,18 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.5.0')" -- tests_integration/ -k "test_load_file.py" --splits 3 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-3.8(airflow='2.5.0')" -- tests_integration/ -k "test_load_file.py" --splits 3 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: cat /tmp/durations-${{ matrix.group }}
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
           name: coverage-${{ matrix.group }}-integration-tests
           path: ./python-sdk/.coverage
+      - name: Collect pytest durations
+        uses: actions/upload-artifact@v2
+        with:
+          name: pytest_durations_load_file_${{ matrix.group }}
+          path: /tmp/durations-${{ matrix.group }}
     env:
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
@@ -345,6 +351,8 @@ jobs:
       )
     strategy:
       fail-fast: false
+      matrix:
+        group: [ 1, 2, 3]
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -397,12 +405,18 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.5.0')" -- tests_integration/ -k "test_example_dags.py" --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-3.8(airflow='2.5.0')" -- tests_integration/ -k "test_example_dags.py" --splits 3 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: cat /tmp/durations-${{ matrix.group }}
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
           name: coverage-${{ matrix.group }}-integration-tests
           path: ./python-sdk/.coverage
+      - name: Collect pytest durations
+        uses: actions/upload-artifact@v2
+        with:
+          name: pytest_durations_example_dags_${{ matrix.group }}
+          path: /tmp/durations-${{ matrix.group }}
     env:
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
@@ -487,12 +501,18 @@ jobs:
       - run: python -c 'import os; print(os.getenv("GOOGLE_APPLICATION_CREDENTIALS_JSON", "").strip())' > ${{ env.GOOGLE_APPLICATION_CREDENTIALS }}
       - run: sqlite3 /tmp/sqlite_default.db "VACUUM;"
       - run: pip3 install nox
-      - run: nox -s "test-3.8(airflow='2.5.0')" -- tests_integration/ -k "not test_load_file.py and not test_example_dags.py" --splits 11 --group ${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: nox -s "test-3.8(airflow='2.5.0')" -- tests_integration/ -k "not test_load_file.py and not test_example_dags.py" --splits 11 --group ${{ matrix.group }} --store-durations --durations-path /tmp/durations-${{ matrix.group }} --cov=src --cov-report=xml --cov-branch
+      - run: cat /tmp/durations-${{ matrix.group }}
       - name: Upload coverage
         uses: actions/upload-artifact@v2
         with:
           name: coverage-${{ matrix.group }}-integration-tests
           path: ./python-sdk/.coverage
+      - name: Collect pytest durations
+        uses: actions/upload-artifact@v2
+        with:
+          name: pytest_durations_integration_tests_${{ matrix.group }}
+          path: /tmp/durations-${{ matrix.group }}
     env:
       GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
       GOOGLE_APPLICATION_CREDENTIALS: /tmp/google_credentials.json
@@ -507,7 +527,7 @@ jobs:
       AIRFLOW__ASTRO_SDK__DATABRICKS_CLUSTER_ID: ${{ secrets.DATABRICKS_CLUSTER_ID }}
       AZURE_WASB_CONN_STRING: ${{ secrets.AZURE_WASB_CONN_STRING }}
 
-  Run-Integration-tests-Airflow-2-2-5:
+  Run-example-dag-tests-Airflow-2-2-5:
     if: >-
       github.event_name == 'push' ||
       (
@@ -657,12 +677,41 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./python-sdk/coverage.xml
 
+  collect-durations:
+    runs-on: ubuntu-latest
+    needs:
+      - Run-Unit-tests-Airflow-2-5
+      - Run-Integration-tests-Airflow-2-5
+      - Run-load-file-Integration-Airflow-2-5
+    steps:
+      - uses: actions/checkout@v3
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: .test_durations
+          key: test_durations-0-${{ github.run_id }}
+      - name: Collect
+        uses: actions/download-artifact@v3
+        with:
+          path: ./python-sdk/artifacts
+      - name: Consolidate and print durations
+        run: |
+          jq -n -S \
+            'reduce (inputs | to_entries[]) as {$key, $value} ({}; .[$key] += $value)' \
+            artifacts/pytest_durations_*/* > .test_durations_print && \
+            cat .test_durations_print
+      - name: Consolidate
+        run: |
+          jq -n -S \
+            'reduce (inputs | to_entries[]) as {$key, $value} ({}; .[$key] += $value)' \
+            artifacts/pytest_durations_*/* > .test_durations
+
   build-n-publish:
     if: github.event_name == 'release'
     name: Build and publish Python 🐍 distributions 📦 to PyPI
     needs:
       - Run-Unit-tests-Airflow-2-5
-      - Run-Integration-tests-Airflow-2-2-5
+      - Run-example-dag-tests-Airflow-2-2-5
       - Run-Integration-tests-Airflow-2-5
       - Run-load-file-Integration-Airflow-2-5
       - Run-example-dag-Integration-Airflow-2-5
