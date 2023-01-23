@@ -114,6 +114,12 @@ def test_version():
     assert f"Astro SQL CLI {__version__}" in result.stdout
 
 
+def test_version_json_output():
+    result = runner.invoke(app, ["version", "--json"])
+    assert result.exit_code == 0
+    assert f'{{"version": "{__version__}"}}' in result.stdout
+
+
 @pytest.mark.parametrize(
     "key,value",
     [
