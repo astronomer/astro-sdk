@@ -18,7 +18,7 @@
 - Add document to showcase the use of `check_table` and `check_column` operators [#1631](https://github.com/astronomer/astro-sdk/pull/1631)
 
 ### Misc
-- install `google-cloud-sdk-gke-gcloud-auth-plugin` in benchmark ci job [#1557](https://github.com/astronomer/astro-sdk/issues/1557)
+- Install `google-cloud-sdk-gke-gcloud-auth-plugin` in benchmark CI job [#1557](https://github.com/astronomer/astro-sdk/issues/1557)
 - Pin `sphinx-autoapi==2.0.0` version for docs build [#1609](https://github.com/astronomer/astro-sdk/pull/1609)
 
 
