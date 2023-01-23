@@ -2,6 +2,10 @@
 
 ## 1.4.1
 
+### Feature:
+- Implement `check_table` Operator to validate data quality at table level [#1239](https://github.com/astronomer/astro-sdk/pull/1239)
+- Add `check_column` Operator to validate data quality for columns in a table/dataframe [#1239](https://github.com/astronomer/astro-sdk/pull/1239)
+
 ## Bug fixes
 - Support "s3" conn type for S3Location [#1647](https://github.com/astronomer/astro-sdk/pull/1647)
 
@@ -11,11 +15,13 @@
 - Update README with newly supported location and db [#1596](https://github.com/astronomer/astro-sdk/pull/1579)
 - Update configuration reference for XCom [#1646](https://github.com/astronomer/astro-sdk/pull/1646)
 - Add step to generate constraints in Python SDK release process [#1474](https://github.com/astronomer/astro-sdk/issues/1474)
-
+- Add document to showcase the use of `check_table` and `check_column` operators [#1631](https://github.com/astronomer/astro-sdk/pull/1631)
 
 ### Misc
 - install `google-cloud-sdk-gke-gcloud-auth-plugin` in benchmark ci job [#1557](https://github.com/astronomer/astro-sdk/issues/1557)
 - Pin `sphinx-autoapi==2.0.0` version for docs build [#1609](https://github.com/astronomer/astro-sdk/pull/1609)
+
+
 ## 1.4.0
 
 ### Feature:
