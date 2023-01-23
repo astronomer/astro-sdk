@@ -309,7 +309,7 @@ def init(
 )
 def deploy(
     workflow_name: str = typer.Argument(  # skipcq: PYL-W0613
-        default=...,
+        default=None,
         show_default=False,
         help="name of the workflow directory within workflows directory.",
     ),
