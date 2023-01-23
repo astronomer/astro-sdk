@@ -308,7 +308,7 @@ def init(
     help="""Deploy workflows to Astro Cloud.""",
 )
 def deploy(
-    workflow_name: str = typer.Option(  # skipcq: PYL-W0613
+    workflow_name: str = typer.Argument(  # skipcq: PYL-W0613
         default=None,
         show_default=False,
         help="name of the workflow directory within workflows directory.",
