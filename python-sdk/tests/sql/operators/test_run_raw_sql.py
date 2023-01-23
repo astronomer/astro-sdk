@@ -115,7 +115,7 @@ def test_run_sql_should_raise_exception(run_sql, results_as_pandas_dataframe, sa
     def raise_exception(result):
         raise ValueError("dummy exception")
 
-    with pytest.raises(ValueError) as e:
+    with pytest.raises(ValueError, match="dummy exception"):
         with sample_dag:
 
             @aql.run_raw_sql(conn_id="sqlite_default", handler=raise_exception, fail_on_empty=True)
@@ -124,7 +124,6 @@ def test_run_sql_should_raise_exception(run_sql, results_as_pandas_dataframe, sa
 
             dummy_method()
         test_utils.run_dag(sample_dag)
-    e.match("dummy exception")
 
 
 @mock.patch("astro.sql.operators.raw_sql.RawSQLOperator.results_as_pandas_dataframe")
