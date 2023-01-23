@@ -12,7 +12,7 @@
 ### Docs
 - Add the documentation and example DAG for Azure blob storage [#1598](https://github.com/astronomer/astro-sdk/pull/1598)
 - Fix dead link in documentation [#1596](https://github.com/astronomer/astro-sdk/pull/1596)
-- Update README with newly supported location and db [#1596](https://github.com/astronomer/astro-sdk/pull/1579)
+- Update README with newly supported location and database [#1596](https://github.com/astronomer/astro-sdk/pull/1579)
 - Update configuration reference for XCom [#1646](https://github.com/astronomer/astro-sdk/pull/1646)
 - Add step to generate constraints in Python SDK release process [#1474](https://github.com/astronomer/astro-sdk/issues/1474)
 - Add document to showcase the use of `check_table` and `check_column` operators [#1631](https://github.com/astronomer/astro-sdk/pull/1631)
