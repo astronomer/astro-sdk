@@ -8,4 +8,5 @@ Operators
    :glob:
 
    ../astro/sql/operators/*
+   ../astro/sql/operators/data_validations/*
    ../astro/files/operators/*
