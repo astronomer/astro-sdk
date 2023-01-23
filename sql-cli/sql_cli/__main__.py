@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -79,8 +80,16 @@ def set_debug_mode(debug: bool) -> None:
     cls=AstroCommand,
     help="Print the SQL CLI version.",
 )
-def version() -> None:
-    rprint("Astro SQL CLI", sql_cli.__version__)
+def version(
+    as_json: bool = typer.Option(
+        False, "--json", help="If the response should be in JSON format", show_default=True
+    ),
+) -> None:
+    if as_json:
+        output_dict = {"version": sql_cli.__version__}
+        print(json.dumps(output_dict))
+    else:
+        rprint("Astro SQL CLI", sql_cli.__version__)
 
 
 @app.command(

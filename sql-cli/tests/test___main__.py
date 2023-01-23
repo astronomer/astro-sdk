@@ -1,3 +1,4 @@
+import json
 import logging
 import pathlib
 from unittest import mock
@@ -112,6 +113,13 @@ def test_version():
     result = runner.invoke(app, ["version"])
     assert result.exit_code == 0
     assert f"Astro SQL CLI {__version__}" in result.stdout
+
+
+def test_version_json_output():
+    result = runner.invoke(app, ["version", "--json"])
+    assert result.exit_code == 0
+    result_json = json.loads(result.stdout)
+    assert result_json["version"] == __version__
 
 
 @pytest.mark.parametrize(
