@@ -88,8 +88,8 @@ def version(
     if as_json:
         output_dict = {"version": sql_cli.__version__}
         print(json.dumps(output_dict))
-        return
-    rprint("Astro SQL CLI", sql_cli.__version__)
+    else:
+        rprint("Astro SQL CLI", sql_cli.__version__)
 
 
 @app.command(
