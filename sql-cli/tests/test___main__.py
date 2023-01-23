@@ -1,3 +1,4 @@
+import json
 import logging
 import pathlib
 from unittest import mock
@@ -117,7 +118,8 @@ def test_version():
 def test_version_json_output():
     result = runner.invoke(app, ["version", "--json"])
     assert result.exit_code == 0
-    assert f'{{"version": "{__version__}"}}' in result.stdout
+    result_json = json.loads(result.stdout)
+    assert result_json["version"] == __version__
 
 
 @pytest.mark.parametrize(
