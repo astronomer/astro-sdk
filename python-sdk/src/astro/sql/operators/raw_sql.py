@@ -21,6 +21,7 @@ else:
 
 from astro import settings
 from astro.constants import RunRawSQLResultFormat
+from astro.dataframes.pandas import PandasDataframe
 from astro.exceptions import IllegalLoadToDatabaseException
 from astro.sql.operators.base_decorator import BaseSQLDecoratedOperator
 from astro.utils.compat.typing import Context
@@ -108,7 +109,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
         """
         Convert the result of a SQL query to a pandas dataframe
         """
-        return pd.DataFrame(result.fetchall(), columns=result.keys())
+        return PandasDataframe(result.fetchall(), columns=result.keys())
 
     def get_results_format_handler(self, results_format: str):
         return getattr(self, f"results_as_{results_format}")
