@@ -137,7 +137,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
                 try:
                     return conversion_func(result)
                 except Exception as e:  # skipcq: PYL-W0703
-                    logging.info(f"Exception {e} handled since 'fail_on_empty' parameter was passed")
+                    logging.info("Exception %s handled since 'fail_on_empty' parameter was passed", str(e))
                     return None
 
             return handle_exceptions
