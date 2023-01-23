@@ -118,6 +118,7 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
         # note that it takes precedence over the handler
         if self.results_format:
             self.handler = self.get_results_format_handler(results_format=self.results_format)
+            logging.info("Provided 'handler' will be overridden when 'results_format' is given.")
         if self.handler:
             self.handler = self.get_wrapped_handler(
                 fail_on_empty=self.fail_on_empty, conversion_func=self.handler
