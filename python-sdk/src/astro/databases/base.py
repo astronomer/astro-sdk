@@ -63,6 +63,8 @@ class BaseDatabase(ABC):
     # illegal_column_name_chars[0] will be replaced by value in illegal_column_name_chars_replacement[0]
     illegal_column_name_chars: list[str] = []
     illegal_column_name_chars_replacement: list[str] = []
+    # In run_raw_sql operator decides if we want to return results directly or process them by handler provided
+    IGNORE_HANDLER_IN_RUN_RAW_SQL: bool = False
     NATIVE_PATHS: dict[Any, Any] = {}
     DEFAULT_SCHEMA = SCHEMA
     NATIVE_LOAD_EXCEPTIONS: Any = DatabaseCustomError
