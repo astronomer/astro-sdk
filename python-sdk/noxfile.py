@@ -45,6 +45,8 @@ def test(session: nox.Session, airflow) -> None:
         # install apache-airflow-providers-sftp==4.0.0 since it is the compatible version
         # to run sftp example dag to load file with airflow 2.2.5
         session.install("apache-airflow-providers-sftp==4.0.0")
+        session.install("apache-airflow-providers-sqlite>=3.1.0")
+        session.install("apache-airflow-providers-common-sql==1.2.0")
         # install smart-open 6.3.0 since it has FTP implementation
         session.install("smart-open>=6.3.0")
     else:
