@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.1
+
+### Features
+
+* Add flag --json to the flow version command ([#1653](https://github.com/astronomer/astro-sdk/pull/1653))
+
+### Others
+
+* Refactor flow deploy command so the workflow name is a CLI argument as opposed to a flag ([#1660](https://github.com/astronomer/astro-sdk/pull/1660))
+* Fix markdown ([#1649](https://github.com/astronomer/astro-sdk/pull/1649))
+
+
 ## 0.3.0
 
 ### Features
