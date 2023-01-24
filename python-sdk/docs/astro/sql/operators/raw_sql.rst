@@ -24,3 +24,15 @@ This example shows how you can run a ``select`` query in Bigquery and return row
     :language: python
     :start-after: [START howto_run_raw_sql_with_handle_1]
     :end-before: [END howto_run_raw_sql_with_handle_1]
+
+Parameters
+-----------
+* **handler** - This parameter is used to pass a callback and this callback gets a cursor object from the database.
+
+* **results_format** - There are common scenarios where the kind of results you would expect from the handler function to return.
+
+    #. List - If you expect a query return to be a list of rows. instead of passing handler to do ``cursor.fetchall()``, we can pass ``results_format=='list'``
+
+    #. Pandas Dataframe - If you expect query result to be converted to ``Pandas Dataframe`` we can pass ``results_format=='pandas_dataframe'``
+
+* **fail_on_empty** - Sometimes the handler function can raise an exception when the data is not returned by the database and we try to run ``fetchall()``. We can make sure that the handler function doesn't raise an exception by passing ``fail_on_empty==False``. The default value for this parameter is ``True``.

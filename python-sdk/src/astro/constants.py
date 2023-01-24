@@ -76,3 +76,5 @@ ExportExistsStrategy = Literal["replace", "exception"]
 MergeConflictStrategy = Literal["ignore", "update", "exception"]
 
 ColumnCapitalization = Literal["upper", "lower", "original"]
+
+RunRawSQLResultFormat = Literal["list", "pandas_dataframe"]
