@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import pandas as pd
 import sqlalchemy
 from airflow.providers.microsoft.mssql.hooks.mssql import MsSqlHook
+from pymssql._pymssql import ProgrammingError
 from sqlalchemy.sql import ClauseElement
 
 from astro.constants import DEFAULT_CHUNK_SIZE, LoadExistStrategy, MergeConflictStrategy
@@ -120,12 +121,16 @@ class MssqlDatabase(BaseDatabase):
 
         :param schema: DB Schema - a namespace that contains named objects like (tables, functions, etc)
         """
-        schema_result = self.hook.run(
-            "SELECT schema_name FROM information_schema.schemata WHERE lower(schema_name) = lower(%(schema_name)s);",
-            parameters={"schema_name": schema.lower()},
-            handler=lambda x: [y[0] for y in x.fetchall()],
-        )
-        return len(schema_result) > 0
+        try:
+            schema_result = self.hook.run(
+                "SELECT schema_name FROM information_schema.schemata WHERE "
+                "lower(schema_name) = lower(%(schema_name)s);",
+                parameters={"schema_name": schema.lower()},
+                handler=lambda x: [y[0] for y in x.fetchall()],
+            )
+            return len(schema_result) > 0
+        except ProgrammingError:
+            return False
 
     def is_autocommit_required(self, sql) -> bool:
         """
