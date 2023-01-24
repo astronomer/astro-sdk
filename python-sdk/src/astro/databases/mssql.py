@@ -230,7 +230,7 @@ class MssqlDatabase(BaseDatabase):
         :param table: The table metadata needed to fetch the rows
         :return: a list of rows
         """
-        statement = f"SELECT * FROM {self.get_table_qualified_name(table)}"
+        statement = f"SELECT * FROM {self.get_table_qualified_name(table)}"  # skipcq: BAN-B608
         if row_limit > -1:
             statement = f"SELECT TOP {row_limit} * FROM {self.get_table_qualified_name(table)}"
         response = self.run_sql(statement)
