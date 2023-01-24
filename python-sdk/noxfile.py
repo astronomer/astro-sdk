@@ -19,7 +19,7 @@ def dev(session: nox.Session) -> None:
     session.install("-e", ".[all,tests]")
 
 
-@nox.session(python=["3.7", "3.8", "3.9"])
+@nox.session(python=["3.7", "3.8", "3.9", "3.10"])
 @nox.parametrize("airflow", ["2.2.5", "2.4", "2.5.0"])
 def test(session: nox.Session, airflow) -> None:
     """Run both unit and integration tests."""
@@ -45,6 +45,8 @@ def test(session: nox.Session, airflow) -> None:
         # install apache-airflow-providers-sftp==4.0.0 since it is the compatible version
         # to run sftp example dag to load file with airflow 2.2.5
         session.install("apache-airflow-providers-sftp==4.0.0")
+        session.install("apache-airflow-providers-sqlite>=3.1.0")
+        session.install("apache-airflow-providers-common-sql==1.2.0")
         # install smart-open 6.3.0 since it has FTP implementation
         session.install("smart-open>=6.3.0")
     else:
@@ -156,7 +158,7 @@ def build_docs(session: nox.Session) -> None:
 
 
 @nox.session(python=["3.7", "3.8", "3.9"])
-@nox.parametrize("airflow", ["2.2.5", "2.3.4", "2.4.2"])
+@nox.parametrize("airflow", ["2.2.5", "2.3.4", "2.4.2", "2.5.1"])
 def generate_constraints(session: nox.Session, airflow) -> None:
     """Generate constraints file"""
     session.install("wheel")

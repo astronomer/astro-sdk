@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -79,8 +80,16 @@ def set_debug_mode(debug: bool) -> None:
     cls=AstroCommand,
     help="Print the SQL CLI version.",
 )
-def version() -> None:
-    rprint("Astro SQL CLI", sql_cli.__version__)
+def version(
+    as_json: bool = typer.Option(
+        False, "--json", help="If the response should be in JSON format", show_default=True
+    ),
+) -> None:
+    if as_json:
+        output_dict = {"version": sql_cli.__version__}
+        print(json.dumps(output_dict))
+    else:
+        rprint("Astro SQL CLI", sql_cli.__version__)
 
 
 @app.command(
@@ -292,6 +301,31 @@ def init(
     project = Project(project_dir_absolute, airflow_home, airflow_dags_folder, data_dir)
     project.initialise()
     rprint("Initialized an Astro SQL project at", project.directory)
+
+
+@app.command(
+    cls=AstroCommand,
+    help="""Deploy workflows to Astro Cloud.""",
+)
+def deploy(
+    workflow_name: str = typer.Argument(  # skipcq: PYL-W0613
+        default=None,
+        show_default=False,
+        help="name of the workflow directory within workflows directory.",
+    ),
+    env: str = typer.Option(  # skipcq: PYL-W0613
+        metavar="environment",
+        default="default",
+        help="environment to deploy",
+    ),
+    project_dir: Path = typer.Option(  # skipcq: PYL-W0613
+        None, dir_okay=True, metavar="PATH", help="(Optional) Default: current directory.", show_default=False
+    ),
+) -> None:
+    rprint(
+        "Please use the Astro CLI to deploy. See https://docs.astronomer.io/astro/cli/sql-cli for details."
+    )
+    raise typer.Exit(code=1)
 
 
 def _generate_dag(

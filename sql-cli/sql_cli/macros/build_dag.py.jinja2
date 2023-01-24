@@ -1,0 +1,29 @@
+{% macro build_dag(dag, schedule_type) %}
+with airflow.DAG(
+    dag_id="{{ dag.dag_id }}",
+    start_date=timezone.parse("{{ dag.start_date }}"),
+    {%- if dag.end_date %}
+    end_date=timezone.parse("{{ dag.end_date }}"),
+    {%- endif %}
+    catchup={{ dag.catchup }},
+    {% if dag.description %}
+    description="{{ dag.description }}",
+    {% endif %}
+    is_paused_upon_creation={{ dag.is_paused_upon_creation }},
+    orientation="{{ dag.orientation }}",
+    tags=[
+        {% for tag in dag.tags %}
+        "{{ tag }}",
+        {% endfor %}
+    ],
+    {% if schedule_type == "str" %}
+    {{ dag.schedule_arg_name }} = "{{ dag.schedule }}",
+    {% elif schedule_type == "list" %}
+    {{ dag.schedule_arg_name }} = [
+        {% for dataset in dag.schedule %}
+            airflow.Dataset(uri="{{ dataset["dataset"]["uri"] }}"),
+        {% endfor %}
+    ]
+    {% endif %}
+) as dag:
+{% endmacro %}

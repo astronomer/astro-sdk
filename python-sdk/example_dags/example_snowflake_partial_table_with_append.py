@@ -9,7 +9,6 @@ This example DAG creates the reporting table & truncates it by the end of the ex
 """
 
 import os
-import time
 from datetime import datetime
 
 import pandas as pd
@@ -72,7 +71,7 @@ def create_table(table: Table):
 
 @dag(start_date=datetime(2021, 12, 1), schedule_interval="@daily", catchup=False)
 def example_snowflake_partial_table_with_append():
-    homes_reporting = Table(name="homes_reporting_data", temp=True, conn_id=SNOWFLAKE_CONN_ID)
+    homes_reporting = Table(conn_id=SNOWFLAKE_CONN_ID)
     create_results_table = create_table(table=homes_reporting, conn_id=SNOWFLAKE_CONN_ID)
     # [END howto_run_raw_sql_snowflake_1]
 
@@ -100,18 +99,16 @@ def example_snowflake_partial_table_with_append():
     )
 
     # Define task dependencies
-    extracted_data = extract_data(
+    extracted_data_table = extract_data(
         homes1=homes_data1,
         homes2=homes_data2,
-        output_table=Table(name="combined_homes_data_" + str(int(time.time())), temp=True),
+        output_table=Table(),
     )
 
-    transformed_data = transform_data(
-        df=extracted_data, output_table=Table(name="homes_data_long_" + str(int(time.time())), temp=True)
-    )
+    transformed_data_table = transform_data(df=extracted_data_table, output_table=Table())
 
     filtered_data = filter_data(
-        homes_long=transformed_data,
+        homes_long=transformed_data_table,
         output_table=Table(),
     )
 

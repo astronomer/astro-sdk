@@ -7,6 +7,7 @@ from airflow.providers.common.sql.operators.sql import SQLTableCheckOperator
 
 from astro.databases import create_database
 from astro.table import BaseTable
+from astro.utils.compat.typing import Context
 
 
 class SQLCheckOperator(SQLTableCheckOperator):
@@ -33,7 +34,7 @@ class SQLCheckOperator(SQLTableCheckOperator):
         "date = '1970-01-01'"
     """
 
-    template_fields = ("partition_clause",)
+    template_fields = ("partition_clause", "dataset")
 
     def __init__(
         self,
@@ -45,14 +46,25 @@ class SQLCheckOperator(SQLTableCheckOperator):
         **kwargs,
     ):
 
-        db = create_database(dataset.conn_id)
+        self.dataset = dataset
         super().__init__(
-            table=db.get_table_qualified_name(dataset),
+            table="place_holder_table_name",
             checks=checks,
             partition_clause=partition_clause,
-            conn_id=dataset.conn_id,
             task_id=task_id or get_unique_task_id("check_table"),
         )
+
+    def execute(self, context: "Context"):
+        db = create_database(self.dataset.conn_id)
+        self.table = db.get_table_qualified_name(self.dataset)
+        self.conn_id = self.dataset.conn_id
+        # apache-airflow-providers-common-sql == 1.2.0 which is compatible with airflow 2.2.5 implements the self.sql
+        # differently compared to apache-airflow-providers-common-sql == 1.3.3
+        try:
+            self.sql = f"SELECT check_name, check_result FROM ({self._generate_sql_query()}) AS check_table"
+        except AttributeError:
+            self.sql = f"SELECT * FROM {self.table};"
+        super().execute(context)
 
     def get_db_hook(self) -> DbApiHook:
         """
