@@ -4,11 +4,11 @@
       "preRelease": true,
       "sqlCliVersion": ">0.2.2"
     },
-    "1.8": {
+    "1.8.0": {
       "preRelease": false,
       "sqlCliVersion": ">0.2, <0.3"
     },
-    "1.9": {
+    "1.9.0": {
       "preRelease": false,
       "sqlCliVersion": ">0.2, <0.3"
     }
@@ -16,16 +16,20 @@
   "baseDockerImage": "quay.io/astronomer/astro-runtime:6.0.4-base",
   "compatibility": {
     "0.3.0rc1": {
-      "astroRuntimeVersion": ">=8.0.0",
+      "astroRuntimeVersion": ">=7.2.0",
+      "astroSDKPythonVersion": ">=1.3.1"
+    },
+    "0.3.1": {
+      "astroRuntimeVersion": ">=7.2.0",
       "astroSDKPythonVersion": ">=1.3.1"
     },
     "0.3.1a0": {
-      "astroRuntimeVersion": ">=8.0.0, <8.1.0",
-      "astroSDKPythonVersion": ">=1.3.0"
+      "astroRuntimeVersion": ">=7.2.0",
+      "astroSDKPythonVersion": ">=1.3.1"
     },
     ">0.2.2": {
-      "astroRuntimeVersion": ">=8.0.0, <8.1.0",
-      "astroSDKPythonVersion": ">=1.3.0"
+      "astroRuntimeVersion": ">=7.2.0",
+      "astroSDKPythonVersion": ">=1.3.1"
     }
   }
 }
