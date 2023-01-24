@@ -242,7 +242,7 @@ class MssqlDatabase(BaseDatabase):
         target_table: BaseTable,
         if_exists: LoadExistStrategy = "replace",
         chunk_size: int = DEFAULT_CHUNK_SIZE,
-    ) -> None:
+    ) -> None:  # skipcq PYL-W0613
         """
         Create a table with the dataframe's contents.
         If the table already exists, append or replace the content, depending on the value of `if_exists`.
