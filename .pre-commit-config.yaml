@@ -46,7 +46,7 @@ repos:
       - id: python-check-mock-methods
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.3.1
+    rev: v1.4.1
     hooks:
       - id: forbid-crlf
       - id: remove-crlf
@@ -71,7 +71,7 @@ repos:
         additional_dependencies: [black>=22.10.0]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: 'v0.0.223'
+    rev: 'v0.0.230'
     hooks:
       - id: ruff
         args:
