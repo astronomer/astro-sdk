@@ -15,15 +15,7 @@
   },
   "baseDockerImage": "quay.io/astronomer/astro-runtime:6.0.4-base",
   "compatibility": {
-    "0.3.0rc1": {
-      "astroRuntimeVersion": ">=7.2.0",
-      "astroSDKPythonVersion": ">=1.3.1"
-    },
     "0.3.1": {
-      "astroRuntimeVersion": ">=7.2.0",
-      "astroSDKPythonVersion": ">=1.3.1"
-    },
-    "0.3.1a0": {
       "astroRuntimeVersion": ">=7.2.0",
       "astroSDKPythonVersion": ">=1.3.1"
     },
