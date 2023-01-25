@@ -11,7 +11,6 @@ START_DATE = datetime(2000, 1, 1)
 LAST_ONE_DF = pd.DataFrame(data={"title": ["Random movie"], "rating": [121]})
 
 
-# [START transform_example_1]
 @aql.transform()
 def top_five_animations(input_table: Table):  # skipcq: PYL-W0613
     return """
@@ -22,10 +21,6 @@ def top_five_animations(input_table: Table):  # skipcq: PYL-W0613
     """
 
 
-# [END transform_example_1]
-
-
-# [START transform_example_2]
 @aql.transform()
 def last_five_animations(input_table: Table):  # skipcq: PYL-W0613
     return """
@@ -36,10 +31,6 @@ def last_five_animations(input_table: Table):  # skipcq: PYL-W0613
     """
 
 
-# [END transform_example_2]
-
-
-# [START transform_example_3]
 @aql.transform
 def union_top_and_last(first_table: Table, second_table: Table):  # skipcq: PYL-W0613
     """Union `first_table` and `second_table` tables to create a simple dataset."""
@@ -50,10 +41,6 @@ def union_top_and_last(first_table: Table, second_table: Table):  # skipcq: PYL-
             """
 
 
-# [END transform_example_3]
-
-
-# [START transform_example_4]
 @aql.transform
 def union_table_and_dataframe(input_table: Table, input_dataframe: pd.DataFrame):  # skipcq: PYL-W0613
     """Union `union_table` table and `input_dataframe` dataframe to create a simple dataset."""
@@ -62,9 +49,6 @@ def union_table_and_dataframe(input_table: Table, input_dataframe: pd.DataFrame)
             UNION
             SELECT title, rating from {{input_dataframe}}
             """
-
-
-# [END transform_example_4]
 
 
 with DAG(
