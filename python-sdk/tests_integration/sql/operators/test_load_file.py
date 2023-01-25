@@ -63,9 +63,12 @@ def is_dict_subset(superset: dict, subset: dict) -> bool:
         {
             "database": Database.REDSHIFT,
         },
+        {
+            "database": Database.MSSQL,
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql"],
 )
 def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
@@ -118,9 +121,12 @@ def test_load_file_with_http_path_file(sample_dag, database_table_fixture):
         {
             "database": Database.REDSHIFT,
         },
+        {
+            "database": Database.MSSQL,
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql"],
 )
 def test_aql_load_remote_file_to_dbs(sample_dag, database_table_fixture, remote_files_fixture):
     db, test_table = database_table_fixture
@@ -175,9 +181,13 @@ def test_aql_load_remote_file_to_dbs(sample_dag, database_table_fixture, remote_
             "database": Database.REDSHIFT,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
+        {
+            "database": Database.MSSQL,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql"],
 )
 def test_aql_replace_existing_table(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
@@ -214,9 +224,12 @@ def test_aql_replace_existing_table(sample_dag, database_table_fixture):
         {
             "database": Database.REDSHIFT,
         },
+        {
+            "database": Database.MSSQL,
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql"],
 )
 def test_aql_local_file_with_no_table_name(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
@@ -376,9 +389,12 @@ def test_load_file_using_file_connection(sample_dag, remote_files_fixture, datab
         {
             "database": Database.REDSHIFT,
         },
+        {
+            "database": Database.MSSQL,
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql"],
 )
 def test_load_file_using_sftp_connection(sample_dag, database_table_fixture):
     db, test_table = database_table_fixture
@@ -433,6 +449,46 @@ def test_load_file_with_named_schema(sample_dag, database_table_fixture, file_ty
             {"id": 1, "name": "First"},
             {"id": 2, "name": "Second"},
             {"id": 3, "name": "Third with unicode पांचाल"},
+        ]
+    )
+    df = df.rename(columns=str.lower)
+    df = df.astype({"id": "int64"})
+    expected = expected.astype({"id": "int64"})
+    assert_frame_equal(df, expected)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.MSSQL,
+        },
+    ],
+    indirect=True,
+    ids=[
+        "mssql",
+    ],
+)
+@pytest.mark.parametrize("file_type", ["csv"])
+def test_load_file_with_named_schema_for_mssql(sample_dag, database_table_fixture, file_type):
+    db, test_table = database_table_fixture
+    test_table.metadata.schema = "custom_schema"
+
+    with sample_dag:
+        load_file(
+            input_file=File(
+                path=str(pathlib.Path(CWD.parent, f"../data/sample_without_unicode.{file_type}"))
+            ),
+            output_table=test_table,
+        )
+    test_utils.run_dag(sample_dag)
+    df = db.export_table_to_pandas_dataframe(test_table)
+    assert len(df) == 2
+    expected = pd.DataFrame(
+        [
+            {"id": 1, "name": "First"},
+            {"id": 2, "name": "Second"},
         ]
     )
     df = df.rename(columns=str.lower)
@@ -538,9 +594,12 @@ def test_aql_load_file_s3_native_path(sample_dag, database_table_fixture, native
         {
             "database": Database.REDSHIFT,
         },
+        {
+            "database": Database.MSSQL,
+        },
     ],
     indirect=True,
-    ids=["Bigquery", "redshift"],
+    ids=["Bigquery", "redshift", "mssql"],
 )
 def test_loading_local_file_to_database(database_table_fixture):
     """
@@ -756,6 +815,46 @@ def test_load_file(sample_dag, database_table_fixture, file_type):
     "database_table_fixture",
     [
         {
+            "database": Database.MSSQL,
+        },
+    ],
+    indirect=True,
+    ids=["mssql"],
+)
+@pytest.mark.parametrize("file_type", ["parquet", "ndjson", "json", "csv"])
+def test_load_file_for_mssql(sample_dag, database_table_fixture, file_type):
+    """Test loading a file into MSSQL table and then exporting the table to dataframe works successfully"""
+    db, test_table = database_table_fixture
+    with sample_dag:
+        load_file(
+            input_file=File(
+                path=str(pathlib.Path(CWD.parent, f"../data/sample_without_unicode.{file_type}"))
+            ),
+            output_table=test_table,
+            use_native_support=False,
+        )
+    test_utils.run_dag(sample_dag)
+
+    df = db.export_table_to_pandas_dataframe(test_table)
+
+    assert len(df) == 2
+    expected = pd.DataFrame(
+        [
+            {"id": 1, "name": "First"},
+            {"id": 2, "name": "Second"},
+        ]
+    )
+    df = df.rename(columns=str.lower)
+    df = df.astype({"id": "int64"})
+    expected = expected.astype({"id": "int64"})
+    assert_frame_equal(df, expected)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
             "database": Database.SNOWFLAKE,
         },
         {
@@ -770,9 +869,12 @@ def test_load_file(sample_dag, database_table_fixture, file_type):
         {
             "database": Database.REDSHIFT,
         },
+        {
+            "database": Database.MSSQL,
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql"],
 )
 def test_aql_nested_ndjson_file_with_default_sep_param(sample_dag, database_table_fixture):
     """Test the flattening of single level nested ndjson, with default separator '_'."""
@@ -794,6 +896,23 @@ def test_aql_nested_ndjson_file_with_default_sep_param(sample_dag, database_tabl
 
 @pytest.mark.integration
 def test_populate_table_metadata(sample_dag):
+    """Test default populating of table fields in load_fil op."""
+
+    @aql.dataframe
+    def validate(table: Table):
+        assert table.metadata.schema == SCHEMA
+
+    with sample_dag:
+        output_table = load_file(
+            input_file=File(path=str(pathlib.Path(CWD.parent, "../data/sample.csv"))),
+            output_table=Table(conn_id="postgres_conn_pagila"),
+        )
+        validate(output_table)
+    test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+def test_populate_table_metadata_mssql(sample_dag):
     """
     Test default populating of table fields in load_fil op.
     """
@@ -804,8 +923,8 @@ def test_populate_table_metadata(sample_dag):
 
     with sample_dag:
         output_table = load_file(
-            input_file=File(path=str(pathlib.Path(CWD.parent, "../data/sample.csv"))),
-            output_table=Table(conn_id="postgres_conn_pagila"),
+            input_file=File(path=str(pathlib.Path(CWD.parent, "../data/sample_without_unicode.csv"))),
+            output_table=Table(conn_id="mssql_conn"),
         )
         validate(output_table)
     test_utils.run_dag(sample_dag)
@@ -1139,6 +1258,33 @@ def test_load_file_using_file_connection_fails_nonexistent_conn(sample_dag, data
         test_utils.run_dag(sample_dag)
 
 
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.MSSQL,
+        },
+    ],
+    indirect=True,
+    ids=["mssql"],
+)
+def test_load_file_nonexistent_conn_for_mssql(sample_dag, database_table_fixture):
+    database_name = "mssql"
+    file_conn_id = "fake_conn"
+    file_uri = "s3://fake-bucket/fake-object.csv"
+
+    sql_server_params = test_utils.get_default_parameters(database_name)
+
+    task_params = {
+        "input_file": File(path=file_uri, conn_id=file_conn_id),
+        "output_table": Table(name=OUTPUT_TABLE_NAME, **sql_server_params),
+    }
+    with pytest.raises(AirflowNotFoundException, match=r"The conn_id `fake_conn` isn't defined"):
+        with sample_dag:
+            load_file(**task_params)
+        test_utils.run_dag(sample_dag)
+
+
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
@@ -1201,3 +1347,26 @@ def test_load_file_delimiter(sample_dag, database_table_fixture):
             load_options=[PandasCsvLoadOptions(delimiter="$")],
         )
     test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.MSSQL},
+    ],
+    indirect=True,
+    ids=["mssql"],
+)
+@pytest.mark.parametrize("if_exists", ["replace", "append"])
+def test_tables_creation_if_they_dont_exist_mssql(database_table_fixture, if_exists):
+    """
+    Verify creation of new tables in case we pass if_exists=replace/append
+    """
+    path = str(CWD) + "/../../data/homes_main.csv"
+    db, test_table = database_table_fixture
+    load_file_task = load_file(input_file=File(path), output_table=test_table, if_exists=if_exists)
+    load_file_task.operator.execute(context=create_context(load_file_task.operator))
+
+    database_df = db.export_table_to_pandas_dataframe(test_table)
+    assert database_df.shape == (3, 9)

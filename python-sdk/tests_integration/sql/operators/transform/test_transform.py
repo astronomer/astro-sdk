@@ -25,9 +25,10 @@ cwd = pathlib.Path(__file__).parent
         {"database": Database.POSTGRES},
         {"database": Database.SQLITE},
         {"database": Database.REDSHIFT},
+        {"database": Database.MSSQL},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql"],
 )
 def test_dataframe_transform(database_table_fixture, sample_dag):
     _, test_table = database_table_fixture
@@ -98,6 +99,40 @@ def test_transform(database_table_fixture, sample_dag):
 @pytest.mark.parametrize(
     "database_table_fixture",
     [
+        {"database": Database.MSSQL},
+    ],
+    indirect=True,
+    ids=["mssql"],
+)
+def test_transform_mssql(database_table_fixture, sample_dag):
+    _, test_table = database_table_fixture
+
+    @aql.transform
+    def sample_function(input_table: Table):
+        return "SELECT TOP 10 * FROM {{input_table}}"
+
+    @aql.dataframe
+    def validate_table(df: pd.DataFrame):
+        assert len(df) == 10
+
+    with sample_dag:
+        homes_file = aql.load_file(
+            input_file=File(path=str(cwd) + "/../../../data/homes.csv"),
+            output_table=test_table,
+        )
+        first_model = sample_function(
+            input_table=homes_file,
+        )
+        inherit_model = sample_function(
+            input_table=first_model,
+        )
+        validate_table(inherit_model)
+    test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
         {"database": Database.SNOWFLAKE},
         {"database": Database.BIGQUERY},
         {"database": Database.POSTGRES},
@@ -131,6 +166,47 @@ def test_raw_sql(database_table_fixture, sample_dag):
             input_file=File(path=str(cwd) + "/../../../data/homes.csv"),
             output_table=test_table,
             load_options=[DeltaLoadOptions.get_default_delta_options()],
+        )
+        raw_sql_result = raw_sql_query(
+            my_input_table=homes_file,
+            created_table=test_table,
+            num_rows=5,
+            handler=lambda cur: cur.fetchall(),
+        )
+        validate_raw_sql(raw_sql_result)
+    test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.MSSQL},
+    ],
+    indirect=True,
+    ids=["mssql"],
+)
+def test_raw_sql_for_mssql(database_table_fixture, sample_dag):
+    db, test_table = database_table_fixture
+
+    @aql.run_raw_sql
+    def raw_sql_query(my_input_table: Table, created_table: Table, num_rows: int):
+        return "SELECT TOP {{num_rows}} * FROM {{my_input_table}}"
+
+    @task
+    def validate_raw_sql(cur: pd.DataFrame):
+        from sqlalchemy.engine.row import LegacyRow
+
+        if db.sql_type == "delta":
+            for c in cur:
+                assert isinstance(c, list)
+        else:
+            for c in cur:
+                assert isinstance(c, LegacyRow)
+
+    with sample_dag:
+        homes_file = aql.load_file(
+            input_file=File(path=str(cwd) + "/../../../data/homes.csv"),
+            output_table=test_table,
         )
         raw_sql_result = raw_sql_query(
             my_input_table=homes_file,
@@ -188,6 +264,49 @@ def test_transform_with_templated_table_name(database_table_fixture, sample_dag)
     "database_table_fixture",
     [
         {
+            "database": Database.MSSQL,
+            "file": File(
+                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
+            ),
+            "table": Table(name="imdb", conn_id="mssql_conn"),
+        }
+    ],
+    indirect=True,
+    ids=["mssql"],
+)
+def test_transform_with_templated_table_name_for_mssql(database_table_fixture, sample_dag):
+    """Test table creation via select statement when the output table uses an Airflow template in its name"""
+    database, imdb_table = database_table_fixture
+
+    @aql.transform
+    def top_five_animations(input_table: Table) -> str:
+        # Don't use quote at the end of the query here due to below error
+        # sqlalchemy.exc.ProgrammingError: (pymssql._pymssql.ProgrammingError) (102, b"Incorrect syntax near ';'
+        # use TOP as LIMIT does not work in mssql
+        return """
+            SELECT TOP 5 title, rating
+            FROM {{ input_table }}
+            WHERE genre1='Animation'
+            ORDER BY rating desc
+        """
+
+    with sample_dag:
+        target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="mssql_conn")
+
+        top_five_animations(input_table=imdb_table, output_table=target_table)
+    test_utils.run_dag(sample_dag)
+
+    expected_target_table = target_table.create_similar_table()
+    expected_target_table.name = "test_is_True"
+    database.drop_table(expected_target_table)
+    assert not database.table_exists(expected_target_table)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
             "database": Database.SQLITE,
             "file": File(
                 "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
@@ -223,6 +342,44 @@ def test_transform_with_file(database_table_fixture, sample_dag):
 
 
 @pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.MSSQL,
+            "file": File(
+                "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
+            ),
+            "table": Table(name="imdb", conn_id="mssql_conn"),
+        }
+    ],
+    indirect=True,
+    ids=["mssql"],
+)
+def test_transform_with_file_for_mssql(database_table_fixture, sample_dag):
+    """Test table creation via select statement in a SQL file"""
+    database, imdb_table = database_table_fixture
+
+    @aql.dataframe
+    def validate(df: pd.DataFrame):
+        assert df.columns.tolist() == ["title", "rating"]
+
+    with sample_dag:
+        target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="mssql_conn")
+        table_from_query = aql.transform_file(
+            file_path="tests_integration/sql/operators/transform/test_mssql.sql",
+            parameters={"input_table": imdb_table},
+            op_kwargs={"output_table": target_table},
+        )
+        validate(table_from_query)
+    test_utils.run_dag(sample_dag)
+
+    expected_target_table = target_table.create_similar_table()
+    expected_target_table.name = "test_is_True"
+    database.drop_table(expected_target_table)
+    assert not database.table_exists(expected_target_table)
+
+
 def test_transform_using_table_metadata(sample_dag):
     """
     Test that load file and transform when database and schema is available in table metadata instead of conn
@@ -245,6 +402,33 @@ def test_transform_using_table_metadata(sample_dag):
             return "SELECT * FROM {{input_table}} LIMIT 4;"
 
         select(input_table=homes_file, output_table=Table(conn_id="snowflake_conn_1"))
+        aql.cleanup()
+    test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+def test_transform_using_table_metadata_mssql(sample_dag):
+    """
+    Test that load file and transform work when database and schema is available in table metadata instead of conn
+    """
+    with sample_dag:
+        test_table = Table(
+            conn_id="mssql_conn",
+            metadata=Metadata(
+                database=os.environ["MSSQL_DB"],
+                schema="dbo",
+            ),
+        )
+        homes_file = aql.load_file(
+            input_file=File(path=str(cwd) + "/../../../data/homes.csv"),
+            output_table=test_table,
+        )
+
+        @aql.transform
+        def select(input_table: Table):
+            return "SELECT TOP 4 * FROM {{input_table}}"
+
+        select(input_table=homes_file, output_table=Table(conn_id="mssql_conn"))
         aql.cleanup()
     test_utils.run_dag(sample_dag)
 
@@ -309,6 +493,21 @@ def test_inlets_outlets_supported_ds():
 
 
 @pytest.mark.integration
+@pytest.mark.skipif(not DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
+def test_inlets_outlets_supported_ds_mssql():
+    """Test Datasets are set as inlets and outlets"""
+    imdb_table = (Table(name="imdb", conn_id="mssql_conn"),)
+    output_table = Table(name="test_name")
+
+    @aql.transform
+    def top_five_animations(input_table: Table) -> str:
+        return "SELECT TOP 5 title, rating FROM {{ input_table }}"
+
+    task = top_five_animations(input_table=imdb_table, output_table=output_table)
+    assert task.operator.outlets == [output_table]
+
+
+@pytest.mark.integration
 @pytest.mark.skipif(DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
 def test_inlets_outlets_non_supported_ds():
     """Test inlets and outlets are not set if Datasets are not supported"""
@@ -318,6 +517,21 @@ def test_inlets_outlets_non_supported_ds():
     @aql.transform
     def top_five_animations(input_table: Table) -> str:
         return "SELECT title, rating FROM {{ input_table }} LIMIT 5;"
+
+    task = top_five_animations(input_table=imdb_table, output_table=output_table)
+    assert task.operator.outlets == []
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(DATASET_SUPPORT, reason="Inlets/Outlets will only be added for Airflow >= 2.4")
+def test_inlets_outlets_non_supported_ds_mssql():
+    """Test inlets and outlets are not set if Datasets are not supported"""
+    imdb_table = (Table(name="imdb", conn_id="mssql_conn"),)
+    output_table = Table(name="test_name")
+
+    @aql.transform
+    def top_five_animations(input_table: Table) -> str:
+        return "SELECT TOP 5 title, rating FROM {{ input_table }}"
 
     task = top_five_animations(input_table=imdb_table, output_table=output_table)
     assert task.operator.outlets == []
