@@ -357,7 +357,7 @@ class SnowflakeDatabase(BaseDatabase):
         )
         if storage_integration is not None:
             return f"storage_integration = {storage_integration};"
-        return file.location.get_stage_auth_sub_statement()
+        return file.location.get_snowflake_stage_auth_sub_statement()
 
     def create_stage(
         self,

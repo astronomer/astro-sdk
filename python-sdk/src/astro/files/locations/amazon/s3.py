@@ -87,7 +87,7 @@ class S3Location(BaseFileLocation):
             cred_dict["fs.s3a.session.token"] = credentials.token
         return cred_dict
 
-    def get_stage_auth_sub_statement(self) -> str:
+    def get_snowflake_stage_auth_sub_statement(self) -> str:
         aws = self.hook.get_credentials()
         if aws.access_key and aws.secret_key:
             auth = f"credentials=(aws_key_id='{aws.access_key}' aws_secret_key='{aws.secret_key}');"
