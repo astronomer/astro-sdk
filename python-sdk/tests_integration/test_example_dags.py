@@ -86,13 +86,13 @@ def order(dag_id: str) -> int:
 
 
 @pytest.fixture()
-def example_dag_id():
+def example_dag_ids():
     dag_bag: DagBag = get_dag_bag()
     for dag_id in sorted(dag_bag.dag_ids, key=order):
         yield dag_id, dag_bag
 
 
-def test_example_dag(session, example_dag_id):
-    dag_id, dag_bag = example_dag_id
+def test_example_dag(session, example_dag_ids):
+    dag_id, dag_bag = example_dag_ids
     dag = dag_bag.get_dag(dag_id)
     wrapper_run_dag(dag)
