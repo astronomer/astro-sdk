@@ -6,6 +6,7 @@ from urllib.parse import urlparse, urlunparse
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
 
 from astro.constants import FileLocation
+from astro.exceptions import DatabaseCustomError
 from astro.files.locations.base import BaseFileLocation
 
 
@@ -85,3 +86,15 @@ class S3Location(BaseFileLocation):
             ] = "org.apache.hadoop.fs.s3a.TemporaryAWSCredentialsProvider"
             cred_dict["fs.s3a.session.token"] = credentials.token
         return cred_dict
+
+    def get_stage_auth_sub_statement(self) -> str:
+        aws = self.hook.get_credentials()
+        if aws.access_key and aws.secret_key:
+            auth = f"credentials=(aws_key_id='{aws.access_key}' aws_secret_key='{aws.secret_key}');"
+        else:
+            raise DatabaseCustomError(
+                "In order to create an stage for S3, one of the following is required: "
+                "* `storage_integration`"
+                "* AWS_KEY_ID and SECRET_KEY_ID"
+            )
+        return auth

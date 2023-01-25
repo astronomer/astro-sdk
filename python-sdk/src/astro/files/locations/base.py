@@ -10,6 +10,7 @@ import smart_open
 from airflow.hooks.base import BaseHook
 
 from astro.constants import FileLocation
+from astro.exceptions import DatabaseCustomError
 from astro.options import LoadOptions
 
 
@@ -188,3 +189,6 @@ class BaseFileLocation(ABC):
         :param df: pandas dataframe
         """
         return smart_open.open(self.smartopen_uri, mode="wb", transport_params=self.transport_params)
+
+    def get_stage_auth_sub_statement(self) -> str:
+        raise DatabaseCustomError("In order to create an stage, `storage_integration` is required.")
