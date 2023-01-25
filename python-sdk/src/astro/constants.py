@@ -53,6 +53,7 @@ class Database(Enum):
     BIGQUERY = "bigquery"
     SNOWFLAKE = "snowflake"
     REDSHIFT = "redshift"
+    MSSQL = "mssql"
     # [END database]
 
     def __str__(self) -> str:

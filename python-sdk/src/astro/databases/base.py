@@ -117,6 +117,7 @@ class BaseDatabase(ABC):
 
         :param sql: Contains SQL query to be run against database
         :param parameters: Optional parameters to be used to render the query
+        :param autocommit: Optional autocommit flag
         """
         if parameters is None:
             parameters = {}
