@@ -68,6 +68,8 @@ def get_dag_bag() -> DagBag:
     print(".airflowignore contents: ")
     print(airflow_ignore_file.read_text())
     dag_bag = DagBag(example_dags_dir, include_examples=False)
+    assert dag_bag.dags
+    assert not dag_bag.import_errors
     return dag_bag
 
 
@@ -83,15 +85,14 @@ def order(dag_id: str) -> int:
     return -1
 
 
-dag_bag = get_dag_bag()
+@pytest.fixture()
+def example_dag_id():
+    dag_bag: DagBag = get_dag_bag()
+    for dag_id in sorted(dag_bag.dag_ids, key=order):
+        yield dag_id, dag_bag
 
 
-@pytest.mark.parametrize("dag_id", sorted(dag_bag.dag_ids, key=order))
-def test_example_dag(session, dag_id: str):
+def test_example_dag(session, example_dag_id):
+    dag_id, dag_bag = example_dag_id
     dag = dag_bag.get_dag(dag_id)
     wrapper_run_dag(dag)
-
-
-def test_example_dags_loaded_with_no_errors():
-    assert dag_bag.dags
-    assert not dag_bag.import_errors
