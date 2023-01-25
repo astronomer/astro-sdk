@@ -118,3 +118,11 @@ connections:
     password: $SFTP_PASSWORD
     port: 21
     extra:
+  - conn_id: mssql_conn
+    conn_type: mssql
+    host: $MSSQL_HOST
+    login: $MSSQL_LOGIN
+    password: $MSSQL_PASSWORD
+    port: 1433
+    schema: $MSSQL_DB
+    extra:

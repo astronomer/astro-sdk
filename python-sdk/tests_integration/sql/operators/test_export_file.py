@@ -63,9 +63,13 @@ def s3fs_creds():
             "database": Database.REDSHIFT,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
+        {
+            "database": Database.MSSQL,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql"],
 )
 def test_export_to_file_dbs_to_remote_file(sample_dag, database_table_fixture, remote_files_fixture):
     _, test_table = database_table_fixture
@@ -114,9 +118,13 @@ def test_export_to_file_dbs_to_remote_file(sample_dag, database_table_fixture, r
             "database": Database.REDSHIFT,
             "file": File(path=str(CWD) + "/../../data/homes2.csv"),
         },
+        {
+            "database": Database.MSSQL,
+            "file": File(path=str(CWD) + "/../../data/homes2.csv"),
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql"],
 )
 def test_save_all_db_tables_to_local_file_exists_overwrite_false(sample_dag, database_table_fixture):
     _, test_table = database_table_fixture
@@ -154,9 +162,13 @@ def test_save_all_db_tables_to_local_file_exists_overwrite_false(sample_dag, dat
             "database": Database.REDSHIFT,
             "file": File(path=str(CWD) + "/../../data/homes.csv"),
         },
+        {
+            "database": Database.MSSQL,
+            "file": File(path=str(CWD) + "/../../data/homes.csv"),
+        },
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "redshift", "mssql"],
 )
 @pytest.mark.parametrize(
     "remote_files_fixture",
@@ -236,6 +248,42 @@ def test_export_file(sample_dag, database_table_fixture, file_type):
     "database_table_fixture",
     [
         {
+            "database": Database.MSSQL,
+            "file": File(path=str(CWD) + "/../../data/sample_without_unicode.csv"),
+        },
+    ],
+    indirect=True,
+    ids=["mssql"],
+)
+@pytest.mark.parametrize("file_type", SUPPORTED_FILE_TYPES)
+def test_export_file_for_mssql(sample_dag, database_table_fixture, file_type):
+    _, test_table = database_table_fixture
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        filepath = Path(tmp_dir, f"sample.{file_type}")
+        with sample_dag:
+            export_to_file(
+                input_data=test_table,
+                output_file=File(path=str(filepath)),
+                if_exists="exception",
+            )
+        test_utils.run_dag(sample_dag)
+
+        df = test_utils.load_to_dataframe(filepath, file_type)
+        assert len(df) == 2
+        expected = pd.DataFrame(
+            [
+                {"id": 1, "name": "First"},
+                {"id": 2, "name": "Second"},
+            ]
+        )
+        assert df.rename(columns=str.lower).equals(expected)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
             "database": Database.POSTGRES,
             "file": File(path=str(CWD) + "/../../data/sample.csv"),
         },
@@ -248,6 +296,40 @@ def test_export_file(sample_dag, database_table_fixture, file_type):
     ids=["postgresql", "redshift"],
 )
 def test_populate_table_metadata(sample_dag, database_table_fixture):
+    """
+    Test default populating of table fields in export_file op.
+    """
+    _, test_table = database_table_fixture
+    test_table.metadata.schema = None
+
+    @aql.dataframe
+    def validate(table: Table):
+        assert table.metadata.schema == SCHEMA
+
+    with sample_dag:
+        aql.export_to_file(
+            input_data=test_table,
+            output_file=File(path="/tmp/saved_df.csv"),
+            if_exists="replace",
+        )
+        validate(test_table)
+
+    test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {
+            "database": Database.MSSQL,
+            "file": File(path=str(CWD) + "/../../data/sample_without_unicode.csv"),
+        },
+    ],
+    indirect=True,
+    ids=["mssql"],
+)
+def test_populate_table_metadata_for_mssql(sample_dag, database_table_fixture):
     """
     Test default populating of table fields in export_file op.
     """

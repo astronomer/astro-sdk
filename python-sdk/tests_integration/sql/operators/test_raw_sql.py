@@ -12,6 +12,7 @@ from ..operators import utils as test_utils
 
 CWD = pathlib.Path(__file__).parent
 DATA_FILEPATH = pathlib.Path(CWD.parent.parent, "data/sample.csv")
+DATA_FILEPATH_MSSQL = pathlib.Path(CWD.parent.parent, "data/sample_without_unicode.csv")
 
 
 @pytest.mark.integration
@@ -54,11 +55,77 @@ def test_run_raw_sql_without_limit(caplog, sample_dag, database_table_fixture):
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
+    [{"database": Database.MSSQL, "file": File(path=str(DATA_FILEPATH_MSSQL))}],
+    indirect=True,
+    ids=["mssql"],
+)
+def test_run_raw_sql_without_limit_for_mssql(caplog, sample_dag, database_table_fixture):
+    _, test_table = database_table_fixture
+    caplog.set_level(logging.WARNING)
+
+    @aql.run_raw_sql
+    def raw_sql_query(input_table):
+        return "SELECT * from {{input_table}}"
+
+    @task
+    def assert_num_rows(results):
+        assert len(results) == 2
+        assert results == [
+            (1, "First"),
+            (2, "Second"),
+        ]
+
+    with sample_dag:
+        results = raw_sql_query(
+            input_table=test_table,
+            handler=lambda cursor: cursor.fetchall(),
+        )
+        assert_num_rows(results)
+
+    test_utils.run_dag(sample_dag)
+
+    expected_warning = "excessive amount of data being recorded to the Airflow metadata database"
+    assert expected_warning in caplog.text
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
     [{"database": Database.SQLITE, "file": File(path=str(DATA_FILEPATH))}],
     indirect=True,
     ids=["sqlite"],
 )
 def test_run_raw_sql_with_limit(sample_dag, database_table_fixture):
+    _, test_table = database_table_fixture
+
+    @aql.run_raw_sql
+    def raw_sql_query(input_table):
+        return "SELECT * from {{input_table}}"
+
+    @task
+    def assert_num_rows(results):
+        assert len(results) == 1
+        assert results == [(1, "First")]
+
+    with sample_dag:
+        results = raw_sql_query(
+            input_table=test_table,
+            response_size=1,
+            handler=lambda cursor: cursor.fetchall(),
+        )
+        assert_num_rows(results)
+
+    test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [{"database": Database.MSSQL, "file": File(path=str(DATA_FILEPATH_MSSQL))}],
+    indirect=True,
+    ids=["mssql"],
+)
+def test_run_raw_sql_with_limit_for_mssql(sample_dag, database_table_fixture):
     _, test_table = database_table_fixture
 
     @aql.run_raw_sql
