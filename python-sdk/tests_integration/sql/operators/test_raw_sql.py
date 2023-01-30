@@ -1,12 +1,14 @@
 import logging
 import pathlib
 
+import pandas as pd
 import pytest
 from airflow.decorators import task
 
 from astro import sql as aql
 from astro.constants import Database
 from astro.files import File
+from astro.table import BaseTable
 
 from ..operators import utils as test_utils
 
@@ -144,5 +146,40 @@ def test_run_raw_sql_with_limit_for_mssql(sample_dag, database_table_fixture):
             handler=lambda cursor: cursor.fetchall(),
         )
         assert_num_rows(results)
+
+    test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [{"database": Database.SQLITE, "file": File(path=str(DATA_FILEPATH))}],
+    indirect=True,
+    ids=["sqlite"],
+)
+def test_run_raw_sql_handle_multiple_tables(sample_dag, database_table_fixture):
+    """
+    Handle the case when we are passing multiple dataframe to run_raw_sql() operator
+    and all the dataframes are converted to different tables.
+    """
+    _, test_table = database_table_fixture
+
+    @aql.run_raw_sql(handler=lambda x: pd.DataFrame(x.fetchall(), columns=x.keys()))
+    def raw_sql_query_1(input_table: BaseTable):
+        return "SELECT * from {{input_table}}"
+
+    @aql.run_raw_sql(handler=lambda x: pd.DataFrame(x.fetchall(), columns=x.keys()))
+    def raw_sql_query_2(input_table: BaseTable):
+        return "SELECT * from {{input_table}}"
+
+    @aql.run_raw_sql(handler=lambda x: pd.DataFrame(x.fetchall(), columns=x.keys()), conn_id="sqlite_default")
+    def raw_sql_query_3(table_1: BaseTable, table_2: BaseTable):
+        assert table_1.name != table_2.name
+        return "SELECT 1 + 1"
+
+    with sample_dag:
+        results_1 = raw_sql_query_1(input_table=test_table)
+        results_2 = raw_sql_query_2(input_table=test_table)
+        _ = raw_sql_query_3(table_1=results_1, table_2=results_2)
 
     test_utils.run_dag(sample_dag)

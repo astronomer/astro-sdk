@@ -88,14 +88,12 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
         # Find and load dataframes from op_arg and op_kwarg into Table
         self.create_output_table_if_needed()
         self.op_args = load_op_arg_dataframes_into_sql(  # type: ignore
-            conn_id=self.conn_id,
-            op_args=self.op_args,  # type: ignore
-            target_table=self.output_table.create_similar_table(),
+            conn_id=self.conn_id, op_args=self.op_args, output_table=self.output_table  # type: ignore
         )
         self.op_kwargs = load_op_kwarg_dataframes_into_sql(
             conn_id=self.conn_id,
             op_kwargs=self.op_kwargs,
-            target_table=self.output_table.create_similar_table(),
+            output_table=self.output_table,
         )
 
         # The transform decorator doesn't explicitly pass output_table as a
@@ -290,19 +288,20 @@ class BaseSQLDecoratedOperator(UpstreamTaskMixin, DecoratedOperator):
             return None
 
 
-def load_op_arg_dataframes_into_sql(conn_id: str, op_args: tuple, target_table: BaseTable) -> tuple:
+def load_op_arg_dataframes_into_sql(conn_id: str, op_args: tuple, output_table: BaseTable) -> tuple:
     """
     Identify dataframes in op_args and load them to the table.
 
     :param conn_id: Connection identifier to be used to load content to the target_table
     :param op_args: user-defined decorator's kwargs
-    :param target_table: Table where the dataframe content will be written to
+    :param output_table: Similar table where the dataframe content will be written to
     :return: New op_args, in which dataframes are replaced by tables
     """
-    final_args = []
+    final_args: list[Table | BaseTable] = []
     database = create_database(conn_id=conn_id)
     for arg in op_args:
         if isinstance(arg, pd.DataFrame):
+            target_table = output_table.create_similar_table()
             database.load_pandas_dataframe_to_table(source_dataframe=arg, target_table=target_table)
             final_args.append(target_table)
         elif isinstance(arg, BaseTable):
@@ -313,19 +312,20 @@ def load_op_arg_dataframes_into_sql(conn_id: str, op_args: tuple, target_table: 
     return tuple(final_args)
 
 
-def load_op_kwarg_dataframes_into_sql(conn_id: str, op_kwargs: dict, target_table: BaseTable) -> dict:
+def load_op_kwarg_dataframes_into_sql(conn_id: str, op_kwargs: dict, output_table: BaseTable) -> dict:
     """
     Identify dataframes in op_kwargs and load them to a table.
 
     :param conn_id: Connection identifier to be used to load content to the target_table
     :param op_kwargs: user-defined decorator's kwargs
-    :param target_table: Table where the dataframe content will be written to
+    :param output_table: Similar table where the dataframe content will be written to
     :return: New op_kwargs, in which dataframes are replaced by tables
     """
     final_kwargs = {}
-    database = create_database(conn_id=conn_id, table=target_table)
+    database = create_database(conn_id=conn_id, table=output_table)
     for key, value in op_kwargs.items():
         if isinstance(value, pd.DataFrame):
+            target_table = output_table.create_similar_table()
             df_table = cast(BaseTable, target_table.create_similar_table())
             database.load_pandas_dataframe_to_table(source_dataframe=value, target_table=df_table)
             final_kwargs[key] = df_table
