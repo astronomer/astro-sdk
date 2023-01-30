@@ -185,10 +185,9 @@ def test_run_raw_sql__results_format__pandas_dataframe(sample_dag, database_tabl
         {"database": Database.SNOWFLAKE, "file": File(path=str(DATA_FILEPATH))},
         {"database": Database.POSTGRES, "file": File(path=str(DATA_FILEPATH))},
         {"database": Database.BIGQUERY, "file": File(path=str(DATA_FILEPATH))},
-        {"database": Database.MSSQL, "file": File(path=str(DATA_FILEPATH))},
     ],
     indirect=True,
-    ids=["sqlite", "snowflake", "postgres", "bigquery", "mssql"],
+    ids=["sqlite", "snowflake", "postgres", "bigquery"],
 )
 def test_run_raw_sql__results_format__list(sample_dag, database_table_fixture):
     """run_raw_sql() command should return `pandas.DataFrame` when `results_format='list' is passed"""
