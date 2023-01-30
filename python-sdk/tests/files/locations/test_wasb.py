@@ -1,9 +1,11 @@
 from unittest.mock import patch
 
+import pytest
 from azure.storage.blob import BlobServiceClient
 
 from astro.files.locations import create_file_location
 from astro.files.locations.azure.wasb import WASBLocation
+from astro.options import WASBLocationLoadOptions
 
 
 def test_get_transport_params_with_wasb():
@@ -43,3 +45,26 @@ def test_wasb_smartopen_uri_wasbs_scheme():
 def test_wasb_smartopen_uri_azure_scheme():
     location = WASBLocation(path="azure://somepath")
     assert location.smartopen_uri == "azure://somepath"
+
+
+def test_get_new_path_for_snowflake_stage_raise_exception():
+    """
+    Test get_new_path_for_snowflake_stage() raise exception when 'storage_account' is missing.
+    """
+    location = WASBLocation(path="azure://somepath")
+    error_message = f"Required param missing 'storage_account', pass {location.LOAD_OPTIONS_CLASS_NAME}"
+    "(storage_account=<account_name>) to load_options"
+    with pytest.raises(ValueError, match=error_message):
+        location.get_new_path_for_snowflake_stage()
+
+
+def test_get_new_path_for_snowflake_stage_new_path():
+    """
+    Test get_new_path_for_snowflake_stage() to return expected path
+    """
+    location = WASBLocation(
+        path="wasb://some_container/test.csv",
+        load_options=WASBLocationLoadOptions(storage_account="storage_account_name"),
+    )
+    new_path = location.get_new_path_for_snowflake_stage()
+    assert new_path == "azure://storage_account_name.blob.core.windows.net/some_container/"
