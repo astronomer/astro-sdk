@@ -154,10 +154,17 @@ def test_handlers():
     Test the handler return desired results
     """
 
+    class Val:
+        def __init__(self, val):
+            self.value = [val]
+
+        def values(self) -> list:
+            return self.value
+
     class MockResultProxy:
         @staticmethod
         def fetchall():
-            return [1, 2, 3]
+            return [Val(1), Val(2), Val(3)]
 
         @staticmethod
         def keys():
@@ -165,7 +172,7 @@ def test_handlers():
 
     result = MockResultProxy()
     processed_result = aql.RawSQLOperator.results_as_list(result)
-    assert processed_result == [1, 2, 3]
+    assert processed_result == [[1], [2], [3]]
 
     processed_result = aql.RawSQLOperator.results_as_pandas_dataframe(result)
     assert isinstance(processed_result, pandas.DataFrame)
