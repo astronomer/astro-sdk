@@ -154,17 +154,17 @@ def test_handlers():
     Test the handler return desired results
     """
 
-    class val:
+    class Val:
         def __init__(self, val):
-            self.val = [val]
+            self.value = [val]
 
         def values(self) -> list:
-            return self.val
+            return self.value
 
     class MockResultProxy:
         @staticmethod
         def fetchall():
-            return [val(1), val(2), val(3)]
+            return [Val(1), Val(2), Val(3)]
 
         @staticmethod
         def keys():
