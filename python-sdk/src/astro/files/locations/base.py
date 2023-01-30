@@ -193,6 +193,10 @@ class BaseFileLocation(ABC):
     def get_snowflake_stage_auth_sub_statement(self) -> str:  # skipcq: PYL-R0201
         raise DatabaseCustomError("In order to create a stage, `storage_integration` is required.")
 
-    def get_new_path_for_snowflake_stage(self):
+
+    def get_new_path_for_snowflake_stage(self) -> str:
+        """
+        Get the altered path if needed for stage creation in snowflake stage creation
+        """
         return self.path
 

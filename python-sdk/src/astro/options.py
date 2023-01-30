@@ -15,6 +15,15 @@ class LoadOptions:
         return attr.asdict(self)
 
 
+def check_required_option(load_options: Optional[LoadOptions], option_name: str) -> bool:
+    """
+    Check required options in load_option class
+    """
+    if load_options is None or getattr(load_options, option_name, None) is None:
+        return False
+    return True
+
+
 def list_to_dict(value: Optional[List[LoadOptions]]) -> Optional[Dict[str, LoadOptions]]:
     """
     Convert list object to dict

@@ -8,6 +8,7 @@ from azure.core.exceptions import ResourceNotFoundError
 
 from astro.constants import FileLocation
 from astro.files.locations.base import BaseFileLocation
+from astro.options import check_required_option
 
 
 class WASBLocation(BaseFileLocation):
@@ -91,14 +92,20 @@ class WASBLocation(BaseFileLocation):
         """
         return urlparse(self.path).path
 
-    def get_new_path_for_snowflake_stage(self):
-        try:
-            storage_account = self.load_options.storage_account
-        except AttributeError as e:
+    def get_new_path_for_snowflake_stage(self) -> str:
+        """
+        Get the altered path if needed for stage creation in snowflake stage creation. We need to modify the path since
+         Snowflake only accepts paths of format for stage creation:
+         "azure://<storage_account>.blob.core.windows.net/<container_name>/load/files/"
+         But SDK accepts paths
+         "wasb://<container_name>/<filename>" or "wasbs://<container_name>/<filename>"
+         To bridge the gap we use this method
+        """
+        if not check_required_option(self.load_options, "storage_account"):
             raise ValueError(
                 f"Required param missing 'storage_account', pass {self.LOAD_OPTIONS_CLASS_NAME}"
                 f"(storage_account=<account_name>) to load_options"
-            ) from e
+            )
         url = urlparse(self.path)
         azure_host = "blob.core.windows.net"
-        return f"{FileLocation.AZURE}://{storage_account}.{azure_host}/{url.netloc}/"
+        return f"{FileLocation.AZURE}://{self.load_options.storage_account}.{azure_host}/{url.netloc}/"  # type: ignore
