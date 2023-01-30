@@ -2,6 +2,7 @@ import logging
 import pathlib
 
 import pandas as pd
+
 import pytest
 from airflow.decorators import task
 
@@ -181,5 +182,59 @@ def test_run_raw_sql_handle_multiple_tables(sample_dag, database_table_fixture):
         results_1 = raw_sql_query_1(input_table=test_table)
         results_2 = raw_sql_query_2(input_table=test_table)
         _ = raw_sql_query_3(table_1=results_1, table_2=results_2)
+    test_utils.run_dag(sample_dag)
 
+
+def test_run_raw_sql__results_format__pandas_dataframe(sample_dag, database_table_fixture):
+    """run_raw_sql() command should return `pandas.DataFrame` when `results_format='pandas_dataframe' is passed"""
+    _, test_table = database_table_fixture
+
+    @aql.run_raw_sql(results_format="pandas_dataframe")
+    def raw_sql_query(input_table):
+        return "SELECT * from {{input_table}}"
+
+    @task
+    def assert_num_rows(result):
+        assert isinstance(result, pd.DataFrame)
+        assert result.equals(pd.read_csv(DATA_FILEPATH))
+        assert result.shape == (3, 2)
+
+    with sample_dag:
+        results = raw_sql_query(input_table=test_table)
+        assert_num_rows(results)
+
+    test_utils.run_dag(sample_dag)
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    "database_table_fixture",
+    [
+        {"database": Database.SQLITE, "file": File(path=str(DATA_FILEPATH))},
+        {"database": Database.SNOWFLAKE, "file": File(path=str(DATA_FILEPATH))},
+        {"database": Database.POSTGRES, "file": File(path=str(DATA_FILEPATH))},
+        {"database": Database.BIGQUERY, "file": File(path=str(DATA_FILEPATH))},
+    ],
+    indirect=True,
+    ids=["sqlite", "snowflake", "postgres", "bigquery"],
+)
+def test_run_raw_sql__results_format__list(sample_dag, database_table_fixture):
+    """run_raw_sql() command should return `List` when `results_format='list' is passed"""
+    _, test_table = database_table_fixture
+
+    @aql.run_raw_sql(results_format="list")
+    def raw_sql_query(input_table):
+        return "SELECT name from {{input_table}}"
+
+    @task
+    def assert_num_rows(result):
+        assert isinstance(result, list)
+        assert result[0] == ["First"]
+        assert result[1] == ["Second"]
+        assert result[2] == ["Third with unicode पांचाल"]
+        assert len(result) == 3
+
+    with sample_dag:
+        results = raw_sql_query(input_table=test_table)
+        assert_num_rows(results)
     test_utils.run_dag(sample_dag)
