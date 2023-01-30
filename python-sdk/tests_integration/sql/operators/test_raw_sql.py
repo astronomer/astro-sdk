@@ -190,7 +190,7 @@ def test_run_raw_sql__results_format__pandas_dataframe(sample_dag, database_tabl
     ids=["sqlite", "snowflake", "postgres", "bigquery"],
 )
 def test_run_raw_sql__results_format__list(sample_dag, database_table_fixture):
-    """run_raw_sql() command should return `pandas.DataFrame` when `results_format='list' is passed"""
+    """run_raw_sql() command should return `List` when `results_format='list' is passed"""
     _, test_table = database_table_fixture
 
     @aql.run_raw_sql(results_format="list")
