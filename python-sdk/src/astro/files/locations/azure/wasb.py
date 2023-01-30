@@ -15,6 +15,7 @@ class WASBLocation(BaseFileLocation):
 
     location_type = FileLocation.WASB
     supported_conn_type = {WasbHook.conn_type, "wasbs"}
+    LOAD_OPTIONS_CLASS_NAME = "WASBLocationLoadOptions"
 
     def exists(self) -> bool:
         """Check if the file exists or not"""
@@ -89,3 +90,15 @@ class WASBLocation(BaseFileLocation):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
         return urlparse(self.path).path
+
+    def get_new_path_for_snowflake_stage(self):
+        try:
+            storage_account = self.load_options.storage_account
+        except AttributeError as e:
+            raise ValueError(
+                f"Required param missing 'storage_account', pass {self.LOAD_OPTIONS_CLASS_NAME}"
+                f"(storage_account=<account_name>) to load_options"
+            ) from e
+        url = urlparse(self.path)
+        azure_host = "blob.core.windows.net"
+        return f"{FileLocation.AZURE}://{storage_account}.{azure_host}/{url.netloc}/"

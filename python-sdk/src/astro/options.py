@@ -65,3 +65,8 @@ class SnowflakeLoadOptions(LoadOptions):
 
     def empty(self):
         return not self.file_options and not self.copy_options
+
+
+@attr.define
+class WASBLocationLoadOptions(LoadOptions):
+    storage_account: str = attr.field(default=None)

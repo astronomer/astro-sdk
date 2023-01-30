@@ -63,7 +63,13 @@ DEFAULT_STORAGE_INTEGRATION = {
 }
 
 NATIVE_LOAD_SUPPORTED_FILE_TYPES = (FileType.CSV, FileType.NDJSON, FileType.PARQUET)
-NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS = (FileLocation.GS, FileLocation.S3)
+NATIVE_LOAD_SUPPORTED_FILE_LOCATIONS = (
+    FileLocation.GS,
+    FileLocation.S3,
+    FileLocation.WASB,
+    FileLocation.WASBS,
+    FileLocation.AZURE,
+)
 
 NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_TYPES = {FileType.PARQUET}
 NATIVE_AUTODETECT_SCHEMA_SUPPORTED_FILE_LOCATIONS = {FileLocation.GS, FileLocation.S3}
@@ -191,7 +197,8 @@ class SnowflakeStage:
         """
         # the stage URL needs to be the folder where the files are
         # https://docs.snowflake.com/en/sql-reference/sql/create-stage.html#external-stage-parameters-externalstageparams
-        url = file.path[: file.path.rfind("/") + 1]
+        path = file.location.get_new_path_for_snowflake_stage()
+        url = path[: path.rfind("/") + 1]
         self.url = url.replace("gs://", "gcs://")
 
     @property  # type: ignore
@@ -384,6 +391,7 @@ class SnowflakeDatabase(BaseDatabase):
             `Snowflake official documentation on stage creation
             <https://docs.snowflake.com/en/sql-reference/sql/create-stage.html>`_
         """
+
         auth = self._create_stage_auth_sub_statement(file=file, storage_integration=storage_integration)
 
         if not self.load_options:

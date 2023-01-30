@@ -24,6 +24,7 @@ class FileLocation(Enum):
     S3 = "s3"  # Amazon S3
     WASB = "wasb"  # Azure Blob Storage
     WASBS = "wasbs"  # Azure Blob Storage
+    AZURE = "azure"  # Azure Blob Storage
     SFTP = "sftp"  # Remote file location
     FTP = "ftp"  # Remote file location
     # [END filelocation]
