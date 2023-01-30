@@ -19,9 +19,7 @@ def check_required_option(load_options: Optional[LoadOptions], option_name: str)
     """
     Check required options in load_option class
     """
-    if load_options is None or getattr(load_options, option_name, None) is None:
-        return False
-    return True
+    return load_options and getattr(load_options, option_name)
 
 
 def list_to_dict(value: Optional[List[LoadOptions]]) -> Optional[Dict[str, LoadOptions]]:
