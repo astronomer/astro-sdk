@@ -238,3 +238,31 @@ def test_run_raw_sql__results_format__list(sample_dag, database_table_fixture):
         results = raw_sql_query(input_table=test_table)
         assert_num_rows(results)
     test_utils.run_dag(sample_dag)
+
+
+def test_run_raw_sql_handle_multiple_tables(sample_dag, database_table_fixture):
+    """
+    Handle the case when we are passing multiple dataframe to run_raw_sql() operator
+    and all the dataframes are converted to different tables.
+    """
+    _, test_table = database_table_fixture
+
+    @aql.run_raw_sql(handler=lambda x: pd.DataFrame(x.fetchall(), columns=x.keys()))
+    def raw_sql_query_1(input_table: BaseTable):
+        return "SELECT * from {{input_table}}"
+
+    @aql.run_raw_sql(handler=lambda x: pd.DataFrame(x.fetchall(), columns=x.keys()))
+    def raw_sql_query_2(input_table: BaseTable):
+        return "SELECT * from {{input_table}}"
+
+    @aql.run_raw_sql(handler=lambda x: pd.DataFrame(x.fetchall(), columns=x.keys()), conn_id="sqlite_default")
+    def raw_sql_query_3(table_1: BaseTable, table_2: BaseTable):
+        assert table_1.name != table_2.name
+        return "SELECT 1 + 1"
+
+    with sample_dag:
+        results_1 = raw_sql_query_1(input_table=test_table)
+        results_2 = raw_sql_query_2(input_table=test_table)
+        _ = raw_sql_query_3(table_1=results_1, table_2=results_2)
+    test_utils.run_dag(sample_dag)
+
