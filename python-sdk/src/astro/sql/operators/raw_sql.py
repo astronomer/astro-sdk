@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Iterable, Mapping
-from typing import Any, Callable, List, cast
+from typing import Any, Callable
 
 try:
     from airflow.decorators.base import TaskDecorator
@@ -93,16 +93,21 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
         """
         if not settings.NEED_CUSTOM_SERIALIZATION:
             return rows
+        if isinstance(rows, PandasDataframe):
+            return rows
         if isinstance(rows, Iterable):
             return [SdkLegacyRow.from_legacy_row(r) if isinstance(r, SQLAlcRow) else r for r in rows]
         return rows
 
     @staticmethod
-    def results_as_list(result: ResultProxy) -> list:
+    def results_as_list(results: ResultProxy) -> list:
         """
         Convert the result of a SQL query to a list
         """
-        return cast(List[Any], result.fetchall())
+        data = []
+        for result in results.fetchall():
+            data.append(result.values())
+        return data
 
     @staticmethod
     def results_as_pandas_dataframe(result: ResultProxy) -> pd.DataFrame:
