@@ -170,7 +170,7 @@ def test_run_raw_sql__results_format__pandas_dataframe(sample_dag, database_tabl
         assert result.shape == (1, 2)
 
     with sample_dag:
-        results = raw_sql_query(input_table=test_table, response_size=1)
+        results = raw_sql_query(input_table=test_table)
         assert_num_rows(results)
 
     test_utils.run_dag(sample_dag)
