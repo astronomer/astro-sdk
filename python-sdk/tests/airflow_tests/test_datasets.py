@@ -107,7 +107,7 @@ def test_example_dataset_dag():
     from airflow.models.dataset import DatasetModel
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    db = DagBag(dir_path + "/../../example_dags")
+    db = DagBag(dir_path + "/../../example_dags/example_datasets.py")
 
     producer_dag = db.get_dag("example_dataset_producer")
     consumer_dag = db.get_dag("example_dataset_consumer")
