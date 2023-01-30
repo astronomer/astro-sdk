@@ -79,7 +79,11 @@ class RawSQLOperator(BaseSQLDecoratedOperator):
             if 0 <= self.response_limit < len(response):
                 raise IllegalLoadToDatabaseException()  # pragma: no cover
             if self.response_size >= 0:
-                return response[: self.response_size]
+                resp = response[: self.response_size]
+                # We do the following is slicing pandas dataframe creates a pd.Dataframe object
+                # which isn't serializable
+                # TODO: We could add a __getitem__ to PandasDataframe object
+                return PandasDataframe.from_pandas_df(resp) if isinstance(resp, pd.DataFrame) else resp
             else:
                 return response
 
