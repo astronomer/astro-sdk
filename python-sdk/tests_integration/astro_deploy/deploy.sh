@@ -37,6 +37,7 @@ fi
 function clean() {
   if [ -d "${SCRIPT_PATH}"/python-sdk ]; then rm -Rf "${SCRIPT_PATH}"/python-sdk; fi
   if [ -d "${SCRIPT_PATH}"/example_dags ]; then rm -Rf "${SCRIPT_PATH}"/example_dags; fi
+  if [ -d "${SCRIPT_PATH}"/tests ]; then rm -Rf "${SCRIPT_PATH}"/tests; fi
 }
 
 ASTRO_DOCKER_REGISTRY=$1
@@ -50,10 +51,13 @@ clean
 
 # Copy source files
 mkdir "${SCRIPT_PATH}"/python-sdk
+mkdir "${SCRIPT_PATH}"/tests
 cp -r "${PROJECT_PATH}"/src "${SCRIPT_PATH}"/python-sdk
 cp -r "${PROJECT_PATH}"/pyproject.toml "${SCRIPT_PATH}"/python-sdk
 cp -r "${PROJECT_PATH}"/README.md "${SCRIPT_PATH}"/python-sdk
 cp -r "${PROJECT_PATH}"/example_dags "${SCRIPT_PATH}"/example_dags
+cp -r "${PROJECT_PATH}"/tests/data "${SCRIPT_PATH}"/tests/data
+
 
 # Build image and deploy
 BUILD_NUMBER=$(awk 'BEGIN {srand(); print srand()}')

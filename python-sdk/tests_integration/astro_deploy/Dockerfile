@@ -5,8 +5,10 @@ RUN pip install /tmp/python-sdk[all]
 RUN pip install apache-airflow[slack]
 
 RUN mkdir -p ${AIRFLOW_HOME}/dags
+RUN mkdir -p ${AIRFLOW_HOME}/tests
 
 COPY example_dags/ ${AIRFLOW_HOME}/dags/
 COPY master_dag.py/ ${AIRFLOW_HOME}/dags/
+COPY tests/ ${AIRFLOW_HOME}/tests/
 
 RUN ls ${AIRFLOW_HOME}/dags/
