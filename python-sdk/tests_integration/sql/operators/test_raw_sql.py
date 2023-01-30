@@ -179,9 +179,15 @@ def test_run_raw_sql__results_format__pandas_dataframe(sample_dag, database_tabl
 @pytest.mark.integration
 @pytest.mark.parametrize(
     "database_table_fixture",
-    [{"database": Database.SQLITE, "file": File(path=str(DATA_FILEPATH))}],
+    [
+        {"database": Database.SQLITE, "file": File(path=str(DATA_FILEPATH))},
+        {"database": Database.SNOWFLAKE, "file": File(path=str(DATA_FILEPATH))},
+        {"database": Database.POSTGRES, "file": File(path=str(DATA_FILEPATH))},
+        {"database": Database.BIGQUERY, "file": File(path=str(DATA_FILEPATH))},
+        {"database": Database.MSSQL, "file": File(path=str(DATA_FILEPATH))},
+    ],
     indirect=True,
-    ids=["sqlite"],
+    ids=["sqlite", "snowflake", "postgres", "bigquery", "mssql"],
 )
 def test_run_raw_sql__results_format__list(sample_dag, database_table_fixture):
     """run_raw_sql() command should return `pandas.DataFrame` when `results_format='list' is passed"""
@@ -194,6 +200,9 @@ def test_run_raw_sql__results_format__list(sample_dag, database_table_fixture):
     @task
     def assert_num_rows(result):
         assert isinstance(result, list)
+        assert result[0] == ["First"]
+        assert result[1] == ["Second"]
+        assert result[2] == ["Third with unicode पांचाल"]
         assert len(result) == 3
 
     with sample_dag:
