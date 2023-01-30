@@ -168,7 +168,7 @@ def test_run_raw_sql__results_format__pandas_dataframe(sample_dag, database_tabl
     def assert_num_rows(result):
         assert isinstance(result, pandas.DataFrame)
         assert result.equals(pandas.read_csv(DATA_FILEPATH))
-        assert result.shape == (1, 2)
+        assert result.shape == (3, 2)
 
     with sample_dag:
         results = raw_sql_query(input_table=test_table)
