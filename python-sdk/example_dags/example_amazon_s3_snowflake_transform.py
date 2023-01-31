@@ -78,7 +78,6 @@ def example_amazon_s3_snowflake_transform():
         output_table=input_table_1,
         load_options=[
             SnowflakeLoadOptions(
-                file_options={"SKIP_HEADER": 1, "SKIP_BLANK_LINES": True},
                 copy_options={"ON_ERROR": "CONTINUE"},
             )
         ],
@@ -88,7 +87,6 @@ def example_amazon_s3_snowflake_transform():
         output_table=input_table_2,
         load_options=[
             SnowflakeLoadOptions(
-                file_options={"SKIP_HEADER": 1, "SKIP_BLANK_LINES": True},
                 copy_options={"ON_ERROR": "CONTINUE"},
             )
         ],
