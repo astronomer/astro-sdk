@@ -356,23 +356,8 @@ class SnowflakeDatabase(BaseDatabase):
             file.location.location_type
         )
         if storage_integration is not None:
-            auth = f"storage_integration = {storage_integration};"
-        else:
-            if file.location.location_type == FileLocation.GS:
-                raise DatabaseCustomError(
-                    "In order to create an stage for GCS, `storage_integration` is required."
-                )
-            elif file.location.location_type == FileLocation.S3:
-                aws = file.location.hook.get_credentials()
-                if aws.access_key and aws.secret_key:
-                    auth = f"credentials=(aws_key_id='{aws.access_key}' aws_secret_key='{aws.secret_key}');"
-                else:
-                    raise DatabaseCustomError(
-                        "In order to create an stage for S3, one of the following is required: "
-                        "* `storage_integration`"
-                        "* AWS_KEY_ID and SECRET_KEY_ID"
-                    )
-        return auth
+            return f"storage_integration = {storage_integration};"
+        return file.location.get_snowflake_stage_auth_sub_statement()
 
     def create_stage(
         self,
