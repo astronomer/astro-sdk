@@ -94,6 +94,10 @@ def test_load_file_to_table_natively_for_fallback_raises_exception_if_not_enable
         metadata=Metadata(database="SNOWFLAKE_DATABASE", schema="SNOWFLAKE_SCHEMA"),
     )
     database = SnowflakeDatabase()
+    database.load_options = SnowflakeLoadOptions(
+        copy_options={"ON_ERROR": "CONTINUE"},
+        file_options={"TYPE": "CSV", "TRIM_SPACE": True},
+    )
     with pytest.raises(DatabaseCustomError):
         database.load_file_to_table_natively_with_fallback(
             source_file=File(str(pathlib.Path(CWD.parent, "data/sample.csv"))),

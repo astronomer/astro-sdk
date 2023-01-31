@@ -66,7 +66,7 @@ class SnowflakeLoadOptions(LoadOptions):
 
     file_options: dict = attr.field(init=True, factory=dict)
     copy_options: dict = attr.field(init=True, factory=dict)
-    validation_mode: Optional[str] = attr.field(default="RETURN_ERRORS")
+    validation_mode: Optional[str] = attr.field(default=None)
     storage_integration: str = attr.field(default=None)
 
     def empty(self):

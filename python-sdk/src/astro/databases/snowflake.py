@@ -651,7 +651,7 @@ class SnowflakeDatabase(BaseDatabase):
         )
         try:
             self.hook.run(sql_statement, handler=lambda cur: cur.fetchall())
-        except self.NATIVE_LOAD_EXCEPTIONS as load_exception:
+        except ProgrammingError as load_exception:
             self.drop_stage(stage)
             raise load_exception
 
