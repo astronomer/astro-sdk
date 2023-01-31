@@ -85,18 +85,13 @@ def order(dag_id: str) -> int:
     return -1
 
 
-@pytest.fixture(scope="module")
-def dag_bag() -> DagBag:
-    return get_dag_bag()
+def get_dags():
+    dag_bag = get_dag_bag()
+    result = [dag_bag.get_dag(dag_id) for dag_id in dag_bag.dag_ids]
+    result.sort(key=order)
+    return result
 
 
-@pytest.fixture()
-def example_dag_ids(dag_bag):
-    for dag_id in sorted(dag_bag.dag_ids, key=order):
-        yield dag_id, dag_bag
-
-
-def test_example_dag(session, example_dag_ids):
-    dag_id, dag_bag = example_dag_ids
-    dag = dag_bag.get_dag(dag_id)
+@pytest.mark.parametrize("dag", get_dags(), ids=lambda dag: dag.dag_id)
+def test_example_dag(session, dag):
     wrapper_run_dag(dag)
