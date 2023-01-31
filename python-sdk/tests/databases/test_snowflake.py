@@ -124,7 +124,7 @@ def test_snowflake_load_options():
             storage_integration="foo",
         )
     assert "FILE_FORMAT=(foo=bar, TYPE=CSV, TRIM_SPACE=TRUE)" in database.run_sql.call_args[0][0]
-    assert "COPY_OPTIONS=(ON_ERROR=CONTINUE)" in database.run_sql.call_args[0][0]
+    assert "COPY_OPTIONS=()" in database.run_sql.call_args[0][0]
 
 
 def test_snowflake_load_options_default():
@@ -143,7 +143,7 @@ def test_snowflake_load_options_default():
             storage_integration="foo",
         )
     assert "FILE_FORMAT=(TYPE=CSV, TRIM_SPACE=TRUE)" in database.run_sql.call_args[0][0]
-    assert "COPY_OPTIONS=(ON_ERROR=CONTINUE)" in database.run_sql.call_args[0][0]
+    assert "COPY_OPTIONS=()" in database.run_sql.call_args[0][0]
 
 
 def test_snowflake_load_options_wrong_options():

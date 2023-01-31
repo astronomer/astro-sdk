@@ -392,12 +392,12 @@ class SnowflakeDatabase(BaseDatabase):
         stage.set_url_from_file(file)
 
         fileformat = ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP[file.type.name]
-        copy_options = [COPY_OPTIONS.get(file.type.name, "")]
+        copy_options = [COPY_OPTIONS.get(file.type.name)] if COPY_OPTIONS.get(file.type.name, None) else []
         copy_options.extend([f"{k}={v}" for k, v in self.load_options.copy_options.items()])
         file_options = [f"{k}={v}" for k, v in self.load_options.file_options.items()]
         file_options.extend([f"TYPE={fileformat}", "TRIM_SPACE=TRUE"])
         file_options_str = ", ".join(file_options)
-        copy_options_str = ", ".join(copy_options)
+        copy_options_str = ", ".join(copy_options)  # type:ignore
         sql_statement = "".join(
             [
                 f"CREATE OR REPLACE STAGE {stage.qualified_name} URL='{stage.url}' ",
