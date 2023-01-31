@@ -31,7 +31,7 @@ def test_create_stage_google_fails_due_to_no_storage_integration():
     database = SnowflakeDatabase(conn_id="fake-conn")
     with pytest.raises(ValueError) as exc_info:
         database.create_stage(file=File("gs://some-bucket/some-file.csv"))
-    expected_msg = "In order to create an stage for GCS, `storage_integration` is required."
+    expected_msg = "In order to create a stage, `storage_integration` is required."
     assert exc_info.match(expected_msg)
 
 
