@@ -59,12 +59,14 @@ class SnowflakeLoadOptions(LoadOptions):
         https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html#copy-options-copyoptions
     :param storage_integration: Specify the previously created Snowflake storage integration
     :param validation_mode: Specify the supported validation mode; RETURN_n_ROWS | RETURN_ERRORS | RETURN_ALL_ERRORS
-        Read more at: https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html#optional-parameters
+        This instructs the COPY command to validate the data files instead of loading them into the specified table;
+        i.e. the COPY command tests the files for errors but does not load them. Read more at:
+        https://docs.snowflake.com/en/sql-reference/sql/copy-into-table.html#optional-parameters
     """
 
     file_options: dict = attr.field(init=True, factory=dict)
     copy_options: dict = attr.field(init=True, factory=dict)
-    validation_mode: str = attr.field(default="RETURN_ALL_ERRORS")
+    validation_mode: Optional[str] = attr.field(default="RETURN_ERRORS")
     storage_integration: str = attr.field(default=None)
 
     def empty(self):

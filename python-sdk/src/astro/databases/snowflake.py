@@ -619,10 +619,9 @@ class SnowflakeDatabase(BaseDatabase):
     def _copy_into_table_from_stage(self, source_file, target_table, stage):
         table_name = self.get_table_qualified_name(target_table)
         file_path = os.path.basename(source_file.path) or ""
-        sql_statement = (
-            f"COPY INTO {table_name} FROM "
-            f"@{stage.qualified_name}/{file_path} VALIDATION_MODE='{self.load_options.validation_mode}'"
-        )
+        sql_statement = f"COPY INTO {table_name} FROM @{stage.qualified_name}/{file_path}"
+
+        self._validate_before_copy_into(source_file, target_table, stage)
 
         # Below code is added due to breaking change in apache-airflow-providers-snowflake==3.2.0,
         # we need to pass handler param to get the rows. But in version apache-airflow-providers-snowflake==3.1.0
@@ -639,6 +638,22 @@ class SnowflakeDatabase(BaseDatabase):
         finally:
             self.drop_stage(stage)
         return rows
+
+    def _validate_before_copy_into(self, source_file, target_table, stage):
+        """Validate COPY INTO command to tests the files for errors but does not load them."""
+        if self.load_options.validation_mode is None:
+            return
+        table_name = self.get_table_qualified_name(target_table)
+        file_path = os.path.basename(source_file.path) or ""
+        sql_statement = (
+            f"COPY INTO {table_name} FROM "
+            f"@{stage.qualified_name}/{file_path} VALIDATION_MODE='{self.load_options.validation_mode}'"
+        )
+        try:
+            self.hook.run(sql_statement, handler=lambda cur: cur.fetchall())
+        except self.NATIVE_LOAD_EXCEPTIONS as load_exception:
+            self.drop_stage(stage)
+            raise load_exception
 
     @staticmethod
     def evaluate_results(rows):

@@ -78,6 +78,7 @@ def example_amazon_s3_snowflake_transform():
         output_table=input_table_1,
         load_options=[
             SnowflakeLoadOptions(
+                file_options={"TYPE": "CSV", "TRIM_SPACE": True},
                 copy_options={"ON_ERROR": "CONTINUE"},
             )
         ],
@@ -87,6 +88,7 @@ def example_amazon_s3_snowflake_transform():
         output_table=input_table_2,
         load_options=[
             SnowflakeLoadOptions(
+                file_options={"TYPE": "CSV", "TRIM_SPACE": True},
                 copy_options={"ON_ERROR": "CONTINUE"},
             )
         ],
