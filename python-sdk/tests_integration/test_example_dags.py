@@ -85,9 +85,13 @@ def order(dag_id: str) -> int:
     return -1
 
 
+@pytest.fixture(scope="module")
+def dag_bag() -> DagBag:
+    return get_dag_bag()
+
+
 @pytest.fixture()
-def example_dag_ids():
-    dag_bag: DagBag = get_dag_bag()
+def example_dag_ids(dag_bag):
     for dag_id in sorted(dag_bag.dag_ids, key=order):
         yield dag_id, dag_bag
 
