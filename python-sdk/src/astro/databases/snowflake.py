@@ -52,7 +52,6 @@ ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP = {
 }
 
 COPY_OPTIONS = {
-    FileType.CSV: "ON_ERROR=CONTINUE",
     FileType.NDJSON: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
     FileType.PARQUET: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
 }
@@ -393,7 +392,7 @@ class SnowflakeDatabase(BaseDatabase):
         stage.set_url_from_file(file)
 
         fileformat = ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP[file.type.name]
-        copy_options = [COPY_OPTIONS[file.type.name]]
+        copy_options = [COPY_OPTIONS.get(file.type.name, "")]
         copy_options.extend([f"{k}={v}" for k, v in self.load_options.copy_options.items()])
         file_options = [f"{k}={v}" for k, v in self.load_options.file_options.items()]
         file_options.extend([f"TYPE={fileformat}", "TRIM_SPACE=TRUE"])
@@ -620,7 +619,10 @@ class SnowflakeDatabase(BaseDatabase):
     def _copy_into_table_from_stage(self, source_file, target_table, stage):
         table_name = self.get_table_qualified_name(target_table)
         file_path = os.path.basename(source_file.path) or ""
-        sql_statement = f"COPY INTO {table_name} FROM @{stage.qualified_name}/{file_path}"
+        sql_statement = (
+            f"COPY INTO {table_name} FROM "
+            f"@{stage.qualified_name}/{file_path} VALIDATION_MODE='{self.load_options.validation_mode}'"
+        )
 
         # Below code is added due to breaking change in apache-airflow-providers-snowflake==3.2.0,
         # we need to pass handler param to get the rows. But in version apache-airflow-providers-snowflake==3.1.0
