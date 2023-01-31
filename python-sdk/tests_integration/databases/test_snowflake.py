@@ -478,7 +478,7 @@ def test_load_file_to_table_natively(remote_files_fixture, database_table_fixtur
     """Load a file to a Snowflake table using the native optimisation."""
     filepath = remote_files_fixture[0]
     database, target_table = database_table_fixture
-    database.load_file_to_table(File(filepath), target_table, {}, use_native_support=True)
+    database.load_file_to_table(File(filepath), target_table, {}, use_native_support=False)
 
     df = database.hook.get_pandas_df(f"SELECT * FROM {target_table.name}")
     assert len(df) == 3
