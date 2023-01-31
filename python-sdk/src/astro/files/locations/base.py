@@ -190,5 +190,5 @@ class BaseFileLocation(ABC):
         """
         return smart_open.open(self.smartopen_uri, mode="wb", transport_params=self.transport_params)
 
-    def get_snowflake_stage_auth_sub_statement(self) -> str:
+    def get_snowflake_stage_auth_sub_statement(self) -> str:  # skipcq: PYL-R0201
         raise DatabaseCustomError("In order to create a stage, `storage_integration` is required.")
