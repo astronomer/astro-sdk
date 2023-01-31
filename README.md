@@ -47,7 +47,8 @@ pip install astro-sdk-python[amazon,google,snowflake,postgres]
     airflow db init
     ```
 
-   > **Note:** `AIRFLOW__CORE__ENABLE_XCOM_PICKLING` no longer needs to be enabled from astro-sdk-python release 1.2 and above. This functionality is now deprecated.
+   > **Note:**
+   > - `AIRFLOW__CORE__ENABLE_XCOM_PICKLING` no longer needs to be enabled from astro-sdk-python release 1.2 and above.
    > - For airflow version < 2.5 and astro-sdk-python release < 1.3 Users can either use a custom XCom backend [AstroCustomXcomBackend](https://astro-sdk-python.readthedocs.io/en/latest/guides/xcom_backend.html#xcom-backend) with Xcom pickling disabled (or) enable Xcom pickling.
    > - For airflow version >= 2.5 and astro-sdk-python release >= 1.3.3 Users can either use [Airflow's Xcom backend](https://astro-sdk-python.readthedocs.io/en/latest/guides/xcom_backend.html#airflow_xcom_backend) with Xcom pickling disabled (or) enable Xcom pickling.
 
