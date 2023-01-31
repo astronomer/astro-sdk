@@ -9,6 +9,7 @@ from airflow.decorators import dag
 
 from astro import sql as aql
 from astro.files import File
+from astro.options import SnowflakeLoadOptions
 from astro.table import Metadata, Table
 
 
@@ -75,10 +76,22 @@ def example_amazon_s3_snowflake_transform():
     temp_table_1 = aql.load_file(
         input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_1_unquoted.csv"),
         output_table=input_table_1,
+        load_options=[
+            SnowflakeLoadOptions(
+                file_options={"SKIP_HEADER": 1, "SKIP_BLANK_LINES": True},
+                copy_options={"ON_ERROR": "CONTINUE"},
+            )
+        ],
     )
     temp_table_2 = aql.load_file(
         input_file=File(path=f"{s3_bucket}/ADOPTION_CENTER_2_unquoted.csv"),
         output_table=input_table_2,
+        load_options=[
+            SnowflakeLoadOptions(
+                file_options={"SKIP_HEADER": 1, "SKIP_BLANK_LINES": True},
+                copy_options={"ON_ERROR": "CONTINUE"},
+            )
+        ],
     )
 
     combined_data = combine_data(
