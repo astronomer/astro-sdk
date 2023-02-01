@@ -150,7 +150,7 @@ def multiple_tables_fixture(request, database_table_fixture):
 
 
 @pytest.fixture
-def remote_files_fixture(request):  # noqa: C901
+def remote_files_fixture(request):
     """
     Return a list of remote object filenames.
     By default, this fixture also creates objects using sample.<filetype>, unless
@@ -182,80 +182,101 @@ def remote_files_fixture(request):  # noqa: C901
     object_path_list = []
     object_prefix_list = []
     unique_value = uuid.uuid4()
+    bucket_name = get_bucket_name(provider)
+    hook = get_hook(provider)
     for item_count in range(file_count):
         object_prefix = f"test/{unique_value}{item_count}.{file_extension}"
-        bucket_name, hook, object_path = _upload_or_delete_remote_file(
-            file_create, object_prefix, provider, source_path
-        )
+        object_path = _upload_or_delete_remote_file(file_create, object_prefix, provider, source_path)
         object_path_list.append(object_path)
         object_prefix_list.append(object_prefix)
 
     yield object_path_list
 
+    _delete_all_blobs(
+        provider=provider, object_prefix_list=object_prefix_list, hook=hook, bucket_name=bucket_name
+    )
+
+
+def _create_blob(provider, source_path, bucket_name, object_prefix):
+    hook = get_hook(provider)
     if provider == "google":
-        for object_prefix in object_prefix_list:
-            # if an object doesn't exist, GCSHook.delete fails:
-            hook.exists(bucket_name, object_prefix) and hook.delete(  # skipcq: PYL-W0106
-                bucket_name, object_prefix
-            )
+        hook.upload(bucket_name, object_prefix, source_path)
     elif provider == "amazon":
-        for object_prefix in object_prefix_list:
-            hook.delete_objects(bucket_name, object_prefix)
-
+        hook.load_file(source_path, object_prefix, bucket_name)
     elif provider == "azure":
-        for object_prefix in object_prefix_list:
-            hook.check_for_blob(bucket_name, object_prefix) and hook.delete_blobs(  # skipcq: PYL-W0106
-                bucket_name, object_prefix
-            )
+        hook.load_file(source_path, bucket_name, object_prefix)
 
 
-def _upload_or_delete_remote_file(file_create, object_prefix, provider, source_path):  # noqa: C901
+def _delete_all_blobs(provider: str, object_prefix_list: list):
+    hook = get_hook(provider)
+    bucket_name = get_bucket_name(provider)
+    delete_blob_provider = {
+        "google": _delete_google_blob,
+        "amazon": _delete_amazon_blob,
+        "azure": _delete_azure_blob,
+    }
+    delete_blob_fun = delete_blob_provider[provider]
+    for object_prefix in object_prefix_list:
+        delete_blob_fun(hook, bucket_name, object_prefix)
+
+
+def _delete_google_blob(hook, bucket_name, object_prefix):
+    hook.exists(bucket_name, object_prefix) and hook.delete(bucket_name, object_prefix)  # skipcq: PYL-W0106
+
+
+def _delete_amazon_blob(hook, bucket_name, object_prefix):
+    hook.delete_objects(bucket_name, object_prefix)
+
+
+def _delete_azure_blob(hook, bucket_name, object_prefix):
+    hook.delete_objects(bucket_name, object_prefix)
+
+
+def get_bucket_name(provider):
+    bucket_provider = {
+        "google": os.getenv("GOOGLE_BUCKET", "dag-authoring"),
+        "amazon": os.getenv("AWS_BUCKET", "tmp9"),
+        "azure": os.getenv("AZURE_BUCKET", "astro-sdk"),
+        "local": None,
+    }
+    return bucket_provider[provider]
+
+
+def get_object_path(provider: str, object_prefix: str, source_path) -> str:
+    bucket_name = get_bucket_name(provider)
+    path_provider = {
+        "google": f"gs://{bucket_name}/{object_prefix}",
+        "amazon": f"s3://{bucket_name}/{object_prefix}",
+        "azure": f"wasb://{bucket_name}/{object_prefix}",
+        "local": str(source_path),
+    }
+    return path_provider[provider]
+
+
+def get_hook(provider):
+    from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+    from airflow.providers.google.cloud.hooks.gcs import GCSHook
+    from airflow.providers.microsoft.azure.hooks.wasb import WasbHook
+
+    hook_provider = {"google": GCSHook(), "amazon": S3Hook(), "azure": WasbHook(), "local": None}
+    return hook_provider[provider]
+
+
+def _upload_or_delete_remote_file(file_create, object_prefix, provider, source_path):
     """
     Upload a local file to remote bucket if file_create is True.
     And deletes a file if it already exists and file_create is False.
     """
-    if provider == "google":
-        from airflow.providers.google.cloud.hooks.gcs import GCSHook
+    bucket_name = get_bucket_name(provider=provider)
+    object_path = get_object_path(provider=provider, object_prefix=object_prefix, source_path=source_path)
+    if file_create:
+        _create_blob(
+            provider=provider, bucket_name=bucket_name, object_prefix=object_prefix, source_path=source_path
+        )
+    else:
+        _delete_all_blobs(provider, [object_prefix])
 
-        bucket_name = os.getenv("GOOGLE_BUCKET", "dag-authoring")
-        object_path = f"gs://{bucket_name}/{object_prefix}"
-        hook = GCSHook()
-        if file_create:
-            hook.upload(bucket_name, object_prefix, source_path)
-        else:
-            # if an object doesn't exist, GCSHook.delete fails:
-            hook.exists(bucket_name, object_prefix) and hook.delete(  # skipcq: PYL-W0106
-                bucket_name, object_prefix
-            )
-    elif provider == "amazon":
-        from airflow.providers.amazon.aws.hooks.s3 import S3Hook
-
-        bucket_name = os.getenv("AWS_BUCKET", "tmp9")
-        object_path = f"s3://{bucket_name}/{object_prefix}"
-        hook = S3Hook()
-        if file_create:
-            hook.load_file(source_path, object_prefix, bucket_name)
-        else:
-            hook.delete_objects(bucket_name, object_prefix)
-
-    elif provider == "azure":
-        from airflow.providers.microsoft.azure.hooks.wasb import WasbHook
-
-        bucket_name = os.getenv("AZURE_BUCKET", "astro-sdk")
-        object_path = f"wasb://{bucket_name}/{object_prefix}"
-        hook = WasbHook()
-        if file_create:
-            hook.load_file(source_path, bucket_name, object_prefix)
-        else:
-            hook.check_for_blob(bucket_name, object_prefix) and hook.delete_file(  # skipcq: PYL-W0106
-                bucket_name, object_prefix
-            )
-
-    elif provider == "local":
-        bucket_name = None
-        hook = None
-        object_path = str(source_path)
-    return bucket_name, hook, object_path
+    return object_path
 
 
 def method_map_fixture(method, base_path, classes, get):
