@@ -21,7 +21,7 @@ with DAG(
         dataset=imdb_movies,
         checks={
             "sell_list": {"check_statement": "sell <= list"},
-            "row_count": {"check_statement": "Count(*) == 47"},
+            "row_count": {"check_statement": "Count(*) = 47"},
         },
     )
     # [END data_validation__check_table]
