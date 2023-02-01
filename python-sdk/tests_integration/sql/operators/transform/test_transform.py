@@ -237,7 +237,7 @@ def test_raw_sql_for_mssql(database_table_fixture, sample_dag):
             "file": File(
                 "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
             ),
-            "table": Table(name="imdb", conn_id="duckdb_default"),
+            "table": Table(name="imdb", conn_id="duckdb_conn"),
         },
     ],
     indirect=True,
@@ -328,7 +328,7 @@ def test_transform_with_templated_table_name_for_mssql(database_table_fixture, s
             "file": File(
                 "https://raw.githubusercontent.com/astronomer/astro-sdk/main/tests/data/imdb_v2.csv"
             ),
-            "table": Table(name="imdb", conn_id="duckdb_default"),
+            "table": Table(name="imdb", conn_id="duckdb_conn"),
         },
     ],
     indirect=True,

@@ -37,7 +37,7 @@ REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN = os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN
 SNOWFLAKE_CONN_ID = "snowflake_conn"
 DATABRICKS_CONN_ID = "databricks_conn"
 MSSQL_CONN_ID = "mssql_conn"
-DUCKDB_CONN_ID = "duckdb_default"
+DUCKDB_CONN_ID = "duckdb_conn"
 
 CWD = pathlib.Path(__file__).parent
 default_args = {
