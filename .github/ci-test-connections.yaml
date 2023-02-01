@@ -94,7 +94,7 @@ connections:
     password: $DATABRICKS_TOKEN
     extra:
       http_path: /sql/1.0/warehouses/cf414a2206dfb397
-  - conn_id: wasb_default_conn
+  - conn_id: wasb_default
     conn_type: wasb
     description: null
     extra:
