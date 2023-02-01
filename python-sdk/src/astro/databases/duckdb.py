@@ -33,7 +33,7 @@ class DuckdbDatabase(BaseDatabase):
 
     @cached_property
     def hook(self) -> DuckDBHook:
-        """Retrieve Airflow hook to interface with the Sqlite database."""
+        """Retrieve Airflow hook to interface with the DuckDB database."""
         return DuckDBHook(duckdb_conn_id=self.conn_id)
 
     @property
