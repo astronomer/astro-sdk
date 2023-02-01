@@ -37,6 +37,7 @@ REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN = os.getenv("REDSHIFT_NATIVE_LOAD_IAM_ROLE_ARN
 SNOWFLAKE_CONN_ID = "snowflake_conn"
 DATABRICKS_CONN_ID = "databricks_conn"
 MSSQL_CONN_ID = "mssql_conn"
+DUCKDB_CONN_ID = "duckdb_default"
 
 CWD = pathlib.Path(__file__).parent
 default_args = {
@@ -352,5 +353,14 @@ with dag:
         ),
     )
     # [END load_file_example_26]
+
+    # [START load_file_example_27]
+    aql.load_file(
+        input_file=File("s3://tmp9/homes_main.csv", conn_id="aws_conn"),
+        output_table=Table(
+            conn_id=DUCKDB_CONN_ID,
+        ),
+    )
+    # [END load_file_example_27]
 
     aql.cleanup()

@@ -225,6 +225,17 @@ Loading to MS SQL
 .. note::
    We do not support loading Unicode data to SQL Server due to limitations on the underlying ``pymssql`` library
 
+Loading to Duckdb
+~~~~~~~~~~~~~~~~~
+
+``load_file`` can load data to duckdb. If the database file is not specified in connection, it will be created
+(the file extension may be .db, .duckdb, or anything else). The special value :memory: (the default) can be used to
+create an in-memory database. Note that for an in-memory database no data is persisted to disk (i.e. all data is lost when you exit the Python process).
+
+.. literalinclude:: ../../../../example_dags/example_load_file.py
+   :language: python
+   :start-after: [START load_file_example_27]
+   :end-before: [END load_file_example_27]
 
 
 Patterns in file path
