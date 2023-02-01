@@ -68,9 +68,7 @@ class WASBLocation(BaseFileLocation):
         if object_name.startswith("/"):
             object_name = object_name[1:]
         return int(
-            self.hook._get_blob_client(  # skipcq: PYL-W0212
-                container_name=container_name, blob_name=object_name
-            )
+            self.hook.blob_service_client.get_blob_client(container=container_name, blob=object_name)
             .get_blob_properties()
             .size
         )
