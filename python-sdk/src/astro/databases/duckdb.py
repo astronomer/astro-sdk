@@ -75,7 +75,7 @@ class DuckdbDatabase(BaseDatabase):
     @staticmethod
     def get_merge_initialization_query(parameters: tuple) -> str:
         """
-        Handles database-specific logic to handle index for Sqlite.
+        Handles database-specific logic to handle index for DuckDB.
         """
         return "CREATE UNIQUE INDEX merge_index ON {{table}}(%s)" % ",".join(parameters)  # skipcq PYL-C0209
 
