@@ -182,8 +182,8 @@ def remote_files_fixture(request):
     object_path_list = []
     object_prefix_list = []
     unique_value = uuid.uuid4()
-    bucket_name = get_bucket_name(provider)
-    hook = get_hook(provider)
+    get_bucket_name(provider)
+    get_hook(provider)
     for item_count in range(file_count):
         object_prefix = f"test/{unique_value}{item_count}.{file_extension}"
         object_path = _upload_or_delete_remote_file(file_create, object_prefix, provider, source_path)
@@ -192,12 +192,10 @@ def remote_files_fixture(request):
 
     yield object_path_list
 
-    _delete_all_blobs(
-        provider=provider, object_prefix_list=object_prefix_list, hook=hook, bucket_name=bucket_name
-    )
+    delete_all_blobs(provider=provider, object_prefix_list=object_prefix_list)
 
 
-def _create_blob(provider, source_path, bucket_name, object_prefix):
+def create_blob(provider, source_path, bucket_name, object_prefix):
     hook = get_hook(provider)
     if provider == "google":
         hook.upload(bucket_name, object_prefix, source_path)
@@ -207,28 +205,28 @@ def _create_blob(provider, source_path, bucket_name, object_prefix):
         hook.load_file(source_path, bucket_name, object_prefix)
 
 
-def _delete_all_blobs(provider: str, object_prefix_list: list):
+def delete_all_blobs(provider: str, object_prefix_list: list):
     hook = get_hook(provider)
     bucket_name = get_bucket_name(provider)
     delete_blob_provider = {
-        "google": _delete_google_blob,
-        "amazon": _delete_amazon_blob,
-        "azure": _delete_azure_blob,
+        "google": delete_google_blob,
+        "amazon": delete_amazon_blob,
+        "azure": delete_azure_blob,
     }
     delete_blob_fun = delete_blob_provider[provider]
     for object_prefix in object_prefix_list:
         delete_blob_fun(hook, bucket_name, object_prefix)
 
 
-def _delete_google_blob(hook, bucket_name, object_prefix):
+def delete_google_blob(hook, bucket_name, object_prefix):
     hook.exists(bucket_name, object_prefix) and hook.delete(bucket_name, object_prefix)  # skipcq: PYL-W0106
 
 
-def _delete_amazon_blob(hook, bucket_name, object_prefix):
+def delete_amazon_blob(hook, bucket_name, object_prefix):
     hook.delete_objects(bucket_name, object_prefix)
 
 
-def _delete_azure_blob(hook, bucket_name, object_prefix):
+def delete_azure_blob(hook, bucket_name, object_prefix):
     hook.delete_objects(bucket_name, object_prefix)
 
 
@@ -270,11 +268,11 @@ def _upload_or_delete_remote_file(file_create, object_prefix, provider, source_p
     bucket_name = get_bucket_name(provider=provider)
     object_path = get_object_path(provider=provider, object_prefix=object_prefix, source_path=source_path)
     if file_create:
-        _create_blob(
+        create_blob(
             provider=provider, bucket_name=bucket_name, object_prefix=object_prefix, source_path=source_path
         )
     else:
-        _delete_all_blobs(provider, [object_prefix])
+        delete_all_blobs(provider, [object_prefix])
 
     return object_path
 
