@@ -132,10 +132,7 @@ def test_aql_load_remote_file_to_dbs(sample_dag, database_table_fixture, remote_
     db, test_table = database_table_fixture
     file_uri = remote_files_fixture[0]
 
-    if file_uri.startswith("wasb"):
-        file_ = File(file_uri, conn_id="wasb_default_conn")
-    else:
-        file_ = File(file_uri)
+    file_ = File(file_uri)
 
     with sample_dag:
         load_file(

@@ -75,10 +75,7 @@ def test_export_to_file_dbs_to_remote_file(sample_dag, database_table_fixture, r
     _, test_table = database_table_fixture
     file_uri = remote_files_fixture[0]
 
-    if file_uri.startswith("wasb"):
-        file_ = File(file_uri, conn_id="wasb_default_conn")
-    else:
-        file_ = File(file_uri)
+    file_ = File(file_uri)
 
     assert not file_.exists()
 
