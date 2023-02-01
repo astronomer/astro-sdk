@@ -406,7 +406,7 @@ class SnowflakeDatabase(BaseDatabase):
                 auth,
             ]
         )
-
+        logging.debug("SQL statement executed: %s ", sql_statement)
         self.run_sql(sql_statement)
 
         return stage
@@ -639,21 +639,24 @@ class SnowflakeDatabase(BaseDatabase):
             self.drop_stage(stage)
         return rows
 
-    def _validate_before_copy_into(self, source_file, target_table, stage):
+    def _validate_before_copy_into(
+        self, source_file: File, target_table: BaseTable, stage: SnowflakeStage
+    ) -> None:
         """Validate COPY INTO command to tests the files for errors but does not load them."""
-        if self.load_options.validation_mode is None:
-            return
-        table_name = self.get_table_qualified_name(target_table)
-        file_path = os.path.basename(source_file.path) or ""
-        sql_statement = (
-            f"COPY INTO {table_name} FROM "
-            f"@{stage.qualified_name}/{file_path} VALIDATION_MODE='{self.load_options.validation_mode}'"
-        )
-        try:
-            self.hook.run(sql_statement, handler=lambda cur: cur.fetchall())
-        except ProgrammingError as load_exception:
-            self.drop_stage(stage)
-            raise load_exception
+        if self.load_options:
+            if self.load_options.validation_mode is None:
+                return
+            table_name = self.get_table_qualified_name(target_table)
+            file_path = os.path.basename(source_file.path) or ""
+            sql_statement = (
+                f"COPY INTO {table_name} FROM "
+                f"@{stage.qualified_name}/{file_path} VALIDATION_MODE='{self.load_options.validation_mode}'"
+            )
+            try:
+                self.hook.run(sql_statement, handler=lambda cur: cur.fetchall())
+            except ProgrammingError as load_exception:
+                self.drop_stage(stage)
+                raise load_exception
 
     @staticmethod
     def evaluate_results(rows):
