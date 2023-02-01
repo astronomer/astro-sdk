@@ -266,7 +266,7 @@ def get_hook(provider):
     hook_provider = {
         "google": GCSHook(),
         "amazon": S3Hook(),
-        "azure": WasbHook(wasb_conn_id="wasb_default_conn"),
+        "azure": WasbHook(),
         "local": None,
     }
     return hook_provider[provider]
