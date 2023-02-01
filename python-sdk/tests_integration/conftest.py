@@ -212,6 +212,7 @@ def delete_all_blobs(provider: str, object_prefix_list: list):
         "google": delete_google_blob,
         "amazon": delete_amazon_blob,
         "azure": delete_azure_blob,
+        "local": delete_local_blob,
     }
     delete_blob_fun = delete_blob_provider[provider]
     for object_prefix in object_prefix_list:
@@ -227,7 +228,13 @@ def delete_amazon_blob(hook, bucket_name, object_prefix):
 
 
 def delete_azure_blob(hook, bucket_name, object_prefix):
-    hook.delete_objects(bucket_name, object_prefix)
+    hook.check_for_blob(bucket_name, object_prefix) and hook.delete_file(  # skipcq: PYL-W0106
+        bucket_name, object_prefix
+    )
+
+
+def delete_local_blob(hook, bucket_name, object_prefix):
+    pass
 
 
 def get_bucket_name(provider):
@@ -256,7 +263,12 @@ def get_hook(provider):
     from airflow.providers.google.cloud.hooks.gcs import GCSHook
     from airflow.providers.microsoft.azure.hooks.wasb import WasbHook
 
-    hook_provider = {"google": GCSHook(), "amazon": S3Hook(), "azure": WasbHook(), "local": None}
+    hook_provider = {
+        "google": GCSHook(),
+        "amazon": S3Hook(),
+        "azure": WasbHook(wasb_conn_id="wasb_default_conn"),
+        "local": None,
+    }
     return hook_provider[provider]
 
 
