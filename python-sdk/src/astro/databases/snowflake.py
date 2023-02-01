@@ -51,10 +51,6 @@ ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP = {
     FileType.PARQUET: "PARQUET",
 }
 
-COPY_OPTIONS = {
-    FileType.NDJSON: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
-    FileType.PARQUET: "MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE",
-}
 
 DEFAULT_STORAGE_INTEGRATION = {
     FileLocation.S3: settings.SNOWFLAKE_STORAGE_INTEGRATION_AMAZON,
@@ -392,7 +388,7 @@ class SnowflakeDatabase(BaseDatabase):
         stage.set_url_from_file(file)
 
         fileformat = ASTRO_SDK_TO_SNOWFLAKE_FILE_FORMAT_MAP[file.type.name]
-        copy_options = [COPY_OPTIONS.get(file.type.name)] if COPY_OPTIONS.get(file.type.name) else []
+        copy_options = []
         copy_options.extend([f"{k}={v}" for k, v in self.load_options.copy_options.items()])
         file_options = [f"{k}={v}" for k, v in self.load_options.file_options.items()]
         file_options.extend([f"TYPE={fileformat}", "TRIM_SPACE=TRUE"])
