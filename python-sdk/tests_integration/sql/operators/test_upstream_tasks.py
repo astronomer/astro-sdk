@@ -20,9 +20,10 @@ cwd = pathlib.Path(__file__).parent
         {"database": Database.BIGQUERY},
         {"database": Database.POSTGRES},
         {"database": Database.SQLITE},
+        {"database": Database.DUCKDB},
     ],
     indirect=True,
-    ids=["snowflake", "bigquery", "postgresql", "sqlite"],
+    ids=["snowflake", "bigquery", "postgresql", "sqlite", "duckdb"],
 )
 def test_raw_sql_chained_queries(database_table_fixture, sample_dag):
     import pandas

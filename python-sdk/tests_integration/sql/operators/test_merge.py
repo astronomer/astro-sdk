@@ -452,8 +452,9 @@ def get_result_sql_single(conn_id):
         (base_database_class, "gcp_conn"),
         (base_database_class, "snowflake_conn"),
         (delta_database_class, "databricks_conn"),
+        (base_database_class, "duckdb_conn"),
     ],
-    ids=["sqlite", "bigquery", "snowflake", "databricks"],
+    ids=["sqlite", "bigquery", "snowflake", "databricks", "duckdb"],
 )
 def test_merge_sql_generation(database_class, conn_id, merge_parameters):
     parameters, mode = merge_parameters

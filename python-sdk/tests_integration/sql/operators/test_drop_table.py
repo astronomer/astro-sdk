@@ -41,9 +41,13 @@ DEFAULT_FILEPATH_MSSQL = str(pathlib.Path(CWD.parent.parent, "data/sample_withou
             "database": Database.REDSHIFT,
             "file": File(DEFAULT_FILEPATH),
         },
+        {
+            "database": Database.DUCKDB,
+            "file": File(DEFAULT_FILEPATH),
+        },
     ],
     indirect=True,
-    ids=["sqlite", "postgres", "bigquery", "snowflake", "redshift"],
+    ids=["sqlite", "postgres", "bigquery", "snowflake", "redshift", "duckdb"],
 )
 def test_drop_table_with_table_metadata(database_table_fixture, sample_dag):
     """Test drop table operator for all databases."""
@@ -127,9 +131,14 @@ def test_drop_table_with_table_metadata_mssql(database_table_fixture, sample_dag
             "table": Table(conn_id="redshift_conn"),
             "file": File(DEFAULT_FILEPATH),
         },
+        {
+            "database": Database.DUCKDB,
+            "table": Table(conn_id="redshift_conn"),
+            "file": File(DEFAULT_FILEPATH),
+        },
     ],
     indirect=True,
-    ids=["postgres", "redshift"],
+    ids=["postgres", "redshift", "duckdb"],
 )
 def test_drop_table_without_table_metadata(database_table_fixture, sample_dag):
     """Test drop table operator for all databases."""
