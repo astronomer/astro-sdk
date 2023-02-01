@@ -8,10 +8,8 @@ RUN apt-get install -y --no-install-recommends \
         libsasl2-dev \
         libsasl2-modules \
         freetds-dev \
-        libssl-dev
-
-RUN apt-get update \
- && apt-get install libkrb5-dev -y
+        libssl-dev \
+        libkrb5-dev
 
 ENV SETUPTOOLS_USE_DISTUTILS=stdlib
 
