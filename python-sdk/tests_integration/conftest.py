@@ -1,3 +1,4 @@
+import logging
 import os
 import pathlib
 import random
@@ -54,6 +55,14 @@ def create_database_connections():
         session.query(Connection).delete()
         create_default_connections(session)
         for conn in connections:
+            last_conn = session.query(Connection).filter(Connection.conn_id == conn.conn_id).first()
+            if last_conn is not None:
+                session.delete(last_conn)
+                session.flush()
+                logging.info(
+                    f"Overriding existing conn_id {conn.conn_id} "
+                    f"with connection specified in test_connections.yaml"
+                )
             session.add(conn)
 
 
@@ -234,7 +243,7 @@ def _upload_or_delete_remote_file(file_create, object_prefix, provider, source_p
 
         bucket_name = os.getenv("AZURE_BUCKET", "astro-sdk")
         object_path = f"wasb://{bucket_name}/{object_prefix}"
-        hook = WasbHook(wasb_conn_id="wasb_default_conn")
+        hook = WasbHook()
         if file_create:
             hook.load_file(source_path, bucket_name, object_prefix)
         else:
