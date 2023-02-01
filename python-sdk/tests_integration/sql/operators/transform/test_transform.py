@@ -258,7 +258,7 @@ def test_transform_with_templated_table_name(database_table_fixture, sample_dag)
         """
 
     with sample_dag:
-        target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="sqlite_default")
+        target_table = Table(name="test_is_{{ ds_nodash }}", conn_id=imdb_table.conn_id)
 
         top_five_animations(input_table=imdb_table, output_table=target_table)
     test_utils.run_dag(sample_dag)
@@ -343,7 +343,7 @@ def test_transform_with_file(database_table_fixture, sample_dag):
         assert df.columns.tolist() == ["title", "rating"]
 
     with sample_dag:
-        target_table = Table(name="test_is_{{ ds_nodash }}", conn_id="sqlite_default")
+        target_table = Table(name="test_is_{{ ds_nodash }}", conn_id=imdb_table.conn_id)
         table_from_query = aql.transform_file(
             file_path="tests_integration/sql/operators/transform/test.sql",
             parameters={"input_table": imdb_table},
