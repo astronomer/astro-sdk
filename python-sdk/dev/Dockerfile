@@ -6,7 +6,11 @@ RUN apt-get install -y --no-install-recommends \
         build-essential \
         libsasl2-2 \
         libsasl2-dev \
-        libsasl2-modules
+        libsasl2-modules \
+        freetds-dev \
+        libssl-dev \
+        libkrb5-dev
+
 ENV SETUPTOOLS_USE_DISTUTILS=stdlib
 
 COPY ../pyproject.toml  ${AIRFLOW_HOME}/astro_sdk/
