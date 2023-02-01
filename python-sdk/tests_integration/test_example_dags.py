@@ -85,13 +85,10 @@ def order(dag_id: str) -> int:
     return -1
 
 
-def get_dags():
-    dag_bag = get_dag_bag()
-    result = [dag_bag.get_dag(dag_id) for dag_id in dag_bag.dag_ids]
-    result.sort(key=order)
-    return result
+dag_bag = get_dag_bag()
 
 
-@pytest.mark.parametrize("dag", get_dags(), ids=lambda dag: dag.dag_id)
-def test_example_dag(session, dag):
+@pytest.mark.parametrize("dag_id", sorted(dag_bag.dag_ids, key=order))
+def test_example_dag(session, dag_id: str):
+    dag = dag_bag.get_dag(dag_id)
     wrapper_run_dag(dag)
