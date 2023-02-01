@@ -130,10 +130,11 @@ class DuckdbDatabase(BaseDatabase):
         """
         Returns the open lineage dataset name as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
-        Example: /tmp/local.db.table_name
+        Example: /tmp/local.duckdb.table_name
         """
         uri = self.hook.get_uri()
-        return uri.removeprefix("duckdb://")
+        conn_with_port = uri.removeprefix("duckdb://")
+        return f"{conn_with_port}.{table.name}"
 
     def openlineage_dataset_namespace(self) -> str:
         """
@@ -141,11 +142,13 @@ class DuckdbDatabase(BaseDatabase):
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         Example: duckdb://127.0.0.1:22
         """
-        return self.hook.get_uri()
+        uri = self.hook.get_uri()
+        conn_with_port = uri.removeprefix("duckdb://")
+        return f"duckdb:/{conn_with_port}"
 
     def openlineage_dataset_uri(self, table: BaseTable) -> str:
         """
         Returns the open lineage dataset uri as per
         https://github.com/OpenLineage/OpenLineage/blob/main/spec/Naming.md
         """
-        return self.hook.get_uri()
+        return f"{self.openlineage_dataset_namespace()}{self.openlineage_dataset_name(table=table)}"
