@@ -1387,7 +1387,7 @@ def test_load_file_snowflake_azure_native_path(sample_dag, database_table_fixtur
     path = "wasb://astro-sdk/sample.csv"
     with sample_dag:
         load_file(
-            input_file=File(path, conn_id="wasb_default_conn"),
+            input_file=File(path),
             output_table=test_table,
             load_options=[
                 SnowflakeLoadOptions(storage_integration="AZURE_INT_PYTHON_SDK"),
