@@ -19,7 +19,7 @@ def contains_required_option(load_options: Optional[LoadOptions], option_name: s
     """
     Check required options in load_option class
     """
-    return bool(load_options and getattr(load_options, option_name))
+    return bool(load_options and getattr(load_options, option_name, None))
 
 
 def list_to_dict(value: Optional[List[LoadOptions]]) -> Optional[Dict[str, LoadOptions]]:
